@@ -162,7 +162,6 @@ class LogsState {
 			});
 	}
 
-	// dyskusja OKR, KPI itp
 	private async fetchLogs(
 		project_id: string,
 		before?: string,

@@ -1,25 +1,17 @@
 <script>
 	import {
+		animatedViewState,
+		AnimationDirection,
+	} from '$lib/shared/ui/animated-view.state.svelte.js';
+	import {
 		ArrowRightIcon,
 		ChartColumnStacked,
 		LogsIcon,
 		TerminalIcon,
 	} from 'lucide-svelte';
-	import { onMount } from 'svelte';
-	import { bash, typescript } from 'svelte-highlight/languages';
 	import Highlight from 'svelte-highlight';
-	import { atomOneDark, githubDark } from 'svelte-highlight/styles';
-	import {
-		animatedViewState,
-		AnimationDirection,
-	} from '$lib/shared/ui/animated-view.state.svelte.js';
-
-	// You may need to import actual icons or use an icon library
-	let visible = false;
-
-	onMount(() => {
-		visible = true;
-	});
+	import { bash, typescript } from 'svelte-highlight/languages';
+	import { githubDark } from 'svelte-highlight/styles';
 </script>
 
 <svelte:head>

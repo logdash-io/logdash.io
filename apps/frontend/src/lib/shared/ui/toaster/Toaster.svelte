@@ -32,7 +32,7 @@
 	}
 </script>
 
-<div class="toast toast-end z-[1000] mt-4 mr-4 w-80 max-w-[320px] space-y-0">
+<div class="toast toast-end z-[1000] mr-4 mt-4 w-80 max-w-[320px] space-y-0">
 	{#each toast.activeToasts as _toast (_toast.id)}
 		{@const config = getToastConfig(_toast.type)}
 		<div
@@ -61,7 +61,7 @@
 			</div>
 
 			<div
-				class="bg-base-content/20 bg-opacity-20 absolute bottom-0 left-0 h-1 w-full origin-left"
+				class="bg-base-content/20 absolute bottom-0 left-0 h-1 w-full origin-left bg-opacity-20"
 				style="animation: toast-progress {_toast.duration}ms linear forwards;"
 			></div>
 		</div>
@@ -69,7 +69,6 @@
 </div>
 
 <style>
-	/* Custom animation for progress bar */
 	@keyframes toast-progress {
 		from {
 			transform: scaleX(1);

@@ -17,18 +17,6 @@
 	const [date, time] = [left, right.split('.')[0]];
 </script>
 
-<!-- const LOG_TYPES = [
-		'error',
-		'warning',
-		'info',
-		'http',
-		'verbose',
-		'debug',
-		'silly',
-	];
-const LOG_COLORS = [ '#155dfc', '#fe9a00', '#e7000b', '#00a6a6', '#00a600',
-'#00a600', '#505050', ]; -->
-
 <div class="flex items-start gap-2.5 font-mono text-sm">
 	<div
 		class={[
@@ -45,7 +33,7 @@ const LOG_COLORS = [ '#155dfc', '#fe9a00', '#e7000b', '#00a6a6', '#00a600',
 	></div>
 
 	<div class="flex flex-col-reverse sm:flex-row sm:gap-2">
-		<span class="text-base-content/60 text-xs whitespace-nowrap sm:text-sm">
+		<span class="text-base-content/60 whitespace-nowrap text-xs sm:text-sm">
 			[{#if prefix === 'full'}{date} {time}{:else}{time}{/if}]
 		</span>
 

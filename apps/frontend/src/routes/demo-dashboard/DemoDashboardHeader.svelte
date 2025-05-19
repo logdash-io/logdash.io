@@ -1,7 +1,7 @@
 <div
 	class="ld-card-base bg-neutral text-neutral-content max-w-7xl rounded-xl p-8 text-base shadow-xl sm:mx-auto"
 >
-	<p class="mb-2 text-xs font-semibold tracking-wide uppercase opacity-80">
+	<p class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-80">
 		Logdash Live Demo
 	</p>
 	<p class="mb-6 text-lg font-extrabold">Our Production Dashboard</p>
@@ -22,10 +22,6 @@
 			<strong>Live Production Metrics:</strong>
 			Interact with visualizations of our key performance indicators.
 		</li>
-		<!-- <li>
-				<strong>Intuitive Search & Filtering:</strong>
-				 Test drive our powerful search to quickly find the data you need.
-			</li> -->
 		<li>
 			<strong>Clean & Uncluttered Interface:</strong>
 			Notice the focus on essential information, free from distractions.

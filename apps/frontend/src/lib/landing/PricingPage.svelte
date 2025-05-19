@@ -116,7 +116,7 @@
 					: ''}"
 			>
 				{#if plan.popular}
-					<div class="badge badge-primary absolute top-4 right-4">
+					<div class="badge badge-primary absolute right-4 top-4">
 						Limited Offer -50%
 					</div>
 				{/if}
@@ -125,7 +125,7 @@
 					<h2 class="card-title text-2xl font-bold">
 						{plan.name}
 					</h2>
-					<div class="mt-2 mb-4">
+					<div class="mb-4 mt-2">
 						<span class="text-4xl font-bold">{plan.price}</span>
 
 						{#if plan.period}
@@ -197,7 +197,7 @@
 		class="ld-card-base bg-neutral text-neutral-content mx-auto max-w-2xl rounded-xl p-8 shadow-xl"
 	>
 		<p
-			class="mb-2 text-xs font-semibold tracking-wide uppercase opacity-80"
+			class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-80"
 		>
 			A Note from us
 		</p>
@@ -253,58 +253,3 @@
 		</div>
 	</div>
 </section>
-
-<!-- Compare Features -->
-<!-- <section class="mb-16 hidden px-4 py-8 md:block">
-		<div class="mx-auto max-w-6xl">
-			<div class="overflow-x-auto">
-				<table class="table w-full">
-					<thead>
-						<tr>
-							<th>Feature</th>
-							{#each pricingData.plans as plan}
-								<th class="text-center">{plan.name}</th>
-							{/each}
-						</tr>
-					</thead>
-					<tbody>
-						{#each pricingData.plans[1].features as feature, i}
-							<tr>
-								<td class="font-medium">{feature.name}</td>
-								{#each pricingData.plans as plan}
-									<td class="text-center">
-										{#if plan.features[i]?.included}
-											<svg
-												class="text-success mx-auto h-5 w-5"
-												fill="currentColor"
-												viewBox="0 0 20 20"
-											>
-												<path
-													fill-rule="evenodd"
-													d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-													clip-rule="evenodd"
-												></path>
-											</svg>
-										{:else}
-											<svg
-												class="text-base-300 mx-auto h-5 w-5"
-												fill="currentColor"
-												viewBox="0 0 20 20"
-											>
-												<path
-													fill-rule="evenodd"
-													d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-													clip-rule="evenodd"
-												></path>
-											</svg>
-										{/if}
-									</td>
-								{/each}
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</section> -->
-<!-- </div> -->

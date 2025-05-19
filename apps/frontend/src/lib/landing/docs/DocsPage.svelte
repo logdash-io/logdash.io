@@ -112,7 +112,7 @@
 				<li>
 					<div
 						class={$activeSection === section.id
-							? 'active font-semibold'
+							? 'font-semibold'
 							: ''}
 					>
 						<a href={`#${section.id}`}>{section.title}</a>
@@ -123,7 +123,7 @@
 								<a
 									href={`#${subsection.id}`}
 									class={$activeSubSection === subsection.id
-										? 'active text-primary'
+										? 'text-primary font-semibold'
 										: ''}
 								>
 									{subsection.title}
@@ -301,22 +301,3 @@
 		{/each}
 	</div>
 </div>
-
-<style>
-	:global(html) {
-		scroll-behavior: smooth;
-	}
-	.active {
-		font-weight: 500;
-	}
-	:global(.sticky) {
-		position: -webkit-sticky;
-		position: sticky;
-	}
-	:global(code) {
-		background: hsl(var(--b3));
-		padding: 0.2em 0.4em;
-		border-radius: 0.3em;
-		font-size: 0.9em;
-	}
-</style>

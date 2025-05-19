@@ -17,7 +17,6 @@ class ToastManager {
 		this.toasts.slice().sort((a, b) => a.timestamp - b.timestamp),
 	);
 
-	// Helper method to add a toast
 	private addToast(message: string, type: ToastType, duration: number) {
 		const id = crypto.randomUUID();
 		const newToast: Toast = {
@@ -30,7 +29,6 @@ class ToastManager {
 
 		this.toasts.push(newToast);
 
-		// Set up automatic removal after duration
 		if (duration > 0) {
 			setTimeout(() => {
 				this.remove(id);
@@ -38,7 +36,6 @@ class ToastManager {
 		}
 	}
 
-	// Public methods
 	public info(message: string, duration = DEFAULT_DURATION) {
 		this.addToast(message, 'info', duration);
 	}
@@ -55,16 +52,13 @@ class ToastManager {
 		this.addToast(message, 'error', duration);
 	}
 
-	// Allow manual removal of a toast by id
 	public remove(id: string) {
 		this.toasts = this.toasts.filter((toast) => toast.id !== id);
 	}
 
-	// Clear all toasts
 	public clear() {
 		this.toasts = [];
 	}
 }
 
-// Create and export a singleton instance
 export const toast = new ToastManager();

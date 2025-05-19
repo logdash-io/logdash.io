@@ -10,7 +10,6 @@ export const load = async ({
 	clusterId: Cluster['id'];
 }> => {
 	const projectId = url.searchParams.get('project_id');
-
 	const demoProject = await logdashAPI.get_demo_project_config();
 
 	if (!projectId || projectId !== demoProject.projectId) {

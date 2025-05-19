@@ -28,7 +28,6 @@
 	}
 
 	function positionTooltip() {
-		// document.body.appendChild(tooltip);
 		const triggerRect = wrapper.getBoundingClientRect();
 		const tooltipRect = tooltip.getBoundingClientRect();
 

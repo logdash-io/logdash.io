@@ -38,8 +38,6 @@ export const FEATURES = [
 			'Intelligent alerting with customizable thresholds and conditions',
 			'Uptime monitoring and SLA tracking for critical services',
 			'Telegram and email notifications for immediate incident response',
-			// 'End-to-end transaction monitoring to identify bottlenecks',
-			// 'Notification integration with Slack, email, PagerDuty, and more',
 		],
 		available: false,
 	},

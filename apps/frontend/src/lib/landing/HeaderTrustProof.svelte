@@ -3,8 +3,6 @@
 </script>
 
 <div class="flex flex-col items-start gap-2 px-6">
-	<!-- quote="I wasted days configuring Grafana, Prometheus, and Loki. Logdash gave
-	me the same visibility with zero configuration in just 3 minutes." -->
 	<TrustProof
 		quote="I wanted something fast and easy to store my logs and monitor key metrics. Logdash was the perfect solution."
 		person="Maciej Adryan"

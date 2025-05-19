@@ -4,16 +4,14 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ cookies, params, url }) => {
-	const logs = await logdashAPI.get_metric_details(
+	const metrics = await logdashAPI.get_metric_details(
 		params.project_id,
 		url.searchParams.get('metric_id'),
 		get_access_token(cookies),
 	);
 
-	console.log('got metrics', logs);
-
 	return json({
 		status: 200,
-		data: logs,
+		data: metrics,
 	});
 };

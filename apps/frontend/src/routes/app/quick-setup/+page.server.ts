@@ -11,7 +11,6 @@ export const load = async ({
 		await logdashAPI.create_anonymous_user();
 	const feature = url.searchParams.get('feature');
 
-	// check if feature is one of valid options
 	const valid_features = [
 		Feature.LOGGING,
 		Feature.METRICS,
