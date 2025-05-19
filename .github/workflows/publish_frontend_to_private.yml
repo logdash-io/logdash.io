@@ -1,0 +1,48 @@
+name: Publish Frontend to Private Repository
+
+on:
+  push:
+    # branches: # Remove or comment out this line to trigger on any branch
+    #   - main
+    paths:
+      - "apps/frontend/**" # Only run if files in apps/frontend change
+
+jobs:
+  publish-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Monorepo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for git subtree operations
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
+      - name: Publish apps/frontend to private repository
+        env:
+          PRIVATE_REPO_PAT: ${{ secrets.FE_PRIVATE_REPO_PAT }}
+          TARGET_USERNAME: ${{ secrets.FE_PRIVATE_REPO_USERNAME }}
+          TARGET_REPONAME: ${{ secrets.FE_PRIVATE_REPO_NAME }}
+          SOURCE_SUBDIRECTORY: apps/frontend
+        run: |
+          if [ -z "$PRIVATE_REPO_PAT" ]; then
+            echo "Error: FE_PRIVATE_REPO_PAT secret is not set."
+            exit 1
+          fi
+          if [ -z "$TARGET_USERNAME" ]; then
+            echo "Error: FE_PRIVATE_REPO_USERNAME secret is not set."
+            exit 1
+          fi
+          if [ -z "$TARGET_REPONAME" ]; then
+            echo "Error: FE_PRIVATE_REPO_NAME secret is not set."
+            exit 1
+          fi
+
+          git remote add private_mirror "https://x-access-token:${PRIVATE_REPO_PAT}@github.com/${TARGET_USERNAME}/${TARGET_REPONAME}.git"
+
+          # Push the subdirectory to the root of the dynamically determined target branch in the private repository.
+          # The --force flag will overwrite the target branch. Use with caution.
+          git subtree push --prefix=${SOURCE_SUBDIRECTORY} private_mirror ${{ github.ref_name }} --force
