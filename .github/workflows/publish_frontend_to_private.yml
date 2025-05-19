@@ -41,10 +41,7 @@ jobs:
             exit 1
           fi
 
-          echo "git remote add private_mirror https://x-access-token:${PRIVATE_REPO_PAT}@github.com/${TARGET_USERNAME}/${TARGET_REPONAME}.git"
-
           git remote add private_mirror "https://x-access-token:${PRIVATE_REPO_PAT}@github.com/${TARGET_USERNAME}/${TARGET_REPONAME}.git"
 
-          # Push the subdirectory to the root of the dynamically determined target branch in the private repository.
-          # The --force flag will overwrite the target branch. Use with caution.
-          git subtree push --prefix=${SOURCE_SUBDIRECTORY} private_mirror ${{ github.ref_name }}
+          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+          git subtree push --prefix=${SOURCE_SUBDIRECTORY} private_mirror "$BRANCH_NAME"
