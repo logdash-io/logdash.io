@@ -19,7 +19,7 @@ jobs:
       - name: Set up Git
         run: |
           git config --global user.name "${{ secrets.FE_PRIVATE_REPO_USERNAME }}"
-          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+          git config --global user.email "${{ secrets.FE_PRIVATE_REPO_USEREMAIL }}"
 
       - name: Publish apps/frontend to private repository
         env:
@@ -40,6 +40,8 @@ jobs:
             echo "Error: FE_PRIVATE_REPO_NAME secret is not set."
             exit 1
           fi
+
+          echo "git remote add private_mirror https://x-access-token:${PRIVATE_REPO_PAT}@github.com/${TARGET_USERNAME}/${TARGET_REPONAME}.git"
 
           git remote add private_mirror "https://x-access-token:${PRIVATE_REPO_PAT}@github.com/${TARGET_USERNAME}/${TARGET_REPONAME}.git"
 
