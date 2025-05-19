@@ -16,32 +16,20 @@ jobs:
         with:
           fetch-depth: 0 # Required for git subtree operations
 
-      - name: Set up Git
+      - name: Setup SSH access to private repo
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.FE_PRIVATE_REPO_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          echo "SSH key and known_hosts configured."
+
+      - name: Configure Git and push frontend to private repo via SSH
         run: |
           git config --global user.name "${{ secrets.FE_PRIVATE_REPO_USERNAME }}"
           git config --global user.email "${{ secrets.FE_PRIVATE_REPO_USEREMAIL }}"
 
-      - name: Publish apps/frontend to private repository
-        env:
-          PRIVATE_REPO_PAT: ${{ secrets.FE_PRIVATE_REPO_PAT }}
-          TARGET_USERNAME: ${{ secrets.FE_PRIVATE_REPO_USERNAME }}
-          TARGET_REPONAME: ${{ secrets.FE_PRIVATE_REPO_NAME }}
-          SOURCE_SUBDIRECTORY: apps/frontend
-        run: |
-          if [ -z "$PRIVATE_REPO_PAT" ]; then
-            echo "Error: FE_PRIVATE_REPO_PAT secret is not set."
-            exit 1
-          fi
-          if [ -z "$TARGET_USERNAME" ]; then
-            echo "Error: FE_PRIVATE_REPO_USERNAME secret is not set."
-            exit 1
-          fi
-          if [ -z "$TARGET_REPONAME" ]; then
-            echo "Error: FE_PRIVATE_REPO_NAME secret is not set."
-            exit 1
-          fi
+          git remote add private_mirror git@github.com:${{ secrets.FE_PRIVATE_REPO_USERNAME }}/${{ secrets.FE_PRIVATE_REPO_NAME }}.git
 
-          git remote add private_mirror "https://x-access-token:${PRIVATE_REPO_PAT}@github.com/${TARGET_USERNAME}/${TARGET_REPONAME}.git"
-
-          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-          git subtree push --prefix=${SOURCE_SUBDIRECTORY} private_mirror "$BRANCH_NAME"
+          git remote -v  # optional sanity check
+          git subtree push --prefix=apps/frontend private_mirror main
