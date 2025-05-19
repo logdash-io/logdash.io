@@ -18,7 +18,7 @@ jobs:
 
       - name: Set up Git
         run: |
-          git config --global user.name "${{ github.actor }}"
+          git config --global user.name "${{ secrets.FE_PRIVATE_REPO_USERNAME }}"
           git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
 
       - name: Publish apps/frontend to private repository
@@ -45,4 +45,4 @@ jobs:
 
           # Push the subdirectory to the root of the dynamically determined target branch in the private repository.
           # The --force flag will overwrite the target branch. Use with caution.
-          git subtree push --prefix=${SOURCE_SUBDIRECTORY} private_mirror ${{ github.ref_name }} --force
+          git subtree push --prefix=${SOURCE_SUBDIRECTORY} private_mirror ${{ github.ref_name }}
