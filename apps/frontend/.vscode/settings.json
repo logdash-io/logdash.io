@@ -1,0 +1,12 @@
+{
+  "workbench.editor.limit.enabled": false,
+  "workbench.editor.limit.value": 50,
+  "workbench.editor.limit.perEditorGroup": false,
+  "workbench.editor.wrapTabs": true,
+  "workbench.editor.tabSizing": "fit",
+  "editor.tabSize": 4,
+  "editor.insertSpaces": false,
+  "editor.detectIndentation": false,
+  "editor.renderWhitespace": "selection",
+  "editor.renderControlCharacters": false
+}

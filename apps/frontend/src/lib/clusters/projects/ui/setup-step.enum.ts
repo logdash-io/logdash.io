@@ -1,0 +1,5 @@
+export enum SetupStep {
+	A_INSTALLATION,
+	B_LOGDASH_INSTANCE,
+	C_CLAIM_PROJECT,
+}

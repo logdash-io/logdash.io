@@ -1,0 +1,31 @@
+export interface EnvironmentConfig {
+	posthog: {
+		key: string;
+		proxy: string;
+		host: string;
+	};
+	github: {
+		clientId: string;
+	};
+	bffLogdashApiKey: string;
+	apiBaseUrl: string;
+	isDevelopment: boolean;
+}
+
+export function getEnvironmentConfig(): EnvironmentConfig {
+	return {
+		posthog: {
+			key: import.meta.env.VITE_POSTHOG_KEY,
+			proxy: import.meta.env.VITE_POSTHOG_PROXY,
+			host: import.meta.env.VITE_POSTHOG_HOST,
+		},
+		github: {
+			clientId: import.meta.env.VITE_GITHUB_CLIENT_ID,
+		},
+		bffLogdashApiKey: import.meta.env.VITE_LOGDASH_API_KEY,
+		apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+		isDevelopment: import.meta.env.DEV || false,
+	};
+}
+
+export const envConfig = getEnvironmentConfig();
