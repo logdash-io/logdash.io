@@ -1,0 +1,66 @@
+name: Deploy backend (dev)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'apps/backend/**'
+      - '.github/workflows/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Run tests
+        uses: './.github/templates/test'
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build and push
+        uses: './.github/templates/build-and-push'
+        with:
+          context: ./apps/backend
+          file: ./apps/backend/Dockerfile
+          dockerhub-username: ${{ secrets.BACKEND_DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.BACKEND_DOCKERHUB_TOKEN }}
+          image-name: ablaszkiewicz/logdash-backend-dev
+      - name: Deploy
+        uses: './.github/templates/deploy-container'
+        with:
+          host: ${{ secrets.BACKEND_DEV_SSH_HOST }}
+          username: ${{ secrets.BACKEND_DEV_SSH_USER }}
+          port: ${{ secrets.BACKEND_DEV_SSH_PORT }}
+          ssh-private-key: ${{ secrets.BACKEND_DEV_SSH_KEY }}
+          server-port: 6001
+          application-port: 3000
+          image-name: ablaszkiewicz/logdash-backend-dev
+          container-name: logdash-backend-dev
+          mongo-url: ${{ secrets.BACKEND_DEV_MONGO_URL }}
+          github-oauth-client-id: ${{ secrets.BACKEND_DEV_GITHUB_OAUTH_CLIENT_ID }}
+          github-oauth-client-secret: ${{ secrets.BACKEND_DEV_GITHUB_OAUTH_CLIENT_SECRET }}
+          resend-api-key: 'null'
+          resend-audience-enabled: 'false'
+          stripe-api-key-secret: ${{ secrets.BACKEND_DEV_STRIPE_API_KEY_SECRET }}
+          stripe-signature: ${{ secrets.BACKEND_DEV_STRIPE_SIGNATURE }}
+          our-env: dev
+          redis-url: ${{ secrets.BACKEND_DEV_REDIS_URL }}
+          stripe-early-bird-price-id: ${{ secrets.BACKEND_DEV_STRIPE_EARLY_BIRD_PRICE_ID }}
+          demo-dashboard-api-key: ${{ secrets.BACKEND_DEV_DEMO_DASHBOARD_API_KEY }}
+          logdash-api-key: ${{ secrets.BACKEND_DEV_LOGDASH_API_KEY }}
+          telegram-token: ${{ secrets.BACKEND_DEV_TELEGRAM_TOKEN }}
+          whitelisted-emails: ${{ secrets.BACKEND_DEV_WHITELISTED_EMAILS }}
+          auth-jwt-secret: ${{ secrets.BACKEND_DEV_AUTH_JWT_SECRET }}
+      - name: Prune
+        uses: './.github/templates/prune'
+        with:
+          host: ${{ secrets.BACKEND_DEV_SSH_HOST }}
+          username: ${{ secrets.BACKEND_DEV_SSH_USER }}
+          port: ${{ secrets.BACKEND_DEV_SSH_PORT }}
+          ssh-private-key: ${{ secrets.BACKEND_DEV_SSH_KEY }}

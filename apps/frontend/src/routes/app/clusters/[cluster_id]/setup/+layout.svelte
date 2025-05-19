@@ -9,7 +9,9 @@
 	onMount(() => {
 		if (browser && !isDev()) {
 			try {
-				posthog.startSessionRecording();
+				setTimeout(() => {
+					posthog.startSessionRecording();
+				}, 2000);
 			} catch (e) {
 				console.error('Error starting session recording:', e);
 			}

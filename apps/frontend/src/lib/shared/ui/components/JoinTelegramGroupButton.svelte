@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { UserTier } from '$lib/shared/types.js';
 	import type { User } from '$lib/shared/user/domain/user';
 	import { fade } from 'svelte/transition';
 
 	const { tier }: { tier: User['tier'] } = $props();
 
 	let joiningTelegram = $state(false);
-	const canAccess = tier === 'early-bird';
+	const canAccess = $derived(tier === UserTier.EARLY_BIRD);
 </script>
 
 <button

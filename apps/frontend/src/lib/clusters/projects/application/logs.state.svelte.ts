@@ -175,6 +175,11 @@ class LogsState {
 		} else {
 			this._logs = arrayToObject<Log>(data, 'id');
 		}
+
+		console.log(
+			'$state.snapshot(this._logs):',
+			$state.snapshot(this._logs),
+		);
 	}
 }
 

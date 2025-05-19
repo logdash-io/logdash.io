@@ -154,15 +154,15 @@
 					}}
 				></div>
 
-				{#if logsState.pageIsLoading}
-					<div
-						class="flex shrink-0 items-center justify-center gap-2 py-12"
-					>
+				<div
+					class="flex h-12 shrink-0 items-center justify-center gap-2"
+				>
+					{#if logsState.pageIsLoading}
 						<span
 							class="loading loading-spinner loading-sm opacity-80"
 						></span>
-					</div>
-				{/if}
+					{/if}
+				</div>
 
 				{#each logsState.logs as log, index}
 					<div

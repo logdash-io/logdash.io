@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:frontend": "pnpm --filter frontend dev"
   },
   "keywords": [],
   "author": "",
-  "license": "MIT",
+  "license": "BSL-1.0",
   "packageManager": "pnpm@10.7.0",
   "pnpm": {
     "onlyBuiltDependencies": [

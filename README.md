@@ -56,7 +56,7 @@ pnpm run build
 
 ## 📄 License
 
-MIT — see [`LICENSE`](./LICENSE) for details.
+BSL-1.0 — see [`LICENSE`](./LICENSE) for details.
 
 ---
 

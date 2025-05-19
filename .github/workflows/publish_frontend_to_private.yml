@@ -1,0 +1,40 @@
+name: Publish Frontend to Private Repository
+
+on:
+  push:
+    # branches: # Remove or comment out this line to trigger on any branch
+    #   - main
+    paths:
+      - "apps/frontend/**" # Only run if files in apps/frontend change
+
+jobs:
+  publish-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Monorepo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for git subtree operations
+
+      - name: Setup SSH access to private repo
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.FE_PRIVATE_REPO_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          echo "SSH key and known_hosts configured."
+
+      - name: Configure Git and push frontend to private repo via SSH
+        run: |
+          TARGET_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+          git config --global user.name "${{ secrets.FE_PRIVATE_REPO_USERNAME }}"
+          git config --global user.email "${{ secrets.FE_PRIVATE_REPO_USEREMAIL }}"
+
+          git remote add private_mirror git@github.com:${{ secrets.FE_PRIVATE_REPO_USERNAME }}/${{ secrets.FE_PRIVATE_REPO_NAME }}.git
+
+          git remote -v  # optional sanity check
+
+          git subtree split --prefix=apps/frontend -b frontend-temp-branch
+          git push --force private_mirror frontend-temp-branch:$TARGET_BRANCH
+          git branch -D frontend-temp-branch

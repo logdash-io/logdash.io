@@ -29,7 +29,7 @@
 	let chartContainer: HTMLElement;
 	let tooltip: HTMLElement;
 	// Constants for chart configuration
-	const MARGIN = { top: 20, right: 20, bottom: 30, left: 40 };
+	const MARGIN = { top: 20, right: 20, bottom: 30, left: 50 };
 	const LABELS_OFFSET = 25;
 	function createChart() {
 		if (!chartContainer || !data || data.length === 0) {
@@ -207,13 +207,13 @@
 <div class="chart-wrapper relative">
 	{#if isLoading}
 		<div
-			class="text-primary loading loading-sm absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+			class="text-primary loading loading-sm absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
 		></div>
 	{/if}
 
 	{#if !isLoading && data.length === 0}
 		<div
-			class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-gray-500"
+			class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-gray-500"
 		>
 			No data available
 		</div>

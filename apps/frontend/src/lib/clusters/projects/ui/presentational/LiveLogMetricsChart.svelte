@@ -36,7 +36,7 @@
 
 	// Constants for chart configuration
 	const CHART_HEIGHT = 200;
-	const MARGIN = { top: 20, right: 30, bottom: 30, left: 40 };
+	const MARGIN = { top: 20, right: 30, bottom: 30, left: 50 };
 	const LOG_TYPES = [
 		'error',
 		'warning',

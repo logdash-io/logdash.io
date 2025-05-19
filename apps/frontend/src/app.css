@@ -98,10 +98,7 @@ body {
 }
 
 /* 
-Scrollbar styles for modern browsers 
-	scrollbar-color
-	scrollbar-gutter
-	scrollbar-width auto | thin | none
+Scrollbar styles for modern browsers;
 */
 * {
 	scrollbar-width: thin;
