@@ -33,11 +33,6 @@ jobs:
 
           git remote -v  # optional sanity check
 
-          # Create a subtree split as a temporary branch
           git subtree split --prefix=apps/frontend -b frontend-temp-branch
-
-          # Force-push it to the remote's main branch
           git push --force private_mirror frontend-temp-branch:main
-
-          # Optional cleanup
           git branch -D frontend-temp-branch
