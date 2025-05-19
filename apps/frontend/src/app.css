@@ -99,9 +99,6 @@ body {
 
 /* 
 Scrollbar styles for modern browsers 
-	scrollbar-color
-	scrollbar-gutter
-	scrollbar-width auto | thin | none
 */
 * {
 	scrollbar-width: thin;
