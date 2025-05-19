@@ -26,6 +26,8 @@ jobs:
 
       - name: Configure Git and push frontend to private repo via SSH
         run: |
+          TARGET_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
           git config --global user.name "${{ secrets.FE_PRIVATE_REPO_USERNAME }}"
           git config --global user.email "${{ secrets.FE_PRIVATE_REPO_USEREMAIL }}"
 
@@ -34,5 +36,5 @@ jobs:
           git remote -v  # optional sanity check
 
           git subtree split --prefix=apps/frontend -b frontend-temp-branch
-          git push --force private_mirror frontend-temp-branch:main
+          git push --force private_mirror frontend-temp-branch:$TARGET_BRANCH
           git branch -D frontend-temp-branch
