@@ -50,6 +50,8 @@ inputs:
     required: false
   whitelisted-emails:
     required: false
+  auth-jwt-secret:
+    required: false
 
 runs:
   using: 'composite'
@@ -82,4 +84,5 @@ runs:
           -e LOGDASH_API_KEY=${{ inputs.logdash-api-key }} \
           -e TELEGRAM_TOKEN=${{ inputs.telegram-token }} \
           -e WHITELISTED_EMAILS=${{ inputs.whitelisted-emails }} \
+          -e AUTH_JWT_SECRET=${{ inputs.auth-jwt-secret }} \
           ${{ inputs.image-name }}

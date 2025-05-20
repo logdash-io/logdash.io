@@ -57,6 +57,7 @@ jobs:
           logdash-api-key: ${{ secrets.BACKEND_PROD_LOGDASH_API_KEY }}
           telegram-token: ${{ secrets.BACKEND_PROD_TELEGRAM_TOKEN }}
           whitelisted-emails: ${{ secrets.BACKEND_PROD_WHITELISTED_EMAILS }}
+          auth-jwt-secret: ${{ secrets.BACKEND_PROD_AUTH_JWT_SECRET }}
       - name: Prune
         uses: './.github/templates/prune'
         with:
