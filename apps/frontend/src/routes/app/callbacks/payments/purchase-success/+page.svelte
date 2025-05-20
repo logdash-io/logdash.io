@@ -25,7 +25,9 @@
 			</p>
 
 			<div class="card-actions w-full justify-center gap-2 rounded-2xl">
-				<a href="/projects" class="btn btn-sm btn-primary">Continue</a>
+				<a href="/app/clusters" class="btn btn-sm btn-primary">
+					Continue
+				</a>
 			</div>
 		</div>
 	</div>
