@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { getEnvConfig } from './shared/configs/env-configs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
@@ -10,10 +11,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .addBearerAuth()
-    .addApiKey(
-      { type: 'apiKey', in: 'header', name: 'project-api-key' },
-      'project-api-key',
-    )
+    .addApiKey({ type: 'apiKey', in: 'header', name: 'project-api-key' }, 'project-api-key')
     .setTitle('LogDash')
     .build();
 
@@ -26,6 +24,8 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
+  console.log(getEnvConfig());
 
   await app.init();
   await app.listen(process.env.PORT ?? 3000);

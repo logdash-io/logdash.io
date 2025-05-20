@@ -139,7 +139,7 @@ export const EnvConfigs: EnvConfigs = {
       chatId: '-1002535913992',
     },
     stripe: {
-      earlyBirdPriceId: process.env.EARLY_BIRD_PRICE_ID!,
+      earlyBirdPriceId: process.env.STRIPE_EARLY_BIRD_PRICE_ID!,
       successUrl: 'https://dev.logdash.io/callbacks/payments/purchase-success',
       returnFromBillingUrl: 'https://dev.logdash.io/clusters',
       apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,
@@ -198,7 +198,7 @@ export const EnvConfigs: EnvConfigs = {
       chatId: '-1002535913992',
     },
     stripe: {
-      earlyBirdPriceId: process.env.EARLY_BIRD_PRICE_ID!,
+      earlyBirdPriceId: process.env.STRIPE_EARLY_BIRD_PRICE_ID!,
       successUrl: 'http://localhost:5173/callbacks/payments/purchase-success',
       returnFromBillingUrl: 'http://localhost:5173/clusters',
       apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,
