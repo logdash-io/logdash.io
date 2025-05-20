@@ -3,12 +3,14 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { RecordMetricDto } from '../ingestion/dto/record-metric.dto';
 import { MetricIngestionService } from '../ingestion/metric-ingestion.service';
 import { MetricAggregationService } from './metric-aggregation.service';
+import { Logger } from '@logdash/js-sdk';
 
 @Injectable()
 export class MetricQueueingService {
   constructor(
     private readonly metricIngestionService: MetricIngestionService,
     private readonly metricAggregationService: MetricAggregationService,
+    private readonly logger: Logger,
   ) {}
 
   public queueMetric(dto: RecordMetricDto): void {
@@ -29,6 +31,10 @@ export class MetricQueueingService {
       return;
     }
 
-    await this.metricIngestionService.recordMetrics(aggregatedDtos);
+    try {
+      await this.metricIngestionService.recordMetrics(aggregatedDtos);
+    } catch (error) {
+      this.logger.error('Error while recording metrics', { errorMessage: error.message });
+    }
   }
 }
