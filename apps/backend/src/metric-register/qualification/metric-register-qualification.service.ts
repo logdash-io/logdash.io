@@ -23,18 +23,14 @@ export class MetricRegisterQualificationService {
     private readonly logger: Logger,
   ) {}
 
-  public async qualifyMetrics(
-    dtos: QualifyMetricDto[],
-  ): Promise<QualifyMetricDto[]> {
+  public async qualifyMetrics(dtos: QualifyMetricDto[]): Promise<QualifyMetricDto[]> {
     const metricsSplitByProject = groupBy(dtos, 'projectId');
 
     const qualifiedMetricsAlreadyRegistered: QualifyMetricDto[] = [];
     const qualifiedMetricsToRegister: QualifyMetricDto[] = [];
     const notQualifiedMetrics: QualifyMetricDto[] = [];
 
-    for (const [projectId, sameProjectDtos] of Object.entries(
-      metricsSplitByProject,
-    )) {
+    for (const [projectId, sameProjectDtos] of Object.entries(metricsSplitByProject)) {
       const qualificationResult = await this.qualifyMetricsForProject(
         projectId,
         sameProjectDtos.map((dto) => dto.metricName),
@@ -76,10 +72,7 @@ export class MetricRegisterQualificationService {
       })),
     );
 
-    return [
-      ...qualifiedMetricsAlreadyRegistered,
-      ...qualifiedMetricsToRegister,
-    ];
+    return [...qualifiedMetricsAlreadyRegistered, ...qualifiedMetricsToRegister];
   }
 
   private async qualifyMetricsForProject(
@@ -96,8 +89,7 @@ export class MetricRegisterQualificationService {
 
     const tier = await this.projectReadCachedService.readTier(projectId);
 
-    const allowedNumberOfMetrics =
-      getProjectPlanConfig(tier).metrics.maxMetricsRegisterEntries;
+    const allowedNumberOfMetrics = getProjectPlanConfig(tier).metrics.maxMetricsRegisterEntries;
 
     const notRegisteredMetricNames: string[] = metricNamesCandidates.filter(
       (candidate) => !registeredMetricNamesSet.has(candidate),
@@ -111,8 +103,7 @@ export class MetricRegisterQualificationService {
       };
     }
 
-    const numberOfFreeSpots =
-      allowedNumberOfMetrics - registeredMetricNamesSet.size;
+    const numberOfFreeSpots = allowedNumberOfMetrics - registeredMetricNamesSet.size;
 
     if (numberOfFreeSpots >= notRegisteredMetricNames.length) {
       return {
@@ -122,10 +113,7 @@ export class MetricRegisterQualificationService {
       };
     }
 
-    const metricsWhichCanBeRegistered = notRegisteredMetricNames.slice(
-      0,
-      numberOfFreeSpots,
-    );
+    const metricsWhichCanBeRegistered = notRegisteredMetricNames.slice(0, numberOfFreeSpots);
 
     const metricsWhichCantBeRegistered = notRegisteredMetricNames.slice(
       numberOfFreeSpots,
