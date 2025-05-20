@@ -19,7 +19,7 @@ jobs:
         uses: './.github/templates/build-and-push'
         with:
           context: ./apps/backend
-          file: ./Dockerfile
+          file: ./apps/backend/Dockerfile
           dockerhub-username: ${{ secrets.BACKEND_DOCKERHUB_USERNAME }}
           dockerhub-token: ${{ secrets.BACKEND_DOCKERHUB_TOKEN }}
           image-name: ablaszkiewicz/logdash-backend-local
@@ -43,7 +43,7 @@ jobs:
           stripe-signature: ${{ secrets.BACKEND_LOCAL_STRIPE_SIGNATURE }}
           our-env: local
           redis-url: ${{ secrets.BACKEND_LOCAL_REDIS_URL }}
-          early-bird-price-id: ${{ secrets.BACKEND_LOCAL_EARLY_BIRD_PRICE_ID }}
+          stripe-early-bird-price-id: ${{ secrets.BACKEND_LOCAL_STRIPE_EARLY_BIRD_PRICE_ID }}
           demo-dashboard-api-key: ${{ secrets.BACKEND_LOCAL_DEMO_DASHBOARD_API_KEY }}
           logdash-api-key: ${{ secrets.BACKEND_LOCAL_LOGDASH_API_KEY }}
           telegram-token: ${{ secrets.BACKEND_LOCAL_TELEGRAM_TOKEN }}

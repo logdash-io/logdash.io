@@ -40,7 +40,7 @@ inputs:
     required: true
   redis-url:
     required: true
-  early-bird-price-id:
+  stripe-early-bird-price-id:
     required: false
   demo-dashboard-api-key:
     required: false
@@ -77,7 +77,7 @@ runs:
           -e STRIPE_SIGNATURE=${{ inputs.stripe-signature }} \
           -e OUR_ENV=${{ inputs.our-env }} \
           -e REDIS_URL=${{ inputs.redis-url }} \
-          -e EARLY_BIRD_PRICE_ID=${{ inputs.early-bird-price-id }} \
+          -e STRIPE_EARLY_BIRD_PRICE_ID=${{ inputs.stripe-early-bird-price-id }} \
           -e DEMO_DASHBOARD_API_KEY=${{ inputs.demo-dashboard-api-key }} \
           -e LOGDASH_API_KEY=${{ inputs.logdash-api-key }} \
           -e TELEGRAM_TOKEN=${{ inputs.telegram-token }} \

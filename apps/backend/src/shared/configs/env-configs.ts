@@ -77,7 +77,7 @@ export const EnvConfigs: EnvConfigs = {
       chatId: '-1002637928179',
     },
     stripe: {
-      earlyBirdPriceId: process.env.EARLY_BIRD_PRICE_ID!,
+      earlyBirdPriceId: process.env.STRIPE_EARLY_BIRD_PRICE_ID!,
       successUrl: 'https://logdash.io/callbacks/payments/purchase-success',
       returnFromBillingUrl: 'https://logdash.io/clusters',
       apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,
