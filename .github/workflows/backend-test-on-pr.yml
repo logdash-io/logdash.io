@@ -6,6 +6,7 @@ on:
       - '**'
     paths:
       - 'apps/backend/**'
+      - '.github/workflows/**'
 
 jobs:
   test:
