@@ -52,6 +52,11 @@ jobs:
           stripe-signature: ${{ secrets.PROD_STRIPE_SIGNATURE }}
           our-env: prod
           redis-url: ${{ secrets.PROD_REDIS_URL }}
+          early-bird-price-id: ${{ secrets.BACKEND_PROD_EARLY_BIRD_PRICE_ID }}
+          demo-dashboard-api-key: ${{ secrets.BACKEND_PROD_DEMO_DASHBOARD_API_KEY }}
+          logdash-api-key: ${{ secrets.BACKEND_PROD_LOGDASH_API_KEY }}
+          telegram-token: ${{ secrets.BACKEND_PROD_TELEGRAM_TOKEN }}
+          whitelisted-emails: ${{ secrets.BACKEND_PROD_WHITELISTED_EMAILS }}
       - name: Prune
         uses: './.github/templates/prune'
         with:

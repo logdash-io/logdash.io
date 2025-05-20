@@ -43,3 +43,8 @@ jobs:
           stripe-signature: ${{ secrets.BACKEND_LOCAL_STRIPE_SIGNATURE }}
           our-env: local
           redis-url: ${{ secrets.BACKEND_LOCAL_REDIS_URL }}
+          early-bird-price-id: ${{ secrets.BACKEND_LOCAL_EARLY_BIRD_PRICE_ID }}
+          demo-dashboard-api-key: ${{ secrets.BACKEND_LOCAL_DEMO_DASHBOARD_API_KEY }}
+          logdash-api-key: ${{ secrets.BACKEND_LOCAL_LOGDASH_API_KEY }}
+          telegram-token: ${{ secrets.BACKEND_LOCAL_TELEGRAM_TOKEN }}
+          whitelisted-emails: ${{ secrets.BACKEND_LOCAL_WHITELISTED_EMAILS }}
