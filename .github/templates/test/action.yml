@@ -8,7 +8,6 @@ runs:
       uses: actions/setup-node@v3
       with:
         node-version: 20.x
-        cache: 'npm'
 
     - name: Install dependencies
       run: cd root/apps/backend && npm ci
