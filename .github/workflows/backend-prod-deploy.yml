@@ -29,29 +29,29 @@ jobs:
         with:
           context: ./apps/backend
           file: ./Dockerfile
-          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
-          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub-username: ${{ secrets.BACKEND_DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.BACKEND_DOCKERHUB_TOKEN }}
           image-name: ablaszkiewicz/logdash-backend-prod
       - name: Deploy
         uses: './.github/templates/deploy-container'
         with:
-          host: ${{ secrets.PROD_SSH_HOST }}
-          username: ${{ secrets.PROD_SSH_USER }}
-          port: ${{ secrets.PROD_SSH_PORT }}
-          ssh-private-key: ${{ secrets.PROD_SSH_KEY }}
+          host: ${{ secrets.BACKEND_PROD_SSH_HOST }}
+          username: ${{ secrets.BACKEND_PROD_SSH_USER }}
+          port: ${{ secrets.BACKEND_PROD_SSH_PORT }}
+          ssh-private-key: ${{ secrets.BACKEND_PROD_SSH_KEY }}
           server-port: 80
           application-port: 3000
           image-name: ablaszkiewicz/logdash-backend-prod
           container-name: logdash-backend-prod
-          mongo-url: ${{ secrets.PROD_MONGO_URL }}
-          github-oauth-client-id: ${{ secrets.PROD_GITHUB_OAUTH_CLIENT_ID }}
-          github-oauth-client-secret: ${{ secrets.PROD_GITHUB_OAUTH_CLIENT_SECRET }}
-          resend-api-key: ${{ secrets.PROD_RESEND_API_KEY }}
+          mongo-url: ${{ secrets.BACKEND_PROD_MONGO_URL }}
+          github-oauth-client-id: ${{ secrets.BACKEND_PROD_GITHUB_OAUTH_CLIENT_ID }}
+          github-oauth-client-secret: ${{ secrets.BACKEND_PROD_GITHUB_OAUTH_CLIENT_SECRET }}
+          resend-api-key: ${{ secrets.BACKEND_PROD_RESEND_API_KEY }}
           resend-audience-enabled: 'true'
-          stripe-api-key-secret: ${{ secrets.PROD_STRIPE_API_KEY_SECRET }}
-          stripe-signature: ${{ secrets.PROD_STRIPE_SIGNATURE }}
+          stripe-api-key-secret: ${{ secrets.BACKEND_PROD_STRIPE_API_KEY_SECRET }}
+          stripe-signature: ${{ secrets.BACKEND_PROD_STRIPE_SIGNATURE }}
           our-env: prod
-          redis-url: ${{ secrets.PROD_REDIS_URL }}
+          redis-url: ${{ secrets.BACKEND_PROD_REDIS_URL }}
           stripe-early-bird-price-id: ${{ secrets.BACKEND_PROD_STRIPE_EARLY_BIRD_PRICE_ID }}
           demo-dashboard-api-key: ${{ secrets.BACKEND_PROD_DEMO_DASHBOARD_API_KEY }}
           logdash-api-key: ${{ secrets.BACKEND_PROD_LOGDASH_API_KEY }}
@@ -61,7 +61,7 @@ jobs:
       - name: Prune
         uses: './.github/templates/prune'
         with:
-          host: ${{ secrets.PROD_SSH_HOST }}
-          username: ${{ secrets.PROD_SSH_USER }}
-          port: ${{ secrets.PROD_SSH_PORT }}
-          ssh-private-key: ${{ secrets.PROD_SSH_KEY }}
+          host: ${{ secrets.BACKEND_PROD_SSH_HOST }}
+          username: ${{ secrets.BACKEND_PROD_SSH_USER }}
+          port: ${{ secrets.BACKEND_PROD_SSH_PORT }}
+          ssh-private-key: ${{ secrets.BACKEND_PROD_SSH_KEY }}

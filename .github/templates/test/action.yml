@@ -18,3 +18,4 @@ runs:
       shell: bash
       env:
         OUR_ENV: 'dev'
+        AUTH_JWT_SECRET: 'test'
