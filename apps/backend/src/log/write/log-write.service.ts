@@ -57,7 +57,7 @@ export class LogWriteService {
     await this.logModel.deleteMany({ projectId });
   }
 
-  @Cron(CronExpression.EVERY_SECOND)
+  // @Cron(CronExpression.EVERY_SECOND)
   public async simulateOneSecondTraffic(): Promise<void> {
     if (process.env.NODE_ENV === 'test' || getOurEnv() === OurEnv.Prod) {
       return;
