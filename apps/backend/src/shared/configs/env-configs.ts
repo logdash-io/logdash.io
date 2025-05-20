@@ -55,6 +55,9 @@ interface EnvConfig {
     enabled: boolean;
     apiKey: string;
   };
+  auth: {
+    jwtSecret: string;
+  };
 }
 
 interface EnvConfigs {
@@ -119,6 +122,9 @@ export const EnvConfigs: EnvConfigs = {
       enabled: true,
       apiKey: process.env.RESEND_API_KEY!,
     },
+    auth: {
+      jwtSecret: process.env.AUTH_JWT_SECRET!,
+    },
   },
   [OurEnv.Dev]: {
     emailLoginWhitelist: {
@@ -175,6 +181,9 @@ export const EnvConfigs: EnvConfigs = {
       enabled: true,
       apiKey: process.env.RESEND_API_KEY!,
     },
+    auth: {
+      jwtSecret: process.env.AUTH_JWT_SECRET!,
+    },
   },
   [OurEnv.Local]: {
     emailLoginWhitelist: {
@@ -230,6 +239,9 @@ export const EnvConfigs: EnvConfigs = {
     resend: {
       enabled: true,
       apiKey: process.env.RESEND_API_KEY!,
+    },
+    auth: {
+      jwtSecret: process.env.AUTH_JWT_SECRET!,
     },
   },
 };
