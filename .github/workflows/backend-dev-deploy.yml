@@ -26,7 +26,7 @@ jobs:
         uses: './.github/templates/build-and-push'
         with:
           context: ./apps/backend
-          file: ./Dockerfile
+          file: ./apps/backend/Dockerfile
           dockerhub-username: ${{ secrets.BACKEND_DOCKERHUB_USERNAME }}
           dockerhub-token: ${{ secrets.BACKEND_DOCKERHUB_TOKEN }}
           image-name: ablaszkiewicz/logdash-backend-dev
