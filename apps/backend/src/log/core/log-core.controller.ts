@@ -59,11 +59,14 @@ export class LogCoreController {
     @Query() dto: StreamProjectLogsQuery,
     @Param('projectId') projectId: string,
   ): Promise<Observable<any>> {
-    const eventStream$ = fromEvent(
-      this.eventEmitter,
-      LogEvents.LogCreatedEvent,
-    ).pipe(
-      filter((data: LogCreatedEvent) => data.projectId === projectId),
+    const eventStream$ = fromEvent(this.eventEmitter, LogEvents.LogCreatedEvent).pipe(
+      filter((data: LogCreatedEvent) => {
+        console.log('Project ID listening for', data.projectId);
+        console.log('DTO that came', data);
+        console.log();
+
+        return data.projectId === projectId;
+      }),
       map((data) => ({ data })),
     );
 
@@ -101,8 +104,7 @@ export class LogCoreController {
     @Body() dto: CreateLogBody,
     @Headers('project-api-key') apiKeyValue: string,
   ): Promise<SuccessResponse> {
-    const projectId =
-      await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
+    const projectId = await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
 
     await this.logRateLimitService.readAndIncrementLogsCount(projectId);
 
@@ -135,9 +137,7 @@ export class LogCoreController {
     @Query() dto: ReadLogsQuery,
   ): Promise<LogSerialized[]> {
     if ((dto.lastId && !dto.direction) || (!dto.lastId && dto.direction)) {
-      throw new BadRequestException(
-        'Provide either lastId and direction or neither',
-      );
+      throw new BadRequestException('Provide either lastId and direction or neither');
     }
 
     const logs = await this.logReadService.readMany({
