@@ -7,11 +7,6 @@ on:
       - dev
     paths:
       - 'apps/backend/**'
-  pull_request:
-    branches:
-      - dev
-    paths:
-      - 'apps/backend/**'
 
 jobs:
   test:
