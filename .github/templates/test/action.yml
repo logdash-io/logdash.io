@@ -10,11 +10,11 @@ runs:
         node-version: 20.x
 
     - name: Install dependencies
-      run: cd root/apps/backend && npm ci
+      run: cd apps/backend && npm ci
       shell: bash
 
     - name: Run tests
-      run: cd root/apps/backend && npm run test
+      run: cd apps/backend && npm run test
       shell: bash
       env:
         OUR_ENV: 'dev'
