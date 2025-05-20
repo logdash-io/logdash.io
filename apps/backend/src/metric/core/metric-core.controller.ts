@@ -12,7 +12,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Public } from '../../auth/core/decorators/is-public';
-import { ApiBearerAuth, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiResponse,
+  ApiSecurity,
+  ApiTags,
+} from '@nestjs/swagger';
 import { MetricReadService } from '../read/metric-read.service';
 import { MetricSerialized, SimpleMetric } from './entities/metric.normalized';
 import { SuccessResponse } from '../../shared/responses/success.response';
@@ -49,17 +54,15 @@ export class MetricCoreController {
     @Body() dto: RecordMetricBody,
     @Headers('project-api-key') apiKeyValue: string,
   ): Promise<SuccessResponse> {
+    const projectId =
+      await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
+
+    await this.metricQueueingService.queueMetric({
+      ...dto,
+      projectId,
+    });
+
     return new SuccessResponse();
-
-    // const projectId =
-    //   await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
-
-    // await this.metricQueueingService.queueMetric({
-    //   ...dto,
-    //   projectId,
-    // });
-
-    // return new SuccessResponse();
   }
 
   @DemoEndpoint()
@@ -69,10 +72,14 @@ export class MetricCoreController {
   public async streamProjectMetrics(
     @Param('projectId') projectId: string,
   ): Promise<Observable<any>> {
-    const eventStream$ = fromEvent(this.eventEmitter, MetricEvents.MetricCreatedEvent).pipe(
+    const eventStream$ = fromEvent(
+      this.eventEmitter,
+      MetricEvents.MetricCreatedEvent,
+    ).pipe(
       filter(
         (data: MetricCreatedEvent) =>
-          data.projectId === projectId && data.granularity !== MetricGranularity.AllTime,
+          data.projectId === projectId &&
+          data.granularity !== MetricGranularity.AllTime,
       ),
       map((data: MetricCreatedEvent) => ({ data })),
     );
@@ -96,18 +103,23 @@ export class MetricCoreController {
     @Param('projectId') projectId: string,
     @Param('metricRegisterEntryId') metricRegisterEntryId: string,
   ): Promise<MetricSerialized[]> {
-    const metricRegisterEntry =
-      await this.metricRegisterReadService.readById(metricRegisterEntryId);
+    const metricRegisterEntry = await this.metricRegisterReadService.readById(
+      metricRegisterEntryId,
+    );
 
     if (!metricRegisterEntry) {
       throw new NotFoundException('Metric register entry not found');
     }
 
     if (metricRegisterEntry.projectId !== projectId) {
-      throw new ForbiddenException('Metric register entry does not belong to this project');
+      throw new ForbiddenException(
+        'Metric register entry does not belong to this project',
+      );
     }
 
-    const metrics = await this.metricReadService.readByMetricRegisterEntryId(metricRegisterEntryId);
+    const metrics = await this.metricReadService.readByMetricRegisterEntryId(
+      metricRegisterEntryId,
+    );
 
     return MetricSerializer.serializeMany(metrics, [metricRegisterEntry]);
   }
@@ -118,7 +130,9 @@ export class MetricCoreController {
   @ApiBearerAuth()
   @Get('projects/:projectId/metrics')
   @ApiResponse({ type: SimpleMetric, isArray: true })
-  public async readCurrentMetrics(@Param('projectId') projectId: string): Promise<SimpleMetric[]> {
+  public async readCurrentMetrics(
+    @Param('projectId') projectId: string,
+  ): Promise<SimpleMetric[]> {
     const metricRegisterEntries =
       await this.metricRegisterReadService.readBelongingToProject(projectId);
 

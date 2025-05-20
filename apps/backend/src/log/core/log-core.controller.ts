@@ -100,28 +100,26 @@ export class LogCoreController {
     @Body() dto: CreateLogBody,
     @Headers('project-api-key') apiKeyValue: string,
   ): Promise<SuccessResponse> {
+    const projectId = await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
+
+    await this.logRateLimitService.readAndIncrementLogsCount(projectId);
+
+    const result = this.logQueueingService.queueLog({
+      ...dto,
+      createdAt: new Date(dto.createdAt),
+      projectId,
+    });
+
+    this.logEventEmitter.emitLogCreatedEvent({
+      id: result.id,
+      createdAt: dto.createdAt,
+      projectId,
+      level: dto.level,
+      message: dto.message,
+      sequenceNumber: dto.sequenceNumber,
+    });
+
     return new SuccessResponse();
-
-    // const projectId = await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
-
-    // await this.logRateLimitService.readAndIncrementLogsCount(projectId);
-
-    // const result = this.logQueueingService.queueLog({
-    //   ...dto,
-    //   createdAt: new Date(dto.createdAt),
-    //   projectId,
-    // });
-
-    // this.logEventEmitter.emitLogCreatedEvent({
-    //   id: result.id,
-    //   createdAt: dto.createdAt,
-    //   projectId,
-    //   level: dto.level,
-    //   message: dto.message,
-    //   sequenceNumber: dto.sequenceNumber,
-    // });
-
-    // return new SuccessResponse();
   }
 
   @DemoEndpoint()
