@@ -1,0 +1,64 @@
+name: Deploy backend (dev)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Run tests
+        uses: './.github/templates/test'
+        with:
+          github-oauth-client-id: ${{ secrets.DEV_GITHUB_OAUTH_CLIENT_ID }}
+          github-oauth-client-secret: ${{ secrets.DEV_GITHUB_OAUTH_CLIENT_SECRET }}
+          resend-api-key: 'empty'
+          resend-audience-enabled: 'false'
+          stripe-api-key-secret: ${{ secrets.DEV_STRIPE_API_KEY_SECRET }}
+          stripe-signature: ${{ secrets.DEV_STRIPE_SIGNATURE }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build and push
+        uses: './.github/templates/build-and-push'
+        with:
+          context: .
+          file: ./Dockerfile
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          image-name: ablaszkiewicz/logdash-backend-dev
+      - name: Deploy
+        uses: './.github/templates/deploy-container'
+        with:
+          host: ${{ secrets.DEV_SSH_HOST }}
+          username: ${{ secrets.DEV_SSH_USER }}
+          port: ${{ secrets.DEV_SSH_PORT }}
+          ssh-private-key: ${{ secrets.DEV_SSH_KEY }}
+          server-port: 6001
+          application-port: 3000
+          image-name: ablaszkiewicz/logdash-backend-dev
+          container-name: logdash-backend-dev
+          mongo-url: ${{ secrets.DEV_MONGO_URL }}
+          github-oauth-client-id: ${{ secrets.DEV_GITHUB_OAUTH_CLIENT_ID }}
+          github-oauth-client-secret: ${{ secrets.DEV_GITHUB_OAUTH_CLIENT_SECRET }}
+          resend-api-key: 'empty'
+          resend-audience-enabled: 'false'
+          stripe-api-key-secret: ${{ secrets.DEV_STRIPE_API_KEY_SECRET }}
+          stripe-signature: ${{ secrets.DEV_STRIPE_SIGNATURE }}
+          our-env: dev
+          redis-url: ${{ secrets.DEV_REDIS_URL }}
+      - name: Prune
+        uses: './.github/templates/prune'
+        with:
+          host: ${{ secrets.DEV_SSH_HOST }}
+          username: ${{ secrets.DEV_SSH_USER }}
+          port: ${{ secrets.DEV_SSH_PORT }}
+          ssh-private-key: ${{ secrets.DEV_SSH_KEY }}
