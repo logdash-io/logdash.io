@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Rules
+
+- never use `.then()`. Always use normal promises,
+- do not put comments in the code,
+- enums keys are in `ThisCase`. Enum values are in `thisCase`,
+- dtos used for submodules (not for controllers) have file names in this format `some-update.dto.ts`. Class names are in this format `SomeUpdateDto`. Do not put validation in these DTOs,
+- dtos used in core module in controller have proper sufix like `UpdateXBody`, `UpdateXQuery`. If response in custom it is defined as `UpdateXResponse`,
+- always use private/public when defining class methods,
+

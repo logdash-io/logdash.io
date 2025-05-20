@@ -1,0 +1,21 @@
+name: 'Run tests'
+description: 'Runs unit and e2e tests'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: cd root/apps/backend && npm ci
+      shell: bash
+
+    - name: Run tests
+      run: cd root/apps/backend && npm run test
+      shell: bash
+      env:
+        OUR_ENV: 'dev'

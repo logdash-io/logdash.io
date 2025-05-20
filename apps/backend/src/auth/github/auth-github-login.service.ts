@@ -1,0 +1,81 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { CustomJwtService } from '../custom-jwt/custom-jwt.service';
+import { UserReadService } from '../../user/read/user-read.service';
+import { UserWriteService } from '../../user/write/user-write.service';
+import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.enum';
+import { AuthMethod } from '../../user/core/enum/auth-method.enum';
+import { AuthEventEmitter } from '../events/auth-event.emitter';
+import { LoginBody } from './dto/login.body';
+import { TokenResponse } from '../../shared/responses/token.response';
+import { AuthGithubDataService } from './auth-github-data.service';
+import { Logger, Metrics } from '@logdash/js-sdk';
+
+@Injectable()
+export class AuthGithubLoginService {
+  constructor(
+    private readonly jwtService: CustomJwtService,
+    private readonly userReadService: UserReadService,
+    private readonly userWriteService: UserWriteService,
+    private readonly emitter: AuthEventEmitter,
+    private readonly logger: Logger,
+    private readonly authGithubDataService: AuthGithubDataService,
+    private readonly metrics: Metrics,
+  ) {}
+
+  public async login(dto: LoginBody): Promise<TokenResponse> {
+    this.logger.log(`Logging user in...`);
+
+    const accessToken = await this.authGithubDataService.getAccessToken(dto.githubCode);
+
+    const email = await this.authGithubDataService.getGithubEmail(accessToken);
+
+    if (email.length === 0 || !email) {
+      this.logger.error('Email not found in github response');
+      throw Error('Email not found in github response');
+    }
+
+    const user = await this.userReadService.readByEmail(email);
+
+    this.logger.log(`After reading user by email`, { email, userId: user?.id });
+
+    if (!user && !dto.termsAccepted) {
+      this.logger.warn('Can not create new account without accepting terms');
+      throw new BadRequestException('Can not create new account without accepting terms');
+    }
+
+    if (user === null) {
+      const avatarUrl = await this.authGithubDataService.getGithubAvatar(accessToken);
+
+      const user = await this.userWriteService.create({
+        accountClaimStatus: AccountClaimStatus.Claimed,
+        authMethod: AuthMethod.Github,
+        email,
+        avatarUrl,
+        marketingConsent: dto.emailAccepted || false,
+      });
+
+      this.logger.log(`Created new user`, { email, userId: user.id });
+
+      await this.emitter.emitUserRegisteredEvent({
+        authMethod: AuthMethod.Github,
+        email,
+        userId: user.id,
+        emailAccepted: dto.emailAccepted || false,
+      });
+
+      this.metrics.mutate('loginGithub', 1);
+
+      return {
+        token: await this.jwtService.sign({ id: user.id }),
+      };
+    }
+
+    this.logger.log(`Logged in existing user`, { email, userId: user.id });
+
+    this.metrics.mutate('loginGithub', 1);
+
+    return {
+      token: await this.jwtService.sign({ id: user.id }),
+    };
+  }
+}

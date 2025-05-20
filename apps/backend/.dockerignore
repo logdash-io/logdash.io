@@ -1,0 +1,8 @@
+node_modules
+dist
+.github
+test
+.env*
+.flaskenv*
+!.env.project
+!.env.vault

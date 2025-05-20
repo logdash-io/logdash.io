@@ -1,0 +1,18 @@
+name: Run Tests on PR
+
+on:
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - 'apps/backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Run tests
+        uses: './.github/templates/test'
