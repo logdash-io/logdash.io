@@ -61,10 +61,6 @@ export class LogCoreController {
   ): Promise<Observable<any>> {
     const eventStream$ = fromEvent(this.eventEmitter, LogEvents.LogCreatedEvent).pipe(
       filter((data: LogCreatedEvent) => {
-        console.log('Project ID listening for', data.projectId);
-        console.log('DTO that came', data);
-        console.log();
-
         return data.projectId === projectId;
       }),
       map((data) => ({ data })),

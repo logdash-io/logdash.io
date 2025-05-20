@@ -98,7 +98,7 @@ export const EnvConfigs: EnvConfigs = {
     demo: {
       clusterId: '682a50841175bcf07c63bbc4',
       projectId: '68279cf6295a5344e638bfc9',
-      logdashApiKey: '',
+      logdashApiKey: process.env.DEMO_DASHBOARD_API_KEY!,
       logdashHost: 'https://api.logdash.io',
       addTestLogRateLimit: {
         timeWindowSeconds: 60,
@@ -157,7 +157,7 @@ export const EnvConfigs: EnvConfigs = {
     demo: {
       clusterId: '682844d37f296819db10b9a5',
       projectId: '682844d37f296819db10b9a9',
-      logdashApiKey: '',
+      logdashApiKey: process.env.DEMO_DASHBOARD_API_KEY!,
       logdashHost: 'https://dev-api.logdash.io',
       addTestLogRateLimit: {
         timeWindowSeconds: 60,
