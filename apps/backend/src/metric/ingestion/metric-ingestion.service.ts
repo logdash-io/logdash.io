@@ -133,6 +133,7 @@ export class MetricIngestionService {
     if (durationMs > getEnvConfig().metrics.metricCreationDurationWarnThreshold) {
       this.logger.warn(`Recorded metrics`, {
         durationMs,
+        count: upsertDtos.length,
       });
     }
 
