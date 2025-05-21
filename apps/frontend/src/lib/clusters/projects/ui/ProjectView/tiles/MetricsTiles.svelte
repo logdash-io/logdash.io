@@ -7,17 +7,32 @@
 	import MetricsListener from '../../presentational/MetricsListener.svelte';
 	import DataTile from './DataTile.svelte';
 	import MetricTile from './MetricTile.svelte';
-	import { XIcon } from 'lucide-svelte';
+	import { AlertTriangleIcon, XIcon } from 'lucide-svelte';
+	import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte.js';
+	import { userState } from '$lib/shared/user/application/user.state.svelte.js';
+	import { UserTier } from '$lib/shared/types.js';
 
 	const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
 	const isDemoDashboard = $derived(
 		page.url.pathname.includes('/demo-dashboard'),
 	);
+
+	// todo: move this responsibility to exposed config state; postponed cause I don't know yet how much it will grow
+	const metricsLimitPlanDifference = $derived.by(() => {
+		const currentMetricsLimit = exposedConfigState.maxRegisteredMetrics(
+			userState.tier,
+		);
+		const upgradedMetricsLimit = exposedConfigState.maxRegisteredMetrics(
+			UserTier.EARLY_BIRD,
+		);
+
+		return upgradedMetricsLimit / currentMetricsLimit;
+	});
 </script>
 
 {#snippet header()}
 	<div
-		class="bg-primary ring-primary absolute top-0 left-0 z-0 flex h-12 w-full items-start justify-between rounded-t-lg text-sm leading-6 ring"
+		class="bg-primary ring-primary absolute left-0 top-0 z-0 flex h-12 w-full items-start justify-between rounded-t-lg text-sm leading-6 ring"
 	>
 		<div
 			transition:fly={{
@@ -47,6 +62,27 @@
 
 <MetricsListener>
 	<div class="flex flex-col gap-4">
+		<div
+			class="bg-primary/20 text-primary flex w-full items-center gap-2 rounded-lg px-3 py-1.5"
+		>
+			<AlertTriangleIcon class="text-primary h-4 w-4 shrink-0" />
+			<span class="text-sm">
+				{#if userState.tier === UserTier.FREE}
+					<a class="underline" href="/app/api/user/upgrade">
+						Upgrade
+					</a>
+					to add
+					<strong>{metricsLimitPlanDifference}x</strong>
+					more metrics to this project.
+				{:else}
+					<a class="underline" href="mailto:contact@logdash.io">
+						Contact us
+					</a>
+					to add more metrics to this project.
+				{/if}
+			</span>
+		</div>
+
 		{#each metricsState.simplifiedMetrics as metric}
 			<DataTile
 				header={previewedMetricId === metric.id ? header : emptyHeader}

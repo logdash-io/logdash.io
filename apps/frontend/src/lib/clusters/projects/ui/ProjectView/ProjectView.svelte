@@ -154,13 +154,15 @@
 <div class=" flex w-full max-w-full flex-col gap-4 pb-8 sm:flex-row">
 	{#if !isPageVisible}
 		<div
-			transition:fade={{ duration: 200, easing: cubicInOut }}
-			class="bg-base-300/40 absolute top-0 left-0 z-20 h-full w-full backdrop-blur-xs"
+			in:fade={{ duration: 200, easing: cubicInOut }}
+			out:fade={{ delay: 300, duration: 200, easing: cubicInOut }}
+			class="bg-base-300/40 backdrop-blur-xs absolute left-0 top-0 z-20 h-full w-full"
 		></div>
 
 		<div
 			class="bg-secondary text-secondary-content fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg px-3 py-2 shadow-lg sm:bottom-8"
-			transition:fly={{ duration: 200, easing: cubicInOut, y: 50 }}
+			in:fly={{ duration: 200, easing: cubicInOut, y: 50 }}
+			out:fly={{ delay: 300, duration: 200, easing: cubicInOut, y: 50 }}
 		>
 			<div class="flex items-center gap-2">
 				<div class="loading loading-spinner loading-sm"></div>
@@ -209,7 +211,7 @@
 
 				<div class="p-6 xl:p-14">
 					<FlamingoIcon
-						class="pointer-events-none aspect-square w-full rounded-2xl object-cover select-none"
+						class="pointer-events-none aspect-square w-full select-none rounded-2xl object-cover"
 					/>
 				</div>
 

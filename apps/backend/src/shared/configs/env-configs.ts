@@ -214,8 +214,8 @@ export const EnvConfigs: EnvConfigs = {
       maxConcurrentRequests: 10,
     },
     demo: {
-      clusterId: '682844d37f296819db10b9a5',
-      projectId: '682844d37f296819db10b9a9',
+      clusterId: '682cf106d7874ce88faf7426',
+      projectId: '682cf10fd7874ce88faf7431',
       logdashApiKey: process.env.DEMO_DASHBOARD_API_KEY!,
       logdashHost: 'https://local-api.logdash.io',
       addTestLogRateLimit: {

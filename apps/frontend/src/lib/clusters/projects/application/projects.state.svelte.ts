@@ -1,13 +1,11 @@
 import type { Feature } from '$lib/shared/types.js';
 import { arrayToObject } from '$lib/shared/utils/array-to-object';
-import { type Source } from 'sveltekit-sse';
 import type { Project } from '../domain/project';
 
 // todo: divide api calls responsibility from state
 class ProjectsState {
 	private _projects = $state<Record<Project['id'], Project>>({});
 	private _initialized = $state(false);
-	private syncConnection: Source | null = null;
 
 	get projects(): Project[] {
 		return Object.values(this._projects).sort((a, b) => {
