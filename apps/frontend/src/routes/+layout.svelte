@@ -12,11 +12,14 @@
 	import { setContext } from 'svelte';
 	import { uuid } from '$lib';
 	import { logger } from '$lib/shared/logger/index.js';
+	import type { ExposedConfig } from '$lib/shared/exposed-config/domain/exposed-config.js';
+	import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte.js';
 
 	type Props = {
 		children: Snippet;
+		data: { exposedConfig: ExposedConfig };
 	};
-	let { children }: Props = $props();
+	let { children, data }: Props = $props();
 	let scrollContainer: HTMLDivElement;
 	const isDemoDashboard = $derived(
 		page.url.pathname.includes('/demo-dashboard'),
@@ -25,6 +28,10 @@
 	$effect.pre(() => {
 		setContext('tabId', `tab-${uuid()}`);
 		logger.debug('Tab ID:', getContext('tabId'));
+	});
+
+	$effect(() => {
+		exposedConfigState.set(data.exposedConfig);
 	});
 
 	onMount(() => {

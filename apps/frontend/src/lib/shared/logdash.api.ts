@@ -10,6 +10,7 @@ import queryString from 'query-string';
 import { bffLogger } from './bff-logger';
 import type { User } from './user/domain/user';
 import { envConfig } from './utils/env-config';
+import type { ExposedConfig } from './exposed-config/domain/exposed-config.js';
 
 type UnauthorizedHandler = () => void;
 
@@ -298,6 +299,13 @@ class LogdashAPI {
 				ip: client_ip,
 			},
 			access_token,
+		);
+	}
+
+	get_exposed_config(): Promise<ExposedConfig> {
+		return this.get<ExposedConfig>(
+			`${LogdashAPI.v0baseUrl}/exposed_config`,
+			'',
 		);
 	}
 
