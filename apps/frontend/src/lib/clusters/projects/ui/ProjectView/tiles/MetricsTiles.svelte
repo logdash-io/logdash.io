@@ -65,7 +65,7 @@
 
 <MetricsListener>
 	<div class="flex flex-col gap-4">
-		{#if metricsState.simplifiedMetrics.length >= currentMetricsLimit}
+		{#if metricsState.simplifiedMetrics.length >= currentMetricsLimit && !isDemoDashboard}
 			<div
 				class="bg-primary/20 text-primary flex w-full items-center gap-2 rounded-lg px-3 py-1.5"
 			>
