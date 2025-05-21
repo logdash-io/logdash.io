@@ -30,28 +30,36 @@ export class MetricRegisterQualificationService {
     const qualifiedMetricsToRegister: QualifyMetricDto[] = [];
     const notQualifiedMetrics: QualifyMetricDto[] = [];
 
-    for (const [projectId, sameProjectDtos] of Object.entries(metricsSplitByProject)) {
-      const qualificationResult = await this.qualifyMetricsForProject(
-        projectId,
-        sameProjectDtos.map((dto) => dto.metricName),
-      );
+    const qualificationResults = await Promise.all(
+      Object.entries(metricsSplitByProject).map(async ([projectId, sameProjectDtos]) => {
+        const result = await this.qualifyMetricsForProject(
+          projectId,
+          sameProjectDtos.map((dto) => dto.metricName),
+        );
+        return {
+          projectId,
+          result,
+        };
+      }),
+    );
 
+    for (const { projectId, result } of qualificationResults) {
       qualifiedMetricsAlreadyRegistered.push(
-        ...qualificationResult.alreadyRegistered.map((metricName) => ({
+        ...result.alreadyRegistered.map((metricName) => ({
           metricName,
           projectId,
         })),
       );
 
       qualifiedMetricsToRegister.push(
-        ...qualificationResult.canBeRegistered.map((metricName) => ({
+        ...result.canBeRegistered.map((metricName) => ({
           metricName,
           projectId,
         })),
       );
 
       notQualifiedMetrics.push(
-        ...qualificationResult.cantBeRegistered.map((metricName) => ({
+        ...result.cantBeRegistered.map((metricName) => ({
           metricName,
           projectId,
         })),

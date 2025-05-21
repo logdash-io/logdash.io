@@ -14,14 +14,12 @@ export class ProjectReadCachedService {
 
   public async readTier(projectId: string): Promise<ProjectTier> {
     const cacheKey = `project:${projectId}:tier`;
-    const cacheTtlSeconds = 5;
+    const cacheTtlSeconds = 10;
 
     const tier = await this.redisService.get(cacheKey);
 
     if (tier === 'null') {
-      throw Error(
-        'Project not found. You have to wait 5 seconds before trying again',
-      );
+      throw Error('Project not found. You have to wait 5 seconds before trying again');
     }
 
     if (tier !== null) {
@@ -50,9 +48,7 @@ export class ProjectReadCachedService {
     const clusterId = await this.redisService.get(cacheKey);
 
     if (clusterId === 'null') {
-      throw Error(
-        'Project not found. You have to wait 5 seconds before trying again',
-      );
+      throw Error('Project not found. You have to wait 5 seconds before trying again');
     }
 
     if (clusterId !== null) {

@@ -40,28 +40,35 @@ export class MetricIngestionService {
 
     // we get unique metrics by project id and name
     // we need that to get through the registration process
-    const uniqueMetrics = getUniqueObjects(
-      dtos,
-      (dto) => `${dto.projectId}-${dto.name}`,
-    );
+    const uniqueMetrics = getUniqueObjects(dtos, (dto) => `${dto.projectId}-${dto.name}`);
+
+    this.logger.log('Recording metrics. Step1', {
+      durationSoFarMs: new Date().getTime() - now.getTime(),
+    });
 
     // we qualify metrics to check if they are below user limit of registered metrics
-    const qualifiedMetrics =
-      await this.metricRegisterQualificationService.qualifyMetrics(
-        uniqueMetrics.map((dto) => ({
-          metricName: dto.name,
-          projectId: dto.projectId,
-        })),
-      );
+    const qualifiedMetrics = await this.metricRegisterQualificationService.qualifyMetrics(
+      uniqueMetrics.map((dto) => ({
+        metricName: dto.name,
+        projectId: dto.projectId,
+      })),
+    );
+
+    this.logger.log('Recording metrics. Step2', {
+      durationSoFarMs: new Date().getTime() - now.getTime(),
+    });
 
     // we filter initial dtos to only include qualified metrics
     const qualifiedDtos = dtos.filter((dto) =>
       qualifiedMetrics.some(
         (qualifiedMetric) =>
-          qualifiedMetric.metricName === dto.name &&
-          qualifiedMetric.projectId === dto.projectId,
+          qualifiedMetric.metricName === dto.name && qualifiedMetric.projectId === dto.projectId,
       ),
     );
+
+    this.logger.log('Recording metrics. Step3', {
+      durationSoFarMs: new Date().getTime() - now.getTime(),
+    });
 
     // map of projectId-metricName pairs to metric register entries ids
     const metricsRegisterEntriesMap =
@@ -72,13 +79,16 @@ export class MetricIngestionService {
         })),
       );
 
+    this.logger.log('Recording metrics. Step4', {
+      durationSoFarMs: new Date().getTime() - now.getTime(),
+    });
+
     // we need to enrich initial dtos with actual metric register entries ids
     // this is because metrics are identified by metric register entry id. Not
     // by project id and metric name
     const enrichedDtos = qualifiedDtos.map((dto) => ({
       ...dto,
-      metricRegisterEntryId:
-        metricsRegisterEntriesMap[`${dto.projectId}-${dto.name}`],
+      metricRegisterEntryId: metricsRegisterEntriesMap[`${dto.projectId}-${dto.name}`],
     }));
 
     // we have to read baseline values of these metrics to know what to "add" to
@@ -89,17 +99,16 @@ export class MetricIngestionService {
       metricRegisterEntryIds: Object.values(metricsRegisterEntriesMap),
     });
 
+    this.logger.log('Recording metrics. Step5', {
+      durationSoFarMs: new Date().getTime() - now.getTime(),
+    });
+
     for (const dto of enrichedDtos) {
-      const bucketedDates = MetricBucketingService.splitDateToBuckets(
-        new Date(),
-      );
+      const bucketedDates = MetricBucketingService.splitDateToBuckets(new Date());
 
       const baseline = baselineValues[dto.metricRegisterEntryId] || 0;
 
-      const value =
-        dto.operation === MetricOperation.Change
-          ? dto.value + baseline
-          : dto.value;
+      const value = dto.operation === MetricOperation.Change ? dto.value + baseline : dto.value;
 
       upsertDtos.push(
         ...bucketedDates.map((bucket) => ({
@@ -113,8 +122,16 @@ export class MetricIngestionService {
       );
     }
 
+    this.logger.log('Recording metrics. Step6', {
+      durationSoFarMs: new Date().getTime() - now.getTime(),
+    });
+
     // save metrics
     await this.metricWriteService.upsertMany(upsertDtos);
+
+    this.logger.log('Recording metrics. Step7', {
+      durationSoFarMs: new Date().getTime() - now.getTime(),
+    });
 
     // create a mapping from register entry ID to metric name
     const metricRegisterIdToNameMap = new Map<string, string>();
@@ -129,9 +146,7 @@ export class MetricIngestionService {
         metric.granularity === MetricGranularity.AllTime
           ? 'all-time'
           : parseFlexibleDate(metric.timeBucket).toISOString(),
-      name:
-        metricRegisterIdToNameMap.get(metric.metricRegisterEntryId) ||
-        'unknown',
+      name: metricRegisterIdToNameMap.get(metric.metricRegisterEntryId) || 'unknown',
       value: metric.value,
       granularity: metric.granularity,
       projectId: metric.projectId,
@@ -143,9 +158,7 @@ export class MetricIngestionService {
 
     const durationMs = new Date().getTime() - now.getTime();
 
-    if (
-      durationMs > getEnvConfig().metrics.metricCreationDurationWarnThreshold
-    ) {
+    if (durationMs > getEnvConfig().metrics.metricCreationDurationWarnThreshold) {
       this.logger.warn(`Recorded metrics`, {
         durationMs,
       });
