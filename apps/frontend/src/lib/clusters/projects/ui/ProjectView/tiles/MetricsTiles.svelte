@@ -16,6 +16,9 @@
 	const isDemoDashboard = $derived(
 		page.url.pathname.includes('/demo-dashboard'),
 	);
+	const currentMetricsLimit = $derived(
+		exposedConfigState.maxRegisteredMetrics(userState.tier),
+	);
 
 	// todo: move this responsibility to exposed config state; postponed cause I don't know yet how much it will grow
 	const metricsLimitPlanDifference = $derived.by(() => {
@@ -62,26 +65,28 @@
 
 <MetricsListener>
 	<div class="flex flex-col gap-4">
-		<div
-			class="bg-primary/20 text-primary flex w-full items-center gap-2 rounded-lg px-3 py-1.5"
-		>
-			<AlertTriangleIcon class="text-primary h-4 w-4 shrink-0" />
-			<span class="text-sm">
-				{#if userState.tier === UserTier.FREE}
-					<a class="underline" href="/app/api/user/upgrade">
-						Upgrade
-					</a>
-					to add
-					<strong>{metricsLimitPlanDifference}x</strong>
-					more metrics to this project.
-				{:else}
-					<a class="underline" href="mailto:contact@logdash.io">
-						Contact us
-					</a>
-					to add more metrics to this project.
-				{/if}
-			</span>
-		</div>
+		{#if metricsState.simplifiedMetrics.length >= currentMetricsLimit}
+			<div
+				class="bg-primary/20 text-primary flex w-full items-center gap-2 rounded-lg px-3 py-1.5"
+			>
+				<AlertTriangleIcon class="text-primary h-4 w-4 shrink-0" />
+				<span class="text-sm">
+					{#if userState.tier === UserTier.FREE}
+						<a class="underline" href="/app/api/user/upgrade">
+							Upgrade
+						</a>
+						to add
+						<strong>{metricsLimitPlanDifference}x</strong>
+						more metrics to this project.
+					{:else}
+						<a class="underline" href="mailto:contact@logdash.io">
+							Contact us
+						</a>
+						to add more metrics to this project.
+					{/if}
+				</span>
+			</div>
+		{/if}
 
 		{#each metricsState.simplifiedMetrics as metric}
 			<DataTile
