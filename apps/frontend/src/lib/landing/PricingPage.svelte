@@ -31,6 +31,7 @@
 					'Great for kicking the tires or for your personal stuff',
 				features: [
 					{ name: 'Up to 5 projects', included: true },
+					{ name: 'Up to 2 metrics per project', included: true },
 					{ name: 'Access 1,000 most recent logs', included: true },
 					{ name: '1 week metrics retention', included: true },
 					{
@@ -55,6 +56,7 @@
 				features: [
 					{ name: 'Everything in Hobby, plus:', included: true },
 					{ name: 'Up to 20 projects', included: true },
+					{ name: 'Up to 10 metrics per project', included: true },
 					{
 						name: 'Lifetime access to 10,000 most recent logs',
 						included: true,
