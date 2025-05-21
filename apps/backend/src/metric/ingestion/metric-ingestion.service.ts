@@ -42,10 +42,6 @@ export class MetricIngestionService {
     // we need that to get through the registration process
     const uniqueMetrics = getUniqueObjects(dtos, (dto) => `${dto.projectId}-${dto.name}`);
 
-    this.logger.log('Recording metrics. Step1', {
-      durationSoFarMs: new Date().getTime() - now.getTime(),
-    });
-
     // we qualify metrics to check if they are below user limit of registered metrics
     const qualifiedMetrics = await this.metricRegisterQualificationService.qualifyMetrics(
       uniqueMetrics.map((dto) => ({
@@ -53,10 +49,6 @@ export class MetricIngestionService {
         projectId: dto.projectId,
       })),
     );
-
-    this.logger.log('Recording metrics. Step2', {
-      durationSoFarMs: new Date().getTime() - now.getTime(),
-    });
 
     // we filter initial dtos to only include qualified metrics
     const qualifiedDtos = dtos.filter((dto) =>
@@ -66,10 +58,6 @@ export class MetricIngestionService {
       ),
     );
 
-    this.logger.log('Recording metrics. Step3', {
-      durationSoFarMs: new Date().getTime() - now.getTime(),
-    });
-
     // map of projectId-metricName pairs to metric register entries ids
     const metricsRegisterEntriesMap =
       await this.metricRegisterReadService.readIdsFromProjectIdMetricNamePairs(
@@ -78,10 +66,6 @@ export class MetricIngestionService {
           projectId: qualifiedMetric.projectId,
         })),
       );
-
-    this.logger.log('Recording metrics. Step4', {
-      durationSoFarMs: new Date().getTime() - now.getTime(),
-    });
 
     // we need to enrich initial dtos with actual metric register entries ids
     // this is because metrics are identified by metric register entry id. Not
@@ -97,10 +81,6 @@ export class MetricIngestionService {
     // todo - add batching
     const baselineValues = await this.metricReadService.readBaselineValues({
       metricRegisterEntryIds: Object.values(metricsRegisterEntriesMap),
-    });
-
-    this.logger.log('Recording metrics. Step5', {
-      durationSoFarMs: new Date().getTime() - now.getTime(),
     });
 
     for (const dto of enrichedDtos) {
@@ -122,16 +102,8 @@ export class MetricIngestionService {
       );
     }
 
-    this.logger.log('Recording metrics. Step6', {
-      durationSoFarMs: new Date().getTime() - now.getTime(),
-    });
-
     // save metrics
     await this.metricWriteService.upsertMany(upsertDtos);
-
-    this.logger.log('Recording metrics. Step7', {
-      durationSoFarMs: new Date().getTime() - now.getTime(),
-    });
 
     // create a mapping from register entry ID to metric name
     const metricRegisterIdToNameMap = new Map<string, string>();
