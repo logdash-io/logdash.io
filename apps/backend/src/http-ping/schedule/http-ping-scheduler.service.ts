@@ -5,6 +5,7 @@ import axios from 'axios';
 import { HttpMonitorNormalized } from 'src/http-monitor/core/entities/http-monitor.interface';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
+import { HttpPingEventEmitter } from '../events/http-ping-event.emitter';
 import { CreateHttpPingDto } from '../write/dto/create-http-ping.dto';
 import { HttpPingWriteService } from '../write/http-ping-write.service';
 
@@ -20,6 +21,7 @@ export class HttpPingSchedulerService {
   constructor(
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpPingWriteService: HttpPingWriteService,
+    private readonly httpPingEventEmitter: HttpPingEventEmitter,
     private readonly logger: Logger,
     private readonly metrics: Metrics,
     private readonly averageRecorder: AverageRecorder,
@@ -103,6 +105,10 @@ export class HttpPingSchedulerService {
 
   private async saveCompletedPings(pings: CreateHttpPingDto[]): Promise<void> {
     if (pings.length === 0) return;
-    await this.httpPingWriteService.createMany(pings);
+    const savedPings = await this.httpPingWriteService.createMany(pings);
+
+    for (const ping of savedPings) {
+      await this.httpPingEventEmitter.emitHttpPingCreatedEvent({ ...ping });
+    }
   }
 }

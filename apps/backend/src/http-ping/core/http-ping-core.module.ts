@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ClusterReadModule } from 'src/cluster/read/cluster-read.module';
 import { HttpMonitorReadModule } from 'src/http-monitor/read/http-monitor-read.module';
 import { ProjectReadModule } from 'src/project/read/project-read.module';
+import { HttpPingEventModule } from '../events/http-ping-event.module';
 import { HttpPingReadModule } from '../read/http-ping-read.module';
 import { HttpPingSchedulerModule } from '../schedule/http-ping-scheduler.module';
 import { HttpPingTtlModule } from '../ttl/http-ping-ttl.module';
@@ -19,6 +20,7 @@ import { HttpPingCoreController } from './http-ping-core.controller';
     HttpMonitorReadModule,
     ClusterReadModule,
     ProjectReadModule,
+    HttpPingEventModule,
   ],
   controllers: [HttpPingCoreController],
 })
