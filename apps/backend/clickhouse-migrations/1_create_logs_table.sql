@@ -1,9 +1,9 @@
 CREATE TABLE logs (
-    id UUID DEFAULT generateUUIDv4(),
+    id FixedString(24),
     
     project_id FixedString(24),
     
-    timestamp DateTime64(3) DEFAULT now64(3),
+    created_at DateTime64(3) DEFAULT now64(3),
     sequence_number UInt32 DEFAULT 0,
 
     level Enum8(
@@ -19,8 +19,8 @@ CREATE TABLE logs (
     message String,
 ) ENGINE = MergeTree()
 
-PARTITION BY toYYYYMMDD(timestamp)
+PARTITION BY toYYYYMMDD(created_at)
 
-ORDER BY (project_id, timestamp, sequence_number)
+ORDER BY (project_id, created_at, sequence_number)
 
 SETTINGS index_granularity = 8192; 

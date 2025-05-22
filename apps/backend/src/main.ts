@@ -3,11 +3,23 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { getEnvConfig } from './shared/configs/env-configs';
+import * as basicAuth from 'express-basic-auth';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.enableCors({ origin: '*' });
+
+  const envConfig = getEnvConfig();
+
+  app.use(
+    /^\/docs/,
+    basicAuth({
+      users: { [envConfig.swagger.username]: envConfig.swagger.password },
+      challenge: true,
+      realm: 'LogDash API Documentation',
+    }),
+  );
 
   const config = new DocumentBuilder()
     .addBearerAuth()

@@ -15,11 +15,12 @@ import { MetricRegisterCoreModule } from './metric-register/core/metric-register
 import { MetricCoreModule } from './metric/core/metric-core.module';
 import { StripeModule } from './payments/stripe/stripe.module';
 import { ProjectCoreModule } from './project/core/project-core.module';
+import { getEnvConfig } from './shared/configs/env-configs';
 import { LogdashModule } from './shared/logdash/logdash.module';
 import { RedisModule } from './shared/redis/redis.module';
 import { SupportCoreModule } from './support/core/support-core.module';
 import { UserCoreModule } from './user/core/user-core.module';
-import { getEnvConfig } from './shared/configs/env-configs';
+import { ClickhouseModule } from './clickhouse/clickhouse.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { getEnvConfig } from './shared/configs/env-configs';
     RedisModule.forRoot({
       url: getEnvConfig().redis.url,
     }),
+    ClickhouseModule,
   ],
 })
 export class AppModule {}

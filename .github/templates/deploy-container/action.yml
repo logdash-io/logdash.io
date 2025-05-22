@@ -64,6 +64,9 @@ inputs:
   clickhouse-db:
     required: true
 
+  swagger-password:
+    required: true
+
 runs:
   using: 'composite'
   steps:
@@ -101,4 +104,5 @@ runs:
           -e CLICKHOUSE_USER=${{ inputs.clickhouse-user }} \
           -e CLICKHOUSE_PASSWORD=${{ inputs.clickhouse-password }} \
           -e CLICKHOUSE_DB=${{ inputs.clickhouse-db }} \
+          -e SWAGGER_PASSWORD=${{ inputs.swagger-password }} \
           ${{ inputs.image-name }}

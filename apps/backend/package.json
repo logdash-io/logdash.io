@@ -23,6 +23,7 @@
     "migrate-clickhouse": "dotenv -e .env -- clickhouse-migrations migrate"
   },
   "dependencies": {
+    "@clickhouse/client": "^0.2.10",
     "@logdash/js-sdk": "^1.0.9",
     "@nestjs/axios": "^4.0.0",
     "@nestjs/common": "^11.0.1",
@@ -40,6 +41,7 @@
     "class-validator": "^0.14.1",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
+    "express-basic-auth": "^1.2.1",
     "mongoose": "^8.10.1",
     "node-cache": "^5.1.2",
     "reflect-metadata": "^0.2.2",
@@ -54,6 +56,7 @@
     "@nestjs/testing": "^11.0.1",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.10.16",
+    "@testcontainers/clickhouse": "^11.0.1",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
@@ -68,6 +71,7 @@
     "prettier": "^3.4.2",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
+    "testcontainers": "^11.0.1",
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
@@ -86,9 +90,12 @@
     "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": ["ts-jest", {
-        "tsconfig": "tsconfig.json"
-      }]
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json"
+        }
+      ]
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
@@ -98,6 +105,8 @@
     "setupFiles": [
       "jest-date-mock"
     ],
+    "globalSetup": "<rootDir>/test/utils/global-setup.ts",
+    "globalTeardown": "<rootDir>/test/utils/global-teardown.ts",
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/src/$1"
     }
