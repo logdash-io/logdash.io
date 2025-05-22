@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ApiKeyCoreModule } from './api-key/core/api-key-core.module';
 import { AuthCoreModule } from './auth/core/auth-core.module';
+import { ClickhouseO11yModule } from './clickhouse-o11y/clickhouse-o11y.module';
 import { ClusterCoreModule } from './cluster/core/cluster-core.module';
 import { ResendModule } from './email/resend/resend.module';
 import { ExposedConfigModule } from './exposed-config/exposed-config.module';
@@ -15,11 +16,11 @@ import { MetricRegisterCoreModule } from './metric-register/core/metric-register
 import { MetricCoreModule } from './metric/core/metric-core.module';
 import { StripeModule } from './payments/stripe/stripe.module';
 import { ProjectCoreModule } from './project/core/project-core.module';
+import { getEnvConfig } from './shared/configs/env-configs';
 import { LogdashModule } from './shared/logdash/logdash.module';
 import { RedisModule } from './shared/redis/redis.module';
 import { SupportCoreModule } from './support/core/support-core.module';
 import { UserCoreModule } from './user/core/user-core.module';
-import { getEnvConfig } from './shared/configs/env-configs';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { getEnvConfig } from './shared/configs/env-configs';
     HttpPingCoreModule,
     ClusterCoreModule,
     MetricRegisterCoreModule,
+    ClickhouseO11yModule,
     RedisModule.forRoot({
       url: getEnvConfig().redis.url,
     }),
