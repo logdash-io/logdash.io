@@ -8,7 +8,11 @@
 	import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
 	import { getContext, onMount, type Snippet } from 'svelte';
 	import Highlight from 'svelte-highlight';
-	import { python, type LanguageType } from 'svelte-highlight/languages';
+	import {
+		python,
+		ruby,
+		type LanguageType,
+	} from 'svelte-highlight/languages';
 	import typescript from 'svelte-highlight/languages/typescript';
 	import SDKInstaller from './SDKInstaller.svelte';
 	import { logMetricsState } from '../../application/log-metrics.state.svelte.js';
@@ -68,7 +72,9 @@ const { logger } = createLogDash({
 	apiKey: "${api_key}"
 });
 
-logger.info('Hello logdash!');`,
+logger.info("Application started successfully")
+logger.error("An unexpected error occurred")
+logger.warn("Low disk space warning")`,
 		},
 		[LogdashSDKName.PYTHON]: {
 			language: python,
@@ -79,7 +85,7 @@ logdash = create_logdash({
     "api_key": "${api_key}",
 })
 
-# Access the logger
+# Access logger
 logger = logdash.logger
 
 logger.info("Application started successfully")
@@ -95,8 +101,18 @@ logger.warn("Low disk space warning")`,
 			code: null,
 		},
 		[LogdashSDKName.RUBY]: {
-			language: null,
-			code: null,
+			language: ruby,
+			code: `require 'logdash'
+
+# api_key is optional, but recommended to see your logs in the dashboard
+logdash_client = Logdash.create(api_key: "${api_key}")
+
+# Access logger
+logger = logdash_client[:logger]
+
+logger.info('Application started successfully')
+logger.error('An unexpected error occurred')
+logger.warn('Low disk space warning')`,
 		},
 		[LogdashSDKName.DOTNET]: {
 			language: null,
@@ -107,8 +123,6 @@ logger.warn("Low disk space warning")`,
 			code: null,
 		},
 	};
-
-	let tryingToClaim = $state(false);
 </script>
 
 <div class="w-full space-y-8">
@@ -121,9 +135,9 @@ logger.warn("Low disk space warning")`,
 	</DataTile>
 </div>
 
-<div class="fixed top-0 left-0 z-50 flex h-full w-full bg-black/60">
+<div class="fixed left-0 top-0 z-50 flex h-full w-full bg-black/60">
 	<div
-		class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-xl max-w-2xl flex-col gap-4 p-8"
+		class="bg-base-200 w-xl absolute right-0 top-0 mx-auto flex h-full max-w-2xl flex-col gap-4 p-8"
 	>
 		<div class="space-y-2">
 			<h5 class="text-2xl font-semibold">
@@ -160,7 +174,7 @@ logger.warn("Low disk space warning")`,
 							);
 						}}
 						for="copy-code-1"
-						class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute top-2 right-2 border-transparent"
+						class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute right-2 top-2 border-transparent"
 					>
 						<input
 							id="copy-code-1"

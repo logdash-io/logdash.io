@@ -8,6 +8,7 @@
 	import {
 		bash,
 		python,
+		ruby,
 		type LanguageType,
 	} from 'svelte-highlight/languages';
 	import typescript from 'svelte-highlight/languages/typescript';
@@ -91,7 +92,7 @@ metrics = logdash.metrics
 # to set absolute value
 metrics.set("users", 0)
 
-# to modify existing metric
+# or modify existing one
 metrics.mutate("users", 1)`,
 		},
 		[LogdashSDKName.JAVA]: {
@@ -103,8 +104,20 @@ metrics.mutate("users", 1)`,
 			code: null,
 		},
 		[LogdashSDKName.RUBY]: {
-			language: null,
-			code: null,
+			language: ruby,
+			code: `require 'logdash'
+
+# api_key is optional, but recommended as metrics are only hosted remotely
+logdash_client = Logdash.create(api_key: "${api_key}")
+
+# Access metrics
+metrics = $logdash_client[:metrics]
+
+# to set absolute value
+metrics.set('users', 0)
+
+# or modify existing one
+metrics.mutate('users', 1)`,
 		},
 		[LogdashSDKName.DOTNET]: {
 			language: null,
@@ -121,9 +134,9 @@ metrics.mutate("users", 1)`,
 	<MetricsTiles />
 </div>
 
-<div class="fixed top-0 left-0 z-50 flex h-full w-full bg-black/60">
+<div class="fixed left-0 top-0 z-50 flex h-full w-full bg-black/60">
 	<div
-		class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-xl max-w-2xl flex-col gap-4 p-8"
+		class="bg-base-200 w-xl absolute right-0 top-0 mx-auto flex h-full max-w-2xl flex-col gap-4 p-8"
 	>
 		<div class="space-y-2">
 			<h5 class="text-2xl font-semibold">
@@ -160,7 +173,7 @@ metrics.mutate("users", 1)`,
 							);
 						}}
 						for="copy-code-1"
-						class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute top-2 right-2 border-transparent"
+						class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute right-2 top-2 border-transparent"
 					>
 						<input
 							id="copy-code-1"
