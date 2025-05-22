@@ -16,6 +16,11 @@ jobs:
         with:
           fetch-depth: 0 # Required for git subtree operations
 
+      - name: Install git-filter-repo
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y git-filter-repo
+
       - name: Setup SSH access to private repo
         run: |
           mkdir -p ~/.ssh
