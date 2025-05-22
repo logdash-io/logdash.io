@@ -44,6 +44,7 @@ import { MetricsMock } from './metrics-mock';
 import { closeInMemoryMongoServer, rootMongooseTestModule } from './mongo-in-memory-server';
 import { ProjectUtils } from './project-utils';
 import { getInMemoryRedisUri, redisInMemoryServer } from './redis-in-memory-server';
+import { rootClickHouseTestModule } from './clickhouse-test-container-server';
 
 export async function createTestApp() {
   const redisUrl = await getInMemoryRedisUri();
@@ -51,6 +52,7 @@ export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({
     imports: [
       rootMongooseTestModule(),
+      rootClickHouseTestModule(),
       AuthCoreModule,
       UserCoreModule,
       LogCoreModule,
