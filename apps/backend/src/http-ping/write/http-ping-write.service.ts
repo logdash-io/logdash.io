@@ -32,4 +32,8 @@ export class HttpPingWriteService {
   public async deleteOlderThan(date: Date): Promise<void> {
     await this.model.deleteMany({ createdAt: { $lt: date } });
   }
+
+  public async deleteByMonitorIds(monitorIds: string[]): Promise<void> {
+    await this.model.deleteMany({ httpMonitorId: { $in: monitorIds } });
+  }
 }

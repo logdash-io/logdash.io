@@ -49,8 +49,8 @@
 			code: null,
 		},
 		[LogdashSDKName.RUBY]: {
-			language: null,
-			code: null,
+			language: bash,
+			code: `gem install logdash`,
 		},
 		[LogdashSDKName.DOTNET]: {
 			language: null,
@@ -72,16 +72,16 @@
 			icon: PythonIcon,
 		},
 		{
+			name: LogdashSDKName.RUBY,
+			icon: RubyIcon,
+		},
+		{
 			name: LogdashSDKName.JAVA,
 			icon: JavaIcon,
 		},
 		{
 			name: LogdashSDKName.PHP,
 			icon: PhpIcon,
-		},
-		{
-			name: LogdashSDKName.RUBY,
-			icon: RubyIcon,
 		},
 		{
 			name: LogdashSDKName.DOTNET,
@@ -147,7 +147,7 @@
 						selectedSDKIndex = SDK_LIST.indexOf(sdk);
 						sdkPopover.hidePopover();
 					}}
-					class="hover:bg-base-200/60 flex cursor-pointer flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs select-none"
+					class="hover:bg-base-200/60 flex cursor-pointer select-none flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs"
 				>
 					<sdk.icon class="h-4 w-4 shrink-0" />
 					<div class="block">
@@ -174,7 +174,7 @@
 				);
 			}}
 			for="copy-code-0"
-			class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute top-2 right-2 border-transparent"
+			class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute right-2 top-2 border-transparent"
 		>
 			<input id="copy-code-0" type="checkbox" />
 
