@@ -137,7 +137,7 @@ logger.warn('Low disk space warning')`,
 
 <div class="fixed left-0 top-0 z-50 flex h-full w-full bg-black/60">
 	<div
-		class="bg-base-200 w-xl absolute right-0 top-0 mx-auto flex h-full max-w-2xl flex-col gap-4 p-8"
+		class="bg-base-200 absolute right-0 top-0 flex h-full w-full flex-col gap-4 overflow-y-auto p-4 shadow-xl sm:max-w-lg sm:p-6 md:max-w-xl md:p-8 lg:max-w-2xl"
 	>
 		<div class="space-y-2">
 			<h5 class="text-2xl font-semibold">
@@ -159,8 +159,8 @@ logger.warn('Low disk space warning')`,
 				<span>2. Setup fresh logger instance</span>
 			</div>
 
-			<div class="space-y-2 overflow-hidden text-sm">
-				<div class="relative text-base">
+			<div class="space-y-2 text-sm">
+				<div class="relative overflow-x-auto text-base">
 					<Highlight
 						class="code-snippet selection:bg-base-100"
 						language={SDK_LOGGING_SETUPS[selectedSDK.name].language}
