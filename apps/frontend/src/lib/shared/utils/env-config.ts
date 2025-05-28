@@ -24,7 +24,7 @@ export function getEnvironmentConfig(): EnvironmentConfig {
 		},
 		bffLogdashApiKey: import.meta.env.VITE_LOGDASH_API_KEY,
 		apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
-		stage: import.meta.env.STAGE || 'local',
+		stage: import.meta.env.VITE_STAGE || 'local',
 	};
 }
 
