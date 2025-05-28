@@ -164,7 +164,7 @@
 					{/if}
 				</div>
 
-				{#each logsState.logs as log, index}
+				{#each logsState.logs as log, index (log.id)}
 					<div
 						in:scale|global={{
 							start: 0.98,

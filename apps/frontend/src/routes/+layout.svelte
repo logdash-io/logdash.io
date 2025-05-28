@@ -26,25 +26,24 @@
 	);
 
 	$effect.pre(() => {
-		setContext('tabId', `tab-${uuid()}`);
-		logger.debug('Tab ID:', getContext('tabId'));
-	});
-
-	$effect(() => {
-		exposedConfigState.set(data.exposedConfig);
-	});
-
-	onMount(() => {
 		if (browser) {
 			posthog.init(envConfig.posthog.key, {
 				api_host: envConfig.posthog.proxy,
 				ui_host: envConfig.posthog.host,
-				person_profiles: 'identified_only',
+				person_profiles: 'always',
+				// person_profiles: 'identified_only',
 				disable_session_recording: true,
 			});
 			window['posthog'] = posthog;
+			setContext('posthog', posthog);
 		}
-		return;
+		setContext('tabId', `tab-${uuid()}`);
+		logger.debug('Tab ID:', getContext('tabId'));
+		console.log('env:', { ...import.meta.env });
+	});
+
+	$effect(() => {
+		exposedConfigState.set(data.exposedConfig);
 	});
 
 	$effect(() => {

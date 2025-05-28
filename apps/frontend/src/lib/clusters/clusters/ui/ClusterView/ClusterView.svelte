@@ -10,6 +10,7 @@
 	import { fly } from 'svelte/transition';
 	import { clustersState } from '../../application/clusters.state.svelte.js';
 	import ProjectsSwitcher from './ProjectsSwitcher/ProjectsSwitcher.svelte';
+	import SetupMonitoringButton from './SetupMonitoringButton.svelte';
 
 	type Props = {
 		priorityClusterId?: string;
@@ -52,7 +53,7 @@
 		/>
 
 		{#if hasLogging || hasMetrics || hasMonitoring}
-			<div class="mr-auto sm:mr-0 sm:ml-auto">
+			<div class="z-20 mr-auto sm:ml-auto sm:mr-0">
 				{#if !hasLogging && projectsState.ready}
 					<button
 						in:fly={{ y: -2, duration: 100 }}
@@ -82,17 +83,16 @@
 				{/if}
 
 				{#if isDev() && !hasMonitoring && clustersState.ready}
-					<button
-						in:fly={{ y: -2, duration: 100 }}
-						onclick={() => {
-							toast.warning(
-								"Easy, we haven't implemented this yet",
+					<SetupMonitoringButton
+						canAddMore={true}
+						onSubmit={(url) => {
+							goto(
+								`/app/clusters/${clusterId}/configure/monitoring?project_id=${page.url.searchParams.get(
+									'project_id',
+								)}&url=${encodeURIComponent(url)}`,
 							);
 						}}
-						class="btn btn-secondary btn-xs gap-1 opacity-90"
-					>
-						Setup monitoring <ArrowRightIcon class="h-4 w-4" />
-					</button>
+					/>
 				{/if}
 			</div>
 		{/if}

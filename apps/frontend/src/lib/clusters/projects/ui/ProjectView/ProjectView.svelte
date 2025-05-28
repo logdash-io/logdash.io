@@ -15,8 +15,8 @@
 	import { projectsState } from '../../application/projects.state.svelte.js';
 	import MetricDetails from './MetricDetails/MetricDetails.svelte';
 	import DataTile from './tiles/DataTile.svelte';
-	import LogsLineChartTile from './tiles/LogsLineChartTile.svelte';
-	import LogsListTile from './tiles/LogsListTile.svelte';
+	import LogsLineChartTile from './tiles/LogMetricsTile.svelte';
+	import LogsListTile from './tiles/LogsTile.svelte';
 	import MetricsTiles from './tiles/MetricsTiles.svelte';
 
 	const logger = createLogger('ProjectView');
