@@ -9,7 +9,7 @@ export interface EnvironmentConfig {
 	};
 	bffLogdashApiKey: string;
 	apiBaseUrl: string;
-	isDevelopment: boolean;
+	stage: 'live' | 'pre-live' | 'local';
 }
 
 export function getEnvironmentConfig(): EnvironmentConfig {
@@ -24,7 +24,7 @@ export function getEnvironmentConfig(): EnvironmentConfig {
 		},
 		bffLogdashApiKey: import.meta.env.VITE_LOGDASH_API_KEY,
 		apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
-		isDevelopment: import.meta.env.DEV || false,
+		stage: import.meta.env.STAGE || 'local',
 	};
 }
 
