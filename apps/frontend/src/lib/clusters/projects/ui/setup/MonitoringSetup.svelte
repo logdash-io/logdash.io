@@ -1,16 +1,12 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { monitoringState } from '$lib/clusters/monitoring/application/monitoring.state.svelte.js';
 	import { logsState } from '$lib/clusters/projects/application/logs.state.svelte';
 	import LogsListener from '$lib/clusters/projects/ui/presentational/LogsListener.svelte';
 	import DataTile from '$lib/clusters/projects/ui/ProjectView/tiles/DataTile.svelte';
-	import LogsLineChartTile from '$lib/clusters/projects/ui/ProjectView/tiles/LogsLineChartTile.svelte';
-	import LogsListTile from '$lib/clusters/projects/ui/ProjectView/tiles/LogsListTile.svelte';
-	import { ArrowRightIcon, CheckCircle } from 'lucide-svelte';
-	import { getContext, onMount, type Snippet } from 'svelte';
-	import { logMetricsState } from '../../application/log-metrics.state.svelte.js';
-	import UrlsConfigurator from './UrlsConfigurator.svelte';
 	import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
-	import { monitoringState } from '$lib/clusters/monitoring/application/monitoring.state.svelte.js';
-	import { page } from '$app/state';
+	import { CheckCircle } from 'lucide-svelte';
+	import { getContext, type Snippet } from 'svelte';
 
 	type Props = {
 		claimer: Snippet<[boolean]>;
