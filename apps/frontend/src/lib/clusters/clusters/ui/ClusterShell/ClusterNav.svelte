@@ -8,6 +8,8 @@
 	import { userState } from '$lib/shared/user/application/user.state.svelte.js';
 	import { fade } from 'svelte/transition';
 	import { clustersState } from '../../application/clusters.state.svelte.js';
+	import { getContext } from 'svelte';
+	import type { PostHog } from 'posthog-js';
 
 	type BreadcrumbStep = {
 		name: string;
@@ -15,6 +17,7 @@
 	};
 	let upgrading = $state(false);
 
+	const posthog = getContext<PostHog>('posthog');
 	const breadcrumb: BreadcrumbStep[] = $derived.by(() => {
 		const allProjectsStep: BreadcrumbStep = {
 			name: 'All Clusters',
@@ -162,7 +165,7 @@
 					<li>
 						<a
 							onclick={() => {
-								window['posthog'].reset();
+								posthog.reset();
 							}}
 							href={RoutePath.LOGOUT}
 						>

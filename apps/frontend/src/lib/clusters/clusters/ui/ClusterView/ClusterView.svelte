@@ -53,7 +53,9 @@
 		/>
 
 		{#if hasLogging || hasMetrics || hasMonitoring}
-			<div class="z-20 mr-auto sm:ml-auto sm:mr-0">
+			<div
+				class="z-20 mr-auto flex items-center gap-2 sm:ml-auto sm:mr-0"
+			>
 				{#if !hasLogging && projectsState.ready}
 					<button
 						in:fly={{ y: -2, duration: 100 }}

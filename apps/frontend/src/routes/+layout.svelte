@@ -10,7 +10,7 @@
 	import Toaster from '$lib/shared/ui/toaster/Toaster.svelte';
 	import { atomOneDark } from 'svelte-highlight/styles';
 	import { setContext } from 'svelte';
-	import { uuid } from '$lib';
+	import { isDev, uuid } from '$lib';
 	import { logger } from '$lib/shared/logger/index.js';
 	import type { ExposedConfig } from '$lib/shared/exposed-config/domain/exposed-config.js';
 	import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte.js';
@@ -24,6 +24,7 @@
 	const isDemoDashboard = $derived(
 		page.url.pathname.includes('/demo-dashboard'),
 	);
+	const RECORDED_ROUTES = ['/setup', '/configure'];
 
 	$effect.pre(() => {
 		if (browser) {
@@ -33,13 +34,25 @@
 				person_profiles: 'always',
 				// person_profiles: 'identified_only'
 				disable_session_recording: true,
+				loaded(ph) {
+					if (
+						RECORDED_ROUTES.some((path) =>
+							page.url.pathname.includes(path),
+						) &&
+						!isDev()
+					) {
+						logger.info(
+							'Starting session recording for route:',
+							page.url.pathname,
+						);
+						ph.startSessionRecording();
+					}
+				},
 			});
-			window['posthog'] = posthog;
 			setContext('posthog', posthog);
 		}
 		setContext('tabId', `tab-${uuid()}`);
 		logger.debug('Tab ID:', getContext('tabId'));
-		console.log('env:', { ...import.meta.env });
 	});
 
 	$effect(() => {
