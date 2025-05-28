@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { GiftIcon } from 'lucide-svelte';
 	import type { PostHog } from 'posthog-js';
+	import { getContext } from 'svelte';
 
 	let message = $state('');
 	let open = $state(false);
 	let rating = $state(5);
 	// svelte-ignore non_reactive_update
 	let textarea: HTMLTextAreaElement | null = null;
+	const posthog = getContext<PostHog>('posthog');
 
 	const captureFeedback = () => {
-		const pg: PostHog = window['posthog'];
-		pg.capture('feedback_collected', {
+		posthog.capture('feedback_collected', {
 			message,
 			rating,
 		});
@@ -24,7 +25,7 @@
 	});
 </script>
 
-<div class="fixed right-4 bottom-4 z-50">
+<div class="fixed bottom-4 right-4 z-50">
 	<div class="relative">
 		<button
 			onclick={() => {
@@ -39,7 +40,7 @@
 
 		{#if open}
 			<div
-				class="ld-card-base focus-within:ring-primary absolute right-0 bottom-12 flex h-52 w-72 flex-col rounded-xl ring ring-transparent"
+				class="ld-card-base focus-within:ring-primary absolute bottom-12 right-0 flex h-52 w-72 flex-col rounded-xl ring ring-transparent"
 			>
 				<textarea
 					bind:this={textarea}
