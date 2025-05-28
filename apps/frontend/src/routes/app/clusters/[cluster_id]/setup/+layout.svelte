@@ -1,17 +1,16 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { isDev } from '$lib';
-	import posthog from 'posthog-js';
-	import { onMount, type Snippet } from 'svelte';
+	import { PostHog } from 'posthog-js';
+	import { getContext, onMount, type Snippet } from 'svelte';
 
 	const { children }: { children: Snippet } = $props();
+	const posthog = getContext<PostHog>('posthog');
 
 	onMount(() => {
 		if (browser && !isDev()) {
 			try {
-				setTimeout(() => {
-					posthog.startSessionRecording();
-				}, 2000);
+				posthog.startSessionRecording();
 			} catch (e) {
 				console.error('Error starting session recording:', e);
 			}

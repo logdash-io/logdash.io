@@ -28,7 +28,7 @@
 
 		<div class="flex max-h-96 flex-col-reverse overflow-auto">
 			<ul class="list-inside list-none break-all">
-				{#each logs as log, index}
+				{#each logs as log, index (log.id)}
 					<li
 						in:scale|global={{
 							start: 0.95,
@@ -36,12 +36,12 @@
 							delay: !rendered ? 5 * index : 0,
 						}}
 					>
-						<LogRow
+						<!-- <LogRow
 							prefix="short"
 							date={log.createdAt}
 							level={log.level}
 							message={log.message}
-						/>
+						/> -->
 					</li>
 				{/each}
 			</ul>

@@ -9,23 +9,13 @@
 	};
 
 	const { date: rawDate, level, message, prefix = 'full' }: Props = $props();
-	const dateTime = DateTime.fromJSDate(new Date(rawDate))
+	const [left, right] = DateTime.fromJSDate(new Date(rawDate))
 		.toLocal()
 		.toISO({ includeOffset: true })
 		.split('T');
 
-	const date = dateTime[0].split('-').reverse().join('-');
+	const [date, time] = $derived([left, right.split('.')[0]]);
 </script>
-
-{#snippet time(date: Date)}
-	{@const _time = DateTime.fromJSDate(new Date(date))
-		.toLocal()
-		.toISO({ includeOffset: true })
-		.split('T')[1]
-		.split('.')[0]}
-
-	{_time}
-{/snippet}
 
 <div class="flex items-start gap-2.5 font-mono text-sm">
 	<div
@@ -44,9 +34,7 @@
 
 	<div class="flex flex-col-reverse sm:flex-row sm:gap-2">
 		<span class="text-base-content/60 whitespace-nowrap text-xs sm:text-sm">
-			[{#if prefix === 'full'}{date}
-				<!-- weird bug: when declaring time as const, it shows the wrong time -->
-				{@render time(rawDate)}{:else}{@render time(rawDate)}{/if}]
+			[{#if prefix === 'full'}{date} {time}{:else}{time}{/if}]
 		</span>
 
 		<span class="break-all">
