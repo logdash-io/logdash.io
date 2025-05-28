@@ -8,7 +8,8 @@
 	import ClusterShell from '$lib/clusters/clusters/ui/ClusterShell/ClusterShell.svelte';
 	import { userState } from '$lib/shared/user/application/user.state.svelte.js';
 	import type { User } from '$lib/shared/user/domain/user';
-	import type { Snippet } from 'svelte';
+	import type { PostHog } from 'posthog-js';
+	import { getContext, type Snippet } from 'svelte';
 
 	type Props = {
 		data: {
@@ -18,13 +19,14 @@
 		children: Snippet;
 	};
 	const { data, children }: Props = $props();
+	const posthog = getContext<PostHog>('posthog');
 
 	$effect(() => {
 		userState.set(data.user);
 		clustersState.set(data.clusters);
 
 		if (browser && !isDev()) {
-			window['posthog']?.identify(data.user.id, {
+			posthog.identify(data.user.id, {
 				email: data.user.email,
 				tier: data.user.tier,
 			});

@@ -6,8 +6,8 @@ on:
     branches:
       - dev
     paths:
-      - 'apps/backend/**'
-      - '.github/workflows/**'
+      - "apps/backend/**"
+      - ".github/workflows/**"
 
 jobs:
   deploy:
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build and push
-        uses: './.github/templates/build-and-push'
+        uses: "./.github/templates/build-and-push"
         with:
           context: ./apps/backend
           file: ./apps/backend/Dockerfile
@@ -24,7 +24,7 @@ jobs:
           dockerhub-token: ${{ secrets.BACKEND_DOCKERHUB_TOKEN }}
           image-name: ablaszkiewicz/logdash-backend-local
       - name: Deploy
-        uses: './.github/templates/deploy-container'
+        uses: "./.github/templates/deploy-container"
         with:
           host: ${{ secrets.BACKEND_LOCAL_SSH_HOST }}
           username: ${{ secrets.BACKEND_LOCAL_SSH_USER }}
@@ -34,11 +34,11 @@ jobs:
           application-port: 3000
           image-name: ablaszkiewicz/logdash-backend-local
           container-name: logdash-backend-local
-          mongo-url: ${{ secrets.BACKEND_LOCAL_MONGO_URL }}
+          mongo-url: ${{ secrets.BACKEND_DEV_MONGO_URL }}
           github-oauth-client-id: ${{ secrets.BACKEND_LOCAL_GITHUB_OAUTH_CLIENT_ID }}
           github-oauth-client-secret: ${{ secrets.BACKEND_LOCAL_GITHUB_OAUTH_CLIENT_SECRET }}
-          resend-api-key: 'empty'
-          resend-audience-enabled: 'false'
+          resend-api-key: "empty"
+          resend-audience-enabled: "false"
           stripe-api-key-secret: ${{ secrets.BACKEND_LOCAL_STRIPE_API_KEY_SECRET }}
           stripe-signature: ${{ secrets.BACKEND_LOCAL_STRIPE_SIGNATURE }}
           our-env: local

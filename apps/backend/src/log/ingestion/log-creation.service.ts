@@ -1,11 +1,11 @@
+import { Logger, Metrics } from '@logdash/js-sdk';
 import { Injectable } from '@nestjs/common';
 import { LogMetricIngestionService } from '../../log-metric/ingestion/log-metric-ingestion.service';
+import { getEnvConfig } from '../../shared/configs/env-configs';
+import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
+import { LogIndexingService } from '../indexing/log-indexing.service';
 import { CreateLogDto } from '../write/dto/create-log.dto';
 import { LogWriteService } from '../write/log-write.service';
-import { LogIndexingService } from '../indexing/log-indexing.service';
-import { getEnvConfig } from '../../shared/configs/env-configs';
-import { Logger, Metrics } from '@logdash/js-sdk';
-import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 @Injectable()
 export class LogIngestionService {
   constructor(
@@ -18,8 +18,7 @@ export class LogIngestionService {
   ) {}
 
   public async createLogs(dtos: CreateLogDto[]): Promise<void> {
-    const enrichedCreateDtos =
-      await this.logIndexingService.enrichWithIndexes(dtos);
+    const enrichedCreateDtos = await this.logIndexingService.enrichWithIndexes(dtos);
 
     const currentTime = Date.now();
 
@@ -34,13 +33,13 @@ export class LogIngestionService {
           projectId: log.projectId,
         })),
       ),
-    ]);
+    ]).catch((error) => {
+      this.logger.error('Error creating logs', { error });
+    });
 
     const durationInMs = Date.now() - currentTime;
 
-    if (
-      durationInMs > getEnvConfig().logging.logCreationDurationWarnThreshold
-    ) {
+    if (durationInMs > getEnvConfig().logging.logCreationDurationWarnThreshold) {
       this.logger.warn(`Created logs`, {
         count: dtos.length,
         durationInMs,

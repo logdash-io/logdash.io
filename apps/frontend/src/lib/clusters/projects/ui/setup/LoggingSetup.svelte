@@ -2,8 +2,8 @@
 	import { logsState } from '$lib/clusters/projects/application/logs.state.svelte';
 	import LogsListener from '$lib/clusters/projects/ui/presentational/LogsListener.svelte';
 	import DataTile from '$lib/clusters/projects/ui/ProjectView/tiles/DataTile.svelte';
-	import LogsLineChartTile from '$lib/clusters/projects/ui/ProjectView/tiles/LogsLineChartTile.svelte';
-	import LogsListTile from '$lib/clusters/projects/ui/ProjectView/tiles/LogsListTile.svelte';
+	import LogsLineChartTile from '$lib/clusters/projects/ui/ProjectView/tiles/LogMetricsTile.svelte';
+	import LogsListTile from '$lib/clusters/projects/ui/ProjectView/tiles/LogsTile.svelte';
 	import { LogdashSDKName, type LogdashSDK } from '$lib/shared/types.js';
 	import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
 	import { getContext, onMount, type Snippet } from 'svelte';

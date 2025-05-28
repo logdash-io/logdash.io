@@ -1,1 +1,3 @@
-export const isDev = () => import.meta.env.MODE === 'development';
+import { envConfig } from './env-config.js';
+
+export const isDev = () => envConfig.stage !== 'live';
