@@ -4,21 +4,98 @@ import { createLogger } from '$lib/shared/logger';
 import queryString from 'query-string';
 import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 
-const logger = createLogger('logs.state', true);
+type PingStatus = {
+	status: 'success' | 'failed';
+	code: number;
+	durationMs: number;
+	timestamp: string;
+	error?: string;
+};
+
+const logger = createLogger('monitoring.state');
 
 // todo: divide api calls responsibility from state
 class MonitoringState {
-	// private _logs = $state<Record<Log['id'], Log>>({});
+	private _monitors = $state<Record<string, PingStatus[]>>({});
 	private syncConnection: Source | null = null;
 	private _shouldReconnect = true;
 	private _unsubscribe: () => void | null = null;
 	private _loadingPage = $state(false);
 
-	get pageIsLoading(): boolean {
-		return this._loadingPage;
+	monitorPings(url: string): PingStatus[] {
+		if (!this._monitors[url]) {
+			return [];
+		}
+		return this._monitors[url].slice().sort((a, b) => {
+			if (a.timestamp < b.timestamp) {
+				return -1;
+			}
+			if (a.timestamp > b.timestamp) {
+				return 1;
+			}
+			return 0;
+		});
 	}
 
-	observeUrl(tabId: string, url: string): void {}
+	observeUrl(clusterId: string, url: string): void {
+		this._monitors[url] = [];
+
+		this.syncConnection = source(
+			`/app/api/clusters/${clusterId}/monitors`,
+			{
+				close: ({ connect }) => {
+					if (!this._shouldReconnect) {
+						logger.debug(
+							'sse manually disconnected, skipping reconnect...',
+						);
+						return;
+					}
+					// todo refetch logs after the last in memory log id
+					logger.debug('connection closed');
+					connect();
+				},
+				error: (error) => {
+					logger.error('sse error:', error);
+				},
+				open: () => {
+					logger.debug('sse opened');
+				},
+				options: {
+					mode: 'cors',
+					openWhenHidden: true,
+					keepalive: true,
+					cache: 'no-cache',
+					body: JSON.stringify({
+						url,
+					}),
+				},
+			},
+		);
+		const value = this.syncConnection.select('ping-status');
+
+		this._unsubscribe = value.subscribe((message) => {
+			try {
+				logger.info('new SSE message:', message);
+				if (!message.length) {
+					logger.debug('SSE message empty, skipping...');
+					return;
+				}
+
+				// {"id":2,"status":"success","statusCode":200,"responseTime":195,"timestamp":"2025-05-29T19:24:41.425Z"}
+
+				const parsedMessage = JSON.parse(message);
+
+				this._monitors[url].push({
+					status: parsedMessage.status,
+					code: parsedMessage.statusCode,
+					durationMs: parsedMessage.responseTime,
+					timestamp: parsedMessage.timestamp,
+				});
+			} catch (e) {
+				logger.error('sse message error:', e);
+			}
+		});
+	}
 
 	sync(tabId: string): void {}
 
@@ -61,57 +138,9 @@ class MonitoringState {
 	// 	]);
 	// }
 
-	// private _openLogsStream(project_id: string, tabId: string): Promise<void> {
-	// 	return new Promise((resolve, reject) => {
-	// 		this.syncConnection = source(
-	// 			`/app/api/${project_id}/logs?tab_id=${tabId}`,
-	// 			{
-	// 				close: ({ connect }) => {
-	// 					if (!this._shouldReconnect) {
-	// 						logger.debug(
-	// 							'sse manually disconnected, skipping reconnect...',
-	// 						);
-	// 						return;
-	// 					}
-	// 					// todo refetch logs after the last in memory log id
-	// 					logger.debug('reconnecting...');
-	// 					connect();
-	// 				},
-	// 				error: (error) => {
-	// 					logger.error('sse error:', error);
-	// 					reject(error);
-	// 				},
-	// 				open: () => {
-	// 					logger.debug('sse opened');
-	// 					resolve();
-	// 				},
-	// 				options: {
-	// 					mode: 'cors',
-	// 					openWhenHidden: true,
-	// 					keepalive: true,
-	// 					cache: 'no-cache',
-	// 				},
-	// 			},
-	// 		);
-	// 		const value = this.syncConnection.select('message');
-
-	// 		this._unsubscribe = value.subscribe((message) => {
-	// 			try {
-	// 				logger.info('new SSE message:', message);
-	// 				if (!message.length) {
-	// 					logger.debug('SSE message empty, skipping...');
-	// 					return;
-	// 				}
-	// 				const log = JSON.parse(message);
-	// 				this._logs[log.id] = log;
-
-	// 				logger.debug('added log:', log);
-	// 			} catch (e) {
-	// 				logger.error('sse message error:', e);
-	// 			}
-	// 		});
-	// 	});
-	// }
+	private _openLogsStream(project_id: string, tabId: string): Promise<void> {
+		return new Promise((resolve, reject) => {});
+	}
 
 	// async loadPreviousPage(project_id: string): Promise<void> {
 	// 	const firstLog = this.logs[0];
