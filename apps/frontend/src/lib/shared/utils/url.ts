@@ -35,3 +35,12 @@ export function tryPrependProtocol(value: string): string {
 	}
 	return `https://${value}`;
 }
+
+export const stripProtocol = (url: string): string => {
+	if (url.startsWith('http://')) {
+		return url.slice(7);
+	} else if (url.startsWith('https://')) {
+		return url.slice(8);
+	}
+	return url;
+};

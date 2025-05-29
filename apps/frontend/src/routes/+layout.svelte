@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import FeedbackButton from '$lib/shared/ui/components/FeedbackButton.svelte';
 	import { envConfig } from '$lib/shared/utils/env-config';
-	import posthog from 'posthog-js';
+	import posthog, { PostHog } from 'posthog-js';
 	import { getContext, onMount, type Snippet } from 'svelte';
 	import '../app.css';
 	import { page } from '$app/state';
@@ -25,6 +25,7 @@
 		page.url.pathname.includes('/demo-dashboard'),
 	);
 	const RECORDED_ROUTES = ['/setup', '/configure'];
+	let loadedPosthogInstance: PostHog | null = $state(null);
 
 	$effect.pre(() => {
 		if (browser) {
@@ -35,24 +36,32 @@
 				// person_profiles: 'identified_only'
 				disable_session_recording: true,
 				loaded(ph) {
-					if (
-						RECORDED_ROUTES.some((path) =>
-							page.url.pathname.includes(path),
-						) &&
-						!isDev()
-					) {
-						logger.info(
-							'Starting session recording for route:',
-							page.url.pathname,
-						);
-						ph.startSessionRecording();
-					}
+					loadedPosthogInstance = ph;
 				},
 			});
 			setContext('posthog', posthog);
 		}
 		setContext('tabId', `tab-${uuid()}`);
 		logger.debug('Tab ID:', getContext('tabId'));
+	});
+
+	$effect(() => {
+		if (
+			RECORDED_ROUTES.some((path) => page.url.pathname.includes(path)) &&
+			!isDev()
+		) {
+			logger.info(
+				'Starting session recording for route:',
+				page.url.pathname,
+			);
+			loadedPosthogInstance.startSessionRecording();
+		} else {
+			logger.info(
+				'Not starting session recording for route:',
+				page.url.pathname,
+			);
+			loadedPosthogInstance.stopSessionRecording();
+		}
 	});
 
 	$effect(() => {
