@@ -5,7 +5,8 @@
 	import { get_max_number_of_projects } from '$lib/shared/constants/plan-configs.js';
 	import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 	import { userState } from '$lib/shared/user/application/user.state.svelte.js';
-	import { projectsState } from '../../../../projects/application/projects.state.svelte.js';
+	import { ChevronDownIcon, CopyIcon, SettingsIcon } from 'lucide-svelte';
+	import { projectsState } from '../../application/projects.state.svelte.js';
 	import ProjectCreator from './ProjectCreator.svelte';
 
 	type Props = {
@@ -38,19 +39,67 @@
 	{#each projectsState.projects as project}
 		{@const activeProject =
 			project.id === page.url.searchParams.get('project_id')}
-		<a
-			href={`?project_id=${project.id}`}
-			role="tab"
+
+		<div
 			class={[
 				project_badge_class,
 				{
-					'badge-primary': activeProject,
+					'badge-primary pr-0': activeProject,
 					'badge-secondary': !activeProject,
 				},
 			]}
+			role="tab"
 		>
-			{project.name}
-		</a>
+			<a href={`?project_id=${project.id}`} class="select-none">
+				{project.name}
+			</a>
+
+			{#if activeProject}
+				<div class="dropdown z-10">
+					<div
+						tabindex="0"
+						role="button"
+						class="btn btn-circle btn-transparent aspect-square h-full w-fit shrink-0 p-0 pl-0 pr-2.5"
+					>
+						<SettingsIcon
+							class="text-primary h-3.5 w-3.5 shrink-0"
+						/>
+					</div>
+
+					<ul
+						tabindex="0"
+						class="menu dropdown-content text-secondary bg-base-100 rounded-box z-1 mt-1 w-fit whitespace-nowrap p-2 shadow"
+					>
+						<li>
+							<a
+								onclick={() => {
+									projectsState
+										.getApiKey(project.id)
+										.then((key) => {
+											navigator.clipboard.writeText(key);
+											toast.success(
+												'Project API key copied to clipboard',
+												5000,
+											);
+										});
+								}}
+								class="whitespace-nowrap"
+							>
+								Copy project api key
+
+								{#if projectsState.isLoadingApiKey(project.id)}
+									<span
+										class="loading loading-spinner loading-xs ml-1"
+									></span>
+								{:else}
+									<CopyIcon class="ml-1.5 h-4 w-4" />
+								{/if}
+							</a>
+						</li>
+					</ul>
+				</div>
+			{/if}
+		</div>
 	{/each}
 
 	{#if !creationDisabled}

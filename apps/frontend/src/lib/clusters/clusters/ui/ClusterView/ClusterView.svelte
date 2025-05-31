@@ -9,7 +9,7 @@
 	import { ArrowRightIcon } from 'lucide-svelte';
 	import { fly } from 'svelte/transition';
 	import { clustersState } from '../../application/clusters.state.svelte.js';
-	import ProjectsSwitcher from './ProjectsSwitcher/ProjectsSwitcher.svelte';
+	import ProjectsSwitcher from '../../../projects/ui/ProjectsSwitcher/ProjectsSwitcher.svelte';
 	import SetupMonitoringButton from './SetupMonitoringButton.svelte';
 
 	type Props = {
