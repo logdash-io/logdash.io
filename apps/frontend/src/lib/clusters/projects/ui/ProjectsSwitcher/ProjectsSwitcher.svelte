@@ -35,7 +35,7 @@
 	});
 </script>
 
-<div role="tablist" class="tabs z-20 gap-1.5 sm:gap-3">
+<div role="tablist" class="tabs z-30 gap-1.5 sm:gap-3">
 	{#each projectsState.projects as project}
 		{@const activeProject =
 			project.id === page.url.searchParams.get('project_id')}
@@ -55,7 +55,7 @@
 			</a>
 
 			{#if activeProject}
-				<div class="dropdown z-10">
+				<div class="dropdown z-30">
 					<div
 						tabindex="0"
 						role="button"
