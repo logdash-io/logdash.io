@@ -5,7 +5,13 @@ import type { Project } from '../domain/project';
 // todo: divide api calls responsibility from state
 class ProjectsState {
 	private _projects = $state<Record<Project['id'], Project>>({});
+	private _apiKeys = $state<Record<Project['id'], string>>({});
+	private _loadingApiKey = $state<Record<Project['id'], boolean>>({});
 	private _initialized = $state(false);
+
+	isLoadingApiKey(projectId: string): boolean {
+		return this._loadingApiKey[projectId] || false;
+	}
 
 	get projects(): Project[] {
 		return Object.values(this._projects).sort((a, b) => {
@@ -31,6 +37,26 @@ class ProjectsState {
 		feature: Feature.LOGGING | Feature.METRICS,
 	): boolean {
 		return this._projects[projectId]?.features.includes(feature);
+	}
+
+	getApiKey(projectId: string): Promise<string> {
+		if (this._apiKeys[projectId]) {
+			return Promise.resolve(this._apiKeys[projectId]);
+		}
+
+		this._loadingApiKey[projectId] = true;
+		return fetch(`/app/api/${projectId}/api-key`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+			.then((response) => response.json())
+			.then(({ data }) => {
+				this._loadingApiKey[projectId] = false;
+				this._apiKeys[projectId] = data;
+				return data;
+			});
 	}
 
 	createProject(clusterId: string, name: string): Promise<Project['id']> {
