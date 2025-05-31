@@ -34,11 +34,11 @@
 				ui_host: envConfig.posthog.host,
 				person_profiles: 'always',
 				// person_profiles: 'identified_only'
-				disable_session_recording: false,
-				// disable_session_recording: true,
-				// loaded(ph) {
-				// 	loadedPosthogInstance = ph;
-				// },
+				// disable_session_recording: false,
+				disable_session_recording: true,
+				loaded(ph) {
+					loadedPosthogInstance = ph;
+				},
 			});
 			setContext('posthog', posthog);
 		}
@@ -48,29 +48,28 @@
 		logger.debug('Tab ID:', getContext('tabId'));
 	});
 
-	// todo: enable after resolving posthog support #31569
-	// $effect(() => {
-	// 	if (!loadedPosthogInstance) {
-	// 		return;
-	// 	}
+	$effect(() => {
+		if (!loadedPosthogInstance) {
+			return;
+		}
 
-	// 	if (
-	// 		RECORDED_ROUTES.some((path) => page.url.pathname.includes(path)) &&
-	// 		!isDev()
-	// 	) {
-	// 		logger.info(
-	// 			'Starting session recording for route:',
-	// 			page.url.pathname,
-	// 		);
-	// 		loadedPosthogInstance.startSessionRecording();
-	// 	} else {
-	// 		logger.info(
-	// 			'Not starting session recording for route:',
-	// 			page.url.pathname,
-	// 		);
-	// 		loadedPosthogInstance.stopSessionRecording();
-	// 	}
-	// });
+		if (
+			RECORDED_ROUTES.some((path) => page.url.pathname.includes(path)) &&
+			!isDev()
+		) {
+			logger.info(
+				'Starting session recording for route:',
+				page.url.pathname,
+			);
+			loadedPosthogInstance.startSessionRecording();
+		} else {
+			logger.info(
+				'Not starting session recording for route:',
+				page.url.pathname,
+			);
+			loadedPosthogInstance.stopSessionRecording();
+		}
+	});
 
 	$effect(() => {
 		exposedConfigState.set(data.exposedConfig);
