@@ -9,6 +9,10 @@ const config = {
 
 	kit: {
 		adapter: adapter(),
+		paths: {
+			relative: false,
+			base: process.env.NODE_ENV === 'production' ? '' : '',
+		},
 	},
 	compilerOptions: {
 		warningFilter: (warning) =>
