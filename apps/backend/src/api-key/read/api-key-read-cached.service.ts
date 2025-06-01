@@ -1,8 +1,8 @@
+import { Logger } from '@logdash/js-sdk';
 import { Injectable } from '@nestjs/common';
-import { ApiKeyReadService } from './api-key-read.service';
 import { Types } from 'mongoose';
 import { RedisService } from '../../shared/redis/redis.service';
-import { Logger } from '@logdash/js-sdk';
+import { ApiKeyReadService } from './api-key-read.service';
 
 @Injectable()
 export class ApiKeyReadCachedService {
@@ -20,7 +20,7 @@ export class ApiKeyReadCachedService {
 
     if (projectId === 'null') {
       throw Error(
-        'API key not found. You have to wait 60 seconds before trying again',
+        `API key ${apiKeyValue} not found. You have to wait 60 seconds before trying again`,
       );
     }
 
