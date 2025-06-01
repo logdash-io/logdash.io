@@ -60,7 +60,7 @@
 			<div class="flex w-full shrink-0 items-start justify-start gap-4">
 				<div
 					class={[
-						'min-h-14 max-w-1.5 flex-1 shrink-0 self-stretch rounded-full',
+						'min-h-14 min-w-1.5 max-w-1.5 flex-1 shrink-0 self-stretch rounded-full',
 						config.bg,
 					]}
 				></div>
