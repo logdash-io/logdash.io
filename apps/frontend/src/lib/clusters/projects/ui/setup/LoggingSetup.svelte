@@ -14,8 +14,9 @@
 		type LanguageType,
 	} from 'svelte-highlight/languages';
 	import typescript from 'svelte-highlight/languages/typescript';
-	import SDKInstaller from './SDKInstaller.svelte';
 	import { logMetricsState } from '../../application/log-metrics.state.svelte.js';
+	import SDKInstaller from './SDKInstaller.svelte';
+	import SetupPrompt from './SetupPrompt.svelte';
 
 	type Props = {
 		project_id: string;
@@ -27,6 +28,7 @@
 
 	let selectedSDK: LogdashSDK = $state();
 	let copied = $state(false);
+	let installationCode = $state('');
 
 	onMount(() => {
 		const tabId: string = getContext('tabId');
@@ -123,6 +125,19 @@ logger.warn('Low disk space warning')`,
 			code: null,
 		},
 	};
+
+	let setupPrompt = $derived(
+		`Generate a minimal ${selectedSDK?.name} code snippet to initialize Logdash logging.  
+First, install the package using default repo package manager, otherwise fallback to the following command:
+
+${installationCode}
+
+Then, here’s the exact code block to use (no comments, no explanation, do NOT include the install command):
+
+${SDK_LOGGING_SETUPS[selectedSDK?.name]?.code}
+
+The prompt should output **only** this install command and this exact code block, no explanations or extras.`,
+	);
 </script>
 
 <div class="w-full space-y-8">
@@ -148,10 +163,12 @@ logger.warn('Low disk space warning')`,
 				Integrate Logdash with your preferred SDK. Your dashboard will
 				update automatically when you send logs.
 			</p>
+
+			<SetupPrompt prompt={setupPrompt} />
 		</div>
 
 		<div class="collapse-open collapse">
-			<SDKInstaller bind:selectedSDK />
+			<SDKInstaller bind:selectedSDK bind:installationCode />
 		</div>
 
 		<div class="collapse-open collapse">

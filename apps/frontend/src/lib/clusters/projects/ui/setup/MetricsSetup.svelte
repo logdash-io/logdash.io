@@ -1,22 +1,19 @@
 <script lang="ts">
-	import { logsState } from '$lib/clusters/projects/application/logs.state.svelte';
-	import type { Project } from '$lib/clusters/projects/domain/project';
 	import MetricsListener from '$lib/clusters/projects/ui/presentational/MetricsListener.svelte';
 	import MetricsTiles from '$lib/clusters/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
-	import { getContext, onMount, type Component, type Snippet } from 'svelte';
+	import { LogdashSDKName, type LogdashSDK } from '$lib/shared/types.js';
+	import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
+	import { getContext, onMount, type Snippet } from 'svelte';
 	import Highlight from 'svelte-highlight';
 	import {
-		bash,
 		python,
 		ruby,
 		type LanguageType,
 	} from 'svelte-highlight/languages';
 	import typescript from 'svelte-highlight/languages/typescript';
-	import ProjectClaimer from './ProjectClaimer.svelte';
-	import SDKInstaller from './SDKInstaller.svelte';
-	import { LogdashSDKName, type LogdashSDK } from '$lib/shared/types.js';
-	import { CheckIcon, Copy, CheckCircle } from 'lucide-svelte';
 	import { metricsState } from '../../application/metrics.state.svelte.js';
+	import SDKInstaller from './SDKInstaller.svelte';
+	import SetupPrompt from './SetupPrompt.svelte';
 
 	type Props = {
 		project_id: string;
@@ -27,6 +24,7 @@
 	let selectedSDK: LogdashSDK = $state();
 
 	let copied = $state(false);
+	let installationCode = $state('');
 
 	const hasMetrics = $derived(metricsState.simplifiedMetrics.length > 0);
 
@@ -128,6 +126,19 @@ metrics.mutate('users', 1)`,
 			code: null,
 		},
 	};
+
+	let setupPrompt = $derived(
+		`Generate a minimal ${selectedSDK?.name} code snippet to initialize Logdash metrics.  
+First, install the package using default repo package manager, otherwise fallback to the following command:
+
+${installationCode}
+
+Then, here’s the exact code block to use (no comments, no explanation, do NOT include the install command):
+
+${SDK_METRICS_SETUPS[selectedSDK?.name]?.code}
+
+The prompt should output **only** this install command and this exact code block, no explanations or extras.`,
+	);
 </script>
 
 <div class="w-full">
@@ -147,10 +158,12 @@ metrics.mutate('users', 1)`,
 				Integrate Logdash with your preferred SDK. Your dashboard will
 				update automatically when you send metrics.
 			</p>
+
+			<SetupPrompt prompt={setupPrompt} />
 		</div>
 
 		<div class="collapse-open collapse">
-			<SDKInstaller bind:selectedSDK />
+			<SDKInstaller bind:selectedSDK bind:installationCode />
 		</div>
 
 		<div class="collapse-open collapse">

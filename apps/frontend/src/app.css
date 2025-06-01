@@ -82,11 +82,11 @@ body {
 }
 
 .tabs {
-	@apply rounded-full;
+	@apply rounded-xl;
 }
 
 .tab {
-	@apply rounded-full;
+	@apply rounded-lg;
 }
 
 .navlink-active {
