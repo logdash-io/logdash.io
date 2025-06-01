@@ -18,8 +18,10 @@
 
 	type Props = {
 		selectedSDK: LogdashSDK;
+		installationCode: string;
 	};
-	let { selectedSDK = $bindable() }: Props = $props();
+	let { selectedSDK = $bindable(), installationCode = $bindable() }: Props =
+		$props();
 
 	let sdkPopover = $state(null);
 
@@ -97,6 +99,9 @@
 
 	$effect(() => {
 		selectedSDK = SDK_LIST[selectedSDKIndex];
+	});
+	$effect(() => {
+		installationCode = SDK_INSTALLERS[selectedSDK.name].code;
 	});
 </script>
 
