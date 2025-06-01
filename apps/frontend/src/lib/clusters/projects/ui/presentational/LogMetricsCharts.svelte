@@ -153,8 +153,13 @@
 			return;
 		}
 
-		// Prepare chart dimensions
-		const width = container.clientWidth;
+		// Prepare chart dimensions - ensure we get the full container width
+		const containerRect = container.getBoundingClientRect();
+		const width = Math.max(
+			containerRect.width,
+			container.clientWidth,
+			container.offsetWidth,
+		);
 		const innerWidth = width - MARGIN.left - MARGIN.right;
 		const innerHeight = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 
@@ -167,16 +172,29 @@
 			now.getTime() - timeRangeHours * 60 * 60 * 1000,
 		);
 
-		// Create SVG and chart group
+		// Create SVG and chart group - ensure SVG takes full width
 		const svg = d3
 			.select(container)
 			.append('svg')
-			.attr('width', width)
-			.attr('height', CHART_HEIGHT);
+			.attr('width', '100%')
+			.attr('height', CHART_HEIGHT)
+			.attr('viewBox', `0 0 ${width} ${CHART_HEIGHT}`)
+			.attr('preserveAspectRatio', 'none');
 
 		const chart = svg
 			.append('g')
 			.attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+
+		// Create a clipping path to ensure bars don't overflow
+		const clipId = `clip-${granularity}-${Date.now()}`;
+		svg.append('defs')
+			.append('clipPath')
+			.attr('id', clipId)
+			.append('rect')
+			.attr('x', 0)
+			.attr('y', 0)
+			.attr('width', innerWidth)
+			.attr('height', innerHeight);
 
 		// Create scales
 		const xScale = createXScale(timeWindow, now, innerWidth);
@@ -184,7 +202,7 @@
 
 		// Add chart elements - REORDERED to put axes and grid first
 		drawAxes(chart, xScale, yScale, innerWidth, innerHeight);
-		drawBars(chart, data, xScale, yScale, granularity);
+		drawBars(chart, data, xScale, yScale, granularity, clipId);
 		drawInteractionLayer(
 			chart,
 			data,
@@ -232,36 +250,61 @@
 		xScale: d3.ScaleTime<number, number>,
 		yScale: d3.ScaleLinear<number, number>,
 		granularity: LogGranularity,
+		clipId: string,
 	) {
+		// Create a group for bars with clipping applied
+		const barsGroup = chart
+			.append('g')
+			.attr('clip-path', `url(#${clipId})`);
+
 		// Color scale for log types
 		const colorScale = d3
 			.scaleOrdinal<string>()
 			.domain(LOG_TYPES)
 			.range(LOG_COLORS);
 
+		// Get chart dimensions for bounds checking
+		const chartWidth = xScale.range()[1];
+		const chartHeight = yScale.range()[0];
+
 		// Process each data point
 		data.forEach((point) => {
 			// Calculate bar dimensions
 			const barStart = xScale(point.startDate);
 			const barEnd = xScale(point.endDate);
-			const barWidth = Math.max(1, barEnd - barStart);
-			const barHeight = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 
-			// Start from the bottom of the chart
-			let y0 = barHeight;
+			// Ensure bars don't overflow horizontally - clamp to chart bounds
+			const clampedBarStart = Math.max(0, Math.min(barStart, chartWidth));
+			const clampedBarEnd = Math.max(0, Math.min(barEnd, chartWidth));
+			const barWidth = Math.max(1, clampedBarEnd - clampedBarStart);
+
+			// Skip bars that are completely outside the visible area
+			if (clampedBarStart >= chartWidth || clampedBarEnd <= 0) {
+				return;
+			}
+
+			// Get the Y-axis maximum for clamping
+			const yMax = yScale.domain()[1];
+			let currentTotal = 0;
+			let y0 = chartHeight;
 
 			// Draw each log type segment, stacking them from bottom to top
 			LOG_TYPES.forEach((logType) => {
 				if (point[logType] > 0) {
-					// Calculate the height for this segment
-					const segmentHeight = barHeight - yScale(point[logType]);
+					// Calculate cumulative total and clamp to Y-axis bounds
+					const segmentValue = Math.min(
+						point[logType],
+						yMax - currentTotal,
+					);
+					if (segmentValue <= 0) return; // Skip if we've exceeded the Y-axis limit
 
-					// Calculate new y position (move up by segment height)
-					const y1 = y0 - segmentHeight;
+					// Calculate the Y position for this segment
+					const y1 = Math.max(0, yScale(currentTotal + segmentValue));
+					const segmentHeight = Math.max(MIN_BAR_HEIGHT, y0 - y1);
 
 					drawBarSegment(
-						chart,
-						barStart,
+						barsGroup,
+						clampedBarStart,
 						barWidth,
 						y0,
 						y1,
@@ -271,19 +314,20 @@
 						granularity,
 					);
 
-					// Update y0 for the next segment to stack on top of this one
+					// Update for next segment
+					currentTotal += segmentValue;
 					y0 = y1;
 				}
 			});
 
-			// Add border for the entire bar
-			chart
+			// Add border for the entire bar (also clipped)
+			barsGroup
 				.append('rect')
 				.attr('class', `bar-outline-${granularity}`)
-				.attr('x', barStart)
-				.attr('y', y0) // Use the last y0 value, which is now at the top of the stack
+				.attr('x', clampedBarStart)
+				.attr('y', y0)
 				.attr('width', barWidth)
-				.attr('height', barHeight - y0)
+				.attr('height', chartHeight - y0)
 				.attr('fill', 'none')
 				.attr('stroke', '#ffffff')
 				.attr('stroke-opacity', 0.3)
@@ -670,9 +714,13 @@
 		// Initial render
 		renderAllCharts();
 
-		// Handle resize
+		// Handle resize with debouncing to improve performance
+		let resizeTimeout: ReturnType<typeof setTimeout>;
 		const resizeObserver = new ResizeObserver(() => {
-			renderAllCharts();
+			clearTimeout(resizeTimeout);
+			resizeTimeout = setTimeout(() => {
+				renderAllCharts();
+			}, 150); // Debounce resize events
 		});
 
 		// Observe all chart containers
@@ -692,6 +740,7 @@
 			if (tooltip) tooltip.remove();
 			resizeObserver.disconnect();
 			clearInterval(updateInterval);
+			if (resizeTimeout) clearTimeout(resizeTimeout);
 		};
 	});
 
@@ -701,19 +750,22 @@
 			return;
 		}
 
-		const minuteData = createDatasetForGranularity('minute');
-		const hourData = createDatasetForGranularity('hour');
-		const dayData = createDatasetForGranularity('day');
+		// Wait for next tick to ensure containers are properly sized
+		setTimeout(() => {
+			const minuteData = createDatasetForGranularity('minute');
+			const hourData = createDatasetForGranularity('hour');
+			const dayData = createDatasetForGranularity('day');
 
-		if (minuteChartContainer) {
-			createChart(minuteChartContainer, minuteData, 'minute');
-		}
-		if (hourChartContainer) {
-			createChart(hourChartContainer, hourData, 'hour');
-		}
-		if (dayChartContainer) {
-			createChart(dayChartContainer, dayData, 'day');
-		}
+			if (minuteChartContainer && minuteChartContainer.clientWidth > 0) {
+				createChart(minuteChartContainer, minuteData, 'minute');
+			}
+			if (hourChartContainer && hourChartContainer.clientWidth > 0) {
+				createChart(hourChartContainer, hourData, 'hour');
+			}
+			if (dayChartContainer && dayChartContainer.clientWidth > 0) {
+				createChart(dayChartContainer, dayData, 'day');
+			}
+		}, 0);
 	}
 
 	$effect(() => {
@@ -752,7 +804,7 @@
 					</span>
 				</div>
 				<div
-					class="h-auto w-full"
+					class="chart-wrapper w-full"
 					bind:this={minuteChartContainer}
 				></div>
 			</div>
@@ -767,7 +819,10 @@
 						)}
 					</span>
 				</div>
-				<div class="h-auto w-full" bind:this={hourChartContainer}></div>
+				<div
+					class="chart-wrapper w-full"
+					bind:this={hourChartContainer}
+				></div>
 			</div>
 
 			<!-- Day granularity chart -->
@@ -780,7 +835,10 @@
 						)}
 					</span>
 				</div>
-				<div class="h-auto w-full" bind:this={dayChartContainer}></div>
+				<div
+					class="chart-wrapper w-full"
+					bind:this={dayChartContainer}
+				></div>
 			</div>
 		</div>
 	</div>
@@ -796,6 +854,13 @@
 <style>
 	.chart-container {
 		position: relative;
+		width: 100%;
+	}
+
+	.chart-wrapper {
+		width: 100%;
+		min-height: 200px;
+		overflow: hidden;
 	}
 
 	:global(.chart-tooltip) {
