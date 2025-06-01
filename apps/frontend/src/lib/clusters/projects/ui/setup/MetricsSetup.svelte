@@ -147,7 +147,7 @@ The prompt should output **only** this install command and this exact code block
 
 <div class="fixed left-0 top-0 z-50 flex h-full w-full bg-black/60">
 	<div
-		class="bg-base-200 sm:w-xl absolute right-0 top-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 p-6 sm:p-8"
+		class="bg-base-200 sm:w-xl absolute right-0 top-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:p-8"
 	>
 		<div class="space-y-2">
 			<h5 class="text-2xl font-semibold">

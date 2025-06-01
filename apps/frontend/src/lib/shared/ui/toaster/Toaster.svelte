@@ -44,7 +44,7 @@
 	{#each toast.activeToasts as _toast (_toast.id)}
 		{@const config = getToastConfig(_toast.type)}
 		<div
-			class="alert alert-soft flex w-80 max-w-[320px] rounded-xl px-3 shadow-lg {config.alertClass} relative animate-none overflow-hidden"
+			class="alert alert-soft ld-card-base flex w-80 max-w-[320px] rounded-xl px-3 shadow-lg {config.alertClass} relative animate-none overflow-hidden"
 			in:fly|global={{
 				duration: 200,
 				y: 15,
