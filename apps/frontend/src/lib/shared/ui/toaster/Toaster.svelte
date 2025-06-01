@@ -40,11 +40,11 @@
 	}
 </script>
 
-<div class="toast toast-end z-[1000] mr-4 mt-4 w-80 max-w-[320px] space-y-0">
+<div class="toast toast-end z-[1000] mr-4 mt-4 space-y-0">
 	{#each toast.activeToasts as _toast (_toast.id)}
 		{@const config = getToastConfig(_toast.type)}
 		<div
-			class="alert alert-soft flex rounded-xl px-3 shadow-lg {config.alertClass} relative animate-none overflow-hidden"
+			class="alert alert-soft flex w-80 max-w-[320px] rounded-xl px-3 shadow-lg {config.alertClass} relative animate-none overflow-hidden"
 			in:fly|global={{
 				duration: 200,
 				y: 15,
@@ -59,14 +59,19 @@
 		>
 			<div class="flex w-full shrink-0 items-start justify-start gap-4">
 				<div
-					class={['h-full min-h-14 w-1.5 rounded-full', config.bg]}
+					class={[
+						'min-h-14 max-w-1.5 flex-1 shrink-0 self-stretch rounded-full',
+						config.bg,
+					]}
 				></div>
 
-				<div class="flex flex-col justify-start">
+				<div class="flex flex-col justify-start gap-0.5 py-0.5">
 					<span class="text-base font-semibold capitalize">
 						{_toast.type}
 					</span>
-					<span class="text-secondary/80 flex-1">
+					<span
+						class="text-secondary/80 flex-1 whitespace-pre-wrap break-all"
+					>
 						{_toast.message}
 					</span>
 				</div>
@@ -80,7 +85,10 @@
 			</div>
 
 			<div
-				class="bg-base-content/20 absolute bottom-0 left-0 h-1 w-full origin-left bg-opacity-20"
+				class={[
+					'absolute bottom-0 left-0 h-0.5 w-full origin-left bg-opacity-20',
+					config.bg,
+				]}
 				style="animation: toast-progress {_toast.duration}ms linear forwards;"
 			></div>
 		</div>
