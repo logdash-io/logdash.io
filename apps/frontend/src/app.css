@@ -93,6 +93,10 @@ body {
 	@apply after:bg-primary relative after:absolute after:top-full after:left-1/2 after:h-1 after:w-1/5 after:max-w-8 after:min-w-5 after:-translate-x-1/2 after:rounded-full;
 }
 
+.collapse-open {
+	@apply shrink-0;
+}
+
 .gutter-both {
 	scrollbar-gutter: stable both-edges;
 }
