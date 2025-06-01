@@ -66,6 +66,8 @@ class MetricsState {
 		this._metrics = {};
 		this._shouldReconnect = true;
 
+		logger.debug(`syncing metrics for project ${project_id}...`);
+
 		await Promise.all([
 			this.fetchMetrics(project_id),
 			this._openMetricsStream(project_id, tabId),
