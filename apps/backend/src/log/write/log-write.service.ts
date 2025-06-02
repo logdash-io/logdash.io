@@ -1,14 +1,13 @@
+import { Logger } from '@logdash/js-sdk';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model } from 'mongoose';
+import { getOurEnv, OurEnv } from '../../shared/types/our-env.enum';
 import { LogEntity } from '../core/entities/log.entity';
 import { LogNormalized } from '../core/entities/log.interface';
-import { CreateLogDto } from './dto/create-log.dto';
 import { LogSerializer } from '../core/entities/log.serializer';
-import { sleep } from '../../shared/utils/sleep';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { getOurEnv, OurEnv } from '../../shared/types/our-env.enum';
-import { Logger } from '@logdash/js-sdk';
+import { CreateLogDto } from './dto/create-log.dto';
 
 @Injectable()
 export class LogWriteService {
@@ -63,13 +62,6 @@ export class LogWriteService {
       return;
     }
 
-    const logsPerSecond = 1;
-
-    const intervalBetweenLogs = 1000 / logsPerSecond;
-
-    for (let i = 0; i < logsPerSecond; i++) {
-      this.logger.log('Stress test log');
-      await sleep(intervalBetweenLogs);
-    }
+    this.logger.log('Stress test log');
   }
 }
