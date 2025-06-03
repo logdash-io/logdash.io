@@ -1,11 +1,10 @@
-import * as request from 'supertest';
-import { createTestApp } from '../utils/bootstrap';
-import { closeInMemoryMongoServer } from '../utils/mongo-in-memory-server';
-import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { Types } from 'mongoose';
-import { ProjectCoreService } from '../../src/project/core/project-core.service';
+import * as request from 'supertest';
+import { LogLevel } from '../../src/log/core/enums/log-level.enum';
+import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
-import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { createTestApp } from '../utils/bootstrap';
 
 describe('ProjectCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -24,8 +23,7 @@ describe('ProjectCoreController (reads)', () => {
 
   it('updates project if user is member', async () => {
     // given
-    const { user, project, token } =
-      await bootstrap.utils.generalUtils.setupAnonymous();
+    const { user, project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
     // when
     const response = await request(bootstrap.app.getHttpServer())
@@ -34,9 +32,7 @@ describe('ProjectCoreController (reads)', () => {
       .send({ name: 'some updated name' });
 
     // then
-    const updatedProject = await bootstrap.models.projectModel.findById(
-      project.id,
-    );
+    const updatedProject = await bootstrap.models.projectModel.findById(project.id);
 
     expect(response.status).toBe(200);
     expect(updatedProject!.name).toBe('some updated name');
@@ -45,8 +41,7 @@ describe('ProjectCoreController (reads)', () => {
 
   it('creates new project for free user', async () => {
     // given
-    const { user, cluster, token } =
-      await bootstrap.utils.generalUtils.setupAnonymous();
+    const { user, cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
     // when
     const response = await request(bootstrap.app.getHttpServer())
@@ -74,11 +69,10 @@ describe('ProjectCoreController (reads)', () => {
 
   it('creates new project for early bird user', async () => {
     // given
-    const { user, cluster, token } =
-      await bootstrap.utils.generalUtils.setupClaimed({
-        email: 'a@a.pl',
-        userTier: UserTier.EarlyBird,
-      });
+    const { user, cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+      email: 'a@a.pl',
+      userTier: UserTier.EarlyBird,
+    });
 
     // when
     const response = await request(bootstrap.app.getHttpServer())
@@ -98,8 +92,7 @@ describe('ProjectCoreController (reads)', () => {
 
   it('does not let free user create more than 5 projects', async () => {
     // given (ALREADY HAS 1 PROJECT)
-    const { project, token } =
-      await bootstrap.utils.generalUtils.setupAnonymous();
+    const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
     for (let i = 0; i < 3; i++) {
       await bootstrap.utils.projectUtils.createDefaultProject({
@@ -127,11 +120,10 @@ describe('ProjectCoreController (reads)', () => {
   it('does not early bird user creator more than 20 projects', async () => {
     // given (ALREADY HAS 1 PROJECT)
 
-    const { user, cluster, token } =
-      await bootstrap.utils.generalUtils.setupClaimed({
-        email: 'a@a.pl',
-        userTier: UserTier.EarlyBird,
-      });
+    const { user, cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+      email: 'a@a.pl',
+      userTier: UserTier.EarlyBird,
+    });
 
     for (let i = 0; i < 18; i++) {
       await bootstrap.utils.projectUtils.createDefaultProject({
@@ -170,5 +162,108 @@ describe('ProjectCoreController (reads)', () => {
     // then
     expect(response.status).toBe(403);
     expect(response.body.message).toBe('User is not a member of this cluster');
+  });
+
+  it('deletes project and all related data', async () => {
+    // given
+    const { user, project, apiKey, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+    const log = await bootstrap.utils.logUtils.createLog({
+      apiKey: apiKey.value,
+      createdAt: new Date().toISOString(),
+      message: 'testLog',
+      level: LogLevel.Silly,
+    });
+
+    const metric = await bootstrap.utils.metricUtils.recordMetric({
+      apiKey: apiKey.value,
+      name: 'testMetric',
+      operation: MetricOperation.Change,
+      value: 1,
+    });
+
+    const logsBeforeRemoval = await bootstrap.models.logModel.find({ projectId: project.id });
+    const metricsBeforeRemoval = await bootstrap.models.metricModel.find({ projectId: project.id });
+    const logMetricsBeforeRemoval = await bootstrap.models.logMetricModel.find({
+      projectId: project.id,
+    });
+    const metricRegisterEntriesBeforeRemoval = await bootstrap.models.metricRegisterModel.find({
+      projectId: project.id,
+    });
+    const projectsBeforeRemoval = await bootstrap.models.projectModel.find({
+      _id: new Types.ObjectId(project.id),
+    });
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer())
+      .delete(`/projects/${project.id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    // then
+    const logsAfterRemoval = await bootstrap.models.logModel.find({ projectId: project.id });
+    const metricsAfterRemoval = await bootstrap.models.metricModel.find({ projectId: project.id });
+    const logMetricsAfterRemoval = await bootstrap.models.logMetricModel.find({
+      projectId: project.id,
+    });
+    const metricRegisterEntriesAfterRemoval = await bootstrap.models.metricRegisterModel.find({
+      projectId: project.id,
+    });
+    const projectsAfterRemoval = await bootstrap.models.projectModel.find({
+      _id: new Types.ObjectId(project.id),
+    });
+
+    expect(response.status).toBe(200);
+
+    expect(logsBeforeRemoval).toHaveLength(1);
+    expect(metricsBeforeRemoval).toHaveLength(4);
+    expect(logMetricsBeforeRemoval).toHaveLength(4);
+    expect(metricRegisterEntriesBeforeRemoval).toHaveLength(1);
+    expect(projectsBeforeRemoval).toHaveLength(1);
+
+    expect(logsAfterRemoval).toHaveLength(0);
+    expect(metricsAfterRemoval).toHaveLength(0);
+    expect(logMetricsAfterRemoval).toHaveLength(0);
+    expect(metricRegisterEntriesAfterRemoval).toHaveLength(0);
+    expect(projectsAfterRemoval).toHaveLength(0);
+  });
+
+  it('does not let user delete project if he is not a member of cluster', async () => {
+    // given
+    const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+    const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer())
+      .delete(`/projects/${setupA.project.id}`)
+      .set('Authorization', `Bearer ${setupB.token}`);
+
+    // then
+    expect(response.status).toBe(403);
+    expect(response.body.message).toBe('User is not a member of this cluster');
+  });
+
+  it('returns 404 when trying to delete non-existent project', async () => {
+    // given
+    const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const nonExistentProjectId = new Types.ObjectId().toString();
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer())
+      .delete(`/projects/${nonExistentProjectId}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    // then
+    expect(response.status).toBe(404);
+  });
+
+  it('does not return when unauthorized', async () => {
+    // given
+    const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer()).delete(`/projects/${project.id}`);
+
+    // then
+    expect(response.status).toBe(401);
   });
 });
