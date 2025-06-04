@@ -7,7 +7,7 @@ import {
 import { CustomJwtService } from '../custom-jwt/custom-jwt.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import { UserWriteService } from '../../user/write/user-write.service';
-import { ClaimProjectBody } from './dto/claim-project.body';
+import { GithubClaimProjectBody } from './dto/github-claim-project.body';
 import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.enum';
 import { AuthMethod } from '../../user/core/enum/auth-method.enum';
 import { AuthEventEmitter } from '../events/auth-event.emitter';
@@ -15,13 +15,13 @@ import { ProjectLimitService } from '../../project/limit/project-limit-service';
 import { TokenResponse } from '../../shared/responses/token.response';
 import { UserNormalized } from '../../user/core/entities/user.interface';
 import { JwtPayloadDto } from '../custom-jwt/dto/jwt-payload.dto';
-import { AuthGithubDataService } from './auth-github-data.service';
+import { GithubAuthDataService } from './github-auth-data.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { Logger } from '@logdash/js-sdk';
 
 @Injectable()
-export class AuthGithubClaimService {
+export class GithubAuthClaimService {
   constructor(
     private readonly jwtService: CustomJwtService,
     private readonly userReadService: UserReadService,
@@ -29,12 +29,12 @@ export class AuthGithubClaimService {
     private readonly emitter: AuthEventEmitter,
     private readonly logger: Logger,
     private readonly projectLimitService: ProjectLimitService,
-    private readonly authGithubDataService: AuthGithubDataService,
+    private readonly authGithubDataService: GithubAuthDataService,
     private readonly clusterReadService: ClusterReadService,
     private readonly clusterWriteService: ClusterWriteService,
   ) {}
 
-  public async claimAccount(dto: ClaimProjectBody): Promise<TokenResponse> {
+  public async claimAccount(dto: GithubClaimProjectBody): Promise<TokenResponse> {
     this.logger.log(`Claiming account`, { accessToken: dto.accessToken });
 
     const accessToken = await this.authGithubDataService.getAccessToken(dto.githubCode);

@@ -50,10 +50,14 @@ export class ClusterMemberGuard implements CanActivate {
   }
 
   private async checkForProjectId(dto: { projectId: string; userId: string }): Promise<boolean> {
-    const clusterId = await this.projectReadCachedService.readClusterId(dto.projectId);
+    const project = await this.projectReadCachedService.readProject(dto.projectId);
+
+    if (!project) {
+      throw new ForbiddenException('Project not found');
+    }
 
     const isMember = await this.clusterReadCachedService.userIsMember({
-      clusterId,
+      clusterId: project.clusterId,
       userId: dto.userId,
     });
 

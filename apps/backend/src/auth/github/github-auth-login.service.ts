@@ -5,24 +5,24 @@ import { UserWriteService } from '../../user/write/user-write.service';
 import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.enum';
 import { AuthMethod } from '../../user/core/enum/auth-method.enum';
 import { AuthEventEmitter } from '../events/auth-event.emitter';
-import { LoginBody } from './dto/login.body';
+import { GithubLoginBody } from './dto/github-login.body';
 import { TokenResponse } from '../../shared/responses/token.response';
-import { AuthGithubDataService } from './auth-github-data.service';
+import { GithubAuthDataService } from './github-auth-data.service';
 import { Logger, Metrics } from '@logdash/js-sdk';
 
 @Injectable()
-export class AuthGithubLoginService {
+export class GithubAuthLoginService {
   constructor(
     private readonly jwtService: CustomJwtService,
     private readonly userReadService: UserReadService,
     private readonly userWriteService: UserWriteService,
     private readonly emitter: AuthEventEmitter,
     private readonly logger: Logger,
-    private readonly authGithubDataService: AuthGithubDataService,
+    private readonly authGithubDataService: GithubAuthDataService,
     private readonly metrics: Metrics,
   ) {}
 
-  public async login(dto: LoginBody): Promise<TokenResponse> {
+  public async login(dto: GithubLoginBody): Promise<TokenResponse> {
     this.logger.log(`Logging user in...`);
 
     const accessToken = await this.authGithubDataService.getAccessToken(dto.githubCode);

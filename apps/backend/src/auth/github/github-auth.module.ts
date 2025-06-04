@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AuthGithubLoginService } from './auth-github-login.service';
+import { GithubAuthLoginService } from './github-auth-login.service';
 import { UserReadModule } from '../../user/read/user-read.module';
 import { UserWriteModule } from '../../user/write/user-write.module';
 import { CustomJwtModule } from '../custom-jwt/custom-jwt.module';
-import { AuthGithubController } from './auth-github.controller';
+import { GithubAuthController } from './github-auth.controller';
 import { ProjectLimitModule } from '../../project/limit/project-limit-module';
-import { AuthGithubDataService } from './auth-github-data.service';
-import { AuthGithubClaimService } from './auth-guthub-claim.service';
+import { GithubAuthDataService } from './github-auth-data.service';
+import { GithubAuthClaimService } from './github-auth-claim.service';
 import { ClusterReadModule } from '../../cluster/read/cluster-read.module';
 import { ClusterWriteModule } from '../../cluster/write/cluster-write.module';
 
@@ -19,11 +19,7 @@ import { ClusterWriteModule } from '../../cluster/write/cluster-write.module';
     ClusterReadModule,
     ClusterWriteModule,
   ],
-  controllers: [AuthGithubController],
-  providers: [
-    AuthGithubLoginService,
-    AuthGithubClaimService,
-    AuthGithubDataService,
-  ],
+  controllers: [GithubAuthController],
+  providers: [GithubAuthLoginService, GithubAuthClaimService, GithubAuthDataService],
 })
-export class AuthGithubModule {}
+export class GithubAuthModule {}
