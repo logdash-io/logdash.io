@@ -19,7 +19,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "stripe": "stripe listen --forward-to localhost:3000/payments/stripe/webhook",
-    "migrate-up": "npx migrate-mongo up"
+    "migrate-up": "npx migrate-mongo up",
+    "encrypt": "npx @dotenvx/dotenvx encrypt -f .env.encrypted",
+    "decrypt": "npx @dotenvx/dotenvx decrypt -f .env.encrypted"
   },
   "dependencies": {
     "@logdash/js-sdk": "^1.0.9",
@@ -83,9 +85,12 @@
     "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": ["ts-jest", {
-        "tsconfig": "tsconfig.json"
-      }]
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json"
+        }
+      ]
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
