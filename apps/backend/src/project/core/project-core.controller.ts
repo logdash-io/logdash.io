@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -52,6 +53,10 @@ export class ProjectCoreController {
   @ApiResponse({ type: ProjectSerialized })
   public async readById(@Param('projectId') projectId: string): Promise<ProjectSerialized> {
     const project = await this.projectReadService.readById(projectId);
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
 
     const logsPerHourRateLimit = getProjectPlanConfig(project.tier).logs.rateLimitPerHour;
 

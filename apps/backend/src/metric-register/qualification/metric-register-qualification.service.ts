@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { MetricRegisterReadService } from '../read/metric-register-read.service';
 import { QualifyMetricDto } from './dto/qualify-metric.dto';
 import { groupBy } from '../../shared/utils/group-by';
@@ -95,7 +95,17 @@ export class MetricRegisterQualificationService {
       await this.metricRegisterReadService.readRegisteredMetricNames(projectId),
     );
 
-    const tier = await this.projectReadCachedService.readTier(projectId);
+    const project = await this.projectReadCachedService.readProject(projectId);
+
+    if (!project) {
+      return {
+        alreadyRegistered: [],
+        canBeRegistered: [],
+        cantBeRegistered: metricNamesCandidates,
+      };
+    }
+
+    const tier = project.tier;
 
     const allowedNumberOfMetrics = getProjectPlanConfig(tier).metrics.maxMetricsRegisterEntries;
 

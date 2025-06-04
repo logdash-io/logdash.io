@@ -1,10 +1,7 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
-import {
-  RedisService,
-  TtlOverwriteStrategy,
-} from '../../shared/redis/redis.service';
+import { RedisService, TtlOverwriteStrategy } from '../../shared/redis/redis.service';
 
 @Injectable()
 export class LogRateLimitService {
@@ -24,7 +21,13 @@ export class LogRateLimitService {
   public async readAndIncrementLogsCount(projectId: string): Promise<void> {
     const requestCount = await this.incrementLogsCount(projectId);
 
-    const tier = await this.projectReadCachedService.readTier(projectId);
+    const project = await this.projectReadCachedService.readProject(projectId);
+
+    if (!project) {
+      throw new BadRequestException('Project not found');
+    }
+
+    const tier = project.tier;
 
     if (requestCount >= getProjectPlanConfig(tier).logs.rateLimitPerHour) {
       throw new HttpException('Rate limit exceeded', 429);

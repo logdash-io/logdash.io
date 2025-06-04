@@ -14,7 +14,7 @@ export class ApiKeyReadCachedService {
     private readonly redisService: RedisService,
   ) {}
 
-  public async readProjectId(apiKeyValue: string): Promise<string> {
+  public async readProjectId(apiKeyValue: string): Promise<string | null> {
     const cacheKey = `api-key:${apiKeyValue}:project-id`;
     const cacheTtlSeconds = 60;
 
@@ -33,7 +33,7 @@ export class ApiKeyReadCachedService {
     if (!apiKey) {
       await this.redisService.set(cacheKey, NON_EXISTENT, cacheTtlSeconds);
       this.logger.error(`API key not found`, { apiKeyValue });
-      throw Error('API key not found');
+      return null;
     }
 
     await this.redisService.set(cacheKey, apiKey.projectId, cacheTtlSeconds);

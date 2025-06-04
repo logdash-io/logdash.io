@@ -10,8 +10,12 @@ import { ProjectTier } from '../core/enums/project-tier.enum';
 export class ProjectReadService {
   constructor(@InjectModel(ProjectEntity.name) private model: Model<ProjectEntity>) {}
 
-  public async readById(projectId: string): Promise<ProjectNormalized> {
+  public async readById(projectId: string): Promise<ProjectNormalized | null> {
     const project = await this.model.findById(projectId);
+
+    if (!project) {
+      return null;
+    }
 
     return ProjectSerializer.normalize(project);
   }
@@ -26,16 +30,6 @@ export class ProjectReadService {
     const projects = await this.model.find({ clusterId });
 
     return projects.map((project) => ProjectSerializer.normalize(project));
-  }
-
-  public async readByProjectId(projectId: string): Promise<ProjectNormalized> {
-    const project = await this.model.findById(projectId);
-
-    if (!project) {
-      throw new NotFoundException('Project not found');
-    }
-
-    return ProjectSerializer.normalize(project);
   }
 
   public async readCurrentIndexMany(projectIds: string[]): Promise<Record<string, number>> {
