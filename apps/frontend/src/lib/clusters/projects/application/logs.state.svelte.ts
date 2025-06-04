@@ -4,13 +4,17 @@ import { arrayToObject } from '$lib/shared/utils/array-to-object';
 import { createLogger } from '$lib/shared/logger';
 import queryString from 'query-string';
 import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
+import { envConfig } from '$lib/shared/utils/env-config.js';
+import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/shared/utils/cookies.utils.js';
+import { getCookieValue } from '$lib/shared/utils/client-cookies.utils.js';
+import { EventSource } from 'eventsource';
 
 const logger = createLogger('logs.state', true);
 
 // todo: divide api calls responsibility from state
 class LogsState {
 	private _logs = $state<Record<Log['id'], Log>>({});
-	private syncConnection: Source | null = null;
+	private syncConnection: EventSource | null = null;
 	private _shouldReconnect = true;
 	private _unsubscribe: () => void | null = null;
 	private _loadingPage = $state(false);
@@ -58,53 +62,73 @@ class LogsState {
 
 	private _openLogsStream(project_id: string, tabId: string): Promise<void> {
 		return new Promise((resolve, reject) => {
-			this.syncConnection = source(
-				`/app/api/${project_id}/logs?tab_id=${tabId}`,
+			this.syncConnection = new EventSource(
+				`${envConfig.apiBaseUrl}/projects/${project_id}/logs/sse?tabId=${tabId}`,
 				{
-					close: ({ connect }) => {
-						if (!this._shouldReconnect) {
-							logger.debug(
-								'sse manually disconnected, skipping reconnect...',
-							);
-							return;
-						}
-						// todo refetch logs after the last in memory log id
-						logger.debug('reconnecting...');
-						connect();
-					},
-					error: (error) => {
-						logger.error('sse error:', error);
-						reject(error);
-					},
-					open: () => {
-						logger.debug('sse opened');
-						resolve();
-					},
-					options: {
-						mode: 'cors',
-						openWhenHidden: true,
-						keepalive: true,
-						cache: 'no-cache',
-					},
+					fetch: (input, init) =>
+						fetch(input, {
+							...init,
+							headers: {
+								...init.headers,
+								Authorization: `Bearer ${getCookieValue(ACCESS_TOKEN_COOKIE_NAME, document.cookie)}`,
+							},
+						}),
 				},
 			);
-			const value = this.syncConnection.select('message');
 
-			this._unsubscribe = value.subscribe((message) => {
+			const onOpen = (event) => {
+				logger.debug('o', event);
+				resolve();
+			};
+			const onError = (event) => {
+				logger.error('SSE connection error:', event);
+
+				if (this._shouldReconnect) {
+					logger.debug('Attempting to reconnect in 3 seconds...');
+					setTimeout(() => {
+						if (this._shouldReconnect) {
+							this._openLogsStream(project_id, tabId);
+						}
+					}, 3000);
+				}
+
+				reject(new Error('SSE connection failed'));
+			};
+			const onMessage = (event) => {
 				try {
-					logger.info('new SSE message:', message);
-					if (!message.length) {
-						logger.debug('SSE message empty, skipping...');
-						return;
-					}
-					const log = JSON.parse(message);
+					logger.info('new SSE message:', event);
+					const log = JSON.parse(event.data) as Log;
 					this._logs[log.id] = log;
 
 					logger.debug('added log:', log);
 				} catch (e) {
 					logger.error('sse message error:', e);
 				}
+			};
+
+			this.syncConnection.addEventListener('open', onOpen, {
+				once: true,
 			});
+			this.syncConnection.addEventListener('error', onError);
+			this.syncConnection.addEventListener('message', onMessage);
+
+			this._unsubscribe = () => {
+				if (!this.syncConnection) {
+					logger.debug(
+						'No active SSE connection to unsubscribe from',
+					);
+					return;
+				}
+
+				this.syncConnection.removeEventListener('open', onOpen);
+				this.syncConnection.removeEventListener('error', onError);
+				this.syncConnection.removeEventListener('message', onMessage);
+
+				logger.debug('Unsubscribing from SSE connection');
+
+				this.syncConnection?.close();
+				this.syncConnection = null;
+			};
 		});
 	}
 
