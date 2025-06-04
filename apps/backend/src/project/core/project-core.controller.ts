@@ -46,16 +46,12 @@ export class ProjectCoreController {
   @UseGuards(ClusterMemberGuard)
   @Get('projects/:projectId')
   @ApiResponse({ type: ProjectSerialized })
-  public async readById(
-    @Param('projectId') projectId: string,
-  ): Promise<ProjectSerialized> {
+  public async readById(@Param('projectId') projectId: string): Promise<ProjectSerialized> {
     const project = await this.projectReadService.readById(projectId);
 
-    const logsPerHourRateLimit = getProjectPlanConfig(project.tier).logs
-      .rateLimitPerHour;
+    const logsPerHourRateLimit = getProjectPlanConfig(project.tier).logs.rateLimitPerHour;
 
-    const currentUsage =
-      await this.logRateLimitService.readLogsCount(projectId);
+    const currentUsage = await this.logRateLimitService.readLogsCountInLastHour(projectId);
 
     return ProjectSerializer.serialize(project, {
       rateLimits: [
@@ -76,10 +72,9 @@ export class ProjectCoreController {
   ): Promise<ProjectSerialized[]> {
     const projects = await this.projectReadService.readByClusterId(clusterId);
 
-    const featuresMap =
-      await this.projectFeaturesService.getProjectFeaturesMany(
-        projects.map((project) => project.id),
-      );
+    const featuresMap = await this.projectFeaturesService.getProjectFeaturesMany(
+      projects.map((project) => project.id),
+    );
 
     return ProjectSerializer.serializeMany(projects, { featuresMap });
   }
@@ -104,8 +99,7 @@ export class ProjectCoreController {
     @Body() dto: CreateProjectBody,
     @Param('clusterId') clusterId: string,
   ): Promise<CreateProjectResponse> {
-    const isWithinLimit =
-      await this.projectLimitService.newProjectWouldBeWithinLimit(userId);
+    const isWithinLimit = await this.projectLimitService.newProjectWouldBeWithinLimit(userId);
 
     if (!isWithinLimit) {
       throw new ConflictException('User has reached the project limit');

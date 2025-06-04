@@ -103,7 +103,7 @@ export class LogCoreController {
   ): Promise<SuccessResponse> {
     const projectId = await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
 
-    await this.logRateLimitService.readAndIncrementLogsCount(projectId);
+    await this.logRateLimitService.requireWithinLimit(projectId);
 
     const result = this.logQueueingService.queueLog({
       ...dto,
@@ -133,7 +133,7 @@ export class LogCoreController {
   ): Promise<SuccessResponse> {
     const projectId = await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
 
-    await this.logRateLimitService.readAndIncrementLogsCount(projectId, dto.logs.length);
+    await this.logRateLimitService.requireWithinLimit(projectId, dto.logs.length);
 
     dto.logs.forEach((logDto) => {
       const result = this.logQueueingService.queueLog({
