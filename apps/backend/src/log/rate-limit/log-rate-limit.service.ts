@@ -18,8 +18,8 @@ export class LogRateLimitService {
     return usage ? parseInt(usage) : 0;
   }
 
-  public async readAndIncrementLogsCount(projectId: string): Promise<void> {
-    const requestCount = await this.incrementLogsCount(projectId);
+  public async readAndIncrementLogsCount(projectId: string, amount: number = 1): Promise<void> {
+    const requestCount = await this.incrementLogsCount(projectId, amount);
 
     const tier = await this.projectReadCachedService.readTier(projectId);
 
@@ -28,27 +28,7 @@ export class LogRateLimitService {
     }
   }
 
-  public async readAndIncrementLogsCountBatch(projectId: string, batchSize: number): Promise<void> {
-    const requestCount = await this.incrementLogsCountBy(projectId, batchSize);
-
-    const tier = await this.projectReadCachedService.readTier(projectId);
-
-    if (requestCount >= getProjectPlanConfig(tier).logs.rateLimitPerHour) {
-      throw new HttpException('Rate limit exceeded', 429);
-    }
-  }
-
-  private async incrementLogsCount(projectId: string): Promise<number> {
-    const key = `project:${projectId}:logs-count-in-last-hour`;
-    const ttlSeconds = 60 * 60; // 1 hour
-
-    return await this.redisService.increment(key, {
-      ttlOverwriteStrategy: TtlOverwriteStrategy.SetOnlyIfNoExpiry,
-      ttlSeconds,
-    });
-  }
-
-  private async incrementLogsCountBy(projectId: string, amount: number): Promise<number> {
+  private async incrementLogsCount(projectId: string, amount: number): Promise<number> {
     const key = `project:${projectId}:logs-count-in-last-hour`;
     const ttlSeconds = 60 * 60; // 1 hour
 
