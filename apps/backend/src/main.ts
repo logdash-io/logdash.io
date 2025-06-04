@@ -25,8 +25,6 @@ async function bootstrap() {
     }),
   );
 
-  console.log(getEnvConfig());
-
   await app.init();
   await app.listen(process.env.PORT ?? 3000);
 }
