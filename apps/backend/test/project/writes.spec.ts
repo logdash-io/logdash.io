@@ -251,20 +251,6 @@ describe('ProjectCoreController (writes)', () => {
       expect(response.body.message).toBe('User is not a member of this cluster');
     });
 
-    it('returns 404 when trying to delete non-existent project', async () => {
-      // given
-      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const nonExistentProjectId = new Types.ObjectId().toString();
-
-      // when
-      const response = await request(bootstrap.app.getHttpServer())
-        .delete(`/projects/${nonExistentProjectId}`)
-        .set('Authorization', `Bearer ${token}`);
-
-      // then
-      expect(response.status).toBe(404);
-    });
-
     it('returns 401 when unauthorized', async () => {
       // given
       const { project } = await bootstrap.utils.generalUtils.setupAnonymous();

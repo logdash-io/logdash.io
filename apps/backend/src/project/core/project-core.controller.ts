@@ -139,6 +139,7 @@ export class ProjectCoreController {
   @Delete('projects/:projectId')
   @ApiResponse({ type: SuccessResponse })
   public async delete(@Param('projectId') projectId: string): Promise<SuccessResponse> {
+    console.log('DUPA');
     await this.projectRemovalService.deleteProjectById(projectId);
 
     return new SuccessResponse();
