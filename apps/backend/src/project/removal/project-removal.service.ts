@@ -25,38 +25,41 @@ export class ProjectRemovalService {
     private readonly logger: Logger,
   ) {}
 
-  // optimize: can be optimized to only read ids
   public async deleteProjectsByClusterId(clusterId: string): Promise<void> {
     const projects = await this.projectReadService.readByClusterId(clusterId);
 
     for (const project of projects) {
-      this.logger.log(`Deleting project...`, {
-        projectId: project.id,
-      });
-      await this.projectWriteService.delete(project.id);
-
-      this.logger.log(`Deleting logs for project...`, {
-        projectId: project.id,
-      });
-      await this.logWriteService.deleteBelongingToProject(project.id);
-
-      this.logger.log(`Deleting metrics for project...`, {
-        projectId: project.id,
-      });
-      await this.metricWriteService.deleteBelongingToProject(project.id);
-
-      this.logger.log(`Deleting metric register entries for project...`, {
-        projectId: project.id,
-      });
-      await this.metricRegisterWriteService.deleteBelongingToProject(project.id);
-
-      this.logger.log(`Deleting log metrics for project...`, {
-        projectId: project.id,
-      });
-      await this.logMetricWriteService.deleteBelongingToProject(project.id);
+      await this.deleteProjectById(project.id);
     }
 
     await this.deleteSysHealth(clusterId);
+  }
+
+  public async deleteProjectById(projectId: string): Promise<void> {
+    this.logger.log(`Deleting project...`, {
+      projectId,
+    });
+    await this.projectWriteService.delete(projectId);
+
+    this.logger.log(`Deleting logs for project...`, {
+      projectId,
+    });
+    await this.logWriteService.deleteBelongingToProject(projectId);
+
+    this.logger.log(`Deleting metrics for project...`, {
+      projectId,
+    });
+    await this.metricWriteService.deleteBelongingToProject(projectId);
+
+    this.logger.log(`Deleting metric register entries for project...`, {
+      projectId,
+    });
+    await this.metricRegisterWriteService.deleteBelongingToProject(projectId);
+
+    this.logger.log(`Deleting log metrics for project...`, {
+      projectId,
+    });
+    await this.logMetricWriteService.deleteBelongingToProject(projectId);
   }
 
   private async deleteSysHealth(clusterId: string): Promise<void> {
