@@ -1,12 +1,13 @@
 import { createClient, type ClickHouseClient } from '@clickhouse/client';
 import { Logger, Metrics } from '@logdash/js-sdk';
 import { Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { getEnvConfig } from 'src/shared/configs/env-configs';
 
 enum PerformanceMetric {
-  RamUsage = 'ramUsage',
-  CpuLoadPercentage = 'cpuLoadPercentage',
-  StorageUsage = 'storageUsage',
+  RamUsage = 'clickhouse.ramUsage',
+  CpuLoadPercentage = 'clickhouse.cpuLoadPercentage',
+  StorageUsage = 'clickhouse.storageUsage',
 }
 
 @Injectable()
@@ -21,7 +22,8 @@ export class ClickhouseO11yService {
     this.clickhouse = createClient({ ...clickHouseConfig });
   }
 
-  public async collectAndReportMetrics(): Promise<void> {
+  @Cron(CronExpression.EVERY_MINUTE)
+  private async collectAndReportMetrics(): Promise<void> {
     try {
       await this.collectMetrics();
     } catch (error) {
