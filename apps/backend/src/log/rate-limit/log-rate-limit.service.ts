@@ -1,10 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
-import {
-  RedisService,
-  TtlOverwriteStrategy,
-} from '../../shared/redis/redis.service';
+import { RedisService, TtlOverwriteStrategy } from '../../shared/redis/redis.service';
 
 @Injectable()
 export class LogRateLimitService {
@@ -31,11 +28,31 @@ export class LogRateLimitService {
     }
   }
 
+  public async readAndIncrementLogsCountBatch(projectId: string, batchSize: number): Promise<void> {
+    const requestCount = await this.incrementLogsCountBy(projectId, batchSize);
+
+    const tier = await this.projectReadCachedService.readTier(projectId);
+
+    if (requestCount >= getProjectPlanConfig(tier).logs.rateLimitPerHour) {
+      throw new HttpException('Rate limit exceeded', 429);
+    }
+  }
+
   private async incrementLogsCount(projectId: string): Promise<number> {
     const key = `project:${projectId}:logs-count-in-last-hour`;
     const ttlSeconds = 60 * 60; // 1 hour
 
     return await this.redisService.increment(key, {
+      ttlOverwriteStrategy: TtlOverwriteStrategy.SetOnlyIfNoExpiry,
+      ttlSeconds,
+    });
+  }
+
+  private async incrementLogsCountBy(projectId: string, amount: number): Promise<number> {
+    const key = `project:${projectId}:logs-count-in-last-hour`;
+    const ttlSeconds = 60 * 60; // 1 hour
+
+    return await this.redisService.incrementBy(key, amount, {
       ttlOverwriteStrategy: TtlOverwriteStrategy.SetOnlyIfNoExpiry,
       ttlSeconds,
     });
