@@ -32,6 +32,7 @@ import { LogRateLimitService } from '../rate-limit/log-rate-limit.service';
 import { LogReadService } from '../read/log-read.service';
 import { DemoEndpoint } from '../../demo/decorators/demo-endpoint.decorator';
 import { CreateLogBody } from './dto/create-log.body';
+import { CreateLogsBatchBody } from './dto/create-logs-batch.body';
 import { ReadLogsQuery } from './dto/read-newer-than.query';
 import { StreamProjectLogsQuery } from './dto/stream-project-logs.query';
 import { LogSerialized } from './entities/log.interface';
@@ -102,7 +103,7 @@ export class LogCoreController {
   ): Promise<SuccessResponse> {
     const projectId = await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
 
-    await this.logRateLimitService.readAndIncrementLogsCount(projectId);
+    await this.logRateLimitService.requireWithinLimit(projectId);
 
     const result = this.logQueueingService.queueLog({
       ...dto,
@@ -117,6 +118,38 @@ export class LogCoreController {
       level: dto.level,
       message: dto.message,
       sequenceNumber: dto.sequenceNumber,
+    });
+
+    return new SuccessResponse();
+  }
+
+  @Public()
+  @Post('logs/batch')
+  @ApiSecurity('project-api-key')
+  @ApiResponseProperty({ type: SuccessResponse })
+  public async createBatch(
+    @Body() dto: CreateLogsBatchBody,
+    @Headers('project-api-key') apiKeyValue: string,
+  ): Promise<SuccessResponse> {
+    const projectId = await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
+
+    await this.logRateLimitService.requireWithinLimit(projectId, dto.logs.length);
+
+    dto.logs.forEach((logDto) => {
+      const result = this.logQueueingService.queueLog({
+        ...logDto,
+        createdAt: new Date(logDto.createdAt),
+        projectId,
+      });
+
+      this.logEventEmitter.emitLogCreatedEvent({
+        id: result.id,
+        createdAt: logDto.createdAt,
+        projectId,
+        level: logDto.level,
+        message: logDto.message,
+        sequenceNumber: logDto.sequenceNumber,
+      });
     });
 
     return new SuccessResponse();
