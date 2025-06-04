@@ -41,7 +41,6 @@ export class ProjectCoreController {
     private readonly projectWriteService: ProjectWriteService,
     private readonly apiKeyWriteService: ApiKeyWriteService,
     private readonly projectLimitService: ProjectLimitService,
-    private readonly projectCoreService: ProjectCoreService,
     private readonly userReadCachedService: UserReadCachedService,
     private readonly projectFeaturesService: ProjectFeaturesService,
     private readonly logRateLimitService: LogRateLimitService,
