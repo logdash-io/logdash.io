@@ -1,10 +1,12 @@
 <script lang="ts">
 	import DotNetIcon from '$lib/shared/icons/DotNetIcon.svelte';
+	import GoIcon from '$lib/shared/icons/GoIcon.svelte';
 	import JavaIcon from '$lib/shared/icons/JavaIcon.svelte';
 	import NodeJsIcon from '$lib/shared/icons/NodeJSIcon.svelte';
 	import PhpIcon from '$lib/shared/icons/PHPIcon.svelte';
 	import PythonIcon from '$lib/shared/icons/PythonIcon.svelte';
 	import RubyIcon from '$lib/shared/icons/RubyIcon.svelte';
+	import RustIcon from '$lib/shared/icons/RustIcon.svelte';
 	import { LogdashSDKName, type LogdashSDK } from '$lib/shared/types.js';
 	import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 	import {
@@ -58,6 +60,14 @@
 			language: null,
 			code: null,
 		},
+		[LogdashSDKName.GO]: {
+			language: null,
+			code: null,
+		},
+		[LogdashSDKName.RUST]: {
+			language: null,
+			code: null,
+		},
 		[LogdashSDKName.OTHER]: {
 			language: null,
 			code: null,
@@ -88,6 +98,14 @@
 		{
 			name: LogdashSDKName.DOTNET,
 			icon: DotNetIcon,
+		},
+		{
+			name: LogdashSDKName.GO,
+			icon: GoIcon,
+		},
+		{
+			name: LogdashSDKName.RUST,
+			icon: RustIcon,
 		},
 		{
 			name: LogdashSDKName.OTHER,

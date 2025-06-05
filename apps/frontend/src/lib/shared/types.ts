@@ -18,6 +18,8 @@ export enum LogdashSDKName {
 	PHP = 'PHP',
 	RUBY = 'Ruby',
 	DOTNET = 'C#/DotNet',
+	GO = 'Go',
+	RUST = 'Rust',
 	OTHER = 'Other',
 }
 
