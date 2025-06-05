@@ -7,6 +7,10 @@ import {
 	type Metric,
 	type SimplifiedMetric,
 } from '../domain/metric';
+import { envConfig } from '$lib/shared/utils/env-config.js';
+import { getCookieValue } from '$lib/shared/utils/client-cookies.utils.js';
+import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/shared/utils/cookies.utils.js';
+import { EventSource } from 'eventsource';
 
 const logger = createLogger('metrics.state', true);
 
@@ -22,7 +26,7 @@ class MetricsState {
 		>
 	>({});
 	private _initialized = $state(false);
-	private syncConnection: Source | null = null;
+	private syncConnection: EventSource | null = null;
 	private _shouldReconnect = true;
 	private _metricDetailsLoading = $state(false);
 	private _unsubscribe: () => void | null = null;
@@ -79,46 +83,46 @@ class MetricsState {
 		tabId: string,
 	): Promise<void> {
 		return new Promise((resolve, reject) => {
-			this.syncConnection = source(
-				`/app/api/${project_id}/metrics?tab_id=${tabId}`,
+			this._unsubscribe?.();
+
+			this.syncConnection = new EventSource(
+				`${envConfig.apiBaseUrl}/projects/${project_id}/metrics/sse?tab_id=${tabId}`,
 				{
-					close: ({ connect }) => {
-						if (!this._shouldReconnect) {
-							logger.debug(
-								'sse manually disconnected, skipping reconnect...',
-							);
-							return;
-						}
-						// todo refetch logs after the last in memory log id
-						logger.debug('reconnecting...');
-						connect();
-					},
-					error: (error) => {
-						logger.error('sse error:', error);
-						reject(error);
-					},
-					open: () => {
-						logger.debug('sse opened');
-						resolve();
-					},
-					options: {
-						mode: 'cors',
-						openWhenHidden: true,
-						keepalive: true,
-						cache: 'no-cache',
-					},
+					fetch: (input, init) =>
+						fetch(input, {
+							...init,
+							headers: {
+								...init.headers,
+								Authorization: `Bearer ${getCookieValue(ACCESS_TOKEN_COOKIE_NAME, document.cookie)}`,
+							},
+						}),
 				},
 			);
-			const value = this.syncConnection.select('message');
 
-			this._unsubscribe = value.subscribe((message) => {
+			const onOpen = (event) => {
+				logger.debug('o', event);
+				resolve();
+			};
+			const onError = (event) => {
+				logger.error('SSE connection error:', event);
+
+				this._unsubscribe?.();
+
+				if (this._shouldReconnect) {
+					logger.debug('Attempting to reconnect in 3 seconds...');
+					setTimeout(() => {
+						if (this._shouldReconnect) {
+							this._openMetricsStream(project_id, tabId);
+						}
+					}, 3000);
+				}
+
+				reject(new Error('SSE connection failed'));
+			};
+			const onMessage = (event) => {
 				try {
-					if (!message.length) {
-						logger.debug('SSE message empty, skipping...');
-						return;
-					}
-					logger.debug('SSE message:', message);
-					const metric: Metric = JSON.parse(message);
+					logger.debug('SSE message:', event);
+					const metric: Metric = JSON.parse(event.data);
 					const metricId = metric.metricRegisterEntryId;
 
 					this._metrics[metricId] =
@@ -174,7 +178,31 @@ class MetricsState {
 				} catch (e) {
 					logger.error('sse message error:', e);
 				}
+			};
+
+			this.syncConnection.addEventListener('open', onOpen, {
+				once: true,
 			});
+			this.syncConnection.addEventListener('error', onError);
+			this.syncConnection.addEventListener('message', onMessage);
+
+			this._unsubscribe = () => {
+				if (!this.syncConnection) {
+					logger.debug(
+						'No active SSE connection to unsubscribe from',
+					);
+					return;
+				}
+
+				this.syncConnection.removeEventListener('open', onOpen);
+				this.syncConnection.removeEventListener('error', onError);
+				this.syncConnection.removeEventListener('message', onMessage);
+
+				logger.debug('Unsubscribing from SSE connection');
+
+				this.syncConnection?.close();
+				this.syncConnection = null;
+			};
 		});
 	}
 

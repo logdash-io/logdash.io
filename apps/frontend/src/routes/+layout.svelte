@@ -28,7 +28,7 @@
 	let loadedPosthogInstance: PostHog | null = $state(null);
 
 	$effect.pre(() => {
-		if (browser) {
+		if (browser && !isDev()) {
 			posthog.init(envConfig.posthog.key, {
 				api_host: envConfig.posthog.proxy,
 				ui_host: envConfig.posthog.host,

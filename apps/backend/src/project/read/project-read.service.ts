@@ -1,49 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Cursor, Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { ProjectEntity } from '../core/entities/project.entity';
 import { ProjectNormalized } from '../core/entities/project.interface';
 import { ProjectSerializer } from '../core/entities/project.serializer';
-import { UserIsMemberDto } from './dto/user-is-member.dto';
 import { ProjectTier } from '../core/enums/project-tier.enum';
 
 @Injectable()
 export class ProjectReadService {
-  constructor(
-    @InjectModel(ProjectEntity.name) private model: Model<ProjectEntity>,
-  ) {}
+  constructor(@InjectModel(ProjectEntity.name) private model: Model<ProjectEntity>) {}
 
-  public async readById(projectId: string): Promise<ProjectNormalized> {
+  public async readById(projectId: string): Promise<ProjectNormalized | null> {
     const project = await this.model.findById(projectId);
+
+    if (!project) {
+      return null;
+    }
 
     return ProjectSerializer.normalize(project);
   }
 
-  public async readByUserIdInMembers(
-    userId: string,
-  ): Promise<ProjectNormalized[]> {
+  public async readByUserIdInMembers(userId: string): Promise<ProjectNormalized[]> {
     const projects = await this.model.find({ members: userId });
 
     return projects.map((project) => ProjectSerializer.normalize(project));
   }
 
-  public async readByClusterId(
-    clusterId: string,
-  ): Promise<ProjectNormalized[]> {
+  public async readByClusterId(clusterId: string): Promise<ProjectNormalized[]> {
     const projects = await this.model.find({ clusterId });
 
     return projects.map((project) => ProjectSerializer.normalize(project));
   }
 
-  public async readByProjectId(projectId: string): Promise<ProjectNormalized> {
-    const project = await this.model.findById(projectId);
-
-    return ProjectSerializer.normalize(project);
-  }
-
-  public async readCurrentIndexMany(
-    projectIds: string[],
-  ): Promise<Record<string, number>> {
+  public async readCurrentIndexMany(projectIds: string[]): Promise<Record<string, number>> {
     const projects = await this.model.find(
       { _id: { $in: projectIds } },
       { 'logValues.currentIndex': 1 },
@@ -58,9 +47,7 @@ export class ProjectReadService {
     return result;
   }
 
-  public async readByCreatorId(
-    creatorId: string,
-  ): Promise<ProjectNormalized[]> {
+  public async readByCreatorId(creatorId: string): Promise<ProjectNormalized[]> {
     const projects = await this.model.find({ creatorId });
 
     return projects.map((project) => ProjectSerializer.normalize(project));

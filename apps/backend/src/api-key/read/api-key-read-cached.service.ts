@@ -1,8 +1,10 @@
+import { Logger } from '@logdash/js-sdk';
 import { Injectable } from '@nestjs/common';
-import { ApiKeyReadService } from './api-key-read.service';
 import { Types } from 'mongoose';
 import { RedisService } from '../../shared/redis/redis.service';
-import { Logger } from '@logdash/js-sdk';
+import { ApiKeyReadService } from './api-key-read.service';
+
+const NON_EXISTENT = 'non-existent';
 
 @Injectable()
 export class ApiKeyReadCachedService {
@@ -12,16 +14,14 @@ export class ApiKeyReadCachedService {
     private readonly redisService: RedisService,
   ) {}
 
-  public async readProjectId(apiKeyValue: string): Promise<string> {
+  public async readProjectId(apiKeyValue: string): Promise<string | null> {
     const cacheKey = `api-key:${apiKeyValue}:project-id`;
     const cacheTtlSeconds = 60;
 
     const projectId = await this.redisService.get(cacheKey);
 
-    if (projectId === 'null') {
-      throw Error(
-        'API key not found. You have to wait 60 seconds before trying again',
-      );
+    if (projectId === NON_EXISTENT) {
+      throw Error('API key not found. You have to wait 60 seconds before trying again');
     }
 
     if (projectId !== null && Types.ObjectId.isValid(projectId)) {
@@ -31,9 +31,9 @@ export class ApiKeyReadCachedService {
     const apiKey = await this.apiKeyReadService.readApiKeyByValue(apiKeyValue);
 
     if (!apiKey) {
-      await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
+      await this.redisService.set(cacheKey, NON_EXISTENT, cacheTtlSeconds);
       this.logger.error(`API key not found`, { apiKeyValue });
-      throw Error('API key not found');
+      return null;
     }
 
     await this.redisService.set(cacheKey, apiKey.projectId, cacheTtlSeconds);

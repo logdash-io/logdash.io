@@ -3,6 +3,7 @@ import { ProjectReadService } from './project-read.service';
 import { ProjectTier } from '../core/enums/project-tier.enum';
 import { RedisService } from '../../shared/redis/redis.service';
 import { Logger } from '@logdash/js-sdk';
+import { ProjectNormalized } from '../core/entities/project.interface';
 
 @Injectable()
 export class ProjectReadCachedService {
@@ -12,61 +13,32 @@ export class ProjectReadCachedService {
     private readonly redisService: RedisService,
   ) {}
 
-  public async readTier(projectId: string): Promise<ProjectTier> {
-    const cacheKey = `project:${projectId}:tier`;
+  public async readProject(projectId: string): Promise<ProjectNormalized | null> {
+    const cacheKey = `project:${projectId}`;
     const cacheTtlSeconds = 10;
 
-    const tier = await this.redisService.get(cacheKey);
+    const projectJson = await this.redisService.get(cacheKey);
 
-    if (tier === 'null') {
-      throw Error('Project not found. You have to wait 5 seconds before trying again');
+    if (projectJson === 'null') {
+      throw Error('Project not found. You have to wait 10 seconds before trying again');
     }
 
-    if (tier !== null) {
-      return tier as ProjectTier;
+    if (projectJson !== null) {
+      return JSON.parse(projectJson) as ProjectNormalized;
     }
 
-    const project = await this.projectReadService.readByProjectId(projectId);
+    const project = await this.projectReadService.readById(projectId);
 
     if (!project) {
       await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
       this.logger.error(`Project not found`, {
         projectId,
       });
-      throw Error('Project not found');
+      return null;
     }
 
-    await this.redisService.set(cacheKey, project.tier, cacheTtlSeconds);
+    await this.redisService.set(cacheKey, JSON.stringify(project), cacheTtlSeconds);
 
-    return project.tier;
-  }
-
-  public async readClusterId(projectId: string): Promise<string> {
-    const cacheKey = `project:${projectId}:cluster-id`;
-    const cacheTtlSeconds = 5;
-
-    const clusterId = await this.redisService.get(cacheKey);
-
-    if (clusterId === 'null') {
-      throw Error('Project not found. You have to wait 5 seconds before trying again');
-    }
-
-    if (clusterId !== null) {
-      return clusterId;
-    }
-
-    const project = await this.projectReadService.readByProjectId(projectId);
-
-    if (!project) {
-      await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
-      this.logger.error(`Project not found`, {
-        projectId,
-      });
-      throw Error('Project not found');
-    }
-
-    await this.redisService.set(cacheKey, project.clusterId, cacheTtlSeconds);
-
-    return project.clusterId;
+    return project;
   }
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 
 @Injectable()
-export class AuthGithubDataService {
+export class GithubAuthDataService {
   public async getAccessToken(code: string): Promise<string> {
     const response = await fetch(`https://github.com/login/oauth/access_token`, {
       method: 'POST',

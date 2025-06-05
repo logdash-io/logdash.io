@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Sse,
+  UnauthorizedException,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -101,6 +102,10 @@ export class LogCoreController {
     @Headers('project-api-key') apiKeyValue: string,
   ): Promise<SuccessResponse> {
     const projectId = await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
+
+    if (!projectId) {
+      throw new UnauthorizedException('Invalid API key');
+    }
 
     await this.logRateLimitService.readAndIncrementLogsCount(projectId);
 

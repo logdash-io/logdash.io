@@ -2,31 +2,35 @@ import {
   Body,
   ConflictException,
   Controller,
+  Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { ProjectReadService } from '../read/project-read.service';
-import { ProjectSerialized } from './entities/project.interface';
-import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
-import { ProjectSerializer } from './entities/project.serializer';
-import { ProjectWriteService } from '../write/project-write.service';
-import { UpdateProjectBody } from './dto/update-project.body';
-import { CreateProjectBody } from './dto/create-project.body';
+import { SuccessResponse } from 'src/shared/responses/success.response';
 import { ApiKeyWriteService } from '../../api-key/write/api-key-write.service';
-import { CreateProjectResponse } from './dto/create-project.response';
-import { ProjectLimitService } from '../limit/project-limit-service';
+import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
-import { ProjectCoreService } from './project-core.service';
-import { UserReadCachedService } from '../../user/read/user-read-cached.service';
-import { projectTierFromUserTier } from './enums/project-tier.enum';
-import { ProjectFeaturesService } from '../features/project-features.service';
-import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 import { LogRateLimitService } from '../../log/rate-limit/log-rate-limit.service';
+import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 import { RateLimitScope } from '../../shared/enums/rate-limit-scope.enum';
+import { UserReadCachedService } from '../../user/read/user-read-cached.service';
+import { ProjectFeaturesService } from '../features/project-features.service';
+import { ProjectLimitService } from '../limit/project-limit-service';
+import { ProjectReadService } from '../read/project-read.service';
+import { ProjectRemovalService } from '../removal/project-removal.service';
+import { ProjectWriteService } from '../write/project-write.service';
+import { CreateProjectBody } from './dto/create-project.body';
+import { CreateProjectResponse } from './dto/create-project.response';
+import { UpdateProjectBody } from './dto/update-project.body';
+import { ProjectSerialized } from './entities/project.interface';
+import { ProjectSerializer } from './entities/project.serializer';
+import { projectTierFromUserTier } from './enums/project-tier.enum';
+import { ProjectCoreService } from './project-core.service';
 
 @Controller('')
 @ApiTags('Projects')
@@ -37,25 +41,25 @@ export class ProjectCoreController {
     private readonly projectWriteService: ProjectWriteService,
     private readonly apiKeyWriteService: ApiKeyWriteService,
     private readonly projectLimitService: ProjectLimitService,
-    private readonly projectCoreService: ProjectCoreService,
     private readonly userReadCachedService: UserReadCachedService,
     private readonly projectFeaturesService: ProjectFeaturesService,
     private readonly logRateLimitService: LogRateLimitService,
+    private readonly projectRemovalService: ProjectRemovalService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
   @Get('projects/:projectId')
   @ApiResponse({ type: ProjectSerialized })
-  public async readById(
-    @Param('projectId') projectId: string,
-  ): Promise<ProjectSerialized> {
+  public async readById(@Param('projectId') projectId: string): Promise<ProjectSerialized> {
     const project = await this.projectReadService.readById(projectId);
 
-    const logsPerHourRateLimit = getProjectPlanConfig(project.tier).logs
-      .rateLimitPerHour;
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
 
-    const currentUsage =
-      await this.logRateLimitService.readLogsCount(projectId);
+    const logsPerHourRateLimit = getProjectPlanConfig(project.tier).logs.rateLimitPerHour;
+
+    const currentUsage = await this.logRateLimitService.readLogsCount(projectId);
 
     return ProjectSerializer.serialize(project, {
       rateLimits: [
@@ -76,10 +80,9 @@ export class ProjectCoreController {
   ): Promise<ProjectSerialized[]> {
     const projects = await this.projectReadService.readByClusterId(clusterId);
 
-    const featuresMap =
-      await this.projectFeaturesService.getProjectFeaturesMany(
-        projects.map((project) => project.id),
-      );
+    const featuresMap = await this.projectFeaturesService.getProjectFeaturesMany(
+      projects.map((project) => project.id),
+    );
 
     return ProjectSerializer.serializeMany(projects, { featuresMap });
   }
@@ -104,8 +107,7 @@ export class ProjectCoreController {
     @Body() dto: CreateProjectBody,
     @Param('clusterId') clusterId: string,
   ): Promise<CreateProjectResponse> {
-    const isWithinLimit =
-      await this.projectLimitService.newProjectWouldBeWithinLimit(userId);
+    const isWithinLimit = await this.projectLimitService.newProjectWouldBeWithinLimit(userId);
 
     if (!isWithinLimit) {
       throw new ConflictException('User has reached the project limit');
@@ -131,5 +133,14 @@ export class ProjectCoreController {
       project: serialized,
       apiKey: apiKey.value,
     };
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @Delete('projects/:projectId')
+  @ApiResponse({ type: SuccessResponse })
+  public async delete(@Param('projectId') projectId: string): Promise<SuccessResponse> {
+    await this.projectRemovalService.deleteProjectById(projectId);
+
+    return new SuccessResponse();
   }
 }

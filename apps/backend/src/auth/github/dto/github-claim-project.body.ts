@@ -1,11 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class LoginBody {
+export class GithubClaimProjectBody {
   @ApiProperty()
   githubCode: string;
 
-  @ApiPropertyOptional()
-  termsAccepted?: boolean;
+  @ApiProperty()
+  accessToken: string;
 
   @ApiPropertyOptional()
   emailAccepted?: boolean;

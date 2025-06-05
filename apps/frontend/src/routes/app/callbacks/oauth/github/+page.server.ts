@@ -2,6 +2,7 @@ import { bffLogger } from '$lib/shared/bff-logger';
 import { logdashAPI } from '$lib/shared/logdash.api';
 import { UserTier } from '$lib/shared/types.js';
 import {
+	get_access_token,
 	save_access_token,
 	save_onboarding_tier,
 } from '$lib/shared/utils/cookies.utils';
@@ -63,7 +64,7 @@ async function runClaimFlow(dto: {
 		throw new Error('cluster_id is required for claiming');
 	}
 
-	const anon_access_token = cookies.get('logdash_access_token');
+	const anon_access_token = get_access_token(cookies);
 
 	bffLogger.info(`claiming github ${JSON.stringify({ code })}...`);
 

@@ -1,8 +1,11 @@
 import { createLogger } from '$lib/shared/logger';
 import { arrayToObject } from '$lib/shared/utils/array-to-object';
-import { source, type Source } from 'sveltekit-sse';
 import type { LogGranularity } from '../domain/log-granularity';
 import type { LogMetric } from '../domain/log-metric';
+import { envConfig } from '$lib/shared/utils/env-config.js';
+import { getCookieValue } from '$lib/shared/utils/client-cookies.utils.js';
+import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/shared/utils/cookies.utils.js';
+import { EventSource } from 'eventsource';
 
 type GranularLogMetrics = Record<
 	LogGranularity,
@@ -18,7 +21,7 @@ class LogMetricsState {
 		hour: {},
 		minute: {},
 	});
-	private syncConnection: Source | null = null;
+	private syncConnection: EventSource | null = null;
 	private _shouldReconnect = true;
 	private _unsubscribe: () => void | null = null;
 
@@ -51,38 +54,45 @@ class LogMetricsState {
 		tabId: string,
 	): Promise<void> {
 		return new Promise((resolve, reject) => {
-			this.syncConnection = source(
-				`/app/api/${project_id}/log-metrics?tab_id=${tabId}`,
+			this._unsubscribe?.();
+
+			this.syncConnection = new EventSource(
+				`${envConfig.apiBaseUrl}/projects/${project_id}/log_metrics/sse?tab_id=${tabId}`,
 				{
-					close: ({ connect }) => {
-						if (!this._shouldReconnect) {
-							logger.debug(
-								'sse manually disconnected, skipping reconnect...',
-							);
-							return;
-						}
-						logger.debug('reconnecting...');
-						connect();
-					},
-					error: (error) => {
-						logger.error('sse error:', error);
-						reject(error);
-					},
-					open: () => {
-						logger.debug('sse opened');
-						resolve();
-					},
+					fetch: (input, init) =>
+						fetch(input, {
+							...init,
+							headers: {
+								...init.headers,
+								Authorization: `Bearer ${getCookieValue(ACCESS_TOKEN_COOKIE_NAME, document.cookie)}`,
+							},
+						}),
 				},
 			);
-			const value = this.syncConnection.select('message');
 
-			this._unsubscribe = value.subscribe((message) => {
+			const onOpen = (event) => {
+				logger.debug('o', event);
+				resolve();
+			};
+			const onError = (event) => {
+				logger.error('SSE connection error:', event);
+
+				this._unsubscribe?.();
+
+				if (this._shouldReconnect) {
+					logger.debug('Attempting to reconnect in 3 seconds...');
+					setTimeout(() => {
+						if (this._shouldReconnect) {
+							this._openLogMetricsStream(project_id, tabId);
+						}
+					}, 3000);
+				}
+
+				reject(new Error('SSE connection failed'));
+			};
+			const onMessage = (event) => {
 				try {
-					if (!message.length) {
-						logger.debug('sse message empty, skipping...');
-						return;
-					}
-					const logMetric = JSON.parse(message);
+					const logMetric = JSON.parse(event.data);
 					// Determine which granularity this metric belongs to
 					const granularity =
 						(logMetric.granularity as LogGranularity) || 'minute';
@@ -116,7 +126,31 @@ class LogMetricsState {
 				} catch (e) {
 					logger.error('error parsing message:', e);
 				}
+			};
+
+			this.syncConnection.addEventListener('open', onOpen, {
+				once: true,
 			});
+			this.syncConnection.addEventListener('error', onError);
+			this.syncConnection.addEventListener('message', onMessage);
+
+			this._unsubscribe = () => {
+				if (!this.syncConnection) {
+					logger.debug(
+						'No active SSE connection to unsubscribe from',
+					);
+					return;
+				}
+
+				this.syncConnection.removeEventListener('open', onOpen);
+				this.syncConnection.removeEventListener('error', onError);
+				this.syncConnection.removeEventListener('message', onMessage);
+
+				logger.debug('Unsubscribing from SSE connection');
+
+				this.syncConnection?.close();
+				this.syncConnection = null;
+			};
 		});
 	}
 
