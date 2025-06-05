@@ -83,6 +83,8 @@ class MetricsState {
 		tabId: string,
 	): Promise<void> {
 		return new Promise((resolve, reject) => {
+			this._unsubscribe?.();
+
 			this.syncConnection = new EventSource(
 				`${envConfig.apiBaseUrl}/projects/${project_id}/metrics/sse?tab_id=${tabId}`,
 				{
@@ -103,6 +105,8 @@ class MetricsState {
 			};
 			const onError = (event) => {
 				logger.error('SSE connection error:', event);
+
+				this._unsubscribe?.();
 
 				if (this._shouldReconnect) {
 					logger.debug('Attempting to reconnect in 3 seconds...');
