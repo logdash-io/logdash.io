@@ -3,6 +3,7 @@ import { CustomJwtService } from '../custom-jwt/custom-jwt.service';
 import { JwtPayloadDto } from '../custom-jwt/dto/jwt-payload.dto';
 import { ApiKeyReadCachedService } from '../../api-key/read/api-key-read-cached.service';
 import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
+import { ApiKeyAuthResponse } from './dto/api-key-auth.response';
 
 @Injectable()
 export class ApiKeyAuthService {
@@ -12,7 +13,7 @@ export class ApiKeyAuthService {
     private readonly customJwtService: CustomJwtService,
   ) {}
 
-  public async authenticateWithApiKey(apiKeyValue: string): Promise<string> {
+  public async authenticateWithApiKey(apiKeyValue: string): Promise<ApiKeyAuthResponse> {
     const projectId = await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
 
     if (!projectId) {
@@ -29,6 +30,8 @@ export class ApiKeyAuthService {
       id: project.creatorId,
     };
 
-    return await this.customJwtService.sign(jwtPayload);
+    const token = await this.customJwtService.sign(jwtPayload);
+
+    return { token, projectId };
   }
 }
