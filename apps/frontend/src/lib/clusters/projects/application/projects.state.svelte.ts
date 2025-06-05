@@ -45,7 +45,7 @@ class ProjectsState {
 		}
 
 		this._loadingApiKey[projectId] = true;
-		return fetch(`/app/api/${projectId}/api-key`, {
+		return fetch(`/app/api/projects/${projectId}/api-key`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',

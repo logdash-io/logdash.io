@@ -171,7 +171,7 @@ class LogsState {
 	}
 
 	sendTestLog(project_id: string): Promise<void> {
-		return fetch(`/app/api/${project_id}/logs/test`, {
+		return fetch(`/app/api/projects/${project_id}/logs/test`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -195,7 +195,9 @@ class LogsState {
 		before?: string,
 	): Promise<void> {
 		const qs = queryString.stringify({ before });
-		const response = await fetch(`/app/api/${project_id}/logs?${qs}`);
+		const response = await fetch(
+			`/app/api/projects/${project_id}/logs?${qs}`,
+		);
 		const { data }: { data: Log[] } = await response.json();
 
 		if (before) {

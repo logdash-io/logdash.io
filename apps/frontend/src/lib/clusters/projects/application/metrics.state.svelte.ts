@@ -263,7 +263,7 @@ class MetricsState {
 	}
 
 	private fetchMetrics(project_id: string): void {
-		const url = `/app/api/${project_id}/metrics`;
+		const url = `/app/api/projects/${project_id}/metrics`;
 
 		fetch(url)
 			.then((response) => {
@@ -286,7 +286,7 @@ class MetricsState {
 		metric_id: string,
 	): Promise<void> {
 		this._metricDetailsLoading = true;
-		const url = `/app/api/${project_id}/metrics/details?metric_id=${metric_id}`;
+		const url = `/app/api/projects/${project_id}/metrics/details?metric_id=${metric_id}`;
 
 		await fetch(url)
 			.then((response) => {
