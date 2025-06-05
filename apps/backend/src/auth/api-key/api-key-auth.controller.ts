@@ -1,9 +1,9 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ApiTags, ApiResponse } from '@nestjs/swagger';
 import { ApiKeyAuthService } from './api-key-auth.service';
-import { ApiKeyAuthRequestDto } from './dto/api-key-auth-request.dto';
+import { ApiKeyAuthBody } from './dto/api-key-auth.body';
 import { Public } from '../core/decorators/is-public';
-import { TokenResponse } from '../../shared/responses/token.response';
+import { ApiKeyAuthResponse } from './dto/api-key-auth.response';
 
 @Public()
 @Controller('auth/api-key')
@@ -12,10 +12,8 @@ export class ApiKeyAuthController {
   constructor(private readonly apiKeyAuthService: ApiKeyAuthService) {}
 
   @Post()
-  @ApiResponse({ type: TokenResponse })
-  public async authenticate(@Body() body: ApiKeyAuthRequestDto): Promise<TokenResponse> {
-    const token = await this.apiKeyAuthService.authenticateWithApiKey(body.apiKey);
-
-    return { token };
+  @ApiResponse({ type: ApiKeyAuthResponse })
+  public async authenticate(@Body() body: ApiKeyAuthBody): Promise<ApiKeyAuthResponse> {
+    return await this.apiKeyAuthService.authenticateWithApiKey(body.apiKey);
   }
 }
