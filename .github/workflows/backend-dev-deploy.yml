@@ -57,6 +57,11 @@ jobs:
           telegram-token: ${{ secrets.BACKEND_DEV_TELEGRAM_TOKEN }}
           whitelisted-emails: ${{ secrets.BACKEND_DEV_WHITELISTED_EMAILS }}
           auth-jwt-secret: ${{ secrets.BACKEND_DEV_AUTH_JWT_SECRET }}
+          clickhouse-host: ${{ secrets.BACKEND_DEV_CLICKHOUSE_HOST }}
+          clickhouse-port: ${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }}
+          clickhouse-user: ${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}
+          clickhouse-password: ${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}
+          clickhouse-db: default
       - name: Prune
         uses: './.github/templates/prune'
         with:

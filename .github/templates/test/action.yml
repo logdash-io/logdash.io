@@ -1,5 +1,4 @@
 name: 'Run tests'
-description: 'Runs unit and e2e tests'
 
 runs:
   using: 'composite'
