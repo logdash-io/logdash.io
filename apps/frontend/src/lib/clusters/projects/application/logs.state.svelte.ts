@@ -1,13 +1,12 @@
-import { source, type Source } from 'sveltekit-sse';
-import type { Log } from '../domain/log';
-import { arrayToObject } from '$lib/shared/utils/array-to-object';
 import { createLogger } from '$lib/shared/logger';
-import queryString from 'query-string';
 import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
-import { envConfig } from '$lib/shared/utils/env-config.js';
-import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/shared/utils/cookies.utils.js';
+import { arrayToObject } from '$lib/shared/utils/array-to-object';
 import { getCookieValue } from '$lib/shared/utils/client-cookies.utils.js';
+import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/shared/utils/cookies.utils.js';
+import { envConfig } from '$lib/shared/utils/env-config.js';
 import { EventSource } from 'eventsource';
+import queryString from 'query-string';
+import type { Log } from '../domain/log';
 
 const logger = createLogger('logs.state', true);
 
@@ -171,7 +170,7 @@ class LogsState {
 	}
 
 	sendTestLog(project_id: string): Promise<void> {
-		return fetch(`/app/api/${project_id}/logs/test`, {
+		return fetch(`/app/api/projects/${project_id}/logs/test`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -195,7 +194,9 @@ class LogsState {
 		before?: string,
 	): Promise<void> {
 		const qs = queryString.stringify({ before });
-		const response = await fetch(`/app/api/${project_id}/logs?${qs}`);
+		const response = await fetch(
+			`/app/api/projects/${project_id}/logs?${qs}`,
+		);
 		const { data }: { data: Log[] } = await response.json();
 
 		if (before) {

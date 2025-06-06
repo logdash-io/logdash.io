@@ -177,7 +177,9 @@ class LogMetricsState {
 	}
 
 	private async fetchLogMetrics(project_id: string): Promise<void> {
-		const response = await fetch(`/app/api/${project_id}/log-metrics`);
+		const response = await fetch(
+			`/app/api/projects/${project_id}/log-metrics`,
+		);
 		const {
 			data,
 		}: {

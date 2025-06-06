@@ -1,16 +1,15 @@
 import { createLogger } from '$lib/shared/logger/index.js';
 import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 import { arrayToObject } from '$lib/shared/utils/array-to-object';
-import { source, type Source } from 'sveltekit-sse';
+import { getCookieValue } from '$lib/shared/utils/client-cookies.utils.js';
+import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/shared/utils/cookies.utils.js';
+import { envConfig } from '$lib/shared/utils/env-config.js';
+import { EventSource } from 'eventsource';
 import {
 	MetricGranularity,
 	type Metric,
 	type SimplifiedMetric,
 } from '../domain/metric';
-import { envConfig } from '$lib/shared/utils/env-config.js';
-import { getCookieValue } from '$lib/shared/utils/client-cookies.utils.js';
-import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/shared/utils/cookies.utils.js';
-import { EventSource } from 'eventsource';
 
 const logger = createLogger('metrics.state', true);
 
@@ -263,7 +262,7 @@ class MetricsState {
 	}
 
 	private fetchMetrics(project_id: string): void {
-		const url = `/app/api/${project_id}/metrics`;
+		const url = `/app/api/projects/${project_id}/metrics`;
 
 		fetch(url)
 			.then((response) => {
@@ -286,7 +285,7 @@ class MetricsState {
 		metric_id: string,
 	): Promise<void> {
 		this._metricDetailsLoading = true;
-		const url = `/app/api/${project_id}/metrics/details?metric_id=${metric_id}`;
+		const url = `/app/api/projects/${project_id}/metrics/details?metric_id=${metric_id}`;
 
 		await fetch(url)
 			.then((response) => {

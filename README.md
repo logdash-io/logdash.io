@@ -12,7 +12,7 @@ Logdash is an open-source, developer-friendly observability platform designed fo
 logdash/
 ├── apps/
 │   ├── frontend/     # SvelteKit app (UI & BFF)
-│   └── backend/      # NestJS API (logs, metrics, auth)
+│   └── backend/      # NestJS API (logs, metrics, auth, projects)
 ├── pnpm-workspace.yaml
 ├── tsconfig.base.json
 ├── package.json
