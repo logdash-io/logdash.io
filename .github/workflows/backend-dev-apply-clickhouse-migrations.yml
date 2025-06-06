@@ -3,7 +3,7 @@ name: Apply clickHouse migrations (dev)
 on:
   push:
     branches:
-      - feat/add-clickhouse-migrations
+      - dev
 
 jobs:
   migrate:
