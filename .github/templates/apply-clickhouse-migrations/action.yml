@@ -1,5 +1,4 @@
-name: 'Run ClickHouse migrations'
-description: 'Runs ClickHouse database migrations'
+name: 'Apply clickhouse migrations'
 
 inputs:
   host:
@@ -20,7 +19,6 @@ runs:
       uses: actions/setup-node@v3
       with:
         node-version: 20.x
-        cache: 'npm'
 
     - name: Install clickhouse-migrations globally
       run: npm install -g clickhouse-migrations
