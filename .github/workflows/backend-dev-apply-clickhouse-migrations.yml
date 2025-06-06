@@ -1,0 +1,22 @@
+name: Apply clickHouse migrations (dev)
+
+on:
+  push:
+    branches:
+      - feat/add-clickhouse-migrations
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Apply migrations
+        uses: './.github/templates/clickhouse-migrate'
+        with:
+          host: ${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}:${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }}
+          user: ${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}
+          password: ${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}
+          db: default
+          migrations-home: './apps/backend/clickhouse-migrations'
