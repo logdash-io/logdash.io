@@ -54,3 +54,4 @@ jobs:
           clickhouse-user: ${{ secrets.BACKEND_LOCAL_CLICKHOUSE_USER }}
           clickhouse-password: ${{ secrets.BACKEND_LOCAL_CLICKHOUSE_PASSWORD }}
           clickhouse-db: default
+          swagger-password: ${{ secrets.BACKEND_SWAGGER_PASSWORD }}

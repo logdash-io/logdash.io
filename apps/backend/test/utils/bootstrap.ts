@@ -44,6 +44,8 @@ import { MetricsMock } from './metrics-mock';
 import { closeInMemoryMongoServer, rootMongooseTestModule } from './mongo-in-memory-server';
 import { ProjectUtils } from './project-utils';
 import { getInMemoryRedisUri, redisInMemoryServer } from './redis-in-memory-server';
+import { rootClickHouseTestModule } from './clickhouse-test-container-server';
+import { ClickHouseClient } from '@clickhouse/client';
 
 export async function createTestApp() {
   const redisUrl = await getInMemoryRedisUri();
@@ -51,6 +53,7 @@ export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({
     imports: [
       rootMongooseTestModule(),
+      rootClickHouseTestModule(),
       AuthCoreModule,
       UserCoreModule,
       LogCoreModule,
@@ -104,6 +107,8 @@ export async function createTestApp() {
 
   const redisService: RedisService = module.get(RedisService);
 
+  const clickhouseClient = app.get(ClickHouseClient);
+
   const clearDatabase = async () => {
     await Promise.all([
       userModel.deleteMany({}),
@@ -117,6 +122,9 @@ export async function createTestApp() {
       httpPingModel.deleteMany({}),
       clusterModel.deleteMany({}),
       redisService.flushAll(),
+      clickhouseClient.query({
+        query: `TRUNCATE TABLE logs`,
+      }),
     ]);
   };
 

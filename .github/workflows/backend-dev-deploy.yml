@@ -62,6 +62,7 @@ jobs:
           clickhouse-user: ${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}
           clickhouse-password: ${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}
           clickhouse-db: default
+          swagger-password: ${{ secrets.BACKEND_SWAGGER_PASSWORD }}
       - name: Prune
         uses: './.github/templates/prune'
         with:
