@@ -58,6 +58,11 @@ interface EnvConfig {
   auth: {
     jwtSecret: string;
   };
+  clickhouse: {
+    host: string;
+    username: string;
+    password: string;
+  };
 }
 
 interface EnvConfigs {
@@ -125,6 +130,11 @@ export const EnvConfigs: EnvConfigs = {
     auth: {
       jwtSecret: process.env.AUTH_JWT_SECRET!,
     },
+    clickhouse: {
+      host: process.env.CLICKHOUSE_HOST!,
+      username: process.env.CLICKHOUSE_USER!,
+      password: process.env.CLICKHOUSE_PASSWORD!,
+    },
   },
   [OurEnv.Dev]: {
     emailLoginWhitelist: {
@@ -184,6 +194,11 @@ export const EnvConfigs: EnvConfigs = {
     auth: {
       jwtSecret: process.env.AUTH_JWT_SECRET!,
     },
+    clickhouse: {
+      host: process.env.CLICKHOUSE_HOST!,
+      username: process.env.CLICKHOUSE_USER!,
+      password: process.env.CLICKHOUSE_PASSWORD!,
+    },
   },
   [OurEnv.Local]: {
     emailLoginWhitelist: {
@@ -242,6 +257,11 @@ export const EnvConfigs: EnvConfigs = {
     },
     auth: {
       jwtSecret: process.env.AUTH_JWT_SECRET!,
+    },
+    clickhouse: {
+      host: process.env.CLICKHOUSE_HOST!,
+      username: process.env.CLICKHOUSE_USER!,
+      password: process.env.CLICKHOUSE_PASSWORD!,
     },
   },
 };
