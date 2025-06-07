@@ -49,8 +49,7 @@ jobs:
           telegram-token: ${{ secrets.BACKEND_LOCAL_TELEGRAM_TOKEN }}
           whitelisted-emails: ${{ secrets.BACKEND_LOCAL_WHITELISTED_EMAILS }}
           auth-jwt-secret: ${{ secrets.BACKEND_LOCAL_AUTH_JWT_SECRET }}
-          clickhouse-host: ${{ secrets.BACKEND_LOCAL_CLICKHOUSE_HOST }}
-          clickhouse-port: ${{ secrets.BACKEND_LOCAL_CLICKHOUSE_PORT }}
+          clickhouse-host: ${{ secrets.BACKEND_LOCAL_CLICKHOUSE_HOST }}:${{ secrets.BACKEND_LOCAL_CLICKHOUSE_PORT }}
           clickhouse-user: ${{ secrets.BACKEND_LOCAL_CLICKHOUSE_USER }}
           clickhouse-password: ${{ secrets.BACKEND_LOCAL_CLICKHOUSE_PASSWORD }}
           clickhouse-db: default
