@@ -61,7 +61,7 @@ inputs:
     required: true
   clickhouse-password:
     required: true
-  clickhouse-db:
+  clickhouse-database:
     required: true
 
   swagger-password:
@@ -103,6 +103,6 @@ runs:
           -e CLICKHOUSE_PORT=${{ inputs.clickhouse-port }} \
           -e CLICKHOUSE_USER=${{ inputs.clickhouse-user }} \
           -e CLICKHOUSE_PASSWORD=${{ inputs.clickhouse-password }} \
-          -e CLICKHOUSE_DB=${{ inputs.clickhouse-db }} \
+          -e CLICKHOUSE_DATABASE=${{ inputs.clickhouse-database }} \
           -e SWAGGER_PASSWORD=${{ inputs.swagger-password }} \
           ${{ inputs.image-name }}

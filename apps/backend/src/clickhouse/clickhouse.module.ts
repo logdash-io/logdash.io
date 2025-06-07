@@ -12,8 +12,6 @@ import { getEnvConfig } from '../shared/configs/env-configs';
 
         const client = createClient({ ...clickHouseConfig });
 
-        console.log(clickHouseConfig);
-
         const pingResult = await client.ping();
 
         if (!pingResult.success) {
