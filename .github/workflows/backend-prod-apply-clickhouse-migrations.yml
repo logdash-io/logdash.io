@@ -1,0 +1,22 @@
+name: Apply clickHouse migrations (prod)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Apply migrations
+        uses: './.github/templates/apply-clickhouse-migrations'
+        with:
+          host: ${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}:${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT }}
+          user: ${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}
+          password: ${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}
+          db: default
+          migrations-home: './apps/backend/clickhouse-migrations'

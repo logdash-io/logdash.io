@@ -8,6 +8,7 @@ import { LogEntity } from '../core/entities/log.entity';
 import { LogNormalized } from '../core/entities/log.interface';
 import { LogSerializer } from '../core/entities/log.serializer';
 import { CreateLogDto } from './dto/create-log.dto';
+import { LogWriteClickhouseService } from './log-write.clickhouse-service';
 
 @Injectable()
 export class LogWriteService {
@@ -54,14 +55,5 @@ export class LogWriteService {
 
   public async deleteBelongingToProject(projectId: string): Promise<void> {
     await this.logModel.deleteMany({ projectId });
-  }
-
-  @Cron(CronExpression.EVERY_SECOND)
-  public async simulateOneSecondTraffic(): Promise<void> {
-    if (process.env.NODE_ENV === 'test' || getOurEnv() === OurEnv.Prod) {
-      return;
-    }
-
-    this.logger.log('Stress test log');
   }
 }

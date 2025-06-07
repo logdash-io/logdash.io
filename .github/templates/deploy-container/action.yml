@@ -31,27 +31,41 @@ inputs:
   resend-api-key:
     required: true
   resend-audience-enabled:
-    required: false
+    required: true
   stripe-api-key-secret:
-    required: false
+    required: true
   stripe-signature:
-    required: false
+    required: true
   our-env:
     required: true
   redis-url:
     required: true
   stripe-early-bird-price-id:
-    required: false
+    required: true
   demo-dashboard-api-key:
-    required: false
+    required: true
   logdash-api-key:
-    required: false
+    required: true
   telegram-token:
-    required: false
+    required: true
   whitelisted-emails:
-    required: false
+    required: true
   auth-jwt-secret:
-    required: false
+    required: true
+
+  clickhouse-host:
+    required: true
+  clickhouse-port:
+    required: true
+  clickhouse-user:
+    required: true
+  clickhouse-password:
+    required: true
+  clickhouse-database:
+    required: true
+
+  swagger-password:
+    required: true
 
 runs:
   using: 'composite'
@@ -85,4 +99,10 @@ runs:
           -e TELEGRAM_TOKEN=${{ inputs.telegram-token }} \
           -e WHITELISTED_EMAILS=${{ inputs.whitelisted-emails }} \
           -e AUTH_JWT_SECRET=${{ inputs.auth-jwt-secret }} \
+          -e CLICKHOUSE_HOST=${{ inputs.clickhouse-host }} \
+          -e CLICKHOUSE_PORT=${{ inputs.clickhouse-port }} \
+          -e CLICKHOUSE_USER=${{ inputs.clickhouse-user }} \
+          -e CLICKHOUSE_PASSWORD=${{ inputs.clickhouse-password }} \
+          -e CLICKHOUSE_DATABASE=${{ inputs.clickhouse-database }} \
+          -e SWAGGER_PASSWORD=${{ inputs.swagger-password }} \
           ${{ inputs.image-name }}
