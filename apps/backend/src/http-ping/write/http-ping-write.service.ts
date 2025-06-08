@@ -1,39 +1,51 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ClickHouseClient } from '@clickhouse/client';
+import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
+import { CreateHttpPingDto } from './dto/create-http-ping.dto';
+import { Types } from 'mongoose';
 import { HttpPingEntity } from '../core/entities/http-ping.entity';
 import { HttpPingNormalized } from '../core/entities/http-ping.interface';
 import { HttpPingSerializer } from '../core/entities/http-ping.serializer';
-import { CreateHttpPingDto } from './dto/create-http-ping.dto';
 
 @Injectable()
 export class HttpPingWriteService {
-  constructor(
-    @InjectModel(HttpPingEntity.name)
-    private model: Model<HttpPingEntity>,
-  ) {}
+  constructor(private readonly clickhouse: ClickHouseClient) {}
 
   public async createMany(dtos: CreateHttpPingDto[]): Promise<HttpPingNormalized[]> {
     if (dtos.length === 0) return [];
 
-    const entities = await this.model.insertMany(
-      dtos.map((dto) => ({
+    const httpPings = dtos.map((dto) =>
+      HttpPingEntity.fromNormalized({
+        id: new Types.ObjectId().toString(),
+        createdAt: new Date(),
         httpMonitorId: dto.httpMonitorId,
-        statusCode: dto.statusCode,
-        responseTimeMs: dto.responseTimeMs,
         message: dto.message,
-      })),
-      { ordered: false },
+        responseTimeMs: dto.responseTimeMs,
+        statusCode: dto.statusCode,
+      }),
     );
 
-    return HttpPingSerializer.normalizeMany(entities);
+    await this.clickhouse.insert({
+      table: 'http_pings',
+      values: httpPings,
+      format: 'JSONEachRow',
+    });
+
+    return HttpPingSerializer.normalizeMany(httpPings);
   }
 
   public async deleteOlderThan(date: Date): Promise<void> {
-    await this.model.deleteMany({ createdAt: { $lt: date } });
+    await this.clickhouse.command({
+      query: `DELETE FROM http_pings WHERE created_at < '${ClickhouseUtils.jsDateToClickhouseDate(date)}'`,
+    });
   }
 
   public async deleteByMonitorIds(monitorIds: string[]): Promise<void> {
-    await this.model.deleteMany({ httpMonitorId: { $in: monitorIds } });
+    if (monitorIds.length === 0) return;
+
+    const monitorIdsStr = monitorIds.map((id) => `'${id}'`).join(',');
+    await this.clickhouse.command({
+      query: `DELETE FROM http_pings WHERE http_monitor_id IN (${monitorIdsStr})`,
+    });
   }
 }

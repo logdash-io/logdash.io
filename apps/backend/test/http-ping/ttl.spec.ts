@@ -26,9 +26,9 @@ describe('Http Ping (ttl)', () => {
         clusterId: cluster.id,
       });
       await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
-      advanceBy(60 * 60 * 1_000);
+      advanceBy(12 * 60 * 60 * 1_000);
       await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
-      advanceBy(59 * 60 * 1_000);
+      advanceBy(11 * 60 * 60 * 1_000);
 
       // when
       await bootstrap.app.get(HttpPingTtlService).deleteOldPings();
@@ -38,8 +38,8 @@ describe('Http Ping (ttl)', () => {
         httpMonitorId: monitor.id,
       });
       expect(pings.length).toBe(1);
-      const oneHourAgo = Date.now() - 60 * 60 * 1000;
-      expect(pings[0].createdAt.getTime()).toBeGreaterThan(oneHourAgo);
+      const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+      expect(pings[0].createdAt.getTime()).toBeGreaterThan(twelveHoursAgo);
     });
   });
 });

@@ -27,6 +27,7 @@ interface EnvConfig {
   };
   pings: {
     maxConcurrentRequests: number;
+    ttlHours: number;
   };
   demo: {
     clusterId: string;
@@ -104,6 +105,7 @@ export const EnvConfigs: EnvConfigs = {
     },
     pings: {
       maxConcurrentRequests: 100,
+      ttlHours: 12,
     },
     demo: {
       clusterId: '682a50841175bcf07c63bbc4',
@@ -173,6 +175,7 @@ export const EnvConfigs: EnvConfigs = {
     },
     pings: {
       maxConcurrentRequests: 10,
+      ttlHours: 12,
     },
     demo: {
       clusterId: '682844d37f296819db10b9a5',
@@ -242,6 +245,7 @@ export const EnvConfigs: EnvConfigs = {
     },
     pings: {
       maxConcurrentRequests: 10,
+      ttlHours: 12,
     },
     demo: {
       clusterId: '682cf106d7874ce88faf7426',
