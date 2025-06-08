@@ -47,6 +47,7 @@
     "stripe": "^17.7.0"
   },
   "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
     "@nestjs/testing": "^11.0.16",
     "@testcontainers/clickhouse": "^11.0.1",
     "@types/express": "^5.0.0",
