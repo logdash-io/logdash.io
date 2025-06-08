@@ -7,9 +7,9 @@ import { DemoEndpoint } from '../../demo/decorators/demo-endpoint.decorator';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { HttpPingCreatedEvent } from '../events/definitions/http-ping-created.event';
 import { HttpPingEvent } from '../events/http-ping-event.enum';
-import { HttpPingReadService } from '../read/http-ping-read.service';
 import { HttpPingSerialized } from './entities/http-ping.interface';
 import { HttpPingSerializer } from './entities/http-ping.serializer';
+import { HttpPingReadService } from '../read/http-ping-read.service';
 
 @ApiBearerAuth()
 @ApiTags('HTTP Pings')
@@ -17,8 +17,8 @@ import { HttpPingSerializer } from './entities/http-ping.serializer';
 @UseGuards(ClusterMemberGuard)
 export class HttpPingCoreController {
   constructor(
-    private readonly httpPingReadService: HttpPingReadService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
+    private readonly httpPingReadService: HttpPingReadService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

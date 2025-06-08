@@ -12,7 +12,6 @@ import { ClusterCoreModule } from '../../src/cluster/core/cluster-core.module';
 import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
 import { HttpMonitorEntity } from '../../src/http-monitor/core/entities/http-monitor.entity';
 import { HttpMonitorCoreModule } from '../../src/http-monitor/core/http-monitor-core.module';
-import { HttpPingEntity } from '../../src/http-ping/core/entities/http-ping.entity';
 import { HttpPingCoreModule } from '../../src/http-ping/core/http-ping-core.module';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/schedule/http-ping-scheduler.service';
 import { LogMetricEntity } from '../../src/log-metric/core/entities/log-metric.entity';
@@ -102,7 +101,6 @@ export async function createTestApp() {
   const httpMonitorModel: Model<HttpMonitorEntity> = module.get(
     getModelToken(HttpMonitorEntity.name),
   );
-  const httpPingModel: Model<HttpPingEntity> = module.get(getModelToken(HttpPingEntity.name));
   const clusterModel: Model<ClusterEntity> = module.get(getModelToken(ClusterEntity.name));
 
   const redisService: RedisService = module.get(RedisService);
@@ -119,11 +117,13 @@ export async function createTestApp() {
       apiKeyModel.deleteMany({}),
       metricRegisterModel.deleteMany({}),
       httpMonitorModel.deleteMany({}),
-      httpPingModel.deleteMany({}),
       clusterModel.deleteMany({}),
       redisService.flushAll(),
       clickhouseClient.query({
         query: `TRUNCATE TABLE logs`,
+      }),
+      clickhouseClient.query({
+        query: `TRUNCATE TABLE http_pings`,
       }),
     ]);
   };
@@ -152,7 +152,6 @@ export async function createTestApp() {
       apiKeyModel,
       metricRegisterModel,
       httpMonitorModel,
-      httpPingModel,
       clusterModel,
     },
     utils: {

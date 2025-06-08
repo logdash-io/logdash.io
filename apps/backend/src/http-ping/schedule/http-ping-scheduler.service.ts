@@ -105,7 +105,8 @@ export class HttpPingSchedulerService {
 
   private async saveCompletedPings(pings: CreateHttpPingDto[]): Promise<void> {
     if (pings.length === 0) return;
-    const savedPings = await this.httpPingWriteService.createMany(pings);
+
+    const [savedPings] = await Promise.all([this.httpPingWriteService.createMany(pings)]);
 
     for (const ping of savedPings) {
       await this.httpPingEventEmitter.emitHttpPingCreatedEvent({ ...ping });

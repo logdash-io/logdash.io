@@ -79,12 +79,8 @@ describe('UserTtlService', () => {
       url: 'https://example.com',
     });
 
-    const httpPing = await bootstrap.models.httpPingModel.create({
-      clusterId: cluster._id,
-      httpMonitorId: httpMonitor._id,
-      statusCode: 200,
-      responseTimeMs: 100,
-      message: 'OK',
+    const httpPingNew = await bootstrap.utils.httpPingUtils.createHttpPing({
+      httpMonitorId: httpMonitor._id.toString(),
     });
 
     const logsBeforeRemoval = await bootstrap.models.logModel.find();
@@ -94,7 +90,7 @@ describe('UserTtlService', () => {
     const projectsBeforeRemoval = await bootstrap.models.projectModel.find();
     const clustersBeforeRemoval = await bootstrap.models.clusterModel.find();
     const httpMonitorsBeforeRemoval = await bootstrap.models.httpMonitorModel.find();
-    const httpPingsBeforeRemoval = await bootstrap.models.httpPingModel.find();
+    const httpPingsBeforeRemoval = await bootstrap.utils.httpPingUtils.getAllPings();
 
     // when
     await service.deleteOldUnclaimedUsers();
@@ -107,7 +103,7 @@ describe('UserTtlService', () => {
     const projectsAfterRemoval = await bootstrap.models.projectModel.find();
     const clustersAfterRemoval = await bootstrap.models.clusterModel.find();
     const httpMonitorsAfterRemoval = await bootstrap.models.httpMonitorModel.find();
-    const httpPingsAfterRemoval = await bootstrap.models.httpPingModel.find();
+    const httpPingsAfterRemoval = await bootstrap.utils.httpPingUtils.getAllPings();
 
     expect(logsBeforeRemoval).toHaveLength(1);
     expect(metricsBeforeRemoval).toHaveLength(4);
