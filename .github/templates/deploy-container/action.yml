@@ -67,9 +67,6 @@ inputs:
   swagger-password:
     required: true
 
-  test-secret:
-    required: true
-
 runs:
   using: 'composite'
   steps:
@@ -108,5 +105,4 @@ runs:
           -e CLICKHOUSE_PASSWORD=${{ inputs.clickhouse-password }} \
           -e CLICKHOUSE_DATABASE=${{ inputs.clickhouse-database }} \
           -e SWAGGER_PASSWORD=${{ inputs.swagger-password }} \
-          -e TEST_SECRET=${{ inputs.test-secret }} \
           ${{ inputs.image-name }}
