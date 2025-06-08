@@ -1,6 +1,5 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
-import { closeInMemoryMongoServer } from '../utils/mongo-in-memory-server';
 
 describe('HttpMonitorCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -17,30 +16,30 @@ describe('HttpMonitorCoreController (reads)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  it('reads cluster monitors', async () => {
+  it('reads project monitors', async () => {
     // given
     const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
     const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
 
     await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
       token: setupA.token,
-      clusterId: setupA.cluster.id,
+      projectId: setupA.project.id,
       name: 'name 1',
     });
     await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
       token: setupA.token,
-      clusterId: setupA.cluster.id,
+      projectId: setupA.project.id,
       name: 'name 2',
     });
     await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
       token: setupB.token,
-      clusterId: setupB.cluster.id,
+      projectId: setupB.project.id,
       name: 'name 1',
     });
 
     // when
     const response = await request(bootstrap.app.getHttpServer())
-      .get(`/clusters/${setupA.cluster.id}/http_monitors`)
+      .get(`/projects/${setupA.project.id}/http_monitors`)
       .set('Authorization', `Bearer ${setupA.token}`);
 
     // then
@@ -49,14 +48,12 @@ describe('HttpMonitorCoreController (reads)', () => {
 
   it('denies access for non-cluster member', async () => {
     // given
-    const { token: creatorToken, cluster } =
-      await bootstrap.utils.generalUtils.setupAnonymous();
-    const { token: otherUserToken } =
-      await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token: creatorToken, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupAnonymous();
 
     // when
     const response = await request(bootstrap.app.getHttpServer())
-      .get(`/clusters/${cluster.id}/http_monitors`)
+      .get(`/projects/${project.id}/http_monitors`)
       .set('Authorization', `Bearer ${otherUserToken}`);
 
     // then

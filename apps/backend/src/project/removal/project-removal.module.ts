@@ -9,6 +9,7 @@ import { MetricWriteModule } from '../../metric/write/metric-write.module';
 import { ProjectReadModule } from '../read/project-read.module';
 import { ProjectWriteModule } from '../write/project-write.module';
 import { ProjectRemovalService } from './project-removal.service';
+import { HttpMonitorRemovalModule } from '../../http-monitor/removal/http-monitor-removal.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ProjectRemovalService } from './project-removal.service';
     HttpPingWriteModule,
     HttpMonitorWriteModule,
     HttpMonitorReadModule,
+    HttpMonitorRemovalModule,
   ],
   providers: [ProjectRemovalService],
   exports: [ProjectRemovalService],

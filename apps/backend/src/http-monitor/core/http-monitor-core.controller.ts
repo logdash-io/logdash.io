@@ -10,7 +10,7 @@ import { HttpMonitorSerializer } from './entities/http-monitor.serializer';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
-@Controller('clusters/:clusterId/http_monitors')
+@Controller('projects/:projectId/http_monitors')
 @UseGuards(ClusterMemberGuard)
 export class HttpMonitorCoreController {
   constructor(
@@ -22,24 +22,24 @@ export class HttpMonitorCoreController {
   @Post()
   @ApiResponse({ type: HttpMonitorSerialized })
   async create(
-    @Param('clusterId') clusterId: string,
+    @Param('projectId') projectId: string,
     @Body() dto: CreateHttpMonitorBody,
   ): Promise<HttpMonitorSerialized> {
-    const hasCapacity = await this.httpMonitorLimitService.hasCapacity(clusterId);
+    const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(
-        'You have reached the maximum number of monitors for this cluster',
+        'You have reached the maximum number of monitors for this project',
       );
     }
 
-    const httpMonitor = await this.httpMonitorWriteService.create(clusterId, dto);
+    const httpMonitor = await this.httpMonitorWriteService.create(projectId, dto);
     return HttpMonitorSerializer.serialize(httpMonitor);
   }
 
   @Get()
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
-  async findAll(@Param('clusterId') clusterId: string): Promise<HttpMonitorSerialized[]> {
-    const httpMonitors = await this.httpMonitorReadService.readByClusterId(clusterId);
+  async readByProjectId(@Param('projectId') projectId: string): Promise<HttpMonitorSerialized[]> {
+    const httpMonitors = await this.httpMonitorReadService.readByProjectId(projectId);
     return HttpMonitorSerializer.serializeMany(httpMonitors);
   }
 }

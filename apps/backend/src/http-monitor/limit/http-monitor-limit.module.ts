@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ClusterReadModule } from '../../cluster/read/cluster-read.module';
 import { UserReadModule } from '../../user/read/user-read.module';
 import { HttpMonitorReadModule } from '../read/http-monitor-read.module';
 import { HttpMonitorLimitService } from './http-monitor-limit.service';
+import { ProjectReadModule } from '../../project/read/project-read.module';
 
 @Module({
-  imports: [UserReadModule, HttpMonitorReadModule, ClusterReadModule],
+  imports: [UserReadModule, HttpMonitorReadModule, ProjectReadModule],
   providers: [HttpMonitorLimitService],
   exports: [HttpMonitorLimitService],
 })

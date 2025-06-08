@@ -13,9 +13,9 @@ export class HttpMonitorWriteService {
     private readonly httpMonitorModel: Model<HttpMonitorEntity>,
   ) {}
 
-  async create(clusterId: string, dto: CreateHttpMonitorBody): Promise<HttpMonitorNormalized> {
+  async create(projectId: string, dto: CreateHttpMonitorBody): Promise<HttpMonitorNormalized> {
     const entity = await this.httpMonitorModel.create({
-      clusterId,
+      projectId,
       name: dto.name,
       url: dto.url,
     });
@@ -23,7 +23,7 @@ export class HttpMonitorWriteService {
     return HttpMonitorSerializer.normalize(entity);
   }
 
-  async deleteBelongingToCluster(clusterId: string): Promise<void> {
-    await this.httpMonitorModel.deleteMany({ clusterId });
+  public async deleteByProjectId(projectId: string): Promise<void> {
+    await this.httpMonitorModel.deleteMany({ projectId });
   }
 }
