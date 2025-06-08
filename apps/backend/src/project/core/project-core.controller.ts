@@ -59,7 +59,7 @@ export class ProjectCoreController {
 
     const logsPerHourRateLimit = getProjectPlanConfig(project.tier).logs.rateLimitPerHour;
 
-    const currentUsage = await this.logRateLimitService.readLogsCount(projectId);
+    const currentUsage = await this.logRateLimitService.readLogsCountInLastHour(projectId);
 
     return ProjectSerializer.serialize(project, {
       rateLimits: [

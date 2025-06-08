@@ -2,6 +2,7 @@ import { advanceBy } from 'jest-date-mock';
 import { Types } from 'mongoose';
 import * as request from 'supertest';
 import { CreateLogBody } from '../../src/log/core/dto/create-log.body';
+import { CreateLogsBatchBody } from '../../src/log/core/dto/create-logs-batch.body';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { LogIngestionService } from '../../src/log/ingestion/log-creation.service';
 import { LogQueueingService } from '../../src/log/queueing/log-queueing.service';
@@ -331,13 +332,13 @@ describe('LogCoreController (writes)', () => {
     const logRateLimitService = await bootstrap.app.get(LogRateLimitService);
 
     // when
-    await logRateLimitService.readAndIncrementLogsCount(apiKey.projectId); // add 1 log
+    await logRateLimitService.requireWithinLimit(apiKey.projectId); // add 1 log
 
     advanceBy(30 * 60 * 1_000); // 30 minutes
 
     for (let i = 0; i < 9999; i++) {
       try {
-        await logRateLimitService.readAndIncrementLogsCount(apiKey.projectId);
+        await logRateLimitService.requireWithinLimit(apiKey.projectId);
       } catch {}
     }
 
@@ -383,5 +384,147 @@ describe('LogCoreController (writes)', () => {
       .send({ ip: '127.0.0.1' });
 
     expect(response.status).toEqual(429);
+  });
+
+  describe('POST /logs/batch', () => {
+    it('creates multiple logs in batch', async () => {
+      // given
+      const { apiKey, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const date = new Date();
+
+      const batchDto: CreateLogsBatchBody = {
+        logs: [
+          {
+            createdAt: date.toISOString(),
+            message: 'test message 1',
+            level: LogLevel.Info,
+          },
+          {
+            createdAt: date.toISOString(),
+            message: 'test message 2',
+            level: LogLevel.Error,
+            sequenceNumber: 123,
+          },
+          {
+            createdAt: date.toISOString(),
+            message: 'test message 3',
+            level: LogLevel.Debug,
+          },
+        ],
+      };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/logs/batch')
+        .set('project-api-key', apiKey.value)
+        .send(batchDto);
+
+      expect(response.body.success).toEqual(true);
+      expect(response.status).toEqual(201);
+
+      await sleep(1000);
+
+      // then
+      const logs = await bootstrap.models.logModel.find({ projectId: project.id });
+
+      expect(logs).toHaveLength(3);
+      expect(logs.find((log) => log.message === 'test message 1')).toBeDefined();
+      expect(logs.find((log) => log.message === 'test message 2')).toBeDefined();
+      expect(logs.find((log) => log.message === 'test message 3')).toBeDefined();
+      expect(logs.find((log) => log.level === LogLevel.Error)).toBeDefined();
+    });
+
+    it('validates maximum batch size of 100 logs', async () => {
+      // given
+      const { apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const date = new Date();
+
+      const logs = Array.from({ length: 101 }, (_, i) => ({
+        createdAt: date.toISOString(),
+        message: `test message ${i + 1}`,
+        level: LogLevel.Info,
+      }));
+
+      const batchDto: CreateLogsBatchBody = { logs };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/logs/batch')
+        .set('project-api-key', apiKey.value)
+        .send(batchDto);
+
+      // then
+      expect(response.status).toEqual(400);
+    });
+
+    it('validates individual log entries in batch', async () => {
+      // given
+      const { apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const batchDto: CreateLogsBatchBody = {
+        logs: [
+          {
+            createdAt: 'invalid-date',
+            message: 'test message',
+            level: LogLevel.Info,
+          },
+        ],
+      };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/logs/batch')
+        .set('project-api-key', apiKey.value)
+        .send(batchDto);
+
+      // then
+      expect(response.status).toEqual(400);
+    });
+
+    it('applies rate limit for batch logs', async () => {
+      const redisService = await bootstrap.app.get(RedisService);
+
+      // given
+      const { apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const date = new Date();
+
+      const logRateLimitService = await bootstrap.app.get(LogRateLimitService);
+
+      // when - fill up most of the rate limit
+      for (let i = 0; i < 9995; i++) {
+        try {
+          await logRateLimitService.requireWithinLimit(apiKey.projectId);
+        } catch {}
+      }
+
+      // Create a batch that would exceed the rate limit
+      const batchDto: CreateLogsBatchBody = {
+        logs: Array.from({ length: 10 }, (_, i) => ({
+          createdAt: date.toISOString(),
+          message: `test message ${i + 1}`,
+          level: LogLevel.Info,
+        })),
+      };
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/logs/batch')
+        .set('project-api-key', apiKey.value)
+        .send(batchDto);
+
+      // then
+      expect(response.status).toEqual(429);
+
+      await removeKeysWhichWouldExpireInNextXSeconds(redisService.getClient(), 3600);
+
+      // and when - after rate limit reset, batch should work
+      advanceBy(35 * 60 * 1_000); // 35 minutes
+      const responseAfterReset = await request(bootstrap.app.getHttpServer())
+        .post('/logs/batch')
+        .set('project-api-key', apiKey.value)
+        .send(batchDto);
+
+      // then
+      expect(responseAfterReset.status).toEqual(201);
+    }, 10_000);
   });
 });

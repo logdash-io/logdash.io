@@ -10,7 +10,7 @@ export class LogRateLimitService {
     private readonly redisService: RedisService,
   ) {}
 
-  public async readLogsCount(projectId: string): Promise<number> {
+  public async readLogsCountInLastHour(projectId: string): Promise<number> {
     const key = `project:${projectId}:logs-count-in-last-hour`;
 
     const usage = await this.redisService.get(key);
@@ -18,8 +18,11 @@ export class LogRateLimitService {
     return usage ? parseInt(usage) : 0;
   }
 
-  public async readAndIncrementLogsCount(projectId: string): Promise<void> {
-    const requestCount = await this.incrementLogsCount(projectId);
+  public async requireWithinLimit(
+    projectId: string,
+    numberOfLogsToBeAdded: number = 1,
+  ): Promise<void> {
+    const requestCount = await this.incrementLogsCount(projectId, numberOfLogsToBeAdded);
 
     const project = await this.projectReadCachedService.readProject(projectId);
 
@@ -34,11 +37,11 @@ export class LogRateLimitService {
     }
   }
 
-  private async incrementLogsCount(projectId: string): Promise<number> {
+  private async incrementLogsCount(projectId: string, by: number): Promise<number> {
     const key = `project:${projectId}:logs-count-in-last-hour`;
     const ttlSeconds = 60 * 60; // 1 hour
 
-    return await this.redisService.increment(key, {
+    return await this.redisService.incrementBy(key, by, {
       ttlOverwriteStrategy: TtlOverwriteStrategy.SetOnlyIfNoExpiry,
       ttlSeconds,
     });
