@@ -17,6 +17,10 @@
 	const project_badge_class =
 		'badge badge-soft badge-md gap-1 cursor-pointer';
 
+	const isOnDemoDashboard = $derived(
+		page.url.pathname.includes('/demo-dashboard'),
+	);
+
 	$effect(() => {
 		const project_id = page.url.searchParams.get('project_id');
 
@@ -44,7 +48,8 @@
 			class={[
 				project_badge_class,
 				{
-					'badge-primary pr-0': activeProject,
+					'badge-primary': activeProject,
+					'pr-0': activeProject && !isOnDemoDashboard,
 					'badge-secondary': !activeProject,
 				},
 			]}
@@ -54,7 +59,7 @@
 				{project.name}
 			</a>
 
-			{#if activeProject}
+			{#if activeProject && !isOnDemoDashboard}
 				<div class="dropdown z-30">
 					<div
 						tabindex="0"
@@ -115,7 +120,7 @@
 							{ replaceState: true },
 						);
 						toast.success(
-							`Project ${name} created successfully, you can now configure it.`,
+							`Service ${name} created successfully, you can now configure it.`,
 							5000,
 						);
 					});

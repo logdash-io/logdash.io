@@ -1,16 +1,40 @@
 <script lang="ts">
-	import LoggingSetup from '$lib/clusters/projects/ui/setup/LoggingSetup.svelte';
-	import MonitoringSetup from '$lib/clusters/projects/ui/setup/MonitoringSetup.svelte';
-	import ProjectClaimer from '$lib/clusters/projects/ui/setup/ProjectClaimer.svelte';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import MonitoringSetup from '$lib/clusters/monitoring/ui/MonitoringSetup.svelte';
+	import { fade } from 'svelte/transition';
 
 	type Props = {
 		data: { project_id: string; api_key: string };
 	};
 	const { data }: Props = $props();
+	let tryingToClaim = $state(false);
 </script>
 
 {#snippet claimer(hasLogs: boolean)}
-	<ProjectClaimer canClaim={hasLogs} />
+	<div class="mt-auto flex items-center gap-4">
+		<button
+			onclick={() => {
+				tryingToClaim = true;
+
+				goto(
+					`/app/clusters/${page.params.cluster_id}?project_id=${page.url.searchParams.get('project_id')}`,
+					{
+						invalidateAll: true,
+					},
+				);
+			}}
+			in:fade={{ duration: 100 }}
+			class={['btn btn-primary flex-1 whitespace-nowrap']}
+			disabled={!hasLogs || tryingToClaim}
+			data-posthog-id="complete-setup-button"
+		>
+			{#if tryingToClaim}
+				<span class="loading loading-xs"></span>
+			{/if}
+			Complete setup
+		</button>
+	</div>
 {/snippet}
 
 <MonitoringSetup {claimer} {...data} />

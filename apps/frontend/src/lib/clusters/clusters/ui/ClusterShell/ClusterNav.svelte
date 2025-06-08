@@ -20,7 +20,7 @@
 	const posthog = getContext<PostHog>('posthog');
 	const breadcrumb: BreadcrumbStep[] = $derived.by(() => {
 		const allProjectsStep: BreadcrumbStep = {
-			name: 'All Clusters',
+			name: 'All Projects',
 			path: '/app/clusters',
 		};
 		if (page.url.pathname.includes('/setup')) {

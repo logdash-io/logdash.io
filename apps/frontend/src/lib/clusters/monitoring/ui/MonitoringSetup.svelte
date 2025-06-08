@@ -1,22 +1,23 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { monitoringState } from '$lib/clusters/monitoring/application/monitoring.state.svelte.js';
-	import { logsState } from '$lib/clusters/projects/application/logs.state.svelte';
-	import LogsListener from '$lib/clusters/projects/ui/presentational/LogsListener.svelte';
-	import DataTile from '$lib/clusters/projects/ui/ProjectView/tiles/DataTile.svelte';
+	import DataTile from '$lib/clusters/common/ui/DataTile.svelte';
 	import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
 	import { stripProtocol } from '$lib/shared/utils/url.js';
 	import { CheckCircle } from 'lucide-svelte';
 	import { getContext, type Snippet } from 'svelte';
+	import MonitorsListener from './MonitorsListener.svelte';
 
 	type Props = {
 		claimer: Snippet<[boolean]>;
 	};
 	const { claimer }: Props = $props();
-	const hasLogs = $derived(logsState.logs.length > 0);
 	const tabId: string = getContext('tabId');
 	const observedUrl = $derived(page.url.searchParams.get('url'));
-	const pings = $derived.by(() => monitoringState.monitorPings(observedUrl));
+	const isHealthy = $derived(monitoringState.isHealthy(observedUrl));
+	const pings = $derived.by(() =>
+		monitoringState.monitoringPings(observedUrl),
+	);
 
 	$effect(() => {
 		monitoringState.observeUrl(page.params.cluster_id, observedUrl);
@@ -36,9 +37,25 @@
 						{stripProtocol(observedUrl)}
 					</h5>
 
-					<div class="badge badge-soft badge-success">
-						<span class="status status-success"></span>
-						healthy
+					<div
+						class={[
+							'badge badge-soft',
+							{
+								'badge-success': isHealthy,
+								'badge-error': !isHealthy,
+							},
+						]}
+					>
+						<span
+							class={[
+								'status',
+								{
+									'status-success': isHealthy,
+									'status-error': !isHealthy,
+								},
+							]}
+						></span>
+						{isHealthy ? 'up' : 'down'}
 					</div>
 				</div>
 
@@ -49,22 +66,8 @@
 
 			<div class="flex w-full flex-col gap-1">
 				<div
-					class="flex h-12 w-full items-center justify-start gap-1 overflow-hidden lg:gap-1"
+					class="flex h-12 w-full items-center justify-end gap-1 overflow-hidden lg:gap-1"
 				>
-					{#each pings as _, i}
-						<Tooltip content={`Service is up ${i}`} placement="top">
-							<div
-								class={[
-									'h-8 w-1.5 shrink-0 rounded-sm hover:h-12 lg:w-[7px]',
-									{
-										'bg-gradient-to-b from-green-600 via-green-600/80 to-green-600': true,
-										'bg-warning': false,
-									},
-								]}
-							></div>
-						</Tooltip>
-					{/each}
-
 					{#each Array.from({ length: 60 - pings.length }) as _, i}
 						<div
 							class={[
@@ -75,6 +78,22 @@
 								},
 							]}
 						></div>
+					{/each}
+
+					{#each pings as ping, i}
+						<Tooltip content={`Service is up ${i}`} placement="top">
+							<div
+								class={[
+									'h-8 w-1.5 shrink-0 rounded-sm bg-gradient-to-b hover:h-12 lg:w-[7px]',
+									{
+										'from-green-600 via-green-600/80 to-green-600':
+											ping.status === 'success',
+										'from-red-600 via-red-600/80 to-red-600':
+											ping.status !== 'success',
+									},
+								]}
+							></div>
+						</Tooltip>
 					{/each}
 				</div>
 			</div>
@@ -117,23 +136,19 @@
 			</div>
 
 			<div class="text-sm">
-				<LogsListener
-					onCaptureOnce={() => {
-						// toast.success('Logs captured!');
-					}}
-				>
+				<MonitorsListener url={observedUrl} onCaptureOnce={() => {}}>
 					<div
 						class="flex items-center justify-start gap-2 font-semibold"
 					>
 						<CheckCircle class="text-success h-5 w-5" />
 						<span class="text-success opacity-80">
-							Logs captured successfully!
+							Pings captured successfully!
 						</span>
 					</div>
-				</LogsListener>
+				</MonitorsListener>
 			</div>
 		</div>
 
-		{@render claimer(hasLogs)}
+		{@render claimer(isHealthy)}
 	</div>
 </div>

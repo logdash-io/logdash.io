@@ -22,7 +22,7 @@ class MonitoringState {
 	private _unsubscribe: () => void | null = null;
 	private _loadingPage = $state(false);
 
-	monitorPings(url: string): PingStatus[] {
+	monitoringPings(url: string): PingStatus[] {
 		if (!this._monitors[url]) {
 			return [];
 		}
@@ -35,6 +35,15 @@ class MonitoringState {
 			}
 			return 0;
 		});
+	}
+
+	isHealthy(url: string): boolean {
+		if (!this._monitors[url] || !this._monitors[url].length) {
+			return false;
+		}
+
+		const lastPing = this._monitors[url][this._monitors[url].length - 1];
+		return lastPing.status === 'success';
 	}
 
 	observeUrl(clusterId: string, url: string): void {

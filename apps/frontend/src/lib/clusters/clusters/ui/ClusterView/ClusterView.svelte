@@ -39,7 +39,7 @@
 	const hasMonitoring = $derived.by(() => {
 		const id = page.url.searchParams.get('project_id');
 
-		return clustersState.hasFeature(id, Feature.MONITORING);
+		return projectsState.hasFeature(id, Feature.MONITORING);
 	});
 </script>
 
@@ -86,6 +86,7 @@
 
 				{#if isDev() && !hasMonitoring && clustersState.ready}
 					<SetupMonitoringButton
+						class="btn btn-secondary btn-xs gap-1 opacity-90"
 						canAddMore={true}
 						onSubmit={(url) => {
 							goto(
@@ -94,7 +95,9 @@
 								)}&url=${encodeURIComponent(url)}`,
 							);
 						}}
-					/>
+					>
+						Setup monitoring <ArrowRightIcon class="h-4 w-4" />
+					</SetupMonitoringButton>
 				{/if}
 			</div>
 		{/if}

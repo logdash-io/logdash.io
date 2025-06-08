@@ -7,8 +7,9 @@
 
 	type Props = {
 		canClaim: boolean;
+		nextUrl: string;
 	};
-	const { canClaim }: Props = $props();
+	const { canClaim, nextUrl }: Props = $props();
 	const cluster_id = page.params.cluster_id;
 
 	let termsAccepted = $state(false);
@@ -22,6 +23,7 @@
 			flow: 'claim',
 			fallback_url: '/',
 			cluster_id,
+			next_url: nextUrl,
 		});
 	}
 </script>
@@ -29,7 +31,7 @@
 <div class={['mt-auto flex flex-col items-center gap-4']}>
 	<div
 		class={[
-			'bg-base-100/60 border-base-100 flex h-fit w-full flex-col gap-2 rounded-xl border text-sm select-none',
+			'bg-base-100/60 border-base-100 flex h-fit w-full select-none flex-col gap-2 rounded-xl border text-sm',
 			{
 				'p-4': canClaim,
 			},

@@ -192,4 +192,38 @@ export const sdkDocs: SDKSection[] = [
 		],
 		type: 'sdk',
 	},
+	// todo: uncomment after these packages will get testing in place
+	// {
+	// 	id: 'ruby',
+	// 	title: 'Ruby SDK',
+	// 	docsPath: 'https://github.com/logdash-io/ruby-sdk?tab=readme-ov-file',
+	// 	sections: [
+	// 		{ id: 'logs', title: 'Logging', path: '#logging' },
+	// 		{ id: 'metrics', title: 'Metrics', path: '#metrics' },
+	// 		// { id: 'monitoring', title: 'Monitoring', path: '#monitoring' },
+	// 	],
+	// 	type: 'sdk',
+	// },
+	// {
+	// 	id: 'java',
+	// 	title: 'Java SDK',
+	// 	docsPath: 'https://github.com/logdash-io/java-sdk?tab=readme-ov-file',
+	// 	sections: [
+	// 		{ id: 'logs', title: 'Logging', path: '#logging' },
+	// 		{ id: 'metrics', title: 'Metrics', path: '#metrics' },
+	// 		// { id: 'monitoring', title: 'Monitoring', path: '#monitoring' },
+	// 	],
+	// 	type: 'sdk',
+	// },
+	// {
+	// 	id: 'java',
+	// 	title: 'Java SDK',
+	// 	docsPath: 'https://github.com/logdash-io/java-sdk?tab=readme-ov-file',
+	// 	sections: [
+	// 		{ id: 'logs', title: 'Logging', path: '#logging' },
+	// 		{ id: 'metrics', title: 'Metrics', path: '#metrics' },
+	// 		// { id: 'monitoring', title: 'Monitoring', path: '#monitoring' },
+	// 	],
+	// 	type: 'sdk',
+	// },
 ];

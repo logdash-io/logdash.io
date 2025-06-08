@@ -30,10 +30,6 @@ class ClustersState {
 		return this._clusters[id]?.name || '';
 	}
 
-	hasFeature(clusterId: string, feature: Feature.MONITORING): boolean {
-		return this._clusters[clusterId]?.features.includes(feature);
-	}
-
 	set(clusters: Cluster[]): void {
 		this._clusters = arrayToObject(clusters, 'id');
 		this._initialized = true;

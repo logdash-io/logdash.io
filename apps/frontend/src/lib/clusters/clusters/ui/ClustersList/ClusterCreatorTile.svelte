@@ -59,7 +59,7 @@
 					minlength={MIN_NAME_LENGTH}
 					maxlength={MAX_NAME_LENGTH}
 					class="input-sm input-ghost selection:bg-secondary/20 h-full w-full rounded-lg pl-6 text-lg font-semibold outline-0 focus:bg-transparent"
-					placeholder="New cluster name"
+					placeholder="New project name"
 				/>
 
 				{#if projectName.length > MIN_NAME_LENGTH && projectName.length < MAX_NAME_LENGTH}{:else}{/if}
@@ -89,7 +89,7 @@
 					class="flex w-full items-center justify-between gap-2 pl-8"
 				>
 					<h5 class="text- font-semibold">
-						Upgrade to add more clusters
+						Upgrade to add more projects
 					</h5>
 					<button
 						class="btn btn-primary btn-sm ml-auto"
@@ -122,7 +122,7 @@
 			}}
 			data-posthog-id="create-cluster-button"
 		>
-			<h5 class="text-lg font-semibold">Create new cluster</h5>
+			<h5 class="text-lg font-semibold">Create new project</h5>
 
 			<div class="badge badge-lg badge-soft badge-primary rounded-full">
 				<Plus class="h-4 w-4" />

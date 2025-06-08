@@ -1,10 +1,10 @@
 import { minToMs } from '$lib/shared/utils/time';
-import { json, type RequestHandler } from '@sveltejs/kit';
+import { type RequestHandler } from '@sveltejs/kit';
 import { produce } from 'sveltekit-sse';
 
 const UNLOCK_TIMEOUT = minToMs(1);
-const PING_INTERVAL = 30_000;
-const PING_COUNT = 3;
+const PING_INTERVAL = 20_000;
+const PING_COUNT = 10;
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const createPingScheduler = (url: string, emit: Function) => {
@@ -47,15 +47,6 @@ const createPingScheduler = (url: string, emit: Function) => {
 	};
 
 	for (let i = 0; i < PING_COUNT; i++) {
-		// emit(
-		// 	'ping-status',
-		// 	JSON.stringify({
-		// 		id: i + 1,
-		// 		status: 'scheduled',
-		// 		timestamp: new Date().toISOString(),
-		// 	}),
-		// );
-
 		timeouts.push(setTimeout(() => ping(i + 1), i * PING_INTERVAL));
 	}
 

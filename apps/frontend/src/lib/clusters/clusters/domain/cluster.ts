@@ -1,4 +1,3 @@
-import type { Feature } from '$lib/shared/types';
 import type { ClusterProjectReadModel } from './cluster-project-simple-read-model';
 
 export type Cluster = {
@@ -7,6 +6,5 @@ export type Cluster = {
 	members: string[];
 	creatorId: string;
 	tier: string;
-	features: Feature[];
 	projects: ClusterProjectReadModel[];
 };

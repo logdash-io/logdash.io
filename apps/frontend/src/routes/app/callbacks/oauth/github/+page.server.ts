@@ -57,7 +57,7 @@ async function runClaimFlow(dto: {
 	const {
 		code,
 		cookies,
-		state: { cluster_id, terms_accepted, email_accepted },
+		state: { cluster_id, terms_accepted, email_accepted, next_url },
 	} = dto;
 
 	if (!cluster_id) {
@@ -87,16 +87,7 @@ async function runClaimFlow(dto: {
 		maxAge: expiration.getTime() - Date.now(),
 	});
 
-	const [defaultProject] = await logdashAPI.get_cluster_projects(
-		cluster_id,
-		access_token,
-	);
-
-	// todo: reconsider this after introducing system health
-	redirect(
-		302,
-		`/app/clusters/${cluster_id}?project_id=${defaultProject.id}`,
-	);
+	redirect(302, next_url || `/app/clusters`);
 }
 
 export const load = async ({
