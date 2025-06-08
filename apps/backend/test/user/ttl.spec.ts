@@ -73,13 +73,18 @@ describe('UserTtlService', () => {
       throw new Error('Cluster not found for user');
     }
 
+    const project = await bootstrap.models.projectModel.findOne({ clusterId: cluster._id });
+    if (!project) {
+      throw new Error('Project not found for cluster');
+    }
+
     const httpMonitor = await bootstrap.models.httpMonitorModel.create({
-      clusterId: cluster._id,
+      projectId: project._id,
       name: 'Test Monitor',
       url: 'https://example.com',
     });
 
-    const httpPingNew = await bootstrap.utils.httpPingUtils.createHttpPing({
+    const httpPing = await bootstrap.utils.httpPingUtils.createHttpPing({
       httpMonitorId: httpMonitor._id.toString(),
     });
 

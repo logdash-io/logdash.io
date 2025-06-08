@@ -22,9 +22,9 @@ export class HttpMonitorReadService {
     return HttpMonitorSerializer.normalize(entity);
   }
 
-  async readByClusterId(clusterId: string): Promise<HttpMonitorNormalized[]> {
+  async readByProjectId(projectId: string): Promise<HttpMonitorNormalized[]> {
     const entities = await this.httpMonitorModel
-      .find({ clusterId })
+      .find({ projectId })
       .sort({ createdAt: -1 })
       .lean<HttpMonitorEntity[]>()
       .exec();
@@ -32,8 +32,8 @@ export class HttpMonitorReadService {
     return HttpMonitorSerializer.normalizeMany(entities);
   }
 
-  async countBelongingToCluster(clusterId: string): Promise<number> {
-    return this.httpMonitorModel.countDocuments({ clusterId }).lean().exec();
+  async countByProjectId(projectId: string): Promise<number> {
+    return this.httpMonitorModel.countDocuments({ projectId }).lean().exec();
   }
 
   async countAll(): Promise<number> {

@@ -21,6 +21,9 @@ export interface ProjectPlanConfig {
       [MetricGranularity.Day]: number;
     };
   };
+  httpMonitors: {
+    maxNumberOfMonitors: number;
+  };
 }
 
 export interface ProjectPlanConfigs {
@@ -50,6 +53,9 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
         [MetricGranularity.Day]: 7 * 24, // 7 days
       },
     },
+    httpMonitors: {
+      maxNumberOfMonitors: 2,
+    },
   },
   [ProjectTier.EarlyBird]: {
     logs: {
@@ -71,6 +77,9 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
         [MetricGranularity.Day]: 30 * 24, // 1 month
       },
     },
+    httpMonitors: {
+      maxNumberOfMonitors: 10,
+    },
   },
   [ProjectTier.Admin]: {
     logs: {
@@ -91,6 +100,9 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
         [MetricGranularity.Hour]: 7 * 24, // 7 days
         [MetricGranularity.Day]: 30 * 24, // 1 month
       },
+    },
+    httpMonitors: {
+      maxNumberOfMonitors: 100,
     },
   },
 };

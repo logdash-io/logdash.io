@@ -22,10 +22,10 @@ export class HttpPingCoreController {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  @Get('clusters/:clusterId/monitors/:monitorId/http_pings')
+  @Get('projects/:projectId/monitors/:monitorId/http_pings')
   @ApiResponse({ type: HttpPingSerialized, isArray: true })
   async findByMonitorId(
-    @Param('clusterId') clusterId: string,
+    @Param('projectId') projectId: string,
     @Param('monitorId') monitorId: string,
   ): Promise<HttpPingSerialized[]> {
     const monitor = await this.httpMonitorReadService.readById(monitorId);
@@ -33,8 +33,8 @@ export class HttpPingCoreController {
       throw new NotFoundException('Monitor not found');
     }
 
-    if (monitor.clusterId !== clusterId) {
-      throw new NotFoundException('Monitor not found in this cluster');
+    if (monitor.projectId !== projectId) {
+      throw new NotFoundException('Monitor not found in this project');
     }
 
     const pings = await this.httpPingReadService.readByMonitorId(monitorId);
@@ -44,9 +44,9 @@ export class HttpPingCoreController {
 
   @DemoEndpoint()
   @ApiBearerAuth()
-  @Sse('clusters/:clusterId/monitors/:monitorId/http_pings/sse')
+  @Sse('projects/:projectId/monitors/:monitorId/http_pings/sse')
   public async streamHttpMonitorPings(
-    @Param('clusterId') clusterId: string,
+    @Param('projectId') projectId: string,
     @Param('monitorId') monitorId: string,
   ): Promise<Observable<any>> {
     const eventStream$ = fromEvent(this.eventEmitter, HttpPingEvent.HttpPingCreatedEvent).pipe(

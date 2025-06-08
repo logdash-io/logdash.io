@@ -31,7 +31,7 @@ describe('Http Ping (SSE)', () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token: setup.token,
-        clusterId: setup.cluster.id,
+        projectId: setup.project.id,
       });
 
       // when
@@ -56,11 +56,11 @@ describe('Http Ping (SSE)', () => {
       const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
       const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token: setupA.token,
-        clusterId: setupA.cluster.id,
+        projectId: setupA.project.id,
       });
       const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token: setupB.token,
-        clusterId: setupB.cluster.id,
+        projectId: setupB.project.id,
       });
 
       // when
@@ -87,7 +87,7 @@ describe('Http Ping (SSE)', () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token: setup.token,
-        clusterId: setup.cluster.id,
+        projectId: setup.project.id,
       });
 
       // when
