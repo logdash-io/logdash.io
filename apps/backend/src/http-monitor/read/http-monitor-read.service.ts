@@ -22,6 +22,14 @@ export class HttpMonitorReadService {
     return HttpMonitorSerializer.normalize(entity);
   }
 
+  async readManyByIds(ids: string[]): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ _id: { $in: ids } })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+    return HttpMonitorSerializer.normalizeMany(entities);
+  }
+
   async readByProjectId(projectId: string): Promise<HttpMonitorNormalized[]> {
     const entities = await this.httpMonitorModel
       .find({ projectId })
