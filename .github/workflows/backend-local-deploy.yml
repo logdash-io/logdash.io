@@ -34,7 +34,7 @@ jobs:
           application-port: 3000
           image-name: ablaszkiewicz/logdash-backend-local
           container-name: logdash-backend-local
-          mongo-url: ${{ secrets.BACKEND_DEV_MONGO_URL }}
+          mongo-url: ${{ secrets.BACKEND_LOCAL_MONGO_URL }}
           github-oauth-client-id: ${{ secrets.BACKEND_LOCAL_GITHUB_OAUTH_CLIENT_ID }}
           github-oauth-client-secret: ${{ secrets.BACKEND_LOCAL_GITHUB_OAUTH_CLIENT_SECRET }}
           resend-api-key: 'empty'
