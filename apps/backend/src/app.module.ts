@@ -22,6 +22,7 @@ import { SupportCoreModule } from './support/core/support-core.module';
 import { UserCoreModule } from './user/core/user-core.module';
 import { ClickhouseModule } from './clickhouse/clickhouse.module';
 import { NotificationChannelCoreModule } from './notification-channel/core/notification-channel-core.module';
+import { HttpPingBucketCoreModule } from './http-ping-bucket/core/http-ping-bucket-core.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { NotificationChannelCoreModule } from './notification-channel/core/notif
     ExposedConfigModule,
     HttpMonitorCoreModule,
     HttpPingCoreModule,
+    HttpPingBucketCoreModule,
     ClusterCoreModule,
     MetricRegisterCoreModule,
     RedisModule.forRoot({

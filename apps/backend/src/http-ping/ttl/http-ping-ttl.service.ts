@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { HttpPingWriteService } from '../write/http-ping-write.service';
 import { getEnvConfig } from '../../shared/configs/env-configs';
+import { HttpPingWriteService } from '../write/http-ping-write.service';
 
 @Injectable()
 export class HttpPingTtlService {

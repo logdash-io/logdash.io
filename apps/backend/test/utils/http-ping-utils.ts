@@ -1,10 +1,9 @@
+import { ClickHouseClient } from '@clickhouse/client';
 import { INestApplication } from '@nestjs/common';
-import { getModelToken } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { HttpPingEntity } from '../../src/http-ping/core/entities/http-ping.entity';
 import { HttpPingNormalized } from '../../src/http-ping/core/entities/http-ping.interface';
 import { HttpPingSerializer } from '../../src/http-ping/core/entities/http-ping.serializer';
-import { ClickHouseClient } from '@clickhouse/client';
 
 export class HttpPingUtils {
   private clickhouseClient: ClickHouseClient;
@@ -18,10 +17,11 @@ export class HttpPingUtils {
     statusCode?: number;
     responseTimeMs?: number;
     message?: string;
+    createdAt?: Date;
   }): Promise<HttpPingNormalized> {
     const httpPingEntity = HttpPingEntity.fromNormalized({
       id: new Types.ObjectId().toString(),
-      createdAt: new Date(),
+      createdAt: params.createdAt || new Date(),
       httpMonitorId: params.httpMonitorId,
       message: params.message || 'Default HTTP ping',
       responseTimeMs: params.responseTimeMs || 100,

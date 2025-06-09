@@ -1,3 +1,4 @@
+import { ClickHouseClient } from '@clickhouse/client';
 import { Logger, Metrics } from '@logdash/js-sdk';
 import { ValidationPipe } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -6,12 +7,14 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { clear } from 'jest-date-mock';
 import { Model } from 'mongoose';
+import * as nock from 'nock';
 import { ApiKeyCoreModule } from '../../src/api-key/core/api-key-core.module';
 import { ApiKeyEntity } from '../../src/api-key/core/entities/api-key.entity';
 import { ClusterCoreModule } from '../../src/cluster/core/cluster-core.module';
 import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
 import { HttpMonitorEntity } from '../../src/http-monitor/core/entities/http-monitor.entity';
 import { HttpMonitorCoreModule } from '../../src/http-monitor/core/http-monitor-core.module';
+import { HttpPingBucketCoreModule } from '../../src/http-ping-bucket/core/http-ping-bucket-core.module';
 import { HttpPingCoreModule } from '../../src/http-ping/core/http-ping-core.module';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/schedule/http-ping-scheduler.service';
 import { LogMetricEntity } from '../../src/log-metric/core/entities/log-metric.entity';
@@ -22,6 +25,8 @@ import { MetricRegisterEntryEntity } from '../../src/metric-register/core/entiti
 import { MetricRegisterCoreModule } from '../../src/metric-register/core/metric-register-core.module';
 import { MetricEntity } from '../../src/metric/core/entities/metric.entity';
 import { MetricCoreModule } from '../../src/metric/core/metric-core.module';
+import { NotificationChannelEntity } from '../../src/notification-channel/core/entities/notification-channel.entity';
+import { NotificationChannelCoreModule } from '../../src/notification-channel/core/notification-channel-core.module';
 import { ProjectEntity } from '../../src/project/core/entities/project.entity';
 import { ProjectCoreModule } from '../../src/project/core/project-core.module';
 import { LogdashModule } from '../../src/shared/logdash/logdash.module';
@@ -31,12 +36,13 @@ import { SupportCoreModule } from '../../src/support/core/support-core.module';
 import { UserEntity } from '../../src/user/core/entities/user.entity';
 import { UserCoreModule } from '../../src/user/core/user-core.module';
 import { AuthCoreModule } from './../../src/auth/core/auth-core.module';
-import { NotificationChannelCoreModule } from '../../src/notification-channel/core/notification-channel-core.module';
-import { NotificationChannelEntity } from '../../src/notification-channel/core/entities/notification-channel.entity';
+import { rootClickHouseTestModule } from './clickhouse-test-container-server';
 import { ProjectGroupUtils } from './cluster-utils';
+import { NotificationChannelUtils } from './communication-channel-utils';
 import { DemoUtils } from './demo';
 import { GeneralUtils } from './general';
 import { HttpMonitorUtils } from './http-monitor-utils';
+import { HttpPingBucketUtils } from './http-ping-bucket-utils';
 import { HttpPingUtils } from './http-ping-utils';
 import { LogUtils } from './log-utils';
 import { LoggerMock } from './logger-mock';
@@ -45,11 +51,7 @@ import { MetricsMock } from './metrics-mock';
 import { closeInMemoryMongoServer, rootMongooseTestModule } from './mongo-in-memory-server';
 import { ProjectUtils } from './project-utils';
 import { getInMemoryRedisUri, redisInMemoryServer } from './redis-in-memory-server';
-import { rootClickHouseTestModule } from './clickhouse-test-container-server';
-import { ClickHouseClient } from '@clickhouse/client';
-import { NotificationChannelUtils } from './communication-channel-utils';
 import { TelegramUtils } from './telegram-utils';
-import * as nock from 'nock';
 
 export async function createTestApp() {
   const redisUrl = await getInMemoryRedisUri();
@@ -71,6 +73,7 @@ export async function createTestApp() {
       SupportCoreModule,
       HttpMonitorCoreModule,
       HttpPingCoreModule,
+      HttpPingBucketCoreModule,
       ClusterCoreModule,
       MetricRegisterCoreModule,
       NotificationChannelCoreModule,
@@ -135,6 +138,9 @@ export async function createTestApp() {
       clickhouseClient.query({
         query: `TRUNCATE TABLE http_pings`,
       }),
+      clickhouseClient.query({
+        query: `TRUNCATE TABLE http_ping_buckets`,
+      }),
     ]);
   };
 
@@ -169,6 +175,7 @@ export async function createTestApp() {
     utils: {
       projectUtils: new ProjectUtils(app),
       httpPingUtils: new HttpPingUtils(app),
+      httpPingBucketUtils: new HttpPingBucketUtils(app),
       metricUtils: new MetricUtils(app),
       logUtils: new LogUtils(app),
       httpMonitorsUtils: new HttpMonitorUtils(app),

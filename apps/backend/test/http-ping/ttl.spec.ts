@@ -18,7 +18,7 @@ describe('Http Ping (ttl)', () => {
   });
 
   describe('CRON deletes pings', () => {
-    it('older than 1 hour', async () => {
+    it('older than 12 hours', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
@@ -26,7 +26,7 @@ describe('Http Ping (ttl)', () => {
         projectId: project.id,
       });
       await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
-      advanceBy(12 * 60 * 60 * 1_000);
+      advanceBy(12 * 60 * 60 * 1_000 + 1000);
       await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
       advanceBy(11 * 60 * 60 * 1_000);
 
