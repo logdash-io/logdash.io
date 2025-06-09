@@ -1,4 +1,13 @@
-import { Body, ConflictException, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  ConflictException,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { HttpMonitorLimitService } from '../limit/http-monitor-limit.service';
@@ -7,10 +16,11 @@ import { HttpMonitorWriteService } from '../write/http-monitor-write.service';
 import { CreateHttpMonitorBody } from './dto/create-http-monitor.body';
 import { HttpMonitorSerialized } from './entities/http-monitor.interface';
 import { HttpMonitorSerializer } from './entities/http-monitor.serializer';
+import { UpdateHttpMonitorBody } from './dto/update-http-monitor.body';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
-@Controller('projects/:projectId/http_monitors')
+@Controller('')
 @UseGuards(ClusterMemberGuard)
 export class HttpMonitorCoreController {
   constructor(
@@ -19,7 +29,7 @@ export class HttpMonitorCoreController {
     private readonly httpMonitorLimitService: HttpMonitorLimitService,
   ) {}
 
-  @Post()
+  @Post('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized })
   async create(
     @Param('projectId') projectId: string,
@@ -36,10 +46,21 @@ export class HttpMonitorCoreController {
     return HttpMonitorSerializer.serialize(httpMonitor);
   }
 
-  @Get()
+  @Get('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
   async readByProjectId(@Param('projectId') projectId: string): Promise<HttpMonitorSerialized[]> {
     const httpMonitors = await this.httpMonitorReadService.readByProjectId(projectId);
     return HttpMonitorSerializer.serializeMany(httpMonitors);
+  }
+
+  @Put('/http_monitors/:httpMonitorId')
+  @ApiResponse({ type: HttpMonitorSerialized })
+  async update(
+    @Param('httpMonitorId') httpMonitorId: string,
+    @Body() dto: UpdateHttpMonitorBody,
+  ): Promise<HttpMonitorSerialized> {
+    const httpMonitor = await this.httpMonitorWriteService.update(httpMonitorId, dto);
+
+    return HttpMonitorSerializer.serialize(httpMonitor);
   }
 }

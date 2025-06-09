@@ -1,6 +1,5 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
-import { closeInMemoryMongoServer } from '../utils/mongo-in-memory-server';
 import { AccountClaimStatus } from '../../src/user/core/enum/account-claim-status.enum';
 import { AuthMethod } from '../../src/user/core/enum/auth-method.enum';
 import * as nock from 'nock';
@@ -47,13 +46,11 @@ describe('Auth (anonymous)', () => {
       .reply(200, { avatar_url: 'https://some-avatar.com' });
 
     // and when
-    await request(bootstrap.app.getHttpServer())
-      .post('/auth/github/claim')
-      .send({
-        githubCode: 'whatever',
-        accessToken: token,
-        emailAccepted: true,
-      });
+    await request(bootstrap.app.getHttpServer()).post('/auth/github/claim').send({
+      githubCode: 'whatever',
+      accessToken: token,
+      emailAccepted: true,
+    });
 
     // then
     const user = (await bootstrap.models.userModel.findOne())!;
@@ -89,12 +86,10 @@ describe('Auth (anonymous)', () => {
       .get('/user')
       .reply(200, { avatar_url: 'https://some-avatar.com' });
 
-    const response = await request(bootstrap.app.getHttpServer())
-      .post('/auth/github/claim')
-      .send({
-        githubCode: 'whatever',
-        accessToken: token,
-      });
+    const response = await request(bootstrap.app.getHttpServer()).post('/auth/github/claim').send({
+      githubCode: 'whatever',
+      accessToken: token,
+    });
 
     // then
     const userAfterClaim = (await bootstrap.models.userModel.findOne())!;

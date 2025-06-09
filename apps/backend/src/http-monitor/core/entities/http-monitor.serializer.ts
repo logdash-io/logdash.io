@@ -8,6 +8,7 @@ export class HttpMonitorSerializer {
       projectId: entity.projectId,
       name: entity.name,
       url: entity.url,
+      notificationChannelIds: entity.notificationChannelIds,
     };
   }
 
@@ -21,6 +22,7 @@ export class HttpMonitorSerializer {
       projectId: normalized.projectId,
       name: normalized.name,
       url: normalized.url,
+      notificationChannelIds: normalized.notificationChannelIds,
     };
   }
 
