@@ -31,6 +31,8 @@ import { SupportCoreModule } from '../../src/support/core/support-core.module';
 import { UserEntity } from '../../src/user/core/entities/user.entity';
 import { UserCoreModule } from '../../src/user/core/user-core.module';
 import { AuthCoreModule } from './../../src/auth/core/auth-core.module';
+import { NotificationsChannelCoreModule } from '../../src/notifications-channel/core/notifications-channel-core.module';
+import { NotificationsChannelEntity } from '../../src/notifications-channel/core/entities/notifications-channel.entity';
 import { ProjectGroupUtils } from './cluster-utils';
 import { DemoUtils } from './demo';
 import { GeneralUtils } from './general';
@@ -45,6 +47,9 @@ import { ProjectUtils } from './project-utils';
 import { getInMemoryRedisUri, redisInMemoryServer } from './redis-in-memory-server';
 import { rootClickHouseTestModule } from './clickhouse-test-container-server';
 import { ClickHouseClient } from '@clickhouse/client';
+import { NotificationsChannelUtils } from './communication-channel-utils';
+import { TelegramUtils } from './telegram-utils';
+import * as nock from 'nock';
 
 export async function createTestApp() {
   const redisUrl = await getInMemoryRedisUri();
@@ -68,6 +73,7 @@ export async function createTestApp() {
       HttpPingCoreModule,
       ClusterCoreModule,
       MetricRegisterCoreModule,
+      NotificationsChannelCoreModule,
       RedisModule.forRoot({
         url: redisUrl,
       }),
@@ -102,6 +108,9 @@ export async function createTestApp() {
     getModelToken(HttpMonitorEntity.name),
   );
   const clusterModel: Model<ClusterEntity> = module.get(getModelToken(ClusterEntity.name));
+  const notificationsChannelModel: Model<NotificationsChannelEntity> = module.get(
+    getModelToken(NotificationsChannelEntity.name),
+  );
 
   const redisService: RedisService = module.get(RedisService);
 
@@ -118,6 +127,7 @@ export async function createTestApp() {
       metricRegisterModel.deleteMany({}),
       httpMonitorModel.deleteMany({}),
       clusterModel.deleteMany({}),
+      notificationsChannelModel.deleteMany({}),
       redisService.flushAll(),
       clickhouseClient.query({
         query: `TRUNCATE TABLE logs`,
@@ -131,6 +141,7 @@ export async function createTestApp() {
   const beforeEach = async () => {
     clear();
     await clearDatabase();
+    nock.cleanAll();
   };
 
   const afterAll = async () => {
@@ -153,6 +164,7 @@ export async function createTestApp() {
       metricRegisterModel,
       httpMonitorModel,
       clusterModel,
+      notificationsChannelModel,
     },
     utils: {
       projectUtils: new ProjectUtils(app),
@@ -163,6 +175,8 @@ export async function createTestApp() {
       projectGroupUtils: new ProjectGroupUtils(app),
       generalUtils: new GeneralUtils(app),
       demoUtils: new DemoUtils(app),
+      notificationsChannelUtils: new NotificationsChannelUtils(app),
+      telegramUtils: new TelegramUtils(app),
     },
     methods: {
       clearDatabase,

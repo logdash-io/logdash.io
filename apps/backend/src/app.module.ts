@@ -21,6 +21,7 @@ import { RedisModule } from './shared/redis/redis.module';
 import { SupportCoreModule } from './support/core/support-core.module';
 import { UserCoreModule } from './user/core/user-core.module';
 import { ClickhouseModule } from './clickhouse/clickhouse.module';
+import { NotificationsChannelCoreModule } from './notifications-channel/core/notifications-channel-core.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ClickhouseModule } from './clickhouse/clickhouse.module';
       url: getEnvConfig().redis.url,
     }),
     ClickhouseModule,
+    NotificationsChannelCoreModule,
   ],
 })
 export class AppModule {}

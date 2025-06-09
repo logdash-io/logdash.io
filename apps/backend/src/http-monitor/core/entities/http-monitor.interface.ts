@@ -3,6 +3,7 @@ export class HttpMonitorNormalized {
   projectId: string;
   name: string;
   url: string;
+  notificationsChannelsIds: string[];
 }
 
 export class HttpMonitorSerialized {
@@ -10,4 +11,5 @@ export class HttpMonitorSerialized {
   projectId: string;
   name: string;
   url: string;
+  notificationsChannelsIds: string[];
 }
