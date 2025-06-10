@@ -54,3 +54,5 @@ jobs:
           clickhouse-password: ${{ secrets.BACKEND_LOCAL_CLICKHOUSE_PASSWORD }}
           clickhouse-database: default
           swagger-password: ${{ secrets.BACKEND_SWAGGER_PASSWORD }}
+          telegram-uptime-bot-token: ${{ secrets.BACKEND_LOCAL_TELEGRAM_UPTIME_BOT_TOKEN }}
+          telegram-uptime-bot-secret: ${{ secrets.BACKEND_LOCAL_TELEGRAM_UPTIME_BOT_SECRET }}

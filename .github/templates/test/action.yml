@@ -18,3 +18,5 @@ runs:
       env:
         OUR_ENV: 'dev'
         AUTH_JWT_SECRET: 'test'
+        TELEGRAM_UPTIME_BOT_TOKEN: 'token'
+        TELEGRAM_UPTIME_BOT_SECRET: 'secret'

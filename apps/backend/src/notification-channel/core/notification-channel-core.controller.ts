@@ -3,19 +3,19 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessResponse } from 'src/shared/responses/success.response';
 import { CreateNotificationChannelBody } from './dto/create-notification-channel.body';
 import { UpdateNotificationChannelBody } from './dto/update-notification-channel.body';
-import { NotificationChannelReadService } from '../read/notification-channel-read.service';
 import { NotificationChannelWriteService } from '../write/notification-channel-write.service';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { NotificationChannelSerializer } from './entities/notification-channel.serializer';
 import { NotificationChannelSerialized } from './entities/notification-channel.interface';
+import { NotificationChannelOptionsEnrichmentService } from './notification-channel-options-enrichment.service';
 
 @Controller()
 @ApiTags('Notification channels')
 @UseGuards(ClusterMemberGuard)
 export class NotificationChannelCoreController {
   constructor(
-    private readonly notificationChannelReadService: NotificationChannelReadService,
     private readonly notificationChannelWriteService: NotificationChannelWriteService,
+    private readonly notificationChannelOptionsEnrichmentService: NotificationChannelOptionsEnrichmentService,
   ) {}
 
   @Post('clusters/:clusterId/notification_channels')
@@ -24,10 +24,15 @@ export class NotificationChannelCoreController {
     @Param('clusterId') clusterId: string,
     @Body() dto: CreateNotificationChannelBody,
   ): Promise<NotificationChannelSerialized> {
+    const enrichedOptions = await this.notificationChannelOptionsEnrichmentService.enrichOptions(
+      dto.options,
+      dto.type,
+    );
+
     const channel = await this.notificationChannelWriteService.create({
       clusterId,
       type: dto.type,
-      options: dto.options,
+      options: enrichedOptions,
     });
 
     return NotificationChannelSerializer.serialize(channel);
