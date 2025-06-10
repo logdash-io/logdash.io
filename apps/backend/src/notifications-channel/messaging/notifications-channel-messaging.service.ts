@@ -3,6 +3,7 @@ import { NotificationsChannelProvider } from './notifications-channel-provider';
 import { NotificationsChannelReadService } from '../read/notifications-channel-read.service';
 import { NotificationTarget } from '../core/enums/notification-target.enum';
 import { TelegramNotificationsChannelProvider } from './providers/telegram.notifications-channel-provider';
+import { WebhookNotificationsChannelProvider } from './providers/webhook.notifications-channel-provider';
 import { NotificationsChannelNormalized } from '../core/entities/notifications-channel.interface';
 import { Logger } from '@logdash/js-sdk';
 import { SendMessageDto } from './dto/send-message.dto';
@@ -11,6 +12,7 @@ import { SendMessageDto } from './dto/send-message.dto';
 export class NotificationsChannelMessagingService {
   constructor(
     private readonly telegramMessagingProvider: TelegramNotificationsChannelProvider,
+    private readonly webhookMessagingProvider: WebhookNotificationsChannelProvider,
     private readonly notificationsChannelReadService: NotificationsChannelReadService,
     private readonly logger: Logger,
   ) {}
@@ -36,6 +38,10 @@ export class NotificationsChannelMessagingService {
   private pickProvider(target: NotificationTarget): NotificationsChannelProvider {
     if (target === NotificationTarget.Telegram) {
       return this.telegramMessagingProvider;
+    }
+
+    if (target === NotificationTarget.Webhook) {
+      return this.webhookMessagingProvider;
     }
 
     this.logger.error('No provider found for notification target', {

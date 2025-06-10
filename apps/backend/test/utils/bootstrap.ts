@@ -49,6 +49,7 @@ import { rootClickHouseTestModule } from './clickhouse-test-container-server';
 import { ClickHouseClient } from '@clickhouse/client';
 import { NotificationsChannelUtils } from './communication-channel-utils';
 import { TelegramUtils } from './telegram-utils';
+import { WebhookUtils } from './webhook-utils';
 import * as nock from 'nock';
 
 export async function createTestApp() {
@@ -177,6 +178,7 @@ export async function createTestApp() {
       demoUtils: new DemoUtils(app),
       notificationsChannelUtils: new NotificationsChannelUtils(app),
       telegramUtils: new TelegramUtils(app),
+      webhookUtils: new WebhookUtils(app),
     },
     methods: {
       clearDatabase,
