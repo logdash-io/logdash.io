@@ -15,7 +15,7 @@ export class HttpMonitorEntity {
   url: string;
 
   @Prop({ required: true })
-  notificationChannelIds: string[];
+  notificationChannelsIds: string[];
 
   createdAt: Date;
   updatedAt: Date;

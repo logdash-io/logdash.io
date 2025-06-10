@@ -19,5 +19,5 @@ export class UpdateHttpMonitorBody {
   @IsOptional()
   @IsArray()
   @IsMongoId({ each: true })
-  notificationChannelIds?: string[];
+  notificationChannelsIds?: string[];
 }

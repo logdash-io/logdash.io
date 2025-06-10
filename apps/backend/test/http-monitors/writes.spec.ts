@@ -27,7 +27,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       const dto: CreateHttpMonitorBody = {
         name: 'some name',
         url: 'https://google.com',
-        notificationChannelIds: [new Types.ObjectId().toString()],
+        notificationChannelsIds: [new Types.ObjectId().toString()],
       };
 
       // when
@@ -116,7 +116,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       const dto: UpdateHttpMonitorBody = {
         name: 'Updated Monitor',
         url: 'https://updated-url.com',
-        notificationChannelIds: [new Types.ObjectId().toString()],
+        notificationChannelsIds: [new Types.ObjectId().toString()],
       };
 
       // when

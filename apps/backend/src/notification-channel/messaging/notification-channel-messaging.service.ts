@@ -17,7 +17,7 @@ export class NotificationChannelMessagingService {
 
   public async sendMessage(dto: SendMessageDto): Promise<void> {
     const channels = await this.notificationChannelReadService.readByIds(
-      dto.notificationChannelIds,
+      dto.notificationChannelsIds,
     );
 
     await Promise.all(

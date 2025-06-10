@@ -1,4 +1,4 @@
 export interface SendMessageDto {
-  notificationChannelIds: string[];
+  notificationChannelsIds: string[];
   message: string;
 }

@@ -40,7 +40,7 @@ describe('Telegram communication channel', () => {
     // when
     const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
     messagingService.sendMessage({
-      notificationChannelIds: [channel.id],
+      notificationChannelsIds: [channel.id],
       message: 'test',
     });
     await sleep(500);

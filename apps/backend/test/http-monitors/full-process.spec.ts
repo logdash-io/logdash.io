@@ -32,7 +32,7 @@ describe('Http monitor full process', () => {
     await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
       projectId: project.id,
       token,
-      notificationChannelIds: [channel.id],
+      notificationChannelsIds: [channel.id],
       name: 'some name',
       url: 'https://chess.com',
     });

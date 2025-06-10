@@ -19,7 +19,7 @@ export class HttpMonitorWriteService {
       projectId,
       name: dto.name,
       url: dto.url,
-      notificationChannelIds: dto.notificationChannelIds,
+      notificationChannelsIds: dto.notificationChannelsIds,
     });
 
     return HttpMonitorSerializer.normalize(entity);
@@ -41,8 +41,8 @@ export class HttpMonitorWriteService {
       updateQuery.url = dto.url;
     }
 
-    if (dto.notificationChannelIds) {
-      updateQuery.notificationChannelIds = dto.notificationChannelIds;
+    if (dto.notificationChannelsIds) {
+      updateQuery.notificationChannelsIds = dto.notificationChannelsIds;
     }
 
     const entity = await this.httpMonitorModel.findByIdAndUpdate(httpMonitorId, updateQuery, {

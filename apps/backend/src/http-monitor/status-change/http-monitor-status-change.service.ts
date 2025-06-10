@@ -53,7 +53,7 @@ export class HttpMonitorStatusChangeService {
     }
 
     await this.notificationChannelMessagingService.sendMessage({
-      notificationChannelIds: httpMonitor.notificationChannelIds,
+      notificationChannelsIds: httpMonitor.notificationChannelsIds,
       message: `HTTP monitor ${httpMonitor.name} is ${newStatus}`,
     });
   }
