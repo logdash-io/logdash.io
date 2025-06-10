@@ -52,10 +52,23 @@ export class HttpMonitorStatusChangeService {
       return;
     }
 
+    const message = this.createStatusMessage(httpMonitor.name, newStatus);
+
     await this.notificationChannelMessagingService.sendMessage({
       notificationChannelsIds: httpMonitor.notificationChannelsIds,
-      message: `HTTP monitor ${httpMonitor.name} is ${newStatus}`,
+      message,
     });
+  }
+
+  private createStatusMessage(monitorName: string, status: PingStatus): string {
+    switch (status) {
+      case PingStatus.Up:
+        return `✅ "${monitorName}" is back online!`;
+      case PingStatus.Down:
+        return `❌ "${monitorName}" is down!`;
+    }
+
+    return '';
   }
 
   private getRedisKey(httpMonitorId: string): string {
