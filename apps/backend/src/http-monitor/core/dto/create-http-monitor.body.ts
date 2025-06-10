@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsUrl, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsArray, IsMongoId, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class CreateHttpMonitorBody {
   @ApiProperty()
@@ -12,4 +12,10 @@ export class CreateHttpMonitorBody {
   @MaxLength(1024)
   @IsUrl()
   url: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  notificationChannelIds?: string[];
 }
