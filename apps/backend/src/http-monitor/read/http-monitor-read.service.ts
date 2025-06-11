@@ -57,4 +57,9 @@ export class HttpMonitorReadService {
       yield HttpMonitorSerializer.normalize(entity);
     }
   }
+
+  public async existsForProject(projectId: string): Promise<boolean> {
+    const result = await this.httpMonitorModel.exists({ projectId });
+    return result !== null;
+  }
 }
