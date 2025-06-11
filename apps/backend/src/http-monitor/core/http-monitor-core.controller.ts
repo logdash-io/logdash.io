@@ -17,6 +17,7 @@ import { CreateHttpMonitorBody } from './dto/create-http-monitor.body';
 import { HttpMonitorSerialized } from './entities/http-monitor.interface';
 import { HttpMonitorSerializer } from './entities/http-monitor.serializer';
 import { UpdateHttpMonitorBody } from './dto/update-http-monitor.body';
+import { ProjectReadService } from '../../project/read/project-read.service';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -27,6 +28,7 @@ export class HttpMonitorCoreController {
     private readonly httpMonitorWriteService: HttpMonitorWriteService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpMonitorLimitService: HttpMonitorLimitService,
+    private readonly projectReadService: ProjectReadService,
   ) {}
 
   @Post('projects/:projectId/http_monitors')
@@ -50,6 +52,18 @@ export class HttpMonitorCoreController {
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
   async readByProjectId(@Param('projectId') projectId: string): Promise<HttpMonitorSerialized[]> {
     const httpMonitors = await this.httpMonitorReadService.readByProjectId(projectId);
+    return HttpMonitorSerializer.serializeMany(httpMonitors);
+  }
+
+  @Get('/clusters/:clusterId/http_monitors')
+  @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
+  async readByClusterId(@Param('clusterId') clusterId: string): Promise<HttpMonitorSerialized[]> {
+    const projectsIdsInCluster = await this.projectReadService.readByClusterId(clusterId);
+
+    const httpMonitors = await this.httpMonitorReadService.readByProjectIds(
+      projectsIdsInCluster.map((project) => project.id),
+    );
+
     return HttpMonitorSerializer.serializeMany(httpMonitors);
   }
 

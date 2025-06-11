@@ -1,3 +1,5 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class HttpMonitorNormalized {
   id: string;
   projectId: string;
@@ -7,9 +9,18 @@ export class HttpMonitorNormalized {
 }
 
 export class HttpMonitorSerialized {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   projectId: string;
+
+  @ApiProperty()
   name: string;
+
+  @ApiProperty()
   url: string;
+
+  @ApiProperty()
   notificationChannelsIds: string[];
 }

@@ -1,16 +1,22 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsObject, IsString, ValidateNested } from 'class-validator';
+import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
+import { IsEnum, IsObject, ValidateNested } from 'class-validator';
 import { NotificationTarget } from '../enums/notification-target.enum';
-import { TelegramOptions, TelegramOptionsValidator } from '../types/telegram-options.type';
-import { WebhookOptions, WebhookOptionsValidator } from '../types/webhook-options.type';
+import { TelegramOptionsValidator } from '../types/telegram-options.type';
+import { WebhookOptionsValidator } from '../types/webhook-options.type';
 import { Transform } from 'class-transformer';
 
+@ApiExtraModels(TelegramOptionsValidator, WebhookOptionsValidator)
 export class CreateNotificationChannelBody {
   @ApiProperty({ enum: NotificationTarget })
   @IsEnum(NotificationTarget)
   public type: NotificationTarget;
 
-  @ApiProperty()
+  @ApiProperty({
+    oneOf: [
+      { $ref: getSchemaPath(TelegramOptionsValidator) },
+      { $ref: getSchemaPath(WebhookOptionsValidator) },
+    ],
+  })
   @ValidateNested()
   @Transform(({ obj, value }) => {
     if (obj.type === NotificationTarget.Telegram) {
@@ -22,5 +28,5 @@ export class CreateNotificationChannelBody {
     return value;
   })
   @IsObject()
-  public options: TelegramOptions | WebhookOptions;
+  public options: TelegramOptionsValidator | WebhookOptionsValidator;
 }

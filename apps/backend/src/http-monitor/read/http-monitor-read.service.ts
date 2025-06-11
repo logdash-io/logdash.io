@@ -12,7 +12,7 @@ export class HttpMonitorReadService {
     private readonly httpMonitorModel: Model<HttpMonitorEntity>,
   ) {}
 
-  async readById(id: string): Promise<HttpMonitorNormalized | null> {
+  public async readById(id: string): Promise<HttpMonitorNormalized | null> {
     const entity = await this.httpMonitorModel.findById(id).lean<HttpMonitorEntity>().exec();
 
     if (!entity) {
@@ -32,15 +32,25 @@ export class HttpMonitorReadService {
     return HttpMonitorSerializer.normalizeMany(entities);
   }
 
-  async countByProjectId(projectId: string): Promise<number> {
+  public async readByProjectIds(projectIds: string[]): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ projectId: { $in: projectIds } })
+      .sort({ createdAt: -1 })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+
+    return HttpMonitorSerializer.normalizeMany(entities);
+  }
+
+  public async countByProjectId(projectId: string): Promise<number> {
     return this.httpMonitorModel.countDocuments({ projectId }).lean().exec();
   }
 
-  async countAll(): Promise<number> {
+  public async countAll(): Promise<number> {
     return this.httpMonitorModel.countDocuments().lean().exec();
   }
 
-  async *readAllCursor(): AsyncGenerator<HttpMonitorNormalized> {
+  public async *readAllCursor(): AsyncGenerator<HttpMonitorNormalized> {
     const cursor = this.httpMonitorModel.find().sort({ createdAt: -1 }).cursor();
 
     for await (const entity of cursor) {
