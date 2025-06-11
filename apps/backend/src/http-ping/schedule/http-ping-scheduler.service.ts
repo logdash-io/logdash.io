@@ -8,6 +8,7 @@ import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.se
 import { HttpPingEventEmitter } from '../events/http-ping-event.emitter';
 import { CreateHttpPingDto } from '../write/dto/create-http-ping.dto';
 import { HttpPingWriteService } from '../write/http-ping-write.service';
+import { HttpPingSchedulerDataService } from './http-ping-scheduler.data-service';
 
 interface QueueItem {
   monitor: HttpMonitorNormalized;
@@ -27,6 +28,7 @@ export class HttpPingSchedulerService {
     private readonly averageRecorder: AverageRecorder,
     @Inject(MAX_CONCURRENT_REQUESTS_TOKEN)
     private readonly maxConcurrentRequests: number,
+    private readonly httpPingSchedulerDataService: HttpPingSchedulerDataService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -116,8 +118,15 @@ export class HttpPingSchedulerService {
 
     const savedPings = await this.httpPingWriteService.createMany(pings);
 
+    const clusterIds = await this.httpPingSchedulerDataService.readClusterIdsByMonitorIds(
+      savedPings.map((ping) => ping.httpMonitorId),
+    );
+
     for (const ping of savedPings) {
-      await this.httpPingEventEmitter.emitHttpPingCreatedEvent({ ...ping });
+      await this.httpPingEventEmitter.emitHttpPingCreatedEvent({
+        ...ping,
+        clusterId: clusterIds[ping.httpMonitorId],
+      });
     }
   }
 }

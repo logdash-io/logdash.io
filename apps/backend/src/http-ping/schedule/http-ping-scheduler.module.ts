@@ -6,11 +6,14 @@ import {
   HttpPingSchedulerService,
   MAX_CONCURRENT_REQUESTS_TOKEN,
 } from './http-ping-scheduler.service';
+import { HttpPingSchedulerDataService } from './http-ping-scheduler.data-service';
+import { ProjectReadModule } from '../../project/read/project-read.module';
 
 @Module({
-  imports: [HttpMonitorReadModule, HttpPingWriteModule],
+  imports: [HttpMonitorReadModule, HttpPingWriteModule, ProjectReadModule],
   providers: [
     HttpPingSchedulerService,
+    HttpPingSchedulerDataService,
     {
       provide: MAX_CONCURRENT_REQUESTS_TOKEN,
       useValue: getEnvConfig().pings.maxConcurrentRequests,

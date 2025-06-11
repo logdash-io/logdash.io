@@ -44,13 +44,12 @@ export class HttpPingCoreController {
 
   @DemoEndpoint()
   @ApiBearerAuth()
-  @Sse('projects/:projectId/monitors/:monitorId/http_pings/sse')
+  @Sse('clusters/:clusterId/http_pings/sse')
   public async streamHttpMonitorPings(
-    @Param('projectId') projectId: string,
-    @Param('monitorId') monitorId: string,
+    @Param('clusterId') clusterId: string,
   ): Promise<Observable<any>> {
     const eventStream$ = fromEvent(this.eventEmitter, HttpPingEvent.HttpPingCreatedEvent).pipe(
-      filter((data: HttpPingCreatedEvent) => data.httpMonitorId === monitorId),
+      filter((data: HttpPingCreatedEvent) => data.clusterId === clusterId),
       map((data: HttpPingCreatedEvent) => ({ data })),
     );
 
