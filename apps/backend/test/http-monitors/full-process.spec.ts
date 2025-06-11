@@ -64,8 +64,8 @@ describe('Http monitor full process', () => {
     await sleep(1000);
 
     // then
-    expect(telegramPostedDtos[0].text).toBe('HTTP monitor some name is up');
-    expect(telegramPostedDtos[1].text).toBe('HTTP monitor some name is down');
-    expect(telegramPostedDtos[2].text).toBe('HTTP monitor some name is up');
+    expect(telegramPostedDtos[0].text).toBe('✅ \"some name\" is back online!');
+    expect(telegramPostedDtos[1].text).toBe('❌ \"some name\" is down!');
+    expect(telegramPostedDtos[2].text).toBe('✅ \"some name\" is back online!');
   });
 });
