@@ -41,23 +41,23 @@ export class HttpPingBucketAggregationService {
   }
 
   private getPeriodConfig(period: '24h' | '4d' | '90d') {
-    const subtractDaysUtc = (days: number) => {
+    const nowMinusDays = (days: number) => {
       return subDays(new Date(), days);
     };
 
     const configs = {
       '24h': {
-        fromDate: addHours(subtractDaysUtc(1), 1),
+        fromDate: addHours(nowMinusDays(1), 1),
         grouping: BucketGrouping.Hour,
         expectedBucketCount: 24,
       },
       '4d': {
-        fromDate: addHours(subtractDaysUtc(4), 1),
+        fromDate: addHours(nowMinusDays(4), 1),
         grouping: BucketGrouping.Hour,
         expectedBucketCount: 96,
       },
       '90d': {
-        fromDate: subtractDaysUtc(89),
+        fromDate: nowMinusDays(89),
         grouping: BucketGrouping.Day,
         expectedBucketCount: 90,
       },
