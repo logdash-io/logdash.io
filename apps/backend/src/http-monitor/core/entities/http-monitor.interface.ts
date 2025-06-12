@@ -26,5 +26,8 @@ export class HttpMonitorSerialized {
   notificationChannelsIds: string[];
 
   @ApiProperty({ enum: HttpMonitorStatus })
-  status: HttpMonitorStatus;
+  lastStatus: HttpMonitorStatus;
+
+  @ApiProperty()
+  lastStatusCode: string;
 }

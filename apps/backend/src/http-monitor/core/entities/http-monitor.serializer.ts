@@ -1,6 +1,7 @@
 import { HttpMonitorStatus } from '../../status/enum/http-monitor-status.enum';
 import { HttpMonitorEntity } from './http-monitor.entity';
 import { HttpMonitorNormalized, HttpMonitorSerialized } from './http-monitor.interface';
+import { HttpMonitorStatusDto } from '../../status/http-monitor-status.service';
 
 export class HttpMonitorSerializer {
   public static normalize(entity: HttpMonitorEntity): HttpMonitorNormalized {
@@ -19,7 +20,7 @@ export class HttpMonitorSerializer {
 
   public static serialize(
     normalized: HttpMonitorNormalized,
-    status: HttpMonitorStatus,
+    status: HttpMonitorStatusDto,
   ): HttpMonitorSerialized {
     return {
       id: normalized.id,
@@ -27,13 +28,14 @@ export class HttpMonitorSerializer {
       name: normalized.name,
       url: normalized.url,
       notificationChannelsIds: normalized.notificationChannelsIds,
-      status,
+      lastStatus: status.status,
+      lastStatusCode: status.statusCode,
     };
   }
 
   public static serializeMany(
     normalized: HttpMonitorNormalized[],
-    params: { statuses: Record<string, HttpMonitorStatus> },
+    params: { statuses: Record<string, HttpMonitorStatusDto> },
   ): HttpMonitorSerialized[] {
     return normalized.map((entity) => this.serialize(entity, params.statuses[entity.id]));
   }

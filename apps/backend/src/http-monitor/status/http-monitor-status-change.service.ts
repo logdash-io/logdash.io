@@ -11,7 +11,6 @@ import { HttpMonitorStatusService } from './http-monitor-status.service';
 @Injectable()
 export class HttpMonitorStatusChangeService {
   constructor(
-    private readonly redisService: RedisService,
     private readonly notificationChannelMessagingService: NotificationChannelMessagingService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpMonitorStatusService: HttpMonitorStatusService,
@@ -22,9 +21,12 @@ export class HttpMonitorStatusChangeService {
     const newStatus = this.computePingStatusFromStatusCode(event.statusCode);
     const previousStatus = await this.httpMonitorStatusService.getStatus(event.httpMonitorId);
 
-    await this.httpMonitorStatusService.setStatus(event.httpMonitorId, newStatus);
+    await this.httpMonitorStatusService.setStatus(event.httpMonitorId, {
+      status: newStatus,
+      statusCode: event.statusCode.toString(),
+    });
 
-    if (previousStatus === HttpMonitorStatus.Unknown || previousStatus != newStatus) {
+    if (previousStatus.status === HttpMonitorStatus.Unknown || previousStatus.status != newStatus) {
       await this.dispatchStatusChangedMessage(event.httpMonitorId, newStatus);
     }
   }

@@ -80,11 +80,14 @@ describe('HttpMonitorCoreController (reads)', () => {
 
       // then
       expect(responseA.body).toHaveLength(1);
-      expect(responseA.body[0].status).toBe(HttpMonitorStatus.Unknown);
+      expect(responseA.body[0].lastStatus).toBe(HttpMonitorStatus.Unknown);
 
       // and when
       const statusService = bootstrap.app.get(HttpMonitorStatusService);
-      await statusService.setStatus(monitor.id, HttpMonitorStatus.Up);
+      await statusService.setStatus(monitor.id, {
+        status: HttpMonitorStatus.Up,
+        statusCode: '200',
+      });
 
       // and when
       const responseB = await request(bootstrap.app.getHttpServer())
@@ -93,7 +96,8 @@ describe('HttpMonitorCoreController (reads)', () => {
 
       // then
       expect(responseB.body).toHaveLength(1);
-      expect(responseB.body[0].status).toBe(HttpMonitorStatus.Up);
+      expect(responseB.body[0].lastStatus).toBe(HttpMonitorStatus.Up);
+      expect(responseB.body[0].lastStatusCode).toBe('200');
     });
   });
 
