@@ -29,5 +29,5 @@ export class HttpMonitorSerialized {
   lastStatus: HttpMonitorStatus;
 
   @ApiProperty()
-  lastStatusCode: string;
+  lastStatusCode: number;
 }

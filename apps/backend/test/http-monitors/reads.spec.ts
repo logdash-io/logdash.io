@@ -97,7 +97,7 @@ describe('HttpMonitorCoreController (reads)', () => {
       // then
       expect(responseB.body).toHaveLength(1);
       expect(responseB.body[0].lastStatus).toBe(HttpMonitorStatus.Up);
-      expect(responseB.body[0].lastStatusCode).toBe('200');
+      expect(responseB.body[0].lastStatusCode).toBe(200);
     });
   });
 

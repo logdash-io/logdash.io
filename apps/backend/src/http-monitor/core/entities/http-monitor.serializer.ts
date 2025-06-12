@@ -29,7 +29,7 @@ export class HttpMonitorSerializer {
       url: normalized.url,
       notificationChannelsIds: normalized.notificationChannelsIds,
       lastStatus: status.status,
-      lastStatusCode: status.statusCode,
+      lastStatusCode: +status.statusCode,
     };
   }
 
