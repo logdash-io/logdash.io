@@ -57,7 +57,7 @@ export class HttpPingBucketIngestionService {
 
     await this.httpPingBucketWriteService.createMany(bucketDtos);
 
-    this.logger.log(`Created ${bucketDtos.length} HTTP ping buckets for previous hour`, {
+    this.logger.log(`Created HTTP ping buckets for previous hour`, {
       timestamp: previousHourStart.toISOString(),
       bucketsCreated: bucketDtos.length,
     });
