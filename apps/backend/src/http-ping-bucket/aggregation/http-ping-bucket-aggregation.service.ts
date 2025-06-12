@@ -74,7 +74,7 @@ export class HttpPingBucketAggregationService {
     );
 
     if (completeBuckets[0] === null) {
-      completeBuckets[0] = await this.tryAddVirtualBucket(grouping);
+      completeBuckets[0] = await this.tryCreateVirtualBucket(grouping);
     }
 
     return completeBuckets;
@@ -129,7 +129,7 @@ export class HttpPingBucketAggregationService {
     }
   }
 
-  private async tryAddVirtualBucket(grouping: BucketGranularity): Promise<VirtualBucket | null> {
+  private async tryCreateVirtualBucket(grouping: BucketGranularity): Promise<VirtualBucket | null> {
     const toDate = addHours(new Date(), 1);
     toDate.setMinutes(0, 0);
     const fromDateForMostRecent = subHours(toDate, 1);
