@@ -1,8 +1,7 @@
-import { ClickHouseClient } from '@clickhouse/client';
 import { Injectable } from '@nestjs/common';
 import { addHours, subDays, subHours } from 'date-fns';
 import { ClickhouseUtils } from 'src/clickhouse/clickhouse.utils';
-import { HttpPingBucketEntity } from '../core/entities/http-ping-bucket.entity';
+import { HttpPingAggregationService } from 'src/http-ping/aggregation/http-ping-aggregation.service';
 import {
   HttpPingBucketNormalized,
   HttpPingBucketSerialized,
@@ -13,7 +12,7 @@ import { BucketGrouping, HttpPingBucketReadService } from '../read/http-ping-buc
 @Injectable()
 export class HttpPingBucketAggregationService {
   constructor(
-    private readonly clickhouse: ClickHouseClient,
+    private readonly httpPingAggregationService: HttpPingAggregationService,
     private readonly httpPingBucketReadService: HttpPingBucketReadService,
   ) {}
 
@@ -99,7 +98,10 @@ export class HttpPingBucketAggregationService {
       fromDateForMostRecent.setUTCHours(0, 0, 0, 0);
     }
 
-    const mostRecentBuckets = await this.aggregatePingsForTimeRange(fromDateForMostRecent, toDate);
+    const mostRecentBuckets = await this.httpPingAggregationService.aggregatePingsForTimeRange(
+      fromDateForMostRecent,
+      toDate,
+    );
 
     if (mostRecentBuckets.length === 0) {
       return null;
@@ -115,32 +117,5 @@ export class HttpPingBucketAggregationService {
         ? ClickhouseUtils.jsDateToClickhouseDate(fromDateForMostRecent)
         : mostRecentBuckets[0].hour_timestamp,
     });
-  }
-
-  public async aggregatePingsForTimeRange(
-    startTime: Date,
-    endTime: Date,
-  ): Promise<Omit<HttpPingBucketEntity, 'id'>[]> {
-    const aggregationResult = await this.clickhouse.query({
-      query: `
-        SELECT 
-          http_monitor_id,
-          toStartOfHour(created_at) as hour_timestamp,
-          countIf(status_code >= 200 AND status_code < 400) as success_count,
-          countIf(status_code >= 400 OR status_code = 0) as failure_count,
-          avg(response_time_ms) as average_latency_ms
-        FROM http_pings 
-        WHERE created_at >= {startTime:DateTime64(3)}
-          AND created_at < {endTime:DateTime64(3)}
-        GROUP BY http_monitor_id, toStartOfHour(created_at)
-        HAVING success_count + failure_count > 0
-      `,
-      query_params: {
-        startTime: ClickhouseUtils.jsDateToClickhouseDate(startTime),
-        endTime: ClickhouseUtils.jsDateToClickhouseDate(endTime),
-      },
-    });
-
-    return ((await aggregationResult.json()) as any).data as Omit<HttpPingBucketEntity, 'id'>[];
   }
 }

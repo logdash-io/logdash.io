@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { HttpPingBucketAggregationModule } from '../aggregation/http-ping-bucket-aggregation.module';
+import { HttpPingAggregationModule } from 'src/http-ping/aggregation/http-ping-aggregation.module';
 import { HttpPingBucketWriteModule } from '../write/http-ping-bucket-write.module';
 import { HttpPingBucketSchedulerService } from './http-ping-bucket-scheduler.service';
 
 @Module({
-  imports: [HttpPingBucketWriteModule, HttpPingBucketAggregationModule],
+  imports: [HttpPingBucketWriteModule, HttpPingAggregationModule],
   providers: [HttpPingBucketSchedulerService],
 })
 export class HttpPingBucketSchedulerModule {}

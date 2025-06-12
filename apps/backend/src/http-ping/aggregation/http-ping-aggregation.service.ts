@@ -1,0 +1,43 @@
+import { ClickHouseClient } from '@clickhouse/client';
+import { Injectable } from '@nestjs/common';
+import { ClickhouseUtils } from 'src/clickhouse/clickhouse.utils';
+
+export interface PingsAggregation {
+  http_monitor_id: string;
+  hour_timestamp: string;
+  success_count: number;
+  failure_count: number;
+  average_latency_ms: number;
+}
+
+@Injectable()
+export class HttpPingAggregationService {
+  constructor(private readonly clickhouse: ClickHouseClient) {}
+
+  public async aggregatePingsForTimeRange(
+    startTime: Date,
+    endTime: Date,
+  ): Promise<PingsAggregation[]> {
+    const aggregationResult = await this.clickhouse.query({
+      query: `
+        SELECT 
+          http_monitor_id,
+          toStartOfHour(created_at) as hour_timestamp,
+          countIf(status_code >= 200 AND status_code < 400) as success_count,
+          countIf(status_code >= 400 OR status_code = 0) as failure_count,
+          avg(response_time_ms) as average_latency_ms
+        FROM http_pings 
+        WHERE created_at >= {startTime:DateTime64(3)}
+          AND created_at < {endTime:DateTime64(3)}
+        GROUP BY http_monitor_id, toStartOfHour(created_at)
+        HAVING success_count + failure_count > 0
+      `,
+      query_params: {
+        startTime: ClickhouseUtils.jsDateToClickhouseDate(startTime),
+        endTime: ClickhouseUtils.jsDateToClickhouseDate(endTime),
+      },
+    });
+
+    return ((await aggregationResult.json()) as any).data as PingsAggregation[];
+  }
+}

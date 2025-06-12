@@ -1,16 +1,18 @@
 import { Logger } from '@logdash/js-sdk';
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import {
+  HttpPingAggregationService,
+  PingsAggregation,
+} from 'src/http-ping/aggregation/http-ping-aggregation.service';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
-import { HttpPingBucketAggregationService } from '../aggregation/http-ping-bucket-aggregation.service';
-import { HttpPingBucketEntity } from '../core/entities/http-ping-bucket.entity';
 import { CreateHttpPingBucketDto } from '../write/dto/create-http-ping-bucket.dto';
 import { HttpPingBucketWriteService } from '../write/http-ping-bucket-write.service';
 
 @Injectable()
 export class HttpPingBucketSchedulerService {
   constructor(
-    private readonly httpPingBucketAggregateService: HttpPingBucketAggregationService,
+    private readonly httpPingAggregationService: HttpPingAggregationService,
     private readonly httpPingBucketWriteService: HttpPingBucketWriteService,
     private readonly logger: Logger,
   ) {}
@@ -39,7 +41,7 @@ export class HttpPingBucketSchedulerService {
       now.getHours(),
     );
 
-    const data = await this.httpPingBucketAggregateService.aggregatePingsForTimeRange(
+    const data = await this.httpPingAggregationService.aggregatePingsForTimeRange(
       previousHourStart,
       previousHourEnd,
     );
@@ -49,15 +51,13 @@ export class HttpPingBucketSchedulerService {
       return;
     }
 
-    const bucketDtos: CreateHttpPingBucketDto[] = data.map(
-      (result: Omit<HttpPingBucketEntity, 'id'>) => ({
-        httpMonitorId: result.http_monitor_id,
-        timestamp: ClickhouseUtils.clickhouseDateToJsDate(result.hour_timestamp),
-        successCount: result.success_count,
-        failureCount: result.failure_count,
-        averageLatencyMs: Number(result.average_latency_ms.toFixed(2)),
-      }),
-    );
+    const bucketDtos: CreateHttpPingBucketDto[] = data.map((result: PingsAggregation) => ({
+      httpMonitorId: result.http_monitor_id,
+      timestamp: ClickhouseUtils.clickhouseDateToJsDate(result.hour_timestamp),
+      successCount: result.success_count,
+      failureCount: result.failure_count,
+      averageLatencyMs: Number(result.average_latency_ms.toFixed(2)),
+    }));
 
     await this.httpPingBucketWriteService.createMany(bucketDtos);
 
