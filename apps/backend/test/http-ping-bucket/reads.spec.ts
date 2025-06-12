@@ -1,3 +1,4 @@
+import { subDays, subHours } from 'date-fns';
 import { advanceTo } from 'jest-date-mock';
 import { Types } from 'mongoose';
 import * as request from 'supertest';
@@ -73,12 +74,9 @@ describe('Http Ping Bucket(reads)', () => {
       });
 
       const now = new Date();
-      const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
-      twoDaysAgo.setMinutes(0, 0, 0);
-      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-      twoHoursAgo.setMinutes(0, 0, 0);
-      const oneHourAgo = new Date(now.getTime() - 1 * 60 * 60 * 1000);
-      oneHourAgo.setMinutes(0, 0, 0);
+      const twoDaysAgo = subDays(now, 2);
+      const twoHoursAgo = subHours(now, 2);
+      const oneHourAgo = subHours(now, 1);
       const twoHoursAgoBucket = {
         httpMonitorId: monitor.id,
         timestamp: twoHoursAgo,
@@ -143,6 +141,11 @@ describe('Http Ping Bucket(reads)', () => {
       const currentHour = new Date();
       currentHour.setMinutes(0, 0, 0);
       await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
+      await bootstrap.utils.httpPingUtils.createHttpPing({
+        httpMonitorId: monitor.id,
+        responseTimeMs: 200,
+        statusCode: 500,
+      });
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -154,8 +157,8 @@ describe('Http Ping Bucket(reads)', () => {
       expect(response.body.buckets).toHaveLength(24);
       expect(response.body.buckets[0]).toMatchObject({
         successCount: 1,
-        failureCount: 0,
-        averageLatencyMs: 100,
+        failureCount: 1,
+        averageLatencyMs: 150,
         timestamp: currentHour.toISOString(),
       });
     });
@@ -169,8 +172,8 @@ describe('Http Ping Bucket(reads)', () => {
       });
 
       const now = new Date();
-      const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
-      const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+      const fiveDaysAgo = subDays(now, 5);
+      const threeDaysAgo = subDays(now, 3);
       const fiveDaysAgoBucket = {
         httpMonitorId: monitor.id,
         timestamp: fiveDaysAgo,
@@ -219,9 +222,8 @@ describe('Http Ping Bucket(reads)', () => {
       });
 
       const now = new Date();
-      const hundredDaysAgo = new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000);
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      thirtyDaysAgo.setMinutes(0, 0, 0);
+      const hundredDaysAgo = subDays(now, 100);
+      const thirtyDaysAgo = subDays(now, 30);
 
       const hundredDaysAgoBucket = {
         httpMonitorId: monitor.id,
@@ -264,7 +266,7 @@ describe('Http Ping Bucket(reads)', () => {
       expect(nullBuckets).toHaveLength(89);
     });
 
-    it('gets virtual bucket for current day for no daily bucket yet created', async () => {
+    it('gets virtual bucket for current day when no bucket yet created for the day', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
@@ -274,7 +276,7 @@ describe('Http Ping Bucket(reads)', () => {
 
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
-      const tenDaysAgo = new Date(today.getTime() - 10 * 24 * 60 * 60 * 1000);
+      const tenDaysAgo = subDays(today, 10);
 
       const tenDaysAgoBucket = {
         httpMonitorId: monitor.id,
@@ -286,6 +288,11 @@ describe('Http Ping Bucket(reads)', () => {
 
       await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket(tenDaysAgoBucket);
       await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
+      await bootstrap.utils.httpPingUtils.createHttpPing({
+        httpMonitorId: monitor.id,
+        statusCode: 500,
+        responseTimeMs: 200,
+      });
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -297,8 +304,8 @@ describe('Http Ping Bucket(reads)', () => {
       expect(response.body.buckets).toHaveLength(90);
       expect(response.body.buckets[0]).toMatchObject({
         successCount: 1,
-        failureCount: 0,
-        averageLatencyMs: 100,
+        failureCount: 1,
+        averageLatencyMs: 150,
         timestamp: today.toISOString(),
       });
 
