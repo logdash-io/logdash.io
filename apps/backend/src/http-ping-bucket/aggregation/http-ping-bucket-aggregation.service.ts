@@ -1,13 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { addHours, subDays, subHours } from 'date-fns';
-import { ClickhouseUtils } from 'src/clickhouse/clickhouse.utils';
 import { HttpPingAggregationService } from 'src/http-ping/aggregation/http-ping-aggregation.service';
-import {
-  HttpPingBucketNormalized,
-  HttpPingBucketSerialized,
-} from '../core/entities/http-ping-bucket.interface';
-import { HttpPingBucketSerializer } from '../core/entities/http-ping-bucket.serializer';
+import { HttpPingBucketSerialized } from '../core/entities/http-ping-bucket.interface';
 import { BucketGrouping, HttpPingBucketReadService } from '../read/http-ping-bucket-read.service';
+import { VirtualBucket } from './virtual-bucket.type';
 
 @Injectable()
 export class HttpPingBucketAggregationService {
@@ -28,15 +24,11 @@ export class HttpPingBucketAggregationService {
       periodConfig.grouping,
     );
 
-    const completeBuckets = await this.createCompleteBuckets(
+    return await this.createCompleteBuckets(
       existingBuckets,
       periodConfig.fromDate,
       periodConfig.grouping,
       periodConfig.expectedBucketCount,
-    );
-
-    return completeBuckets.map((bucket) =>
-      bucket ? HttpPingBucketSerializer.serialize(bucket) : null,
     );
   }
 
@@ -67,11 +59,11 @@ export class HttpPingBucketAggregationService {
   }
 
   private async createCompleteBuckets(
-    existingBuckets: HttpPingBucketNormalized[],
+    existingBuckets: VirtualBucket[],
     fromDate: Date,
     grouping: BucketGrouping,
     expectedBucketCount: number,
-  ): Promise<(HttpPingBucketNormalized | null)[]> {
+  ): Promise<(VirtualBucket | null)[]> {
     const completeBuckets = this.fillWithEmptyBuckets(
       existingBuckets,
       fromDate,
@@ -87,13 +79,13 @@ export class HttpPingBucketAggregationService {
   }
 
   private fillWithEmptyBuckets(
-    existingBuckets: HttpPingBucketNormalized[],
+    existingBuckets: VirtualBucket[],
     fromDate: Date,
     grouping: BucketGrouping,
     expectedCount: number,
-  ): (HttpPingBucketNormalized | null)[] {
-    const buckets: (HttpPingBucketNormalized | null)[] = [];
-    const existingBucketsMap = new Map<string, HttpPingBucketNormalized>();
+  ): (VirtualBucket | null)[] {
+    const buckets: (VirtualBucket | null)[] = [];
+    const existingBucketsMap = new Map<string, VirtualBucket>();
 
     existingBuckets.forEach((bucket) => {
       const key = this.getBucketKey(bucket.timestamp, grouping);
@@ -135,9 +127,7 @@ export class HttpPingBucketAggregationService {
     }
   }
 
-  private async tryAddVirtualBucket(
-    grouping: BucketGrouping,
-  ): Promise<HttpPingBucketNormalized | null> {
+  private async tryAddVirtualBucket(grouping: BucketGrouping): Promise<VirtualBucket | null> {
     const toDate = addHours(new Date(), 1);
     toDate.setMinutes(0, 0);
     const fromDateForMostRecent = subHours(toDate, 1);
@@ -158,15 +148,11 @@ export class HttpPingBucketAggregationService {
 
     const mostRecentBucket = mostRecentBuckets[0];
 
-    return HttpPingBucketSerializer.normalize({
-      id: '',
-      http_monitor_id: mostRecentBucket.http_monitor_id,
-      success_count: mostRecentBucket.success_count,
-      failure_count: mostRecentBucket.failure_count,
-      average_latency_ms: mostRecentBucket.average_latency_ms,
-      hour_timestamp: isDailyGrouping
-        ? ClickhouseUtils.jsDateToClickhouseDate(fromDateForMostRecent)
-        : mostRecentBucket.hour_timestamp,
-    });
+    return {
+      timestamp: isDailyGrouping ? fromDateForMostRecent : mostRecentBucket.hour_timestamp,
+      successCount: mostRecentBucket.success_count,
+      failureCount: mostRecentBucket.failure_count,
+      averageLatencyMs: mostRecentBucket.average_latency_ms,
+    };
   }
 }

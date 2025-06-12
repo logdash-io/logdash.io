@@ -5,7 +5,6 @@ import {
   HttpPingAggregationService,
   PingsAggregation,
 } from 'src/http-ping/aggregation/http-ping-aggregation.service';
-import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 import { CreateHttpPingBucketDto } from '../write/dto/create-http-ping-bucket.dto';
 import { HttpPingBucketWriteService } from '../write/http-ping-bucket-write.service';
 
@@ -53,7 +52,7 @@ export class HttpPingBucketSchedulerService {
 
     const bucketDtos: CreateHttpPingBucketDto[] = data.map((result: PingsAggregation) => ({
       httpMonitorId: result.http_monitor_id,
-      timestamp: ClickhouseUtils.clickhouseDateToJsDate(result.hour_timestamp),
+      timestamp: result.hour_timestamp,
       successCount: result.success_count,
       failureCount: result.failure_count,
       averageLatencyMs: Number(result.average_latency_ms.toFixed(2)),

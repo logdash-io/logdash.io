@@ -1,9 +1,7 @@
 import { ClickHouseClient } from '@clickhouse/client';
 import { Injectable } from '@nestjs/common';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
-import { HttpPingBucketEntity } from '../core/entities/http-ping-bucket.entity';
-import { HttpPingBucketNormalized } from '../core/entities/http-ping-bucket.interface';
-import { HttpPingBucketSerializer } from '../core/entities/http-ping-bucket.serializer';
+import { VirtualBucket } from '../aggregation/virtual-bucket.type';
 
 export enum BucketGrouping {
   Hour = 'hour',
@@ -18,40 +16,36 @@ export class HttpPingBucketReadService {
     monitorId: string,
     fromDate: Date,
     grouping: BucketGrouping = BucketGrouping.Hour,
-  ): Promise<HttpPingBucketNormalized[]> {
+  ): Promise<VirtualBucket[]> {
     const toDate = new Date();
     let query: string;
 
     if (grouping === BucketGrouping.Hour) {
       query = `
         SELECT 
-          id,
-          http_monitor_id,
-          hour_timestamp,
-          success_count,
-          failure_count,
-          average_latency_ms
+          hour_timestamp as timestamp,
+          success_count as successCount,
+          failure_count as failureCount,
+          average_latency_ms as averageLatencyMs
         FROM http_ping_buckets 
         WHERE http_monitor_id = {monitorId:FixedString(24)}
-          AND hour_timestamp >= {fromDate:DateTime64(3)}
-          AND hour_timestamp <= {toDate:DateTime64(3)}
-        ORDER BY hour_timestamp ASC
+          AND timestamp >= {fromDate:DateTime64(3)}
+          AND timestamp <= {toDate:DateTime64(3)}
+        ORDER BY timestamp ASC
       `;
     } else {
       query = `
         SELECT 
-          toString(generateUUIDv4()) AS id,
-          {monitorId:FixedString(24)} AS http_monitor_id,
-          toStartOfDay(hour_timestamp) AS hour_timestamp,
-          sum(success_count) AS success_count,
-          sum(failure_count) AS failure_count,
-          avg(average_latency_ms) AS average_latency_ms
+          toStartOfDay(hour_timestamp) AS timestamp,
+          sum(success_count) AS successCount,
+          sum(failure_count) AS failureCount,
+          avg(average_latency_ms) AS averageLatencyMs
         FROM http_ping_buckets 
         WHERE http_monitor_id = {monitorId:FixedString(24)}
           AND hour_timestamp >= {fromDate:DateTime64(3)}
           AND hour_timestamp <= {toDate:DateTime64(3)}
-        GROUP BY hour_timestamp
-        ORDER BY hour_timestamp ASC
+        GROUP BY timestamp
+        ORDER BY timestamp ASC
       `;
     }
     const result = await this.clickhouse.query({
@@ -63,8 +57,13 @@ export class HttpPingBucketReadService {
       },
     });
 
-    const data = ((await result.json()) as any).data as HttpPingBucketEntity[];
+    const resultData = ((await result.json()) as any).data;
 
-    return HttpPingBucketSerializer.normalizeMany(data);
+    return resultData.map((rawBucket) => ({
+      timestamp: ClickhouseUtils.clickhouseDateToJsDate(rawBucket.timestamp),
+      averageLatencyMs: Number(rawBucket.averageLatencyMs),
+      failureCount: Number(rawBucket.failureCount),
+      successCount: Number(rawBucket.successCount),
+    }));
   }
 }

@@ -87,8 +87,6 @@ describe('Http Ping (reads)', () => {
         .get(`/projects/${project.id}/monitors/${monitor.id}/http_pings?limit=5`)
         .set('Authorization', `Bearer ${token}`);
 
-      console.log(response.body);
-
       // then
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(5);

@@ -4,7 +4,7 @@ import { ClickhouseUtils } from 'src/clickhouse/clickhouse.utils';
 
 export interface PingsAggregation {
   http_monitor_id: string;
-  hour_timestamp: string;
+  hour_timestamp: Date;
   success_count: number;
   failure_count: number;
   average_latency_ms: number;
@@ -38,6 +38,14 @@ export class HttpPingAggregationService {
       },
     });
 
-    return ((await aggregationResult.json()) as any).data as PingsAggregation[];
+    const resultData = ((await aggregationResult.json()) as any).data;
+
+    return resultData.map((rawBucket) => ({
+      http_monitor_id: rawBucket.http_monitor_id,
+      hour_timestamp: ClickhouseUtils.clickhouseDateToJsDate(rawBucket.hour_timestamp),
+      success_count: Number(rawBucket.success_count),
+      failure_count: Number(rawBucket.failure_count),
+      average_latency_ms: Number(rawBucket.average_latency_ms),
+    }));
   }
 }
