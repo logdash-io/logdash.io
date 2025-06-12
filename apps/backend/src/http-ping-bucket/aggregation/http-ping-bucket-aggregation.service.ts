@@ -107,15 +107,17 @@ export class HttpPingBucketAggregationService {
       return null;
     }
 
+    const mostRecentBucket = mostRecentBuckets[0];
+
     return HttpPingBucketSerializer.normalize({
       id: '',
-      http_monitor_id: mostRecentBuckets[0].http_monitor_id,
-      success_count: mostRecentBuckets[0].success_count,
-      failure_count: mostRecentBuckets[0].failure_count,
-      average_latency_ms: mostRecentBuckets[0].average_latency_ms,
+      http_monitor_id: mostRecentBucket.http_monitor_id,
+      success_count: mostRecentBucket.success_count,
+      failure_count: mostRecentBucket.failure_count,
+      average_latency_ms: mostRecentBucket.average_latency_ms,
       hour_timestamp: isDailyGrouping
         ? ClickhouseUtils.jsDateToClickhouseDate(fromDateForMostRecent)
-        : mostRecentBuckets[0].hour_timestamp,
+        : mostRecentBucket.hour_timestamp,
     });
   }
 }
