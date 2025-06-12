@@ -31,7 +31,7 @@ describe('Telegram communication channel', () => {
     const requestBodies: any[] = [];
 
     bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
-      botId: (channel.options as TelegramOptions).botToken,
+      botId: (channel.options as TelegramOptions).botToken!,
       onMessage: (body) => {
         requestBodies.push(body);
       },

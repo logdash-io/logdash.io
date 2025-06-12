@@ -39,7 +39,7 @@ describe('Http monitor full process', () => {
 
     let telegramPostedDtos: any[] = [];
     await bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
-      botId: (channel.options as TelegramOptions).botToken,
+      botId: (channel.options as TelegramOptions).botToken!,
       onMessage: (dto) => {
         telegramPostedDtos.push(dto);
       },

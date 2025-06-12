@@ -69,6 +69,12 @@ interface EnvConfig {
     password: string;
     database: string;
   };
+  notificationChannels: {
+    telegramUptimeBot: {
+      secret: string;
+      token: string;
+    };
+  };
 }
 
 interface EnvConfigs {
@@ -147,6 +153,12 @@ export const EnvConfigs: EnvConfigs = {
       password: process.env.CLICKHOUSE_PASSWORD!,
       database: process.env.CLICKHOUSE_DATABASE!,
     },
+    notificationChannels: {
+      telegramUptimeBot: {
+        secret: process.env.TELEGRAM_UPTIME_BOT_SECRET!,
+        token: process.env.TELEGRAM_UPTIME_BOT_TOKEN!,
+      },
+    },
   },
   [OurEnv.Dev]: {
     emailLoginWhitelist: {
@@ -217,6 +229,12 @@ export const EnvConfigs: EnvConfigs = {
       password: process.env.CLICKHOUSE_PASSWORD!,
       database: process.env.CLICKHOUSE_DATABASE!,
     },
+    notificationChannels: {
+      telegramUptimeBot: {
+        secret: process.env.TELEGRAM_UPTIME_BOT_SECRET!,
+        token: process.env.TELEGRAM_UPTIME_BOT_TOKEN!,
+      },
+    },
   },
   [OurEnv.Local]: {
     emailLoginWhitelist: {
@@ -286,6 +304,12 @@ export const EnvConfigs: EnvConfigs = {
       username: process.env.CLICKHOUSE_USER!,
       password: process.env.CLICKHOUSE_PASSWORD!,
       database: process.env.CLICKHOUSE_DATABASE!,
+    },
+    notificationChannels: {
+      telegramUptimeBot: {
+        secret: process.env.TELEGRAM_UPTIME_BOT_SECRET!,
+        token: process.env.TELEGRAM_UPTIME_BOT_TOKEN!,
+      },
     },
   },
 };

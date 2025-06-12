@@ -1,10 +1,13 @@
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
 export class TelegramOptionsValidator {
-  @ApiProperty()
+  @ApiPropertyOptional({
+    description: 'If not provided, will use default logdash uptime bot token',
+  })
+  @IsOptional()
   @IsString()
-  public botToken: string;
+  public botToken?: string;
 
   @ApiProperty()
   @IsString()
@@ -12,6 +15,6 @@ export class TelegramOptionsValidator {
 }
 
 export interface TelegramOptions {
-  botToken: string;
+  botToken?: string;
   chatId: string;
 }

@@ -4,16 +4,19 @@ import { NotificationChannelWriteModule } from '../write/notification-channel-wr
 import { NotificationChannelCoreController } from './notification-channel-core.controller';
 import { NotificationChannelMessagingModule } from '../messaging/notification-channel-messaging.module';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
+import { TelegramSetupModule } from '../setup/telegram/telegram-setup.module';
+import { NotificationChannelOptionsEnrichmentService } from './notification-channel-options-enrichment.service';
 
 @Module({
   imports: [
     NotificationChannelReadModule,
     NotificationChannelWriteModule,
     NotificationChannelMessagingModule,
+    TelegramSetupModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [NotificationChannelCoreController],
-  providers: [],
+  providers: [NotificationChannelOptionsEnrichmentService],
   exports: [],
 })
 export class NotificationChannelCoreModule {}

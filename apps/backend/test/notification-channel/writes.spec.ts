@@ -3,8 +3,9 @@ import { createTestApp } from '../utils/bootstrap';
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
 import { WebhookOptions } from '../../src/notification-channel/core/types/webhook-options.type';
 import { NotificationTarget } from '../../src/notification-channel/core/enums/notification-target.enum';
+import { getEnvConfig } from '../../src/shared/configs/env-configs';
 
-describe('NotificationhannelCoreController (writes)', () => {
+describe('NotificationChannelCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
 
   beforeAll(async () => {
@@ -50,7 +51,7 @@ describe('NotificationhannelCoreController (writes)', () => {
         expect((entity.options as TelegramOptions).chatId).toBe('valid-chat-id');
       });
 
-      it('rejects telegram channel without botToken', async () => {
+      it('uses default bot token if not provided', async () => {
         // given
         const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
@@ -68,8 +69,15 @@ describe('NotificationhannelCoreController (writes)', () => {
           .send(invalidTelegramData);
 
         // then
-        expect(response.status).toBe(400);
-        expect(response.body.message).toEqual(['options.botToken must be a string']);
+        expect(response.status).toBe(201);
+        const entity = (await bootstrap.models.notificationChannelModel.findOne())!;
+
+        expect(entity).toBeDefined();
+        expect(entity.clusterId).toBe(cluster.id);
+        expect(entity.target).toBe(NotificationTarget.Telegram);
+        expect((entity.options as TelegramOptions).botToken).toBe(
+          getEnvConfig().notificationChannels.telegramUptimeBot.token,
+        );
       });
     });
 
