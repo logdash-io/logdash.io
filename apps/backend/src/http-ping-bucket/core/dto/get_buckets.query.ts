@@ -1,6 +1,9 @@
-import { IsIn } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum } from 'class-validator';
+import { BucketsPeriod } from 'src/http-ping-bucket/aggregation/types/bucket-period.enum';
 
 export class GetBucketsQuery {
-  @IsIn(['24h', '4d', '90d'])
-  period: '24h' | '4d' | '90d';
+  @ApiProperty({ enum: BucketsPeriod })
+  @IsEnum(BucketsPeriod)
+  period: BucketsPeriod;
 }

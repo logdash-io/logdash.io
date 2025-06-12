@@ -1,7 +1,7 @@
 import { ClickHouseClient } from '@clickhouse/client';
 import { Injectable } from '@nestjs/common';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
-import { VirtualBucket } from '../aggregation/virtual-bucket.type';
+import { VirtualBucket } from '../aggregation/types/virtual-bucket.type';
 
 export enum BucketGrouping {
   Hour = 'hour',

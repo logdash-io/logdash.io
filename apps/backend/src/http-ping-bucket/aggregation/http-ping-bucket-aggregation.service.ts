@@ -3,7 +3,8 @@ import { addHours, subDays, subHours } from 'date-fns';
 import { HttpPingAggregationService } from 'src/http-ping/aggregation/http-ping-aggregation.service';
 import { HttpPingBucketSerialized } from '../core/entities/http-ping-bucket.interface';
 import { BucketGrouping, HttpPingBucketReadService } from '../read/http-ping-bucket-read.service';
-import { VirtualBucket } from './virtual-bucket.type';
+import { BucketsPeriod } from './types/bucket-period.enum';
+import { VirtualBucket } from './types/virtual-bucket.type';
 
 @Injectable()
 export class HttpPingBucketAggregationService {
@@ -14,7 +15,7 @@ export class HttpPingBucketAggregationService {
 
   public async getBucketsForMonitor(
     monitorId: string,
-    period: '24h' | '4d' | '90d' = '24h',
+    period: BucketsPeriod,
   ): Promise<(HttpPingBucketSerialized | null)[]> {
     const periodConfig = this.getPeriodConfig(period);
 
@@ -32,23 +33,23 @@ export class HttpPingBucketAggregationService {
     );
   }
 
-  private getPeriodConfig(period: '24h' | '4d' | '90d') {
+  private getPeriodConfig(period: BucketsPeriod) {
     const nowMinusDays = (days: number) => {
       return subDays(new Date(), days);
     };
 
     const configs = {
-      '24h': {
+      [BucketsPeriod.Day]: {
         fromDate: addHours(nowMinusDays(1), 1),
         grouping: BucketGrouping.Hour,
         expectedBucketCount: 24,
       },
-      '4d': {
+      [BucketsPeriod.FourDays]: {
         fromDate: addHours(nowMinusDays(4), 1),
         grouping: BucketGrouping.Hour,
         expectedBucketCount: 96,
       },
-      '90d': {
+      [BucketsPeriod.NinetyDays]: {
         fromDate: nowMinusDays(89),
         grouping: BucketGrouping.Day,
         expectedBucketCount: 90,
