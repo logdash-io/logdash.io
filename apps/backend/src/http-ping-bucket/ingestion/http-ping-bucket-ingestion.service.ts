@@ -1,13 +1,13 @@
 import { Logger } from '@logdash/js-sdk';
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { subHours } from 'date-fns';
 import {
   HttpPingAggregationService,
   PingsAggregation,
 } from 'src/http-ping/aggregation/http-ping-aggregation.service';
 import { CreateHttpPingBucketDto } from '../write/dto/create-http-ping-bucket.dto';
 import { HttpPingBucketWriteService } from '../write/http-ping-bucket-write.service';
-import { subHours } from 'date-fns';
 
 @Injectable()
 export class HttpPingBucketIngestionService {
@@ -42,6 +42,11 @@ export class HttpPingBucketIngestionService {
       return;
     }
 
+    /*
+     TODO: 
+      - if performance is bad, consider placing this operation in within the database
+      - currently we fetch data from the database, do some operations on it and then put it back in the database
+     */
     const bucketDtos: CreateHttpPingBucketDto[] = data.map((result: PingsAggregation) => ({
       httpMonitorId: result.http_monitor_id,
       timestamp: result.hour_timestamp,
