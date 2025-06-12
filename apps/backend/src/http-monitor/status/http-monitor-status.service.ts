@@ -57,7 +57,7 @@ export class HttpMonitorStatusService {
       };
     }
 
-    return status as unknown as HttpMonitorStatusDto;
+    return JSON.parse(status) as HttpMonitorStatusDto;
   }
 
   public async setStatus(httpMonitorId: string, dto: HttpMonitorStatusDto) {
