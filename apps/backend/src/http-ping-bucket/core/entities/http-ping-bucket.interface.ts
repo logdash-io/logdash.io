@@ -1,3 +1,5 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class HttpPingBucketNormalized {
   id: string;
   httpMonitorId: string;
@@ -8,8 +10,15 @@ export class HttpPingBucketNormalized {
 }
 
 export class HttpPingBucketSerialized {
+  @ApiProperty()
   timestamp: Date;
+
+  @ApiProperty()
   successCount: number;
+
+  @ApiProperty()
   failureCount: number;
+
+  @ApiProperty()
   averageLatencyMs: number;
 }
