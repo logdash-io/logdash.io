@@ -1,6 +1,6 @@
 import { advanceBy } from 'jest-date-mock';
 import * as nock from 'nock';
-import { HttpPingBucketSchedulerService } from '../../src/http-ping-bucket/schedule/http-ping-bucket-scheduler.service';
+import { HttpPingBucketIngestionService } from '../../src/http-ping-bucket/ingestion/http-ping-bucket-ingestion.service';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
 
@@ -20,7 +20,7 @@ describe('Http Ping (writes)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  describe('CRON bucket scheduler', () => {
+  describe('CRON bucket ingestion', () => {
     it('creates buckets from pings for previous hour', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -52,7 +52,7 @@ describe('Http Ping (writes)', () => {
 
       // then
       advanceBy(oneHourMs);
-      const scheduler = bootstrap.app.get(HttpPingBucketSchedulerService);
+      const scheduler = bootstrap.app.get(HttpPingBucketIngestionService);
       await scheduler.createBucketsForPreviousHour();
 
       const buckets = await bootstrap.utils.httpPingBucketUtils.getMonitorBuckets({
@@ -70,7 +70,7 @@ describe('Http Ping (writes)', () => {
 
     it('does not create buckets when no pings exist', async () => {
       // when
-      const scheduler = bootstrap.app.get(HttpPingBucketSchedulerService);
+      const scheduler = bootstrap.app.get(HttpPingBucketIngestionService);
       await scheduler.createBucketsForPreviousHour();
 
       // then

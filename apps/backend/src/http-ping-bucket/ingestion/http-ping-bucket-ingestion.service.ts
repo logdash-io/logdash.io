@@ -7,6 +7,7 @@ import {
 } from 'src/http-ping/aggregation/http-ping-aggregation.service';
 import { CreateHttpPingBucketDto } from '../write/dto/create-http-ping-bucket.dto';
 import { HttpPingBucketWriteService } from '../write/http-ping-bucket-write.service';
+import { subHours } from 'date-fns';
 
 @Injectable()
 export class HttpPingBucketIngestionService {
@@ -27,18 +28,9 @@ export class HttpPingBucketIngestionService {
 
   private async aggregatePingsIntoBuckets(): Promise<void> {
     const now = new Date();
-    const previousHourStart = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      now.getHours() - 1,
-    );
-    const previousHourEnd = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      now.getHours(),
-    );
+    now.setMinutes(0, 0, 0);
+    const previousHourStart = subHours(now, 1);
+    const previousHourEnd = now;
 
     const data = await this.httpPingAggregationService.aggregatePingsForTimeRange(
       previousHourStart,
