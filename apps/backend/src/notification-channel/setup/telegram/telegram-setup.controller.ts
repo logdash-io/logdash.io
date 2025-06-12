@@ -11,6 +11,7 @@ import { TelegramUpdateDto } from './dto/telegram-update.dto';
 export class TelegramSetupController {
   constructor(private readonly telegramApiService: TelegramSetupService) {}
 
+  @ApiBearerAuth()
   @Get('chat_info')
   @ApiResponse({ type: TelegramChatInfoResponse })
   public async fetchChats(
@@ -25,15 +26,12 @@ export class TelegramSetupController {
     return { success: true, chatId: chatInfo.id, name: chatInfo.name };
   }
 
-  @ApiBearerAuth()
   @Public()
   @Post('bot_webhook')
   public async webhookUpdate(
     @Body() body: TelegramUpdateDto,
     @Headers('X-Telegram-Bot-Api-Secret-Token') secret: string,
   ) {
-    console.log('webhookUpdate', body, secret);
-
     await this.telegramApiService.webhookUpdate(body, secret);
   }
 }
