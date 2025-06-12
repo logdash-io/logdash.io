@@ -9,7 +9,7 @@ import { CreateHttpPingBucketDto } from '../write/dto/create-http-ping-bucket.dt
 import { HttpPingBucketWriteService } from '../write/http-ping-bucket-write.service';
 
 @Injectable()
-export class HttpPingBucketSchedulerService {
+export class HttpPingBucketIngestionService {
   constructor(
     private readonly httpPingAggregationService: HttpPingAggregationService,
     private readonly httpPingBucketWriteService: HttpPingBucketWriteService,
