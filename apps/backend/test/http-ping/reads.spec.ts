@@ -69,5 +69,29 @@ describe('Http Ping (reads)', () => {
         message: 'Default HTTP ping',
       });
     });
+
+    it('gets pings for a monitor with limit', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token,
+        projectId: project.id,
+      });
+
+      for (let i = 0; i < 10; i++) {
+        await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
+      }
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/monitors/${monitor.id}/http_pings?limit=5`)
+        .set('Authorization', `Bearer ${token}`);
+
+      console.log(response.body);
+
+      // then
+      expect(response.status).toBe(200);
+      expect(response.body.length).toBe(5);
+    });
   });
 });

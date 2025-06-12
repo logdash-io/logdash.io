@@ -8,7 +8,10 @@ import { HttpPingEntity } from '../core/entities/http-ping.entity';
 export class HttpPingReadService {
   constructor(private readonly clickhouse: ClickHouseClient) {}
 
-  public async readByMonitorId(monitorId: string): Promise<HttpPingNormalized[]> {
+  public async readByMonitorId(
+    monitorId: string,
+    limit: number = 100,
+  ): Promise<HttpPingNormalized[]> {
     const result = await this.clickhouse.query({
       query: `
         SELECT 
@@ -21,9 +24,11 @@ export class HttpPingReadService {
         FROM http_pings 
         WHERE http_monitor_id = {monitorId:FixedString(24)}
         ORDER BY created_at DESC
+        LIMIT {limit:UInt64}
       `,
       query_params: {
         monitorId,
+        limit,
       },
     });
 

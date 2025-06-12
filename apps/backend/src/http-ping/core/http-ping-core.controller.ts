@@ -1,4 +1,4 @@
-import { Controller, Get, NotFoundException, Param, Sse, UseGuards } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, Query, Sse, UseGuards } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { filter, fromEvent, map, Observable } from 'rxjs';
@@ -10,6 +10,7 @@ import { HttpPingEvent } from '../events/http-ping-event.enum';
 import { HttpPingSerialized } from './entities/http-ping.interface';
 import { HttpPingSerializer } from './entities/http-ping.serializer';
 import { HttpPingReadService } from '../read/http-ping-read.service';
+import { ReadByMonitorIdQuery } from './dto/read-by-monitor-id.query';
 
 @ApiBearerAuth()
 @ApiTags('HTTP Pings')
@@ -24,9 +25,10 @@ export class HttpPingCoreController {
 
   @Get('projects/:projectId/monitors/:monitorId/http_pings')
   @ApiResponse({ type: HttpPingSerialized, isArray: true })
-  async findByMonitorId(
+  async readByMonitorIdQuery(
     @Param('projectId') projectId: string,
     @Param('monitorId') monitorId: string,
+    @Query() query: ReadByMonitorIdQuery,
   ): Promise<HttpPingSerialized[]> {
     const monitor = await this.httpMonitorReadService.readById(monitorId);
     if (!monitor) {
@@ -37,7 +39,7 @@ export class HttpPingCoreController {
       throw new NotFoundException('Monitor not found in this project');
     }
 
-    const pings = await this.httpPingReadService.readByMonitorId(monitorId);
+    const pings = await this.httpPingReadService.readByMonitorId(monitorId, query.limit);
 
     return HttpPingSerializer.serializeMany(pings);
   }
