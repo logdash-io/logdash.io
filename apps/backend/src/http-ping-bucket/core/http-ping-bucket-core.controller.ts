@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { HttpPingBucketSerialized } from '../../http-ping-bucket/core/entities/http-ping-bucket.interface';
-import { HttpPingBucketAggregateService } from '../aggregate/http-ping-bucket-aggregate.service';
+import { HttpPingBucketAggregationService } from '../aggregation/http-ping-bucket-aggregation.service';
 
 @ApiBearerAuth()
 @ApiTags('HTTP Ping Buckets')
@@ -12,7 +12,7 @@ import { HttpPingBucketAggregateService } from '../aggregate/http-ping-bucket-ag
 export class HttpPingBucketCoreController {
   constructor(
     private readonly httpMonitorReadService: HttpMonitorReadService,
-    private readonly httpPingBucketAggregateService: HttpPingBucketAggregateService,
+    private readonly httpPingBucketAggregateService: HttpPingBucketAggregationService,
   ) {}
 
   @Get('projects/:projectId/monitors/:monitorId/http_ping_buckets')

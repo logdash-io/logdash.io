@@ -4,7 +4,7 @@ import { HttpMonitorReadModule } from 'src/http-monitor/read/http-monitor-read.m
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { HttpPingBucketSchedulerModule } from '../../http-ping-bucket/schedule/http-ping-bucket-scheduler.module';
 import { HttpPingBucketWriteModule } from '../../http-ping-bucket/write/http-ping-bucket-write.module';
-import { HttpPingBucketAggregateModule } from '../aggregate/http-ping-bucket-aggregate.module';
+import { HttpPingBucketAggregationModule } from '../aggregation/http-ping-bucket-aggregation.module';
 import { HttpPingBucketTtlModule } from '../ttl/http-ping-bucket-ttl.module';
 import { HttpPingBucketCoreController } from './http-ping-bucket-core.controller';
 
@@ -15,7 +15,7 @@ import { HttpPingBucketCoreController } from './http-ping-bucket-core.controller
     HttpPingBucketSchedulerModule,
     HttpPingBucketWriteModule,
     HttpPingBucketTtlModule,
-    HttpPingBucketAggregateModule,
+    HttpPingBucketAggregationModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [HttpPingBucketCoreController],

@@ -11,7 +11,7 @@ import { HttpPingBucketSerializer } from '../core/entities/http-ping-bucket.seri
 import { BucketGrouping, HttpPingBucketReadService } from '../read/http-ping-bucket-read.service';
 
 @Injectable()
-export class HttpPingBucketAggregateService {
+export class HttpPingBucketAggregationService {
   constructor(
     private readonly clickhouse: ClickHouseClient,
     private readonly httpPingBucketReadService: HttpPingBucketReadService,

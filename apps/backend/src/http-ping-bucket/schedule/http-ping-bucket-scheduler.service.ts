@@ -2,7 +2,7 @@ import { Logger } from '@logdash/js-sdk';
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
-import { HttpPingBucketAggregateService } from '../aggregate/http-ping-bucket-aggregate.service';
+import { HttpPingBucketAggregationService } from '../aggregation/http-ping-bucket-aggregation.service';
 import { HttpPingBucketEntity } from '../core/entities/http-ping-bucket.entity';
 import { CreateHttpPingBucketDto } from '../write/dto/create-http-ping-bucket.dto';
 import { HttpPingBucketWriteService } from '../write/http-ping-bucket-write.service';
@@ -10,7 +10,7 @@ import { HttpPingBucketWriteService } from '../write/http-ping-bucket-write.serv
 @Injectable()
 export class HttpPingBucketSchedulerService {
   constructor(
-    private readonly httpPingBucketAggregateService: HttpPingBucketAggregateService,
+    private readonly httpPingBucketAggregateService: HttpPingBucketAggregationService,
     private readonly httpPingBucketWriteService: HttpPingBucketWriteService,
     private readonly logger: Logger,
   ) {}
@@ -66,5 +66,4 @@ export class HttpPingBucketSchedulerService {
       bucketsCreated: bucketDtos.length,
     });
   }
-
 }
