@@ -1,12 +1,8 @@
 import { ClickHouseClient } from '@clickhouse/client';
 import { Injectable } from '@nestjs/common';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
-import { VirtualBucket } from '../aggregation/types/virtual-bucket.type';
-
-export enum BucketGrouping {
-  Hour = 'hour',
-  Day = 'day',
-}
+import { BucketGranularity } from '../core/types/bucket-granularity.enum';
+import { VirtualBucket } from '../core/types/virtual-bucket.type';
 
 @Injectable()
 export class HttpPingBucketReadService {
@@ -15,12 +11,12 @@ export class HttpPingBucketReadService {
   public async readBucketsForMonitor(
     monitorId: string,
     fromDate: Date,
-    grouping: BucketGrouping = BucketGrouping.Hour,
+    grouping: BucketGranularity,
   ): Promise<VirtualBucket[]> {
     const toDate = new Date();
     let query: string;
 
-    if (grouping === BucketGrouping.Hour) {
+    if (grouping === BucketGranularity.Hour) {
       query = `
         SELECT 
           hour_timestamp as timestamp,

@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { addHours, subDays, subHours } from 'date-fns';
 import { HttpPingAggregationService } from 'src/http-ping/aggregation/http-ping-aggregation.service';
 import { HttpPingBucketSerialized } from '../core/entities/http-ping-bucket.interface';
-import { BucketGrouping, HttpPingBucketReadService } from '../read/http-ping-bucket-read.service';
-import { BucketsPeriod } from './types/bucket-period.enum';
-import { VirtualBucket } from './types/virtual-bucket.type';
+import { BucketGranularity } from '../core/types/bucket-granularity.enum';
+import { BucketsPeriod } from '../core/types/bucket-period.enum';
+import { VirtualBucket } from '../core/types/virtual-bucket.type';
+import { HttpPingBucketReadService } from '../read/http-ping-bucket-read.service';
 
 @Injectable()
 export class HttpPingBucketAggregationService {
@@ -41,17 +42,17 @@ export class HttpPingBucketAggregationService {
     const configs = {
       [BucketsPeriod.Day]: {
         fromDate: addHours(nowMinusDays(1), 1),
-        grouping: BucketGrouping.Hour,
+        grouping: BucketGranularity.Hour,
         expectedBucketCount: 24,
       },
       [BucketsPeriod.FourDays]: {
         fromDate: addHours(nowMinusDays(4), 1),
-        grouping: BucketGrouping.Hour,
+        grouping: BucketGranularity.Hour,
         expectedBucketCount: 96,
       },
       [BucketsPeriod.NinetyDays]: {
         fromDate: nowMinusDays(89),
-        grouping: BucketGrouping.Day,
+        grouping: BucketGranularity.Day,
         expectedBucketCount: 90,
       },
     };
@@ -62,7 +63,7 @@ export class HttpPingBucketAggregationService {
   private async createCompleteBuckets(
     existingBuckets: VirtualBucket[],
     fromDate: Date,
-    grouping: BucketGrouping,
+    grouping: BucketGranularity,
     expectedBucketCount: number,
   ): Promise<(VirtualBucket | null)[]> {
     const completeBuckets = this.fillWithEmptyBuckets(
@@ -82,7 +83,7 @@ export class HttpPingBucketAggregationService {
   private fillWithEmptyBuckets(
     existingBuckets: VirtualBucket[],
     fromDate: Date,
-    grouping: BucketGrouping,
+    grouping: BucketGranularity,
     expectedCount: number,
   ): (VirtualBucket | null)[] {
     const buckets: (VirtualBucket | null)[] = [];
@@ -95,10 +96,10 @@ export class HttpPingBucketAggregationService {
 
     const oneHourMs = 60 * 60 * 1000;
     const oneDayMs = 24 * oneHourMs;
-    const increment = grouping === BucketGrouping.Hour ? oneHourMs : oneDayMs;
+    const increment = grouping === BucketGranularity.Hour ? oneHourMs : oneDayMs;
     let currentDate = new Date(fromDate);
 
-    if (grouping === BucketGrouping.Hour) {
+    if (grouping === BucketGranularity.Hour) {
       currentDate.setMinutes(0, 0, 0);
     } else {
       currentDate.setHours(0, 0, 0, 0);
@@ -120,19 +121,19 @@ export class HttpPingBucketAggregationService {
     return buckets.reverse();
   }
 
-  private getBucketKey(date: Date, grouping: BucketGrouping): string {
-    if (grouping === BucketGrouping.Hour) {
+  private getBucketKey(date: Date, grouping: BucketGranularity): string {
+    if (grouping === BucketGranularity.Hour) {
       return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
     } else {
       return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
     }
   }
 
-  private async tryAddVirtualBucket(grouping: BucketGrouping): Promise<VirtualBucket | null> {
+  private async tryAddVirtualBucket(grouping: BucketGranularity): Promise<VirtualBucket | null> {
     const toDate = addHours(new Date(), 1);
     toDate.setMinutes(0, 0);
     const fromDateForMostRecent = subHours(toDate, 1);
-    const isDailyGrouping = grouping === BucketGrouping.Day;
+    const isDailyGrouping = grouping === BucketGranularity.Day;
 
     if (isDailyGrouping) {
       fromDateForMostRecent.setUTCHours(0, 0, 0, 0);

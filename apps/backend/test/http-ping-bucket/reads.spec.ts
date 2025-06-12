@@ -111,9 +111,9 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(24);
+      expect(response.body.buckets).toHaveLength(24);
 
-      const expectedOneHourAgoBucket = response.body[1];
+      const expectedOneHourAgoBucket = response.body.buckets[1];
       expect(expectedOneHourAgoBucket).toMatchObject({
         successCount: oneHourAgoBucket.successCount,
         failureCount: oneHourAgoBucket.failureCount,
@@ -121,7 +121,7 @@ describe('Http Ping Bucket(reads)', () => {
         timestamp: oneHourAgo.toISOString(),
       });
 
-      const expectedTwoHoursAgoBucket = response.body[2];
+      const expectedTwoHoursAgoBucket = response.body.buckets[2];
       expect(expectedTwoHoursAgoBucket).toMatchObject({
         successCount: twoHoursAgoBucket.successCount,
         failureCount: twoHoursAgoBucket.failureCount,
@@ -129,7 +129,7 @@ describe('Http Ping Bucket(reads)', () => {
         timestamp: twoHoursAgo.toISOString(),
       });
 
-      const nullBuckets = response.body.filter((bucket) => bucket === null);
+      const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
       expect(nullBuckets).toHaveLength(22);
     });
 
@@ -151,8 +151,8 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(24);
-      expect(response.body[0]).toMatchObject({
+      expect(response.body.buckets).toHaveLength(24);
+      expect(response.body.buckets[0]).toMatchObject({
         successCount: 1,
         failureCount: 0,
         averageLatencyMs: 100,
@@ -196,9 +196,9 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(96);
+      expect(response.body.buckets).toHaveLength(96);
 
-      const expectedThreeDaysAgoBucket = response.body[3 * 24];
+      const expectedThreeDaysAgoBucket = response.body.buckets[3 * 24];
       expect(expectedThreeDaysAgoBucket).toMatchObject({
         successCount: threeDaysAgoBucket.successCount,
         failureCount: threeDaysAgoBucket.failureCount,
@@ -206,7 +206,7 @@ describe('Http Ping Bucket(reads)', () => {
         timestamp: threeDaysAgo.toISOString(),
       });
 
-      const nullBuckets = response.body.filter((bucket) => bucket === null);
+      const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
       expect(nullBuckets).toHaveLength(95);
     });
 
@@ -248,9 +248,9 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(90);
+      expect(response.body.buckets).toHaveLength(90);
 
-      const expectedThirtyDaysAgoBucket = response.body[30];
+      const expectedThirtyDaysAgoBucket = response.body.buckets[30];
       const expectedTimestamp = new Date(thirtyDaysAgo.getTime());
       expectedTimestamp.setUTCHours(0, 0, 0, 0);
       expect(expectedThirtyDaysAgoBucket).toMatchObject({
@@ -260,7 +260,7 @@ describe('Http Ping Bucket(reads)', () => {
         timestamp: expectedTimestamp.toISOString(),
       });
 
-      const nullBuckets = response.body.filter((bucket) => bucket === null);
+      const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
       expect(nullBuckets).toHaveLength(89);
     });
 
@@ -294,15 +294,15 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(90);
-      expect(response.body[0]).toMatchObject({
+      expect(response.body.buckets).toHaveLength(90);
+      expect(response.body.buckets[0]).toMatchObject({
         successCount: 1,
         failureCount: 0,
         averageLatencyMs: 100,
         timestamp: today.toISOString(),
       });
 
-      const expectedTenDaysAgoBucket = response.body[10];
+      const expectedTenDaysAgoBucket = response.body.buckets[10];
       expect(expectedTenDaysAgoBucket).toMatchObject({
         successCount: 1,
         failureCount: 2,
@@ -310,7 +310,7 @@ describe('Http Ping Bucket(reads)', () => {
         timestamp: tenDaysAgo.toISOString(),
       });
 
-      const nullBuckets = response.body.filter((bucket) => bucket === null);
+      const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
       expect(nullBuckets).toHaveLength(88);
     });
   });
