@@ -47,6 +47,23 @@ describe('Http Ping Bucket(reads)', () => {
       expect(response.status).toBe(403);
     });
 
+    it('does not allow invalid period', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token: setup.token,
+        projectId: setup.project.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/monitors/${monitor.id}/http_ping_buckets?period=invalid`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // then
+      expect(response.status).toBe(400);
+    });
+
     it('gets hourly buckets for 24h period', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
