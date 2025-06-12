@@ -1,5 +1,7 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
+import { HttpMonitorStatus } from '../../src/http-monitor/status/enum/http-monitor-status.enum';
+import { HttpMonitorStatusService } from '../../src/http-monitor/status/http-monitor-status.service';
 
 describe('HttpMonitorCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -59,6 +61,39 @@ describe('HttpMonitorCoreController (reads)', () => {
 
       // then
       expect(response.status).toBe(403);
+    });
+
+    it('includes statuses in the response', async () => {
+      // given
+      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token: setupA.token,
+        projectId: setupA.project.id,
+        name: 'name 1',
+      });
+
+      // when
+      const responseA = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setupA.project.id}/http_monitors`)
+        .set('Authorization', `Bearer ${setupA.token}`);
+
+      // then
+      expect(responseA.body).toHaveLength(1);
+      expect(responseA.body[0].status).toBe(HttpMonitorStatus.Unknown);
+
+      // and when
+      const statusService = bootstrap.app.get(HttpMonitorStatusService);
+      await statusService.setStatus(monitor.id, HttpMonitorStatus.Up);
+
+      // and when
+      const responseB = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setupA.project.id}/http_monitors`)
+        .set('Authorization', `Bearer ${setupA.token}`);
+
+      // then
+      expect(responseB.body).toHaveLength(1);
+      expect(responseB.body[0].status).toBe(HttpMonitorStatus.Up);
     });
   });
 

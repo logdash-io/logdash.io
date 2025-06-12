@@ -77,4 +77,15 @@ export class RedisService {
   public async flushAll(): Promise<void> {
     await this.client.flushAll();
   }
+
+  public async mGet(keys: string[]): Promise<Record<string, string | null>> {
+    const result = await this.client.mGet(keys);
+    return result.reduce(
+      (acc, value, index) => {
+        acc[keys[index]] = value;
+        return acc;
+      },
+      {} as Record<string, string | null>,
+    );
+  }
 }

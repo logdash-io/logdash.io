@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { HttpPingEvent } from '../../http-ping/events/http-ping-event.enum';
 import { HttpPingCreatedEvent } from '../../http-ping/events/definitions/http-ping-created.event';
-import { PingStatus } from './enum/ping-status.enum';
+import { HttpMonitorStatus } from './enum/http-monitor-status.enum';
 import { RedisService } from '../../shared/redis/redis.service';
 import { NotificationChannelMessagingService } from '../../notification-channel/messaging/notification-channel-messaging.service';
 import { HttpMonitorReadService } from '../read/http-monitor-read.service';
+import { HttpMonitorStatusService } from './http-monitor-status.service';
 
 @Injectable()
 export class HttpMonitorStatusChangeService {
@@ -13,39 +14,26 @@ export class HttpMonitorStatusChangeService {
     private readonly redisService: RedisService,
     private readonly notificationChannelMessagingService: NotificationChannelMessagingService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
+    private readonly httpMonitorStatusService: HttpMonitorStatusService,
   ) {}
 
   @OnEvent(HttpPingEvent.HttpPingCreatedEvent)
   public async handleHttpPingCreatedEvent(event: HttpPingCreatedEvent) {
     const newStatus = this.computePingStatusFromStatusCode(event.statusCode);
-    const previousStatus = await this.getStatus(event.httpMonitorId);
+    const previousStatus = await this.httpMonitorStatusService.getStatus(event.httpMonitorId);
 
-    await this.setStatus(event.httpMonitorId, newStatus);
+    await this.httpMonitorStatusService.setStatus(event.httpMonitorId, newStatus);
 
-    if (previousStatus === PingStatus.Unknown || previousStatus != newStatus) {
+    if (previousStatus === HttpMonitorStatus.Unknown || previousStatus != newStatus) {
       await this.dispatchStatusChangedMessage(event.httpMonitorId, newStatus);
     }
   }
 
-  private computePingStatusFromStatusCode(statusCode: number): PingStatus {
-    return statusCode >= 200 && statusCode < 400 ? PingStatus.Up : PingStatus.Down;
+  private computePingStatusFromStatusCode(statusCode: number): HttpMonitorStatus {
+    return statusCode >= 200 && statusCode < 400 ? HttpMonitorStatus.Up : HttpMonitorStatus.Down;
   }
 
-  private async getStatus(httpMonitorId: string): Promise<PingStatus> {
-    const previousStatus = await this.redisService.get(this.getRedisKey(httpMonitorId));
-
-    if (!previousStatus) {
-      return PingStatus.Unknown;
-    }
-
-    return previousStatus as PingStatus;
-  }
-
-  private async setStatus(httpMonitorId: string, status: PingStatus) {
-    await this.redisService.set(this.getRedisKey(httpMonitorId), status);
-  }
-
-  private async dispatchStatusChangedMessage(httpMonitorId: string, newStatus: PingStatus) {
+  private async dispatchStatusChangedMessage(httpMonitorId: string, newStatus: HttpMonitorStatus) {
     const httpMonitor = await this.httpMonitorReadService.readById(httpMonitorId);
 
     if (!httpMonitor) {
@@ -60,18 +48,14 @@ export class HttpMonitorStatusChangeService {
     });
   }
 
-  private createStatusMessage(monitorName: string, status: PingStatus): string {
+  private createStatusMessage(monitorName: string, status: HttpMonitorStatus): string {
     switch (status) {
-      case PingStatus.Up:
+      case HttpMonitorStatus.Up:
         return `✅ "${monitorName}" is back online!`;
-      case PingStatus.Down:
+      case HttpMonitorStatus.Down:
         return `❌ "${monitorName}" is down!`;
     }
 
     return '';
-  }
-
-  private getRedisKey(httpMonitorId: string): string {
-    return `http-monitor:${httpMonitorId}:status`;
   }
 }

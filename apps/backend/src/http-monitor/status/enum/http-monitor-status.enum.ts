@@ -1,4 +1,4 @@
-export enum PingStatus {
+export enum HttpMonitorStatus {
   Up = 'up',
   Down = 'down',
   Unknown = 'unknown',

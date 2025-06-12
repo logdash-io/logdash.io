@@ -18,6 +18,7 @@ import { HttpMonitorSerialized } from './entities/http-monitor.interface';
 import { HttpMonitorSerializer } from './entities/http-monitor.serializer';
 import { UpdateHttpMonitorBody } from './dto/update-http-monitor.body';
 import { ProjectReadService } from '../../project/read/project-read.service';
+import { HttpMonitorStatusService } from '../status/http-monitor-status.service';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -29,6 +30,7 @@ export class HttpMonitorCoreController {
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpMonitorLimitService: HttpMonitorLimitService,
     private readonly projectReadService: ProjectReadService,
+    private readonly httpMonitorStatusService: HttpMonitorStatusService,
   ) {}
 
   @Post('projects/:projectId/http_monitors')
@@ -45,14 +47,20 @@ export class HttpMonitorCoreController {
     }
 
     const httpMonitor = await this.httpMonitorWriteService.create(projectId, dto);
-    return HttpMonitorSerializer.serialize(httpMonitor);
+    const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
+
+    return HttpMonitorSerializer.serialize(httpMonitor, status);
   }
 
   @Get('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
   async readByProjectId(@Param('projectId') projectId: string): Promise<HttpMonitorSerialized[]> {
     const httpMonitors = await this.httpMonitorReadService.readByProjectId(projectId);
-    return HttpMonitorSerializer.serializeMany(httpMonitors);
+    const statuses = await this.httpMonitorStatusService.getStatuses(
+      httpMonitors.map((httpMonitor) => httpMonitor.id),
+    );
+
+    return HttpMonitorSerializer.serializeMany(httpMonitors, { statuses });
   }
 
   @Get('/clusters/:clusterId/http_monitors')
@@ -64,7 +72,11 @@ export class HttpMonitorCoreController {
       projectsIdsInCluster.map((project) => project.id),
     );
 
-    return HttpMonitorSerializer.serializeMany(httpMonitors);
+    const statuses = await this.httpMonitorStatusService.getStatuses(
+      httpMonitors.map((httpMonitor) => httpMonitor.id),
+    );
+
+    return HttpMonitorSerializer.serializeMany(httpMonitors, { statuses });
   }
 
   @Put('/http_monitors/:httpMonitorId')
@@ -75,6 +87,8 @@ export class HttpMonitorCoreController {
   ): Promise<HttpMonitorSerialized> {
     const httpMonitor = await this.httpMonitorWriteService.update(httpMonitorId, dto);
 
-    return HttpMonitorSerializer.serialize(httpMonitor);
+    const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
+
+    return HttpMonitorSerializer.serialize(httpMonitor, status);
   }
 }
