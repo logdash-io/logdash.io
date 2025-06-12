@@ -19,7 +19,7 @@ describe('Http Ping Bucket(reads)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  describe('GET /projects/:projectId/monitors/:monitorId/http_ping_buckets', () => {
+  describe('GET /monitors/:httpMonitorId/http_ping_buckets', () => {
     it('forbids access when user is not in cluster', async () => {
       // given
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -27,7 +27,7 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${setupA.project.id}/monitors/${new Types.ObjectId()}/http_ping_buckets`)
+        .get(`/monitors/${new Types.ObjectId()}/http_ping_buckets`)
         .set('Authorization', `Bearer ${setupB.token}`);
 
       // then
@@ -40,11 +40,11 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${setup.project.id}/monitors/${new Types.ObjectId()}/http_ping_buckets`)
+        .get(`/monitors/${new Types.ObjectId()}/http_ping_buckets`)
         .set('Authorization', `Bearer ${setup.token}`);
 
       // then
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(403);
     });
 
     it('gets hourly buckets for 24h period', async () => {
@@ -89,7 +89,7 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/monitors/${monitor.id}/http_ping_buckets?period=24h`)
+        .get(`/monitors/${monitor.id}/http_ping_buckets?period=24h`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -129,7 +129,7 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/monitors/${monitor.id}/http_ping_buckets?period=24h`)
+        .get(`/monitors/${monitor.id}/http_ping_buckets?period=24h`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -174,7 +174,7 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/monitors/${monitor.id}/http_ping_buckets?period=4d`)
+        .get(`/monitors/${monitor.id}/http_ping_buckets?period=4d`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -226,7 +226,7 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/monitors/${monitor.id}/http_ping_buckets?period=90d`)
+        .get(`/monitors/${monitor.id}/http_ping_buckets?period=90d`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -272,7 +272,7 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/monitors/${monitor.id}/http_ping_buckets?period=90d`)
+        .get(`/monitors/${monitor.id}/http_ping_buckets?period=90d`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
