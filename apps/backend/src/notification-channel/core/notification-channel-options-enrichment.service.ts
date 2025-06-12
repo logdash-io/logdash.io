@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { NotificationChannelWriteService } from '../write/notification-channel-write.service';
 import { NotificationChannelOptions } from './entities/notification-channel.entity';
 import { TelegramOptions } from './types/telegram-options.type';
 import { NotificationTarget } from './enums/notification-target.enum';
@@ -13,11 +12,13 @@ export class NotificationChannelOptionsEnrichmentService {
     options: NotificationChannelOptions,
     target: NotificationTarget,
   ): Promise<NotificationChannelOptions> {
+    const optionsDeepCopy = structuredClone(options);
+
     if (target === NotificationTarget.Telegram) {
-      return this.enrichTelegramOptions(options as TelegramOptions);
+      return this.enrichTelegramOptions(optionsDeepCopy as TelegramOptions);
     }
 
-    return options;
+    return optionsDeepCopy;
   }
 
   private async enrichTelegramOptions(options: TelegramOptions): Promise<TelegramOptions> {
