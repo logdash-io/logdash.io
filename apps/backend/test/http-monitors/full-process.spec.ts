@@ -54,7 +54,7 @@ describe('Http monitor full process', () => {
     await service.tryPingAllMonitors();
 
     // up -> down
-    nock('https://chess.com').get('/').reply(500, 'error');
+    nock('https://chess.com').get('/').reply(500, { error: 'some funny error' });
     await service.tryPingAllMonitors();
 
     // down -> up
@@ -64,8 +64,14 @@ describe('Http monitor full process', () => {
     await sleep(1000);
 
     // then
-    expect(telegramPostedDtos[0].text).toBe('✅ \"some name\" is back online!');
-    expect(telegramPostedDtos[1].text).toBe('❌ \"some name\" is down!');
-    expect(telegramPostedDtos[2].text).toBe('✅ \"some name\" is back online!');
+    const codeBlock = '```';
+
+    expect(telegramPostedDtos[0].text).toBe(`🟢  *some name* is up`);
+    expect(telegramPostedDtos[1].text).toBe(`🔴  *some name* is down
+${codeBlock}
+Status code: 500
+Error: {"error":"some funny error"}
+${codeBlock}`);
+    expect(telegramPostedDtos[2].text).toBe(`🟢  *some name* is up`);
   });
 });

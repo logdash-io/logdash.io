@@ -52,6 +52,7 @@ import { closeInMemoryMongoServer, rootMongooseTestModule } from './mongo-in-mem
 import { ProjectUtils } from './project-utils';
 import { getInMemoryRedisUri, redisInMemoryServer } from './redis-in-memory-server';
 import { TelegramUtils } from './telegram-utils';
+import { WebhookUtils } from './webhook-utils';
 
 export async function createTestApp() {
   const redisUrl = await getInMemoryRedisUri();
@@ -184,6 +185,7 @@ export async function createTestApp() {
       demoUtils: new DemoUtils(app),
       notificationChannelUtils: new NotificationChannelUtils(app),
       telegramUtils: new TelegramUtils(app),
+      webhookUtils: new WebhookUtils(app),
     },
     methods: {
       clearDatabase,

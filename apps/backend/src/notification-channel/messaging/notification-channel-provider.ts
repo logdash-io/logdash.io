@@ -1,10 +1,16 @@
+import { HttpMonitorStatus } from '../../http-monitor/status/enum/http-monitor-status.enum';
 import { NotificationChannelNormalized } from '../core/entities/notification-channel.interface';
 
-export interface SendMessageSpecificProviderDto {
+export interface SendHttpMonitorAlertMessageSpecificProviderDto {
   notificationChannel: NotificationChannelNormalized;
-  message: string;
+  httpMonitorId: string;
+  newStatus: HttpMonitorStatus;
+  name: string;
+  url: string;
+  errorMessage?: string;
+  statusCode?: string;
 }
 
 export interface NotificationChannelProvider {
-  sendMessage(dto: SendMessageSpecificProviderDto): Promise<void>;
+  sendHttpMonitorAlertMessage(dto: SendHttpMonitorAlertMessageSpecificProviderDto): Promise<void>;
 }

@@ -27,7 +27,12 @@ export class HttpMonitorStatusChangeService {
     });
 
     if (previousStatus.status === HttpMonitorStatus.Unknown || previousStatus.status != newStatus) {
-      await this.dispatchStatusChangedMessage(event.httpMonitorId, newStatus);
+      await this.dispatchStatusChangedMessage({
+        httpMonitorId: event.httpMonitorId,
+        newStatus,
+        errorMessage: event.message,
+        statusCode: event.statusCode.toString(),
+      });
     }
   }
 
@@ -35,29 +40,26 @@ export class HttpMonitorStatusChangeService {
     return statusCode >= 200 && statusCode < 400 ? HttpMonitorStatus.Up : HttpMonitorStatus.Down;
   }
 
-  private async dispatchStatusChangedMessage(httpMonitorId: string, newStatus: HttpMonitorStatus) {
-    const httpMonitor = await this.httpMonitorReadService.readById(httpMonitorId);
+  private async dispatchStatusChangedMessage(dto: {
+    httpMonitorId: string;
+    newStatus: HttpMonitorStatus;
+    statusCode?: string;
+    errorMessage?: string;
+  }) {
+    const httpMonitor = await this.httpMonitorReadService.readById(dto.httpMonitorId);
 
     if (!httpMonitor) {
       return;
     }
 
-    const message = this.createStatusMessage(httpMonitor.name, newStatus);
-
-    await this.notificationChannelMessagingService.sendMessage({
+    await this.notificationChannelMessagingService.sendHttpMonitorAlertMessage({
       notificationChannelsIds: httpMonitor.notificationChannelsIds,
-      message,
+      httpMonitorId: dto.httpMonitorId,
+      newStatus: dto.newStatus,
+      name: httpMonitor.name,
+      url: httpMonitor.url,
+      errorMessage: dto.errorMessage,
+      statusCode: dto.statusCode,
     });
-  }
-
-  private createStatusMessage(monitorName: string, status: HttpMonitorStatus): string {
-    switch (status) {
-      case HttpMonitorStatus.Up:
-        return `✅ "${monitorName}" is back online!`;
-      case HttpMonitorStatus.Down:
-        return `❌ "${monitorName}" is down!`;
-    }
-
-    return '';
   }
 }
