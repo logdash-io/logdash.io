@@ -5,7 +5,7 @@
 	import { logger } from '$lib/shared/logger/index.js';
 	import { UserTier } from '../../../../../shared/types';
 	import { userState } from '../../../../../shared/user/application/user.state.svelte';
-	import DataTile from '../../../../common/ui/DataTile.svelte';
+	import DataTile from '../tiles/DataTile.svelte';
 	import { getGraphReadyPoints } from './data.utils.js';
 	import MetricBreakdownChart from './MetricBreakdownChart.svelte';
 

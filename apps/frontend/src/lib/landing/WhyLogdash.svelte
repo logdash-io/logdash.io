@@ -24,7 +24,7 @@
 <section id="why-logdash" class="">
 	<div class="container mx-auto px-4">
 		<div class="mb-12 text-center">
-			<h2 class="mb-4 text-3xl font-bold md:text-4xl">
+			<h2 class="mb-2 text-3xl font-bold md:text-4xl">
 				Why Engineers Love Logdash
 			</h2>
 			<p class="mx-auto max-w-3xl text-xl opacity-80">
@@ -36,7 +36,7 @@
 		<div class="mx-auto flex max-w-3xl flex-col gap-6">
 			{#each features as feature}
 				<div class="card shadow-xl">
-					<div class="card-body flex flex-row items-center gap-6">
+					<div class="card-body flex flex-row items-start gap-6">
 						<div
 							class="text-success bg-base-200 border-base-100/50 flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border"
 						>
@@ -56,7 +56,9 @@
 							</svg>
 						</div>
 						<div class="text-left">
-							<h3 class="card-title text-xl">{feature.title}</h3>
+							<h3 class="card-title mb-1 text-xl">
+								{feature.title}
+							</h3>
 							<p class="text-lg opacity-75">
 								{feature.description}
 							</p>

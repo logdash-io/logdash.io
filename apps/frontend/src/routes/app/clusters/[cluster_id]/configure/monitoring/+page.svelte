@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import MonitoringSetup from '$lib/clusters/monitoring/ui/MonitoringSetup.svelte';
+	import MonitoringSetup from '$lib/clusters/projects/ui/setup/MonitoringSetup.svelte';
 	import { fade } from 'svelte/transition';
 
 	type Props = {

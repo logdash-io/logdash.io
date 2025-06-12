@@ -1,6 +1,6 @@
 <script lang="ts">
 	import MetricsSetup from '$lib/clusters/projects/ui/setup/MetricsSetup.svelte';
-	import ProjectClaimer from '$lib/clusters/common/ui/ProjectClaimer.svelte';
+	import ProjectClaimer from '$lib/clusters/projects/ui/setup/ProjectClaimer.svelte';
 	import { page } from '$app/state';
 
 	type Props = {

@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { metricsState } from '$lib/clusters/projects/application/metrics.state.svelte';
 	import type { Snippet } from 'svelte';
-	import { monitoringState } from '../application/monitoring.state.svelte.js';
+	import { monitoringState } from '../../application/monitoring.state.svelte.js';
 
 	type Props = {
 		url: string;
@@ -9,6 +8,7 @@
 		onCaptureOnce?: () => void;
 	};
 	const { url, children, onCaptureOnce }: Props = $props();
+	`ś`;
 	const isHealthy = $derived(monitoringState.isHealthy(url));
 	let notified = $state(false);
 

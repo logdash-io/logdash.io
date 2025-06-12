@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import DataTile from '$lib/clusters/common/ui/DataTile.svelte';
+	import DataTile from '$lib/clusters/projects/ui/ProjectView/tiles/DataTile.svelte';
 	import { FEATURES } from '$lib/shared/constants/features.js';
 	import FlamingoIcon from '$lib/shared/icons/FlamingoIcon.svelte';
 	import { TimerIcon, ArrowRightIcon } from 'lucide-svelte';

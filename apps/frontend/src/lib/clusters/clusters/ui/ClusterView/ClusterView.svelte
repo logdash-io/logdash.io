@@ -4,12 +4,11 @@
 	import { projectsState } from '$lib/clusters/projects/application/projects.state.svelte.js';
 	import ProjectView from '$lib/clusters/projects/ui/ProjectView/ProjectView.svelte';
 	import { Feature } from '$lib/shared/types';
-	import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 	import { isDev } from '$lib/shared/utils/is-dev.util';
 	import { ArrowRightIcon } from 'lucide-svelte';
 	import { fly } from 'svelte/transition';
-	import { clustersState } from '../../application/clusters.state.svelte.js';
 	import ProjectsSwitcher from '../../../projects/ui/ProjectsSwitcher/ProjectsSwitcher.svelte';
+	import { clustersState } from '../../application/clusters.state.svelte.js';
 	import SetupMonitoringButton from './SetupMonitoringButton.svelte';
 
 	type Props = {
@@ -21,26 +20,18 @@
 	);
 
 	const { priorityClusterId }: Props = $props();
-
 	const clusterId = priorityClusterId ?? page.params.cluster_id;
+	const projectId = $derived(page.url.searchParams.get('project_id'));
 
-	const hasLogging = $derived.by(() => {
-		const id = page.url.searchParams.get('project_id');
-
-		return projectsState.hasFeature(id, Feature.LOGGING);
-	});
-
-	const hasMetrics = $derived.by(() => {
-		const id = page.url.searchParams.get('project_id');
-
-		return projectsState.hasFeature(id, Feature.METRICS);
-	});
-
-	const hasMonitoring = $derived.by(() => {
-		const id = page.url.searchParams.get('project_id');
-
-		return projectsState.hasFeature(id, Feature.MONITORING);
-	});
+	const hasLogging = $derived(
+		projectsState.hasFeature(projectId, Feature.LOGGING),
+	);
+	const hasMetrics = $derived(
+		projectsState.hasFeature(projectId, Feature.METRICS),
+	);
+	const hasMonitoring = $derived(
+		projectsState.hasFeature(projectId, Feature.MONITORING),
+	);
 </script>
 
 <div class="mb-8 h-full w-full space-y-4">
@@ -64,7 +55,7 @@
 								`/app/clusters/${clusterId}/configure/logging?project_id=${page.url.searchParams.get('project_id')}`,
 							);
 						}}
-						class="btn btn-secondary btn-xs gap-1 opacity-90"
+						class="btn btn-secondary btn-sm gap-1 opacity-90"
 					>
 						Setup logging <ArrowRightIcon class="h-4 w-4" />
 					</button>
@@ -78,7 +69,7 @@
 								`/app/clusters/${clusterId}/configure/metrics?project_id=${page.url.searchParams.get('project_id')}`,
 							);
 						}}
-						class="btn btn-secondary btn-xs gap-1 opacity-90"
+						class="btn btn-secondary btn-sm gap-1 opacity-90"
 					>
 						Setup metrics <ArrowRightIcon class="h-4 w-4" />
 					</button>
@@ -86,7 +77,7 @@
 
 				{#if isDev() && !hasMonitoring && clustersState.ready}
 					<SetupMonitoringButton
-						class="btn btn-secondary btn-xs gap-1 opacity-90"
+						class="btn btn-secondary btn-sm gap-1 opacity-90"
 						canAddMore={true}
 						onSubmit={(url) => {
 							goto(

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { monitoringState } from '$lib/clusters/monitoring/application/monitoring.state.svelte.js';
-	import DataTile from '$lib/clusters/common/ui/DataTile.svelte';
+	import { monitoringState } from '$lib/clusters/projects/application/monitoring.state.svelte.js';
+	import DataTile from '$lib/clusters/projects/ui/ProjectView/tiles/DataTile.svelte';
 	import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
 	import { stripProtocol } from '$lib/shared/utils/url.js';
 	import { CheckCircle } from 'lucide-svelte';
 	import { getContext, type Snippet } from 'svelte';
-	import MonitorsListener from './MonitorsListener.svelte';
+	import MonitorsListener from '../presentational/MonitorsListener.svelte';
 
 	type Props = {
 		claimer: Snippet<[boolean]>;
@@ -20,7 +20,7 @@
 	);
 
 	$effect(() => {
-		monitoringState.observeUrl(page.params.cluster_id, observedUrl);
+		monitoringState.previewUrl(page.params.cluster_id, observedUrl);
 
 		return () => {
 			monitoringState.unsync();
@@ -29,7 +29,7 @@
 </script>
 
 <div class="w-xl mr-auto space-y-8">
-	<DataTile delayIn={0} delayOut={50}>
+	previewUrl<DataTile delayIn={0} delayOut={50}>
 		<div class="flex w-full flex-col gap-2">
 			<div class="flex w-full gap-2">
 				<div class="flex w-full items-center gap-2">
@@ -87,9 +87,11 @@
 									'h-8 w-1.5 shrink-0 rounded-sm bg-gradient-to-b hover:h-12 lg:w-[7px]',
 									{
 										'from-green-600 via-green-600/80 to-green-600':
-											ping.status === 'success',
+											ping.statusCode >= 200 &&
+											ping.statusCode < 400,
 										'from-red-600 via-red-600/80 to-red-600':
-											ping.status !== 'success',
+											ping.statusCode >= 200 &&
+											ping.statusCode < 400,
 									},
 								]}
 							></div>

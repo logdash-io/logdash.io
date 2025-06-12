@@ -11,6 +11,7 @@ import { bffLogger } from './bff-logger';
 import type { User } from './user/domain/user';
 import { envConfig } from './utils/env-config';
 import type { ExposedConfig } from './exposed-config/domain/exposed-config.js';
+import type { Monitor } from '$lib/clusters/projects/domain/monitoring/monitor.js';
 
 type UnauthorizedHandler = () => void;
 
@@ -306,6 +307,49 @@ class LogdashAPI {
 		return this.get<ExposedConfig>(
 			`${LogdashAPI.v0baseUrl}/exposed_config`,
 			'',
+		);
+	}
+
+	get_monitors(cluster_id: string, access_token: string): Promise<Monitor[]> {
+		return this.get<Monitor[]>(
+			`${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/http_monitors`,
+			access_token,
+		);
+	}
+
+	get_monitor_pings(dto: {
+		project_id: string;
+		monitor_id: string;
+		access_token: string;
+		limit: number;
+	}): Promise<HttpPing[]> {
+		const qs = queryString.stringify({
+			limit: dto.limit ?? 50,
+		});
+		return this.get<HttpPing[]>(
+			`${LogdashAPI.v0baseUrl}/projects/${dto.project_id}/monitors/${dto.monitor_id}/http_pings?${qs}`,
+			dto.access_token,
+		);
+	}
+
+	create_monitor(
+		project_id: string,
+		monitor: {
+			url: string;
+			name: string;
+		},
+		access_token: string,
+	): Promise<Monitor> {
+		console.log(
+			`Creating monitor for project ${project_id} with data:`,
+			monitor,
+			access_token,
+		);
+
+		return this.post<Monitor>(
+			`${LogdashAPI.v0baseUrl}/projects/${project_id}/http_monitors`,
+			monitor,
+			access_token,
 		);
 	}
 

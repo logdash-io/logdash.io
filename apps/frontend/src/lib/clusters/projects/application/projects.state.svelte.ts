@@ -1,6 +1,5 @@
 import { Feature } from '$lib/shared/types.js';
 import { arrayToObject } from '$lib/shared/utils/array-to-object';
-import { isDev } from '$lib/shared/utils/is-dev.util.js';
 import type { Project } from '../domain/project';
 
 // todo: divide api calls responsibility from state
@@ -34,10 +33,6 @@ class ProjectsState {
 	}
 
 	hasFeature(projectId: string, feature: Feature): boolean {
-		if (feature === Feature.MONITORING && isDev()) {
-			return true;
-		}
-
 		return this._projects[projectId]?.features.includes(feature);
 	}
 

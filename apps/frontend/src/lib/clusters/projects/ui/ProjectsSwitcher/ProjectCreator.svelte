@@ -96,10 +96,10 @@
 		class="w-full"
 	>
 		<button
-			class={'badge badge-soft badge-md cursor-pointer gap-1'}
+			class={'ld-card-base flex cursor-pointer items-center gap-1 rounded-xl px-4 py-3'}
 			tabindex="0"
 		>
-			add service <PlusIcon class="h-3.5 w-3.5" />
+			new service <PlusIcon class="h-3.5 w-3.5" />
 		</button>
 	</Tooltip>
 </div>

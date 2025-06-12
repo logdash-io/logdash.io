@@ -5,7 +5,7 @@
 	import { cubicInOut } from 'svelte/easing';
 	import { fly } from 'svelte/transition';
 	import MetricsListener from '../../presentational/MetricsListener.svelte';
-	import DataTile from '../../../../common/ui/DataTile.svelte';
+	import DataTile from './DataTile.svelte';
 	import MetricTile from './MetricTile.svelte';
 	import { AlertTriangleIcon, XIcon } from 'lucide-svelte';
 	import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte.js';

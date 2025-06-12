@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { Feature } from '$lib/shared/types.js';
-	import DataTile from '../../../common/ui/DataTile.svelte';
+	import DataTile from './tiles/DataTile.svelte';
 	import { metricsState } from '../../application/metrics.state.svelte.js';
 	import { projectsState } from '../../application/projects.state.svelte.js';
 	import EmptyState from './EmptyState.svelte';
@@ -10,6 +10,8 @@
 	import LogsLineChartTile from './tiles/LogMetricsTile.svelte';
 	import LogsListTile from './tiles/LogsTile.svelte';
 	import MetricsTiles from './tiles/MetricsTiles.svelte';
+	import { monitoringState } from '../../application/monitoring.state.svelte.js';
+	import { isDev } from '$lib/shared/utils/is-dev.util.js';
 
 	const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
 
@@ -72,6 +74,10 @@
 		<div class="flex flex-1 flex-col gap-4">
 			<MetricDetails />
 		</div>
+	{/if}
+
+	{#if hasMonitoring && isDev()}
+		monitors:{JSON.stringify(monitoringState.monitors)}
 	{/if}
 
 	{#if !hasMetrics && !hasLogging && !hasMonitoring && projectsState.ready && metricsState.ready}

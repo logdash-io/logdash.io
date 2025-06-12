@@ -31,7 +31,7 @@
 			onclick={() => {
 				open = !open;
 			}}
-			class="btn btn-outline btn-md border-primary bg-base-300"
+			class="btn btn-outline text-primary btn-neutral border-primary/20 btn-md bg-base-300"
 			data-posthog-id="share-feedback-button"
 		>
 			<GiftIcon class="h-5 w-5" />
@@ -40,7 +40,7 @@
 
 		{#if open}
 			<div
-				class="ld-card-base focus-within:ring-primary absolute bottom-12 right-0 flex h-52 w-72 flex-col rounded-xl ring ring-transparent"
+				class="ld-card-base focus-within:ring-primary/40 absolute bottom-12 right-0 flex h-52 w-72 flex-col rounded-xl ring ring-transparent"
 			>
 				<textarea
 					bind:this={textarea}

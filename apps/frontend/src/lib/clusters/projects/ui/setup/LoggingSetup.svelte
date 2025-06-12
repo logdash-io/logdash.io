@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { logsState } from '$lib/clusters/projects/application/logs.state.svelte';
 	import LogsListener from '$lib/clusters/projects/ui/presentational/LogsListener.svelte';
-	import DataTile from '$lib/clusters/common/ui/DataTile.svelte';
+	import DataTile from '$lib/clusters/projects/ui/ProjectView/tiles/DataTile.svelte';
 	import LogsLineChartTile from '$lib/clusters/projects/ui/ProjectView/tiles/LogMetricsTile.svelte';
 	import LogsListTile from '$lib/clusters/projects/ui/ProjectView/tiles/LogsTile.svelte';
 	import { LogdashSDKName, type LogdashSDK } from '$lib/shared/types.js';
