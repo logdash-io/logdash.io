@@ -22,7 +22,9 @@ export class HttpPingBucketNormalized {
       existingBucketsMap.set(key, bucket);
     });
 
-    const increment = grouping === BucketGrouping.Hour ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+    const oneHourMs = 60 * 60 * 1000;
+    const oneDayMs = 24 * oneHourMs;
+    const increment = grouping === BucketGrouping.Hour ? oneHourMs : oneDayMs;
     let currentDate = new Date(fromDate);
 
     if (grouping === BucketGrouping.Hour) {
