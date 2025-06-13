@@ -3,7 +3,7 @@ name: Apply mongo migrations (dev)
 on:
   push:
     branches:
-      - dev
+      - feat/store-baseline-in-metric-register-entry
     paths:
       - 'apps/backend/migrations/**'
       - '.github/**'
