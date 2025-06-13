@@ -28,20 +28,25 @@ export class ExposedConfigController {
   @Get('/flaky_route')
   @Public()
   public async flakyRoute() {
-    const randomNumber = Math.floor(Math.random() * 4);
+    // First 50/50 split between success and errors
+    const isSuccess = Math.random() < 0.5;
 
-    switch (randomNumber) {
+    if (isSuccess) {
+      return { message: 'OK' };
+    }
+
+    // For the error cases, split remaining 50% into three equal parts
+    const errorType = Math.floor(Math.random() * 3);
+
+    switch (errorType) {
       case 0:
-        return { message: 'OK' };
-
-      case 1:
         await new Promise((resolve) => setTimeout(resolve, 15000));
         return { message: 'OK' };
 
-      case 2:
+      case 1:
         throw new BadRequestException('PIETY PAPIEZA 404 CUSTOM MESSAGE');
 
-      case 3:
+      case 2:
         throw new InternalServerErrorException('PIETY PAPIEZA 500 CUSTOM MESSAGE');
     }
   }

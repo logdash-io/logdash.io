@@ -9,7 +9,7 @@ export class TelegramUtils {
     onMessage: (message: any) => void;
   }) {
     nock('https://api.telegram.org')
-      .post(`/bot${dto.botId}/sendMessage`, (body) => {
+      .post(`/bot${dto.botId}/sendMessage?parse_mode=MarkdownV2`, (body) => {
         dto.onMessage(body);
         return true;
       })
