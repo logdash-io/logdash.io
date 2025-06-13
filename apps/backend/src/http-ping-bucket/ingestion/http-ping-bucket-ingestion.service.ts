@@ -32,7 +32,7 @@ export class HttpPingBucketIngestionService {
     const previousHourStart = subHours(now, 1);
     const previousHourEnd = now;
 
-    const data = await this.httpPingAggregationService.aggregatePingsForTimeRange(
+    const data = await this.httpPingAggregationService.aggregateAllForTimeRange(
       previousHourStart,
       previousHourEnd,
     );

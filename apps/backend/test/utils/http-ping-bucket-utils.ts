@@ -22,10 +22,10 @@ export class HttpPingBucketUtils {
     const bucketEntity = HttpPingBucketEntity.fromNormalized({
       id: new Types.ObjectId().toString(),
       httpMonitorId: params.httpMonitorId,
-      timestamp: params.timestamp || new Date(),
-      successCount: params.successCount || 10,
-      failureCount: params.failureCount || 2,
-      averageLatencyMs: params.averageLatencyMs || 150.5,
+      timestamp: params.timestamp ?? new Date(),
+      successCount: params.successCount ?? 10,
+      failureCount: params.failureCount ?? 2,
+      averageLatencyMs: params.averageLatencyMs ?? 150.5,
     });
 
     await this.clickhouseClient.insert({

@@ -23,13 +23,12 @@ describe('Http Ping Bucket(reads)', () => {
   describe('GET /monitors/:httpMonitorId/http_ping_buckets', () => {
     it('forbids access when user is not in cluster', async () => {
       // given
-      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
-      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/monitors/${new Types.ObjectId()}/http_ping_buckets`)
-        .set('Authorization', `Bearer ${setupB.token}`);
+        .set('Authorization', `Bearer ${setup.token}`);
 
       // then
       expect(response.status).toBe(403);
@@ -92,15 +91,15 @@ describe('Http Ping Bucket(reads)', () => {
         averageLatencyMs: 300,
       };
 
-      await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket({
+      await createBucket({
         httpMonitorId: monitor.id,
         timestamp: twoDaysAgo,
         successCount: 1,
         failureCount: 2,
         averageLatencyMs: 100,
       });
-      await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket(twoHoursAgoBucket);
-      await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket(oneHourAgoBucket);
+      await createBucket(twoHoursAgoBucket);
+      await createBucket(oneHourAgoBucket);
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -140,12 +139,8 @@ describe('Http Ping Bucket(reads)', () => {
       });
       const currentHour = new Date();
       currentHour.setMinutes(0, 0, 0);
-      await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
-      await bootstrap.utils.httpPingUtils.createHttpPing({
-        httpMonitorId: monitor.id,
-        responseTimeMs: 200,
-        statusCode: 500,
-      });
+      await createPing({ httpMonitorId: monitor.id });
+      await createPing({ httpMonitorId: monitor.id, responseTimeMs: 200, statusCode: 500 });
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -161,6 +156,63 @@ describe('Http Ping Bucket(reads)', () => {
         averageLatencyMs: 150,
         timestamp: currentHour.toISOString(),
       });
+    });
+
+    it('gets buckets only for the monitor', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token,
+        projectId: project.id,
+      });
+      const otherMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token,
+        projectId: project.id,
+      });
+
+      const now = new Date();
+      now.setMinutes(0, 0, 0);
+      const twoHoursAgo = subHours(now, 2);
+
+      await createPing({ httpMonitorId: monitor.id, statusCode: 200, responseTimeMs: 100 });
+      await createPing({ httpMonitorId: otherMonitor.id, statusCode: 500, responseTimeMs: 200 });
+      await createBucket({
+        httpMonitorId: monitor.id,
+        timestamp: twoHoursAgo,
+        successCount: 1,
+        failureCount: 2,
+        averageLatencyMs: 100,
+      });
+      await createBucket({
+        httpMonitorId: otherMonitor.id,
+        timestamp: twoHoursAgo,
+        successCount: 3,
+        failureCount: 4,
+        averageLatencyMs: 200,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/monitors/${monitor.id}/http_ping_buckets?period=24h`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(200);
+      expect(response.body.buckets).toHaveLength(24);
+      expect(response.body.buckets[0]).toMatchObject({
+        successCount: 1,
+        failureCount: 0,
+        averageLatencyMs: 100,
+        timestamp: now.toISOString(),
+      });
+      expect(response.body.buckets[2]).toMatchObject({
+        successCount: 1,
+        failureCount: 2,
+        averageLatencyMs: 100,
+        timestamp: twoHoursAgo.toISOString(),
+      });
+      const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
+      expect(nullBuckets).toHaveLength(22);
     });
 
     it('gets hourly buckets for 4d period', async () => {
@@ -189,8 +241,8 @@ describe('Http Ping Bucket(reads)', () => {
         averageLatencyMs: 200,
       };
 
-      await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket(fiveDaysAgoBucket);
-      await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket(threeDaysAgoBucket);
+      await createBucket(fiveDaysAgoBucket);
+      await createBucket(threeDaysAgoBucket);
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -240,8 +292,8 @@ describe('Http Ping Bucket(reads)', () => {
         averageLatencyMs: 200,
       };
 
-      await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket(hundredDaysAgoBucket);
-      await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket(thirtyDaysAgoBucket);
+      await createBucket(hundredDaysAgoBucket);
+      await createBucket(thirtyDaysAgoBucket);
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -286,13 +338,9 @@ describe('Http Ping Bucket(reads)', () => {
         averageLatencyMs: 100,
       };
 
-      await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket(tenDaysAgoBucket);
-      await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
-      await bootstrap.utils.httpPingUtils.createHttpPing({
-        httpMonitorId: monitor.id,
-        statusCode: 500,
-        responseTimeMs: 200,
-      });
+      await createBucket(tenDaysAgoBucket);
+      await createPing({ httpMonitorId: monitor.id });
+      await createPing({ httpMonitorId: monitor.id, statusCode: 500, responseTimeMs: 200 });
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -321,4 +369,24 @@ describe('Http Ping Bucket(reads)', () => {
       expect(nullBuckets).toHaveLength(88);
     });
   });
+
+  async function createBucket(params: {
+    httpMonitorId: string;
+    timestamp?: Date;
+    successCount?: number;
+    failureCount?: number;
+    averageLatencyMs?: number;
+  }) {
+    await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket(params);
+  }
+
+  async function createPing(params: {
+    httpMonitorId: string;
+    statusCode?: number;
+    responseTimeMs?: number;
+    message?: string;
+    createdAt?: Date;
+  }): Promise<void> {
+    await bootstrap.utils.httpPingUtils.createHttpPing(params);
+  }
 });

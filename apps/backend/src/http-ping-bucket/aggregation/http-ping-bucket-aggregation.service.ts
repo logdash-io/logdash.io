@@ -27,6 +27,7 @@ export class HttpPingBucketAggregationService {
     );
 
     return await this.createCompleteBuckets(
+      monitorId,
       existingBuckets,
       periodConfig.fromDate,
       periodConfig.grouping,
@@ -61,6 +62,7 @@ export class HttpPingBucketAggregationService {
   }
 
   private async createCompleteBuckets(
+    monitorId: string,
     existingBuckets: VirtualBucket[],
     fromDate: Date,
     grouping: BucketGranularity,
@@ -74,7 +76,7 @@ export class HttpPingBucketAggregationService {
     );
 
     if (completeBuckets[0] === null) {
-      completeBuckets[0] = await this.tryCreateVirtualBucket(grouping);
+      completeBuckets[0] = await this.tryCreateVirtualBucket(monitorId, grouping);
     }
 
     return completeBuckets;
@@ -129,7 +131,10 @@ export class HttpPingBucketAggregationService {
     }
   }
 
-  private async tryCreateVirtualBucket(grouping: BucketGranularity): Promise<VirtualBucket | null> {
+  private async tryCreateVirtualBucket(
+    monitorId: string,
+    grouping: BucketGranularity,
+  ): Promise<VirtualBucket | null> {
     const toDate = addHours(new Date(), 1);
     toDate.setMinutes(0, 0);
     const fromDateForMostRecent = subHours(toDate, 1);
@@ -139,7 +144,8 @@ export class HttpPingBucketAggregationService {
       fromDateForMostRecent.setUTCHours(0, 0, 0, 0);
     }
 
-    const mostRecentBuckets = await this.httpPingAggregationService.aggregatePingsForTimeRange(
+    const mostRecentBuckets = await this.httpPingAggregationService.aggregateByMonitorForTimeRange(
+      monitorId,
       fromDateForMostRecent,
       toDate,
     );
