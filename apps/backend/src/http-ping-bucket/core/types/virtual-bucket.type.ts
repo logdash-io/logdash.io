@@ -1,7 +1,16 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class VirtualBucket {
-  timestamp: Date;
-  successCount: number;
-  failureCount: number;
+  @ApiProperty()
+  public timestamp: Date;
+
+  @ApiProperty()
+  public successCount: number;
+
+  @ApiProperty()
+  public failureCount: number;
+
+  @ApiProperty()
   averageLatencyMs: number;
 
   public static fromMany(buckets: VirtualBucket[]): VirtualBucket {

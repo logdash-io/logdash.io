@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { addHours, subDays, subHours } from 'date-fns';
 import { HttpPingAggregationService } from 'src/http-ping/aggregation/http-ping-aggregation.service';
-import { HttpPingBucketSerialized } from '../core/entities/http-ping-bucket.interface';
 import { BucketGranularity } from '../core/types/bucket-granularity.enum';
 import { BucketsPeriod } from '../core/types/bucket-period.enum';
 import { VirtualBucket } from '../core/types/virtual-bucket.type';
@@ -17,7 +16,7 @@ export class HttpPingBucketAggregationService {
   public async getBucketsForMonitor(
     monitorId: string,
     period: BucketsPeriod,
-  ): Promise<(HttpPingBucketSerialized | null)[]> {
+  ): Promise<(VirtualBucket | null)[]> {
     const periodConfig = this.getPeriodConfig(period);
 
     const existingBuckets = await this.httpPingBucketReadService.readBucketsForMonitor(
