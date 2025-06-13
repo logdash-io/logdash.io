@@ -23,7 +23,7 @@
 	<Tooltip interactive={true} content={fullStatus} placement="bottom">
 		<div
 			class={[
-				'badge badge-soft mr-2',
+				'badge badge-soft mr-1',
 				{
 					'badge-success': isHealthy,
 					'badge-error': !isHealthy,

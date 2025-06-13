@@ -16,7 +16,7 @@ class ProjectsState {
 	}
 
 	isUpdatingProject(projectId: string): boolean {
-		return this._loadingApiKey[projectId] || false;
+		return this._updatingProject[projectId] || false;
 	}
 
 	isDeletingProject(projectId: string): boolean {
