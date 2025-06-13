@@ -17,7 +17,7 @@ runs:
       shell: bash
 
     - name: Install dotenv
-      run: npm install -g dotenv
+      run: npm install dotenv
       shell: bash
 
     - name: Run mongo migrations
