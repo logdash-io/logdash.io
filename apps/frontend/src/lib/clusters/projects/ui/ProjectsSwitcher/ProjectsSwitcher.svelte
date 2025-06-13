@@ -5,7 +5,7 @@
 	import { get_max_number_of_projects } from '$lib/shared/constants/plan-configs.js';
 	import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 	import { userState } from '$lib/shared/user/application/user.state.svelte.js';
-	import { CopyIcon, MoreVerticalIcon } from 'lucide-svelte';
+	import { CopyIcon, MoreVerticalIcon, Trash2Icon } from 'lucide-svelte';
 	import { projectsState } from '../../application/projects.state.svelte.js';
 	import ProjectCreator from './ProjectCreator.svelte';
 	import ProjectHealthStatus from './ProjectHealthStatus.svelte';
@@ -16,7 +16,7 @@
 	};
 	const { withDefaultRedirect, creationDisabled }: Props = $props();
 	const project_badge_class =
-		'ld-card-base rounded-xl px-4 py-3 flex gap-1 cursor-pointer items-center';
+		'ld-card-base rounded-xl py-2 px-4 flex gap-1 cursor-pointer items-center';
 
 	const isOnDemoDashboard = $derived(
 		page.url.pathname.includes('/demo-dashboard'),
@@ -51,7 +51,7 @@
 				{
 					'ring-primary/30 ring': activeProject,
 					'pr-2': activeProject && !isOnDemoDashboard,
-					// 'badge-secondary': !activeProject,
+					// 'px-4': !activeProject,
 				},
 			]}
 			role="tab"
@@ -98,7 +98,36 @@
 										class="loading loading-spinner loading-xs ml-1"
 									></span>
 								{:else}
-									<CopyIcon class="ml-1.5 h-4 w-4" />
+									<CopyIcon class="ml-1.5 h-3.5 w-3.5" />
+								{/if}
+							</a>
+						</li>
+
+						<li>
+							<a
+								onclick={() => {
+									projectsState
+										.deleteProject(project.id)
+										.then((key) => {
+											goto(
+												`/app/clusters/${page.params.cluster_id}`,
+											);
+											toast.success(
+												'Project deleted successfully',
+												5000,
+											);
+										});
+								}}
+								class="text-error whitespace-nowrap"
+							>
+								Delete project
+
+								{#if projectsState.isDeletingProject(project.id)}
+									<span
+										class="loading loading-spinner loading-xs ml-auto"
+									></span>
+								{:else}
+									<Trash2Icon class="ml-auto h-4 w-4" />
 								{/if}
 							</a>
 						</li>

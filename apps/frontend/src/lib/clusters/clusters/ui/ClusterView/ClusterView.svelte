@@ -94,5 +94,7 @@
 		{/if}
 	</div>
 
-	<ProjectView />
+	{#if projectId}
+		<ProjectView />
+	{/if}
 </div>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { invalidate } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { isDev } from '$lib';
 	import { clustersState } from '$lib/clusters/clusters/application/clusters.state.svelte.js';
@@ -20,6 +20,7 @@
 	};
 	const { data, children }: Props = $props();
 	const posthog = getContext<PostHog>('posthog');
+	const isClustersRoot = $derived(page.url.pathname === '/app/clusters');
 
 	$effect(() => {
 		userState.set(data.user);
@@ -34,8 +35,8 @@
 	});
 
 	$effect(() => {
-		if (page.url.pathname === '/app/clusters') {
-			invalidate('/app/clusters');
+		if (isClustersRoot) {
+			invalidateAll();
 		}
 	});
 </script>

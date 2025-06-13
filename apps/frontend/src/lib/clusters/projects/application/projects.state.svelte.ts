@@ -7,10 +7,15 @@ class ProjectsState {
 	private _projects = $state<Record<Project['id'], Project>>({});
 	private _apiKeys = $state<Record<Project['id'], string>>({});
 	private _loadingApiKey = $state<Record<Project['id'], boolean>>({});
+	private _deletingProject = $state<Record<Project['id'], boolean>>({});
 	private _initialized = $state(false);
 
 	isLoadingApiKey(projectId: string): boolean {
 		return this._loadingApiKey[projectId] || false;
+	}
+
+	isDeletingProject(projectId: string): boolean {
+		return this._deletingProject[projectId] || false;
 	}
 
 	get projects(): Project[] {
@@ -50,7 +55,7 @@ class ProjectsState {
 		})
 			.then((response) => response.json())
 			.then(({ data }) => {
-				this._loadingApiKey[projectId] = false;
+				delete this._loadingApiKey[projectId];
 				this._apiKeys[projectId] = data;
 				return data;
 			});
@@ -69,6 +74,25 @@ class ProjectsState {
 				this._projects[project.id] = { ...project, features: [] };
 				return project.id;
 			});
+	}
+
+	deleteProject(projectId: string): Promise<void> {
+		if (this._deletingProject[projectId]) {
+			return Promise.resolve();
+		}
+		this._deletingProject[projectId] = true;
+
+		return fetch(`/app/api/projects/${projectId}`, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		}).then(() => {
+			delete this._projects[projectId];
+			delete this._apiKeys[projectId];
+			delete this._loadingApiKey[projectId];
+			delete this._deletingProject[projectId];
+		});
 	}
 }
 

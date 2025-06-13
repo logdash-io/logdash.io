@@ -14,6 +14,7 @@
 			flow: 'login',
 			fallback_url: `/app/auth?needs_account=true`,
 			tier,
+			next_url: '/app/clusters',
 		});
 	};
 
