@@ -81,6 +81,18 @@ class LogdashAPI {
 		);
 	}
 
+	update_project(
+		project_id: string,
+		update: Partial<{ name: string }>,
+		access_token: string,
+	): Promise<Project> {
+		return this.put<Project>(
+			`${LogdashAPI.v0baseUrl}/projects/${project_id}`,
+			update,
+			access_token,
+		);
+	}
+
 	delete_project(project_id: string, access_token: string): Promise<void> {
 		return this.performFetch<void>(
 			`${LogdashAPI.v0baseUrl}/projects/${project_id}`,
@@ -408,7 +420,13 @@ class LogdashAPI {
 			);
 		}
 
-		return response.json();
+		if (
+			response.headers.get('content-type')?.includes('application/json')
+		) {
+			return response.json();
+		}
+
+		return response.text() as unknown as T;
 	}
 
 	private get<T>(url: string, access_token: string): Promise<T> {
