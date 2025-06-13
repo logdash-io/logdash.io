@@ -45,7 +45,7 @@ ${codeBlock}`;
     chatId: string;
     message: string;
   }) {
-    const url = `https://api.telegram.org/bot${dto.botToken}/sendMessage`;
+    const url = `https://api.telegram.org/bot${dto.botToken}/sendMessage?parse_mode=MarkdownV2`;
 
     try {
       await axios.post(url, {
