@@ -8,6 +8,7 @@
 	import { clustersState } from '../../application/clusters.state.svelte.js';
 	import ClusterCreatorTile from './ClusterCreatorTile.svelte';
 	import { type Cluster } from '../../domain/cluster.js';
+	import queryString from 'query-string';
 
 	type Props = {
 		canCreate: boolean;
@@ -35,15 +36,14 @@
 </script>
 
 {#snippet clusterTile(cluster: Cluster, i: number)}
+	{@const qs = queryString.stringify({
+		project_id: cluster.projects?.[0].id,
+	})}
 	<div
 		draggable="false"
 		role="button"
 		onclick={() => {
-			goto(
-				`/app/clusters/${cluster.id}?project_id=${
-					cluster.projects?.[0].id
-				}`,
-			);
+			goto(`/app/clusters/${cluster.id}?${qs}`);
 		}}
 		class="ld-card-base h-fit w-full cursor-pointer rounded-xl p-7"
 	>
@@ -85,21 +85,23 @@
 				</button>
 			</div>
 
-			<div class="w-full gap-2">
-				{#each cluster.projects as project}
-					<a
-						href={`/app/clusters/${cluster.id}?project_id=${project.id}`}
-						draggable="false"
-						role="button"
-						onclick={(e) => {
-							e.stopPropagation();
-						}}
-						class="badge badge-md badge-soft badge-secondary hover:badge-primary hover:text-primary m-1 rounded-full transition-all"
-					>
-						{project.name}
-					</a>
-				{/each}
-			</div>
+			{#if cluster.projects?.length}
+				<div class="w-full gap-2">
+					{#each cluster.projects as project}
+						<a
+							href={`/app/clusters/${cluster.id}?project_id=${project.id}`}
+							draggable="false"
+							role="button"
+							onclick={(e) => {
+								e.stopPropagation();
+							}}
+							class="badge badge-md badge-soft badge-secondary hover:badge-primary hover:text-primary m-1 rounded-full transition-all"
+						>
+							{project.name}
+						</a>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</div>
 {/snippet}

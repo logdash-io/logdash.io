@@ -12,6 +12,7 @@ import type { User } from './user/domain/user';
 import { envConfig } from './utils/env-config';
 import type { ExposedConfig } from './exposed-config/domain/exposed-config.js';
 import type { Monitor } from '$lib/clusters/projects/domain/monitoring/monitor.js';
+import type { HttpPing } from '$lib/clusters/projects/domain/monitoring/http-ping.js';
 
 type UnauthorizedHandler = () => void;
 
@@ -76,6 +77,31 @@ class LogdashAPI {
 		return this.post<{ project: Project; apiKey: string }>(
 			`${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/projects`,
 			{ name },
+			access_token,
+		);
+	}
+
+	update_project(
+		project_id: string,
+		update: Partial<{ name: string }>,
+		access_token: string,
+	): Promise<Project> {
+		return this.put<Project>(
+			`${LogdashAPI.v0baseUrl}/projects/${project_id}`,
+			update,
+			access_token,
+		);
+	}
+
+	delete_project(project_id: string, access_token: string): Promise<void> {
+		return this.performFetch<void>(
+			`${LogdashAPI.v0baseUrl}/projects/${project_id}`,
+			{
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			},
 			access_token,
 		);
 	}
@@ -394,7 +420,13 @@ class LogdashAPI {
 			);
 		}
 
-		return response.json();
+		if (
+			response.headers.get('content-type')?.includes('application/json')
+		) {
+			return response.json();
+		}
+
+		return response.text() as unknown as T;
 	}
 
 	private get<T>(url: string, access_token: string): Promise<T> {

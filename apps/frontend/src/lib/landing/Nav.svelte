@@ -6,6 +6,7 @@
 		AnimationDirection,
 	} from '$lib/shared/ui/animated-view.state.svelte';
 	import { generateGithubOAuthUrl } from '$lib/shared/utils/generate-github-oauth-url';
+	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 
 	const ROUTES = [
@@ -36,6 +37,10 @@
 	const currentRouteIndex = $derived(
 		ROUTES.findIndex((route) => route.path === page.url.pathname),
 	);
+
+	onDestroy(() => {
+		loggingIn = false;
+	});
 
 	const handleGithubLogin = () => {
 		loggingIn = true;

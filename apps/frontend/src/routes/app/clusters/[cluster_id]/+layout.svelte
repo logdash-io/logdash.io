@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import { page } from '$app/state';
+	import { isDev } from '$lib';
 	import { monitoringState } from '$lib/clusters/projects/application/monitoring.state.svelte.js';
 	import { projectsState } from '$lib/clusters/projects/application/projects.state.svelte.js';
 	import type { Project } from '$lib/clusters/projects/domain/project.js';
@@ -14,6 +15,10 @@
 	const clusterId = $derived(page.params.cluster_id);
 
 	$effect(() => {
+		if (!isDev()) {
+			return;
+		}
+
 		monitoringState.sync(clusterId);
 
 		return () => {
