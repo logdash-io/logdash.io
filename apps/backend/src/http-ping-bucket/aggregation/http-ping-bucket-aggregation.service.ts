@@ -75,8 +75,11 @@ export class HttpPingBucketAggregationService {
       expectedBucketCount,
     );
 
-    if (completeBuckets[0] === null) {
-      completeBuckets[0] = await this.tryCreateVirtualBucket(monitorId, grouping);
+    const nowVirtualBucket = await this.tryCreateVirtualBucket(monitorId, grouping);
+    if (nowVirtualBucket) {
+      completeBuckets[0] = completeBuckets[0]
+        ? VirtualBucket.fromMany([completeBuckets[0], nowVirtualBucket])
+        : nowVirtualBucket;
     }
 
     return completeBuckets;

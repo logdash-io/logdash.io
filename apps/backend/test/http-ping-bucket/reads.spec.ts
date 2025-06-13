@@ -370,6 +370,46 @@ describe('Http Ping Bucket(reads)', () => {
     });
   });
 
+  it('gets virtual bucket for current day when buckets for the day exist', async () => {
+    // given
+    const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      token,
+      projectId: project.id,
+    });
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    await createBucket({
+      httpMonitorId: monitor.id,
+      timestamp: today,
+      successCount: 1,
+      failureCount: 2,
+      averageLatencyMs: 300,
+    });
+    await createPing({ httpMonitorId: monitor.id });
+    await createPing({ httpMonitorId: monitor.id, statusCode: 500, responseTimeMs: 200 });
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer())
+      .get(`/monitors/${monitor.id}/http_ping_buckets?period=90d`)
+      .set('Authorization', `Bearer ${token}`);
+
+    // then
+    expect(response.status).toBe(200);
+    expect(response.body.buckets).toHaveLength(90);
+    expect(response.body.buckets[0]).toMatchObject({
+      successCount: 2,
+      failureCount: 3,
+      averageLatencyMs: 240,
+      timestamp: today.toISOString(),
+    });
+
+    const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
+    expect(nullBuckets).toHaveLength(89);
+  });
+
   async function createBucket(params: {
     httpMonitorId: string;
     timestamp?: Date;
