@@ -10,6 +10,7 @@
 		children: Snippet;
 		class?: ClassValue;
 		trigger?: 'hover' | 'click';
+		interactive?: boolean;
 	};
 	const {
 		children,
@@ -17,6 +18,7 @@
 		content,
 		placement,
 		trigger = 'hover',
+		interactive = false,
 	}: Props = $props();
 
 	let wrapper: HTMLSpanElement;
@@ -24,14 +26,28 @@
 
 	let visible = $state(false);
 	let coords = { top: 0, left: 0 };
+	let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	function show() {
+		// Clear any pending hide timeout
+		if (hideTimeout) {
+			clearTimeout(hideTimeout);
+			hideTimeout = null;
+		}
 		visible = true;
 		tick().then(positionTooltip);
 	}
 
 	function hide() {
-		visible = false;
+		// Only add delay for interactive tooltips on hover trigger
+		if (interactive && trigger === 'hover') {
+			hideTimeout = setTimeout(() => {
+				visible = false;
+				hideTimeout = null;
+			}, 200); // 300ms delay
+		} else {
+			visible = false;
+		}
 	}
 
 	function toggle() {
@@ -103,15 +119,31 @@
 		if (trigger === 'hover') {
 			wrapper.addEventListener('mouseenter', show);
 			wrapper.addEventListener('mouseleave', hide);
+
+			if (interactive && tooltip) {
+				tooltip.addEventListener('mouseenter', show);
+				tooltip.addEventListener('mouseleave', hide);
+			}
 		} else if (trigger === 'click') {
 			wrapper.addEventListener('click', handleClick);
 			document.addEventListener('click', handleClickOutside);
 		}
 
 		return () => {
+			// Clear any pending timeout on cleanup
+			if (hideTimeout) {
+				clearTimeout(hideTimeout);
+				hideTimeout = null;
+			}
+
 			if (trigger === 'hover') {
 				wrapper.removeEventListener('mouseenter', show);
 				wrapper.removeEventListener('mouseleave', hide);
+
+				if (interactive && tooltip) {
+					tooltip.removeEventListener('mouseenter', show);
+					tooltip.removeEventListener('mouseleave', hide);
+				}
 			} else if (trigger === 'click') {
 				wrapper.removeEventListener('click', handleClick);
 				document.removeEventListener('click', handleClickOutside);

@@ -72,7 +72,7 @@
 				<button
 					class="btn btn-primary btn-sm ml-auto"
 					onclick={() => {
-						goto('/api/user/upgrade');
+						goto('/app/api/user/upgrade');
 					}}
 				>
 					Upgrade

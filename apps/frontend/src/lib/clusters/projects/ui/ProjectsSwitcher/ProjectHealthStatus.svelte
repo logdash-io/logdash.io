@@ -9,16 +9,18 @@
 	const isOnDemoDashboard = $derived(
 		page.url.pathname.includes('/demo-dashboard'),
 	);
-	const projectMonitor = $derived(monitoringState.projectMonitor(projectId));
+	const projectMonitor = $derived(
+		monitoringState.getMonitorByProjectId(projectId),
+	);
 	const isHealthy = $derived(monitoringState.isHealthy(projectMonitor?.id));
 </script>
 
 {#snippet fullStatus()}
-	<MonitorStatus monitorId={projectMonitor?.id} />
+	<MonitorStatus {projectId} />
 {/snippet}
 
 {#if projectMonitor && !isOnDemoDashboard && isDev()}
-	<Tooltip content={fullStatus} placement="bottom">
+	<Tooltip interactive={true} content={fullStatus} placement="bottom">
 		<div
 			class={[
 				'badge badge-soft mr-2',

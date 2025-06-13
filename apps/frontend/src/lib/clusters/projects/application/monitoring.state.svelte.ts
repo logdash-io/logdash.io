@@ -33,7 +33,7 @@ class MonitoringState {
 		return this._getSortedMonitors();
 	}
 
-	projectMonitor(projectId: string): Monitor {
+	getMonitorByProjectId(projectId: string): Monitor {
 		return this.monitors.find((monitor) => monitor.projectId === projectId);
 	}
 
@@ -336,11 +336,20 @@ class MonitoringState {
 		);
 		const { data }: { data: HttpPing[] } = await response.json();
 
-		// this._monitorPings = arrayToObject<HttpPing>(data, 'httpMonitorId');
-		this._monitorPings[monitorId] = data.map((ping) => ({
-			...ping,
-			createdAt: new Date(ping.createdAt),
-		}));
+		this._monitorPings[monitorId] = data
+			.map((ping) => ({
+				...ping,
+				createdAt: new Date(ping.createdAt),
+			}))
+			.sort((a, b) => {
+				if (a.createdAt < b.createdAt) {
+					return -1;
+				}
+				if (a.createdAt > b.createdAt) {
+					return 1;
+				}
+				return 0;
+			});
 	}
 }
 

@@ -19,7 +19,7 @@ export const GET: RequestHandler = async ({ params, url, cookies }) => {
 		project_id: projectId,
 		monitor_id: params.monitor_id,
 		access_token: get_access_token(cookies),
-		limit: 10,
+		limit: 60,
 	});
 
 	return json({

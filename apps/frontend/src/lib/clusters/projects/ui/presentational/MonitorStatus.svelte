@@ -2,14 +2,20 @@
 	import { page } from '$app/state';
 	import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
 	import { stripProtocol } from '$lib/shared/utils/url.js';
+	import { DateTime } from 'luxon';
 	import { monitoringState } from '../../application/monitoring.state.svelte.js';
 	import DataTile from '../ProjectView/tiles/DataTile.svelte';
 
-	const { monitorId } = $props();
-	const projectMonitor = $derived(monitoringState.getMonitorById(monitorId));
+	const { projectId } = $props();
+	const MAX_PINGS = 60;
+
+	const projectMonitor = $derived(
+		monitoringState.getMonitorByProjectId(projectId),
+	);
 	const isHealthy = $derived(monitoringState.isHealthy(projectMonitor?.id));
-	const pings = $derived(monitoringState.monitoringPings(projectMonitor.id));
-	const projectId = $derived(page.url.searchParams.get('project_id'));
+	const pings = $derived(
+		monitoringState.monitoringPings(projectMonitor.id).slice(0, MAX_PINGS),
+	);
 
 	$effect(() => {
 		console.log(`Syncing pings for project monitor: ${projectMonitor?.id}`);
@@ -77,7 +83,17 @@
 				{/each}
 
 				{#each pings as ping, i}
-					<Tooltip content={`Service is up ${i}`} placement="top">
+					<Tooltip
+						content={`${
+							DateTime.fromJSDate(new Date(ping.createdAt))
+								.toLocal()
+								.toISO({ includeOffset: true })
+								.split('T')
+								.join(' ')
+								.split('.')[0]
+						}`}
+						placement="top"
+					>
 						<div
 							class={[
 								'h-8 w-1.5 shrink-0 rounded-sm bg-gradient-to-b hover:h-12 lg:w-[7px]',
@@ -94,5 +110,7 @@
 				{/each}
 			</div>
 		</div>
+
+		<p class="text-secondary/60 text-sm">Last 60 pings</p>
 	</div>
 </DataTile>

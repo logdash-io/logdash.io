@@ -44,6 +44,7 @@
 			email_accepted: false,
 			flow: 'login',
 			fallback_url: '/app/auth?needs_account=true',
+			next_url: '/app/clusters',
 		});
 	};
 </script>

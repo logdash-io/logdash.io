@@ -5,16 +5,9 @@
 	import { get_max_number_of_projects } from '$lib/shared/constants/plan-configs.js';
 	import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 	import { userState } from '$lib/shared/user/application/user.state.svelte.js';
-	import {
-		ChevronDownIcon,
-		CopyIcon,
-		MoreVerticalIcon,
-		SettingsIcon,
-	} from 'lucide-svelte';
+	import { CopyIcon, MoreVerticalIcon } from 'lucide-svelte';
 	import { projectsState } from '../../application/projects.state.svelte.js';
 	import ProjectCreator from './ProjectCreator.svelte';
-	import { monitoringState } from '../../application/monitoring.state.svelte.js';
-	import { isDev } from '$lib/shared/utils/is-dev.util.js';
 	import ProjectHealthStatus from './ProjectHealthStatus.svelte';
 
 	type Props = {
@@ -56,7 +49,7 @@
 			class={[
 				project_badge_class,
 				{
-					'border-primary ring-primary/50 border ring': activeProject,
+					'ring-primary/30 ring': activeProject,
 					'pr-2': activeProject && !isOnDemoDashboard,
 					// 'badge-secondary': !activeProject,
 				},
