@@ -18,6 +18,6 @@ runs:
 
     - name: Run mongo migrations
       run: |
-        cd /apps/backend
+        cd ./apps/backend
         MIGRATIONS_MONGO_URL="${{ inputs.mongo-uri }}" npm run migrate-up
       shell: bash
