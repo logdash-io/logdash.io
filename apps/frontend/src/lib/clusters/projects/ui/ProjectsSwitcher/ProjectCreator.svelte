@@ -11,7 +11,7 @@
 	};
 	const { canAddMore, onSubmit }: Props = $props();
 
-	const MIN_NAME_LENGTH = 3;
+	const MIN_NAME_LENGTH = 1;
 	const MAX_NAME_LENGTH = 30;
 
 	let projectName = $state('');
@@ -96,7 +96,7 @@
 		class="w-full"
 	>
 		<button
-			class={'ld-card-base flex cursor-pointer items-center gap-1 rounded-xl px-4 py-3'}
+			class={'ld-card-base flex cursor-pointer items-center gap-1 rounded-full px-4 py-2'}
 			tabindex="0"
 		>
 			new service <PlusIcon class="h-3.5 w-3.5" />

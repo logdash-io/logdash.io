@@ -21,7 +21,7 @@
 	};
 	const { withDefaultRedirect, creationDisabled }: Props = $props();
 	const project_badge_class =
-		'ld-card-base rounded-xl py-2 px-4 flex gap-1 cursor-pointer items-center';
+		'ld-card-base rounded-full py-2 px-2.5 flex cursor-pointer items-center';
 
 	const isOnDemoDashboard = $derived(
 		page.url.pathname.includes('/demo-dashboard'),
@@ -63,18 +63,18 @@
 		>
 			<ProjectHealthStatus projectId={project.id} />
 
-			<a href={`?project_id=${project.id}`} class="select-none">
+			<a href={`?project_id=${project.id}`} class="mx-2 select-none">
 				{project.name}
 			</a>
 
 			{#if activeProject && !isOnDemoDashboard}
-				<div class="dropdown z-30">
+				<div class="dropdown z-30 flex">
 					<div
 						tabindex="0"
 						role="button"
-						class="btn btn-circle btn-transparent aspect-square h-full w-fit shrink-0 p-1"
+						class="btn btn-circle btn-transparent mr-0.5 aspect-square h-full w-fit shrink-0"
 					>
-						<MoreVerticalIcon class="h-4.5 w-4.5 shrink-0" />
+						<MoreVerticalIcon class="h-4 w-4 shrink-0" />
 					</div>
 
 					<ul
@@ -158,6 +158,17 @@
 						<li>
 							<a
 								onclick={() => {
+									if (
+										!confirm(
+											'Are you sure you want to delete this project?',
+										) ||
+										projectsState.isDeletingProject(
+											project.id,
+										)
+									) {
+										return;
+									}
+
 									projectsState
 										.deleteProject(project.id)
 										.then((key) => {
