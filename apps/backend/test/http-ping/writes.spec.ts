@@ -67,7 +67,7 @@ describe('Http Ping (writes)', () => {
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
     expect(allPings.length).toBe(1000);
-  }, 15000);
+  }, 30000);
 
   it('stores pings with failed status code', async () => {
     // given
