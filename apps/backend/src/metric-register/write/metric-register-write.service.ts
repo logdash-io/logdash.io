@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { MetricRegisterEntryEntity } from '../core/entities/metric-register-entry.entity';
 import { CreateMetricRegisterEntryDto } from './dto/create-metric-register-entry.dto';
 import { RemoveMetricRegisterEntryDto } from './dto/remove-metric-register-entry.dto';
+import { UpdateCounterAbsoluteValueDto } from './dto/update-counter-absolute-value.dto';
 
 @Injectable()
 export class MetricRegisterWriteService {
@@ -20,9 +21,7 @@ export class MetricRegisterWriteService {
     await this.model.deleteMany({ projectId }, { ordered: false });
   }
 
-  public async removeById(
-    dto: RemoveMetricRegisterEntryDto,
-  ): Promise<string | null> {
+  public async removeById(dto: RemoveMetricRegisterEntryDto): Promise<string | null> {
     const entry = await this.model.findOne({
       _id: new Types.ObjectId(dto.id),
     });
@@ -35,5 +34,20 @@ export class MetricRegisterWriteService {
     await this.model.deleteOne({ _id: entry._id });
 
     return entryId;
+  }
+
+  public async upsertAllTimeValues(dtos: UpdateCounterAbsoluteValueDto[]): Promise<void> {
+    await this.model.bulkWrite(
+      dtos.map((dto) => ({
+        updateOne: {
+          filter: { _id: new Types.ObjectId(dto.metricRegisterEntryId) },
+          update: {
+            $set: {
+              'values.counter.absoluteValue': dto.value,
+            },
+          },
+        },
+      })),
+    );
   }
 }

@@ -16,6 +16,7 @@ import { MetricOperation } from '../core/enums/metric-operation.enum';
 import { Logger } from '@logdash/js-sdk';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 import { getEnvConfig } from '../../shared/configs/env-configs';
+import { MetricRegisterWriteService } from '../../metric-register/write/metric-register-write.service';
 export class BucketedMetricDto extends EnrichedRecordMetricDto {
   timeBucket: string;
   granularity: MetricGranularity;
@@ -31,6 +32,7 @@ export class MetricIngestionService {
     private readonly metricEventEmitter: MetricEventEmitter,
     private readonly logger: Logger,
     private readonly averageRecorder: AverageRecorder,
+    private readonly metricRegisterWriteService: MetricRegisterWriteService,
   ) {}
 
   public async recordMetrics(dtos: RecordMetricDto[]): Promise<void> {
@@ -101,6 +103,15 @@ export class MetricIngestionService {
         })),
       );
     }
+
+    // save new baseline values
+    const allTimeValues = upsertDtos
+      .filter((dto) => dto.granularity === MetricGranularity.AllTime)
+      .map((dto) => ({
+        metricRegisterEntryId: dto.metricRegisterEntryId,
+        value: dto.value,
+      }));
+    await this.metricRegisterWriteService.upsertAllTimeValues(allTimeValues);
 
     // save metrics
     await this.metricWriteService.upsertMany(upsertDtos);

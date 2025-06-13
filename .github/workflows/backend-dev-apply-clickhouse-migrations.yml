@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - dev
+    paths:
+      - 'apps/backend/clickhouse-migrations/**'
+      - '.github/**'
 
 jobs:
   migrate:
