@@ -5,9 +5,10 @@
 	import { get_max_number_of_projects } from '$lib/shared/constants/plan-configs.js';
 	import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 	import { userState } from '$lib/shared/user/application/user.state.svelte.js';
-	import { ChevronDownIcon, CopyIcon, SettingsIcon } from 'lucide-svelte';
+	import { CopyIcon, MoreVerticalIcon } from 'lucide-svelte';
 	import { projectsState } from '../../application/projects.state.svelte.js';
 	import ProjectCreator from './ProjectCreator.svelte';
+	import ProjectHealthStatus from './ProjectHealthStatus.svelte';
 
 	type Props = {
 		withDefaultRedirect: boolean;
@@ -15,7 +16,11 @@
 	};
 	const { withDefaultRedirect, creationDisabled }: Props = $props();
 	const project_badge_class =
-		'badge badge-soft badge-md gap-1 cursor-pointer';
+		'ld-card-base rounded-xl px-4 py-3 flex gap-1 cursor-pointer items-center';
+
+	const isOnDemoDashboard = $derived(
+		page.url.pathname.includes('/demo-dashboard'),
+	);
 
 	$effect(() => {
 		const project_id = page.url.searchParams.get('project_id');
@@ -44,26 +49,27 @@
 			class={[
 				project_badge_class,
 				{
-					'badge-primary pr-0': activeProject,
-					'badge-secondary': !activeProject,
+					'ring-primary/30 ring': activeProject,
+					'pr-2': activeProject && !isOnDemoDashboard,
+					// 'badge-secondary': !activeProject,
 				},
 			]}
 			role="tab"
 		>
+			<ProjectHealthStatus projectId={project.id} />
+
 			<a href={`?project_id=${project.id}`} class="select-none">
 				{project.name}
 			</a>
 
-			{#if activeProject}
+			{#if activeProject && !isOnDemoDashboard}
 				<div class="dropdown z-30">
 					<div
 						tabindex="0"
 						role="button"
-						class="btn btn-circle btn-transparent aspect-square h-full w-fit shrink-0 p-0 pl-0 pr-2.5"
+						class="btn btn-circle btn-transparent aspect-square h-full w-fit shrink-0 p-1"
 					>
-						<SettingsIcon
-							class="text-primary h-3.5 w-3.5 shrink-0"
-						/>
+						<MoreVerticalIcon class="h-4.5 w-4.5 shrink-0" />
 					</div>
 
 					<ul
@@ -115,13 +121,11 @@
 							{ replaceState: true },
 						);
 						toast.success(
-							`Project ${name} created successfully, you can now configure it.`,
+							`Service ${name} created successfully, you can now configure it.`,
 							5000,
 						);
 					});
 			}}
-			delayIn={0}
-			delayOut={0}
 		/>
 	{/if}
 </div>

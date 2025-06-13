@@ -2,6 +2,7 @@ import { logdashAPI } from '$lib/shared/logdash.api';
 import { Feature } from '$lib/shared/types';
 import { save_access_token } from '$lib/shared/utils/cookies.utils';
 import { redirect, type ServerLoadEvent } from '@sveltejs/kit';
+import queryString from 'query-string';
 
 export const load = async ({
 	cookies,
@@ -20,11 +21,19 @@ export const load = async ({
 		redirect(302, '/');
 	}
 
-	if ([Feature.LOGGING, Feature.METRICS].includes(feature as Feature)) {
-		await logdashAPI.create_project('default', cluster_id, access_token);
-	}
+	const { project } = await logdashAPI.create_project(
+		'default',
+		cluster_id,
+		access_token,
+	);
 
 	save_access_token(cookies, access_token);
 
-	redirect(302, `/app/clusters/${cluster_id}/setup/${feature}`);
+	const qs = queryString.stringify({
+		...queryString.parse(url.search),
+		project_id: project.id,
+		feature: undefined,
+	});
+
+	redirect(302, `/app/clusters/${cluster_id}/setup/${feature}?${qs}`);
 };

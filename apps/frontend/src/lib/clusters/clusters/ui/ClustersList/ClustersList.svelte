@@ -65,7 +65,7 @@
 					onclick={(e) => {
 						e.stopPropagation();
 						const newName = prompt(
-							'Enter new cluster name',
+							'Enter new project name',
 							cluster.name,
 						);
 						if (newName) {
@@ -74,7 +74,7 @@
 									name: newName,
 								})
 								.then(() => {
-									toast.success('Cluster name updated!');
+									toast.success('Project name updated!');
 								});
 						}
 					}}
@@ -117,7 +117,7 @@
 				delayOut={0}
 				onSubmit={(name) => {
 					clustersState.create(name).then((createdClusterId) => {
-						toast.success('Cluster created!');
+						toast.success('Project created!');
 						goto(`/app/clusters/${createdClusterId}`);
 					});
 				}}
@@ -145,7 +145,7 @@
 								clustersState
 									.create(name)
 									.then((createdClusterId) => {
-										toast.success('Cluster created!');
+										toast.success('Project created!');
 										goto(
 											`/app/clusters/${createdClusterId}`,
 										);

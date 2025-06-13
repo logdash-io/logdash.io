@@ -24,6 +24,18 @@ export class RedisService {
     return Number(result);
   }
 
+  public async incrementBy(
+    key: string,
+    amount: number,
+    expiryOptions?: ExpiryOptions,
+  ): Promise<number> {
+    const result = await this.client.incrBy(key, amount);
+    if (expiryOptions) {
+      await this.expire(key, expiryOptions);
+    }
+    return Number(result);
+  }
+
   public async expire(key: string, expiryOptions: ExpiryOptions): Promise<void> {
     const expiryOptionsMap: Record<TtlOverwriteStrategy, 'NX' | undefined> = {
       [TtlOverwriteStrategy.SetAlways]: undefined,
@@ -64,5 +76,16 @@ export class RedisService {
 
   public async flushAll(): Promise<void> {
     await this.client.flushAll();
+  }
+
+  public async mGet(keys: string[]): Promise<Record<string, string | null>> {
+    const result = await this.client.mGet(keys);
+    return result.reduce(
+      (acc, value, index) => {
+        acc[keys[index]] = value;
+        return acc;
+      },
+      {} as Record<string, string | null>,
+    );
   }
 }

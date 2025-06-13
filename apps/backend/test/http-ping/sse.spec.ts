@@ -25,56 +25,33 @@ describe('Http Ping (SSE)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  describe('GET /clusters/:clusterId/monitors/:monitorId/http_pings/sse', () => {
-    it('receives ping events for the specified monitor', async () => {
+  describe('GET /clusters/:clusterId/http_pings/sse', () => {
+    it('receives ping events for the specified cluster', async () => {
       // given
-      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
-        token: setup.token,
-        clusterId: setup.cluster.id,
+      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token: setupA.token,
+        projectId: setupA.project.id,
+      });
+
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token: setupB.token,
+        projectId: setupB.project.id,
       });
 
       // when
-      const stream = await controller.streamHttpMonitorPings(setup.cluster.id, monitor.id);
+      const stream = await controller.streamHttpMonitorPings(setupA.cluster.id);
       const resultsPromise = firstValueFrom(stream.pipe(take(1)));
 
       await schedulerService.tryPingAllMonitors();
 
       // then
       const results = await resultsPromise;
+
       expect(results.data).toMatchObject({
-        httpMonitorId: monitor.id,
-        statusCode: 200,
-        responseTimeMs: expect.any(Number),
-        message: 'OK',
-      });
-    });
-
-    it('filters out events from other monitors', async () => {
-      // given
-      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
-      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
-        token: setupA.token,
+        httpMonitorId: monitorA.id,
         clusterId: setupA.cluster.id,
-      });
-      const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
-        token: setupB.token,
-        clusterId: setupB.cluster.id,
-      });
-
-      // when
-      const stream = await controller.streamHttpMonitorPings(setupB.cluster.id, monitorB.id);
-      const resultPromise = Promise.race([
-        firstValueFrom(stream.pipe(take(1))),
-        new Promise((resolve) => setTimeout(() => resolve(null), 1000)),
-      ]);
-      await schedulerService.tryPingAllMonitors();
-
-      // then
-      const result = await resultPromise;
-      expect(result.data).toMatchObject({
-        httpMonitorId: monitorB.id,
         statusCode: 200,
         responseTimeMs: expect.any(Number),
         message: 'OK',
@@ -84,31 +61,38 @@ describe('Http Ping (SSE)', () => {
     it('processes multiple ping events in sequence', async () => {
       // given
       nock.cleanAll();
-      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
-        token: setup.token,
-        clusterId: setup.cluster.id,
+      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token: setupA.token,
+        projectId: setupA.project.id,
+      });
+
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token: setupB.token,
+        projectId: setupB.project.id,
       });
 
       // when
-      const stream = await controller.streamHttpMonitorPings(setup.cluster.id, monitor.id);
+      const stream = await controller.streamHttpMonitorPings(setupA.cluster.id);
       const resultsPromise = firstValueFrom(stream.pipe(take(2), toArray()));
-      nock(URL_STUB).get('/').delay(10).reply(200);
+      nock(URL_STUB).get('/').times(2).delay(10).reply(200);
       await schedulerService.tryPingAllMonitors();
-      nock(URL_STUB).get('/').delay(10).reply(404);
+      nock(URL_STUB).get('/').times(2).delay(10).reply(404);
       await schedulerService.tryPingAllMonitors();
 
       // then
       const results = await resultsPromise;
+
       expect(results).toHaveLength(2);
       expect(results[0].data).toMatchObject({
-        httpMonitorId: monitor.id,
+        httpMonitorId: monitorA.id,
         statusCode: 200,
         responseTimeMs: expect.any(Number),
         message: 'OK',
       });
       expect(results[1].data).toMatchObject({
-        httpMonitorId: monitor.id,
+        httpMonitorId: monitorA.id,
         statusCode: 404,
         responseTimeMs: expect.any(Number),
         message: 'Not Found',

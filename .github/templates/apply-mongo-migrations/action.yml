@@ -1,0 +1,27 @@
+name: 'Apply mongo migrations'
+
+inputs:
+  mongo-uri:
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+
+    - name: Install mongo-migrations globally
+      run: npm install -g migrate-mongo
+      shell: bash
+
+    - name: Install dotenv
+      run: npm install dotenv
+      shell: bash
+
+    - name: Run mongo migrations
+      run: |
+        cd ./apps/backend
+        MIGRATIONS_MONGO_URL="${{ inputs.mongo-uri }}" npm run migrate-up
+      shell: bash

@@ -62,6 +62,8 @@ jobs:
           clickhouse-password: ${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}
           clickhouse-database: default
           swagger-password: ${{ secrets.BACKEND_SWAGGER_PASSWORD }}
+          telegram-uptime-bot-token: ${{ secrets.BACKEND_DEV_TELEGRAM_UPTIME_BOT_TOKEN }}
+          telegram-uptime-bot-secret: ${{ secrets.BACKEND_DEV_TELEGRAM_UPTIME_BOT_SECRET }}
       - name: Prune
         uses: './.github/templates/prune'
         with:

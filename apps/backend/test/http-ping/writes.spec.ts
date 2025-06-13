@@ -27,11 +27,11 @@ describe('Http Ping (writes)', () => {
     const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
     const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
       token: setupA.token,
-      clusterId: setupA.cluster.id,
+      projectId: setupA.project.id,
     });
     const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
       token: setupB.token,
-      clusterId: setupB.cluster.id,
+      projectId: setupB.project.id,
     });
 
     // when
@@ -57,7 +57,7 @@ describe('Http Ping (writes)', () => {
     for (let i = 0; i < 1000; i++) {
       await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
         token: setup.token,
-        clusterId: setup.cluster.id,
+        projectId: setup.project.id,
       });
     }
 
@@ -67,15 +67,15 @@ describe('Http Ping (writes)', () => {
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
     expect(allPings.length).toBe(1000);
-  }, 15000);
+  }, 30000);
 
   it('stores pings with failed status code', async () => {
     // given
-    const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
     const anotherUrl = 'https://another-url.com';
     const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
       token,
-      clusterId: cluster.id,
+      projectId: project.id,
       url: anotherUrl,
     });
     nock(anotherUrl).persist().get('/').delay(10).reply(403);

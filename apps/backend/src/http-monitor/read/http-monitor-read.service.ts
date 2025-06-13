@@ -12,7 +12,7 @@ export class HttpMonitorReadService {
     private readonly httpMonitorModel: Model<HttpMonitorEntity>,
   ) {}
 
-  async readById(id: string): Promise<HttpMonitorNormalized | null> {
+  public async readById(id: string): Promise<HttpMonitorNormalized | null> {
     const entity = await this.httpMonitorModel.findById(id).lean<HttpMonitorEntity>().exec();
 
     if (!entity) {
@@ -22,9 +22,17 @@ export class HttpMonitorReadService {
     return HttpMonitorSerializer.normalize(entity);
   }
 
-  async readByClusterId(clusterId: string): Promise<HttpMonitorNormalized[]> {
+  async readManyByIds(ids: string[]): Promise<HttpMonitorNormalized[]> {
     const entities = await this.httpMonitorModel
-      .find({ clusterId })
+      .find({ _id: { $in: ids } })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+    return HttpMonitorSerializer.normalizeMany(entities);
+  }
+
+  async readByProjectId(projectId: string): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ projectId })
       .sort({ createdAt: -1 })
       .lean<HttpMonitorEntity[]>()
       .exec();
@@ -32,19 +40,34 @@ export class HttpMonitorReadService {
     return HttpMonitorSerializer.normalizeMany(entities);
   }
 
-  async countBelongingToCluster(clusterId: string): Promise<number> {
-    return this.httpMonitorModel.countDocuments({ clusterId }).lean().exec();
+  public async readByProjectIds(projectIds: string[]): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ projectId: { $in: projectIds } })
+      .sort({ createdAt: -1 })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+
+    return HttpMonitorSerializer.normalizeMany(entities);
   }
 
-  async countAll(): Promise<number> {
+  public async countByProjectId(projectId: string): Promise<number> {
+    return this.httpMonitorModel.countDocuments({ projectId }).lean().exec();
+  }
+
+  public async countAll(): Promise<number> {
     return this.httpMonitorModel.countDocuments().lean().exec();
   }
 
-  async *readAllCursor(): AsyncGenerator<HttpMonitorNormalized> {
+  public async *readAllCursor(): AsyncGenerator<HttpMonitorNormalized> {
     const cursor = this.httpMonitorModel.find().sort({ createdAt: -1 }).cursor();
 
     for await (const entity of cursor) {
       yield HttpMonitorSerializer.normalize(entity);
     }
+  }
+
+  public async existsForProject(projectId: string): Promise<boolean> {
+    const result = await this.httpMonitorModel.exists({ projectId });
+    return result !== null;
   }
 }

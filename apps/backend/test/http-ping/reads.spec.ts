@@ -25,7 +25,7 @@ describe('Http Ping (reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/clusters/${setupA.project.clusterId}/monitors/${new Types.ObjectId()}/http_pings`)
+        .get(`/projects/${setupA.project.id}/monitors/${new Types.ObjectId()}/http_pings`)
         .set('Authorization', `Bearer ${setupB.token}`);
 
       // then
@@ -37,7 +37,7 @@ describe('Http Ping (reads)', () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/clusters/${setup.project.clusterId}/monitors/${new Types.ObjectId()}/http_pings`)
+        .get(`/projects/${setup.project.id}/monitors/${new Types.ObjectId()}/http_pings`)
         .set('Authorization', `Bearer ${setup.token}`);
 
       // then
@@ -46,10 +46,10 @@ describe('Http Ping (reads)', () => {
 
     it('gets pings for a monitor', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token,
-        clusterId: cluster.id,
+        projectId: project.id,
       });
       for (let i = 0; i < 10; i++) {
         await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
@@ -57,7 +57,7 @@ describe('Http Ping (reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/clusters/${cluster.id}/monitors/${monitor.id}/http_pings`)
+        .get(`/projects/${project.id}/monitors/${monitor.id}/http_pings`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -68,6 +68,28 @@ describe('Http Ping (reads)', () => {
         responseTimeMs: expect.any(Number),
         message: 'Default HTTP ping',
       });
+    });
+
+    it('gets pings for a monitor with limit', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token,
+        projectId: project.id,
+      });
+
+      for (let i = 0; i < 10; i++) {
+        await bootstrap.utils.httpPingUtils.createHttpPing({ httpMonitorId: monitor.id });
+      }
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/monitors/${monitor.id}/http_pings?limit=5`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(200);
+      expect(response.body.length).toBe(5);
     });
   });
 });

@@ -55,7 +55,7 @@
 				Frequently Asked Questions
 			</h2>
 			<p
-				class="mt-4 text-lg leading-relaxed text-gray-600 dark:text-gray-300"
+				class="mt-2 text-lg leading-relaxed text-gray-600 dark:text-gray-300"
 			>
 				Have a different question? <a
 					href="https://discord.gg/naftPW4Hxe"
@@ -79,13 +79,11 @@
 				{#each faqs as faq (faq.question)}
 					<div class="mb-10 break-inside-avoid lg:mb-12">
 						<dt
-							class="text-base-content text-lg leading-7 font-semibold"
+							class="text-base-content text-lg font-semibold leading-7"
 						>
 							{faq.question}
 						</dt>
-						<dd
-							class="text-base-content/70 mt-2 text-base leading-7"
-						>
+						<dd class="text-base-content/70 mt-2 text-base">
 							{faq.answer}
 						</dd>
 					</div>

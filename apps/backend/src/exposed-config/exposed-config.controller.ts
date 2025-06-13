@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { BadRequestException, Controller, Get, InternalServerErrorException } from '@nestjs/common';
 import { ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/core/decorators/is-public';
 import { ProjectPlanConfigs } from '../shared/configs/project-plan-configs';
@@ -23,6 +23,32 @@ export class ExposedConfigController {
       projectPlanConfigs: ProjectPlanConfigs,
       userPlanConfigs: UserPlanConfigs,
     };
+  }
+
+  @Get('/flaky_route')
+  @Public()
+  public async flakyRoute() {
+    // First 50/50 split between success and errors
+    const isSuccess = Math.random() < 0.5;
+
+    if (isSuccess) {
+      return { message: 'OK' };
+    }
+
+    // For the error cases, split remaining 50% into three equal parts
+    const errorType = Math.floor(Math.random() * 3);
+
+    switch (errorType) {
+      case 0:
+        await new Promise((resolve) => setTimeout(resolve, 15000));
+        return { message: 'OK' };
+
+      case 1:
+        throw new BadRequestException('PIETY PAPIEZA 404 CUSTOM MESSAGE');
+
+      case 2:
+        throw new InternalServerErrorException('PIETY PAPIEZA 500 CUSTOM MESSAGE');
+    }
   }
 
   @Get('/demo')

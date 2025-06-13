@@ -4,9 +4,6 @@ interface UserPlanConfig {
   projects: {
     maxNumberOfProjects: number;
   };
-  httpMonitors: {
-    maxNumberOfMonitors: number;
-  };
 }
 
 export interface UserPlanConfigs {
@@ -20,24 +17,15 @@ export const UserPlanConfigs: UserPlanConfigs = {
     projects: {
       maxNumberOfProjects: 5,
     },
-    httpMonitors: {
-      maxNumberOfMonitors: 2,
-    },
   },
   [UserTier.EarlyBird]: {
     projects: {
       maxNumberOfProjects: 20,
     },
-    httpMonitors: {
-      maxNumberOfMonitors: 10,
-    },
   },
   [UserTier.Admin]: {
     projects: {
       maxNumberOfProjects: 100,
-    },
-    httpMonitors: {
-      maxNumberOfMonitors: 100,
     },
   },
 };

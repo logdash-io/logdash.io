@@ -56,13 +56,13 @@
 					class="align-start relative flex h-[500px] w-full shrink-0 justify-center overflow-hidden lg:h-96 lg:w-1/2 lg:overflow-visible"
 				>
 					<div
-						class="absolute right-0 bottom-0 z-10 scale-90 rotate-z-3 sm:right-auto sm:left-0 sm:-rotate-z-3 lg:z-0 lg:scale-100"
+						class="rotate-z-3 sm:-rotate-z-3 absolute bottom-0 right-0 z-10 scale-90 sm:left-0 sm:right-auto lg:z-0 lg:scale-100"
 					>
 						<SystemHealth />
 					</div>
 
 					<div
-						class="absolute right-0 bottom-[120px] max-w-md scale-80 -rotate-z-3 sm:rotate-z-3 lg:-bottom-4 lg:scale-100"
+						class="scale-80 -rotate-z-3 sm:rotate-z-3 absolute bottom-[120px] right-0 max-w-md lg:-bottom-4 lg:scale-100"
 					>
 						<Logs />
 					</div>
@@ -98,20 +98,22 @@
 	<div class="distance h-16 sm:h-32"></div>
 
 	<div
-		class="ld-card text-primary-content mx-2 flex flex-col-reverse items-center justify-between py-24 text-left sm:mx-0 sm:flex-row"
+		class="ld-card text-primary-content relative mx-2 flex flex-col-reverse items-center justify-between py-24 text-left sm:mx-0 sm:flex-row md:mt-14"
 	>
 		<div>
 			<h2
-				class="mb-8 text-center text-3xl font-bold sm:text-left sm:text-4xl"
+				class="mb-2 text-center text-3xl font-bold sm:text-left sm:text-4xl"
 			>
 				Ready to Get Started?
 			</h2>
 
 			<FlamingoIcon
-				class="text-primary mx-auto mb-6 h-54 w-54 sm:hidden"
+				class="text-primary h-54 w-54 mx-auto mb-6 md:hidden"
 			/>
 
-			<p class="mb-10 text-lg opacity-90">
+			<p
+				class="mb-4 w-full text-lg opacity-90 md:w-1/2 lg:w-4/5 xl:w-full"
+			>
 				Our flamingo is ready, are you?
 				<br />
 				Get started with logdash today and see how easy it is to monitor
@@ -127,7 +129,9 @@
 			</a>
 		</div>
 
-		<FlamingoIcon class="text-primary hidden h-54 w-54 sm:block" />
+		<FlamingoIcon
+			class="text-primary absolute bottom-8 right-8 hidden h-64 w-64 md:block"
+		/>
 	</div>
 
 	<div class="distance h-16 sm:h-32"></div>

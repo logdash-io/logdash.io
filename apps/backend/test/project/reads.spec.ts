@@ -30,8 +30,7 @@ describe('ProjectCoreController (reads)', () => {
   describe('GET /clusters/:clusterId/projects', () => {
     it('reads projects in cluster', async () => {
       // given
-      const { token, cluster } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
       const response = await request(app.getHttpServer())
@@ -47,8 +46,7 @@ describe('ProjectCoreController (reads)', () => {
     describe('project features', () => {
       it('returns empty features array when project has no features', async () => {
         // given
-        const { token, cluster, project } =
-          await bootstrap.utils.generalUtils.setupAnonymous();
+        const { token, cluster, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
         // when
         const response = await request(app.getHttpServer())
@@ -85,8 +83,7 @@ describe('ProjectCoreController (reads)', () => {
 
       it('returns metrics feature when project has metrics', async () => {
         // given
-        const { token, cluster, apiKey } =
-          await bootstrap.utils.generalUtils.setupAnonymous();
+        const { token, cluster, apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();
 
         await bootstrap.utils.metricUtils.recordMetric({
           name: 'TestMetric',
@@ -106,10 +103,28 @@ describe('ProjectCoreController (reads)', () => {
         expect(projects[0].features).not.toContain(ProjectFeature.logging);
       });
 
+      it('returns monitoring feature when project has http monitors', async () => {
+        // given
+        const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+          projectId: project.id,
+          token,
+        });
+
+        // when
+        const response = await request(app.getHttpServer())
+          .get(`/clusters/${cluster.id}/projects`)
+          .set('Authorization', `Bearer ${token}`);
+
+        // then
+        const projects = response.body as ProjectSerialized[];
+        expect(projects[0].features).toContain(ProjectFeature.monitoring);
+      });
+
       it('returns both features when project has logs and metrics', async () => {
         // given
-        const { token, cluster, apiKey } =
-          await bootstrap.utils.generalUtils.setupAnonymous();
+        const { token, cluster, apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();
 
         await Promise.all([
           bootstrap.utils.logUtils.createLog({
@@ -143,8 +158,7 @@ describe('ProjectCoreController (reads)', () => {
     it('returns 403 for non-cluster member', async () => {
       // given
       const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const { token: nonMemberToken } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: nonMemberToken } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
       const response = await request(app.getHttpServer())
@@ -159,8 +173,7 @@ describe('ProjectCoreController (reads)', () => {
   describe('GET /projects/:projectId', () => {
     it('reads project by id and returns rate limits with no usage', async () => {
       // given
-      const { token, project } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
       const response = await request(app.getHttpServer())
@@ -180,15 +193,13 @@ describe('ProjectCoreController (reads)', () => {
       expect(rateLimit.scope).toEqual(RateLimitScope.ProjectLogsPerHour);
       expect(rateLimit.currentUsage).toEqual(0);
 
-      const expectedLimit = getProjectPlanConfig(project.tier).logs
-        .rateLimitPerHour;
+      const expectedLimit = getProjectPlanConfig(project.tier).logs.rateLimitPerHour;
       expect(rateLimit.limit).toEqual(expectedLimit);
     });
 
     it('reads project by id and returns rate limits with some usage', async () => {
       // given
-      const { token, project, apiKey } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, project, apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // Create some logs to simulate usage
       await Promise.all([
@@ -224,17 +235,14 @@ describe('ProjectCoreController (reads)', () => {
       expect(rateLimit.scope).toEqual(RateLimitScope.ProjectLogsPerHour);
       expect(rateLimit.currentUsage).toEqual(2);
 
-      const expectedLimit = getProjectPlanConfig(project.tier).logs
-        .rateLimitPerHour;
+      const expectedLimit = getProjectPlanConfig(project.tier).logs.rateLimitPerHour;
       expect(rateLimit.limit).toEqual(expectedLimit);
     });
 
     it('returns 403 for non-cluster member', async () => {
       // given
-      const { project: projectOfUserA } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
-      const { token: nonMemberToken } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { project: projectOfUserA } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: nonMemberToken } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
       const response = await request(app.getHttpServer())

@@ -1,4 +1,4 @@
-import type { Feature } from '$lib/shared/types.js';
+import { Feature } from '$lib/shared/types.js';
 import { arrayToObject } from '$lib/shared/utils/array-to-object';
 import type { Project } from '../domain/project';
 
@@ -32,10 +32,7 @@ class ProjectsState {
 		this._initialized = true;
 	}
 
-	hasFeature(
-		projectId: string,
-		feature: Feature.LOGGING | Feature.METRICS,
-	): boolean {
+	hasFeature(projectId: string, feature: Feature): boolean {
 		return this._projects[projectId]?.features.includes(feature);
 	}
 

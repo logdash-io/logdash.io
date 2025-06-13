@@ -6,13 +6,16 @@ export class HttpMonitorEntity {
   _id: Types.ObjectId;
 
   @Prop({ required: true })
-  clusterId: string;
+  projectId: string;
 
   @Prop({ required: true })
   name: string;
 
   @Prop({ required: true })
   url: string;
+
+  @Prop({ required: true })
+  notificationChannelsIds: string[];
 
   createdAt: Date;
   updatedAt: Date;

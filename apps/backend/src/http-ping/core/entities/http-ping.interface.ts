@@ -1,4 +1,3 @@
-
 export class HttpPingNormalized {
   id: string;
   httpMonitorId: string;
@@ -6,7 +5,6 @@ export class HttpPingNormalized {
   responseTimeMs: number;
   message?: string;
   createdAt: Date;
-  updatedAt: Date;
 }
 
 export class HttpPingSerialized {
@@ -16,5 +14,4 @@ export class HttpPingSerialized {
   responseTimeMs: number;
   message?: string;
   createdAt: Date;
-  updatedAt: Date;
 }

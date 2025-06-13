@@ -1,4 +1,4 @@
-import { Controller, Get, NotFoundException, Param, Sse, UseGuards } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, Query, Sse, UseGuards } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { filter, fromEvent, map, Observable } from 'rxjs';
@@ -7,9 +7,10 @@ import { DemoEndpoint } from '../../demo/decorators/demo-endpoint.decorator';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { HttpPingCreatedEvent } from '../events/definitions/http-ping-created.event';
 import { HttpPingEvent } from '../events/http-ping-event.enum';
-import { HttpPingReadService } from '../read/http-ping-read.service';
 import { HttpPingSerialized } from './entities/http-ping.interface';
 import { HttpPingSerializer } from './entities/http-ping.serializer';
+import { HttpPingReadService } from '../read/http-ping-read.service';
+import { ReadByMonitorIdQuery } from './dto/read-by-monitor-id.query';
 
 @ApiBearerAuth()
 @ApiTags('HTTP Pings')
@@ -17,40 +18,40 @@ import { HttpPingSerializer } from './entities/http-ping.serializer';
 @UseGuards(ClusterMemberGuard)
 export class HttpPingCoreController {
   constructor(
-    private readonly httpPingReadService: HttpPingReadService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
+    private readonly httpPingReadService: HttpPingReadService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  @Get('clusters/:clusterId/monitors/:monitorId/http_pings')
+  @Get('projects/:projectId/monitors/:monitorId/http_pings')
   @ApiResponse({ type: HttpPingSerialized, isArray: true })
-  async findByMonitorId(
-    @Param('clusterId') clusterId: string,
+  async readByMonitorIdQuery(
+    @Param('projectId') projectId: string,
     @Param('monitorId') monitorId: string,
+    @Query() query: ReadByMonitorIdQuery,
   ): Promise<HttpPingSerialized[]> {
     const monitor = await this.httpMonitorReadService.readById(monitorId);
     if (!monitor) {
       throw new NotFoundException('Monitor not found');
     }
 
-    if (monitor.clusterId !== clusterId) {
-      throw new NotFoundException('Monitor not found in this cluster');
+    if (monitor.projectId !== projectId) {
+      throw new NotFoundException('Monitor not found in this project');
     }
 
-    const pings = await this.httpPingReadService.readByMonitorId(monitorId);
+    const pings = await this.httpPingReadService.readByMonitorId(monitorId, query.limit);
 
     return HttpPingSerializer.serializeMany(pings);
   }
 
   @DemoEndpoint()
   @ApiBearerAuth()
-  @Sse('clusters/:clusterId/monitors/:monitorId/http_pings/sse')
+  @Sse('clusters/:clusterId/http_pings/sse')
   public async streamHttpMonitorPings(
     @Param('clusterId') clusterId: string,
-    @Param('monitorId') monitorId: string,
   ): Promise<Observable<any>> {
     const eventStream$ = fromEvent(this.eventEmitter, HttpPingEvent.HttpPingCreatedEvent).pipe(
-      filter((data: HttpPingCreatedEvent) => data.httpMonitorId === monitorId),
+      filter((data: HttpPingCreatedEvent) => data.clusterId === clusterId),
       map((data: HttpPingCreatedEvent) => ({ data })),
     );
 

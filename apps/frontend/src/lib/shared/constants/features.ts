@@ -1,5 +1,6 @@
 import { LogsIcon, ChartSplineIcon, HeartPulseIcon } from 'lucide-svelte';
 import { Feature } from '../types';
+import { isDev } from '../utils/is-dev.util.js';
 
 export const FEATURES = [
 	{
@@ -39,6 +40,6 @@ export const FEATURES = [
 			'Uptime monitoring and SLA tracking for critical services',
 			'Telegram and email notifications for immediate incident response',
 		],
-		available: false,
+		available: isDev(),
 	},
 ];

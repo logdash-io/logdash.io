@@ -8,6 +8,7 @@ import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.se
 import { HttpPingEventEmitter } from '../events/http-ping-event.emitter';
 import { CreateHttpPingDto } from '../write/dto/create-http-ping.dto';
 import { HttpPingWriteService } from '../write/http-ping-write.service';
+import { HttpPingSchedulerDataService } from './http-ping-scheduler.data-service';
 
 interface QueueItem {
   monitor: HttpMonitorNormalized;
@@ -27,9 +28,18 @@ export class HttpPingSchedulerService {
     private readonly averageRecorder: AverageRecorder,
     @Inject(MAX_CONCURRENT_REQUESTS_TOKEN)
     private readonly maxConcurrentRequests: number,
+    private readonly httpPingSchedulerDataService: HttpPingSchedulerDataService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
+  private async triggerPingAllMonitors(): Promise<void> {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    await this.tryPingAllMonitors();
+  }
+
   public async tryPingAllMonitors(): Promise<void> {
     try {
       await this.pingAllMonitors();
@@ -91,12 +101,30 @@ export class HttpPingSchedulerService {
     startTime: number,
     error?: any,
   ): CreateHttpPingDto {
+    const message = this.getMessage(response, error);
+
     return {
       httpMonitorId: monitor.id,
       statusCode: response?.status || 0,
       responseTimeMs: this.calculateResponseTime(startTime),
-      message: response?.statusText || error?.message?.substring(0, 1000) || 'Unknown error',
+      message,
     };
+  }
+
+  private getMessage(response: any, error: any): string {
+    let jsonStringified;
+    try {
+      jsonStringified = JSON.stringify(response?.data);
+    } catch {
+      jsonStringified = null;
+    }
+
+    return (
+      (typeof response?.data === 'string' ? response.data.substring(0, 1000) : jsonStringified) ||
+      response?.statusText ||
+      error?.message ||
+      'Unknown error'
+    );
   }
 
   private calculateResponseTime(startTime: number): number {
@@ -105,10 +133,18 @@ export class HttpPingSchedulerService {
 
   private async saveCompletedPings(pings: CreateHttpPingDto[]): Promise<void> {
     if (pings.length === 0) return;
+
     const savedPings = await this.httpPingWriteService.createMany(pings);
 
+    const clusterIds = await this.httpPingSchedulerDataService.readClusterIdsByMonitorIds(
+      savedPings.map((ping) => ping.httpMonitorId),
+    );
+
     for (const ping of savedPings) {
-      await this.httpPingEventEmitter.emitHttpPingCreatedEvent({ ...ping });
+      await this.httpPingEventEmitter.emitHttpPingCreatedEvent({
+        ...ping,
+        clusterId: clusterIds[ping.httpMonitorId],
+      });
     }
   }
 }

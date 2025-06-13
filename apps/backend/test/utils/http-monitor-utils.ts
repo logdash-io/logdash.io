@@ -19,12 +19,12 @@ export class HttpMonitorUtils {
   }
 
   public async createHttpMonitor(
-    dto: Partial<CreateHttpMonitorBody> & { token: string; clusterId: string },
+    dto: Partial<CreateHttpMonitorBody> & { token: string; projectId: string },
   ): Promise<HttpMonitorSerialized> {
     this.tryFillDto(dto);
 
     const response = await request(this.app.getHttpServer())
-      .post(`/clusters/${dto.clusterId}/http_monitors`)
+      .post(`/projects/${dto.projectId}/http_monitors`)
       .set('Authorization', `Bearer ${dto.token}`)
       .send(dto);
 
@@ -32,7 +32,7 @@ export class HttpMonitorUtils {
   }
 
   public async storeHttpMonitor(
-    dto: Partial<CreateHttpMonitorBody> & { token: string; clusterId: string },
+    dto: Partial<CreateHttpMonitorBody> & { token: string; projectId: string },
   ): Promise<HttpMonitorNormalized> {
     this.tryFillDto(dto);
     const monitor = await this.httpMonitorModel.create(dto);

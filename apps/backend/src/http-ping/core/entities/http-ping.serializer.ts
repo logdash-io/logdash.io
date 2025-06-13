@@ -1,16 +1,16 @@
+import { ClickhouseUtils } from '../../../clickhouse/clickhouse.utils';
 import { HttpPingEntity } from './http-ping.entity';
 import { HttpPingNormalized, HttpPingSerialized } from './http-ping.interface';
 
 export class HttpPingSerializer {
   public static normalize(entity: HttpPingEntity): HttpPingNormalized {
     return {
-      id: entity._id.toString(),
-      httpMonitorId: entity.httpMonitorId,
-      statusCode: entity.statusCode,
-      responseTimeMs: entity.responseTimeMs,
-      message: entity.message,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
+      id: entity.id,
+      httpMonitorId: entity.http_monitor_id,
+      statusCode: entity.status_code,
+      responseTimeMs: entity.response_time_ms,
+      message: entity.message || undefined,
+      createdAt: ClickhouseUtils.clickhouseDateToJsDate(entity.created_at),
     };
   }
 
@@ -26,7 +26,6 @@ export class HttpPingSerializer {
       responseTimeMs: normalized.responseTimeMs,
       message: normalized.message,
       createdAt: normalized.createdAt,
-      updatedAt: normalized.updatedAt,
     };
   }
 

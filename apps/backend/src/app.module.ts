@@ -21,6 +21,8 @@ import { RedisModule } from './shared/redis/redis.module';
 import { SupportCoreModule } from './support/core/support-core.module';
 import { UserCoreModule } from './user/core/user-core.module';
 import { ClickhouseModule } from './clickhouse/clickhouse.module';
+import { NotificationChannelCoreModule } from './notification-channel/core/notification-channel-core.module';
+import { HttpPingBucketCoreModule } from './http-ping-bucket/core/http-ping-bucket-core.module';
 
 @Module({
   imports: [
@@ -41,12 +43,14 @@ import { ClickhouseModule } from './clickhouse/clickhouse.module';
     ExposedConfigModule,
     HttpMonitorCoreModule,
     HttpPingCoreModule,
+    HttpPingBucketCoreModule,
     ClusterCoreModule,
     MetricRegisterCoreModule,
     RedisModule.forRoot({
       url: getEnvConfig().redis.url,
     }),
     ClickhouseModule,
+    NotificationChannelCoreModule,
   ],
 })
 export class AppModule {}

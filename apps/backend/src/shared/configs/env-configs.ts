@@ -27,6 +27,7 @@ interface EnvConfig {
   };
   pings: {
     maxConcurrentRequests: number;
+    ttlHours: number;
   };
   demo: {
     clusterId: string;
@@ -68,6 +69,12 @@ interface EnvConfig {
     password: string;
     database: string;
   };
+  notificationChannels: {
+    telegramUptimeBot: {
+      secret: string;
+      token: string;
+    };
+  };
 }
 
 interface EnvConfigs {
@@ -104,6 +111,7 @@ export const EnvConfigs: EnvConfigs = {
     },
     pings: {
       maxConcurrentRequests: 100,
+      ttlHours: 12,
     },
     demo: {
       clusterId: '682a50841175bcf07c63bbc4',
@@ -145,6 +153,12 @@ export const EnvConfigs: EnvConfigs = {
       password: process.env.CLICKHOUSE_PASSWORD!,
       database: process.env.CLICKHOUSE_DATABASE!,
     },
+    notificationChannels: {
+      telegramUptimeBot: {
+        secret: process.env.TELEGRAM_UPTIME_BOT_SECRET!,
+        token: process.env.TELEGRAM_UPTIME_BOT_TOKEN!,
+      },
+    },
   },
   [OurEnv.Dev]: {
     emailLoginWhitelist: {
@@ -173,6 +187,7 @@ export const EnvConfigs: EnvConfigs = {
     },
     pings: {
       maxConcurrentRequests: 10,
+      ttlHours: 12,
     },
     demo: {
       clusterId: '682844d37f296819db10b9a5',
@@ -214,6 +229,12 @@ export const EnvConfigs: EnvConfigs = {
       password: process.env.CLICKHOUSE_PASSWORD!,
       database: process.env.CLICKHOUSE_DATABASE!,
     },
+    notificationChannels: {
+      telegramUptimeBot: {
+        secret: process.env.TELEGRAM_UPTIME_BOT_SECRET!,
+        token: process.env.TELEGRAM_UPTIME_BOT_TOKEN!,
+      },
+    },
   },
   [OurEnv.Local]: {
     emailLoginWhitelist: {
@@ -242,6 +263,7 @@ export const EnvConfigs: EnvConfigs = {
     },
     pings: {
       maxConcurrentRequests: 10,
+      ttlHours: 12,
     },
     demo: {
       clusterId: '682cf106d7874ce88faf7426',
@@ -282,6 +304,12 @@ export const EnvConfigs: EnvConfigs = {
       username: process.env.CLICKHOUSE_USER!,
       password: process.env.CLICKHOUSE_PASSWORD!,
       database: process.env.CLICKHOUSE_DATABASE!,
+    },
+    notificationChannels: {
+      telegramUptimeBot: {
+        secret: process.env.TELEGRAM_UPTIME_BOT_SECRET!,
+        token: process.env.TELEGRAM_UPTIME_BOT_TOKEN!,
+      },
     },
   },
 };

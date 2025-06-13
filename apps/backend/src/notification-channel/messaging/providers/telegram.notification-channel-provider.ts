@@ -1,0 +1,61 @@
+import { Injectable } from '@nestjs/common';
+import axios from 'axios';
+import {
+  NotificationChannelProvider,
+  SendHttpMonitorAlertMessageSpecificProviderDto,
+} from '../notification-channel-provider';
+import { TelegramOptions } from '../../core/types/telegram-options.type';
+import { Logger } from '@logdash/js-sdk';
+import { HttpMonitorStatus } from '../../../http-monitor/status/enum/http-monitor-status.enum';
+
+@Injectable()
+export class TelegramNotificationChannelProvider implements NotificationChannelProvider {
+  constructor(private readonly logger: Logger) {}
+
+  public async sendHttpMonitorAlertMessage(
+    dto: SendHttpMonitorAlertMessageSpecificProviderDto,
+  ): Promise<void> {
+    const options: TelegramOptions = dto.notificationChannel.options as TelegramOptions;
+
+    await this.sendMessageToTelegramApi({
+      botToken: options.botToken!,
+      chatId: options.chatId,
+      message: this.createHttpMonitorAlertMessage(dto),
+    });
+  }
+
+  private createHttpMonitorAlertMessage(
+    dto: SendHttpMonitorAlertMessageSpecificProviderDto,
+  ): string {
+    const codeBlock = '```';
+
+    if (dto.newStatus === HttpMonitorStatus.Down) {
+      return `🔴  *${dto.name}* is down
+${codeBlock}
+Status code: ${dto.statusCode ?? 'N/A'}
+Error: ${dto.errorMessage ?? 'N/A'}
+${codeBlock}`;
+    }
+
+    return `🟢  *${dto.name}* is up`;
+  }
+
+  private async sendMessageToTelegramApi(dto: {
+    botToken: string;
+    chatId: string;
+    message: string;
+  }) {
+    const url = `https://api.telegram.org/bot${dto.botToken}/sendMessage?parse_mode=MarkdownV2`;
+
+    try {
+      await axios.post(url, {
+        chat_id: dto.chatId,
+        text: dto.message,
+      });
+    } catch (error) {
+      this.logger.error('Failed to send message to Telegram', {
+        error: error.response?.data || error.message,
+      });
+    }
+  }
+}

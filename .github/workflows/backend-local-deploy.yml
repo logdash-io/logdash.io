@@ -34,7 +34,7 @@ jobs:
           application-port: 3000
           image-name: ablaszkiewicz/logdash-backend-local
           container-name: logdash-backend-local
-          mongo-url: ${{ secrets.BACKEND_DEV_MONGO_URL }}
+          mongo-url: ${{ secrets.BACKEND_LOCAL_MONGO_URL }}
           github-oauth-client-id: ${{ secrets.BACKEND_LOCAL_GITHUB_OAUTH_CLIENT_ID }}
           github-oauth-client-secret: ${{ secrets.BACKEND_LOCAL_GITHUB_OAUTH_CLIENT_SECRET }}
           resend-api-key: 'empty'
@@ -54,3 +54,5 @@ jobs:
           clickhouse-password: ${{ secrets.BACKEND_LOCAL_CLICKHOUSE_PASSWORD }}
           clickhouse-database: default
           swagger-password: ${{ secrets.BACKEND_SWAGGER_PASSWORD }}
+          telegram-uptime-bot-token: ${{ secrets.BACKEND_LOCAL_TELEGRAM_UPTIME_BOT_TOKEN }}
+          telegram-uptime-bot-secret: ${{ secrets.BACKEND_LOCAL_TELEGRAM_UPTIME_BOT_SECRET }}

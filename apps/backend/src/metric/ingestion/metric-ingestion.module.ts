@@ -5,6 +5,7 @@ import { MetricReadModule } from '../read/metric-read.module';
 import { MetricRegisterQualificationModule } from '../../metric-register/qualification/metric-register-qualification.module';
 import { MetricRegisterReadModule } from '../../metric-register/read/metric-register-read.module';
 import { MetricEventModule } from '../events/metric-event.module';
+import { MetricRegisterWriteModule } from '../../metric-register/write/metric-register-write.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { MetricEventModule } from '../events/metric-event.module';
     MetricRegisterQualificationModule,
     MetricRegisterReadModule,
     MetricEventModule,
+    MetricRegisterWriteModule,
   ],
   providers: [MetricIngestionService],
   exports: [MetricIngestionService],

@@ -1,26 +1,27 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { ClickhouseUtils } from '../../../clickhouse/clickhouse.utils';
+import { HttpPingNormalized } from './http-ping.interface';
 
-@Schema({ collection: 'httpPings', timestamps: true })
 export class HttpPingEntity {
-  _id: Types.ObjectId;
+  id: string;
 
-  @Prop()
-  httpMonitorId: string;
+  http_monitor_id: string;
 
-  @Prop()
-  statusCode: number;
+  status_code: number;
 
-  @Prop()
-  responseTimeMs: number;
+  response_time_ms: number;
 
-  @Prop()
-  message: string;
+  message: string | null;
 
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+
+  public static fromNormalized(normalized: HttpPingNormalized): HttpPingEntity {
+    return {
+      id: normalized.id,
+      http_monitor_id: normalized.httpMonitorId,
+      status_code: normalized.statusCode,
+      response_time_ms: normalized.responseTimeMs,
+      message: normalized.message || null,
+      created_at: ClickhouseUtils.jsDateToClickhouseDate(normalized.createdAt),
+    };
+  }
 }
-
-export type HttpPingDocument = HydratedDocument<HttpPingEntity>;
-
-export const HttpPingSchema = SchemaFactory.createForClass(HttpPingEntity);

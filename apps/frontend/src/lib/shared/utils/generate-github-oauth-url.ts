@@ -8,6 +8,7 @@ export type GithubCallbackState = {
 	fallback_url: string;
 	cluster_id?: string;
 	tier?: UserTier;
+	next_url: string;
 };
 
 export const generateGithubOAuthUrl = (state: GithubCallbackState) => {

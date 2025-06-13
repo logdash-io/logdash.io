@@ -1,0 +1,21 @@
+name: Apply mongo migrations (dev)
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'apps/backend/migrations/**'
+      - '.github/**'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Apply migrations
+        uses: './.github/templates/apply-mongo-migrations'
+        with:
+          mongo-uri: ${{ secrets.BACKEND_DEV_MONGO_URL }}

@@ -5,4 +5,5 @@ export interface HttpPingCreatedEvent {
   responseTimeMs: number;
   message?: string;
   createdAt: Date;
+  clusterId: string;
 }
