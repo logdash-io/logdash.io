@@ -101,12 +101,30 @@ export class HttpPingSchedulerService {
     startTime: number,
     error?: any,
   ): CreateHttpPingDto {
+    const message = this.getMessage(response, error);
+
     return {
       httpMonitorId: monitor.id,
       statusCode: response?.status || 0,
       responseTimeMs: this.calculateResponseTime(startTime),
-      message: response?.statusText || error?.message?.substring(0, 1000) || 'Unknown error',
+      message,
     };
+  }
+
+  private getMessage(response: any, error: any): string {
+    let jsonStringified;
+    try {
+      jsonStringified = JSON.stringify(response?.data);
+    } catch {
+      jsonStringified = null;
+    }
+
+    return (
+      (typeof response?.data === 'string' ? response.data.substring(0, 1000) : jsonStringified) ||
+      response?.statusText ||
+      error?.message ||
+      'Unknown error'
+    );
   }
 
   private calculateResponseTime(startTime: number): number {

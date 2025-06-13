@@ -2,8 +2,9 @@ import { createTestApp } from '../../utils/bootstrap';
 import { NotificationChannelMessagingService } from '../../../src/notification-channel/messaging/notification-channel-messaging.service';
 import { TelegramOptions } from '../../../src/notification-channel/core/types/telegram-options.type';
 import { sleep } from '../../utils/sleep';
+import { HttpMonitorStatus } from '../../../src/http-monitor/status/enum/http-monitor-status.enum';
 
-describe('Telegram communication channel', () => {
+describe('Telegram notification channel', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
 
   beforeAll(async () => {
@@ -14,42 +15,99 @@ describe('Telegram communication channel', () => {
     await bootstrap.methods.beforeEach();
   });
 
-  it('sends message to telegram', async () => {
-    // given
-    const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+  describe('http monitor alert message', () => {
+    it('sends down message with error message', async () => {
+      // given
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-    const channel =
-      await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
-        clusterId: cluster.id,
-        token,
-        options: {
-          botToken: 'valid-bot-token',
-          chatId: 'valid-chat-id',
+      const channel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: cluster.id,
+          token,
+          options: {
+            botToken: 'valid-bot-token',
+            chatId: 'valid-chat-id',
+          },
+        });
+
+      const requestBodies: any[] = [];
+
+      bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
+        botId: (channel.options as TelegramOptions).botToken!,
+        onMessage: (body) => {
+          requestBodies.push(body);
         },
       });
 
-    const requestBodies: any[] = [];
+      // when
+      const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
+      messagingService.sendHttpMonitorAlertMessage({
+        httpMonitorId: 'some-http-monitor-id',
+        notificationChannelsIds: [channel.id],
+        newStatus: HttpMonitorStatus.Down,
+        name: 'test',
+        url: 'https://google.com',
+        errorMessage: 'test error',
+        statusCode: '404',
+      });
 
-    bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
-      botId: (channel.options as TelegramOptions).botToken!,
-      onMessage: (body) => {
-        requestBodies.push(body);
-      },
+      await sleep(500);
+
+      const codeBlock = '```';
+
+      // then
+      expect(requestBodies.length).toBe(1);
+      expect(requestBodies[0]).toEqual({
+        chat_id: 'valid-chat-id',
+        text: `🔴  *test* is down
+${codeBlock}
+Status code: 404
+Error: test error
+${codeBlock}`,
+      });
     });
 
-    // when
-    const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
-    messagingService.sendMessage({
-      notificationChannelsIds: [channel.id],
-      message: 'test',
-    });
-    await sleep(500);
+    it('sends up message', async () => {
+      // given
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-    // then
-    expect(requestBodies.length).toBe(1);
-    expect(requestBodies[0]).toEqual({
-      chat_id: 'valid-chat-id',
-      text: 'test',
+      const channel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: cluster.id,
+          token,
+          options: {
+            botToken: 'valid-bot-token',
+            chatId: 'valid-chat-id',
+          },
+        });
+
+      const requestBodies: any[] = [];
+
+      bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
+        botId: (channel.options as TelegramOptions).botToken!,
+        onMessage: (body) => {
+          requestBodies.push(body);
+        },
+      });
+
+      // when
+      const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
+      messagingService.sendHttpMonitorAlertMessage({
+        httpMonitorId: 'some-http-monitor-id',
+        notificationChannelsIds: [channel.id],
+        newStatus: HttpMonitorStatus.Up,
+        name: 'test',
+        url: 'https://google.com',
+      });
+
+      await sleep(500);
+
+      // then
+      expect(requestBodies.length).toBe(1);
+      expect(requestBodies[0]).toEqual({
+        chat_id: 'valid-chat-id',
+        text: `🟢  *test* is up`,
+      });
     });
   });
 });
