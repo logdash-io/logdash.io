@@ -16,6 +16,10 @@ runs:
       run: npm install -g migrate-mongo
       shell: bash
 
+    - name: Install dotenv
+      run: npm install -g dotenv
+      shell: bash
+
     - name: Run mongo migrations
       run: |
         cd ./apps/backend
