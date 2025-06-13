@@ -56,22 +56,20 @@ describe('Metrics (writes)', () => {
 
     // then
     const metrics = await bootstrap.models.metricModel.find();
+    const metricRegisterEntry = await bootstrap.models.metricRegisterModel.findOne({
+      name: 'Users',
+      projectId: apiKey.projectId,
+    });
 
-    const hourMetric = metrics.find(
-      (metric) => metric.granularity === MetricGranularity.Hour,
-    )!;
-    const dayMetric = metrics.find(
-      (metric) => metric.granularity === MetricGranularity.Day,
-    )!;
+    const hourMetric = metrics.find((metric) => metric.granularity === MetricGranularity.Hour)!;
+    const dayMetric = metrics.find((metric) => metric.granularity === MetricGranularity.Day)!;
     const firstMinuteMetric = metrics.find(
       (metric) =>
-        metric.granularity === MetricGranularity.Minute &&
-        metric.timeBucket === '2021-01-01T12:00',
+        metric.granularity === MetricGranularity.Minute && metric.timeBucket === '2021-01-01T12:00',
     )!;
     const secondMinuteMetric = metrics.find(
       (metric) =>
-        metric.granularity === MetricGranularity.Minute &&
-        metric.timeBucket === '2021-01-01T12:01',
+        metric.granularity === MetricGranularity.Minute && metric.timeBucket === '2021-01-01T12:01',
     )!;
     const allTimeMetric = metrics.find(
       (metric) => metric.granularity === MetricGranularity.AllTime,
@@ -82,19 +80,18 @@ describe('Metrics (writes)', () => {
     expect(firstMinuteMetric.value).toEqual(2);
     expect(secondMinuteMetric.value).toEqual(3);
     expect(allTimeMetric.value).toEqual(3);
+
+    expect(metricRegisterEntry?.values?.counter?.absoluteValue).toEqual(3);
   });
 
   it('records metrics with dynamic granularity (CHANGE)', async () => {
     // given
-    const { apiKey, project } =
-      await bootstrap.utils.generalUtils.setupAnonymous();
+    const { apiKey, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
     advanceTo(new Date('2021-01-01T12:00:00Z'));
 
     // when
-    const service: MetricQueueingService = bootstrap.app.get(
-      MetricQueueingService,
-    );
+    const service: MetricQueueingService = bootstrap.app.get(MetricQueueingService);
 
     await service.queueMetrics([
       {
@@ -135,14 +132,18 @@ describe('Metrics (writes)', () => {
     await service.processQueue();
 
     const metrics = await bootstrap.models.metricModel.find();
+    const metricRegisterEntry = await bootstrap.models.metricRegisterModel.findOne({
+      name: 'Users',
+      projectId: apiKey.projectId,
+    });
 
     expect(metrics[0].value).toEqual(11);
+    expect(metricRegisterEntry?.values?.counter?.absoluteValue).toEqual(11);
   });
 
   it('registers metric and does not let go beyond the limit', async () => {
     // given
-    const { apiKey, project } =
-      await bootstrap.utils.generalUtils.setupAnonymous();
+    const { apiKey, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
     // when
     const promisesA: Promise<void>[] = [];
@@ -177,8 +178,7 @@ describe('Metrics (writes)', () => {
     }
 
     // then
-    const metricRegisterEntries =
-      await bootstrap.models.metricRegisterModel.find();
+    const metricRegisterEntries = await bootstrap.models.metricRegisterModel.find();
 
     const users0MetricRegisterEntryId = metricRegisterEntries
       .find((entry) => entry.name === 'Users0')!
