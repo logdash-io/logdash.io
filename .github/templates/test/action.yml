@@ -23,11 +23,12 @@ runs:
         TEST_FILES="${{ inputs.test-batch }}"
         echo "Running tests for: $TEST_FILES"
 
-        # Convert space-separated string to array and run each test
-        for test_file in $TEST_FILES; do
-          echo "Running test: $test_file"
-          npx jest --testPathPattern="$test_file" --runInBand --forceExit
-        done
+        # Convert space-separated string to regex pattern for Jest
+        # Example: "test1.spec.ts test2.spec.ts test3.spec.ts" becomes "(test1\.spec\.ts|test2\.spec\.ts|test3\.spec\.ts)"
+        REGEX_PATTERN=$(echo "$TEST_FILES" | sed 's/ /|/g' | sed 's/\./\\./g' | sed 's/^/(/; s/$/)/')
+
+        echo "Jest pattern: $REGEX_PATTERN"
+        npx jest --testPathPattern="$REGEX_PATTERN" --runInBand --forceExit
       shell: bash
       env:
         OUR_ENV: 'dev'
