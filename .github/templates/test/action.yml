@@ -1,4 +1,9 @@
-name: 'Run tests'
+name: 'Run single test'
+
+inputs:
+  test-file:
+    description: 'Specific test file to run'
+    required: true
 
 runs:
   using: 'composite'
@@ -12,8 +17,8 @@ runs:
       run: cd apps/backend && npm ci
       shell: bash
 
-    - name: Run tests
-      run: cd apps/backend && npm run test
+    - name: Run test
+      run: cd apps/backend && npx jest --testPathPattern="${{ inputs.test-file }}" --runInBand --forceExit
       shell: bash
       env:
         OUR_ENV: 'dev'

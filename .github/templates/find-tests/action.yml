@@ -1,0 +1,23 @@
+name: 'Find test files'
+
+outputs:
+  test-files:
+    description: 'List of test files for matrix'
+    value: ${{ steps.find-tests.outputs.test-files }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+
+    - name: Find test files
+      id: find-tests
+      run: |
+        cd apps/backend
+        TEST_FILES=$(find test -name "*.spec.ts" -type f | jq -R -s -c 'split("\n")[:-1]')
+        echo "test-files=$TEST_FILES" >> $GITHUB_OUTPUT
+        echo "Found test files: $TEST_FILES"
+      shell: bash
