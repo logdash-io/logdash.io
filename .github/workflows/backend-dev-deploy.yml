@@ -38,13 +38,15 @@ jobs:
           username: ${{ secrets.BACKEND_DEV_SSH_USER }}
           port: ${{ secrets.BACKEND_DEV_SSH_PORT }}
           ssh-private-key: ${{ secrets.BACKEND_DEV_SSH_KEY }}
-          server-port: 6001
+          server-port: 80
           application-port: 3000
           image-name: ablaszkiewicz/logdash-backend-dev
           container-name: logdash-backend-dev
           mongo-url: ${{ secrets.BACKEND_DEV_MONGO_URL }}
           github-oauth-client-id: ${{ secrets.BACKEND_DEV_GITHUB_OAUTH_CLIENT_ID }}
           github-oauth-client-secret: ${{ secrets.BACKEND_DEV_GITHUB_OAUTH_CLIENT_SECRET }}
+          github-oauth-client-id-alternative: ${{ secrets.BACKEND_DEV_GITHUB_OAUTH_CLIENT_ID_ALTERNATIVE }}
+          github-oauth-client-secret-alternative: ${{ secrets.BACKEND_DEV_GITHUB_OAUTH_CLIENT_SECRET_ALTERNATIVE }}
           resend-api-key: 'null'
           resend-audience-enabled: 'false'
           stripe-api-key-secret: ${{ secrets.BACKEND_DEV_STRIPE_API_KEY_SECRET }}
@@ -64,6 +66,7 @@ jobs:
           swagger-password: ${{ secrets.BACKEND_SWAGGER_PASSWORD }}
           telegram-uptime-bot-token: ${{ secrets.BACKEND_DEV_TELEGRAM_UPTIME_BOT_TOKEN }}
           telegram-uptime-bot-secret: ${{ secrets.BACKEND_DEV_TELEGRAM_UPTIME_BOT_SECRET }}
+
       - name: Prune
         uses: './.github/templates/prune'
         with:

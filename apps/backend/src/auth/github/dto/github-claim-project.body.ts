@@ -9,4 +9,6 @@ export class GithubClaimProjectBody {
 
   @ApiPropertyOptional()
   emailAccepted?: boolean;
+
+  forceLocalLogin?: boolean;
 }

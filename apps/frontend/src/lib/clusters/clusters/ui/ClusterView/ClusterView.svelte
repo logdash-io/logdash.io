@@ -10,6 +10,7 @@
 	import ProjectsSwitcher from '../../../projects/ui/ProjectsSwitcher/ProjectsSwitcher.svelte';
 	import { clustersState } from '../../application/clusters.state.svelte.js';
 	import SetupMonitoringButton from './SetupMonitoringButton.svelte';
+	import { userState } from '$lib/shared/user/application/user.state.svelte.js';
 
 	type Props = {
 		priorityClusterId?: string;
@@ -75,7 +76,7 @@
 					</button>
 				{/if}
 
-				{#if isDev() && !hasMonitoring && clustersState.ready}
+				{#if userState.hasEarlyAccess && !hasMonitoring && clustersState.ready}
 					<SetupMonitoringButton
 						class="btn btn-secondary btn-sm gap-1 opacity-90"
 						canAddMore={true}

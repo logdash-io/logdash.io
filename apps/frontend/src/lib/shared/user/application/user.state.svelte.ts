@@ -1,4 +1,5 @@
 import { UserTier } from '$lib/shared/types.js';
+import { isDev } from '$lib/shared/utils/is-dev.util.js';
 import { type User } from '../domain/user.js';
 
 class UserState {
@@ -14,6 +15,10 @@ class UserState {
 
 	get avatar(): User['avatarUrl'] {
 		return this._user?.avatarUrl;
+	}
+
+	get hasEarlyAccess(): boolean {
+		return this.tier === UserTier.EARLY_BIRD || isDev();
 	}
 
 	set(user: User): void {

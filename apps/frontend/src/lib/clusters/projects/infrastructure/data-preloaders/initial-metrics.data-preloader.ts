@@ -5,25 +5,25 @@ import type { ServerLoadEvent } from '@sveltejs/kit';
 import type { Metric } from '../../domain/metric.js';
 
 export class InitialMetricsDataPreloader
-	implements DataPreloader<{ initialMetrics: Metric[] }>
+  implements DataPreloader<{ initialMetrics: Metric[] }>
 {
-	async preload({
-		cookies,
-		params,
-		url,
-	}: ServerLoadEvent): Promise<{ initialMetrics: Metric[] }> {
-		if (!url.searchParams.has('project_id')) {
-			return {
-				initialMetrics: [],
-			};
-		}
+  async preload({
+    cookies,
+    params,
+    url,
+  }: ServerLoadEvent): Promise<{ initialMetrics: Metric[] }> {
+    if (!url.searchParams.has('project_id')) {
+      return {
+        initialMetrics: [],
+      };
+    }
 
-		const initialMetrics =
-			(await logdashAPI.get_project_metrics(
-				url.searchParams.get('project_id'),
-				get_access_token(cookies),
-			)) || [];
+    const initialMetrics =
+      (await logdashAPI.get_project_metrics(
+        url.searchParams.get('project_id'),
+        get_access_token(cookies),
+      )) || [];
 
-		return { initialMetrics };
-	}
+    return { initialMetrics };
+  }
 }

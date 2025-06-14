@@ -50,4 +50,15 @@ export class HttpMonitorUtils {
 
     return dto as CreateHttpMonitorBody;
   }
+
+  public async getHttpMonitorResponse(
+    httpMonitorId: string,
+    token: string,
+  ): Promise<HttpMonitorSerialized> {
+    const response = await request(this.app.getHttpServer())
+      .get(`/http_monitors/${httpMonitorId}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    return response.body;
+  }
 }

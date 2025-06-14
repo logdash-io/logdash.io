@@ -6,30 +6,52 @@
 	import { stripProtocol } from '$lib/shared/utils/url.js';
 	import { CheckCircle } from 'lucide-svelte';
 	import { getContext, type Snippet } from 'svelte';
-	import MonitorsListener from '../presentational/MonitorsListener.svelte';
+	import MonitorsListener from '../presentational/PingsListener.svelte';
+	import { goto } from '$app/navigation';
+	import { autoFocus } from '$lib/shared/ui/actions/use-autofocus.svelte.js';
 
 	type Props = {
 		claimer: Snippet<[boolean]>;
 	};
 	const { claimer }: Props = $props();
-	const tabId: string = getContext('tabId');
+	const MIN_NAME_LENGTH = 1;
+	const MAX_NAME_LENGTH = 50;
+
+	const clusterId = $derived(page.params.cluster_id);
 	const observedUrl = $derived(page.url.searchParams.get('url'));
-	const isHealthy = $derived(monitoringState.isHealthy(observedUrl));
-	const pings = $derived.by(() =>
-		monitoringState.monitoringPings(observedUrl),
+	const nameParam = $derived(
+		decodeURIComponent(page.url.searchParams.get('name') || ''),
+	);
+	const isHealthy = $derived(monitoringState.isPreviewHealthy(observedUrl));
+	const pings = $derived.by(() => monitoringState.previewPings(observedUrl));
+	let monitorName = $state(
+		nameParam ?? (stripProtocol(page.url.searchParams.get('url')) || ''),
 	);
 
 	$effect(() => {
-		monitoringState.previewUrl(page.params.cluster_id, observedUrl);
+		monitoringState.previewUrl(clusterId, observedUrl);
 
 		return () => {
-			monitoringState.unsync();
+			monitoringState.stopUrlPreview();
 		};
+	});
+
+	$effect(() => {
+		if (nameParam === monitorName) {
+			return;
+		}
+
+		page.url.searchParams.set('name', encodeURIComponent(monitorName));
+		goto(page.url.toString(), {
+			replaceState: true,
+			keepFocus: true,
+			noScroll: true,
+		});
 	});
 </script>
 
 <div class="w-xl mr-auto space-y-8">
-	previewUrl<DataTile delayIn={0} delayOut={50}>
+	<DataTile delayIn={0} delayOut={50}>
 		<div class="flex w-full flex-col gap-2">
 			<div class="flex w-full gap-2">
 				<div class="flex w-full items-center gap-2">
@@ -81,17 +103,17 @@
 					{/each}
 
 					{#each pings as ping, i}
+						{@const pingHealthy =
+							ping.statusCode >= 200 && ping.statusCode < 400}
 						<Tooltip content={`Service is up ${i}`} placement="top">
 							<div
 								class={[
 									'h-8 w-1.5 shrink-0 rounded-sm bg-gradient-to-b hover:h-12 lg:w-[7px]',
 									{
 										'from-green-600 via-green-600/80 to-green-600':
-											ping.statusCode >= 200 &&
-											ping.statusCode < 400,
+											pingHealthy,
 										'from-red-600 via-red-600/80 to-red-600':
-											ping.statusCode >= 200 &&
-											ping.statusCode < 400,
+											!pingHealthy,
 									},
 								]}
 							></div>
@@ -124,17 +146,35 @@
 			</div>
 
 			<div class="space-y-2 text-3xl font-semibold">
-				<div
-					class="text-secondary italicx relative flex items-center gap-2"
-				>
+				<div class="text-secondary relative flex items-center gap-2">
 					{page.url.searchParams.get('url')}
 				</div>
 			</div>
 		</div>
 
+		<div class="collapse-open collapse overflow-visible rounded-none">
+			<div class="px-1 py-4 font-semibold">
+				<span>2. Choose name</span>
+			</div>
+
+			<div class="space-y-2 text-3xl font-semibold">
+				<input
+					type="text"
+					bind:value={monitorName}
+					placeholder={stripProtocol(observedUrl)}
+					minlength={MIN_NAME_LENGTH}
+					maxlength={MAX_NAME_LENGTH}
+					class="input-sm input-ghost selection:bg-secondary/20 border-secondary/20 focus:border-primary h-full w-full rounded-lg px-3 py-2 text-lg font-semibold outline-0 focus:bg-transparent"
+					use:autoFocus={{
+						selectAll: true,
+					}}
+				/>
+			</div>
+		</div>
+
 		<div class="collapse-open">
 			<div class="px-1 py-4 font-semibold">
-				<span>2. Capture pings</span>
+				<span>3. Capture pings</span>
 			</div>
 
 			<div class="text-sm">

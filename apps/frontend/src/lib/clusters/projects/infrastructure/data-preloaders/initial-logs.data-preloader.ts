@@ -5,25 +5,24 @@ import type { ServerLoadEvent } from '@sveltejs/kit';
 import type { Log } from '../../domain/log.js';
 
 export class InitialLogsDataPreloader
-	implements DataPreloader<{ initialLogs: Log[] }>
+  implements DataPreloader<{ initialLogs: Log[] }>
 {
-	async preload({
-		cookies,
-		params,
-		url,
-	}: ServerLoadEvent): Promise<{ initialLogs: Log[] }> {
-		if (!url.searchParams.has('project_id')) {
-			return {
-				initialLogs: [],
-			};
-		}
+  async preload({
+    cookies,
+    url,
+  }: ServerLoadEvent): Promise<{ initialLogs: Log[] }> {
+    if (!url.searchParams.has('project_id')) {
+      return {
+        initialLogs: [],
+      };
+    }
 
-		const initialLogs =
-			(await logdashAPI.get_project_logs(
-				url.searchParams.get('project_id'),
-				get_access_token(cookies),
-			)) || [];
+    const initialLogs =
+      (await logdashAPI.get_project_logs(
+        url.searchParams.get('project_id'),
+        get_access_token(cookies),
+      )) || [];
 
-		return { initialLogs };
-	}
+    return { initialLogs };
+  }
 }

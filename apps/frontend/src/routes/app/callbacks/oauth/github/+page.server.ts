@@ -1,6 +1,6 @@
+import { dev } from '$app/environment';
 import { bffLogger } from '$lib/shared/bff-logger';
 import { logdashAPI } from '$lib/shared/logdash.api';
-import { UserTier } from '$lib/shared/types.js';
 import {
 	get_access_token,
 	save_access_token,
@@ -31,6 +31,7 @@ async function runLoginFlow(dto: {
 		code,
 		terms_accepted,
 		email_accepted,
+		is_local_env: dev,
 	});
 
 	if (error) {
@@ -73,6 +74,7 @@ async function runClaimFlow(dto: {
 		anon_jwt_token: anon_access_token,
 		terms_accepted,
 		email_accepted,
+		is_local_env: dev,
 	});
 
 	if (error) {
