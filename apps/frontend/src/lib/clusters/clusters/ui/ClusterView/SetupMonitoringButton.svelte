@@ -18,7 +18,7 @@
 	const { onSubmit, class: className, children }: Props = $props();
 
 	const MIN_NAME_LENGTH = 3;
-	const MAX_NAME_LENGTH = 30;
+	const MAX_NAME_LENGTH = 800;
 
 	let url = $state('');
 
