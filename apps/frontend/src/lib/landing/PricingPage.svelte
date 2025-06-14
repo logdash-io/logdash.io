@@ -53,10 +53,11 @@
 				name: 'Early Bird',
 				price: '$5',
 				period: 'per month',
-				description: 'Ideal for Logdash believers and early adopters',
+				description: 'Ideal for Logdash believers and early adopters. Only 7 spots available!',
 				features: [
 					{ name: 'Everything in Hobby, plus:', included: true },
 					{ name: 'Up to 20 projects', included: true },
+					{ name: 'Up to 20 http monitors', included: true },
 					{ name: 'Up to 10 metrics per project', included: true },
 					{
 						name: 'Lifetime access to 10,000 most recent logs',
