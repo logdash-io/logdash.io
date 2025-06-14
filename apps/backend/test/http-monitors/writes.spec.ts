@@ -4,6 +4,10 @@ import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-conf
 import { CreateHttpMonitorBody } from '../../src/http-monitor/core/dto/create-http-monitor.body';
 import { Types } from 'mongoose';
 import { UpdateHttpMonitorBody } from '../../src/http-monitor/core/dto/update-http-monitor.body';
+import { HttpMonitorStatus } from '../../src/http-monitor/status/enum/http-monitor-status.enum';
+import * as nock from 'nock';
+import { HttpPingSchedulerService } from '../../src/http-ping/schedule/http-ping-scheduler.service';
+import { sleep } from '../utils/sleep';
 
 describe('HttpMonitorCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -100,6 +104,26 @@ describe('HttpMonitorCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(403);
+    });
+
+    it('pings newly created monitor', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      nock('https://example.com').get('/').reply(200);
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/projects/${project.id}/http_monitors`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'Test Monitor', url: 'https://example.com' });
+
+      // then
+      await sleep(3000);
+      const monitorResponse = await bootstrap.utils.httpMonitorsUtils.getHttpMonitorResponse(
+        response.body.id,
+        token,
+      );
+      expect(monitorResponse.lastStatus).toBe(HttpMonitorStatus.Up);
     });
   });
 
