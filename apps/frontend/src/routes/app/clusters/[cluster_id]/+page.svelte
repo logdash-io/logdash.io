@@ -5,9 +5,10 @@
 	import ClusterView from '$lib/clusters/clusters/ui/ClusterView/ClusterView.svelte';
 	import { logsState } from '$lib/clusters/projects/application/logs.state.svelte.js';
 	import { metricsState } from '$lib/clusters/projects/application/metrics.state.svelte.js';
-	import { projectsState } from '$lib/clusters/projects/application/projects.state.svelte';
+	import { monitoringState } from '$lib/clusters/projects/application/monitoring.state.svelte.js';
 	import type { Log } from '$lib/clusters/projects/domain/log.js';
 	import type { Metric } from '$lib/clusters/projects/domain/metric.js';
+	import type { Monitor } from '$lib/clusters/projects/domain/monitoring/monitor.js';
 	import type { Project } from '$lib/clusters/projects/domain/project';
 
 	type Props = {
@@ -16,6 +17,7 @@
 			clusters: Cluster[];
 			initialLogs: Log[];
 			initialMetrics: Metric[];
+			initialMonitors: Monitor[];
 		};
 	};
 	const { data }: Props = $props();
@@ -27,6 +29,7 @@
 	$effect(() => {
 		logsState.set(data.initialLogs);
 		metricsState.set(data.initialMetrics);
+		monitoringState.set(data.initialMonitors);
 	});
 
 	// todo: check if user is claimed with api request before rendering, otherwise redirect to setup

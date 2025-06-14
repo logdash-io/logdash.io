@@ -4,4 +4,5 @@ export type Monitor = {
 	name: string;
 	projectId: string;
 	notificationChannelsIds: string[];
+	lastStatusCode: number;
 };

@@ -25,7 +25,10 @@ export class GithubAuthLoginService {
   public async login(dto: GithubLoginBody): Promise<TokenResponse> {
     this.logger.log(`Logging user in...`);
 
-    const accessToken = await this.authGithubDataService.getAccessToken(dto.githubCode);
+    const accessToken = await this.authGithubDataService.getAccessToken(
+      dto.githubCode,
+      dto.forceLocalLogin,
+    );
 
     const email = await this.authGithubDataService.getGithubEmail(accessToken);
 

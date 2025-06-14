@@ -9,4 +9,6 @@ export class GithubLoginBody {
 
   @ApiPropertyOptional()
   emailAccepted?: boolean;
+
+  forceLocalLogin?: boolean;
 }

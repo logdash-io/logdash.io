@@ -1,9 +1,13 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import SetupMonitoringButton from '$lib/clusters/clusters/ui/ClusterView/SetupMonitoringButton.svelte';
 	import DataTile from '$lib/clusters/projects/ui/ProjectView/tiles/DataTile.svelte';
 	import { FEATURES } from '$lib/shared/constants/features.js';
 	import FlamingoIcon from '$lib/shared/icons/FlamingoIcon.svelte';
+	import { RoutePath } from '$lib/shared/route-path.js';
+	import { Feature } from '$lib/shared/types.js';
+	import { userState } from '$lib/shared/user/application/user.state.svelte.js';
 	import { TimerIcon, ArrowRightIcon } from 'lucide-svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
@@ -40,28 +44,46 @@
 							{feature.title}
 						</h5>
 
-						<button
-							class="btn btn-primary btn-sm gap-1 opacity-90"
-							disabled={!feature.available}
-							onclick={() => {
-								if (!feature.available) {
-									return;
-								}
+						{#if feature.id === Feature.MONITORING && userState.hasEarlyAccess}
+							<SetupMonitoringButton
+								class="btn btn-primary btn-sm gap-1 opacity-90"
+								canAddMore={true}
+								onSubmit={(url) => {
+									goto(
+										`/app/clusters/${page.params.cluster_id}/configure/monitoring?project_id=${page.url.searchParams.get(
+											'project_id',
+										)}&url=${encodeURIComponent(url)}`,
+									);
+								}}
+							>
+								Setup monitoring <ArrowRightIcon
+									class="h-4 w-4"
+								/>
+							</SetupMonitoringButton>
+						{:else}
+							<button
+								class="btn btn-primary btn-sm gap-1 opacity-90"
+								disabled={!feature.available}
+								onclick={() => {
+									if (!feature.available) {
+										return;
+									}
 
-								goto(
-									`/app/clusters/${page.params.cluster_id}/configure/${feature.id}?project_id=${page.url.searchParams.get(
-										'project_id',
-									)}`,
-								);
-							}}
-						>
-							{#if !feature.available}
-								Coming soon <TimerIcon class="h-4 w-4" />
-							{:else}
-								Setup {feature.title}
-								<ArrowRightIcon class="h-4 w-4" />
-							{/if}
-						</button>
+									goto(
+										`/app/clusters/${page.params.cluster_id}/configure/${feature.id}?project_id=${page.url.searchParams.get(
+											'project_id',
+										)}`,
+									);
+								}}
+							>
+								{#if !feature.available}
+									Coming soon <TimerIcon class="h-4 w-4" />
+								{:else}
+									Setup {feature.title}
+									<ArrowRightIcon class="h-4 w-4" />
+								{/if}
+							</button>
+						{/if}
 					</div>
 
 					<ul>

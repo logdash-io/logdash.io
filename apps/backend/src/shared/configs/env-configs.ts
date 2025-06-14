@@ -45,6 +45,8 @@ interface EnvConfig {
   github: {
     clientId: string;
     clientSecret: string;
+    clientIdAlternative?: string;
+    clientSecretAlternative?: string;
   };
   mongo: {
     url: string;
@@ -205,6 +207,8 @@ export const EnvConfigs: EnvConfigs = {
     github: {
       clientId: process.env.GITHUB_OAUTH_CLIENT_ID!,
       clientSecret: process.env.GITHUB_OAUTH_CLIENT_SECRET!,
+      clientIdAlternative: process.env.GITHUB_OAUTH_CLIENT_ID_ALTERNATIVE!,
+      clientSecretAlternative: process.env.GITHUB_OAUTH_CLIENT_SECRET_ALTERNATIVE!,
     },
     mongo: {
       url: process.env.MONGO_URL!,

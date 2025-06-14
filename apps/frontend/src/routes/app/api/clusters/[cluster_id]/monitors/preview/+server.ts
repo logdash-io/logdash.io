@@ -1,16 +1,19 @@
+import type { HttpPingCreatedEvent } from '$lib/clusters/projects/domain/monitoring/http-ping.js';
 import { minToMs } from '$lib/shared/utils/time';
 import { type RequestHandler } from '@sveltejs/kit';
 import { produce } from 'sveltekit-sse';
 
-const UNLOCK_TIMEOUT = minToMs(1);
 const PING_INTERVAL = 20_000;
 const PING_COUNT = 10;
+const UNLOCK_TIMEOUT = PING_COUNT * PING_INTERVAL + minToMs(1);
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-const createPingScheduler = (url: string, emit: Function) => {
+const createPingScheduler = (
+	url: string,
+	emit: (event: string, payload: HttpPingCreatedEvent) => void,
+) => {
 	const timeouts: ReturnType<typeof setTimeout>[] = [];
 
-	const ping = async (id: number) => {
+	const ping = async (id: string) => {
 		const start = Date.now();
 
 		try {
@@ -19,35 +22,30 @@ const createPingScheduler = (url: string, emit: Function) => {
 				signal: AbortSignal.timeout(5000),
 			});
 
-			emit(
-				'ping-status',
-				JSON.stringify({
-					id,
-					status: 'success',
-					statusCode: response.status,
-					responseTime: Date.now() - start,
-					timestamp: new Date().toISOString(),
-				}),
-			);
+			emit('ping-status', {
+				id,
+				statusCode: response.status,
+				clusterId: 'preview',
+				createdAt: new Date(),
+				message: `Ping ${id} to ${url} successful`,
+				httpMonitorId: 'preview',
+				responseTimeMs: Date.now() - start,
+			});
 		} catch (error) {
-			emit(
-				'ping-status',
-				JSON.stringify({
-					id,
-					status: 'failed',
-					error:
-						error instanceof Error
-							? error.message
-							: 'Unknown error',
-					responseTime: Date.now() - start,
-					timestamp: new Date().toISOString(),
-				}),
-			);
+			emit('ping-status', {
+				id,
+				statusCode: 0,
+				clusterId: 'preview',
+				createdAt: new Date(),
+				message: `Ping ${id} to ${url} failed: ${error instanceof Error ? error.message : String(error)}`,
+				httpMonitorId: 'preview',
+				responseTimeMs: Date.now() - start,
+			});
 		}
 	};
 
 	for (let i = 0; i < PING_COUNT; i++) {
-		timeouts.push(setTimeout(() => ping(i + 1), i * PING_INTERVAL));
+		timeouts.push(setTimeout(() => ping(`${i + 1}`), i * PING_INTERVAL));
 	}
 
 	return () => timeouts.forEach(clearTimeout);
@@ -62,7 +60,9 @@ export const POST: RequestHandler = async ({ params, cookies, request }) => {
 			console.log('pingUrl:', pingUrl);
 
 			const cleanupPings = pingUrl
-				? createPingScheduler(pingUrl, emit)
+				? createPingScheduler(pingUrl, (e, d) =>
+						emit(e, JSON.stringify(d)),
+					)
 				: () => {};
 			const unlockTimer = setTimeout(
 				() => lock.set(false),

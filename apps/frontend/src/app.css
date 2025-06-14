@@ -61,6 +61,10 @@ body {
 	@apply whitespace-nowrap;
 }
 
+.btn-secondary:not(:disabled) {
+	@apply shadow-secondary/40 shadow;
+}
+
 .ld-card-base,
 .ld-card {
 	@apply from-base-200 to-base-300 border-base-100/70 border bg-gradient-to-br shadow-lg;

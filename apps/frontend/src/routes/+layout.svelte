@@ -33,8 +33,6 @@
 				api_host: envConfig.posthog.proxy,
 				ui_host: envConfig.posthog.host,
 				person_profiles: 'always',
-				// person_profiles: 'identified_only'
-				// disable_session_recording: false,
 				disable_session_recording: true,
 				loaded(ph) {
 					loadedPosthogInstance = ph;

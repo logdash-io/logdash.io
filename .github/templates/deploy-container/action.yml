@@ -28,6 +28,10 @@ inputs:
     required: true
   github-oauth-client-secret:
     required: true
+  github-oauth-client-id-alternative:
+    required: true
+  github-oauth-client-secret-alternative:
+    required: true
   resend-api-key:
     required: true
   resend-audience-enabled:
@@ -92,6 +96,8 @@ runs:
           -e MONGO_URL=${{ inputs.mongo-url }} \
           -e GITHUB_OAUTH_CLIENT_ID=${{ inputs.github-oauth-client-id }} \
           -e GITHUB_OAUTH_CLIENT_SECRET=${{ inputs.github-oauth-client-secret }} \
+          -e GITHUB_OAUTH_CLIENT_ID_ALTERNATIVE=${{ inputs.github-oauth-client-id-alternative }} \
+          -e GITHUB_OAUTH_CLIENT_SECRET_ALTERNATIVE=${{ inputs.github-oauth-client-secret-alternative }} \
           -e RESEND_API_KEY=${{ inputs.resend-api-key }} \
           -e STRIPE_API_KEY_SECRET=${{ inputs.stripe-api-key-secret }} \
           -e STRIPE_SIGNATURE=${{ inputs.stripe-signature }} \

@@ -19,5 +19,6 @@ import { ProjectReadModule } from '../../project/read/project-read.module';
       useValue: getEnvConfig().pings.maxConcurrentRequests,
     },
   ],
+  exports: [HttpPingSchedulerService],
 })
 export class HttpPingSchedulerModule {}

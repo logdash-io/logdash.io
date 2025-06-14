@@ -13,9 +13,13 @@
 	}: { children: Snippet; data: { projects: Project[] } } = $props();
 
 	const clusterId = $derived(page.params.cluster_id);
+	const isSettingUp = $derived(
+		page.url.pathname.includes('/setup') ||
+			page.url.pathname.includes('/configure'),
+	);
 
 	$effect(() => {
-		if (!isDev()) {
+		if (!isDev() || isSettingUp) {
 			return;
 		}
 
@@ -31,10 +35,7 @@
 	});
 
 	$effect(() => {
-		if (
-			page.url.pathname.includes('/setup') ||
-			page.url.pathname.includes('/configure')
-		) {
+		if (isSettingUp) {
 			invalidate(`/app/clusters/${page.params.cluster_id}`);
 		}
 	});

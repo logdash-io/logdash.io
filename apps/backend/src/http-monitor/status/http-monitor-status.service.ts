@@ -20,6 +20,10 @@ export class HttpMonitorStatusService {
   public async getStatuses(
     httpMonitorIds: string[],
   ): Promise<Record<string, HttpMonitorStatusDto>> {
+    if (httpMonitorIds.length === 0) {
+      return {};
+    }
+
     const statuses = await this.redisService.mGet(httpMonitorIds.map((id) => this.getRedisKey(id)));
 
     return httpMonitorIds.reduce(

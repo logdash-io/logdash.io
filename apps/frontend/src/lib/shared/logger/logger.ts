@@ -33,7 +33,10 @@ export class Logger {
 	}
 
 	private _log(level: LogLevel, message: string, ...args: unknown[]): void {
-		const loggerEnabled = localStorage.getItem('logger_enabled');
+		const loggerEnabled =
+			typeof localStorage !== 'undefined'
+				? localStorage.getItem('logger_enabled')
+				: null;
 
 		if (!this.isDev && !loggerEnabled) {
 			return;

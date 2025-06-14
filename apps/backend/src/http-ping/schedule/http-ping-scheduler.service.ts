@@ -78,6 +78,16 @@ export class HttpPingSchedulerService {
     this.metrics.mutate('pingsMade', results.length);
   }
 
+  public async pingSingleMonitor(httpMonitorId: string): Promise<void> {
+    const monitor = await this.httpMonitorReadService.readById(httpMonitorId);
+    if (!monitor) {
+      throw new Error('Monitor not found');
+    }
+
+    const ping = await this.pingMonitor(monitor);
+    await this.saveCompletedPings([ping]);
+  }
+
   private async pingMonitor(monitor: HttpMonitorNormalized): Promise<CreateHttpPingDto> {
     const startTime = Date.now();
     try {
