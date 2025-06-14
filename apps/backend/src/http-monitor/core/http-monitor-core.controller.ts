@@ -20,6 +20,7 @@ import { UpdateHttpMonitorBody } from './dto/update-http-monitor.body';
 import { ProjectReadService } from '../../project/read/project-read.service';
 import { HttpMonitorStatusService } from '../status/http-monitor-status.service';
 import { HttpPingSchedulerService } from '../../http-ping/schedule/http-ping-scheduler.service';
+import {DemoEndpoint} from "src/demo/decorators/demo-endpoint.decorator";
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -67,6 +68,7 @@ export class HttpMonitorCoreController {
     return HttpMonitorSerializer.serializeMany(httpMonitors, { statuses });
   }
 
+  @DemoEndpoint()
   @Get('/clusters/:clusterId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
   async readByClusterId(@Param('clusterId') clusterId: string): Promise<HttpMonitorSerialized[]> {

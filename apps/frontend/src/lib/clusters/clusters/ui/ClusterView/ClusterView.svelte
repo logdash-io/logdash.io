@@ -76,7 +76,7 @@
 					</button>
 				{/if}
 
-				{#if userState.hasEarlyAccess && !hasMonitoring && clustersState.ready}
+				{#if userState.hasEarlyAccess && !hasMonitoring && !isOnDemoDashboard && clustersState.ready}
 					<SetupMonitoringButton
 						class="btn btn-secondary btn-sm gap-1 opacity-90"
 						canAddMore={true}
