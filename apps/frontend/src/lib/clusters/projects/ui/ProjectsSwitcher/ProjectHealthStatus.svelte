@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/state';
+	import {page} from '$app/state';
 	import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
-	import { isDev } from '$lib/shared/utils/is-dev.util.js';
-	import { monitoringState } from '../../application/monitoring.state.svelte.js';
+	import {monitoringState} from '../../application/monitoring.state.svelte.js';
 	import MonitorStatus from '../presentational/MonitorStatus.svelte';
+	import {userState} from "$lib/shared/user/application/user.state.svelte";
 
 	const { projectId } = $props();
 	const isOnDemoDashboard = $derived(
@@ -19,7 +19,7 @@
 	<MonitorStatus {projectId} />
 {/snippet}
 
-{#if projectMonitor && !isOnDemoDashboard && isDev()}
+{#if projectMonitor && !isOnDemoDashboard && userState.hasEarlyAccess}
 	<Tooltip interactive={true} content={fullStatus} placement="bottom">
 		<div
 			class={[
