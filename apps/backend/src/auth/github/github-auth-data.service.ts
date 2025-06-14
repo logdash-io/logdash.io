@@ -5,7 +5,7 @@ import { getEnvConfig } from '../../shared/configs/env-configs';
 export class GithubAuthDataService {
   public async getAccessToken(code: string, forceLocalLogin?: boolean): Promise<string> {
     const { clientId, clientSecret } = await this.getGithubClientCredentials({
-      useAlternative: false,
+      useAlternative: forceLocalLogin || false,
     });
 
     const response = await fetch(`https://github.com/login/oauth/access_token`, {
