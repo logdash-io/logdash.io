@@ -4,9 +4,6 @@ import { RedisContainer } from '@testcontainers/redis';
 export const createRedisTestContainer = async (): Promise<void> => {
   const redisContainer = await new RedisContainer('redis:latest').start();
 
-  console.log('Started redis');
-  console.log(redisContainer.getConnectionUrl());
-
   global.redisContainer = redisContainer;
 };
 
