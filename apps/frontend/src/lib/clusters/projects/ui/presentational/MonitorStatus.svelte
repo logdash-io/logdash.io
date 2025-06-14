@@ -5,6 +5,7 @@
 	import { DateTime } from 'luxon';
 	import { monitoringState } from '../../application/monitoring.state.svelte.js';
 	import DataTile from '../ProjectView/tiles/DataTile.svelte';
+	import { logger } from '$lib/shared/logger/index.js';
 
 	const { projectId } = $props();
 	const MAX_PINGS = 60;
@@ -18,10 +19,12 @@
 	);
 
 	$effect(() => {
-		console.log(`Syncing pings for project monitor: ${projectMonitor?.id}`);
+		logger.debug(
+			`Syncing pings for project monitor: ${projectMonitor?.id}`,
+		);
 
 		if (!projectMonitor || !projectId) {
-			console.warn('No project monitor found for syncing pings.');
+			logger.warn('No project monitor found for syncing pings.');
 			return;
 		}
 
@@ -38,7 +41,7 @@
 		<div class="flex w-full gap-2">
 			<div class="flex w-full items-center gap-2">
 				<h5 class="text-2xl font-semibold">
-					{stripProtocol(projectMonitor?.url)}
+					{projectMonitor?.name}
 				</h5>
 
 				<div
@@ -82,7 +85,9 @@
 					></div>
 				{/each}
 
-				{#each pings as ping, i}
+				{#each pings as ping (ping.id)}
+					{@const pingHealthy =
+						ping.statusCode >= 200 && ping.statusCode < 400}
 					<Tooltip
 						content={`${
 							DateTime.fromJSDate(new Date(ping.createdAt))
@@ -99,10 +104,9 @@
 								'h-8 w-1.5 shrink-0 rounded-sm bg-gradient-to-b hover:h-12 lg:w-[7px]',
 								{
 									'from-green-600 via-green-600/80 to-green-600':
-										ping.statusCode >= 200 &&
-										ping.statusCode < 400,
-									'from-red-600 via-red-600/80 to-red-600':
-										ping.statusCode >= 400,
+										pingHealthy,
+									'from-orange-600 via-orange-600/80 to-orange-600':
+										!pingHealthy,
 								},
 							]}
 						></div>

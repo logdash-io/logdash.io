@@ -11,6 +11,7 @@
 		class?: ClassValue;
 		trigger?: 'hover' | 'click';
 		interactive?: boolean;
+		align?: 'left' | 'center' | 'right';
 	};
 	const {
 		children,
@@ -19,6 +20,7 @@
 		placement,
 		trigger = 'hover',
 		interactive = false,
+		align = 'center',
 	}: Props = $props();
 
 	let wrapper: HTMLSpanElement;
@@ -90,8 +92,22 @@
 				? triggerRect.top - tooltipRect.height - margin
 				: triggerRect.bottom + margin;
 
-		let left =
-			triggerRect.left + (triggerRect.width - tooltipRect.width) / 2;
+		// Calculate horizontal position based on align prop
+		let left: number;
+		switch (align) {
+			case 'left':
+				left = triggerRect.left;
+				break;
+			case 'right':
+				left = triggerRect.right - tooltipRect.width;
+				break;
+			case 'center':
+			default:
+				left =
+					triggerRect.left +
+					(triggerRect.width - tooltipRect.width) / 2;
+				break;
+		}
 
 		// Adjust horizontal position to stay within screen bounds
 		if (left < margin) {

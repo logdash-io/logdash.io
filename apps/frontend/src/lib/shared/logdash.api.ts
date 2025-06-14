@@ -110,6 +110,7 @@ class LogdashAPI {
 		code: string;
 		terms_accepted: boolean;
 		email_accepted: boolean;
+		is_local_env: boolean;
 	}): Promise<{
 		access_token?: string;
 		error?: string;
@@ -120,6 +121,7 @@ class LogdashAPI {
 				githubCode: dto.code,
 				termsAccepted: dto.terms_accepted,
 				emailAccepted: dto.email_accepted,
+				forceLocalLogin: dto.is_local_env,
 			},
 		)
 			.then((data) => ({ access_token: data.token }))
@@ -202,6 +204,7 @@ class LogdashAPI {
 		anon_jwt_token: string;
 		terms_accepted: boolean;
 		email_accepted: boolean;
+		is_local_env: boolean;
 	}): Promise<{
 		access_token?: string;
 		error?: string;
@@ -213,6 +216,7 @@ class LogdashAPI {
 				accessToken: dto.anon_jwt_token,
 				termsAccepted: dto.terms_accepted,
 				emailAccepted: dto.email_accepted,
+				forceLocalLogin: dto.is_local_env,
 			},
 			dto.anon_jwt_token,
 		)
@@ -330,6 +334,10 @@ class LogdashAPI {
 	}
 
 	get_exposed_config(): Promise<ExposedConfig> {
+		console.log(
+			'`${LogdashAPI.v0baseUrl}/exposed_config`:',
+			`${LogdashAPI.v0baseUrl}/exposed_config`,
+		);
 		return this.get<ExposedConfig>(
 			`${LogdashAPI.v0baseUrl}/exposed_config`,
 			'',

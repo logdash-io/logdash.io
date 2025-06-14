@@ -10,6 +10,7 @@
 	const { data }: Props = $props();
 	let tryingToClaim = $state(false);
 	const url = $derived(page.url.searchParams.get('url'));
+	const name = $derived(page.url.searchParams.get('name'));
 </script>
 
 {#snippet claimer(hasLogs: boolean)}
@@ -19,7 +20,7 @@
 				tryingToClaim = true;
 
 				goto(
-					`/app/api/clusters/${page.params.cluster_id}/monitors/create?project_id=${data.project_id}&url=${url}`,
+					`/app/api/clusters/${page.params.cluster_id}/monitors/create?project_id=${data.project_id}&url=${url}&name=${name}`,
 					{
 						invalidateAll: true,
 					},

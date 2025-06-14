@@ -61,7 +61,7 @@ body {
 	@apply whitespace-nowrap;
 }
 
-.btn-secondary {
+.btn-secondary:not(:disabled) {
 	@apply shadow-secondary/40 shadow;
 }
 
