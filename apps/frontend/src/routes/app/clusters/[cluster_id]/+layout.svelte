@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import { page } from '$app/state';
-	import { isDev } from '$lib';
 	import { monitoringState } from '$lib/clusters/projects/application/monitoring.state.svelte.js';
 	import { projectsState } from '$lib/clusters/projects/application/projects.state.svelte.js';
 	import type { Project } from '$lib/clusters/projects/domain/project.js';
 	import { type Snippet } from 'svelte';
+    import {userState} from "$lib/shared/user/application/user.state.svelte";
 
 	const {
 		children,
@@ -19,7 +19,7 @@
 	);
 
 	$effect(() => {
-		if (!isDev() || isSettingUp) {
+		if (isSettingUp || !userState.hasEarlyAccess) {
 			return;
 		}
 

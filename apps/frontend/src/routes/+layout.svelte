@@ -90,7 +90,7 @@
 <svelte:head>
 	{@html atomOneDark}
 </svelte:head>
-
+<svelte:boundary onerror={(error, reset) => console.log('💥')}>
 <Toaster />
 
 {#if page.url.pathname.includes('/app')}
@@ -117,3 +117,4 @@
 		<FeedbackButton />
 	</div>
 {/if}
+</svelte:boundary>

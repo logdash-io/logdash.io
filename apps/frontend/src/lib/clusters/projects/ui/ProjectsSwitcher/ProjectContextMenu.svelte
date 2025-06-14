@@ -16,7 +16,6 @@
 
 {#snippet menu(close: () => void)}
 	<ul
-		tabindex="0"
 		class="menu dropdown-content text-secondary bg-base-100 rounded-box z-1 mt-1 w-fit whitespace-nowrap p-2 shadow"
 	>
 		<li>
