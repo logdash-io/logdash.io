@@ -42,7 +42,8 @@ class MonitoringState {
 	}
 
 	unsync(): void {
-		this._disconnectAllConnections();
+		logger.debug('unsyncing monitors...');
+		this._stopMonitorsSync();
 	}
 
 	pauseSync(): void {
@@ -58,7 +59,7 @@ class MonitoringState {
 	}
 
 	isHealthy(monitorId: string): boolean {
-		return this._checkHealthStatus(this._monitorPings[monitorId]);
+		return this._checkHealthStatus(monitorId);
 	}
 
 	getMonitorById(monitorId: string): Monitor | undefined {
@@ -82,7 +83,19 @@ class MonitoringState {
 	}
 
 	isPreviewHealthy(url: string): boolean {
-		return this._checkHealthStatus(this._previewedMonitors[url]);
+		const last = <T>(arr: T[]): T | undefined => {
+			if (!arr || arr.length === 0) {
+				return undefined;
+			}
+			return arr[arr.length - 1];
+		};
+
+		const code = last(this._previewedMonitors[url])?.statusCode;
+
+		if (code === undefined) {
+			return false;
+		}
+		return code >= 200 && code < 400;
 	}
 
 	syncMonitorPings(
@@ -115,12 +128,14 @@ class MonitoringState {
 		});
 	}
 
-	private _checkHealthStatus(pings: HttpPing[] | undefined): boolean {
-		if (!pings || !pings.length) {
+	private _checkHealthStatus(monitorId: string): boolean {
+		const code = this._monitors[monitorId]?.lastStatusCode;
+
+		if (code === undefined) {
+			logger.warn(`Monitor ${monitorId} has no last status code`);
 			return false;
 		}
-		const lastPing = pings[pings.length - 1];
-		return lastPing.statusCode >= 200 && lastPing.statusCode < 400;
+		return code >= 200 && code < 400;
 	}
 
 	private async _syncClusterMonitors(clusterId: string): Promise<void> {
@@ -136,13 +151,12 @@ class MonitoringState {
 		]);
 	}
 
-	private _disconnectAllConnections(): void {
+	private _stopMonitorsSync(): void {
 		this._shouldReconnect = false;
 		logger.debug('unsyncing monitors...');
 		this._unsubscribe?.();
 		this.syncConnection?.close();
 		this.syncConnection = null;
-		this._stopUrlPreview();
 	}
 
 	private _pauseMonitorSync(): void {
@@ -167,13 +181,7 @@ class MonitoringState {
 			`/app/api/clusters/${clusterId}/monitors/preview`,
 			{
 				close: ({ connect }) => {
-					if (!this._shouldReconnect) {
-						logger.debug(
-							'preview SSE manually disconnected, skipping reconnect...',
-						);
-						return;
-					}
-					logger.debug('preview connection closed');
+					logger.debug('preview connection closed, reconnecting...');
 					connect();
 				},
 				error: (error) => {
@@ -279,6 +287,9 @@ class MonitoringState {
 					this._monitorPings[pingData.httpMonitorId].push({
 						...pingData,
 					});
+
+					this._monitors[pingData.httpMonitorId].lastStatusCode =
+						pingData.statusCode;
 
 					logger.debug('added ping:', pingData);
 				} catch (e) {

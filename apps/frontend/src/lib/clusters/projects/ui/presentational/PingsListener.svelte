@@ -8,8 +8,7 @@
 		onCaptureOnce?: () => void;
 	};
 	const { url, children, onCaptureOnce }: Props = $props();
-	`ś`;
-	const isHealthy = $derived(monitoringState.isHealthy(url));
+	const isHealthy = $derived(monitoringState.isPreviewHealthy(url));
 	let notified = $state(false);
 
 	$effect(() => {
@@ -27,6 +26,6 @@
 		class="text-primary mx-auto flex items-center gap-2 font-semibold opacity-90"
 	>
 		<span class="loading loading-ring loading-xl"></span>
-		Waiting for service healthy...
+		Waiting for a healthy ping...
 	</div>
 {/if}

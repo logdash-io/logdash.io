@@ -51,6 +51,12 @@
 			project.id === page.url.searchParams.get('project_id')}
 
 		<div
+			onclick={() => {
+				if (activeProject || isOnDemoDashboard) {
+					return;
+				}
+				goto(`?project_id=${project.id}`);
+			}}
 			class={[
 				project_badge_class,
 				{
@@ -63,9 +69,9 @@
 		>
 			<ProjectHealthStatus projectId={project.id} />
 
-			<a href={`?project_id=${project.id}`} class="mx-2 select-none">
+			<span class="mx-2 select-none">
 				{project.name}
-			</a>
+			</span>
 
 			{#if activeProject && !isOnDemoDashboard}
 				<div class="dropdown z-30 flex">
@@ -73,6 +79,7 @@
 						tabindex="0"
 						role="button"
 						class="btn btn-circle btn-transparent mr-0.5 aspect-square h-full w-fit shrink-0"
+						onclick={(e) => e.stopPropagation()}
 					>
 						<MoreVerticalIcon class="h-4 w-4 shrink-0" />
 					</div>
@@ -117,7 +124,7 @@
 									);
 
 									if (!newName || newName.trim() === '') {
-										toast.error(
+										toast.warning(
 											'Project name cannot be empty',
 											5000,
 										);

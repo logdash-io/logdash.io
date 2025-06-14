@@ -76,10 +76,6 @@
 		</div>
 	{/if}
 
-	{#if hasMonitoring && isDev()}
-		monitors:{JSON.stringify(monitoringState.monitors)}
-	{/if}
-
 	{#if !hasMetrics && !hasLogging && !hasMonitoring && projectsState.ready && metricsState.ready}
 		<EmptyState />
 	{/if}

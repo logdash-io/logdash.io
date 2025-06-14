@@ -6,7 +6,7 @@
 	import { stripProtocol } from '$lib/shared/utils/url.js';
 	import { CheckCircle } from 'lucide-svelte';
 	import { getContext, type Snippet } from 'svelte';
-	import MonitorsListener from '../presentational/MonitorsListener.svelte';
+	import MonitorsListener from '../presentational/PingsListener.svelte';
 
 	type Props = {
 		claimer: Snippet<[boolean]>;
@@ -14,22 +14,20 @@
 	const { claimer }: Props = $props();
 	const tabId: string = getContext('tabId');
 	const observedUrl = $derived(page.url.searchParams.get('url'));
-	const isHealthy = $derived(monitoringState.isHealthy(observedUrl));
-	const pings = $derived.by(() =>
-		monitoringState.monitoringPings(observedUrl),
-	);
+	const isHealthy = $derived(monitoringState.isPreviewHealthy(observedUrl));
+	const pings = $derived.by(() => monitoringState.previewPings(observedUrl));
 
 	$effect(() => {
 		monitoringState.previewUrl(page.params.cluster_id, observedUrl);
 
 		return () => {
-			monitoringState.unsync();
+			monitoringState.stopUrlPreview();
 		};
 	});
 </script>
 
 <div class="w-xl mr-auto space-y-8">
-	previewUrl<DataTile delayIn={0} delayOut={50}>
+	<DataTile delayIn={0} delayOut={50}>
 		<div class="flex w-full flex-col gap-2">
 			<div class="flex w-full gap-2">
 				<div class="flex w-full items-center gap-2">
@@ -81,17 +79,17 @@
 					{/each}
 
 					{#each pings as ping, i}
+						{@const pingHealthy =
+							ping.statusCode >= 200 && ping.statusCode < 400}
 						<Tooltip content={`Service is up ${i}`} placement="top">
 							<div
 								class={[
 									'h-8 w-1.5 shrink-0 rounded-sm bg-gradient-to-b hover:h-12 lg:w-[7px]',
 									{
 										'from-green-600 via-green-600/80 to-green-600':
-											ping.statusCode >= 200 &&
-											ping.statusCode < 400,
+											pingHealthy,
 										'from-red-600 via-red-600/80 to-red-600':
-											ping.statusCode >= 200 &&
-											ping.statusCode < 400,
+											!pingHealthy,
 									},
 								]}
 							></div>
