@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
-	import { stripProtocol } from '$lib/shared/utils/url.js';
 	import { DateTime } from 'luxon';
 	import { monitoringState } from '../../application/monitoring.state.svelte.js';
 	import DataTile from '../ProjectView/tiles/DataTile.svelte';
@@ -73,7 +72,7 @@
 			<div
 				class="flex h-12 w-full items-center justify-end gap-1 overflow-hidden lg:gap-1"
 			>
-				{#each Array.from({ length: 60 - pings.length }) as _, i}
+				{#each Array.from({ length: 60 - pings.length }) as _, i (i)}
 					<div
 						class={[
 							'h-8 w-1.5 shrink-0 rounded-sm hover:h-12 lg:w-[7px]',

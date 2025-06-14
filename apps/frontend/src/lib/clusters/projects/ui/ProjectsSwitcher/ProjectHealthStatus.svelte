@@ -19,7 +19,7 @@
 	<MonitorStatus {projectId} />
 {/snippet}
 
-{#if projectMonitor && !isOnDemoDashboard && userState.hasEarlyAccess}
+{#if projectMonitor && (userState.hasEarlyAccess || isOnDemoDashboard)}
 	<Tooltip interactive={true} content={fullStatus} placement="bottom">
 		<div
 			class={[
