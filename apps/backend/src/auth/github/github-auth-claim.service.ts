@@ -37,7 +37,10 @@ export class GithubAuthClaimService {
   public async claimAccount(dto: GithubClaimProjectBody): Promise<TokenResponse> {
     this.logger.log(`Claiming account`, { accessToken: dto.accessToken });
 
-    const accessToken = await this.authGithubDataService.getAccessToken(dto.githubCode);
+    const accessToken = await this.authGithubDataService.getAccessToken(
+      dto.githubCode,
+      dto.forceLocalLogin,
+    );
 
     const [email, avatar] = await Promise.all([
       this.authGithubDataService.getGithubEmail(accessToken),

@@ -3,15 +3,19 @@ import { getEnvConfig } from '../../shared/configs/env-configs';
 
 @Injectable()
 export class GithubAuthDataService {
-  public async getAccessToken(code: string): Promise<string> {
+  public async getAccessToken(code: string, forceLocalLogin?: boolean): Promise<string> {
+    const { clientId, clientSecret } = await this.getGithubClientCredentials({
+      useAlternative: false,
+    });
+
     const response = await fetch(`https://github.com/login/oauth/access_token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        client_id: getEnvConfig().github.clientId,
-        client_secret: getEnvConfig().github.clientSecret,
+        client_id: clientId,
+        client_secret: clientSecret,
         code,
       }),
     });
@@ -45,5 +49,21 @@ export class GithubAuthDataService {
     const user = await response.json();
 
     return user.avatar_url;
+  }
+
+  private async getGithubClientCredentials(dto: {
+    useAlternative: boolean;
+  }): Promise<{ clientId: string; clientSecret: string }> {
+    if (dto.useAlternative) {
+      return {
+        clientId: getEnvConfig().github.clientIdAlternative!,
+        clientSecret: getEnvConfig().github.clientSecretAlternative!,
+      };
+    }
+
+    return {
+      clientId: getEnvConfig().github.clientId,
+      clientSecret: getEnvConfig().github.clientSecret,
+    };
   }
 }
