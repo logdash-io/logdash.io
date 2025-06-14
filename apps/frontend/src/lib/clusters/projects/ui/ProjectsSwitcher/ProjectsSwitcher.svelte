@@ -38,13 +38,6 @@
 			}
 		}
 	});
-
-	$effect(() => {
-		console.log(
-			clustersState.allClustersProjectsCount,
-			get_max_number_of_projects(userState.tier),
-		);
-	});
 </script>
 
 <div role="tablist" class="tabs z-30 gap-1.5 sm:gap-3">
