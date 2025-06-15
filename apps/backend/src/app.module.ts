@@ -23,6 +23,7 @@ import { UserCoreModule } from './user/core/user-core.module';
 import { ClickhouseModule } from './clickhouse/clickhouse.module';
 import { NotificationChannelCoreModule } from './notification-channel/core/notification-channel-core.module';
 import { HttpPingBucketCoreModule } from './http-ping-bucket/core/http-ping-bucket-core.module';
+import { PublicDashboardCoreModule } from './public-dashboard/core/public-dashboard-core.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { HttpPingBucketCoreModule } from './http-ping-bucket/core/http-ping-buck
     }),
     ClickhouseModule,
     NotificationChannelCoreModule,
+    PublicDashboardCoreModule,
   ],
 })
 export class AppModule {}
