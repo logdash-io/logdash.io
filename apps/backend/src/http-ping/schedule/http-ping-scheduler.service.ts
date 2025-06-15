@@ -117,7 +117,8 @@ export class HttpPingSchedulerService {
       httpMonitorId: monitor.id,
       statusCode: response?.status || 0,
       responseTimeMs: this.calculateResponseTime(startTime),
-      message: response?.status > 400 || response?.status < 200 ? undefined : message,
+      message:
+        response?.status > 400 || response?.status < 200 ? message.substring(0, 1000) : message,
     };
   }
 

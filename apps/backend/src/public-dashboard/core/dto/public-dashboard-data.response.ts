@@ -2,11 +2,6 @@ import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
 import { HttpPingSerialized } from '../../../http-ping/core/entities/http-ping.interface';
 import { VirtualBucket } from '../../../http-ping-bucket/core/types/virtual-bucket.type';
 
-export class PublicDashboardDataResponse {
-  @ApiProperty()
-  httpMonitors: PublicDashboardMonitorDto[];
-}
-
 @ApiExtraModels(VirtualBucket)
 export class PublicDashboardMonitorDto {
   @ApiProperty()
@@ -18,6 +13,17 @@ export class PublicDashboardMonitorDto {
   })
   buckets: (VirtualBucket | null)[];
 
-  @ApiProperty()
+  @ApiProperty({
+    type: HttpPingSerialized,
+    isArray: true,
+  })
   pings: HttpPingSerialized[];
+}
+
+export class PublicDashboardDataResponse {
+  @ApiProperty({
+    type: PublicDashboardMonitorDto,
+    isArray: true,
+  })
+  httpMonitors: PublicDashboardMonitorDto[];
 }
