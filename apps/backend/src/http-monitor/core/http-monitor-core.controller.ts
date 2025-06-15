@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
@@ -21,11 +22,11 @@ import { ProjectReadService } from '../../project/read/project-read.service';
 import { HttpMonitorStatusService } from '../status/http-monitor-status.service';
 import { HttpPingSchedulerService } from '../../http-ping/schedule/http-ping-scheduler.service';
 import { DemoEndpoint } from 'src/demo/decorators/demo-endpoint.decorator';
+import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
 @Controller('')
-@UseGuards(ClusterMemberGuard)
 export class HttpMonitorCoreController {
   constructor(
     private readonly httpMonitorWriteService: HttpMonitorWriteService,
@@ -36,6 +37,7 @@ export class HttpMonitorCoreController {
     private readonly httpPingSchedulerService: HttpPingSchedulerService,
   ) {}
 
+  @UseGuards(ClusterMemberGuard)
   @Post('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized })
   async create(
@@ -59,6 +61,7 @@ export class HttpMonitorCoreController {
     return HttpMonitorSerializer.serialize(httpMonitor, status);
   }
 
+  @UseGuards(ClusterMemberGuard)
   @Get('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
   async readByProjectId(@Param('projectId') projectId: string): Promise<HttpMonitorSerialized[]> {
@@ -71,6 +74,8 @@ export class HttpMonitorCoreController {
   }
 
   @DemoEndpoint()
+  @UseInterceptors(DemoCacheInterceptor)
+  @UseGuards(ClusterMemberGuard)
   @Get('/clusters/:clusterId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
   async readByClusterId(@Param('clusterId') clusterId: string): Promise<HttpMonitorSerialized[]> {
@@ -87,6 +92,7 @@ export class HttpMonitorCoreController {
     return HttpMonitorSerializer.serializeMany(httpMonitors, { statuses });
   }
 
+  @UseGuards(ClusterMemberGuard)
   @Put('/http_monitors/:httpMonitorId')
   @ApiResponse({ type: HttpMonitorSerialized })
   async update(

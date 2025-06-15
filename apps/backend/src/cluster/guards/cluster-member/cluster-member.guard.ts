@@ -40,7 +40,10 @@ export class ClusterMemberGuard implements CanActivate {
     const notificationChannelIdFromParams = request.params[NOTIFICATION_CHANNEL_ID_PARAM_NAME];
     const httpMonitorIdFromParams = request.params[HTTP_MONITOR_ID_PARAM_NAME];
 
-    if (projectIdFromParams === getEnvConfig().demo.projectId) {
+    if (
+      projectIdFromParams === getEnvConfig().demo.projectId ||
+      clusterIdFromParams === getEnvConfig().demo.clusterId
+    ) {
       return true;
     }
 
