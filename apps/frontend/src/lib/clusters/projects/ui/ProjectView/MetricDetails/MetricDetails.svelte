@@ -9,14 +9,26 @@
 	import { getGraphReadyPoints } from './data.utils.js';
 	import MetricBreakdownChart from './MetricBreakdownChart.svelte';
 
+	const MinuteDataChartOptions = {
+		SMALL: '1h',
+		LARGE: '12h',
+	} as const;
+
 	const HourDataChartOptions = {
-		Small: '24h',
-		Large: '7 days',
+		SMALL: '24h',
+		LARGE: '7 days',
+	} as const;
+
+	const DayDataChartOptions = {
+		SMALL: '7 days',
+		LARGE: '30 days',
 	} as const;
 
 	const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
 
-	let hourDataTimeRange: typeof HourDataChartOptions[keyof typeof HourDataChartOptions] = $state(HourDataChartOptions.Small);
+	let minuteDataTimeRange: typeof MinuteDataChartOptions[keyof typeof MinuteDataChartOptions] = $state(MinuteDataChartOptions.SMALL);
+	let hourDataTimeRange: typeof HourDataChartOptions[keyof typeof HourDataChartOptions] = $state(HourDataChartOptions.SMALL);
+	let dayDataTimeRange: typeof DayDataChartOptions[keyof typeof DayDataChartOptions] = $state(DayDataChartOptions.SMALL);
 
 	$effect(() => {
 		const projectId = page.url.searchParams.get('project_id');
@@ -79,9 +91,9 @@
 		};
 
 		const compiledConfig = {
-			minute: isPaidTier ? paidConfig.minute : freeConfig.minute,
-			hour: (isPaidTier && hourDataTimeRange === HourDataChartOptions.Large) ? paidConfig.hour : freeConfig.hour,
-			day: isPaidTier ? paidConfig.day : freeConfig.day,
+			minute: (isPaidTier && minuteDataTimeRange === MinuteDataChartOptions.LARGE) ? paidConfig.minute : freeConfig.minute,
+			hour: (isPaidTier && hourDataTimeRange === HourDataChartOptions.LARGE) ? paidConfig.hour : freeConfig.hour,
+			day: (isPaidTier && dayDataTimeRange === DayDataChartOptions.LARGE) ? paidConfig.day : freeConfig.day,
 		}
 
 		return getGraphReadyPoints(
@@ -98,12 +110,41 @@
 {/snippet}
 
 <DataTile delayIn={0}>
-	<h2 class="text-xl font-semibold">Minute data</h2>
+	<div class="flex justify-between items-center mb-4">
+		<h2 class="text-xl font-semibold">Minute data</h2>
+		<div
+			role="tablist"
+			class="tabs tabs-box tabs-sm bg-base-100/70 rounded-lg shadow-none"
+		>
+			<button 
+				role="tab" 
+				class="tab {minuteDataTimeRange === MinuteDataChartOptions.SMALL ? 'tab-active btn-secondary' : ''} w-28 rounded-lg"
+				onclick={() => minuteDataTimeRange = MinuteDataChartOptions.SMALL}
+			>
+				{MinuteDataChartOptions.SMALL}
+			</button>
+			<div class="indicator tab w-28">
+				<span
+					class="indicator-item badge-sm badge-primary badge badge-soft font-bold"
+				>
+					PRO
+				</span>
+				<button 
+					role="tab" 
+					class="tab {minuteDataTimeRange === MinuteDataChartOptions.LARGE ? 'tab-active btn-secondary' : ''} w-full h-full rounded-lg"
+					onclick={() => minuteDataTimeRange = MinuteDataChartOptions.LARGE}
+				>
+					{MinuteDataChartOptions.LARGE}
+				</button>
+			</div>
+		</div>
+	</div>
+	
 	{@render previewedMetricSubtitle()}
 	<MetricBreakdownChart
 		data={minuteData}
 		height={250}
-		timeRange={isPaidTier ? 'large' : 'small'}
+		timeRange={minuteDataTimeRange === MinuteDataChartOptions.LARGE ? 'large' : 'small'}
 		isLoading={metricsState.metricDetailsLoading}
 	/>
 </DataTile>
@@ -117,12 +158,12 @@
 		>
 			<button 
 				role="tab" 
-				class="tab {hourDataTimeRange === HourDataChartOptions.Small ? 'tab-active btn-secondary' : ''} w-20 rounded-lg"
-				onclick={() => hourDataTimeRange = HourDataChartOptions.Small}
+				class="tab {hourDataTimeRange === HourDataChartOptions.SMALL ? 'tab-active btn-secondary' : ''} w-28 rounded-lg"
+				onclick={() => hourDataTimeRange = HourDataChartOptions.SMALL}
 			>
-				{HourDataChartOptions.Small}
+				{HourDataChartOptions.SMALL}
 			</button>
-			<div class="indicator tab w-20">
+			<div class="indicator tab w-28">
 				<span
 					class="indicator-item badge-sm badge-primary badge badge-soft font-bold"
 				>
@@ -130,10 +171,10 @@
 				</span>
 				<button 
 					role="tab" 
-					class="tab {hourDataTimeRange === HourDataChartOptions.Large ? 'tab-active btn-secondary' : ''} w-full h-full rounded-lg"
-					onclick={() => hourDataTimeRange = HourDataChartOptions.Large}
+					class="tab {hourDataTimeRange === HourDataChartOptions.LARGE ? 'tab-active btn-secondary' : ''} w-full h-full rounded-lg"
+					onclick={() => hourDataTimeRange = HourDataChartOptions.LARGE}
 				>
-					{HourDataChartOptions.Large}
+					{HourDataChartOptions.LARGE}
 				</button>
 			</div>
 		</div>
@@ -144,19 +185,48 @@
 		data={hourData}
 		height={250}
 		format="hour"
-		timeRange={hourDataTimeRange === HourDataChartOptions.Large ? 'large' : 'small'}
+		timeRange={hourDataTimeRange === HourDataChartOptions.LARGE ? 'large' : 'small'}
 		isLoading={metricsState.metricDetailsLoading}
 	/>
 </DataTile>
 
 <DataTile delayIn={100}>
-	<h2 class="text-xl font-semibold">Day data</h2>
+	<div class="flex justify-between items-center mb-4">
+		<h2 class="text-xl font-semibold">Day data</h2>
+		<div
+			role="tablist"
+			class="tabs tabs-box tabs-sm bg-base-100/70 rounded-lg shadow-none"
+		>
+			<button 
+				role="tab" 
+				class="tab {dayDataTimeRange === DayDataChartOptions.SMALL ? 'tab-active btn-secondary' : ''} w-28 rounded-lg"
+				onclick={() => dayDataTimeRange = DayDataChartOptions.SMALL}
+			>
+				{DayDataChartOptions.SMALL}
+			</button>
+			<div class="indicator tab w-28">
+				<span
+					class="indicator-item badge-sm badge-primary badge badge-soft font-bold"
+				>
+					PRO
+				</span>
+				<button 
+					role="tab" 
+					class="tab {dayDataTimeRange === DayDataChartOptions.LARGE ? 'tab-active btn-secondary' : ''} w-full h-full rounded-lg"
+					onclick={() => dayDataTimeRange = DayDataChartOptions.LARGE}
+				>
+					{DayDataChartOptions.LARGE}
+				</button>
+			</div>
+		</div>
+	</div>
+	
 	{@render previewedMetricSubtitle()}
 	<MetricBreakdownChart
 		data={dayData}
 		height={250}
 		format="day"
-		timeRange={isPaidTier ? 'large' : 'small'}
+		timeRange={dayDataTimeRange === DayDataChartOptions.LARGE ? 'large' : 'small'}
 		isLoading={metricsState.metricDetailsLoading}
 	/>
 </DataTile>
