@@ -41,4 +41,8 @@ export class PublicDashboardWriteService {
       { $pull: { httpMonitorsIds: dto.httpMonitorId } },
     );
   }
+
+  public async deleteByClusterId(clusterId: string): Promise<void> {
+    await this.publicDashboardModel.deleteMany({ clusterId });
+  }
 }

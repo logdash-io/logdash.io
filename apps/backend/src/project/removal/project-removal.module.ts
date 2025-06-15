@@ -10,6 +10,7 @@ import { ProjectReadModule } from '../read/project-read.module';
 import { ProjectWriteModule } from '../write/project-write.module';
 import { ProjectRemovalService } from './project-removal.service';
 import { HttpMonitorRemovalModule } from '../../http-monitor/removal/http-monitor-removal.module';
+import { ApiKeyWriteModule } from '../../api-key/write/api-key-write.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { HttpMonitorRemovalModule } from '../../http-monitor/removal/http-monito
     HttpMonitorWriteModule,
     HttpMonitorReadModule,
     HttpMonitorRemovalModule,
+    ApiKeyWriteModule,
   ],
   providers: [ProjectRemovalService],
   exports: [ProjectRemovalService],

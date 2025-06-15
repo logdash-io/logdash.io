@@ -187,6 +187,19 @@ describe('ProjectCoreController (writes)', () => {
         value: 1,
       });
 
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: project.id,
+        token: token,
+      });
+
+      const ping = await bootstrap.utils.httpPingUtils.createHttpPing({
+        httpMonitorId: monitor.id,
+      });
+
+      const httpPingBucket = await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket({
+        httpMonitorId: monitor.id,
+      });
+
       const logsBeforeRemoval = await bootstrap.models.logModel.find({ projectId: project.id });
       const metricsBeforeRemoval = await bootstrap.models.metricModel.find({
         projectId: project.id,
@@ -199,6 +212,19 @@ describe('ProjectCoreController (writes)', () => {
       });
       const projectsBeforeRemoval = await bootstrap.models.projectModel.find({
         _id: new Types.ObjectId(project.id),
+      });
+      const apiKeysBeforeRemoval = await bootstrap.models.apiKeyModel.find({
+        projectId: project.id,
+      });
+      const httpMonitorsBeforeRemoval = await bootstrap.models.httpMonitorModel.find({
+        projectId: project.id,
+      });
+      const httpPingBucketsBeforeRemoval =
+        await bootstrap.utils.httpPingBucketUtils.getMonitorBuckets({
+          httpMonitorId: monitor.id,
+        });
+      const httpPingsBeforeRemoval = await bootstrap.utils.httpPingUtils.getMonitorPings({
+        httpMonitorId: monitor.id,
       });
 
       // when
@@ -220,6 +246,20 @@ describe('ProjectCoreController (writes)', () => {
       const projectsAfterRemoval = await bootstrap.models.projectModel.find({
         _id: new Types.ObjectId(project.id),
       });
+      const apiKeysAfterRemoval = await bootstrap.models.apiKeyModel.find({
+        projectId: project.id,
+      });
+
+      const httpMonitorsAfterRemoval = await bootstrap.models.httpMonitorModel.find({
+        projectId: project.id,
+      });
+      const httpPingsAfterRemoval = await bootstrap.utils.httpPingUtils.getMonitorPings({
+        httpMonitorId: monitor.id,
+      });
+      const httpPingBucketsAfterRemoval =
+        await bootstrap.utils.httpPingBucketUtils.getMonitorBuckets({
+          httpMonitorId: monitor.id,
+        });
 
       expect(response.status).toBe(200);
 
@@ -228,12 +268,20 @@ describe('ProjectCoreController (writes)', () => {
       expect(logMetricsBeforeRemoval).toHaveLength(4);
       expect(metricRegisterEntriesBeforeRemoval).toHaveLength(1);
       expect(projectsBeforeRemoval).toHaveLength(1);
+      expect(apiKeysBeforeRemoval).toHaveLength(1);
+      expect(httpMonitorsBeforeRemoval).toHaveLength(1);
+      expect(httpPingsBeforeRemoval).toHaveLength(1);
+      expect(httpPingBucketsBeforeRemoval).toHaveLength(1);
 
       expect(logsAfterRemoval).toHaveLength(0);
       expect(metricsAfterRemoval).toHaveLength(0);
       expect(logMetricsAfterRemoval).toHaveLength(0);
       expect(metricRegisterEntriesAfterRemoval).toHaveLength(0);
       expect(projectsAfterRemoval).toHaveLength(0);
+      expect(apiKeysAfterRemoval).toHaveLength(0);
+      expect(httpMonitorsAfterRemoval).toHaveLength(0);
+      expect(httpPingsAfterRemoval).toHaveLength(0);
+      expect(httpPingBucketsAfterRemoval).toHaveLength(0);
     });
 
     it('does not let user delete project if he is not a member of cluster', async () => {

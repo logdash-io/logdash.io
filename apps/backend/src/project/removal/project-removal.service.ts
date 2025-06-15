@@ -7,6 +7,8 @@ import { MetricWriteService } from '../../metric/write/metric-write.service';
 import { ProjectReadService } from '../read/project-read.service';
 import { ProjectWriteService } from '../write/project-write.service';
 import { HttpMonitorRemovalService } from '../../http-monitor/removal/http-monitor-removal.service';
+import { ApiKeyWriteService } from '../../api-key/write/api-key-write.service';
+import { PublicDashboardWriteService } from '../../public-dashboard/write/public-dashboard-write.service';
 
 @Injectable()
 export class ProjectRemovalService {
@@ -19,6 +21,7 @@ export class ProjectRemovalService {
     private readonly logMetricWriteService: LogMetricWriteService,
     private readonly logger: Logger,
     private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
+    private readonly apiKeyWriteService: ApiKeyWriteService,
   ) {}
 
   public async deleteProjectsByClusterId(clusterId: string): Promise<void> {
@@ -59,5 +62,10 @@ export class ProjectRemovalService {
       projectId,
     });
     await this.httpMonitorRemovalService.deleteByProjectId(projectId);
+
+    this.logger.log(`Deleting API keys for project...`, {
+      projectId,
+    });
+    await this.apiKeyWriteService.deleteByProjectId(projectId);
   }
 }

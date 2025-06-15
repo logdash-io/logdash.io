@@ -4,11 +4,11 @@ import {
   Get,
   Post,
   BadRequestException,
-  Patch,
   Param,
   NotFoundException,
   Put,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { ClusterWriteService } from '../write/cluster-write.service';
 import { CreateClusterBody } from './dto/create-cluster.body';
@@ -24,6 +24,8 @@ import { ClusterFeaturesService } from '../features/cluster-features.service';
 import { ClusterReadCachedService } from '../read/cluster-read-cached.service';
 import { UpdateClusterBody } from './dto/update-cluster.body';
 import { ClusterMemberGuard } from '../guards/cluster-member/cluster-member.guard';
+import { ClusterRemovalService } from '../removal/cluster-removal.service';
+import { SuccessResponse } from '../../shared/responses/success.response';
 
 @ApiTags('Clusters')
 @Controller()
@@ -35,6 +37,7 @@ export class ClusterCoreController {
     private readonly userReadCachedService: UserReadCachedService,
     private readonly projectReadService: ProjectReadService,
     private readonly clusterFeaturesService: ClusterFeaturesService,
+    private readonly clusterRemovalService: ClusterRemovalService,
   ) {}
 
   @ApiBearerAuth()
@@ -45,8 +48,7 @@ export class ClusterCoreController {
     @CurrentUserId() userId: string,
   ): Promise<ClusterSerialized> {
     const MAX_CLUSTERS_PER_USER = 100;
-    const currentClusterCount =
-      await this.clusterReadCachedService.countByCreatorId(userId);
+    const currentClusterCount = await this.clusterReadCachedService.countByCreatorId(userId);
 
     if (currentClusterCount >= MAX_CLUSTERS_PER_USER) {
       throw new BadRequestException(
@@ -66,24 +68,28 @@ export class ClusterCoreController {
     return ClusterSerializer.serialize(cluster);
   }
 
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Delete('clusters/:clusterId')
+  public async delete(@Param('clusterId') clusterId: string): Promise<SuccessResponse> {
+    await this.clusterRemovalService.deleteClusterById(clusterId);
+
+    return new SuccessResponse();
+  }
+
   @ApiBearerAuth()
   @Get('users/me/clusters')
   @ApiResponse({ type: ClusterSerialized, isArray: true })
-  public async getAll(
-    @CurrentUserId() userId: string,
-  ): Promise<ClusterSerialized[]> {
-    const clusters =
-      await this.clusterReadService.readWhereUserIsInMembers(userId);
+  public async getAll(@CurrentUserId() userId: string): Promise<ClusterSerialized[]> {
+    const clusters = await this.clusterReadService.readWhereUserIsInMembers(userId);
 
-    const projectsGroupedByCluster =
-      await this.projectReadService.readGroupedByClusterMany(
-        clusters.map((cluster) => cluster.id),
-      );
+    const projectsGroupedByCluster = await this.projectReadService.readGroupedByClusterMany(
+      clusters.map((cluster) => cluster.id),
+    );
 
-    const featuresMap =
-      await this.clusterFeaturesService.getClusterFeaturesMany(
-        clusters.map((cluster) => cluster.id),
-      );
+    const featuresMap = await this.clusterFeaturesService.getClusterFeaturesMany(
+      clusters.map((cluster) => cluster.id),
+    );
 
     return ClusterSerializer.serializeMany(clusters, {
       projectsMap: projectsGroupedByCluster,
@@ -123,11 +129,11 @@ export class ClusterCoreController {
       throw new NotFoundException('Cluster not found after update');
     }
 
-    const projectsGroupedByCluster =
-      await this.projectReadService.readGroupedByClusterMany([clusterId]);
+    const projectsGroupedByCluster = await this.projectReadService.readGroupedByClusterMany([
+      clusterId,
+    ]);
 
-    const featuresMap =
-      await this.clusterFeaturesService.getClusterFeaturesMany([clusterId]);
+    const featuresMap = await this.clusterFeaturesService.getClusterFeaturesMany([clusterId]);
 
     return ClusterSerializer.serialize(updatedCluster, {
       projects: projectsGroupedByCluster[clusterId],
