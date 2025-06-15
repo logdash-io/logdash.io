@@ -203,7 +203,9 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .delete(`/public-dashboards/${publicDashboard.id}/monitors/asd123`)
+        .delete(
+          `/public-dashboards/${publicDashboard.id}/monitors/${new Types.ObjectId().toString()}`,
+        )
         .set('Authorization', `Bearer ${setupB.token}`);
 
       // then
