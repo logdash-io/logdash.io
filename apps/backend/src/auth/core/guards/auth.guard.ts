@@ -26,22 +26,16 @@ export class AuthGuard implements CanActivate {
 
     const isDemoEndpoint = this.reflector.get<boolean>(DEMO_ENDPOINT_KEY, context.getHandler());
 
-    console.log('isDemoEndpoint', isDemoEndpoint);
-
     if (
       isDemoEndpoint &&
       (this.isRelatedToDemoProject(request) || this.isRelatedToDemoCluster(request))
     ) {
       const token = this.extractTokenFromHeader(request);
 
-      console.log('token', token);
-
       if (!token) {
         return true;
       }
       const payload = await this.jwtService.getTokenPayload(token);
-
-      console.log('payload', payload);
 
       if (!payload) {
         return true;
@@ -49,21 +43,15 @@ export class AuthGuard implements CanActivate {
 
       request['user'] = payload;
 
-      console.log('payload', payload);
-
       return true;
     }
 
     const token = this.extractTokenFromHeader(request);
 
-    console.log('token', token);
-
     if (!token) {
       throw new UnauthorizedException();
     }
     const payload = await this.jwtService.getTokenPayload(token);
-
-    console.log('payload', payload);
 
     if (!payload) {
       throw new UnauthorizedException();
