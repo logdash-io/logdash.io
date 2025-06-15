@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CustomJwtService } from '../../custom-jwt/custom-jwt.service';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/is-public';
@@ -29,12 +24,25 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    const isDemoEndpoint = this.reflector.get<boolean>(
-      DEMO_ENDPOINT_KEY,
-      context.getHandler(),
-    );
+    const isDemoEndpoint = this.reflector.get<boolean>(DEMO_ENDPOINT_KEY, context.getHandler());
 
-    if (isDemoEndpoint && this.isRelatedToDemoProject(request)) {
+    if (
+      isDemoEndpoint &&
+      (this.isRelatedToDemoProject(request) || this.isRelatedToDemoCluster(request))
+    ) {
+      const token = this.extractTokenFromHeader(request);
+
+      if (!token) {
+        return true;
+      }
+      const payload = await this.jwtService.getTokenPayload(token);
+
+      if (!payload) {
+        return true;
+      }
+
+      request['user'] = payload;
+
       return true;
     }
 
@@ -55,8 +63,7 @@ export class AuthGuard implements CanActivate {
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] =
-      (request.headers as any).authorization?.split(' ') ?? [];
+    const [type, token] = (request.headers as any).authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }
 
@@ -64,5 +71,10 @@ export class AuthGuard implements CanActivate {
     const projectId = request.params.projectId;
 
     return projectId === getEnvConfig().demo.projectId;
+  }
+  private isRelatedToDemoCluster(request: any): boolean {
+    const clusterId = request.params.clusterId;
+
+    return clusterId === getEnvConfig().demo.clusterId;
   }
 }

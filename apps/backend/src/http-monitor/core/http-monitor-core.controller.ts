@@ -20,7 +20,7 @@ import { UpdateHttpMonitorBody } from './dto/update-http-monitor.body';
 import { ProjectReadService } from '../../project/read/project-read.service';
 import { HttpMonitorStatusService } from '../status/http-monitor-status.service';
 import { HttpPingSchedulerService } from '../../http-ping/schedule/http-ping-scheduler.service';
-import {DemoEndpoint} from "src/demo/decorators/demo-endpoint.decorator";
+import { DemoEndpoint } from 'src/demo/decorators/demo-endpoint.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -52,7 +52,9 @@ export class HttpMonitorCoreController {
     const httpMonitor = await this.httpMonitorWriteService.create(projectId, dto);
     const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
 
-    void this.httpPingSchedulerService.pingSingleMonitor(httpMonitor.id);
+    if (process.env.NODE_ENV !== 'test') {
+      void this.httpPingSchedulerService.pingSingleMonitor(httpMonitor.id);
+    }
 
     return HttpMonitorSerializer.serialize(httpMonitor, status);
   }

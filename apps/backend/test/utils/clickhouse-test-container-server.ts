@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { createClient, ClickHouseClient } from '@clickhouse/client';
-import { ClickHouseContainer, StartedClickHouseContainer } from '@testcontainers/clickhouse';
+import { ClickHouseContainer } from '@testcontainers/clickhouse';
 import * as path from 'path';
 
 export const createClickHouseTestContainer = async (): Promise<void> => {

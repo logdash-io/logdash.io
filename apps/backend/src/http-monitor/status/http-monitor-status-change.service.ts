@@ -7,6 +7,7 @@ import { RedisService } from '../../shared/redis/redis.service';
 import { NotificationChannelMessagingService } from '../../notification-channel/messaging/notification-channel-messaging.service';
 import { HttpMonitorReadService } from '../read/http-monitor-read.service';
 import { HttpMonitorStatusService } from './http-monitor-status.service';
+import { Logger } from '@logdash/js-sdk';
 
 @Injectable()
 export class HttpMonitorStatusChangeService {
@@ -14,9 +15,21 @@ export class HttpMonitorStatusChangeService {
     private readonly notificationChannelMessagingService: NotificationChannelMessagingService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpMonitorStatusService: HttpMonitorStatusService,
+    private readonly logger: Logger,
   ) {}
 
   @OnEvent(HttpPingEvent.HttpPingCreatedEvent)
+  public async tryHandleHttpPingCreatedEvent(event: HttpPingCreatedEvent) {
+    try {
+      await this.handleHttpPingCreatedEvent(event);
+    } catch (error) {
+      this.logger.error('Error handling http ping created event', {
+        error,
+        event,
+      });
+    }
+  }
+
   public async handleHttpPingCreatedEvent(event: HttpPingCreatedEvent) {
     const newStatus = this.computePingStatusFromStatusCode(event.statusCode);
     const previousStatus = await this.httpMonitorStatusService.getStatus(event.httpMonitorId);

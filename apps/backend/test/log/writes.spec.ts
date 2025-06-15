@@ -12,7 +12,7 @@ import { CreateLogDto } from '../../src/log/write/dto/create-log.dto';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { createTestApp } from '../utils/bootstrap';
-import { removeKeysWhichWouldExpireInNextXSeconds } from '../utils/redis-in-memory-server';
+import { removeKeysWhichWouldExpireInNextXSeconds } from '../utils/redis-test-container-server';
 import { sleep } from '../utils/sleep';
 
 describe('LogCoreController (writes)', () => {
@@ -422,7 +422,7 @@ describe('LogCoreController (writes)', () => {
       expect(response.body.success).toEqual(true);
       expect(response.status).toEqual(201);
 
-      await sleep(1000);
+      await sleep(1_500);
 
       // then
       const logs = await bootstrap.models.logModel.find({ projectId: project.id });

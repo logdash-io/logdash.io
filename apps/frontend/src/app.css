@@ -1,150 +1,145 @@
 @import 'tailwindcss';
+
 @plugin 'daisyui';
 
 html {
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 body {
-	font-synthesis: none;
-	font-variant-ligatures: none;
+    font-synthesis: none;
+    font-variant-ligatures: none;
 }
 
 html,
 body {
-	--font-sans:
-		'Kumbh Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-		Roboto, 'Helvetica Neue', Arial, sans-serif;
-	--font-mono:
-		'JetBrains Mono', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono',
-		'Source Code Pro', monospace;
-	--root-bg: var(--color-neutral-950);
-	--color-primary: var(--color-pink-600);
-	--color-primary-content: var(--color-neutral-100);
-	--color-secondary: var(--color-neutral-100);
-	--color-secondary-content: var(--color-neutral-950);
+    --font-sans: 'Kumbh Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono',
+    'Source Code Pro', monospace;
+    --root-bg: var(--color-neutral-950);
+    --color-primary: var(--color-pink-600);
+    --color-primary-content: var(--color-neutral-100);
+    --color-secondary: var(--color-neutral-100);
+    --color-secondary-content: var(--color-neutral-950);
 
-	--color-base-300: var(--color-neutral-950);
-	--color-base-200: var(--color-neutral-900);
-	--color-base-100: var(--color-neutral-800);
-	--color-base-content: var(--color-neutral-100);
+    --color-base-300: var(--color-neutral-950);
+    --color-base-200: var(--color-neutral-900);
+    --color-base-100: var(--color-neutral-800);
+    --color-base-content: var(--color-neutral-100);
 
-	--color-success: var(--color-green-600);
-	--color-error: var(--color-red-600);
-	--color-warning: var(--color-amber-500);
-	--color-info: var(--color-blue-600);
+    --color-success: var(--color-green-600);
+    --color-error: var(--color-red-600);
+    --color-warning: var(--color-amber-500);
+    --color-info: var(--color-blue-600);
 
-	--radius-selector: var(--radius-md);
+    --radius-selector: var(--radius-md);
 
-	@apply overflow-hidden scroll-smooth tracking-wide;
+    @apply overflow-hidden scroll-smooth tracking-wide;
 }
 
 * {
-	@apply outline-primary/80;
+    @apply outline-primary/80;
 }
 
 .btn:not(.btn-circle) {
-	@apply rounded-lg;
+    @apply rounded-lg;
 }
 
 .btn-transparent {
-	@apply border-0 bg-transparent shadow-none;
+    @apply border-0 bg-transparent shadow-none;
 }
 
 .code-snippet > .hljs {
-	@apply from-base-300 to-base-200 border-base-200 rounded-xl border bg-gradient-to-br shadow-lg;
+    @apply from-base-300 to-base-200 border-base-200 rounded-xl border bg-gradient-to-br shadow-lg;
 }
 
 .btn {
-	@apply whitespace-nowrap;
-}
-
-.btn-secondary:not(:disabled) {
-	@apply shadow-secondary/40 shadow;
+    @apply whitespace-nowrap;
 }
 
 .ld-card-base,
 .ld-card {
-	@apply from-base-200 to-base-300 border-base-100/70 border bg-gradient-to-br shadow-lg;
+    @apply from-base-200 to-base-300 border-base-100/70 border bg-gradient-to-br shadow-lg;
 }
 
 @keyframes toast-progress {
-	from {
-		transform: scaleX(1);
-	}
-	to {
-		transform: scaleX(0);
-	}
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
 }
 
 .ld-card {
-	@apply rounded-xl px-6 py-6 sm:px-8 sm:py-8;
+    @apply rounded-xl px-6 py-6 sm:px-8 sm:py-8;
 }
 
 .ld-modal {
-	@apply from-base-200 to-base-300 border-base-100/50 rounded-xl border bg-gradient-to-br p-8 shadow-lg;
+    @apply from-base-200 to-base-300 border-base-100/50 rounded-xl border bg-gradient-to-br p-8 shadow-lg;
 }
 
 .status {
-	@apply shadow-none;
-	background-image: none;
+    @apply shadow-none;
+    background-image: none;
 }
 
 .badge {
-	@apply rounded-full;
+    @apply rounded-full;
 }
 
 .distance {
-	@apply w-full shrink-0;
+    @apply w-full shrink-0;
 }
 
 .tabs {
-	@apply rounded-xl;
+    @apply rounded-xl;
 }
 
 .tab {
-	@apply rounded-lg;
+    @apply rounded-lg;
 }
 
 .navlink-active {
-	@apply after:bg-primary relative after:absolute after:top-full after:left-1/2 after:h-1 after:w-1/5 after:max-w-8 after:min-w-5 after:-translate-x-1/2 after:rounded-full;
+    @apply after:bg-primary relative after:absolute after:top-full after:left-1/2 after:h-1 after:w-1/5 after:max-w-8 after:min-w-5 after:-translate-x-1/2 after:rounded-full;
 }
 
 .collapse-open {
-	@apply shrink-0;
+    @apply shrink-0;
 }
 
 .gutter-both {
-	scrollbar-gutter: stable both-edges;
+    scrollbar-gutter: stable both-edges;
 }
 
 /* 
 Scrollbar styles for modern browsers
 */
 * {
-	scrollbar-width: thin;
-	scrollbar-color: var(--color-neutral-500) transparent;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-neutral-500) transparent;
 }
 
 ::-webkit-scrollbar-track {
-	@apply h-1.5 w-1.5 bg-transparent;
-	border-radius: 10px;
+    @apply h-1.5 w-1.5 bg-transparent;
+    border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-	@apply h-1.5 w-1.5;
-	border-radius: 10px;
+    @apply h-1.5 w-1.5;
+    border-radius: 10px;
 }
 
 .cds--chart-holder[data-carbon-theme='g100'] {
-	.chart-grid-backdrop {
-		fill: none;
-		opacity: 30%;
-	}
+    .chart-grid-backdrop {
+        fill: none;
+        opacity: 30%;
+    }
 }
 
 .bx--cc--tooltip {
-	background-color: blue;
+    background-color: blue;
 }
