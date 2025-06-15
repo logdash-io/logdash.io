@@ -16,8 +16,6 @@ export class PublicDashboardReadService {
   ) {}
 
   public async readByClusterId(clusterId: string): Promise<PublicDashboardNormalized[]> {
-    console.log(clusterId);
-
     const entities = await this.publicDashboardModel.find({ clusterId }).exec();
     return entities.map((entity) => PublicDashboardSerializer.normalize(entity));
   }

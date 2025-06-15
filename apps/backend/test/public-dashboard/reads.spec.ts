@@ -30,10 +30,7 @@ describe('PublicDashboardCoreController (reads)', () => {
       // when
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/clusters/${cluster.id}/public-dashboards`)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200);
-
-      console.log(await bootstrap.models.publicDashboardModel.find());
+        .set('Authorization', `Bearer ${token}`);
 
       // then
       const dashboards: PublicDashboardSerialized[] = response.body;
@@ -51,8 +48,7 @@ describe('PublicDashboardCoreController (reads)', () => {
       // when
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/clusters/${clusterId}/public-dashboards`)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200);
+        .set('Authorization', `Bearer ${token}`);
 
       // then
       expect(response.body).toEqual([]);
@@ -71,8 +67,7 @@ describe('PublicDashboardCoreController (reads)', () => {
       // when
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/clusters/${setupA.cluster.id}/public-dashboards`)
-        .set('Authorization', `Bearer ${setupB.token}`)
-        .expect(403);
+        .set('Authorization', `Bearer ${setupB.token}`);
 
       // then
       expect(response.status).toEqual(403);
