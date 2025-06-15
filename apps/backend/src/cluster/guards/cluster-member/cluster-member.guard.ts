@@ -32,6 +32,7 @@ export class ClusterMemberGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+
     const userId = request.user?.id;
 
     const clusterIdFromParams = request.params[CLUSTER_ID_PARAM_NAME];
