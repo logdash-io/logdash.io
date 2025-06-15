@@ -70,14 +70,12 @@ export class PublicDashboardCompositionService {
     const response: PublicDashboardDataResponse = {
       httpMonitors: monitors.map((monitor) => ({
         name: monitor.name,
-        buckets: bucketsByMonitorId[monitor.id].map((bucket) => {
-          if (!bucket) {
-            return null;
-          }
-
-          return HttpPingBucketSerializer.serialize(bucket as HttpPingBucketNormalized);
-        }),
-        pings: pingsByMonitorId[monitor.id].map((ping) => HttpPingSerializer.serialize(ping)),
+        buckets: bucketsByMonitorId[monitor.id],
+        pings: pingsByMonitorId[monitor.id].map((ping) => ({
+          createdAt: ping.createdAt.toISOString(),
+          statusCode: ping.statusCode,
+          responseTimeMs: ping.responseTimeMs,
+        })),
       })),
     };
 
