@@ -1,0 +1,65 @@
+name: 'Find test files'
+
+inputs:
+  batch-size:
+    description: 'Number of test files per batch'
+    required: false
+    default: '3'
+
+outputs:
+  test-batches:
+    description: 'List of test file batches for matrix'
+    value: ${{ steps.create-batches.outputs.test-batches }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+
+    - name: Find and batch test files
+      id: create-batches
+      run: |
+        cd apps/backend
+
+        # Find all test files
+        TEST_FILES=($(find test -name "*.spec.ts" -type f | sort))
+
+        # Group into batches
+        BATCH_SIZE=${{ inputs.batch-size }}
+        BATCHES=()
+        CURRENT_BATCH=()
+
+        for file in "${TEST_FILES[@]}"; do
+          CURRENT_BATCH+=("$file")
+          
+          if [ ${#CURRENT_BATCH[@]} -eq $BATCH_SIZE ]; then
+            # Convert array to space-separated string and add to batches
+            BATCH_STRING=$(printf '%s ' "${CURRENT_BATCH[@]}")
+            BATCHES+=("${BATCH_STRING% }")  # Remove trailing space
+            CURRENT_BATCH=()
+          fi
+        done
+
+        # Add remaining files as final batch
+        if [ ${#CURRENT_BATCH[@]} -gt 0 ]; then
+          BATCH_STRING=$(printf '%s ' "${CURRENT_BATCH[@]}")
+          BATCHES+=("${BATCH_STRING% }")
+        fi
+
+        # Convert to JSON array
+        BATCH_JSON="["
+        for i in "${!BATCHES[@]}"; do
+          if [ $i -gt 0 ]; then
+            BATCH_JSON+=","
+          fi
+          BATCH_JSON+="\"${BATCHES[$i]}\""
+        done
+        BATCH_JSON+="]"
+
+        echo "test-batches=$BATCH_JSON" >> $GITHUB_OUTPUT
+        echo "Created ${#BATCHES[@]} batches with batch size $BATCH_SIZE"
+        echo "Batches: $BATCH_JSON"
+      shell: bash

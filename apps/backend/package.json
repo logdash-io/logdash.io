@@ -50,6 +50,7 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/testing": "^11.0.16",
     "@testcontainers/clickhouse": "^11.0.1",
+    "@testcontainers/redis": "^11.0.3",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
@@ -70,9 +71,6 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3"
-  },
-  "optionalDependencies": {
-    "redis-memory-server": "^0.12.1"
   },
   "jest": {
     "moduleFileExtensions": [

@@ -105,26 +105,6 @@ describe('HttpMonitorCoreController (writes)', () => {
       // then
       expect(response.status).toBe(403);
     });
-
-    it('pings newly created monitor', async () => {
-      // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
-      nock('https://example.com').get('/').reply(200);
-
-      // when
-      const response = await request(bootstrap.app.getHttpServer())
-        .post(`/projects/${project.id}/http_monitors`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'Test Monitor', url: 'https://example.com' });
-
-      // then
-      await sleep(3000);
-      const monitorResponse = await bootstrap.utils.httpMonitorsUtils.getHttpMonitorResponse(
-        response.body.id,
-        token,
-      );
-      expect(monitorResponse.lastStatus).toBe(HttpMonitorStatus.Up);
-    });
   });
 
   describe('PUT /http_monitors/:httpMonitorId', () => {

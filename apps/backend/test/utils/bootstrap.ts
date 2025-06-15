@@ -50,13 +50,11 @@ import { MetricUtils } from './metric-utils';
 import { MetricsMock } from './metrics-mock';
 import { closeInMemoryMongoServer, rootMongooseTestModule } from './mongo-in-memory-server';
 import { ProjectUtils } from './project-utils';
-import { getInMemoryRedisUri, redisInMemoryServer } from './redis-in-memory-server';
+import { getRedisTestContainerUrl } from './redis-test-container-server';
 import { TelegramUtils } from './telegram-utils';
 import { WebhookUtils } from './webhook-utils';
 
 export async function createTestApp() {
-  const redisUrl = await getInMemoryRedisUri();
-
   const module: TestingModule = await Test.createTestingModule({
     imports: [
       rootMongooseTestModule(),
@@ -79,7 +77,7 @@ export async function createTestApp() {
       MetricRegisterCoreModule,
       NotificationChannelCoreModule,
       RedisModule.forRoot({
-        url: redisUrl,
+        url: getRedisTestContainerUrl(),
       }),
     ],
   })
@@ -154,7 +152,6 @@ export async function createTestApp() {
   const afterAll = async () => {
     await app.close();
     await closeInMemoryMongoServer();
-    await redisInMemoryServer.stop();
     clear();
   };
 

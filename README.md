@@ -48,7 +48,7 @@ pnpm run build
 
 - **Frontend:** [SvelteKit](https://kit.svelte.dev) + [Tailwind CSS](https://tailwindcss.com)
 - **Backend:** [NestJS](https://nestjs.com)
-- **Database:** [MongoDB](https://www.mongodb.com) + [Redis](https://redis.io)
+- **Database:** [MongoDB](https://www.mongodb.com) + [Redis](https://redis.io) + [Clickhouse](https://clickhouse.com/)
 - **Monorepo:** pnpm workspaces
 - **Type safety:** TypeScript with shared types (maybe one day)
 
