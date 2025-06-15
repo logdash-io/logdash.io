@@ -157,4 +157,61 @@ describe('HttpMonitorCoreController (writes)', () => {
       expect(response.status).toBe(403);
     });
   });
+
+  describe('DELETE /http_monitors/:httpMonitorId', () => {
+    it('deletes monitor and related resouces', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: setup.project.id,
+        token: setup.token,
+      });
+
+      const httpPing = await bootstrap.utils.httpPingUtils.createHttpPing({
+        httpMonitorId: httpMonitor.id,
+      });
+
+      const httpPingBucket = await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket({
+        httpMonitorId: httpMonitor.id,
+      });
+
+      const monitorsBeforeRemoval = await bootstrap.models.httpMonitorModel.find();
+      const pingsBeforeRemoval = await bootstrap.utils.httpPingUtils.getAllPings();
+      const bucketsBeforeRemoval = await bootstrap.utils.httpPingBucketUtils.getAllBuckets();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/http_monitors/${httpMonitor.id}`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // then
+      const monitorsAfterRemoval = await bootstrap.models.httpMonitorModel.find();
+      const pingsAfterRemoval = await bootstrap.utils.httpPingUtils.getAllPings();
+      const bucketsAfterRemoval = await bootstrap.utils.httpPingBucketUtils.getAllBuckets();
+
+      expect(monitorsAfterRemoval).toHaveLength(monitorsBeforeRemoval.length - 1);
+      expect(pingsAfterRemoval).toHaveLength(pingsBeforeRemoval.length - 1);
+      expect(bucketsAfterRemoval).toHaveLength(bucketsBeforeRemoval.length - 1);
+    });
+
+    it('denies access for non-cluster member', async () => {
+      // given
+      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: setupA.project.id,
+        token: setupA.token,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/http_monitors/${httpMonitor.id}`)
+        .set('Authorization', `Bearer ${setupB.token}`);
+
+      // then
+      expect(response.status).toBe(403);
+    });
+  });
 });

@@ -55,4 +55,8 @@ export class HttpMonitorWriteService {
 
     return HttpMonitorSerializer.normalize(entity);
   }
+
+  public async deleteById(httpMonitorId: string): Promise<void> {
+    await this.httpMonitorModel.findByIdAndDelete(httpMonitorId);
+  }
 }

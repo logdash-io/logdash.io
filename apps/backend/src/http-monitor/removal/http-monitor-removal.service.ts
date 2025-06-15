@@ -23,4 +23,10 @@ export class HttpMonitorRemovalService {
       await this.httpBucketWriteService.deleteByMonitorIds(monitorsIds);
     }
   }
+
+  public async deleteById(httpMonitorId: string): Promise<void> {
+    await this.httpPingWriteService.deleteByMonitorIds([httpMonitorId]);
+    await this.httpMonitorWriteService.deleteById(httpMonitorId);
+    await this.httpBucketWriteService.deleteByMonitorIds([httpMonitorId]);
+  }
 }

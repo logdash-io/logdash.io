@@ -2,6 +2,7 @@ import {
   Body,
   ConflictException,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -23,6 +24,7 @@ import { HttpMonitorStatusService } from '../status/http-monitor-status.service'
 import { HttpPingSchedulerService } from '../../http-ping/schedule/http-ping-scheduler.service';
 import { DemoEndpoint } from 'src/demo/decorators/demo-endpoint.decorator';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
+import { HttpMonitorRemovalService } from '../removal/http-monitor-removal.service';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -35,6 +37,7 @@ export class HttpMonitorCoreController {
     private readonly projectReadService: ProjectReadService,
     private readonly httpMonitorStatusService: HttpMonitorStatusService,
     private readonly httpPingSchedulerService: HttpPingSchedulerService,
+    private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -104,5 +107,11 @@ export class HttpMonitorCoreController {
     const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
 
     return HttpMonitorSerializer.serialize(httpMonitor, status);
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @Delete('/http_monitors/:httpMonitorId')
+  async delete(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
+    await this.httpMonitorRemovalService.deleteById(httpMonitorId);
   }
 }

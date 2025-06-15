@@ -3,15 +3,18 @@ import { PublicDashboardDataResponse } from '../core/dto/public-dashboard-data.r
 import { HttpPingReadService } from '../../http-ping/read/http-ping-read.service';
 import { PublicDashboardReadService } from '../read/public-dashboard-read.service';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
-import { HttpPingSerializer } from '../../http-ping/core/entities/http-ping.serializer';
 import { HttpPingBucketAggregationService } from '../../http-ping-bucket/aggregation/http-ping-bucket-aggregation.service';
 import { BucketsPeriod } from '../../http-ping-bucket/core/types/bucket-period.enum';
 import { VirtualBucket } from '../../http-ping-bucket/core/types/virtual-bucket.type';
-import { HttpPingBucketSerializer } from '../../http-ping-bucket/core/entities/http-ping-bucket.serializer';
-import { HttpPingBucketNormalized } from '../../http-ping-bucket/core/entities/http-ping-bucket.interface';
 import { RedisService } from '../../shared/redis/redis.service';
 
-const CACHE_TTL_SECONDS = 60; // 1 minute
+const PUBLIC_CACHE_TTL_SECONDS = 60; // 1 minute
+const PRIVATE_CACHE_TTL_SECONDS = 1; // 1 second
+
+enum ResponseType {
+  Public = 'public-data',
+  Private = 'private-data',
+}
 
 @Injectable()
 export class PublicDashboardCompositionService {
@@ -23,16 +26,64 @@ export class PublicDashboardCompositionService {
     private readonly redisService: RedisService,
   ) {}
 
-  public async composeResponse(
+  public async composePublicResponse(
     publicDashboardId: string,
     period: BucketsPeriod,
   ): Promise<PublicDashboardDataResponse> {
-    const cachedResponse = await this.getCachedResponse(publicDashboardId, period);
+    const cachedResponse = await this.getCachedResponse(
+      publicDashboardId,
+      period,
+      ResponseType.Public,
+    );
 
     if (cachedResponse) {
       return cachedResponse;
     }
 
+    const response = await this.composeResponseData(publicDashboardId, period);
+
+    await this.setCachedResponse(
+      publicDashboardId,
+      period,
+      ResponseType.Public,
+      response,
+      PUBLIC_CACHE_TTL_SECONDS,
+    );
+
+    return response;
+  }
+
+  public async composePrivateResponse(
+    publicDashboardId: string,
+    period: BucketsPeriod,
+  ): Promise<PublicDashboardDataResponse> {
+    const cachedResponse = await this.getCachedResponse(
+      publicDashboardId,
+      period,
+      ResponseType.Private,
+    );
+
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    const response = await this.composeResponseData(publicDashboardId, period);
+
+    await this.setCachedResponse(
+      publicDashboardId,
+      period,
+      ResponseType.Private,
+      response,
+      PRIVATE_CACHE_TTL_SECONDS,
+    );
+
+    return response;
+  }
+
+  private async composeResponseData(
+    publicDashboardId: string,
+    period: BucketsPeriod,
+  ): Promise<PublicDashboardDataResponse> {
     const dashboard = await this.publicDashboardReadService.readById(publicDashboardId);
 
     if (!dashboard) {
@@ -45,7 +96,28 @@ export class PublicDashboardCompositionService {
       dashboard.httpMonitorsIds,
     );
 
-    const buckets = await Promise.all(
+    const buckets = await this.getBucketsForMonitors(monitors, period);
+
+    const bucketsByMonitorId = this.groupBucketsByMonitorId(buckets);
+
+    return {
+      httpMonitors: monitors.map((monitor) => ({
+        name: monitor.name,
+        buckets: bucketsByMonitorId[monitor.id],
+        pings: pingsByMonitorId[monitor.id].map((ping) => ({
+          createdAt: ping.createdAt.toISOString(),
+          statusCode: ping.statusCode,
+          responseTimeMs: ping.responseTimeMs,
+        })),
+      })),
+    };
+  }
+
+  private async getBucketsForMonitors(
+    monitors: any[],
+    period: BucketsPeriod,
+  ): Promise<{ monitorId: string; buckets: (VirtualBucket | null)[] }[]> {
+    return Promise.all(
       monitors.map(async (monitor) => {
         const buckets = await this.httpPingBucketAggregationService.getBucketsForMonitor(
           monitor.id,
@@ -58,37 +130,28 @@ export class PublicDashboardCompositionService {
         };
       }),
     );
+  }
 
-    const bucketsByMonitorId = buckets.reduce(
+  private groupBucketsByMonitorId(
+    buckets: { monitorId: string; buckets: (VirtualBucket | null)[] }[],
+  ): Record<string, (VirtualBucket | null)[]> {
+    return buckets.reduce(
       (acc, bucket) => {
         acc[bucket.monitorId] = bucket.buckets;
         return acc;
       },
       {} as Record<string, (VirtualBucket | null)[]>,
     );
-
-    const response: PublicDashboardDataResponse = {
-      httpMonitors: monitors.map((monitor) => ({
-        name: monitor.name,
-        buckets: bucketsByMonitorId[monitor.id],
-        pings: pingsByMonitorId[monitor.id].map((ping) => ({
-          createdAt: ping.createdAt.toISOString(),
-          statusCode: ping.statusCode,
-          responseTimeMs: ping.responseTimeMs,
-        })),
-      })),
-    };
-
-    await this.setCachedResponse(publicDashboardId, period, response);
-
-    return response;
   }
 
   private async getCachedResponse(
     publicDashboardId: string,
     period: BucketsPeriod,
+    responseType: ResponseType,
   ): Promise<PublicDashboardDataResponse | null> {
-    const cachedResponse = await this.redisService.get(this.getCacheKey(publicDashboardId, period));
+    const cachedResponse = await this.redisService.get(
+      this.getCacheKey(publicDashboardId, period, responseType),
+    );
 
     if (cachedResponse) {
       return JSON.parse(cachedResponse) as PublicDashboardDataResponse;
@@ -100,16 +163,22 @@ export class PublicDashboardCompositionService {
   private async setCachedResponse(
     publicDashboardId: string,
     period: BucketsPeriod,
+    responseType: ResponseType,
     response: PublicDashboardDataResponse,
+    ttlSeconds: number,
   ): Promise<void> {
     await this.redisService.set(
-      this.getCacheKey(publicDashboardId, period),
+      this.getCacheKey(publicDashboardId, period, responseType),
       JSON.stringify(response),
-      CACHE_TTL_SECONDS,
+      ttlSeconds,
     );
   }
 
-  private getCacheKey(publicDashboardId: string, period: BucketsPeriod): string {
-    return `public-dashboard:${publicDashboardId}:public-data:${period}`;
+  private getCacheKey(
+    publicDashboardId: string,
+    period: BucketsPeriod,
+    responseType: ResponseType,
+  ): string {
+    return `public-dashboard:${publicDashboardId}:${responseType}:${period}`;
   }
 }

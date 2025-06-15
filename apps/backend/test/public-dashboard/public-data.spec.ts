@@ -1,6 +1,5 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
-import { PublicDashboardSerialized } from '../../src/public-dashboard/core/entities/public-dashboard.interface';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { PublicDashboardDataResponse } from '../../src/public-dashboard/core/dto/public-dashboard-data.response';
 
@@ -54,58 +53,89 @@ describe('PublicDashboardCoreController (public data read)', () => {
     };
   }
 
-  it('reads public data', async () => {
-    // given
-    const setup = await setupPublicDashboard();
+  describe('GET /public_dashboards/:publicDashboardId/public_data', () => {
+    it('reads public data', async () => {
+      // given
+      const setup = await setupPublicDashboard();
 
-    // when
-    const response = await request(bootstrap.app.getHttpServer()).get(
-      `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
-    );
+      // when
+      const response = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
 
-    // then
-    const data = response.body as PublicDashboardDataResponse;
+      // then
+      const data = response.body as PublicDashboardDataResponse;
 
-    expect(response.status).toBe(200);
+      expect(response.status).toBe(200);
 
-    expect(data.httpMonitors).toHaveLength(2);
+      expect(data.httpMonitors).toHaveLength(2);
 
-    expect(data.httpMonitors[0].name).toBe('A');
-    expect(data.httpMonitors[0].pings).toHaveLength(1);
+      expect(data.httpMonitors[0].name).toBe('A');
+      expect(data.httpMonitors[0].pings).toHaveLength(1);
 
-    expect(data.httpMonitors[1].name).toBe('B');
-    expect(data.httpMonitors[1].pings).toHaveLength(1);
+      expect(data.httpMonitors[1].name).toBe('B');
+      expect(data.httpMonitors[1].pings).toHaveLength(1);
 
-    expect(data.httpMonitors[0].buckets).toHaveLength(24);
-    expect(data.httpMonitors[1].buckets).toHaveLength(24);
+      expect(data.httpMonitors[0].buckets).toHaveLength(24);
+      expect(data.httpMonitors[1].buckets).toHaveLength(24);
+    });
+
+    it('uses cache', async () => {
+      // given
+      const setup = await setupPublicDashboard();
+
+      // when
+      const firstResponse = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      const data = firstResponse.body as PublicDashboardDataResponse;
+
+      data.httpMonitors = [];
+
+      // and when
+      const redisService = bootstrap.app.get(RedisService);
+      await redisService.set(
+        `public-dashboard:${setup.publicDashboard.id}:public-data:24h`,
+        JSON.stringify(data),
+      );
+
+      // and when
+      const secondResponse = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      expect(secondResponse.body).toEqual(data);
+    });
   });
 
-  it('uses cache', async () => {
-    // given
-    const setup = await setupPublicDashboard();
+  describe('GET /public_dashboards/:publicDashboardId/data', () => {
+    it('reads private data', async () => {
+      // given
+      const setup = await setupPublicDashboard();
 
-    // when
-    const firstResponse = await request(bootstrap.app.getHttpServer()).get(
-      `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
-    );
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/public_dashboards/${setup.publicDashboard.id}/data?period=24h`)
+        .set('Authorization', `Bearer ${setup.token}`);
 
-    const data = firstResponse.body as PublicDashboardDataResponse;
+      // then
+      expect(response.status).toBe(200);
+    });
 
-    data.httpMonitors = [];
+    it('denies access for non-cluster member', async () => {
+      // given
+      const setupA = await setupPublicDashboard();
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
 
-    // and when
-    const redisService = bootstrap.app.get(RedisService);
-    await redisService.set(
-      `public-dashboard:${setup.publicDashboard.id}:public-data:24h`,
-      JSON.stringify(data),
-    );
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/public_dashboards/${setupA.publicDashboard.id}/data?period=24h`)
+        .set('Authorization', `Bearer ${setupB.token}`);
 
-    // and when
-    const secondResponse = await request(bootstrap.app.getHttpServer()).get(
-      `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
-    );
-
-    // then
-    expect(secondResponse.body).toEqual(data);
+      // then
+      expect(response.status).toBe(403);
+    });
   });
 });

@@ -74,11 +74,28 @@ export class PublicDashboardCoreController {
   @Public()
   @Get('/public_dashboards/:publicDashboardId/public_data')
   @ApiResponse({ type: PublicDashboardDataResponse })
+  public async readPublicDashboardPublicData(
+    @Param('publicDashboardId') publicDashboardId: string,
+    @Query() query: PublicDashboardDataQuery,
+  ): Promise<PublicDashboardDataResponse> {
+    return this.publicDashboardCompositionService.composePublicResponse(
+      publicDashboardId,
+      query.period,
+    );
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @Get('/public_dashboards/:publicDashboardId/data')
+  @ApiResponse({ type: PublicDashboardDataResponse })
   public async readPublicDashboardData(
     @Param('publicDashboardId') publicDashboardId: string,
     @Query() query: PublicDashboardDataQuery,
   ): Promise<PublicDashboardDataResponse> {
-    return this.publicDashboardCompositionService.composeResponse(publicDashboardId, query.period);
+    return this.publicDashboardCompositionService.composePrivateResponse(
+      publicDashboardId,
+      query.period,
+    );
   }
 
   @UseGuards(ClusterMemberGuard)
