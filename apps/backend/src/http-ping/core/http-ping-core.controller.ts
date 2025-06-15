@@ -23,6 +23,7 @@ export class HttpPingCoreController {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  @DemoEndpoint()
   @Get('projects/:projectId/monitors/:monitorId/http_pings')
   @ApiResponse({ type: HttpPingSerialized, isArray: true })
   async readByMonitorIdQuery(
