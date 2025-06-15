@@ -39,9 +39,19 @@ export class HttpPingReadService {
 
   public async readManyByMonitorIds(
     monitorIds: string[],
+    limitPerMonitor: number = 100,
   ): Promise<Record<string, HttpPingNormalized[]>> {
     const result = await this.clickhouse.query({
       query: `
+        WITH
+          (
+            SELECT groupArray(http_monitor_id)
+            FROM (
+              SELECT DISTINCT http_monitor_id
+              FROM http_pings
+              WHERE http_monitor_id IN ({monitorIds:Array(FixedString(24))})
+            )
+          ) AS monitor_ids
         SELECT 
           id,
           http_monitor_id,
@@ -49,10 +59,18 @@ export class HttpPingReadService {
           status_code,
           response_time_ms,
           message
-        FROM http_pings WHERE http_monitor_id IN ({monitorIds:Array(FixedString(24))})
+        FROM (
+          SELECT
+            *,
+            row_number() OVER (PARTITION BY http_monitor_id ORDER BY created_at DESC) as rn
+          FROM http_pings
+          WHERE http_monitor_id IN ({monitorIds:Array(FixedString(24))})
+        )
+        WHERE rn <= {limitPerMonitor:UInt64}
       `,
       query_params: {
         monitorIds,
+        limitPerMonitor,
       },
     });
 
