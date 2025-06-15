@@ -8,6 +8,7 @@ import {
   UseGuards,
   Body,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PublicDashboardReadService } from '../read/public-dashboard-read.service';
@@ -18,6 +19,10 @@ import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { CreatePublicDashboardBody } from './dto/create-public-dashboard.body';
 import { ProjectReadService } from '../../project/read/project-read.service';
+import { Public } from '../../auth/core/decorators/is-public';
+import { PublicDashboardDataResponse } from './dto/public-dashboard-data.response';
+import { PublicDashboardCompositionService } from '../composition/public-dashboard-composition.service';
+import { PublicDashboardDataQuery } from './dto/public-dashboard-data.query';
 
 @ApiTags('Public Dashboards')
 @Controller()
@@ -27,6 +32,7 @@ export class PublicDashboardCoreController {
     private readonly publicDashboardWriteService: PublicDashboardWriteService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly projectReadService: ProjectReadService,
+    private readonly publicDashboardCompositionService: PublicDashboardCompositionService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -63,6 +69,16 @@ export class PublicDashboardCoreController {
   ): Promise<PublicDashboardSerialized[]> {
     const dashboards = await this.publicDashboardReadService.readByClusterId(clusterId);
     return PublicDashboardSerializer.serializeMany(dashboards);
+  }
+
+  @Public()
+  @Get('/public-dashboards/:publicDashboardId/public-data')
+  @ApiResponse({ type: PublicDashboardDataResponse })
+  public async readPublicDashboardData(
+    @Param('publicDashboardId') publicDashboardId: string,
+    @Query() query: PublicDashboardDataQuery,
+  ): Promise<PublicDashboardDataResponse> {
+    return this.publicDashboardCompositionService.composeResponse(publicDashboardId, query.period);
   }
 
   @UseGuards(ClusterMemberGuard)
