@@ -36,4 +36,37 @@ export class HttpPingReadService {
 
     return HttpPingSerializer.normalizeMany(data);
   }
+
+  public async readManyByMonitorIds(
+    monitorIds: string[],
+  ): Promise<Record<string, HttpPingNormalized[]>> {
+    const result = await this.clickhouse.query({
+      query: `
+        SELECT 
+          id,
+          http_monitor_id,
+          created_at,
+          status_code,
+          response_time_ms,
+          message
+        FROM http_pings WHERE http_monitor_id IN ({monitorIds:Array(FixedString(24))})
+      `,
+      query_params: {
+        monitorIds,
+      },
+    });
+
+    const data = ((await result.json()) as any).data as HttpPingEntity[];
+
+    return data.reduce(
+      (acc, ping) => {
+        acc[ping.http_monitor_id] = [
+          ...(acc[ping.http_monitor_id] || []),
+          HttpPingSerializer.normalize(ping as HttpPingEntity),
+        ];
+        return acc;
+      },
+      {} as Record<string, HttpPingNormalized[]>,
+    );
+  }
 }
