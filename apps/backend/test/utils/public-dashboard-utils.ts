@@ -12,7 +12,7 @@ export class PublicDashboardUtils {
     httpMonitorsIds?: string[];
   }): Promise<PublicDashboardSerialized> {
     const response = await request(this.app.getHttpServer())
-      .post(`/clusters/${params.clusterId}/public-dashboards`)
+      .post(`/clusters/${params.clusterId}/public_dashboards`)
       .set('Authorization', `Bearer ${params.token}`)
       .send({
         clusterId: params.clusterId,

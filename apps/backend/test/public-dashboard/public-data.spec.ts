@@ -60,7 +60,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
     // when
     const response = await request(bootstrap.app.getHttpServer()).get(
-      `/public-dashboards/${setup.publicDashboard.id}/public-data?period=24h`,
+      `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
     );
 
     // then
@@ -86,7 +86,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
     // when
     const firstResponse = await request(bootstrap.app.getHttpServer()).get(
-      `/public-dashboards/${setup.publicDashboard.id}/public-data?period=24h`,
+      `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
     );
 
     const data = firstResponse.body as PublicDashboardDataResponse;
@@ -102,7 +102,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
     // and when
     const secondResponse = await request(bootstrap.app.getHttpServer()).get(
-      `/public-dashboards/${setup.publicDashboard.id}/public-data?period=24h`,
+      `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
     );
 
     // then

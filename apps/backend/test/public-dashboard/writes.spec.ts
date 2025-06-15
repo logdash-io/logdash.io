@@ -1,8 +1,6 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
-import { PublicDashboardSerialized } from '../../src/public-dashboard/core/entities/public-dashboard.interface';
 import { Types } from 'mongoose';
-import { Type } from 'class-transformer';
 
 describe('PublicDashboardCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -19,7 +17,7 @@ describe('PublicDashboardCoreController (writes)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  describe('POST /clusters/:clusterId/public-dashboards', () => {
+  describe('POST /clusters/:clusterId/public_dashboards', () => {
     it('creates public dashboard', async () => {
       // given
       const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -32,7 +30,7 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/clusters/${clusterId}/public-dashboards`)
+        .post(`/clusters/${clusterId}/public_dashboards`)
         .set('Authorization', `Bearer ${token}`)
         .send({
           httpMonitorsIds: [httpMonitor.id],
@@ -59,7 +57,7 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/clusters/${setupA.cluster.id}/public-dashboards`)
+        .post(`/clusters/${setupA.cluster.id}/public_dashboards`)
         .set('Authorization', `Bearer ${setupA.token}`)
         .send({
           httpMonitorsIds: [httpMonitor.id],
@@ -70,7 +68,7 @@ describe('PublicDashboardCoreController (writes)', () => {
     });
   });
 
-  describe('POST /public-dashboards/:publicDashboardId/monitors/:httpMonitorId', () => {
+  describe('POST /public_dashboards/:publicDashboardId/monitors/:httpMonitorId', () => {
     it('adds monitor to public dashboard', async () => {
       // given
       const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -88,7 +86,7 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/public-dashboards/${publicDashboard.id}/monitors/${httpMonitor.id}`)
+        .post(`/public_dashboards/${publicDashboard.id}/monitors/${httpMonitor.id}`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -117,11 +115,11 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       // when
       await request(bootstrap.app.getHttpServer())
-        .post(`/public-dashboards/${publicDashboard.id}/monitors/${httpMonitor.id}`)
+        .post(`/public_dashboards/${publicDashboard.id}/monitors/${httpMonitor.id}`)
         .set('Authorization', `Bearer ${token}`);
 
       await request(bootstrap.app.getHttpServer())
-        .post(`/public-dashboards/${publicDashboard.id}/monitors/${httpMonitor.id}`)
+        .post(`/public_dashboards/${publicDashboard.id}/monitors/${httpMonitor.id}`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -145,7 +143,7 @@ describe('PublicDashboardCoreController (writes)', () => {
       // when
       const response = await request(bootstrap.app.getHttpServer())
         .post(
-          `/public-dashboards/${publicDashboard.id}/monitors/${new Types.ObjectId().toString()}`,
+          `/public_dashboards/${publicDashboard.id}/monitors/${new Types.ObjectId().toString()}`,
         )
         .set('Authorization', `Bearer ${setupB.token}`);
 
@@ -154,7 +152,7 @@ describe('PublicDashboardCoreController (writes)', () => {
     });
   });
 
-  describe('DELETE /public-dashboards/:publicDashboardId/monitors/:httpMonitorId', () => {
+  describe('DELETE /public_dashboards/:publicDashboardId/monitors/:httpMonitorId', () => {
     it('removes monitor from public dashboard', async () => {
       // given
       const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -177,7 +175,7 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .delete(`/public-dashboards/${publicDashboard.id}/monitors/${httpMonitor.id}`)
+        .delete(`/public_dashboards/${publicDashboard.id}/monitors/${httpMonitor.id}`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -204,7 +202,7 @@ describe('PublicDashboardCoreController (writes)', () => {
       // when
       const response = await request(bootstrap.app.getHttpServer())
         .delete(
-          `/public-dashboards/${publicDashboard.id}/monitors/${new Types.ObjectId().toString()}`,
+          `/public_dashboards/${publicDashboard.id}/monitors/${new Types.ObjectId().toString()}`,
         )
         .set('Authorization', `Bearer ${setupB.token}`);
 

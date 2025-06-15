@@ -37,7 +37,7 @@ export class PublicDashboardCoreController {
 
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
-  @Post('/clusters/:clusterId/public-dashboards')
+  @Post('/clusters/:clusterId/public_dashboards')
   public async createPublicDashboard(
     @Param('clusterId') clusterId: string,
     @Body() body: CreatePublicDashboardBody,
@@ -62,7 +62,7 @@ export class PublicDashboardCoreController {
 
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
-  @Get('clusters/:clusterId/public-dashboards')
+  @Get('clusters/:clusterId/public_dashboards')
   @ApiResponse({ type: PublicDashboardSerialized, isArray: true })
   public async readByClusterId(
     @Param('clusterId') clusterId: string,
@@ -72,7 +72,7 @@ export class PublicDashboardCoreController {
   }
 
   @Public()
-  @Get('/public-dashboards/:publicDashboardId/public-data')
+  @Get('/public_dashboards/:publicDashboardId/public_data')
   @ApiResponse({ type: PublicDashboardDataResponse })
   public async readPublicDashboardData(
     @Param('publicDashboardId') publicDashboardId: string,
@@ -83,7 +83,7 @@ export class PublicDashboardCoreController {
 
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
-  @Post('/public-dashboards/:publicDashboardId/monitors/:httpMonitorId')
+  @Post('/public_dashboards/:publicDashboardId/monitors/:httpMonitorId')
   @ApiResponse({ type: PublicDashboardSerialized })
   public async addMonitorToDashboard(
     @Param('publicDashboardId') publicDashboardId: string,
@@ -123,7 +123,7 @@ export class PublicDashboardCoreController {
 
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
-  @Delete('/public-dashboards/:publicDashboardId/monitors/:httpMonitorId')
+  @Delete('/public_dashboards/:publicDashboardId/monitors/:httpMonitorId')
   @ApiResponse({ type: PublicDashboardSerialized })
   public async removeMonitorFromDashboard(
     @Param('publicDashboardId') publicDashboardId: string,

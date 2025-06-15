@@ -17,7 +17,7 @@ describe('PublicDashboardCoreController (reads)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  describe('GET /clusters/:clusterId/public-dashboards', () => {
+  describe('GET /clusters/:clusterId/public_dashboards', () => {
     it('reads public dashboards by cluster id', async () => {
       // given
       const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -29,7 +29,7 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/clusters/${cluster.id}/public-dashboards`)
+        .get(`/clusters/${cluster.id}/public_dashboards`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -47,7 +47,7 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/clusters/${clusterId}/public-dashboards`)
+        .get(`/clusters/${clusterId}/public_dashboards`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -66,7 +66,7 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/clusters/${setupA.cluster.id}/public-dashboards`)
+        .get(`/clusters/${setupA.cluster.id}/public_dashboards`)
         .set('Authorization', `Bearer ${setupB.token}`);
 
       // then
