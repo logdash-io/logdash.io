@@ -6,11 +6,10 @@ import { Logger } from '@logdash/js-sdk';
 
 @Injectable()
 export class StripeService {
-  private stripe = new Stripe(getEnvConfig().stripe.apiKeySecret);
-
   constructor(
     private readonly logger: Logger,
     private readonly userReadService: UserReadService,
+    private readonly stripe: Stripe,
   ) {}
 
   public async getPaymentSessionUrl(email: string): Promise<string> {

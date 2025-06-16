@@ -7,10 +7,9 @@ import { StripeSubscriptionDeletedHandler } from './stripe.subscription-deleted.
 
 @Injectable()
 export class StripeEventsHandler {
-  private stripe = new Stripe(getEnvConfig().stripe.apiKeySecret);
-
   constructor(
     private readonly logger: Logger,
+    private readonly stripe: Stripe,
     private readonly stripePaymentSucceededHandler: StripePaymentSucceededHandler,
     private readonly stripeSubscriptionDeletedHandler: StripeSubscriptionDeletedHandler,
   ) {}
