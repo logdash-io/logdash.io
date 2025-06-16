@@ -38,12 +38,6 @@
       ></div>
     {/if}
 
-    <!-- Empty ping slots -->
-    {#each Array.from({ length: emptyPings }) as _, i (i)}
-      <StatusBar status={'unknown'} />
-    {/each}
-
-    <!-- Actual pings -->
     {#each displayPings as ping, pingIndex (pingIndex)}
       {@const isHealthy = ping.statusCode >= 200 && ping.statusCode < 400}
       {@const pingStatus = isHealthy ? 'healthy' : 'unhealthy'}
@@ -53,6 +47,10 @@
       >
         <StatusBar status={pingStatus} />
       </Tooltip>
+    {/each}
+
+    {#each Array.from({ length: emptyPings }) as _, i (i)}
+      <StatusBar status={'unknown'} />
     {/each}
   </div>
 
