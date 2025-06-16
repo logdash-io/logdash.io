@@ -15,8 +15,8 @@ export class SubscriptionEntity {
   @Prop({ type: Date, required: true })
   startedAt: Date;
 
-  @Prop({ type: Date })
-  endsAt?: Date;
+  @Prop({ type: Date, default: null })
+  endsAt: Date | null;
 
   @Prop()
   createdAt: Date;

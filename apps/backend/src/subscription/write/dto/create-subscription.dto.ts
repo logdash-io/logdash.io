@@ -4,5 +4,5 @@ export interface CreateSubscriptionDto {
   userId: string;
   tier: UserTier;
   startedAt: Date;
-  endsAt?: Date;
+  endsAt: Date | null;
 }

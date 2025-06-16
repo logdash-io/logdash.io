@@ -6,6 +6,7 @@ import { UserTierService } from '../../user/tier/user-tier.service';
 import { Logger } from '@logdash/js-sdk';
 import { TryApplyNewSubscriptionDto } from './dto/try-apply-new-subscription.dto';
 import { ChangeActiveSubscriptionEndsAtDto } from './dto/change-active-subscrription-ends-at.dto';
+import { subSeconds } from 'date-fns';
 
 @Injectable()
 export class SubscriptionManagementService {
@@ -43,14 +44,6 @@ export class SubscriptionManagementService {
       throw new BadRequestException('User already has active subscription');
     }
 
-    if (dto.tier === UserTier.EarlyBird) {
-      this.logger.log('Can not apply early bird subscription', {
-        dto,
-      });
-
-      throw new BadRequestException('Can not apply early bird subscription');
-    }
-
     await this.subscriptionWriteService.create({
       startedAt: new Date(),
       tier: dto.tier,
@@ -61,7 +54,7 @@ export class SubscriptionManagementService {
     await this.userTierService.updateUserTier(dto.userId, dto.tier);
   }
 
-  public async changeCurrentSubscriptionExpirationDate(
+  public async changeActiveSubscriptionExpirationDate(
     dto: ChangeActiveSubscriptionEndsAtDto,
   ): Promise<void> {
     const activeSubscription = await this.subscriptionReadService.readActiveByUserId(dto.userId);
@@ -74,9 +67,26 @@ export class SubscriptionManagementService {
       throw new BadRequestException('User does not have active subscription');
     }
 
+    if (activeSubscription.tier === UserTier.EarlyBird) {
+      this.logger.log('Can not change expiration date of early bird subscription', {
+        dto,
+      });
+
+      throw new BadRequestException('Can not change expiration date of early bird subscription');
+    }
+
     await this.subscriptionWriteService.updateOne({
       id: activeSubscription.id,
       endsAt: dto.endsAt,
     });
+  }
+
+  public async endActiveSubscription(userId: string): Promise<void> {
+    await this.changeActiveSubscriptionExpirationDate({
+      userId,
+      endsAt: subSeconds(new Date(), 1),
+    });
+
+    await this.recalculateAndApplyUserTier(userId);
   }
 }

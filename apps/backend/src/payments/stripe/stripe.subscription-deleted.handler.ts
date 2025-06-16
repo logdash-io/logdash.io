@@ -4,6 +4,7 @@ import { UserReadService } from '../../user/read/user-read.service';
 import Stripe from 'stripe';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
 import { Logger } from '@logdash/js-sdk';
+import { SubscriptionManagementService } from '../../subscription/management/subscription-management.service';
 
 @Injectable()
 export class StripeSubscriptionDeletedHandler {
@@ -11,6 +12,7 @@ export class StripeSubscriptionDeletedHandler {
     private readonly logger: Logger,
     private readonly userReadService: UserReadService,
     private readonly userTierService: UserTierService,
+    private readonly subscriptionManagementService: SubscriptionManagementService,
   ) {}
 
   public async handle(event: Stripe.Event): Promise<void> {
@@ -31,12 +33,9 @@ export class StripeSubscriptionDeletedHandler {
       return;
     }
 
-    await this.userTierService.updateUserTier(user.id, UserTier.Free);
+    await this.subscriptionManagementService.endActiveSubscription(user.id);
 
-    this.logger.log(`[STRIPE] Updated user tier`, {
-      email: user.email,
-      newTier: UserTier.Free,
-    });
+    this.logger.log(`[STRIPE] Finished handling subscription deleted event`);
   }
 
   private eventIsValid(event: Stripe.Event): event is Stripe.CustomerSubscriptionDeletedEvent {

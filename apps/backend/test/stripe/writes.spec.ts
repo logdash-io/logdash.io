@@ -4,7 +4,6 @@ import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.payment-succeeded.handler';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { StripeSubscriptionDeletedHandler } from '../../src/payments/stripe/stripe.subscription-deleted.handler';
-import { Types } from 'mongoose';
 
 describe('StripeController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -20,6 +19,32 @@ describe('StripeController (writes)', () => {
   afterAll(async () => {
     await bootstrap.methods.afterAll();
   });
+
+  async function setupUserWithEarlyBird() {
+    const setup = await bootstrap.utils.generalUtils.setupClaimed({
+      email: 'test@test.com',
+      userTier: UserTier.Free,
+    });
+
+    const event = {
+      type: 'invoice.payment_succeeded',
+      data: {
+        object: {
+          customer: 'mock-customer-id',
+          customer_email: setup.user.email,
+          lines: {
+            data: [{ price: { id: getEnvConfig().stripe.earlyBirdPriceId } }],
+          },
+        },
+      },
+    } as unknown as Stripe.InvoicePaymentSucceededEvent;
+
+    const subscriptionSucceededHandler = bootstrap.app.get(StripePaymentSucceededHandler);
+
+    await subscriptionSucceededHandler.handle(event);
+
+    return setup;
+  }
 
   describe('Invoice payment succeeded webhook', () => {
     it('upgrades user tier to early bird', async () => {
@@ -49,34 +74,27 @@ describe('StripeController (writes)', () => {
       } as unknown as Stripe.PaymentIntentSucceededEvent;
 
       // when
-      const service = bootstrap.app.get(StripePaymentSucceededHandler);
+      const subscriptionSucceededHandler = bootstrap.app.get(StripePaymentSucceededHandler);
 
-      await service.handle(event);
+      await subscriptionSucceededHandler.handle(event);
 
       // then
       const userAfterUpdate = await bootstrap.models.userModel.findById(user.id);
+      const subscription = (await bootstrap.models.subscriptionModel.findOne())!;
 
       expect(userAfterUpdate!.tier).toBe(UserTier.EarlyBird);
       expect(userAfterUpdate!.stripeCustomerId).toBe('mock-customer-id');
+
+      expect(subscription.tier).toBe(UserTier.EarlyBird);
+      expect(subscription.userId).toBe(user.id);
+      expect(subscription.endsAt).toBeNull();
     });
   });
 
   describe('Subscription deleted webhook', () => {
     it('degrades user tier to free', async () => {
       // given
-      const { user } = await bootstrap.utils.generalUtils.setupClaimed({
-        email: 'test@test.com',
-        userTier: UserTier.EarlyBird,
-      });
-
-      await bootstrap.models.userModel.updateOne(
-        {
-          _id: new Types.ObjectId(user.id),
-        },
-        {
-          stripeCustomerId: 'mock-customer-id',
-        },
-      );
+      const { user } = await setupUserWithEarlyBird();
 
       const event = {
         type: 'customer.subscription.deleted',
@@ -88,14 +106,21 @@ describe('StripeController (writes)', () => {
       } as unknown as Stripe.CustomerSubscriptionDeletedEvent;
 
       // when
-      const service = bootstrap.app.get(StripeSubscriptionDeletedHandler);
+      const subscriptionDeletedHandler = bootstrap.app.get(StripeSubscriptionDeletedHandler);
 
-      await service.handle(event);
+      await subscriptionDeletedHandler.handle(event);
 
       // then
       const userAfterUpdate = await bootstrap.models.userModel.findById(user.id);
+      const subscription = (await bootstrap.models.subscriptionModel.findOne())!;
 
       expect(userAfterUpdate!.tier).toBe(UserTier.Free);
+
+      expect(subscription.tier).toBe(UserTier.EarlyBird);
+      expect(subscription.userId).toBe(user.id);
+      expect(
+        Math.abs(new Date(subscription.endsAt!).getTime() - new Date().getTime()),
+      ).toBeLessThan(10_000);
     });
   });
 });

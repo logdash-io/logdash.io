@@ -1,15 +1,18 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { SubscriptionReadService } from '../read/subscription-read.service';
-import { SubscriptionEntity } from './entities/subscription.entity';
+import { Controller, Get, Param } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { SubscriptionManagementService } from '../management/subscription-management.service';
+import { addDays } from 'date-fns';
 
-@Controller('subscriptions')
+@ApiTags('Subscriptions')
+@Controller('')
 export class SubscriptionCoreController {
-  constructor(private readonly subscriptionReadService: SubscriptionReadService) {}
+  constructor(private readonly subscriptionManagementService: SubscriptionManagementService) {}
 
-  @Get('user/:userId/active')
-  public async getActiveSubscriptionByUserId(
-    @Param('userId') userId: string,
-  ): Promise<SubscriptionEntity | null> {
-    return this.subscriptionReadService.readActiveByUserId(userId);
+  @Get('admin/user/:userId/extend_active_subscription')
+  public async getActiveSubscriptionByUserId(@Param('userId') userId: string): Promise<void> {
+    await this.subscriptionManagementService.changeActiveSubscriptionExpirationDate({
+      userId,
+      endsAt: addDays(new Date(), 1),
+    });
   }
 }

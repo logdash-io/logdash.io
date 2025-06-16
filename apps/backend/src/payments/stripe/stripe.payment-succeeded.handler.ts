@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { UserWriteService } from '../../user/write/user-write.service';
-import { UserTierService } from '../../user/tier/user-tier.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import Stripe from 'stripe';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
 import { Logger } from '@logdash/js-sdk';
+import { SubscriptionManagementService } from '../../subscription/management/subscription-management.service';
 
 @Injectable()
 export class StripePaymentSucceededHandler {
   constructor(
     private readonly logger: Logger,
     private readonly userReadService: UserReadService,
-    private readonly userTierService: UserTierService,
     private readonly userWriteService: UserWriteService,
+    private readonly subscriptionManagementService: SubscriptionManagementService,
   ) {}
 
   public async handle(event: Stripe.Event): Promise<void> {
@@ -53,16 +53,18 @@ export class StripePaymentSucceededHandler {
       return;
     }
 
-    await this.userTierService.updateUserTier(user.id, UserTier.EarlyBird);
     await this.userWriteService.update({
       stripeCustomerId: customerId as string,
       id: user.id,
     });
 
-    this.logger.log(`[STRIPE] Updated user tier`, {
-      email,
-      newTier: UserTier.EarlyBird,
+    await this.subscriptionManagementService.tryApplyNewSubscription({
+      userId: user.id,
+      tier: UserTier.EarlyBird,
+      endsAt: null,
     });
+
+    this.logger.log(`[STRIPE] Finished handling payment succeeded event`);
   }
 
   private eventIsValid(event: Stripe.Event): event is Stripe.InvoicePaymentSucceededEvent {
