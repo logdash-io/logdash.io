@@ -39,7 +39,7 @@
   const emptyBuckets = $derived(Math.max(0, maxBucketsToShow - bucketsCount));
 </script>
 
-<div class="space-y-2">
+<div class="hidden space-y-2 sm:block">
   <div
     class="flex h-6 w-fit flex-row-reverse items-end justify-end overflow-visible"
   >

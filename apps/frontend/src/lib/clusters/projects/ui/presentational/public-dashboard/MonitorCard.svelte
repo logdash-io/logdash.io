@@ -77,13 +77,13 @@
       </div>
     </div>
 
-    <div class="z-10 mt-2 cursor-default">
+    <div class="z-10 cursor-default sm:mt-2">
       <PingChart pings={monitor.pings} {maxPingsToShow} />
     </div>
   </div>
 
   <div class="collapse-content p-0 text-sm">
-    <div class="px-6 pb-2">
+    <div class="px-6 sm:pb-2">
       <div class="flex flex-wrap gap-6 text-sm">
         <div class="flex items-center gap-2">
           <TrendingUpIcon class="text-success h-4 w-4" />
