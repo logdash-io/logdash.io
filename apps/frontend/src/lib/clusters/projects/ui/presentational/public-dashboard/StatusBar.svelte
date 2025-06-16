@@ -17,7 +17,7 @@
   const statusColors = {
     up: 'from-green-600 via-green-600/80 to-green-600',
     healthy: 'from-green-600 via-green-600/80 to-green-600',
-    degraded: 'from-orange-600 via-orange-600/80 to-orange-600',
+    degraded: 'from-yellow-600 via-yellow-600/80 to-yellow-600',
     down: 'from-red-600 via-red-600/80 to-red-600',
     unhealthy: 'from-red-600 via-red-600/80 to-red-600',
     unknown: 'from-neutral-700 via-neutral-700/80 to-neutral-700',
