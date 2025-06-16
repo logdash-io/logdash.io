@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Headers,
-  Post,
-  RawBodyRequest,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Headers, Post, RawBodyRequest, Req } from '@nestjs/common';
 import { Public } from '../../auth/core/decorators/is-public';
 import { StripeService } from './stripe.service';
 import { Request } from 'express';
@@ -16,12 +9,14 @@ import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.en
 import { CheckoutResponse } from './dto/checkout.response';
 import { CustomerPortalResponse } from './dto/customer-portal.response';
 import { Logger } from '@logdash/js-sdk';
+import { StripeEventsHandler } from './stripe.events-handler';
 
 @ApiTags('Payments (stripe)')
 @Controller('payments/stripe')
 export class StripeController {
   constructor(
     private readonly stripeService: StripeService,
+    private readonly stripeEventsHandler: StripeEventsHandler,
     private readonly userReadService: UserReadService,
     private readonly logger: Logger,
   ) {}
@@ -34,52 +29,26 @@ export class StripeController {
   ): Promise<void> {
     this.logger.log(`Received stripe webhook event`);
 
-    const event = await this.stripeService.getEvent(
-      req.rawBody,
-      stripeSignature,
-    );
+    const event = await this.stripeEventsHandler.decryptEvent(req.rawBody, stripeSignature);
 
-    if (event.type === 'invoice.payment_succeeded') {
-      await this.stripeService.handlePaymentSucceeded(
-        event.data.object.customer_email,
-        event.data.object.customer,
-        event.data.object.lines.data[0].price.id,
-      );
-      return;
-    }
-
-    if (event.type === 'customer.subscription.deleted') {
-      //asd
-      await this.stripeService.handleSubscriptionDeleted(event.data.object);
-      return;
-    }
+    await this.stripeEventsHandler.handleEvent(event);
   }
 
   @ApiBearerAuth()
   @Get('checkout')
-  public async getCheckoutUrl(
-    @CurrentUserId() userId: string,
-  ): Promise<CheckoutResponse> {
+  public async getCheckoutUrl(@CurrentUserId() userId: string): Promise<CheckoutResponse> {
     const user = await this.userReadService.readById(userId);
 
     if (!user) {
-      this.logger.error(
-        `User not found while trying to initiate stripe checkout`,
-        { userId },
-      );
-      throw new Error(
-        `User not found while trying to initiate stripe checkout`,
-      );
+      this.logger.error(`User not found while trying to initiate stripe checkout`, { userId });
+      throw new Error(`User not found while trying to initiate stripe checkout`);
     }
 
     if (user.accountClaimStatus !== AccountClaimStatus.Claimed) {
-      this.logger.error(
-        `User account not claimed while trying to initiate stripe checkout`,
-        { userId },
-      );
-      throw new Error(
-        `User account not claimed while trying to initiate stripe checkout`,
-      );
+      this.logger.error(`User account not claimed while trying to initiate stripe checkout`, {
+        userId,
+      });
+      throw new Error(`User account not claimed while trying to initiate stripe checkout`);
     }
 
     return {
