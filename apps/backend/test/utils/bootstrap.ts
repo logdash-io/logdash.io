@@ -58,6 +58,7 @@ import { WebhookUtils } from './webhook-utils';
 import { PublicDashboardUtils } from './public-dashboard-utils';
 import { StripeModule } from '../../src/payments/stripe/stripe.module';
 import { SubscriptionEntity } from '../../src/subscription/core/entities/subscription.entity';
+import { SubscriptionCoreModule } from '../../src/subscription/core/subscription-core.module';
 
 export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({
@@ -83,6 +84,7 @@ export async function createTestApp() {
       NotificationChannelCoreModule,
       PublicDashboardCoreModule,
       StripeModule,
+      SubscriptionCoreModule,
       RedisModule.forRoot({
         url: getRedisTestContainerUrl(),
       }),

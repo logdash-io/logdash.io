@@ -20,32 +20,6 @@ describe('StripeController (writes)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  async function setupUserWithEarlyBird() {
-    const setup = await bootstrap.utils.generalUtils.setupClaimed({
-      email: 'test@test.com',
-      userTier: UserTier.Free,
-    });
-
-    const event = {
-      type: 'invoice.payment_succeeded',
-      data: {
-        object: {
-          customer: 'mock-customer-id',
-          customer_email: setup.user.email,
-          lines: {
-            data: [{ price: { id: getEnvConfig().stripe.earlyBirdPriceId } }],
-          },
-        },
-      },
-    } as unknown as Stripe.InvoicePaymentSucceededEvent;
-
-    const subscriptionSucceededHandler = bootstrap.app.get(StripePaymentSucceededHandler);
-
-    await subscriptionSucceededHandler.handle(event);
-
-    return setup;
-  }
-
   describe('Invoice payment succeeded webhook', () => {
     it('upgrades user tier to early bird', async () => {
       // given
@@ -94,7 +68,10 @@ describe('StripeController (writes)', () => {
   describe('Subscription deleted webhook', () => {
     it('degrades user tier to free', async () => {
       // given
-      const { user } = await setupUserWithEarlyBird();
+      const setup = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'test@test.com',
+        userTier: UserTier.EarlyBird,
+      });
 
       const event = {
         type: 'customer.subscription.deleted',
@@ -111,13 +88,13 @@ describe('StripeController (writes)', () => {
       await subscriptionDeletedHandler.handle(event);
 
       // then
-      const userAfterUpdate = await bootstrap.models.userModel.findById(user.id);
+      const userAfterUpdate = await bootstrap.models.userModel.findById(setup.user.id);
       const subscription = (await bootstrap.models.subscriptionModel.findOne())!;
 
       expect(userAfterUpdate!.tier).toBe(UserTier.Free);
 
       expect(subscription.tier).toBe(UserTier.EarlyBird);
-      expect(subscription.userId).toBe(user.id);
+      expect(subscription.userId).toBe(setup.user.id);
       expect(
         Math.abs(new Date(subscription.endsAt!).getTime() - new Date().getTime()),
       ).toBeLessThan(10_000);

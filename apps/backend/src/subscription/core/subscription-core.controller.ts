@@ -1,18 +1,40 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { SubscriptionManagementService } from '../management/subscription-management.service';
-import { addDays } from 'date-fns';
+import { AdminGuard } from '../../auth/core/guards/admin.guard';
+import { ExtendActiveSubscriptionBody } from './dto/extend-active-subscription.body';
+import { ApplyNewSubscriptionBody } from './dto/apply-new-subscription.body';
+import { Public } from '../../auth/core/decorators/is-public';
 
 @ApiTags('Subscriptions')
 @Controller('')
 export class SubscriptionCoreController {
   constructor(private readonly subscriptionManagementService: SubscriptionManagementService) {}
 
-  @Get('admin/user/:userId/extend_active_subscription')
-  public async getActiveSubscriptionByUserId(@Param('userId') userId: string): Promise<void> {
+  @Public()
+  @Post('admin/user/:userId/apply_new_subscription')
+  @UseGuards(AdminGuard)
+  public async applyNewSubscription(
+    @Param('userId') userId: string,
+    @Body() body: ApplyNewSubscriptionBody,
+  ): Promise<void> {
+    await this.subscriptionManagementService.tryApplyNewSubscription({
+      userId,
+      tier: body.tier,
+      endsAt: new Date(body.endsAt),
+    });
+  }
+
+  @Public()
+  @Post('admin/user/:userId/extend_active_subscription')
+  @UseGuards(AdminGuard)
+  public async getActiveSubscriptionByUserId(
+    @Param('userId') userId: string,
+    @Body() body: ExtendActiveSubscriptionBody,
+  ): Promise<void> {
     await this.subscriptionManagementService.changeActiveSubscriptionExpirationDate({
       userId,
-      endsAt: addDays(new Date(), 1),
+      endsAt: new Date(body.endsAt),
     });
   }
 }

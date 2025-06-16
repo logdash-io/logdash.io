@@ -82,8 +82,18 @@ export class SubscriptionManagementService {
   }
 
   public async endActiveSubscription(userId: string): Promise<void> {
-    await this.changeActiveSubscriptionExpirationDate({
-      userId,
+    const activeSubscription = await this.subscriptionReadService.readActiveByUserId(userId);
+
+    if (!activeSubscription) {
+      this.logger.log('Can not end non-existing subscription', {
+        userId,
+      });
+
+      throw new BadRequestException('User does not have active subscription');
+    }
+
+    await this.subscriptionWriteService.updateOne({
+      id: activeSubscription.id,
       endsAt: subSeconds(new Date(), 1),
     });
 
