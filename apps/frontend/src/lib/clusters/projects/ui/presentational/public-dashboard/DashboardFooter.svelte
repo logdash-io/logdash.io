@@ -1,8 +1,10 @@
-<script lang="ts">
-  // Simple footer component for the dashboard
-</script>
-
 <p class="mt-auto text-center text-sm text-gray-500">
-  Powered by <span class="text-primary font-medium">Logdash</span>
+  Powered by <a
+    target="_blank"
+    href="https://logdash.io"
+    class="text-primary font-medium"
+  >
+    Logdash
+  </a>
   • Status page updates automatically
 </p>

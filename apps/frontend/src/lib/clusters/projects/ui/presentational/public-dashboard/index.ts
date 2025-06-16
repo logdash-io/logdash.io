@@ -1,4 +1,5 @@
 export { default as SystemStatusHeader } from './SystemStatusHeader.svelte';
+export { default as DashboardTitle } from './DashboardTitle.svelte';
 export { default as MonitorCard } from './MonitorCard.svelte';
 export { default as LoadingSpinner } from './LoadingSpinner.svelte';
 export { default as EmptyState } from './EmptyState.svelte';

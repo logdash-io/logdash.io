@@ -32,7 +32,10 @@
 
 <div class="bg-base-300 fixed left-0 top-0 z-50 flex h-full w-full">
   <div class="mx-auto space-y-8">
-    <PublicDashboard state={publicDashboardPrivateState} />
+    <PublicDashboard
+      enablePolling={false}
+      state={publicDashboardPrivateState}
+    />
   </div>
 
   <div

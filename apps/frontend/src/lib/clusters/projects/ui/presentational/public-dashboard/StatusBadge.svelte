@@ -16,7 +16,7 @@
       textColor: 'text-green-600',
     },
     down: {
-      color: 'bg-red-500',
+      color: 'bg-red-600',
       text: 'Down',
       textColor: 'text-red-600',
     },

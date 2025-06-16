@@ -2,8 +2,8 @@
   import type { PublicDashboardState } from '../application/public-dashboards/public-dashboard.state.svelte.js';
   import {
     SystemStatusHeader,
+    DashboardTitle,
     MonitorCard,
-    LoadingSpinner,
     EmptyState,
     DashboardFooter,
   } from './presentational/public-dashboard';
@@ -12,17 +12,23 @@
     state: PublicDashboardState;
     maxBucketsToShow?: number;
     maxPingsToShow?: number;
+    enablePolling?: boolean;
+    pollingInterval?: number;
+    onRefresh?: () => void;
   }
 
   let {
     state: dashboardState,
     maxBucketsToShow = 90,
     maxPingsToShow = 90,
+    enablePolling = true,
+    pollingInterval = 60,
+    onRefresh,
   }: Props = $props();
 
   const dashboardData = $derived(dashboardState.data);
   const loading = $derived(dashboardState.isLoading);
-  const systemStatus = $derived(dashboardState.systemStatusEnhanced);
+  const systemStatus = $derived(dashboardState.systemStatus);
   const lastUpdated = $derived(dashboardState.lastUpdate);
 </script>
 
@@ -34,11 +40,13 @@
   />
 </svelte:head>
 
-{#if loading}
-  <LoadingSpinner message="Loading status..." />
-{:else if dashboardData}
-  <div class="mx-auto min-h-screen w-fit max-w-none">
-    <div class="w-fit px-4 py-8 sm:px-6 lg:px-8">
+<div class="mx-auto min-h-screen w-fit max-w-none">
+  <div class="w-fit px-4 py-8 sm:px-6 lg:px-8">
+    <DashboardTitle {loading} {enablePolling} {pollingInterval} {onRefresh}>
+      Status Page
+    </DashboardTitle>
+
+    {#if dashboardData}
       <SystemStatusHeader
         {systemStatus}
         {lastUpdated}
@@ -61,10 +69,10 @@
           {/each}
         </div>
       </div>
+    {:else}
+      <EmptyState />
+    {/if}
 
-      <DashboardFooter />
-    </div>
+    <DashboardFooter />
   </div>
-{:else}
-  <EmptyState />
-{/if}
+</div>

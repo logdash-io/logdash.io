@@ -17,4 +17,9 @@
   });
 </script>
 
-<PublicDashboard state={publicDashboardPublicState} />
+<PublicDashboard
+  enablePolling={true}
+  onRefresh={() => publicDashboardPublicState.loadDashboard(data.dashboardId)}
+  pollingInterval={60}
+  state={publicDashboardPublicState}
+/>

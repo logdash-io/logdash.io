@@ -3,6 +3,8 @@
   import StatusBadge from './StatusBadge.svelte';
   import UptimeChart from './UptimeChart.svelte';
   import PingChart from './PingChart.svelte';
+  import { fly } from 'svelte/transition';
+  import { cubicInOut } from 'svelte/easing';
 
   interface Monitor {
     name: string;

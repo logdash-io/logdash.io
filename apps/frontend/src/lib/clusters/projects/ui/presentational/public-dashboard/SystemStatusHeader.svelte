@@ -6,6 +6,7 @@
     XCircleIcon,
     ClockIcon,
   } from 'lucide-svelte';
+  import { onMount } from 'svelte';
 
   type SystemStatus = 'operational' | 'degraded' | 'outage' | 'unknown';
 
@@ -50,11 +51,33 @@
   };
 
   const config = $derived(statusConfig[systemStatus]);
-</script>
+  let now = $state(new Date());
 
-<div class="mb-8 text-center">
-  <h1 class="text-secondary text-2xl font-semibold">Service Status</h1>
-</div>
+  onMount(() => {
+    const interval = setInterval(() => {
+      now = new Date();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  });
+
+  const userFriendlyLastUpdated = $derived.by(() => {
+    const diffInSeconds = Math.floor(
+      (now.getTime() - lastUpdated.getTime()) / 1000,
+    );
+
+    if (diffInSeconds < 10) {
+      return 'Updated just now';
+    }
+
+    if (diffInSeconds < 60) {
+      return `Updated less than a minute ago`;
+    }
+
+    const relativeTime = DateTime.fromJSDate(lastUpdated).toRelative();
+    return `Last updated ${relativeTime}`;
+  });
+</script>
 
 <div
   class={`mb-4 rounded-xl border p-6 ${config.bgColor} ${config.borderColor}`}
@@ -71,7 +94,7 @@
           {config.text}
         </h2>
         <p class="text-sm text-gray-600 dark:text-gray-300">
-          Last updated: {DateTime.fromJSDate(lastUpdated).toRelative()}
+          {userFriendlyLastUpdated}
         </p>
       </div>
     </div>
