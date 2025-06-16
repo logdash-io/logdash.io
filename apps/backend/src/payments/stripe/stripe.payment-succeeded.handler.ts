@@ -1,10 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserWriteService } from '../../user/write/user-write.service';
 import { UserTierService } from '../../user/tier/user-tier.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import Stripe from 'stripe';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
+import { Logger } from '@logdash/js-sdk';
 
 @Injectable()
 export class StripePaymentSucceededHandler {
@@ -21,6 +22,7 @@ export class StripePaymentSucceededHandler {
     });
 
     if (!this.eventIsValid(event)) {
+      console.log('Event is invalid');
       return;
     }
 
@@ -68,6 +70,7 @@ export class StripePaymentSucceededHandler {
       this.logger.error(`[STRIPE] Invalid event type for payment succeeded handler`, {
         event,
       });
+      console.log(1);
       return false;
     }
 
@@ -75,6 +78,8 @@ export class StripePaymentSucceededHandler {
       this.logger.error(`[STRIPE] Price is missing`, {
         event,
       });
+      console.log(2);
+
       return false;
     }
 
@@ -82,6 +87,8 @@ export class StripePaymentSucceededHandler {
       this.logger.error(`[STRIPE] Customer email is missing`, {
         event,
       });
+      console.log(3);
+
       return false;
     }
 
@@ -89,6 +96,8 @@ export class StripePaymentSucceededHandler {
       this.logger.error(`[STRIPE] Customer is missing or not a string`, {
         event,
       });
+      console.log(4);
+
       return false;
     }
 

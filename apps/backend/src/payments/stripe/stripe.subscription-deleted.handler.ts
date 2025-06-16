@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserTierService } from '../../user/tier/user-tier.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import Stripe from 'stripe';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
+import { Logger } from '@logdash/js-sdk';
 
 @Injectable()
 export class StripeSubscriptionDeletedHandler {
