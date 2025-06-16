@@ -35,3 +35,5 @@ runs:
         AUTH_JWT_SECRET: 'test'
         TELEGRAM_UPTIME_BOT_TOKEN: 'token'
         TELEGRAM_UPTIME_BOT_SECRET: 'secret'
+        STRIPE_EARLY_BIRD_PRICE_ID: 'test-early-bird-price-id'
+        STRIPE_API_KEY_SECRET: 'test-api-key-secret'
