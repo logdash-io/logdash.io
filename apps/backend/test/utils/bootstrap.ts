@@ -56,6 +56,7 @@ import { getRedisTestContainerUrl } from './redis-test-container-server';
 import { TelegramUtils } from './telegram-utils';
 import { WebhookUtils } from './webhook-utils';
 import { PublicDashboardUtils } from './public-dashboard-utils';
+import { StripeModule } from '../../src/payments/stripe/stripe.module';
 
 export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({
@@ -80,6 +81,7 @@ export async function createTestApp() {
       MetricRegisterCoreModule,
       NotificationChannelCoreModule,
       PublicDashboardCoreModule,
+      StripeModule,
       RedisModule.forRoot({
         url: getRedisTestContainerUrl(),
       }),
