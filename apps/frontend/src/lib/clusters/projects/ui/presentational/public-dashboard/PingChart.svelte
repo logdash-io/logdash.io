@@ -40,9 +40,7 @@
 
     <!-- Empty ping slots -->
     {#each Array.from({ length: emptyPings }) as _, i (i)}
-      <div
-        class="h-2 w-2 flex-shrink-0 rounded-sm bg-gray-200 dark:bg-gray-600"
-      ></div>
+      <StatusBar status={'unknown'} />
     {/each}
 
     <!-- Actual pings -->
