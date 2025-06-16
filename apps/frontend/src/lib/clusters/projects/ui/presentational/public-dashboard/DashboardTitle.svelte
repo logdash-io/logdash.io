@@ -74,7 +74,7 @@
   </h1>
   {#if enablePolling}
     <div
-      class="mt-2 flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-300"
+      class="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-300"
     >
       {#if loading}
         <div class="loading-spinner loading loading-xs"></div>

@@ -30,21 +30,24 @@
     degraded: {
       text: 'Partial System Outage',
       color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
+      bgColor:
+        'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-900/10',
       borderColor: 'border-yellow-200 dark:border-yellow-800/10',
       icon: AlertTriangleIcon,
     },
     outage: {
       text: 'Major System Outage',
       color: 'text-red-600',
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      bgColor:
+        'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/10',
       borderColor: 'border-red-200 dark:border-red-800/10',
       icon: XCircleIcon,
     },
     unknown: {
       text: 'Status Unknown',
       color: 'text-gray-600',
-      bgColor: 'bg-gray-50 dark:bg-gray-900/20',
+      bgColor:
+        'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-900/10',
       borderColor: 'border-gray-200 dark:border-gray-800/10',
       icon: ClockIcon,
     },
