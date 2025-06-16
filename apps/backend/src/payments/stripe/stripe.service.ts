@@ -14,7 +14,7 @@ export class StripeService {
   ) {}
 
   public async getPaymentSessionUrl(email: string): Promise<string> {
-    this.logger.log(`Initiating payment session for user`, { email });
+    this.logger.log(`[STRIPE] Initiating payment session for user`, { email });
 
     const checkoutSession = await this.stripe.checkout.sessions.create({
       customer_email: email,
@@ -31,7 +31,7 @@ export class StripeService {
     });
 
     if (!checkoutSession.url) {
-      this.logger.error(`Payment session contained no information for user`, {
+      this.logger.error(`[STRIPE] Payment session contained no information for user`, {
         email,
       });
 
@@ -45,12 +45,12 @@ export class StripeService {
     const user = await this.userReadService.readById(userId);
 
     if (!user) {
-      this.logger.error(`User not found with id`, { userId });
+      this.logger.error(`[STRIPE] User not found with id`, { userId });
       throw new Error(`User not found with id: ${userId}`);
     }
 
     if (!user.stripeCustomerId) {
-      this.logger.error(`User with id has no stripe customer id`, { userId });
+      this.logger.error(`[STRIPE] User with id has no stripe customer id`, { userId });
       throw new Error(`User with id: ${userId} has no stripe customer id`);
     }
 
