@@ -8,6 +8,7 @@ interface UserPlanConfig {
 
 export interface UserPlanConfigs {
   [UserTier.Free]: UserPlanConfig;
+  [UserTier.Contributor]: UserPlanConfig;
   [UserTier.EarlyBird]: UserPlanConfig;
   [UserTier.Admin]: UserPlanConfig;
 }
@@ -16,6 +17,11 @@ export const UserPlanConfigs: UserPlanConfigs = {
   [UserTier.Free]: {
     projects: {
       maxNumberOfProjects: 5,
+    },
+  },
+  [UserTier.Contributor]: {
+    projects: {
+      maxNumberOfProjects: 10,
     },
   },
   [UserTier.EarlyBird]: {

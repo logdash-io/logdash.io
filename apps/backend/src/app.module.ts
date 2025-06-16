@@ -24,6 +24,7 @@ import { ClickhouseModule } from './clickhouse/clickhouse.module';
 import { NotificationChannelCoreModule } from './notification-channel/core/notification-channel-core.module';
 import { HttpPingBucketCoreModule } from './http-ping-bucket/core/http-ping-bucket-core.module';
 import { PublicDashboardCoreModule } from './public-dashboard/core/public-dashboard-core.module';
+import { SubscriptionCoreModule } from './subscription/core/subscription-core.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { PublicDashboardCoreModule } from './public-dashboard/core/public-dashbo
     EventEmitterModule.forRoot(),
     ResendModule,
     StripeModule,
+    SubscriptionCoreModule,
     SupportCoreModule,
     ExposedConfigModule,
     HttpMonitorCoreModule,
