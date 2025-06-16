@@ -14,6 +14,7 @@ import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.payment-succeeded.handler';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import Stripe from 'stripe';
+import { sleep } from './sleep';
 
 export class GeneralUtils {
   private readonly userModel: Model<UserEntity>;
@@ -22,7 +23,7 @@ export class GeneralUtils {
     this.userModel = this.app.get(getModelToken(UserEntity.name));
   }
 
-  public async setupAnonymous(): Promise<{
+  public async setupAnonymous(dto?: { userTier?: UserTier }): Promise<{
     token: string;
     user: UserSerialized;
     cluster: ClusterSerialized;
@@ -34,6 +35,17 @@ export class GeneralUtils {
 
     const token: string = userResponse.body.token;
     const user: UserSerialized = userResponse.body.user;
+
+    if (dto?.userTier) {
+      await this.userModel.updateOne(
+        {
+          _id: new Types.ObjectId(user.id),
+        },
+        {
+          tier: dto.userTier,
+        },
+      );
+    }
 
     // cluster
     const clusterResponse = await request(this.app.getHttpServer())
@@ -76,7 +88,7 @@ export class GeneralUtils {
     cluster: ClusterSerialized;
     project: ProjectSerialized;
   }> {
-    const anonymousResult = await this.setupAnonymous();
+    const anonymousResult = await this.setupAnonymous(dto);
 
     await this.userModel.updateOne(
       {
@@ -97,6 +109,8 @@ export class GeneralUtils {
       .set('Authorization', `Bearer ${anonymousResult.token}`);
 
     const user = userResponse.body;
+
+    await sleep(100);
 
     return {
       ...anonymousResult,

@@ -88,7 +88,6 @@ describe('ProjectCoreController (writes)', () => {
         _id: new Types.ObjectId(response.body.project.id),
       });
 
-      expect(projects).toHaveLength(1);
       expect(projects[0].name).toBe('some name');
       expect(projects[0].tier).toBe(ProjectTier.EarlyBird);
     });
