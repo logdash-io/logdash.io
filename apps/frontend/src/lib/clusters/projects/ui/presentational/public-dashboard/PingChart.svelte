@@ -55,11 +55,9 @@
   </div>
 
   <div class="text-secondary/60 flex items-center justify-between text-xs">
-    <span>Recent checks (last hour)</span>
     <span>
-      Latest: {pingsCount > 0
-        ? DateTime.fromJSDate(new Date(pings[0].createdAt)).toRelative()
-        : 'No data'}
+      {maxPingsToShow} minutes ago
     </span>
+    <span>Now</span>
   </div>
 </div>

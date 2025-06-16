@@ -43,7 +43,6 @@
   <div
     class="flex h-6 w-fit flex-row-reverse items-end justify-end overflow-visible"
   >
-    <!-- Empty buckets for days with no data -->
     {#each Array.from({ length: emptyBuckets }) as _, i (i)}
       <div
         class="h-8 w-2 flex-shrink-0 rounded-sm bg-gradient-to-b from-neutral-700 via-neutral-700/80 to-neutral-700"
@@ -51,7 +50,6 @@
       ></div>
     {/each}
 
-    <!-- Actual buckets with data -->
     {#each displayBuckets as bucket, bucketIndex (bucketIndex)}
       {@const bucketStatus = getBucketStatus(bucket)}
       {@const uptime = getUptimeFromBucket(bucket)}
@@ -68,12 +66,8 @@
 
   <div class="text-secondary/60 flex items-center justify-between text-xs">
     <span>
-      Last {maxBucketsToShow} days
+      {maxBucketsToShow} days ago
     </span>
-    <span>
-      Today: {bucketsCount > 0 && buckets?.[0]
-        ? DateTime.fromJSDate(new Date(buckets[0].timestamp)).toRelative()
-        : 'No data'}
-    </span>
+    <span>Today</span>
   </div>
 </div>
