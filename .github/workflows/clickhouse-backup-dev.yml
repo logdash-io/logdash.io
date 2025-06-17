@@ -39,7 +39,7 @@ jobs:
           # Create backup using clickhouse-client
           ./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
-            --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+            --port=40087 \
             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
             --database=default \
@@ -70,7 +70,7 @@ jobs:
               
               # Backup schema
               ./clickhouse client \
-                --host="${CLICKHOUSE_HOST}" \
+                --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
                 --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
                 --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                 --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
@@ -79,7 +79,7 @@ jobs:
               
               # Backup data
               ./clickhouse client \
-                --host="${CLICKHOUSE_HOST}" \
+                --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
                 --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
                 --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                 --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
