@@ -42,7 +42,7 @@ jobs:
           ./clickhouse client \
             --host=${CLICKHOUSE_HOST} \
             --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
-            --user=default \
+            --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
             --database=default \
             --query="SELECT * FROM system.tables WHERE database = 'default' FORMAT TSV" > backup/tables_list.tsv
