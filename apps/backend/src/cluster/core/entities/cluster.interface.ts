@@ -10,6 +10,17 @@ export class SimplifiedProject {
   name: string;
 }
 
+export class SimplifiedPublicDashboard {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  isPublic: boolean;
+}
+
 export class ClusterNormalized {
   id: string;
   name: string;
@@ -39,4 +50,7 @@ export class ClusterSerialized {
 
   @ApiPropertyOptional({ enum: ClusterFeature, isArray: true })
   features?: ClusterFeature[];
+
+  @ApiPropertyOptional({ type: SimplifiedPublicDashboard, isArray: true })
+  publicDashboards?: SimplifiedPublicDashboard[];
 }
