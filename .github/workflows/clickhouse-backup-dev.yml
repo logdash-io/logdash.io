@@ -3,6 +3,9 @@ name: Clickhouse backup (dev)
 on:
   schedule:
     - cron: '*/15 * * * *'
+  push:
+    branches:
+      - clickhouse-backup
   workflow_dispatch:
 
 jobs:
