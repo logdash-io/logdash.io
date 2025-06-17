@@ -55,7 +55,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
       },
     },
     httpMonitors: {
-      maxNumberOfMonitors: 1,
+      maxNumberOfMonitors: 5,
     },
   },
   [ProjectTier.Contributor]: {
@@ -79,7 +79,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
       },
     },
     httpMonitors: {
-      maxNumberOfMonitors: 1,
+      maxNumberOfMonitors: 5,
     },
   },
   [ProjectTier.EarlyBird]: {
@@ -103,7 +103,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
       },
     },
     httpMonitors: {
-      maxNumberOfMonitors: 1,
+      maxNumberOfMonitors: 5,
     },
   },
   [ProjectTier.Admin]: {
