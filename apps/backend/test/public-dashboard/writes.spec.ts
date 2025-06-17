@@ -34,6 +34,8 @@ describe('PublicDashboardCoreController (writes)', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           httpMonitorsIds: [httpMonitor.id],
+          name: 'some name',
+          isPublic: false,
         });
 
       // then
@@ -43,6 +45,8 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       expect(createdDashboard?.httpMonitorsIds).toContain(httpMonitor.id);
       expect(createdDashboard?.httpMonitorsIds).toHaveLength(1);
+      expect(createdDashboard?.name).toEqual('some name');
+      expect(createdDashboard?.isPublic).toEqual(false);
     });
 
     it('does not create public dashboard if http monitors do not belong to the same cluster', async () => {
