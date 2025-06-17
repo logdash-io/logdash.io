@@ -39,8 +39,8 @@ jobs:
           # Create backup using clickhouse-client
           ./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
-            --port=40087 \
-            --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
+            --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+            --user=default \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
             --database=default \
             --query="SELECT * FROM system.tables WHERE database = 'default' FORMAT TSV" > backup/tables_list.tsv
