@@ -22,18 +22,23 @@ jobs:
           sudo ./clickhouse install
         shell: bash
 
-      - name: Create ClickHouse Backup
+            - name: Create ClickHouse Backup
         run: |
           # Create backup directory
           mkdir -p backup
-
+          
           # Get current timestamp for backup name
           TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
           BACKUP_NAME="clickhouse_backup_dev_${TIMESTAMP}"
-
+          
+          # Strip http:// prefix from host if present
+          CLICKHOUSE_HOST="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+          
           # Create backup using clickhouse-client
           ./clickhouse client \
-            --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+            --host="${CLICKHOUSE_HOST}" \
             --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
@@ -53,7 +58,7 @@ jobs:
               
               # Get row count before backup
               ROW_COUNT=$(./clickhouse client \
-                --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+                --host="${CLICKHOUSE_HOST}" \
                 --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
                 --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                 --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
@@ -65,7 +70,7 @@ jobs:
               
               # Backup schema
               ./clickhouse client \
-                --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+                --host="${CLICKHOUSE_HOST}" \
                 --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
                 --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                 --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
@@ -74,7 +79,7 @@ jobs:
               
               # Backup data
               ./clickhouse client \
-                --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+                --host="${CLICKHOUSE_HOST}" \
                 --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
                 --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                 --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \

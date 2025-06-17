@@ -82,8 +82,14 @@ jobs:
       - name: Test ClickHouse Connection
         run: |
           echo "🔗 Testing ClickHouse connection..."
+
+          # Strip http:// prefix from host if present
+          CLICKHOUSE_HOST="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+
           ./clickhouse client \
-            --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+            --host="${CLICKHOUSE_HOST}" \
             --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
