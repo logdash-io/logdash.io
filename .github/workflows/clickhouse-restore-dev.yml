@@ -90,7 +90,7 @@ jobs:
 
           ./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
-            --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+            --port=40087 \
             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
             --database=default \
