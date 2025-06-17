@@ -36,6 +36,8 @@ jobs:
           CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
           CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
 
+          echo "Trying to connect to clickhouse..."
+
           # Create backup using clickhouse-client
           ./clickhouse client \
             --host=${CLICKHOUSE_HOST} \
