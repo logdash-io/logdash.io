@@ -103,6 +103,11 @@ jobs:
           echo "🔄 Starting table restoration..."
           cd restore
 
+          # Strip http:// prefix from host if present
+          CLICKHOUSE_HOST="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+
           # Restore tables from backup
           while IFS=$'\t' read -r database table engine; do
             if [ "$database" = "default" ] && [ "$table" != "tables_list" ]; then
@@ -112,7 +117,7 @@ jobs:
               if [ -f "backup/${table}_schema.sql" ]; then
                 echo "Creating schema for table: $table"
                 ../clickhouse client \
-                  --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+                  --host="${CLICKHOUSE_HOST}" \
                   --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
                   --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                   --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
@@ -127,7 +132,7 @@ jobs:
               if [ -f "backup/${table}_data.native" ]; then
                 echo "Restoring data for table: $table"
                 ../clickhouse client \
-                  --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+                  --host="${CLICKHOUSE_HOST}" \
                   --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
                   --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                   --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
@@ -146,9 +151,14 @@ jobs:
         run: |
           echo "🔍 Verifying restoration..."
 
+                    # Strip http:// prefix from host if present
+          CLICKHOUSE_HOST="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+
           # Get restored tables count
           RESTORED_TABLES=$(./clickhouse client \
-            --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+            --host="${CLICKHOUSE_HOST}" \
             --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
@@ -160,7 +170,7 @@ jobs:
           # List restored tables with row counts
           echo "📋 Restored tables with row counts:"
           ./clickhouse client \
-            --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+            --host="${CLICKHOUSE_HOST}" \
             --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
