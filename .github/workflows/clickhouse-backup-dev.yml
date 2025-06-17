@@ -1,0 +1,111 @@
+name: Clickhouse backup (dev)
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install ClickHouse Client
+        run: |
+          curl https://clickhouse.com/ | sh
+          sudo ./clickhouse install
+        shell: bash
+
+      - name: Create ClickHouse Backup
+        run: |
+          # Create backup directory
+          mkdir -p backup
+
+          # Get current timestamp for backup name
+          TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+          BACKUP_NAME="clickhouse_backup_dev_${TIMESTAMP}"
+
+          # Create backup using clickhouse-client
+          ./clickhouse client \
+            --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+            --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+            --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
+            --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
+            --database=default \
+            --query="SELECT * FROM system.tables WHERE database = 'default' FORMAT TSV" > backup/tables_list.tsv
+
+          # Initialize backup summary
+          echo "📊 BACKUP SUMMARY" > backup/backup_summary.txt
+          echo "=================" >> backup/backup_summary.txt
+          echo "Backup started at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/backup_summary.txt
+          echo "" >> backup/backup_summary.txt
+
+          # Backup all tables in default database
+          while IFS=$'\t' read -r database table engine; do
+            if [ "$database" = "default" ] && [ "$table" != "tables_list" ]; then
+              echo "🔧 Backing up table: $table"
+              
+              # Get row count before backup
+              ROW_COUNT=$(./clickhouse client \
+                --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+                --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+                --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
+                --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
+                --database=default \
+                --query="SELECT COUNT(*) FROM $table")
+              
+              echo "📋 Table: $table - Rows: $ROW_COUNT"
+              echo "Table: $table - Rows: $ROW_COUNT" >> backup/backup_summary.txt
+              
+              # Backup schema
+              ./clickhouse client \
+                --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+                --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+                --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
+                --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
+                --database=default \
+                --query="SHOW CREATE TABLE $table" > "backup/${table}_schema.sql"
+              
+              # Backup data
+              ./clickhouse client \
+                --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+                --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+                --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
+                --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
+                --database=default \
+                --query="SELECT * FROM $table FORMAT Native" > "backup/${table}_data.native"
+            fi
+          done < backup/tables_list.tsv
+
+          # Finalize backup summary
+          echo "" >> backup/backup_summary.txt
+          echo "Backup completed at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/backup_summary.txt
+
+          # Display backup summary
+          echo ""
+          echo "📊 BACKUP COMPLETED - SUMMARY:"
+          echo "=============================="
+          cat backup/backup_summary.txt
+
+          # Create metadata file
+          echo "backup_timestamp=${TIMESTAMP}" > backup/metadata.txt
+          echo "database=default" >> backup/metadata.txt
+          echo "environment=dev" >> backup/metadata.txt
+          echo "created_at=$(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/metadata.txt
+
+          # Compress backup
+          tar -czf "${BACKUP_NAME}.tar.gz" backup/
+
+          # Set output for artifact name
+          echo "BACKUP_NAME=${BACKUP_NAME}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_NAME }}
+          path: ${{ env.BACKUP_NAME }}.tar.gz
+          retention-days: 7
