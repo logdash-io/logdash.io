@@ -37,4 +37,11 @@ export class SubscriptionCoreController {
       endsAt: new Date(body.endsAt),
     });
   }
+
+  @Public()
+  @Post('admin/user/:userId/end_active_subscription')
+  @UseGuards(AdminGuard)
+  public async endActiveSubscription(@Param('userId') userId: string): Promise<void> {
+    await this.subscriptionManagementService.endActiveNonPaidSubscription(userId);
+  }
 }

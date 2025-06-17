@@ -2,7 +2,7 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
-import { addDays } from 'date-fns';
+import { addDays, addHours } from 'date-fns';
 
 describe('SubscriptionCoreController', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -176,6 +176,76 @@ describe('SubscriptionCoreController', () => {
       expect(response.body.message).toBe(
         'Can not change expiration date of early bird subscription',
       );
+    });
+  });
+
+  describe('POST /admin/user/:userId/end_active_subscription', () => {
+    it('should end active subscription successfully with valid admin key', async () => {
+      const { user } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'test@test.com',
+      });
+
+      await request(bootstrap.app.getHttpServer())
+        .post(`/admin/user/${user.id}/apply_new_subscription`)
+        .set('super-secret-admin-key', adminKey)
+        .send({
+          tier: UserTier.Contributor,
+          endsAt: addHours(new Date(), 1),
+        });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/admin/user/${user.id}/end_active_subscription`)
+        .set('super-secret-admin-key', adminKey);
+
+      expect(response.status).toBe(201);
+
+      const subscription = await bootstrap.models.subscriptionModel.findOne({
+        userId: user.id,
+      });
+      expect(
+        Math.abs(new Date(subscription!.endsAt!).getTime() - new Date().getTime()),
+      ).toBeLessThan(5_000);
+    });
+
+    it('should return 401 with invalid admin key', async () => {
+      const { user } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'test@test.com',
+        userTier: UserTier.Contributor,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/admin/user/${user.id}/end_active_subscription`)
+        .set('super-secret-admin-key', 'invalid-key');
+
+      expect(response.status).toBe(401);
+      expect(response.body.message).toBe('Invalid admin key');
+    });
+
+    it('should return 400 when user has no active subscription', async () => {
+      const { user } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'test@test.com',
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/admin/user/${user.id}/end_active_subscription`)
+        .set('super-secret-admin-key', adminKey);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('User does not have active subscription');
+    });
+
+    it('should return 400 when trying to end early bird subscription', async () => {
+      const { user } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'test@test.com',
+        userTier: UserTier.EarlyBird,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/admin/user/${user.id}/end_active_subscription`)
+        .set('super-secret-admin-key', adminKey);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('Can not end early bird subscription');
     });
   });
 });

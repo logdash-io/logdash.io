@@ -81,6 +81,33 @@ export class SubscriptionManagementService {
     });
   }
 
+  public async endActiveNonPaidSubscription(userId: string): Promise<void> {
+    const activeSubscription = await this.subscriptionReadService.readActiveByUserId(userId);
+
+    if (!activeSubscription) {
+      this.logger.log('Can not end non-existing subscription', {
+        userId,
+      });
+
+      throw new BadRequestException('User does not have active subscription');
+    }
+
+    if (activeSubscription?.tier === UserTier.EarlyBird) {
+      this.logger.log('Can not end early bird subscription', {
+        userId,
+      });
+
+      throw new BadRequestException('Can not end early bird subscription');
+    }
+
+    await this.subscriptionWriteService.updateOne({
+      id: activeSubscription.id,
+      endsAt: subSeconds(new Date(), 1),
+    });
+
+    await this.recalculateAndApplyUserTier(userId);
+  }
+
   public async endActiveSubscription(userId: string): Promise<void> {
     const activeSubscription = await this.subscriptionReadService.readActiveByUserId(userId);
 
