@@ -1,4 +1,4 @@
-name: Apply clickHouse migrations (dev)
+name: Apply clickhouse migrations (dev)
 
 on:
   push:
