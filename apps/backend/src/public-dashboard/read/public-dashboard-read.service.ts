@@ -20,6 +20,13 @@ export class PublicDashboardReadService {
     return entities.map((entity) => PublicDashboardSerializer.normalize(entity));
   }
 
+  public async readByClustersIds(clusterIds: string[]): Promise<PublicDashboardNormalized[]> {
+    const entities = await this.publicDashboardModel
+      .find({ clusterId: { $in: clusterIds } })
+      .exec();
+    return entities.map((entity) => PublicDashboardSerializer.normalize(entity));
+  }
+
   public async readById(id: string): Promise<PublicDashboardNormalized | null> {
     const entity = await this.publicDashboardModel.findById(id).exec();
     if (!entity) {

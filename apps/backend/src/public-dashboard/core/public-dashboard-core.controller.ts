@@ -25,6 +25,8 @@ import { PublicDashboardDataResponse } from './dto/public-dashboard-data.respons
 import { PublicDashboardCompositionService } from '../composition/public-dashboard-composition.service';
 import { PublicDashboardDataQuery } from './dto/public-dashboard-data.query';
 import { UpdatePublicDashboardBody } from './dto/update-public-dashboard.body';
+import { PublicDashboardLimitService } from '../limit/public-dashboard-limit.service';
+import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 
 @ApiTags('Public Dashboards')
 @Controller()
@@ -35,6 +37,7 @@ export class PublicDashboardCoreController {
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly projectReadService: ProjectReadService,
     private readonly publicDashboardCompositionService: PublicDashboardCompositionService,
+    private readonly publicDashboardLimitService: PublicDashboardLimitService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -43,7 +46,16 @@ export class PublicDashboardCoreController {
   public async create(
     @Param('clusterId') clusterId: string,
     @Body() body: CreatePublicDashboardBody,
+    @CurrentUserId() userId: string,
   ): Promise<PublicDashboardSerialized> {
+    const hasCapacity = await this.publicDashboardLimitService.hasCapacity(userId);
+
+    if (!hasCapacity) {
+      throw new BadRequestException(
+        'You have reached the maximum number of public dashboards allowed for your plan',
+      );
+    }
+
     const dashboard = await this.publicDashboardWriteService.create({
       clusterId,
       httpMonitorsIds: body.httpMonitorsIds,

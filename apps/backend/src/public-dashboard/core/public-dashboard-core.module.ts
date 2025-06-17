@@ -8,6 +8,7 @@ import { HttpMonitorReadModule } from '../../http-monitor/read/http-monitor-read
 import { ProjectReadModule } from '../../project/read/project-read.module';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { PublicDashboardCompositionModule } from '../composition/public-dashboard-composition.module';
+import { PublicDashboardLimitModule } from '../limit/public-dashboard-limit.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { PublicDashboardCompositionModule } from '../composition/public-dashboar
     HttpMonitorReadModule,
     ProjectReadModule,
     PublicDashboardCompositionModule,
+    PublicDashboardLimitModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [PublicDashboardCoreController],

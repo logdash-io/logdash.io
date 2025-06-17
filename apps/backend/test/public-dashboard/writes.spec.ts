@@ -1,6 +1,7 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('PublicDashboardCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -69,6 +70,74 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       // then
       expect(response.status).toEqual(400);
+    });
+
+    it('does not allow free user to create second public dashboard', async () => {
+      // given
+      const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token,
+        projectId: project.id,
+      });
+
+      // Create first dashboard
+      await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+        clusterId: cluster.id,
+        token,
+        name: 'first dashboard',
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/public_dashboards`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          httpMonitorsIds: [httpMonitor.id],
+          name: 'second dashboard',
+          isPublic: false,
+        });
+
+      // then
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        'You have reached the maximum number of public dashboards allowed for your plan',
+      );
+    });
+
+    it('allows early bird user to create more public dashboards', async () => {
+      // given
+      const { token, project, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'earlybird@test.com',
+        userTier: UserTier.EarlyBird,
+      });
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token,
+        projectId: project.id,
+      });
+
+      // Create 3 dashboards
+      for (let i = 0; i < 3; i++) {
+        await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+          clusterId: cluster.id,
+          token,
+          name: `dashboard ${i + 1}`,
+        });
+      }
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/public_dashboards`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          httpMonitorsIds: [httpMonitor.id],
+          name: 'fourth dashboard',
+          isPublic: false,
+        });
+
+      // then
+      expect(response.status).toBe(201);
     });
   });
 
