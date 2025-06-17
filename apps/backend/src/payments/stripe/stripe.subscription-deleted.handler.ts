@@ -33,7 +33,10 @@ export class StripeSubscriptionDeletedHandler {
       return;
     }
 
-    await this.subscriptionManagementService.endActiveSubscription(user.id);
+    await this.subscriptionManagementService.endActiveSubscription(
+      user.id,
+      stripeCustomerId as string,
+    );
 
     this.logger.log(`[STRIPE] Finished handling subscription deleted event`);
   }

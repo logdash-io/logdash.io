@@ -108,12 +108,13 @@ export class SubscriptionManagementService {
     await this.recalculateAndApplyUserTier(userId);
   }
 
-  public async endActiveSubscription(userId: string): Promise<void> {
+  public async endActiveSubscription(userId: string, stripeCustomerId: string): Promise<void> {
     const activeSubscription = await this.subscriptionReadService.readActiveByUserId(userId);
 
     if (!activeSubscription) {
       this.logger.log('Can not end non-existing subscription', {
         userId,
+        stripeCustomerId,
       });
 
       throw new BadRequestException('User does not have active subscription');
