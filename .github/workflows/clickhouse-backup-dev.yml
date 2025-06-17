@@ -120,4 +120,4 @@ jobs:
         with:
           name: ${{ env.BACKUP_NAME }}
           path: ${{ env.BACKUP_NAME }}.tar.gz
-          retention-days: 7
+          retention-days: 14
