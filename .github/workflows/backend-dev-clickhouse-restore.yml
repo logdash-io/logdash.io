@@ -122,54 +122,54 @@ jobs:
           echo "✅ ClickHouse connection successful"
         shell: bash
 
-      # - name: Restore Tables
-      #   run: |
-      #     echo "🔄 Starting table restoration..."
-      #     cd restore
+      - name: Restore Tables
+        run: |
+          echo "🔄 Starting table restoration..."
+          cd restore
 
-      #     # Strip http:// prefix from host if present
-      #     CLICKHOUSE_HOST="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}"
-      #     CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
-      #     CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+          # Strip http:// prefix from host if present
+          CLICKHOUSE_HOST="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
 
-      #     # Restore tables from backup
-      #     while IFS=$'\t' read -r database table engine; do
-      #       if [ "$database" = "default" ] && [ "$table" != "tables_list" ]; then
-      #         echo "🔧 Restoring table: $table"
+          # Restore tables from backup
+          while IFS=$'\t' read -r database table engine; do
+            if [ "$database" = "default" ] && [ "$table" != "tables_list" ]; then
+              echo "🔧 Restoring table: $table"
 
-      #         # Create table schema
-      #         if [ -f "backup/${table}_schema.sql" ]; then
-      #           echo "Creating schema for table: $table"
-      #           ../clickhouse client \
-      #             --host="${CLICKHOUSE_HOST}" \
-      #             --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT_TCP }} \
-      #             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
-      #             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
-      #             --database=default \
-      #             --multiquery < "backup/${table}_schema.sql"
-      #         else
-      #           echo "⚠️ Schema file not found for table: $table"
-      #           continue
-      #         fi
+              # Create table schema
+              if [ -f "backup/${table}_schema.sql" ]; then
+                echo "Creating schema for table: $table"
+                ../clickhouse client \
+                  --host="${CLICKHOUSE_HOST}" \
+                  --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT_TCP }} \
+                  --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
+                  --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
+                  --database=default \
+                  --multiquery < "backup/${table}_schema.sql"
+              else
+                echo "⚠️ Schema file not found for table: $table"
+                continue
+              fi
 
-      #         # Restore data if data file exists
-      #         if [ -f "backup/${table}_data.native" ]; then
-      #           echo "Restoring data for table: $table"
-      #           ../clickhouse client \
-      #             --host="${CLICKHOUSE_HOST}" \
-      #             --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT_TCP }} \
-      #             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
-      #             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
-      #             --database=default \
-      #             --query="INSERT INTO $table FORMAT Native" < "backup/${table}_data.native"
-      #         else
-      #           echo "⚠️ Data file not found for table: $table"
-      #         fi
-      #       fi
-      #     done < backup/tables_list.tsv
+              # Restore data if data file exists
+              if [ -f "backup/${table}_data.native" ]; then
+                echo "Restoring data for table: $table"
+                ../clickhouse client \
+                  --host="${CLICKHOUSE_HOST}" \
+                  --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT_TCP }} \
+                  --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
+                  --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
+                  --database=default \
+                  --query="INSERT INTO $table FORMAT Native" < "backup/${table}_data.native"
+              else
+                echo "⚠️ Data file not found for table: $table"
+              fi
+            fi
+          done < backup/tables_list.tsv
 
-      #     echo "✅ Table restoration completed"
-      #   shell: bash
+          echo "✅ Table restoration completed"
+        shell: bash
 
       - name: Verify Restoration
         run: |
