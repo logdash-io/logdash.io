@@ -10,6 +10,12 @@ export class PublicDashboardEntity {
 
   @Prop({ default: [] })
   httpMonitorsIds: string[];
+
+  @Prop()
+  name: string;
+
+  @Prop({ default: false })
+  isPublic: boolean;
 }
 
 export type PublicDashboardDocument = HydratedDocument<PublicDashboardEntity>;

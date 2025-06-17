@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PublicDashboardDataResponse } from '../core/dto/public-dashboard-data.response';
 import { HttpPingReadService } from '../../http-ping/read/http-ping-read.service';
 import { PublicDashboardReadService } from '../read/public-dashboard-read.service';
@@ -37,6 +37,10 @@ export class PublicDashboardCompositionService {
     );
 
     if (cachedResponse) {
+      if (!cachedResponse.isPublic) {
+        throw new ForbiddenException('Dashboard is not yet public');
+      }
+
       return cachedResponse;
     }
 
@@ -49,6 +53,10 @@ export class PublicDashboardCompositionService {
       response,
       PUBLIC_CACHE_TTL_SECONDS,
     );
+
+    if (!response.isPublic) {
+      throw new ForbiddenException('Dashboard is not yet public');
+    }
 
     return response;
   }
@@ -110,6 +118,8 @@ export class PublicDashboardCompositionService {
           responseTimeMs: ping.responseTimeMs,
         })),
       })),
+      name: dashboard.name,
+      isPublic: dashboard.isPublic,
     };
   }
 
@@ -171,6 +181,18 @@ export class PublicDashboardCompositionService {
       this.getCacheKey(publicDashboardId, period, responseType),
       JSON.stringify(response),
       ttlSeconds,
+    );
+  }
+
+  public async invalidateCache(publicDashboardId: string): Promise<void> {
+    await this.redisService.del(
+      this.getCacheKey(publicDashboardId, BucketsPeriod.Day, ResponseType.Public),
+    );
+    await this.redisService.del(
+      this.getCacheKey(publicDashboardId, BucketsPeriod.FourDays, ResponseType.Public),
+    );
+    await this.redisService.del(
+      this.getCacheKey(publicDashboardId, BucketsPeriod.NinetyDays, ResponseType.Public),
     );
   }
 

@@ -18,7 +18,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  async function setupPublicDashboard() {
+  async function setupPublicDashboard(dto?: { isPublic?: boolean }) {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
     const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
@@ -37,6 +37,8 @@ describe('PublicDashboardCoreController (public data read)', () => {
       clusterId: setup.cluster.id,
       token: setup.token,
       httpMonitorsIds: [monitorA.id, monitorB.id],
+      name: 'test',
+      isPublic: dto?.isPublic === undefined ? true : dto.isPublic,
     });
 
     await bootstrap.utils.httpPingUtils.createHttpPing({
@@ -107,6 +109,53 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
       // then
       expect(secondResponse.body).toEqual(data);
+    });
+
+    it('returns 403 if dashboard is not public', async () => {
+      // given
+      const setup = await setupPublicDashboard();
+
+      await bootstrap.utils.publicDashboardUtils.updatePublicDashboard({
+        token: setup.token,
+        id: setup.publicDashboard.id,
+        isPublic: false,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      expect(response.status).toBe(403);
+    });
+
+    it('invalidates cache if user changes dashboard to public', async () => {
+      // given
+      const setup = await setupPublicDashboard({ isPublic: false });
+
+      // when
+      const firstResponse = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      expect(firstResponse.status).toBe(403);
+
+      // and when
+      await bootstrap.utils.publicDashboardUtils.updatePublicDashboard({
+        token: setup.token,
+        id: setup.publicDashboard.id,
+        isPublic: true,
+      });
+
+      // and when
+      const secondResponse = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      expect(secondResponse.status).toBe(200);
     });
   });
 

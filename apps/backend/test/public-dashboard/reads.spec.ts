@@ -25,6 +25,8 @@ describe('PublicDashboardCoreController (reads)', () => {
       await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
         token,
+        name: 'piety papieza',
+        isPublic: true,
       });
 
       // when
@@ -38,6 +40,8 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       expect(dashboards[0].clusterId).toBe(cluster.id);
       expect(dashboards[0].httpMonitorsIds).toEqual([]);
+      expect(dashboards[0].name).toEqual('piety papieza');
+      expect(dashboards[0].isPublic).toEqual(true);
     });
 
     it('returns empty array when no public dashboards exist for cluster', async () => {

@@ -6,6 +6,8 @@ export class PublicDashboardSerializer {
       id: entity._id.toString(),
       clusterId: entity.clusterId,
       httpMonitorsIds: entity.httpMonitorsIds || [],
+      name: entity.name,
+      isPublic: entity.isPublic,
     };
   }
 
@@ -14,6 +16,8 @@ export class PublicDashboardSerializer {
       id: normalized.id,
       clusterId: normalized.clusterId,
       httpMonitorsIds: normalized.httpMonitorsIds,
+      name: normalized.name,
+      isPublic: normalized.isPublic,
     };
   }
 
