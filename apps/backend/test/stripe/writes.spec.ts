@@ -4,7 +4,6 @@ import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.payment-succeeded.handler';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { StripeSubscriptionDeletedHandler } from '../../src/payments/stripe/stripe.subscription-deleted.handler';
-import { Types } from 'mongoose';
 
 describe('StripeController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -49,34 +48,30 @@ describe('StripeController (writes)', () => {
       } as unknown as Stripe.PaymentIntentSucceededEvent;
 
       // when
-      const service = bootstrap.app.get(StripePaymentSucceededHandler);
+      const subscriptionSucceededHandler = bootstrap.app.get(StripePaymentSucceededHandler);
 
-      await service.handle(event);
+      await subscriptionSucceededHandler.handle(event);
 
       // then
       const userAfterUpdate = await bootstrap.models.userModel.findById(user.id);
+      const subscription = (await bootstrap.models.subscriptionModel.findOne())!;
 
       expect(userAfterUpdate!.tier).toBe(UserTier.EarlyBird);
       expect(userAfterUpdate!.stripeCustomerId).toBe('mock-customer-id');
+
+      expect(subscription.tier).toBe(UserTier.EarlyBird);
+      expect(subscription.userId).toBe(user.id);
+      expect(subscription.endsAt).toBeNull();
     });
   });
 
   describe('Subscription deleted webhook', () => {
     it('degrades user tier to free', async () => {
       // given
-      const { user } = await bootstrap.utils.generalUtils.setupClaimed({
+      const setup = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
         userTier: UserTier.EarlyBird,
       });
-
-      await bootstrap.models.userModel.updateOne(
-        {
-          _id: new Types.ObjectId(user.id),
-        },
-        {
-          stripeCustomerId: 'mock-customer-id',
-        },
-      );
 
       const event = {
         type: 'customer.subscription.deleted',
@@ -88,14 +83,21 @@ describe('StripeController (writes)', () => {
       } as unknown as Stripe.CustomerSubscriptionDeletedEvent;
 
       // when
-      const service = bootstrap.app.get(StripeSubscriptionDeletedHandler);
+      const subscriptionDeletedHandler = bootstrap.app.get(StripeSubscriptionDeletedHandler);
 
-      await service.handle(event);
+      await subscriptionDeletedHandler.handle(event);
 
       // then
-      const userAfterUpdate = await bootstrap.models.userModel.findById(user.id);
+      const userAfterUpdate = await bootstrap.models.userModel.findById(setup.user.id);
+      const subscription = (await bootstrap.models.subscriptionModel.findOne())!;
 
       expect(userAfterUpdate!.tier).toBe(UserTier.Free);
+
+      expect(subscription.tier).toBe(UserTier.EarlyBird);
+      expect(subscription.userId).toBe(setup.user.id);
+      expect(
+        Math.abs(new Date(subscription.endsAt!).getTime() - new Date().getTime()),
+      ).toBeLessThan(10_000);
     });
   });
 });

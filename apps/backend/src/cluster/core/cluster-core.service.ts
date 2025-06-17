@@ -14,7 +14,9 @@ export class ClusterCoreService {
   public async updateClustersTiers(payload: UserTierChangedEvent): Promise<void> {
     const newProjectTier = {
       [UserTier.Free]: ClusterTier.Free,
+      [UserTier.Contributor]: ClusterTier.Contributor,
       [UserTier.EarlyBird]: ClusterTier.EarlyBird,
+      [UserTier.Admin]: ClusterTier.Admin,
     }[payload.newTier];
 
     await this.clusterWriteService.updateTiersByCreatorId(payload.userId, newProjectTier);

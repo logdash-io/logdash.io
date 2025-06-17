@@ -42,8 +42,8 @@ export class GithubAuthLoginService {
     this.logger.log(`After reading user by email`, { email, userId: user?.id });
 
     if (!user && !dto.termsAccepted) {
-      this.logger.warn('Can not create new account without accepting terms');
-      throw new BadRequestException('Can not create new account without accepting terms');
+      this.logger.warn('Cannot create new account without accepting terms');
+      throw new BadRequestException('Cannot create new account without accepting terms');
     }
 
     if (user === null) {

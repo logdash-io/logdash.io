@@ -57,6 +57,8 @@ import { TelegramUtils } from './telegram-utils';
 import { WebhookUtils } from './webhook-utils';
 import { PublicDashboardUtils } from './public-dashboard-utils';
 import { StripeModule } from '../../src/payments/stripe/stripe.module';
+import { SubscriptionEntity } from '../../src/subscription/core/entities/subscription.entity';
+import { SubscriptionCoreModule } from '../../src/subscription/core/subscription-core.module';
 
 export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({
@@ -82,6 +84,7 @@ export async function createTestApp() {
       NotificationChannelCoreModule,
       PublicDashboardCoreModule,
       StripeModule,
+      SubscriptionCoreModule,
       RedisModule.forRoot({
         url: getRedisTestContainerUrl(),
       }),
@@ -122,6 +125,9 @@ export async function createTestApp() {
   const publicDashboardModel: Model<PublicDashboardEntity> = module.get(
     getModelToken(PublicDashboardEntity.name),
   );
+  const subscriptionModel: Model<SubscriptionEntity> = module.get(
+    getModelToken(SubscriptionEntity.name),
+  );
 
   const redisService: RedisService = module.get(RedisService);
 
@@ -140,6 +146,7 @@ export async function createTestApp() {
       clusterModel.deleteMany({}),
       notificationChannelModel.deleteMany({}),
       publicDashboardModel.deleteMany({}),
+      subscriptionModel.deleteMany({}),
       redisService.flushAll(),
       clickhouseClient.query({
         query: `TRUNCATE TABLE logs`,
@@ -180,6 +187,7 @@ export async function createTestApp() {
       clusterModel,
       notificationChannelModel,
       publicDashboardModel,
+      subscriptionModel,
     },
     utils: {
       projectUtils: new ProjectUtils(app),

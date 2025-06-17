@@ -37,3 +37,4 @@ runs:
         TELEGRAM_UPTIME_BOT_SECRET: 'secret'
         STRIPE_EARLY_BIRD_PRICE_ID: 'test-early-bird-price-id'
         STRIPE_API_KEY_SECRET: 'test-api-key-secret'
+        ADMIN_SUPER_SECRET_ADMIN_KEY: 'test'

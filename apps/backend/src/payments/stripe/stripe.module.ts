@@ -9,9 +9,10 @@ import { StripePaymentSucceededHandler } from './stripe.payment-succeeded.handle
 import { StripeSubscriptionDeletedHandler } from './stripe.subscription-deleted.handler';
 import Stripe from 'stripe';
 import { getEnvConfig } from '../../shared/configs/env-configs';
+import { SubscriptionManagementModule } from '../../subscription/management/subscription-management.module';
 
 @Module({
-  imports: [UserWriteModule, UserReadModule, UserTierModule],
+  imports: [UserWriteModule, UserReadModule, UserTierModule, SubscriptionManagementModule],
   providers: [
     StripeService,
     StripeEventsHandler,

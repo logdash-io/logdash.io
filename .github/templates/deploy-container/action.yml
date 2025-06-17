@@ -75,6 +75,9 @@ inputs:
   telegram-uptime-bot-secret:
     required: true
 
+  admin-super-secret-admin-key:
+    required: true
+
 runs:
   using: 'composite'
   steps:
@@ -117,4 +120,5 @@ runs:
           -e SWAGGER_PASSWORD=${{ inputs.swagger-password }} \
           -e TELEGRAM_UPTIME_BOT_TOKEN=${{ inputs.telegram-uptime-bot-token }} \
           -e TELEGRAM_UPTIME_BOT_SECRET=${{ inputs.telegram-uptime-bot-secret }} \
+          -e ADMIN_SUPER_SECRET_ADMIN_KEY=${{ inputs.admin-super-secret-admin-key }} \
           ${{ inputs.image-name }}
