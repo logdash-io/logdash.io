@@ -5,7 +5,7 @@ on:
     - cron: '*/15 * * * *'
   push:
     branches:
-      - clickhouse-backup
+      - clickhouse-backups
   workflow_dispatch:
 
 jobs:
