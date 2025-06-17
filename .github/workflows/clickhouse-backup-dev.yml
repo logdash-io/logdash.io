@@ -38,12 +38,14 @@ jobs:
 
           # Create backup using clickhouse-client
           ./clickhouse client \
-            --host="${CLICKHOUSE_HOST}" \
+            --host=${CLICKHOUSE_HOST} \
             --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
             --user=default \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
             --database=default \
             --query="SELECT * FROM system.tables WHERE database = 'default' FORMAT TSV" > backup/tables_list.tsv
+
+          echo "Tables list: $(cat backup/tables_list.tsv)"
 
           # Initialize backup summary
           echo "📊 BACKUP SUMMARY" > backup/backup_summary.txt
