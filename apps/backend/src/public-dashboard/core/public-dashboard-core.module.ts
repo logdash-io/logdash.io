@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PublicDashboardEntity, PublicDashboardSchema } from './entities/public-dashboard.entity';
 import { PublicDashboardCoreController } from './public-dashboard-core.controller';
-import { PublicDashboardCoreService } from './public-dashboard-core.service';
 import { PublicDashboardReadModule } from '../read/public-dashboard-read.module';
 import { PublicDashboardWriteModule } from '../write/public-dashboard-write.module';
 import { HttpMonitorReadModule } from '../../http-monitor/read/http-monitor-read.module';
@@ -23,7 +22,7 @@ import { PublicDashboardCompositionModule } from '../composition/public-dashboar
     ...ClusterMemberGuardImports,
   ],
   controllers: [PublicDashboardCoreController],
-  providers: [PublicDashboardCoreService],
-  exports: [PublicDashboardCoreService],
+  providers: [],
+  exports: [],
 })
 export class PublicDashboardCoreModule {}

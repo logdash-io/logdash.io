@@ -34,6 +34,8 @@ describe('PublicDashboardCoreController (writes)', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           httpMonitorsIds: [httpMonitor.id],
+          name: 'some name',
+          isPublic: false,
         });
 
       // then
@@ -43,6 +45,8 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       expect(createdDashboard?.httpMonitorsIds).toContain(httpMonitor.id);
       expect(createdDashboard?.httpMonitorsIds).toHaveLength(1);
+      expect(createdDashboard?.name).toEqual('some name');
+      expect(createdDashboard?.isPublic).toEqual(false);
     });
 
     it('does not create public dashboard if http monitors do not belong to the same cluster', async () => {
@@ -205,6 +209,60 @@ describe('PublicDashboardCoreController (writes)', () => {
           `/public_dashboards/${publicDashboard.id}/monitors/${new Types.ObjectId().toString()}`,
         )
         .set('Authorization', `Bearer ${setupB.token}`);
+
+      // then
+      expect(response.status).toEqual(403);
+    });
+  });
+
+  describe('PUT /public_dashboards/:publicDashboardId', () => {
+    it('updates public dashboard', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+        clusterId: setup.cluster.id,
+        token: setup.token,
+        name: 'default name',
+        isPublic: false,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/public_dashboards/${publicDashboard.id}`)
+        .set('Authorization', `Bearer ${setup.token}`)
+        .send({
+          name: 'changed name',
+          isPublic: true,
+        });
+
+      // then
+      const updatedDashboard = await bootstrap.models.publicDashboardModel.findById(
+        publicDashboard.id,
+      );
+
+      expect(updatedDashboard?.name).toEqual('changed name');
+      expect(updatedDashboard?.isPublic).toEqual(true);
+    });
+
+    it('throws 403 when user is not a member of the cluster', async () => {
+      // given
+      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+        clusterId: setupA.cluster.id,
+        token: setupA.token,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/public_dashboards/${publicDashboard.id}`)
+        .set('Authorization', `Bearer ${setupB.token}`)
+        .send({
+          name: 'changed name',
+          isPublic: true,
+        });
 
       // then
       expect(response.status).toEqual(403);

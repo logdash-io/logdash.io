@@ -4,6 +4,8 @@ export class PublicDashboardNormalized {
   id: string;
   clusterId: string;
   httpMonitorsIds: string[];
+  name: string;
+  isPublic: boolean;
 }
 
 export class PublicDashboardSerialized {
@@ -15,4 +17,10 @@ export class PublicDashboardSerialized {
 
   @ApiProperty({ type: [String] })
   httpMonitorsIds: string[];
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  isPublic: boolean;
 }

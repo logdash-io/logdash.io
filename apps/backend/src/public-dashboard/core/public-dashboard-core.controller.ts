@@ -9,6 +9,7 @@ import {
   Body,
   BadRequestException,
   Query,
+  Put,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PublicDashboardReadService } from '../read/public-dashboard-read.service';
@@ -23,6 +24,7 @@ import { Public } from '../../auth/core/decorators/is-public';
 import { PublicDashboardDataResponse } from './dto/public-dashboard-data.response';
 import { PublicDashboardCompositionService } from '../composition/public-dashboard-composition.service';
 import { PublicDashboardDataQuery } from './dto/public-dashboard-data.query';
+import { UpdatePublicDashboardBody } from './dto/update-public-dashboard.body';
 
 @ApiTags('Public Dashboards')
 @Controller()
@@ -38,13 +40,15 @@ export class PublicDashboardCoreController {
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Post('/clusters/:clusterId/public_dashboards')
-  public async createPublicDashboard(
+  public async create(
     @Param('clusterId') clusterId: string,
     @Body() body: CreatePublicDashboardBody,
   ): Promise<PublicDashboardSerialized> {
     const dashboard = await this.publicDashboardWriteService.create({
       clusterId,
       httpMonitorsIds: body.httpMonitorsIds,
+      name: body.name,
+      isPublic: body.isPublic,
     });
 
     const monitors = await this.httpMonitorReadService.readManyByIds(dashboard.httpMonitorsIds);
@@ -56,6 +60,24 @@ export class PublicDashboardCoreController {
     if (projects.some((project) => project.clusterId !== clusterId)) {
       throw new BadRequestException('Some monitors do not belong to the same cluster');
     }
+
+    return PublicDashboardSerializer.serialize(dashboard);
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Put('/public_dashboards/:publicDashboardId')
+  public async update(
+    @Param('publicDashboardId') publicDashboardId: string,
+    @Body() body: UpdatePublicDashboardBody,
+  ): Promise<PublicDashboardSerialized> {
+    const dashboard = await this.publicDashboardWriteService.update({
+      id: publicDashboardId,
+      name: body.name,
+      isPublic: body.isPublic,
+    });
+
+    await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
 
     return PublicDashboardSerializer.serialize(dashboard);
   }
