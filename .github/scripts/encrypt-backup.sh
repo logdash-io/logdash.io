@@ -30,14 +30,22 @@ echo "📁 Output: $OUTPUT_FILE"
 SALT=$(openssl rand -hex 32)
 IV=$(openssl rand -hex 16)
 
-# Derive key from the provided key using PBKDF2 with the salt
-DERIVED_KEY=$(echo -n "$ENCRYPTION_KEY$SALT" | openssl dgst -sha256 -binary | xxd -p -c 256)
+# Derive encryption key and HMAC key from the provided key using the salt
+DERIVED_KEY=$(echo -n "$ENCRYPTION_KEY$SALT" | openssl dgst -sha256 -binary | xxd -p -c 64)
+HMAC_KEY=$(echo -n "$ENCRYPTION_KEY$SALT$IV" | openssl dgst -sha256 -binary | xxd -p -c 64)
 
-# Create encrypted file with salt and IV prepended
+# Encrypt the file using AES-256-CBC
+ENCRYPTED_DATA=$(openssl enc -aes-256-cbc -e -K "$DERIVED_KEY" -iv "$IV" -in "$INPUT_FILE" | base64 -w 0)
+
+# Calculate HMAC of encrypted data for authentication
+HMAC=$(echo -n "$ENCRYPTED_DATA" | openssl dgst -sha256 -hmac "$HMAC_KEY" -binary | xxd -p -c 64)
+
+# Create encrypted file with salt, IV, HMAC, and encrypted data
 {
     echo -n "$SALT"
-    echo -n "$IV" 
-    openssl enc -aes-256-gcm -e -K "$DERIVED_KEY" -iv "$IV" -in "$INPUT_FILE"
+    echo -n "$IV"
+    echo -n "$HMAC"
+    echo -n "$ENCRYPTED_DATA"
 } > "$OUTPUT_FILE"
 
 if [ $? -eq 0 ]; then
