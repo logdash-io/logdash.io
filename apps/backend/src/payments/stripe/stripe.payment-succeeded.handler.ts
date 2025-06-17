@@ -58,7 +58,7 @@ export class StripePaymentSucceededHandler {
       id: user.id,
     });
 
-    await this.subscriptionManagementService.tryApplyNewSubscription({
+    await this.subscriptionManagementService.applyNew({
       userId: user.id,
       tier: UserTier.EarlyBird,
       endsAt: null,

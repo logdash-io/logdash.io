@@ -50,12 +50,10 @@ describe('Auth (anonymous)', () => {
       .get('/user')
       .reply(200, { avatar_url: 'https://some-avatar.com' });
 
-    await request(bootstrap.app.getHttpServer())
-      .post('/auth/github/claim')
-      .send({
-        githubCode: 'whatever',
-        accessToken: anonymous.token,
-      });
+    await request(bootstrap.app.getHttpServer()).post('/auth/github/claim').send({
+      githubCode: 'whatever',
+      accessToken: anonymous.token,
+    });
 
     // then
     const tempUserAfterClaim = await bootstrap.models.userModel.findOne({
@@ -67,9 +65,7 @@ describe('Auth (anonymous)', () => {
     });
 
     expect(tempUserAfterClaim).toBeNull();
-    expect(clusterAfterClaim?.creatorId.toString()).toEqual(
-      alreadyRegistered.user.id,
-    );
+    expect(clusterAfterClaim?.creatorId.toString()).toEqual(alreadyRegistered.user.id);
     expect(clusterAfterClaim?.members).toEqual([alreadyRegistered.user.id]);
   });
 
@@ -189,8 +185,6 @@ describe('Auth (anonymous)', () => {
 
     // then
     expect(loginResponse.status).toEqual(400);
-    expect(loginResponse.body.message).toEqual(
-      'Can not create new account without accepting terms',
-    );
+    expect(loginResponse.body.message).toEqual('Cannot create new account without accepting terms');
   });
 });

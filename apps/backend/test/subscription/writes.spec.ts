@@ -21,7 +21,7 @@ describe('SubscriptionCoreController', () => {
   });
 
   describe('POST /admin/user/:userId/apply_new_subscription', () => {
-    it('should apply new subscription successfully with valid admin key', async () => {
+    it('applies new subscription successfully with valid admin key', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
       });
@@ -43,7 +43,7 @@ describe('SubscriptionCoreController', () => {
       expect(new Date(subscription!.endsAt!)).toEqual(new Date('2024-12-31T23:59:59.000Z'));
     });
 
-    it('should return 401 with invalid admin key', async () => {
+    it('returns 401 with invalid admin key', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
       });
@@ -60,7 +60,7 @@ describe('SubscriptionCoreController', () => {
       expect(response.body.message).toBe('Invalid admin key');
     });
 
-    it('should return 400 when user already has active subscription', async () => {
+    it('returns 400 when user already has active subscription', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
         userTier: UserTier.EarlyBird,
@@ -78,7 +78,7 @@ describe('SubscriptionCoreController', () => {
       expect(response.body.message).toBe('User already has active subscription');
     });
 
-    it('should return 400 with invalid tier', async () => {
+    it('returns 400 with invalid tier', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
       });
@@ -96,7 +96,7 @@ describe('SubscriptionCoreController', () => {
   });
 
   describe('POST /admin/user/:userId/extend_active_subscription', () => {
-    it('should extend active subscription successfully', async () => {
+    it('extends active subscription successfully', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
       });
@@ -127,7 +127,7 @@ describe('SubscriptionCoreController', () => {
       expect(new Date(subscription!.endsAt!)).toEqual(addDays(initialEndsAt, 7));
     });
 
-    it('should return 401 with invalid admin key', async () => {
+    it('returns 401 with invalid admin key', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
       });
@@ -143,7 +143,7 @@ describe('SubscriptionCoreController', () => {
       expect(response.body.message).toBe('Invalid admin key');
     });
 
-    it('should return 400 when user has no active subscription', async () => {
+    it('returns 400 when user has no active subscription', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
       });
@@ -159,7 +159,7 @@ describe('SubscriptionCoreController', () => {
       expect(response.body.message).toBe('User does not have active subscription');
     });
 
-    it('should return 400 when trying to extend early bird subscription', async () => {
+    it('returns 400 when trying to extend early bird subscription', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
         userTier: UserTier.EarlyBird,
@@ -174,13 +174,13 @@ describe('SubscriptionCoreController', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
-        'Can not change expiration date of early bird subscription',
+        'Cannot change expiration date of early bird subscription',
       );
     });
   });
 
   describe('POST /admin/user/:userId/end_active_subscription', () => {
-    it('should end active subscription successfully with valid admin key', async () => {
+    it('ends active subscription successfully with valid admin key', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
       });
@@ -207,7 +207,7 @@ describe('SubscriptionCoreController', () => {
       ).toBeLessThan(5_000);
     });
 
-    it('should return 401 with invalid admin key', async () => {
+    it('returns 401 with invalid admin key', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
         userTier: UserTier.Contributor,
@@ -221,7 +221,7 @@ describe('SubscriptionCoreController', () => {
       expect(response.body.message).toBe('Invalid admin key');
     });
 
-    it('should return 400 when user has no active subscription', async () => {
+    it('returns 400 when user has no active subscription', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
       });
@@ -234,7 +234,7 @@ describe('SubscriptionCoreController', () => {
       expect(response.body.message).toBe('User does not have active subscription');
     });
 
-    it('should return 400 when trying to end early bird subscription', async () => {
+    it('returns 400 when trying to end early bird subscription', async () => {
       const { user } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'test@test.com',
         userTier: UserTier.EarlyBird,
@@ -245,7 +245,7 @@ describe('SubscriptionCoreController', () => {
         .set('super-secret-admin-key', adminKey);
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Can not end early bird subscription');
+      expect(response.body.message).toBe('Cannot end early bird subscription');
     });
   });
 });

@@ -7,18 +7,18 @@ import { ApplyNewSubscriptionBody } from './dto/apply-new-subscription.body';
 import { Public } from '../../auth/core/decorators/is-public';
 
 @ApiTags('Subscriptions')
+@UseGuards(AdminGuard)
 @Controller('')
 export class SubscriptionCoreController {
   constructor(private readonly subscriptionManagementService: SubscriptionManagementService) {}
 
   @Public()
   @Post('admin/user/:userId/apply_new_subscription')
-  @UseGuards(AdminGuard)
   public async applyNewSubscription(
     @Param('userId') userId: string,
     @Body() body: ApplyNewSubscriptionBody,
   ): Promise<void> {
-    await this.subscriptionManagementService.tryApplyNewSubscription({
+    await this.subscriptionManagementService.applyNew({
       userId,
       tier: body.tier,
       endsAt: new Date(body.endsAt),
@@ -27,7 +27,6 @@ export class SubscriptionCoreController {
 
   @Public()
   @Post('admin/user/:userId/extend_active_subscription')
-  @UseGuards(AdminGuard)
   public async getActiveSubscriptionByUserId(
     @Param('userId') userId: string,
     @Body() body: ExtendActiveSubscriptionBody,
