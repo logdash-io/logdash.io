@@ -112,7 +112,7 @@ export class HttpPingSchedulerService {
     error?: any,
   ): CreateHttpPingDto {
     const message = this.getMessage(response, error);
-    const isError = response?.status > 400 || response?.status < 200;
+    const isError = response?.status >= 400 || response?.status < 200 || response?.status === 0;
 
     return {
       httpMonitorId: monitor.id,
