@@ -7,6 +7,10 @@ on:
         description: 'GitHub Run ID of the backup workflow to restore from'
         required: true
         type: string
+      artifact_name:
+        description: 'Name of the backup artifact to restore from'
+        required: true
+        type: string
       confirmation_password:
         description: 'Type "RESTORE_CONFIRMED" to proceed with restore operation'
         required: true
@@ -38,7 +42,9 @@ jobs:
       - name: Download Backup Artifact
         uses: actions/download-artifact@v4
         with:
-          name: clickhouse_backup_dev_${{ github.event.inputs.backup_run_id }}
+          name: ${{ github.event.inputs.artifact_name }}
+          run-id: ${{ github.event.inputs.backup_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           path: ./restore
 
       - name: Extract and Validate Backup
@@ -90,7 +96,7 @@ jobs:
 
           ./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
-            --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+            --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT_TCP }} \
             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
             --database=default \
@@ -118,7 +124,7 @@ jobs:
                 echo "Creating schema for table: $table"
                 ../clickhouse client \
                   --host="${CLICKHOUSE_HOST}" \
-                  --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+                  --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT_TCP }} \
                   --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                   --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
                   --database=default \
@@ -133,7 +139,7 @@ jobs:
                 echo "Restoring data for table: $table"
                 ../clickhouse client \
                   --host="${CLICKHOUSE_HOST}" \
-                  --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+                  --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT_TCP }} \
                   --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                   --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
                   --database=default \
@@ -159,7 +165,7 @@ jobs:
           # Get restored tables count
           RESTORED_TABLES=$(./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
-            --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+            --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT_TCP }} \
             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
             --database=default \
@@ -171,16 +177,11 @@ jobs:
           echo "📋 Restored tables with row counts:"
           ./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
-            --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+            --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT_TCP }} \
             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
             --database=default \
             --query="SELECT name, total_rows FROM system.tables WHERE database = 'default' AND engine NOT LIKE '%System%' ORDER BY name"
 
           echo "✅ Restoration verification completed"
-        shell: bash
-
-      - name: Cleanup
-        run: |
-          rm -rf restore/
         shell: bash
