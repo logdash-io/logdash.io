@@ -37,13 +37,13 @@ describe('ClusterCoreController (writes)', () => {
       expect(entity?.name).toBe('my cluster');
     });
 
-    it('throws error when user tries to create more than 100 clusters', async () => {
+    it('throws error when user tries to create more than 5 clusters', async () => {
       // given
       const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
       const userId = user.id;
 
-      // create 99 clusters (100th is created in the setup)
-      const clusters = Array.from({ length: 99 }, (_, index) => ({
+      // create 4 clusters (5th is created in the setup)
+      const clusters = Array.from({ length: 4 }, (_, index) => ({
         _id: new Types.ObjectId(),
         name: `Cluster ${index}`,
         creatorId: userId,
@@ -61,16 +61,14 @@ describe('ClusterCoreController (writes)', () => {
         .expect(400);
 
       // then
-      expect(response.body.message).toBe(
-        'Cannot create more clusters. Maximum limit of 100 clusters per user has been reached.',
-      );
+      expect(response.body.message).toBe('Cannot create more clusters. Maximum limit reached.');
 
       // Verify no new cluster was created
       const clusterCount = await bootstrap.models.clusterModel.countDocuments({
         creatorId: userId,
       });
 
-      expect(clusterCount).toBe(100);
+      expect(clusterCount).toBe(5);
     });
   });
 

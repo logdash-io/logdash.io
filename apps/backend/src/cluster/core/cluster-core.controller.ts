@@ -26,6 +26,9 @@ import { UpdateClusterBody } from './dto/update-cluster.body';
 import { ClusterMemberGuard } from '../guards/cluster-member/cluster-member.guard';
 import { ClusterRemovalService } from '../removal/cluster-removal.service';
 import { SuccessResponse } from '../../shared/responses/success.response';
+import { PublicDashboardReadService } from '../../public-dashboard/read/public-dashboard-read.service';
+import { groupBy } from '../../shared/utils/group-by';
+import { getUserPlanConfig } from '../../shared/configs/user-plan-configs';
 
 @ApiTags('Clusters')
 @Controller()
@@ -38,6 +41,7 @@ export class ClusterCoreController {
     private readonly projectReadService: ProjectReadService,
     private readonly clusterFeaturesService: ClusterFeaturesService,
     private readonly clusterRemovalService: ClusterRemovalService,
+    private readonly publicDashboardReadService: PublicDashboardReadService,
   ) {}
 
   @ApiBearerAuth()
@@ -47,16 +51,14 @@ export class ClusterCoreController {
     @Body() body: CreateClusterBody,
     @CurrentUserId() userId: string,
   ): Promise<ClusterSerialized> {
-    const MAX_CLUSTERS_PER_USER = 100;
+    const userTier = await this.userReadCachedService.readTier(userId);
+    const MAX_CLUSTERS_PER_USER = getUserPlanConfig(userTier).projects.maxNumberOfProjects;
     const currentClusterCount = await this.clusterReadCachedService.countByCreatorId(userId);
 
     if (currentClusterCount >= MAX_CLUSTERS_PER_USER) {
-      throw new BadRequestException(
-        'Cannot create more clusters. Maximum limit of 100 clusters per user has been reached.',
-      );
+      throw new BadRequestException('Cannot create more clusters. Maximum limit reached.');
     }
 
-    const userTier = await this.userReadCachedService.readTier(userId);
     const clusterTier = clusterTierFromUserTier(userTier);
 
     const cluster = await this.clusterWriteService.create({
@@ -91,9 +93,16 @@ export class ClusterCoreController {
       clusters.map((cluster) => cluster.id),
     );
 
+    const publicDashboards = await this.publicDashboardReadService.readByClustersIds(
+      clusters.map((cluster) => cluster.id),
+    );
+
+    const publicDashboardsMap = groupBy(publicDashboards, 'clusterId');
+
     return ClusterSerializer.serializeMany(clusters, {
       projectsMap: projectsGroupedByCluster,
       featuresMap,
+      publicDashboardsMap,
     });
   }
 

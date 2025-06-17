@@ -2,6 +2,7 @@ import { ProjectNormalized } from '../../../project/core/entities/project.interf
 import { ClusterEntity } from './cluster.entity';
 import { ClusterNormalized, ClusterSerialized } from './cluster.interface';
 import { ClusterFeature } from '../enums/cluster-feature.enum';
+import { PublicDashboardNormalized } from '../../../public-dashboard/core/entities/public-dashboard.interface';
 
 export class ClusterSerializer {
   public static normalize(entity: ClusterEntity): ClusterNormalized {
@@ -23,6 +24,7 @@ export class ClusterSerializer {
     params?: {
       projects?: ProjectNormalized[];
       features?: ClusterFeature[];
+      publicDashboards?: PublicDashboardNormalized[];
     },
   ): ClusterSerialized {
     return {
@@ -38,6 +40,13 @@ export class ClusterSerializer {
           }))
         : undefined,
       features: params?.features,
+      publicDashboards: params?.publicDashboards
+        ? params.publicDashboards.map((publicDashboard) => ({
+            id: publicDashboard.id,
+            name: publicDashboard.name,
+            isPublic: publicDashboard.isPublic,
+          }))
+        : undefined,
     };
   }
 
@@ -46,12 +55,14 @@ export class ClusterSerializer {
     params?: {
       projectsMap?: Record<string, ProjectNormalized[]>;
       featuresMap?: Record<string, ClusterFeature[]>;
+      publicDashboardsMap?: Record<string, PublicDashboardNormalized[]>;
     },
   ): ClusterSerialized[] {
     return normalizedClusters.map((entity) =>
       this.serialize(entity, {
         projects: params?.projectsMap?.[entity.id],
         features: params?.featuresMap?.[entity.id],
+        publicDashboards: params?.publicDashboardsMap?.[entity.id],
       }),
     );
   }
