@@ -112,9 +112,28 @@ jobs:
           echo "BACKUP_NAME=${BACKUP_NAME}" >> $GITHUB_ENV
         shell: bash
 
+      - name: Encrypt Backup
+        run: |
+          echo "🔐 Encrypting backup artifact..."
+
+          # Make script executable
+          chmod +x .github/scripts/encrypt-backup.sh
+
+          # Encrypt the backup
+          ./.github/scripts/encrypt-backup.sh \
+            "${BACKUP_NAME}.tar.gz" \
+            "${BACKUP_NAME}.tar.gz.enc" \
+            "${{ secrets.BACKEND_BACKUP_ARTIFACT_KEY }}"
+
+          # Remove unencrypted file for security
+          rm -f "${BACKUP_NAME}.tar.gz"
+
+          echo "✅ Backup encrypted and ready for upload"
+        shell: bash
+
       - name: Upload Backup Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BACKUP_NAME }}
-          path: ${{ env.BACKUP_NAME }}.tar.gz
+          path: ${{ env.BACKUP_NAME }}.tar.gz.enc
           retention-days: 14
