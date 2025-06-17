@@ -92,7 +92,7 @@ jobs:
           echo "✅ ClickHouse connection successful"
         shell: bash
 
-            - name: Restore Tables
+      - name: Restore Tables
         run: |
           echo "🔄 Starting table restoration..."
           cd restore
