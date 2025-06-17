@@ -36,16 +36,39 @@ jobs:
           CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
           CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
 
-          echo "Trying to connect to clickhouse..."
+          echo "Trying to connect to ClickHouse..."
+          echo "Host: ${CLICKHOUSE_HOST}"
+          echo "Port: ${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }}"
+          echo "User: ${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}"
 
-          # Create backup using clickhouse-client
+          # Test network connectivity first
+          echo "Testing network connectivity..."
+          nc -zv ${CLICKHOUSE_HOST} ${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} || echo "Network test failed"
+
+          # Test what's actually running on that port
+          echo "Testing what's on the port..."
+          timeout 5 bash -c "echo '' | nc ${CLICKHOUSE_HOST} ${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }}" | hexdump -C || echo "Port test failed"
+
+          # Try with secure connection first (common issue with cloud providers)
+          echo "Attempting secure ClickHouse connection..."
           ./clickhouse client \
             --host=${CLICKHOUSE_HOST} \
             --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
             --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
             --database=default \
-            --query="SELECT * FROM system.tables WHERE database = 'default' FORMAT TSV" > backup/tables_list.tsv
+            --secure \
+            --query="SELECT * FROM system.tables WHERE database = 'default' FORMAT TSV" > backup/tables_list.tsv || {
+              echo "Secure connection failed, trying without SSL..."
+              # Create backup using clickhouse-client without SSL
+              ./clickhouse client \
+                --host=${CLICKHOUSE_HOST} \
+                --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
+                --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
+                --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
+                --database=default \
+                --query="SELECT * FROM system.tables WHERE database = 'default' FORMAT TSV" > backup/tables_list.tsv
+            }
 
           echo "Tables list: $(cat backup/tables_list.tsv)"
 
@@ -74,7 +97,7 @@ jobs:
               
               # Backup schema
               ./clickhouse client \
-                --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+                --host=${CLICKHOUSE_HOST} \
                 --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
                 --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                 --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
@@ -83,7 +106,7 @@ jobs:
               
               # Backup data
               ./clickhouse client \
-                --host="${{ secrets.BACKEND_DEV_CLICKHOUSE_EXTERNAL_HOST }}" \
+                --host=${CLICKHOUSE_HOST} \
                 --port=${{ secrets.BACKEND_DEV_CLICKHOUSE_PORT }} \
                 --user="${{ secrets.BACKEND_DEV_CLICKHOUSE_USER }}" \
                 --password="${{ secrets.BACKEND_DEV_CLICKHOUSE_PASSWORD }}" \
