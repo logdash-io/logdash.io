@@ -3,7 +3,12 @@
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
   import { isDev } from '$lib/shared/utils/is-dev.util.js';
-  import { CopyIcon, PenLineIcon, SettingsIcon } from 'lucide-svelte';
+  import {
+    CopyIcon,
+    PenLineIcon,
+    SettingsIcon,
+    Trash2Icon,
+  } from 'lucide-svelte';
   import { clustersState } from '../application/clusters.state.svelte.js';
 
   const { cluster } = $props();
@@ -66,21 +71,28 @@
       </a>
     </li>
 
-    <!-- <li>
+    <li>
       <a
         onclick={() => {
-          // if (
-          //   !confirm('Are you sure you want to delete this project?') ||
-          //   projectsState.isDeletingProject(project.id)
-          // ) {
-          //   close();
-          //   return;
-          // }
+          if (
+            !confirm('Are you sure you want to delete this project?') ||
+            clustersState.isDeleting
+          ) {
+            close();
+            return;
+          }
 
-          // projectsState.deleteProject(project.id).then((key) => {
-          //   goto(`/app/clusters/${page.params.cluster_id}`);
-          //   toast.success('Project deleted successfully', 5000);
-          // });
+          const onDeleted = toast.info('Deleting project...', 60000);
+
+          clustersState
+            .delete(cluster.id)
+            .then((key) => {
+              onDeleted();
+              toast.success('Project deleted successfully', 5000);
+            })
+            .catch((error) => {
+              toast.error(`Failed to delete project: ${error.message}`, 5000);
+            });
           close();
         }}
         class="text-error whitespace-nowrap"
@@ -93,7 +105,7 @@
           <Trash2Icon class="ml-auto h-4 w-4" />
         {/if}
       </a>
-    </li> -->
+    </li>
   </ul>
 {/snippet}
 

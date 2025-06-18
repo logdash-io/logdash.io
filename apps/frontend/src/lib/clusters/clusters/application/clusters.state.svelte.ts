@@ -1,4 +1,3 @@
-import type { Feature } from '$lib/shared/types.js';
 import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 import { arrayToObject } from '$lib/shared/utils/array-to-object';
 import { type Source } from 'sveltekit-sse';
@@ -81,6 +80,21 @@ class ClustersState {
     }).finally(() => {
       this._requestStatus = null;
     });
+  }
+
+  async delete(id: string): Promise<void> {
+    this._requestStatus = 'deleting';
+    try {
+      // todo: validate why it returns false positive on delete
+      await fetch(`/app/api/clusters/${id}`, {
+        method: 'DELETE',
+      });
+      delete this._clusters[id];
+    } catch (error) {
+      toast.error(`Failed to delete cluster: ${error}`);
+    } finally {
+      this._requestStatus = null;
+    }
   }
 }
 
