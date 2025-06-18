@@ -71,6 +71,19 @@ class LogdashAPI {
     );
   }
 
+  delete_cluster(cluster_id: string, access_token: string): Promise<void> {
+    return this.performFetch<void>(
+      `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      access_token,
+    );
+  }
+
   create_project(
     name: string,
     cluster_id: string,
@@ -368,7 +381,22 @@ class LogdashAPI {
   ): Promise<PublicDashboard> {
     return this.post<PublicDashboard>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/public_dashboards`,
-      {},
+      {
+        name: `Status Page`,
+        isPublic: false,
+      },
+      access_token,
+    );
+  }
+
+  update_public_dashboard(
+    dashboard_id: string,
+    update: Partial<{ name: string; isPublic: boolean }>,
+    access_token: string,
+  ): Promise<PublicDashboard> {
+    return this.put<PublicDashboard>(
+      `${LogdashAPI.v0baseUrl}/public_dashboards/${dashboard_id}`,
+      update,
       access_token,
     );
   }

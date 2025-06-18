@@ -32,15 +32,10 @@ export class ClusterWriteService {
   public async update(dto: UpdateClusterDto): Promise<void> {
     const updateQuery = this.constructUpdateQuery(dto);
 
-    await this.model.updateOne(
-      { _id: new Types.ObjectId(dto.id) },
-      updateQuery,
-    );
+    await this.model.updateOne({ _id: new Types.ObjectId(dto.id) }, updateQuery);
   }
 
-  private constructUpdateQuery(
-    dto: UpdateClusterDto,
-  ): UpdateQuery<ClusterEntity> {
+  private constructUpdateQuery(dto: UpdateClusterDto): UpdateQuery<ClusterEntity> {
     const updateQuery: UpdateQuery<ClusterEntity> = {};
 
     if (dto.name) {
@@ -58,14 +53,8 @@ export class ClusterWriteService {
     return updateQuery;
   }
 
-  public async updateTiersByCreatorId(
-    creatorId: string,
-    tier: ClusterTier,
-  ): Promise<void> {
-    await this.model.updateMany(
-      { creatorId: new Types.ObjectId(creatorId) },
-      { tier },
-    );
+  public async updateTiersByCreatorId(creatorId: string, tier: ClusterTier): Promise<void> {
+    await this.model.updateMany({ creatorId: new Types.ObjectId(creatorId) }, { tier });
   }
 
   public async delete(id: string): Promise<void> {

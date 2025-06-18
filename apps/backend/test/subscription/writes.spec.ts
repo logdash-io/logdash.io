@@ -3,6 +3,8 @@ import { createTestApp } from '../utils/bootstrap';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { addDays, addHours } from 'date-fns';
+import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
+import { sleep } from '../utils/sleep';
 
 describe('SubscriptionCoreController', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -34,11 +36,18 @@ describe('SubscriptionCoreController', () => {
           endsAt: '2024-12-31T23:59:59.000Z',
         });
 
+      await sleep(200);
+
       expect(response.status).toBe(201);
 
       const subscription = await bootstrap.models.subscriptionModel.findOne({
         userId: user.id,
       });
+      const clusterAfterUpdate = await bootstrap.models.clusterModel.findOne({
+        creatorId: user.id,
+      });
+
+      expect(clusterAfterUpdate!.tier).toBe(ClusterTier.Contributor);
       expect(subscription!.tier).toBe(UserTier.Contributor);
       expect(new Date(subscription!.endsAt!)).toEqual(new Date('2024-12-31T23:59:59.000Z'));
     });
