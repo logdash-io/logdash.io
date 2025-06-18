@@ -136,7 +136,6 @@ jobs:
           while IFS=$'\t' read -r database table engine; do
             if [ "$database" = "default" ] && [ "$table" != "tables_list" ]; then
               echo "🔧 Restoring table: $table"
-
               # Create table schema
               if [ -f "backup/${table}_schema.sql" ]; then
                 echo "Creating schema for table: $table"
@@ -151,7 +150,6 @@ jobs:
                 echo "⚠️ Schema file not found for table: $table"
                 continue
               fi
-
               # Restore data if data file exists
               if [ -f "backup/${table}_data.native" ]; then
                 echo "Restoring data for table: $table"

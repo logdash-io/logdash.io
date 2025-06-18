@@ -40,7 +40,7 @@
   );
 
   $effect(() => {
-    if (isSettingUp || !userState.hasEarlyAccess) {
+    if ((isSettingUp || !userState.hasEarlyAccess) && !isOnDemoDashboard) {
       return;
     }
 
