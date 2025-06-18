@@ -27,6 +27,8 @@ import { MetricEntity } from '../../src/metric/core/entities/metric.entity';
 import { MetricCoreModule } from '../../src/metric/core/metric-core.module';
 import { NotificationChannelEntity } from '../../src/notification-channel/core/entities/notification-channel.entity';
 import { NotificationChannelCoreModule } from '../../src/notification-channel/core/notification-channel-core.module';
+import { PublicDashboardEntity } from '../../src/public-dashboard/core/entities/public-dashboard.entity';
+import { PublicDashboardCoreModule } from '../../src/public-dashboard/core/public-dashboard-core.module';
 import { ProjectEntity } from '../../src/project/core/entities/project.entity';
 import { ProjectCoreModule } from '../../src/project/core/project-core.module';
 import { LogdashModule } from '../../src/shared/logdash/logdash.module';
@@ -53,6 +55,10 @@ import { ProjectUtils } from './project-utils';
 import { getRedisTestContainerUrl } from './redis-test-container-server';
 import { TelegramUtils } from './telegram-utils';
 import { WebhookUtils } from './webhook-utils';
+import { PublicDashboardUtils } from './public-dashboard-utils';
+import { StripeModule } from '../../src/payments/stripe/stripe.module';
+import { SubscriptionEntity } from '../../src/subscription/core/entities/subscription.entity';
+import { SubscriptionCoreModule } from '../../src/subscription/core/subscription-core.module';
 
 export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({
@@ -76,6 +82,9 @@ export async function createTestApp() {
       ClusterCoreModule,
       MetricRegisterCoreModule,
       NotificationChannelCoreModule,
+      PublicDashboardCoreModule,
+      StripeModule,
+      SubscriptionCoreModule,
       RedisModule.forRoot({
         url: getRedisTestContainerUrl(),
       }),
@@ -113,6 +122,12 @@ export async function createTestApp() {
   const notificationChannelModel: Model<NotificationChannelEntity> = module.get(
     getModelToken(NotificationChannelEntity.name),
   );
+  const publicDashboardModel: Model<PublicDashboardEntity> = module.get(
+    getModelToken(PublicDashboardEntity.name),
+  );
+  const subscriptionModel: Model<SubscriptionEntity> = module.get(
+    getModelToken(SubscriptionEntity.name),
+  );
 
   const redisService: RedisService = module.get(RedisService);
 
@@ -130,6 +145,8 @@ export async function createTestApp() {
       httpMonitorModel.deleteMany({}),
       clusterModel.deleteMany({}),
       notificationChannelModel.deleteMany({}),
+      publicDashboardModel.deleteMany({}),
+      subscriptionModel.deleteMany({}),
       redisService.flushAll(),
       clickhouseClient.query({
         query: `TRUNCATE TABLE logs`,
@@ -169,6 +186,8 @@ export async function createTestApp() {
       httpMonitorModel,
       clusterModel,
       notificationChannelModel,
+      publicDashboardModel,
+      subscriptionModel,
     },
     utils: {
       projectUtils: new ProjectUtils(app),
@@ -183,6 +202,7 @@ export async function createTestApp() {
       notificationChannelUtils: new NotificationChannelUtils(app),
       telegramUtils: new TelegramUtils(app),
       webhookUtils: new WebhookUtils(app),
+      publicDashboardUtils: new PublicDashboardUtils(app),
     },
     methods: {
       clearDatabase,

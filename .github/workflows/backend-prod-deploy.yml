@@ -64,6 +64,7 @@ jobs:
           swagger-password: ${{ secrets.BACKEND_SWAGGER_PASSWORD }}
           telegram-uptime-bot-token: ${{ secrets.BACKEND_PROD_TELEGRAM_UPTIME_BOT_TOKEN }}
           telegram-uptime-bot-secret: ${{ secrets.BACKEND_PROD_TELEGRAM_UPTIME_BOT_SECRET }}
+          admin-super-secret-admin-key: ${{ secrets.BACKEND_PROD_ADMIN_SUPER_SECRET_ADMIN_KEY }}
       - name: Prune
         uses: './.github/templates/prune'
         with:

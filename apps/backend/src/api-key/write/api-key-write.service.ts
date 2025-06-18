@@ -8,9 +8,7 @@ import { ApiKeySerializer } from '../core/entities/api-key.serializer';
 
 @Injectable()
 export class ApiKeyWriteService {
-  constructor(
-    @InjectModel(ApiKeyEntity.name) private apiKeyModel: Model<ApiKeyEntity>,
-  ) {}
+  constructor(@InjectModel(ApiKeyEntity.name) private apiKeyModel: Model<ApiKeyEntity>) {}
 
   public async createApiKey(dto: CreateApiKeyDto): Promise<ApiKeyNormalized> {
     const value = this.generateApiKeyValue();
@@ -28,8 +26,7 @@ export class ApiKeyWriteService {
 
     const resultArray = new Array(32).fill('');
 
-    const characters =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const charactersLength = characters.length;
 
     for (let i = 0; i < timestamp.length; i++) {
@@ -39,12 +36,14 @@ export class ApiKeyWriteService {
 
     for (let i = 0; i < 32; i++) {
       if (!resultArray[i]) {
-        resultArray[i] = characters.charAt(
-          Math.floor(Math.random() * charactersLength),
-        );
+        resultArray[i] = characters.charAt(Math.floor(Math.random() * charactersLength));
       }
     }
 
     return resultArray.join('');
+  }
+
+  public async deleteByProjectId(projectId: string): Promise<void> {
+    await this.apiKeyModel.deleteMany({ projectId });
   }
 }

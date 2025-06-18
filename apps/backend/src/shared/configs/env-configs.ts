@@ -77,12 +77,14 @@ interface EnvConfig {
       token: string;
     };
   };
+  admin: {
+    superSecretAdminKey: string;
+  };
 }
 
 interface EnvConfigs {
   [OurEnv.Prod]: EnvConfig;
   [OurEnv.Dev]: EnvConfig;
-  [OurEnv.Local]: EnvConfig;
 }
 
 export const EnvConfigs: EnvConfigs = {
@@ -160,6 +162,9 @@ export const EnvConfigs: EnvConfigs = {
         secret: process.env.TELEGRAM_UPTIME_BOT_SECRET!,
         token: process.env.TELEGRAM_UPTIME_BOT_TOKEN!,
       },
+    },
+    admin: {
+      superSecretAdminKey: process.env.ADMIN_SUPER_SECRET_ADMIN_KEY!,
     },
   },
   [OurEnv.Dev]: {
@@ -239,81 +244,8 @@ export const EnvConfigs: EnvConfigs = {
         token: process.env.TELEGRAM_UPTIME_BOT_TOKEN!,
       },
     },
-  },
-  [OurEnv.Local]: {
-    emailLoginWhitelist: {
-      enabled: true,
-      whitelistedEmails: (process.env.WHITELISTED_EMAILS ?? '')!.split(','),
-    },
-    logdash: {
-      apiKey: process.env.LOGDASH_API_KEY!,
-    },
-    telegram: {
-      token: process.env.TELEGRAM_TOKEN!,
-      chatId: '-1002535913992',
-    },
-    stripe: {
-      earlyBirdPriceId: process.env.STRIPE_EARLY_BIRD_PRICE_ID!,
-      successUrl: 'http://localhost:5173/app/callbacks/payments/purchase-success',
-      returnFromBillingUrl: 'http://localhost:5173/app/clusters',
-      apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,
-      signature: process.env.STRIPE_SIGNATURE!,
-    },
-    logging: {
-      logCreationDurationWarnThreshold: 100,
-    },
-    anonymousAccounts: {
-      removeAfterHours: 24 * 7, // 7 days
-    },
-    pings: {
-      maxConcurrentRequests: 10,
-      ttlHours: 12,
-    },
-    demo: {
-      clusterId: '682cf106d7874ce88faf7426',
-      projectId: '682cf10fd7874ce88faf7431',
-      logdashApiKey: process.env.DEMO_DASHBOARD_API_KEY!,
-      logdashHost: 'https://local-api.logdash.io',
-      addTestLogRateLimit: {
-        timeWindowSeconds: 60,
-        limit: 10,
-      },
-    },
-    metrics: {
-      metricCreationDurationWarnThreshold: 100,
-    },
-    github: {
-      clientId: process.env.GITHUB_OAUTH_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_OAUTH_CLIENT_SECRET!,
-    },
-    mongo: {
-      url: process.env.MONGO_URL!,
-    },
-    redis: {
-      url: process.env.REDIS_URL!,
-    },
-    resend: {
-      enabled: true,
-      apiKey: process.env.RESEND_API_KEY!,
-    },
-    auth: {
-      jwtSecret: process.env.AUTH_JWT_SECRET!,
-    },
-    swagger: {
-      username: 'admin',
-      password: process.env.SWAGGER_PASSWORD!,
-    },
-    clickhouse: {
-      host: process.env.CLICKHOUSE_HOST!,
-      username: process.env.CLICKHOUSE_USER!,
-      password: process.env.CLICKHOUSE_PASSWORD!,
-      database: process.env.CLICKHOUSE_DATABASE!,
-    },
-    notificationChannels: {
-      telegramUptimeBot: {
-        secret: process.env.TELEGRAM_UPTIME_BOT_SECRET!,
-        token: process.env.TELEGRAM_UPTIME_BOT_TOKEN!,
-      },
+    admin: {
+      superSecretAdminKey: process.env.ADMIN_SUPER_SECRET_ADMIN_KEY!,
     },
   },
 };

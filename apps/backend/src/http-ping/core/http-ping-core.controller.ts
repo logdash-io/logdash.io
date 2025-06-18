@@ -1,4 +1,13 @@
-import { Controller, Get, NotFoundException, Param, Query, Sse, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Query,
+  Sse,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { filter, fromEvent, map, Observable } from 'rxjs';
@@ -11,6 +20,7 @@ import { HttpPingSerialized } from './entities/http-ping.interface';
 import { HttpPingSerializer } from './entities/http-ping.serializer';
 import { HttpPingReadService } from '../read/http-ping-read.service';
 import { ReadByMonitorIdQuery } from './dto/read-by-monitor-id.query';
+import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
 
 @ApiBearerAuth()
 @ApiTags('HTTP Pings')
@@ -23,6 +33,8 @@ export class HttpPingCoreController {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  @UseInterceptors(DemoCacheInterceptor)
+  @DemoEndpoint()
   @Get('projects/:projectId/monitors/:monitorId/http_pings')
   @ApiResponse({ type: HttpPingSerialized, isArray: true })
   async readByMonitorIdQuery(

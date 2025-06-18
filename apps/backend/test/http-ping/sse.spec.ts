@@ -54,7 +54,7 @@ describe('Http Ping (SSE)', () => {
         clusterId: setupA.cluster.id,
         statusCode: 200,
         responseTimeMs: expect.any(Number),
-        message: 'OK',
+        message: undefined,
       });
     });
 
@@ -89,7 +89,7 @@ describe('Http Ping (SSE)', () => {
         httpMonitorId: monitorA.id,
         statusCode: 200,
         responseTimeMs: expect.any(Number),
-        message: 'OK',
+        message: undefined,
       });
       expect(results[1].data).toMatchObject({
         httpMonitorId: monitorA.id,

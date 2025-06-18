@@ -47,19 +47,37 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: ./restore
 
-      - name: Extract and Validate Backup
+      - name: Decrypt and Extract Backup
         run: |
           cd restore
 
-          # Find the backup file
+          # Find the backup file (encrypted or unencrypted)
+          ENCRYPTED_FILE=$(find . -name "clickhouse_backup_dev_*.tar.gz.enc" | head -1)
           BACKUP_FILE=$(find . -name "clickhouse_backup_dev_*.tar.gz" | head -1)
 
-          if [ -z "$BACKUP_FILE" ]; then
+          if [ -n "$ENCRYPTED_FILE" ]; then
+            echo "Found encrypted backup file: $ENCRYPTED_FILE"
+            
+            # Make script executable
+            chmod +x ../.github/scripts/decrypt-backup.sh
+            
+            # Decrypt the backup
+            DECRYPTED_FILE="${ENCRYPTED_FILE%.enc}"
+            echo "🔓 Decrypting backup..."
+            ../.github/scripts/decrypt-backup.sh \
+              "$ENCRYPTED_FILE" \
+              "$DECRYPTED_FILE" \
+              "${{ secrets.BACKEND_BACKUP_ARTIFACT_KEY }}"
+            
+            BACKUP_FILE="$DECRYPTED_FILE"
+          elif [ -n "$BACKUP_FILE" ]; then
+            echo "Found unencrypted backup file: $BACKUP_FILE (backward compatibility)"
+          else
             echo "❌ No backup file found in artifact"
             exit 1
           fi
 
-          echo "Found backup file: $BACKUP_FILE"
+          echo "Using backup file: $BACKUP_FILE"
 
           # Extract backup
           tar -xzf "$BACKUP_FILE"
@@ -118,7 +136,6 @@ jobs:
           while IFS=$'\t' read -r database table engine; do
             if [ "$database" = "default" ] && [ "$table" != "tables_list" ]; then
               echo "🔧 Restoring table: $table"
-              
               # Create table schema
               if [ -f "backup/${table}_schema.sql" ]; then
                 echo "Creating schema for table: $table"
@@ -133,7 +150,6 @@ jobs:
                 echo "⚠️ Schema file not found for table: $table"
                 continue
               fi
-              
               # Restore data if data file exists
               if [ -f "backup/${table}_data.native" ]; then
                 echo "Restoring data for table: $table"

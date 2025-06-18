@@ -36,7 +36,7 @@
 
   const isSettingUp = $derived(
     page.url.pathname.includes('/setup') ||
-    page.url.pathname.includes('/configure'),
+      page.url.pathname.includes('/configure'),
   );
 
   $effect(() => {
@@ -62,18 +62,16 @@
     />
 
     {#if hasLogging || hasMetrics || hasMonitoring}
-      <div
-        class="z-20 mr-auto flex items-center gap-2 sm:ml-auto sm:mr-0"
-      >
+      <div class="z-20 mr-auto flex items-center gap-2 sm:ml-auto sm:mr-0">
         {#if !hasLogging && projectsState.ready}
           <button
             in:fly={{ y: -2, duration: 100 }}
             onclick={() => {
-							goto(
-								`/app/clusters/${clusterId}/configure/logging?project_id=${page.url.searchParams.get('project_id')}`,
-							);
-						}}
-            class="btn btn-secondary btn-sm gap-1 opacity-90"
+              goto(
+                `/app/clusters/${clusterId}/configure/logging?project_id=${page.url.searchParams.get('project_id')}`,
+              );
+            }}
+            class="btn btn-secondary btn-xs sm:btn-sm gap-1 opacity-90"
           >
             Setup logging
             <ArrowRightIcon class="h-4 w-4" />
@@ -84,11 +82,11 @@
           <button
             in:fly={{ y: -2, duration: 100 }}
             onclick={() => {
-							goto(
-								`/app/clusters/${clusterId}/configure/metrics?project_id=${page.url.searchParams.get('project_id')}`,
-							);
-						}}
-            class="btn btn-secondary btn-sm gap-1 opacity-90"
+              goto(
+                `/app/clusters/${clusterId}/configure/metrics?project_id=${page.url.searchParams.get('project_id')}`,
+              );
+            }}
+            class="btn btn-secondary btn-xs sm:btn-sm gap-1 opacity-90"
           >
             Setup metrics
             <ArrowRightIcon class="h-4 w-4" />
@@ -97,15 +95,16 @@
 
         {#if userState.hasEarlyAccess && !hasMonitoring && !isOnDemoDashboard && clustersState.ready}
           <SetupMonitoringButton
-            class="btn btn-secondary btn-sm gap-1 opacity-90"
+            class="btn btn-secondary btn-xs sm:btn-sm gap-1 opacity-90"
             canAddMore={true}
             onSubmit={(url) => {
-						goto(
-							`/app/clusters/${clusterId}/configure/monitoring?project_id=${page.url.searchParams.get(
-								'project_id',
-							)}&url=${encodeURIComponent(url)}`,
-						);
-					}}>
+              goto(
+                `/app/clusters/${clusterId}/configure/monitoring?project_id=${page.url.searchParams.get(
+                  'project_id',
+                )}&url=${encodeURIComponent(url)}`,
+              );
+            }}
+          >
             Setup monitoring
             <ArrowRightIcon class="h-4 w-4" />
           </SetupMonitoringButton>

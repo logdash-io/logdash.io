@@ -6,73 +6,82 @@ import type { Cluster } from '../domain/cluster';
 
 // todo: divide api calls responsibility from state
 class ClustersState {
-	private _clusters = $state<Record<Cluster['id'], Cluster>>({});
-	private _initialized = $state(false);
-	private syncConnection: Source | null = null;
+  private _clusters = $state<Record<Cluster['id'], Cluster>>({});
+  private _initialized = $state(false);
+  private syncConnection: Source | null = null;
+  private _requestStatus = $state<'deleting' | 'updating'>(null);
 
-	get clusters(): Cluster[] {
-		return Object.values(this._clusters).sort((a, b) => {
-			return a.id > b.id ? 1 : -1;
-		});
-	}
+  get isUpdating(): boolean {
+    return this._requestStatus === 'updating';
+  }
 
-	get allClustersProjectsCount(): number {
-		return this.clusters.reduce((acc, cluster) => {
-			return acc + (cluster.projects?.length || 0);
-		}, 0);
-	}
+  get isDeleting(): boolean {
+    return this._requestStatus === 'deleting';
+  }
 
-	get ready(): boolean {
-		return this._initialized;
-	}
+  get clusters(): Cluster[] {
+    return Object.values(this._clusters).sort((a, b) => {
+      return a.id > b.id ? 1 : -1;
+    });
+  }
 
-	clusterName(id: string): string {
-		return this._clusters[id]?.name || '';
-	}
+  get allClustersProjectsCount(): number {
+    return this.clusters.reduce((acc, cluster) => {
+      return acc + (cluster.projects?.length || 0);
+    }, 0);
+  }
 
-	set(clusters: Cluster[]): void {
-		this._clusters = arrayToObject(clusters, 'id');
-		this._initialized = true;
-	}
+  get ready(): boolean {
+    return this._initialized;
+  }
 
-	create(name: string): Promise<Cluster['id']> {
-		return fetch(`/app/api/clusters`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({ name }),
-		})
-			.then((response) => response.json())
-			.then((cluster) => {
-				this._clusters[cluster.id] = cluster;
-				return cluster.id;
-			});
-	}
+  clusterName(id: string): string {
+    return this._clusters[id]?.name || '';
+  }
 
-	async update(id: string, update: Partial<Cluster>): Promise<void> {
-		const existingCluster = this._clusters[id];
+  set(clusters: Cluster[]): void {
+    this._clusters = arrayToObject(clusters, 'id');
+    this._initialized = true;
+  }
 
-		if (!existingCluster) {
-			throw new Error(`Cluster with id ${id} does not exist`);
-		}
+  create(name: string): Promise<Cluster['id']> {
+    return fetch(`/app/api/clusters`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name }),
+    })
+      .then((response) => response.json())
+      .then((cluster) => {
+        this._clusters[cluster.id] = cluster;
+        return cluster.id;
+      });
+  }
 
-		if (existingCluster.name === update.name) {
-			return Promise.resolve();
-		}
+  async update(id: string, update: Partial<Cluster>): Promise<void> {
+    const existingCluster = this._clusters[id];
 
-		this._clusters[id].name = update.name;
+    if (!existingCluster) {
+      throw new Error(`Cluster with id ${id} does not exist`);
+    }
 
-		await fetch(`/app/api/clusters/${id}`, {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(update),
-		}).catch((error) => {
-			toast.error(`Failed to update cluster ${id}: ${error.message}`);
-		});
-	}
+    if (existingCluster.name === update.name) {
+      return Promise.resolve();
+    }
+
+    this._clusters[id].name = update.name;
+
+    await fetch(`/app/api/clusters/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(update),
+    }).finally(() => {
+      this._requestStatus = null;
+    });
+  }
 }
 
 export const clustersState = new ClustersState();

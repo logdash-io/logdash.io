@@ -9,6 +9,7 @@
   import ClusterCreatorTile from './ClusterCreatorTile.svelte';
   import { type Cluster } from '../../domain/cluster.js';
   import queryString from 'query-string';
+  import ClusterContextMenu from '../ClusterContextMenu.svelte';
 
   type Props = {
     canCreate: boolean;
@@ -61,25 +62,7 @@
           {cluster.name}
         </h5>
 
-        <button
-          onclick={(e) => {
-            e.stopPropagation();
-            const newName = prompt('Enter new project name', cluster.name);
-            if (newName) {
-              clustersState
-                .update(cluster.id, {
-                  name: newName,
-                })
-                .then(() => {
-                  toast.success('Project name updated!');
-                });
-            }
-          }}
-          class="btn btn-circle gap-1 text-white"
-          data-posthog-id="cluster-settings-button"
-        >
-          <SettingsIcon class="h-5 w-5" />
-        </button>
+        <ClusterContextMenu {cluster} />
       </div>
 
       {#if cluster.projects?.length}

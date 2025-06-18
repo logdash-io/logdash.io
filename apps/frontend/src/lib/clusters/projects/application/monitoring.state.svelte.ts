@@ -86,6 +86,12 @@ class MonitoringState {
     return this._getSortedPings(this._previewedMonitors[url]);
   }
 
+  load(clusterId: string): void {
+    logger.debug('loading monitors...');
+    this._loadingPage = true;
+    this._fetchMonitors(clusterId);
+  }
+
   isPreviewHealthy(url: string): boolean {
     const last = <T>(arr: T[]): T | undefined => {
       if (!arr || arr.length === 0) {

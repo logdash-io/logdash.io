@@ -8,17 +8,21 @@ import { ProjectReadModule } from '../../../project/read/project-read.module';
 import { NotificationChannelReadModule } from '../../../notification-channel/read/notification-channel-read.module';
 import { HttpMonitorReadService } from '../../../http-monitor/read/http-monitor-read.service';
 import { HttpMonitorReadModule } from '../../../http-monitor/read/http-monitor-read.module';
+import { PublicDashboardReadService } from '../../../public-dashboard/read/public-dashboard-read.service';
+import { PublicDashboardReadModule } from '../../../public-dashboard/read/public-dashboard-read.module';
 
 const CLUSTER_ID_PARAM_NAME = 'clusterId';
 const PROJECT_ID_PARAM_NAME = 'projectId';
 const NOTIFICATION_CHANNEL_ID_PARAM_NAME = 'notificationChannelId';
 const HTTP_MONITOR_ID_PARAM_NAME = 'httpMonitorId';
+const PUBLIC_DASHBOARD_ID_PARAM_NAME = 'publicDashboardId';
 
 export const ClusterMemberGuardImports = [
   ClusterReadModule,
   ProjectReadModule,
   NotificationChannelReadModule,
   HttpMonitorReadModule,
+  PublicDashboardReadModule,
 ];
 
 @Injectable()
@@ -28,6 +32,7 @@ export class ClusterMemberGuard implements CanActivate {
     private readonly projectReadCachedService: ProjectReadCachedService,
     private readonly notificationChannelReadService: NotificationChannelReadService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
+    private readonly publicDashboardReadService: PublicDashboardReadService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -39,8 +44,12 @@ export class ClusterMemberGuard implements CanActivate {
     const projectIdFromParams = request.params[PROJECT_ID_PARAM_NAME];
     const notificationChannelIdFromParams = request.params[NOTIFICATION_CHANNEL_ID_PARAM_NAME];
     const httpMonitorIdFromParams = request.params[HTTP_MONITOR_ID_PARAM_NAME];
+    const publicDashboardIdFromParams = request.params[PUBLIC_DASHBOARD_ID_PARAM_NAME];
 
-    if (projectIdFromParams === getEnvConfig().demo.projectId) {
+    if (
+      projectIdFromParams === getEnvConfig().demo.projectId ||
+      clusterIdFromParams === getEnvConfig().demo.clusterId
+    ) {
       return true;
     }
 
@@ -52,10 +61,11 @@ export class ClusterMemberGuard implements CanActivate {
       !clusterIdFromParams &&
       !projectIdFromParams &&
       !notificationChannelIdFromParams &&
-      !httpMonitorIdFromParams
+      !httpMonitorIdFromParams &&
+      !publicDashboardIdFromParams
     ) {
       throw new ForbiddenException(
-        'Cluster ID, project ID, communication channel ID or http monitor ID not provided',
+        'Cluster ID, project ID, communication channel ID, http monitor ID or public dashboard ID not provided',
       );
     }
 
@@ -83,6 +93,13 @@ export class ClusterMemberGuard implements CanActivate {
     if (httpMonitorIdFromParams) {
       return this.checkForHttpMonitorId({
         httpMonitorId: httpMonitorIdFromParams,
+        userId,
+      });
+    }
+
+    if (publicDashboardIdFromParams) {
+      return this.checkForPublicDashboardId({
+        publicDashboardId: publicDashboardIdFromParams,
         userId,
       });
     }
@@ -162,6 +179,28 @@ export class ClusterMemberGuard implements CanActivate {
 
     const isMember = await this.clusterReadCachedService.userIsMember({
       clusterId: project.clusterId,
+      userId: dto.userId,
+    });
+
+    if (!isMember) {
+      throw new ForbiddenException('User is not a member of this cluster');
+    }
+
+    return true;
+  }
+
+  private async checkForPublicDashboardId(dto: {
+    publicDashboardId: string;
+    userId: string;
+  }): Promise<boolean> {
+    const publicDashboard = await this.publicDashboardReadService.readById(dto.publicDashboardId);
+
+    if (!publicDashboard) {
+      throw new ForbiddenException('Public dashboard not found');
+    }
+
+    const isMember = await this.clusterReadCachedService.userIsMember({
+      clusterId: publicDashboard.clusterId,
       userId: dto.userId,
     });
 

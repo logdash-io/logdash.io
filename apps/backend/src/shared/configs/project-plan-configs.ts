@@ -28,6 +28,7 @@ export interface ProjectPlanConfig {
 
 export interface ProjectPlanConfigs {
   [ProjectTier.Free]: ProjectPlanConfig;
+  [ProjectTier.Contributor]: ProjectPlanConfig;
   [ProjectTier.EarlyBird]: ProjectPlanConfig;
   [ProjectTier.Admin]: ProjectPlanConfig;
 }
@@ -54,7 +55,31 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
       },
     },
     httpMonitors: {
-      maxNumberOfMonitors: 2,
+      maxNumberOfMonitors: 5,
+    },
+  },
+  [ProjectTier.Contributor]: {
+    logs: {
+      keepLastXLogs: 10_000,
+      rateLimitPerHour: 50_000,
+    },
+    logMetrics: {
+      keepGranularitiesForHours: {
+        [MetricGranularity.Minute]: 12, // 12 hours
+        [MetricGranularity.Hour]: 7 * 24, // 7 days
+        [MetricGranularity.Day]: 30 * 24, // 30 days
+      },
+    },
+    metrics: {
+      maxMetricsRegisterEntries: 10,
+      keepGranularitiesForHours: {
+        [MetricGranularity.Minute]: 12, // 12 hours
+        [MetricGranularity.Hour]: 7 * 24, // 7 days
+        [MetricGranularity.Day]: 30 * 24, // 30 days
+      },
+    },
+    httpMonitors: {
+      maxNumberOfMonitors: 5,
     },
   },
   [ProjectTier.EarlyBird]: {
@@ -78,7 +103,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
       },
     },
     httpMonitors: {
-      maxNumberOfMonitors: 10,
+      maxNumberOfMonitors: 5,
     },
   },
   [ProjectTier.Admin]: {

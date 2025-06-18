@@ -18,7 +18,7 @@ describe('ClusterCoreController (writes)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  describe('POST /users/me/clusters - create cluster', () => {
+  describe('POST /users/me/clusters', () => {
     it('creates new cluster', async () => {
       // given
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -37,14 +37,13 @@ describe('ClusterCoreController (writes)', () => {
       expect(entity?.name).toBe('my cluster');
     });
 
-    it('throws error when user tries to create more than 100 clusters', async () => {
+    it('throws error when user tries to create more than 5 clusters', async () => {
       // given
-      const { token, user } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
       const userId = user.id;
 
-      // create 99 clusters (100th is created in the setup)
-      const clusters = Array.from({ length: 99 }, (_, index) => ({
+      // create 4 clusters (5th is created in the setup)
+      const clusters = Array.from({ length: 4 }, (_, index) => ({
         _id: new Types.ObjectId(),
         name: `Cluster ${index}`,
         creatorId: userId,
@@ -62,24 +61,21 @@ describe('ClusterCoreController (writes)', () => {
         .expect(400);
 
       // then
-      expect(response.body.message).toBe(
-        'Cannot create more clusters. Maximum limit of 100 clusters per user has been reached.',
-      );
+      expect(response.body.message).toBe('Cannot create more clusters. Maximum limit reached.');
 
       // Verify no new cluster was created
       const clusterCount = await bootstrap.models.clusterModel.countDocuments({
         creatorId: userId,
       });
 
-      expect(clusterCount).toBe(100);
+      expect(clusterCount).toBe(5);
     });
   });
 
-  describe('PUT /clusters/:clusterId - update cluster', () => {
+  describe('PUT /clusters/:clusterId', () => {
     it('updates cluster name', async () => {
       // given
-      const { token, user } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
       const userId = user.id;
 
       const cluster = await bootstrap.models.clusterModel.create({
@@ -102,15 +98,13 @@ describe('ClusterCoreController (writes)', () => {
       // then
       expect(response.body.name).toBe('Updated Cluster Name');
 
-      const updatedCluster =
-        await bootstrap.models.clusterModel.findById(clusterId);
+      const updatedCluster = await bootstrap.models.clusterModel.findById(clusterId);
       expect(updatedCluster?.name).toBe('Updated Cluster Name');
     });
 
     it('throws error when user is not a member of the cluster', async () => {
       // given
-      const { user: creator } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { user: creator } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { token: nonMemberToken, user: nonMember } =
         await bootstrap.utils.generalUtils.setupAnonymous();
 
@@ -133,9 +127,73 @@ describe('ClusterCoreController (writes)', () => {
         .expect(403); // Forbidden due to ClusterMemberGuard
 
       // Verify name wasn't changed
-      const unchangedCluster =
-        await bootstrap.models.clusterModel.findById(clusterId);
+      const unchangedCluster = await bootstrap.models.clusterModel.findById(clusterId);
       expect(unchangedCluster?.name).toBe('Test Cluster');
+    });
+  });
+
+  describe('DELETE /clusters/:clusterId', () => {
+    it('deletes cluster and connected projects and public dashboards', async () => {
+      // given
+      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const userId = user.id;
+
+      const cluster = await bootstrap.models.clusterModel.create({
+        _id: new Types.ObjectId(),
+        name: 'Test Cluster',
+        creatorId: userId,
+        members: [userId],
+        tier: ClusterTier.Free,
+      });
+
+      const project = await bootstrap.utils.projectUtils.createDefaultProject({
+        clusterId: cluster._id.toString(),
+      });
+
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: project.id,
+        token,
+      });
+      const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+        clusterId: cluster._id.toString(),
+        httpMonitorsIds: [monitor.id],
+        token,
+      });
+
+      const projectsBeforeRemoval = await bootstrap.models.projectModel.find({
+        clusterId: cluster._id.toString(),
+      });
+
+      const publicDashboardsBeforeRemoval = await bootstrap.models.publicDashboardModel.find({
+        clusterId: cluster._id.toString(),
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster._id.toString()}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toEqual(200);
+
+      const projectsAfterRemoval = await bootstrap.models.projectModel.find({
+        clusterId: cluster._id.toString(),
+      });
+
+      const clustersAfterRemoval = await bootstrap.models.clusterModel.find({
+        _id: new Types.ObjectId(cluster._id.toString()),
+      });
+
+      const publicDashboardsAfterRemoval = await bootstrap.models.publicDashboardModel.find({
+        clusterId: cluster._id.toString(),
+      });
+
+      expect(projectsBeforeRemoval).toHaveLength(1);
+      expect(publicDashboardsBeforeRemoval).toHaveLength(1);
+
+      expect(projectsAfterRemoval).toHaveLength(0);
+      expect(clustersAfterRemoval).toHaveLength(0);
+      expect(publicDashboardsAfterRemoval).toHaveLength(0);
     });
   });
 });

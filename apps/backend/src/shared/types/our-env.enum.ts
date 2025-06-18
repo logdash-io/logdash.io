@@ -1,7 +1,6 @@
 require('dotenv').config();
 
 export enum OurEnv {
-  Local = 'local',
   Dev = 'dev',
   Prod = 'prod',
 }
