@@ -22,7 +22,6 @@ export class StripePaymentSucceededHandler {
     });
 
     if (!this.eventIsValid(event)) {
-      console.log('Event is invalid');
       return;
     }
 
@@ -72,7 +71,6 @@ export class StripePaymentSucceededHandler {
       this.logger.error(`[STRIPE] Invalid event type for payment succeeded handler`, {
         event,
       });
-      console.log(1);
       return false;
     }
 
@@ -80,7 +78,6 @@ export class StripePaymentSucceededHandler {
       this.logger.error(`[STRIPE] Price is missing`, {
         event,
       });
-      console.log(2);
 
       return false;
     }
@@ -89,7 +86,6 @@ export class StripePaymentSucceededHandler {
       this.logger.error(`[STRIPE] Customer email is missing`, {
         event,
       });
-      console.log(3);
 
       return false;
     }
@@ -98,7 +94,6 @@ export class StripePaymentSucceededHandler {
       this.logger.error(`[STRIPE] Customer is missing or not a string`, {
         event,
       });
-      console.log(4);
 
       return false;
     }

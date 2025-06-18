@@ -6,6 +6,7 @@ import { UserReadModule } from '../../user/read/user-read.module';
 import { ClusterFeaturesModule } from '../features/cluster-features.module';
 import { ClusterMemberGuardImports } from '../guards/cluster-member/cluster-member.guard';
 import { ClusterRemovalModule } from '../removal/cluster-removal.module';
+import { ClusterCoreService } from './cluster-core.service';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ClusterRemovalModule } from '../removal/cluster-removal.module';
     ClusterRemovalModule,
     ...ClusterMemberGuardImports,
   ],
+  providers: [ClusterCoreService],
   controllers: [ClusterCoreController],
   exports: [ClusterFeaturesModule],
 })

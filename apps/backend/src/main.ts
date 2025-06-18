@@ -4,8 +4,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { getEnvConfig } from './shared/configs/env-configs';
 import * as basicAuth from 'express-basic-auth';
-import { TelegramOptionsValidator } from './notification-channel/core/types/telegram-options.type';
-import { WebhookOptionsValidator } from './notification-channel/core/types/webhook-options.type';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });

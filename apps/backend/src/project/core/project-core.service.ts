@@ -5,25 +5,18 @@ import { UserTierChangedEvent } from '../../user/events/definitions/user-tier-ch
 import { ProjectWriteService } from '../write/project-write.service';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
 import { ProjectTier } from './enums/project-tier.enum';
-import { ProjectReadService } from '../read/project-read.service';
-import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
-import { clusterTierFromProjectTier } from '../../cluster/core/enums/cluster-tier.enum';
-import { Logger } from '@logdash/js-sdk';
 
 @Injectable()
 export class ProjectCoreService {
-  constructor(
-    private readonly projectWriteService: ProjectWriteService,
-    private readonly projectReadService: ProjectReadService,
-    private readonly clusterWriteService: ClusterWriteService,
-    private readonly logger: Logger,
-  ) {}
+  constructor(private readonly projectWriteService: ProjectWriteService) {}
 
   @OnEvent(UserEvents.UserTierChanged)
   public async updateProjectsTiers(payload: UserTierChangedEvent): Promise<void> {
     const newProjectTier = {
       [UserTier.Free]: ProjectTier.Free,
       [UserTier.EarlyBird]: ProjectTier.EarlyBird,
+      [UserTier.Contributor]: ProjectTier.Contributor,
+      [UserTier.Admin]: ProjectTier.Admin,
     }[payload.newTier];
 
     await this.projectWriteService.updateTiersByCreatorId(payload.userId, newProjectTier);
