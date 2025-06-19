@@ -2,36 +2,95 @@
   import { goto } from '$app/navigation';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
-  import { isDev } from '$lib/shared/utils/is-dev.util.js';
   import {
-    CopyIcon,
     PenLineIcon,
+    PlusIcon,
     SettingsIcon,
     Trash2Icon,
   } from 'lucide-svelte';
   import { clustersState } from '../application/clusters.state.svelte.js';
+  import { page } from '$app/state';
+  import { projectsState } from '$lib/clusters/projects/application/projects.state.svelte.js';
+  import SetupMonitoringButton from '$lib/clusters/projects/ui/presentational/SetupMonitoringButton.svelte';
+  import { Feature } from '$lib/shared/types.js';
+  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
+  import { fly } from 'svelte/transition';
 
-  const { cluster } = $props();
+  type Props = {
+    clusterId: string;
+  };
+  const { clusterId }: Props = $props();
+  const cluster = $derived(clustersState.get(clusterId));
+  const projectId = $derived(page.url.searchParams.get('project_id'));
+
+  const hasLogging = $derived(
+    projectsState.hasFeature(projectId, Feature.LOGGING),
+  );
+  const hasMetrics = $derived(
+    projectsState.hasFeature(projectId, Feature.METRICS),
+  );
+  const hasMonitoring = $derived(
+    projectsState.hasFeature(projectId, Feature.MONITORING),
+  );
 </script>
 
 {#snippet menu(close: () => void)}
   <ul
-    class="menu dropdown-content text-secondary bg-base-100 rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
+    class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
-    {#if isDev()}
-      <li>
-        <a
-          onclick={() => {
-            goto(`/app/clusters/${cluster.id}/configure/public-dashboard`);
-            close();
-          }}
-          class="whitespace-nowrap"
-        >
-          Configure public dashboard
+    {#if projectId}
+      {#if !hasLogging && projectsState.ready}
+        <li class="py-0.5">
+          <button
+            in:fly={{ y: -2, duration: 100 }}
+            onclick={() => {
+              goto(
+                `/app/clusters/${clusterId}/configure/logging?project_id=${page.url.searchParams.get('project_id')}`,
+              );
+            }}
+            class="flex w-full items-center justify-between"
+          >
+            Add logging
+            <PlusIcon class="h-4 w-4" />
+          </button>
+        </li>
+      {/if}
 
-          <CopyIcon class="ml-1.5 h-3.5 w-3.5" />
-        </a>
-      </li>
+      {#if !hasMetrics && projectsState.ready}
+        <li class="py-0.5">
+          <button
+            in:fly={{ y: -2, duration: 100 }}
+            onclick={() => {
+              goto(
+                `/app/clusters/${clusterId}/configure/metrics?project_id=${page.url.searchParams.get('project_id')}`,
+              );
+            }}
+            class="flex w-full items-center justify-between"
+          >
+            Add metrics
+            <PlusIcon class="h-4 w-4" />
+          </button>
+        </li>
+      {/if}
+
+      {#if userState.hasEarlyAccess && !hasMonitoring && clustersState.ready}
+        <li class="py-0.5">
+          <SetupMonitoringButton
+            class="flex w-full items-center justify-between"
+            canAddMore={true}
+            onSubmit={(url) => {
+              goto(
+                `/app/clusters/${clusterId}/configure/monitoring?project_id=${page.url.searchParams.get(
+                  'project_id',
+                )}&url=${encodeURIComponent(url)}`,
+              );
+            }}
+          >
+            Add monitoring
+            <PlusIcon class="h-4 w-4" />
+          </SetupMonitoringButton>
+        </li>
+      {/if}
     {/if}
 
     <li>
@@ -109,19 +168,13 @@
   </ul>
 {/snippet}
 
-<Tooltip
-  align="left"
-  content={menu}
-  placement="bottom"
-  trigger="click"
-  interactive={true}
->
+<Tooltip content={menu} interactive={true} placement="bottom">
   <button
+    class="btn btn-circle ld-card-base gap-1"
+    data-posthog-id="cluster-settings-button"
     onclick={(e) => {
       e.stopPropagation();
     }}
-    class="btn btn-circle gap-1 text-white"
-    data-posthog-id="cluster-settings-button"
   >
     <SettingsIcon class="h-5 w-5" />
   </button>

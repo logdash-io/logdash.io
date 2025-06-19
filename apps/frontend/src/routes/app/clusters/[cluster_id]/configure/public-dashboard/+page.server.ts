@@ -14,13 +14,11 @@ export const load = async ({
     throw new Error('Cluster id is required');
   }
 
-  // Get existing public dashboards for this cluster
   let dashboards = await logdashAPI.get_public_dashboards(
     clusterId,
     get_access_token(cookies),
   );
 
-  // If no dashboards exist, create one
   if (!dashboards || dashboards.length === 0) {
     const newDashboard = await logdashAPI.create_public_dashboard(
       clusterId,

@@ -9,6 +9,10 @@ import { GithubLoginBody } from './dto/github-login.body';
 import { TokenResponse } from '../../shared/responses/token.response';
 import { GithubAuthDataService } from './github-auth-data.service';
 import { Logger, Metrics } from '@logdash/js-sdk';
+import { AuditLog } from '../../user-audit-log/write/audit-log-write.service';
+import { AuditLogUserAction } from '../../user-audit-log/core/enums/audit-log-actions.enum';
+import { Actor } from '../../user-audit-log/core/enums/actor.enum';
+import { RelatedDomain } from '../../user-audit-log/core/enums/related-domain.enum';
 
 @Injectable()
 export class GithubAuthLoginService {
@@ -20,6 +24,7 @@ export class GithubAuthLoginService {
     private readonly logger: Logger,
     private readonly authGithubDataService: GithubAuthDataService,
     private readonly metrics: Metrics,
+    private readonly auditLog: AuditLog,
   ) {}
 
   public async login(dto: GithubLoginBody): Promise<TokenResponse> {
@@ -68,6 +73,14 @@ export class GithubAuthLoginService {
 
       this.metrics.mutate('loginGithub', 1);
 
+      void this.auditLog.create({
+        userId: user.id,
+        actor: Actor.User,
+        action: AuditLogUserAction.GithubLogin,
+        relatedDomain: RelatedDomain.User,
+        relatedEntityId: user.id,
+      });
+
       return {
         token: await this.jwtService.sign({ id: user.id }),
       };
@@ -76,6 +89,14 @@ export class GithubAuthLoginService {
     this.logger.log(`Logged in existing user`, { email, userId: user.id });
 
     this.metrics.mutate('loginGithub', 1);
+
+    void this.auditLog.create({
+      userId: user.id,
+      actor: Actor.User,
+      action: AuditLogUserAction.GithubLogin,
+      relatedDomain: RelatedDomain.User,
+      relatedEntityId: user.id,
+    });
 
     return {
       token: await this.jwtService.sign({ id: user.id }),

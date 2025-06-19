@@ -1,45 +1,50 @@
 import type { UserTier } from '$lib/shared/types.js';
 
 type GranularityHours = {
-	minute: number;
-	hour: number;
-	day: number;
+  minute: number;
+  hour: number;
+  day: number;
 };
 
 type ProjectPlanLogConfig = {
-	keepLastXLogs: number;
-	rateLimitPerHour: number;
+  keepLastXLogs: number;
+  rateLimitPerHour: number;
 };
 
 type ProjectPlanLogMetricsConfig = {
-	keepGranularitiesForHours: GranularityHours;
+  keepGranularitiesForHours: GranularityHours;
 };
 
 type ProjectPlanMetricsConfig = {
-	maxMetricsRegisterEntries: number;
-	keepGranularitiesForHours: GranularityHours;
+  maxMetricsRegisterEntries: number;
+  keepGranularitiesForHours: GranularityHours;
+};
+
+type ProjectPlanHttpMonitorsConfig = {
+  maxNumberOfMonitors: number;
 };
 
 type ProjectPlan = {
-	logs: ProjectPlanLogConfig;
-	logMetrics: ProjectPlanLogMetricsConfig;
-	metrics: ProjectPlanMetricsConfig;
+  logs: ProjectPlanLogConfig;
+  logMetrics: ProjectPlanLogMetricsConfig;
+  metrics: ProjectPlanMetricsConfig;
+  httpMonitors: ProjectPlanHttpMonitorsConfig;
 };
 
 type UserPlanProjectsConfig = {
-	maxNumberOfProjects: number;
+  maxNumberOfProjects: number;
 };
 
-type UserPlanHttpMonitorsConfig = {
-	maxNumberOfMonitors: number;
+type UserPlanPublicDashboardsConfig = {
+  maxNumberOfPublicDashboards: number;
 };
 
 type UserPlan = {
-	projects: UserPlanProjectsConfig;
-	httpMonitors: UserPlanHttpMonitorsConfig;
+  projects: UserPlanProjectsConfig;
+  publicDashboards: UserPlanPublicDashboardsConfig;
 };
 
 export type ExposedConfig = {
-	projectPlanConfigs: Record<UserTier, ProjectPlan>;
-	userPlanConfigs: Record<UserTier, UserPlan>;
+  projectPlanConfigs: Record<UserTier, ProjectPlan>;
+  userPlanConfigs: Record<UserTier, UserPlan>;
 };

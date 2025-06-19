@@ -14,6 +14,6 @@ export const load: PageServerLoad = async ({ params }) => {
     };
   } catch (err) {
     console.error('Failed to load public dashboard:', err);
-    throw error(404, 'Dashboard not found');
+    error(404, 'Dashboard not found');
   }
 };

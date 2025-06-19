@@ -5,10 +5,17 @@ import type { Cluster } from '../domain/cluster';
 
 // todo: divide api calls responsibility from state
 class ClustersState {
-  private _clusters = $state<Record<Cluster['id'], Cluster>>({});
   private _initialized = $state(false);
   private syncConnection: Source | null = null;
   private _requestStatus = $state<'deleting' | 'updating'>(null);
+
+  private _clusters = $state<Record<Cluster['id'], Cluster>>({});
+
+  get clusters(): Cluster[] {
+    return Object.values(this._clusters).sort((a, b) => {
+      return a.id > b.id ? 1 : -1;
+    });
+  }
 
   get isUpdating(): boolean {
     return this._requestStatus === 'updating';
@@ -18,10 +25,14 @@ class ClustersState {
     return this._requestStatus === 'deleting';
   }
 
-  get clusters(): Cluster[] {
-    return Object.values(this._clusters).sort((a, b) => {
-      return a.id > b.id ? 1 : -1;
-    });
+  get publishedDashboardsCount(): number {
+    return this.clusters.reduce((acc, cluster) => {
+      return (
+        acc +
+        (cluster.publicDashboards?.filter((dashboard) => dashboard.isPublic)
+          ?.length || 0)
+      );
+    }, 0);
   }
 
   get allClustersProjectsCount(): number {
@@ -32,6 +43,10 @@ class ClustersState {
 
   get ready(): boolean {
     return this._initialized;
+  }
+
+  get(id: string): Cluster | undefined {
+    return this._clusters[id];
   }
 
   clusterName(id: string): string {
@@ -85,7 +100,7 @@ class ClustersState {
   async delete(id: string): Promise<void> {
     this._requestStatus = 'deleting';
     try {
-      // todo: validate why it returns false positive on delete
+      // todo: validate why it returns false positive on error
       await fetch(`/app/api/clusters/${id}`, {
         method: 'DELETE',
       });

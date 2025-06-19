@@ -2,12 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
-  import {
-    MoreVerticalIcon,
-    CopyIcon,
-    PenLineIcon,
-    Trash2Icon,
-  } from 'lucide-svelte';
+  import { CopyIcon, MoreVerticalIcon, PenLineIcon, Trash2Icon } from 'lucide-svelte';
   import { projectsState } from '../../application/projects.state.svelte.js';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
 
@@ -16,7 +11,7 @@
 
 {#snippet menu(close: () => void)}
   <ul
-    class="menu dropdown-content text-secondary bg-base-100 rounded-box z-1 mt-1 w-fit whitespace-nowrap p-2 shadow"
+    class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 mt-1 w-fit whitespace-nowrap p-2 shadow"
   >
     <li>
       <a
@@ -103,17 +98,15 @@
 {/snippet}
 
 <Tooltip
-  align="left"
   content={menu}
-  placement="bottom"
-  trigger="click"
   interactive={true}
+  placement="bottom"
 >
   <div
-    tabindex="0"
-    role="button"
     class="btn btn-circle btn-transparent mr-0.5 aspect-square h-full w-fit shrink-0"
     onclick={(e) => e.stopPropagation()}
+    role="button"
+    tabindex="0"
   >
     <MoreVerticalIcon class="h-4 w-4 shrink-0" />
   </div>

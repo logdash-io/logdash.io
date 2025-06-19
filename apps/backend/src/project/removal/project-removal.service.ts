@@ -24,19 +24,19 @@ export class ProjectRemovalService {
     private readonly apiKeyWriteService: ApiKeyWriteService,
   ) {}
 
-  public async deleteProjectsByClusterId(clusterId: string): Promise<void> {
+  public async deleteProjectsByClusterId(clusterId: string, actorUserId?: string): Promise<void> {
     const projects = await this.projectReadService.readByClusterId(clusterId);
 
     for (const project of projects) {
-      await this.deleteProjectById(project.id);
+      await this.deleteProjectById(project.id, actorUserId);
     }
   }
 
-  public async deleteProjectById(projectId: string): Promise<void> {
+  public async deleteProjectById(projectId: string, actorUserId?: string): Promise<void> {
     this.logger.log(`Deleting project...`, {
       projectId,
     });
-    await this.projectWriteService.delete(projectId);
+    await this.projectWriteService.delete(projectId, actorUserId);
 
     this.logger.log(`Deleting logs for project...`, {
       projectId,
