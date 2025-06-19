@@ -7,7 +7,7 @@
   import { ExternalLinkIcon, LogOutIcon } from 'lucide-svelte';
   import type { PostHog } from 'posthog-js';
   import { getContext } from 'svelte';
-  import UpgradeButton from './UpgradeButton.svelte';
+  import UpgradeButton from '$lib/shared/upgrade/UpgradeButton.svelte';
 
   const posthog = getContext<PostHog>('posthog');
 </script>
@@ -27,7 +27,8 @@
             goto('/app/api/user/billing');
           }}
         >
-          Billing <ExternalLinkIcon class="inline h-4 w-4" />
+          Billing
+          <ExternalLinkIcon class="inline h-4 w-4" />
         </a>
       </li>
     {/if}
@@ -40,14 +41,15 @@
         }}
         href={RoutePath.LOGOUT}
       >
-        Logout <LogOutIcon class="inline h-4 w-4" />
+        Logout
+        <LogOutIcon class="inline h-4 w-4" />
       </a>
     </li>
   </ul>
 {/snippet}
 
-<Tooltip interactive={true} content={menu} placement="bottom" align="right">
-  <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+<Tooltip align="right" content={menu} interactive={true} placement="bottom">
+  <div class="btn btn-ghost btn-circle" role="button" tabindex="0">
     <div class="indicator">
       <span
         class={[

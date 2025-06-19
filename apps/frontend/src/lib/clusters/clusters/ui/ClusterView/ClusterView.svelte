@@ -47,7 +47,7 @@
     />
 
     {#if !isOnDemoDashboard}
-      <div class="ml-auto flex items-center gap-2">
+      <div class="sm:ml-auto w-full sm:w-fit flex items-center gap-2">
         <PublicDashboardContextMenu {clusterId} />
         <ClusterContextMenu {clusterId} />
       </div>

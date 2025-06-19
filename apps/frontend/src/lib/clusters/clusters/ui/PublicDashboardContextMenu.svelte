@@ -2,14 +2,11 @@
   import { goto } from '$app/navigation';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { isDev } from '$lib/shared/utils/is-dev.util.js';
-  import {
-    CopyIcon,
-    ExternalLinkIcon,
-    GanttChartSquareIcon,
-    SettingsIcon,
-  } from 'lucide-svelte';
+  import { CopyIcon, ExternalLinkIcon, GanttChartSquareIcon, SettingsIcon } from 'lucide-svelte';
   import { clustersState } from '../application/clusters.state.svelte.js';
-  import { publicDashboardManagerState } from '$lib/clusters/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
+  import {
+    publicDashboardManagerState,
+  } from '$lib/clusters/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 
   type Props = {
@@ -74,10 +71,10 @@
   </ul>
 {/snippet}
 
-<Tooltip content={menu} interactive={true} placement="bottom">
+<Tooltip class="w-full" content={menu} interactive={true} placement="bottom">
   <button
     class={[
-      'btn gap-1 rounded-full',
+      'btn gap-1 rounded-full w-full flex items-center justify-between',
       {
         'ld-card-base': !isPublic,
         'to-success/15 text-success border border-green-950 bg-gradient-to-br from-transparent':

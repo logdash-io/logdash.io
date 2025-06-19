@@ -1,15 +1,17 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import SkyBackground from '$lib/shared/ui/components/SkyBackground.svelte';
+  import SkyBackground from '$lib/shared/upgrade/SkyBackground.svelte';
   import { RocketIcon } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
-  import { backgroundState } from '../../application/background.state.svelte.js';
+  import { backgroundState } from '$lib/shared/upgrade/background.state.svelte.js';
   import type { ClassValue } from 'svelte/elements';
+  import type { Snippet } from 'svelte';
 
   type Props = {
     class?: ClassValue;
+    children?: Snippet;
   };
-  const { class: className = '' }: Props = $props();
+  const { class: className = '', children }: Props = $props();
 
   let isHovered = $state(false);
   let upgrading = $state(false);
@@ -25,23 +27,28 @@
   };
 </script>
 
-<div class={['btn-wrapper z-10 rounded-lg p-[1px]', className]}>
+<div class={['btn-wrapper w-full z-10 rounded-lg p-[1px]', className]}>
   <button
-    class="btn btn-neutral relative w-fit overflow-hidden"
-    onmouseenter={handleMouseEnter}
-    onmouseleave={handleMouseLeave}
+    class="btn btn-neutral relative w-full overflow-hidden"
     onclick={() => {
       upgrading = true;
       // todo: should it become part of the RoutePath enum?
       goto('/app/api/user/upgrade');
     }}
+    onmouseenter={handleMouseEnter}
+    onmouseleave={handleMouseLeave}
   >
     <div class="absolute h-full w-full overflow-hidden">
-      <SkyBackground density={20} speed={1} comets={false} />
+      <SkyBackground comets={false} density={20} speed={1} />
     </div>
 
-    <div class="relative z-10 flex w-full items-center gap-2">
-      Upgrade your plan
+    <div class="relative z-10 flex w-full justify-between items-center gap-2">
+      {#if children}
+        {@render children?.()}
+      {:else}
+        Upgrade your plan
+      {/if}
+
       {#if upgrading}
         <div
           in:fade={{ duration: 150 }}
@@ -64,8 +71,8 @@
   }
 
   .btn-wrapper {
-    --bg-background: transparent;
-    --clr-card: transparent;
+    --bg-background: #bada55;
+    --clr-card: rgba(255, 255, 255, 0.1);
     --clr-1: transparent;
     --clr-2: transparent;
     --clr-3: rgba(255, 255, 255, 0.4);
@@ -90,7 +97,7 @@
       var(--clr-1),
       var(--clr-2),
       var(--clr-3),
-      /* var(--clr-2), */ /* var(--clr-1), */ var(--clr-card)
+        /* var(--clr-2), */ /* var(--clr-1), */ var(--clr-card)
     );
     border-radius: inherit;
     animation: rotate 4.5s linear infinite;
