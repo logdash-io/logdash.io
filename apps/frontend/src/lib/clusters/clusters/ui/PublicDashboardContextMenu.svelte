@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
-  import { isDev } from '$lib/shared/utils/is-dev.util.js';
   import { CopyIcon, ExternalLinkIcon, GanttChartSquareIcon, SettingsIcon } from 'lucide-svelte';
   import { clustersState } from '../application/clusters.state.svelte.js';
   import {
@@ -25,7 +24,7 @@
   <ul
     class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
-    {#if isPublic && isDev()}
+    {#if isPublic}
       <li>
         <a
           href={dashboardUrl}
