@@ -139,8 +139,11 @@ export class ProjectCoreController {
   @UseGuards(ClusterMemberGuard)
   @Delete('projects/:projectId')
   @ApiResponse({ type: SuccessResponse })
-  public async delete(@Param('projectId') projectId: string): Promise<SuccessResponse> {
-    await this.projectRemovalService.deleteProjectById(projectId);
+  public async delete(
+    @Param('projectId') projectId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<SuccessResponse> {
+    await this.projectRemovalService.deleteProjectById(projectId, userId);
 
     return new SuccessResponse();
   }
