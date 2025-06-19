@@ -24,6 +24,7 @@ describe('Metrics (reads)', () => {
     const newMetricQueueingService = bootstrap.app.get(NewMetricQueueingService);
 
     const iterations = 10_000;
+    const numberOfProjects = 100;
     const limit = 5;
 
     const start = performance.now();
@@ -31,7 +32,7 @@ describe('Metrics (reads)', () => {
     await Promise.all(
       Array.from({ length: iterations }, async (_, i) => {
         try {
-          const projectId = `default${randomIntegerBetweenInclusive(0, 9)}`;
+          const projectId = `default${randomIntegerBetweenInclusive(0, numberOfProjects - 1)}`;
 
           await newMetricQueueingService.queueMetric({
             projectId,
@@ -69,8 +70,7 @@ describe('Metrics (reads)', () => {
 
     const grouped = groupBy(metrics, 'projectId');
 
-    console.log(Object.keys(grouped));
-    expect(Object.keys(grouped).length).toBe(10);
+    expect(Object.keys(grouped).length).toBe(numberOfProjects);
 
     for (const projectId of Object.keys(grouped)) {
       expect(grouped[projectId].length).toBe(limit);
