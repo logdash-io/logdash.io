@@ -51,7 +51,7 @@
       </button>
     {:else}
       {@const totalPublicDashboardCount = clustersState.publishedDashboardsCount}
-      {@const canPublish = false && totalPublicDashboardCount < exposedConfigState.maxNumberOfPublicDashboards(userState.tier)}
+      {@const canPublish = totalPublicDashboardCount < exposedConfigState.maxNumberOfPublicDashboards(userState.tier)}
 
       {#if canPublish}
         <button
