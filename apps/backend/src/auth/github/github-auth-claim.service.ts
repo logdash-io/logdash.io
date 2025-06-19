@@ -19,6 +19,10 @@ import { GithubAuthDataService } from './github-auth-data.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { Logger } from '@logdash/js-sdk';
+import { AuditLog } from '../../user-audit-log/write/audit-log-write.service';
+import { Actor } from '../../user-audit-log/core/enums/actor.enum';
+import { AuditLogUserAction } from '../../user-audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../user-audit-log/core/enums/related-domain.enum';
 
 @Injectable()
 export class GithubAuthClaimService {
@@ -32,6 +36,7 @@ export class GithubAuthClaimService {
     private readonly authGithubDataService: GithubAuthDataService,
     private readonly clusterReadService: ClusterReadService,
     private readonly clusterWriteService: ClusterWriteService,
+    private readonly auditLog: AuditLog,
   ) {}
 
   public async claimAccount(dto: GithubClaimProjectBody): Promise<TokenResponse> {
