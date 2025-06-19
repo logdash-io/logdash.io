@@ -1,17 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { MetricOperation } from '@logdash/js-sdk';
+import { Logger, MetricOperation } from '@logdash/js-sdk';
 import { MetricRegisterWriteService } from '../../metric-register/write/metric-register-write.service';
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { MetricBufferDataService } from './metric-buffer.data.service';
-import { RedisService } from '../../shared/redis/redis.service';
 import { RecordMetricDto } from '../ingestion/dto/record-metric.dto';
-
-interface AddToBufferDto {
-  projectId: string;
-  metricName: string;
-  value: number;
-  operation: MetricOperation;
-}
 
 @Injectable()
 export class MetricBufferService {
@@ -19,6 +11,7 @@ export class MetricBufferService {
     private readonly metricBufferDataService: MetricBufferDataService,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
+    private readonly logger: Logger,
   ) {}
 
   public async addToBuffer(dto: RecordMetricDto): Promise<void> {
@@ -46,6 +39,8 @@ export class MetricBufferService {
   }
 
   public async flushBuffer(): Promise<void> {
+    const now = performance.now();
+
     const changedProjects = await this.metricBufferDataService.getChangedProjects();
 
     const updates: {
@@ -67,6 +62,8 @@ export class MetricBufferService {
             let value = 0;
             if (operation === MetricOperation.Set && absoluteValue) {
               value = parseInt(absoluteValue);
+            } else if (operation === MetricOperation.Change && deltaValue && absoluteValue) {
+              value = parseInt(deltaValue) + parseInt(absoluteValue);
             } else if (operation === MetricOperation.Change && deltaValue) {
               value = parseInt(deltaValue);
             }
@@ -84,34 +81,35 @@ export class MetricBufferService {
       }),
     );
 
-    const now = performance.now();
-
-    const updatesWithMetricId =
-      await this.metricRegisterReadService.readIdsFromProjectIdMetricNamePairs(
+    const projectIdMetricNameToMetricRegisterEntryIdAndValue =
+      await this.metricRegisterReadService.readIdsAndValuesFromProjectIdMetricNamePairs(
         updates.map((update) => ({
           projectId: update.projectId,
           metricName: update.metricName,
         })),
       );
 
-    const afterReading = performance.now();
-
-    const updatesParsed = updates.map((update) => ({
+    const updatesWithMetricId = updates.map((update) => ({
       ...update,
-      metricId: updatesWithMetricId[`${update.projectId}-${update.metricName}`],
+      metricId:
+        projectIdMetricNameToMetricRegisterEntryIdAndValue[
+          `${update.projectId}-${update.metricName}`
+        ].id,
+      baselineValue:
+        projectIdMetricNameToMetricRegisterEntryIdAndValue[
+          `${update.projectId}-${update.metricName}`
+        ].value,
     }));
 
     await this.metricRegisterWriteService.upsertAbsoluteValues(
-      updatesParsed.map((update) => ({
+      updatesWithMetricId.map((update) => ({
         metricRegisterEntryId: update.metricId,
-        value: update.value,
+        value: update.value + update.baselineValue,
         operation: update.operation,
       })),
     );
 
-    const afterWriting = performance.now();
-
-    // console.log(`Time it took to read metrics: ${afterReading - now}ms`);
-    // console.log(`Time it took to write metrics: ${afterWriting - afterReading}ms`);
+    const bufferFlushDurationMs = performance.now() - now;
+    this.logger.info(`Buffer flush duration: ${bufferFlushDurationMs}ms`);
   }
 }

@@ -3,7 +3,6 @@ import { NewMetricQueueingService } from '../../src/metric/new-queueing/new-metr
 import { MetricOperation } from '@logdash/js-sdk';
 import { MetricBufferService } from '../../src/metric/buffer/metric-buffer.service';
 import { randomIntegerBetweenInclusive } from '../../src/shared/utils/random-integer-between';
-import { groupBy } from '../../src/shared/utils/group-by';
 import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-configs';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
@@ -103,5 +102,38 @@ describe('Metrics (reads)', () => {
     );
 
     expect(metricsSum).toBe(iterations);
+  });
+
+  it('accumulates set and change metrics', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupClaimed({
+      userTier: UserTier.EarlyBird,
+      email: 'test@test.com',
+    });
+
+    // when
+    await queueingService.queueMetric({
+      projectId: setup.project.id,
+      name: `metric`,
+      operation: MetricOperation.Set,
+      value: 2137,
+    });
+
+    await queueingService.queueMetric({
+      projectId: setup.project.id,
+      name: `metric`,
+      operation: MetricOperation.Change,
+      value: 1,
+    });
+
+    await buffferService.flushBuffer();
+
+    // then
+    const metrics = await bootstrap.models.metricRegisterModel.find({
+      projectId: setup.project.id,
+    });
+
+    expect(metrics.length).toBe(1);
+    expect(metrics[0].values.counter?.absoluteValue).toBe(2138);
   });
 });
