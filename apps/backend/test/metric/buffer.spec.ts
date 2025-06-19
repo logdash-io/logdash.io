@@ -7,7 +7,7 @@ import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-conf
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
-describe('Metrics (reads)', () => {
+describe('Metrics buffer', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
   let queueingService: NewMetricQueueingService;
   let buffferService: MetricBufferService;
