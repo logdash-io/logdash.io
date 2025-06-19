@@ -38,19 +38,9 @@ export class NewMetricQueueingService {
         },
       ]);
 
-      await this.metricBufferService.addToBuffer({
-        projectId: dto.projectId,
-        metricName: dto.metricName,
-        value: dto.value,
-        operation: dto.operation,
-      });
+      await this.metricBufferService.addToBuffer(dto);
     } else if (result === AddToSetResult.AlreadyInSet) {
-      await this.metricBufferService.addToBuffer({
-        projectId: dto.projectId,
-        metricName: dto.metricName,
-        value: dto.value,
-        operation: dto.operation,
-      });
+      await this.metricBufferService.addToBuffer(dto);
     } else if (result === AddToSetResult.OverLimit) {
       throw new Error('You cannot add more metrics');
     }

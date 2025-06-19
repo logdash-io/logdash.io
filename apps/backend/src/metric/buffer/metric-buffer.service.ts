@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { RedisService } from '../../shared/redis/redis.service';
 import { MetricOperation } from '@logdash/js-sdk';
 import { MetricRegisterWriteService } from '../../metric-register/write/metric-register-write.service';
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
+import { MetricBufferDataService } from './metric-buffer.data.service';
 
 interface AddToBufferDto {
   projectId: string;
@@ -14,7 +14,7 @@ interface AddToBufferDto {
 @Injectable()
 export class MetricBufferService {
   constructor(
-    private readonly redisService: RedisService,
+    private readonly metricBufferDataService: MetricBufferDataService,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
   ) {}
@@ -22,82 +22,29 @@ export class MetricBufferService {
   public async addToBuffer(dto: AddToBufferDto): Promise<void> {
     if (dto.operation === MetricOperation.Set) {
       await Promise.all([
-        this.storeSetMetric(dto.projectId, dto.metricName, dto.value),
-        this.updateLastOperation(dto.projectId, dto.metricName, MetricOperation.Set),
-        this.addToSetOfChanged(dto.projectId, dto.metricName),
+        this.metricBufferDataService.storeSetMetric(dto.projectId, dto.metricName, dto.value),
+        this.metricBufferDataService.updateLastOperation(
+          dto.projectId,
+          dto.metricName,
+          MetricOperation.Set,
+        ),
+        this.metricBufferDataService.markAsChanged(dto.projectId, dto.metricName),
       ]);
     } else if (dto.operation === MetricOperation.Change) {
       await Promise.all([
-        this.storeChangeMetric(dto.projectId, dto.metricName, dto.value),
-        this.updateLastOperation(dto.projectId, dto.metricName, MetricOperation.Change),
-        this.addToSetOfChanged(dto.projectId, dto.metricName),
+        this.metricBufferDataService.storeChangeMetric(dto.projectId, dto.metricName, dto.value),
+        this.metricBufferDataService.updateLastOperation(
+          dto.projectId,
+          dto.metricName,
+          MetricOperation.Change,
+        ),
+        this.metricBufferDataService.markAsChanged(dto.projectId, dto.metricName),
       ]);
     }
   }
 
-  private async getMetricBufferValueKey(
-    projectId: string,
-    metricName: string,
-    operation: MetricOperation,
-  ): Promise<string> {
-    if (operation === MetricOperation.Set) {
-      return `metrics-buffer:project:${projectId}:metric:${metricName}:absolute-value`;
-    } else if (operation === MetricOperation.Change) {
-      return `metrics-buffer:project:${projectId}:metric:${metricName}:delta-value`;
-    }
-
-    throw new Error('Invalid operation');
-  }
-
-  private async getMetricBufferLastOperationKey(
-    projectId: string,
-    metricName: string,
-  ): Promise<string> {
-    return `metrics-buffer:project:${projectId}:metric:${metricName}:last-operation`;
-  }
-
-  private async getMetricBufferChangedProjectsKey(): Promise<string> {
-    return `metrics-buffer:changed-projects`;
-  }
-
-  private async getMetricBufferChangedMetricsKey(projectId: string): Promise<string> {
-    return `metrics-buffer:changed-metric:project:${projectId}`;
-  }
-
-  public async storeSetMetric(projectId: string, metricName: string, value: number): Promise<void> {
-    const key = await this.getMetricBufferValueKey(projectId, metricName, MetricOperation.Set);
-    await this.redisService.set(key, value.toString());
-  }
-
-  public async storeChangeMetric(
-    projectId: string,
-    metricName: string,
-    value: number,
-  ): Promise<void> {
-    const key = await this.getMetricBufferValueKey(projectId, metricName, MetricOperation.Change);
-    await this.redisService.incrementBy(key, value);
-  }
-
-  public async updateLastOperation(
-    projectId: string,
-    metricName: string,
-    operation: MetricOperation,
-  ): Promise<void> {
-    const key = await this.getMetricBufferLastOperationKey(projectId, metricName);
-    await this.redisService.set(key, operation);
-  }
-
-  public async addToSetOfChanged(projectId: string, metricName: string): Promise<void> {
-    const projectKey = await this.getMetricBufferChangedProjectsKey();
-    const metricsKey = await this.getMetricBufferChangedMetricsKey(projectId);
-    await this.redisService.sAdd(projectKey, projectId);
-    await this.redisService.sAdd(metricsKey, metricName);
-  }
-
   public async flushBuffer(): Promise<void> {
-    const changedProjects = await this.redisService.sMembers(
-      await this.getMetricBufferChangedProjectsKey(),
-    );
+    const changedProjects = await this.metricBufferDataService.getChangedProjects();
 
     const updates: {
       projectId: string;
@@ -108,20 +55,12 @@ export class MetricBufferService {
 
     await Promise.all(
       changedProjects.map(async (projectId) => {
-        const metricsKey = await this.getMetricBufferChangedMetricsKey(projectId);
-        const metrics = await this.redisService.sMembers(metricsKey);
+        const metrics = await this.metricBufferDataService.getChangedMetrics(projectId);
 
         await Promise.all(
           metrics.map(async (metric) => {
-            const [operation, absoluteValue, deltaValue] = await Promise.all([
-              this.redisService.get(await this.getMetricBufferLastOperationKey(projectId, metric)),
-              this.redisService.get(
-                await this.getMetricBufferValueKey(projectId, metric, MetricOperation.Set),
-              ),
-              this.redisService.get(
-                await this.getMetricBufferValueKey(projectId, metric, MetricOperation.Change),
-              ),
-            ]);
+            const { operation, absoluteValue, deltaValue } =
+              await this.metricBufferDataService.getMetricData(projectId, metric);
 
             let value = 0;
             if (operation === MetricOperation.Set && absoluteValue) {
@@ -139,10 +78,7 @@ export class MetricBufferService {
           }),
         );
 
-        await Promise.all([
-          this.redisService.del(`metrics-buffer:project:${projectId}:*`),
-          this.redisService.sRem(`metrics-buffer:changed-projects`, projectId),
-        ]);
+        await this.metricBufferDataService.cleanupProjectData(projectId);
       }),
     );
 

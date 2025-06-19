@@ -23,7 +23,7 @@ describe('Metrics (reads)', () => {
   it('test', async () => {
     const newMetricQueueingService = bootstrap.app.get(NewMetricQueueingService);
 
-    const iterations = 10_000;
+    const iterations = 100_000;
     const numberOfProjects = 100;
     const limit = 5;
 
