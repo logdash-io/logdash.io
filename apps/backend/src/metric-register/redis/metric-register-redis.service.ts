@@ -14,18 +14,26 @@ const TRY_ADD_TO_SET_WITH_LIMIT_SCRIPT = `
 -- KEYS[2] - lock key (created-metrics:project-lock:<projectId>)
 -- ARGV[1] - value to add
 -- ARGV[2] - limit
+-- ARGV[3] - acceptIfSetIsEmpty (0 or 1)
 
 local setKey = KEYS[1]
 local lockKey = KEYS[2]
 local value = ARGV[1]
 local limit = tonumber(ARGV[2])
+local acceptIfSetIsEmpty = ARGV[3] == '1'
 
 -- Check if set exists and has members
 local currentSize = redis.call('SCARD', setKey)
 if currentSize == 0 then
-    -- Set project lock
-    redis.call('SET', lockKey, '1')
-    return 'setEmptyProjectLocked'
+    if not acceptIfSetIsEmpty then
+        -- Set project lock
+        redis.call('SET', lockKey, '1')
+        return 'setEmptyProjectLocked'
+    else
+        -- Add to empty set and return success
+        redis.call('SADD', setKey, value)
+        return 'added'
+    end
 end
 
 -- Check if value already exists in set
@@ -61,7 +69,7 @@ export class MetricRegisterRedisService {
 
   public async tryAddToCreatedSet(
     projectId: string,
-    metricId: string,
+    metricName: string,
     limit: number,
     acceptIfSetIsEmpty: boolean = false,
   ): Promise<AddToSetResult> {
@@ -73,7 +81,7 @@ export class MetricRegisterRedisService {
       sha,
       2,
       [setKey, lockKey],
-      [metricId, limit.toString()],
+      [metricName, limit.toString(), acceptIfSetIsEmpty ? '1' : '0'],
     );
 
     return result as AddToSetResult;

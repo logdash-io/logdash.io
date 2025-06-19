@@ -4,6 +4,7 @@ import { MetricRegisterWriteService } from '../../metric-register/write/metric-r
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { MetricBufferDataService } from './metric-buffer.data.service';
 import { RedisService } from '../../shared/redis/redis.service';
+import { RecordMetricDto } from '../ingestion/dto/record-metric.dto';
 
 interface AddToBufferDto {
   projectId: string;
@@ -18,29 +19,28 @@ export class MetricBufferService {
     private readonly metricBufferDataService: MetricBufferDataService,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
-    private readonly redisService: RedisService,
   ) {}
 
-  public async addToBuffer(dto: AddToBufferDto): Promise<void> {
+  public async addToBuffer(dto: RecordMetricDto): Promise<void> {
     if (dto.operation === MetricOperation.Set) {
       await Promise.all([
-        this.metricBufferDataService.storeSetMetric(dto.projectId, dto.metricName, dto.value),
+        this.metricBufferDataService.storeSetMetric(dto.projectId, dto.name, dto.value),
         this.metricBufferDataService.updateLastOperation(
           dto.projectId,
-          dto.metricName,
+          dto.name,
           MetricOperation.Set,
         ),
-        this.metricBufferDataService.markAsChanged(dto.projectId, dto.metricName),
+        this.metricBufferDataService.markAsChanged(dto.projectId, dto.name),
       ]);
     } else if (dto.operation === MetricOperation.Change) {
       await Promise.all([
-        this.metricBufferDataService.storeChangeMetric(dto.projectId, dto.metricName, dto.value),
+        this.metricBufferDataService.storeChangeMetric(dto.projectId, dto.name, dto.value),
         this.metricBufferDataService.updateLastOperation(
           dto.projectId,
-          dto.metricName,
+          dto.name,
           MetricOperation.Change,
         ),
-        this.metricBufferDataService.markAsChanged(dto.projectId, dto.metricName),
+        this.metricBufferDataService.markAsChanged(dto.projectId, dto.name),
       ]);
     }
   }
@@ -111,7 +111,7 @@ export class MetricBufferService {
 
     const afterWriting = performance.now();
 
-    console.log(`Time it took to read metrics: ${afterReading - now}ms`);
-    console.log(`Time it took to write metrics: ${afterWriting - afterReading}ms`);
+    // console.log(`Time it took to read metrics: ${afterReading - now}ms`);
+    // console.log(`Time it took to write metrics: ${afterWriting - afterReading}ms`);
   }
 }

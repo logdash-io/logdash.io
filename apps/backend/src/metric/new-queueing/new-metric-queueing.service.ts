@@ -1,4 +1,4 @@
-import { Injectable, Module } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MetricOperation } from '@logdash/js-sdk';
 import {
   AddToSetResult,
@@ -6,16 +6,9 @@ import {
 } from '../../metric-register/redis/metric-register-redis.service';
 import { MetricRegisterWriteService } from '../../metric-register/write/metric-register-write.service';
 import { MetricBufferService } from '../buffer/metric-buffer.service';
-import { RateLimit } from '../../shared/responses/rate-limit.response';
 import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
-
-interface QueueMetricDto {
-  projectId: string;
-  metricName: string;
-  operation: MetricOperation;
-  value: number;
-}
+import { RecordMetricDto } from '../ingestion/dto/record-metric.dto';
 
 @Injectable()
 export class NewMetricQueueingService {
@@ -26,7 +19,7 @@ export class NewMetricQueueingService {
     private readonly metricBufferService: MetricBufferService,
   ) {}
 
-  public async queueMetric(dto: QueueMetricDto): Promise<void> {
+  public async queueMetric(dto: RecordMetricDto): Promise<void> {
     await this.ensureProjectIsUnlocked(dto.projectId);
 
     const tier = (await this.projectReadCachedService.readProjectOrThrow(dto.projectId)).tier;
@@ -35,14 +28,14 @@ export class NewMetricQueueingService {
 
     const result = await this.metricRegisterRedisService.tryAddToCreatedSet(
       dto.projectId,
-      dto.metricName,
+      dto.name,
       limit,
     );
 
     if (result === AddToSetResult.Added) {
       await this.metricRegisterWriteService.createMany([
         {
-          name: dto.metricName,
+          name: dto.name,
           projectId: dto.projectId,
         },
       ]);
@@ -56,14 +49,14 @@ export class NewMetricQueueingService {
       try {
         await this.metricRegisterWriteService.createMany([
           {
-            name: dto.metricName,
+            name: dto.name,
             projectId: dto.projectId,
           },
         ]);
       } catch {}
       await this.metricRegisterRedisService.tryAddToCreatedSet(
         dto.projectId,
-        dto.metricName,
+        dto.name,
         limit,
         true,
       );
