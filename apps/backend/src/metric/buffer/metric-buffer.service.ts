@@ -62,33 +62,41 @@ export class MetricBufferService {
   public async flushBuffer(): Promise<void> {
     const changedProjects = await this.redisService.sMembers(`metrics-buffer:changed-projects`);
 
-    for (const projectId of changedProjects) {
-      const metrics = await this.redisService.sMembers(
-        `metrics-buffer:changed-metric:project:${projectId}`,
-      );
+    await Promise.all(
+      changedProjects.map(async (projectId) => {
+        const metricsKey = `metrics-buffer:changed-metric:project:${projectId}`;
+        const metrics = await this.redisService.sMembers(metricsKey);
 
-      for (const metric of metrics) {
-        const operation = await this.redisService.get(
-          `metrics-buffer:project:${projectId}:metric:${metric}:last-operation`,
+        await Promise.all(
+          metrics.map(async (metric) => {
+            const [operation, absoluteValue, deltaValue] = await Promise.all([
+              this.redisService.get(
+                `metrics-buffer:project:${projectId}:metric:${metric}:last-operation`,
+              ),
+              this.redisService.get(
+                `metrics-buffer:project:${projectId}:metric:${metric}:absolute-value`,
+              ),
+              this.redisService.get(
+                `metrics-buffer:project:${projectId}:metric:${metric}:delta-value`,
+              ),
+            ]);
+
+            let value = 0;
+            if (operation === MetricOperation.Set && absoluteValue) {
+              value = parseInt(absoluteValue);
+            } else if (operation === MetricOperation.Change && deltaValue) {
+              value = parseInt(deltaValue);
+            }
+
+            return value;
+          }),
         );
 
-        let value: number = 0;
-
-        if (operation === MetricOperation.Set) {
-          const valueString = await this.redisService.get(
-            `metrics-buffer:project:${projectId}:metric:${metric}:absolute-value`,
-          );
-          value = valueString ? parseInt(valueString) : 0;
-        } else if (operation === MetricOperation.Change) {
-          const valueString = await this.redisService.get(
-            `metrics-buffer:project:${projectId}:metric:${metric}:delta-value`,
-          );
-          value = valueString ? parseInt(valueString) : 0;
-        }
-      }
-
-      await this.redisService.del(`metrics-buffer:project:${projectId}:*`);
-      await this.redisService.sRem(`metrics-buffer:changed-projects`, projectId);
-    }
+        await Promise.all([
+          this.redisService.del(`metrics-buffer:project:${projectId}:*`),
+          this.redisService.sRem(`metrics-buffer:changed-projects`, projectId),
+        ]);
+      }),
+    );
   }
 }
