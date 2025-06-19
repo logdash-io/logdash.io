@@ -109,7 +109,7 @@ export class RedisService {
     return await this.client.sMembers(key);
   }
 
-  public async sAdd(key: string, value: string): Promise<void> {
+  public async sAdd(key: string, value: string | string[]): Promise<void> {
     await this.client.sAdd(key, value);
   }
 
