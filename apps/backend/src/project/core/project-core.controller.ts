@@ -91,6 +91,7 @@ export class ProjectCoreController {
   @Put('projects/:projectId')
   public async update(
     @Param('projectId') projectId: string,
+    @CurrentUserId() userId: string,
     @Body() dto: UpdateProjectBody,
   ): Promise<void> {
     await this.projectWriteService.updateProject({

@@ -9,6 +9,13 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectTier } from '../core/enums/project-tier.enum';
 import { ProjectEventEmitter } from '../events/project-event.emitter';
 import { Metrics } from '@logdash/js-sdk';
+import { AuditLog } from '../../user-audit-log/write/audit-log-write.service';
+import { Actor } from '../../user-audit-log/core/enums/actor.enum';
+import {
+  AuditLogEntityAction,
+  AuditLogUserAction,
+} from '../../user-audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../user-audit-log/core/enums/related-domain.enum';
 
 @Injectable()
 export class ProjectWriteService {
@@ -16,6 +23,7 @@ export class ProjectWriteService {
     @InjectModel(ProjectEntity.name) private model: Model<ProjectEntity>,
     private readonly projectEventEmitter: ProjectEventEmitter,
     private readonly metrics: Metrics,
+    private readonly auditLog: AuditLog,
   ) {}
 
   public async create(dto: CreateProjectDto): Promise<ProjectNormalized> {
@@ -37,14 +45,20 @@ export class ProjectWriteService {
       userId: dto.userId,
     });
 
+    void this.auditLog.create({
+      userId: dto.userId,
+      actor: Actor.User,
+      action: AuditLogEntityAction.Created,
+      relatedDomain: RelatedDomain.Project,
+      relatedEntityId: projectNormalized.id,
+    });
+
     this.metrics.mutate('projectsCreated', 1);
 
     return projectNormalized;
   }
 
-  public async writeCurrentIndexMany(
-    dto: Record<string, number>,
-  ): Promise<void> {
+  public async writeCurrentIndexMany(dto: Record<string, number>): Promise<void> {
     await this.model.bulkWrite(
       Object.keys(dto).map((projectId) => ({
         updateOne: {
@@ -56,25 +70,40 @@ export class ProjectWriteService {
     );
   }
 
-  public async updateProject(dto: UpdateProjectDto): Promise<void> {
+  public async updateProject(dto: UpdateProjectDto, actorUserId?: string): Promise<void> {
     const updateQuery = this.constructUpdateQuery(dto);
 
-    await this.model.updateOne(
-      { _id: new Types.ObjectId(dto.id) },
-      updateQuery,
-    );
+    if (actorUserId) {
+      void this.auditLog.create({
+        userId: actorUserId,
+        actor: Actor.User,
+        action: AuditLogEntityAction.Updated,
+        relatedDomain: RelatedDomain.Project,
+        relatedEntityId: dto.id,
+      });
+    }
+
+    await this.model.updateOne({ _id: new Types.ObjectId(dto.id) }, updateQuery);
   }
 
-  public async updateTiersByCreatorId(
-    creatorId: string,
-    tier: ProjectTier,
-  ): Promise<void> {
+  public async updateTiersByCreatorId(creatorId: string, tier: ProjectTier): Promise<void> {
+    const projects = await this.model.find({ creatorId });
+
+    this.auditLog.createMany(
+      projects.map((project) => ({
+        userId: project.creatorId,
+        actor: Actor.System,
+        action: AuditLogEntityAction.Updated,
+        relatedDomain: RelatedDomain.Project,
+        relatedEntityId: project.id,
+        description: `Updated tier to ${tier} because user tier changed`,
+      })),
+    );
+
     await this.model.updateMany({ creatorId }, { tier });
   }
 
-  private constructUpdateQuery(
-    dto: UpdateProjectDto,
-  ): UpdateQuery<ProjectEntity> {
+  private constructUpdateQuery(dto: UpdateProjectDto): UpdateQuery<ProjectEntity> {
     const updateQuery: UpdateQuery<ProjectEntity> = {};
 
     if (dto.name) {
@@ -101,7 +130,15 @@ export class ProjectWriteService {
     return updateQuery;
   }
 
-  public async delete(projectId: string): Promise<void> {
+  public async delete(projectId: string, actorUserId?: string): Promise<void> {
+    void this.auditLog.create({
+      userId: actorUserId,
+      actor: actorUserId ? Actor.User : Actor.System,
+      action: AuditLogEntityAction.Deleted,
+      relatedDomain: RelatedDomain.Project,
+      relatedEntityId: projectId,
+    });
+
     await this.model.deleteOne({ _id: new Types.ObjectId(projectId) });
   }
 }
