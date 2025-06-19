@@ -17,7 +17,7 @@
     <div
       in:scale={{ duration: 100, easing: cubicInOut, start: 0.9 }}
       out:scale={{ duration: 100, easing: cubicInOut, start: 0.9 }}
-      class="absolute left-0 top-0 h-full w-full overflow-hidden"
+      class="fixed left-0 top-0 h-full w-full overflow-hidden"
     >
       <SkyBackground />
     </div>

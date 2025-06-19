@@ -1,9 +1,15 @@
-<script>
+<script lang="ts">
   import { goto } from '$app/navigation';
   import SkyBackground from '$lib/shared/ui/components/SkyBackground.svelte';
   import { RocketIcon } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
   import { backgroundState } from '../../application/background.state.svelte.js';
+  import type { ClassValue } from 'svelte/elements';
+
+  type Props = {
+    class?: ClassValue;
+  };
+  const { class: className = '' }: Props = $props();
 
   let isHovered = $state(false);
   let upgrading = $state(false);
@@ -19,7 +25,7 @@
   };
 </script>
 
-<div class="btn-wrapper z-10 rounded-lg p-[1px]">
+<div class={['btn-wrapper z-10 rounded-lg p-[1px]', className]}>
   <button
     class="btn btn-neutral relative w-fit overflow-hidden"
     onmouseenter={handleMouseEnter}
@@ -31,17 +37,17 @@
     }}
   >
     <div class="absolute h-full w-full overflow-hidden">
-      <SkyBackground />
+      <SkyBackground density={20} speed={1} comets={false} />
     </div>
 
-    <div class="relative z-10 w-full">
+    <div class="relative z-10 flex w-full items-center gap-2">
       Upgrade your plan
       {#if upgrading}
         <div
           in:fade={{ duration: 150 }}
           class="flex h-4 w-4 items-center justify-center"
         >
-          <span class="loading loading-sm loading-spinner"></span>
+          <span class="loading loading-xs loading-spinner"></span>
         </div>
       {:else}
         <RocketIcon class="inline h-4 w-4" />

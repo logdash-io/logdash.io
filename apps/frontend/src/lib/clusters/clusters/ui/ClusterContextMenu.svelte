@@ -2,7 +2,12 @@
   import { goto } from '$app/navigation';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
-  import { PenLineIcon, PlusIcon, SettingsIcon, Trash2Icon } from 'lucide-svelte';
+  import {
+    PenLineIcon,
+    PlusIcon,
+    SettingsIcon,
+    Trash2Icon,
+  } from 'lucide-svelte';
   import { clustersState } from '../application/clusters.state.svelte.js';
   import { page } from '$app/state';
   import { projectsState } from '$lib/clusters/projects/application/projects.state.svelte.js';
@@ -33,57 +38,59 @@
   <ul
     class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
-    {#if !hasLogging && projectsState.ready}
-      <li class="py-0.5">
-        <button
-          in:fly={{ y: -2, duration: 100 }}
-          onclick={() => {
+    {#if projectId}
+      {#if !hasLogging && projectsState.ready}
+        <li class="py-0.5">
+          <button
+            in:fly={{ y: -2, duration: 100 }}
+            onclick={() => {
               goto(
                 `/app/clusters/${clusterId}/configure/logging?project_id=${page.url.searchParams.get('project_id')}`,
               );
             }}
-          class="flex w-full items-center justify-between"
-        >
-          Add logging
-          <PlusIcon class="h-4 w-4" />
-        </button>
-      </li>
-    {/if}
+            class="flex w-full items-center justify-between"
+          >
+            Add logging
+            <PlusIcon class="h-4 w-4" />
+          </button>
+        </li>
+      {/if}
 
-    {#if !hasMetrics && projectsState.ready}
-      <li class="py-0.5">
-        <button
-          in:fly={{ y: -2, duration: 100 }}
-          onclick={() => {
+      {#if !hasMetrics && projectsState.ready}
+        <li class="py-0.5">
+          <button
+            in:fly={{ y: -2, duration: 100 }}
+            onclick={() => {
               goto(
                 `/app/clusters/${clusterId}/configure/metrics?project_id=${page.url.searchParams.get('project_id')}`,
               );
             }}
-          class="flex w-full items-center justify-between"
-        >
-          Add metrics
-          <PlusIcon class="h-4 w-4" />
-        </button>
-      </li>
-    {/if}
+            class="flex w-full items-center justify-between"
+          >
+            Add metrics
+            <PlusIcon class="h-4 w-4" />
+          </button>
+        </li>
+      {/if}
 
-    {#if userState.hasEarlyAccess && !hasMonitoring && clustersState.ready}
-      <li class="py-0.5">
-        <SetupMonitoringButton
-          class="flex w-full items-center justify-between"
-          canAddMore={true}
-          onSubmit={(url) => {
+      {#if userState.hasEarlyAccess && !hasMonitoring && clustersState.ready}
+        <li class="py-0.5">
+          <SetupMonitoringButton
+            class="flex w-full items-center justify-between"
+            canAddMore={true}
+            onSubmit={(url) => {
               goto(
                 `/app/clusters/${clusterId}/configure/monitoring?project_id=${page.url.searchParams.get(
                   'project_id',
                 )}&url=${encodeURIComponent(url)}`,
               );
             }}
-        >
-          Add monitoring
-          <PlusIcon class="h-4 w-4" />
-        </SetupMonitoringButton>
-      </li>
+          >
+            Add monitoring
+            <PlusIcon class="h-4 w-4" />
+          </SetupMonitoringButton>
+        </li>
+      {/if}
     {/if}
 
     <li>

@@ -64,7 +64,7 @@
   {/each}
 {/snippet}
 
-<div class="bg-base-300/50 sticky top-0 z-50 pb-2 backdrop-blur-lg sm:pb-0">
+<div class="top-0 z-50 pb-2 sm:pb-0">
   <div class="navbar xl:w-7xl mx-auto pb-0 pl-0 sm:pb-2 sm:pl-2">
     <div class="navbar-start">
       <a class="flex items-center justify-start gap-2" href="/">

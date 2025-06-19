@@ -2,11 +2,14 @@
   import { goto } from '$app/navigation';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { isDev } from '$lib/shared/utils/is-dev.util.js';
-  import { CopyIcon, ExternalLinkIcon, GanttChartSquareIcon, SettingsIcon } from 'lucide-svelte';
-  import { clustersState } from '../application/clusters.state.svelte.js';
   import {
-    publicDashboardManagerState,
-  } from '$lib/clusters/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
+    CopyIcon,
+    ExternalLinkIcon,
+    GanttChartSquareIcon,
+    SettingsIcon,
+  } from 'lucide-svelte';
+  import { clustersState } from '../application/clusters.state.svelte.js';
+  import { publicDashboardManagerState } from '$lib/clusters/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 
   type Props = {
