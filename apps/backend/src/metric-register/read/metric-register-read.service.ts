@@ -24,9 +24,7 @@ export class MetricRegisterReadService {
     return entries.map((entry) => entry.name);
   }
 
-  public async readById(
-    id: string,
-  ): Promise<MetricRegisterEntryNormalized | null> {
+  public async readById(id: string): Promise<MetricRegisterEntryNormalized | null> {
     const result = await this.model.findById(id).exec();
 
     if (!result) {
@@ -60,16 +58,37 @@ export class MetricRegisterReadService {
     return result;
   }
 
-  public async readBelongingToProject(
-    projectId: string,
-  ): Promise<MetricRegisterEntryNormalized[]> {
+  public async readIdsAndValuesFromProjectIdMetricNamePairs(
+    dtos: ProjectIdMetricNamePairDto[],
+  ): Promise<Record<string, { id: string; value: number }>> {
+    const entries = await this.model
+      .find({
+        $or: dtos.map((dto) => ({
+          name: dto.metricName,
+          projectId: dto.projectId,
+        })),
+      })
+      .lean<MetricRegisterEntryEntity[]>()
+      .exec();
+
+    const result: Record<string, { id: string; value: number }> = {};
+
+    for (const entry of entries) {
+      result[`${entry.projectId}-${entry.name}`] = {
+        id: entry._id.toString(),
+        value: entry.values?.counter?.absoluteValue ?? 0,
+      };
+    }
+
+    return result;
+  }
+
+  public async readBelongingToProject(projectId: string): Promise<MetricRegisterEntryNormalized[]> {
     const entities = await this.model
       .find({ projectId })
       .lean<MetricRegisterEntryEntity[]>()
       .exec();
 
-    return entities.map((entity) =>
-      MetricRegisterEntrySerializer.normalize(entity),
-    );
+    return entities.map((entity) => MetricRegisterEntrySerializer.normalize(entity));
   }
 }
