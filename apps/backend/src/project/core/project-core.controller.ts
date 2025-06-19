@@ -94,10 +94,13 @@ export class ProjectCoreController {
     @CurrentUserId() userId: string,
     @Body() dto: UpdateProjectBody,
   ): Promise<void> {
-    await this.projectWriteService.updateProject({
-      id: projectId,
-      name: dto.name,
-    });
+    await this.projectWriteService.updateProject(
+      {
+        id: projectId,
+        name: dto.name,
+      },
+      userId,
+    );
   }
 
   @UseGuards(ClusterMemberGuard)
