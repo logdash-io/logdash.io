@@ -5,6 +5,10 @@ import { closeInMemoryMongoServer } from '../utils/mongo-in-memory-server';
 import { AccountClaimStatus } from '../../src/user/core/enum/account-claim-status.enum';
 import * as nock from 'nock';
 import { AuthMethod } from '../../src/user/core/enum/auth-method.enum';
+import { RelatedDomain } from '../../src/user-audit-log/core/enums/related-domain.enum';
+import { Actor } from '../../src/user-audit-log/core/enums/actor.enum';
+import { AuditLogUserAction } from '../../src/user-audit-log/core/enums/audit-log-actions.enum';
+import { sleep } from '../utils/sleep';
 
 describe('Auth (anonymous)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -104,8 +108,14 @@ describe('Auth (anonymous)', () => {
         githubCode: 'whatever',
       });
 
+    await sleep(100);
+
     // then
     expect(loginResponse.body.token).toBeDefined();
+    await bootstrap.utils.auditLogUtils.assertAuditLog({
+      userId: existingUser.user.id,
+      action: AuditLogUserAction.GithubLogin,
+    });
   });
 
   it('creates new user if not exists (and accepted terms)', async () => {

@@ -59,6 +59,8 @@ import { PublicDashboardUtils } from './public-dashboard-utils';
 import { StripeModule } from '../../src/payments/stripe/stripe.module';
 import { SubscriptionEntity } from '../../src/subscription/core/entities/subscription.entity';
 import { SubscriptionCoreModule } from '../../src/subscription/core/subscription-core.module';
+import { AuditLogUtils } from './audit-log-utils';
+import { AuditLogWriteModule } from '../../src/user-audit-log/write/audit-log-write.module';
 
 export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({
@@ -85,6 +87,7 @@ export async function createTestApp() {
       PublicDashboardCoreModule,
       StripeModule,
       SubscriptionCoreModule,
+      AuditLogWriteModule,
       RedisModule.forRoot({
         url: getRedisTestContainerUrl(),
       }),
@@ -203,6 +206,7 @@ export async function createTestApp() {
       telegramUtils: new TelegramUtils(app),
       webhookUtils: new WebhookUtils(app),
       publicDashboardUtils: new PublicDashboardUtils(app),
+      auditLogUtils: new AuditLogUtils(app),
     },
     methods: {
       clearDatabase,
