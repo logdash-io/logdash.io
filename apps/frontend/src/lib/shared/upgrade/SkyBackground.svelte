@@ -4,10 +4,24 @@
   let { density = 9, speed = 2, comets = true } = $props(); // Svelte 5 props
 
   let skyBackgroundElement: HTMLDivElement | null = $state(null);
+  let containerSize = $derived.by(() => {
+    if (skyBackgroundElement) {
+      const rect = skyBackgroundElement.getBoundingClientRect();
+      return {
+        width: rect.width,
+        height: rect.height,
+      };
+    }
+    return { width: 400, height: 300 };
+  });
 
-  function generateStars(baseCount, seed, layerOffset = 0) {
+  function generateStars(baseCount, seed, layerOffset = 0, starSize = 1) {
     const actualCount = Math.floor(baseCount * density);
     const stars = [];
+
+    // Use reactive container size, but double the height since .stars has height: 200%
+    const containerWidth = containerSize.width;
+    const containerHeight = containerSize.height * 2;
 
     for (let i = 0; i < actualCount; i++) {
       // Custom hash function for pseudo-randomness
@@ -22,13 +36,17 @@
       const weyl2 =
         (((i + 13) * phi + (seed + 4177) * sqrt2) * 2654435761) % 4294967296;
 
-      // Generate coordinates across full viewport
-      const x = Math.abs((hash1 + weyl1 + i * 127) % 4294967296) % 100; // 0-99vw
-      const baseY =
-        Math.abs((hash2 + weyl2 + i * 131 + hash3) % 4294967296) % 100; // 0-99vh
-      const y = (baseY + layerOffset) % 100; // Apply layer offset and wrap
+      // Generate coordinates as percentages with padding to avoid edge overflow
+      const xPercent = Math.abs((hash1 + weyl1 + i * 127) % 4294967296) % 100; // 0-95%
+      const baseYPercent =
+        Math.abs((hash2 + weyl2 + i * 131 + hash3) % 4294967296) % 100; // 0-99%
+      const yPercent = (baseYPercent + layerOffset) % 100; // Apply layer offset and wrap
 
-      stars.push(`${x}vw ${y}vh 0 #fff`);
+      // Convert to pixel values
+      const x = Math.floor((xPercent / 100) * containerWidth);
+      const y = Math.floor((yPercent / 100) * containerHeight);
+
+      stars.push(`${x}px ${y}px 0 #fff`);
     }
 
     return stars.join(', ');
@@ -42,13 +60,13 @@
     const cometsArray = [];
 
     for (let i = 0; i < cometCount; i++) {
-      // Start from anywhere slightly outside the viewport
-      const startX = getRandomNumberBetween(-10, 110); // vw
-      const startY = getRandomNumberBetween(-10, 10); // vh
+      // Start from anywhere slightly outside the parent element
+      const startX = getRandomNumberBetween(-10, 110); // %
+      const startY = getRandomNumberBetween(-10, 10); // %
 
       // Angle between 45° and 135° (π/4 to 3π/4 radians) for mostly top-to-bottom
       const angleRad = Math.PI / 4 + getRandomNumberBetween(0, Math.PI / 2);
-      // Random travel distance (40vw to 100vw)
+      // Random travel distance (40% to 100%)
       const distance = getRandomNumberBetween(40, 100);
 
       // Calculate end point based on angle and distance
@@ -89,14 +107,27 @@
   const cometsData = $derived.by(() => generateComets());
 
   // Generate stars for each layer - smaller stars are denser
-  const stars1 = $derived(generateStars(40, 982451653, 0)); // Small stars (1px) - highest density
-  const stars2 = $derived(generateStars(Math.floor(40 * 0.5), 2971215073, 29)); // Medium stars (2px) - 80% density
-  const stars3 = $derived(generateStars(Math.floor(40 * 0.3), 4111820313, 58)); // Large stars (3px) - 60% density
+  // Make reactive to container size changes
+  const stars1 = $derived.by(() => {
+    // Include containerSize in dependency
+    containerSize;
+    return generateStars(40, 982451653, 0, 1); // Small stars (1px) - highest density
+  });
+
+  const stars2 = $derived.by(() => {
+    containerSize;
+    return generateStars(Math.floor(40 * 0.5), 2971215073, 29, 2); // Medium stars (2px) - 80% density
+  });
+
+  const stars3 = $derived.by(() => {
+    containerSize;
+    return generateStars(Math.floor(40 * 0.3), 4111820313, 58, 3); // Large stars (3px) - 60% density
+  });
 </script>
 
 <div
   class="sky-background"
-  style="--speed: {speed};"
+  style="--speed: {speed}; --container-height: {containerSize.height}px;"
   bind:this={skyBackgroundElement}
 >
   <!-- Single set of star layers - same pattern for seamless loop -->
@@ -111,10 +142,10 @@
         <div
           class="comet"
           style="
-            --start-x: {comet.startX}vw;
-            --start-y: {comet.startY}vh;
-            --end-x: {comet.endX}vw;
-            --end-y: {comet.endY}vh;
+            --start-x: {comet.startX}%;
+            --start-y: {comet.startY}%;
+            --end-x: {comet.endX}%;
+            --end-y: {comet.endY}%;
             --delay: {comet.delay}s;
             --duration: {comet.duration}s;
             --angle: {comet.angle}deg;
@@ -140,7 +171,7 @@
   .stars {
     position: absolute;
     width: 100%;
-    height: 200vh; /* Double height for seamless loop */
+    height: 200%; /* Double height for seamless loop */
     background: transparent;
 
     &:before,
@@ -161,7 +192,7 @@
     }
 
     &:after {
-      top: 100vh;
+      top: var(--container-height);
       box-shadow: var(--stars); /* Same stars for seamless loop */
     }
   }
@@ -189,7 +220,7 @@
       transform: translateY(0);
     }
     to {
-      transform: translateY(-100vh);
+      transform: translateY(calc(-1 * var(--container-height)));
     }
   }
 

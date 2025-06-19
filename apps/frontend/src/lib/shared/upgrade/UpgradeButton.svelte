@@ -27,7 +27,7 @@
   };
 </script>
 
-<div class={['btn-wrapper w-full z-10 rounded-lg p-[1px]', className]}>
+<div class={['btn-wrapper z-10 w-full rounded-lg p-[1px]', className]}>
   <button
     class="btn btn-neutral relative w-full overflow-hidden"
     onclick={() => {
@@ -39,10 +39,10 @@
     onmouseleave={handleMouseLeave}
   >
     <div class="absolute h-full w-full overflow-hidden">
-      <SkyBackground comets={false} density={20} speed={1} />
+      <SkyBackground comets={false} density={0.1} speed={10} />
     </div>
 
-    <div class="relative z-10 flex w-full justify-between items-center gap-2">
+    <div class="relative z-10 flex w-full items-center justify-between gap-2">
       {#if children}
         {@render children?.()}
       {:else}
@@ -97,7 +97,7 @@
       var(--clr-1),
       var(--clr-2),
       var(--clr-3),
-        /* var(--clr-2), */ /* var(--clr-1), */ var(--clr-card)
+      /* var(--clr-2), */ /* var(--clr-1), */ var(--clr-card)
     );
     border-radius: inherit;
     animation: rotate 4.5s linear infinite;
