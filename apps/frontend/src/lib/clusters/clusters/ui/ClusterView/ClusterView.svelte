@@ -3,6 +3,7 @@
   import { monitoringState } from '$lib/clusters/projects/application/monitoring.state.svelte';
   import ProjectView from '$lib/clusters/projects/ui/ProjectView/ProjectView.svelte';
   import { userState } from '$lib/shared/user/application/user.state.svelte.js';
+  import { isDev } from '$lib/shared/utils/is-dev.util.js';
   import ProjectsSwitcher from '../../../projects/ui/ProjectsSwitcher/ProjectsSwitcher.svelte';
   import ClusterContextMenu from '../ClusterContextMenu.svelte';
   import PublicDashboardContextMenu from '../PublicDashboardContextMenu.svelte';
@@ -21,7 +22,7 @@
 
   const isSettingUp = $derived(
     page.url.pathname.includes('/setup') ||
-    page.url.pathname.includes('/configure'),
+      page.url.pathname.includes('/configure'),
   );
 
   $effect(() => {
@@ -47,8 +48,10 @@
     />
 
     {#if !isOnDemoDashboard}
-      <div class="sm:ml-auto w-full sm:w-fit flex items-center gap-2">
-        <PublicDashboardContextMenu {clusterId} />
+      <div class="flex w-full items-center gap-2 sm:ml-auto sm:w-fit">
+        {#if userState.hasEarlyAccess}
+          <PublicDashboardContextMenu {clusterId} />
+        {/if}
         <ClusterContextMenu {clusterId} />
       </div>
     {/if}
