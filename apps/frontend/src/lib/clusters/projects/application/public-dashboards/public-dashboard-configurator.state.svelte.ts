@@ -1,18 +1,42 @@
+type Dashboard = {
+  id: string;
+  name: string;
+  isPublic: boolean;
+  httpMonitorsIds: string[];
+};
+
 export class PublicDashboardManagerState {
-  private _dashboardMonitors = $state<Record<string, string[]>>({});
-  private _loading = $state(true);
-  private _creating = $state(false);
+  private _dashboards = $state<Record<Dashboard['id'], Dashboard>>({});
 
-  get loading() {
-    return this._loading;
+  getDashboard(dashboardId: string): Dashboard | undefined {
+    return this._dashboards[dashboardId];
   }
 
-  get creating() {
-    return this._creating;
-  }
-
-  getMonitors(dashboardId: string): string[] {
-    return this._dashboardMonitors[dashboardId] || [];
+  async update(
+    dashboardId: string,
+    dto: Partial<{
+      name: string;
+      isPublic: boolean;
+    }>,
+  ): Promise<void> {
+    try {
+      const response = await fetch(
+        `/app/api/public-dashboards/${dashboardId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(dto),
+        },
+      );
+      const { data } = await response.json();
+      this._dashboards[data.id] = data;
+    } catch (error) {
+      console.error('Failed to create or update public dashboard:', error);
+      throw error;
+    } finally {
+    }
   }
 
   async addMonitor(dashboardId: string, monitorId: string): Promise<void> {
@@ -23,11 +47,16 @@ export class PublicDashboardManagerState {
           method: 'POST',
         },
       );
-      if (!this._dashboardMonitors[dashboardId]) {
-        this._dashboardMonitors[dashboardId] = [];
+      if (!this._dashboards[dashboardId]) {
+        this._dashboards[dashboardId] = {
+          id: dashboardId,
+          name: '',
+          isPublic: false,
+          httpMonitorsIds: [],
+        };
       }
-      if (!this._dashboardMonitors[dashboardId].includes(monitorId)) {
-        this._dashboardMonitors[dashboardId].push(monitorId);
+      if (!this._dashboards[dashboardId].httpMonitorsIds.includes(monitorId)) {
+        this._dashboards[dashboardId].httpMonitorsIds.push(monitorId);
       }
     } catch (error) {
       console.error('Failed to add monitor to dashboard:', error);
@@ -43,10 +72,10 @@ export class PublicDashboardManagerState {
           method: 'DELETE',
         },
       );
-      if (this._dashboardMonitors[dashboardId]) {
-        this._dashboardMonitors[dashboardId] = this._dashboardMonitors[
+      if (this._dashboards[dashboardId]) {
+        this._dashboards[dashboardId].httpMonitorsIds = this._dashboards[
           dashboardId
-        ].filter((id) => id !== monitorId);
+        ].httpMonitorsIds.filter((id) => id !== monitorId);
       }
     } catch (error) {
       console.error('Failed to remove monitor from dashboard:', error);
@@ -55,8 +84,8 @@ export class PublicDashboardManagerState {
   }
 
   async toggleMonitor(dashboardId: string, monitorId: string): Promise<void> {
-    if (this._dashboardMonitors[dashboardId]) {
-      if (this._dashboardMonitors[dashboardId].includes(monitorId)) {
+    if (this._dashboards[dashboardId]) {
+      if (this._dashboards[dashboardId].httpMonitorsIds.includes(monitorId)) {
         await this.removeMonitor(dashboardId, monitorId);
       } else {
         await this.addMonitor(dashboardId, monitorId);
@@ -68,23 +97,20 @@ export class PublicDashboardManagerState {
 
   async loadPublicDashboards(clusterId: string): Promise<void> {
     try {
-      this._loading = true;
       const response = await fetch(
         `/app/api/clusters/${clusterId}/public-dashboards`,
       );
       const { data } = await response.json();
-      this._dashboardMonitors = data.reduce(
+      this._dashboards = data.reduce(
         (acc, dashboard) => {
-          acc[dashboard.id] = dashboard.httpMonitorsIds;
+          acc[dashboard.id] = dashboard;
           return acc;
         },
-        {} as Record<string, string[]>,
+        {} as Record<Dashboard['id'], Dashboard>,
       );
-      this._loading = false;
     } catch (error) {
       console.error('Failed to load public dashboards:', error);
     } finally {
-      this._loading = false;
     }
   }
 

@@ -6,6 +6,9 @@
   import { publicDashboardManagerState } from '../../application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { publicDashboardPrivateState } from '../../application/public-dashboards/public-dashboard-private.state.svelte.js';
   import PublicDashboard from '../PublicDashboard.svelte';
+  import { autoFocus } from '$lib/shared/ui/actions/use-autofocus.svelte.js';
+  import { debounce } from '$lib/shared/utils/debounce.js';
+  import { clustersState } from '$lib/clusters/clusters/application/clusters.state.svelte.js';
 
   type Props = {
     dashboard_id: string;
@@ -13,10 +16,17 @@
   };
   const { claimer, dashboard_id }: Props = $props();
 
+  let dashboardName = $state('');
+  const debouncedNameUpdate = debounce((name: string) => {
+    publicDashboardManagerState.update(dashboard_id, { name });
+  }, 250);
+
   const clusterId = $derived(page.params.cluster_id);
-  const dashboardMonitors = $derived(
-    publicDashboardManagerState.getMonitors(dashboard_id),
+  const cluster = $derived(clustersState.get(clusterId));
+  const dashboard = $derived(
+    publicDashboardManagerState.getDashboard(dashboard_id),
   );
+  const dashboardMonitors = $derived(dashboard?.httpMonitorsIds || []);
 
   onMount(() => {
     monitoringState.load(clusterId);
@@ -28,13 +38,22 @@
 
     publicDashboardPrivateState.loadDashboard(dashboard_id);
   });
+
+  $effect(() => {
+    if (dashboardName.trim().length === 0) {
+      return;
+    }
+
+    debouncedNameUpdate(dashboardName);
+  });
 </script>
 
 <div class="bg-base-300 fixed left-0 top-0 z-50 flex h-full w-full">
-  <div class="mx-auto space-y-8">
+  <div class="mx-auto space-y-8 overflow-hidden">
     <PublicDashboard
       enablePolling={false}
       state={publicDashboardPrivateState}
+      title={dashboardName}
     />
   </div>
 
@@ -42,6 +61,12 @@
     class="bg-base-200 border-base-100 sm:w-xl right-0 top-0 flex h-full w-full max-w-2xl shrink-0 flex-col gap-4 overflow-auto border-l p-6 sm:p-8"
   >
     <div class="space-y-2">
+      <span class="badge badge-soft badge-primary">
+        {#if cluster}Configuring {cluster.name}{:else}
+          <span class="loading loading-spinner w-3"></span>
+        {/if}
+      </span>
+
       <h5 class="text-2xl font-semibold">
         Setup Public Dashboard for your project
       </h5>
@@ -53,7 +78,7 @@
 
     <div class="collapse-open collapse overflow-visible rounded-none">
       <div class="px-1 py-4 font-semibold">
-        <span>Select http monitors</span>
+        <span>1. Select http monitors</span>
       </div>
 
       <div class="w-full max-w-full space-y-2 truncate">
@@ -70,7 +95,6 @@
                   dashboard_id,
                   monitor.id,
                 );
-                console.log(`Toggling monitor: ${monitor.id}`);
               }}
             />
             <span class="ml-2 truncate text-lg font-semibold">
@@ -81,23 +105,25 @@
       </div>
     </div>
 
-    <!-- <div class="collapse-open">
+    <div class="collapse-open">
       <div class="px-1 py-4 font-semibold">
-        <span>3. Capture pings</span>
+        <span>2. Choose name</span>
       </div>
 
       <div class="text-sm">
-        <MonitorsListener url={observedUrl} onCaptureOnce={() => {}}>
-          <div class="flex items-center justify-start gap-2 font-semibold">
-            <CheckCircle class="text-success h-5 w-5" />
-            <span class="text-success opacity-80">
-              Pings captured successfully!
-            </span>
-          </div>
-        </MonitorsListener>
+        <p class="mb-2">
+          The name will be used in the header of your public dashboard.
+        </p>
+        <input
+          type="text"
+          class="input-sm input-ghost selection:bg-secondary/20 border-secondary/20 focus:border-primary h-full w-full rounded-lg border px-3 py-2 text-lg font-semibold outline-0 focus:bg-transparent"
+          placeholder={dashboard?.name}
+          use:autoFocus={{ selectAll: true }}
+          bind:value={dashboardName}
+        />
       </div>
-    </div> -->
+    </div>
 
-    {@render claimer(true)}
+    {@render claimer(dashboard?.isPublic)}
   </div>
 </div>

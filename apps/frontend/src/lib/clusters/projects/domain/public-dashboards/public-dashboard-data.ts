@@ -1,4 +1,5 @@
 export type PublicDashboardData = {
+  name: string;
   httpMonitors: {
     name: string;
     buckets: ({

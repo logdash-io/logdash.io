@@ -10,6 +10,7 @@
 
   interface Props {
     state: PublicDashboardState;
+    title?: string;
     maxBucketsToShow?: number;
     maxPingsToShow?: number;
     enablePolling?: boolean;
@@ -19,6 +20,7 @@
 
   let {
     state: dashboardState,
+    title,
     maxBucketsToShow = 90,
     maxPingsToShow = 90,
     enablePolling = true,
@@ -30,20 +32,21 @@
   const loading = $derived(dashboardState.isLoading);
   const systemStatus = $derived(dashboardState.systemStatus);
   const lastUpdated = $derived(dashboardState.lastUpdate);
+  const pageName = $derived(title || dashboardData?.name || 'Status Page');
 </script>
 
 <svelte:head>
-  <title>Status Dashboard</title>
+  <title>{pageName}</title>
   <meta
     name="description"
     content="Real-time status dashboard for our services"
   />
 </svelte:head>
 
-<div class="mx-auto min-h-screen w-fit max-w-none">
+<div class="mx-auto h-full w-fit max-w-none">
   <div class="w-fit px-4 py-8 sm:px-6 lg:px-8">
     <DashboardTitle {loading} {enablePolling} {pollingInterval} {onRefresh}>
-      Status Page
+      {pageName}
     </DashboardTitle>
 
     {#if dashboardData}

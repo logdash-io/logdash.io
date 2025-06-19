@@ -34,6 +34,10 @@ class ClustersState {
     return this._initialized;
   }
 
+  get(id: string): Cluster | undefined {
+    return this._clusters[id];
+  }
+
   clusterName(id: string): string {
     return this._clusters[id]?.name || '';
   }
@@ -85,7 +89,7 @@ class ClustersState {
   async delete(id: string): Promise<void> {
     this._requestStatus = 'deleting';
     try {
-      // todo: validate why it returns false positive on delete
+      // todo: validate why it returns false positive on error
       await fetch(`/app/api/clusters/${id}`, {
         method: 'DELETE',
       });

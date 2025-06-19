@@ -9,10 +9,9 @@
 
   interface Props {
     status: StatusType;
-    interactive?: boolean;
   }
 
-  let { status, interactive = true }: Props = $props();
+  let { status }: Props = $props();
 
   const statusColors = {
     up: 'from-green-600 via-green-600/80 to-green-600',
@@ -24,9 +23,8 @@
   };
 
   const colorClass = $derived(statusColors[status] || statusColors.unknown);
-  const hoverClass = $derived(interactive ? 'hover:h-6' : '');
 </script>
 
-<div class={`h-5 w-[7px] flex-shrink-0 pl-0.5 ${hoverClass}`}>
+<div class={`h-6 w-2 flex-shrink-0 pl-0.5 hover:h-6`}>
   <div class={`rounded-xs h-full bg-gradient-to-b ${colorClass}`}></div>
 </div>

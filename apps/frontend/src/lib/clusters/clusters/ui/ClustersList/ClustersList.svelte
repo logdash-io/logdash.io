@@ -62,7 +62,7 @@
           {cluster.name}
         </h5>
 
-        <ClusterContextMenu {cluster} />
+        <ClusterContextMenu clusterId={cluster.id} />
       </div>
 
       {#if cluster.projects?.length}
