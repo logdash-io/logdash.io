@@ -4,9 +4,13 @@ import { MetricOperation } from '@logdash/js-sdk';
 import { MetricBufferService } from '../../src/metric/buffer/metric-buffer.service';
 import { randomIntegerBetweenInclusive } from '../../src/shared/utils/random-integer-between';
 import { groupBy } from '../../src/shared/utils/group-by';
+import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-configs';
+import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 
 describe('Metrics (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
+  let queueingService: NewMetricQueueingService;
+  let buffferService: MetricBufferService;
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
@@ -14,10 +18,44 @@ describe('Metrics (reads)', () => {
 
   beforeEach(async () => {
     await bootstrap.methods.beforeEach();
+    queueingService = bootstrap.app.get(NewMetricQueueingService);
+    buffferService = bootstrap.app.get(MetricBufferService);
   });
 
   afterAll(async () => {
     await bootstrap.methods.afterAll();
+  });
+
+  const freeTierLimit = getProjectPlanConfig(ProjectTier.Free).metrics.maxMetricsRegisterEntries;
+
+  it(`it lets free user add ${freeTierLimit} metrics`, async () => {
+    // given
+    const uniqueMetricsNumberToTry = 3;
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+    // when
+    for (let i = 0; i < uniqueMetricsNumberToTry; i++) {
+      try {
+        await queueingService.queueMetric({
+          projectId: setup.project.id,
+          metricName: `metric-${i}`,
+          operation: MetricOperation.Set,
+          value: 2137,
+        });
+      } catch {}
+    }
+
+    await buffferService.flushBuffer();
+
+    // then
+    const metrics = await bootstrap.models.metricRegisterModel.find({
+      projectId: setup.project.id,
+    });
+
+    expect(metrics.length).toBe(freeTierLimit);
+    metrics.forEach((metric) => {
+      expect(metric.values.counter?.absoluteValue).toBe(2137);
+    });
   });
 
   it('test', async () => {

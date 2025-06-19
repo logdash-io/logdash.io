@@ -3,6 +3,7 @@ import { MetricOperation } from '@logdash/js-sdk';
 import { MetricRegisterWriteService } from '../../metric-register/write/metric-register-write.service';
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { MetricBufferDataService } from './metric-buffer.data.service';
+import { RedisService } from '../../shared/redis/redis.service';
 
 interface AddToBufferDto {
   projectId: string;
@@ -17,6 +18,7 @@ export class MetricBufferService {
     private readonly metricBufferDataService: MetricBufferDataService,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
+    private readonly redisService: RedisService,
   ) {}
 
   public async addToBuffer(dto: AddToBufferDto): Promise<void> {

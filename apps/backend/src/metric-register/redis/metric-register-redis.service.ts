@@ -63,6 +63,7 @@ export class MetricRegisterRedisService {
     projectId: string,
     metricId: string,
     limit: number,
+    acceptIfSetIsEmpty: boolean = false,
   ): Promise<AddToSetResult> {
     const setKey = this.getCreatedMetricsKey(projectId);
     const lockKey = this.getProjectLockKey(projectId);
@@ -100,6 +101,10 @@ export class MetricRegisterRedisService {
     const metrics = await this.metricRegisterReadService.readBelongingToProject(projectId);
 
     await this.redisService.del(setKey);
+
+    if (metrics.length === 0) {
+      return;
+    }
 
     await this.redisService.sAdd(
       setKey,

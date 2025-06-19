@@ -7,6 +7,8 @@ import {
 import { MetricRegisterWriteService } from '../../metric-register/write/metric-register-write.service';
 import { MetricBufferService } from '../buffer/metric-buffer.service';
 import { RateLimit } from '../../shared/responses/rate-limit.response';
+import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
+import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 
 interface QueueMetricDto {
   projectId: string;
@@ -20,16 +22,21 @@ export class NewMetricQueueingService {
   constructor(
     private readonly metricRegisterRedisService: MetricRegisterRedisService,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
+    private readonly projectReadCachedService: ProjectReadCachedService,
     private readonly metricBufferService: MetricBufferService,
   ) {}
 
   public async queueMetric(dto: QueueMetricDto): Promise<void> {
     await this.ensureProjectIsUnlocked(dto.projectId);
 
+    const tier = (await this.projectReadCachedService.readProjectOrThrow(dto.projectId)).tier;
+
+    const limit = getProjectPlanConfig(tier).metrics.maxMetricsRegisterEntries;
+
     const result = await this.metricRegisterRedisService.tryAddToCreatedSet(
       dto.projectId,
       dto.metricName,
-      5,
+      limit,
     );
 
     if (result === AddToSetResult.Added) {
@@ -46,6 +53,21 @@ export class NewMetricQueueingService {
     } else if (result === AddToSetResult.SetEmptyProjectLocked) {
       await this.metricRegisterRedisService.syncProjectFromMongo(dto.projectId);
       await this.metricRegisterRedisService.unlockProject(dto.projectId);
+      try {
+        await this.metricRegisterWriteService.createMany([
+          {
+            name: dto.metricName,
+            projectId: dto.projectId,
+          },
+        ]);
+      } catch {}
+      await this.metricRegisterRedisService.tryAddToCreatedSet(
+        dto.projectId,
+        dto.metricName,
+        limit,
+        true,
+      );
+      await this.metricBufferService.addToBuffer(dto);
     } else if (result === AddToSetResult.OverLimit) {
       throw new Error('You cannot add more metrics');
     }
