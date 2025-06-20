@@ -31,8 +31,9 @@
   --color-warning: var(--color-amber-500);
   --color-info: var(--color-blue-600);
 
-  --radius-selector: var(--radius-xl);
+  --radius-selector: var(--radius-md);
   --radius-field: var(--radius-lg);
+  --radius-box: var(--radius-xl);
 }
 
 html {
@@ -58,114 +59,116 @@ body {
   @apply overflow-hidden scroll-smooth tracking-wide;
 }
 
-* {
-  @apply outline-primary/80;
-}
-
-.btn:not(.btn-circle):not(.rounded-full) {
-  @apply rounded-lg;
-}
-
-.btn-transparent {
-  @apply border-0 bg-transparent shadow-none;
-}
-
-.code-snippet > .hljs {
-  @apply from-base-300 to-base-200 border-base-200 rounded-xl border bg-gradient-to-br shadow-lg;
-}
-
-.btn {
-  @apply whitespace-nowrap shadow-none;
-}
-
-.btn-neutral {
-  @apply border-base-100/70 border;
-}
-
-.menu {
-  @apply p-1.5;
-}
-
-.ld-card-base,
-.ld-card {
-  @apply from-base-200 to-base-300 border-base-100/70 border bg-gradient-to-br shadow-lg;
-}
-
-@keyframes toast-progress {
-  from {
-    transform: scaleX(1);
+#root {
+  * {
+    @apply outline-primary/80;
   }
-  to {
-    transform: scaleX(0);
+
+  .btn:not(.btn-circle):not(.rounded-full) {
+    @apply rounded-lg;
   }
-}
 
-.ld-card {
-  @apply rounded-xl px-6 py-6 sm:px-8 sm:py-8;
-}
+  .btn-transparent {
+    @apply border-0 bg-transparent shadow-none;
+  }
 
-.ld-modal {
-  @apply from-base-200 to-base-300 border-base-100/50 rounded-xl border bg-gradient-to-br p-8 shadow-lg;
-}
+  .code-snippet > .hljs {
+    @apply from-base-300 to-base-200 border-base-200 rounded-xl border bg-gradient-to-br shadow-lg;
+  }
 
-.status {
-  @apply shadow-none;
-  background-image: none;
-}
+  .btn {
+    @apply whitespace-nowrap shadow-none;
+  }
 
-.badge {
-  @apply rounded-full;
-}
+  .btn-neutral {
+    @apply border-base-100/70 border;
+  }
 
-.distance {
-  @apply w-full shrink-0;
-}
+  .menu {
+    @apply p-1.5;
+  }
 
-.tabs {
-  @apply rounded-xl;
-}
+  .ld-card-base,
+  .ld-card {
+    @apply from-base-200 to-base-300 border-base-100/70 border bg-gradient-to-br shadow-lg;
+  }
 
-.tab {
-  @apply rounded-lg;
-}
+  @keyframes toast-progress {
+    from {
+      transform: scaleX(1);
+    }
+    to {
+      transform: scaleX(0);
+    }
+  }
 
-.navlink-active {
-  @apply after:bg-primary relative after:absolute after:top-full after:left-1/2 after:h-1 after:w-1/5 after:max-w-8 after:min-w-5 after:-translate-x-1/2 after:rounded-full;
-}
+  .ld-card {
+    @apply rounded-xl px-6 py-6 sm:px-8 sm:py-8;
+  }
 
-.collapse-open {
-  @apply shrink-0;
-}
+  .ld-modal {
+    @apply from-base-200 to-base-300 border-base-100/50 rounded-xl border bg-gradient-to-br p-8 shadow-lg;
+  }
 
-.gutter-both {
-  scrollbar-gutter: stable both-edges;
-}
+  .status {
+    @apply shadow-none;
+    background-image: none;
+  }
 
-/* 
+  .badge {
+    @apply rounded-full;
+  }
+
+  .distance {
+    @apply w-full shrink-0;
+  }
+
+  .tabs {
+    @apply rounded-xl;
+  }
+
+  .tab {
+    @apply rounded-lg;
+  }
+
+  .navlink-active {
+    @apply after:bg-primary relative after:absolute after:top-full after:left-1/2 after:h-1 after:w-1/5 after:max-w-8 after:min-w-5 after:-translate-x-1/2 after:rounded-full;
+  }
+
+  .collapse-open {
+    @apply shrink-0;
+  }
+
+  .gutter-both {
+    scrollbar-gutter: stable both-edges;
+  }
+
+  /* 
 Scrollbar styles for modern browsers
 */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-neutral-500) transparent;
-}
-
-::-webkit-scrollbar-track {
-  @apply h-1.5 w-1.5 bg-transparent;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply h-1.5 w-1.5;
-  border-radius: 10px;
-}
-
-.cds--chart-holder[data-carbon-theme='g100'] {
-  .chart-grid-backdrop {
-    fill: none;
-    opacity: 30%;
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-neutral-500) transparent;
   }
-}
 
-.bx--cc--tooltip {
-  background-color: blue;
+  ::-webkit-scrollbar-track {
+    @apply h-1.5 w-1.5 bg-transparent;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply h-1.5 w-1.5;
+    border-radius: 10px;
+  }
+
+  .cds--chart-holder[data-carbon-theme='g100'] {
+    .chart-grid-backdrop {
+      fill: none;
+      opacity: 30%;
+    }
+  }
+
+  .bx--cc--tooltip {
+    background-color: blue;
+  }
 }
