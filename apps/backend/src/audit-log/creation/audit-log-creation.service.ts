@@ -24,12 +24,12 @@ export class AuditLog {
   public async create(dto: CreateAuditLogDto): Promise<void> {
     try {
       if (dto.userId) {
-        return this.createIfWithinRateLimit(dto);
+        return await this.createIfWithinRateLimit(dto);
       }
 
       const enrichedDto = await this.enrichDtoWithUserId(dto);
 
-      return this.createIfWithinRateLimit(enrichedDto);
+      return await this.createIfWithinRateLimit(enrichedDto);
     } catch (error) {
       this.logger.error('Error creating audit log', {
         error,
