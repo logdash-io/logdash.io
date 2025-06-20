@@ -21,7 +21,7 @@
       textColor: 'text-red-600',
     },
     degraded: {
-      color: 'bg-yellow-500',
+      color: 'bg-yellow-600',
       text: 'Degraded',
       textColor: 'text-yellow-600',
     },

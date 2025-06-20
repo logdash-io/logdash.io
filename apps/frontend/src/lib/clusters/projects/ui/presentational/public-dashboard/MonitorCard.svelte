@@ -3,8 +3,6 @@
   import StatusBadge from './StatusBadge.svelte';
   import UptimeChart from './UptimeChart.svelte';
   import PingChart from './PingChart.svelte';
-  import { fly } from 'svelte/transition';
-  import { cubicInOut } from 'svelte/easing';
 
   interface Monitor {
     name: string;
@@ -23,7 +21,7 @@
 
   interface Props {
     monitor: Monitor;
-    status: 'up' | 'down' | 'unknown';
+    status: 'up' | 'down' | 'degraded' | 'unknown';
     uptime: number;
     maxBucketsToShow?: number;
     maxPingsToShow?: number;
@@ -37,21 +35,33 @@
     maxPingsToShow = 90,
   }: Props = $props();
 
-  const statusText = $derived(
-    status === 'up' ? 'Operational' : status === 'down' ? 'Down' : 'Unknown',
-  );
-  const statusColor = $derived(
-    status === 'up'
-      ? 'text-green-600'
-      : status === 'down'
-        ? 'text-red-600'
-        : 'text-gray-600',
-  );
+  const statusConfig = {
+    up: {
+      text: 'Operational',
+      color: 'text-green-600',
+    },
+    down: {
+      text: 'Down',
+      color: 'text-red-600',
+    },
+    degraded: {
+      text: 'Degraded',
+      color: 'text-yellow-600',
+    },
+    unknown: {
+      text: 'Unknown',
+      color: 'text-gray-600',
+    },
+  };
+
+  const config = $derived(statusConfig[status]);
+  const statusText = $derived(config.text);
+  const statusColor = $derived(config.color);
   let open = $state(false);
 </script>
 
 <div
-  class="ld-card-base collapse w-fit min-w-full rounded-xl border border-gray-200 bg-white shadow-sm"
+  class="ld-card-base collapse w-fit min-w-full rounded-xl bg-white shadow-sm"
 >
   <input bind:checked={open} class="p-0" type="checkbox" />
   <div class="collapse-title flex flex-col items-center p-6">
@@ -60,7 +70,7 @@
         <StatusBadge {status} />
 
         <div>
-          <h4 class="text-lg font-medium text-gray-900 dark:text-white">
+          <h4 class="text-secondary text-lg font-medium">
             {monitor.name}
           </h4>
         </div>
@@ -80,7 +90,7 @@
     </div>
 
     <div class="z-10 cursor-default sm:mt-2">
-      <PingChart pings={monitor.pings} {maxPingsToShow} />
+      <PingChart {maxPingsToShow} pings={monitor.pings} />
     </div>
   </div>
 
