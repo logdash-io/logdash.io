@@ -1,4 +1,10 @@
-@import 'tailwindcss';
+@config "../tailwind.config.ts";
+
+@layer theme, base, components;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css';
 
 @plugin 'daisyui';
 @plugin 'daisyui/theme' {
@@ -25,7 +31,8 @@
   --color-warning: var(--color-amber-500);
   --color-info: var(--color-blue-600);
 
-  --radius-selector: var(--radius-md);
+  --radius-selector: var(--radius-xl);
+  --radius-field: var(--radius-lg);
 }
 
 html {

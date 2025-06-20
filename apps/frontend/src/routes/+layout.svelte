@@ -19,7 +19,7 @@
     data: { exposedConfig: ExposedConfig };
   };
   let { children, data }: Props = $props();
-  let scrollContainer: HTMLDivElement;
+  let scrollContainer: HTMLDivElement = $state(null);
   const isDemoDashboard = $derived(
     page.url.pathname.includes('/demo-dashboard'),
   );
