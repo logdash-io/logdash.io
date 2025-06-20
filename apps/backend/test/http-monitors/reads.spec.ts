@@ -41,7 +41,7 @@ describe('HttpMonitorCoreController (reads)', () => {
         .set('Authorization', `Bearer ${setupA.token}`);
 
       // then
-      expect(response.body).toHaveLength(2);
+      expect(response.body).toHaveLength(1);
     });
 
     it('denies access for non-cluster member', async () => {

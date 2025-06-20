@@ -22,13 +22,20 @@ export class AuditLog {
   ) {}
 
   public async create(dto: CreateAuditLogDto): Promise<void> {
-    if (dto.userId) {
-      await this.createIfWithinRateLimit(dto);
+    try {
+      if (dto.userId) {
+        await this.createIfWithinRateLimit(dto);
+      }
+
+      const enrichedDto = await this.enrichDtoWithUserId(dto);
+
+      await this.createIfWithinRateLimit(enrichedDto);
+    } catch (error) {
+      this.logger.error('Error creating audit log', {
+        error,
+        dto,
+      });
     }
-
-    const enrichedDto = await this.enrichDtoWithUserId(dto);
-
-    await this.createIfWithinRateLimit(enrichedDto);
   }
 
   private async createIfWithinRateLimit(dto: CreateAuditLogDto): Promise<void> {
