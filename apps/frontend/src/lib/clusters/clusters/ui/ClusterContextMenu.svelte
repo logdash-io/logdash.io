@@ -98,7 +98,12 @@
         onclick={(e) => {
           e.stopPropagation();
           const newName = prompt('Enter new project name', cluster.name);
+          const hasCancelled = newName === null;
           close();
+
+          if (hasCancelled) {
+            return;
+          }
 
           if (!newName || newName.trim() === '') {
             toast.warning('Project name cannot be empty', 5000);
