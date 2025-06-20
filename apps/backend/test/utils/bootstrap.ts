@@ -60,7 +60,7 @@ import { StripeModule } from '../../src/payments/stripe/stripe.module';
 import { SubscriptionEntity } from '../../src/subscription/core/entities/subscription.entity';
 import { SubscriptionCoreModule } from '../../src/subscription/core/subscription-core.module';
 import { AuditLogUtils } from './audit-log-utils';
-import { AuditLogWriteModule } from '../../src/user-audit-log/write/audit-log-write.module';
+import { AuditLogCreationModule } from '../../src/audit-log/creation/audit-log-creation.module';
 
 export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({
@@ -87,7 +87,7 @@ export async function createTestApp() {
       PublicDashboardCoreModule,
       StripeModule,
       SubscriptionCoreModule,
-      AuditLogWriteModule,
+      AuditLogCreationModule,
       RedisModule.forRoot({
         url: getRedisTestContainerUrl(),
       }),

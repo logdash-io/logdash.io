@@ -31,16 +31,12 @@ export class LogTtlService {
   }
 
   public async removeOldLogs(): Promise<void> {
-    const candidates =
-      await this.projectReadService.getProjectForLogRemovalCursor();
+    const candidates = await this.projectReadService.getProjectForLogRemovalCursor();
 
     for await (const candidate of candidates) {
       const limit = getProjectPlanConfig(candidate.tier).logs.keepLastXLogs;
 
-      if (
-        Math.abs(candidate.currentIndex - candidate.lastDeletionIndex) >
-        limit + 500
-      ) {
+      if (Math.abs(candidate.currentIndex - candidate.lastDeletionIndex) > limit + 500) {
         const cutoffIndex = candidate.currentIndex - limit;
 
         this.logger.log(`Removing logs for project`, {
@@ -55,10 +51,7 @@ export class LogTtlService {
           cutoffIndex,
         );
 
-        await this.projectWriteService.updateProject({
-          id: candidate.projectId,
-          lastDeletionIndex: cutoffIndex,
-        });
+        await this.projectWriteService.updateLastDeletionIndex(candidate.projectId, cutoffIndex);
       }
     }
   }

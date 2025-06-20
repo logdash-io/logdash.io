@@ -30,11 +30,6 @@ describe('HttpMonitorCoreController (reads)', () => {
         name: 'name 1',
       });
       await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
-        token: setupA.token,
-        projectId: setupA.project.id,
-        name: 'name 2',
-      });
-      await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token: setupB.token,
         projectId: setupB.project.id,
         name: 'name 1',
@@ -46,7 +41,7 @@ describe('HttpMonitorCoreController (reads)', () => {
         .set('Authorization', `Bearer ${setupA.token}`);
 
       // then
-      expect(response.body).toHaveLength(2);
+      expect(response.body).toHaveLength(1);
     });
 
     it('denies access for non-cluster member', async () => {

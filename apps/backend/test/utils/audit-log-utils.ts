@@ -1,11 +1,8 @@
 import { ClickHouseClient } from '@clickhouse/client';
 import { INestApplication } from '@nestjs/common';
-import { Types } from 'mongoose';
-import { HttpPingBucketEntity } from '../../src/http-ping-bucket/core/entities/http-ping-bucket.entity';
-import { HttpPingBucketNormalized } from '../../src/http-ping-bucket/core/entities/http-ping-bucket.interface';
-import { HttpPingBucketSerializer } from '../../src/http-ping-bucket/core/entities/http-ping-bucket.serializer';
-import { AuditLogNormalized } from '../../src/user-audit-log/core/entities/audit-log.interface';
-import { AuditLogEntity } from '../../src/user-audit-log/core/entities/audit-log.entity';
+import { AuditLogNormalized } from '../../src/audit-log/core/entities/audit-log.interface';
+import { AuditLogEntity } from '../../src/audit-log/core/entities/audit-log.entity';
+import { sleep } from './sleep';
 
 export class AuditLogUtils {
   private clickhouseClient: ClickHouseClient;
@@ -43,6 +40,8 @@ export class AuditLogUtils {
   }
 
   public async assertAuditLog(dto: Partial<AuditLogNormalized>): Promise<AuditLogEntity> {
+    await sleep(200);
+
     const response = await this.clickhouseClient.query({
       query: `SELECT * FROM audit_logs`,
       format: 'JSONEachRow',

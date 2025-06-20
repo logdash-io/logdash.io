@@ -21,6 +21,11 @@ describe('PublicDashboardCoreController (public data read)', () => {
   async function setupPublicDashboard(dto?: { isPublic?: boolean }) {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
+    const additionalProject = await bootstrap.utils.projectUtils.createDefaultProject({
+      userId: setup.user.id,
+      clusterId: setup.cluster.id,
+    });
+
     const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
       token: setup.token,
       projectId: setup.project.id,
@@ -29,7 +34,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
     const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
       token: setup.token,
-      projectId: setup.project.id,
+      projectId: additionalProject.id,
       name: 'B',
     });
 

@@ -9,10 +9,10 @@ import { GithubLoginBody } from './dto/github-login.body';
 import { TokenResponse } from '../../shared/responses/token.response';
 import { GithubAuthDataService } from './github-auth-data.service';
 import { Logger, Metrics } from '@logdash/js-sdk';
-import { AuditLog } from '../../user-audit-log/write/audit-log-write.service';
-import { AuditLogUserAction } from '../../user-audit-log/core/enums/audit-log-actions.enum';
-import { Actor } from '../../user-audit-log/core/enums/actor.enum';
-import { RelatedDomain } from '../../user-audit-log/core/enums/related-domain.enum';
+import { AuditLogUserAction } from '../../audit-log/core/enums/audit-log-actions.enum';
+import { Actor } from '../../audit-log/core/enums/actor.enum';
+import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
+import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 
 @Injectable()
 export class GithubAuthLoginService {

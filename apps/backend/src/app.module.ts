@@ -25,7 +25,7 @@ import { NotificationChannelCoreModule } from './notification-channel/core/notif
 import { HttpPingBucketCoreModule } from './http-ping-bucket/core/http-ping-bucket-core.module';
 import { PublicDashboardCoreModule } from './public-dashboard/core/public-dashboard-core.module';
 import { SubscriptionCoreModule } from './subscription/core/subscription-core.module';
-import { AuditLogWriteModule } from './user-audit-log/write/audit-log-write.module';
+import { AuditLogCreationModule } from './audit-log/creation/audit-log-creation.module';
 
 @Module({
   imports: [
@@ -56,8 +56,7 @@ import { AuditLogWriteModule } from './user-audit-log/write/audit-log-write.modu
     ClickhouseModule,
     NotificationChannelCoreModule,
     PublicDashboardCoreModule,
-    AuditLogWriteModule,
-    AuditLogWriteModule,
+    AuditLogCreationModule,
   ],
 })
 export class AppModule {}

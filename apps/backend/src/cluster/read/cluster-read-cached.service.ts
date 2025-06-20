@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { RedisService } from '../../shared/redis/redis.service';
 import { ClusterTier } from '../core/enums/cluster-tier.enum';
 import { ClusterReadService } from './cluster-read.service';
+import { ClusterNormalized } from '../core/entities/cluster.interface';
 
 @Injectable()
 export class ClusterReadCachedService {
@@ -11,6 +12,33 @@ export class ClusterReadCachedService {
     private readonly logger: Logger,
     private readonly redisService: RedisService,
   ) {}
+
+  public async readById(clusterId: string): Promise<ClusterNormalized | null> {
+    const cacheKey = `cluster:${clusterId}`;
+    const cacheTtlSeconds = 5;
+
+    const clusterJson = await this.redisService.get(cacheKey);
+
+    if (clusterJson === 'null') {
+      throw Error('Cluster not found. You have to wait 5 seconds before trying again');
+    }
+
+    if (clusterJson !== null) {
+      return JSON.parse(clusterJson) as ClusterNormalized;
+    }
+
+    const cluster = await this.clusterReadService.readById(clusterId);
+
+    if (!cluster) {
+      await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
+      this.logger.error(`Cluster not found`, { clusterId });
+      return null;
+    }
+
+    await this.redisService.set(cacheKey, JSON.stringify(cluster), cacheTtlSeconds);
+
+    return cluster;
+  }
 
   public async readTier(clusterId: string): Promise<ClusterTier> {
     const cacheKey = `cluster:${clusterId}:tier`;
