@@ -1,11 +1,7 @@
 import { ClickHouseClient } from '@clickhouse/client';
 import { INestApplication } from '@nestjs/common';
-import { Types } from 'mongoose';
-import { HttpPingBucketEntity } from '../../src/http-ping-bucket/core/entities/http-ping-bucket.entity';
-import { HttpPingBucketNormalized } from '../../src/http-ping-bucket/core/entities/http-ping-bucket.interface';
-import { HttpPingBucketSerializer } from '../../src/http-ping-bucket/core/entities/http-ping-bucket.serializer';
-import { AuditLogNormalized } from '../../src/user-audit-log/core/entities/audit-log.interface';
-import { AuditLogEntity } from '../../src/user-audit-log/core/entities/audit-log.entity';
+import { AuditLogNormalized } from '../../src/audit-log/core/entities/audit-log.interface';
+import { AuditLogEntity } from '../../src/audit-log/core/entities/audit-log.entity';
 
 export class AuditLogUtils {
   private clickhouseClient: ClickHouseClient;

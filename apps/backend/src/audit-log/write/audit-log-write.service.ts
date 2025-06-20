@@ -7,7 +7,7 @@ import { AuditLogNormalized } from '../core/entities/audit-log.interface';
 import { AuditLogSerializer } from '../core/entities/audit-log.serializer';
 
 @Injectable()
-export class AuditLog {
+export class AuditLogWriteService {
   constructor(private readonly clickhouse: ClickHouseClient) {}
 
   public async create(dto: CreateAuditLogDto): Promise<AuditLogNormalized> {

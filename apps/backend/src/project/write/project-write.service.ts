@@ -9,13 +9,10 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectTier } from '../core/enums/project-tier.enum';
 import { ProjectEventEmitter } from '../events/project-event.emitter';
 import { Metrics } from '@logdash/js-sdk';
-import { AuditLog } from '../../user-audit-log/write/audit-log-write.service';
-import { Actor } from '../../user-audit-log/core/enums/actor.enum';
-import {
-  AuditLogEntityAction,
-  AuditLogUserAction,
-} from '../../user-audit-log/core/enums/audit-log-actions.enum';
-import { RelatedDomain } from '../../user-audit-log/core/enums/related-domain.enum';
+import { Actor } from '../../audit-log/core/enums/actor.enum';
+import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
+import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 
 @Injectable()
 export class ProjectWriteService {
@@ -76,7 +73,7 @@ export class ProjectWriteService {
     if (actorUserId) {
       void this.auditLog.create({
         userId: actorUserId,
-        actor: Actor.User,
+        actor: actorUserId ? Actor.User : Actor.System,
         action: AuditLogEntityAction.Updated,
         relatedDomain: RelatedDomain.Project,
         relatedEntityId: dto.id,
@@ -86,19 +83,31 @@ export class ProjectWriteService {
     await this.model.updateOne({ _id: new Types.ObjectId(dto.id) }, updateQuery);
   }
 
+  public async updateLastDeletionIndex(
+    projectId: string,
+    lastDeletionIndex: number,
+  ): Promise<void> {
+    await this.model.updateOne(
+      { _id: new Types.ObjectId(projectId) },
+      {
+        'logValues.lastDeletionIndex': lastDeletionIndex,
+      },
+    );
+  }
+
   public async updateTiersByCreatorId(creatorId: string, tier: ProjectTier): Promise<void> {
     const projects = await this.model.find({ creatorId });
 
-    this.auditLog.createMany(
-      projects.map((project) => ({
+    projects.forEach((project) => {
+      void this.auditLog.create({
         userId: project.creatorId,
         actor: Actor.System,
         action: AuditLogEntityAction.Updated,
         relatedDomain: RelatedDomain.Project,
         relatedEntityId: project.id,
         description: `Updated tier to ${tier} because user tier changed`,
-      })),
-    );
+      });
+    });
 
     await this.model.updateMany({ creatorId }, { tier });
   }
@@ -118,20 +127,11 @@ export class ProjectWriteService {
       updateQuery.clusterId = dto.clusterId;
     }
 
-    if (dto.lastDeletionIndex) {
-      updateQuery['logValues.lastDeletionIndex'] = dto.lastDeletionIndex;
-    }
-
-    // todo remove that after sync
-    if (dto.clearMembers) {
-      (updateQuery as any).members = null;
-    }
-
     return updateQuery;
   }
 
   public async delete(projectId: string, actorUserId?: string): Promise<void> {
-    void this.auditLog.create({
+    await this.auditLog.create({
       userId: actorUserId,
       actor: actorUserId ? Actor.User : Actor.System,
       action: AuditLogEntityAction.Deleted,

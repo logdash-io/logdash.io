@@ -1,13 +1,10 @@
 import * as request from 'supertest';
 import { Types } from 'mongoose';
 import { createTestApp } from '../utils/bootstrap';
-import { closeInMemoryMongoServer } from '../utils/mongo-in-memory-server';
 import { AccountClaimStatus } from '../../src/user/core/enum/account-claim-status.enum';
 import * as nock from 'nock';
 import { AuthMethod } from '../../src/user/core/enum/auth-method.enum';
-import { RelatedDomain } from '../../src/user-audit-log/core/enums/related-domain.enum';
-import { Actor } from '../../src/user-audit-log/core/enums/actor.enum';
-import { AuditLogUserAction } from '../../src/user-audit-log/core/enums/audit-log-actions.enum';
+import { AuditLogUserAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { sleep } from '../utils/sleep';
 
 describe('Auth (anonymous)', () => {
