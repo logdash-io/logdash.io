@@ -88,4 +88,36 @@ export class RedisService {
       {} as Record<string, string | null>,
     );
   }
+
+  public async scriptLoad(script: string): Promise<string> {
+    return await this.client.scriptLoad(script);
+  }
+
+  public async evalSha(
+    sha: string,
+    numKeys: number,
+    keys: string[],
+    args: string[],
+  ): Promise<string> {
+    return (await this.client.evalSha(sha, {
+      keys,
+      arguments: args,
+    })) as string;
+  }
+
+  public async sMembers(key: string): Promise<string[]> {
+    return await this.client.sMembers(key);
+  }
+
+  public async sAdd(key: string, value: string | string[]): Promise<void> {
+    await this.client.sAdd(key, value);
+  }
+
+  public async sRem(key: string, value: string): Promise<void> {
+    await this.client.sRem(key, value);
+  }
+
+  public async keys(pattern: string): Promise<string[]> {
+    return await this.client.keys(pattern);
+  }
 }

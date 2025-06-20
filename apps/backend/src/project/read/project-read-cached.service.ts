@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProjectReadService } from './project-read.service';
 import { ProjectTier } from '../core/enums/project-tier.enum';
 import { RedisService } from '../../shared/redis/redis.service';
@@ -39,6 +39,14 @@ export class ProjectReadCachedService {
 
     await this.redisService.set(cacheKey, JSON.stringify(project), cacheTtlSeconds);
 
+    return project;
+  }
+
+  public async readProjectOrThrow(projectId: string): Promise<ProjectNormalized> {
+    const project = await this.readProject(projectId);
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
     return project;
   }
 }

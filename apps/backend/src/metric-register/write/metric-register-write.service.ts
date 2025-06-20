@@ -5,6 +5,7 @@ import { MetricRegisterEntryEntity } from '../core/entities/metric-register-entr
 import { CreateMetricRegisterEntryDto } from './dto/create-metric-register-entry.dto';
 import { RemoveMetricRegisterEntryDto } from './dto/remove-metric-register-entry.dto';
 import { UpdateCounterAbsoluteValueDto } from './dto/update-counter-absolute-value.dto';
+import { MetricOperation } from '@logdash/js-sdk';
 
 @Injectable()
 export class MetricRegisterWriteService {
@@ -48,6 +49,20 @@ export class MetricRegisterWriteService {
           },
         },
       })),
+    );
+  }
+
+  public async upsertAbsoluteValues(
+    dtos: { metricRegisterEntryId: string; value: number }[],
+  ): Promise<void> {
+    await this.model.bulkWrite(
+      dtos.map((dto) => ({
+        updateOne: {
+          filter: { _id: new Types.ObjectId(dto.metricRegisterEntryId) },
+          update: { $set: { 'values.counter.absoluteValue': dto.value } },
+        },
+      })),
+      { ordered: false },
     );
   }
 }
