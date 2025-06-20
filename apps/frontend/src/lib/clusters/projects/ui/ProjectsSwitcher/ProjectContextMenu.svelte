@@ -2,7 +2,12 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
-  import { CopyIcon, MoreVerticalIcon, PenLineIcon, Trash2Icon } from 'lucide-svelte';
+  import {
+    CopyIcon,
+    MoreVerticalIcon,
+    PenLineIcon,
+    Trash2Icon,
+  } from 'lucide-svelte';
   import { projectsState } from '../../application/projects.state.svelte.js';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
 
@@ -38,7 +43,12 @@
       <a
         onclick={() => {
           const newName = prompt('Enter new service name', project.name);
+          const hasCancelled = newName === null;
           close();
+
+          if (hasCancelled) {
+            return;
+          }
 
           if (!newName || newName.trim() === '') {
             toast.warning('Service name cannot be empty', 5000);
@@ -97,11 +107,7 @@
   </ul>
 {/snippet}
 
-<Tooltip
-  content={menu}
-  interactive={true}
-  placement="bottom"
->
+<Tooltip content={menu} interactive={true} placement="bottom">
   <div
     class="btn btn-circle btn-transparent mr-0.5 aspect-square h-full w-fit shrink-0"
     onclick={(e) => e.stopPropagation()}
