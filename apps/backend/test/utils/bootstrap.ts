@@ -160,6 +160,9 @@ export async function createTestApp() {
       clickhouseClient.query({
         query: `TRUNCATE TABLE http_ping_buckets`,
       }),
+      clickhouseClient.query({
+        query: `TRUNCATE TABLE audit_logs`,
+      }),
     ]);
   };
 

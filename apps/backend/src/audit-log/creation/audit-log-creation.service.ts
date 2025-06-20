@@ -24,12 +24,12 @@ export class AuditLog {
   public async create(dto: CreateAuditLogDto): Promise<void> {
     try {
       if (dto.userId) {
-        await this.createIfWithinRateLimit(dto);
+        return this.createIfWithinRateLimit(dto);
       }
 
       const enrichedDto = await this.enrichDtoWithUserId(dto);
 
-      await this.createIfWithinRateLimit(enrichedDto);
+      return this.createIfWithinRateLimit(enrichedDto);
     } catch (error) {
       this.logger.error('Error creating audit log', {
         error,
@@ -80,6 +80,7 @@ export class AuditLog {
       if (cluster) {
         return {
           ...dto,
+          userId: cluster.creatorId,
         };
       }
     }
@@ -107,14 +108,11 @@ export class AuditLog {
 
   private async isWithinRateLimit(userId: string): Promise<boolean> {
     const key = `audit-log:rate-limit:${userId}`;
-    const count = await this.redisService.get(key);
-    if (!count) {
-      await this.redisService.increment(key, {
-        ttlOverwriteStrategy: TtlOverwriteStrategy.SetOnlyIfNoExpiry,
-        ttlSeconds: 60,
-      });
-      return true;
-    }
-    return Number(count) < MAX_AUDIT_LOGS_PER_USER_PER_MINUTE;
+    const count = await this.redisService.increment(key, {
+      ttlOverwriteStrategy: TtlOverwriteStrategy.SetOnlyIfNoExpiry,
+      ttlSeconds: 60,
+    });
+
+    return Number(count) <= MAX_AUDIT_LOGS_PER_USER_PER_MINUTE;
   }
 }

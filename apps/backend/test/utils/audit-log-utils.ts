@@ -61,4 +61,15 @@ export class AuditLogUtils {
 
     return matchingAuditLog;
   }
+
+  public async countUserAuditLogs(userId: string): Promise<number> {
+    const response = await this.clickhouseClient.query({
+      query: `SELECT COUNT(*) FROM audit_logs WHERE user_id = '${userId}'`,
+      format: 'JSONEachRow',
+    });
+
+    const result = (await response.json()) as any;
+
+    return Number(result[0]['COUNT()']);
+  }
 }
