@@ -30,11 +30,6 @@ describe('HttpMonitorCoreController (reads)', () => {
         name: 'name 1',
       });
       await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
-        token: setupA.token,
-        projectId: setupA.project.id,
-        name: 'name 2',
-      });
-      await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token: setupB.token,
         projectId: setupB.project.id,
         name: 'name 1',
