@@ -51,10 +51,7 @@ export class LogTtlService {
           cutoffIndex,
         );
 
-        await this.projectWriteService.updateLastDeletionIndex(
-          candidate.projectId,
-          candidate.lastDeletionIndex,
-        );
+        await this.projectWriteService.updateLastDeletionIndex(candidate.projectId, cutoffIndex);
       }
     }
   }
