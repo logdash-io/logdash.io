@@ -5,6 +5,8 @@ import { MetricOperation } from '../../src/metric/core/enums/metric-operation.en
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
+import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 
 describe('ProjectCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -38,6 +40,12 @@ describe('ProjectCoreController (writes)', () => {
       expect(response.status).toBe(200);
       expect(updatedProject!.name).toBe('some updated name');
       expect(updatedProject!.creatorId).toBe(user.id);
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Updated,
+        relatedDomain: RelatedDomain.Project,
+        relatedEntityId: project.id,
+      });
     });
   });
 
@@ -164,6 +172,25 @@ describe('ProjectCoreController (writes)', () => {
       // then
       expect(response.status).toBe(403);
       expect(response.body.message).toBe('User is not a member of this cluster');
+    });
+
+    it('creates audit log when project is created', async () => {
+      // given
+      const { user, cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/projects`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'some name' });
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Created,
+        relatedDomain: RelatedDomain.Project,
+        relatedEntityId: response.body.project.id,
+      });
     });
   });
 
@@ -309,6 +336,24 @@ describe('ProjectCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(401);
+    });
+
+    it('creates audit log when project is deleted', async () => {
+      // given
+      const { user, project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/projects/${project.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Deleted,
+        relatedDomain: RelatedDomain.Project,
+        relatedEntityId: project.id,
+      });
     });
   });
 });

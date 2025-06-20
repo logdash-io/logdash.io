@@ -105,8 +105,6 @@ describe('Auth (anonymous)', () => {
         githubCode: 'whatever',
       });
 
-    await sleep(100);
-
     // then
     expect(loginResponse.body.token).toBeDefined();
     await bootstrap.utils.auditLogUtils.assertAuditLog({
