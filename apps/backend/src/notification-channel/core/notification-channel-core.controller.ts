@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessResponse } from 'src/shared/responses/success.response';
 import { CreateNotificationChannelBody } from './dto/create-notification-channel.body';
@@ -8,6 +8,7 @@ import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-
 import { NotificationChannelSerializer } from './entities/notification-channel.serializer';
 import { NotificationChannelSerialized } from './entities/notification-channel.interface';
 import { NotificationChannelOptionsEnrichmentService } from './notification-channel-options-enrichment.service';
+import { NotificationChannelReadService } from '../read/notification-channel-read.service';
 
 @Controller()
 @ApiTags('Notification channels')
@@ -16,6 +17,7 @@ export class NotificationChannelCoreController {
   constructor(
     private readonly notificationChannelWriteService: NotificationChannelWriteService,
     private readonly notificationChannelOptionsEnrichmentService: NotificationChannelOptionsEnrichmentService,
+    private readonly notificationChannelReadService: NotificationChannelReadService,
   ) {}
 
   @Post('clusters/:clusterId/notification_channels')
@@ -55,5 +57,15 @@ export class NotificationChannelCoreController {
     await this.notificationChannelWriteService.delete(id);
 
     return new SuccessResponse();
+  }
+
+  @ApiResponse({ type: [NotificationChannelSerialized] })
+  @Get('clusters/:clusterId/notification_channels')
+  public async getByClusterId(
+    @Param('clusterId') clusterId: string,
+  ): Promise<NotificationChannelSerialized[]> {
+    const channels = await this.notificationChannelReadService.readByClusterId(clusterId);
+
+    return channels.map(NotificationChannelSerializer.serialize);
   }
 }
