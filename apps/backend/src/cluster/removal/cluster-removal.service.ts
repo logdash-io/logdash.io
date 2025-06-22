@@ -26,14 +26,14 @@ export class ClusterRemovalService {
     }
   }
 
-  public async deleteClusterById(clusterId: string): Promise<void> {
+  public async deleteClusterById(clusterId: string, actorUserId?: string): Promise<void> {
     const cluster = await this.clusterReadService.readById(clusterId);
 
     if (!cluster) {
       throw new NotFoundException('Cluster not found');
     }
 
-    await this.clusterWriteService.delete(clusterId);
+    await this.clusterWriteService.delete(clusterId, actorUserId);
 
     await this.projectRemovalService.deleteProjectsByClusterId(clusterId);
 

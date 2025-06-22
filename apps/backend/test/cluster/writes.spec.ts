@@ -123,6 +123,36 @@ describe('ClusterCoreController (writes)', () => {
       expect(updatedCluster?.name).toBe('Updated Cluster Name');
     });
 
+    it('creates audit log when cluster is updated', async () => {
+      // given
+      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const userId = user.id;
+
+      const cluster = await bootstrap.models.clusterModel.create({
+        _id: new Types.ObjectId(),
+        name: 'Original Cluster Name',
+        creatorId: userId,
+        members: [userId],
+        tier: ClusterTier.Free,
+      });
+
+      const clusterId = cluster._id.toString();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/clusters/${clusterId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'Updated Cluster Name' });
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Update,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: clusterId,
+      });
+    });
+
     it('throws error when user is not a member of the cluster', async () => {
       // given
       const { user: creator } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -215,6 +245,35 @@ describe('ClusterCoreController (writes)', () => {
       expect(projectsAfterRemoval).toHaveLength(0);
       expect(clustersAfterRemoval).toHaveLength(0);
       expect(publicDashboardsAfterRemoval).toHaveLength(0);
+    });
+
+    it('creates audit log when cluster is deleted', async () => {
+      // given
+      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const userId = user.id;
+
+      const cluster = await bootstrap.models.clusterModel.create({
+        _id: new Types.ObjectId(),
+        name: 'Test Cluster',
+        creatorId: userId,
+        members: [userId],
+        tier: ClusterTier.Free,
+      });
+
+      const clusterId = cluster._id.toString();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${clusterId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Delete,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: clusterId,
+      });
     });
   });
 });
