@@ -51,7 +51,7 @@ export class ProjectRemovalService {
     this.logger.log(`Deleting metric register entries for project...`, {
       projectId,
     });
-    await this.metricRegisterWriteService.deleteBelongingToProject(projectId);
+    await this.metricRegisterWriteService.deleteBelongingToProject(projectId, actorUserId);
 
     this.logger.log(`Deleting log metrics for project...`, {
       projectId,
@@ -61,7 +61,7 @@ export class ProjectRemovalService {
     this.logger.log(`Deleting HTTP monitors for project...`, {
       projectId,
     });
-    await this.httpMonitorRemovalService.deleteByProjectId(projectId);
+    await this.httpMonitorRemovalService.deleteByProjectId(projectId, actorUserId);
 
     this.logger.log(`Deleting API keys for project...`, {
       projectId,

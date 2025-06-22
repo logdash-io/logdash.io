@@ -13,20 +13,20 @@ export class HttpMonitorRemovalService {
     private readonly httpBucketWriteService: HttpPingBucketWriteService,
   ) {}
 
-  public async deleteByProjectId(projectId: string): Promise<void> {
+  public async deleteByProjectId(projectId: string, actorUserId?: string): Promise<void> {
     const monitors = await this.httpMonitorReadService.readByProjectId(projectId);
     const monitorsIds = monitors.map((monitor) => monitor.id);
 
     if (monitorsIds.length > 0) {
       await this.httpPingWriteService.deleteByMonitorIds(monitorsIds);
-      await this.httpMonitorWriteService.deleteByProjectId(projectId);
+      await this.httpMonitorWriteService.deleteByProjectId(projectId, actorUserId);
       await this.httpBucketWriteService.deleteByMonitorIds(monitorsIds);
     }
   }
 
-  public async deleteById(httpMonitorId: string): Promise<void> {
+  public async deleteById(httpMonitorId: string, actorUserId?: string): Promise<void> {
     await this.httpPingWriteService.deleteByMonitorIds([httpMonitorId]);
-    await this.httpMonitorWriteService.deleteById(httpMonitorId);
+    await this.httpMonitorWriteService.deleteById(httpMonitorId, actorUserId);
     await this.httpBucketWriteService.deleteByMonitorIds([httpMonitorId]);
   }
 }

@@ -56,6 +56,7 @@ export class AuditLogUtils {
     const matchingAuditLog = auditLogs.find((auditLog) => this.matchAuditLog(auditLog, dto));
 
     if (!matchingAuditLog) {
+      console.log('All audit logs: ', auditLogs);
       throw new Error('No matching audit log found');
     }
 

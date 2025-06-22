@@ -6,4 +6,5 @@ export enum RelatedDomain {
   Metric = 'metric',
   PublicDashboard = 'publicDashboard',
   NotificationChannel = 'notificationChannel',
+  HttpMonitor = 'httpMonitor',
 }
