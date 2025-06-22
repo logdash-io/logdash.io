@@ -1,7 +1,7 @@
 export enum AuditLogEntityAction {
-  Created = 'created',
-  Updated = 'updated',
-  Deleted = 'deleted',
+  Create = 'create',
+  Update = 'update',
+  Delete = 'delete',
 }
 
 export enum AuditLogUserAction {

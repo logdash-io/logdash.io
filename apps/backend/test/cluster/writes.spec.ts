@@ -2,6 +2,8 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
+import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 
 describe('ClusterCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -69,6 +71,25 @@ describe('ClusterCoreController (writes)', () => {
       });
 
       expect(clusterCount).toBe(5);
+    });
+
+    it('creates audit log when cluster is created', async () => {
+      // given
+      const { user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/users/me/clusters`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'some name' });
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Create,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: response.body.id,
+      });
     });
   });
 

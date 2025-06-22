@@ -49,6 +49,9 @@ export class AuditLogUtils {
 
     const auditLogs = (await response.json()) as any as AuditLogEntity[];
 
+    console.log(dto);
+    console.log(auditLogs);
+
     if (auditLogs.length === 0) {
       throw new Error('No audit logs found');
     }
