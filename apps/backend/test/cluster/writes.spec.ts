@@ -2,6 +2,8 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
+import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 
 describe('ClusterCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -70,6 +72,25 @@ describe('ClusterCoreController (writes)', () => {
 
       expect(clusterCount).toBe(5);
     });
+
+    it('creates audit log when cluster is created', async () => {
+      // given
+      const { user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/users/me/clusters`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'some name' });
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Create,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: response.body.id,
+      });
+    });
   });
 
   describe('PUT /clusters/:clusterId', () => {
@@ -100,6 +121,36 @@ describe('ClusterCoreController (writes)', () => {
 
       const updatedCluster = await bootstrap.models.clusterModel.findById(clusterId);
       expect(updatedCluster?.name).toBe('Updated Cluster Name');
+    });
+
+    it('creates audit log when cluster is updated', async () => {
+      // given
+      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const userId = user.id;
+
+      const cluster = await bootstrap.models.clusterModel.create({
+        _id: new Types.ObjectId(),
+        name: 'Original Cluster Name',
+        creatorId: userId,
+        members: [userId],
+        tier: ClusterTier.Free,
+      });
+
+      const clusterId = cluster._id.toString();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/clusters/${clusterId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'Updated Cluster Name' });
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Update,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: clusterId,
+      });
     });
 
     it('throws error when user is not a member of the cluster', async () => {
@@ -194,6 +245,35 @@ describe('ClusterCoreController (writes)', () => {
       expect(projectsAfterRemoval).toHaveLength(0);
       expect(clustersAfterRemoval).toHaveLength(0);
       expect(publicDashboardsAfterRemoval).toHaveLength(0);
+    });
+
+    it('creates audit log when cluster is deleted', async () => {
+      // given
+      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const userId = user.id;
+
+      const cluster = await bootstrap.models.clusterModel.create({
+        _id: new Types.ObjectId(),
+        name: 'Test Cluster',
+        creatorId: userId,
+        members: [userId],
+        tier: ClusterTier.Free,
+      });
+
+      const clusterId = cluster._id.toString();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${clusterId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Delete,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: clusterId,
+      });
     });
   });
 });

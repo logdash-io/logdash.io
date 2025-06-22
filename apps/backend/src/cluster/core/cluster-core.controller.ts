@@ -73,8 +73,11 @@ export class ClusterCoreController {
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Delete('clusters/:clusterId')
-  public async delete(@Param('clusterId') clusterId: string): Promise<SuccessResponse> {
-    await this.clusterRemovalService.deleteClusterById(clusterId);
+  public async delete(
+    @Param('clusterId') clusterId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<SuccessResponse> {
+    await this.clusterRemovalService.deleteClusterById(clusterId, userId);
 
     return new SuccessResponse();
   }
@@ -127,10 +130,13 @@ export class ClusterCoreController {
       );
     }
 
-    await this.clusterWriteService.update({
-      id: clusterId,
-      name: body.name,
-    });
+    await this.clusterWriteService.update(
+      {
+        id: clusterId,
+        name: body.name,
+      },
+      userId,
+    );
 
     const updatedCluster = await this.clusterReadService.readById(clusterId);
 
