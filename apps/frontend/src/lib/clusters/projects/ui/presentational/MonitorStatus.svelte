@@ -6,8 +6,13 @@
   import DataTile from '../ProjectView/tiles/DataTile.svelte';
   import { logger } from '$lib/shared/logger/index.js';
   import StatusBar from './public-dashboard/StatusBar.svelte';
+  import type { Snippet } from 'svelte';
 
-  const { projectId } = $props();
+  type Props = {
+    projectId: string;
+    children: Snippet;
+  };
+  const { projectId, children }: Props = $props();
   const MAX_PINGS = 60;
 
   const projectMonitor = $derived(
@@ -101,5 +106,7 @@
     </div>
 
     <p class="text-secondary/60 text-sm">Last 60 pings</p>
+
+    {@render children()}
   </div>
 </DataTile>

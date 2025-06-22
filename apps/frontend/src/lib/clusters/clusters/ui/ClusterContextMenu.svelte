@@ -1,20 +1,20 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/state';
+  import { projectsState } from '$lib/clusters/projects/application/projects.state.svelte.js';
+  import SetupMonitoringButton from '$lib/clusters/projects/ui/presentational/SetupMonitoringButton.svelte';
+  import { Feature } from '$lib/shared/types.js';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
+  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
   import {
     PenLineIcon,
     PlusIcon,
     SettingsIcon,
     Trash2Icon,
   } from 'lucide-svelte';
-  import { clustersState } from '../application/clusters.state.svelte.js';
-  import { page } from '$app/state';
-  import { projectsState } from '$lib/clusters/projects/application/projects.state.svelte.js';
-  import SetupMonitoringButton from '$lib/clusters/projects/ui/presentational/SetupMonitoringButton.svelte';
-  import { Feature } from '$lib/shared/types.js';
-  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
   import { fly } from 'svelte/transition';
+  import { clustersState } from '../application/clusters.state.svelte.js';
 
   type Props = {
     clusterId: string;

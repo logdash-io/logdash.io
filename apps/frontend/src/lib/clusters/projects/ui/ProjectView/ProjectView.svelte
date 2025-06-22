@@ -3,6 +3,8 @@
   import { Feature } from '$lib/shared/types.js';
   import { metricsState } from '../../application/metrics.state.svelte.js';
   import { projectsState } from '../../application/projects.state.svelte.js';
+  import TelegramAlertingSetup from '../notification-channels/telegram-setup/TelegramAlertingSetup.svelte';
+  import NotificationChannelsList from '../notification-channels/NotificationChannelsList.svelte';
   import EmptyState from './EmptyState.svelte';
   import MetricDetails from './MetricDetails/MetricDetails.svelte';
   import ProjectSync from './ProjectSync.svelte';
@@ -12,6 +14,7 @@
   import MetricsTiles from './tiles/MetricsTiles.svelte';
 
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
+  const clusterId = $derived(page.params.cluster_id);
 
   const hasLogging = $derived.by(() => {
     const id = page.url.searchParams.get('project_id');
@@ -44,6 +47,8 @@
 </script>
 
 <ProjectSync>
+  <TelegramAlertingSetup {clusterId} />
+
   {#if hasLogging && (!previewedMetricId || isMobile) && metricsState.ready}
     <div class="flex flex-1 flex-col gap-4">
       <DataTile delayIn={0} delayOut={50}>

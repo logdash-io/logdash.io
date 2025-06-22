@@ -10,6 +10,7 @@ import type {
   HttpPing,
   HttpPingCreatedEvent,
 } from '../domain/monitoring/http-ping.js';
+import { httpClient } from '$lib/shared/http/http-client.js';
 
 const logger = createLogger('monitoring.state');
 
@@ -31,6 +32,101 @@ class MonitoringState {
 
   get monitors(): Monitor[] {
     return this._getSortedMonitors();
+  }
+
+  hasNotificationChannel(monitorId: string, channelId: string): boolean {
+    const monitor = this._monitors[monitorId];
+    if (!monitor) {
+      return false;
+    }
+    return (
+      monitor.notificationChannelsIds &&
+      monitor.notificationChannelsIds.includes(channelId)
+    );
+  }
+
+  addNotificationChannel(monitorId: string, channelId: string): Promise<void> {
+    if (!monitorId || !channelId) {
+      return Promise.reject(
+        new Error('Monitor ID and Channel ID are required'),
+      );
+    }
+
+    const monitor = this._monitors[monitorId];
+
+    if (!monitor) {
+      return Promise.reject(
+        new Error(`Monitor with ID ${monitorId} not found`),
+      );
+    }
+
+    if (this.hasNotificationChannel(monitorId, channelId)) {
+      return Promise.resolve();
+    }
+
+    logger.debug(
+      `Adding notification channel ${channelId} to monitor ${monitorId}`,
+    );
+
+    // this._monitors[monitorId].notificationChannelsIds.push(channelId);
+    this._monitors[monitorId].notificationChannelsIds = [channelId];
+
+    return httpClient.put(`/http_monitors/${monitorId}`, {
+      notificationChannelsIds: [channelId],
+    });
+  }
+
+  removeNotificationChannel(
+    monitorId: string,
+    channelId: string,
+  ): Promise<void> {
+    if (!monitorId || !channelId) {
+      return Promise.reject(
+        new Error('Monitor ID and Channel ID are required'),
+      );
+    }
+
+    const monitor = this._monitors[monitorId];
+
+    if (!monitor) {
+      return Promise.reject(
+        new Error(`Monitor with ID ${monitorId} not found`),
+      );
+    }
+
+    if (!this.hasNotificationChannel(monitorId, channelId)) {
+      return Promise.resolve();
+    }
+
+    logger.debug(
+      `Removing notification channel ${channelId} from monitor ${monitorId}`,
+    );
+
+    // this._monitors[monitorId].notificationChannelsIds = this._monitors[monitorId].notificationChannelsIds.filter(
+    //   (id) => id !== channelId,
+    // );
+    this._monitors[monitorId].notificationChannelsIds = [];
+
+    return httpClient.put(`/http_monitors/${monitorId}`, {
+      notificationChannelsIds: [],
+    });
+  }
+
+  toggleNotificationChannel(
+    monitorId: string,
+    channelId: string,
+  ): Promise<void> {
+    if (!monitorId || !channelId) {
+      return Promise.reject(
+        new Error('Monitor ID and Channel ID are required'),
+      );
+    }
+
+    if (this.hasNotificationChannel(monitorId, channelId)) {
+      return this.removeNotificationChannel(monitorId, channelId);
+    } else {
+      return this.addNotificationChannel(monitorId, channelId);
+    }
   }
 
   getMonitorByProjectId(projectId: string): Monitor {
