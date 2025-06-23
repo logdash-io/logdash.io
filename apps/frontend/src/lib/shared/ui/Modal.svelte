@@ -34,7 +34,7 @@
         easing: quadInOut,
         start: 0.95,
       }}
-      class="ld-card w-lg z-10"
+      class="ld-card w-xl z-10"
     >
       {@render children()}
     </div>
