@@ -90,10 +90,12 @@
           <div class="mx-auto w-full max-w-md">
             <!-- Plan header -->
             <div class="relative mb-6">
-              <div class="badge badge-primary absolute right-4 top-4">
+              <div
+                class="badge badge-primary badge-soft absolute right-0 top-0 font-semibold"
+              >
                 Limited Offer -50%
               </div>
-              <h2 class="text-primary mb-2 text-3xl font-bold">
+              <h2 class="text-secondary mb-2 text-3xl font-bold">
                 {earlyBirdPlan.name}
               </h2>
               <div class="mb-4">
@@ -142,7 +144,7 @@
                     <span class="loading loading-spinner h-5 w-5"></span>
                   </div>
                 {/if}
-                {earlyBirdPlan.buttonText}
+                Upgrade to {earlyBirdPlan.name}
               </button>
 
               <!-- Trial info -->

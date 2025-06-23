@@ -53,7 +53,9 @@
           : ''}"
       >
         {#if plan.popular}
-          <div class="badge badge-primary absolute right-4 top-4">
+          <div
+            class="badge badge-primary badge-soft absolute right-4 top-4 font-semibold"
+          >
             Limited Offer -50%
           </div>
         {/if}
