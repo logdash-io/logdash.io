@@ -4,6 +4,8 @@ import type {
   NotificationChannel,
 } from '$lib/clusters/projects/domain/telegram/telegram.types';
 import { NotificationChannelsService } from '$lib/clusters/projects/infrastructure/notification-channels/notification-channels.service';
+import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
+import { AxiosError } from 'axios';
 
 export class NotificationChannelsStateManager {
   state = $state<NotificationChannelsState>({
@@ -35,12 +37,9 @@ export class NotificationChannelsStateManager {
     }
   }
 
-  async deleteChannel(clusterId: string, channelId: string): Promise<void> {
+  async deleteChannel(channelId: string): Promise<void> {
     try {
-      await NotificationChannelsService.deleteNotificationChannel(
-        clusterId,
-        channelId,
-      );
+      await NotificationChannelsService.deleteNotificationChannel(channelId);
 
       this.state.channels = this.state.channels.filter(
         (channel) => channel.id !== channelId,
@@ -68,13 +67,17 @@ export class NotificationChannelsStateManager {
           channel,
         );
 
-      this.state.channels.push(createdChannel);
+      // todo: push to state.channels once backend contract returns NotificationChannel from creation
+      // this.state.channels.push(createdChannel);
     } catch (error) {
-      console.error('Error creating notification channel:', error);
-      this.state.error =
-        error instanceof Error
-          ? error.message
-          : 'Failed to create notification channel';
+      // todo: make error handling generic
+      toast.error(
+        `${
+          error instanceof AxiosError
+            ? error.response?.data?.message
+            : 'Failed to create notification channel'
+        }`,
+      );
     } finally {
       this.state.isLoading = false;
     }

@@ -31,14 +31,18 @@
   }
 
   function onChannelSetupSubmit() {
-    telegramSetupState.close();
-    notificationChannelsState.createChannel(clusterId, {
-      type: 'telegram',
-      name: telegramSetupState.state.chatName,
-      options: {
-        chatId: telegramSetupState.state.chatId,
-      },
-    });
+    notificationChannelsState
+      .createChannel(clusterId, {
+        type: 'telegram',
+        name: telegramSetupState.state.chatName,
+        options: {
+          chatId: telegramSetupState.state.chatId,
+        },
+      })
+      .then(() => {
+        telegramSetupState.close();
+        notificationChannelsState.loadChannels(clusterId);
+      });
   }
 </script>
 

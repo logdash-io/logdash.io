@@ -23,12 +23,7 @@ export class NotificationChannelsService {
     );
   }
 
-  static async deleteNotificationChannel(
-    clusterId: string,
-    channelId: string,
-  ): Promise<void> {
-    return httpClient.delete(
-      `/clusters/${clusterId}/notification_channels/${channelId}`,
-    );
+  static async deleteNotificationChannel(channelId: string): Promise<void> {
+    return httpClient.delete(`/notification_channels/${channelId}`);
   }
 }
