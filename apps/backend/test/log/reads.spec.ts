@@ -3,6 +3,13 @@ import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { createTestApp } from '../utils/bootstrap';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { sleep } from '../utils/sleep';
+import { ClickHouseClient } from '@clickhouse/client';
+import {
+  LogClickhouseNormalized,
+  LogClickhouseSerialized,
+  LogSerialized,
+} from '../../src/log/core/entities/log.interface';
+import { LogSerializer } from '../../src/log/core/entities/log.serializer';
 
 describe('LogCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -21,8 +28,7 @@ describe('LogCoreController (reads)', () => {
 
   describe('GET /projects/:projectId/logs', () => {
     it('reads logs with direction', async () => {
-      const { project, token } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // given
       const createdAt = new Date('2000-01-01T11:00:00Z').toISOString();
@@ -65,14 +71,10 @@ describe('LogCoreController (reads)', () => {
 
       // when
       const responseFirst = await request(bootstrap.app.getHttpServer())
-        .get(
-          `/projects/${project.id}/logs?direction=before&lastId=${third.id}&limit=1`,
-        )
+        .get(`/projects/${project.id}/logs?direction=before&lastId=${third.id}&limit=1`)
         .set('Authorization', `Bearer ${token}`);
       const responseSecond = await request(bootstrap.app.getHttpServer())
-        .get(
-          `/projects/${project.id}/logs?direction=after&lastId=${third.id}&limit=1`,
-        )
+        .get(`/projects/${project.id}/logs?direction=after&lastId=${third.id}&limit=1`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -92,9 +94,7 @@ describe('LogCoreController (reads)', () => {
 
       // then
       expect(response.status).toEqual(403);
-      expect(response.body.message).toEqual(
-        'User is not a member of this cluster',
-      );
+      expect(response.body.message).toEqual('User is not a member of this cluster');
     });
 
     it('reads logs from demo project without authorization and uses cache', async () => {
@@ -133,6 +133,77 @@ describe('LogCoreController (reads)', () => {
       // then
       expect(secondResponse.status).toEqual(200);
       expect(secondResponse.body).toEqual([{ message: 'I like turtles' }]);
+    });
+  });
+
+  describe('GET /projects/:projectId/logs/v2', () => {
+    it('reads logs with direction', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // given
+      const createdAt = new Date('2000-01-01T11:00:00Z').toISOString();
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt,
+        message: 'Test message',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt,
+        message: 'Test message',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt,
+        message: 'Test message',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt,
+        message: 'Test message',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt,
+        message: 'Test message',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await sleep(1_500);
+
+      const clickhouseClient = bootstrap.app.get(ClickHouseClient);
+
+      const orderedLogsResult = await clickhouseClient.query({
+        query: `
+          SELECT * FROM logs
+          WHERE project_id = '${setup.project.id}'
+          ORDER BY id ASC
+        `,
+      });
+
+      const logsData = (await orderedLogsResult.json()) as any;
+
+      const logs: LogClickhouseNormalized[] = logsData.data.map((log: any) =>
+        LogSerializer.normalizeClickhouse(log),
+      );
+
+      const [first, second, third, fourth, fifth] = logs;
+
+      console.log(logs);
     });
   });
 });

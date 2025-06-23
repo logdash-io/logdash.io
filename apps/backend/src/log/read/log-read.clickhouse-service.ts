@@ -6,27 +6,24 @@ import { LogNormalized } from '../core/entities/log.interface';
 import { LogSerializer } from '../core/entities/log.serializer';
 import { LogReadDirection } from '../core/enums/log-read-direction.enum';
 import { Logger } from '@logdash/js-sdk';
+import { ClickHouseClient } from '@clickhouse/client';
+import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 
 @Injectable()
 export class LogReadService {
   constructor(
-    @InjectModel(LogEntity.name) private logModel: Model<LogEntity>,
+    private readonly clickhouse: ClickHouseClient,
     private logger: Logger,
   ) {}
 
   public async existsForProject(projectId: string): Promise<boolean> {
-    const result = await this.logModel.exists({ projectId });
-    return result !== null;
-  }
+    const result = await this.clickhouse.query({
+      query: `SELECT 1 FROM logs WHERE projectId = '${projectId}' LIMIT 1`,
+    });
 
-  public async readById(id: string): Promise<LogNormalized> {
-    const log = await this.logModel.findById(id).lean<LogEntity>().exec();
+    const data = (await result.json()) as any;
 
-    if (!log) {
-      throw new Error('Log not found');
-    }
-
-    return LogSerializer.normalize(log);
+    return data.length > 0;
   }
 
   public async readMany(dto: {
@@ -35,62 +32,25 @@ export class LogReadService {
     limit: number;
     projectId: string;
   }): Promise<LogNormalized[]> {
-    if (dto.direction) {
-      const log = await this.getIndexOfLog(dto.lastId!);
+    let query = `SELECT * FROM logs WHERE project_id = '${dto.projectId}'`;
 
-      const findQuery: FilterQuery<LogEntity> = {
-        projectId: dto.projectId,
-      };
-
-      if (dto.direction === LogReadDirection.Before) {
-        findQuery.index = { $lt: log };
-      }
-
-      if (dto.direction === LogReadDirection.After) {
-        findQuery.index = { $gt: log };
-      }
-
-      if (dto.direction === LogReadDirection.Before) {
-        findQuery.index = { $lt: log };
-      }
-
-      const logs = await this.logModel
-        .find(findQuery)
-        .sort({ index: dto.direction === LogReadDirection.Before ? -1 : 1 })
-        .lean<LogEntity[]>()
-        .limit(dto.limit)
-        .exec();
-
-      return logs.map((log) => LogSerializer.normalize(log));
+    if (dto.lastId && dto.direction) {
+      const operator = dto.direction === LogReadDirection.After ? '>' : '<';
+      query += ` AND id ${operator} '${dto.lastId}'`;
     }
 
-    const findQuery: FilterQuery<LogEntity> = {};
+    query += ` ORDER BY id ASC LIMIT ${dto.limit}`;
 
-    if (dto.projectId) {
-      findQuery.projectId = dto.projectId;
-    }
+    const result = await this.clickhouse.query({ query });
+    const data = ((await result.json()) as any).data;
 
-    const logs = await this.logModel
-      .find(findQuery)
-      .sort({ index: -1 })
-      .lean<LogEntity[]>()
-      .limit(dto.limit)
-      .exec();
-
-    return logs.map((log) => LogSerializer.normalize(log));
-  }
-
-  private async getIndexOfLog(logId: string): Promise<number> {
-    const log = await this.logModel.findOne(
-      { _id: new Types.ObjectId(logId) },
-      { index: 1 },
-    );
-
-    if (!log) {
-      this.logger.error(`Log not found`, { logId });
-      throw new Error(`Log with id ${logId} not found`);
-    }
-
-    return log.index;
+    return data.map((row: any) => ({
+      id: row.id,
+      createdAt: ClickhouseUtils.clickhouseDateToJsDate(row.created_at),
+      message: row.message,
+      level: row.level,
+      projectId: row.project_id,
+      index: row.sequence_number,
+    }));
   }
 }

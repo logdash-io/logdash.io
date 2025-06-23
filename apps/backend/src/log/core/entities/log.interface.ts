@@ -10,6 +10,15 @@ export class LogNormalized {
   index: number;
 }
 
+export class LogClickhouseNormalized {
+  id: string;
+  createdAt: Date;
+  message: string;
+  level: LogLevel;
+  projectId: string;
+  sequenceNumber: number;
+}
+
 export class LogSerialized {
   @ApiProperty()
   id: string;
@@ -25,4 +34,21 @@ export class LogSerialized {
 
   @ApiProperty()
   index: number;
+}
+
+export class LogClickhouseSerialized {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  createdAt: string;
+
+  @ApiProperty()
+  message: string;
+
+  @ApiProperty({ enum: LogLevel })
+  level: LogLevel;
+
+  @ApiProperty()
+  sequenceNumber: number;
 }
