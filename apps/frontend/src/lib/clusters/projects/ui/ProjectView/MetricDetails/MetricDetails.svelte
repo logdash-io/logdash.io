@@ -132,7 +132,8 @@
 				<button 
 					role="tab" 
 					class="tab {minuteDataTimeRange === MinuteDataChartOptions.LARGE ? 'tab-active btn-secondary' : ''} w-full h-full rounded-lg"
-					onclick={() => minuteDataTimeRange = MinuteDataChartOptions.LARGE}
+					disabled={!isPaidTier}
+					onclick={() => isPaidTier && (minuteDataTimeRange = MinuteDataChartOptions.LARGE)}
 				>
 					{MinuteDataChartOptions.LARGE}
 				</button>
@@ -172,7 +173,8 @@
 				<button 
 					role="tab" 
 					class="tab {hourDataTimeRange === HourDataChartOptions.LARGE ? 'tab-active btn-secondary' : ''} w-full h-full rounded-lg"
-					onclick={() => hourDataTimeRange = HourDataChartOptions.LARGE}
+					disabled={!isPaidTier}
+					onclick={() => isPaidTier && (hourDataTimeRange = HourDataChartOptions.LARGE)}
 				>
 					{HourDataChartOptions.LARGE}
 				</button>
@@ -213,7 +215,8 @@
 				<button 
 					role="tab" 
 					class="tab {dayDataTimeRange === DayDataChartOptions.LARGE ? 'tab-active btn-secondary' : ''} w-full h-full rounded-lg"
-					onclick={() => dayDataTimeRange = DayDataChartOptions.LARGE}
+					disabled={!isPaidTier}
+					onclick={() => isPaidTier && (dayDataTimeRange = DayDataChartOptions.LARGE)}
 				>
 					{DayDataChartOptions.LARGE}
 				</button>
