@@ -12,7 +12,6 @@ import { NotificationChannelReadService } from '../read/notification-channel-rea
 
 @Controller()
 @ApiTags('Notification channels')
-@UseGuards(ClusterMemberGuard)
 export class NotificationChannelCoreController {
   constructor(
     private readonly notificationChannelWriteService: NotificationChannelWriteService,
@@ -20,6 +19,7 @@ export class NotificationChannelCoreController {
     private readonly notificationChannelReadService: NotificationChannelReadService,
   ) {}
 
+  @UseGuards(ClusterMemberGuard)
   @Post('clusters/:clusterId/notification_channels')
   @ApiResponse({ type: NotificationChannelSerialized })
   public async create(
@@ -40,6 +40,7 @@ export class NotificationChannelCoreController {
     return NotificationChannelSerializer.serialize(channel);
   }
 
+  @UseGuards(ClusterMemberGuard)
   @Put('notification_channels/:id')
   public async update(
     @Param('id') id: string,
@@ -51,6 +52,7 @@ export class NotificationChannelCoreController {
     });
   }
 
+  @UseGuards(ClusterMemberGuard)
   @Delete('notification_channels/:id')
   @ApiResponse({ type: SuccessResponse })
   public async delete(@Param('id') id: string): Promise<SuccessResponse> {
@@ -59,7 +61,8 @@ export class NotificationChannelCoreController {
     return new SuccessResponse();
   }
 
-  @ApiResponse({ type: [NotificationChannelSerialized] })
+  @UseGuards(ClusterMemberGuard)
+  @ApiResponse({ type: NotificationChannelSerialized, isArray: true })
   @Get('clusters/:clusterId/notification_channels')
   public async getByClusterId(
     @Param('clusterId') clusterId: string,
