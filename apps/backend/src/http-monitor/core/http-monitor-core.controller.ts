@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ConflictException,
   Controller,
@@ -26,6 +27,7 @@ import { HttpPingSchedulerService } from '../../http-ping/schedule/http-ping-sch
 import { DemoEndpoint } from 'src/demo/decorators/demo-endpoint.decorator';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
 import { HttpMonitorRemovalService } from '../removal/http-monitor-removal.service';
+import { NotificationChannelReadService } from '../../notification-channel/read/notification-channel-read.service';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -39,6 +41,7 @@ export class HttpMonitorCoreController {
     private readonly httpMonitorStatusService: HttpMonitorStatusService,
     private readonly httpPingSchedulerService: HttpPingSchedulerService,
     private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
+    private readonly notificationChannelReadService: NotificationChannelReadService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -55,6 +58,11 @@ export class HttpMonitorCoreController {
         'You have reached the maximum number of monitors for this project',
       );
     }
+
+    await this.validateNotificationChannels({
+      notificationChannelsIds: dto.notificationChannelsIds,
+      projectId,
+    });
 
     const httpMonitor = await this.httpMonitorWriteService.create(projectId, dto, userId);
     const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
@@ -119,5 +127,60 @@ export class HttpMonitorCoreController {
     @CurrentUserId() userId: string,
   ): Promise<void> {
     await this.httpMonitorRemovalService.deleteById(httpMonitorId, userId);
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @Post('/http_monitors/:httpMonitorId/notification_channels/:notificationChannelId')
+  async addNotificationChannel(
+    @Param('httpMonitorId') httpMonitorId: string,
+    @Param('notificationChannelId') notificationChannelId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<void> {
+    await this.validateNotificationChannels({
+      notificationChannelsIds: [notificationChannelId],
+      projectId: (await this.httpMonitorReadService.readById(httpMonitorId))!.projectId,
+    });
+
+    await this.httpMonitorWriteService.addNotificationChannel(
+      httpMonitorId,
+      notificationChannelId,
+      userId,
+    );
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @Delete('/http_monitors/:httpMonitorId/notification_channels/:notificationChannelId')
+  async removeNotificationChannel(
+    @Param('httpMonitorId') httpMonitorId: string,
+    @Param('notificationChannelId') notificationChannelId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<void> {
+    await this.validateNotificationChannels({
+      notificationChannelsIds: [notificationChannelId],
+      projectId: (await this.httpMonitorReadService.readById(httpMonitorId))!.projectId,
+    });
+
+    await this.httpMonitorWriteService.removeNotificationChannel(
+      httpMonitorId,
+      notificationChannelId,
+      userId,
+    );
+  }
+
+  private async validateNotificationChannels(params: {
+    notificationChannelsIds?: string[];
+    projectId: string;
+  }): Promise<void> {
+    const clusterId = (await this.projectReadService.readById(params.projectId))!.clusterId;
+
+    if (
+      params.notificationChannelsIds &&
+      !(await this.notificationChannelReadService.belongToCluster(
+        params.notificationChannelsIds,
+        clusterId,
+      ))
+    ) {
+      throw new BadRequestException('Notification channels must belong to the same cluster');
+    }
   }
 }

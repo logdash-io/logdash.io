@@ -7,7 +7,11 @@ import { HttpMonitorNormalized } from '../core/entities/http-monitor.interface';
 import { HttpMonitorSerializer } from '../core/entities/http-monitor.serializer';
 import { UpdateHttpMonitorBody } from '../core/dto/update-http-monitor.body';
 import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
-import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
+import {
+  AuditLogEntityAction,
+  AuditLogHttpMonitorAction,
+  AuditLogNotificationChannelAction,
+} from '../../audit-log/core/enums/audit-log-actions.enum';
 import { Actor } from '../../audit-log/core/enums/actor.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 
@@ -38,6 +42,28 @@ export class HttpMonitorWriteService {
       relatedDomain: RelatedDomain.HttpMonitor,
       relatedEntityId: entity._id.toString(),
     });
+
+    if (dto.notificationChannelsIds) {
+      dto.notificationChannelsIds.forEach((notificationChannelId) => {
+        this.auditLog.create({
+          userId: actorUserId,
+          relatedDomain: RelatedDomain.NotificationChannel,
+          actor: Actor.User,
+          action: AuditLogNotificationChannelAction.AddedToMonitor,
+          relatedEntityId: notificationChannelId,
+          description: `Added to monitor ${entity._id}`,
+        });
+      });
+
+      this.auditLog.create({
+        userId: actorUserId,
+        relatedDomain: RelatedDomain.HttpMonitor,
+        actor: Actor.User,
+        action: AuditLogHttpMonitorAction.AddedNotificationChannel,
+        relatedEntityId: entity._id.toString(),
+        description: `Added notification channels ${dto.notificationChannelsIds.join(', ')} to monitor`,
+      });
+    }
 
     return HttpMonitorSerializer.normalize(entity);
   }
@@ -105,5 +131,61 @@ export class HttpMonitorWriteService {
     });
 
     await this.httpMonitorModel.findByIdAndDelete(httpMonitorId);
+  }
+
+  public async addNotificationChannel(
+    httpMonitorId: string,
+    notificationChannelId: string,
+    actorUserId: string,
+  ): Promise<void> {
+    this.auditLog.create({
+      userId: actorUserId,
+      relatedDomain: RelatedDomain.HttpMonitor,
+      actor: Actor.User,
+      action: AuditLogHttpMonitorAction.AddedNotificationChannel,
+      relatedEntityId: httpMonitorId,
+      description: `Added notification channel ${notificationChannelId} to monitor`,
+    });
+
+    this.auditLog.create({
+      userId: actorUserId,
+      relatedDomain: RelatedDomain.NotificationChannel,
+      actor: Actor.User,
+      action: AuditLogNotificationChannelAction.AddedToMonitor,
+      relatedEntityId: notificationChannelId,
+      description: `Added to monitor ${httpMonitorId}`,
+    });
+
+    await this.httpMonitorModel.findByIdAndUpdate(httpMonitorId, {
+      $addToSet: { notificationChannelsIds: notificationChannelId },
+    });
+  }
+
+  public async removeNotificationChannel(
+    httpMonitorId: string,
+    notificationChannelId: string,
+    actorUserId: string,
+  ): Promise<void> {
+    this.auditLog.create({
+      userId: actorUserId,
+      relatedDomain: RelatedDomain.HttpMonitor,
+      actor: Actor.User,
+      action: AuditLogHttpMonitorAction.RemovedNotificationChannel,
+      relatedEntityId: httpMonitorId,
+      description: `Removed notification channel ${notificationChannelId} from monitor`,
+    });
+
+    this.auditLog.create({
+      userId: actorUserId,
+      relatedDomain: RelatedDomain.NotificationChannel,
+      actor: Actor.User,
+      action: AuditLogNotificationChannelAction.RemovedFromMonitor,
+      relatedEntityId: notificationChannelId,
+      description: `Removed from monitor ${httpMonitorId}`,
+    });
+
+    await this.httpMonitorModel.findByIdAndUpdate(httpMonitorId, {
+      $pull: { notificationChannelsIds: notificationChannelId },
+    });
   }
 }

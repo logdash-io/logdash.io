@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsArray, IsMongoId, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export class UpdateHttpMonitorBody {

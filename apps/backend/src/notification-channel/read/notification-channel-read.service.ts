@@ -60,4 +60,16 @@ export class NotificationChannelReadService {
       ? NotificationChannelSerializer.normalize(notificationChannel)
       : null;
   }
+
+  public async belongToCluster(
+    notificationChannelsIds: string[],
+    clusterId: string,
+  ): Promise<boolean> {
+    const notificationChannels = await this.notificationChannelModel
+      .find({ _id: { $in: notificationChannelsIds }, clusterId })
+      .lean<NotificationChannelEntity[]>()
+      .exec();
+
+    return notificationChannels.length === notificationChannelsIds.length;
+  }
 }
