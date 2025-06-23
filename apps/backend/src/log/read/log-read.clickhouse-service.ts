@@ -35,11 +35,24 @@ export class LogReadService {
     let query = `SELECT * FROM logs WHERE project_id = '${dto.projectId}'`;
 
     if (dto.lastId && dto.direction) {
-      const operator = dto.direction === LogReadDirection.After ? '>' : '<';
-      query += ` AND id ${operator} '${dto.lastId}'`;
+      const lastLogQuery = `SELECT created_at, sequence_number FROM logs WHERE id = '${dto.lastId}' AND project_id = '${dto.projectId}' LIMIT 1`;
+      const lastLogResult = await this.clickhouse.query({ query: lastLogQuery });
+      const lastLogData = ((await lastLogResult.json()) as any).data;
+
+      if (lastLogData.length > 0) {
+        const lastLog = lastLogData[0];
+        const lastCreatedAt = lastLog.created_at;
+        const lastSequenceNumber = lastLog.sequence_number;
+
+        if (dto.direction === LogReadDirection.After) {
+          query += ` AND (created_at > '${lastCreatedAt}' OR (created_at = '${lastCreatedAt}' AND sequence_number > ${lastSequenceNumber}))`;
+        } else {
+          query += ` AND (created_at < '${lastCreatedAt}' OR (created_at = '${lastCreatedAt}' AND sequence_number < ${lastSequenceNumber}))`;
+        }
+      }
     }
 
-    query += ` ORDER BY id ASC LIMIT ${dto.limit}`;
+    query += ` ORDER BY created_at ASC, sequence_number ASC LIMIT ${dto.limit}`;
 
     const result = await this.clickhouse.query({ query });
     const data = ((await result.json()) as any).data;

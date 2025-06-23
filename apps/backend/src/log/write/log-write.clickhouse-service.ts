@@ -27,7 +27,5 @@ export class LogWriteClickhouseService {
       values: logs,
       format: 'JSONEachRow',
     });
-
-    console.log(result);
   }
 }

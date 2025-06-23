@@ -10,6 +10,7 @@ import {
   LogSerialized,
 } from '../../src/log/core/entities/log.interface';
 import { LogSerializer } from '../../src/log/core/entities/log.serializer';
+import { addMinutes, subMinutes } from 'date-fns';
 
 describe('LogCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -141,11 +142,11 @@ describe('LogCoreController (reads)', () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // given
-      const createdAt = new Date('2000-01-01T11:00:00Z').toISOString();
+      const createdAt = new Date('2000-01-01T11:00:00Z');
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt,
+        createdAt: subMinutes(createdAt, 1).toISOString(),
         message: 'Test message',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -153,31 +154,34 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt,
+        createdAt: createdAt.toISOString(),
         message: 'Test message',
         level: LogLevel.Info,
         withoutSleep: true,
+        sequenceNumber: 2,
       });
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt,
+        createdAt: createdAt.toISOString(),
         message: 'Test message',
         level: LogLevel.Info,
         withoutSleep: true,
+        sequenceNumber: 3,
       });
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt,
+        createdAt: createdAt.toISOString(),
         message: 'Test message',
         level: LogLevel.Info,
         withoutSleep: true,
+        sequenceNumber: 4,
       });
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt,
+        createdAt: addMinutes(createdAt, 1).toISOString(),
         message: 'Test message',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -203,7 +207,26 @@ describe('LogCoreController (reads)', () => {
 
       const [first, second, third, fourth, fifth] = logs;
 
-      console.log(logs);
+      const responseSecond = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?direction=before&lastId=${third.id}&limit=1`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      const responseFourth = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?direction=after&lastId=${third.id}&limit=1`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      const responseFirst = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?direction=before&lastId=${second.id}&limit=1`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      const responseFifth = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?direction=after&lastId=${fourth.id}&limit=1`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(responseSecond.body[0].id).toEqual(second.id);
+      expect(responseFourth.body[0].id).toEqual(fourth.id);
+      expect(responseFirst.body[0].id).toEqual(first.id);
+      expect(responseFifth.body[0].id).toEqual(fifth.id);
     });
   });
 });
