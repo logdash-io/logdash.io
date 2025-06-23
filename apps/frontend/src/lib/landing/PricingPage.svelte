@@ -3,6 +3,7 @@
 	import { generateGithubOAuthUrl } from '$lib/shared/utils/generate-github-oauth-url.js';
 	import { CheckIcon, XIcon } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
+  import { exposedConfigState } from '../shared/exposed-config/application/exposed-config.state.svelte';
 
 	let loggingIn = $state(false);
 
@@ -17,6 +18,7 @@
 			next_url: '/app/clusters',
 		});
 	};
+
 
 	const pricingData = {
 		header: {
@@ -98,7 +100,7 @@
 		},
 	};
 
-	const featureComparison = {
+	const featureComparison = $derived({
 		title: 'Detailed Feature Comparison',
 		plans: [
 			{ name: 'Hobby', price: 'Free', tier: 'hobby' },
@@ -237,7 +239,7 @@
 				]
 			}
 		]
-	};
+	});
 </script>
 
 <section class="px-4 py-8 sm:py-16">
