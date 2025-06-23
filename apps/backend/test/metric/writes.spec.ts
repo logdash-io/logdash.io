@@ -6,6 +6,7 @@ import { MetricTtlService } from '../../src/metric/ttl/metric-ttl.service';
 import { subDays, subHours } from 'date-fns';
 import { MetricBucketingService } from '../../src/metric-shared/bucketing/metric-bucketing.service';
 import { MetricQueueingService } from '../../src/metric/queueing/metric-queueing-service';
+import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-configs';
 
 describe('Metrics (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -148,7 +149,7 @@ describe('Metrics (writes)', () => {
     // when
     const promisesA: Promise<void>[] = [];
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < getProjectPlanConfig(project.tier).metrics.maxMetricsRegisterEntries; i++) {
       promisesA.push(
         bootstrap.utils.metricUtils.recordMetric({
           name: `Users${i}`,
@@ -163,12 +164,18 @@ describe('Metrics (writes)', () => {
 
     // then
     const registeredMetrics = await bootstrap.models.metricRegisterModel.find();
-    expect(registeredMetrics.length).toEqual(2);
+    expect(registeredMetrics.length).toEqual(
+      getProjectPlanConfig(project.tier).metrics.maxMetricsRegisterEntries,
+    );
 
     // and when
     const promisesB: Promise<void>[] = [];
 
-    for (let i = 0; i < 4; i++) {
+    for (
+      let i = 0;
+      i < getProjectPlanConfig(project.tier).metrics.maxMetricsRegisterEntries + 2; // try to register 2 additional
+      i++
+    ) {
       await bootstrap.utils.metricUtils.recordMetric({
         name: `Users${i}`,
         value: 2,
@@ -188,23 +195,40 @@ describe('Metrics (writes)', () => {
       .find((entry) => entry.name === 'Users1')!
       ._id.toString();
 
-    // make sure that only metric Users0 and Users1 were registered
+    const users2MetricRegisterEntryId = metricRegisterEntries
+      .find((entry) => entry.name === 'Users2')!
+      ._id.toString();
+
+    const users3MetricRegisterEntryId = metricRegisterEntries
+      .find((entry) => entry.name === 'Users3')!
+      ._id.toString();
+
+    const users4MetricRegisterEntryId = metricRegisterEntries
+      .find((entry) => entry.name === 'Users4')!
+      ._id.toString();
+
+    // make sure that only metric Users0 and Users1 and Users2 and Users3 and Users4 were registered
     const metrics = await bootstrap.models.metricModel.find({
       $and: [
         { metricRegisterEntryId: { $ne: users0MetricRegisterEntryId } },
         { metricRegisterEntryId: { $ne: users1MetricRegisterEntryId } },
+        { metricRegisterEntryId: { $ne: users2MetricRegisterEntryId } },
+        { metricRegisterEntryId: { $ne: users3MetricRegisterEntryId } },
+        { metricRegisterEntryId: { $ne: users4MetricRegisterEntryId } },
       ],
     });
     expect(metrics.length).toEqual(0);
 
-    expect(await bootstrap.models.metricRegisterModel.find()).toHaveLength(2);
+    expect(await bootstrap.models.metricRegisterModel.find()).toHaveLength(
+      getProjectPlanConfig(project.tier).metrics.maxMetricsRegisterEntries,
+    );
 
     const allTimeMetrics = await bootstrap.models.metricModel.find({
       granularity: MetricGranularity.AllTime,
     });
 
     expect(allTimeMetrics.every((metric) => metric.value === 2)).toBeTruthy();
-  }, 10_000);
+  }, 20_000);
 
   it('removes minute metrics older than 1 hour', async () => {
     const service = bootstrap.app.get(MetricTtlService);
