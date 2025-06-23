@@ -13,7 +13,7 @@ type GranularLogMetrics = Record<
   Record<LogMetric['date'], LogMetric>
 >;
 
-const logger = createLogger('log_metrics.state', true);
+const logger = createLogger('log_metrics.state');
 
 // todo: divide api calls responsibility from state
 class LogMetricsState {
