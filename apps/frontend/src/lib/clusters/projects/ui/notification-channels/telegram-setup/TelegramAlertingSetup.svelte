@@ -1,5 +1,6 @@
 <script lang="ts">
   import { clustersState } from '$lib/clusters/clusters/application/clusters.state.svelte.js';
+  import { monitoringState } from '$lib/clusters/projects/application/monitoring.state.svelte.js';
   import { notificationChannelsState } from '$lib/clusters/projects/application/notification-channels/notification-channels.state.svelte';
   import { telegramSetupState } from '$lib/clusters/projects/application/telegram/telegram-setup.state.svelte';
   import Modal from '$lib/shared/ui/Modal.svelte';
@@ -30,7 +31,7 @@
     telegramSetupState.retry();
   }
 
-  function onChannelSetupSubmit() {
+  function onChannelSetupSubmit(shouldAssignToServiceMonitor: boolean) {
     notificationChannelsState
       .createChannel(clusterId, {
         type: 'telegram',
@@ -39,7 +40,13 @@
           chatId: telegramSetupState.state.chatId,
         },
       })
-      .then(() => {
+      .then((createdChannelId: string) => {
+        if (shouldAssignToServiceMonitor) {
+          monitoringState.addNotificationChannel(
+            telegramSetupState.state.monitorId,
+            createdChannelId,
+          );
+        }
         telegramSetupState.close();
         notificationChannelsState.loadChannels(clusterId);
       });
@@ -64,6 +71,9 @@
       clusterName={clustersState.clusterName(clusterId)}
       chatName={telegramSetupState.state.chatName}
       onSubmit={onChannelSetupSubmit}
+      monitorName={monitoringState.getMonitorById(
+        telegramSetupState.state.monitorId,
+      )?.name || ''}
     />
   {:else if telegramSetupState.state.currentStep === 'error'}
     <TelegramErrorStep

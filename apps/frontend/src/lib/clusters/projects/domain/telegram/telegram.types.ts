@@ -53,4 +53,5 @@ export interface TelegramSetupStateProps {
   chatName: string;
   chatId: string;
   errorMessage: string;
+  monitorId?: string;
 }

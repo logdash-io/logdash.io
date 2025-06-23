@@ -112,7 +112,7 @@
         <button
           in:fly={{ y: -2, duration: 100 }}
           onclick={() => {
-            telegramSetupState.startSetup();
+            telegramSetupState.startSetup(monitorId);
             close();
           }}
           class="btn btn-transparent flex w-full items-center justify-start gap-4 px-0"

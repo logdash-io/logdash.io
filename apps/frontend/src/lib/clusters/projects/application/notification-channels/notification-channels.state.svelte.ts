@@ -1,8 +1,5 @@
 import type { NotificationChannelsState } from '$lib/clusters/projects/domain/notification-channels/notification-channels.types';
-import type {
-  CreateNotificationChannelDTO,
-  NotificationChannel,
-} from '$lib/clusters/projects/domain/telegram/telegram.types';
+import type { CreateNotificationChannelDTO } from '$lib/clusters/projects/domain/telegram/telegram.types';
 import { NotificationChannelsService } from '$lib/clusters/projects/infrastructure/notification-channels/notification-channels.service';
 import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 import { AxiosError } from 'axios';
@@ -44,6 +41,8 @@ export class NotificationChannelsStateManager {
       this.state.channels = this.state.channels.filter(
         (channel) => channel.id !== channelId,
       );
+
+      toast.success('Notification channel deleted successfully');
     } catch (error) {
       console.error('Error deleting notification channel:', error);
       this.state.error =
@@ -56,7 +55,7 @@ export class NotificationChannelsStateManager {
   async createChannel(
     clusterId: string,
     channel: CreateNotificationChannelDTO,
-  ): Promise<void> {
+  ): Promise<string> {
     this.state.isLoading = true;
     this.state.error = null;
 
@@ -66,6 +65,9 @@ export class NotificationChannelsStateManager {
           clusterId,
           channel,
         );
+
+      toast.success('Notification channel created successfully');
+      return createdChannel.id;
 
       // todo: push to state.channels once backend contract returns NotificationChannel from creation
       // this.state.channels.push(createdChannel);

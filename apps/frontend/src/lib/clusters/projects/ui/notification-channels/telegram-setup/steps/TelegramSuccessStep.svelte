@@ -4,10 +4,12 @@
   type Props = {
     chatName: string;
     clusterName: string;
-    onSubmit: () => void;
+    monitorName: string;
+    onSubmit: (withAssignment: boolean) => void;
   };
 
-  let { chatName, clusterName, onSubmit }: Props = $props();
+  let { chatName, monitorName, clusterName, onSubmit }: Props = $props();
+  let assignToServiceMonitor = $state(false);
 </script>
 
 <div class="space-y-8 text-center">
@@ -32,7 +34,23 @@
     {chatName}
   </p>
 
-  <button type="button" class="btn btn-primary w-full" onclick={onSubmit}>
+  <div class="flex items-center justify-start gap-2">
+    <input
+      type="checkbox"
+      id="assign-service-monitor"
+      bind:checked={assignToServiceMonitor}
+      class="checkbox checkbox-primary"
+    />
+    <label for="assign-service-monitor" class="cursor-pointer text-sm">
+      Assign to {monitorName} service monitor
+    </label>
+  </div>
+
+  <button
+    type="button"
+    class="btn btn-primary w-full"
+    onclick={() => onSubmit(assignToServiceMonitor)}
+  >
     Save channel to {clusterName} project
   </button>
 </div>
