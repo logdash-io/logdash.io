@@ -97,6 +97,147 @@
 				'Contact us for any questions about our pricing or features',
 		},
 	};
+
+	const featureComparison = {
+		title: 'Detailed Feature Comparison',
+		plans: [
+			{ name: 'Hobby', price: 'Free', tier: 'hobby' },
+			{ name: 'Early Bird', price: '$5/month', tier: 'earlyBird' }
+		],
+		sections: [
+			{
+				name: 'Projects',
+				icon: '🚀',
+				features: [
+					{
+						name: 'Projects',
+						hobby: '5',
+						earlyBird: 'Unlimited'
+					},
+					{
+						name: 'Services',
+						hobby: '5',
+						earlyBird: '20'
+					},
+				]
+			},
+			{
+				name: 'Logs',
+				icon: '📊',
+				features: [
+					{
+						name: 'Logs retention',
+						hobby: '1,000 most recent logs',
+						earlyBird: '10,000 most recent logs'
+					},
+					{
+						name: "Statistics retention",
+						hobby: '7 days',
+						earlyBird: '30 days'
+					},
+					{
+						name: 'Rate limit per hour',
+						hobby: '10,000',
+						earlyBird: '50,000'
+					}
+				]
+			},
+			{
+				name: 'Metrics',
+				icon: '📈',
+				features: [
+					{
+						name: 'Metrics per service',
+						hobby: '2',
+						earlyBird: '10'
+					},
+					{
+						name: 'Retention',
+						hobby: '7 days',
+						earlyBird: '30 days'
+					},
+				]
+			},
+			{
+				name: 'Monitors',
+				icon: '🔍',
+				features: [
+					{
+						name: 'Number of monitors per service',
+						hobby: '1',
+						earlyBird: '1'
+					},
+				]
+			},
+			{
+				name: 'Alerting',
+				icon: '🚨',
+				features: [
+					{
+						name: 'Telegram',
+						hobby: true,
+						earlyBird: true
+					},
+					{
+						name: 'Email',
+						hobby: false,
+						earlyBird: 'Coming soon'
+					},
+					{
+						name: 'Webhook',
+						hobby: false,
+						earlyBird: 'Coming soon'
+					},
+					{
+						name: 'Discord',
+						hobby: false,
+						earlyBird: 'Coming soon'
+					},
+					{
+						name: 'Slack',
+						hobby: false,
+						earlyBird: 'Coming soon'
+					},
+					{
+						name: 'SMS',
+						hobby: false,
+						earlyBird: 'Coming soon'
+					},
+				]
+			},
+			{
+				name: 'Support',
+				icon: '💬',
+				features: [
+					{
+						name: 'Dedicated discord channel',
+						hobby: false,
+						earlyBird: true
+					},
+					{
+						name: 'Priority support',
+						hobby: false,
+						earlyBird: true
+					},
+					{
+						name: 'Regular catch-up calls',
+						hobby: false,
+						earlyBird: true
+					},
+					{
+						name: 'Early access to new features',
+						hobby: false,
+						earlyBird: true
+					},
+					{
+						name: 'Feature requests',
+						hobby: false,
+						earlyBird: true
+					},
+				]
+			}
+		]
+	};
 </script>
 
 <section class="px-4 py-8 sm:py-16">
@@ -196,6 +337,68 @@
 	<span class="badge badge-ghost badge-soft mx-auto mb-8 block opacity-80">
 		Plans are in beta and subject to change
 	</span>
+
+	<!-- Detailed Feature Comparison Table -->
+	<div class="mx-auto max-w-6xl">
+		<h2 class="mb-8 text-center text-2xl font-bold">
+			{featureComparison.title}
+		</h2>
+
+		<div class="overflow-x-auto rounded-xl border border-base-300 bg-base-100 shadow-lg">
+			<table class="table w-full">
+				<thead>
+					<tr class="border-b-2 border-base-300">
+						<th class="text-left font-bold">Feature</th>
+						{#each featureComparison.plans as plan}
+							<th class="text-center font-bold">
+								{plan.name}<br>
+								<span class="text-sm font-normal opacity-75">{plan.price}</span>
+							</th>
+						{/each}
+					</tr>
+				</thead>
+				<tbody>
+					{#each featureComparison.sections as section}
+						<!-- Section Header -->
+						<tr class="border-b border-base-200">
+							<td colspan="3" class="bg-base-200 py-3 text-sm font-semibold uppercase tracking-wider">
+								{section.icon} {section.name}
+							</td>
+						</tr>
+
+						<!-- Section Features -->
+						{#each section.features as feature}
+							<tr>
+								<td class="font-medium">{feature.name}</td>
+								<td class="text-center">
+									{#if typeof feature.hobby === 'boolean'}
+										{#if feature.hobby}
+											<CheckIcon class="mx-auto h-4 w-4 text-success" />
+										{:else}
+											<XIcon class="mx-auto h-4 w-4 text-error" />
+										{/if}
+									{:else}
+										{feature.hobby}
+									{/if}
+								</td>
+								<td class="text-center">
+									{#if typeof feature.earlyBird === 'boolean'}
+										{#if feature.earlyBird}
+											<CheckIcon class="mx-auto h-4 w-4 text-success" />
+										{:else}
+											<XIcon class="mx-auto h-4 w-4 text-error" />
+										{/if}
+									{:else}
+										{feature.earlyBird}
+									{/if}
+								</td>
+							</tr>
+						{/each}
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</div>
 
 	<div
 		class="ld-card-base bg-neutral text-neutral-content mx-auto max-w-2xl rounded-xl p-8 shadow-xl"
