@@ -81,6 +81,35 @@ describe('NotificationChannelCoreController (writes)', () => {
           getEnvConfig().notificationChannels.telegramUptimeBot.token,
         );
       });
+
+      it('throws error if notification channel with same chatId already exists', async () => {
+        // given
+        const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        const telegramData = {
+          type: NotificationTarget.Telegram,
+          options: {
+            botToken: 'valid-bot-token',
+            chatId: 'valid-chat-id',
+          },
+        };
+
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: cluster.id,
+          options: { chatId: 'valid-chat-id' },
+          token,
+        });
+
+        // when
+        const response = await request(bootstrap.app.getHttpServer())
+          .post(`/clusters/${cluster.id}/notification_channels`)
+          .set('Authorization', `Bearer ${token}`)
+          .send(telegramData);
+
+        // then
+        expect(response.status).toBe(400);
+        expect(response.body.message).toEqual('Channel with this chatId already exists');
+      });
     });
 
     describe('Webhook', () => {
@@ -191,6 +220,32 @@ describe('NotificationChannelCoreController (writes)', () => {
         relatedDomain: RelatedDomain.NotificationChannel,
         relatedEntityId: response.body.id,
       });
+    });
+
+    it('does not allow to create more than 100 notification channels', async () => {
+      // given
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      for (let i = 0; i < 100; i++) {
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: cluster.id,
+          options: { chatId: `valid-chat-id-${i}` },
+          token,
+        });
+      }
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/notification_channels`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          type: NotificationTarget.Telegram,
+          options: { chatId: 'valid-chat-id' },
+        });
+
+      // then
+      expect(response.status).toBe(400);
+      expect(response.body.message).toEqual('Cannot create more than 100 notification channels');
     });
   });
 

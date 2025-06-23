@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessResponse } from 'src/shared/responses/success.response';
 import { CreateNotificationChannelBody } from './dto/create-notification-channel.body';
@@ -10,6 +20,7 @@ import { NotificationChannelSerialized } from './entities/notification-channel.i
 import { NotificationChannelOptionsEnrichmentService } from './notification-channel-options-enrichment.service';
 import { NotificationChannelReadService } from '../read/notification-channel-read.service';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
+import { NotificationChannelOptionsValidationService } from './notification-channel-options-validation.service';
 
 @Controller()
 @ApiTags('Notification channels')
@@ -18,6 +29,7 @@ export class NotificationChannelCoreController {
     private readonly notificationChannelWriteService: NotificationChannelWriteService,
     private readonly notificationChannelOptionsEnrichmentService: NotificationChannelOptionsEnrichmentService,
     private readonly notificationChannelReadService: NotificationChannelReadService,
+    private readonly notificationChannelOptionsValidationService: NotificationChannelOptionsValidationService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -28,6 +40,19 @@ export class NotificationChannelCoreController {
     @Body() dto: CreateNotificationChannelBody,
     @CurrentUserId() userId: string,
   ): Promise<NotificationChannelSerialized> {
+    const boundToClusterCount =
+      await this.notificationChannelReadService.countByClusterId(clusterId);
+
+    if (boundToClusterCount >= 100) {
+      throw new BadRequestException('Cannot create more than 100 notification channels');
+    }
+
+    await this.notificationChannelOptionsValidationService.validateOptions(
+      dto.options,
+      dto.type,
+      clusterId,
+    );
+
     const enrichedOptions = await this.notificationChannelOptionsEnrichmentService.enrichOptions(
       dto.options,
       dto.type,

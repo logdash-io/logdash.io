@@ -42,4 +42,22 @@ export class NotificationChannelReadService {
 
     return notificationChannels.map(NotificationChannelSerializer.normalize);
   }
+
+  public async countByClusterId(clusterId: string): Promise<number> {
+    return this.notificationChannelModel.countDocuments({ clusterId }).exec();
+  }
+
+  public async readExistingTelegramChannelByChatIdAndClusterId(
+    chatId: string,
+    clusterId: string,
+  ): Promise<NotificationChannelNormalized | null> {
+    const notificationChannel = await this.notificationChannelModel
+      .findOne({ clusterId, 'options.chatId': chatId })
+      .lean<NotificationChannelEntity>()
+      .exec();
+
+    return notificationChannel
+      ? NotificationChannelSerializer.normalize(notificationChannel)
+      : null;
+  }
 }
