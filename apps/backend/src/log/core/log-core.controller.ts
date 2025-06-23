@@ -187,4 +187,28 @@ export class LogCoreController {
 
     return logs.map((log) => LogSerializer.serialize(log));
   }
+
+  @DemoEndpoint()
+  @UseInterceptors(DemoCacheInterceptor)
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Get('projects/:projectId/logs/v2')
+  @ApiResponse({ type: LogSerialized, isArray: true })
+  public async readLogsV2(
+    @Param('projectId') projectId: string,
+    @Query() dto: ReadLogsQuery,
+  ): Promise<LogSerialized[]> {
+    if ((dto.lastId && !dto.direction) || (!dto.lastId && dto.direction)) {
+      throw new BadRequestException('Provide either lastId and direction or neither');
+    }
+
+    const logs = await this.logReadService.readMany({
+      direction: dto.direction,
+      lastId: dto.lastId,
+      projectId,
+      limit: dto.limit ?? 50,
+    });
+
+    return logs.map((log) => LogSerializer.serialize(log));
+  }
 }
