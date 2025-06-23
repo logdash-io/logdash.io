@@ -55,6 +55,14 @@ export class LogCoreController {
     private readonly logReadClickhouseService: LogReadClickhouseService,
   ) {}
 
+  @Sse('dupa/sse')
+  @Public()
+  public async sse(): Promise<Observable<any>> {
+    return new Observable((observer) => {
+      observer.next('Hello');
+    });
+  }
+
   @DemoEndpoint()
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
