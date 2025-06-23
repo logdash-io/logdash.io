@@ -1,5 +1,3 @@
-import { logger } from '$lib/shared/logger/index.js';
-
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
 
 export interface Toast {
@@ -20,7 +18,6 @@ class ToastManager {
   );
 
   private addToast(message: string, type: ToastType, duration: number): string {
-    logger.debug('[toasts] Adding toast:', { message, type, duration });
     const id = crypto.randomUUID();
     const newToast: Toast = {
       id,
@@ -47,7 +44,6 @@ class ToastManager {
   }
 
   public success(message: string, duration = DEFAULT_DURATION) {
-    logger.debug('[toasts] Adding success toast:', { message, duration });
     const id = this.addToast(message, 'success', duration);
     return () => this.remove(id);
   }
@@ -63,12 +59,10 @@ class ToastManager {
   }
 
   public remove(id: string) {
-    logger.debug('[toasts] Removing toast:', { id });
     this.toasts = this.toasts.filter((toast) => toast.id !== id);
   }
 
   public clear() {
-    logger.debug('[toasts] Clearing all toasts');
     this.toasts = [];
   }
 }

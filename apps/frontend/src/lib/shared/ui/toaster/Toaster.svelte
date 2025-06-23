@@ -38,12 +38,9 @@
         return { alertClass: '', bg: '' };
     }
   }
-
-  $inspect(toast.activeToasts);
 </script>
 
 <div class="toast toast-end z-[1000] mr-4 mt-4 space-y-0">
-  {toast.activeToasts.length}
   {#each toast.activeToasts as _toast (_toast.id)}
     {@const config = getToastConfig(_toast.type)}
     <div
