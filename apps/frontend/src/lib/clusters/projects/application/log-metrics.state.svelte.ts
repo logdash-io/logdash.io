@@ -46,7 +46,7 @@ class LogMetricsState {
 
     await Promise.all([
       this.fetchLogMetrics(project_id),
-      // this._openLogMetricsStream(project_id, tabId),
+      this._openLogMetricsStream(project_id, tabId),
     ]);
   }
 
