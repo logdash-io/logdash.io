@@ -4,10 +4,8 @@ import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-conf
 import { CreateHttpMonitorBody } from '../../src/http-monitor/core/dto/create-http-monitor.body';
 import { Types } from 'mongoose';
 import { UpdateHttpMonitorBody } from '../../src/http-monitor/core/dto/update-http-monitor.body';
-import { HttpMonitorStatus } from '../../src/http-monitor/status/enum/http-monitor-status.enum';
-import * as nock from 'nock';
-import { HttpPingSchedulerService } from '../../src/http-ping/schedule/http-ping-scheduler.service';
-import { sleep } from '../utils/sleep';
+import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 
 describe('HttpMonitorCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -105,6 +103,30 @@ describe('HttpMonitorCoreController (writes)', () => {
       // then
       expect(response.status).toBe(403);
     });
+
+    it('creates audit log when monitor is created', async () => {
+      // given
+      const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const dto: CreateHttpMonitorBody = {
+        name: 'some name',
+        url: 'https://google.com',
+        notificationChannelsIds: [new Types.ObjectId().toString()],
+      };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/projects/${project.id}/http_monitors`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(dto);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Create,
+        relatedDomain: RelatedDomain.HttpMonitor,
+        relatedEntityId: response.body.id,
+      });
+    });
   });
 
   describe('PUT /http_monitors/:httpMonitorId', () => {
@@ -155,6 +177,36 @@ describe('HttpMonitorCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(403);
+    });
+
+    it('creates audit log when monitor is updated', async () => {
+      // given
+      const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: project.id,
+        token,
+      });
+
+      const dto: UpdateHttpMonitorBody = {
+        name: 'Updated Monitor',
+        url: 'https://updated-url.com',
+        notificationChannelsIds: [new Types.ObjectId().toString()],
+      };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/http_monitors/${httpMonitor.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(dto);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Update,
+        relatedDomain: RelatedDomain.HttpMonitor,
+        relatedEntityId: httpMonitor.id,
+      });
     });
   });
 
@@ -212,6 +264,29 @@ describe('HttpMonitorCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(403);
+    });
+
+    it('creates audit log when monitor is deleted', async () => {
+      // given
+      const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: project.id,
+        token,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/http_monitors/${httpMonitor.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Delete,
+        relatedDomain: RelatedDomain.HttpMonitor,
+        relatedEntityId: httpMonitor.id,
+      });
     });
   });
 });

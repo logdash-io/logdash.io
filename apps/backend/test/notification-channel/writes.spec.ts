@@ -4,6 +4,8 @@ import { TelegramOptions } from '../../src/notification-channel/core/types/teleg
 import { WebhookOptions } from '../../src/notification-channel/core/types/webhook-options.type';
 import { NotificationTarget } from '../../src/notification-channel/core/enums/notification-target.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
+import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 
 describe('NotificationChannelCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -161,6 +163,169 @@ describe('NotificationChannelCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(403);
+    });
+
+    it('creates audit log when notification channel is created', async () => {
+      // given
+      const { cluster, user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const telegramData = {
+        type: NotificationTarget.Telegram,
+        options: {
+          botToken: 'valid-bot-token',
+          chatId: 'valid-chat-id',
+        },
+      };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/notification_channels`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(telegramData);
+
+      // then
+      expect(response.status).toBe(201);
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Create,
+        relatedDomain: RelatedDomain.NotificationChannel,
+        relatedEntityId: response.body.id,
+      });
+    });
+  });
+
+  describe('PUT /notification_channels/:id', () => {
+    it('updates notification channel options', async () => {
+      // given
+      const { cluster, user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // Create a notification channel first
+      const channel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: cluster.id,
+          options: { chatId: 'some-chat' },
+          token,
+        });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/notification_channels/${channel.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          options: {
+            botToken: 'updated-bot-token',
+            chatId: 'updated-chat-id',
+          },
+        });
+
+      // then
+      expect(response.status).toBe(200);
+      const entity = await bootstrap.models.notificationChannelModel.findById(channel.id);
+      expect((entity!.options as TelegramOptions).botToken).toBe('updated-bot-token');
+      expect((entity!.options as TelegramOptions).chatId).toBe('updated-chat-id');
+    });
+
+    it('creates audit log when notification channel is updated', async () => {
+      // given
+      const { cluster, user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // Create a notification channel first
+      const createResponse = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/notification_channels`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          type: NotificationTarget.Telegram,
+          options: {
+            botToken: 'original-bot-token',
+            chatId: 'original-chat-id',
+          },
+        });
+
+      const channelId = createResponse.body.id;
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/notification_channels/${channelId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          options: {
+            botToken: 'updated-bot-token',
+            chatId: 'updated-chat-id',
+          },
+        });
+
+      // then
+      expect(response.status).toBe(200);
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Update,
+        relatedDomain: RelatedDomain.NotificationChannel,
+        relatedEntityId: channelId,
+      });
+    });
+  });
+
+  describe('DELETE /notification_channels/:id', () => {
+    it('deletes notification channel', async () => {
+      // given
+      const { cluster, user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // Create a notification channel first
+      const createResponse = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/notification_channels`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          type: NotificationTarget.Telegram,
+          options: {
+            botToken: 'bot-token',
+            chatId: 'chat-id',
+          },
+        });
+
+      const channelId = createResponse.body.id;
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/notification_channels/${channelId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(200);
+      const entity = await bootstrap.models.notificationChannelModel.findById(channelId);
+      expect(entity).toBeNull();
+    });
+
+    it('creates audit log when notification channel is deleted', async () => {
+      // given
+      const { cluster, user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // Create a notification channel first
+      const createResponse = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/notification_channels`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          type: NotificationTarget.Telegram,
+          options: {
+            botToken: 'bot-token',
+            chatId: 'chat-id',
+          },
+        });
+
+      const channelId = createResponse.body.id;
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/notification_channels/${channelId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(200);
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Delete,
+        relatedDomain: RelatedDomain.NotificationChannel,
+        relatedEntityId: channelId,
+      });
     });
   });
 });

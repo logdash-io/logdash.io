@@ -9,6 +9,7 @@ import { NotificationChannelSerializer } from './entities/notification-channel.s
 import { NotificationChannelSerialized } from './entities/notification-channel.interface';
 import { NotificationChannelOptionsEnrichmentService } from './notification-channel-options-enrichment.service';
 import { NotificationChannelReadService } from '../read/notification-channel-read.service';
+import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 
 @Controller()
 @ApiTags('Notification channels')
@@ -25,38 +26,49 @@ export class NotificationChannelCoreController {
   public async create(
     @Param('clusterId') clusterId: string,
     @Body() dto: CreateNotificationChannelBody,
+    @CurrentUserId() userId: string,
   ): Promise<NotificationChannelSerialized> {
     const enrichedOptions = await this.notificationChannelOptionsEnrichmentService.enrichOptions(
       dto.options,
       dto.type,
     );
 
-    const channel = await this.notificationChannelWriteService.create({
-      clusterId,
-      type: dto.type,
-      options: enrichedOptions,
-    });
+    const channel = await this.notificationChannelWriteService.create(
+      {
+        clusterId,
+        type: dto.type,
+        options: enrichedOptions,
+      },
+      userId,
+    );
 
     return NotificationChannelSerializer.serialize(channel);
   }
 
   @UseGuards(ClusterMemberGuard)
-  @Put('notification_channels/:id')
+  @Put('notification_channels/:notificationChannelId')
   public async update(
-    @Param('id') id: string,
+    @Param('notificationChannelId') id: string,
     @Body() dto: UpdateNotificationChannelBody,
+    @CurrentUserId() userId: string,
   ): Promise<void> {
-    await this.notificationChannelWriteService.update({
-      id,
-      options: dto.options,
-    });
+    await this.notificationChannelWriteService.update(
+      {
+        id,
+        options: dto.options,
+      },
+      userId,
+    );
   }
 
   @UseGuards(ClusterMemberGuard)
-  @Delete('notification_channels/:id')
+  @Delete('notification_channels/:notificationChannelId')
   @ApiResponse({ type: SuccessResponse })
-  public async delete(@Param('id') id: string): Promise<SuccessResponse> {
-    await this.notificationChannelWriteService.delete(id);
+  public async delete(
+    @Param('notificationChannelId') id: string,
+    @CurrentUserId() userId: string,
+  ): Promise<SuccessResponse> {
+    await this.notificationChannelWriteService.delete(id, userId);
 
     return new SuccessResponse();
   }

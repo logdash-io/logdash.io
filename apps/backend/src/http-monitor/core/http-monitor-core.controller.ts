@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { HttpMonitorLimitService } from '../limit/http-monitor-limit.service';
@@ -46,6 +47,7 @@ export class HttpMonitorCoreController {
   async create(
     @Param('projectId') projectId: string,
     @Body() dto: CreateHttpMonitorBody,
+    @CurrentUserId() userId: string,
   ): Promise<HttpMonitorSerialized> {
     const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
     if (!hasCapacity) {
@@ -54,7 +56,7 @@ export class HttpMonitorCoreController {
       );
     }
 
-    const httpMonitor = await this.httpMonitorWriteService.create(projectId, dto);
+    const httpMonitor = await this.httpMonitorWriteService.create(projectId, dto, userId);
     const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
 
     if (process.env.NODE_ENV !== 'test') {
@@ -101,8 +103,9 @@ export class HttpMonitorCoreController {
   async update(
     @Param('httpMonitorId') httpMonitorId: string,
     @Body() dto: UpdateHttpMonitorBody,
+    @CurrentUserId() userId: string,
   ): Promise<HttpMonitorSerialized> {
-    const httpMonitor = await this.httpMonitorWriteService.update(httpMonitorId, dto);
+    const httpMonitor = await this.httpMonitorWriteService.update(httpMonitorId, dto, userId);
 
     const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
 
@@ -111,7 +114,10 @@ export class HttpMonitorCoreController {
 
   @UseGuards(ClusterMemberGuard)
   @Delete('/http_monitors/:httpMonitorId')
-  async delete(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
-    await this.httpMonitorRemovalService.deleteById(httpMonitorId);
+  async delete(
+    @Param('httpMonitorId') httpMonitorId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<void> {
+    await this.httpMonitorRemovalService.deleteById(httpMonitorId, userId);
   }
 }

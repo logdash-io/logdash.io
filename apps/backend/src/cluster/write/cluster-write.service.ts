@@ -78,7 +78,7 @@ export class ClusterWriteService {
     const clusters = await this.model.find({ creatorId });
 
     clusters.forEach((cluster) => {
-      void this.auditLog.create({
+      this.auditLog.create({
         userId: creatorId,
         actor: Actor.System,
         action: AuditLogEntityAction.Update,
