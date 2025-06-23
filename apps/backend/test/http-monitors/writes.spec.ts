@@ -30,10 +30,17 @@ describe('HttpMonitorCoreController (writes)', () => {
     it('creates new monitor', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: project.clusterId,
+          token,
+        });
+
       const dto: CreateHttpMonitorBody = {
         name: 'some name',
         url: 'https://google.com',
-        notificationChannelsIds: [new Types.ObjectId().toString()],
+        notificationChannelsIds: [notificationChannel.id],
       };
 
       // when
@@ -140,10 +147,17 @@ describe('HttpMonitorCoreController (writes)', () => {
     it('creates audit log when monitor is created', async () => {
       // given
       const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: project.clusterId,
+          token,
+        });
+
       const dto: CreateHttpMonitorBody = {
         name: 'some name',
         url: 'https://google.com',
-        notificationChannelsIds: [new Types.ObjectId().toString()],
+        notificationChannelsIds: [notificationChannel.id],
       };
 
       // when

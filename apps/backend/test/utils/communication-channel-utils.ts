@@ -5,6 +5,7 @@ import { TelegramOptions } from '../../src/notification-channel/core/types/teleg
 import { WebhookOptions } from '../../src/notification-channel/core/types/webhook-options.type';
 import * as request from 'supertest';
 import { CreateNotificationChannelBody } from '../../src/notification-channel/core/dto/create-notification-channel.body';
+import { getEnvConfig } from '../../src/shared/configs/env-configs';
 
 export class NotificationChannelUtils {
   constructor(private readonly app: INestApplication<any>) {}
@@ -12,13 +13,23 @@ export class NotificationChannelUtils {
   public async createTelegramNotificationChannel(dto: {
     clusterId: string;
     token: string;
-    options: TelegramOptions;
+    options?: Partial<TelegramOptions>;
     name?: string;
   }): Promise<NotificationChannelNormalized> {
+    const options = dto.options || {};
+
+    if (!options.botToken) {
+      options.botToken = getEnvConfig().notificationChannels.telegramUptimeBot.token;
+    }
+
+    if (!options.chatId) {
+      options.chatId = 'some-chat-id';
+    }
+
     const body: CreateNotificationChannelBody = {
       type: NotificationTarget.Telegram,
       name: dto.name || 'Test Telegram Channel',
-      options: dto.options,
+      options: options as TelegramOptions,
     };
 
     const response = await request(this.app.getHttpServer())

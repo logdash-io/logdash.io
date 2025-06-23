@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
-import { IsEnum, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsEnum, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 import { NotificationTarget } from '../enums/notification-target.enum';
 import { TelegramOptionsValidator } from '../types/telegram-options.type';
 import { WebhookOptionsValidator } from '../types/webhook-options.type';
@@ -12,6 +12,7 @@ export class CreateNotificationChannelBody {
   public type: NotificationTarget;
 
   @ApiProperty({ description: 'Display name for the notification channel' })
+  @MaxLength(1024)
   @IsString()
   public name: string;
 
