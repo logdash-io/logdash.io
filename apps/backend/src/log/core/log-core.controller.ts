@@ -58,8 +58,11 @@ export class LogCoreController {
   @Sse('dupa/sse')
   @Public()
   public async sse(): Promise<Observable<any>> {
+    const eventStream$ = fromEvent(this.eventEmitter, 'asd').pipe(map((data) => ({ data })));
+
     return new Observable((observer) => {
-      observer.next('Hello');
+      const subscription = eventStream$.subscribe(observer);
+      return () => subscription.unsubscribe();
     });
   }
 
