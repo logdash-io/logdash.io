@@ -47,7 +47,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
       },
     },
     metrics: {
-      maxMetricsRegisterEntries: 2,
+      maxMetricsRegisterEntries: 5,
       keepGranularitiesForHours: {
         [MetricGranularity.Minute]: 1, // 1 hour
         [MetricGranularity.Hour]: 12, // 12 hours

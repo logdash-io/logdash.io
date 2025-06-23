@@ -15,7 +15,7 @@ export class LogUtils {
       .set('project-api-key', dto.apiKey)
       .send(dto);
 
-    if (dto.withoutSleep === false) {
+    if (dto.withoutSleep === undefined || dto.withoutSleep === false) {
       await sleep(1000);
     }
 
