@@ -1,31 +1,38 @@
 <script lang="ts">
   import { CheckIcon } from 'lucide-svelte';
 
-  interface Props {
+  type Props = {
     chatName: string;
-    onDone: () => void;
-  }
+    clusterName: string;
+    onSubmit: () => void;
+  };
 
-  let { chatName, onDone }: Props = $props();
+  let { chatName, clusterName, onSubmit }: Props = $props();
 </script>
 
-<div class="text-center">
-  <div class="avatar placeholder mb-4">
-    <div class="bg-success text-success-content h-12 w-12 rounded-full">
+<div class="space-y-8 text-center">
+  <div class="flex items-center justify-start gap-4">
+    <div
+      class="success-card flex h-14 w-14 items-center justify-center rounded-full"
+    >
       <CheckIcon class="h-6 w-6" />
+    </div>
+
+    <div class="flex flex-col items-start">
+      <h3 class="text-xl font-semibold">Telegram Channel Found</h3>
+      <p class="text-secondary/70 text-sm">
+        You can now save it to your project.
+      </p>
     </div>
   </div>
 
-  <h3 class="mb-2 text-lg font-semibold">Success!</h3>
-
-  <p class="mb-6 text-sm opacity-70">
-    Telegram notifications have been set up successfully for <strong>
-      {chatName}
-    </strong>
-    . You'll now receive alerts for monitor status changes.
+  <p
+    class="ld-card-base mx-auto w-fit truncate rounded-xl p-4 px-6 font-mono text-3xl font-semibold uppercase"
+  >
+    {chatName}
   </p>
 
-  <button type="button" class="btn btn-success w-full" onclick={onDone}>
-    Done
+  <button type="button" class="btn btn-primary w-full" onclick={onSubmit}>
+    Save channel to {clusterName} project
   </button>
 </div>

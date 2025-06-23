@@ -30,7 +30,6 @@
         ? `Webhook (${new URL(channel.options.url).hostname})`
         : 'Webhook';
     }
-    return channel.target;
   }
 
   function getChannelIcon(channel: NotificationChannel): string {

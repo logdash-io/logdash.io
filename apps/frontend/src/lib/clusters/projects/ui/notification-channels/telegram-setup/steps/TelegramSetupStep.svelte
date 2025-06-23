@@ -27,15 +27,20 @@
   }
 </script>
 
-<div class="space-y-4">
+<div class="space-y-6">
   <div class="flex items-center justify-start gap-4">
     <div
-      class="bg-base-300 border-base-100 text-primary-content flex h-12 w-12 items-center justify-center rounded-full border"
+      class="bg-base-300 border-base-100 text-primary-content flex h-14 w-14 items-center justify-center rounded-full border"
     >
       <SendIcon class="h-6 w-6" />
     </div>
 
-    <h3 class="text-xl font-semibold">Setup Telegram Channel</h3>
+    <div class="flex flex-col items-start">
+      <h3 class="text-xl font-semibold">Setup Telegram Channel</h3>
+      <p class="text-secondary/70 text-sm">
+        This is the hard part, so we made it easy!
+      </p>
+    </div>
   </div>
 
   <div class="text-secondary mb-6 text-sm">

@@ -1,13 +1,10 @@
-import type {
-  TelegramSetupEvents,
-  TelegramSetupStateProps,
-} from '$lib/clusters/projects/domain/telegram/telegram.types';
+import type { TelegramSetupStateProps } from '$lib/clusters/projects/domain/telegram/telegram.types';
 import { TelegramService } from '$lib/clusters/projects/infrastructure/telegram/telegram.service';
 import { PassphraseGenerator } from './passphrase-generator';
 
 export class TelegramSetupState {
   state = $state<TelegramSetupStateProps>({
-    isOpen: true,
+    isOpen: false,
     currentStep: 'setup',
     passphrase: '',
     chatName: '',
@@ -16,11 +13,6 @@ export class TelegramSetupState {
   });
 
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
-  private events: TelegramSetupEvents;
-
-  bind(events: TelegramSetupEvents): void {
-    this.events = events;
-  }
 
   startSetup(): void {
     this.state.isOpen = true;
@@ -58,7 +50,7 @@ export class TelegramSetupState {
   private startPolling(): void {
     if (this.pollingInterval) return;
 
-    this.pollingInterval = setInterval(async () => {
+    const poll = async () => {
       try {
         const response = await TelegramService.getChatInfo(
           this.state.passphrase,
@@ -68,13 +60,16 @@ export class TelegramSetupState {
           this.stopPolling();
           this.state.chatId = response.chatId;
           this.state.chatName = response.name;
-          await this.createNotificationChannel();
+          this.state.currentStep = 'success';
         }
       } catch (error) {
         console.error('Error polling for chat info:', error);
         // Continue polling - user might not have sent message yet
       }
-    }, 2000);
+    };
+
+    this.pollingInterval = setInterval(poll, 2000);
+    poll();
   }
 
   private stopPolling(): void {
@@ -92,7 +87,7 @@ export class TelegramSetupState {
       );
 
       this.state.currentStep = 'success';
-      this.events.onChannelCreated(channel.id, this.state.chatName);
+      // this.events.onChannelCreated(channel.id, this.state.chatName);
     } catch (error) {
       console.error('Error creating notification channel:', error);
       this.state.currentStep = 'error';
@@ -111,7 +106,7 @@ export class TelegramSetupState {
       );
 
       this.state.currentStep = 'success';
-      this.events.onChannelCreated(channel.id, this.state.chatName);
+      // this.events.onChannelCreated(channel.id, this.state.chatName);
     } catch (error) {
       console.error('Error creating notification channel:', error);
       this.state.currentStep = 'error';
@@ -120,10 +115,6 @@ export class TelegramSetupState {
           ? error.message
           : 'Failed to create notification channel';
     }
-  }
-
-  destroy(): void {
-    this.stopPolling();
   }
 }
 

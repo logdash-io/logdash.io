@@ -1,5 +1,8 @@
 import type { NotificationChannelsState } from '$lib/clusters/projects/domain/notification-channels/notification-channels.types';
-import type { NotificationChannel } from '$lib/clusters/projects/domain/telegram/telegram.types';
+import type {
+  CreateNotificationChannelDTO,
+  NotificationChannel,
+} from '$lib/clusters/projects/domain/telegram/telegram.types';
 import { NotificationChannelsService } from '$lib/clusters/projects/infrastructure/notification-channels/notification-channels.service';
 
 export class NotificationChannelsStateManager {
@@ -51,8 +54,30 @@ export class NotificationChannelsStateManager {
     }
   }
 
-  addChannel(channel: NotificationChannel): void {
-    this.state.channels = [channel, ...this.state.channels];
+  async createChannel(
+    clusterId: string,
+    channel: CreateNotificationChannelDTO,
+  ): Promise<void> {
+    this.state.isLoading = true;
+    this.state.error = null;
+
+    try {
+      const createdChannel =
+        await NotificationChannelsService.createNotificationChannel(
+          clusterId,
+          channel,
+        );
+
+      this.state.channels.push(createdChannel);
+    } catch (error) {
+      console.error('Error creating notification channel:', error);
+      this.state.error =
+        error instanceof Error
+          ? error.message
+          : 'Failed to create notification channel';
+    } finally {
+      this.state.isLoading = false;
+    }
   }
 
   clearError(): void {
