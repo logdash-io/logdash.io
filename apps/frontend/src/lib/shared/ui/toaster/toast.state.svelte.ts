@@ -1,3 +1,5 @@
+import { logger } from '$lib/shared/logger/index.js';
+
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
 
 export interface Toast {
@@ -18,6 +20,7 @@ class ToastManager {
   );
 
   private addToast(message: string, type: ToastType, duration: number): string {
+    logger.debug('Adding toast:', { message, type, duration });
     const id = crypto.randomUUID();
     const newToast: Toast = {
       id,
@@ -44,6 +47,7 @@ class ToastManager {
   }
 
   public success(message: string, duration = DEFAULT_DURATION) {
+    logger.debug('Adding success toast:', { message, duration });
     const id = this.addToast(message, 'success', duration);
     return () => this.remove(id);
   }
