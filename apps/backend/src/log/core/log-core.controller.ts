@@ -55,17 +55,6 @@ export class LogCoreController {
     private readonly logReadClickhouseService: LogReadClickhouseService,
   ) {}
 
-  @Sse('dupa/sse')
-  @Public()
-  public async sse(): Promise<Observable<any>> {
-    const eventStream$ = fromEvent(this.eventEmitter, 'asd').pipe(map((data) => ({ data })));
-
-    return new Observable((observer) => {
-      const subscription = eventStream$.subscribe(observer);
-      return () => subscription.unsubscribe();
-    });
-  }
-
   @DemoEndpoint()
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
@@ -78,6 +67,8 @@ export class LogCoreController {
 
     const eventStream$ = fromEvent(this.eventEmitter, LogEvents.LogCreatedEvent).pipe(
       filter((data: LogCreatedEvent) => {
+        console.log('Filtering event', data);
+
         return data.projectId === projectId;
       }),
       map((data) => ({ data })),
