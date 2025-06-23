@@ -27,6 +27,7 @@ export class NotificationChannelWriteService {
       _id: new Types.ObjectId(),
       clusterId: dto.clusterId,
       target: dto.type,
+      name: dto.name,
       options: dto.options,
       createdAt: new Date(),
       updatedAt: new Date(),

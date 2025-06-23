@@ -30,6 +30,7 @@ describe('NotificationChannelCoreController (writes)', () => {
 
         const telegramData = {
           type: NotificationTarget.Telegram,
+          name: 'Test Telegram Channel',
           options: {
             botToken: 'valid-bot-token',
             chatId: 'valid-chat-id',
@@ -59,6 +60,7 @@ describe('NotificationChannelCoreController (writes)', () => {
 
         const invalidTelegramData = {
           type: NotificationTarget.Telegram,
+          name: 'Test Telegram Channel',
           options: {
             chatId: 'valid-chat-id',
           },
@@ -88,6 +90,7 @@ describe('NotificationChannelCoreController (writes)', () => {
 
         const telegramData = {
           type: NotificationTarget.Telegram,
+          name: 'Test Telegram Channel',
           options: {
             botToken: 'valid-bot-token',
             chatId: 'valid-chat-id',
@@ -119,6 +122,7 @@ describe('NotificationChannelCoreController (writes)', () => {
 
         const webhookData = {
           type: NotificationTarget.Webhook,
+          name: 'Test Webhook Channel',
           options: {
             url: 'https://example.com/webhook',
             headers: { 'Content-Type': 'application/json' },
@@ -152,6 +156,7 @@ describe('NotificationChannelCoreController (writes)', () => {
 
         const invalidWebhookData = {
           type: NotificationTarget.Webhook,
+          name: 'Test Webhook Channel',
           options: {
             headers: { 'Content-Type': 'application/json' },
             method: 'POST',
@@ -177,6 +182,7 @@ describe('NotificationChannelCoreController (writes)', () => {
 
       const notificationChannelData = {
         type: NotificationTarget.Webhook,
+        name: 'Test Webhook Channel',
         options: {
           url: 'https://example.com/webhook',
           headers: { 'Content-Type': 'application/json' },
@@ -200,6 +206,7 @@ describe('NotificationChannelCoreController (writes)', () => {
 
       const telegramData = {
         type: NotificationTarget.Telegram,
+        name: 'Test Telegram Channel',
         options: {
           botToken: 'valid-bot-token',
           chatId: 'valid-chat-id',
@@ -240,6 +247,7 @@ describe('NotificationChannelCoreController (writes)', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           type: NotificationTarget.Telegram,
+          name: 'Test Telegram Channel',
           options: { chatId: 'valid-chat-id' },
         });
 
@@ -290,6 +298,7 @@ describe('NotificationChannelCoreController (writes)', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           type: NotificationTarget.Telegram,
+          name: 'Test Telegram Channel',
           options: {
             botToken: 'original-bot-token',
             chatId: 'original-chat-id',
@@ -331,6 +340,7 @@ describe('NotificationChannelCoreController (writes)', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           type: NotificationTarget.Telegram,
+          name: 'Test Telegram Channel',
           options: {
             botToken: 'bot-token',
             chatId: 'chat-id',
@@ -360,6 +370,7 @@ describe('NotificationChannelCoreController (writes)', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           type: NotificationTarget.Telegram,
+          name: 'Test Telegram Channel',
           options: {
             botToken: 'bot-token',
             chatId: 'chat-id',

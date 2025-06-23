@@ -62,6 +62,7 @@ export class NotificationChannelCoreController {
       {
         clusterId,
         type: dto.type,
+        name: dto.name,
         options: enrichedOptions,
       },
       userId,

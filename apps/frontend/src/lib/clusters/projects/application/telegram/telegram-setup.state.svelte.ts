@@ -64,7 +64,6 @@ export class TelegramSetupState {
         }
       } catch (error) {
         console.error('Error polling for chat info:', error);
-        // Continue polling - user might not have sent message yet
       }
     };
 
@@ -76,44 +75,6 @@ export class TelegramSetupState {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
       this.pollingInterval = null;
-    }
-  }
-
-  private async createNotificationChannel(): Promise<void> {
-    try {
-      const channel = await TelegramService.createNotificationChannel(
-        '', // Will be injected by the UI component
-        this.state.chatId,
-      );
-
-      this.state.currentStep = 'success';
-      // this.events.onChannelCreated(channel.id, this.state.chatName);
-    } catch (error) {
-      console.error('Error creating notification channel:', error);
-      this.state.currentStep = 'error';
-      this.state.errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to create notification channel';
-    }
-  }
-
-  async createNotificationChannelForCluster(clusterId: string): Promise<void> {
-    try {
-      const channel = await TelegramService.createNotificationChannel(
-        clusterId,
-        this.state.chatId,
-      );
-
-      this.state.currentStep = 'success';
-      // this.events.onChannelCreated(channel.id, this.state.chatName);
-    } catch (error) {
-      console.error('Error creating notification channel:', error);
-      this.state.currentStep = 'error';
-      this.state.errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to create notification channel';
     }
   }
 }

@@ -34,9 +34,9 @@
     telegramSetupState.close();
     notificationChannelsState.createChannel(clusterId, {
       type: 'telegram',
+      name: telegramSetupState.state.chatName,
       options: {
         chatId: telegramSetupState.state.chatId,
-        botToken: 'xdd',
       },
     });
   }

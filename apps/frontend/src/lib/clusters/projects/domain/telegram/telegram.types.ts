@@ -8,9 +8,10 @@ interface TelegramNotificationChannel {
   id: string;
   clusterId: string;
   target: 'telegram';
+  name: string;
   options: {
     chatId: string;
-    botToken: string;
+    botToken?: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -20,6 +21,7 @@ interface WebhookNotificationChannel {
   id: string;
   clusterId: string;
   target: 'webhook';
+  name: string;
   options: {
     url: string;
     headers: Record<string, string>;
@@ -34,9 +36,9 @@ export type NotificationChannel =
 
 type CreateTelegramNotificationChannelDTO = {
   type: 'telegram';
+  name: string;
   options: {
     chatId: string;
-    botToken: string;
   };
 };
 

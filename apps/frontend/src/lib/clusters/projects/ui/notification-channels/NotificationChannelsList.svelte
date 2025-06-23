@@ -21,15 +21,8 @@
   }
 
   function getChannelDisplayName(channel: NotificationChannel): string {
-    if (channel.target === 'telegram') {
-      // Try to get chat name from options or use a default
-      return channel.options.chatId ? `Telegram Chat` : 'Telegram';
-    }
-    if (channel.target === 'webhook') {
-      return channel.options.url
-        ? `Webhook (${new URL(channel.options.url).hostname})`
-        : 'Webhook';
-    }
+    // Use the name from the channel entity
+    return channel.name || `${channel.target} Channel`;
   }
 
   function getChannelIcon(channel: NotificationChannel): string {

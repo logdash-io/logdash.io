@@ -13,9 +13,11 @@ export class NotificationChannelUtils {
     clusterId: string;
     token: string;
     options: TelegramOptions;
+    name?: string;
   }): Promise<NotificationChannelNormalized> {
     const body: CreateNotificationChannelBody = {
       type: NotificationTarget.Telegram,
+      name: dto.name || 'Test Telegram Channel',
       options: dto.options,
     };
 
@@ -31,9 +33,11 @@ export class NotificationChannelUtils {
     clusterId: string;
     token: string;
     options: WebhookOptions;
+    name?: string;
   }): Promise<NotificationChannelNormalized> {
     const body: CreateNotificationChannelBody = {
       type: NotificationTarget.Webhook,
+      name: dto.name || 'Test Webhook Channel',
       options: dto.options,
     };
 

@@ -5,5 +5,6 @@ import { WebhookOptions } from '../../core/types/webhook-options.type';
 export class CreateNotificationChannelDto {
   clusterId: string;
   type: NotificationTarget;
+  name: string;
   options: TelegramOptions | WebhookOptions;
 }
