@@ -4,11 +4,7 @@ import { createTestApp } from '../utils/bootstrap';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { sleep } from '../utils/sleep';
 import { ClickHouseClient } from '@clickhouse/client';
-import {
-  LogClickhouseNormalized,
-  LogClickhouseSerialized,
-  LogSerialized,
-} from '../../src/log/core/entities/log.interface';
+import { LogClickhouseNormalized } from '../../src/log/core/entities/log.interface';
 import { LogSerializer } from '../../src/log/core/entities/log.serializer';
 import { addMinutes, subMinutes } from 'date-fns';
 

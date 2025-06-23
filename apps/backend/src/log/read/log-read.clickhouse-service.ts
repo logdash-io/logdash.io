@@ -28,29 +28,56 @@ export class LogReadClickhouseService {
     limit: number;
     projectId: string;
   }): Promise<LogNormalized[]> {
-    let query = `SELECT * FROM logs WHERE project_id = '${dto.projectId}'`;
+    let query: string;
+    let queryParams: Record<string, any>;
 
     if (dto.lastId && dto.direction) {
-      const lastLogQuery = `SELECT created_at, sequence_number FROM logs WHERE id = '${dto.lastId}' AND project_id = '${dto.projectId}' LIMIT 1`;
-      const lastLogResult = await this.clickhouse.query({ query: lastLogQuery });
-      const lastLogData = ((await lastLogResult.json()) as any).data;
-
-      if (lastLogData.length > 0) {
-        const lastLog = lastLogData[0];
-        const lastCreatedAt = lastLog.created_at;
-        const lastSequenceNumber = lastLog.sequence_number;
-
-        if (dto.direction === LogReadDirection.After) {
-          query += ` AND (created_at > '${lastCreatedAt}' OR (created_at = '${lastCreatedAt}' AND sequence_number > ${lastSequenceNumber}))`;
-        } else {
-          query += ` AND (created_at < '${lastCreatedAt}' OR (created_at = '${lastCreatedAt}' AND sequence_number < ${lastSequenceNumber}))`;
-        }
+      if (dto.direction === LogReadDirection.After) {
+        query = `
+          SELECT l.* FROM logs l
+          WHERE l.project_id = {projectId:String}
+          AND (l.created_at, l.sequence_number) > (
+            SELECT created_at, sequence_number 
+            FROM logs 
+            WHERE id = {lastId:String} AND project_id = {projectId:String}
+            LIMIT 1
+          )
+          ORDER BY l.created_at ASC, l.sequence_number ASC 
+          LIMIT {limit:UInt32}`;
+      } else {
+        query = `
+          SELECT l.* FROM logs l
+          WHERE l.project_id = {projectId:String}
+          AND (l.created_at, l.sequence_number) < (
+            SELECT created_at, sequence_number 
+            FROM logs 
+            WHERE id = {lastId:String} AND project_id = {projectId:String}
+            LIMIT 1
+          )
+          ORDER BY l.created_at DESC, l.sequence_number DESC 
+          LIMIT {limit:UInt32}`;
       }
+      queryParams = {
+        projectId: dto.projectId,
+        lastId: dto.lastId,
+        limit: dto.limit,
+      };
+    } else {
+      query = `
+        SELECT * FROM logs 
+        WHERE project_id = {projectId:String}
+        ORDER BY created_at ASC, sequence_number ASC 
+        LIMIT {limit:UInt32}`;
+      queryParams = {
+        projectId: dto.projectId,
+        limit: dto.limit,
+      };
     }
 
-    query += ` ORDER BY created_at ASC, sequence_number ASC LIMIT ${dto.limit}`;
-
-    const result = await this.clickhouse.query({ query });
+    const result = await this.clickhouse.query({
+      query,
+      query_params: queryParams,
+    });
     const data = ((await result.json()) as any).data;
 
     return data.map((row: any) => LogSerializer.normalizeClickhouse(row));
