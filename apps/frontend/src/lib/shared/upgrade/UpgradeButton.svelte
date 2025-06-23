@@ -2,10 +2,10 @@
   import { goto } from '$app/navigation';
   import SkyBackground from '$lib/shared/upgrade/SkyBackground.svelte';
   import { RocketIcon } from 'lucide-svelte';
-  import { fade } from 'svelte/transition';
-  import { backgroundState } from '$lib/shared/upgrade/background.state.svelte.js';
-  import type { ClassValue } from 'svelte/elements';
   import type { Snippet } from 'svelte';
+  import type { ClassValue } from 'svelte/elements';
+  import { fade } from 'svelte/transition';
+  import { upgradeState } from './upgrade.state.svelte.js';
 
   type Props = {
     class?: ClassValue;
@@ -17,12 +17,12 @@
   let upgrading = $state(false);
 
   const handleMouseEnter = () => {
-    backgroundState.show();
+    upgradeState.showBackground();
     isHovered = true;
   };
 
   const handleMouseLeave = () => {
-    backgroundState.hide();
+    upgradeState.hideBackground();
     isHovered = false;
   };
 </script>

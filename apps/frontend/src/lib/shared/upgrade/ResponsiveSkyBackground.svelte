@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { backgroundState } from '$lib/shared/upgrade/background.state.svelte.js';
-  import { scale } from 'svelte/transition';
-  import { cubicInOut } from 'svelte/easing';
   import SkyBackground from '$lib/shared/upgrade/SkyBackground.svelte';
+  import { onMount } from 'svelte';
+  import { cubicInOut } from 'svelte/easing';
+  import { scale } from 'svelte/transition';
+  import { upgradeState } from './upgrade.state.svelte.js';
 
   let width = $state(typeof window !== 'undefined' ? window.innerWidth : 1200);
 
@@ -33,7 +33,7 @@
   );
 </script>
 
-{#if backgroundState.isVisible}
+{#if upgradeState.backgroundVisible || upgradeState.modalOpen}
   <div
     in:scale={{ duration: 100, easing: cubicInOut, start: 0.9 }}
     out:scale={{ duration: 100, easing: cubicInOut, start: 0.9 }}

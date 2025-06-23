@@ -125,7 +125,13 @@
   </div>
 {/snippet}
 
-<Tooltip content={menu} interactive={true} placement="bottom" align="right">
+<Tooltip
+  class="w-full"
+  content={menu}
+  interactive={true}
+  placement="bottom"
+  align="right"
+>
   <button
     class="btn btn-secondary w-full gap-1"
     data-posthog-id="connect-notification-channel-button"

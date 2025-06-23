@@ -1,0 +1,50 @@
+import { UserTier } from './types.js';
+
+export const PAYMENT_PLANS = [
+  {
+    name: 'Hobby',
+    price: 'Free',
+    description: 'Great for kicking the tires or for your personal stuff',
+    features: [
+      { name: 'Up to 5 projects' },
+      { name: 'Up to 5 http monitors' },
+      { name: 'Up to 1 public dashboards' },
+      { name: 'Up to 5 metrics per project' },
+      { name: 'Monitoring channels (Telegram & Webhooks)' },
+      { name: 'Access 1,000 most recent logs' },
+      { name: '1 week metrics retention' },
+      { name: 'Quick insights with short-term data granularity' },
+      { name: 'Feature requests' },
+      { name: 'Vibrant Discord community' },
+    ],
+    buttonText: 'Get started',
+    tier: UserTier.FREE,
+    popular: false,
+  },
+  {
+    name: 'Early Bird',
+    price: '$5',
+    period: 'per month',
+    description:
+      'Ideal for Logdash believers and early adopters. Only 4 spots available!',
+    features: [
+      { name: 'Everything in Hobby, plus:' },
+      { name: 'Up to 20 projects' },
+      { name: 'Up to 20 http monitors' },
+      { name: 'Up to 5 public dashboards' },
+      { name: 'Up to 10 metrics per project' },
+      { name: 'Monitoring channels (Telegram & Webhooks & Email & SMS)' },
+      { name: 'Lifetime access to 10,000 most recent logs' },
+      { name: '1 month metrics retention' },
+      { name: 'Comprehensive insights with extended data granularity' },
+      { name: 'Priority support' },
+      { name: 'Dedicated Discord channel with us' },
+      { name: 'Regular catch-up calls' },
+      { name: 'Early access to new features' },
+      { name: 'Priority feature requests' },
+    ],
+    buttonText: 'Get started',
+    tier: UserTier.EARLY_BIRD,
+    popular: true,
+  },
+] as const;
