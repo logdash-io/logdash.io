@@ -25,6 +25,6 @@
   const colorClass = $derived(statusColors[status] || statusColors.unknown);
 </script>
 
-<div class={`h-6 w-2 flex-shrink-0 pl-0.5 hover:h-6`}>
+<div class={`h-6 w-2 flex-shrink-0 pl-0.5 hover:h-8`}>
   <div class={`rounded-xs h-full bg-gradient-to-b ${colorClass}`}></div>
 </div>

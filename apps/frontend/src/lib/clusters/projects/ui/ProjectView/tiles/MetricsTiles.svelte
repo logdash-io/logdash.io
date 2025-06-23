@@ -11,7 +11,7 @@
   import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { userState } from '$lib/shared/user/application/user.state.svelte.js';
   import { UserTier } from '$lib/shared/types.js';
-  import { backgroundState } from '$lib/shared/upgrade/background.state.svelte';
+  import { upgradeState } from '$lib/shared/upgrade/upgrade.state.svelte.js';
 
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
   const isDemoDashboard = $derived(
@@ -40,10 +40,10 @@
   >
     <div
       transition:fly={{
-				duration: 200,
-				easing: cubicInOut,
-				y: 5,
-			}}
+        duration: 200,
+        easing: cubicInOut,
+        y: 5,
+      }}
       class="flex h-full w-full items-start justify-between gap-3 overflow-hidden px-3 py-1.5"
     >
       <span>Previewing</span>
@@ -51,9 +51,9 @@
       <button
         class="btn btn-secondary btn-soft btn-xs"
         onclick={() => {
-					page.url.searchParams.delete('metric_id');
-					goto(page.url.href);
-				}}
+          page.url.searchParams.delete('metric_id');
+          goto(page.url.href);
+        }}
         data-posthog-id="close-metric-preview-button"
       >
         Close
@@ -73,24 +73,23 @@
       >
         <AlertTriangleIcon class="text-primary h-4 w-4 shrink-0" />
         <span class="text-sm">
-					{#if userState.tier === UserTier.FREE}
-						<a
-              onmouseenter={() => backgroundState.show()}
-              onmouseleave={() => backgroundState.hide()}
-              class="underline" href="/app/api/user/upgrade"
+          {#if userState.tier === UserTier.FREE}
+            <a
+              onmouseenter={() => upgradeState.showBackground()}
+              onmouseleave={() => upgradeState.hideBackground()}
+              class="underline"
+              href="/app/api/user/upgrade"
             >
-							Upgrade
-						</a>
-						to add
-						<strong>{metricsLimitPlanDifference}x</strong>
-						more metrics to this project.
-					{:else}
-						<a class="underline" href="mailto:contact@logdash.io">
-							Contact us
-						</a>
-						to add more metrics to this project.
-					{/if}
-				</span>
+              Upgrade
+            </a>
+            to add
+            <strong>{metricsLimitPlanDifference}x</strong>
+            more metrics to this project.
+          {:else}
+            <a class="underline" href="mailto:contact@logdash.io">Contact us</a>
+            to add more metrics to this project.
+          {/if}
+        </span>
       </div>
     {/if}
 
@@ -98,19 +97,19 @@
       <DataTile
         header={previewedMetricId === metric.id ? header : emptyHeader}
         parentClass={[
-					'group relative transition-all duration-200',
-					{
-						'pt-9': previewedMetricId === metric.id,
-						'pt-0': previewedMetricId !== metric.id,
-					},
-				]}
+          'group relative transition-all duration-200',
+          {
+            'pt-9': previewedMetricId === metric.id,
+            'pt-0': previewedMetricId !== metric.id,
+          },
+        ]}
         class={[
-					'z-10 ring',
-					{
-						'ring-primary': metric.id === previewedMetricId,
-						'ring-transparent': metric.id !== previewedMetricId,
-					},
-				]}
+          'z-10 ring',
+          {
+            'ring-primary': metric.id === previewedMetricId,
+            'ring-transparent': metric.id !== previewedMetricId,
+          },
+        ]}
         delayIn={0}
         delayOut={50}
       >

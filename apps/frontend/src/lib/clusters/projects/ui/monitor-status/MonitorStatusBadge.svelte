@@ -6,7 +6,8 @@
   import { isDev } from '$lib/shared/utils/is-dev.util.js';
   import { monitoringState } from '../../application/monitoring.state.svelte.js';
   import NotificationChannelsContextMenu from '../notification-channels/NotificationChannelsContextMenu.svelte';
-  import MonitorStatus from '../presentational/MonitorStatus.svelte';
+  import MonitorContextMenu from './MonitorContextMenu.svelte';
+  import MonitorStatus from './MonitorStatus.svelte';
 
   const { projectId } = $props();
   const isOnDemoDashboard = $derived(
@@ -21,12 +22,16 @@
 
 {#snippet fullStatus()}
   <MonitorStatus {projectId}>
-    {#if isDev()}
-      <NotificationChannelsContextMenu
-        monitorId={monitoringState.getMonitorByProjectId(projectId)?.id || ''}
-        {clusterId}
-      />
-    {/if}
+    <div class="flex w-full items-center gap-4">
+      <MonitorContextMenu monitorId={projectMonitor.id} />
+
+      {#if userState.hasEarlyAccess}
+        <NotificationChannelsContextMenu
+          monitorId={monitoringState.getMonitorByProjectId(projectId)?.id || ''}
+          {clusterId}
+        />
+      {/if}
+    </div>
   </MonitorStatus>
 {/snippet}
 

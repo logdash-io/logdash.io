@@ -220,6 +220,41 @@ class MonitoringState {
     return this._fetchPings(clusterId, projectId, monitorId);
   }
 
+  async updateMonitorName(monitorId: string, newName: string): Promise<void> {
+    if (!monitorId || !newName?.trim()) {
+      throw new Error('Monitor ID and name are required');
+    }
+
+    const monitor = this._monitors[monitorId];
+    if (!monitor) {
+      throw new Error(`Monitor with ID ${monitorId} not found`);
+    }
+
+    await httpClient.put(`/http_monitors/${monitorId}`, {
+      name: newName.trim(),
+    });
+
+    // Update local state
+    this._monitors[monitorId].name = newName.trim();
+  }
+
+  async deleteMonitor(monitorId: string): Promise<void> {
+    if (!monitorId) {
+      throw new Error('Monitor ID is required');
+    }
+
+    const monitor = this._monitors[monitorId];
+    if (!monitor) {
+      throw new Error(`Monitor with ID ${monitorId} not found`);
+    }
+
+    await httpClient.delete(`/http_monitors/${monitorId}`);
+
+    // Remove from local state
+    delete this._monitors[monitorId];
+    delete this._monitorPings[monitorId];
+  }
+
   // Private helper methods
   private _getSortedMonitors(): Monitor[] {
     return Object.values(this._monitors).sort((a, b) =>

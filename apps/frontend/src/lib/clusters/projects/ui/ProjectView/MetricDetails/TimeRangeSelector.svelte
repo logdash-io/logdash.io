@@ -1,32 +1,72 @@
 <script lang="ts">
-	export let title: string;
-	export let currentRange: string;
-	export let smallOption: string;
-	export let largeOption: string;
-	export let isPaidTier: boolean;
-	export let onRangeChange: (range: string) => void;
+  import { upgradeState } from '$lib/shared/upgrade/upgrade.state.svelte.js';
+
+  interface Props {
+    title: string;
+    currentRange: string;
+    smallOption: string;
+    largeOption: string;
+    canSwitchTabs: boolean;
+    onRangeChange: (range: string) => void;
+  }
+
+  let {
+    title,
+    currentRange,
+    smallOption,
+    largeOption,
+    canSwitchTabs,
+    onRangeChange,
+  }: Props = $props();
 </script>
 
-<div class="flex justify-between items-center mb-4">
-	<h2 class="text-xl font-semibold">{title}</h2>
-	<div
-		role="tablist"
-		class="tabs tabs-box tabs-sm bg-base-100/70 rounded-lg shadow-none"
-	>
-		<button 
-			role="tab" 
-			class="tab {currentRange === smallOption ? 'tab-active btn-secondary' : ''} w-28 rounded-lg"
-			onclick={() => onRangeChange(smallOption)}
-		>
-			{smallOption}
-		</button>
-		<button 
-			role="tab" 
-			class="tab {currentRange === largeOption ? 'tab-active btn-secondary' : ''} w-28 rounded-lg"
-			onclick={() => onRangeChange(largeOption)}
-		>
-			{largeOption}
-		</button>
+<div class="mb-4 flex items-center justify-between">
+  <h2 class="text-xl font-semibold">{title}</h2>
 
-	</div>
-</div> 
+  <div class="indicator">
+    {#if !canSwitchTabs}
+      <span class="indicator-item badge badge-soft badge-primary badge-xs">
+        PRO
+      </span>
+    {/if}
+
+    <div
+      role="tablist"
+      class={['tabs tabs-box tabs-xs bg-base-100/70 rounded-lg shadow-none']}
+      onclick={(e) => {
+        if (!canSwitchTabs) {
+          e.preventDefault();
+          e.stopPropagation();
+          upgradeState.openModal();
+          return;
+        }
+      }}
+    >
+      <button
+        role="tab"
+        class={[
+          'tab w-20 rounded-lg',
+          {
+            'tab-active btn-secondary': currentRange === smallOption,
+          },
+        ]}
+        onclick={() => onRangeChange(smallOption)}
+      >
+        {smallOption}
+      </button>
+
+      <button
+        role="tab"
+        class={[
+          'tab w-20 rounded-lg',
+          {
+            'tab-active btn-secondary': currentRange === largeOption,
+          },
+        ]}
+        onclick={() => onRangeChange(largeOption)}
+      >
+        {largeOption}
+      </button>
+    </div>
+  </div>
+</div>
