@@ -1,4 +1,7 @@
-import type { NotificationChannel } from '$lib/clusters/projects/domain/telegram/telegram.types';
+import type {
+  CreateNotificationChannelDTO,
+  NotificationChannel,
+} from '$lib/clusters/projects/domain/telegram/telegram.types';
 import { httpClient } from '$lib/shared/http';
 
 export class NotificationChannelsService {
@@ -10,12 +13,17 @@ export class NotificationChannelsService {
     );
   }
 
-  static async deleteNotificationChannel(
+  static createNotificationChannel(
     clusterId: string,
-    channelId: string,
-  ): Promise<void> {
-    return httpClient.delete(
-      `/clusters/${clusterId}/notification_channels/${channelId}`,
+    channel: CreateNotificationChannelDTO,
+  ): Promise<NotificationChannel> {
+    return httpClient.post<NotificationChannel>(
+      `/clusters/${clusterId}/notification_channels`,
+      channel,
     );
+  }
+
+  static async deleteNotificationChannel(channelId: string): Promise<void> {
+    return httpClient.delete(`/notification_channels/${channelId}`);
   }
 }

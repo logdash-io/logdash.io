@@ -24,16 +24,7 @@
   }
 
   function getChannelDisplayName(channel: NotificationChannel): string {
-    if (channel.target === 'telegram') {
-      // Try to get chat name from options or use a default
-      return channel.options.chatId ? `Telegram Chat` : 'Telegram';
-    }
-    if (channel.target === 'webhook') {
-      return channel.options.url
-        ? `Webhook (${new URL(channel.options.url).hostname})`
-        : 'Webhook';
-    }
-    return channel.target;
+    return channel.name || `${channel.target} Channel`;
   }
 
   function getChannelIcon(channel: NotificationChannel): string {
@@ -49,10 +40,10 @@
   async function handleDelete(channel: NotificationChannel): Promise<void> {
     if (
       confirm(
-        `Are you sure you want to delete this ${channel.target} notification channel?`,
+        `Are you sure you want to delete ${getChannelDisplayName(channel)} notification channel?`,
       )
     ) {
-      await notificationChannelsState.deleteChannel(clusterId, channel.id);
+      await notificationChannelsState.deleteChannel(channel.id);
     }
   }
 
@@ -121,7 +112,7 @@
         <button
           in:fly={{ y: -2, duration: 100 }}
           onclick={() => {
-            telegramSetupState.startSetup();
+            telegramSetupState.startSetup(monitorId);
             close();
           }}
           class="btn btn-transparent flex w-full items-center justify-start gap-4 px-0"

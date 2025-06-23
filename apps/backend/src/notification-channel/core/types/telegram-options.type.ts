@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class TelegramOptionsValidator {
   @ApiPropertyOptional({
@@ -7,10 +7,12 @@ export class TelegramOptionsValidator {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(1024)
   public botToken?: string;
 
   @ApiProperty()
   @IsString()
+  @MaxLength(1024)
   public chatId: string;
 }
 

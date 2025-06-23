@@ -16,6 +16,9 @@ export class NotificationChannelEntity {
   @Prop({ type: String, enum: NotificationTarget })
   target: NotificationTarget;
 
+  @Prop({ type: String })
+  name: string;
+
   @Prop({ type: Object })
   options: NotificationChannelOptions;
 

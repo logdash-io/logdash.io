@@ -88,6 +88,14 @@ body {
     @apply p-1.5;
   }
 
+  .success-card {
+    @apply to-success/15 text-success border border-green-950 bg-gradient-to-br from-transparent;
+  }
+
+  .error-card {
+    @apply to-error/15 text-error border border-red-950 bg-gradient-to-br from-transparent;
+  }
+
   .ld-card-base,
   .ld-card {
     @apply from-base-200 to-base-300 border-base-100/70 border bg-gradient-to-br shadow-lg;

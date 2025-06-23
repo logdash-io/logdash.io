@@ -1,6 +1,8 @@
 import type { NotificationChannelsState } from '$lib/clusters/projects/domain/notification-channels/notification-channels.types';
-import type { NotificationChannel } from '$lib/clusters/projects/domain/telegram/telegram.types';
+import type { CreateNotificationChannelDTO } from '$lib/clusters/projects/domain/telegram/telegram.types';
 import { NotificationChannelsService } from '$lib/clusters/projects/infrastructure/notification-channels/notification-channels.service';
+import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
+import { AxiosError } from 'axios';
 
 export class NotificationChannelsStateManager {
   state = $state<NotificationChannelsState>({
@@ -32,16 +34,15 @@ export class NotificationChannelsStateManager {
     }
   }
 
-  async deleteChannel(clusterId: string, channelId: string): Promise<void> {
+  async deleteChannel(channelId: string): Promise<void> {
     try {
-      await NotificationChannelsService.deleteNotificationChannel(
-        clusterId,
-        channelId,
-      );
+      await NotificationChannelsService.deleteNotificationChannel(channelId);
 
       this.state.channels = this.state.channels.filter(
         (channel) => channel.id !== channelId,
       );
+
+      toast.success('Notification channel deleted successfully');
     } catch (error) {
       console.error('Error deleting notification channel:', error);
       this.state.error =
@@ -51,8 +52,37 @@ export class NotificationChannelsStateManager {
     }
   }
 
-  addChannel(channel: NotificationChannel): void {
-    this.state.channels = [channel, ...this.state.channels];
+  async createChannel(
+    clusterId: string,
+    channel: CreateNotificationChannelDTO,
+  ): Promise<string> {
+    this.state.isLoading = true;
+    this.state.error = null;
+
+    try {
+      const createdChannel =
+        await NotificationChannelsService.createNotificationChannel(
+          clusterId,
+          channel,
+        );
+
+      toast.success('Notification channel created successfully');
+      return createdChannel.id;
+
+      // todo: push to state.channels once backend contract returns NotificationChannel from creation
+      // this.state.channels.push(createdChannel);
+    } catch (error) {
+      // todo: make error handling generic
+      toast.error(
+        `${
+          error instanceof AxiosError
+            ? error.response?.data?.message
+            : 'Failed to create notification channel'
+        }`,
+      );
+    } finally {
+      this.state.isLoading = false;
+    }
   }
 
   clearError(): void {

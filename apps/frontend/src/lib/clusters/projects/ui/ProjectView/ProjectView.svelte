@@ -4,7 +4,6 @@
   import { metricsState } from '../../application/metrics.state.svelte.js';
   import { projectsState } from '../../application/projects.state.svelte.js';
   import TelegramAlertingSetup from '../notification-channels/telegram-setup/TelegramAlertingSetup.svelte';
-  import NotificationChannelsList from '../notification-channels/NotificationChannelsList.svelte';
   import EmptyState from './EmptyState.svelte';
   import MetricDetails from './MetricDetails/MetricDetails.svelte';
   import ProjectSync from './ProjectSync.svelte';

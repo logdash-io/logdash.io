@@ -11,6 +11,7 @@ import type {
   HttpPingCreatedEvent,
 } from '../domain/monitoring/http-ping.js';
 import { httpClient } from '$lib/shared/http/http-client.js';
+import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 
 const logger = createLogger('monitoring.state');
 
@@ -45,7 +46,10 @@ class MonitoringState {
     );
   }
 
-  addNotificationChannel(monitorId: string, channelId: string): Promise<void> {
+  async addNotificationChannel(
+    monitorId: string,
+    channelId: string,
+  ): Promise<void> {
     if (!monitorId || !channelId) {
       return Promise.reject(
         new Error('Monitor ID and Channel ID are required'),
@@ -71,12 +75,14 @@ class MonitoringState {
     // this._monitors[monitorId].notificationChannelsIds.push(channelId);
     this._monitors[monitorId].notificationChannelsIds = [channelId];
 
-    return httpClient.put(`/http_monitors/${monitorId}`, {
+    await httpClient.put(`/http_monitors/${monitorId}`, {
       notificationChannelsIds: [channelId],
     });
+
+    toast.success(`Notification channel added to monitor ${monitor.name}`);
   }
 
-  removeNotificationChannel(
+  async removeNotificationChannel(
     monitorId: string,
     channelId: string,
   ): Promise<void> {
@@ -107,9 +113,11 @@ class MonitoringState {
     // );
     this._monitors[monitorId].notificationChannelsIds = [];
 
-    return httpClient.put(`/http_monitors/${monitorId}`, {
+    await httpClient.put(`/http_monitors/${monitorId}`, {
       notificationChannelsIds: [],
     });
+
+    toast.success(`Notification channel removed from monitor ${monitor.name}`);
   }
 
   toggleNotificationChannel(

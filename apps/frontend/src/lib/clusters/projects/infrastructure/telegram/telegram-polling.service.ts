@@ -1,9 +1,5 @@
 import { TelegramService } from './telegram.service';
 
-/**
- * Service for polling Telegram chat info
- * Single Responsibility: Polling logic
- */
 export class TelegramPollingService {
   private interval: ReturnType<typeof setInterval> | null = null;
   private isPolling = false;
