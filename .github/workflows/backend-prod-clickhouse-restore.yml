@@ -1,0 +1,203 @@
+name: Clickhouse restore (prod)
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_run_id:
+        description: 'GitHub Run ID of the backup workflow to restore from'
+        required: true
+        type: string
+      artifact_name:
+        description: 'Name of the backup artifact to restore from'
+        required: true
+        type: string
+      confirmation_password:
+        description: 'Type "RESTORE_CONFIRMED" to proceed with restore operation'
+        required: true
+        type: string
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate Input Password
+        run: |
+          if [ "${{ github.event.inputs.confirmation_password }}" != "RESTORE_CONFIRMED" ]; then
+            echo "❌ Invalid confirmation password. Please type 'RESTORE_CONFIRMED' to proceed."
+            exit 1
+          fi
+          echo "✅ Confirmation password validated"
+        shell: bash
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install ClickHouse Client
+        run: |
+          curl https://clickhouse.com/ | sh
+          sudo ./clickhouse install
+        shell: bash
+
+      - name: Download Backup Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.inputs.artifact_name }}
+          run-id: ${{ github.event.inputs.backup_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: ./restore
+
+      - name: Decrypt and Extract Backup
+        run: |
+          cd restore
+
+          # Find the backup file (encrypted or unencrypted)
+          ENCRYPTED_FILE=$(find . -name "clickhouse_backup_prod_*.tar.gz.enc" | head -1)
+          BACKUP_FILE=$(find . -name "clickhouse_backup_prod_*.tar.gz" | head -1)
+
+          if [ -n "$ENCRYPTED_FILE" ]; then
+            echo "Found encrypted backup file: $ENCRYPTED_FILE"
+            
+            # Make script executable
+            chmod +x ../.github/scripts/decrypt-backup.sh
+            
+            # Decrypt the backup
+            DECRYPTED_FILE="${ENCRYPTED_FILE%.enc}"
+            echo "🔓 Decrypting backup..."
+            ../.github/scripts/decrypt-backup.sh \
+              "$ENCRYPTED_FILE" \
+              "$DECRYPTED_FILE" \
+              "${{ secrets.BACKEND_BACKUP_ARTIFACT_KEY }}"
+            
+            BACKUP_FILE="$DECRYPTED_FILE"
+          elif [ -n "$BACKUP_FILE" ]; then
+            echo "Found unencrypted backup file: $BACKUP_FILE (backward compatibility)"
+          else
+            echo "❌ No backup file found in artifact"
+            exit 1
+          fi
+
+          echo "Using backup file: $BACKUP_FILE"
+
+          # Extract backup
+          tar -xzf "$BACKUP_FILE"
+
+          # Validate backup structure
+          if [ ! -f "backup/metadata.txt" ]; then
+            echo "❌ Invalid backup: metadata.txt not found"
+            exit 1
+          fi
+
+          if [ ! -f "backup/tables_list.tsv" ]; then
+            echo "❌ Invalid backup: tables_list.tsv not found"
+            exit 1
+          fi
+
+          echo "✅ Backup validation passed"
+
+          # Display backup information
+          echo "📋 Backup Information:"
+          cat backup/metadata.txt
+
+          echo "📊 Tables in backup:"
+          cat backup/tables_list.tsv
+        shell: bash
+
+      - name: Test ClickHouse Connection
+        run: |
+          echo "🔗 Testing ClickHouse connection..."
+
+          # Strip http:// prefix from host if present
+          CLICKHOUSE_HOST="${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+
+          ./clickhouse client \
+            --host="${CLICKHOUSE_HOST}" \
+            --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
+            --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
+            --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
+            --database=default \
+            --query="SELECT 1 as connection_test"
+          echo "✅ ClickHouse connection successful"
+        shell: bash
+
+      - name: Restore Tables
+        run: |
+          echo "🔄 Starting table restoration..."
+          cd restore
+
+          # Strip http:// prefix from host if present
+          CLICKHOUSE_HOST="${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+
+          # Restore tables from backup
+          while IFS=$'\t' read -r database table engine; do
+            if [ "$database" = "default" ] && [ "$table" != "tables_list" ]; then
+              echo "🔧 Restoring table: $table"
+              # Create table schema
+              if [ -f "backup/${table}_schema.sql" ]; then
+                echo "Creating schema for table: $table"
+                ../clickhouse client \
+                  --host="${CLICKHOUSE_HOST}" \
+                  --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
+                  --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
+                  --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
+                  --database=default \
+                  --multiquery < "backup/${table}_schema.sql"
+              else
+                echo "⚠️ Schema file not found for table: $table"
+                continue
+              fi
+              # Restore data if data file exists
+              if [ -f "backup/${table}_data.native" ]; then
+                echo "Restoring data for table: $table"
+                ../clickhouse client \
+                  --host="${CLICKHOUSE_HOST}" \
+                  --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
+                  --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
+                  --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
+                  --database=default \
+                  --query="INSERT INTO $table FORMAT Native" < "backup/${table}_data.native"
+              else
+                echo "⚠️ Data file not found for table: $table"
+              fi
+            fi
+          done < backup/tables_list.tsv
+
+          echo "✅ Table restoration completed"
+        shell: bash
+
+      - name: Verify Restoration
+        run: |
+          echo "🔍 Verifying restoration..."
+
+                    # Strip http:// prefix from host if present
+          CLICKHOUSE_HOST="${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
+          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+
+          # Get restored tables count
+          RESTORED_TABLES=$(./clickhouse client \
+            --host="${CLICKHOUSE_HOST}" \
+            --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
+            --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
+            --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
+            --database=default \
+            --query="SELECT COUNT(*) FROM system.tables WHERE database = 'default' AND engine NOT LIKE '%System%'")
+
+          echo "📊 Number of restored tables: $RESTORED_TABLES"
+
+          # List restored tables with row counts
+          echo "📋 Restored tables with row counts:"
+          ./clickhouse client \
+            --host="${CLICKHOUSE_HOST}" \
+            --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
+            --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
+            --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
+            --database=default \
+            --query="SELECT name, total_rows FROM system.tables WHERE database = 'default' AND engine NOT LIKE '%System%' ORDER BY name"
+
+          echo "✅ Restoration verification completed"
+        shell: bash
