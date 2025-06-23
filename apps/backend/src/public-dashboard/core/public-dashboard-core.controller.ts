@@ -163,6 +163,8 @@ export class PublicDashboardCoreController {
       httpMonitorId: httpMonitorId,
     });
 
+    await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
+
     const updatedDashboard = await this.publicDashboardReadService.readById(publicDashboardId);
 
     if (!updatedDashboard) {
@@ -196,6 +198,8 @@ export class PublicDashboardCoreController {
       publicDashboardId: publicDashboardId,
       httpMonitorId: httpMonitorId,
     });
+
+    await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
 
     const updatedDashboard = await this.publicDashboardReadService.readById(publicDashboardId);
 
