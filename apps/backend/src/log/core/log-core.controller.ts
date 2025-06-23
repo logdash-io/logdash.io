@@ -40,6 +40,7 @@ import { LogSerialized } from './entities/log.interface';
 import { LogSerializer } from './entities/log.serializer';
 import { LogReadDirection } from './enums/log-read-direction.enum';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
+import { LogReadClickhouseService } from '../read/log-read.clickhouse-service';
 
 @Controller('')
 @ApiTags('Logs')
@@ -51,6 +52,7 @@ export class LogCoreController {
     private readonly logEventEmitter: LogEventEmitter,
     private readonly eventEmitter: EventEmitter2,
     private readonly logRateLimitService: LogRateLimitService,
+    private readonly logReadClickhouseService: LogReadClickhouseService,
   ) {}
 
   @DemoEndpoint()

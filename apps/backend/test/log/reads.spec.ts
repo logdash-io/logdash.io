@@ -195,7 +195,7 @@ describe('LogCoreController (reads)', () => {
         query: `
           SELECT * FROM logs
           WHERE project_id = '${setup.project.id}'
-          ORDER BY id ASC
+          ORDER BY created_at ASC, sequence_number ASC
         `,
       });
 
@@ -227,6 +227,51 @@ describe('LogCoreController (reads)', () => {
       expect(responseFourth.body[0].id).toEqual(fourth.id);
       expect(responseFirst.body[0].id).toEqual(first.id);
       expect(responseFifth.body[0].id).toEqual(fifth.id);
+    });
+
+    it('returns 403 if user does not belong to cluster', async () => {
+      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setupA.project.id}/logs/v2?direction=before&lastId=123&limit=1`)
+        .set('Authorization', `Bearer ${setupB.token}`);
+
+      expect(response.status).toEqual(403);
+    });
+
+    it('reads logs from demo project without authorization and uses cache', async () => {
+      const { project } = await bootstrap.utils.demoUtils.setupDemoProject();
+
+      const response = await request(bootstrap.app.getHttpServer()).get(
+        `/projects/${project.id}/logs/v2`,
+      );
+
+      await sleep(100);
+
+      const redisService = bootstrap.app.get(RedisService);
+
+      const client = await redisService.getClient();
+      const keys = await client.keys('demo-dashboard-path:*');
+      const key = keys[0];
+
+      const cachedResponseRaw = (await redisService.get(key))!;
+      const cachedResponse = JSON.parse(cachedResponseRaw);
+
+      expect(response.status).toEqual(200);
+      expect(cachedResponse).toEqual(response.body);
+
+      // and when
+      await client.set(key, JSON.stringify([{ message: 'I like turtles' }]), {
+        EX: 10,
+      });
+
+      const secondResponse = await request(bootstrap.app.getHttpServer()).get(
+        `/projects/${project.id}/logs/v2`,
+      );
+
+      expect(secondResponse.status).toEqual(200);
+      expect(secondResponse.body).toEqual([{ message: 'I like turtles' }]);
     });
   });
 });

@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
-import { LogEntity } from '../core/entities/log.entity';
 import { LogNormalized } from '../core/entities/log.interface';
 import { LogSerializer } from '../core/entities/log.serializer';
 import { LogReadDirection } from '../core/enums/log-read-direction.enum';
 import { Logger } from '@logdash/js-sdk';
 import { ClickHouseClient } from '@clickhouse/client';
-import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 
 @Injectable()
-export class LogReadService {
+export class LogReadClickhouseService {
   constructor(
     private readonly clickhouse: ClickHouseClient,
     private logger: Logger,
@@ -57,13 +53,6 @@ export class LogReadService {
     const result = await this.clickhouse.query({ query });
     const data = ((await result.json()) as any).data;
 
-    return data.map((row: any) => ({
-      id: row.id,
-      createdAt: ClickhouseUtils.clickhouseDateToJsDate(row.created_at),
-      message: row.message,
-      level: row.level,
-      projectId: row.project_id,
-      index: row.sequence_number,
-    }));
+    return data.map((row: any) => LogSerializer.normalizeClickhouse(row));
   }
 }
