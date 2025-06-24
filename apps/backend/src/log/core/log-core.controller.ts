@@ -63,8 +63,6 @@ export class LogCoreController {
     @Query() dto: StreamProjectLogsQuery,
     @Param('projectId') projectId: string,
   ): Promise<Observable<any>> {
-    console.log('Got sse connection');
-
     const eventStream$ = fromEvent(this.eventEmitter, LogEvents.LogCreatedEvent).pipe(
       filter((data: LogCreatedEvent) => {
         console.log('Filtering event', data);
@@ -73,8 +71,6 @@ export class LogCoreController {
       }),
       map((data) => ({ data })),
     );
-
-    console.log('Constructed stream');
 
     let historicalLogs$: Observable<{ data: LogSerialized }> = from([]);
 
@@ -93,11 +89,8 @@ export class LogCoreController {
 
     const combinedStream$ = concat(historicalLogs$, eventStream$);
 
-    console.log('Combined stream');
-
     return new Observable((observer) => {
       const subscription = combinedStream$.subscribe(observer);
-      console.log('Subscribed to stream');
 
       return () => {
         subscription.unsubscribe();
@@ -213,7 +206,7 @@ export class LogCoreController {
       throw new BadRequestException('Provide either lastId and direction or neither');
     }
 
-    const logs = await this.logReadService.readMany({
+    const logs = await this.logReadClickhouseService.readMany({
       direction: dto.direction,
       lastId: dto.lastId,
       projectId,
