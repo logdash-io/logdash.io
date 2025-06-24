@@ -6,13 +6,7 @@
   import { Feature } from '$lib/shared/types.js';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
-  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
-  import {
-    PenLineIcon,
-    PlusIcon,
-    SettingsIcon,
-    Trash2Icon,
-  } from 'lucide-svelte';
+  import { PenLineIcon, PlusIcon, SettingsIcon, Trash2Icon } from 'lucide-svelte';
   import { fly } from 'svelte/transition';
   import { clustersState } from '../application/clusters.state.svelte.js';
 
@@ -73,7 +67,7 @@
         </li>
       {/if}
 
-      {#if userState.hasEarlyAccess && !hasMonitoring && clustersState.ready}
+      {#if !hasMonitoring && clustersState.ready}
         <li class="py-0.5">
           <SetupMonitoringButton
             class="flex w-full items-center justify-between"

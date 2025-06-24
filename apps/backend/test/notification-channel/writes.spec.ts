@@ -113,6 +113,43 @@ describe('NotificationChannelCoreController (writes)', () => {
         expect(response.status).toBe(400);
         expect(response.body.message).toEqual('Channel with this chatId already exists');
       });
+
+      it('sends welcome message to telegram channel', async () => {
+        // given
+        const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        const telegramData = {
+          type: NotificationTarget.Telegram,
+          name: 'Test Telegram Channel',
+          options: { chatId: 'valid-chat-id' },
+        };
+
+        const requestBodies: any[] = [];
+
+        bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
+          botId: getEnvConfig().notificationChannels.telegramUptimeBot.token,
+          onMessage: (body) => {
+            requestBodies.push(body);
+          },
+        });
+
+        // when
+        const response = await request(bootstrap.app.getHttpServer())
+          .post(`/clusters/${cluster.id}/notification_channels`)
+          .set('Authorization', `Bearer ${token}`)
+          .send(telegramData);
+
+        // then
+        expect(response.status).toBe(201);
+        expect(requestBodies.length).toBe(1);
+        expect(requestBodies[0]).toEqual({
+          chat_id: 'valid-chat-id',
+          text: `👋 Hi\\! I'm \`logdash-uptime-bot\`
+Setup was completed successfully
+
+I'll notify you about the status of your services`,
+        });
+      });
     });
 
     describe('Webhook', () => {
@@ -233,13 +270,13 @@ describe('NotificationChannelCoreController (writes)', () => {
       // given
       const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      for (let i = 0; i < 100; i++) {
-        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
-          clusterId: cluster.id,
-          options: { chatId: `valid-chat-id-${i}` },
-          token,
-        });
-      }
+      await Promise.all(
+        Array.from({ length: 100 }).map((_, i) =>
+          bootstrap.models.notificationChannelModel.create({
+            clusterId: cluster.id,
+          }),
+        ),
+      );
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -254,7 +291,7 @@ describe('NotificationChannelCoreController (writes)', () => {
       // then
       expect(response.status).toBe(400);
       expect(response.body.message).toEqual('Cannot create more than 100 notification channels');
-    });
+    }, 10_000);
   });
 
   describe('PUT /notification_channels/:id', () => {

@@ -11,6 +11,11 @@ export interface SendHttpMonitorAlertMessageSpecificProviderDto {
   statusCode?: string;
 }
 
+export interface SendWelcomeMessageSpecificProviderDto {
+  notificationChannel: NotificationChannelNormalized;
+}
+
 export interface NotificationChannelProvider {
   sendHttpMonitorAlertMessage(dto: SendHttpMonitorAlertMessageSpecificProviderDto): Promise<void>;
+  sendWelcomeMessage(dto: SendWelcomeMessageSpecificProviderDto): Promise<void>;
 }

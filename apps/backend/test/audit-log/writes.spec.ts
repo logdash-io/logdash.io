@@ -90,8 +90,6 @@ describe('Audit logs (writes)', () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-    console.log(setup.user.id);
-
     // when
     await Promise.all(
       Array.from({ length: 1000 }).map(async () => {

@@ -77,17 +77,17 @@
 
     const compiledConfig = {
       minute:
-        userState.isFree &&
+        userState.isPaid &&
         minuteDataTimeRange === ChartOptions[ChartType.MINUTE].LARGE
           ? paidConfig.minute
           : freeConfig.minute,
       hour:
-        userState.isFree &&
+        userState.isPaid &&
         hourDataTimeRange === ChartOptions[ChartType.HOUR].LARGE
           ? paidConfig.hour
           : freeConfig.hour,
       day:
-        userState.isFree &&
+        userState.isPaid &&
         dayDataTimeRange === ChartOptions[ChartType.DAY].LARGE
           ? paidConfig.day
           : freeConfig.day,
@@ -105,65 +105,65 @@
 
 <DataTile delayIn={0}>
   <TimeRangeSelector
-    title={ChartTitles[ChartType.MINUTE]}
+    canSwitchTabs={!userState.isPaid}
     currentRange={minuteDataTimeRange}
-    smallOption={ChartOptions[ChartType.MINUTE].SMALL}
     largeOption={ChartOptions[ChartType.MINUTE].LARGE}
-    canSwitchTabs={!userState.isFree}
     onRangeChange={(range) => (minuteDataTimeRange = range)}
+    smallOption={ChartOptions[ChartType.MINUTE].SMALL}
+    title={ChartTitles[ChartType.MINUTE]}
   />
 
   {@render previewedMetricSubtitle()}
   <MetricBreakdownChart
     data={minuteData}
     height={250}
+    isLoading={metricsState.metricDetailsLoading}
     timeRange={minuteDataTimeRange === ChartOptions[ChartType.MINUTE].LARGE
       ? 'large'
       : 'small'}
-    isLoading={metricsState.metricDetailsLoading}
   />
 </DataTile>
 
 <DataTile delayIn={50}>
   <TimeRangeSelector
-    title={ChartTitles[ChartType.HOUR]}
+    canSwitchTabs={!userState.isPaid}
     currentRange={hourDataTimeRange}
-    smallOption={ChartOptions[ChartType.HOUR].SMALL}
     largeOption={ChartOptions[ChartType.HOUR].LARGE}
-    canSwitchTabs={!userState.isFree}
     onRangeChange={(range) => (hourDataTimeRange = range)}
+    smallOption={ChartOptions[ChartType.HOUR].SMALL}
+    title={ChartTitles[ChartType.HOUR]}
   />
 
   {@render previewedMetricSubtitle()}
   <MetricBreakdownChart
     data={hourData}
-    height={250}
     format="hour"
+    height={250}
+    isLoading={metricsState.metricDetailsLoading}
     timeRange={hourDataTimeRange === ChartOptions[ChartType.HOUR].LARGE
       ? 'large'
       : 'small'}
-    isLoading={metricsState.metricDetailsLoading}
   />
 </DataTile>
 
 <DataTile delayIn={100}>
   <TimeRangeSelector
-    title={ChartTitles[ChartType.DAY]}
+    canSwitchTabs={!userState.isPaid}
     currentRange={dayDataTimeRange}
-    smallOption={ChartOptions[ChartType.DAY].SMALL}
     largeOption={ChartOptions[ChartType.DAY].LARGE}
-    canSwitchTabs={!userState.isFree}
     onRangeChange={(range) => (dayDataTimeRange = range)}
+    smallOption={ChartOptions[ChartType.DAY].SMALL}
+    title={ChartTitles[ChartType.DAY]}
   />
 
   {@render previewedMetricSubtitle()}
   <MetricBreakdownChart
     data={dayData}
-    height={250}
     format="day"
+    height={250}
+    isLoading={metricsState.metricDetailsLoading}
     timeRange={dayDataTimeRange === ChartOptions[ChartType.DAY].LARGE
       ? 'large'
       : 'small'}
-    isLoading={metricsState.metricDetailsLoading}
   />
 </DataTile>

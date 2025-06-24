@@ -48,7 +48,7 @@
             {/each}
           </ul>
 
-          {#if feature.id !== Feature.MONITORING || !isDev()}
+          {#if feature.id !== Feature.MONITORING}
             <a
               {...feature.available && {
                 href: `${RoutePath.QUICK_SETUP}?feature=${feature.id}`,
@@ -70,10 +70,10 @@
               class="btn btn-md hover:btn-primary btn-secondary trnasition-none mt-6 w-full"
               canAddMore={true}
               onSubmit={(url) => {
-								goto(
-									`${RoutePath.QUICK_SETUP}?feature=${feature.id}&url=${encodeURIComponent(url)}`,
-								);
-							}}
+                goto(
+                  `${RoutePath.QUICK_SETUP}?feature=${feature.id}&url=${encodeURIComponent(url)}`,
+                );
+              }}
             >
               Setup monitoring
               <ArrowRightIcon class="h-4 w-4" />
@@ -87,11 +87,11 @@
   <section class="ld-card-base rounded-xl p-8">
     <h2 class="mb-1 text-3xl font-bold">Ready to take it for a spin?</h2>
     <p class="text-base-content/70 mb-4">
-      No credit card required. Understand your system in minutes, like
-      never before.
+      No credit card required. Understand your system in minutes, like never
+      before.
     </p>
     <a
-      class="btn btn-primary rounded-full"
+      class="btn btn-primary"
       data-posthog-id="features-open-dashboard-cta"
       href={RoutePath.AUTH}
     >

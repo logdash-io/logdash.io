@@ -13,8 +13,8 @@ class UserState {
     return this._user?.tier || UserTier.FREE;
   }
 
-  get isFree(): boolean {
-    return this.tier === UserTier.FREE;
+  get isPaid(): boolean {
+    return this.tier !== UserTier.FREE;
   }
 
   get avatar(): User['avatarUrl'] {
