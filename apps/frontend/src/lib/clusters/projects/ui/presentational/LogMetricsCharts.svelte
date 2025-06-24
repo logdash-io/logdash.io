@@ -695,6 +695,7 @@
       .style('font-family', 'system-ui, -apple-system, sans-serif');
 
     // Initial render
+    logger.debug('[LogMetricsChart] Initial renderAllCharts');
     renderAllCharts();
 
     // Handle resize with debouncing to improve performance

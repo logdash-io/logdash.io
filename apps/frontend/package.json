@@ -54,6 +54,7 @@
     "query-string": "^9.1.1",
     "svelte-highlight": "^7.8.2",
     "svelte-intersection-observer": "^1.0.0",
-    "sveltekit-sse": "^0.13.19"
+    "sveltekit-sse": "^0.13.19",
+    "ts-pattern": "^5.7.1"
   }
 }

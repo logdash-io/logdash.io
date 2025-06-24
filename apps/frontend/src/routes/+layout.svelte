@@ -101,7 +101,7 @@
   {:else}
     <div
       bind:this={scrollContainer}
-      class="gutter-both overflxow-x-hidden relative flex h-dvh w-dvw flex-col items-center overflow-auto overflow-x-hidden"
+      class="gutter-both overflxow-x-hidden relative flex h-dvh w-dvw flex-col items-center overflow-auto overflow-x-hidden scroll-smooth"
     >
       <Nav />
 

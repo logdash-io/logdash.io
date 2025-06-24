@@ -4,6 +4,7 @@ export enum UserTier {
   FREE = 'free',
   EARLY_BIRD = 'early-bird',
   CONTRIBUTOR = 'contributor',
+  PRO = 'pro',
 }
 
 export enum Feature {
