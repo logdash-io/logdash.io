@@ -83,15 +83,15 @@
 
     const compiledConfig = {
       minute:
-        !isPaid && minuteDataTimeRange === ChartOptions[ChartType.MINUTE].LARGE
+        isPaid && minuteDataTimeRange === ChartOptions[ChartType.MINUTE].LARGE
           ? paidConfig.minute
           : freeConfig.minute,
       hour:
-        !isPaid && hourDataTimeRange === ChartOptions[ChartType.HOUR].LARGE
+        isPaid && hourDataTimeRange === ChartOptions[ChartType.HOUR].LARGE
           ? paidConfig.hour
           : freeConfig.hour,
       day:
-        !isPaid && dayDataTimeRange === ChartOptions[ChartType.DAY].LARGE
+        isPaid && dayDataTimeRange === ChartOptions[ChartType.DAY].LARGE
           ? paidConfig.day
           : freeConfig.day,
     };
