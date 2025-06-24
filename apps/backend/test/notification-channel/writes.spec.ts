@@ -144,10 +144,10 @@ describe('NotificationChannelCoreController (writes)', () => {
         expect(requestBodies.length).toBe(1);
         expect(requestBodies[0]).toEqual({
           chat_id: 'valid-chat-id',
-          text: `👋 Hi\\! I'm \`logdash-uptime-bot\`.
-Setup was completed successfully.
+          text: `👋 Hi\\! I'm \`logdash-uptime-bot\`
+Setup was completed successfully
 
-I'll notify you about the status of your services.`,
+I'll notify you about the status of your services`,
         });
       });
     });
