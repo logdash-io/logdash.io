@@ -171,6 +171,7 @@
 							.style('visibility', 'visible')
 							.style('left', `${mouseX}px`)
 							.style('top', `${mouseY - 20}px`)
+							.style('position', 'absolute')
 							.html(
 								`<strong>Date:</strong> ${d.x}<br><strong>Value:</strong> ${d.y}`,
 							);
@@ -183,6 +184,8 @@
 				// Hide the tooltip
 				d3.select(tooltip).style('visibility', 'hidden');
 			});
+
+		d3.select(tooltip).style('position', 'absolute');
 	}
 	onMount(() => {
 		createChart();
