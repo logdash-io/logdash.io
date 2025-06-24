@@ -8,6 +8,7 @@
   import RubyIcon from '$lib/shared/icons/RubyIcon.svelte';
   import RustIcon from '$lib/shared/icons/RustIcon.svelte';
   import { type LogdashSDK, LogdashSDKName } from '$lib/shared/types.js';
+  import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
   import {
     CheckIcon,
@@ -123,34 +124,16 @@
   });
 </script>
 
-<div class="flex items-center justify-between px-1 py-4 font-semibold">
-  <span>1. Install the Logdash SDK</span>
-
-  <button
-    class="btn btn-neutral btn-sm"
-    data-posthog-id="sdk-selection-button"
-    popovertarget="sdk-popover"
-    style="anchor-name:--sdk-popover-anchor"
-  >
-    <selectedSDK.icon class="h-4 w-4 shrink-0" />
-    {selectedSDK.name}
-
-    <ChevronDownIcon class="h-4 w-4 shrink-0" />
-  </button>
-
+{#snippet menu(close: () => void)}
   <ul
     bind:this={sdkPopover}
-    class="dropdown dropdown-center bg-base-100 rounded-box z-1 overflow-visible p-1 shadow-sm"
-    id="sdk-popover"
-    popover
-    style="position-anchor:--sdk-popover-anchor"
-    tabindex="0"
+    class="dropdown dropdown-center ld-card-base z-20 overflow-visible rounded-xl p-1.5 shadow-sm"
   >
     {#each SDK_LIST as sdk}
       {@const isSupported = !!SDK_INSTALLERS[sdk.name].code}
       <div
         class={[
-          'w-full',
+          'w-full rounded-xl',
           {
             'tooltip tooltip-left tooltip-primary': !isSupported,
           },
@@ -162,6 +145,7 @@
         <li
           onclick={(e) => {
             e.stopPropagation();
+            close();
             if (!isSupported) {
               toast.success('Noted!');
               return;
@@ -170,7 +154,7 @@
             selectedSDKIndex = SDK_LIST.indexOf(sdk);
             sdkPopover.hidePopover();
           }}
-          class="hover:bg-base-200/60 flex cursor-pointer select-none flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs"
+          class="hover:bg-base-100/70 flex cursor-pointer select-none flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs"
         >
           <sdk.icon class="h-4 w-4 shrink-0" />
           <div class="block">
@@ -180,6 +164,22 @@
       </div>
     {/each}
   </ul>
+{/snippet}
+
+<div class="z-50 flex items-center justify-between px-1 py-4 font-semibold">
+  <span>1. Install the Logdash SDK</span>
+
+  <Tooltip content={menu} interactive={true} placement="bottom">
+    <button
+      class="btn btn-neutral btn-sm"
+      data-posthog-id="sdk-selection-button"
+    >
+      <selectedSDK.icon class="h-4 w-4 shrink-0" />
+      {selectedSDK.name}
+
+      <ChevronDownIcon class="h-4 w-4 shrink-0" />
+    </button>
+  </Tooltip>
 </div>
 
 <div class="space-y-2 overflow-hidden text-sm">

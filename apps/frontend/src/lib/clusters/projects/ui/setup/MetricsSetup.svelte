@@ -5,7 +5,14 @@
   import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
   import { getContext, onMount, type Snippet } from 'svelte';
   import Highlight from 'svelte-highlight';
-  import { csharp, go, python, ruby, rust, type LanguageType } from 'svelte-highlight/languages';
+  import {
+    csharp,
+    go,
+    python,
+    ruby,
+    rust,
+    type LanguageType,
+  } from 'svelte-highlight/languages';
   import typescript from 'svelte-highlight/languages/typescript';
   import { metricsState } from '../../application/metrics.state.svelte.js';
   import SDKInstaller from './SDKInstaller.svelte';
@@ -208,7 +215,7 @@ The prompt should output **only** this install command and this exact code block
       <SetupPrompt prompt={setupPrompt} />
     </div>
 
-    <div class="collapse-open collapse">
+    <div class="collapse-open collapse z-10">
       <SDKInstaller bind:selectedSDK bind:installationCode />
     </div>
 
