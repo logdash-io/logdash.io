@@ -29,6 +29,17 @@ export class NotificationChannelMessagingService {
     );
   }
 
+  public async sendWelcomeMessage(notificationChannelId: string): Promise<void> {
+    const channel = await this.notificationChannelReadService.readById(notificationChannelId);
+
+    if (!channel) {
+      throw new Error('Channel not found');
+    }
+
+    const provider = this.pickProvider(channel.target);
+    await provider.sendWelcomeMessage({ notificationChannel: channel });
+  }
+
   private async sendHttpMonitorAlertMessageToNotificationChannel(
     channel: NotificationChannelNormalized,
     dto: SendHttpMonitorAlertMessageDto,

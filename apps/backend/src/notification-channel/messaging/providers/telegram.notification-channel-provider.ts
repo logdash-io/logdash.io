@@ -3,6 +3,7 @@ import axios from 'axios';
 import {
   NotificationChannelProvider,
   SendHttpMonitorAlertMessageSpecificProviderDto,
+  SendWelcomeMessageSpecificProviderDto,
 } from '../notification-channel-provider';
 import { TelegramOptions } from '../../core/types/telegram-options.type';
 import { Logger } from '@logdash/js-sdk';
@@ -22,6 +23,23 @@ export class TelegramNotificationChannelProvider implements NotificationChannelP
       chatId: options.chatId,
       message: this.createHttpMonitorAlertMessage(dto),
     });
+  }
+
+  public async sendWelcomeMessage(dto: SendWelcomeMessageSpecificProviderDto): Promise<void> {
+    const options: TelegramOptions = dto.notificationChannel.options as TelegramOptions;
+
+    await this.sendMessageToTelegramApi({
+      botToken: options.botToken!,
+      chatId: options.chatId,
+      message: this.createWelcomeMessage(dto),
+    });
+  }
+
+  private createWelcomeMessage(dto: SendWelcomeMessageSpecificProviderDto): string {
+    return `👋 Hi! I'm \`logdash-uptime-bot\`.
+Setup was completed successfully.
+
+I'll notify you about the status of your services.`;
   }
 
   private createHttpMonitorAlertMessage(

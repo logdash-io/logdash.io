@@ -3,6 +3,7 @@ import axios from 'axios';
 import {
   NotificationChannelProvider,
   SendHttpMonitorAlertMessageSpecificProviderDto,
+  SendWelcomeMessageSpecificProviderDto,
 } from '../notification-channel-provider';
 import { Logger } from '@logdash/js-sdk';
 import { WebhookOptions } from '../../core/types/webhook-options.type';
@@ -30,6 +31,10 @@ export class WebhookNotificationChannelProvider implements NotificationChannelPr
       headers: webhookOptions.headers,
       bodyToSend: body,
     });
+  }
+
+  public async sendWelcomeMessage(dto: SendWelcomeMessageSpecificProviderDto): Promise<void> {
+    return;
   }
 
   private async sendMessageToWebhook(dto: {

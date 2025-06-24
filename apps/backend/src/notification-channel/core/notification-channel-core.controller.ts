@@ -21,6 +21,7 @@ import { NotificationChannelOptionsEnrichmentService } from './notification-chan
 import { NotificationChannelReadService } from '../read/notification-channel-read.service';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { NotificationChannelOptionsValidationService } from './notification-channel-options-validation.service';
+import { NotificationChannelMessagingService } from '../messaging/notification-channel-messaging.service';
 
 @Controller()
 @ApiTags('Notification channels')
@@ -30,6 +31,7 @@ export class NotificationChannelCoreController {
     private readonly notificationChannelOptionsEnrichmentService: NotificationChannelOptionsEnrichmentService,
     private readonly notificationChannelReadService: NotificationChannelReadService,
     private readonly notificationChannelOptionsValidationService: NotificationChannelOptionsValidationService,
+    private readonly notificationChannelMessagingService: NotificationChannelMessagingService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -67,6 +69,8 @@ export class NotificationChannelCoreController {
       },
       userId,
     );
+
+    await this.notificationChannelMessagingService.sendWelcomeMessage(channel.id);
 
     return NotificationChannelSerializer.serialize(channel);
   }
