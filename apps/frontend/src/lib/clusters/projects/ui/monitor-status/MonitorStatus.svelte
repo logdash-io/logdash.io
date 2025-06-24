@@ -1,12 +1,12 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { logger } from '$lib/shared/logger/index.js';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { DateTime } from 'luxon';
-  import { monitoringState } from '../../application/monitoring.state.svelte.js';
-  import DataTile from '../ProjectView/tiles/DataTile.svelte';
-  import { logger } from '$lib/shared/logger/index.js';
-  import StatusBar from '../presentational/public-dashboard/StatusBar.svelte';
   import type { Snippet } from 'svelte';
+  import { monitoringState } from '../../application/monitoring.state.svelte.js';
+  import StatusBar from '../presentational/public-dashboard/StatusBar.svelte';
+  import DataTile from '../ProjectView/tiles/DataTile.svelte';
 
   type Props = {
     projectId: string;

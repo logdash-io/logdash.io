@@ -3,7 +3,7 @@ import { UserTier } from './types.js';
 export const PAYMENT_PLANS = [
   {
     name: 'Hobby',
-    price: 'Free',
+    price: 'Free forever',
     description:
       'Great for kicking the tires or for your personal stuff. No credit card required.',
     features: [

@@ -12,18 +12,23 @@
   );
   const clusterId = $derived(page.params.cluster_id);
   const isHealthy = $derived(monitoringState.isHealthy(projectMonitor?.id));
+  const isOnDemoDashboard = $derived(
+    page.url.pathname.includes('/demo-dashboard'),
+  );
 </script>
 
 {#snippet fullStatus()}
   <MonitorStatus {projectId}>
-    <div class="flex w-full items-center gap-4">
-      <MonitorContextMenu monitorId={projectMonitor.id} />
+    {#if !isOnDemoDashboard}
+      <div class="flex w-full items-center gap-4">
+        <MonitorContextMenu monitorId={projectMonitor.id} />
 
-      <NotificationChannelsContextMenu
-        monitorId={monitoringState.getMonitorByProjectId(projectId)?.id || ''}
-        {clusterId}
-      />
-    </div>
+        <NotificationChannelsContextMenu
+          monitorId={monitoringState.getMonitorByProjectId(projectId)?.id || ''}
+          {clusterId}
+        />
+      </div>
+    {/if}
   </MonitorStatus>
 {/snippet}
 

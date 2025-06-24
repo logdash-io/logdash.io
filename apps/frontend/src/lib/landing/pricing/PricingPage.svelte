@@ -1,11 +1,9 @@
 <script lang="ts">
   import { PAYMENT_PLANS } from '$lib/shared/payment-plans.const.js';
   import { UserTier } from '$lib/shared/types.js';
-  import { generateGithubOAuthUrl } from '$lib/shared/utils/generate-github-oauth-url.js';
   import { ArrowDownIcon, CheckIcon, ShieldCheckIcon } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
   import PricingComparisonTable from './PricingComparisonTable.svelte';
-  import { match } from 'ts-pattern';
   import { runGithubLogin } from './run-github-login.js';
 
   let loggingIn = $state(false);
