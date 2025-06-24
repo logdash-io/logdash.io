@@ -93,16 +93,16 @@
               <div
                 class="badge badge-primary badge-soft absolute right-0 top-0 font-semibold"
               >
-                Limited Offer -50%
+                {earlyBirdPlan.badge.text}
               </div>
               <h2 class="text-secondary mb-2 text-3xl font-bold">
                 {earlyBirdPlan.name}
               </h2>
               <div class="mb-4">
                 <span class="text-5xl font-bold">{earlyBirdPlan.price}</span>
-                <span class="text-lg opacity-75">
+                <!-- <span class="text-lg opacity-75">
                   {earlyBirdPlan.period}
-                </span>
+                </span> -->
               </div>
               <p class="text-base opacity-75">
                 {earlyBirdPlan.description}

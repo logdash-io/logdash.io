@@ -35,6 +35,8 @@
     metricsState.previewMetric(projectId, previewedMetricId);
   });
 
+  const isPaid = $derived(userState.isPaid);
+
   const { minuteData, hourData, dayData } = $derived.by(() => {
     const minuteData = metricsState.metricsByMetricRegisterId(
       page.url.searchParams.get('metric_id'),
@@ -81,25 +83,18 @@
 
     const compiledConfig = {
       minute:
-        userState.isPaid &&
-        minuteDataTimeRange === ChartOptions[ChartType.MINUTE].LARGE
+        !isPaid && minuteDataTimeRange === ChartOptions[ChartType.MINUTE].LARGE
           ? paidConfig.minute
           : freeConfig.minute,
       hour:
-        userState.isPaid &&
-        hourDataTimeRange === ChartOptions[ChartType.HOUR].LARGE
+        !isPaid && hourDataTimeRange === ChartOptions[ChartType.HOUR].LARGE
           ? paidConfig.hour
           : freeConfig.hour,
       day:
-        userState.isPaid &&
-        dayDataTimeRange === ChartOptions[ChartType.DAY].LARGE
+        !isPaid && dayDataTimeRange === ChartOptions[ChartType.DAY].LARGE
           ? paidConfig.day
           : freeConfig.day,
     };
-
-    console.log(minuteDataTimeRange, hourDataTimeRange, dayDataTimeRange);
-    console.log('compiledConfig', compiledConfig);
-
 
     const graphReadyPoints = getGraphReadyPoints(metricsData, compiledConfig);
     return graphReadyPoints;
@@ -114,7 +109,7 @@
 
 <DataTile delayIn={0}>
   <TimeRangeSelector
-    canSwitchTabs={!userState.isPaid}
+    canSwitchTabs={isPaid}
     currentRange={minuteDataTimeRange}
     largeOption={ChartOptions[ChartType.MINUTE].LARGE}
     onRangeChange={(range) => (minuteDataTimeRange = range)}
@@ -135,7 +130,7 @@
 
 <DataTile delayIn={50}>
   <TimeRangeSelector
-    canSwitchTabs={!userState.isPaid}
+    canSwitchTabs={isPaid}
     currentRange={hourDataTimeRange}
     largeOption={ChartOptions[ChartType.HOUR].LARGE}
     onRangeChange={(range) => (hourDataTimeRange = range)}
@@ -157,7 +152,7 @@
 
 <DataTile delayIn={100}>
   <TimeRangeSelector
-    canSwitchTabs={!userState.isPaid}
+    canSwitchTabs={isPaid}
     currentRange={dayDataTimeRange}
     largeOption={ChartOptions[ChartType.DAY].LARGE}
     onRangeChange={(range) => (dayDataTimeRange = range)}

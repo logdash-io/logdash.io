@@ -6,7 +6,12 @@
   import { Feature } from '$lib/shared/types.js';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
-  import { PenLineIcon, PlusIcon, SettingsIcon, Trash2Icon } from 'lucide-svelte';
+  import {
+    PenLineIcon,
+    PlusIcon,
+    SettingsIcon,
+    Trash2Icon,
+  } from 'lucide-svelte';
   import { fly } from 'svelte/transition';
   import { clustersState } from '../application/clusters.state.svelte.js';
 
@@ -87,85 +92,83 @@
       {/if}
     {/if}
 
-    {#if !projectId}
-      <li>
-        <a
-          onclick={(e) => {
-            e.stopPropagation();
-            const newName = prompt('Enter new project name', cluster.name);
-            const hasCancelled = newName === null;
+    <li>
+      <a
+        onclick={(e) => {
+          e.stopPropagation();
+          const newName = prompt('Enter new project name', cluster.name);
+          const hasCancelled = newName === null;
+          close();
+
+          if (hasCancelled) {
+            return;
+          }
+
+          if (!newName || newName.trim() === '') {
+            toast.warning('Project name cannot be empty', 5000);
+            return;
+          }
+
+          if (newName === cluster.name) {
+            toast.info('Project name is the same, no changes made', 5000);
+            return;
+          }
+
+          clustersState
+            .update(cluster.id, {
+              name: newName,
+            })
+            .then(() => {
+              toast.success('Project name updated successfully', 5000);
+            });
+        }}
+        class="whitespace-nowrap"
+      >
+        Rename project
+
+        {#if clustersState.isUpdating}
+          <span class="loading loading-spinner loading-xs ml-auto"></span>
+        {:else}
+          <PenLineIcon class="ml-auto h-4 w-4" />
+        {/if}
+      </a>
+    </li>
+
+    <li>
+      <a
+        onclick={() => {
+          if (
+            !confirm('Are you sure you want to delete this project?') ||
+            clustersState.isDeleting
+          ) {
             close();
+            return;
+          }
 
-            if (hasCancelled) {
-              return;
-            }
+          const onDeleted = toast.info('Deleting project...', 60000);
 
-            if (!newName || newName.trim() === '') {
-              toast.warning('Project name cannot be empty', 5000);
-              return;
-            }
+          clustersState
+            .delete(cluster.id)
+            .then((key) => {
+              onDeleted();
+              toast.success('Project deleted successfully', 5000);
+            })
+            .catch((error) => {
+              toast.error(`Failed to delete project: ${error.message}`, 5000);
+            });
+          close();
+        }}
+        class="text-error whitespace-nowrap"
+      >
+        Delete project
 
-            if (newName === cluster.name) {
-              toast.info('Project name is the same, no changes made', 5000);
-              return;
-            }
-
-            clustersState
-              .update(cluster.id, {
-                name: newName,
-              })
-              .then(() => {
-                toast.success('Project name updated successfully', 5000);
-              });
-          }}
-          class="whitespace-nowrap"
-        >
-          Rename project
-
-          {#if clustersState.isUpdating}
-            <span class="loading loading-spinner loading-xs ml-auto"></span>
-          {:else}
-            <PenLineIcon class="ml-auto h-4 w-4" />
-          {/if}
-        </a>
-      </li>
-
-      <li>
-        <a
-          onclick={() => {
-            if (
-              !confirm('Are you sure you want to delete this project?') ||
-              clustersState.isDeleting
-            ) {
-              close();
-              return;
-            }
-
-            const onDeleted = toast.info('Deleting project...', 60000);
-
-            clustersState
-              .delete(cluster.id)
-              .then((key) => {
-                onDeleted();
-                toast.success('Project deleted successfully', 5000);
-              })
-              .catch((error) => {
-                toast.error(`Failed to delete project: ${error.message}`, 5000);
-              });
-            close();
-          }}
-          class="text-error whitespace-nowrap"
-        >
-          Delete project
-
-          {#if clustersState.isDeleting}
-            <span class="loading loading-spinner loading-xs ml-auto"></span>
-          {:else}
-            <Trash2Icon class="ml-auto h-4 w-4" />
-          {/if}
-        </a>
-      </li>
-    {/if}
+        {#if clustersState.isDeleting}
+          <span class="loading loading-spinner loading-xs ml-auto"></span>
+        {:else}
+          <Trash2Icon class="ml-auto h-4 w-4" />
+        {/if}
+      </a>
+    </li>
   </ul>
 {/snippet}
 
