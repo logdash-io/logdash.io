@@ -30,7 +30,6 @@ import { UpdateProjectBody } from './dto/update-project.body';
 import { ProjectSerialized } from './entities/project.interface';
 import { ProjectSerializer } from './entities/project.serializer';
 import { projectTierFromUserTier } from './enums/project-tier.enum';
-import { ProjectCoreService } from './project-core.service';
 
 @Controller('')
 @ApiTags('Projects')

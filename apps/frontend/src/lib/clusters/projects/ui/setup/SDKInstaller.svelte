@@ -16,7 +16,7 @@
 		DotSquareIcon,
 	} from 'lucide-svelte';
 	import Highlight from 'svelte-highlight';
-	import { bash, type LanguageType } from 'svelte-highlight/languages';
+	import { bash, csharp, rust, type LanguageType } from 'svelte-highlight/languages';
 
 	type Props = {
 		selectedSDK: LogdashSDK;
@@ -57,16 +57,16 @@
 			code: `gem install logdash`,
 		},
 		[LogdashSDKName.DOTNET]: {
-			language: null,
-			code: null,
+			language: csharp,
+			code: `dotnet add package Logdash`,
 		},
 		[LogdashSDKName.GO]: {
-			language: null,
-			code: null,
+			language: bash,
+			code: `go get github.com/logdash-io/go-sdk/logdash`,
 		},
 		[LogdashSDKName.RUST]: {
-			language: null,
-			code: null,
+			language: bash,
+			code: `cargo add logdash`,
 		},
 		[LogdashSDKName.OTHER]: {
 			language: null,
@@ -84,28 +84,28 @@
 			icon: PythonIcon,
 		},
 		{
-			name: LogdashSDKName.RUBY,
-			icon: RubyIcon,
-		},
-		{
-			name: LogdashSDKName.JAVA,
-			icon: JavaIcon,
-		},
-		{
-			name: LogdashSDKName.PHP,
-			icon: PhpIcon,
+			name: LogdashSDKName.GO,
+			icon: GoIcon,
 		},
 		{
 			name: LogdashSDKName.DOTNET,
 			icon: DotNetIcon,
 		},
 		{
-			name: LogdashSDKName.GO,
-			icon: GoIcon,
+			name: LogdashSDKName.JAVA,
+			icon: JavaIcon,
 		},
 		{
 			name: LogdashSDKName.RUST,
 			icon: RustIcon,
+		},
+		{
+			name: LogdashSDKName.RUBY,
+			icon: RubyIcon,
+		},
+		{
+			name: LogdashSDKName.PHP,
+			icon: PhpIcon,
 		},
 		{
 			name: LogdashSDKName.OTHER,

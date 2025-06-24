@@ -28,6 +28,10 @@
       return;
     }
 
+    minuteDataTimeRange;
+    hourDataTimeRange;
+    dayDataTimeRange;
+
     metricsState.previewMetric(projectId, previewedMetricId);
   });
 
@@ -93,7 +97,12 @@
           : freeConfig.day,
     };
 
-    return getGraphReadyPoints(metricsData, compiledConfig);
+    console.log(minuteDataTimeRange, hourDataTimeRange, dayDataTimeRange);
+    console.log('compiledConfig', compiledConfig);
+
+
+    const graphReadyPoints = getGraphReadyPoints(metricsData, compiledConfig);
+    return graphReadyPoints;
   });
 </script>
 
