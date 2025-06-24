@@ -5,23 +5,59 @@ import { MetricRegisterEntryEntity } from '../core/entities/metric-register-entr
 import { CreateMetricRegisterEntryDto } from './dto/create-metric-register-entry.dto';
 import { RemoveMetricRegisterEntryDto } from './dto/remove-metric-register-entry.dto';
 import { UpdateCounterAbsoluteValueDto } from './dto/update-counter-absolute-value.dto';
+import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
+import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
+import { Actor } from '../../audit-log/core/enums/actor.enum';
+import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 
 @Injectable()
 export class MetricRegisterWriteService {
   constructor(
     @InjectModel(MetricRegisterEntryEntity.name)
     private readonly model: Model<MetricRegisterEntryEntity>,
+    private readonly auditLog: AuditLog,
   ) {}
 
-  public async createMany(dtos: CreateMetricRegisterEntryDto[]): Promise<void> {
-    await this.model.insertMany(dtos, { ordered: false });
+  public async createMany(
+    dtos: CreateMetricRegisterEntryDto[],
+    actorUserId?: string,
+  ): Promise<void> {
+    const entries = await this.model.insertMany(dtos, { ordered: false });
+
+    entries.forEach((entry) => {
+      this.auditLog.create({
+        userId: actorUserId,
+        action: AuditLogEntityAction.Create,
+        actor: actorUserId ? Actor.User : Actor.System,
+        relatedDomain: RelatedDomain.Metric,
+        relatedEntityId: entry._id.toString(),
+      });
+    });
   }
 
-  public async deleteBelongingToProject(projectId: string): Promise<void> {
+  public async deleteBelongingToProject(projectId: string, actorUserId?: string): Promise<void> {
+    const entries = await this.model.find({ projectId });
+
+    await Promise.all(
+      entries.map((entry) =>
+        this.auditLog.create({
+          userId: actorUserId,
+          action: AuditLogEntityAction.Delete,
+          actor: actorUserId ? Actor.User : Actor.System,
+          relatedDomain: RelatedDomain.Metric,
+          relatedEntityId: entry._id.toString(),
+          description: `Deleted due to project deletion`,
+        }),
+      ),
+    );
+
     await this.model.deleteMany({ projectId }, { ordered: false });
   }
 
-  public async removeById(dto: RemoveMetricRegisterEntryDto): Promise<string | null> {
+  public async removeById(
+    dto: RemoveMetricRegisterEntryDto,
+    actorUserId?: string,
+  ): Promise<string | null> {
     const entry = await this.model.findOne({
       _id: new Types.ObjectId(dto.id),
     });
@@ -31,6 +67,15 @@ export class MetricRegisterWriteService {
     }
 
     const entryId = entry._id.toString();
+
+    await this.auditLog.create({
+      userId: actorUserId,
+      action: AuditLogEntityAction.Delete,
+      actor: actorUserId ? Actor.User : Actor.System,
+      relatedDomain: RelatedDomain.Metric,
+      relatedEntityId: entryId,
+    });
+
     await this.model.deleteOne({ _id: entry._id });
 
     return entryId;

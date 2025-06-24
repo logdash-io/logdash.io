@@ -4,10 +4,12 @@ import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-conf
 import { CreateHttpMonitorBody } from '../../src/http-monitor/core/dto/create-http-monitor.body';
 import { Types } from 'mongoose';
 import { UpdateHttpMonitorBody } from '../../src/http-monitor/core/dto/update-http-monitor.body';
-import { HttpMonitorStatus } from '../../src/http-monitor/status/enum/http-monitor-status.enum';
-import * as nock from 'nock';
-import { HttpPingSchedulerService } from '../../src/http-ping/schedule/http-ping-scheduler.service';
-import { sleep } from '../utils/sleep';
+import {
+  AuditLogEntityAction,
+  AuditLogHttpMonitorAction,
+  AuditLogNotificationChannelAction,
+} from '../../src/audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 
 describe('HttpMonitorCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -28,10 +30,17 @@ describe('HttpMonitorCoreController (writes)', () => {
     it('creates new monitor', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: project.clusterId,
+          token,
+        });
+
       const dto: CreateHttpMonitorBody = {
         name: 'some name',
         url: 'https://google.com',
-        notificationChannelsIds: [new Types.ObjectId().toString()],
+        notificationChannelsIds: [notificationChannel.id],
       };
 
       // when
@@ -91,6 +100,35 @@ describe('HttpMonitorCoreController (writes)', () => {
       );
     });
 
+    it('throws error when notification channels do not belong to the same cluster', async () => {
+      // given
+      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: setupB.cluster.id,
+          token: setupB.token,
+          options: {
+            chatId: 'some-chat-id',
+          },
+        });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/projects/${setupA.project.id}/http_monitors`)
+        .set('Authorization', `Bearer ${setupA.token}`)
+        .send({
+          name: 'Test Monitor',
+          url: 'https://example.com',
+          notificationChannelsIds: [notificationChannel.id],
+        });
+
+      // then
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('Notification channels must belong to the same cluster');
+    });
+
     it('denies access for non-cluster member', async () => {
       // given
       const { token: creatorToken, project } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -104,6 +142,37 @@ describe('HttpMonitorCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(403);
+    });
+
+    it('creates audit log when monitor is created', async () => {
+      // given
+      const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: project.clusterId,
+          token,
+        });
+
+      const dto: CreateHttpMonitorBody = {
+        name: 'some name',
+        url: 'https://google.com',
+        notificationChannelsIds: [notificationChannel.id],
+      };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/projects/${project.id}/http_monitors`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(dto);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Create,
+        relatedDomain: RelatedDomain.HttpMonitor,
+        relatedEntityId: response.body.id,
+      });
     });
   });
 
@@ -155,6 +224,36 @@ describe('HttpMonitorCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(403);
+    });
+
+    it('creates audit log when monitor is updated', async () => {
+      // given
+      const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: project.id,
+        token,
+      });
+
+      const dto: UpdateHttpMonitorBody = {
+        name: 'Updated Monitor',
+        url: 'https://updated-url.com',
+        notificationChannelsIds: [new Types.ObjectId().toString()],
+      };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/http_monitors/${httpMonitor.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(dto);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Update,
+        relatedDomain: RelatedDomain.HttpMonitor,
+        relatedEntityId: httpMonitor.id,
+      });
     });
   });
 
@@ -212,6 +311,160 @@ describe('HttpMonitorCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(403);
+    });
+
+    it('creates audit log when monitor is deleted', async () => {
+      // given
+      const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: project.id,
+        token,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/http_monitors/${httpMonitor.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Delete,
+        relatedDomain: RelatedDomain.HttpMonitor,
+        relatedEntityId: httpMonitor.id,
+      });
+    });
+  });
+
+  describe('POST /http_monitors/:httpMonitorId/notification_channels/:notificationChannelId', () => {
+    it('adds notification channel to monitor', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: setup.project.id,
+        token: setup.token,
+      });
+
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: setup.cluster.id,
+          token: setup.token,
+          options: {
+            chatId: 'some-chat-id',
+          },
+        });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/http_monitors/${httpMonitor.id}/notification_channels/${notificationChannel.id}`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // then
+      const entity = await bootstrap.models.httpMonitorModel.findOne();
+
+      expect(entity).toMatchObject({
+        notificationChannelsIds: [notificationChannel.id],
+      });
+    });
+
+    it('creates audit log when notification channel is added to monitor', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: setup.project.id,
+        token: setup.token,
+      });
+
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: setup.cluster.id,
+          token: setup.token,
+          options: {
+            chatId: 'some-chat-id',
+          },
+        });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/http_monitors/${httpMonitor.id}/notification_channels/${notificationChannel.id}`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: setup.user.id,
+        action: AuditLogHttpMonitorAction.AddedNotificationChannel,
+      });
+
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: setup.user.id,
+        action: AuditLogNotificationChannelAction.AddedToMonitor,
+      });
+    });
+  });
+
+  describe('DELETE /http_monitors/:httpMonitorId/notification_channels/:notificationChannelId', () => {
+    it('removes notification channel from monitor', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: setup.project.id,
+        token: setup.token,
+      });
+
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: setup.cluster.id,
+          token: setup.token,
+          options: {
+            chatId: 'some-chat-id',
+          },
+        });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/http_monitors/${httpMonitor.id}/notification_channels/${notificationChannel.id}`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // then
+      const entity = await bootstrap.models.httpMonitorModel.findOne();
+
+      expect(entity).toMatchObject({
+        notificationChannelsIds: [],
+      });
+    });
+
+    it('creates audit log when notification channel is removed from monitor', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        projectId: setup.project.id,
+        token: setup.token,
+      });
+
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: setup.cluster.id,
+          token: setup.token,
+          options: {
+            chatId: 'some-chat-id',
+          },
+        });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/http_monitors/${httpMonitor.id}/notification_channels/${notificationChannel.id}`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: setup.user.id,
+        action: AuditLogHttpMonitorAction.RemovedNotificationChannel,
+      });
     });
   });
 });

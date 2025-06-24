@@ -1,14 +1,15 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { monitoringState } from '$lib/clusters/projects/application/monitoring.state.svelte.js';
   import DataTile from '$lib/clusters/projects/ui/ProjectView/tiles/DataTile.svelte';
+  import { autoFocus } from '$lib/shared/ui/actions/use-autofocus.svelte.js';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { stripProtocol } from '$lib/shared/utils/url.js';
   import { CheckCircle } from 'lucide-svelte';
-  import { getContext, type Snippet } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
   import MonitorsListener from '../presentational/PingsListener.svelte';
-  import { goto } from '$app/navigation';
-  import { autoFocus } from '$lib/shared/ui/actions/use-autofocus.svelte.js';
+  import { browser } from '$app/environment';
 
   type Props = {
     claimer: Snippet<[boolean]>;
@@ -19,14 +20,12 @@
 
   const clusterId = $derived(page.params.cluster_id);
   const observedUrl = $derived(page.url.searchParams.get('url'));
-  const nameParam = $derived(
-    decodeURIComponent(page.url.searchParams.get('name') || ''),
+  const nameParam = $derived(page.url.searchParams.get('name'));
+  const monitorName = $derived(
+    stripProtocol(decodeURIComponent(nameParam || observedUrl)),
   );
   const isHealthy = $derived(monitoringState.isPreviewHealthy(observedUrl));
   const pings = $derived.by(() => monitoringState.previewPings(observedUrl));
-  let monitorName = $state(
-    nameParam ?? (stripProtocol(page.url.searchParams.get('url')) || ''),
-  );
 
   $effect(() => {
     monitoringState.previewUrl(clusterId, observedUrl);
@@ -37,17 +36,36 @@
   });
 
   $effect(() => {
-    if (nameParam === monitorName) {
+    if (monitorName === nameParam) {
       return;
     }
 
-    page.url.searchParams.set('name', encodeURIComponent(monitorName));
-    goto(page.url.toString(), {
+    setMonitorName(monitorName);
+  });
+
+  onMount(() => {
+    const t = setTimeout(() => {
+      if (!nameParam) {
+        setMonitorName(stripProtocol(observedUrl));
+      }
+    }, 0);
+
+    return () => {
+      clearTimeout(t);
+    };
+  });
+
+  function setMonitorName(name: string) {
+    const query = new URLSearchParams(page.url.searchParams.toString());
+
+    query.set('name', encodeURIComponent(name));
+
+    goto(`?${query.toString()}`, {
       replaceState: true,
       keepFocus: true,
       noScroll: true,
     });
-  });
+  }
 </script>
 
 <div class="w-xl mr-auto space-y-8">
@@ -55,8 +73,8 @@
     <div class="flex w-full flex-col gap-2">
       <div class="flex w-full gap-2">
         <div class="flex w-full items-center gap-2">
-          <h5 class="text-2xl font-semibold">
-            {stripProtocol(observedUrl)}
+          <h5 class="truncate text-2xl font-semibold">
+            {monitorName}
           </h5>
 
           <div
@@ -139,11 +157,9 @@
         <span>1. Configure url</span>
       </div>
 
-      <div class="space-y-2 text-3xl font-semibold">
-        <div class="text-secondary relative flex items-center gap-2">
-          {page.url.searchParams.get('url')}
-        </div>
-      </div>
+      <span class="text-secondary relative truncate text-3xl font-semibold">
+        {observedUrl}
+      </span>
     </div>
 
     <div class="collapse-open collapse overflow-visible rounded-none">
@@ -154,11 +170,14 @@
       <div class="space-y-2 text-3xl font-semibold">
         <input
           type="text"
-          bind:value={monitorName}
+          value={monitorName}
+          oninput={(e) => {
+            setMonitorName(e.currentTarget.value);
+          }}
           placeholder={stripProtocol(observedUrl)}
           minlength={MIN_NAME_LENGTH}
           maxlength={MAX_NAME_LENGTH}
-          class="input-sm input-ghost selection:bg-secondary/20 border-secondary/20 focus:border-primary h-full w-full rounded-lg px-3 py-2 text-lg font-semibold outline-0 focus:bg-transparent"
+          class="input-sm input-ghost selection:bg-secondary/20 border-secondary/20 focus:border-primary h-full w-full rounded-lg border px-3 py-2 text-lg font-semibold outline-0 focus:bg-transparent"
           use:autoFocus={{
             selectAll: true,
           }}

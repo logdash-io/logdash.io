@@ -40,6 +40,7 @@ import { LogSerialized } from './entities/log.interface';
 import { LogSerializer } from './entities/log.serializer';
 import { LogReadDirection } from './enums/log-read-direction.enum';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
+import { LogReadClickhouseService } from '../read/log-read.clickhouse-service';
 
 @Controller('')
 @ApiTags('Logs')
@@ -51,6 +52,7 @@ export class LogCoreController {
     private readonly logEventEmitter: LogEventEmitter,
     private readonly eventEmitter: EventEmitter2,
     private readonly logRateLimitService: LogRateLimitService,
+    private readonly logReadClickhouseService: LogReadClickhouseService,
   ) {}
 
   @DemoEndpoint()
@@ -63,6 +65,8 @@ export class LogCoreController {
   ): Promise<Observable<any>> {
     const eventStream$ = fromEvent(this.eventEmitter, LogEvents.LogCreatedEvent).pipe(
       filter((data: LogCreatedEvent) => {
+        console.log('Filtering event', data);
+
         return data.projectId === projectId;
       }),
       map((data) => ({ data })),
@@ -179,6 +183,30 @@ export class LogCoreController {
     }
 
     const logs = await this.logReadService.readMany({
+      direction: dto.direction,
+      lastId: dto.lastId,
+      projectId,
+      limit: dto.limit ?? 50,
+    });
+
+    return logs.map((log) => LogSerializer.serialize(log));
+  }
+
+  @DemoEndpoint()
+  @UseInterceptors(DemoCacheInterceptor)
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Get('projects/:projectId/logs/v2')
+  @ApiResponse({ type: LogSerialized, isArray: true })
+  public async readLogsV2(
+    @Param('projectId') projectId: string,
+    @Query() dto: ReadLogsQuery,
+  ): Promise<LogSerialized[]> {
+    if ((dto.lastId && !dto.direction) || (!dto.lastId && dto.direction)) {
+      throw new BadRequestException('Provide either lastId and direction or neither');
+    }
+
+    const logs = await this.logReadClickhouseService.readMany({
       direction: dto.direction,
       lastId: dto.lastId,
       projectId,

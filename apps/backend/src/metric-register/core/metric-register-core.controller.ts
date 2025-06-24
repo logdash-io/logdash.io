@@ -1,10 +1,5 @@
-import {
-  Controller,
-  Delete,
-  NotFoundException,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Delete, NotFoundException, Param, UseGuards } from '@nestjs/common';
+import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MetricRegisterWriteService } from '../write/metric-register-write.service';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
@@ -25,10 +20,14 @@ export class MetricRegisterCoreController {
   @ApiResponse({ type: SuccessResponse })
   public async removeMetricRegisterEntry(
     @Param('id') id: string,
+    @CurrentUserId() userId: string,
   ): Promise<SuccessResponse> {
-    const entryId = await this.metricRegisterWriteService.removeById({
-      id,
-    });
+    const entryId = await this.metricRegisterWriteService.removeById(
+      {
+        id,
+      },
+      userId,
+    );
 
     if (!entryId) {
       throw new NotFoundException('Metric register entry not found');

@@ -6,6 +6,7 @@ import { NotificationChannelMessagingModule } from '../messaging/notification-ch
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { TelegramSetupModule } from '../setup/telegram/telegram-setup.module';
 import { NotificationChannelOptionsEnrichmentService } from './notification-channel-options-enrichment.service';
+import { NotificationChannelOptionsValidationService } from './notification-channel-options-validation.service';
 
 @Module({
   imports: [
@@ -16,7 +17,10 @@ import { NotificationChannelOptionsEnrichmentService } from './notification-chan
     ...ClusterMemberGuardImports,
   ],
   controllers: [NotificationChannelCoreController],
-  providers: [NotificationChannelOptionsEnrichmentService],
+  providers: [
+    NotificationChannelOptionsEnrichmentService,
+    NotificationChannelOptionsValidationService,
+  ],
   exports: [],
 })
 export class NotificationChannelCoreModule {}

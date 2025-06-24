@@ -19,33 +19,53 @@
     try {
       await navigator.clipboard.writeText(passphrase);
       copied = true;
-      toast.success('Passphrase copied to clipboard!', 2000);
+      toast.success('Passphrase copied to clipboard!');
       setTimeout(() => (copied = false), 2000);
     } catch (err) {
       console.error('Failed to copy to clipboard:', err);
     }
   }
+
+  async function copyBotName() {
+    if (!browser) return;
+
+    try {
+      await navigator.clipboard.writeText('@logdash_uptime_bot');
+      toast.success('Bot name copied to clipboard!');
+    } catch (err) {
+      toast.error(`Failed to copy bot name: ${err}`);
+    }
+  }
 </script>
 
-<div class="space-y-4">
+<div class="space-y-6">
   <div class="flex items-center justify-start gap-4">
     <div
-      class="bg-base-300 border-base-100 text-primary-content flex h-12 w-12 items-center justify-center rounded-full border"
+      class="bg-base-300 border-base-100 text-primary-content flex h-14 w-14 items-center justify-center rounded-full border"
     >
       <SendIcon class="h-6 w-6" />
     </div>
 
-    <h3 class="text-xl font-semibold">Setup Telegram Channel</h3>
+    <div class="flex flex-col items-start">
+      <h3 class="text-xl font-semibold">Setup Telegram Channel</h3>
+      <p class="text-secondary/70 text-sm">
+        This is the hard part, so we made it easy!
+      </p>
+    </div>
   </div>
 
   <div class="text-secondary mb-6 text-sm">
     <h4 class="text-lg font-semibold">Step 1</h4>
-    <p class="text-secondary/70 mb-4">
+    <p class="text-secondary/70 mb-4 select-none">
       Add the bot
-      <code class="kbd kbd-sm">@logdash_uptime_bot</code>
-      to your Telegram group or chat
-      <span class="underline">as administrator</span>
-      with messages read permission.
+      <code
+        class="kbd kbd-sm hover:bg-base-200 cursor-pointer transition-colors"
+        onclick={copyBotName}
+        title="Click to copy bot name"
+      >
+        @logdash_uptime_bot
+      </code>
+      to your Telegram group or chat.
     </p>
 
     <h4 class="text-lg font-semibold">Step 2</h4>

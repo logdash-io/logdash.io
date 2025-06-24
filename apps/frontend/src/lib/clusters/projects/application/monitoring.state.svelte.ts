@@ -11,6 +11,7 @@ import type {
   HttpPingCreatedEvent,
 } from '../domain/monitoring/http-ping.js';
 import { httpClient } from '$lib/shared/http/http-client.js';
+import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 
 const logger = createLogger('monitoring.state');
 
@@ -45,7 +46,10 @@ class MonitoringState {
     );
   }
 
-  addNotificationChannel(monitorId: string, channelId: string): Promise<void> {
+  async addNotificationChannel(
+    monitorId: string,
+    channelId: string,
+  ): Promise<void> {
     if (!monitorId || !channelId) {
       return Promise.reject(
         new Error('Monitor ID and Channel ID are required'),
@@ -71,12 +75,14 @@ class MonitoringState {
     // this._monitors[monitorId].notificationChannelsIds.push(channelId);
     this._monitors[monitorId].notificationChannelsIds = [channelId];
 
-    return httpClient.put(`/http_monitors/${monitorId}`, {
+    await httpClient.put(`/http_monitors/${monitorId}`, {
       notificationChannelsIds: [channelId],
     });
+
+    toast.success(`Notification channel added to monitor ${monitor.name}`);
   }
 
-  removeNotificationChannel(
+  async removeNotificationChannel(
     monitorId: string,
     channelId: string,
   ): Promise<void> {
@@ -107,9 +113,11 @@ class MonitoringState {
     // );
     this._monitors[monitorId].notificationChannelsIds = [];
 
-    return httpClient.put(`/http_monitors/${monitorId}`, {
+    await httpClient.put(`/http_monitors/${monitorId}`, {
       notificationChannelsIds: [],
     });
+
+    toast.success(`Notification channel removed from monitor ${monitor.name}`);
   }
 
   toggleNotificationChannel(
@@ -210,6 +218,41 @@ class MonitoringState {
     monitorId: string,
   ): Promise<void> {
     return this._fetchPings(clusterId, projectId, monitorId);
+  }
+
+  async updateMonitorName(monitorId: string, newName: string): Promise<void> {
+    if (!monitorId || !newName?.trim()) {
+      throw new Error('Monitor ID and name are required');
+    }
+
+    const monitor = this._monitors[monitorId];
+    if (!monitor) {
+      throw new Error(`Monitor with ID ${monitorId} not found`);
+    }
+
+    await httpClient.put(`/http_monitors/${monitorId}`, {
+      name: newName.trim(),
+    });
+
+    // Update local state
+    this._monitors[monitorId].name = newName.trim();
+  }
+
+  async deleteMonitor(monitorId: string): Promise<void> {
+    if (!monitorId) {
+      throw new Error('Monitor ID is required');
+    }
+
+    const monitor = this._monitors[monitorId];
+    if (!monitor) {
+      throw new Error(`Monitor with ID ${monitorId} not found`);
+    }
+
+    await httpClient.delete(`/http_monitors/${monitorId}`);
+
+    // Remove from local state
+    delete this._monitors[monitorId];
+    delete this._monitorPings[monitorId];
   }
 
   // Private helper methods

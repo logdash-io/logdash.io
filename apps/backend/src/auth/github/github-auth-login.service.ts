@@ -73,7 +73,7 @@ export class GithubAuthLoginService {
 
       this.metrics.mutate('loginGithub', 1);
 
-      void this.auditLog.create({
+      this.auditLog.create({
         userId: user.id,
         actor: Actor.User,
         action: AuditLogUserAction.GithubLogin,
@@ -90,7 +90,7 @@ export class GithubAuthLoginService {
 
     this.metrics.mutate('loginGithub', 1);
 
-    void this.auditLog.create({
+    this.auditLog.create({
       userId: user.id,
       actor: Actor.User,
       action: AuditLogUserAction.GithubLogin,

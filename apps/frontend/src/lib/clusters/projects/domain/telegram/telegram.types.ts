@@ -1,27 +1,48 @@
-/**
- * Domain types for Telegram notification system
- * Contains core business entities and value objects
- */
-
 export interface TelegramChatInfo {
   success: boolean;
   chatId?: string;
   name?: string;
 }
 
-export interface NotificationChannel {
+interface TelegramNotificationChannel {
   id: string;
   clusterId: string;
-  target: 'telegram' | 'webhook';
+  target: 'telegram';
+  name: string;
   options: {
-    chatId?: string;
+    chatId: string;
     botToken?: string;
-    url?: string;
-    headers?: Record<string, string>;
   };
   createdAt: string;
   updatedAt: string;
 }
+
+interface WebhookNotificationChannel {
+  id: string;
+  clusterId: string;
+  target: 'webhook';
+  name: string;
+  options: {
+    url: string;
+    headers: Record<string, string>;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NotificationChannel =
+  | TelegramNotificationChannel
+  | WebhookNotificationChannel;
+
+type CreateTelegramNotificationChannelDTO = {
+  type: 'telegram';
+  name: string;
+  options: {
+    chatId: string;
+  };
+};
+
+export type CreateNotificationChannelDTO = CreateTelegramNotificationChannelDTO;
 
 export type TelegramSetupStep = 'setup' | 'waiting' | 'success' | 'error';
 
@@ -32,8 +53,5 @@ export interface TelegramSetupStateProps {
   chatName: string;
   chatId: string;
   errorMessage: string;
-}
-
-export interface TelegramSetupEvents {
-  onChannelCreated: (channelId: string, chatName: string) => void;
+  monitorId?: string;
 }
