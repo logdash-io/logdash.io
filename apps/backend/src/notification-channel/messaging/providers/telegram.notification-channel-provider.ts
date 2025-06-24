@@ -36,10 +36,10 @@ export class TelegramNotificationChannelProvider implements NotificationChannelP
   }
 
   private createWelcomeMessage(dto: SendWelcomeMessageSpecificProviderDto): string {
-    return `👋 Hi\\! I'm \`logdash-uptime-bot\`.
-Setup was completed successfully.
+    return `👋 Hi\\! I'm \`logdash-uptime-bot\`
+Setup was completed successfully
 
-I'll notify you about the status of your services.`;
+I'll notify you about the status of your services`;
   }
 
   private createHttpMonitorAlertMessage(
