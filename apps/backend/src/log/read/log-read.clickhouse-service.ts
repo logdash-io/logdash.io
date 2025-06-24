@@ -66,7 +66,7 @@ export class LogReadClickhouseService {
       query = `
         SELECT * FROM logs 
         WHERE project_id = {projectId:String}
-        ORDER BY created_at ASC, sequence_number ASC 
+        ORDER BY created_at DESC, sequence_number DESC 
         LIMIT {limit:UInt32}`;
       queryParams = {
         projectId: dto.projectId,

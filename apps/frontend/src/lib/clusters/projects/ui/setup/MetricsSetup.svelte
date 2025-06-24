@@ -5,7 +5,7 @@
   import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
   import { getContext, onMount, type Snippet } from 'svelte';
   import Highlight from 'svelte-highlight';
-  import { python, ruby, type LanguageType } from 'svelte-highlight/languages';
+  import { csharp, go, python, ruby, rust, type LanguageType } from 'svelte-highlight/languages';
   import typescript from 'svelte-highlight/languages/typescript';
   import { metricsState } from '../../application/metrics.state.svelte.js';
   import SDKInstaller from './SDKInstaller.svelte';
@@ -66,9 +66,10 @@ const { metrics } = createLogDash({
 	apiKey: "${api_key}"
 });
 
-// set absolute value
+// to set absolute value
 metrics.set('users', 0);
-// or modify existing one
+
+// or increment / decrement by
 metrics.mutate('users', 1);`,
     },
     [LogdashSDKName.PYTHON]: {
@@ -76,18 +77,19 @@ metrics.mutate('users', 1);`,
       code: `from logdash import create_logdash
 
 logdash = create_logdash({
-    # optional, but recommended as metrics are only hosted remotely
     "api_key": "${api_key}",
 })
 
-# Access metrics
 metrics = logdash.metrics
 
 # to set absolute value
 metrics.set("users", 0)
 
-# or modify existing one
-metrics.mutate("users", 1)`,
+# or increment / decrement by
+metrics.mutate("users", 1)
+
+# wait to ensure metrics were sent
+time.sleep(5)`,
     },
     [LogdashSDKName.JAVA]: {
       language: null,
@@ -101,21 +103,71 @@ metrics.mutate("users", 1)`,
       language: ruby,
       code: `require 'logdash'
 
-# api_key is optional, but recommended as metrics are only hosted remotely
 logdash_client = Logdash.create(api_key: "${api_key}")
 
-# Access metrics
 metrics = $logdash_client[:metrics]
 
 # to set absolute value
 metrics.set('users', 0)
 
-# or modify existing one
-metrics.mutate('users', 1)`,
+# or increment / decrement by
+metrics.mutate('users', 1)
+
+# wait to ensure metrics were sent
+sleep 5`,
     },
     [LogdashSDKName.DOTNET]: {
-      language: null,
-      code: null,
+      language: csharp,
+      code: `using Logdash;
+using Logdash.Models;
+
+var builder = new LogdashBuilder();
+var (logdash, metrics) = builder.WithHttpClient(new HttpClient())
+    .WithInitializationParams(new InitializationParams("${api_key}"))
+    .Build();
+    
+// to set absolute value
+metrics.Set("users", 0);
+
+// or increment / decrement by
+metrics.Mutate("users", 1);
+
+// wait to ensure metrics were sent
+await Task.Delay(5000);`,
+    },
+    [LogdashSDKName.RUST]: {
+      language: rust,
+      code: `let (_, m) = logdash::create_logdash(logdash::Config::default().api_key("${api_key}".into()));
+
+// to set absolute value
+m.set("user".into(), 0.0)
+
+// or increment / decrement by
+m.mutate("user".into(), 1.0)
+
+// wait to ensure metrics were sent
+thread::sleep(Duration::from_secs(5));
+`,
+    },
+    [LogdashSDKName.GO]: {
+      language: go,
+      code: `ld := logdash.New(logdash.LogdashConfig{
+  logdash.WithApiKey("${api_key}"),
+})
+
+metrics := logdash.Metrics
+
+// to set absolute value
+metrics.Set("users", 0)
+
+// or increment / decrement by
+metrics.Mutate("users", 1)
+
+// wait to ensure metrics were sent
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+ld.Shutdown(ctx)
+`,
     },
     [LogdashSDKName.OTHER]: {
       language: null,

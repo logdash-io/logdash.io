@@ -38,7 +38,7 @@ jobs:
           username: ${{ secrets.BACKEND_PROD_SSH_USER }}
           port: ${{ secrets.BACKEND_PROD_SSH_PORT }}
           ssh-private-key: ${{ secrets.BACKEND_PROD_SSH_KEY }}
-          server-port: 80
+          server-port: 3000
           application-port: 3000
           image-name: ablaszkiewicz/logdash-backend-prod
           container-name: logdash-backend-prod

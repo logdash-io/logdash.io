@@ -8,7 +8,7 @@
   import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
   import { getContext, onMount, type Snippet } from 'svelte';
   import Highlight from 'svelte-highlight';
-  import { python, ruby, type LanguageType } from 'svelte-highlight/languages';
+  import { csharp, go, python, ruby, rust, type LanguageType } from 'svelte-highlight/languages';
   import typescript from 'svelte-highlight/languages/typescript';
   import { logMetricsState } from '../../application/log-metrics.state.svelte.js';
   import SDKInstaller from './SDKInstaller.svelte';
@@ -79,16 +79,18 @@ logger.warn("Low disk space warning")`,
       code: `from logdash import create_logdash
 
 logdash = create_logdash({
-    # optional, but recommended to see your logs in the dashboard
-    "api_key": "${api_key}",
+  "api_key": "${api_key}",
 })
 
-# Access logger
 logger = logdash.logger
 
 logger.info("Application started successfully")
 logger.error("An unexpected error occurred")
-logger.warn("Low disk space warning")`,
+logger.warn("Low disk space warning")
+
+# wait to ensure logs were sent
+time.sleep(5)
+`,
     },
     [LogdashSDKName.JAVA]: {
       language: null,
@@ -102,19 +104,63 @@ logger.warn("Low disk space warning")`,
       language: ruby,
       code: `require 'logdash'
 
-# api_key is optional, but recommended to see your logs in the dashboard
 logdash_client = Logdash.create(api_key: "${api_key}")
 
-# Access logger
 logger = logdash_client[:logger]
 
 logger.info('Application started successfully')
 logger.error('An unexpected error occurred')
-logger.warn('Low disk space warning')`,
+logger.warn('Low disk space warning')
+
+# wait to ensure logs were sent
+sleep 5`,
     },
     [LogdashSDKName.DOTNET]: {
-      language: null,
-      code: null,
+      language: csharp,
+      code: `using Logdash;
+using Logdash.Models;
+
+var builder = new LogdashBuilder();
+var (logdash, metrics) = builder.WithHttpClient(new HttpClient())
+    .WithInitializationParams(new InitializationParams("${api_key}"))
+    .Build();
+
+logger.Info("Application started successfully");
+logger.Error("An unexpected error occurred");
+logger.Warn("Low disk space warning");
+
+// wait to ensure logs were sent
+await Task.Delay(5000); 
+`,
+    },
+    [LogdashSDKName.RUST]: {
+      language: rust,
+      code: `let (logger, _) = logdash::create_logdash(logdash::Config::default().api_key("${api_key}".into()));
+
+logger.info("Application started successfully");
+logger.error("An unexpected error occurred");
+logger.warn("Low disk space warning");
+
+// wait to ensure logs were sent
+thread::sleep(Duration::from_secs(5));`,
+    },
+    [LogdashSDKName.GO]: {
+      language: go,
+      code: `ld := logdash.New(
+  logdash.WithApiKey("${api_key}"),
+)
+
+logger := logdash.logger
+
+logger.Info("Application started successfully")
+logger.Error("An unexpected error occurred")
+logger.Warn("Low disk space warning")
+
+// wait to ensure logs were sent
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+ld.Shutdown(ctx)
+    `,
     },
     [LogdashSDKName.OTHER]: {
       language: null,
