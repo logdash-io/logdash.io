@@ -272,10 +272,8 @@ I'll notify you about the status of your services`,
 
       await Promise.all(
         Array.from({ length: 100 }).map((_, i) =>
-          bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          bootstrap.models.notificationChannelModel.create({
             clusterId: cluster.id,
-            options: { chatId: `valid-chat-id-${i}` },
-            token,
           }),
         ),
       );
