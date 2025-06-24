@@ -3,18 +3,21 @@ import type { Log } from '$lib/clusters/projects/domain/log';
 import type { LogGranularity } from '$lib/clusters/projects/domain/log-granularity';
 import type { LogMetric } from '$lib/clusters/projects/domain/log-metric';
 import type { Metric } from '$lib/clusters/projects/domain/metric';
+import type { HttpPing } from '$lib/clusters/projects/domain/monitoring/http-ping.js';
+import type { Monitor } from '$lib/clusters/projects/domain/monitoring/monitor.js';
 import type { Project } from '$lib/clusters/projects/domain/project';
+import type { PublicDashboardData } from '$lib/clusters/projects/domain/public-dashboards/public-dashboard-data.js';
+import type { PublicDashboard } from '$lib/clusters/projects/domain/public-dashboards/public-dashboard.js';
+import type {
+  NotificationChannel,
+  TelegramChatInfo,
+} from '$lib/clusters/projects/domain/telegram/telegram.types';
 import { redirect } from '@sveltejs/kit';
-import { EventSource } from 'eventsource';
 import queryString from 'query-string';
 import { bffLogger } from './bff-logger';
+import type { ExposedConfig } from './exposed-config/domain/exposed-config.js';
 import type { User } from './user/domain/user';
 import { envConfig } from './utils/env-config';
-import type { ExposedConfig } from './exposed-config/domain/exposed-config.js';
-import type { Monitor } from '$lib/clusters/projects/domain/monitoring/monitor.js';
-import type { HttpPing } from '$lib/clusters/projects/domain/monitoring/http-ping.js';
-import type { PublicDashboard } from '$lib/clusters/projects/domain/public-dashboards/public-dashboard.js';
-import type { PublicDashboardData } from '$lib/clusters/projects/domain/public-dashboards/public-dashboard-data.js';
 
 type UnauthorizedHandler = () => void;
 
@@ -254,6 +257,37 @@ class LogdashAPI {
     return this.get<{ url: string }>(
       `${LogdashAPI.v0baseUrl}/support/telegram/invite-link`,
       access_token,
+    );
+  }
+
+  get_telegram_chat_info(passphrase: string): Promise<TelegramChatInfo> {
+    const cookies = document?.cookie || '';
+    const tokenMatch = cookies.match(/access_token=([^;]+)/);
+    const accessToken = tokenMatch ? tokenMatch[1] : '';
+
+    return this.get<TelegramChatInfo>(
+      `${LogdashAPI.v0baseUrl}/notification_channel_setup/telegram/chat_info?passphrase=${encodeURIComponent(passphrase)}`,
+      accessToken,
+    );
+  }
+
+  create_telegram_notification_channel(
+    clusterId: string,
+    options: { chatId: string },
+  ): Promise<NotificationChannel> {
+    const cookies = document?.cookie || '';
+    const tokenMatch = cookies.match(/access_token=([^;]+)/);
+    const accessToken = tokenMatch ? tokenMatch[1] : '';
+
+    return this.post<NotificationChannel>(
+      `${LogdashAPI.v0baseUrl}/clusters/${clusterId}/notification_channels`,
+      {
+        type: 'telegram',
+        options: {
+          chatId: options.chatId,
+        },
+      },
+      accessToken,
     );
   }
 

@@ -42,10 +42,10 @@ export class ProjectWriteService {
       userId: dto.userId,
     });
 
-    void this.auditLog.create({
+    this.auditLog.create({
       userId: dto.userId,
       actor: Actor.User,
-      action: AuditLogEntityAction.Created,
+      action: AuditLogEntityAction.Create,
       relatedDomain: RelatedDomain.Project,
       relatedEntityId: projectNormalized.id,
     });
@@ -74,7 +74,7 @@ export class ProjectWriteService {
       void this.auditLog.create({
         userId: actorUserId,
         actor: actorUserId ? Actor.User : Actor.System,
-        action: AuditLogEntityAction.Updated,
+        action: AuditLogEntityAction.Update,
         relatedDomain: RelatedDomain.Project,
         relatedEntityId: dto.id,
       });
@@ -99,12 +99,12 @@ export class ProjectWriteService {
     const projects = await this.model.find({ creatorId });
 
     projects.forEach((project) => {
-      void this.auditLog.create({
+      this.auditLog.create({
         userId: project.creatorId,
         actor: Actor.System,
-        action: AuditLogEntityAction.Updated,
+        action: AuditLogEntityAction.Update,
         relatedDomain: RelatedDomain.Project,
-        relatedEntityId: project.id,
+        relatedEntityId: project._id.toString(),
         description: `Updated tier to ${tier} because user tier changed`,
       });
     });
@@ -134,7 +134,7 @@ export class ProjectWriteService {
     await this.auditLog.create({
       userId: actorUserId,
       actor: actorUserId ? Actor.User : Actor.System,
-      action: AuditLogEntityAction.Deleted,
+      action: AuditLogEntityAction.Delete,
       relatedDomain: RelatedDomain.Project,
       relatedEntityId: projectId,
     });

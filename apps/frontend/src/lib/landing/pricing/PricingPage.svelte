@@ -1,0 +1,189 @@
+<script lang="ts">
+  import { PAYMENT_PLANS } from '$lib/shared/payment-plans.const.js';
+  import { UserTier } from '$lib/shared/types.js';
+  import { generateGithubOAuthUrl } from '$lib/shared/utils/generate-github-oauth-url.js';
+  import { ArrowDownIcon, CheckIcon, ShieldCheckIcon } from 'lucide-svelte';
+  import { fade } from 'svelte/transition';
+  import PricingComparisonTable from './PricingComparisonTable.svelte';
+  import { match } from 'ts-pattern';
+  import { runGithubLogin } from './run-github-login.js';
+
+  let loggingIn = $state(false);
+
+  const handleGithubLogin = (tier: UserTier) => {
+    loggingIn = true;
+    runGithubLogin(tier);
+  };
+
+  const pricingData = {
+    header: {
+      title: 'Pricing that makes sense',
+      subtitle: "Pick a plan that's right for you and your awesome projects.",
+    },
+    plans: PAYMENT_PLANS,
+    footer: {
+      title: "Questions? We're here to help",
+      description: 'Contact us for any questions about our pricing or features',
+    },
+  };
+</script>
+
+<section class="px-4 py-8 sm:py-16">
+  <div class="mx-auto max-w-4xl text-center">
+    <h1 class="mb-4 text-4xl font-bold">{pricingData.header.title}</h1>
+    <p class="mb-8 text-lg opacity-80">{pricingData.header.subtitle}</p>
+  </div>
+</section>
+
+<section class="px-4">
+  <div class="mx-auto mb-8 grid max-w-7xl gap-8 md:grid-cols-3">
+    {#each pricingData.plans as plan}
+      <div class="relative flex flex-col">
+        {#if plan.popular}
+          <div
+            class="bg-primary ring-primary flex h-16 w-full items-center justify-center rounded-xl pb-6 text-sm font-semibold ring"
+          >
+            Best Value
+          </div>
+        {:else}
+          <div class="h-16"></div>
+        {/if}
+
+        <div
+          class={[
+            'card ld-card-base relative -mt-6 overflow-visible rounded-xl p-8 shadow-xl',
+            {
+              'ring-primary ring': plan.popular,
+            },
+          ]}
+        >
+          <div class={['badge badge-soft badge-lg mb-4', plan.badge.class]}>
+            {plan.badge.text}
+          </div>
+
+          <div class="card-body p-0">
+            <h2 class="card-title text-2xl font-normal">
+              {plan.name}
+            </h2>
+            <div class="mt-2">
+              <span class="text-4xl font-semibold">{plan.price}</span>
+
+              <p class="mt-4 text-sm opacity-75">
+                {plan.description}
+              </p>
+            </div>
+
+            <div class="card-actions my-4 justify-center">
+              <button
+                onclick={() => handleGithubLogin(plan.tier)}
+                disabled={loggingIn || plan['disabled']}
+                class={`btn btn-lg w-full rounded-full font-medium ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}
+              >
+                {#if loggingIn}
+                  <div
+                    in:fade={{ duration: 150 }}
+                    class="flex h-6 w-6 items-center justify-center"
+                  >
+                    <span class="loading loading-spinner h-4 w-4"></span>
+                  </div>
+                {/if}
+
+                {plan.buttonText}
+              </button>
+            </div>
+
+            <div class="mb-4 flex items-center gap-2 text-base font-semibold">
+              <ShieldCheckIcon class="text-success h-6 w-6" />
+              {plan.guarantee}
+            </div>
+
+            <ul class="mb-8 space-y-3 text-base">
+              {#each plan.features as feature}
+                <li class="flex items-center gap-3">
+                  <CheckIcon class="text-success h-5 w-5 flex-shrink-0" />
+
+                  <span>
+                    {feature.name}
+                  </span>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        </div>
+      </div>
+    {/each}
+  </div>
+
+  <span class="badge badge-soft mx-auto mb-8 block opacity-80">
+    Plans are in beta and subject to change
+  </span>
+
+  <a
+    href="#detailed-plans-comparison"
+    class="btn btn-xl btn-primary btn-outline mx-auto my-12 flex w-fit items-center gap-2 rounded-full font-normal"
+  >
+    Compare plans
+    <ArrowDownIcon class="h-5 w-5" />
+  </a>
+
+  <div
+    class="ld-card-base bg-neutral text-neutral-content mx-auto max-w-2xl rounded-xl p-8 shadow-xl"
+  >
+    <p class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-80">
+      A Note from us
+    </p>
+    <p class="mb-6 text-lg font-extrabold">Logdash Inc.</p>
+
+    <p class="mb-4 opacity-90">
+      Our pricing is designed to let you explore all of the Logdash features and
+      capabilities without paying a dime.
+    </p>
+
+    <p class="mb-4 opacity-90">
+      We believe that the best way to help with your success is to give you
+      access to everything we have to offer, even before you decide to upgrade.
+    </p>
+
+    <p class="mb-4 opacity-90">
+      Focus on building your awesome projects; your access to all features is
+      only limited by fair resource usage on our side.
+    </p>
+
+    <p class="mb-6 opacity-90">
+      We're committed to transparency and fairness as we grow. Thanks for
+      joining our journey!
+    </p>
+
+    <div
+      class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-8"
+    >
+      <div class="flex items-center gap-4">
+        <img
+          src="/images/founders/olo.webp"
+          alt="Aleksander Blaszkiewicz"
+          class="h-12 w-12 rounded-full"
+        />
+        <div class="text-left">
+          <p class="font-medium">Aleksander Blaszkiewicz</p>
+          <p class="text-sm opacity-75">Co-founder</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <img
+          src="/images/founders/szymeo.webp"
+          alt="Szymon Gracki"
+          class="h-12 w-12 rounded-full"
+        />
+        <div class="text-left">
+          <p class="font-medium">Szymon Gracki</p>
+          <p class="text-sm opacity-75">Co-founder</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="distance h-8 md:h-16"></div>
+
+  <PricingComparisonTable />
+</section>

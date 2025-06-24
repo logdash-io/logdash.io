@@ -3,6 +3,10 @@ import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { createTestApp } from '../utils/bootstrap';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { sleep } from '../utils/sleep';
+import { ClickHouseClient } from '@clickhouse/client';
+import { LogClickhouseNormalized } from '../../src/log/core/entities/log.interface';
+import { LogSerializer } from '../../src/log/core/entities/log.serializer';
+import { addMinutes, subMinutes } from 'date-fns';
 
 describe('LogCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -21,8 +25,7 @@ describe('LogCoreController (reads)', () => {
 
   describe('GET /projects/:projectId/logs', () => {
     it('reads logs with direction', async () => {
-      const { project, token } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // given
       const createdAt = new Date('2000-01-01T11:00:00Z').toISOString();
@@ -65,14 +68,10 @@ describe('LogCoreController (reads)', () => {
 
       // when
       const responseFirst = await request(bootstrap.app.getHttpServer())
-        .get(
-          `/projects/${project.id}/logs?direction=before&lastId=${third.id}&limit=1`,
-        )
+        .get(`/projects/${project.id}/logs?direction=before&lastId=${third.id}&limit=1`)
         .set('Authorization', `Bearer ${token}`);
       const responseSecond = await request(bootstrap.app.getHttpServer())
-        .get(
-          `/projects/${project.id}/logs?direction=after&lastId=${third.id}&limit=1`,
-        )
+        .get(`/projects/${project.id}/logs?direction=after&lastId=${third.id}&limit=1`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -92,9 +91,7 @@ describe('LogCoreController (reads)', () => {
 
       // then
       expect(response.status).toEqual(403);
-      expect(response.body.message).toEqual(
-        'User is not a member of this cluster',
-      );
+      expect(response.body.message).toEqual('User is not a member of this cluster');
     });
 
     it('reads logs from demo project without authorization and uses cache', async () => {
@@ -131,6 +128,144 @@ describe('LogCoreController (reads)', () => {
         .set('Authorization', `Bearer asd123`);
 
       // then
+      expect(secondResponse.status).toEqual(200);
+      expect(secondResponse.body).toEqual([{ message: 'I like turtles' }]);
+    });
+  });
+
+  describe('GET /projects/:projectId/logs/v2', () => {
+    it('reads logs with direction', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // given
+      const createdAt = new Date('2000-01-01T11:00:00Z');
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: subMinutes(createdAt, 1).toISOString(),
+        message: 'Test message',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: createdAt.toISOString(),
+        message: 'Test message',
+        level: LogLevel.Info,
+        withoutSleep: true,
+        sequenceNumber: 2,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: createdAt.toISOString(),
+        message: 'Test message',
+        level: LogLevel.Info,
+        withoutSleep: true,
+        sequenceNumber: 3,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: createdAt.toISOString(),
+        message: 'Test message',
+        level: LogLevel.Info,
+        withoutSleep: true,
+        sequenceNumber: 4,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: addMinutes(createdAt, 1).toISOString(),
+        message: 'Test message',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await sleep(1_500);
+
+      const clickhouseClient = bootstrap.app.get(ClickHouseClient);
+
+      const orderedLogsResult = await clickhouseClient.query({
+        query: `
+          SELECT * FROM logs
+          WHERE project_id = '${setup.project.id}'
+          ORDER BY created_at ASC, sequence_number ASC
+        `,
+      });
+
+      const logsData = (await orderedLogsResult.json()) as any;
+
+      const logs: LogClickhouseNormalized[] = logsData.data.map((log: any) =>
+        LogSerializer.normalizeClickhouse(log),
+      );
+
+      const [first, second, third, fourth, fifth] = logs;
+
+      const responseSecond = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?direction=before&lastId=${third.id}&limit=1`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      const responseFourth = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?direction=after&lastId=${third.id}&limit=1`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      const responseFirst = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?direction=before&lastId=${second.id}&limit=1`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      const responseFifth = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?direction=after&lastId=${fourth.id}&limit=1`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(responseSecond.body[0].id).toEqual(second.id);
+      expect(responseFourth.body[0].id).toEqual(fourth.id);
+      expect(responseFirst.body[0].id).toEqual(first.id);
+      expect(responseFifth.body[0].id).toEqual(fifth.id);
+    });
+
+    it('returns 403 if user does not belong to cluster', async () => {
+      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setupA.project.id}/logs/v2?direction=before&lastId=123&limit=1`)
+        .set('Authorization', `Bearer ${setupB.token}`);
+
+      expect(response.status).toEqual(403);
+    });
+
+    it('reads logs from demo project without authorization and uses cache', async () => {
+      const { project } = await bootstrap.utils.demoUtils.setupDemoProject();
+
+      const response = await request(bootstrap.app.getHttpServer()).get(
+        `/projects/${project.id}/logs/v2`,
+      );
+
+      await sleep(100);
+
+      const redisService = bootstrap.app.get(RedisService);
+
+      const client = await redisService.getClient();
+      const keys = await client.keys('demo-dashboard-path:*');
+      const key = keys[0];
+
+      const cachedResponseRaw = (await redisService.get(key))!;
+      const cachedResponse = JSON.parse(cachedResponseRaw);
+
+      expect(response.status).toEqual(200);
+      expect(cachedResponse).toEqual(response.body);
+
+      // and when
+      await client.set(key, JSON.stringify([{ message: 'I like turtles' }]), {
+        EX: 10,
+      });
+
+      const secondResponse = await request(bootstrap.app.getHttpServer()).get(
+        `/projects/${project.id}/logs/v2`,
+      );
+
       expect(secondResponse.status).toEqual(200);
       expect(secondResponse.body).toEqual([{ message: 'I like turtles' }]);
     });

@@ -42,7 +42,7 @@ describe('ProjectCoreController (writes)', () => {
       expect(updatedProject!.creatorId).toBe(user.id);
       await bootstrap.utils.auditLogUtils.assertAuditLog({
         userId: user.id,
-        action: AuditLogEntityAction.Updated,
+        action: AuditLogEntityAction.Update,
         relatedDomain: RelatedDomain.Project,
         relatedEntityId: project.id,
       });
@@ -187,7 +187,7 @@ describe('ProjectCoreController (writes)', () => {
       // then
       await bootstrap.utils.auditLogUtils.assertAuditLog({
         userId: user.id,
-        action: AuditLogEntityAction.Created,
+        action: AuditLogEntityAction.Create,
         relatedDomain: RelatedDomain.Project,
         relatedEntityId: response.body.project.id,
       });
@@ -350,7 +350,7 @@ describe('ProjectCoreController (writes)', () => {
       // then
       await bootstrap.utils.auditLogUtils.assertAuditLog({
         userId: user.id,
-        action: AuditLogEntityAction.Deleted,
+        action: AuditLogEntityAction.Delete,
         relatedDomain: RelatedDomain.Project,
         relatedEntityId: project.id,
       });

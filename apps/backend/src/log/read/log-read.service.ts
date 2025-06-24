@@ -81,10 +81,7 @@ export class LogReadService {
   }
 
   private async getIndexOfLog(logId: string): Promise<number> {
-    const log = await this.logModel.findOne(
-      { _id: new Types.ObjectId(logId) },
-      { index: 1 },
-    );
+    const log = await this.logModel.findOne({ _id: new Types.ObjectId(logId) }, { index: 1 });
 
     if (!log) {
       this.logger.error(`Log not found`, { logId });

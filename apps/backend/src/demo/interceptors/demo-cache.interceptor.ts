@@ -1,9 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -22,14 +17,8 @@ export class DemoCacheInterceptor implements NestInterceptor {
     private redisService: RedisService,
   ) {}
 
-  async intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Promise<Observable<any>> {
-    const isDemoCacheEnabled = this.reflector.get<boolean>(
-      DEMO_ENDPOINT_KEY,
-      context.getHandler(),
-    );
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+    const isDemoCacheEnabled = this.reflector.get<boolean>(DEMO_ENDPOINT_KEY, context.getHandler());
 
     if (!isDemoCacheEnabled) {
       return next.handle();
@@ -62,14 +51,10 @@ export class DemoCacheInterceptor implements NestInterceptor {
     return `demo-dashboard-path:${path}:${JSON.stringify(query)}`;
   }
 
-  private async tryGetCachedResponse(
-    cacheKey: string,
-  ): Promise<unknown | null> {
+  private async tryGetCachedResponse(cacheKey: string): Promise<unknown | null> {
     try {
       const cachedResponseRaw = await this.redisService.get(cacheKey);
-      const cachedResponse = cachedResponseRaw
-        ? JSON.parse(cachedResponseRaw)
-        : null;
+      const cachedResponse = cachedResponseRaw ? JSON.parse(cachedResponseRaw) : null;
       return cachedResponse;
     } catch (error) {
       return null;

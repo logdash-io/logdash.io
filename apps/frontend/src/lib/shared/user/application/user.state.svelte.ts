@@ -13,6 +13,10 @@ class UserState {
     return this._user?.tier || UserTier.FREE;
   }
 
+  get isFree(): boolean {
+    return this.tier === UserTier.FREE;
+  }
+
   get avatar(): User['avatarUrl'] {
     return this._user?.avatarUrl;
   }

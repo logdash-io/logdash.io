@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsMongoId, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsMongoId,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateHttpMonitorBody {
   @ApiProperty()
@@ -17,5 +25,6 @@ export class CreateHttpMonitorBody {
   @IsOptional()
   @IsArray()
   @IsMongoId({ each: true })
+  @ArrayMaxSize(100)
   notificationChannelsIds?: string[];
 }

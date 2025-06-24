@@ -8,14 +8,16 @@ export class LogUtils {
   constructor(private readonly app: INestApplication<any>) {}
 
   public async createLog(
-    dto: CreateLogBody & { apiKey: string },
+    dto: CreateLogBody & { apiKey: string; withoutSleep?: boolean },
   ): Promise<void> {
     const response = await request(this.app.getHttpServer())
       .post('/logs')
       .set('project-api-key', dto.apiKey)
       .send(dto);
 
-    await sleep(1000);
+    if (dto.withoutSleep === undefined || dto.withoutSleep === false) {
+      await sleep(1000);
+    }
 
     return response.body;
   }

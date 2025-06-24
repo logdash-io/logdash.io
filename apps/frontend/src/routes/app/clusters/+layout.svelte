@@ -6,6 +6,7 @@
   import { clustersState } from '$lib/clusters/clusters/application/clusters.state.svelte.js';
   import type { Cluster } from '$lib/clusters/clusters/domain/cluster';
   import ClusterShell from '$lib/clusters/clusters/ui/ClusterShell/ClusterShell.svelte';
+  import UpgradeModal from '$lib/shared/upgrade/UpgradeModal.svelte';
   import { userState } from '$lib/shared/user/application/user.state.svelte.js';
   import type { User } from '$lib/shared/user/domain/user';
   import type { PostHog } from 'posthog-js';
@@ -40,6 +41,8 @@
     }
   });
 </script>
+
+<UpgradeModal />
 
 <ClusterShell>
   {@render children?.()}

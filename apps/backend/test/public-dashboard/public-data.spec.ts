@@ -57,6 +57,8 @@ describe('PublicDashboardCoreController (public data read)', () => {
     return {
       ...setup,
       publicDashboard,
+      monitorA,
+      monitorB,
     };
   }
 
@@ -161,6 +163,77 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
       // then
       expect(secondResponse.status).toBe(200);
+    });
+
+    it('invalidates cache if user removes monitor from dashboard', async () => {
+      // given
+      const setup = await setupPublicDashboard();
+
+      // when
+      const firstResponse = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      expect(firstResponse.status).toBe(200);
+      expect(firstResponse.body.httpMonitors).toHaveLength(2);
+
+      // and when
+      await request(bootstrap.app.getHttpServer())
+        .delete(`/public_dashboards/${setup.publicDashboard.id}/monitors/${setup.monitorA.id}`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // and when
+      const secondResponse = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      expect(secondResponse.status).toBe(200);
+      expect(secondResponse.body.httpMonitors).toHaveLength(1);
+    });
+
+    it('invalidates cache if user adds monitor to dashboard', async () => {
+      // given
+      const setup = await setupPublicDashboard();
+
+      // when
+      const firstResponse = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      expect(firstResponse.status).toBe(200);
+      expect(firstResponse.body.httpMonitors).toHaveLength(2);
+
+      const project = await bootstrap.utils.projectUtils.createDefaultProject({
+        userId: setup.user.id,
+        clusterId: setup.cluster.id,
+      });
+
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token: setup.token,
+        projectId: project.id,
+        name: 'C',
+      });
+
+      await bootstrap.utils.httpPingUtils.createHttpPing({
+        httpMonitorId: monitor.id,
+      });
+
+      // and when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/public_dashboards/${setup.publicDashboard.id}/monitors/${monitor.id}`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // and when
+      const secondResponse = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      expect(secondResponse.status).toBe(200);
+      expect(secondResponse.body.httpMonitors).toHaveLength(3);
     });
   });
 

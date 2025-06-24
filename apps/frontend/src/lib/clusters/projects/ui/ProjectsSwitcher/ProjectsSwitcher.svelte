@@ -7,7 +7,7 @@
   import { projectsState } from '../../application/projects.state.svelte.js';
   import ProjectContextMenu from './ProjectContextMenu.svelte';
   import ProjectCreator from './ProjectCreator.svelte';
-  import ProjectHealthStatus from './ProjectHealthStatus.svelte';
+  import ProjectHealthStatus from '../monitor-status/MonitorStatusBadge.svelte';
   import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte';
 
   type Props = {
@@ -25,11 +25,7 @@
   $effect(() => {
     const project_id = page.url.searchParams.get('project_id');
 
-    if (
-      !project_id &&
-      projectsState.projects.length &&
-      withDefaultRedirect
-    ) {
+    if (!project_id && projectsState.projects.length && withDefaultRedirect) {
       const defaultProject = projectsState.projects[0];
       if (defaultProject) {
         goto(`?project_id=${defaultProject.id}`, {
@@ -43,30 +39,30 @@
 <div class="tabs z-30 gap-1.5 sm:gap-3" role="tablist">
   {#each projectsState.projects as project}
     {@const activeProject =
-    project.id === page.url.searchParams.get('project_id')}
+      project.id === page.url.searchParams.get('project_id')}
 
     <div
       onclick={() => {
-				if (activeProject || isOnDemoDashboard) {
-					return;
-				}
-				goto(`?project_id=${project.id}`);
-			}}
+        if (activeProject || isOnDemoDashboard) {
+          return;
+        }
+        goto(`?project_id=${project.id}`);
+      }}
       class={[
-				project_badge_class,
-				{
-					'ring-primary/30 ring': activeProject,
-					'pr-2': activeProject && !isOnDemoDashboard,
-					// 'px-4': !activeProject,
-				},
-			]}
+        project_badge_class,
+        {
+          'ring-primary/30 ring': activeProject,
+          'pr-2': activeProject && !isOnDemoDashboard,
+          // 'px-4': !activeProject,
+        },
+      ]}
       role="tab"
     >
       <ProjectHealthStatus projectId={project.id} />
 
       <span class="mx-2 select-none">
-				{project.name}
-			</span>
+        {project.name}
+      </span>
 
       {#if activeProject && !isOnDemoDashboard}
         <ProjectContextMenu {project} />
@@ -77,21 +73,21 @@
   {#if !creationDisabled}
     <ProjectCreator
       canAddMore={clustersState.allClustersProjectsCount <
-				exposedConfigState.maxNumberOfProjects(userState.tier)}
+        exposedConfigState.maxNumberOfProjects(userState.tier)}
       onSubmit={(name) => {
-				projectsState
-					.createProject(page.params.cluster_id, name)
-					.then((projectId) => {
-						goto(
-							`/app/clusters/${page.params.cluster_id}/?project_id=${projectId}`,
-							{ replaceState: true },
-						);
-						toast.success(
-							`Service ${name} created successfully, you can now configure it.`,
-							5000,
-						);
-					});
-			}}
+        projectsState
+          .createProject(page.params.cluster_id, name)
+          .then((projectId) => {
+            goto(
+              `/app/clusters/${page.params.cluster_id}/?project_id=${projectId}`,
+              { replaceState: true },
+            );
+            toast.success(
+              `Service ${name} created successfully, you can now configure it.`,
+              5000,
+            );
+          });
+      }}
     />
   {/if}
 </div>

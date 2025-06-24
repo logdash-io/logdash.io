@@ -8,12 +8,17 @@ import { ClusterSerializer } from '../core/entities/cluster.serializer';
 import { UpdateClusterDto } from './dto/update-cluster.dto';
 import { ClusterTier } from '../core/enums/cluster-tier.enum';
 import { Metrics } from '@logdash/js-sdk';
+import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
+import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
+import { Actor } from '../../audit-log/core/enums/actor.enum';
+import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 @Injectable()
 export class ClusterWriteService {
   constructor(
     @InjectModel(ClusterEntity.name)
     private model: Model<ClusterEntity>,
     private readonly metrics: Metrics,
+    private readonly auditLog: AuditLog,
   ) {}
 
   public async create(dto: CreateClusterDto): Promise<ClusterNormalized> {
@@ -26,11 +31,27 @@ export class ClusterWriteService {
 
     this.metrics.mutate('clustersCreated', 1);
 
+    this.auditLog.create({
+      userId: dto.creatorId,
+      action: AuditLogEntityAction.Create,
+      actor: Actor.User,
+      relatedDomain: RelatedDomain.Cluster,
+      relatedEntityId: cluster._id.toString(),
+    });
+
     return ClusterSerializer.normalize(cluster);
   }
 
-  public async update(dto: UpdateClusterDto): Promise<void> {
+  public async update(dto: UpdateClusterDto, actorUserId?: string): Promise<void> {
     const updateQuery = this.constructUpdateQuery(dto);
+
+    this.auditLog.create({
+      userId: actorUserId,
+      action: AuditLogEntityAction.Update,
+      actor: actorUserId ? Actor.User : Actor.System,
+      relatedDomain: RelatedDomain.Cluster,
+      relatedEntityId: dto.id,
+    });
 
     await this.model.updateOne({ _id: new Types.ObjectId(dto.id) }, updateQuery);
   }
@@ -54,10 +75,31 @@ export class ClusterWriteService {
   }
 
   public async updateTiersByCreatorId(creatorId: string, tier: ClusterTier): Promise<void> {
+    const clusters = await this.model.find({ creatorId });
+
+    clusters.forEach((cluster) => {
+      this.auditLog.create({
+        userId: creatorId,
+        actor: Actor.System,
+        action: AuditLogEntityAction.Update,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: cluster._id.toString(),
+        description: `Updated tier to ${tier} because user tier changed`,
+      });
+    });
+
     await this.model.updateMany({ creatorId: new Types.ObjectId(creatorId) }, { tier });
   }
 
-  public async delete(id: string): Promise<void> {
+  public async delete(id: string, actorUserId?: string): Promise<void> {
+    await this.auditLog.create({
+      userId: actorUserId,
+      actor: Actor.System,
+      action: AuditLogEntityAction.Delete,
+      relatedDomain: RelatedDomain.Cluster,
+      relatedEntityId: id,
+    });
+
     await this.model.deleteOne({ _id: new Types.ObjectId(id) });
   }
 }

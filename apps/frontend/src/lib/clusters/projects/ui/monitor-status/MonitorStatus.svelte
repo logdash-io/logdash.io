@@ -5,9 +5,14 @@
   import { monitoringState } from '../../application/monitoring.state.svelte.js';
   import DataTile from '../ProjectView/tiles/DataTile.svelte';
   import { logger } from '$lib/shared/logger/index.js';
-  import StatusBar from './public-dashboard/StatusBar.svelte';
+  import StatusBar from '../presentational/public-dashboard/StatusBar.svelte';
+  import type { Snippet } from 'svelte';
 
-  const { projectId } = $props();
+  type Props = {
+    projectId: string;
+    children: Snippet;
+  };
+  const { projectId, children }: Props = $props();
   const MAX_PINGS = 60;
 
   const projectMonitor = $derived(
@@ -38,7 +43,7 @@
   <div class="flex w-full flex-col gap-2">
     <div class="flex w-full gap-2">
       <div class="flex w-full items-center gap-2">
-        <h5 class="text-2xl font-semibold">
+        <h5 class="max-w-80 truncate text-2xl font-semibold">
           {projectMonitor?.name}
         </h5>
 
@@ -70,15 +75,7 @@
     <div class="flex w-full flex-col">
       <div class="flex h-12 w-full items-center justify-end overflow-hidden">
         {#each Array.from({ length: 60 - pings.length }) as _, i (i)}
-          <div
-            class={[
-              'h-8 w-1.5 shrink-0 rounded-sm hover:h-12 lg:w-[7px]',
-              {
-                'bg-gradient-to-b from-neutral-700 via-neutral-700/80 to-neutral-700': true,
-                'bg-warning': false,
-              },
-            ]}
-          ></div>
+          <StatusBar status={'unknown'} />
         {/each}
 
         {#each pings as ping (ping.id)}
@@ -89,7 +86,7 @@
                 .toLocal()
                 .toISO({ includeOffset: true })
                 .split('T')
-                .join(' ')
+                .join(' at ')
                 .split('.')[0]
             }`}
             placement="top"
@@ -101,5 +98,7 @@
     </div>
 
     <p class="text-secondary/60 text-sm">Last 60 pings</p>
+
+    {@render children()}
   </div>
 </DataTile>
