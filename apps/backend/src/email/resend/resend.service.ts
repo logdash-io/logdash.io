@@ -14,7 +14,7 @@ export class ResendService {
 
   @OnEvent(AuthEvents.UserRegistered)
   public async handleUserRegisteredEvent(dto: UserRegisteredEvent): Promise<void> {
-    if (getEnvConfig().resend.enabled) {
+    if (!getEnvConfig().resend.enabled) {
       this.logger.log('Skipping resend audience update...');
       return;
     }
