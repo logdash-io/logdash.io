@@ -94,7 +94,7 @@ export class ClusterWriteService {
   public async delete(id: string, actorUserId?: string): Promise<void> {
     await this.auditLog.create({
       userId: actorUserId,
-      actor: Actor.System,
+      actor: actorUserId ? Actor.User : Actor.System,
       action: AuditLogEntityAction.Delete,
       relatedDomain: RelatedDomain.Cluster,
       relatedEntityId: id,
