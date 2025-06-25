@@ -9,8 +9,6 @@ export const load = async ({
   project_id: string;
   api_key: string;
 }> => {
-  redirect(302, '/app/clusters');
-
   const clusterId = params.cluster_id;
   if (!clusterId) {
     throw new Error('Cluster ID is required');
