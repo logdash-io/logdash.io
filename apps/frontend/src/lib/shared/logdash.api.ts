@@ -175,7 +175,7 @@ class LogdashAPI {
     });
 
     return this.get<Log[]>(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}/logs?${qs}`,
+      `${LogdashAPI.v0baseUrl}/projects/${project_id}/logs/v2?${qs}`,
       access_token,
     );
   }
