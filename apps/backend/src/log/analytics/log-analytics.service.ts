@@ -21,7 +21,7 @@ export class LogAnalyticsService {
         {startDate:DateTime64(3)} as start_time,
         {endDate:DateTime64(3)} as end_time,
         {bucketMinutes:UInt32} as bucket_minutes,
-        toUInt32(dateDiff('minute', start_time, end_time) / bucket_minutes) as total_buckets
+        toUInt32((dateDiff('minute', start_time, end_time) + bucket_minutes - 1) / bucket_minutes) as total_buckets
       SELECT 
         bucket_start,
         bucket_start + toIntervalMinute(bucket_minutes) as bucket_end,
@@ -36,7 +36,7 @@ export class LogAnalyticsService {
       FROM (
         SELECT 
           start_time + toIntervalMinute(bucket_minutes * number) as bucket_start
-        FROM numbers(total_buckets + 1)
+        FROM numbers(total_buckets)
       ) buckets
       LEFT JOIN (
         SELECT 

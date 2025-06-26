@@ -12,6 +12,8 @@ export enum LogAnalyticsBucket {
   TwoHours = 120,
   FourHours = 240,
   EightHours = 480,
+  TwelveHours = 720,
+  TwentyFourHours = 1440,
 }
 
 export class LogAnalyticsQuery {

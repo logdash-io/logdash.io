@@ -67,7 +67,7 @@ describe('LogCoreController (analytics)', () => {
         .set('Authorization', `Bearer ${token}`)
         .query({
           startDate: '2024-01-01T10:00:00Z',
-          endDate: '2024-01-01T10:15:00Z',
+          endDate: '2024-01-01T10:14:00Z',
           bucket: LogAnalyticsBucket.FiveMinutes,
         });
 
