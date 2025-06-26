@@ -7,9 +7,14 @@ export class LogAnalyticsDateAlignmentService {
     startDate: Date,
     endDate: Date,
     bucketMinutes: LogAnalyticsBucket,
+    utcOffsetHours: number = 0,
   ): { alignedStartDate: Date; alignedEndDate: Date } {
-    const alignedStartDate = this.alignStartDateToPreviousBoundary(startDate, bucketMinutes);
-    const alignedEndDate = this.alignEndDateToNextBoundary(endDate, bucketMinutes);
+    const alignedStartDate = this.alignStartDateToPreviousBoundary(
+      startDate,
+      bucketMinutes,
+      utcOffsetHours,
+    );
+    const alignedEndDate = this.alignEndDateToNextBoundary(endDate, bucketMinutes, utcOffsetHours);
 
     return {
       alignedStartDate,
@@ -17,58 +22,76 @@ export class LogAnalyticsDateAlignmentService {
     };
   }
 
-  private alignStartDateToPreviousBoundary(date: Date, bucketMinutes: number): Date {
-    const aligned = new Date(date);
+  private alignStartDateToPreviousBoundary(
+    date: Date,
+    bucketMinutes: number,
+    utcOffsetHours: number,
+  ): Date {
+    // Convert to local time by adding the offset
+    const localTime = new Date(date.getTime() + utcOffsetHours * 60 * 60 * 1000);
 
     if (bucketMinutes >= 60) {
-      const totalMinutesFromMidnight = aligned.getUTCHours() * 60 + aligned.getUTCMinutes();
-      const alignedMinutesFromMidnight =
-        Math.floor(totalMinutesFromMidnight / bucketMinutes) * bucketMinutes;
+      const totalMinutesFromLocalMidnight =
+        localTime.getUTCHours() * 60 + localTime.getUTCMinutes();
+      const alignedMinutesFromLocalMidnight =
+        Math.floor(totalMinutesFromLocalMidnight / bucketMinutes) * bucketMinutes;
 
-      aligned.setUTCHours(Math.floor(alignedMinutesFromMidnight / 60));
-      aligned.setUTCMinutes(alignedMinutesFromMidnight % 60);
+      localTime.setUTCHours(Math.floor(alignedMinutesFromLocalMidnight / 60));
+      localTime.setUTCMinutes(alignedMinutesFromLocalMidnight % 60);
     } else {
-      aligned.setUTCMinutes(Math.floor(aligned.getUTCMinutes() / bucketMinutes) * bucketMinutes);
+      localTime.setUTCMinutes(
+        Math.floor(localTime.getUTCMinutes() / bucketMinutes) * bucketMinutes,
+      );
     }
 
-    aligned.setUTCSeconds(0);
-    aligned.setUTCMilliseconds(0);
+    localTime.setUTCSeconds(0);
+    localTime.setUTCMilliseconds(0);
 
-    return aligned;
+    // Convert back to UTC by subtracting the offset
+    return new Date(localTime.getTime() - utcOffsetHours * 60 * 60 * 1000);
   }
 
-  private alignEndDateToNextBoundary(date: Date, bucketMinutes: number): Date {
-    const aligned = new Date(date);
+  private alignEndDateToNextBoundary(
+    date: Date,
+    bucketMinutes: number,
+    utcOffsetHours: number,
+  ): Date {
+    // Convert to local time by adding the offset
+    const localTime = new Date(date.getTime() + utcOffsetHours * 60 * 60 * 1000);
 
     const needsAlignment =
-      aligned.getUTCSeconds() !== 0 ||
-      aligned.getUTCMilliseconds() !== 0 ||
+      localTime.getUTCSeconds() !== 0 ||
+      localTime.getUTCMilliseconds() !== 0 ||
       (bucketMinutes >= 60
-        ? (aligned.getUTCHours() * 60 + aligned.getUTCMinutes()) % bucketMinutes !== 0
-        : aligned.getUTCMinutes() % bucketMinutes !== 0);
+        ? (localTime.getUTCHours() * 60 + localTime.getUTCMinutes()) % bucketMinutes !== 0
+        : localTime.getUTCMinutes() % bucketMinutes !== 0);
 
     if (needsAlignment) {
       if (bucketMinutes >= 60) {
-        const totalMinutesFromMidnight = aligned.getUTCHours() * 60 + aligned.getUTCMinutes();
-        const alignedMinutesFromMidnight =
-          Math.ceil(totalMinutesFromMidnight / bucketMinutes) * bucketMinutes;
+        const totalMinutesFromLocalMidnight =
+          localTime.getUTCHours() * 60 + localTime.getUTCMinutes();
+        const alignedMinutesFromLocalMidnight =
+          Math.ceil(totalMinutesFromLocalMidnight / bucketMinutes) * bucketMinutes;
 
-        if (alignedMinutesFromMidnight >= 24 * 60) {
-          aligned.setUTCDate(aligned.getUTCDate() + 1);
-          aligned.setUTCHours(0);
-          aligned.setUTCMinutes(0);
+        if (alignedMinutesFromLocalMidnight >= 24 * 60) {
+          localTime.setUTCDate(localTime.getUTCDate() + 1);
+          localTime.setUTCHours(0);
+          localTime.setUTCMinutes(0);
         } else {
-          aligned.setUTCHours(Math.floor(alignedMinutesFromMidnight / 60));
-          aligned.setUTCMinutes(alignedMinutesFromMidnight % 60);
+          localTime.setUTCHours(Math.floor(alignedMinutesFromLocalMidnight / 60));
+          localTime.setUTCMinutes(alignedMinutesFromLocalMidnight % 60);
         }
       } else {
-        aligned.setUTCMinutes(Math.ceil(aligned.getUTCMinutes() / bucketMinutes) * bucketMinutes);
+        localTime.setUTCMinutes(
+          Math.ceil(localTime.getUTCMinutes() / bucketMinutes) * bucketMinutes,
+        );
       }
     }
 
-    aligned.setUTCSeconds(0);
-    aligned.setUTCMilliseconds(0);
+    localTime.setUTCSeconds(0);
+    localTime.setUTCMilliseconds(0);
 
-    return aligned;
+    // Convert back to UTC by subtracting the offset
+    return new Date(localTime.getTime() - utcOffsetHours * 60 * 60 * 1000);
   }
 }
