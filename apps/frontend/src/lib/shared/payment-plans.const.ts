@@ -51,7 +51,7 @@ export const PAYMENT_PLANS = [
       { name: 'Priority feature requests' },
     ],
     badge: {
-      text: 'Save 50%, 4 spots left',
+      text: 'Save 50%, 2 spots left',
       class: 'badge-primary',
     },
     buttonText: 'Select Early Bird',
