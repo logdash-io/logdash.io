@@ -97,7 +97,7 @@
   <div class="collapse-content p-0 text-sm">
     <div class="px-6 sm:pb-2">
       <div class="flex flex-wrap gap-6 text-sm">
-        <div class="flex items-center gap-2">
+        <div class="mb-2 flex items-center gap-2">
           <TrendingUpIcon class="text-success h-4 w-4" />
           <span class="text-gray-600 dark:text-gray-300">
             90-day Uptime:
