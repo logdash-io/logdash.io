@@ -1,9 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import {
-    publicDashboardManagerState,
-  } from '$lib/clusters/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
+  import { publicDashboardManagerState } from '$lib/clusters/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import PublicDashboardSetup from '$lib/clusters/projects/ui/setup/PublicDashboardSetup.svelte';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
   import { fade } from 'svelte/transition';
@@ -20,7 +18,7 @@
 </script>
 
 {#snippet claimer(isPublic: boolean)}
-  <div class="mt-auto space-y-2">
+  <div class="flex-1 space-y-2">
     {#if isPublic}
       <button
         onclick={() => {
@@ -50,27 +48,30 @@
         Unpublish dashboard
       </button>
     {:else}
-      {@const totalPublicDashboardCount = clustersState.publishedDashboardsCount}
-      {@const canPublish = totalPublicDashboardCount < exposedConfigState.maxNumberOfPublicDashboards(userState.tier)}
+      {@const totalPublicDashboardCount =
+        clustersState.publishedDashboardsCount}
+      {@const canPublish =
+        totalPublicDashboardCount <
+        exposedConfigState.maxNumberOfPublicDashboards(userState.tier)}
 
       {#if canPublish}
         <button
           onclick={() => {
-          tryingToClaim = true;
+            tryingToClaim = true;
 
-          publicDashboardManagerState
-            .update(data.dashboard_id, {
-              isPublic: true,
-            })
-            .then(() => {
-              goto(`/app/clusters/${page.params.cluster_id}`, {
-                invalidateAll: true,
+            publicDashboardManagerState
+              .update(data.dashboard_id, {
+                isPublic: true,
+              })
+              .then(() => {
+                goto(`/app/clusters/${page.params.cluster_id}`, {
+                  invalidateAll: true,
+                });
+                toast.success('Dashboard is now public.');
+
+                window.open(`/d/${data.dashboard_id}`, '_blank');
               });
-              toast.success('Dashboard is now public.');
-
-              window.open(`/d/${data.dashboard_id}`, '_blank');
-            });
-        }}
+          }}
           in:fade={{ duration: 100 }}
           class={['btn btn-primary w-full flex-1 whitespace-nowrap']}
           disabled={tryingToClaim}
@@ -82,9 +83,7 @@
           Publish dashboard
         </button>
       {:else}
-        <UpgradeButton>
-          Upgrade to publish more dashboards
-        </UpgradeButton>
+        <UpgradeButton>Upgrade to publish more dashboards</UpgradeButton>
       {/if}
     {/if}
   </div>

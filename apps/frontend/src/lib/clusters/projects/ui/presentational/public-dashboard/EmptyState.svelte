@@ -10,12 +10,12 @@
   }: Props = $props();
 </script>
 
-<div class="flex h-64 items-center justify-center">
+<div class="ld-card md:w-xl mb-4 flex w-full items-center justify-center">
   <div class="text-center">
-    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+    <h3 class="text-secondary mb-2 text-xl font-medium">
       {title}
     </h3>
-    <p class="text-lg text-gray-600 dark:text-gray-300">
+    <p class="text-secondary/70 text-base">
       {description}
     </p>
   </div>

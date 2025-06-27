@@ -49,7 +49,7 @@
       {pageName}
     </DashboardTitle>
 
-    {#if dashboardData}
+    {#if dashboardData && dashboardData.httpMonitors.length > 0}
       <SystemStatusHeader
         {systemStatus}
         {lastUpdated}
@@ -73,7 +73,10 @@
         </div>
       </div>
     {:else}
-      <EmptyState />
+      <EmptyState
+        title="No Monitors Found"
+        description="No HTTP monitors selected. Please add monitors to see their status."
+      />
     {/if}
 
     <DashboardFooter />
