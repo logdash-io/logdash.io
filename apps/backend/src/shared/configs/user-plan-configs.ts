@@ -29,7 +29,7 @@ export const UserPlanConfigs: UserPlanConfigs = {
       maxNumberOfPublicDashboards: 1,
     },
     notificationChannels: {
-      allowedTypes: [NotificationChannelType.Telegram],
+      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
     },
   },
   [UserTier.Contributor]: {

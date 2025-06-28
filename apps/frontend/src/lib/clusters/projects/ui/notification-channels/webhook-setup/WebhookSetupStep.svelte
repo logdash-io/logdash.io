@@ -1,7 +1,10 @@
 <script lang="ts">
   import { autoFocus } from '$lib/shared/ui/actions/use-autofocus.svelte.js';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
+  import UpgradeElement from '$lib/shared/upgrade/UpgradeElement.svelte';
+  import { UserTier } from '$lib/shared/types.js';
   import { LinkIcon, XIcon } from 'lucide-svelte';
+  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
 
   type Header = {
     key: string;
@@ -11,6 +14,7 @@
   type Props = {
     clusterName: string;
     monitorName: string;
+    userTier: UserTier;
     onCancel?: () => void;
     onSubmit: (dto: {
       withAssignment: boolean;
@@ -28,11 +32,15 @@
   const HEADER_VALUE_PATTERN = /^[\x20-\x7E]*$/;
 
   let { monitorName, clusterName, onCancel, onSubmit }: Props = $props();
+
+  const canUseAdvancedMethods = $derived(!userState.isFree);
+  const canUseCustomHeaders = $derived(!userState.isFree);
+
   let assignToServiceMonitor = $state(false);
   let webhookName = $state('');
   let webhookUrl = $state('');
   let headers = $state<Header[]>([]);
-  let method = $state(ALLOWED_METHODS[0]);
+  let method = $state('GET');
 
   function isValidHeaderName(name: string): boolean {
     return name === '' || HEADER_NAME_PATTERN.test(name);
@@ -86,15 +94,26 @@
         <ul class="menu ld-card-base rounded-xl">
           {#each ALLOWED_METHODS as _method}
             <li>
-              <button
-                class=""
-                onclick={() => {
-                  method = _method;
-                  close();
+              <UpgradeElement
+                enabled={_method !== 'GET' && !canUseAdvancedMethods}
+                source="webhook-method-restriction"
+                class="w-full"
+                onClick={() => {
+                  if (_method === 'GET' || canUseAdvancedMethods) {
+                    method = _method;
+                    close();
+                  }
                 }}
               >
-                {_method}
-              </button>
+                <span>{_method}</span>
+                {#if _method !== 'GET' && !canUseAdvancedMethods}
+                  <span
+                    class="badge badge-primary badge-xs badge-soft uppercase"
+                  >
+                    Upgrade
+                  </span>
+                {/if}
+              </UpgradeElement>
             </li>
           {/each}
         </ul>
@@ -163,17 +182,28 @@
         </div>
       {/each}
 
-      <button
-        class="btn btn-secondary btn-sm"
-        onclick={() => {
-          headers.push({
-            key: '',
-            value: '',
-          });
-        }}
+      <UpgradeElement
+        enabled={!canUseCustomHeaders}
+        source="webhook-headers-restriction"
+        class="w-full"
       >
-        Add header
-      </button>
+        <button
+          class="btn btn-secondary btn-sm flex w-full items-center justify-center gap-2"
+          onclick={() => {
+            if (canUseCustomHeaders) {
+              headers.push({
+                key: '',
+                value: '',
+              });
+            }
+          }}
+        >
+          <span>Add header</span>
+          {#if !canUseCustomHeaders}
+            <span class="badge badge-primary badge-sm">Upgrade</span>
+          {/if}
+        </button>
+      </UpgradeElement>
     </div>
   </div>
 
@@ -182,7 +212,7 @@
       type="checkbox"
       id="assign-service-monitor"
       bind:checked={assignToServiceMonitor}
-      class="checkbox checkbox-primary"
+      class="checkbox checkbox-primary checkbox-sm"
     />
     <label for="assign-service-monitor" class="cursor-pointer text-sm">
       Assign to {monitorName} service monitor

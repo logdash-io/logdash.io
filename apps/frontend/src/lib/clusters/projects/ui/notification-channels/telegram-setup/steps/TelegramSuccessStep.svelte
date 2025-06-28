@@ -39,7 +39,7 @@
       type="checkbox"
       id="assign-service-monitor"
       bind:checked={assignToServiceMonitor}
-      class="checkbox checkbox-primary"
+      class="checkbox checkbox-primary checkbox-sm"
     />
     <label for="assign-service-monitor" class="cursor-pointer text-sm">
       Assign to {monitorName} service monitor

@@ -15,6 +15,8 @@ export type UpgradeSource =
   | 'project-limit'
   | 'public-dashboard-limit'
   | 'feature-restriction'
+  | 'webhook-method-restriction'
+  | 'webhook-headers-restriction'
   | 'unknown';
 
 export const startTierUpgrade = (source: UpgradeSource = 'unknown') => {

@@ -141,6 +141,7 @@
       monitorName={monitoringState.getMonitorById(
         notificationChannelSetupState.state.monitorId,
       )?.name || ''}
+      {userTier}
       onSubmit={(dto: {
         withAssignment: boolean;
         url: string;

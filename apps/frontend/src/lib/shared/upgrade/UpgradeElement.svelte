@@ -12,12 +12,14 @@
     children?: Snippet;
     enabled?: boolean;
     source?: UpgradeSource;
+    onClick?: () => void;
   };
   const {
     class: className = '',
     children,
     enabled = true,
     source = 'unknown',
+    onClick,
   }: Props = $props();
 
   const handleMouseEnter = () => {
@@ -38,6 +40,7 @@
   onmouseleave={handleMouseLeave}
   class={['cursor-pointer', className]}
   onclick={() => {
+    onClick?.();
     if (enabled) {
       startTierUpgrade(source);
     }

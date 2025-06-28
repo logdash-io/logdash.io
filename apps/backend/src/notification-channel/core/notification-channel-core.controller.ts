@@ -70,6 +70,7 @@ export class NotificationChannelCoreController {
       dto.options,
       dto.type,
       clusterId,
+      userTier,
     );
 
     const enrichedOptions = await this.notificationChannelOptionsEnrichmentService.enrichOptions(
