@@ -1,7 +1,7 @@
 <script lang="ts">
   import { telegramSetupState } from '$lib/clusters/projects/application/notification-channels/telegram-setup.state.svelte';
   import Modal from '$lib/shared/ui/Modal.svelte';
-  import { BellIcon, LinkIcon, SendIcon } from 'lucide-svelte';
+  import { BellIcon, LinkIcon, MailIcon, SendIcon } from 'lucide-svelte';
   import { notificationChannelSetupState } from '../../application/notification-channels/notification-channel-setup.state.svelte.js';
   import TelegramAlertingSetup from './telegram-setup/TelegramAlertingSetup.svelte';
   import WebhookSetupStep from './webhook-setup/WebhookSetupStep.svelte';
@@ -10,6 +10,9 @@
   import { notificationChannelsState } from '../../application/notification-channels/notification-channels.state.svelte.js';
   import { UserTier } from '$lib/shared/types.js';
   import { userState } from '$lib/shared/user/application/user.state.svelte.js';
+  import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte.js';
+  import { NotificationChannelType } from '$lib/shared/exposed-config/domain/exposed-config.js';
+  import UpgradeElement from '$lib/shared/upgrade/UpgradeElement.svelte';
 
   type Props = {
     clusterId: string;
@@ -17,12 +20,14 @@
 
   const { clusterId }: Props = $props();
   const userTier = $derived(userState.tier);
+  const allowedNotificationChannels = $derived(
+    exposedConfigState.allowedNotificationChannels(userTier),
+  );
+
   const availableChannels = $state([
     {
-      id: 'telegram',
+      id: NotificationChannelType.TELEGRAM,
       name: 'Telegram',
-      includedTiers: [],
-      extraTiers: [],
       onclick: () => {
         const monitorId = notificationChannelSetupState.state.monitorId;
         telegramSetupState.startSetup(monitorId);
@@ -30,34 +35,19 @@
       icon: SendIcon,
     },
     {
-      id: 'webhook',
+      id: NotificationChannelType.WEBHOOK,
       name: 'Webhook',
-      includedTiers: [UserTier.EARLY_BIRD, UserTier.PRO],
-      extraTiers: [UserTier.CONTRIBUTOR],
       onclick: () => {
         // notificationChannelSetupState.startWebhookSetup();
       },
       icon: LinkIcon,
     },
-    // { id: 'email', name: 'Email' },
   ]);
   let selectedChannel: string | null = $state(null);
 
   function closeModal() {
     notificationChannelSetupState.close();
   }
-
-  const channelUnavailable = (channel: (typeof availableChannels)[number]) => {
-    return (
-      channel.includedTiers.length &&
-      !channel.includedTiers.includes(userTier) &&
-      !channel.extraTiers.includes(userTier)
-    );
-  };
-
-  const isFreeChannel = (channel: (typeof availableChannels)[number]) => {
-    return !channel.includedTiers.length;
-  };
 </script>
 
 {#snippet base()}
@@ -79,34 +69,43 @@
 
     <div class="flex flex-col">
       {#each availableChannels as channel (channel.id)}
-        <div
-          class="hover:bg-secondary/10 flex cursor-pointer select-none items-center justify-start gap-4 rounded-xl px-4 py-3"
-          onclick={() => {
-            if (channelUnavailable(channel)) {
-              return;
-            }
-
-            selectedChannel = channel.id;
-            channel.onclick?.();
-          }}
+        <UpgradeElement
+          class="w-full"
+          enabled={!allowedNotificationChannels.includes(channel.id)}
         >
-          <channel.icon class="text-secondary ml-2 inline h-4 w-4" />
-          <span>{channel.name}</span>
+          <div
+            class="hover:bg-secondary/10 flex cursor-pointer items-center justify-start gap-4 rounded-xl px-4 py-3 select-none"
+            onclick={() => {
+              if (!allowedNotificationChannels.includes(channel.id)) {
+                return;
+              }
 
-          {#if isFreeChannel(channel)}
-            <div class="ml-auto">
-              <div class="badge badge-secondary badge-soft badge-sm">Free</div>
-            </div>
-          {/if}
+              selectedChannel = channel.id;
+              channel.onclick?.();
+            }}
+          >
+            <channel.icon class="text-secondary ml-2 inline h-4 w-4" />
+            <span>{channel.name}</span>
 
-          {#if channelUnavailable(channel)}
-            <div
-              class="badge badge-primary badge-soft badge-sm ml-auto capitalize"
-            >
-              {userState.humanReadableTier(channel.includedTiers[0])}
-            </div>
-          {/if}
-        </div>
+            {#if !allowedNotificationChannels.includes(channel.id)}
+              {#snippet upgradeText()}
+                {@const requiredTier =
+                  exposedConfigState.firstTierWithNotificationChannel(
+                    channel.id,
+                  )}
+                {requiredTier
+                  ? `Upgrade to ${exposedConfigState.formatTierName(requiredTier)}`
+                  : 'Upgrade Tier'}
+              {/snippet}
+
+              <div
+                class="badge badge-primary badge-soft badge-sm ml-auto capitalize"
+              >
+                {@render upgradeText()}
+              </div>
+            {/if}
+          </div>
+        </UpgradeElement>
       {/each}
     </div>
 

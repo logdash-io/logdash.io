@@ -1,5 +1,9 @@
-import type { UserTier } from '$lib/shared/types.js';
-import type { ExposedConfig } from '../domain/exposed-config.js';
+import { UserTier } from '$lib/shared/types.js';
+import type {
+  ExposedConfig,
+  NotificationChannelType,
+} from '../domain/exposed-config.js';
+import { match } from 'ts-pattern';
 
 // todo: divide api calls responsibility from state
 class ExposedConfigState {
@@ -56,6 +60,49 @@ class ExposedConfigState {
       this._config.projectPlanConfigs[tier].httpMonitors.maxNumberOfMonitors ??
       0
     );
+  }
+
+  allowedNotificationChannels(tier: UserTier): NotificationChannelType[] {
+    if (!this._config) {
+      return [];
+    }
+
+    const tierConfig = this._config.userPlanConfigs[tier];
+    if (!tierConfig || !tierConfig.notificationChannels) {
+      return [];
+    }
+
+    return (tierConfig.notificationChannels.allowedTypes ??
+      []) as NotificationChannelType[];
+  }
+
+  firstTierWithNotificationChannel(
+    channelType: NotificationChannelType,
+  ): UserTier | null {
+    if (!this._config) {
+      return null;
+    }
+
+    const tierOrder = [UserTier.FREE, UserTier.EARLY_BIRD, UserTier.PRO];
+
+    for (const tier of tierOrder) {
+      const allowedChannels = this.allowedNotificationChannels(tier);
+      if (allowedChannels.includes(channelType)) {
+        return tier;
+      }
+    }
+
+    return null;
+  }
+
+  formatTierName(tier: UserTier): string {
+    // todo: make usertier a value object
+    return match(tier)
+      .with(UserTier.FREE, () => 'Free')
+      .with(UserTier.EARLY_BIRD, () => 'Early Bird')
+      .with(UserTier.CONTRIBUTOR, () => 'Contributor')
+      .with(UserTier.PRO, () => 'Pro')
+      .otherwise(() => tier);
   }
 }
 

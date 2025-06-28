@@ -2,16 +2,16 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { metricsState } from '$lib/clusters/projects/application/metrics.state.svelte.js';
+  import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte.js';
+  import { UserTier } from '$lib/shared/types.js';
+  import UpgradeElement from '$lib/shared/upgrade/UpgradeElement.svelte';
+  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
+  import { AlertTriangleIcon, XIcon } from 'lucide-svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
   import MetricsListener from '../../presentational/MetricsListener.svelte';
   import DataTile from './DataTile.svelte';
   import MetricTile from './MetricTile.svelte';
-  import { AlertTriangleIcon, XIcon } from 'lucide-svelte';
-  import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte.js';
-  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
-  import { UserTier } from '$lib/shared/types.js';
-  import { upgradeState } from '$lib/shared/upgrade/upgrade.state.svelte.js';
 
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
   const isDemoDashboard = $derived(
@@ -36,7 +36,7 @@
 
 {#snippet header()}
   <div
-    class="bg-primary ring-primary absolute left-0 top-0 z-0 flex h-12 w-full items-start justify-between rounded-t-lg text-sm leading-6 ring"
+    class="bg-primary ring-primary absolute top-0 left-0 z-0 flex h-12 w-full items-start justify-between rounded-t-lg text-sm leading-6 ring"
   >
     <div
       transition:fly={{
@@ -74,17 +74,11 @@
         <AlertTriangleIcon class="text-primary h-4 w-4 shrink-0" />
         <span class="text-sm">
           {#if userState.tier === UserTier.FREE}
-            <a
-              onmouseenter={() => upgradeState.showBackground()}
-              onmouseleave={() => upgradeState.hideBackground()}
-              class="underline"
-              href="/app/api/user/upgrade"
-            >
-              Upgrade
-            </a>
-            to add
-            <strong>{metricsLimitPlanDifference}x</strong>
-            more metrics to this project.
+            <UpgradeElement>
+              Upgrade to add
+              <strong>{metricsLimitPlanDifference}x</strong>
+              more metrics to this project.
+            </UpgradeElement>
           {:else}
             <a class="underline" href="mailto:contact@logdash.io">Contact us</a>
             to add more metrics to this project.
