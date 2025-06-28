@@ -4,6 +4,7 @@
   import ProjectView from '$lib/clusters/projects/ui/ProjectView/ProjectView.svelte';
   import ProjectsSwitcher from '../../../projects/ui/ProjectsSwitcher/ProjectsSwitcher.svelte';
   import ClusterContextMenu from '../ClusterContextMenu.svelte';
+  import ProjectFeaturesContextMenu from '../ProjectFeaturesContextMenu.svelte';
   import PublicDashboardContextMenu from '../PublicDashboardContextMenu.svelte';
 
   type Props = {
@@ -20,7 +21,7 @@
 
   const isSettingUp = $derived(
     page.url.pathname.includes('/setup') ||
-    page.url.pathname.includes('/configure'),
+      page.url.pathname.includes('/configure'),
   );
 
   $effect(() => {
@@ -49,7 +50,11 @@
       <div class="flex w-full items-center gap-2 sm:ml-auto sm:w-fit">
         <PublicDashboardContextMenu {clusterId} />
 
-        <ClusterContextMenu {clusterId} />
+        {#if projectId}
+          <ProjectFeaturesContextMenu {clusterId} />
+        {:else}
+          <ClusterContextMenu {clusterId} />
+        {/if}
       </div>
     {/if}
   </div>
