@@ -13,13 +13,13 @@ export interface ClusterPlanConfigs {
 
 export const ClusterPlanConfigs: ClusterPlanConfigs = {
   [ClusterTier.Free]: {
-    maxClusterMembers: 2,
+    maxClusterMembers: 1,
   },
   [ClusterTier.Contributor]: {
-    maxClusterMembers: 3,
+    maxClusterMembers: 2,
   },
   [ClusterTier.EarlyBird]: {
-    maxClusterMembers: 4,
+    maxClusterMembers: 2,
   },
   [ClusterTier.Admin]: {
     maxClusterMembers: 100,

@@ -21,6 +21,7 @@ import { UserReadService } from '../../user/read/user-read.service';
 import { SuccessResponse } from '../../shared/responses/success.response';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
+import { ClusterInviteLimitService } from '../limit/cluster-invite-limit.service';
 
 @ApiTags('Cluster Invites')
 @Controller()
@@ -30,6 +31,7 @@ export class ClusterInviteCoreController {
     private readonly clusterInviteReadService: ClusterInviteReadService,
     private readonly clusterWriteService: ClusterWriteService,
     private readonly userReadService: UserReadService,
+    private readonly clusterInviteLimitService: ClusterInviteLimitService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -50,6 +52,12 @@ export class ClusterInviteCoreController {
 
     if (existingInvite) {
       throw new BadRequestException('User is already invited to this cluster');
+    }
+
+    const hasCapacity = await this.clusterInviteLimitService.hasCapacity(clusterId);
+
+    if (!hasCapacity) {
+      throw new BadRequestException('Cluster is at capacity');
     }
 
     const invite = await this.clusterInviteWriteService.create({

@@ -5,6 +5,7 @@ import { ClusterInviteWriteModule } from '../write/cluster-invite-write.module';
 import { UserReadModule } from '../../user/read/user-read.module';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { ClusterWriteModule } from '../../cluster/write/cluster-write.module';
+import { ClusterInviteLimitModule } from '../limit/cluster-invite-limit.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ClusterWriteModule } from '../../cluster/write/cluster-write.module';
     ClusterInviteWriteModule,
     UserReadModule,
     ClusterWriteModule,
+    ClusterInviteLimitModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [ClusterInviteCoreController],

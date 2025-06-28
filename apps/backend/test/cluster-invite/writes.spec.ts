@@ -8,6 +8,7 @@ import {
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 import { ClusterInviteSerializer } from '../../src/cluster-invite/core/entities/cluster-invite.serializer';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('ClusterInviteCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -30,7 +31,10 @@ describe('ClusterInviteCoreController (writes)', () => {
         token: inviterToken,
         user: inviter,
         cluster,
-      } = await bootstrap.utils.generalUtils.setupAnonymous();
+      } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
       const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const response = await request(bootstrap.app.getHttpServer())
@@ -59,7 +63,10 @@ describe('ClusterInviteCoreController (writes)', () => {
     });
 
     it('throws error when invited user does not exist', async () => {
-      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
       const nonExistentUserId = new Types.ObjectId().toString();
 
       const response = await request(bootstrap.app.getHttpServer())
@@ -75,7 +82,10 @@ describe('ClusterInviteCoreController (writes)', () => {
     });
 
     it('throws error when user is already invited to cluster', async () => {
-      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
       const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       await bootstrap.utils.clusterInviteUtils.createClusterInvite({
@@ -101,7 +111,10 @@ describe('ClusterInviteCoreController (writes)', () => {
         token: inviterToken,
         user: inviter,
         cluster,
-      } = await bootstrap.utils.generalUtils.setupAnonymous();
+      } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
       const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const response = await request(bootstrap.app.getHttpServer())
@@ -124,6 +137,83 @@ describe('ClusterInviteCoreController (writes)', () => {
         action: AuditLogUserAction.GotInvitedToCluster,
         relatedDomain: RelatedDomain.User,
         relatedEntityId: invitedUser.id,
+      });
+    });
+
+    describe('Max capacity', () => {
+      it('throws error when cluster is at max capacity (FREE)', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupClaimed({
+          email: 'admin@example.com',
+          userTier: UserTier.Free,
+        });
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .post(`/clusters/${setup.cluster.id}/cluster_invites`)
+          .set('Authorization', `Bearer ${setup.token}`)
+          .send({
+            invitedUserId: setup.user.id,
+            role: ClusterRole.Write,
+          });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toBe('Cluster is at capacity');
+      });
+
+      it('throws error when cluster is at max capacity (EARLY BIRD - MEMBERS)', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupClaimed({
+          email: 'admin@example.com',
+          userTier: UserTier.EarlyBird,
+        });
+
+        const otherSetup = await bootstrap.utils.generalUtils.setupClaimed({
+          email: 'other@example.com',
+          userTier: UserTier.EarlyBird,
+        });
+
+        const artificialRole = await bootstrap.utils.projectGroupUtils.addRole({
+          clusterId: setup.cluster.id,
+          userId: otherSetup.user.id,
+          role: ClusterRole.Write,
+        });
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .post(`/clusters/${setup.cluster.id}/cluster_invites`)
+          .set('Authorization', `Bearer ${setup.token}`)
+          .send({
+            invitedUserId: otherSetup.user.id,
+            role: ClusterRole.Write,
+          });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toBe('Cluster is at capacity');
+      });
+
+      it('throws error when cluster is at max capacity (EARLY BIRD - INVITES)', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupClaimed({
+          email: 'admin@example.com',
+          userTier: UserTier.EarlyBird,
+        });
+
+        const invitedSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        const toInviteSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+          token: setup.token,
+          clusterId: setup.cluster.id,
+          invitedUserId: toInviteSetup.user.id,
+        });
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .post(`/clusters/${setup.cluster.id}/cluster_invites`)
+          .set('Authorization', `Bearer ${setup.token}`)
+          .send({
+            invitedUserId: toInviteSetup.user.id,
+            role: ClusterRole.Write,
+          });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toBe('Cluster is at capacity');
       });
     });
 
