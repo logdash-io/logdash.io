@@ -1,6 +1,7 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 
 describe('ClusterInviteCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -119,6 +120,72 @@ describe('ClusterInviteCoreController (reads)', () => {
         .expect(200);
 
       expect(response.body).toHaveLength(0);
+    });
+  });
+
+  describe('GET /clusters/:clusterId/cluster_invites/capacity', () => {
+    it('returns capacity for default cluster', async () => {
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.EarlyBird,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body.maxMembers).toBe(2);
+      expect(response.body.currentUsersCount).toBe(1);
+      expect(response.body.currentInvitesCount).toBe(0);
+    });
+
+    it('returns capacity for cluster with members', async () => {
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.EarlyBird,
+      });
+
+      const otherSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        userId: otherSetup.user.id,
+        role: ClusterRole.Write,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body.maxMembers).toBe(2);
+      expect(response.body.currentUsersCount).toBe(2);
+      expect(response.body.currentInvitesCount).toBe(0);
+    });
+
+    it('returns capacity for cluster with invites', async () => {
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.EarlyBird,
+      });
+
+      const otherSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token,
+        clusterId: cluster.id,
+        invitedUserId: otherSetup.user.id,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body.maxMembers).toBe(2);
+      expect(response.body.currentUsersCount).toBe(1);
+      expect(response.body.currentInvitesCount).toBe(1);
     });
   });
 });

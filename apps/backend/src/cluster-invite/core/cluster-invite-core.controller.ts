@@ -22,6 +22,7 @@ import { SuccessResponse } from '../../shared/responses/success.response';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { ClusterInviteLimitService } from '../limit/cluster-invite-limit.service';
+import { ClusterInviteCapacityResponse } from './dto/cluster-invite-capacity.response';
 
 @ApiTags('Cluster Invites')
 @Controller()
@@ -79,6 +80,17 @@ export class ClusterInviteCoreController {
   ): Promise<ClusterInviteSerialized[]> {
     const invites = await this.clusterInviteReadService.readByClusterId(clusterId);
     return ClusterInviteSerializer.serializeMany(invites);
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Get('clusters/:clusterId/cluster_invites/capacity')
+  @ApiResponse({ type: ClusterInviteCapacityResponse })
+  public async getCapacity(
+    @Param('clusterId') clusterId: string,
+  ): Promise<ClusterInviteCapacityResponse> {
+    const capacity = await this.clusterInviteLimitService.getCapacity(clusterId);
+    return capacity;
   }
 
   @ApiBearerAuth()
