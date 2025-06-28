@@ -1,5 +1,11 @@
 import type { UserTier } from '$lib/shared/types.js';
 
+export enum NotificationChannelType {
+  TELEGRAM = 'telegram',
+  WEBHOOK = 'webhook',
+  EMAIL = 'email',
+}
+
 type GranularityHours = {
   minute: number;
   hour: number;
@@ -39,9 +45,14 @@ type UserPlanPublicDashboardsConfig = {
   maxNumberOfPublicDashboards: number;
 };
 
+type UserPlanNotificationChannelsConfig = {
+  allowedTypes: NotificationChannelType[];
+};
+
 type UserPlan = {
   projects: UserPlanProjectsConfig;
   publicDashboards: UserPlanPublicDashboardsConfig;
+  notificationChannels: UserPlanNotificationChannelsConfig;
 };
 
 export type ExposedConfig = {

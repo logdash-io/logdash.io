@@ -15,12 +15,18 @@ import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import Stripe from 'stripe';
 import { sleep } from './sleep';
+import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
+import { ProjectEntity } from '../../src/project/core/entities/project.entity';
 
 export class GeneralUtils {
   private readonly userModel: Model<UserEntity>;
+  private readonly clusterModel: Model<ClusterEntity>;
+  private readonly projectModel: Model<ProjectEntity>;
 
   constructor(private readonly app: INestApplication<any>) {
     this.userModel = this.app.get(getModelToken(UserEntity.name));
+    this.clusterModel = this.app.get(getModelToken(ClusterEntity.name));
+    this.projectModel = this.app.get(getModelToken(ProjectEntity.name));
   }
 
   public async setupAnonymous(dto?: { userTier?: UserTier }): Promise<{
@@ -82,12 +88,15 @@ export class GeneralUtils {
     };
   }
 
-  public async setupClaimed(dto: { email: string; userTier?: UserTier }): Promise<{
+  public async setupClaimed(dto?: { email?: string; userTier?: UserTier }): Promise<{
     token: string;
     user: UserSerialized;
     cluster: ClusterSerialized;
     project: ProjectSerialized;
   }> {
+    const email = dto?.email ?? this.getRandomEmail();
+    const tier = dto?.userTier ?? UserTier.Free;
+
     const anonymousResult = await this.setupAnonymous(dto);
 
     await this.userModel.updateOne(
@@ -96,12 +105,30 @@ export class GeneralUtils {
       },
       {
         accountClaimStatus: AccountClaimStatus.Claimed,
-        email: dto.email,
+        email,
       },
     );
 
-    if (dto.userTier === UserTier.EarlyBird) {
-      await this.setupEarlyBirdSubscription(dto.email);
+    await this.clusterModel.updateOne(
+      {
+        _id: new Types.ObjectId(anonymousResult.cluster.id),
+      },
+      {
+        tier,
+      },
+    );
+
+    await this.projectModel.updateOne(
+      {
+        _id: new Types.ObjectId(anonymousResult.project.id),
+      },
+      {
+        tier,
+      },
+    );
+
+    if (tier === UserTier.EarlyBird) {
+      await this.setupEarlyBirdSubscription(email);
     }
 
     const userResponse = await request(this.app.getHttpServer())
@@ -135,5 +162,9 @@ export class GeneralUtils {
     } as unknown as Stripe.InvoicePaymentSucceededEvent;
 
     await handler.handle(event);
+  }
+
+  private getRandomEmail(): string {
+    return `test-${Math.random()}@example.com`;
   }
 }

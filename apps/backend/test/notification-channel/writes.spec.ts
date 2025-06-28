@@ -2,10 +2,11 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
 import { WebhookOptions } from '../../src/notification-channel/core/types/webhook-options.type';
-import { NotificationTarget } from '../../src/notification-channel/core/enums/notification-target.enum';
+import { NotificationChannelType } from '../../src/notification-channel/core/enums/notification-target.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('NotificationChannelCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -29,7 +30,7 @@ describe('NotificationChannelCoreController (writes)', () => {
         const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
         const telegramData = {
-          type: NotificationTarget.Telegram,
+          type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
             botToken: 'valid-bot-token',
@@ -49,7 +50,7 @@ describe('NotificationChannelCoreController (writes)', () => {
 
         expect(entity).toBeDefined();
         expect(entity.clusterId).toBe(cluster.id);
-        expect(entity.target).toBe(NotificationTarget.Telegram);
+        expect(entity.target).toBe(NotificationChannelType.Telegram);
         expect((entity.options as TelegramOptions).botToken).toBe('valid-bot-token');
         expect((entity.options as TelegramOptions).chatId).toBe('valid-chat-id');
       });
@@ -59,7 +60,7 @@ describe('NotificationChannelCoreController (writes)', () => {
         const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
         const invalidTelegramData = {
-          type: NotificationTarget.Telegram,
+          type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
             chatId: 'valid-chat-id',
@@ -78,7 +79,7 @@ describe('NotificationChannelCoreController (writes)', () => {
 
         expect(entity).toBeDefined();
         expect(entity.clusterId).toBe(cluster.id);
-        expect(entity.target).toBe(NotificationTarget.Telegram);
+        expect(entity.target).toBe(NotificationChannelType.Telegram);
         expect((entity.options as TelegramOptions).botToken).toBe(
           getEnvConfig().notificationChannels.telegramUptimeBot.token,
         );
@@ -89,7 +90,7 @@ describe('NotificationChannelCoreController (writes)', () => {
         const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
         const telegramData = {
-          type: NotificationTarget.Telegram,
+          type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
             botToken: 'valid-bot-token',
@@ -119,7 +120,7 @@ describe('NotificationChannelCoreController (writes)', () => {
         const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
         const telegramData = {
-          type: NotificationTarget.Telegram,
+          type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: { chatId: 'valid-chat-id' },
         };
@@ -155,10 +156,13 @@ I'll notify you about the status of your services`,
     describe('Webhook', () => {
       it('creates webhook channel with valid data', async () => {
         // given
-        const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+        const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+          email: 'test@example.com',
+          userTier: UserTier.Contributor,
+        });
 
         const webhookData = {
-          type: NotificationTarget.Webhook,
+          type: NotificationChannelType.Webhook,
           name: 'Test Webhook Channel',
           options: {
             url: 'https://example.com/webhook',
@@ -179,7 +183,7 @@ I'll notify you about the status of your services`,
 
         expect(entity).toBeDefined();
         expect(entity.clusterId).toBe(cluster.id);
-        expect(entity.target).toBe(NotificationTarget.Webhook);
+        expect(entity.target).toBe(NotificationChannelType.Webhook);
         expect((entity.options as WebhookOptions).url).toBe('https://example.com/webhook');
         expect((entity.options as WebhookOptions).headers).toEqual({
           'Content-Type': 'application/json',
@@ -189,10 +193,13 @@ I'll notify you about the status of your services`,
 
       it('rejects webhook channel with with missing url', async () => {
         // given
-        const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+        const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+          email: 'test@example.com',
+          userTier: UserTier.Contributor,
+        });
 
         const invalidWebhookData = {
-          type: NotificationTarget.Webhook,
+          type: NotificationChannelType.Webhook,
           name: 'Test Webhook Channel',
           options: {
             headers: { 'Content-Type': 'application/json' },
@@ -210,6 +217,181 @@ I'll notify you about the status of your services`,
         expect(response.status).toBe(400);
         expect(response.body.message).toEqual(['options.url must be a string']);
       });
+
+      describe('Free tier webhook restrictions', () => {
+        it('allows free tier to create webhook with GET method', async () => {
+          // given
+          const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+          const webhookData = {
+            type: NotificationChannelType.Webhook,
+            name: 'Free Tier Webhook',
+            options: {
+              url: 'https://example.com/webhook',
+              method: 'GET',
+            },
+          };
+
+          // when
+          const response = await request(bootstrap.app.getHttpServer())
+            .post(`/clusters/${cluster.id}/notification_channels`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(webhookData);
+
+          // then
+          expect(response.status).toBe(201);
+          const entity = (await bootstrap.models.notificationChannelModel.findOne())!;
+          expect((entity.options as WebhookOptions).method).toBe('GET');
+        });
+
+        it('allows free tier to create webhook without method (defaults to GET)', async () => {
+          // given
+          const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+          const webhookData = {
+            type: NotificationChannelType.Webhook,
+            name: 'Free Tier Webhook No Method',
+            options: {
+              url: 'https://example.com/webhook',
+            },
+          };
+
+          // when
+          const response = await request(bootstrap.app.getHttpServer())
+            .post(`/clusters/${cluster.id}/notification_channels`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(webhookData);
+
+          // then
+          expect(response.status).toBe(201);
+        });
+
+        it.each(['POST', 'PUT', 'DELETE', 'PATCH'])(
+          'rejects free tier webhook with %s method',
+          async (method) => {
+            // given
+            const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+            const webhookData = {
+              type: NotificationChannelType.Webhook,
+              name: 'Free Tier Webhook',
+              options: {
+                url: 'https://example.com/webhook',
+                method,
+              },
+            };
+
+            // when
+            const response = await request(bootstrap.app.getHttpServer())
+              .post(`/clusters/${cluster.id}/notification_channels`)
+              .set('Authorization', `Bearer ${token}`)
+              .send(webhookData);
+
+            // then
+            expect(response.status).toBe(400);
+            expect(response.body.message).toBe(
+              'Free tier users can only use GET method for webhooks. Upgrade to use other HTTP methods.',
+            );
+          },
+        );
+
+        it('rejects free tier webhook with custom headers', async () => {
+          // given
+          const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+          const webhookData = {
+            type: NotificationChannelType.Webhook,
+            name: 'Free Tier Webhook',
+            options: {
+              url: 'https://example.com/webhook',
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+            },
+          };
+
+          // when
+          const response = await request(bootstrap.app.getHttpServer())
+            .post(`/clusters/${cluster.id}/notification_channels`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(webhookData);
+
+          // then
+          expect(response.status).toBe(400);
+          expect(response.body.message).toBe(
+            'Free tier users cannot use custom headers for webhooks. Upgrade to use custom headers.',
+          );
+        });
+      });
+
+      describe('Paid tier webhook features', () => {
+        it.each(['POST', 'PUT', 'DELETE', 'PATCH'])(
+          'allows paid tier to create webhook with %s method',
+          async (method) => {
+            // given
+            const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+              email: 'test@example.com',
+              userTier: UserTier.Contributor,
+            });
+
+            const webhookData = {
+              type: NotificationChannelType.Webhook,
+              name: 'Paid Tier Webhook',
+              options: {
+                url: 'https://example.com/webhook',
+                method,
+              },
+            };
+
+            // when
+            const response = await request(bootstrap.app.getHttpServer())
+              .post(`/clusters/${cluster.id}/notification_channels`)
+              .set('Authorization', `Bearer ${token}`)
+              .send(webhookData);
+
+            // then
+            expect(response.status).toBe(201);
+            const entity = (await bootstrap.models.notificationChannelModel.findOne())!;
+            expect((entity.options as WebhookOptions).method).toBe(method);
+          },
+        );
+
+        it('allows paid tier to create webhook with custom headers', async () => {
+          // given
+          const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+            email: 'test@example.com',
+            userTier: UserTier.Contributor,
+          });
+
+          const webhookData = {
+            type: NotificationChannelType.Webhook,
+            name: 'Paid Tier Webhook',
+            options: {
+              url: 'https://example.com/webhook',
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: 'Bearer token123',
+                'X-Custom-Header': 'custom-value',
+              },
+            },
+          };
+
+          // when
+          const response = await request(bootstrap.app.getHttpServer())
+            .post(`/clusters/${cluster.id}/notification_channels`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(webhookData);
+
+          // then
+          expect(response.status).toBe(201);
+          const entity = (await bootstrap.models.notificationChannelModel.findOne())!;
+          expect((entity.options as WebhookOptions).headers).toEqual({
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer token123',
+            'X-Custom-Header': 'custom-value',
+          });
+        });
+      });
     });
 
     it('forbids non-cluster member to create notification channel', async () => {
@@ -218,7 +400,7 @@ I'll notify you about the status of your services`,
       const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const notificationChannelData = {
-        type: NotificationTarget.Webhook,
+        type: NotificationChannelType.Webhook,
         name: 'Test Webhook Channel',
         options: {
           url: 'https://example.com/webhook',
@@ -242,7 +424,7 @@ I'll notify you about the status of your services`,
       const { cluster, user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const telegramData = {
-        type: NotificationTarget.Telegram,
+        type: NotificationChannelType.Telegram,
         name: 'Test Telegram Channel',
         options: {
           botToken: 'valid-bot-token',
@@ -266,6 +448,95 @@ I'll notify you about the status of your services`,
       });
     });
 
+    it.each([
+      {
+        userTier: UserTier.Free,
+        channelType: NotificationChannelType.Telegram,
+        shouldSucceed: true,
+        description: 'allows free users to create telegram channels',
+      },
+      {
+        userTier: UserTier.Free,
+        channelType: NotificationChannelType.Webhook,
+        shouldSucceed: true,
+        description: 'allows free users to create basic webhook channels',
+      },
+      {
+        userTier: UserTier.Contributor,
+        channelType: NotificationChannelType.Telegram,
+        shouldSucceed: true,
+        description: 'allows contributor users to create telegram channels',
+      },
+      {
+        userTier: UserTier.Contributor,
+        channelType: NotificationChannelType.Webhook,
+        shouldSucceed: true,
+        description: 'allows contributor users to create webhook channels',
+      },
+      {
+        userTier: UserTier.EarlyBird,
+        channelType: NotificationChannelType.Telegram,
+        shouldSucceed: true,
+        description: 'allows early bird users to create telegram channels',
+      },
+      {
+        userTier: UserTier.EarlyBird,
+        channelType: NotificationChannelType.Webhook,
+        shouldSucceed: true,
+        description: 'allows early bird users to create webhook channels',
+      },
+      {
+        userTier: UserTier.Admin,
+        channelType: NotificationChannelType.Telegram,
+        shouldSucceed: true,
+        description: 'allows admin users to create telegram channels',
+      },
+      {
+        userTier: UserTier.Admin,
+        channelType: NotificationChannelType.Webhook,
+        shouldSucceed: true,
+        description: 'allows admin users to create webhook channels',
+      },
+    ])('$description', async ({ userTier, channelType, shouldSucceed }) => {
+      // given
+      const setupMethod =
+        userTier === UserTier.Free
+          ? () => bootstrap.utils.generalUtils.setupAnonymous()
+          : () =>
+              bootstrap.utils.generalUtils.setupClaimed({
+                email: `test-${userTier}@example.com`,
+                userTier,
+              });
+
+      const { cluster, token } = await setupMethod();
+
+      const channelData = {
+        type: channelType,
+        name: `Test ${channelType} Channel`,
+        options:
+          channelType === NotificationChannelType.Telegram
+            ? { chatId: `test-chat-${Date.now()}` }
+            : { url: 'https://example.com/webhook' },
+      };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/notification_channels`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(channelData);
+
+      // then
+      if (shouldSucceed) {
+        expect(response.status).toBe(201);
+        expect(response.body.target).toBe(channelType);
+      } else {
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe(
+          `${channelType} notification channels are not available for your current tier`,
+        );
+      }
+    });
+
     it('does not allow to create more than 100 notification channels', async () => {
       // given
       const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -283,7 +554,7 @@ I'll notify you about the status of your services`,
         .post(`/clusters/${cluster.id}/notification_channels`)
         .set('Authorization', `Bearer ${token}`)
         .send({
-          type: NotificationTarget.Telegram,
+          type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: { chatId: 'valid-chat-id' },
         });
@@ -334,7 +605,7 @@ I'll notify you about the status of your services`,
         .post(`/clusters/${cluster.id}/notification_channels`)
         .set('Authorization', `Bearer ${token}`)
         .send({
-          type: NotificationTarget.Telegram,
+          type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
             botToken: 'original-bot-token',
@@ -376,7 +647,7 @@ I'll notify you about the status of your services`,
         .post(`/clusters/${cluster.id}/notification_channels`)
         .set('Authorization', `Bearer ${token}`)
         .send({
-          type: NotificationTarget.Telegram,
+          type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
             botToken: 'bot-token',
@@ -406,7 +677,7 @@ I'll notify you about the status of your services`,
         .post(`/clusters/${cluster.id}/notification_channels`)
         .set('Authorization', `Bearer ${token}`)
         .send({
-          type: NotificationTarget.Telegram,
+          type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
             botToken: 'bot-token',

@@ -32,25 +32,25 @@
 <div
   class="ld-card-base relative flex h-full max-h-32 w-full items-center justify-between gap-2 overflow-hidden rounded-xl"
   in:fly|global={{
-		y: -5,
-		duration: 400,
-		delay: delayIn,
-	}}
+    y: -5,
+    duration: 400,
+    delay: delayIn,
+  }}
   style="min-height: calc(var(--spacing) * 24)"
 >
   {#if editMode}
     <div
       in:fly={{ y: 5, duration: 400, easing: cubicOut }}
       class={[
-				'absolute top-1/2 flex h-full w-full -translate-y-1/2 items-center justify-between gap-2 rounded-xl border border-transparent pr-6 transition-colors',
-				{
-					'focus-within:border-success/50':
-						projectName.length >= MIN_NAME_LENGTH &&
-						projectName.length < MAX_NAME_LENGTH,
-					'focus-within:border-primary/50':
-						projectName.length < MIN_NAME_LENGTH,
-				},
-			]}
+        'absolute top-1/2 flex h-full w-full -translate-y-1/2 items-center justify-between gap-2 rounded-xl border border-transparent pr-6 transition-colors',
+        {
+          'focus-within:border-success/50':
+            projectName.length >= MIN_NAME_LENGTH &&
+            projectName.length < MAX_NAME_LENGTH,
+          'focus-within:border-primary/50':
+            projectName.length < MIN_NAME_LENGTH,
+        },
+      ]}
     >
       {#if canAddMore}
         <input
@@ -66,12 +66,12 @@
 
         <button
           disabled={projectName.length < MIN_NAME_LENGTH ||
-						projectName.length > MAX_NAME_LENGTH}
+            projectName.length > MAX_NAME_LENGTH}
           class="btn btn-success btn-soft btn-sm btn-square"
           onclick={() => {
-						onSubmit(projectName);
-						editMode = false;
-					}}
+            onSubmit(projectName);
+            editMode = false;
+          }}
           use:clickShortcut={{ key: 'Enter' }}
         >
           <CheckIcon class="h-4 w-4" />
@@ -85,13 +85,11 @@
           <XIcon class="h-4 w-4" />
         </button>
       {:else}
-        <div
-          class="flex w-full items-center justify-between gap-2 pl-8"
-        >
+        <div class="flex w-full items-center justify-between gap-2 pl-8">
           <!--          <h5 class="text- font-semibold">-->
           <!--            -->
           <!--          </h5>-->
-          <UpgradeButton>
+          <UpgradeButton source="cluster-limit">
             Upgrade to add more projects
           </UpgradeButton>
           <!--					<button-->
@@ -117,12 +115,12 @@
       class="absolute flex h-full w-full cursor-pointer items-center justify-between gap-2 rounded-xl px-8"
       role="button"
       onclick={(e) => {
-				if (editMode) {
-					e.preventDefault();
-					return;
-				}
-				editMode = !editMode;
-			}}
+        if (editMode) {
+          e.preventDefault();
+          return;
+        }
+        editMode = !editMode;
+      }}
       data-posthog-id="create-cluster-button"
     >
       <h5 class="text-lg font-semibold">Create new project</h5>

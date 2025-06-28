@@ -26,6 +26,7 @@ import { HttpPingBucketCoreModule } from './http-ping-bucket/core/http-ping-buck
 import { PublicDashboardCoreModule } from './public-dashboard/core/public-dashboard-core.module';
 import { SubscriptionCoreModule } from './subscription/core/subscription-core.module';
 import { AuditLogCreationModule } from './audit-log/creation/audit-log-creation.module';
+import { ClusterInviteCoreModule } from './cluster-invite/core/cluster-invite-core.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { AuditLogCreationModule } from './audit-log/creation/audit-log-creation.
     NotificationChannelCoreModule,
     PublicDashboardCoreModule,
     AuditLogCreationModule,
+    ClusterInviteCoreModule,
   ],
 })
 export class AppModule {}

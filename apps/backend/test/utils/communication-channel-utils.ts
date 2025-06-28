@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { NotificationChannelNormalized } from '../../src/notification-channel/core/entities/notification-channel.interface';
-import { NotificationTarget } from '../../src/notification-channel/core/enums/notification-target.enum';
+import { NotificationChannelType } from '../../src/notification-channel/core/enums/notification-target.enum';
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
 import { WebhookOptions } from '../../src/notification-channel/core/types/webhook-options.type';
 import * as request from 'supertest';
@@ -27,7 +27,7 @@ export class NotificationChannelUtils {
     }
 
     const body: CreateNotificationChannelBody = {
-      type: NotificationTarget.Telegram,
+      type: NotificationChannelType.Telegram,
       name: dto.name || 'Test Telegram Channel',
       options: options as TelegramOptions,
     };
@@ -47,7 +47,7 @@ export class NotificationChannelUtils {
     name?: string;
   }): Promise<NotificationChannelNormalized> {
     const body: CreateNotificationChannelBody = {
-      type: NotificationTarget.Webhook,
+      type: NotificationChannelType.Webhook,
       name: dto.name || 'Test Webhook Channel',
       options: dto.options,
     };

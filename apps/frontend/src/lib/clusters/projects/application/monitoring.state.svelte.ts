@@ -13,7 +13,7 @@ import type {
 import { httpClient } from '$lib/shared/http/http-client.js';
 import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 
-const logger = createLogger('monitoring.state');
+const logger = createLogger('monitoring.state', true);
 
 // todo: divide api calls responsibility from state
 class MonitoringState {
@@ -72,11 +72,11 @@ class MonitoringState {
       `Adding notification channel ${channelId} to monitor ${monitorId}`,
     );
 
-    // this._monitors[monitorId].notificationChannelsIds.push(channelId);
-    this._monitors[monitorId].notificationChannelsIds = [channelId];
+    this._monitors[monitorId].notificationChannelsIds.push(channelId);
 
     await httpClient.put(`/http_monitors/${monitorId}`, {
-      notificationChannelsIds: [channelId],
+      notificationChannelsIds:
+        this._monitors[monitorId].notificationChannelsIds,
     });
 
     toast.success(`Notification channel added to monitor ${monitor.name}`);
@@ -108,13 +108,13 @@ class MonitoringState {
       `Removing notification channel ${channelId} from monitor ${monitorId}`,
     );
 
-    // this._monitors[monitorId].notificationChannelsIds = this._monitors[monitorId].notificationChannelsIds.filter(
-    //   (id) => id !== channelId,
-    // );
-    this._monitors[monitorId].notificationChannelsIds = [];
+    this._monitors[monitorId].notificationChannelsIds = this._monitors[
+      monitorId
+    ].notificationChannelsIds.filter((id) => id !== channelId);
 
     await httpClient.put(`/http_monitors/${monitorId}`, {
-      notificationChannelsIds: [],
+      notificationChannelsIds:
+        this._monitors[monitorId].notificationChannelsIds,
     });
 
     toast.success(`Notification channel removed from monitor ${monitor.name}`);

@@ -3,7 +3,7 @@
   import { Feature } from '$lib/shared/types.js';
   import { metricsState } from '../../application/metrics.state.svelte.js';
   import { projectsState } from '../../application/projects.state.svelte.js';
-  import TelegramAlertingSetup from '../notification-channels/telegram-setup/TelegramAlertingSetup.svelte';
+  import NotificationChannelSetupModal from '../notification-channels/NotificationChannelSetupModal.svelte';
   import EmptyState from './EmptyState.svelte';
   import MetricDetails from './MetricDetails/MetricDetails.svelte';
   import ProjectSync from './ProjectSync.svelte';
@@ -46,7 +46,7 @@
 </script>
 
 <ProjectSync>
-  <TelegramAlertingSetup {clusterId} />
+  <NotificationChannelSetupModal {clusterId} />
 
   {#if hasLogging && (!previewedMetricId || isMobile) && metricsState.ready}
     <div class="flex flex-1 flex-col gap-4">

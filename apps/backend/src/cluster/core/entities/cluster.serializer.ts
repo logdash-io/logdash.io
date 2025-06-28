@@ -12,6 +12,7 @@ export class ClusterSerializer {
       tier: entity.tier,
       members: entity.members,
       name: entity.name,
+      roles: entity.roles,
     };
   }
 
@@ -47,6 +48,7 @@ export class ClusterSerializer {
             isPublic: publicDashboard.isPublic,
           }))
         : undefined,
+      roles: normalizedCluster.roles,
     };
   }
 

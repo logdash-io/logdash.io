@@ -13,8 +13,17 @@ class UserState {
     return this._user?.tier || UserTier.FREE;
   }
 
+  // todo: this should be a domain value object
+  humanReadableTier(tier: UserTier): string {
+    return tier.replace('-', ' ');
+  }
+
   get isPaid(): boolean {
     return this.tier !== UserTier.FREE;
+  }
+
+  get isFree(): boolean {
+    return this.tier === UserTier.FREE;
   }
 
   get avatar(): User['avatarUrl'] {

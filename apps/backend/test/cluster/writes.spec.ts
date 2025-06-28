@@ -2,8 +2,13 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
-import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
+import {
+  AuditLogClusterAction,
+  AuditLogEntityAction,
+  AuditLogUserAction,
+} from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
+import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 
 describe('ClusterCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -90,6 +95,20 @@ describe('ClusterCoreController (writes)', () => {
         relatedDomain: RelatedDomain.Cluster,
         relatedEntityId: response.body.id,
       });
+    });
+
+    it('creates cluster with creator role', async () => {
+      // given
+      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/users/me/clusters`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'some name' });
+
+      // then
+      expect(response.body.roles).toEqual({ [user.id]: ClusterRole.Creator });
     });
   });
 
@@ -274,6 +293,59 @@ describe('ClusterCoreController (writes)', () => {
         relatedDomain: RelatedDomain.Cluster,
         relatedEntityId: clusterId,
       });
+    });
+  });
+
+  describe('DELETE /clusters/:clusterId/roles/:userId', () => {
+    it('deletes role from cluster', async () => {
+      // given
+      const { token, user, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const otherSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Write,
+        userId: otherSetup.user.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}/roles/${otherSetup.user.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      const clusterAfterRemoval = await bootstrap.models.clusterModel.findById(cluster.id);
+      expect(clusterAfterRemoval?.roles[otherSetup.user.id]).toBeUndefined();
+
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogClusterAction.RevokedRole,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: cluster.id,
+      });
+
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: otherSetup.user.id,
+        action: AuditLogUserAction.RevokedRoleFromCluster,
+        relatedDomain: RelatedDomain.User,
+        relatedEntityId: cluster.id,
+      });
+    });
+
+    it('throws error when creator tries to delete his role', async () => {
+      // given
+      const { token, user, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}/roles/${user.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        'Cannot delete role. User is the creator of this cluster.',
+      );
     });
   });
 });

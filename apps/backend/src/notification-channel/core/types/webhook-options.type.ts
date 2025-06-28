@@ -1,4 +1,4 @@
-import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsObject, IsOptional, IsString } from 'class-validator';
 
 export enum WebhookHttpMethod {

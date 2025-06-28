@@ -6,12 +6,21 @@
   import type { ClassValue } from 'svelte/elements';
   import { fade } from 'svelte/transition';
   import { upgradeState } from './upgrade.state.svelte.js';
+  import {
+    startTierUpgrade,
+    type UpgradeSource,
+  } from './start-tier-upgrade.util.js';
 
   type Props = {
     class?: ClassValue;
     children?: Snippet;
+    source?: UpgradeSource;
   };
-  const { class: className = '', children }: Props = $props();
+  const {
+    class: className = '',
+    children,
+    source = 'unknown',
+  }: Props = $props();
 
   let isHovered = $state(false);
   let upgrading = $state(false);
@@ -32,8 +41,7 @@
     class="btn btn-neutral relative w-full overflow-hidden"
     onclick={() => {
       upgrading = true;
-      // todo: should it become part of the RoutePath enum?
-      goto('/app/api/user/upgrade');
+      startTierUpgrade(source);
     }}
     onmouseenter={handleMouseEnter}
     onmouseleave={handleMouseLeave}

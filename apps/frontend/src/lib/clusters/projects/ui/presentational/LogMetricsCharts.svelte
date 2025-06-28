@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { LogGranularity } from '$lib/clusters/projects/domain/log-granularity';
   import type { LogMetric } from '$lib/clusters/projects/domain/log-metric';
-  import { logger } from '$lib/shared/logger/index.js';
+  import { createLogger } from '$lib/shared/logger/index.js';
   import * as d3 from 'd3';
   import { onMount } from 'svelte';
 
+  const logger = createLogger('LogMetricsCharts', true);
   // Component props with per-granularity time ranges
   type TimeRanges = {
     minute?: number;

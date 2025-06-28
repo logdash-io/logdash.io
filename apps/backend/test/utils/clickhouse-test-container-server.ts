@@ -23,6 +23,7 @@ export const createClickHouseTestContainer = async (): Promise<void> => {
         mode: 'rw',
       },
     ])
+    .withReuse()
     .start();
 
   global.clickhouseContainer = clickhouseContainer;

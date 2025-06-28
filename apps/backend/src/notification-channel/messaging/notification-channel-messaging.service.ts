@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NotificationChannelProvider } from './notification-channel-provider';
 import { NotificationChannelReadService } from '../read/notification-channel-read.service';
-import { NotificationTarget } from '../core/enums/notification-target.enum';
+import { NotificationChannelType } from '../core/enums/notification-target.enum';
 import { TelegramNotificationChannelProvider } from './providers/telegram.notification-channel-provider';
 import { NotificationChannelNormalized } from '../core/entities/notification-channel.interface';
 import { Logger } from '@logdash/js-sdk';
@@ -48,12 +48,12 @@ export class NotificationChannelMessagingService {
     await provider.sendHttpMonitorAlertMessage({ notificationChannel: channel, ...dto });
   }
 
-  private pickProvider(target: NotificationTarget): NotificationChannelProvider {
-    if (target === NotificationTarget.Telegram) {
+  private pickProvider(target: NotificationChannelType): NotificationChannelProvider {
+    if (target === NotificationChannelType.Telegram) {
       return this.telegramMessagingProvider;
     }
 
-    if (target === NotificationTarget.Webhook) {
+    if (target === NotificationChannelType.Webhook) {
       return this.webhookMessagingProvider;
     }
 

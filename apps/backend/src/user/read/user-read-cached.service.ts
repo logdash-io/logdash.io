@@ -19,16 +19,14 @@ export class UserReadCachedService {
     const tier = await this.redisService.get(cacheKey);
 
     if (tier === 'null') {
-      throw Error(
-        'User not found. You have to wait 5 seconds before trying again',
-      );
+      throw Error('User not found. You have to wait 5 seconds before trying again');
     }
 
     if (tier !== null) {
       return tier as UserTier;
     }
 
-    const user = await this.userReadService.readById(userId);
+    const user = await this.userReadService.readByIdOrThrow(userId);
 
     if (!user) {
       await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);

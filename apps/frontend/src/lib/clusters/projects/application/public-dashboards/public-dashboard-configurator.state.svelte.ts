@@ -35,7 +35,6 @@ export class PublicDashboardManagerState {
     } catch (error) {
       console.error('Failed to create or update public dashboard:', error);
       throw error;
-    } finally {
     }
   }
 
@@ -110,7 +109,6 @@ export class PublicDashboardManagerState {
       );
     } catch (error) {
       console.error('Failed to load public dashboards:', error);
-    } finally {
     }
   }
 

@@ -12,6 +12,8 @@ import { ApiKeyCoreModule } from '../../src/api-key/core/api-key-core.module';
 import { ApiKeyEntity } from '../../src/api-key/core/entities/api-key.entity';
 import { ClusterCoreModule } from '../../src/cluster/core/cluster-core.module';
 import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
+import { ClusterInviteCoreModule } from '../../src/cluster-invite/core/cluster-invite-core.module';
+import { ClusterInviteEntity } from '../../src/cluster-invite/core/entities/cluster-invite.entity';
 import { HttpMonitorEntity } from '../../src/http-monitor/core/entities/http-monitor.entity';
 import { HttpMonitorCoreModule } from '../../src/http-monitor/core/http-monitor-core.module';
 import { HttpPingBucketCoreModule } from '../../src/http-ping-bucket/core/http-ping-bucket-core.module';
@@ -39,7 +41,7 @@ import { UserEntity } from '../../src/user/core/entities/user.entity';
 import { UserCoreModule } from '../../src/user/core/user-core.module';
 import { AuthCoreModule } from './../../src/auth/core/auth-core.module';
 import { rootClickHouseTestModule } from './clickhouse-test-container-server';
-import { ProjectGroupUtils } from './cluster-utils';
+import { ClusterUtils } from './cluster-utils';
 import { NotificationChannelUtils } from './communication-channel-utils';
 import { DemoUtils } from './demo';
 import { GeneralUtils } from './general';
@@ -56,6 +58,7 @@ import { getRedisTestContainerUrl } from './redis-test-container-server';
 import { TelegramUtils } from './telegram-utils';
 import { WebhookUtils } from './webhook-utils';
 import { PublicDashboardUtils } from './public-dashboard-utils';
+import { ClusterInviteUtils } from './cluster-invite-utils';
 import { StripeModule } from '../../src/payments/stripe/stripe.module';
 import { SubscriptionEntity } from '../../src/subscription/core/entities/subscription.entity';
 import { SubscriptionCoreModule } from '../../src/subscription/core/subscription-core.module';
@@ -82,6 +85,7 @@ export async function createTestApp() {
       HttpPingCoreModule,
       HttpPingBucketCoreModule,
       ClusterCoreModule,
+      ClusterInviteCoreModule,
       MetricRegisterCoreModule,
       NotificationChannelCoreModule,
       PublicDashboardCoreModule,
@@ -122,6 +126,9 @@ export async function createTestApp() {
     getModelToken(HttpMonitorEntity.name),
   );
   const clusterModel: Model<ClusterEntity> = module.get(getModelToken(ClusterEntity.name));
+  const clusterInviteModel: Model<ClusterInviteEntity> = module.get(
+    getModelToken(ClusterInviteEntity.name),
+  );
   const notificationChannelModel: Model<NotificationChannelEntity> = module.get(
     getModelToken(NotificationChannelEntity.name),
   );
@@ -147,6 +154,7 @@ export async function createTestApp() {
       metricRegisterModel.deleteMany({}),
       httpMonitorModel.deleteMany({}),
       clusterModel.deleteMany({}),
+      clusterInviteModel.deleteMany({}),
       notificationChannelModel.deleteMany({}),
       publicDashboardModel.deleteMany({}),
       subscriptionModel.deleteMany({}),
@@ -191,6 +199,7 @@ export async function createTestApp() {
       metricRegisterModel,
       httpMonitorModel,
       clusterModel,
+      clusterInviteModel,
       notificationChannelModel,
       publicDashboardModel,
       subscriptionModel,
@@ -202,7 +211,7 @@ export async function createTestApp() {
       metricUtils: new MetricUtils(app),
       logUtils: new LogUtils(app),
       httpMonitorsUtils: new HttpMonitorUtils(app),
-      projectGroupUtils: new ProjectGroupUtils(app),
+      projectGroupUtils: new ClusterUtils(app),
       generalUtils: new GeneralUtils(app),
       demoUtils: new DemoUtils(app),
       notificationChannelUtils: new NotificationChannelUtils(app),
@@ -210,6 +219,7 @@ export async function createTestApp() {
       webhookUtils: new WebhookUtils(app),
       publicDashboardUtils: new PublicDashboardUtils(app),
       auditLogUtils: new AuditLogUtils(app),
+      clusterInviteUtils: new ClusterInviteUtils(app),
     },
     methods: {
       clearDatabase,
