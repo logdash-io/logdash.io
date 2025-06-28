@@ -70,6 +70,7 @@ export class ClusterInviteCoreController {
     const invite = await this.clusterInviteWriteService.create({
       inviterUserId: userId,
       invitedUserId: invitedUser.id,
+      invitedUserEmail: body.email,
       clusterId,
       role: body.role,
     });

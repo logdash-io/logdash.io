@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import SkyBackground from '$lib/shared/upgrade/SkyBackground.svelte';
   import { RocketIcon } from 'lucide-svelte';
   import { getContext, type Snippet } from 'svelte';

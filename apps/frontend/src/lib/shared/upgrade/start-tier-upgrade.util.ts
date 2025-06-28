@@ -12,6 +12,7 @@ export type UpgradeSource =
   | 'feature-restriction'
   | 'webhook-method-restriction'
   | 'webhook-headers-restriction'
+  | 'cluster-invite-limit'
   | 'unknown';
 
 export const startTierUpgrade = (

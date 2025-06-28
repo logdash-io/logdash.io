@@ -12,6 +12,9 @@ export class ClusterInviteEntity {
   @Prop()
   invitedUserId: string;
 
+  @Prop({ required: true })
+  invitedUserEmail: string;
+
   @Prop()
   clusterId: string;
 

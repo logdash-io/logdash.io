@@ -46,7 +46,11 @@ describe('ClusterInviteCoreController (reads)', () => {
 
       expect(response.body).toHaveLength(2);
       expect(response.body[0].clusterId).toBe(cluster.id);
+      expect(response.body[0].invitedUserEmail).toBe(invitedUser1.email);
+      expect(response.body[0].invitedUserId).toBeUndefined();
       expect(response.body[1].clusterId).toBe(cluster.id);
+      expect(response.body[1].invitedUserEmail).toBe(invitedUser2.email);
+      expect(response.body[1].invitedUserId).toBeUndefined();
     });
 
     it('returns empty array when no invites exist for cluster', async () => {
@@ -107,8 +111,10 @@ describe('ClusterInviteCoreController (reads)', () => {
         .expect(200);
 
       expect(response.body).toHaveLength(2);
-      expect(response.body[0].invitedUserId).toBe(invitedUser.id);
-      expect(response.body[1].invitedUserId).toBe(invitedUser.id);
+      expect(response.body[0].invitedUserEmail).toBe(invitedUser.email);
+      expect(response.body[0].invitedUserId).toBeUndefined();
+      expect(response.body[1].invitedUserEmail).toBe(invitedUser.email);
+      expect(response.body[1].invitedUserId).toBeUndefined();
     });
 
     it('returns empty array when user has no invites', async () => {

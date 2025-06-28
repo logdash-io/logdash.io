@@ -26,6 +26,7 @@ export class ClusterInviteWriteService {
     const invite = await this.model.create({
       inviterUserId: dto.inviterUserId,
       invitedUserId: dto.invitedUserId,
+      invitedUserEmail: dto.invitedUserEmail,
       clusterId: dto.clusterId,
       role: dto.role,
     });

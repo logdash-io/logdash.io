@@ -50,8 +50,9 @@ describe('ClusterInviteCoreController (writes)', () => {
 
       expect(response.statusCode).toBe(201);
       expect(response.body.inviterUserId).toBe(inviter.id);
-      expect(response.body.invitedUserId).toBe(invitedUser.id);
+      expect(response.body.invitedUserEmail).toBe(invitedUser.email);
       expect(response.body.clusterId).toBe(cluster.id);
+      expect(response.body.invitedUserId).toBeUndefined();
 
       const entity = (await bootstrap.models.clusterInviteModel.findOne())!;
 
@@ -60,6 +61,7 @@ describe('ClusterInviteCoreController (writes)', () => {
       expect(invite).toMatchObject({
         inviterUserId: inviter.id,
         invitedUserId: invitedUser.id,
+        invitedUserEmail: invitedUser.email,
         clusterId: cluster.id,
         role: ClusterRole.Write,
       });
@@ -234,7 +236,8 @@ describe('ClusterInviteCoreController (writes)', () => {
         .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${otherUserToken}`)
         .send({
-          invitedUserId: invitedUser.id,
+          email: invitedUser.email,
+          role: ClusterRole.Write,
         });
 
       expect(response.statusCode).toBe(403);

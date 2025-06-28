@@ -5,6 +5,7 @@ export interface ClusterInviteNormalized {
   id: string;
   inviterUserId: string;
   invitedUserId: string;
+  invitedUserEmail: string;
   clusterId: string;
   role: ClusterRole;
   createdAt: Date;
@@ -19,7 +20,7 @@ export class ClusterInviteSerialized {
   inviterUserId: string;
 
   @ApiProperty()
-  invitedUserId: string;
+  invitedUserEmail: string;
 
   @ApiProperty()
   clusterId: string;

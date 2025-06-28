@@ -21,6 +21,10 @@ import { envConfig } from './utils/env-config';
 
 type UnauthorizedHandler = () => void;
 
+/**
+ * @deprecated Use infrastructure layer services instead (e.g., ClusterInvitesService)
+ * This class is being phased out in favor of the layered architecture approach
+ */
 class LogdashAPI {
   private static readonly v0baseUrl = envConfig.apiBaseUrl;
   private unauthorizedHandlers: UnauthorizedHandler[] = [];
@@ -600,4 +604,7 @@ logdashAPI.registerUnauthorizedHandler(() => {
   redirect(302, '/app/auth');
 });
 
+/**
+ * @deprecated Use infrastructure layer services instead (e.g., ClusterInvitesService)
+ */
 export { logdashAPI };
