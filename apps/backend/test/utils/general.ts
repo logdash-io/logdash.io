@@ -88,12 +88,15 @@ export class GeneralUtils {
     };
   }
 
-  public async setupClaimed(dto: { email: string; userTier?: UserTier }): Promise<{
+  public async setupClaimed(dto?: { email?: string; userTier?: UserTier }): Promise<{
     token: string;
     user: UserSerialized;
     cluster: ClusterSerialized;
     project: ProjectSerialized;
   }> {
+    const email = dto?.email ?? this.getRandomEmail();
+    const tier = dto?.userTier ?? UserTier.Free;
+
     const anonymousResult = await this.setupAnonymous(dto);
 
     await this.userModel.updateOne(
@@ -102,7 +105,7 @@ export class GeneralUtils {
       },
       {
         accountClaimStatus: AccountClaimStatus.Claimed,
-        email: dto.email,
+        email,
       },
     );
 
@@ -111,7 +114,7 @@ export class GeneralUtils {
         _id: new Types.ObjectId(anonymousResult.cluster.id),
       },
       {
-        tier: dto.userTier,
+        tier,
       },
     );
 
@@ -120,12 +123,12 @@ export class GeneralUtils {
         _id: new Types.ObjectId(anonymousResult.project.id),
       },
       {
-        tier: dto.userTier,
+        tier,
       },
     );
 
-    if (dto.userTier === UserTier.EarlyBird) {
-      await this.setupEarlyBirdSubscription(dto.email);
+    if (tier === UserTier.EarlyBird) {
+      await this.setupEarlyBirdSubscription(email);
     }
 
     const userResponse = await request(this.app.getHttpServer())
@@ -159,5 +162,9 @@ export class GeneralUtils {
     } as unknown as Stripe.InvoicePaymentSucceededEvent;
 
     await handler.handle(event);
+  }
+
+  private getRandomEmail(): string {
+    return `test-${Math.random()}@example.com`;
   }
 }

@@ -46,10 +46,14 @@ export class ClusterInviteCoreController {
     @CurrentUserId() userId: string,
     @Param('clusterId') clusterId: string,
   ): Promise<ClusterInviteSerialized> {
-    await this.userReadService.readByIdOrThrow(body.invitedUserId);
+    const invitedUser = await this.userReadService.readByEmail(body.email);
+
+    if (!invitedUser) {
+      throw new BadRequestException('User with this email not found');
+    }
 
     const existingInvite = await this.clusterInviteReadService.findExistingInvite({
-      invitedUserId: body.invitedUserId,
+      invitedUserId: invitedUser.id,
       clusterId,
     });
 
@@ -65,7 +69,7 @@ export class ClusterInviteCoreController {
 
     const invite = await this.clusterInviteWriteService.create({
       inviterUserId: userId,
-      invitedUserId: body.invitedUserId,
+      invitedUserId: invitedUser.id,
       clusterId,
       role: body.role,
     });

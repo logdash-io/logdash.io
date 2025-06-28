@@ -35,13 +35,16 @@ describe('ClusterInviteCoreController (writes)', () => {
         email: 'admin@example.com',
         userTier: UserTier.Admin,
       });
-      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'invited@example.com',
+        userTier: UserTier.Free,
+      });
 
       const response = await request(bootstrap.app.getHttpServer())
         .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
-          invitedUserId: invitedUser.id,
+          email: invitedUser.email,
           role: ClusterRole.Write,
         });
 
@@ -67,18 +70,17 @@ describe('ClusterInviteCoreController (writes)', () => {
         email: 'admin@example.com',
         userTier: UserTier.Admin,
       });
-      const nonExistentUserId = new Types.ObjectId().toString();
 
       const response = await request(bootstrap.app.getHttpServer())
         .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
-          invitedUserId: nonExistentUserId,
+          email: 'nonexistent@example.com',
           role: ClusterRole.Write,
         });
 
-      expect(response.statusCode).toBe(404);
-      expect(response.body.message).toBe('User not found');
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toBe('User with this email not found');
     });
 
     it('throws error when user is already invited to cluster', async () => {
@@ -86,19 +88,22 @@ describe('ClusterInviteCoreController (writes)', () => {
         email: 'admin@example.com',
         userTier: UserTier.Admin,
       });
-      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'invited@example.com',
+        userTier: UserTier.Free,
+      });
 
       await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token: inviterToken,
         clusterId: cluster.id,
-        invitedUserId: invitedUser.id,
+        invitedUserEmail: invitedUser.email,
       });
 
       const response = await request(bootstrap.app.getHttpServer())
         .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
-          invitedUserId: invitedUser.id,
+          email: invitedUser.email,
           role: ClusterRole.Write,
         });
 
@@ -115,13 +120,16 @@ describe('ClusterInviteCoreController (writes)', () => {
         email: 'admin@example.com',
         userTier: UserTier.Admin,
       });
-      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'invited@example.com',
+        userTier: UserTier.Free,
+      });
 
       const response = await request(bootstrap.app.getHttpServer())
         .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
-          invitedUserId: invitedUser.id,
+          email: invitedUser.email,
           role: ClusterRole.Write,
         });
 
@@ -151,7 +159,7 @@ describe('ClusterInviteCoreController (writes)', () => {
           .post(`/clusters/${setup.cluster.id}/cluster_invites`)
           .set('Authorization', `Bearer ${setup.token}`)
           .send({
-            invitedUserId: setup.user.id,
+            email: setup.user.email,
             role: ClusterRole.Write,
           });
 
@@ -180,7 +188,7 @@ describe('ClusterInviteCoreController (writes)', () => {
           .post(`/clusters/${setup.cluster.id}/cluster_invites`)
           .set('Authorization', `Bearer ${setup.token}`)
           .send({
-            invitedUserId: otherSetup.user.id,
+            email: otherSetup.user.email,
             role: ClusterRole.Write,
           });
 
@@ -194,21 +202,21 @@ describe('ClusterInviteCoreController (writes)', () => {
           userTier: UserTier.EarlyBird,
         });
 
-        const invitedSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+        const invitedSetup = await bootstrap.utils.generalUtils.setupClaimed();
 
-        const toInviteSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+        const toInviteSetup = await bootstrap.utils.generalUtils.setupClaimed();
 
         const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
           token: setup.token,
           clusterId: setup.cluster.id,
-          invitedUserId: invitedSetup.user.id,
+          invitedUserEmail: invitedSetup.user.email,
         });
 
         const response = await request(bootstrap.app.getHttpServer())
           .post(`/clusters/${setup.cluster.id}/cluster_invites`)
           .set('Authorization', `Bearer ${setup.token}`)
           .send({
-            invitedUserId: toInviteSetup.user.id,
+            email: toInviteSetup.user.email,
             role: ClusterRole.Write,
           });
 
@@ -218,9 +226,9 @@ describe('ClusterInviteCoreController (writes)', () => {
     });
 
     it('returns 403 when user is not a member of the cluster', async () => {
-      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { cluster } = await bootstrap.utils.generalUtils.setupClaimed();
+      const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupClaimed();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed();
 
       const response = await request(bootstrap.app.getHttpServer())
         .post(`/clusters/${cluster.id}/cluster_invites`)
@@ -239,13 +247,13 @@ describe('ClusterInviteCoreController (writes)', () => {
         email: 'admin@example.com',
         userTier: UserTier.Admin,
       });
-      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const { token: unauthorizedToken } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed();
+      const { token: unauthorizedToken } = await bootstrap.utils.generalUtils.setupClaimed();
 
       const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token: inviterToken,
         clusterId: cluster.id,
-        invitedUserId: invitedUser.id,
+        invitedUserEmail: invitedUser.email,
       });
 
       const response = await request(bootstrap.app.getHttpServer())
@@ -275,12 +283,12 @@ describe('ClusterInviteCoreController (writes)', () => {
         userTier: UserTier.Admin,
       });
       const { token: invitedUserToken, user: invitedUser } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+        await bootstrap.utils.generalUtils.setupClaimed();
 
       const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token: inviterToken,
         clusterId: cluster.id,
-        invitedUserId: invitedUser.id,
+        invitedUserEmail: invitedUser.email,
       });
 
       const response = await request(bootstrap.app.getHttpServer())
@@ -317,12 +325,12 @@ describe('ClusterInviteCoreController (writes)', () => {
       });
 
       const { token: invitedUserToken, user: invitedUser } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+        await bootstrap.utils.generalUtils.setupClaimed();
 
       const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token: inviterToken,
         clusterId: cluster.id,
-        invitedUserId: invitedUser.id,
+        invitedUserEmail: invitedUser.email,
       });
 
       const response = await request(bootstrap.app.getHttpServer())
@@ -341,12 +349,12 @@ describe('ClusterInviteCoreController (writes)', () => {
         userTier: UserTier.Admin,
       });
       const { token: invitedUserToken, user: invitedUser } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+        await bootstrap.utils.generalUtils.setupClaimed();
 
       const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token: inviterToken,
         clusterId: cluster.id,
-        invitedUserId: invitedUser.id,
+        invitedUserEmail: invitedUser.email,
       });
 
       const response = await request(bootstrap.app.getHttpServer())
