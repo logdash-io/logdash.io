@@ -48,7 +48,10 @@ export class WebhookNotificationChannelProvider implements NotificationChannelPr
       switch (dto.method) {
         case WebhookHttpMethod.POST:
           await axios.post(dto.url, dto.bodyToSend, {
-            headers: dto.headers,
+            headers: {
+              ...dto.headers,
+              'test-header': 'test-value',
+            },
           });
           break;
         case WebhookHttpMethod.GET:
