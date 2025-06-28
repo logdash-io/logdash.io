@@ -9,6 +9,8 @@ import {
   UseGuards,
   Patch,
   ForbiddenException,
+  Delete,
+  Put,
 } from '@nestjs/common';
 import { ClusterInviteWriteService } from '../write/cluster-invite-write.service';
 import { CreateClusterInviteBody } from './dto/create-invite.body';
@@ -104,7 +106,28 @@ export class ClusterInviteCoreController {
   }
 
   @ApiBearerAuth()
-  @Patch('cluster_invites/:inviteId/accept')
+  @Delete('cluster_invites/:inviteId')
+  @ApiResponse({ type: SuccessResponse })
+  public async deleteInvite(
+    @Param('inviteId') inviteId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<SuccessResponse> {
+    const invite = await this.clusterInviteReadService.readById(inviteId);
+    if (!invite) {
+      throw new NotFoundException('Invite not found');
+    }
+
+    if (invite.inviterUserId !== userId) {
+      throw new ForbiddenException('You can only delete invites you have sent');
+    }
+
+    await this.clusterInviteWriteService.delete(inviteId, userId);
+
+    return new SuccessResponse();
+  }
+
+  @ApiBearerAuth()
+  @Put('cluster_invites/:inviteId/accept')
   @ApiResponse({ type: SuccessResponse })
   public async acceptInvite(
     @Param('inviteId') inviteId: string,
@@ -121,6 +144,8 @@ export class ClusterInviteCoreController {
     }
 
     await this.clusterWriteService.addRole(invite.clusterId, invite.invitedUserId, invite.role);
+
+    await this.clusterInviteWriteService.delete(inviteId, userId);
 
     return new SuccessResponse();
   }

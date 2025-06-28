@@ -233,7 +233,7 @@ describe('ClusterInviteCoreController (writes)', () => {
     });
   });
 
-  describe('PATCH /cluster_invites/:inviteId/accept', () => {
+  describe('PUT /cluster_invites/:inviteId/accept', () => {
     it('validates invite ownership', async () => {
       const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'admin@example.com',
@@ -249,7 +249,7 @@ describe('ClusterInviteCoreController (writes)', () => {
       });
 
       const response = await request(bootstrap.app.getHttpServer())
-        .patch(`/cluster_invites/${invite.id}/accept`)
+        .put(`/cluster_invites/${invite.id}/accept`)
         .set('Authorization', `Bearer ${unauthorizedToken}`);
 
       expect(response.body.message).toBe('You can only accept invites sent to you');
@@ -263,7 +263,7 @@ describe('ClusterInviteCoreController (writes)', () => {
       const nonExistentInviteId = new Types.ObjectId().toString();
 
       const response = await request(bootstrap.app.getHttpServer())
-        .patch(`/cluster_invites/${nonExistentInviteId}/accept`)
+        .put(`/cluster_invites/${nonExistentInviteId}/accept`)
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.body.message).toBe('Invite not found');
@@ -284,7 +284,7 @@ describe('ClusterInviteCoreController (writes)', () => {
       });
 
       const response = await request(bootstrap.app.getHttpServer())
-        .patch(`/cluster_invites/${invite.id}/accept`)
+        .put(`/cluster_invites/${invite.id}/accept`)
         .set('Authorization', `Bearer ${invitedUserToken}`)
         .expect(200);
 
@@ -306,6 +306,55 @@ describe('ClusterInviteCoreController (writes)', () => {
 
       const updatedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
       expect(updatedCluster?.roles[invitedUser.id]).toBe(ClusterRole.Write);
+    });
+  });
+
+  describe('DELETE /cluster_invites/:inviteId', () => {
+    it('deletes invite', async () => {
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
+
+      const { token: invitedUserToken, user: invitedUser } =
+        await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: inviterToken,
+        clusterId: cluster.id,
+        invitedUserId: invitedUser.id,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/cluster_invites/${invite.id}`)
+        .set('Authorization', `Bearer ${inviterToken}`);
+
+      expect(response.statusCode).toBe(200);
+
+      const invites = await bootstrap.models.clusterInviteModel.find({});
+      expect(invites.length).toBe(0);
+    });
+
+    it('throws error when user other than inviter tries to delete invite', async () => {
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
+      const { token: invitedUserToken, user: invitedUser } =
+        await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: inviterToken,
+        clusterId: cluster.id,
+        invitedUserId: invitedUser.id,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/cluster_invites/${invite.id}`)
+        .set('Authorization', `Bearer ${invitedUserToken}`);
+
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe('You can only delete invites you have sent');
     });
   });
 });
