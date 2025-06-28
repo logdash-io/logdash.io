@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { ClusterRole } from '../../../cluster/core/enums/cluster-role.enum';
 
-@Schema({ collection: 'cluster-invites', timestamps: true })
+@Schema({ collection: 'clusterInvites', timestamps: true })
 export class ClusterInviteEntity {
   _id: string;
 
@@ -18,10 +18,7 @@ export class ClusterInviteEntity {
   @Prop()
   role: ClusterRole;
 
-  @Prop()
   createdAt: Date;
-
-  @Prop()
   updatedAt: Date;
 }
 
