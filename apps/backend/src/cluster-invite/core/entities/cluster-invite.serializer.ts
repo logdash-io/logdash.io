@@ -8,6 +8,7 @@ export class ClusterInviteSerializer {
       inviterUserId: entity.inviterUserId,
       invitedUserId: entity.invitedUserId,
       clusterId: entity.clusterId,
+      role: entity.role,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };
@@ -23,6 +24,7 @@ export class ClusterInviteSerializer {
       inviterUserId: entity.inviterUserId,
       invitedUserId: entity.invitedUserId,
       clusterId: entity.clusterId,
+      role: entity.role,
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),
     };

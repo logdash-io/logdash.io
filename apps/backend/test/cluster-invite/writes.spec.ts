@@ -1,8 +1,13 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
-import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
+import {
+  AuditLogClusterAction,
+  AuditLogUserAction,
+} from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
+import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
+import { ClusterInviteSerializer } from '../../src/cluster-invite/core/entities/cluster-invite.serializer';
 
 describe('ClusterInviteCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -33,6 +38,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
           invitedUserId: invitedUser.id,
+          role: ClusterRole.Write,
         });
 
       expect(response.statusCode).toBe(201);
@@ -40,13 +46,16 @@ describe('ClusterInviteCoreController (writes)', () => {
       expect(response.body.invitedUserId).toBe(invitedUser.id);
       expect(response.body.clusterId).toBe(cluster.id);
 
-      const entity = await bootstrap.models.clusterInviteModel.findOne({
+      const entity = (await bootstrap.models.clusterInviteModel.findOne())!;
+
+      const invite = ClusterInviteSerializer.normalize(entity);
+
+      expect(invite).toMatchObject({
         inviterUserId: inviter.id,
         invitedUserId: invitedUser.id,
         clusterId: cluster.id,
+        role: ClusterRole.Write,
       });
-
-      expect(entity).toBeTruthy();
     });
 
     it('throws error when invited user does not exist', async () => {
@@ -58,6 +67,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
           invitedUserId: nonExistentUserId,
+          role: ClusterRole.Write,
         });
 
       expect(response.statusCode).toBe(404);
@@ -79,6 +89,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
           invitedUserId: invitedUser.id,
+          role: ClusterRole.Write,
         });
 
       expect(response.statusCode).toBe(400);
@@ -98,13 +109,21 @@ describe('ClusterInviteCoreController (writes)', () => {
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
           invitedUserId: invitedUser.id,
+          role: ClusterRole.Write,
         });
 
       await bootstrap.utils.auditLogUtils.assertAuditLog({
         userId: inviter.id,
-        action: AuditLogEntityAction.Create,
+        action: AuditLogClusterAction.InvitedUser,
         relatedDomain: RelatedDomain.Cluster,
         relatedEntityId: response.body.id,
+      });
+
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: invitedUser.id,
+        action: AuditLogUserAction.GotInvitedToCluster,
+        relatedDomain: RelatedDomain.User,
+        relatedEntityId: invitedUser.id,
       });
     });
 
@@ -154,7 +173,7 @@ describe('ClusterInviteCoreController (writes)', () => {
       expect(response.body.message).toBe('Invite not found');
     });
 
-    it('accepts invite successfully (placeholder implementation)', async () => {
+    it('accepts invite successfully', async () => {
       const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { token: invitedUserToken, user: invitedUser } =
         await bootstrap.utils.generalUtils.setupAnonymous();
@@ -171,6 +190,23 @@ describe('ClusterInviteCoreController (writes)', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
+
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: invitedUser.id,
+        action: AuditLogUserAction.AcceptedInviteToCluster,
+        relatedDomain: RelatedDomain.User,
+        relatedEntityId: cluster.id,
+      });
+
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: invitedUser.id,
+        action: AuditLogClusterAction.AcceptedInvite,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: cluster.id,
+      });
+
+      const updatedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
+      expect(updatedCluster?.roles[invitedUser.id]).toBe(ClusterRole.Write);
     });
   });
 });

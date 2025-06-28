@@ -20,6 +20,7 @@ import { ClusterInviteReadService } from '../read/cluster-invite-read.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import { SuccessResponse } from '../../shared/responses/success.response';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
+import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 
 @ApiTags('Cluster Invites')
 @Controller()
@@ -27,6 +28,7 @@ export class ClusterInviteCoreController {
   constructor(
     private readonly clusterInviteWriteService: ClusterInviteWriteService,
     private readonly clusterInviteReadService: ClusterInviteReadService,
+    private readonly clusterWriteService: ClusterWriteService,
     private readonly userReadService: UserReadService,
   ) {}
 
@@ -54,6 +56,7 @@ export class ClusterInviteCoreController {
       inviterUserId: userId,
       invitedUserId: body.invitedUserId,
       clusterId,
+      role: body.role,
     });
 
     return ClusterInviteSerializer.serialize(invite);
@@ -96,6 +99,8 @@ export class ClusterInviteCoreController {
     if (invite.invitedUserId !== userId) {
       throw new ForbiddenException('You can only accept invites sent to you');
     }
+
+    await this.clusterWriteService.addRole(invite.clusterId, invite.invitedUserId, invite.role);
 
     return new SuccessResponse();
   }

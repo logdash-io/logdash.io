@@ -9,9 +9,14 @@ import { UpdateClusterDto } from './dto/update-cluster.dto';
 import { ClusterTier } from '../core/enums/cluster-tier.enum';
 import { Metrics } from '@logdash/js-sdk';
 import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
-import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
+import {
+  AuditLogClusterAction,
+  AuditLogEntityAction,
+  AuditLogUserAction,
+} from '../../audit-log/core/enums/audit-log-actions.enum';
 import { Actor } from '../../audit-log/core/enums/actor.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
+import { ClusterRole } from '../core/enums/cluster-role.enum';
 @Injectable()
 export class ClusterWriteService {
   constructor(
@@ -104,10 +109,53 @@ export class ClusterWriteService {
     await this.model.deleteOne({ _id: new Types.ObjectId(id) });
   }
 
-  public async deleteRole(clusterId: string, userId: string): Promise<void> {
+  public async deleteRole(clusterId: string, userId: string, actorUserId?: string): Promise<void> {
+    this.auditLog.create({
+      userId: actorUserId,
+      actor: actorUserId ? Actor.User : Actor.System,
+      action: AuditLogClusterAction.RevokedRole,
+      relatedDomain: RelatedDomain.Cluster,
+      relatedEntityId: clusterId,
+      description: `Revoked role from user ${userId}`,
+    });
+
+    this.auditLog.create({
+      userId: userId,
+      actor: Actor.User,
+      action: AuditLogUserAction.RevokedRoleFromCluster,
+      relatedDomain: RelatedDomain.User,
+      relatedEntityId: clusterId,
+      description: `This user role has been revoked from cluster ${clusterId}`,
+    });
+
     await this.model.updateOne(
       { _id: new Types.ObjectId(clusterId) },
       { $unset: { [`roles.${userId}`]: 1 } },
     );
+  }
+
+  public async addRole(clusterId: string, userId: string, role: ClusterRole): Promise<void> {
+    await this.model.updateOne(
+      { _id: new Types.ObjectId(clusterId) },
+      { $set: { [`roles.${userId}`]: role } },
+    );
+
+    this.auditLog.create({
+      userId: userId,
+      actor: Actor.User,
+      action: AuditLogUserAction.AcceptedInviteToCluster,
+      relatedDomain: RelatedDomain.User,
+      relatedEntityId: clusterId,
+      description: `Accepted invite to cluster ${clusterId} with role ${role}`,
+    });
+
+    this.auditLog.create({
+      userId: userId,
+      actor: Actor.System,
+      action: AuditLogClusterAction.AcceptedInvite,
+      relatedDomain: RelatedDomain.Cluster,
+      relatedEntityId: clusterId,
+      description: `Accepted invite for user ${userId} to cluster ${clusterId} with role ${role}`,
+    });
   }
 }

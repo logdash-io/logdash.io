@@ -6,6 +6,9 @@ export enum AuditLogEntityAction {
 
 export enum AuditLogUserAction {
   GithubLogin = 'githubLogin',
+  GotInvitedToCluster = 'gotInvitedToCluster',
+  AcceptedInviteToCluster = 'acceptedInviteToCluster',
+  RevokedRoleFromCluster = 'revokedRoleFromCluster',
 }
 
 export enum AuditLogNotificationChannelAction {
@@ -16,4 +19,11 @@ export enum AuditLogNotificationChannelAction {
 export enum AuditLogHttpMonitorAction {
   AddedNotificationChannel = 'addedNotificationChannel',
   RemovedNotificationChannel = 'removedNotificationChannel',
+}
+
+export enum AuditLogClusterAction {
+  InvitedUser = 'invitedUser',
+  AcceptedInvite = 'acceptedInvite',
+  RevokedRole = 'revokedRole',
+  DeletedInvite = 'deletedInvite',
 }

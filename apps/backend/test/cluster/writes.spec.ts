@@ -2,7 +2,11 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
-import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
+import {
+  AuditLogClusterAction,
+  AuditLogEntityAction,
+  AuditLogUserAction,
+} from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 
@@ -312,6 +316,20 @@ describe('ClusterCoreController (writes)', () => {
       // then
       const clusterAfterRemoval = await bootstrap.models.clusterModel.findById(cluster.id);
       expect(clusterAfterRemoval?.roles[otherSetup.user.id]).toBeUndefined();
+
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogClusterAction.RevokedRole,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: cluster.id,
+      });
+
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: otherSetup.user.id,
+        action: AuditLogUserAction.RevokedRoleFromCluster,
+        relatedDomain: RelatedDomain.User,
+        relatedEntityId: cluster.id,
+      });
     });
 
     it('throws error when creator tries to delete his role', async () => {

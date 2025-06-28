@@ -6,7 +6,11 @@ import { CreateClusterInviteDto } from './dto/create-invite.dto';
 import { ClusterInviteNormalized } from '../core/entities/cluster-invite.interface';
 import { ClusterInviteSerializer } from '../core/entities/cluster-invite.serializer';
 import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
-import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
+import {
+  AuditLogClusterAction,
+  AuditLogEntityAction,
+  AuditLogUserAction,
+} from '../../audit-log/core/enums/audit-log-actions.enum';
 import { Actor } from '../../audit-log/core/enums/actor.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 
@@ -23,15 +27,25 @@ export class ClusterInviteWriteService {
       inviterUserId: dto.inviterUserId,
       invitedUserId: dto.invitedUserId,
       clusterId: dto.clusterId,
+      role: dto.role,
     });
 
     this.auditLog.create({
       userId: dto.inviterUserId,
-      action: AuditLogEntityAction.Create,
+      action: AuditLogClusterAction.InvitedUser,
       actor: Actor.User,
       relatedDomain: RelatedDomain.Cluster,
       relatedEntityId: invite._id.toString(),
-      description: `Invited user ${dto.invitedUserId} to cluster ${dto.clusterId}`,
+      description: `Invited user ${dto.invitedUserId} to cluster ${dto.clusterId} with role ${dto.role}`,
+    });
+
+    this.auditLog.create({
+      userId: dto.invitedUserId,
+      action: AuditLogUserAction.GotInvitedToCluster,
+      actor: Actor.User,
+      relatedDomain: RelatedDomain.User,
+      relatedEntityId: dto.invitedUserId,
+      description: `You have been invited to cluster ${dto.clusterId} with role ${dto.role}`,
     });
 
     return ClusterInviteSerializer.normalize(invite);
@@ -41,10 +55,10 @@ export class ClusterInviteWriteService {
     await this.auditLog.create({
       userId: actorUserId,
       actor: actorUserId ? Actor.User : Actor.System,
-      action: AuditLogEntityAction.Delete,
+      action: AuditLogClusterAction.DeletedInvite,
       relatedDomain: RelatedDomain.Cluster,
       relatedEntityId: inviteId,
-      description: 'Cluster invite deleted',
+      description: `Cluster invite ${inviteId} deleted`,
     });
 
     await this.model.deleteOne({ _id: new Types.ObjectId(inviteId) });
