@@ -201,7 +201,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
           token: setup.token,
           clusterId: setup.cluster.id,
-          invitedUserId: toInviteSetup.user.id,
+          invitedUserId: invitedSetup.user.id,
         });
 
         const response = await request(bootstrap.app.getHttpServer())
@@ -235,7 +235,10 @@ describe('ClusterInviteCoreController (writes)', () => {
 
   describe('PATCH /cluster_invites/:inviteId/accept', () => {
     it('validates invite ownership', async () => {
-      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
       const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { token: unauthorizedToken } = await bootstrap.utils.generalUtils.setupAnonymous();
 
@@ -253,7 +256,10 @@ describe('ClusterInviteCoreController (writes)', () => {
     });
 
     it('throws error when invite does not exist', async () => {
-      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
       const nonExistentInviteId = new Types.ObjectId().toString();
 
       const response = await request(bootstrap.app.getHttpServer())
@@ -264,7 +270,10 @@ describe('ClusterInviteCoreController (writes)', () => {
     });
 
     it('accepts invite successfully', async () => {
-      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
       const { token: invitedUserToken, user: invitedUser } =
         await bootstrap.utils.generalUtils.setupAnonymous();
 

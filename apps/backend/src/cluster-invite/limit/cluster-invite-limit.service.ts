@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ClusterInviteReadService } from '../read/cluster-invite-read.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
-import { ClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
 
 @Injectable()
 export class ClusterInviteLimitService {

@@ -1,5 +1,6 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('ClusterInviteCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -18,7 +19,10 @@ describe('ClusterInviteCoreController (reads)', () => {
 
   describe('GET /clusters/:clusterId/cluster_invites', () => {
     it('returns invites for a cluster', async () => {
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
       const { user: invitedUser1 } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { user: invitedUser2 } = await bootstrap.utils.generalUtils.setupAnonymous();
 
@@ -70,10 +74,18 @@ describe('ClusterInviteCoreController (reads)', () => {
   describe('GET /users/me/cluster_invites', () => {
     it('returns invites for the current user', async () => {
       const { token: inviterToken, cluster: cluster1 } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
-      const { token: invitedUserToken, user: invitedUser } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+        await bootstrap.utils.generalUtils.setupClaimed({
+          email: 'admin1@example.com',
+          userTier: UserTier.Admin,
+        });
+
       const { token: inviterToken2, cluster: cluster2 } =
+        await bootstrap.utils.generalUtils.setupClaimed({
+          email: 'admin2@example.com',
+          userTier: UserTier.Admin,
+        });
+
+      const { token: invitedUserToken, user: invitedUser } =
         await bootstrap.utils.generalUtils.setupAnonymous();
 
       await bootstrap.utils.clusterInviteUtils.createClusterInvite({
