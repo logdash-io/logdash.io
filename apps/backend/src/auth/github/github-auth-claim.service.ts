@@ -60,7 +60,7 @@ export class GithubAuthClaimService {
 
     const userWithThisEmail = await this.userReadService.readByEmail(email);
 
-    const existingTempUserById = await this.userReadService.readById(userId);
+    const existingTempUserById = await this.userReadService.readByIdOrThrow(userId);
 
     if (userWithThisEmail) {
       return this.claimExistingUser(existingTempUserById.id, userWithThisEmail.id);

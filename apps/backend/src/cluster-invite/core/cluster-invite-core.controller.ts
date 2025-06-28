@@ -8,6 +8,7 @@ import {
   NotFoundException,
   UseGuards,
   Patch,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ClusterInviteWriteService } from '../write/cluster-invite-write.service';
 import { CreateClusterInviteBody } from './dto/create-invite.body';
@@ -18,6 +19,7 @@ import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ClusterInviteReadService } from '../read/cluster-invite-read.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import { SuccessResponse } from '../../shared/responses/success.response';
+import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 
 @ApiTags('Cluster Invites')
 @Controller()
@@ -28,6 +30,7 @@ export class ClusterInviteCoreController {
     private readonly userReadService: UserReadService,
   ) {}
 
+  @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Post('clusters/:clusterId/cluster_invites')
   @ApiResponse({ type: ClusterInviteSerialized })
@@ -36,10 +39,7 @@ export class ClusterInviteCoreController {
     @CurrentUserId() userId: string,
     @Param('clusterId') clusterId: string,
   ): Promise<ClusterInviteSerialized> {
-    const invitedUser = await this.userReadService.readById(body.invitedUserId);
-    if (!invitedUser) {
-      throw new NotFoundException('Invited user not found');
-    }
+    await this.userReadService.readByIdOrThrow(body.invitedUserId);
 
     const existingInvite = await this.clusterInviteReadService.findExistingInvite({
       invitedUserId: body.invitedUserId,
@@ -59,6 +59,7 @@ export class ClusterInviteCoreController {
     return ClusterInviteSerializer.serialize(invite);
   }
 
+  @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Get('clusters/:clusterId/cluster_invites')
   @ApiResponse({ type: ClusterInviteSerialized, isArray: true })
@@ -93,7 +94,7 @@ export class ClusterInviteCoreController {
     }
 
     if (invite.invitedUserId !== userId) {
-      throw new BadRequestException('You can only accept invites sent to you');
+      throw new ForbiddenException('You can only accept invites sent to you');
     }
 
     return new SuccessResponse();

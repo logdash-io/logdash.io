@@ -41,7 +41,7 @@ export class StripeService {
   }
 
   public async getCustomerPortalUrl(userId: string): Promise<string> {
-    const user = await this.userReadService.readById(userId);
+    const user = await this.userReadService.readByIdOrThrow(userId);
 
     if (!user) {
       this.logger.error(`[STRIPE] User not found with id`, { userId });

@@ -1,7 +1,6 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
-import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 
@@ -22,108 +21,80 @@ describe('ClusterInviteCoreController (writes)', () => {
 
   describe('POST /clusters/:clusterId/cluster_invites', () => {
     it('creates new cluster invite', async () => {
-      const { token: inviterToken, user: inviter } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const {
+        token: inviterToken,
+        user: inviter,
+        cluster,
+      } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const cluster = await bootstrap.models.clusterModel.create({
-        _id: new Types.ObjectId(),
-        name: 'Test Cluster',
-        creatorId: inviter.id,
-        members: [inviter.id],
-        tier: ClusterTier.Free,
-      });
-
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/clusters/${cluster._id.toString()}/cluster_invites`)
+        .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
           invitedUserId: invitedUser.id,
-        })
-        .expect(201);
+        });
 
+      expect(response.statusCode).toBe(201);
       expect(response.body.inviterUserId).toBe(inviter.id);
       expect(response.body.invitedUserId).toBe(invitedUser.id);
-      expect(response.body.clusterId).toBe(cluster._id.toString());
+      expect(response.body.clusterId).toBe(cluster.id);
 
       const entity = await bootstrap.models.clusterInviteModel.findOne({
         inviterUserId: inviter.id,
         invitedUserId: invitedUser.id,
-        clusterId: cluster._id.toString(),
+        clusterId: cluster.id,
       });
 
       expect(entity).toBeTruthy();
     });
 
     it('throws error when invited user does not exist', async () => {
-      const { token: inviterToken } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
       const nonExistentUserId = new Types.ObjectId().toString();
 
-      const cluster = await bootstrap.models.clusterModel.create({
-        _id: new Types.ObjectId(),
-        name: 'Test Cluster',
-        creatorId: 'some-creator-id',
-        members: ['some-creator-id'],
-        tier: ClusterTier.Free,
-      });
-
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/clusters/${cluster._id.toString()}/cluster_invites`)
+        .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
           invitedUserId: nonExistentUserId,
-        })
-        .expect(404);
+        });
 
-      expect(response.body.message).toBe('Invited user not found');
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toBe('User not found');
     });
 
     it('throws error when user is already invited to cluster', async () => {
-      const { token: inviterToken, user: inviter } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const cluster = await bootstrap.models.clusterModel.create({
-        _id: new Types.ObjectId(),
-        name: 'Test Cluster',
-        creatorId: inviter.id,
-        members: [inviter.id],
-        tier: ClusterTier.Free,
-      });
-
-      await bootstrap.models.clusterInviteModel.create({
-        _id: new Types.ObjectId(),
-        inviterUserId: inviter.id,
+      await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: inviterToken,
+        clusterId: cluster.id,
         invitedUserId: invitedUser.id,
-        clusterId: cluster._id.toString(),
       });
 
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/clusters/${cluster._id.toString()}/cluster_invites`)
+        .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
           invitedUserId: invitedUser.id,
-        })
-        .expect(400);
+        });
 
+      expect(response.statusCode).toBe(400);
       expect(response.body.message).toBe('User is already invited to this cluster');
     });
 
     it('creates audit log when invite is created', async () => {
-      const { token: inviterToken, user: inviter } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const {
+        token: inviterToken,
+        user: inviter,
+        cluster,
+      } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const cluster = await bootstrap.models.clusterModel.create({
-        _id: new Types.ObjectId(),
-        name: 'Test Cluster',
-        creatorId: inviter.id,
-        members: [inviter.id],
-        tier: ClusterTier.Free,
-      });
-
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/clusters/${cluster._id.toString()}/cluster_invites`)
+        .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
           invitedUserId: invitedUser.id,
@@ -136,34 +107,38 @@ describe('ClusterInviteCoreController (writes)', () => {
         relatedEntityId: response.body.id,
       });
     });
+
+    it('returns 403 when user is not a member of the cluster', async () => {
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/cluster_invites`)
+        .set('Authorization', `Bearer ${otherUserToken}`)
+        .send({
+          invitedUserId: invitedUser.id,
+        });
+
+      expect(response.statusCode).toBe(403);
+    });
   });
 
   describe('PATCH /cluster_invites/:inviteId/accept', () => {
     it('validates invite ownership', async () => {
-      const { user: inviter } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const { token: invitedUserToken, user: invitedUser } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { token: unauthorizedToken } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const cluster = await bootstrap.models.clusterModel.create({
-        _id: new Types.ObjectId(),
-        name: 'Test Cluster',
-        creatorId: inviter.id,
-        members: [inviter.id],
-        tier: ClusterTier.Free,
-      });
-
-      const invite = await bootstrap.models.clusterInviteModel.create({
-        _id: new Types.ObjectId(),
-        inviterUserId: inviter.id,
+      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: inviterToken,
+        clusterId: cluster.id,
         invitedUserId: invitedUser.id,
-        clusterId: cluster._id.toString(),
       });
 
       const response = await request(bootstrap.app.getHttpServer())
-        .patch(`/cluster_invites/${invite._id.toString()}/accept`)
-        .set('Authorization', `Bearer ${unauthorizedToken}`)
-        .expect(400);
+        .patch(`/cluster_invites/${invite.id}/accept`)
+        .set('Authorization', `Bearer ${unauthorizedToken}`);
 
       expect(response.body.message).toBe('You can only accept invites sent to you');
     });
@@ -174,34 +149,24 @@ describe('ClusterInviteCoreController (writes)', () => {
 
       const response = await request(bootstrap.app.getHttpServer())
         .patch(`/cluster_invites/${nonExistentInviteId}/accept`)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(404);
+        .set('Authorization', `Bearer ${token}`);
 
       expect(response.body.message).toBe('Invite not found');
     });
 
     it('accepts invite successfully (placeholder implementation)', async () => {
-      const { user: inviter } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { token: invitedUserToken, user: invitedUser } =
         await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const cluster = await bootstrap.models.clusterModel.create({
-        _id: new Types.ObjectId(),
-        name: 'Test Cluster',
-        creatorId: inviter.id,
-        members: [inviter.id],
-        tier: ClusterTier.Free,
-      });
-
-      const invite = await bootstrap.models.clusterInviteModel.create({
-        _id: new Types.ObjectId(),
-        inviterUserId: inviter.id,
+      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: inviterToken,
+        clusterId: cluster.id,
         invitedUserId: invitedUser.id,
-        clusterId: cluster._id.toString(),
       });
 
       const response = await request(bootstrap.app.getHttpServer())
-        .patch(`/cluster_invites/${invite._id.toString()}/accept`)
+        .patch(`/cluster_invites/${invite.id}/accept`)
         .set('Authorization', `Bearer ${invitedUserToken}`)
         .expect(200);
 

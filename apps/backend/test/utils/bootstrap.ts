@@ -58,6 +58,7 @@ import { getRedisTestContainerUrl } from './redis-test-container-server';
 import { TelegramUtils } from './telegram-utils';
 import { WebhookUtils } from './webhook-utils';
 import { PublicDashboardUtils } from './public-dashboard-utils';
+import { ClusterInviteUtils } from './cluster-invite-utils';
 import { StripeModule } from '../../src/payments/stripe/stripe.module';
 import { SubscriptionEntity } from '../../src/subscription/core/entities/subscription.entity';
 import { SubscriptionCoreModule } from '../../src/subscription/core/subscription-core.module';
@@ -218,6 +219,7 @@ export async function createTestApp() {
       webhookUtils: new WebhookUtils(app),
       publicDashboardUtils: new PublicDashboardUtils(app),
       auditLogUtils: new AuditLogUtils(app),
+      clusterInviteUtils: new ClusterInviteUtils(app),
     },
     methods: {
       clearDatabase,

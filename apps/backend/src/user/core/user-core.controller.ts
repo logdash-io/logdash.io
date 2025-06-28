@@ -28,10 +28,8 @@ export class UserCoreController {
 
   @Get('me')
   @ApiResponse({ type: UserSerialized })
-  public async readCurrentUser(
-    @CurrentUserId() userId,
-  ): Promise<UserSerialized> {
-    const user = await this.userReadService.readById(userId);
+  public async readCurrentUser(@CurrentUserId() userId): Promise<UserSerialized> {
+    const user = await this.userReadService.readByIdOrThrow(userId);
 
     return UserSerializer.serialize(user);
   }
@@ -42,7 +40,7 @@ export class UserCoreController {
     @CurrentUserId() userId,
     @Body() dto: UpdatePublicUserBody,
   ): Promise<UserSerialized> {
-    const user = await this.userReadService.readById(userId);
+    const user = await this.userReadService.readByIdOrThrow(userId);
 
     return UserSerializer.serialize(user);
   }

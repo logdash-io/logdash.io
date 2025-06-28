@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserNormalized } from '../core/entities/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserEntity } from '../core/entities/user.entity';
@@ -10,11 +10,11 @@ import { AccountClaimStatus } from '../core/enum/account-claim-status.enum';
 export class UserReadService {
   constructor(@InjectModel(UserEntity.name) private userModel: Model<UserEntity>) {}
 
-  public async readById(id: string): Promise<UserNormalized> {
+  public async readByIdOrThrow(id: string): Promise<UserNormalized> {
     const user = await this.userModel.findById(id).lean<UserEntity>().exec();
 
     if (!user) {
-      throw new Error(`User with id: ${id} not found for read`);
+      throw new NotFoundException(`User not found`);
     }
 
     return UserSerializer.normalize(user);
