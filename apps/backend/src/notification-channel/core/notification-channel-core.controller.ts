@@ -22,6 +22,8 @@ import { NotificationChannelReadService } from '../read/notification-channel-rea
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { NotificationChannelOptionsValidationService } from './notification-channel-options-validation.service';
 import { NotificationChannelMessagingService } from '../messaging/notification-channel-messaging.service';
+import { UserReadCachedService } from '../../user/read/user-read-cached.service';
+import { NotificationChannelTierValidationService } from './notification-channel-tier-validation.service';
 
 @Controller()
 @ApiTags('Notification channels')
@@ -32,6 +34,8 @@ export class NotificationChannelCoreController {
     private readonly notificationChannelReadService: NotificationChannelReadService,
     private readonly notificationChannelOptionsValidationService: NotificationChannelOptionsValidationService,
     private readonly notificationChannelMessagingService: NotificationChannelMessagingService,
+    private readonly userReadCachedService: UserReadCachedService,
+    private readonly notificationChannelTierValidationService: NotificationChannelTierValidationService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -47,6 +51,19 @@ export class NotificationChannelCoreController {
 
     if (boundToClusterCount >= 100) {
       throw new BadRequestException('Cannot create more than 100 notification channels');
+    }
+
+    // Check if user tier allows creating this type of notification channel
+    const userTier = await this.userReadCachedService.readTier(userId);
+    if (
+      !this.notificationChannelTierValidationService.isNotificationChannelTypeAllowedForTier(
+        dto.type,
+        userTier,
+      )
+    ) {
+      throw new BadRequestException(
+        `${dto.type} notification channels are not available for your current tier`,
+      );
     }
 
     await this.notificationChannelOptionsValidationService.validateOptions(

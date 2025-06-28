@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { NotificationChannelOptions } from './entities/notification-channel.entity';
-import { NotificationTarget } from './enums/notification-target.enum';
+import { NotificationChannelType } from './enums/notification-target.enum';
 import { TelegramOptions } from './types/telegram-options.type';
 import { NotificationChannelReadService } from '../read/notification-channel-read.service';
 
@@ -10,10 +10,10 @@ export class NotificationChannelOptionsValidationService {
 
   public async validateOptions(
     options: NotificationChannelOptions,
-    target: NotificationTarget,
+    target: NotificationChannelType,
     clusterId: string,
   ): Promise<void> {
-    if (target === NotificationTarget.Telegram) {
+    if (target === NotificationChannelType.Telegram) {
       await this.validateTelegramOptions(options as TelegramOptions, clusterId);
     }
   }

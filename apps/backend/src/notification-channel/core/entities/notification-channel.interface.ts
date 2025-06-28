@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { NotificationTarget } from '../enums/notification-target.enum';
+import { NotificationChannelType } from '../enums/notification-target.enum';
 import { NotificationChannelOptions } from './notification-channel.entity';
 
 export interface NotificationChannelNormalized {
   id: string;
   clusterId: string;
-  target: NotificationTarget;
+  target: NotificationChannelType;
   name: string;
   options: NotificationChannelOptions;
   createdAt: Date;
@@ -19,8 +19,8 @@ export class NotificationChannelSerialized {
   @ApiProperty()
   clusterId: string;
 
-  @ApiProperty({ enum: NotificationTarget })
-  target: NotificationTarget;
+  @ApiProperty({ enum: NotificationChannelType })
+  target: NotificationChannelType;
 
   @ApiProperty()
   name: string;

@@ -1,0 +1,37 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+### 1. Code should read like a newspaper
+- The most important logic should come first.
+- If a function or component is used in a file, it should be defined *after* its usage.
+- Prioritize top-down readability — group related logic together and avoid jumping around the file.
+
+### 2. Respect architectural discipline
+- Follow **SOLID principles** wherever applicable.
+- Maintain a **clear separation of concerns** — don't mix data fetching, UI, and business logic unless explicitly necessary.
+- Distinguish between **smart (container)** and **dumb (presentational)** components.
+- Adhere to a **layered architecture**: `ui → application → infrastructure → domain -> shared`, etc.
+
+### 3. Consistency and standards
+- Follow the existing conventions in this codebase: naming, folder structure, import style, etc.
+- If something is unclear or missing, **ask for context** before proceeding.
+- If you make a decision that deviates from our patterns, briefly explain why.
+
+### 4. UX for devs and users
+- Code should be easy to reason about and maintain.
+- Prefer clarity over cleverness.
+- If something feels clunky, it probably needs to be refactored.
+
+> 🧠 Tip: Write code as if you're the future maintainer — and you’ve forgotten everything.
+
+- never use `.then()`. Always use normal promises,
+- do not put comments in the code,
+- enums keys are in `THIS_CASE`. Enum values are in `this-case`,
+- distinguish between dtos and regular interfaces
+- keep state type within the state file
+- things from /shared shouldn't import anything domain-specific, if more than one domain is using something it should become part of /shared
+- always use private/public when defining class methods,
+- always include function return type
+

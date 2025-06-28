@@ -5,7 +5,7 @@ import {
   NotificationChannelNormalized,
   NotificationChannelSerialized,
 } from './notification-channel.interface';
-import { NotificationTarget } from '../enums/notification-target.enum';
+import { NotificationChannelType } from '../enums/notification-target.enum';
 
 export class NotificationChannelSerializer {
   public static normalize(entity: NotificationChannelEntity): NotificationChannelNormalized {
@@ -25,7 +25,7 @@ export class NotificationChannelSerializer {
   ): NotificationChannelSerialized {
     const target = normalized.target;
 
-    if (target === NotificationTarget.Telegram) {
+    if (target === NotificationChannelType.Telegram) {
       normalized.options = NotificationChannelSerializer.serializeTelegramOptions(
         normalized.options as TelegramOptions,
       );

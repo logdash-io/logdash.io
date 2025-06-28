@@ -1,4 +1,5 @@
 import { UserTier } from '../../user/core/enum/user-tier.enum';
+import { NotificationChannelType } from '../../notification-channel/core/enums/notification-target.enum';
 
 interface UserPlanConfig {
   projects: {
@@ -6,6 +7,9 @@ interface UserPlanConfig {
   };
   publicDashboards: {
     maxNumberOfPublicDashboards: number;
+  };
+  notificationChannels: {
+    allowedTypes: NotificationChannelType[];
   };
 }
 
@@ -24,6 +28,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     publicDashboards: {
       maxNumberOfPublicDashboards: 1,
     },
+    notificationChannels: {
+      allowedTypes: [NotificationChannelType.Telegram],
+    },
   },
   [UserTier.Contributor]: {
     projects: {
@@ -31,6 +38,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     },
     publicDashboards: {
       maxNumberOfPublicDashboards: 5,
+    },
+    notificationChannels: {
+      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
     },
   },
   [UserTier.EarlyBird]: {
@@ -40,6 +50,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     publicDashboards: {
       maxNumberOfPublicDashboards: 5,
     },
+    notificationChannels: {
+      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
+    },
   },
   [UserTier.Admin]: {
     projects: {
@@ -47,6 +60,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     },
     publicDashboards: {
       maxNumberOfPublicDashboards: 100,
+    },
+    notificationChannels: {
+      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
     },
   },
 };

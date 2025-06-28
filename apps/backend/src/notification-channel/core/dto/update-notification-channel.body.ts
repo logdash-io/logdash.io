@@ -1,14 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsObject, IsOptional } from 'class-validator';
-import { NotificationTarget } from '../enums/notification-target.enum';
+import { NotificationChannelType } from '../enums/notification-target.enum';
 import { TelegramOptions } from '../types/telegram-options.type';
 import { WebhookOptions } from '../types/webhook-options.type';
 
 export class UpdateNotificationChannelBody {
-  @ApiPropertyOptional({ enum: NotificationTarget })
-  @IsEnum(NotificationTarget)
+  @ApiPropertyOptional({ enum: NotificationChannelType })
+  @IsEnum(NotificationChannelType)
   @IsOptional()
-  public type?: NotificationTarget;
+  public type?: NotificationChannelType;
 
   @ApiPropertyOptional()
   @IsObject()
