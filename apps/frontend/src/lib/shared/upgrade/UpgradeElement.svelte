@@ -1,11 +1,12 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+  import { getContext, type Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import { upgradeState } from './upgrade.state.svelte.js';
   import {
     startTierUpgrade,
     type UpgradeSource,
   } from './start-tier-upgrade.util.js';
+  import type { PostHog } from 'posthog-js';
 
   type Props = {
     class?: ClassValue;
@@ -21,6 +22,8 @@
     source = 'unknown',
     onClick,
   }: Props = $props();
+
+  const posthog = getContext<PostHog>('posthog');
 
   const handleMouseEnter = () => {
     if (enabled) {
@@ -42,7 +45,7 @@
   onclick={() => {
     onClick?.();
     if (enabled) {
-      startTierUpgrade(source);
+      startTierUpgrade(posthog, source);
     }
   }}
   role="button"

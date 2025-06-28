@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import SkyBackground from '$lib/shared/upgrade/SkyBackground.svelte';
   import { RocketIcon } from 'lucide-svelte';
-  import type { Snippet } from 'svelte';
+  import { getContext, type Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import { fade } from 'svelte/transition';
   import { upgradeState } from './upgrade.state.svelte.js';
@@ -10,6 +10,7 @@
     startTierUpgrade,
     type UpgradeSource,
   } from './start-tier-upgrade.util.js';
+  import type { PostHog } from 'posthog-js';
 
   type Props = {
     class?: ClassValue;
@@ -21,7 +22,7 @@
     children,
     source = 'unknown',
   }: Props = $props();
-
+  const posthog = getContext<PostHog>('posthog');
   let isHovered = $state(false);
   let upgrading = $state(false);
 
@@ -41,7 +42,7 @@
     class="btn btn-neutral relative w-full overflow-hidden"
     onclick={() => {
       upgrading = true;
-      startTierUpgrade(source);
+      startTierUpgrade(posthog, source);
     }}
     onmouseenter={handleMouseEnter}
     onmouseleave={handleMouseLeave}
