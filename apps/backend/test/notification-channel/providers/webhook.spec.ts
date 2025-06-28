@@ -3,6 +3,7 @@ import { NotificationChannelMessagingService } from '../../../src/notification-c
 import { sleep } from '../../utils/sleep';
 import { HttpMonitorStatus } from '../../../src/http-monitor/status/enum/http-monitor-status.enum';
 import { WebhookHttpMethod } from '../../../src/notification-channel/core/types/webhook-options.type';
+import { UserTier } from '../../../src/user/core/enum/user-tier.enum';
 
 describe('Webhook notification channel', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -21,7 +22,9 @@ describe('Webhook notification channel', () => {
 
   describe('http monitor alert message', () => {
     it('sends down message with error message', async () => {
-      const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.EarlyBird,
+      });
 
       const webhookUrl = 'https://webhook.site/test-webhook';
       const channel =
@@ -47,7 +50,7 @@ describe('Webhook notification channel', () => {
       });
 
       const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
-      messagingService.sendHttpMonitorAlertMessage({
+      await messagingService.sendHttpMonitorAlertMessage({
         httpMonitorId: 'some-http-monitor-id',
         notificationChannelsIds: [channel.id],
         newStatus: HttpMonitorStatus.Down,
@@ -56,8 +59,6 @@ describe('Webhook notification channel', () => {
         errorMessage: 'test error',
         statusCode: '404',
       });
-
-      await sleep(500);
 
       expect(requestBodies.length).toBe(1);
       expect(requestBodies[0]).toEqual({
@@ -71,7 +72,9 @@ describe('Webhook notification channel', () => {
     });
 
     it('sends up message', async () => {
-      const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.EarlyBird,
+      });
 
       const webhookUrl = 'https://webhook.site/test-webhook-up';
       const channel =
@@ -115,7 +118,9 @@ describe('Webhook notification channel', () => {
     });
 
     it('sends message with custom headers', async () => {
-      const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.EarlyBird,
+      });
 
       const webhookUrl = 'https://webhook.site/test-webhook-headers';
       const customHeaders = {
@@ -186,7 +191,9 @@ describe('Webhook notification channel', () => {
 
       httpMethods.forEach((method) => {
         it(`sends message using ${method} method`, async () => {
-          const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+          const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+            userTier: UserTier.EarlyBird,
+          });
 
           const webhookUrl = `https://webhook.site/test-webhook-${method.toLowerCase()}`;
           const customHeaders = {
