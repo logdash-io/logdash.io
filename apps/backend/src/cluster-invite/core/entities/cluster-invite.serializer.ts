@@ -19,19 +19,26 @@ export class ClusterInviteSerializer {
     return entities.map((entity) => this.normalize(entity));
   }
 
-  public static serialize(entity: ClusterInviteNormalized): ClusterInviteSerialized {
+  public static serialize(
+    entity: ClusterInviteNormalized,
+    clusterName?: string,
+  ): ClusterInviteSerialized {
     return {
       id: entity.id,
       inviterUserId: entity.inviterUserId,
       invitedUserEmail: entity.invitedUserEmail,
       clusterId: entity.clusterId,
+      clusterName: clusterName || '',
       role: entity.role,
       createdAt: entity.createdAt.toISOString(),
       updatedAt: entity.updatedAt.toISOString(),
     };
   }
 
-  public static serializeMany(entities: ClusterInviteNormalized[]): ClusterInviteSerialized[] {
-    return entities.map((entity) => this.serialize(entity));
+  public static serializeMany(
+    entities: ClusterInviteNormalized[],
+    clusterNames?: Record<string, string>,
+  ): ClusterInviteSerialized[] {
+    return entities.map((entity) => this.serialize(entity, clusterNames?.[entity.clusterId]));
   }
 }

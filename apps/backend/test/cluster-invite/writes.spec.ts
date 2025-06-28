@@ -52,6 +52,7 @@ describe('ClusterInviteCoreController (writes)', () => {
       expect(response.body.inviterUserId).toBe(inviter.id);
       expect(response.body.invitedUserEmail).toBe(invitedUser.email);
       expect(response.body.clusterId).toBe(cluster.id);
+      expect(response.body.clusterName).toBe(cluster.name);
       expect(response.body.invitedUserId).toBeUndefined();
 
       const entity = (await bootstrap.models.clusterInviteModel.findOne())!;
@@ -67,7 +68,7 @@ describe('ClusterInviteCoreController (writes)', () => {
       });
     });
 
-    it('throws error when invited user does not exist', async () => {
+    it('returns success when invited user does not exist', async () => {
       const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'admin@example.com',
         userTier: UserTier.Admin,
@@ -81,8 +82,15 @@ describe('ClusterInviteCoreController (writes)', () => {
           role: ClusterRole.Write,
         });
 
-      expect(response.statusCode).toBe(400);
-      expect(response.body.message).toBe('User with this email not found');
+      expect(response.statusCode).toBe(201);
+      expect(response.body.id).toBe('pending');
+      expect(response.body.invitedUserEmail).toBe('nonexistent@example.com');
+      expect(response.body.clusterId).toBe(cluster.id);
+      expect(response.body.clusterName).toBe(cluster.name);
+
+      // Verify no actual invite was created in database
+      const invites = await bootstrap.models.clusterInviteModel.find({});
+      expect(invites.length).toBe(0);
     });
 
     it('throws error when user is already invited to cluster', async () => {

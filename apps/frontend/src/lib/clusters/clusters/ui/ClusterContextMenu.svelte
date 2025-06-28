@@ -1,12 +1,7 @@
 <script lang="ts">
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
-  import {
-    PenLineIcon,
-    SettingsIcon,
-    Trash2Icon,
-    UserPlusIcon,
-  } from 'lucide-svelte';
+  import { PenLineIcon, SettingsIcon, Trash2Icon, Users } from 'lucide-svelte';
   import { clustersState } from '../application/clusters.state.svelte.js';
   import { clusterInvitesState } from '../application/cluster-invites.state.svelte.js';
 
@@ -30,8 +25,8 @@
         }}
         class="whitespace-nowrap"
       >
-        Invite users
-        <UserPlusIcon class="ml-auto h-4 w-4" />
+        Manage team
+        <Users class="ml-auto h-4 w-4" />
       </a>
     </li>
 

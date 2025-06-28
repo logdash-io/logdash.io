@@ -23,6 +23,7 @@ import { UserReadService } from '../../user/read/user-read.service';
 import { SuccessResponse } from '../../shared/responses/success.response';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
+import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ClusterInviteLimitService } from '../limit/cluster-invite-limit.service';
 import { ClusterInviteCapacityResponse } from './dto/cluster-invite-capacity.response';
 
@@ -33,6 +34,7 @@ export class ClusterInviteCoreController {
     private readonly clusterInviteWriteService: ClusterInviteWriteService,
     private readonly clusterInviteReadService: ClusterInviteReadService,
     private readonly clusterWriteService: ClusterWriteService,
+    private readonly clusterReadService: ClusterReadService,
     private readonly userReadService: UserReadService,
     private readonly clusterInviteLimitService: ClusterInviteLimitService,
   ) {}
@@ -49,7 +51,17 @@ export class ClusterInviteCoreController {
     const invitedUser = await this.userReadService.readByEmail(body.email);
 
     if (!invitedUser) {
-      throw new BadRequestException('User with this email not found');
+      const cluster = await this.clusterReadService.readById(clusterId);
+      return {
+        id: 'pending',
+        inviterUserId: userId,
+        invitedUserEmail: body.email,
+        clusterId,
+        clusterName: cluster?.name || '',
+        role: body.role,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as ClusterInviteSerialized;
     }
 
     const existingInvite = await this.clusterInviteReadService.findExistingInvite({
@@ -75,7 +87,8 @@ export class ClusterInviteCoreController {
       role: body.role,
     });
 
-    return ClusterInviteSerializer.serialize(invite);
+    const cluster = await this.clusterReadService.readById(clusterId);
+    return ClusterInviteSerializer.serialize(invite, cluster?.name);
   }
 
   @UseGuards(ClusterMemberGuard)
@@ -86,7 +99,9 @@ export class ClusterInviteCoreController {
     @Param('clusterId') clusterId: string,
   ): Promise<ClusterInviteSerialized[]> {
     const invites = await this.clusterInviteReadService.readByClusterId(clusterId);
-    return ClusterInviteSerializer.serializeMany(invites);
+    const cluster = await this.clusterReadService.readById(clusterId);
+    const clusterNames = cluster ? { [clusterId]: cluster.name } : {};
+    return ClusterInviteSerializer.serializeMany(invites, clusterNames);
   }
 
   @UseGuards(ClusterMemberGuard)
@@ -107,7 +122,18 @@ export class ClusterInviteCoreController {
     @CurrentUserId() userId: string,
   ): Promise<ClusterInviteSerialized[]> {
     const invites = await this.clusterInviteReadService.readByInvitedUserId(userId);
-    return ClusterInviteSerializer.serializeMany(invites);
+
+    const clusterIds = [...new Set(invites.map((invite) => invite.clusterId))];
+    const clusterNames: Record<string, string> = {};
+
+    for (const clusterId of clusterIds) {
+      const cluster = await this.clusterReadService.readById(clusterId);
+      if (cluster) {
+        clusterNames[clusterId] = cluster.name;
+      }
+    }
+
+    return ClusterInviteSerializer.serializeMany(invites, clusterNames);
   }
 
   @ApiBearerAuth()

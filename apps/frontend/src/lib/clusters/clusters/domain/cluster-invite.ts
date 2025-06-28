@@ -8,6 +8,7 @@ export type ClusterInvite = {
   inviterUserId: string;
   invitedUserEmail: string;
   clusterId: string;
+  clusterName: string;
   role: ClusterRole;
   createdAt: string;
   updatedAt: string;

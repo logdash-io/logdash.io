@@ -34,4 +34,5 @@ alwaysApply: true
 - things from /shared shouldn't import anything domain-specific, if more than one domain is using something it should become part of /shared
 - always use private/public when defining class methods,
 - always include function return type
+- do NOT include bootstrap classes, project is styled with daisyui+tailwind - see app.css for custom classess
 

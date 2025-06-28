@@ -46,9 +46,11 @@ describe('ClusterInviteCoreController (reads)', () => {
 
       expect(response.body).toHaveLength(2);
       expect(response.body[0].clusterId).toBe(cluster.id);
+      expect(response.body[0].clusterName).toBe(cluster.name);
       expect(response.body[0].invitedUserEmail).toBe(invitedUser1.email);
       expect(response.body[0].invitedUserId).toBeUndefined();
       expect(response.body[1].clusterId).toBe(cluster.id);
+      expect(response.body[1].clusterName).toBe(cluster.name);
       expect(response.body[1].invitedUserEmail).toBe(invitedUser2.email);
       expect(response.body[1].invitedUserId).toBeUndefined();
     });
@@ -112,8 +114,10 @@ describe('ClusterInviteCoreController (reads)', () => {
 
       expect(response.body).toHaveLength(2);
       expect(response.body[0].invitedUserEmail).toBe(invitedUser.email);
+      expect(response.body[0].clusterName).toBe(cluster1.name);
       expect(response.body[0].invitedUserId).toBeUndefined();
       expect(response.body[1].invitedUserEmail).toBe(invitedUser.email);
+      expect(response.body[1].clusterName).toBe(cluster2.name);
       expect(response.body[1].invitedUserId).toBeUndefined();
     });
 

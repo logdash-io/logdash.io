@@ -16,13 +16,15 @@ export type UpgradeSource =
   | 'unknown';
 
 export const startTierUpgrade = (
-  posthog: PostHog,
+  posthog?: PostHog,
   source: UpgradeSource = 'unknown',
 ) => {
-  posthog.capture('upgrade_initiated', {
-    source,
-    timestamp: new Date().toISOString(),
-  });
+  if (!posthog) {
+    posthog.capture('upgrade_initiated', {
+      source,
+      timestamp: new Date().toISOString(),
+    });
+  }
 
   const params = new URLSearchParams({ source });
   goto(`/app/api/user/upgrade?${params.toString()}`);

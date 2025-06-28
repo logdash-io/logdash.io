@@ -26,6 +26,9 @@ export class ClusterInviteSerialized {
   clusterId: string;
 
   @ApiProperty()
+  clusterName: string;
+
+  @ApiProperty()
   role: ClusterRole;
 
   @ApiProperty()

@@ -104,6 +104,10 @@ body {
     @apply to-error/15 text-error border border-red-950 bg-gradient-to-br from-transparent;
   }
 
+  .primary-card {
+    @apply from-primary/5 to-primary/15 border-primary/20 border bg-gradient-to-br;
+  }
+
   .ld-card-base,
   .ld-card {
     @apply from-base-200 to-base-300 border-base-100/70 border bg-gradient-to-br shadow-lg;
