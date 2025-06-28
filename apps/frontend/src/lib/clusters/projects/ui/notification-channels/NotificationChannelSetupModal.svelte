@@ -42,7 +42,7 @@
       icon: LinkIcon,
     },
   ]);
-  let selectedChannel: string | null = $state('webhook');
+  let selectedChannel: string | null = $state(null);
 
   function closeModal() {
     notificationChannelSetupState.close();
