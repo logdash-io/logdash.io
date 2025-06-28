@@ -217,6 +217,181 @@ I'll notify you about the status of your services`,
         expect(response.status).toBe(400);
         expect(response.body.message).toEqual(['options.url must be a string']);
       });
+
+      describe('Free tier webhook restrictions', () => {
+        it('allows free tier to create webhook with GET method', async () => {
+          // given
+          const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+          const webhookData = {
+            type: NotificationChannelType.Webhook,
+            name: 'Free Tier Webhook',
+            options: {
+              url: 'https://example.com/webhook',
+              method: 'GET',
+            },
+          };
+
+          // when
+          const response = await request(bootstrap.app.getHttpServer())
+            .post(`/clusters/${cluster.id}/notification_channels`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(webhookData);
+
+          // then
+          expect(response.status).toBe(201);
+          const entity = (await bootstrap.models.notificationChannelModel.findOne())!;
+          expect((entity.options as WebhookOptions).method).toBe('GET');
+        });
+
+        it('allows free tier to create webhook without method (defaults to GET)', async () => {
+          // given
+          const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+          const webhookData = {
+            type: NotificationChannelType.Webhook,
+            name: 'Free Tier Webhook No Method',
+            options: {
+              url: 'https://example.com/webhook',
+            },
+          };
+
+          // when
+          const response = await request(bootstrap.app.getHttpServer())
+            .post(`/clusters/${cluster.id}/notification_channels`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(webhookData);
+
+          // then
+          expect(response.status).toBe(201);
+        });
+
+        it.each(['POST', 'PUT', 'DELETE', 'PATCH'])(
+          'rejects free tier webhook with %s method',
+          async (method) => {
+            // given
+            const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+            const webhookData = {
+              type: NotificationChannelType.Webhook,
+              name: 'Free Tier Webhook',
+              options: {
+                url: 'https://example.com/webhook',
+                method,
+              },
+            };
+
+            // when
+            const response = await request(bootstrap.app.getHttpServer())
+              .post(`/clusters/${cluster.id}/notification_channels`)
+              .set('Authorization', `Bearer ${token}`)
+              .send(webhookData);
+
+            // then
+            expect(response.status).toBe(400);
+            expect(response.body.message).toBe(
+              'Free tier users can only use GET method for webhooks. Upgrade to use other HTTP methods.',
+            );
+          },
+        );
+
+        it('rejects free tier webhook with custom headers', async () => {
+          // given
+          const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+          const webhookData = {
+            type: NotificationChannelType.Webhook,
+            name: 'Free Tier Webhook',
+            options: {
+              url: 'https://example.com/webhook',
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+            },
+          };
+
+          // when
+          const response = await request(bootstrap.app.getHttpServer())
+            .post(`/clusters/${cluster.id}/notification_channels`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(webhookData);
+
+          // then
+          expect(response.status).toBe(400);
+          expect(response.body.message).toBe(
+            'Free tier users cannot use custom headers for webhooks. Upgrade to use custom headers.',
+          );
+        });
+      });
+
+      describe('Paid tier webhook features', () => {
+        it.each(['POST', 'PUT', 'DELETE', 'PATCH'])(
+          'allows paid tier to create webhook with %s method',
+          async (method) => {
+            // given
+            const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+              email: 'test@example.com',
+              userTier: UserTier.Contributor,
+            });
+
+            const webhookData = {
+              type: NotificationChannelType.Webhook,
+              name: 'Paid Tier Webhook',
+              options: {
+                url: 'https://example.com/webhook',
+                method,
+              },
+            };
+
+            // when
+            const response = await request(bootstrap.app.getHttpServer())
+              .post(`/clusters/${cluster.id}/notification_channels`)
+              .set('Authorization', `Bearer ${token}`)
+              .send(webhookData);
+
+            // then
+            expect(response.status).toBe(201);
+            const entity = (await bootstrap.models.notificationChannelModel.findOne())!;
+            expect((entity.options as WebhookOptions).method).toBe(method);
+          },
+        );
+
+        it('allows paid tier to create webhook with custom headers', async () => {
+          // given
+          const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+            email: 'test@example.com',
+            userTier: UserTier.Contributor,
+          });
+
+          const webhookData = {
+            type: NotificationChannelType.Webhook,
+            name: 'Paid Tier Webhook',
+            options: {
+              url: 'https://example.com/webhook',
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: 'Bearer token123',
+                'X-Custom-Header': 'custom-value',
+              },
+            },
+          };
+
+          // when
+          const response = await request(bootstrap.app.getHttpServer())
+            .post(`/clusters/${cluster.id}/notification_channels`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(webhookData);
+
+          // then
+          expect(response.status).toBe(201);
+          const entity = (await bootstrap.models.notificationChannelModel.findOne())!;
+          expect((entity.options as WebhookOptions).headers).toEqual({
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer token123',
+            'X-Custom-Header': 'custom-value',
+          });
+        });
+      });
     });
 
     it('forbids non-cluster member to create notification channel', async () => {
@@ -283,8 +458,8 @@ I'll notify you about the status of your services`,
       {
         userTier: UserTier.Free,
         channelType: NotificationChannelType.Webhook,
-        shouldSucceed: false,
-        description: 'prevents free users from creating webhook channels',
+        shouldSucceed: true,
+        description: 'allows free users to create basic webhook channels',
       },
       {
         userTier: UserTier.Contributor,

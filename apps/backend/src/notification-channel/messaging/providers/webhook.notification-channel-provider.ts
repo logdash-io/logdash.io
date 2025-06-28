@@ -29,7 +29,7 @@ export class WebhookNotificationChannelProvider implements NotificationChannelPr
     await this.sendMessageToWebhook({
       url: webhookOptions.url,
       headers: webhookOptions.headers,
-      method: webhookOptions.method ?? WebhookHttpMethod.POST,
+      method: webhookOptions.method ?? WebhookHttpMethod.GET,
       bodyToSend: body,
     });
   }
