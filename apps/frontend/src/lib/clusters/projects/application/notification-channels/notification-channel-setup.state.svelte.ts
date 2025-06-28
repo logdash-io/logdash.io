@@ -5,7 +5,7 @@ type Props = {
 
 export class NotificationChannelSetupState {
   state = $state<Props>({
-    isOpen: false,
+    isOpen: true,
     monitorId: null,
   });
 

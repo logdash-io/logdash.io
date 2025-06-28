@@ -47,6 +47,8 @@ type CreateWebhookNotificationChannelDTO = {
   name: string;
   options: {
     url: string;
+    headers: Record<string, string>;
+    method: string;
   };
 };
 

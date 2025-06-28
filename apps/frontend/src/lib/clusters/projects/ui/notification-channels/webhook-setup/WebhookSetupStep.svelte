@@ -1,6 +1,12 @@
 <script lang="ts">
   import { autoFocus } from '$lib/shared/ui/actions/use-autofocus.svelte.js';
-  import { LinkIcon } from 'lucide-svelte';
+  import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
+  import { LinkIcon, XIcon } from 'lucide-svelte';
+
+  type Header = {
+    key: string;
+    value: string;
+  };
 
   type Props = {
     clusterName: string;
@@ -9,14 +15,45 @@
     onSubmit: (dto: {
       withAssignment: boolean;
       url: string;
+      headers: Record<string, string>;
+      method: string;
       name: string;
     }) => void;
   };
+
+  const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+
+  // HTTP header validation patterns
+  const HEADER_NAME_PATTERN = /^[a-zA-Z0-9-]+$/;
+  const HEADER_VALUE_PATTERN = /^[\x20-\x7E]*$/;
 
   let { monitorName, clusterName, onCancel, onSubmit }: Props = $props();
   let assignToServiceMonitor = $state(false);
   let webhookName = $state('');
   let webhookUrl = $state('');
+  let headers = $state<Header[]>([]);
+  let method = $state(ALLOWED_METHODS[0]);
+
+  function isValidHeaderName(name: string): boolean {
+    return name === '' || HEADER_NAME_PATTERN.test(name);
+  }
+
+  function isValidHeaderValue(value: string): boolean {
+    return HEADER_VALUE_PATTERN.test(value);
+  }
+
+  function hasValidHeaders(): boolean {
+    return headers.every(
+      (header) =>
+        isValidHeaderName(header.key) && isValidHeaderValue(header.value),
+    );
+  }
+
+  function canSubmit(): boolean {
+    return (
+      webhookName.trim() !== '' && webhookUrl.trim() !== '' && hasValidHeaders()
+    );
+  }
 </script>
 
 <div class="space-y-8 text-center">
@@ -35,24 +72,112 @@
     </div>
   </div>
 
-  <div class="space-y-2">
+  <div class="space-y-2 text-base">
     <input
       bind:value={webhookName}
-      class="input-sm input-ghost selection:bg-secondary/20 border-secondary/20 focus:border-primary h-full w-full rounded-lg border px-3 py-2 text-lg outline-0 focus:bg-transparent"
+      class="ld-input ld-input-padding"
       placeholder={'Memorable webhook name'}
       type="text"
       use:autoFocus={{ selectAll: true }}
     />
 
-    <input
-      bind:value={webhookUrl}
-      class="input-sm input-ghost selection:bg-secondary/20 border-secondary/20 focus:border-primary h-full w-full rounded-lg border px-3 py-2 text-lg outline-0 focus:bg-transparent"
-      placeholder={'Webhook URL'}
-      type="text"
-    />
+    <div class="join relative w-full">
+      {#snippet methodSelect(close: () => void)}
+        <ul class="menu ld-card-base rounded-xl">
+          {#each ALLOWED_METHODS as _method}
+            <li>
+              <button
+                class=""
+                onclick={() => {
+                  method = _method;
+                  close();
+                }}
+              >
+                {_method}
+              </button>
+            </li>
+          {/each}
+        </ul>
+      {/snippet}
+
+      <Tooltip content={methodSelect} placement="bottom" trigger="click">
+        <button class="btn btn-transparent btn-sm absolute top-0.5 left-0">
+          {method}
+        </button>
+      </Tooltip>
+
+      <input
+        bind:value={webhookUrl}
+        class="join-item ld-input py-2 pr-3 pl-16"
+        placeholder={'Webhook URL'}
+        type="text"
+      />
+    </div>
+
+    <div class="flex flex-col gap-2">
+      {#each headers as header, index}
+        <div class="flex items-center gap-2">
+          <div class="flex-1">
+            <input
+              type="text"
+              bind:value={header.key}
+              class={[
+                'ld-input ld-input-padding',
+                { 'input-error': !isValidHeaderName(header.key) },
+              ]}
+              placeholder={'Key'}
+              use:autoFocus={{
+                enabled: index === headers.length - 1,
+              }}
+            />
+            {#if header.key && !isValidHeaderName(header.key)}
+              <div class="text-error mt-1 text-xs">
+                Header name can only contain letters, numbers, and hyphens
+              </div>
+            {/if}
+          </div>
+          <div class="flex-1">
+            <input
+              type="text"
+              bind:value={header.value}
+              class={[
+                'ld-input ld-input-padding',
+                { 'input-error': !isValidHeaderValue(header.value) },
+              ]}
+              placeholder={'Value'}
+            />
+            {#if header.value && !isValidHeaderValue(header.value)}
+              <div class="text-error mt-1 text-xs">
+                Header value contains invalid characters
+              </div>
+            {/if}
+          </div>
+          <button
+            class="btn btn-ghost btn-sm"
+            onclick={() => {
+              headers.splice(index, 1);
+            }}
+          >
+            <XIcon class="h-4 w-4" />
+          </button>
+        </div>
+      {/each}
+
+      <button
+        class="btn btn-secondary btn-sm"
+        onclick={() => {
+          headers.push({
+            key: '',
+            value: '',
+          });
+        }}
+      >
+        Add header
+      </button>
+    </div>
   </div>
 
-  <div class="flex select-none items-center justify-start gap-2">
+  <div class="flex items-center justify-start gap-2 select-none">
     <input
       type="checkbox"
       id="assign-service-monitor"
@@ -75,11 +200,22 @@
     <button
       type="button"
       class="btn btn-primary flex-1"
+      disabled={!canSubmit()}
       onclick={() =>
         onSubmit({
           withAssignment: assignToServiceMonitor,
           url: webhookUrl,
           name: webhookName,
+          headers: headers.reduce(
+            (acc, header) => {
+              if (header.key && header.value) {
+                acc[header.key] = header.value;
+              }
+              return acc;
+            },
+            {} as Record<string, string>,
+          ),
+          method,
         })}
     >
       Save channel to {clusterName} project

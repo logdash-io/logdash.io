@@ -1,18 +1,17 @@
 <script lang="ts">
-  import { telegramSetupState } from '$lib/clusters/projects/application/notification-channels/telegram-setup.state.svelte';
-  import Modal from '$lib/shared/ui/Modal.svelte';
-  import { BellIcon, LinkIcon, MailIcon, SendIcon } from 'lucide-svelte';
-  import { notificationChannelSetupState } from '../../application/notification-channels/notification-channel-setup.state.svelte.js';
-  import TelegramAlertingSetup from './telegram-setup/TelegramAlertingSetup.svelte';
-  import WebhookSetupStep from './webhook-setup/WebhookSetupStep.svelte';
   import { clustersState } from '$lib/clusters/clusters/application/clusters.state.svelte.js';
-  import { monitoringState } from '../../application/monitoring.state.svelte.js';
-  import { notificationChannelsState } from '../../application/notification-channels/notification-channels.state.svelte.js';
-  import { UserTier } from '$lib/shared/types.js';
-  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
+  import { telegramSetupState } from '$lib/clusters/projects/application/notification-channels/telegram-setup.state.svelte';
   import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { NotificationChannelType } from '$lib/shared/exposed-config/domain/exposed-config.js';
+  import Modal from '$lib/shared/ui/Modal.svelte';
   import UpgradeElement from '$lib/shared/upgrade/UpgradeElement.svelte';
+  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
+  import { BellIcon, LinkIcon, SendIcon } from 'lucide-svelte';
+  import { monitoringState } from '../../application/monitoring.state.svelte.js';
+  import { notificationChannelSetupState } from '../../application/notification-channels/notification-channel-setup.state.svelte.js';
+  import { notificationChannelsState } from '../../application/notification-channels/notification-channels.state.svelte.js';
+  import TelegramAlertingSetup from './telegram-setup/TelegramAlertingSetup.svelte';
+  import WebhookSetupStep from './webhook-setup/WebhookSetupStep.svelte';
 
   type Props = {
     clusterId: string;
@@ -43,7 +42,7 @@
       icon: LinkIcon,
     },
   ]);
-  let selectedChannel: string | null = $state(null);
+  let selectedChannel: string | null = $state('webhook');
 
   function closeModal() {
     notificationChannelSetupState.close();
@@ -146,6 +145,8 @@
         withAssignment: boolean;
         url: string;
         name: string;
+        headers: Record<string, string>;
+        method: string;
       }) => {
         notificationChannelsState
           .createChannel(clusterId, {
@@ -153,6 +154,8 @@
             name: dto.name,
             options: {
               url: dto.url,
+              headers: dto.headers,
+              method: dto.method,
             },
           })
           .then((createdChannelId: string) => {

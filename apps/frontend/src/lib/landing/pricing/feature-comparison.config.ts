@@ -111,8 +111,8 @@ export const featureComparison = {
         {
           name: 'Webhook alerts',
           [UserTier.FREE]: false,
-          [UserTier.EARLY_BIRD]: 'Coming soon',
-          [UserTier.PRO]: 'Coming soon',
+          [UserTier.EARLY_BIRD]: true,
+          [UserTier.PRO]: true,
         },
         {
           name: 'Discord alerts',
