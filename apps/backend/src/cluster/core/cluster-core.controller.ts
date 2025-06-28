@@ -29,6 +29,7 @@ import { SuccessResponse } from '../../shared/responses/success.response';
 import { PublicDashboardReadService } from '../../public-dashboard/read/public-dashboard-read.service';
 import { groupBy } from '../../shared/utils/group-by';
 import { getUserPlanConfig } from '../../shared/configs/user-plan-configs';
+import { ClusterRole } from './enums/cluster-role.enum';
 
 @ApiTags('Clusters')
 @Controller()
@@ -65,6 +66,9 @@ export class ClusterCoreController {
       creatorId: userId,
       name: body.name,
       tier: clusterTier,
+      roles: {
+        [userId]: ClusterRole.Creator,
+      },
     });
 
     return ClusterSerializer.serialize(cluster);
@@ -154,5 +158,27 @@ export class ClusterCoreController {
       projects: projectsGroupedByCluster[clusterId],
       features: featuresMap[clusterId],
     });
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Delete('clusters/:clusterId/roles/:userId')
+  public async deleteRole(
+    @Param('clusterId') clusterId: string,
+    @Param('userId') userId: string,
+  ): Promise<SuccessResponse> {
+    const cluster = await this.clusterReadService.readById(clusterId);
+
+    if (!cluster) {
+      throw new NotFoundException('Cluster not found');
+    }
+
+    if (cluster.creatorId === userId) {
+      throw new BadRequestException('Cannot delete role. User is the creator of this cluster.');
+    }
+
+    await this.clusterWriteService.deleteRole(clusterId, userId);
+
+    return new SuccessResponse();
   }
 }

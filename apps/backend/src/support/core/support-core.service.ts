@@ -16,7 +16,7 @@ export class SupportCoreService {
   ) {}
 
   public async getTelegramSupportInviteLink(userId: string): Promise<string> {
-    const user = await this.userReadService.readById(userId);
+    const user = await this.userReadService.readByIdOrThrow(userId);
 
     if (user.tier === UserTier.Free) {
       throw new ForbiddenException(

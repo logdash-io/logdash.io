@@ -15,12 +15,18 @@ import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import Stripe from 'stripe';
 import { sleep } from './sleep';
+import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
+import { ProjectEntity } from '../../src/project/core/entities/project.entity';
 
 export class GeneralUtils {
   private readonly userModel: Model<UserEntity>;
+  private readonly clusterModel: Model<ClusterEntity>;
+  private readonly projectModel: Model<ProjectEntity>;
 
   constructor(private readonly app: INestApplication<any>) {
     this.userModel = this.app.get(getModelToken(UserEntity.name));
+    this.clusterModel = this.app.get(getModelToken(ClusterEntity.name));
+    this.projectModel = this.app.get(getModelToken(ProjectEntity.name));
   }
 
   public async setupAnonymous(dto?: { userTier?: UserTier }): Promise<{
@@ -97,6 +103,24 @@ export class GeneralUtils {
       {
         accountClaimStatus: AccountClaimStatus.Claimed,
         email: dto.email,
+      },
+    );
+
+    await this.clusterModel.updateOne(
+      {
+        _id: new Types.ObjectId(anonymousResult.cluster.id),
+      },
+      {
+        tier: dto.userTier,
+      },
+    );
+
+    await this.projectModel.updateOne(
+      {
+        _id: new Types.ObjectId(anonymousResult.project.id),
+      },
+      {
+        tier: dto.userTier,
       },
     );
 

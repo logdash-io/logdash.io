@@ -2,7 +2,7 @@ import { RedisClientType } from '@redis/client';
 import { RedisContainer } from '@testcontainers/redis';
 
 export const createRedisTestContainer = async (): Promise<void> => {
-  const redisContainer = await new RedisContainer('redis:latest').start();
+  const redisContainer = await new RedisContainer('redis:latest').withReuse().start();
 
   global.redisContainer = redisContainer;
 };

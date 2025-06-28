@@ -37,7 +37,7 @@ export class StripeController {
   @ApiBearerAuth()
   @Get('checkout')
   public async getCheckoutUrl(@CurrentUserId() userId: string): Promise<CheckoutResponse> {
-    const user = await this.userReadService.readById(userId);
+    const user = await this.userReadService.readByIdOrThrow(userId);
 
     if (!user) {
       this.logger.error(`User not found while trying to initiate stripe checkout`, { userId });

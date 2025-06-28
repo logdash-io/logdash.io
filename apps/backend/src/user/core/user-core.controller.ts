@@ -14,6 +14,7 @@ import { CreateAnonymousUserResponse } from './dto/create-anonymous-user.respons
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { ClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
 import { ClusterSerializer } from '../../cluster/core/entities/cluster.serializer';
+import { ClusterRole } from '../../cluster/core/enums/cluster-role.enum';
 
 @Controller('users')
 @ApiTags('Users')
@@ -28,10 +29,8 @@ export class UserCoreController {
 
   @Get('me')
   @ApiResponse({ type: UserSerialized })
-  public async readCurrentUser(
-    @CurrentUserId() userId,
-  ): Promise<UserSerialized> {
-    const user = await this.userReadService.readById(userId);
+  public async readCurrentUser(@CurrentUserId() userId): Promise<UserSerialized> {
+    const user = await this.userReadService.readByIdOrThrow(userId);
 
     return UserSerializer.serialize(user);
   }
@@ -42,7 +41,7 @@ export class UserCoreController {
     @CurrentUserId() userId,
     @Body() dto: UpdatePublicUserBody,
   ): Promise<UserSerialized> {
-    const user = await this.userReadService.readById(userId);
+    const user = await this.userReadService.readByIdOrThrow(userId);
 
     return UserSerializer.serialize(user);
   }
@@ -61,6 +60,9 @@ export class UserCoreController {
       name: 'My first cluster',
       creatorId: user.id,
       tier: ClusterTier.Free,
+      roles: {
+        [user.id]: ClusterRole.Creator,
+      },
     });
 
     return {
