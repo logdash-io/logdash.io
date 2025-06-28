@@ -1,11 +1,6 @@
 <script lang="ts">
-  import {
-    CheckIcon,
-    MinusIcon,
-    ShieldCheckIcon,
-    ShieldIcon,
-  } from 'lucide-svelte';
-  import { featureComparison } from './feature-comparison.config.js';
+  import { CheckIcon, MinusIcon, ShieldCheckIcon } from 'lucide-svelte';
+  import { FEATURES_COMPARISON } from './feature-comparison.config.js';
   import { UserTier } from '$lib/shared/types.js';
   import { PAYMENT_PLANS } from '$lib/shared/payment-plans.const.js';
   import { fade } from 'svelte/transition';
@@ -25,7 +20,7 @@
 >
   <div class="-my-56 pb-56">
     <h2 class="mb-16 text-center text-5xl">
-      {featureComparison.title}
+      {FEATURES_COMPARISON.title}
     </h2>
 
     <div class="overflow-x-auto">
@@ -36,7 +31,7 @@
         <thead>
           <tr class="border-none">
             <th class="text-left font-bold"></th>
-            {#each featureComparison.plans as plan (plan.tier)}
+            {#each FEATURES_COMPARISON.plans as plan (plan.tier)}
               {@const fullPlanConfig = PAYMENT_PLANS.find(
                 (p) => p.tier === plan.tier,
               )}
@@ -51,7 +46,7 @@
               >
                 {#if plan.tier === UserTier.EARLY_BIRD}
                   <div
-                    class="bg-primary text-secondary left-0 top-0 z-0 -mb-8 flex h-16 w-full items-center justify-center rounded-xl pb-8 text-xs font-semibold"
+                    class="bg-primary text-secondary top-0 left-0 z-0 -mb-8 flex h-16 w-full items-center justify-center rounded-xl pb-8 text-xs font-semibold"
                   >
                     Best Value
                   </div>
@@ -63,9 +58,9 @@
                   class={[
                     'relative z-10 h-80 p-4 pt-9 text-left',
                     {
-                      'border-primary/60 rounded-tl-xl rounded-tr-xl border-l border-r border-t bg-[#210c15]':
+                      'border-primary/60 rounded-tl-xl rounded-tr-xl border-t border-r border-l bg-[#210c15]':
                         plan.tier === UserTier.EARLY_BIRD,
-                      'border-secondary/10 rounded-tl-2xl border border-b-0 border-r-0':
+                      'border-secondary/10 rounded-tl-2xl border border-r-0 border-b-0':
                         plan.tier === UserTier.FREE,
                       'border-secondary/10 rounded-tr-2xl border border-b-0 border-l-0':
                         plan.tier === UserTier.PRO,
@@ -90,7 +85,7 @@
                         {fullPlanConfig.price}
                       </span>
 
-                      <p class="mt-4 whitespace-pre-wrap text-sm opacity-75">
+                      <p class="mt-4 text-sm whitespace-pre-wrap opacity-75">
                         {fullPlanConfig.description.split('.')[0]}
                       </p>
                     </div>
@@ -135,12 +130,12 @@
                 30-Day Money Back Guarantee
               </div>
             </td>
-            {#each featureComparison.plans as plan (plan.tier)}
+            {#each FEATURES_COMPARISON.plans as plan (plan.tier)}
               <td
                 class={[
                   'text-center',
                   {
-                    'bg-primary/10 border-primary/60 border-l border-r':
+                    'bg-primary/10 border-primary/60 border-r border-l':
                       plan.tier === UserTier.EARLY_BIRD,
                     'border-secondary/10 text-secondary/30 border-l':
                       plan.tier === UserTier.FREE,
@@ -154,10 +149,12 @@
             {/each}
           </tr>
 
-          {#each featureComparison.sections as section, parentIndex}
+          {#each FEATURES_COMPARISON.sections as section, parentIndex}
             {@const isLastSection =
               section ===
-              featureComparison.sections[featureComparison.sections.length - 1]}
+              FEATURES_COMPARISON.sections[
+                FEATURES_COMPARISON.sections.length - 1
+              ]}
             {#each section.features as feature, index}
               {@const isLast =
                 feature === section.features[section.features.length - 1]}
@@ -192,7 +189,7 @@
                   class={[
                     'text-center',
                     {
-                      'bg-primary/10 border-primary/60 border-l border-r': true,
+                      'bg-primary/10 border-primary/60 border-r border-l': true,
                       'rounded-b-xl border-b': isLastSection && isLast,
                     },
                   ]}

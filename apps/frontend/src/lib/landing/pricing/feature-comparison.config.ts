@@ -1,6 +1,6 @@
 import { UserTier } from '$lib/shared/types.js';
 
-export const featureComparison = {
+export const FEATURES_COMPARISON = {
   title: 'Compare Plans',
   plans: [
     { name: 'Hobby', price: 'Free', tier: UserTier.FREE },
@@ -103,16 +103,16 @@ export const featureComparison = {
           [UserTier.PRO]: true,
         },
         {
+          name: 'Webhook alerts',
+          [UserTier.FREE]: true,
+          [UserTier.EARLY_BIRD]: true,
+          [UserTier.PRO]: true,
+        },
+        {
           name: 'Email alerts',
           [UserTier.FREE]: false,
           [UserTier.EARLY_BIRD]: 'Coming soon',
           [UserTier.PRO]: 'Coming soon',
-        },
-        {
-          name: 'Webhook alerts',
-          [UserTier.FREE]: false,
-          [UserTier.EARLY_BIRD]: true,
-          [UserTier.PRO]: true,
         },
         {
           name: 'Discord alerts',

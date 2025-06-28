@@ -33,6 +33,7 @@ describe('Webhook notification channel', () => {
           token,
           options: {
             url: webhookUrl,
+            method: WebhookHttpMethod.POST,
             headers: {
               'Content-Type': 'application/json',
               Authorization: 'Bearer test-token',
@@ -83,6 +84,7 @@ describe('Webhook notification channel', () => {
           token,
           options: {
             url: webhookUrl,
+            method: WebhookHttpMethod.POST,
           },
         });
 
@@ -134,6 +136,7 @@ describe('Webhook notification channel', () => {
           token,
           options: {
             url: webhookUrl,
+            method: WebhookHttpMethod.POST,
             headers: customHeaders,
           },
         });
