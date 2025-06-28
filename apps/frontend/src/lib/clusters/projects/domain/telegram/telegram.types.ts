@@ -42,7 +42,17 @@ type CreateTelegramNotificationChannelDTO = {
   };
 };
 
-export type CreateNotificationChannelDTO = CreateTelegramNotificationChannelDTO;
+type CreateWebhookNotificationChannelDTO = {
+  type: 'webhook';
+  name: string;
+  options: {
+    url: string;
+  };
+};
+
+export type CreateNotificationChannelDTO =
+  | CreateTelegramNotificationChannelDTO
+  | CreateWebhookNotificationChannelDTO;
 
 export type TelegramSetupStep = 'setup' | 'waiting' | 'success' | 'error';
 

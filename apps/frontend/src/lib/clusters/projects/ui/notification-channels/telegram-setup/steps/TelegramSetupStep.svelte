@@ -106,7 +106,7 @@
       class="btn btn-secondary btn-soft flex-1"
       onclick={onCancel}
     >
-      Cancel
+      Back
     </button>
     <button type="button" class="btn btn-primary flex-1" onclick={onNext}>
       Message sent!

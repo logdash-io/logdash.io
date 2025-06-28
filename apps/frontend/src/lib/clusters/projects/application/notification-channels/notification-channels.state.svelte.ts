@@ -18,7 +18,7 @@ export class NotificationChannelsStateManager {
     try {
       const channels =
         await NotificationChannelsService.getNotificationChannels(clusterId);
-      // Sort by newest first (createdAt descending)
+
       this.state.channels = channels.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -42,7 +42,7 @@ export class NotificationChannelsStateManager {
         (channel) => channel.id !== channelId,
       );
 
-      toast.success('Notification channel deleted successfully');
+      toast.success('Notification channel deleted');
     } catch (error) {
       console.error('Error deleting notification channel:', error);
       this.state.error =
@@ -66,7 +66,7 @@ export class NotificationChannelsStateManager {
           channel,
         );
 
-      toast.success('Notification channel created successfully');
+      toast.success('Notification channel created');
       return createdChannel.id;
 
       // todo: push to state.channels once backend contract returns NotificationChannel from creation

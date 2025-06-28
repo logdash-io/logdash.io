@@ -5,8 +5,9 @@
   import { fly } from 'svelte/transition';
   import { monitoringState } from '../../application/monitoring.state.svelte.js';
   import { notificationChannelsState } from '../../application/notification-channels/notification-channels.state.svelte.js';
-  import { telegramSetupState } from '../../application/telegram/telegram-setup.state.svelte.js';
+  import { telegramSetupState } from '../../application/notification-channels/telegram-setup.state.svelte.js';
   import type { NotificationChannel } from '../../domain/telegram/telegram.types.js';
+  import { notificationChannelSetupState } from '../../application/notification-channels/notification-channel-setup.state.svelte.js';
 
   type Props = {
     clusterId: string;
@@ -112,7 +113,7 @@
         <button
           in:fly={{ y: -2, duration: 100 }}
           onclick={() => {
-            telegramSetupState.startSetup(monitorId);
+            notificationChannelSetupState.open(monitorId);
             close();
           }}
           class="btn btn-transparent flex w-full items-center justify-start gap-4 px-0"

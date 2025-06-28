@@ -1,19 +1,18 @@
 import { createLogger } from '$lib/shared/logger';
 import { arrayToObject } from '$lib/shared/utils/array-to-object';
-import type { LogGranularity } from '../domain/log-granularity';
-import type { LogMetric } from '../domain/log-metric';
-import { envConfig } from '$lib/shared/utils/env-config.js';
 import { getCookieValue } from '$lib/shared/utils/client-cookies.utils.js';
 import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/shared/utils/cookies.utils.js';
+import { envConfig } from '$lib/shared/utils/env-config.js';
 import { EventSource } from 'eventsource';
-import { sleep } from '$lib/shared/utils/time.js';
+import type { LogGranularity } from '../domain/log-granularity';
+import type { LogMetric } from '../domain/log-metric';
 
 type GranularLogMetrics = Record<
   LogGranularity,
   Record<LogMetric['date'], LogMetric>
 >;
 
-const logger = createLogger('log_metrics.state');
+const logger = createLogger('log_metrics.state', true);
 
 // todo: divide api calls responsibility from state
 class LogMetricsState {
