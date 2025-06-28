@@ -11,7 +11,7 @@ import { HttpMonitorReadModule } from '../../../http-monitor/read/http-monitor-r
 import { PublicDashboardReadService } from '../../../public-dashboard/read/public-dashboard-read.service';
 import { PublicDashboardReadModule } from '../../../public-dashboard/read/public-dashboard-read.module';
 import { Reflector } from '@nestjs/core';
-import { PERMITTED_CLUSTER_ROLES_KEY } from '../../decorators/require-cluster-role.decorator';
+import { REQUIRE_ROLE_KEY } from '../../decorators/require-cluster-role.decorator';
 import { ClusterRole } from '../../core/enums/cluster-role.enum';
 
 const CLUSTER_ID_PARAM_NAME = 'clusterId';
@@ -40,10 +40,10 @@ export class ClusterMemberGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredRoles = this.reflector.getAllAndOverride<ClusterRole[]>(
-      PERMITTED_CLUSTER_ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredRoles = this.reflector.getAllAndOverride<ClusterRole[]>(REQUIRE_ROLE_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     if (requiredRoles) {
       console.log('Required roles:', requiredRoles);

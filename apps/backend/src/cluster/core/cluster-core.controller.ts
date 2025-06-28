@@ -30,7 +30,7 @@ import { PublicDashboardReadService } from '../../public-dashboard/read/public-d
 import { groupBy } from '../../shared/utils/group-by';
 import { getUserPlanConfig } from '../../shared/configs/user-plan-configs';
 import { ClusterRole } from './enums/cluster-role.enum';
-import { RequireOneOfClusterRoles } from '../decorators/require-cluster-role.decorator';
+import { RequireRole } from '../decorators/require-cluster-role.decorator';
 
 @ApiTags('Clusters')
 @Controller()
@@ -76,7 +76,7 @@ export class ClusterCoreController {
   }
 
   @UseGuards(ClusterMemberGuard)
-  @RequireOneOfClusterRoles(ClusterRole.Creator)
+  @RequireRole(ClusterRole.Creator)
   @ApiBearerAuth()
   @Delete('clusters/:clusterId')
   public async delete(
