@@ -15,6 +15,10 @@ describe('Telegram notification channel', () => {
     await bootstrap.methods.beforeEach();
   });
 
+  afterAll(async () => {
+    await bootstrap.methods.afterAll();
+  });
+
   describe('http monitor alert message', () => {
     it('sends down message with error message', async () => {
       // given

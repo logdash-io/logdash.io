@@ -6,7 +6,7 @@ import {
   SendWelcomeMessageSpecificProviderDto,
 } from '../notification-channel-provider';
 import { Logger } from '@logdash/js-sdk';
-import { WebhookOptions } from '../../core/types/webhook-options.type';
+import { WebhookHttpMethod, WebhookOptions } from '../../core/types/webhook-options.type';
 
 @Injectable()
 export class WebhookNotificationChannelProvider implements NotificationChannelProvider {
@@ -29,6 +29,7 @@ export class WebhookNotificationChannelProvider implements NotificationChannelPr
     await this.sendMessageToWebhook({
       url: webhookOptions.url,
       headers: webhookOptions.headers,
+      method: webhookOptions.method ?? WebhookHttpMethod.POST,
       bodyToSend: body,
     });
   }
@@ -39,13 +40,50 @@ export class WebhookNotificationChannelProvider implements NotificationChannelPr
 
   private async sendMessageToWebhook(dto: {
     url: string;
+    method: WebhookHttpMethod;
     headers?: Record<string, string>;
     bodyToSend: any;
   }) {
     try {
-      await axios.post(dto.url, dto.bodyToSend, {
-        headers: dto.headers,
-      });
+      switch (dto.method) {
+        case WebhookHttpMethod.POST:
+          await axios.post(dto.url, dto.bodyToSend, {
+            headers: dto.headers,
+          });
+          break;
+        case WebhookHttpMethod.GET:
+          await axios.get(dto.url, {
+            headers: dto.headers,
+          });
+          break;
+        case WebhookHttpMethod.PUT:
+          await axios.put(dto.url, dto.bodyToSend, {
+            headers: dto.headers,
+          });
+          break;
+        case WebhookHttpMethod.DELETE:
+          await axios.delete(dto.url, {
+            headers: dto.headers,
+          });
+          break;
+        case WebhookHttpMethod.PATCH:
+          await axios.patch(dto.url, dto.bodyToSend, {
+            headers: dto.headers,
+          });
+          break;
+        case WebhookHttpMethod.OPTIONS:
+          await axios.options(dto.url, {
+            headers: dto.headers,
+          });
+          break;
+        case WebhookHttpMethod.HEAD:
+          await axios.head(dto.url, {
+            headers: dto.headers,
+          });
+          break;
+        default:
+          throw new Error(`Unsupported HTTP method: ${dto.method}`);
+      }
     } catch (error) {
       this.logger.error('Failed to send message to webhook', {
         url: dto.url,
