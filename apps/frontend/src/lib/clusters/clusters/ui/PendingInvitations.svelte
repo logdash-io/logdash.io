@@ -28,7 +28,7 @@
 </script>
 
 {#if userInvitationsState.hasPendingInvitations}
-  <div class="success-card mb-4 w-full rounded-xl">
+  <div class="success-card mb-4 w-full rounded-xl pl-2">
     <div class="space-y-3">
       {#each userInvitationsState.invitations as invitation}
         <div class="flex items-center justify-between rounded-lg p-3">

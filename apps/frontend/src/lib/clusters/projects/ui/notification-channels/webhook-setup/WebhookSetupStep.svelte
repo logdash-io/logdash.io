@@ -188,7 +188,7 @@
         class="w-full"
       >
         <button
-          class="btn btn-secondary btn-sm flex w-full items-center justify-center gap-2"
+          class="btn btn-neutral btn-md flex w-full items-center justify-center gap-2"
           onclick={() => {
             if (canUseCustomHeaders) {
               headers.push({
