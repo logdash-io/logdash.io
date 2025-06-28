@@ -8,16 +8,21 @@
   import { clustersState } from '$lib/clusters/clusters/application/clusters.state.svelte.js';
   import { monitoringState } from '../../application/monitoring.state.svelte.js';
   import { notificationChannelsState } from '../../application/notification-channels/notification-channels.state.svelte.js';
+  import { UserTier } from '$lib/shared/types.js';
+  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
 
   type Props = {
     clusterId: string;
   };
 
   const { clusterId }: Props = $props();
+  const userTier = $derived(userState.tier);
   const availableChannels = $state([
     {
       id: 'telegram',
       name: 'Telegram',
+      includedTiers: [],
+      extraTiers: [],
       onclick: () => {
         const monitorId = notificationChannelSetupState.state.monitorId;
         telegramSetupState.startSetup(monitorId);
@@ -27,6 +32,8 @@
     {
       id: 'webhook',
       name: 'Webhook',
+      includedTiers: [UserTier.EARLY_BIRD, UserTier.PRO],
+      extraTiers: [UserTier.CONTRIBUTOR],
       onclick: () => {
         // notificationChannelSetupState.startWebhookSetup();
       },
@@ -39,6 +46,18 @@
   function closeModal() {
     notificationChannelSetupState.close();
   }
+
+  const channelUnavailable = (channel: (typeof availableChannels)[number]) => {
+    return (
+      channel.includedTiers.length &&
+      !channel.includedTiers.includes(userTier) &&
+      !channel.extraTiers.includes(userTier)
+    );
+  };
+
+  const isFreeChannel = (channel: (typeof availableChannels)[number]) => {
+    return !channel.includedTiers.length;
+  };
 </script>
 
 {#snippet base()}
@@ -61,14 +80,32 @@
     <div class="flex flex-col">
       {#each availableChannels as channel (channel.id)}
         <div
-          class="hover:bg-secondary/10 flex cursor-pointer items-center justify-start gap-4 rounded-xl px-4 py-3"
+          class="hover:bg-secondary/10 flex cursor-pointer select-none items-center justify-start gap-4 rounded-xl px-4 py-3"
           onclick={() => {
+            if (channelUnavailable(channel)) {
+              return;
+            }
+
             selectedChannel = channel.id;
             channel.onclick?.();
           }}
         >
           <channel.icon class="text-secondary ml-2 inline h-4 w-4" />
           <span>{channel.name}</span>
+
+          {#if isFreeChannel(channel)}
+            <div class="ml-auto">
+              <div class="badge badge-secondary badge-soft badge-sm">Free</div>
+            </div>
+          {/if}
+
+          {#if channelUnavailable(channel)}
+            <div
+              class="badge badge-primary badge-soft badge-sm ml-auto capitalize"
+            >
+              {userState.humanReadableTier(channel.includedTiers[0])}
+            </div>
+          {/if}
         </div>
       {/each}
     </div>
