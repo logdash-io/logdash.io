@@ -12,6 +12,8 @@ import { ApiKeyCoreModule } from '../../src/api-key/core/api-key-core.module';
 import { ApiKeyEntity } from '../../src/api-key/core/entities/api-key.entity';
 import { ClusterCoreModule } from '../../src/cluster/core/cluster-core.module';
 import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
+import { ClusterInviteCoreModule } from '../../src/cluster-invite/core/cluster-invite-core.module';
+import { ClusterInviteEntity } from '../../src/cluster-invite/core/entities/cluster-invite.entity';
 import { HttpMonitorEntity } from '../../src/http-monitor/core/entities/http-monitor.entity';
 import { HttpMonitorCoreModule } from '../../src/http-monitor/core/http-monitor-core.module';
 import { HttpPingBucketCoreModule } from '../../src/http-ping-bucket/core/http-ping-bucket-core.module';
@@ -82,6 +84,7 @@ export async function createTestApp() {
       HttpPingCoreModule,
       HttpPingBucketCoreModule,
       ClusterCoreModule,
+      ClusterInviteCoreModule,
       MetricRegisterCoreModule,
       NotificationChannelCoreModule,
       PublicDashboardCoreModule,
@@ -122,6 +125,9 @@ export async function createTestApp() {
     getModelToken(HttpMonitorEntity.name),
   );
   const clusterModel: Model<ClusterEntity> = module.get(getModelToken(ClusterEntity.name));
+  const clusterInviteModel: Model<ClusterInviteEntity> = module.get(
+    getModelToken(ClusterInviteEntity.name),
+  );
   const notificationChannelModel: Model<NotificationChannelEntity> = module.get(
     getModelToken(NotificationChannelEntity.name),
   );
@@ -147,6 +153,7 @@ export async function createTestApp() {
       metricRegisterModel.deleteMany({}),
       httpMonitorModel.deleteMany({}),
       clusterModel.deleteMany({}),
+      clusterInviteModel.deleteMany({}),
       notificationChannelModel.deleteMany({}),
       publicDashboardModel.deleteMany({}),
       subscriptionModel.deleteMany({}),
@@ -191,6 +198,7 @@ export async function createTestApp() {
       metricRegisterModel,
       httpMonitorModel,
       clusterModel,
+      clusterInviteModel,
       notificationChannelModel,
       publicDashboardModel,
       subscriptionModel,
