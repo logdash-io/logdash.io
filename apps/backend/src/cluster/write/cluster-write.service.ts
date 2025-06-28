@@ -27,6 +27,7 @@ export class ClusterWriteService {
       members: [...new Set([dto.creatorId, ...(dto.members || [])])],
       creatorId: dto.creatorId,
       tier: dto.tier,
+      roles: dto.roles,
     });
 
     this.metrics.mutate('clustersCreated', 1);
@@ -101,5 +102,12 @@ export class ClusterWriteService {
     });
 
     await this.model.deleteOne({ _id: new Types.ObjectId(id) });
+  }
+
+  public async deleteRole(clusterId: string, userId: string): Promise<void> {
+    await this.model.updateOne(
+      { _id: new Types.ObjectId(clusterId) },
+      { $unset: { [`roles.${userId}`]: 1 } },
+    );
   }
 }

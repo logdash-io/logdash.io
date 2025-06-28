@@ -41,7 +41,7 @@ import { UserEntity } from '../../src/user/core/entities/user.entity';
 import { UserCoreModule } from '../../src/user/core/user-core.module';
 import { AuthCoreModule } from './../../src/auth/core/auth-core.module';
 import { rootClickHouseTestModule } from './clickhouse-test-container-server';
-import { ProjectGroupUtils } from './cluster-utils';
+import { ClusterUtils } from './cluster-utils';
 import { NotificationChannelUtils } from './communication-channel-utils';
 import { DemoUtils } from './demo';
 import { GeneralUtils } from './general';
@@ -211,7 +211,7 @@ export async function createTestApp() {
       metricUtils: new MetricUtils(app),
       logUtils: new LogUtils(app),
       httpMonitorsUtils: new HttpMonitorUtils(app),
-      projectGroupUtils: new ProjectGroupUtils(app),
+      projectGroupUtils: new ClusterUtils(app),
       generalUtils: new GeneralUtils(app),
       demoUtils: new DemoUtils(app),
       notificationChannelUtils: new NotificationChannelUtils(app),
