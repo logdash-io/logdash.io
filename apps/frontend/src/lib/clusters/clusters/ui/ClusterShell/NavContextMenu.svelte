@@ -18,7 +18,7 @@
     class="menu dropdown-content ld-card-base rounded-box z-1 p-2 shadow"
   >
     {#if userState.canUpgrade}
-      <UpgradeButton class="mb-1" />
+      <UpgradeButton class="mb-1" source="nav-menu" />
     {:else}
       <li>
         <a

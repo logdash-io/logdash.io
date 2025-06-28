@@ -2,14 +2,23 @@
   import type { Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import { upgradeState } from './upgrade.state.svelte.js';
-  import { startTierUpgrade } from './start-tier-upgrade.util.js';
+  import {
+    startTierUpgrade,
+    type UpgradeSource,
+  } from './start-tier-upgrade.util.js';
 
   type Props = {
     class?: ClassValue;
     children?: Snippet;
     enabled?: boolean;
+    source?: UpgradeSource;
   };
-  const { class: className = '', children, enabled = true }: Props = $props();
+  const {
+    class: className = '',
+    children,
+    enabled = true,
+    source = 'unknown',
+  }: Props = $props();
 
   const handleMouseEnter = () => {
     if (enabled) {
@@ -30,7 +39,7 @@
   class={['cursor-pointer', className]}
   onclick={() => {
     if (enabled) {
-      startTierUpgrade();
+      startTierUpgrade(source);
     }
   }}
   role="button"

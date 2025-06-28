@@ -20,15 +20,14 @@
 {#snippet configurator(close: () => void)}
   <div
     class={[
-			'ld-card-base ring-base-100 flex h-20 w-96 items-center justify-between gap-2 rounded-xl pr-6 shadow-xl ring transition-colors',
-			{
-				'focus-within:ring-success/50':
-					projectName.length >= MIN_NAME_LENGTH &&
-					projectName.length < MAX_NAME_LENGTH,
-				'focus-within:ring-primary/50':
-					projectName.length < MIN_NAME_LENGTH,
-			},
-		]}
+      'ld-card-base ring-base-100 flex h-20 w-96 items-center justify-between gap-2 rounded-xl pr-6 shadow-xl ring transition-colors',
+      {
+        'focus-within:ring-success/50':
+          projectName.length >= MIN_NAME_LENGTH &&
+          projectName.length < MAX_NAME_LENGTH,
+        'focus-within:ring-primary/50': projectName.length < MIN_NAME_LENGTH,
+      },
+    ]}
   >
     {#if canAddMore}
       <input
@@ -38,20 +37,20 @@
         class="input-sm input-ghost selection:bg-secondary/20 h-full w-full rounded-lg pl-6 text-lg font-semibold outline-0 focus:bg-transparent"
         placeholder="New service name"
         use:autoFocus={{
-					selectAll: true,
-				}}
+          selectAll: true,
+        }}
       />
 
       {#if projectName.length > MIN_NAME_LENGTH && projectName.length < MAX_NAME_LENGTH}{:else}{/if}
 
       <button
         disabled={projectName.length < MIN_NAME_LENGTH ||
-					projectName.length > MAX_NAME_LENGTH}
+          projectName.length > MAX_NAME_LENGTH}
         class="btn btn-success btn-soft btn-sm btn-square"
         onclick={() => {
-					onSubmit(projectName);
-					close();
-				}}
+          onSubmit(projectName);
+          close();
+        }}
         use:clickShortcut={{ key: 'Enter' }}
       >
         <CheckIcon class="h-4 w-4" />
@@ -66,7 +65,7 @@
       </button>
     {:else}
       <div class="flex w-full items-center justify-between gap-2 pl-8">
-        <UpgradeButton>
+        <UpgradeButton source="project-limit">
           Upgrade to add more services
         </UpgradeButton>
 

@@ -74,7 +74,7 @@
         <AlertTriangleIcon class="text-primary h-4 w-4 shrink-0" />
         <span class="text-sm">
           {#if userState.tier === UserTier.FREE}
-            <UpgradeElement>
+            <UpgradeElement source="metrics-limit">
               Upgrade to add
               <strong>{metricsLimitPlanDifference}x</strong>
               more metrics to this project.

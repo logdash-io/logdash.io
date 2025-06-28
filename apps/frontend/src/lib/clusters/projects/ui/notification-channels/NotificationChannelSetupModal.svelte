@@ -72,6 +72,7 @@
         <UpgradeElement
           class="w-full"
           enabled={!allowedNotificationChannels.includes(channel.id)}
+          source="notification-channel-setup"
         >
           <div
             class="hover:bg-secondary/10 flex cursor-pointer items-center justify-start gap-4 rounded-xl px-4 py-3 select-none"

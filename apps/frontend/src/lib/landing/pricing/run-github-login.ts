@@ -10,7 +10,10 @@ export const runGithubLogin = (tier: UserTier) => {
     fallback_url: `/app/auth?needs_account=true`,
     tier,
     next_url: match(tier)
-      .with(UserTier.EARLY_BIRD, () => '/app/api/user/upgrade')
+      .with(
+        UserTier.EARLY_BIRD,
+        () => '/app/api/user/upgrade?source=pricing-page',
+      )
       .otherwise(() => '/app/clusters'),
   });
 };

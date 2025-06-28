@@ -83,7 +83,9 @@
           Publish dashboard
         </button>
       {:else}
-        <UpgradeButton>Upgrade to publish more dashboards</UpgradeButton>
+        <UpgradeButton source="public-dashboard-limit">
+          Upgrade to publish more dashboards
+        </UpgradeButton>
       {/if}
     {/if}
   </div>
