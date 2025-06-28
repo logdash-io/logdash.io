@@ -10,11 +10,11 @@ export class ClusterInviteUtils {
   public async createClusterInvite(dto: {
     token: string;
     clusterId: string;
-    invitedUserId: string;
+    invitedUserEmail: string;
     role?: ClusterRole;
   }): Promise<ClusterInviteSerialized> {
     const body: CreateClusterInviteBody = {
-      invitedUserId: dto.invitedUserId,
+      email: dto.invitedUserEmail,
       role: dto.role ?? ClusterRole.Write,
     };
 

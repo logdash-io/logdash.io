@@ -24,19 +24,19 @@ describe('ClusterInviteCoreController (reads)', () => {
         email: 'admin@example.com',
         userTier: UserTier.Admin,
       });
-      const { user: invitedUser1 } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const { user: invitedUser2 } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { user: invitedUser1 } = await bootstrap.utils.generalUtils.setupClaimed();
+      const { user: invitedUser2 } = await bootstrap.utils.generalUtils.setupClaimed();
 
       await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token,
         clusterId: cluster.id,
-        invitedUserId: invitedUser1.id,
+        invitedUserEmail: invitedUser1.email,
       });
 
       await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token,
         clusterId: cluster.id,
-        invitedUserId: invitedUser2.id,
+        invitedUserEmail: invitedUser2.email,
       });
 
       const response = await request(bootstrap.app.getHttpServer())
@@ -50,7 +50,7 @@ describe('ClusterInviteCoreController (reads)', () => {
     });
 
     it('returns empty array when no invites exist for cluster', async () => {
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed();
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/clusters/${cluster.id}/cluster_invites`)
@@ -61,8 +61,8 @@ describe('ClusterInviteCoreController (reads)', () => {
     });
 
     it('returns 403 when user is not a member of the cluster', async () => {
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed();
+      const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupClaimed();
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/clusters/${cluster.id}/cluster_invites`)
@@ -87,18 +87,18 @@ describe('ClusterInviteCoreController (reads)', () => {
         });
 
       const { token: invitedUserToken, user: invitedUser } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+        await bootstrap.utils.generalUtils.setupClaimed();
 
       await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token: inviterToken,
         clusterId: cluster1.id,
-        invitedUserId: invitedUser.id,
+        invitedUserEmail: invitedUser.email,
       });
 
       await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token: inviterToken2,
         clusterId: cluster2.id,
-        invitedUserId: invitedUser.id,
+        invitedUserEmail: invitedUser.email,
       });
 
       const response = await request(bootstrap.app.getHttpServer())
@@ -112,7 +112,7 @@ describe('ClusterInviteCoreController (reads)', () => {
     });
 
     it('returns empty array when user has no invites', async () => {
-      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token } = await bootstrap.utils.generalUtils.setupClaimed();
 
       const response = await request(bootstrap.app.getHttpServer())
         .get('/users/me/cluster_invites')
@@ -146,7 +146,7 @@ describe('ClusterInviteCoreController (reads)', () => {
         userTier: UserTier.EarlyBird,
       });
 
-      const otherSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const otherSetup = await bootstrap.utils.generalUtils.setupClaimed();
 
       await bootstrap.utils.projectGroupUtils.addRole({
         clusterId: cluster.id,
@@ -170,12 +170,12 @@ describe('ClusterInviteCoreController (reads)', () => {
         userTier: UserTier.EarlyBird,
       });
 
-      const otherSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const otherSetup = await bootstrap.utils.generalUtils.setupClaimed();
 
       await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token,
         clusterId: cluster.id,
-        invitedUserId: otherSetup.user.id,
+        invitedUserEmail: otherSetup.user.email,
       });
 
       const response = await request(bootstrap.app.getHttpServer())
