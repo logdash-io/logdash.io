@@ -13,12 +13,15 @@ import { PublicDashboardReadModule } from '../../../public-dashboard/read/public
 import { Reflector } from '@nestjs/core';
 import { REQUIRE_ROLE_KEY } from '../../decorators/require-cluster-role.decorator';
 import { ClusterRole } from '../../core/enums/cluster-role.enum';
+import { ClusterInviteReadService } from '../../../cluster-invite/read/cluster-invite-read.service';
+import { ClusterInviteReadModule } from '../../../cluster-invite/read/cluster-invite-read.module';
 
 const CLUSTER_ID_PARAM_NAME = 'clusterId';
 const PROJECT_ID_PARAM_NAME = 'projectId';
 const NOTIFICATION_CHANNEL_ID_PARAM_NAME = 'notificationChannelId';
 const HTTP_MONITOR_ID_PARAM_NAME = 'httpMonitorId';
 const PUBLIC_DASHBOARD_ID_PARAM_NAME = 'publicDashboardId';
+const CLUSTER_INVITE_ID_PARAM_NAME = 'clusterInviteId';
 
 export const ClusterMemberGuardImports = [
   ClusterReadModule,
@@ -26,6 +29,7 @@ export const ClusterMemberGuardImports = [
   NotificationChannelReadModule,
   HttpMonitorReadModule,
   PublicDashboardReadModule,
+  ClusterInviteReadModule,
 ];
 
 @Injectable()
@@ -36,18 +40,16 @@ export class ClusterMemberGuard implements CanActivate {
     private readonly notificationChannelReadService: NotificationChannelReadService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly publicDashboardReadService: PublicDashboardReadService,
+    private readonly clusterInviteReadService: ClusterInviteReadService,
     private readonly reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredRoles = this.reflector.getAllAndOverride<ClusterRole[]>(REQUIRE_ROLE_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (requiredRoles) {
-      console.log('Required roles:', requiredRoles);
-    }
+    const allowedRoles =
+      this.reflector.getAllAndOverride<ClusterRole[]>(REQUIRE_ROLE_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]) ?? Object.values(ClusterRole);
 
     const request = context.switchToHttp().getRequest();
 
@@ -58,6 +60,7 @@ export class ClusterMemberGuard implements CanActivate {
     const notificationChannelIdFromParams = request.params[NOTIFICATION_CHANNEL_ID_PARAM_NAME];
     const httpMonitorIdFromParams = request.params[HTTP_MONITOR_ID_PARAM_NAME];
     const publicDashboardIdFromParams = request.params[PUBLIC_DASHBOARD_ID_PARAM_NAME];
+    const clusterInviteIdFromParams = request.params[CLUSTER_INVITE_ID_PARAM_NAME];
 
     if (
       projectIdFromParams === getEnvConfig().demo.projectId ||
@@ -75,10 +78,11 @@ export class ClusterMemberGuard implements CanActivate {
       !projectIdFromParams &&
       !notificationChannelIdFromParams &&
       !httpMonitorIdFromParams &&
-      !publicDashboardIdFromParams
+      !publicDashboardIdFromParams &&
+      !clusterInviteIdFromParams
     ) {
       throw new ForbiddenException(
-        'Cluster ID, project ID, communication channel ID, http monitor ID or public dashboard ID not provided',
+        'Cluster ID, project ID, communication channel ID, http monitor ID, public dashboard ID or cluster invite ID not provided',
       );
     }
 
@@ -86,6 +90,7 @@ export class ClusterMemberGuard implements CanActivate {
       return this.checkForClusterId({
         clusterId: clusterIdFromParams,
         userId,
+        allowedRoles,
       });
     }
 
@@ -93,6 +98,7 @@ export class ClusterMemberGuard implements CanActivate {
       return this.checkForProjectId({
         projectId: projectIdFromParams,
         userId,
+        allowedRoles,
       });
     }
 
@@ -100,6 +106,7 @@ export class ClusterMemberGuard implements CanActivate {
       return this.checkForNotificationChannelId({
         notificationChannelId: notificationChannelIdFromParams,
         userId,
+        allowedRoles,
       });
     }
 
@@ -107,6 +114,7 @@ export class ClusterMemberGuard implements CanActivate {
       return this.checkForHttpMonitorId({
         httpMonitorId: httpMonitorIdFromParams,
         userId,
+        allowedRoles,
       });
     }
 
@@ -114,39 +122,64 @@ export class ClusterMemberGuard implements CanActivate {
       return this.checkForPublicDashboardId({
         publicDashboardId: publicDashboardIdFromParams,
         userId,
+        allowedRoles,
+      });
+    }
+
+    if (clusterInviteIdFromParams) {
+      return this.checkForClusterInviteId({
+        clusterInviteId: clusterInviteIdFromParams,
+        userId,
+        allowedRoles,
       });
     }
 
     throw new ForbiddenException('Invalid request');
   }
 
-  private async checkForProjectId(dto: { projectId: string; userId: string }): Promise<boolean> {
+  private async checkForProjectId(dto: {
+    projectId: string;
+    userId: string;
+    allowedRoles: ClusterRole[];
+  }): Promise<boolean> {
     const project = await this.projectReadCachedService.readProject(dto.projectId);
 
     if (!project) {
       throw new ForbiddenException('Project not found');
     }
 
-    const isMember = await this.clusterReadCachedService.userIsMember({
+    const role = await this.clusterReadCachedService.readUserRole({
       clusterId: project.clusterId,
       userId: dto.userId,
     });
 
-    if (!isMember) {
+    if (!role) {
       throw new ForbiddenException('User is not a member of this cluster');
+    }
+
+    if (!dto.allowedRoles.includes(role)) {
+      throw new ForbiddenException('User does not have the required role');
     }
 
     return true;
   }
 
-  private async checkForClusterId(dto: { clusterId: string; userId: string }): Promise<boolean> {
-    const isMember = await this.clusterReadCachedService.userIsMember({
+  private async checkForClusterId(dto: {
+    clusterId: string;
+    userId: string;
+    allowedRoles: ClusterRole[];
+  }): Promise<boolean> {
+    const role = await this.clusterReadCachedService.readUserRole({
       clusterId: dto.clusterId,
       userId: dto.userId,
     });
 
-    if (!isMember) {
+    if (!role) {
       throw new ForbiddenException('User is not a member of this cluster');
+    }
+
+    if (!dto.allowedRoles.includes(role)) {
+      throw new ForbiddenException('User does not have the required role');
     }
 
     return true;
@@ -155,6 +188,7 @@ export class ClusterMemberGuard implements CanActivate {
   private async checkForNotificationChannelId(dto: {
     notificationChannelId: string;
     userId: string;
+    allowedRoles: ClusterRole[];
   }): Promise<boolean> {
     const channel = await this.notificationChannelReadService.readById(dto.notificationChannelId);
 
@@ -162,13 +196,17 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('Communication channel not found');
     }
 
-    const isMember = await this.clusterReadCachedService.userIsMember({
+    const role = await this.clusterReadCachedService.readUserRole({
       clusterId: channel.clusterId,
       userId: dto.userId,
     });
 
-    if (!isMember) {
+    if (!role) {
       throw new ForbiddenException('User is not a member of this cluster');
+    }
+
+    if (!dto.allowedRoles.includes(role)) {
+      throw new ForbiddenException('User does not have the required role');
     }
 
     return true;
@@ -177,6 +215,7 @@ export class ClusterMemberGuard implements CanActivate {
   private async checkForHttpMonitorId(dto: {
     httpMonitorId: string;
     userId: string;
+    allowedRoles: ClusterRole[];
   }): Promise<boolean> {
     const httpMonitor = await this.httpMonitorReadService.readById(dto.httpMonitorId);
 
@@ -190,13 +229,17 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('Project not found');
     }
 
-    const isMember = await this.clusterReadCachedService.userIsMember({
+    const role = await this.clusterReadCachedService.readUserRole({
       clusterId: project.clusterId,
       userId: dto.userId,
     });
 
-    if (!isMember) {
+    if (!role) {
       throw new ForbiddenException('User is not a member of this cluster');
+    }
+
+    if (!dto.allowedRoles.includes(role)) {
+      throw new ForbiddenException('User does not have the required role');
     }
 
     return true;
@@ -205,6 +248,7 @@ export class ClusterMemberGuard implements CanActivate {
   private async checkForPublicDashboardId(dto: {
     publicDashboardId: string;
     userId: string;
+    allowedRoles: ClusterRole[];
   }): Promise<boolean> {
     const publicDashboard = await this.publicDashboardReadService.readById(dto.publicDashboardId);
 
@@ -212,13 +256,41 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('Public dashboard not found');
     }
 
-    const isMember = await this.clusterReadCachedService.userIsMember({
+    const role = await this.clusterReadCachedService.readUserRole({
       clusterId: publicDashboard.clusterId,
       userId: dto.userId,
     });
 
-    if (!isMember) {
+    if (!role) {
       throw new ForbiddenException('User is not a member of this cluster');
+    }
+
+    if (!dto.allowedRoles.includes(role)) {
+      throw new ForbiddenException('User does not have the required role');
+    }
+
+    return true;
+  }
+
+  private async checkForClusterInviteId(dto: {
+    clusterInviteId: string;
+    userId: string;
+    allowedRoles: ClusterRole[];
+  }): Promise<boolean> {
+    const invite = await this.clusterInviteReadService.readById(dto.clusterInviteId);
+
+    if (!invite) {
+      throw new ForbiddenException('Cluster invite not found');
+    }
+
+    const cluster = await this.clusterReadCachedService.readById(invite.clusterId);
+
+    if (!cluster) {
+      throw new ForbiddenException('Cluster not found');
+    }
+
+    if (!dto.allowedRoles.includes(invite.role)) {
+      throw new ForbiddenException('User does not have the required role');
     }
 
     return true;

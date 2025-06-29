@@ -294,6 +294,45 @@ describe('ClusterCoreController (writes)', () => {
         relatedEntityId: clusterId,
       });
     });
+
+    it('throws 403 error when user is not a member of the cluster', async () => {
+      // given
+      const { user: creator, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: nonMemberToken, user: nonMember } =
+        await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when & then
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}`)
+        .set('Authorization', `Bearer ${nonMemberToken}`)
+        .expect(403);
+
+      // then
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe('User is not a member of this cluster');
+    });
+
+    it('throws 403 error when user is member of the cluster but does not have the required role', async () => {
+      // given
+      const { user: creator, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: nonMemberToken, user: nonMember } =
+        await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        userId: nonMember.id,
+        role: ClusterRole.Write,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}`)
+        .set('Authorization', `Bearer ${nonMemberToken}`);
+
+      // then
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe('User does not have the required role');
+    });
   });
 
   describe('DELETE /clusters/:clusterId/roles/:userId', () => {
@@ -346,6 +385,27 @@ describe('ClusterCoreController (writes)', () => {
       expect(response.body.message).toBe(
         'Cannot delete role. User is the creator of this cluster.',
       );
+    });
+
+    it('throws 403 error when user does not have the required role', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const otherSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Write,
+        userId: otherSetup.user.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}/roles/${otherSetup.user.id}`)
+        .set('Authorization', `Bearer ${otherSetup.token}`);
+
+      // then
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe('User does not have the required role');
     });
   });
 });

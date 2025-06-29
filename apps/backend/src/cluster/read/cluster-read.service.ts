@@ -13,29 +13,18 @@ export class ClusterReadService {
   ) {}
 
   public async readById(clusterId: string): Promise<ClusterNormalized | null> {
-    const cluster = await this.model
-      .findById(clusterId)
-      .lean<ClusterEntity>()
-      .exec();
+    const cluster = await this.model.findById(clusterId).lean<ClusterEntity>().exec();
 
     return cluster ? ClusterSerializer.normalize(cluster) : null;
   }
 
-  public async readWhereUserIsInMembers(
-    userId: string,
-  ): Promise<ClusterNormalized[]> {
-    const clusters = await this.model
-      .find({ members: userId })
-      .lean<ClusterEntity[]>()
-      .exec();
+  public async readWhereUserIsInMembers(userId: string): Promise<ClusterNormalized[]> {
+    const clusters = await this.model.find({ members: userId }).lean<ClusterEntity[]>().exec();
 
     return ClusterSerializer.normalizeMany(clusters);
   }
 
-  public async userIsMember(dto: {
-    userId: string;
-    clusterId: string;
-  }): Promise<boolean> {
+  public async userIsMember(dto: { userId: string; clusterId: string }): Promise<boolean> {
     const cluster = await this.model
       .findOne({ _id: dto.clusterId, members: dto.userId })
       .lean<ClusterEntity>()
@@ -44,13 +33,8 @@ export class ClusterReadService {
     return !!cluster;
   }
 
-  public async readByCreatorId(
-    creatorId: string,
-  ): Promise<ClusterNormalized[]> {
-    const clusters = await this.model
-      .find({ creatorId })
-      .lean<ClusterEntity[]>()
-      .exec();
+  public async readByCreatorId(creatorId: string): Promise<ClusterNormalized[]> {
+    const clusters = await this.model.find({ creatorId }).lean<ClusterEntity[]>().exec();
 
     return ClusterSerializer.normalizeMany(clusters);
   }

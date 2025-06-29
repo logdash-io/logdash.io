@@ -162,6 +162,7 @@ export class ClusterCoreController {
     });
   }
 
+  @RequireRole(ClusterRole.Creator)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Delete('clusters/:clusterId/roles/:userId')

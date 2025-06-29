@@ -4,6 +4,7 @@ import { RedisService } from '../../shared/redis/redis.service';
 import { ClusterTier } from '../core/enums/cluster-tier.enum';
 import { ClusterReadService } from './cluster-read.service';
 import { ClusterNormalized } from '../core/entities/cluster.interface';
+import { ClusterRole } from '../core/enums/cluster-role.enum';
 
 @Injectable()
 export class ClusterReadCachedService {
@@ -97,5 +98,37 @@ export class ClusterReadCachedService {
     await this.redisService.set(cacheKey, isMember.toString(), cacheTtlSeconds);
 
     return isMember;
+  }
+
+  public async readUserRole(dto: {
+    clusterId: string;
+    userId: string;
+  }): Promise<ClusterRole | null> {
+    const cacheKey = `cluster:${dto.clusterId}:user:${dto.userId}:role`;
+    const cacheTtlSeconds = 5;
+    const cachedResult = await this.redisService.get(cacheKey);
+
+    if (cachedResult !== null) {
+      return cachedResult as ClusterRole;
+    }
+
+    const cluster = await this.clusterReadService.readById(dto.clusterId);
+
+    if (!cluster) {
+      await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
+      this.logger.error(`Cluster not found`, { clusterId: dto.clusterId });
+      return null;
+    }
+
+    const role = cluster.roles[dto.userId];
+
+    if (!role) {
+      await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
+      return null;
+    }
+
+    await this.redisService.set(cacheKey, role, cacheTtlSeconds);
+
+    return role;
   }
 }
