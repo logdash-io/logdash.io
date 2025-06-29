@@ -112,7 +112,6 @@ export class ClusterInviteCoreController {
     return ClusterInviteSerializer.serializeMany(invites);
   }
 
-  @RequireRole(ClusterRole.Creator)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Delete('cluster_invites/:clusterInviteId')

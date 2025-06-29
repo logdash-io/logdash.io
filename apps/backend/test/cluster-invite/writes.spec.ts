@@ -386,32 +386,5 @@ describe('ClusterInviteCoreController (writes)', () => {
       expect(response.statusCode).toBe(403);
       expect(response.body.message).toBe('You can only delete invites you have sent');
     });
-
-    it('throws 403 error when user does not have the required role', async () => {
-      const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
-        email: 'admin@example.com',
-        userTier: UserTier.Admin,
-      });
-      const otherSetup = await bootstrap.utils.generalUtils.setupClaimed();
-
-      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
-        token: token,
-        clusterId: cluster.id,
-        invitedUserEmail: otherSetup.user.email,
-      });
-
-      await bootstrap.utils.projectGroupUtils.addRole({
-        clusterId: cluster.id,
-        role: ClusterRole.Write,
-        userId: otherSetup.user.id,
-      });
-
-      const response = await request(bootstrap.app.getHttpServer())
-        .delete(`/cluster_invites/${invite.id}`)
-        .set('Authorization', `Bearer ${otherSetup.token}`);
-
-      expect(response.statusCode).toBe(403);
-      expect(response.body.message).toBe('User does not have the required role');
-    });
   });
 });
