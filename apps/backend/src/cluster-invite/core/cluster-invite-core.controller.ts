@@ -26,6 +26,8 @@ import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ClusterInviteLimitService } from '../limit/cluster-invite-limit.service';
 import { ClusterInviteCapacityResponse } from './dto/cluster-invite-capacity.response';
+import { RequireRole } from '../../cluster/decorators/require-cluster-role.decorator';
+import { ClusterRole } from '../../cluster/core/enums/cluster-role.enum';
 
 @ApiTags('Cluster Invites')
 @Controller()
@@ -39,6 +41,7 @@ export class ClusterInviteCoreController {
     private readonly clusterInviteLimitService: ClusterInviteLimitService,
   ) {}
 
+  @RequireRole(ClusterRole.Creator)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Post('clusters/:clusterId/cluster_invites')
@@ -136,14 +139,15 @@ export class ClusterInviteCoreController {
     return ClusterInviteSerializer.serializeMany(invites, clusterNames);
   }
 
+  @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
-  @Delete('cluster_invites/:inviteId')
+  @Delete('cluster_invites/:clusterInviteId')
   @ApiResponse({ type: SuccessResponse })
   public async deleteInvite(
-    @Param('inviteId') inviteId: string,
+    @Param('clusterInviteId') clusterInviteId: string,
     @CurrentUserId() userId: string,
   ): Promise<SuccessResponse> {
-    const invite = await this.clusterInviteReadService.readById(inviteId);
+    const invite = await this.clusterInviteReadService.readById(clusterInviteId);
     if (!invite) {
       throw new NotFoundException('Invite not found');
     }
@@ -152,19 +156,19 @@ export class ClusterInviteCoreController {
       throw new ForbiddenException('You can only delete invites you have sent');
     }
 
-    await this.clusterInviteWriteService.delete(inviteId, userId);
+    await this.clusterInviteWriteService.delete(clusterInviteId, userId);
 
     return new SuccessResponse();
   }
 
   @ApiBearerAuth()
-  @Put('cluster_invites/:inviteId/accept')
+  @Put('cluster_invites/:clusterInviteId/accept')
   @ApiResponse({ type: SuccessResponse })
   public async acceptInvite(
-    @Param('inviteId') inviteId: string,
+    @Param('clusterInviteId') clusterInviteId: string,
     @CurrentUserId() userId: string,
   ): Promise<SuccessResponse> {
-    const invite = await this.clusterInviteReadService.readById(inviteId);
+    const invite = await this.clusterInviteReadService.readById(clusterInviteId);
 
     if (!invite) {
       throw new NotFoundException('Invite not found');
@@ -176,7 +180,7 @@ export class ClusterInviteCoreController {
 
     await this.clusterWriteService.addRole(invite.clusterId, invite.invitedUserId, invite.role);
 
-    await this.clusterInviteWriteService.delete(inviteId, userId);
+    await this.clusterInviteWriteService.delete(clusterInviteId, userId);
 
     return new SuccessResponse();
   }

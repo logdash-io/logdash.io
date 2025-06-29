@@ -158,6 +158,28 @@ describe('ClusterInviteCoreController (writes)', () => {
       });
     });
 
+    it('throws 403 error when user is does not have the required role', async () => {
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const otherSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Write,
+        userId: otherSetup.user.id,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/cluster_invites`)
+        .set('Authorization', `Bearer ${otherSetup.token}`)
+        .send({
+          email: otherSetup.user.email,
+          role: ClusterRole.Write,
+        });
+
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe('User does not have the required role');
+    });
+
     describe('Max capacity', () => {
       it('throws error when cluster is at max capacity (FREE)', async () => {
         const setup = await bootstrap.utils.generalUtils.setupClaimed({
