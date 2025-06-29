@@ -120,7 +120,7 @@ export class ClusterReadCachedService {
       return null;
     }
 
-    const role = cluster.roles[dto.userId];
+    const role = cluster.roles?.[dto.userId];
 
     if (!role) {
       await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);

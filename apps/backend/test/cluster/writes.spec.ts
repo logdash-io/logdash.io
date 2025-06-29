@@ -115,22 +115,12 @@ describe('ClusterCoreController (writes)', () => {
   describe('PUT /clusters/:clusterId', () => {
     it('updates cluster name', async () => {
       // given
-      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, user, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
       const userId = user.id;
-
-      const cluster = await bootstrap.models.clusterModel.create({
-        _id: new Types.ObjectId(),
-        name: 'Original Cluster Name',
-        creatorId: userId,
-        members: [userId],
-        tier: ClusterTier.Free,
-      });
-
-      const clusterId = cluster._id.toString();
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .put(`/clusters/${clusterId}`)
+        .put(`/clusters/${cluster.id}`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'Updated Cluster Name' })
         .expect(200);
@@ -138,28 +128,17 @@ describe('ClusterCoreController (writes)', () => {
       // then
       expect(response.body.name).toBe('Updated Cluster Name');
 
-      const updatedCluster = await bootstrap.models.clusterModel.findById(clusterId);
+      const updatedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
       expect(updatedCluster?.name).toBe('Updated Cluster Name');
     });
 
     it('creates audit log when cluster is updated', async () => {
       // given
-      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const userId = user.id;
-
-      const cluster = await bootstrap.models.clusterModel.create({
-        _id: new Types.ObjectId(),
-        name: 'Original Cluster Name',
-        creatorId: userId,
-        members: [userId],
-        tier: ClusterTier.Free,
-      });
-
-      const clusterId = cluster._id.toString();
+      const { token, user, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .put(`/clusters/${clusterId}`)
+        .put(`/clusters/${cluster.id}`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'Updated Cluster Name' });
 
@@ -168,7 +147,7 @@ describe('ClusterCoreController (writes)', () => {
         userId: user.id,
         action: AuditLogEntityAction.Update,
         relatedDomain: RelatedDomain.Cluster,
-        relatedEntityId: clusterId,
+        relatedEntityId: cluster.id,
       });
     });
 
@@ -205,57 +184,44 @@ describe('ClusterCoreController (writes)', () => {
   describe('DELETE /clusters/:clusterId', () => {
     it('deletes cluster and connected projects and public dashboards', async () => {
       // given
-      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const userId = user.id;
-
-      const cluster = await bootstrap.models.clusterModel.create({
-        _id: new Types.ObjectId(),
-        name: 'Test Cluster',
-        creatorId: userId,
-        members: [userId],
-        tier: ClusterTier.Free,
-      });
-
-      const project = await bootstrap.utils.projectUtils.createDefaultProject({
-        clusterId: cluster._id.toString(),
-      });
+      const { token, user, cluster, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         projectId: project.id,
         token,
       });
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
-        clusterId: cluster._id.toString(),
+        clusterId: cluster.id,
         httpMonitorsIds: [monitor.id],
         token,
       });
 
       const projectsBeforeRemoval = await bootstrap.models.projectModel.find({
-        clusterId: cluster._id.toString(),
+        clusterId: cluster.id,
       });
 
       const publicDashboardsBeforeRemoval = await bootstrap.models.publicDashboardModel.find({
-        clusterId: cluster._id.toString(),
+        clusterId: cluster.id,
       });
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .delete(`/clusters/${cluster._id.toString()}`)
+        .delete(`/clusters/${cluster.id}`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
       expect(response.status).toEqual(200);
 
       const projectsAfterRemoval = await bootstrap.models.projectModel.find({
-        clusterId: cluster._id.toString(),
+        clusterId: cluster.id,
       });
 
       const clustersAfterRemoval = await bootstrap.models.clusterModel.find({
-        _id: new Types.ObjectId(cluster._id.toString()),
+        _id: new Types.ObjectId(cluster.id),
       });
 
       const publicDashboardsAfterRemoval = await bootstrap.models.publicDashboardModel.find({
-        clusterId: cluster._id.toString(),
+        clusterId: cluster.id,
       });
 
       expect(projectsBeforeRemoval).toHaveLength(1);
@@ -268,22 +234,11 @@ describe('ClusterCoreController (writes)', () => {
 
     it('creates audit log when cluster is deleted', async () => {
       // given
-      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const userId = user.id;
-
-      const cluster = await bootstrap.models.clusterModel.create({
-        _id: new Types.ObjectId(),
-        name: 'Test Cluster',
-        creatorId: userId,
-        members: [userId],
-        tier: ClusterTier.Free,
-      });
-
-      const clusterId = cluster._id.toString();
+      const { token, user, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .delete(`/clusters/${clusterId}`)
+        .delete(`/clusters/${cluster.id}`)
         .set('Authorization', `Bearer ${token}`);
 
       // then
@@ -291,7 +246,7 @@ describe('ClusterCoreController (writes)', () => {
         userId: user.id,
         action: AuditLogEntityAction.Delete,
         relatedDomain: RelatedDomain.Cluster,
-        relatedEntityId: clusterId,
+        relatedEntityId: cluster.id,
       });
     });
 
