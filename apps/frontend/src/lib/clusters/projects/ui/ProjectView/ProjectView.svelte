@@ -9,7 +9,7 @@
   import ProjectSync from './ProjectSync.svelte';
   import DataTile from './tiles/DataTile.svelte';
   import LogsLineChartTile from './tiles/LogMetricsTile.svelte';
-  import LogsListTile from './tiles/LogsTile.svelte';
+  import LogsListTile from './tiles/logs/LogsTile.svelte';
   import MetricsTiles from './tiles/MetricsTiles.svelte';
 
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));

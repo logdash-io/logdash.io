@@ -3,7 +3,7 @@
   import LogsListener from '$lib/clusters/projects/ui/presentational/LogsListener.svelte';
   import DataTile from '$lib/clusters/projects/ui/ProjectView/tiles/DataTile.svelte';
   import LogsLineChartTile from '$lib/clusters/projects/ui/ProjectView/tiles/LogMetricsTile.svelte';
-  import LogsListTile from '$lib/clusters/projects/ui/ProjectView/tiles/LogsTile.svelte';
+  import LogsListTile from '$lib/clusters/projects/ui/ProjectView/tiles/logs/LogsTile.svelte';
   import { LogdashSDKName, type LogdashSDK } from '$lib/shared/types.js';
   import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
   import { getContext, onMount, type Snippet } from 'svelte';
@@ -199,9 +199,9 @@ The prompt should output **only** this install command and this exact code block
   </DataTile>
 </div>
 
-<div class="fixed left-0 top-0 z-50 flex h-full w-full bg-black/60">
+<div class="fixed top-0 left-0 z-50 flex h-full w-full bg-black/60">
   <div
-    class="bg-base-200 sm:w-xl absolute right-0 top-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:p-8"
+    class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:w-xl sm:p-8"
   >
     <div class="space-y-2">
       <h5 class="text-2xl font-semibold">Setup Logging for your service</h5>
@@ -238,7 +238,7 @@ The prompt should output **only** this install command and this exact code block
               );
             }}
             for="copy-code-1"
-            class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute right-2 top-2 border-transparent"
+            class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute top-2 right-2 border-transparent"
           >
             <input id="copy-code-1" bind:checked={copied} type="checkbox" />
 
