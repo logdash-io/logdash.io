@@ -12,13 +12,17 @@
     };
   };
   const { data }: Props = $props();
+
+  const ownProjectsCount = $derived(
+    clustersState.ownClustersProjectsCount(data.user.id),
+  );
+  const tierMaxProjects = $derived(
+    exposedConfigState.maxNumberOfProjects(data.user.tier),
+  );
 </script>
 
 <svelte:head>
   <title>all_clusters | logdash</title>
 </svelte:head>
 
-<ClustersList
-  canCreate={clustersState.allClustersProjectsCount <
-    exposedConfigState.maxNumberOfProjects(data.user.tier)}
-/>
+<ClustersList canCreate={ownProjectsCount < tierMaxProjects} />

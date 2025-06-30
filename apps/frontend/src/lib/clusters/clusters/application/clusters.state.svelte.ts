@@ -35,10 +35,12 @@ class ClustersState {
     }, 0);
   }
 
-  get allClustersProjectsCount(): number {
-    return this.clusters.reduce((acc, cluster) => {
-      return acc + (cluster.projects?.length || 0);
-    }, 0);
+  ownClustersProjectsCount(userId: string): number {
+    return this.clusters
+      .filter((cluster) => cluster.creatorId === userId)
+      .reduce((acc, cluster) => {
+        return acc + (cluster.projects?.length || 0);
+      }, 0);
   }
 
   get ready(): boolean {

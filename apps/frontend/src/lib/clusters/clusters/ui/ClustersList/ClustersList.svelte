@@ -96,7 +96,6 @@
       <ClusterCreatorTile
         canAddMore={canCreate}
         delayIn={clustersState.clusters.length * ANIMATION_DELAY}
-        delayOut={0}
         onSubmit={(name) => {
           clustersState.create(name).then((createdClusterId) => {
             toast.success('Project created!');
@@ -121,7 +120,6 @@
             <ClusterCreatorTile
               canAddMore={canCreate}
               delayIn={delay}
-              delayOut={0}
               onSubmit={(name) => {
                 clustersState.create(name).then((createdClusterId) => {
                   toast.success('Project created!');

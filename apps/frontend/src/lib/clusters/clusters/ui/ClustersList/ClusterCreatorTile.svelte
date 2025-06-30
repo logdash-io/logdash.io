@@ -8,10 +8,9 @@
   type Props = {
     canAddMore: boolean;
     delayIn?: number;
-    delayOut?: number;
     onSubmit: (name: string) => void;
   };
-  const { canAddMore, delayIn, delayOut, onSubmit }: Props = $props();
+  const { canAddMore, delayIn, onSubmit }: Props = $props();
 
   const MIN_NAME_LENGTH = 3;
   const MAX_NAME_LENGTH = 30;
@@ -86,20 +85,10 @@
         </button>
       {:else}
         <div class="flex w-full items-center justify-between gap-2 pl-8">
-          <!--          <h5 class="text- font-semibold">-->
-          <!--            -->
-          <!--          </h5>-->
           <UpgradeButton source="cluster-limit">
             Upgrade to add more projects
           </UpgradeButton>
-          <!--					<button-->
-          <!--						class="btn btn-primary btn-sm ml-auto"-->
-          <!--						onclick={() => {-->
-          <!--							goto('/app/api/user/upgrade');-->
-          <!--						}}-->
-          <!--					>-->
-          <!--						Upgrade-->
-          <!--					</button>-->
+
           <button
             class="btn btn-error btn-soft btn-sm btn-square"
             onclick={() => (editMode = false)}
