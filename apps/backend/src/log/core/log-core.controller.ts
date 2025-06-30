@@ -36,7 +36,7 @@ import { CreateLogBody } from './dto/create-log.body';
 import { CreateLogsBatchBody } from './dto/create-logs-batch.body';
 import { ReadLogsQuery } from './dto/read-newer-than.query';
 import { StreamProjectLogsQuery } from './dto/stream-project-logs.query';
-import { LogSerialized } from './entities/log.interface';
+import { LogNormalized, LogSerialized } from './entities/log.interface';
 import { LogSerializer } from './entities/log.serializer';
 import { LogReadDirection } from './enums/log-read-direction.enum';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
@@ -201,15 +201,36 @@ export class LogCoreController {
     @Query() dto: ReadLogsQuery,
   ): Promise<LogSerialized[]> {
     if ((dto.lastId && !dto.direction) || (!dto.lastId && dto.direction)) {
-      throw new BadRequestException('Provide either lastId and direction or neither');
+      throw new BadRequestException('Provide either lastId+direction or startDate+endDate');
     }
 
-    const logs = await this.logReadClickhouseService.readMany({
-      direction: dto.direction,
-      lastId: dto.lastId,
-      projectId,
-      limit: dto.limit ?? 50,
-    });
+    if (dto.lastId && (dto.startDate || dto.endDate)) {
+      throw new BadRequestException('Provide either lastId+direction or startDate+endDate');
+    }
+
+    if (dto.direction && (dto.startDate || dto.endDate)) {
+      throw new BadRequestException('Provide either lastId+direction or startDate+endDate');
+    }
+
+    let logs: LogNormalized[] = [];
+
+    if (dto.startDate || dto.endDate) {
+      logs = await this.logReadClickhouseService.readManyDateRange({
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        projectId,
+        limit: dto.limit ?? 50,
+        level: dto.level,
+      });
+    } else {
+      logs = await this.logReadClickhouseService.readManyLastId({
+        direction: dto.direction,
+        lastId: dto.lastId,
+        projectId,
+        limit: dto.limit ?? 50,
+        level: dto.level,
+      });
+    }
 
     return logs.map((log) => LogSerializer.serialize(log));
   }

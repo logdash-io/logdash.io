@@ -1,7 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, Max } from 'class-validator';
+import { IsDate, IsDateString, IsEnum, IsOptional, IsString, Max } from 'class-validator';
 import { LogReadDirection } from '../enums/log-read-direction.enum';
 import { Transform } from 'class-transformer';
+import { LogLevel } from '../enums/log-level.enum';
 
 export class ReadLogsQuery {
   @ApiPropertyOptional()
@@ -12,11 +13,29 @@ export class ReadLogsQuery {
   @ApiPropertyOptional({ enum: LogReadDirection })
   @IsEnum(LogReadDirection)
   @IsOptional()
-  direction;
+  direction: LogReadDirection;
 
   @ApiPropertyOptional()
   @IsOptional()
   @Max(100)
   @Transform(({ value }) => Number(value))
   limit?: number;
+
+  @ApiPropertyOptional()
+  @Transform(({ value }) => new Date(value))
+  @IsDate()
+  @IsOptional()
+  startDate?: Date;
+
+  @ApiPropertyOptional()
+  @Transform(({ value }) => new Date(value))
+  @IsDate()
+  @IsOptional()
+  endDate?: Date;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @IsEnum(LogLevel)
+  level?: LogLevel;
 }

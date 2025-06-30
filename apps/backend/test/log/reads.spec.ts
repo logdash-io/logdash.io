@@ -270,4 +270,260 @@ describe('LogCoreController (reads)', () => {
       expect(secondResponse.body).toEqual([{ message: 'I like turtles' }]);
     });
   });
+
+  describe('GET /projects/:projectId/logs/v2 (date range)', () => {
+    it('reads logs with only startDate provided', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const baseDate = new Date('2023-01-01T12:00:00Z');
+      const startDate = new Date('2023-01-01T11:30:00Z');
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T11:00:00Z').toISOString(),
+        message: 'Before start date',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: baseDate.toISOString(),
+        message: 'After start date',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T13:00:00Z').toISOString(),
+        message: 'Much after start date',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await sleep(1_500);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?startDate=${startDate.toISOString()}`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toHaveLength(2);
+      expect(response.body.some((log) => log.message === 'After start date')).toBe(true);
+      expect(response.body.some((log) => log.message === 'Much after start date')).toBe(true);
+      expect(response.body.some((log) => log.message === 'Before start date')).toBe(false);
+    });
+
+    it('reads logs with only endDate provided', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const endDate = new Date('2023-01-01T11:30:00Z');
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T11:00:00Z').toISOString(),
+        message: 'Before end date',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
+        message: 'After end date',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await sleep(1_500);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?endDate=${endDate.toISOString()}`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].message).toEqual('Before end date');
+    });
+
+    it('reads logs with both startDate and endDate provided', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const startDate = new Date('2023-01-01T11:30:00Z');
+      const endDate = new Date('2023-01-01T12:30:00Z');
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T11:00:00Z').toISOString(),
+        message: 'Before range',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
+        message: 'In range',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T13:00:00Z').toISOString(),
+        message: 'After range',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await sleep(1_500);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(
+          `/projects/${setup.project.id}/logs/v2?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
+        )
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].message).toEqual('In range');
+    });
+
+    it('reads logs with date range and level filter', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const startDate = new Date('2023-01-01T11:30:00Z');
+      const endDate = new Date('2023-01-01T12:30:00Z');
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
+        message: 'Info log in range',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T12:10:00Z').toISOString(),
+        message: 'Error log in range',
+        level: LogLevel.Error,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T12:20:00Z').toISOString(),
+        message: 'Warning log in range',
+        level: LogLevel.Warning,
+        withoutSleep: true,
+      });
+
+      await sleep(1_500);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(
+          `/projects/${setup.project.id}/logs/v2?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&level=${LogLevel.Error}`,
+        )
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].message).toEqual('Error log in range');
+      expect(response.body[0].level).toEqual(LogLevel.Error);
+    });
+
+    it('returns empty array when no logs match date range', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const startDate = new Date('2023-01-01T11:30:00Z');
+      const endDate = new Date('2023-01-01T12:30:00Z');
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T10:00:00Z').toISOString(),
+        message: 'Before range',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T14:00:00Z').toISOString(),
+        message: 'After range',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await sleep(1_500);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(
+          `/projects/${setup.project.id}/logs/v2?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
+        )
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toHaveLength(0);
+    });
+
+    it('throws error when combining lastId with date range', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const startDate = new Date('2023-01-01T11:30:00Z');
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(
+          `/projects/${setup.project.id}/logs/v2?lastId=someId&startDate=${startDate.toISOString()}`,
+        )
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(response.status).toEqual(400);
+      expect(response.body.message).toEqual('Provide either lastId+direction or startDate+endDate');
+    });
+
+    it('throws error when combining direction with date range', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const startDate = new Date('2023-01-01T11:30:00Z');
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(
+          `/projects/${setup.project.id}/logs/v2?direction=after&startDate=${startDate.toISOString()}`,
+        )
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(response.status).toEqual(400);
+      expect(response.body.message).toEqual('Provide either lastId+direction or startDate+endDate');
+    });
+
+    it('respects limit parameter with date range', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const startDate = new Date('2023-01-01T11:30:00Z');
+      const endDate = new Date('2023-01-01T12:30:00Z');
+
+      for (let i = 0; i < 5; i++) {
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date(`2023-01-01T12:${i.toString().padStart(2, '0')}:00Z`).toISOString(),
+          message: `Log ${i}`,
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+      }
+
+      await sleep(1_500);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(
+          `/projects/${setup.project.id}/logs/v2?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&limit=3`,
+        )
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toHaveLength(3);
+    });
+  });
 });
