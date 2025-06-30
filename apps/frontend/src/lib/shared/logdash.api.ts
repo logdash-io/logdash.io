@@ -250,6 +250,11 @@ class LogdashAPI {
     );
   }
 
+  /**
+   * @deprecated Use ClusterService.getClusters() instead
+   * @param access_token
+   * @returns
+   */
   get_user_clusters(access_token: string): Promise<Cluster[]> {
     return this.get<Cluster[]>(
       `${LogdashAPI.v0baseUrl}/users/me/clusters`,

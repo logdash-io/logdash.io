@@ -237,14 +237,14 @@
         </div>
       </div>
     {:else}
-      <div class="text-base-content/50 py-8 text-center">
-        <UserPlusIcon class="mx-auto mb-3 h-12 w-12 opacity-30" />
+      <div class="text-base-content/50 py-4 text-center">
+        <UserPlusIcon class="mx-auto mb-3 h-10 w-10 opacity-30" />
         <p>No pending invitations</p>
       </div>
     {/if}
   {/if}
 
-  <div class="flex justify-end gap-3 pt-6">
+  <div class="flex justify-end gap-3 pt-2">
     <button class="btn btn-ghost" onclick={onClose}>Close</button>
   </div>
 </Modal>

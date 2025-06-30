@@ -27,13 +27,23 @@
       day: 'numeric',
     });
   }
+
+  const invitations = $derived(userInvitationsState.invitations);
 </script>
 
 {#if userInvitationsState.hasPendingInvitations}
-  <div class="success-card mb-4 w-full rounded-xl pl-2">
-    <div class="space-y-3">
-      {#each userInvitationsState.invitations as invitation}
-        <div class="flex items-center justify-between rounded-lg p-3">
+  <div class="success-card mb-4 w-full rounded-xl px-2">
+    <div class="space-y-0">
+      {#each invitations as invitation, index}
+        <div
+          class={[
+            'flex items-center justify-between rounded-lg p-3 pr-1',
+            {
+              'border-success/20 rounded-b-none border-b':
+                invitations.length > 1 && index !== invitations.length - 1,
+            },
+          ]}
+        >
           <div class="flex flex-1 items-center">
             <div class="text-sm font-medium">
               {invitation.clusterName} • Invited {formatDate(
