@@ -106,8 +106,10 @@ export class ClusterInviteCoreController {
       roles.map(async (member) => {
         const user = await this.userReadService.readByIdOrThrow(member.id);
         return {
+          id: user.id,
           email: user.email,
           role: member.role,
+          avatarUrl: user.avatarUrl,
         };
       }),
     );
