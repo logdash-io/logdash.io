@@ -18,12 +18,6 @@ export class ClusterReadService {
     return cluster ? ClusterSerializer.normalize(cluster) : null;
   }
 
-  public async readWhereUserIsInMembers(userId: string): Promise<ClusterNormalized[]> {
-    const clusters = await this.model.find({ members: userId }).lean<ClusterEntity[]>().exec();
-
-    return ClusterSerializer.normalizeMany(clusters);
-  }
-
   public async readWhereUserHasAnyRole(userId: string): Promise<ClusterNormalized[]> {
     const clusters = await this.model
       .find({
