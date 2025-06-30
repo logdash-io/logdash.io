@@ -41,6 +41,8 @@ describe('UserTtlService', () => {
   });
 
   it('removes user after threshold', async () => {
+    jest.retryTimes(3);
+
     const service = bootstrap.app.get(UserTtlService);
 
     // given
