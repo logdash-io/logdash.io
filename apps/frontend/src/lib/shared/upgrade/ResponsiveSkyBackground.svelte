@@ -2,7 +2,7 @@
   import SkyBackground from '$lib/shared/upgrade/SkyBackground.svelte';
   import { onMount } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
-  import { scale } from 'svelte/transition';
+  import { fade, scale } from 'svelte/transition';
   import { upgradeState } from './upgrade.state.svelte.js';
 
   let width = $state(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -35,9 +35,9 @@
 
 {#if upgradeState.backgroundVisible || upgradeState.modalOpen}
   <div
-    in:scale={{ duration: 100, easing: cubicInOut, start: 0.9 }}
+    in:fade={{ duration: 300, easing: cubicInOut }}
     out:scale={{ duration: 100, easing: cubicInOut, start: 0.9 }}
-    class="fixed left-0 top-0 h-full w-full overflow-hidden"
+    class="fixed top-0 left-0 h-full w-full overflow-hidden"
   >
     <SkyBackground {density} />
   </div>
