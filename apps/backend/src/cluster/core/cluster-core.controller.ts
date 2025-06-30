@@ -92,7 +92,7 @@ export class ClusterCoreController {
   @Get('users/me/clusters')
   @ApiResponse({ type: ClusterSerialized, isArray: true })
   public async getAll(@CurrentUserId() userId: string): Promise<ClusterSerialized[]> {
-    const clusters = await this.clusterReadService.readWhereUserIsInMembers(userId);
+    const clusters = await this.clusterReadService.readWhereUserHasAnyRole(userId);
 
     const projectsGroupedByCluster = await this.projectReadService.readGroupedByClusterMany(
       clusters.map((cluster) => cluster.id),

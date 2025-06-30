@@ -1,6 +1,8 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { ClusterSerialized } from '../../src/cluster/core/entities/cluster.interface';
+import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('ClusterCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -59,6 +61,31 @@ describe('ClusterCoreController (reads)', () => {
 
       expect(clusterSerialized.projects?.[0].id).toEqual(project.id);
       expect(clusterSerialized.projects?.[0].name).toEqual(project.name);
+    });
+
+    it('reads clusters where user has write role', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Admin,
+      });
+      const otherSetup = await bootstrap.utils.generalUtils.setupClaimed();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: setup.cluster.id,
+        userId: otherSetup.user.id,
+        role: ClusterRole.Write,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/users/me/clusters`)
+        .set('Authorization', `Bearer ${otherSetup.token}`);
+
+      // then
+      const clusterSerialized: ClusterSerialized = response.body[0];
+
+      expect(clusterSerialized.id).toEqual(setup.cluster.id);
+      expect(clusterSerialized.projects?.[0].id).toEqual(setup.project.id);
+      expect(clusterSerialized.projects?.[0].name).toEqual(setup.project.name);
     });
   });
 });

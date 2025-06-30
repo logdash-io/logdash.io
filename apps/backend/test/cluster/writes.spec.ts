@@ -184,7 +184,7 @@ describe('ClusterCoreController (writes)', () => {
   describe('DELETE /clusters/:clusterId', () => {
     it('deletes cluster and connected projects and public dashboards', async () => {
       // given
-      const { token, user, cluster, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         projectId: project.id,

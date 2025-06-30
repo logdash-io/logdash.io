@@ -24,6 +24,19 @@ export class ClusterReadService {
     return ClusterSerializer.normalizeMany(clusters);
   }
 
+  public async readWhereUserHasAnyRole(userId: string): Promise<ClusterNormalized[]> {
+    const clusters = await this.model
+      .find({
+        [`roles.${userId}`]: {
+          $exists: true,
+          $ne: null,
+        },
+      })
+      .lean<ClusterEntity[]>()
+      .exec();
+    return ClusterSerializer.normalizeMany(clusters);
+  }
+
   public async userIsMember(dto: { userId: string; clusterId: string }): Promise<boolean> {
     const cluster = await this.model
       .findOne({ _id: dto.clusterId, members: dto.userId })
