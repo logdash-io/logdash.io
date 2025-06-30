@@ -30,6 +30,7 @@
     let cleanup: () => void;
 
     if (isOpen && clusterId) {
+      clusterInvitesState.loadInvitesAndCapacity(clusterId);
       cleanup = clusterInvitesState.startInvitesPolling(clusterId);
     }
 

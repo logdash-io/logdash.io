@@ -63,16 +63,21 @@ class ClusterInvitesState {
   }
 
   startInvitesPolling(clusterId: string): () => void {
-    this.loadInvites(clusterId);
     const interval = setInterval(() => {
-      this.loadInvites(clusterId);
-    }, 2000);
+      this.loadInvitesAndCapacity(clusterId, true);
+    }, 5000);
 
     return () => clearInterval(interval);
   }
 
-  async loadInvites(clusterId: string): Promise<void> {
-    this._state.isLoading = true;
+  async loadInvitesAndCapacity(
+    clusterId: string,
+    silent = false,
+  ): Promise<void> {
+    if (!silent) {
+      this._state.isLoading = true;
+    }
+
     try {
       const [invites, capacity] = await Promise.all([
         ClusterInvitesService.getClusterInvites(clusterId),
@@ -84,7 +89,9 @@ class ClusterInvitesState {
       toast.error('Failed to load invitations');
       console.error('Failed to load cluster invites:', error);
     } finally {
-      this._state.isLoading = false;
+      if (!silent) {
+        this._state.isLoading = false;
+      }
     }
   }
 

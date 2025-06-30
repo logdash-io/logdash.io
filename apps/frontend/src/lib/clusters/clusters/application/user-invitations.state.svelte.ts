@@ -40,7 +40,7 @@ class UserInvitationsState {
   startPollingInvitations(): () => void {
     const interval = setInterval(async () => {
       await this.loadInvitations();
-    }, 1000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }

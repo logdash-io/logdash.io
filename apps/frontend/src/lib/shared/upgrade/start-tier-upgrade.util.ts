@@ -19,7 +19,7 @@ export const startTierUpgrade = (
   posthog?: PostHog,
   source: UpgradeSource = 'unknown',
 ) => {
-  if (!posthog) {
+  if (posthog) {
     posthog.capture('upgrade_initiated', {
       source,
       timestamp: new Date().toISOString(),
