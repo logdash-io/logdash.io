@@ -51,24 +51,8 @@ export class ClusterInviteCoreController {
     @CurrentUserId() userId: string,
     @Param('clusterId') clusterId: string,
   ): Promise<ClusterInviteSerialized> {
-    const invitedUser = await this.userReadService.readByEmail(body.email);
-
-    if (!invitedUser) {
-      const cluster = await this.clusterReadService.readById(clusterId);
-      return {
-        id: 'pending',
-        inviterUserId: userId,
-        invitedUserEmail: body.email,
-        clusterId,
-        clusterName: cluster?.name || '',
-        role: body.role,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      } as ClusterInviteSerialized;
-    }
-
     const existingInvite = await this.clusterInviteReadService.findExistingInvite({
-      invitedUserId: invitedUser.id,
+      invitedUserEmail: body.email,
       clusterId,
     });
 
@@ -84,7 +68,6 @@ export class ClusterInviteCoreController {
 
     const invite = await this.clusterInviteWriteService.create({
       inviterUserId: userId,
-      invitedUserId: invitedUser.id,
       invitedUserEmail: body.email,
       clusterId,
       role: body.role,
@@ -124,7 +107,9 @@ export class ClusterInviteCoreController {
   public async getByInvitedUserId(
     @CurrentUserId() userId: string,
   ): Promise<ClusterInviteSerialized[]> {
-    const invites = await this.clusterInviteReadService.readByInvitedUserId(userId);
+    const user = await this.userReadService.readByIdOrThrow(userId);
+
+    const invites = await this.clusterInviteReadService.readByInvitedUserEmail(user.email);
 
     const clusterIds = [...new Set(invites.map((invite) => invite.clusterId))];
     const clusterNames: Record<string, string> = {};
@@ -147,13 +132,15 @@ export class ClusterInviteCoreController {
     @Param('clusterInviteId') clusterInviteId: string,
     @CurrentUserId() userId: string,
   ): Promise<SuccessResponse> {
+    const user = await this.userReadService.readByIdOrThrow(userId);
+
     const invite = await this.clusterInviteReadService.readById(clusterInviteId);
     if (!invite) {
       throw new NotFoundException('Invite not found');
     }
 
-    if (invite.inviterUserId !== userId) {
-      throw new ForbiddenException('You can only delete invites you have sent');
+    if (invite.inviterUserId !== userId && invite.invitedUserEmail !== user.email) {
+      throw new ForbiddenException('You can only delete invites you have sent or received');
     }
 
     await this.clusterInviteWriteService.delete(clusterInviteId, userId);
@@ -168,17 +155,19 @@ export class ClusterInviteCoreController {
     @Param('clusterInviteId') clusterInviteId: string,
     @CurrentUserId() userId: string,
   ): Promise<SuccessResponse> {
+    const user = await this.userReadService.readByIdOrThrow(userId);
+
     const invite = await this.clusterInviteReadService.readById(clusterInviteId);
 
     if (!invite) {
       throw new NotFoundException('Invite not found');
     }
 
-    if (invite.invitedUserId !== userId) {
+    if (invite.invitedUserEmail !== user.email) {
       throw new ForbiddenException('You can only accept invites sent to you');
     }
 
-    await this.clusterWriteService.addRole(invite.clusterId, invite.invitedUserId, invite.role);
+    await this.clusterWriteService.addRole(invite.clusterId, user.id, invite.role);
 
     await this.clusterInviteWriteService.delete(clusterInviteId, userId);
 

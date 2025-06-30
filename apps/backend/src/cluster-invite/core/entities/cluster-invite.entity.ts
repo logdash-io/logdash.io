@@ -9,9 +9,6 @@ export class ClusterInviteEntity {
   @Prop()
   inviterUserId: string;
 
-  @Prop()
-  invitedUserId: string;
-
   @Prop({ required: true })
   invitedUserEmail: string;
 
