@@ -4,7 +4,6 @@ import { ClusterRole } from '../../../cluster/core/enums/cluster-role.enum';
 export interface ClusterInviteNormalized {
   id: string;
   inviterUserId: string;
-  invitedUserId: string;
   invitedUserEmail: string;
   clusterId: string;
   role: ClusterRole;

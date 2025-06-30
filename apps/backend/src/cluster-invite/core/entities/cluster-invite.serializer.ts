@@ -6,7 +6,6 @@ export class ClusterInviteSerializer {
     return {
       id: entity._id.toString(),
       inviterUserId: entity.inviterUserId,
-      invitedUserId: entity.invitedUserId,
       invitedUserEmail: entity.invitedUserEmail,
       clusterId: entity.clusterId,
       role: entity.role,
