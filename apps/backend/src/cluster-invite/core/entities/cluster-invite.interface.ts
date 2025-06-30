@@ -4,7 +4,7 @@ import { ClusterRole } from '../../../cluster/core/enums/cluster-role.enum';
 export interface ClusterInviteNormalized {
   id: string;
   inviterUserId: string;
-  invitedUserId: string;
+  invitedUserEmail: string;
   clusterId: string;
   role: ClusterRole;
   createdAt: Date;
@@ -19,10 +19,13 @@ export class ClusterInviteSerialized {
   inviterUserId: string;
 
   @ApiProperty()
-  invitedUserId: string;
+  invitedUserEmail: string;
 
   @ApiProperty()
   clusterId: string;
+
+  @ApiProperty()
+  clusterName: string;
 
   @ApiProperty()
   role: ClusterRole;

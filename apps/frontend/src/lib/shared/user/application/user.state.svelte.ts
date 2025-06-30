@@ -13,6 +13,10 @@ class UserState {
     return this._user?.tier || UserTier.FREE;
   }
 
+  get id(): User['id'] {
+    return this._user?.id;
+  }
+
   // todo: this should be a domain value object
   humanReadableTier(tier: UserTier): string {
     return tier.replace('-', ' ');

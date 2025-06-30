@@ -23,8 +23,11 @@ import { UserReadService } from '../../user/read/user-read.service';
 import { SuccessResponse } from '../../shared/responses/success.response';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
+import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ClusterInviteLimitService } from '../limit/cluster-invite-limit.service';
 import { ClusterInviteCapacityResponse } from './dto/cluster-invite-capacity.response';
+import { RequireRole } from '../../cluster/decorators/require-cluster-role.decorator';
+import { ClusterRole } from '../../cluster/core/enums/cluster-role.enum';
 
 @ApiTags('Cluster Invites')
 @Controller()
@@ -33,10 +36,12 @@ export class ClusterInviteCoreController {
     private readonly clusterInviteWriteService: ClusterInviteWriteService,
     private readonly clusterInviteReadService: ClusterInviteReadService,
     private readonly clusterWriteService: ClusterWriteService,
+    private readonly clusterReadService: ClusterReadService,
     private readonly userReadService: UserReadService,
     private readonly clusterInviteLimitService: ClusterInviteLimitService,
   ) {}
 
+  @RequireRole(ClusterRole.Creator)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Post('clusters/:clusterId/cluster_invites')
@@ -46,14 +51,8 @@ export class ClusterInviteCoreController {
     @CurrentUserId() userId: string,
     @Param('clusterId') clusterId: string,
   ): Promise<ClusterInviteSerialized> {
-    const invitedUser = await this.userReadService.readByEmail(body.email);
-
-    if (!invitedUser) {
-      throw new BadRequestException('User with this email not found');
-    }
-
     const existingInvite = await this.clusterInviteReadService.findExistingInvite({
-      invitedUserId: invitedUser.id,
+      invitedUserEmail: body.email,
       clusterId,
     });
 
@@ -69,12 +68,13 @@ export class ClusterInviteCoreController {
 
     const invite = await this.clusterInviteWriteService.create({
       inviterUserId: userId,
-      invitedUserId: invitedUser.id,
+      invitedUserEmail: body.email,
       clusterId,
       role: body.role,
     });
 
-    return ClusterInviteSerializer.serialize(invite);
+    const cluster = await this.clusterReadService.readById(clusterId);
+    return ClusterInviteSerializer.serialize(invite, cluster?.name);
   }
 
   @UseGuards(ClusterMemberGuard)
@@ -85,9 +85,12 @@ export class ClusterInviteCoreController {
     @Param('clusterId') clusterId: string,
   ): Promise<ClusterInviteSerialized[]> {
     const invites = await this.clusterInviteReadService.readByClusterId(clusterId);
-    return ClusterInviteSerializer.serializeMany(invites);
+    const cluster = await this.clusterReadService.readById(clusterId);
+    const clusterNames = cluster ? { [clusterId]: cluster.name } : {};
+    return ClusterInviteSerializer.serializeMany(invites, clusterNames);
   }
 
+  @RequireRole(ClusterRole.Creator)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Get('clusters/:clusterId/cluster_invites/capacity')
@@ -96,7 +99,25 @@ export class ClusterInviteCoreController {
     @Param('clusterId') clusterId: string,
   ): Promise<ClusterInviteCapacityResponse> {
     const capacity = await this.clusterInviteLimitService.getCapacity(clusterId);
-    return capacity;
+
+    const roles = await this.clusterReadService.readMembers(clusterId);
+
+    const members = await Promise.all(
+      roles.map(async (member) => {
+        const user = await this.userReadService.readByIdOrThrow(member.id);
+        return {
+          id: user.id,
+          email: user.email,
+          role: member.role,
+          avatarUrl: user.avatarUrl,
+        };
+      }),
+    );
+
+    return {
+      ...capacity,
+      members,
+    };
   }
 
   @ApiBearerAuth()
@@ -105,51 +126,69 @@ export class ClusterInviteCoreController {
   public async getByInvitedUserId(
     @CurrentUserId() userId: string,
   ): Promise<ClusterInviteSerialized[]> {
-    const invites = await this.clusterInviteReadService.readByInvitedUserId(userId);
-    return ClusterInviteSerializer.serializeMany(invites);
+    const user = await this.userReadService.readByIdOrThrow(userId);
+
+    const invites = await this.clusterInviteReadService.readByInvitedUserEmail(user.email);
+
+    const clusterIds = [...new Set(invites.map((invite) => invite.clusterId))];
+    const clusterNames: Record<string, string> = {};
+
+    for (const clusterId of clusterIds) {
+      const cluster = await this.clusterReadService.readById(clusterId);
+      if (cluster) {
+        clusterNames[clusterId] = cluster.name;
+      }
+    }
+
+    return ClusterInviteSerializer.serializeMany(invites, clusterNames);
   }
 
+  @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
-  @Delete('cluster_invites/:inviteId')
+  @Delete('cluster_invites/:clusterInviteId')
   @ApiResponse({ type: SuccessResponse })
   public async deleteInvite(
-    @Param('inviteId') inviteId: string,
+    @Param('clusterInviteId') clusterInviteId: string,
     @CurrentUserId() userId: string,
   ): Promise<SuccessResponse> {
-    const invite = await this.clusterInviteReadService.readById(inviteId);
+    const user = await this.userReadService.readByIdOrThrow(userId);
+
+    const invite = await this.clusterInviteReadService.readById(clusterInviteId);
     if (!invite) {
       throw new NotFoundException('Invite not found');
     }
 
-    if (invite.inviterUserId !== userId) {
-      throw new ForbiddenException('You can only delete invites you have sent');
+    if (invite.inviterUserId !== userId && invite.invitedUserEmail !== user.email) {
+      throw new ForbiddenException('You can only delete invites you have sent or received');
     }
 
-    await this.clusterInviteWriteService.delete(inviteId, userId);
+    await this.clusterInviteWriteService.delete(clusterInviteId, userId);
 
     return new SuccessResponse();
   }
 
   @ApiBearerAuth()
-  @Put('cluster_invites/:inviteId/accept')
+  @Put('cluster_invites/:clusterInviteId/accept')
   @ApiResponse({ type: SuccessResponse })
   public async acceptInvite(
-    @Param('inviteId') inviteId: string,
+    @Param('clusterInviteId') clusterInviteId: string,
     @CurrentUserId() userId: string,
   ): Promise<SuccessResponse> {
-    const invite = await this.clusterInviteReadService.readById(inviteId);
+    const user = await this.userReadService.readByIdOrThrow(userId);
+
+    const invite = await this.clusterInviteReadService.readById(clusterInviteId);
 
     if (!invite) {
       throw new NotFoundException('Invite not found');
     }
 
-    if (invite.invitedUserId !== userId) {
+    if (invite.invitedUserEmail !== user.email) {
       throw new ForbiddenException('You can only accept invites sent to you');
     }
 
-    await this.clusterWriteService.addRole(invite.clusterId, invite.invitedUserId, invite.role);
+    await this.clusterWriteService.addRole(invite.clusterId, user.id, invite.role);
 
-    await this.clusterInviteWriteService.delete(inviteId, userId);
+    await this.clusterInviteWriteService.delete(clusterInviteId, userId);
 
     return new SuccessResponse();
   }

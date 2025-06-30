@@ -4,6 +4,7 @@ import { Public } from '../auth/core/decorators/is-public';
 import { ProjectPlanConfigs } from '../shared/configs/project-plan-configs';
 import { UserPlanConfigs } from '../shared/configs/user-plan-configs';
 import { getEnvConfig } from '../shared/configs/env-configs';
+import { ClusterPlanConfigs } from '../shared/configs/cluster-plan-configs';
 
 export class DemoConfigResponnse {
   @ApiProperty()
@@ -21,6 +22,7 @@ export class ExposedConfigController {
   public async getExposedConfig() {
     return {
       projectPlanConfigs: ProjectPlanConfigs,
+      clusterPlanConfigs: ClusterPlanConfigs,
       userPlanConfigs: UserPlanConfigs,
     };
   }

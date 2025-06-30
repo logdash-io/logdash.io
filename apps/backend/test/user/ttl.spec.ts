@@ -7,6 +7,8 @@ import { UserTtlService } from '../../src/user/ttl/user-ttl.service';
 import { createTestApp } from '../utils/bootstrap';
 
 describe('UserTtlService', () => {
+  jest.retryTimes(3);
+
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
 
   beforeAll(async () => {

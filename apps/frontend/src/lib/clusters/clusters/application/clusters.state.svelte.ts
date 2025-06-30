@@ -45,6 +45,10 @@ class ClustersState {
     return this._initialized;
   }
 
+  isUserClusterCreator(userId: string, clusterId: string): boolean {
+    return this.get(clusterId)?.creatorId === userId;
+  }
+
   get(id: string): Cluster | undefined {
     return this._clusters[id];
   }
@@ -110,6 +114,13 @@ class ClustersState {
     } finally {
       this._requestStatus = null;
     }
+  }
+
+  async load(): Promise<void> {
+    const clusters = await fetch(`/app/api/clusters`).then((response) =>
+      response.json(),
+    );
+    this.set(clusters);
   }
 }
 

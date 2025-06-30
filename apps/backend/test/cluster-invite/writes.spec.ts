@@ -50,8 +50,10 @@ describe('ClusterInviteCoreController (writes)', () => {
 
       expect(response.statusCode).toBe(201);
       expect(response.body.inviterUserId).toBe(inviter.id);
-      expect(response.body.invitedUserId).toBe(invitedUser.id);
+      expect(response.body.invitedUserEmail).toBe(invitedUser.email);
       expect(response.body.clusterId).toBe(cluster.id);
+      expect(response.body.clusterName).toBe(cluster.name);
+      expect(response.body.invitedUserId).toBeUndefined();
 
       const entity = (await bootstrap.models.clusterInviteModel.findOne())!;
 
@@ -59,13 +61,13 @@ describe('ClusterInviteCoreController (writes)', () => {
 
       expect(invite).toMatchObject({
         inviterUserId: inviter.id,
-        invitedUserId: invitedUser.id,
+        invitedUserEmail: invitedUser.email,
         clusterId: cluster.id,
         role: ClusterRole.Write,
       });
     });
 
-    it('throws error when invited user does not exist', async () => {
+    it('lets non existent user be invited', async () => {
       const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'admin@example.com',
         userTier: UserTier.Admin,
@@ -79,8 +81,19 @@ describe('ClusterInviteCoreController (writes)', () => {
           role: ClusterRole.Write,
         });
 
-      expect(response.statusCode).toBe(400);
-      expect(response.body.message).toBe('User with this email not found');
+      const nonexistentSetup = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'nonexistent@example.com',
+      });
+
+      const response2 = await request(bootstrap.app.getHttpServer())
+        .get(`/users/me/cluster_invites`)
+        .set('Authorization', `Bearer ${nonexistentSetup.token}`);
+
+      expect(response2.body).toHaveLength(1);
+      expect(response2.body[0].invitedUserEmail).toBe('nonexistent@example.com');
+      expect(response2.body[0].clusterId).toBe(cluster.id);
+      expect(response2.body[0].clusterName).toBe(cluster.name);
+      expect(response2.body[0].role).toBe(ClusterRole.Write);
     });
 
     it('throws error when user is already invited to cluster', async () => {
@@ -139,13 +152,28 @@ describe('ClusterInviteCoreController (writes)', () => {
         relatedDomain: RelatedDomain.Cluster,
         relatedEntityId: response.body.id,
       });
+    });
 
-      await bootstrap.utils.auditLogUtils.assertAuditLog({
-        userId: invitedUser.id,
-        action: AuditLogUserAction.GotInvitedToCluster,
-        relatedDomain: RelatedDomain.User,
-        relatedEntityId: invitedUser.id,
+    it('throws 403 error when user is does not have the required role', async () => {
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const otherSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Write,
+        userId: otherSetup.user.id,
       });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/cluster_invites`)
+        .set('Authorization', `Bearer ${otherSetup.token}`)
+        .send({
+          email: otherSetup.user.email,
+          role: ClusterRole.Write,
+        });
+
+      expect(response.statusCode).toBe(403);
+      expect(response.body.message).toBe('User does not have the required role');
     });
 
     describe('Max capacity', () => {
@@ -234,7 +262,8 @@ describe('ClusterInviteCoreController (writes)', () => {
         .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${otherUserToken}`)
         .send({
-          invitedUserId: invitedUser.id,
+          email: invitedUser.email,
+          role: ClusterRole.Write,
         });
 
       expect(response.statusCode).toBe(403);
@@ -343,13 +372,15 @@ describe('ClusterInviteCoreController (writes)', () => {
       expect(invites.length).toBe(0);
     });
 
-    it('throws error when user other than inviter tries to delete invite', async () => {
+    it('throws error when user other than inviter or invited tries to delete invite', async () => {
       const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'admin@example.com',
         userTier: UserTier.Admin,
       });
       const { token: invitedUserToken, user: invitedUser } =
         await bootstrap.utils.generalUtils.setupClaimed();
+
+      const otherSetup = await bootstrap.utils.generalUtils.setupClaimed();
 
       const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token: inviterToken,
@@ -359,10 +390,10 @@ describe('ClusterInviteCoreController (writes)', () => {
 
       const response = await request(bootstrap.app.getHttpServer())
         .delete(`/cluster_invites/${invite.id}`)
-        .set('Authorization', `Bearer ${invitedUserToken}`);
+        .set('Authorization', `Bearer ${otherSetup.token}`);
 
       expect(response.statusCode).toBe(403);
-      expect(response.body.message).toBe('You can only delete invites you have sent');
+      expect(response.body.message).toBe('You can only delete invites you have sent or received');
     });
   });
 });

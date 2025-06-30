@@ -24,18 +24,22 @@ export class ClusterInviteReadService {
     return ClusterInviteSerializer.normalizeMany(invites);
   }
 
-  public async readByInvitedUserId(invitedUserId: string): Promise<ClusterInviteNormalized[]> {
-    const invites = await this.model.find({ invitedUserId }).lean<ClusterInviteEntity[]>().exec();
-
+  public async readByInvitedUserEmail(
+    invitedUserEmail: string,
+  ): Promise<ClusterInviteNormalized[]> {
+    const invites = await this.model
+      .find({ invitedUserEmail })
+      .lean<ClusterInviteEntity[]>()
+      .exec();
     return ClusterInviteSerializer.normalizeMany(invites);
   }
 
   public async findExistingInvite(dto: {
-    invitedUserId: string;
+    invitedUserEmail: string;
     clusterId: string;
   }): Promise<ClusterInviteNormalized | null> {
     const invite = await this.model
-      .findOne({ invitedUserId: dto.invitedUserId, clusterId: dto.clusterId })
+      .findOne({ invitedUserEmail: dto.invitedUserEmail, clusterId: dto.clusterId })
       .lean<ClusterInviteEntity>()
       .exec();
 

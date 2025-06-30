@@ -34,6 +34,11 @@
       }
     }
   });
+
+  const totalProjectsCount = $derived(clustersState.allClustersProjectsCount);
+  const tierMaxProjects = $derived(
+    exposedConfigState.maxNumberOfProjects(userState.tier),
+  );
 </script>
 
 <div class="tabs z-30 gap-1.5 sm:gap-3" role="tablist">
@@ -72,8 +77,7 @@
 
   {#if !creationDisabled}
     <ProjectCreator
-      canAddMore={clustersState.allClustersProjectsCount <
-        exposedConfigState.maxNumberOfProjects(userState.tier)}
+      canAddMore={totalProjectsCount < tierMaxProjects}
       onSubmit={(name) => {
         projectsState
           .createProject(page.params.cluster_id, name)

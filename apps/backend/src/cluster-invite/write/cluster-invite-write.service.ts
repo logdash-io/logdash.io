@@ -25,7 +25,7 @@ export class ClusterInviteWriteService {
   public async create(dto: CreateClusterInviteDto): Promise<ClusterInviteNormalized> {
     const invite = await this.model.create({
       inviterUserId: dto.inviterUserId,
-      invitedUserId: dto.invitedUserId,
+      invitedUserEmail: dto.invitedUserEmail,
       clusterId: dto.clusterId,
       role: dto.role,
     });
@@ -36,16 +36,7 @@ export class ClusterInviteWriteService {
       actor: Actor.User,
       relatedDomain: RelatedDomain.Cluster,
       relatedEntityId: invite._id.toString(),
-      description: `Invited user ${dto.invitedUserId} to cluster ${dto.clusterId} with role ${dto.role}`,
-    });
-
-    this.auditLog.create({
-      userId: dto.invitedUserId,
-      action: AuditLogUserAction.GotInvitedToCluster,
-      actor: Actor.User,
-      relatedDomain: RelatedDomain.User,
-      relatedEntityId: dto.invitedUserId,
-      description: `You have been invited to cluster ${dto.clusterId} with role ${dto.role}`,
+      description: `Invited user ${dto.invitedUserEmail} to cluster ${dto.clusterId} with role ${dto.role}`,
     });
 
     return ClusterInviteSerializer.normalize(invite);

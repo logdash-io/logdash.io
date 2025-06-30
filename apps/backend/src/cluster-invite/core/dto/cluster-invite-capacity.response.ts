@@ -1,4 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ClusterRole } from '../../../cluster/core/enums/cluster-role.enum';
+
+export class ClusterMember {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  role: ClusterRole;
+
+  @ApiPropertyOptional()
+  avatarUrl?: string;
+}
 
 export class ClusterInviteCapacityResponse {
   @ApiProperty()
@@ -9,4 +24,7 @@ export class ClusterInviteCapacityResponse {
 
   @ApiProperty()
   currentInvitesCount: number;
+
+  @ApiProperty({ type: ClusterMember, isArray: true })
+  members: ClusterMember[];
 }

@@ -30,6 +30,7 @@ import { PublicDashboardReadService } from '../../public-dashboard/read/public-d
 import { groupBy } from '../../shared/utils/group-by';
 import { getUserPlanConfig } from '../../shared/configs/user-plan-configs';
 import { ClusterRole } from './enums/cluster-role.enum';
+import { RequireRole } from '../decorators/require-cluster-role.decorator';
 
 @ApiTags('Clusters')
 @Controller()
@@ -75,6 +76,7 @@ export class ClusterCoreController {
   }
 
   @UseGuards(ClusterMemberGuard)
+  @RequireRole(ClusterRole.Creator)
   @ApiBearerAuth()
   @Delete('clusters/:clusterId')
   public async delete(
@@ -90,7 +92,7 @@ export class ClusterCoreController {
   @Get('users/me/clusters')
   @ApiResponse({ type: ClusterSerialized, isArray: true })
   public async getAll(@CurrentUserId() userId: string): Promise<ClusterSerialized[]> {
-    const clusters = await this.clusterReadService.readWhereUserIsInMembers(userId);
+    const clusters = await this.clusterReadService.readWhereUserHasAnyRole(userId);
 
     const projectsGroupedByCluster = await this.projectReadService.readGroupedByClusterMany(
       clusters.map((cluster) => cluster.id),
@@ -160,6 +162,7 @@ export class ClusterCoreController {
     });
   }
 
+  @RequireRole(ClusterRole.Creator)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Delete('clusters/:clusterId/roles/:userId')
