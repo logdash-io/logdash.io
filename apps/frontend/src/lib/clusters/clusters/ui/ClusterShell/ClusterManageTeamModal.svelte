@@ -27,9 +27,15 @@
   });
 
   $effect(() => {
+    let cleanup: () => void;
+
     if (isOpen && clusterId) {
-      clusterInvitesState.loadInvites(clusterId);
+      cleanup = clusterInvitesState.startInvitesPolling(clusterId);
     }
+
+    return () => {
+      cleanup?.();
+    };
   });
 
   $effect(() => {
@@ -99,6 +105,7 @@
                 .currentInvitesCount}/{clusterInvitesState.capacity.maxMembers}
           </span>
         </div>
+
         <div class="bg-primary/20 mt-2 h-1.5 w-full rounded-full">
           <div
             class="bg-primary h-1.5 rounded-full"
@@ -107,6 +114,34 @@
               clusterInvitesState.capacity.maxMembers) *
               100}%"
           ></div>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-2">
+          {#each clusterInvitesState.capacity.members as member}
+            <div class="ld-card-base flex items-center gap-2 rounded-xl p-3">
+              <div class="avatar">
+                <div class="w-8 rounded-full">
+                  <img
+                    src={member.avatarUrl}
+                    alt={member.email}
+                    class="rounded-full"
+                  />
+                </div>
+              </div>
+              <span class="text-sm">{member.email}</span>
+              <span
+                class={[
+                  'badge badge-soft badge-sm ml-auto',
+                  {
+                    'badge-primary': member.role === ClusterRole.CREATOR,
+                    'badge-secondary': member.role === ClusterRole.WRITE,
+                  },
+                ]}
+              >
+                {member.role}
+              </span>
+            </div>
+          {/each}
         </div>
       </div>
     {/if}

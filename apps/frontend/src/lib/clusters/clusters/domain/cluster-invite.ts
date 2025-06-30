@@ -14,8 +14,15 @@ export type ClusterInvite = {
   updatedAt: string;
 };
 
+export type ClusterMember = {
+  email: string;
+  avatarUrl: string;
+  role: ClusterRole;
+};
+
 export type ClusterInviteCapacity = {
   maxMembers: number;
   currentUsersCount: number;
   currentInvitesCount: number;
+  members: ClusterMember[];
 };

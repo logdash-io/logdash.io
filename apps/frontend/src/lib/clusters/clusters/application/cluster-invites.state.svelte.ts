@@ -62,6 +62,15 @@ class ClusterInvitesState {
     return currentUsersCount + currentInvitesCount < maxMembers;
   }
 
+  startInvitesPolling(clusterId: string): () => void {
+    this.loadInvites(clusterId);
+    const interval = setInterval(() => {
+      this.loadInvites(clusterId);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }
+
   async loadInvites(clusterId: string): Promise<void> {
     this._state.isLoading = true;
     try {
