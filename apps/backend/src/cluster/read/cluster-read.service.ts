@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { ClusterEntity } from '../core/entities/cluster.entity';
 import { ClusterNormalized } from '../core/entities/cluster.interface';
 import { ClusterSerializer } from '../core/entities/cluster.serializer';
+import { ClusterMember } from '../../cluster-invite/core/dto/cluster-invite-capacity.response';
+import { ClusterRole } from '../core/enums/cluster-role.enum';
 
 @Injectable()
 export class ClusterReadService {
@@ -48,5 +50,21 @@ export class ClusterReadService {
 
   public async countByCreatorId(creatorId: string): Promise<number> {
     return await this.model.countDocuments({ creatorId }).exec();
+  }
+
+  public async readMembers(clusterId: string): Promise<{ id: string; role: ClusterRole }[]> {
+    const cluster = await this.model.findById(clusterId).lean<ClusterEntity>().exec();
+
+    // map roles (email:role) to members
+    const roles = cluster?.roles;
+
+    if (!roles) {
+      return [];
+    }
+
+    return Object.entries(roles).map(([id, role]) => ({
+      id,
+      role,
+    }));
   }
 }

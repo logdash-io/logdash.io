@@ -90,6 +90,7 @@ export class ClusterInviteCoreController {
     return ClusterInviteSerializer.serializeMany(invites, clusterNames);
   }
 
+  @RequireRole(ClusterRole.Creator)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Get('clusters/:clusterId/cluster_invites/capacity')
@@ -98,7 +99,23 @@ export class ClusterInviteCoreController {
     @Param('clusterId') clusterId: string,
   ): Promise<ClusterInviteCapacityResponse> {
     const capacity = await this.clusterInviteLimitService.getCapacity(clusterId);
-    return capacity;
+
+    const roles = await this.clusterReadService.readMembers(clusterId);
+
+    const members = await Promise.all(
+      roles.map(async (member) => {
+        const user = await this.userReadService.readByIdOrThrow(member.id);
+        return {
+          email: user.email,
+          role: member.role,
+        };
+      }),
+    );
+
+    return {
+      ...capacity,
+      members,
+    };
   }
 
   @ApiBearerAuth()

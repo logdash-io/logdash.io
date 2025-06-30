@@ -197,5 +197,35 @@ describe('ClusterInviteCoreController (reads)', () => {
       expect(response.body.currentUsersCount).toBe(1);
       expect(response.body.currentInvitesCount).toBe(1);
     });
+
+    it('returns members', async () => {
+      const { token, cluster, user } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.EarlyBird,
+      });
+
+      const otherSetup = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'other@example.com',
+        userTier: UserTier.EarlyBird,
+      });
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        userId: otherSetup.user.id,
+        role: ClusterRole.Write,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body.members).toHaveLength(2);
+      expect(response.body.members[0].email).toBe(user.email);
+      expect(response.body.members[0].role).toBe(ClusterRole.Creator);
+      expect(response.body.members[1].email).toBe(otherSetup.user.email);
+      expect(response.body.members[1].role).toBe(ClusterRole.Write);
+      expect(response.body.currentUsersCount).toBe(2);
+    });
   });
 });
