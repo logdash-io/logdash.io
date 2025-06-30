@@ -39,7 +39,7 @@
 >
   {#if editMode}
     <div
-      in:fly={{ y: 5, duration: 400, easing: cubicOut }}
+      in:fly={{ y: -5, duration: 200, easing: cubicOut }}
       class={[
         'absolute top-1/2 flex h-full w-full -translate-y-1/2 items-center justify-between gap-2 rounded-xl border border-transparent pr-6 transition-colors',
         {
@@ -86,7 +86,7 @@
       {:else}
         <div class="flex w-full items-center justify-between gap-2 pl-8">
           <UpgradeButton source="cluster-limit">
-            Upgrade to add more projects
+            Upgrade your plan to add more projects
           </UpgradeButton>
 
           <button
@@ -100,7 +100,7 @@
     </div>
   {:else}
     <button
-      in:fly={{ y: -5, duration: 400, easing: cubicOut }}
+      in:fly={{ y: -5, duration: 200, easing: cubicOut }}
       class="absolute flex h-full w-full cursor-pointer items-center justify-between gap-2 rounded-xl px-8"
       role="button"
       onclick={(e) => {

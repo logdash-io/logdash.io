@@ -2,6 +2,7 @@ import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 import { arrayToObject } from '$lib/shared/utils/array-to-object';
 import { type Source } from 'sveltekit-sse';
 import type { Cluster } from '../domain/cluster';
+import { ClustersService } from '../infrastructure/clusters.service.js';
 
 // todo: divide api calls responsibility from state
 class ClustersState {
@@ -117,9 +118,7 @@ class ClustersState {
   }
 
   async load(): Promise<void> {
-    const clusters = await fetch(`/app/api/clusters`).then((response) =>
-      response.json(),
-    );
+    const clusters = await ClustersService.getClusters();
     this.set(clusters);
   }
 }

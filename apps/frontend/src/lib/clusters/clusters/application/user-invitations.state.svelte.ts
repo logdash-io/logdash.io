@@ -1,4 +1,4 @@
-import type { ClusterInvite } from '$lib/clusters/clusters/domain/cluster-invite';
+import { type ClusterInvite } from '$lib/clusters/clusters/domain/cluster-invite';
 import { ClusterInvitesService } from '$lib/clusters/clusters/infrastructure/cluster-invites.service';
 import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
 

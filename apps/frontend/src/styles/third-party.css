@@ -1,0 +1,10 @@
+.cds--chart-holder[data-carbon-theme='g100'] {
+  .chart-grid-backdrop {
+    fill: none;
+    opacity: 30%;
+  }
+}
+
+.bx--cc--tooltip {
+  background-color: blue;
+}
