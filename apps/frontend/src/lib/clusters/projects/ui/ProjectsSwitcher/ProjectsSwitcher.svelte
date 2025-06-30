@@ -35,9 +35,7 @@
     }
   });
 
-  const ownProjectsCount = $derived(
-    clustersState.ownClustersProjectsCount(userState.id),
-  );
+  const totalProjectsCount = $derived(clustersState.allClustersProjectsCount);
   const tierMaxProjects = $derived(
     exposedConfigState.maxNumberOfProjects(userState.tier),
   );
@@ -79,7 +77,7 @@
 
   {#if !creationDisabled}
     <ProjectCreator
-      canAddMore={ownProjectsCount < tierMaxProjects}
+      canAddMore={totalProjectsCount < tierMaxProjects}
       onSubmit={(name) => {
         projectsState
           .createProject(page.params.cluster_id, name)
