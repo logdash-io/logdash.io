@@ -35,16 +35,18 @@ class ClustersState {
     }, 0);
   }
 
-  ownClustersProjectsCount(userId: string): number {
-    return this.clusters
-      .filter((cluster) => cluster.creatorId === userId)
-      .reduce((acc, cluster) => {
-        return acc + (cluster.projects?.length || 0);
-      }, 0);
+  get allClustersProjectsCount(): number {
+    return this.clusters.reduce((acc, cluster) => {
+      return acc + (cluster.projects?.length || 0);
+    }, 0);
   }
 
   get ready(): boolean {
     return this._initialized;
+  }
+
+  isUserClusterCreator(userId: string, clusterId: string): boolean {
+    return this.get(clusterId)?.creatorId === userId;
   }
 
   get(id: string): Cluster | undefined {
@@ -112,6 +114,13 @@ class ClustersState {
     } finally {
       this._requestStatus = null;
     }
+  }
+
+  async load(): Promise<void> {
+    const clusters = await fetch(`/app/api/clusters`).then((response) =>
+      response.json(),
+    );
+    this.set(clusters);
   }
 }
 

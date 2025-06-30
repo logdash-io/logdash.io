@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { userState } from '$lib/shared/user/application/user.state.svelte.js';
   import Tooltip from '$lib/shared/ui/components/Tooltip.svelte';
   import { toast } from '$lib/shared/ui/toaster/toast.state.svelte.js';
   import { PenLineIcon, SettingsIcon, Trash2Icon, Users } from 'lucide-svelte';
@@ -16,19 +17,21 @@
   <ul
     class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit p-2 whitespace-nowrap shadow"
   >
-    <li>
-      <a
-        onclick={(e) => {
-          e.stopPropagation();
-          close();
-          clusterInvitesState.openModal(clusterId);
-        }}
-        class="whitespace-nowrap"
-      >
-        Manage team
-        <Users class="ml-auto h-4 w-4" />
-      </a>
-    </li>
+    {#if clustersState.isUserClusterCreator(userState.id, clusterId)}
+      <li>
+        <a
+          onclick={(e) => {
+            e.stopPropagation();
+            close();
+            clusterInvitesState.openModal(clusterId);
+          }}
+          class="whitespace-nowrap"
+        >
+          Manage team
+          <Users class="ml-auto h-4 w-4" />
+        </a>
+      </li>
+    {/if}
 
     <li>
       <a

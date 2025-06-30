@@ -176,9 +176,9 @@ export const FEATURES_COMPARISON = {
       features: [
         {
           name: 'Multiple Collaborators',
-          [UserTier.FREE]: 'Coming soon',
-          [UserTier.EARLY_BIRD]: 'Coming soon',
-          [UserTier.PRO]: 'Coming soon',
+          [UserTier.FREE]: '1 extra user per project',
+          [UserTier.EARLY_BIRD]: '2 extra users per project',
+          [UserTier.PRO]: '5 extra users per project',
         },
         {
           name: '99.9% uptime SLA',

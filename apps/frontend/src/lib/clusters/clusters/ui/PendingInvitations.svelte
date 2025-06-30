@@ -1,11 +1,13 @@
 <script lang="ts">
+  import { CheckIcon, XIcon } from 'lucide-svelte';
+  import { clustersState } from '../application/clusters.state.svelte.js';
   import { userInvitationsState } from '../application/user-invitations.state.svelte.js';
   import { ClusterRole } from '../domain/cluster-invite.js';
-  import { CheckIcon, XIcon, UserPlusIcon } from 'lucide-svelte';
 
   async function onInvitationAccepted(inviteId: string): Promise<void> {
     try {
       await userInvitationsState.acceptInvitation(inviteId);
+      clustersState.load();
     } catch (error) {
       console.error('Error accepting invitation:', error);
     }

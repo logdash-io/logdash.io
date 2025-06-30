@@ -12,6 +12,7 @@ export const PAYMENT_PLANS = [
       { name: 'Up to 5 http monitors' },
       { name: 'Up to 1 public dashboards' },
       { name: 'Up to 5 metrics per service' },
+      { name: 'Up to 1 extra user per project' },
       { name: 'Monitoring channels (Telegram & Basic Webhooks)' },
       { name: '7 days logs retention (350K logs per service)' },
       { name: '7 days metrics retention' },
@@ -40,6 +41,7 @@ export const PAYMENT_PLANS = [
       { name: 'Up to 20 http monitors' },
       { name: 'Up to 5 public dashboards' },
       { name: 'Up to 10 metrics per service' },
+      { name: 'Up to 2 extra users per project' },
       { name: 'Monitoring channels (Telegram & Advanced Webhooks & Email)' },
       { name: '30 days logs retention (7.5M logs per service)' },
       { name: '30 days metrics retention' },
@@ -71,6 +73,7 @@ export const PAYMENT_PLANS = [
       { name: 'Up to 50 http monitors' },
       { name: 'Up to 25 public dashboards' },
       { name: 'Up to 30 metrics per service' },
+      { name: 'Up to 5 extra users per project' },
       {
         name: 'Monitoring channels (Telegram & Advanced Webhooks & Email & SMS)',
       },

@@ -37,6 +37,14 @@ class UserInvitationsState {
     return this._state.invitations.length > 0;
   }
 
+  startPollingInvitations(): () => void {
+    const interval = setInterval(async () => {
+      await this.loadInvitations();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }
+
   async loadInvitations(): Promise<void> {
     this._state.isLoading = true;
     try {

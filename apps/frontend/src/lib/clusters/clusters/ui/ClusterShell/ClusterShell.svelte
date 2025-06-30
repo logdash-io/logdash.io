@@ -13,8 +13,10 @@
   };
   const { children }: Props = $props();
 
-  onMount(async () => {
-    await userInvitationsState.loadInvitations();
+  onMount(() => {
+    const cleanup = userInvitationsState.startPollingInvitations();
+
+    return () => cleanup();
   });
 </script>
 
