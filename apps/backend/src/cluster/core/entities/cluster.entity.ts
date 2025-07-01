@@ -11,9 +11,6 @@ export class ClusterEntity {
   name: string;
 
   @Prop()
-  members: string[];
-
-  @Prop()
   creatorId: string;
 
   @Prop()
