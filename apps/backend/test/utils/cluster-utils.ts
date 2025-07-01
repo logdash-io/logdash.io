@@ -21,7 +21,7 @@ export class ClusterUtils {
     }
 
     const response = await request(this.app.getHttpServer())
-      .post('/users/me/project_groups')
+      .post('/users/me/clusters')
       .set('Authorization', `Bearer ${dto.token}`)
       .send(dto);
 
