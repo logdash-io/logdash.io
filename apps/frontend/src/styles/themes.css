@@ -18,8 +18,13 @@
   --color-base-content: var(--color-neutral-100);
 
   --color-success: var(--color-green-600);
+
   --color-error: var(--color-red-600);
+  --color-error-content: var(--color-red-500);
+
   --color-warning: var(--color-amber-500);
+  --color-warning-content: var(--color-amber-500);
+
   --color-info: var(--color-blue-600);
 
   --radius-selector: var(--radius-md);

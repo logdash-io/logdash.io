@@ -1,12 +1,12 @@
 import { dev } from '$app/environment';
-import { bffLogger } from '$lib/shared/bff-logger';
-import { logdashAPI } from '$lib/shared/logdash.api';
+import { bffLogger } from '$lib/domains/shared/bff-logger';
+import { logdashAPI } from '$lib/domains/shared/logdash.api';
 import {
 	get_access_token,
 	save_access_token,
 	save_onboarding_tier,
-} from '$lib/shared/utils/cookies.utils';
-import type { GithubCallbackState } from '$lib/shared/utils/generate-github-oauth-url';
+} from '$lib/domains/shared/utils/cookies.utils';
+import type { GithubCallbackState } from '$lib/domains/shared/utils/generate-github-oauth-url';
 import {
 	isRedirect,
 	redirect,

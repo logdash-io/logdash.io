@@ -1,4 +1,4 @@
-import { UserTier } from '$lib/shared/types.js';
+import { UserTier } from '$lib/domains/shared/types.js';
 
 export const FEATURES_COMPARISON = {
   title: 'Compare Plans',

@@ -1,8 +1,8 @@
-import { logdashAPI } from '$lib/shared/logdash.api';
-import { get_access_token } from '$lib/shared/utils/cookies.utils';
+import { logdashAPI } from '$lib/domains/shared/logdash.api';
+import { get_access_token } from '$lib/domains/shared/utils/cookies.utils';
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { bffLogger } from '$lib/shared/bff-logger.js';
+import { bffLogger } from '$lib/domains/shared/bff-logger.js';
 
 export const GET: RequestHandler = async ({ cookies, url }) => {
   const source = url.searchParams.get('source') || 'unknown';

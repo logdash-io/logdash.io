@@ -1,5 +1,5 @@
 <script>
-	import LegalPage from '$lib/shared/ui/legal/LegalPage.svelte';
+	import LegalPage from '$lib/domains/shared/ui/legal/LegalPage.svelte';
 	import { cookiesPolicyDefinition } from './definition';
 </script>
 

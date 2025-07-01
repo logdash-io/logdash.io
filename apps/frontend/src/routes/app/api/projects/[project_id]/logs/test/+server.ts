@@ -1,7 +1,7 @@
-import { logdashAPI } from '$lib/shared/logdash.api';
+import { logdashAPI } from '$lib/domains/shared/logdash.api';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { get_access_token } from '$lib/shared/utils/cookies.utils.js';
+import { get_access_token } from '$lib/domains/shared/utils/cookies.utils.js';
 
 export const POST: RequestHandler = async ({
 	params,

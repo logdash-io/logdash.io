@@ -1,4 +1,4 @@
-import type { LegalDocumentDefinition } from '$lib/shared/ui/legal/LegalDocumentDefinition';
+import type { LegalDocumentDefinition } from '$lib/domains/shared/ui/legal/LegalDocumentDefinition';
 
 export const cookiesPolicyDefinition: LegalDocumentDefinition = [
 	{

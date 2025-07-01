@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { PAYMENT_PLANS } from '$lib/shared/payment-plans.const.js';
-  import { UserTier } from '$lib/shared/types.js';
+  import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
+  import { UserTier } from '$lib/domains/shared/types.js';
   import { ArrowDownIcon, CheckIcon, ShieldCheckIcon } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
   import PricingComparisonTable from './PricingComparisonTable.svelte';

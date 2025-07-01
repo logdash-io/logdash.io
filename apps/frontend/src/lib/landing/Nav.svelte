@@ -1,11 +1,11 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import Logo from '$lib/shared/icons/Logo.svelte';
+  import Logo from '$lib/domains/shared/icons/Logo.svelte';
   import {
     animatedViewState,
     AnimationDirection,
-  } from '$lib/shared/ui/animated-view.state.svelte';
-  import { generateGithubOAuthUrl } from '$lib/shared/utils/generate-github-oauth-url';
+  } from '$lib/domains/shared/ui/animated-view.state.svelte';
+  import { generateGithubOAuthUrl } from '$lib/domains/shared/utils/generate-github-oauth-url';
   import { onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
 

@@ -1,8 +1,8 @@
 <script>
 	import { page } from '$app/state';
-	import NewsletterCheckbox from '$lib/shared/ui/components/NewsletterCheckbox.svelte';
-	import TosCheckbox from '$lib/shared/ui/components/TOSCheckbox.svelte';
-	import { generateGithubOAuthUrl } from '$lib/shared/utils/generate-github-oauth-url';
+	import NewsletterCheckbox from '$lib/domains/shared/ui/components/NewsletterCheckbox.svelte';
+	import TosCheckbox from '$lib/domains/shared/ui/components/TOSCheckbox.svelte';
+	import { generateGithubOAuthUrl } from '$lib/domains/shared/utils/generate-github-oauth-url';
 	import { onMount } from 'svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade, scale } from 'svelte/transition';
