@@ -6,7 +6,7 @@
   import type { Snippet } from 'svelte';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import StatusBar from '$lib/domains/app/projects/ui/presentational/public-dashboard/StatusBar.svelte';
-  import DataTile from '$lib/domains/app/projects/ui/ProjectView/tiles/DataTile.svelte';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
 
   type Props = {
     projectId: string;

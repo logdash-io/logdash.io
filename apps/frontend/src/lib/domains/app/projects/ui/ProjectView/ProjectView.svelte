@@ -3,14 +3,13 @@
   import { Feature } from '$lib/domains/shared/types.js';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
-  import NotificationChannelSetupModal
-    from '$lib/domains/app/projects/ui/notification-channels/NotificationChannelSetupModal.svelte';
+  import NotificationChannelSetupModal from '$lib/domains/app/projects/ui/notification-channels/NotificationChannelSetupModal.svelte';
   import EmptyState from '$lib/domains/app/projects/ui/ProjectView/EmptyState.svelte';
   import MetricDetails from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricDetails.svelte';
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
-  import DataTile from '$lib/domains/app/projects/ui/ProjectView/tiles/DataTile.svelte';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import LogsLineChartTile from '$lib/domains/app/projects/ui/ProjectView/tiles/LogMetricsTile.svelte';
-  import LogsListTile from '$lib/domains/app/projects/ui/ProjectView/tiles/logs/LogsTile.svelte';
+  import LogsListTile from '$lib/domains/logs/ui/LogsTile.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
 
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));

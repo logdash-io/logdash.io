@@ -2,14 +2,13 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import SetupMonitoringButton from '$lib/domains/app/projects/ui/presentational/SetupMonitoringButton.svelte';
-  import DataTile from '$lib/domains/app/projects/ui/ProjectView/tiles/DataTile.svelte';
-  import { FEATURES } from '$lib/domains/shared/constants/features.ts';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
-  import { Feature } from '$lib/domains/shared/types.ts';
-  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.ts';
   import { ArrowRightIcon, TimerIcon } from 'lucide-svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fade } from 'svelte/transition';
+  import { FEATURES } from '$lib/domains/shared/constants/features.js';
+  import { Feature } from '$lib/domains/shared/types.js';
 </script>
 
 <div class="flex w-full flex-col gap-4 sm:flex-row">

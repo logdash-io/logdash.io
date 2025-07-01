@@ -3,10 +3,10 @@
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
   import ClusterView from '$lib/domains/app/clusters/ui/ClusterView/ClusterView.svelte';
-  import { logsState } from '$lib/domains/app/projects/application/logs.state.svelte.js';
+  import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import type { Log } from '$lib/domains/app/projects/domain/log.js';
+  import type { Log } from '$lib/domains/logs/domain/log.js';
   import type { Metric } from '$lib/domains/app/projects/domain/metric.js';
   import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
   import type { Project } from '$lib/domains/app/projects/domain/project';

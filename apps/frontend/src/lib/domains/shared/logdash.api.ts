@@ -1,5 +1,5 @@
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
-import type { Log } from '$lib/domains/app/projects/domain/log';
+import type { Log } from '$lib/domains/logs/domain/log';
 import type { LogGranularity } from '$lib/domains/app/projects/domain/log-granularity';
 import type { LogMetric } from '$lib/domains/app/projects/domain/log-metric';
 import type { Metric } from '$lib/domains/app/projects/domain/metric';

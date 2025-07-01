@@ -1,11 +1,11 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
   import { page } from '$app/state';
-  import { logsState } from '$lib/domains/app/projects/application/logs.state.svelte.js';
-  import LogsListener from '$lib/domains/app/projects/ui/presentational/LogsListener.svelte';
-  import LogsHeader from '$lib/domains/app/projects/ui/ProjectView/tiles/logs/components/LogsHeader.svelte';
-  import LogsSearchInput from '$lib/domains/app/projects/ui/ProjectView/tiles/logs/components/LogsSearchInput.svelte';
-  import LogsVirtualList from '$lib/domains/app/projects/ui/ProjectView/tiles/logs/components/LogsVirtualList.svelte';
+  import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
+  import LogsListener from '$lib/domains/logs/ui/LogsListener.svelte';
+  import LogsHeader from '$lib/domains/logs/ui/components/LogsHeader.svelte';
+  import LogsSearchInput from '$lib/domains/logs/ui/components/LogsSearchInput.svelte';
+  import LogsVirtualList from '$lib/domains/logs/ui/components/LogsVirtualList.svelte';
 
   const projectId = $derived(page.url.searchParams.get('project_id'));
   const tabId: string = getContext('tabId');

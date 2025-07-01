@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { logsState } from '$lib/domains/app/projects/application/logs.state.svelte.js';
+  import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
 
   type Props = {
     projectId: string;

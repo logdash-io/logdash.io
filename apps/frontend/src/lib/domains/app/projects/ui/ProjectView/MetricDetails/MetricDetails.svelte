@@ -4,7 +4,7 @@
   import { MetricGranularity } from '$lib/domains/app/projects/domain/metric.js';
   import { logger } from '$lib/domains/shared/logger';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import DataTile from '$lib/domains/app/projects/ui/ProjectView/tiles/DataTile.svelte';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import {
     ChartOptions,
     ChartTitles,

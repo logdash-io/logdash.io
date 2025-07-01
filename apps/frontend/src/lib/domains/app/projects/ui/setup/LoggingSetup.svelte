@@ -1,10 +1,13 @@
 <script lang="ts">
-  import { logsState } from '$lib/domains/app/projects/application/logs.state.svelte.js';
-  import LogsListener from '$lib/domains/app/projects/ui/presentational/LogsListener.svelte';
-  import DataTile from '$lib/domains/app/projects/ui/ProjectView/tiles/DataTile.svelte';
+  import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
+  import LogsListener from '$lib/domains/logs/ui/LogsListener.svelte';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import LogsLineChartTile from '$lib/domains/app/projects/ui/ProjectView/tiles/LogMetricsTile.svelte';
   import LogsListTile from '$lib/domains/app/projects/ui/ProjectView/tiles/logs/LogsTile.svelte';
-  import { LogdashSDKName, type LogdashSDK } from '$lib/domains/shared/types.js';
+  import {
+    LogdashSDKName,
+    type LogdashSDK,
+  } from '$lib/domains/shared/types.js';
   import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
   import { getContext, onMount, type Snippet } from 'svelte';
   import Highlight from 'svelte-highlight';

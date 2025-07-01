@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { logMetricsState } from '$lib/domains/app/projects/application/log-metrics.state.svelte.js';
-  import { logsState } from '$lib/domains/app/projects/application/logs.state.svelte.js';
+  import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { createLogger } from '$lib/domains/shared/logger';
   import { getContext, untrack, type Snippet } from 'svelte';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
@@ -39,13 +39,13 @@
       if (newVisibility) {
         logger.info('Page became visible. Data sync will resume.');
         Promise.all([
-            logsState.resumeSync(projectIdToSync, tabId),
-            logMetricsState.resumeSync(projectIdToSync, tabId),
-            metricsState.resumeSync(projectIdToSync, tabId),
-            previewedMetricId
-              ? metricsState.previewMetric(projectIdToSync, previewedMetricId)
-              : Promise.resolve(),
-          ])
+          logsState.resumeSync(projectIdToSync, tabId),
+          logMetricsState.resumeSync(projectIdToSync, tabId),
+          metricsState.resumeSync(projectIdToSync, tabId),
+          previewedMetricId
+            ? metricsState.previewMetric(projectIdToSync, previewedMetricId)
+            : Promise.resolve(),
+        ])
           .then(() => {
             isPageVisible = newVisibility;
           })

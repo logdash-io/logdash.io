@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import DataTile from '$lib/domains/app/projects/ui/ProjectView/tiles/DataTile.svelte';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
   import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
@@ -120,7 +120,7 @@
 
           {#each pings as ping, i}
             {@const pingHealthy =
-            ping.statusCode >= 200 && ping.statusCode < 400}
+              ping.statusCode >= 200 && ping.statusCode < 400}
             <Tooltip content={`Service is up ${i}`} placement="top">
               <div
                 class={[

@@ -10,7 +10,7 @@
   import { cubicInOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
   import MetricsListener from '$lib/domains/app/projects/ui/presentational/MetricsListener.svelte';
-  import DataTile from '$lib/domains/app/projects/ui/ProjectView/tiles/DataTile.svelte';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import MetricTile from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricTile.svelte';
 
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));

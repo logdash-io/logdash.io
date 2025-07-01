@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { logsState } from '$lib/domains/app/projects/application/logs.state.svelte.js';
+  import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { intersect } from '$lib/domains/shared/ui/actions/use-intersect.svelte.js';
   import { fade } from 'svelte/transition';
-  import type { Log } from '$lib/domains/app/projects/domain/log';
-  import EnhancedLogRow from '$lib/domains/app/projects/ui/ProjectView/tiles/logs/components/EnhancedLogRow.svelte';
+  import type { Log } from '$lib/domains/logs/domain/log';
+  import EnhancedLogRow from '$lib/domains/logs/ui/components/EnhancedLogRow.svelte';
 
   type Props = {
     projectId: string;
