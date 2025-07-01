@@ -19,6 +19,7 @@ import { GithubAuthDataService } from './github-auth-data.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { Logger } from '@logdash/js-sdk';
+import { ClusterRole } from '../../cluster/core/enums/cluster-role.enum';
 
 @Injectable()
 export class GithubAuthClaimService {
@@ -106,7 +107,7 @@ export class GithubAuthClaimService {
       await this.clusterWriteService.update({
         id: cluster.id,
         creatorId: existingUserId,
-        members: [existingUserId],
+        roles: { [existingUserId]: ClusterRole.Creator },
       });
     }
 

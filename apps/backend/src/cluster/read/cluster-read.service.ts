@@ -4,7 +4,6 @@ import { Model } from 'mongoose';
 import { ClusterEntity } from '../core/entities/cluster.entity';
 import { ClusterNormalized } from '../core/entities/cluster.interface';
 import { ClusterSerializer } from '../core/entities/cluster.serializer';
-import { ClusterMember } from '../../cluster-invite/core/dto/cluster-invite-capacity.response';
 import { ClusterRole } from '../core/enums/cluster-role.enum';
 
 @Injectable()
@@ -34,12 +33,13 @@ export class ClusterReadService {
   }
 
   public async userIsMember(dto: { userId: string; clusterId: string }): Promise<boolean> {
-    const cluster = await this.model
-      .findOne({ _id: dto.clusterId, members: dto.userId })
-      .lean<ClusterEntity>()
-      .exec();
+    const cluster = await this.model.findOne({ _id: dto.clusterId }).lean<ClusterEntity>().exec();
 
-    return !!cluster;
+    if (cluster) {
+      return !!cluster.roles[dto.userId];
+    }
+
+    return false;
   }
 
   public async readByCreatorId(creatorId: string): Promise<ClusterNormalized[]> {
@@ -66,5 +66,16 @@ export class ClusterReadService {
       id,
       role,
     }));
+  }
+
+  public async countBeingMemberOfClusters(userId: string): Promise<number> {
+    return await this.model
+      .countDocuments({
+        [`roles.${userId}`]: {
+          $exists: true,
+          $ne: null,
+        },
+      })
+      .exec();
   }
 }

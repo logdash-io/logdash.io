@@ -29,7 +29,6 @@ export class ClusterWriteService {
   public async create(dto: CreateClusterDto): Promise<ClusterNormalized> {
     const cluster = await this.model.create({
       name: dto.name,
-      members: [...new Set([dto.creatorId, ...(dto.members || [])])],
       creatorId: dto.creatorId,
       tier: dto.tier,
       roles: dto.roles,
@@ -69,8 +68,8 @@ export class ClusterWriteService {
       updateQuery.name = dto.name;
     }
 
-    if (dto.members) {
-      updateQuery.members = dto.members;
+    if (dto.roles) {
+      updateQuery.roles = dto.roles;
     }
 
     if (dto.creatorId) {

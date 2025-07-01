@@ -25,7 +25,6 @@ export class SimplifiedPublicDashboard {
 export class ClusterNormalized {
   id: string;
   name: string;
-  members: string[];
   creatorId: string;
   tier: ClusterTier;
   roles: Record<string, ClusterRole>;
@@ -37,9 +36,6 @@ export class ClusterSerialized {
 
   @ApiProperty()
   name: string;
-
-  @ApiProperty()
-  members: string[];
 
   @ApiProperty()
   creatorId: string;
