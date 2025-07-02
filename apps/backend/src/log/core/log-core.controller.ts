@@ -222,7 +222,7 @@ export class LogCoreController {
   @UseInterceptors(DemoCacheInterceptor)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
-  @Get('projects/:projectId/logs/analytics')
+  @Get('projects/:projectId/logs/analytics/v1')
   @ApiResponse({ type: LogAnalyticsResponse })
   public async getLogAnalytics(
     @Param('projectId') projectId: string,

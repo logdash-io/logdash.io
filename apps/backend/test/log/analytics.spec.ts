@@ -20,7 +20,7 @@ describe('LogCoreController (analytics)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  describe('GET /projects/:projectId/logs/analytics', () => {
+  describe('GET /projects/:projectId/logs/analytics/v1', () => {
     it('returns bucketed analytics with auto-selected buckets', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -61,7 +61,7 @@ describe('LogCoreController (analytics)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/logs/analytics`)
+        .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
           startDate: '2024-01-01T10:00:00Z',
@@ -115,7 +115,7 @@ describe('LogCoreController (analytics)', () => {
 
       // when - request 17:02-17:07 (5 minutes)
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/logs/analytics`)
+        .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
           startDate: '2024-01-01T17:02:10Z',
@@ -167,7 +167,7 @@ describe('LogCoreController (analytics)', () => {
 
       // when - test with 1 hour range
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/logs/analytics`)
+        .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
           startDate: '2024-01-01T10:00:00Z',
@@ -252,7 +252,7 @@ describe('LogCoreController (analytics)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/logs/analytics`)
+        .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
           startDate: '2024-01-01T10:00:00Z',
@@ -324,7 +324,7 @@ describe('LogCoreController (analytics)', () => {
 
       // when - test with 7 day range (should select larger buckets)
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/logs/analytics`)
+        .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
           startDate: '2024-01-01T00:00:00Z',
@@ -344,7 +344,7 @@ describe('LogCoreController (analytics)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${project.id}/logs/analytics`)
+        .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
           startDate: '2024-01-01T10:00:00Z',
@@ -364,7 +364,7 @@ describe('LogCoreController (analytics)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${setup.project.id}/logs/analytics`)
+        .get(`/projects/${setup.project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${otherSetup.token}`)
         .query({
           startDate: '2024-01-01T10:00:00Z',
