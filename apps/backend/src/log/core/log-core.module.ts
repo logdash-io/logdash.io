@@ -10,6 +10,7 @@ import { LogRateLimitModule } from '../rate-limit/log-rate-limit.module';
 import { ApiKeyReadModule } from '../../api-key/read/api-key-read.module';
 import { AddTestLogModule } from '../add-test-log/add-test-log.module';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
+import { LogAnalyticsModule } from '../analytics/log-analytics.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/c
     LogTtlModule,
     LogRateLimitModule,
     AddTestLogModule,
+    LogAnalyticsModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [LogCoreController],
