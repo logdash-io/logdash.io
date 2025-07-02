@@ -4,6 +4,7 @@ import { HttpPingCoreController } from '../../src/http-ping/core/http-ping-core.
 import { HttpPingSchedulerService } from '../../src/http-ping/schedule/http-ping-scheduler.service';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('Http Ping (SSE)', () => {
   let controller: HttpPingCoreController;
@@ -44,7 +45,7 @@ describe('Http Ping (SSE)', () => {
       const stream = await controller.streamHttpMonitorPings(setupA.cluster.id);
       const resultsPromise = firstValueFrom(stream.pipe(take(1)));
 
-      await schedulerService.tryPingAllMonitors();
+      await schedulerService.tryPingMonitors([UserTier.Free]);
 
       // then
       const results = await resultsPromise;
@@ -77,9 +78,9 @@ describe('Http Ping (SSE)', () => {
       const stream = await controller.streamHttpMonitorPings(setupA.cluster.id);
       const resultsPromise = firstValueFrom(stream.pipe(take(2), toArray()));
       nock(URL_STUB).get('/').times(2).delay(10).reply(200);
-      await schedulerService.tryPingAllMonitors();
+      await schedulerService.tryPingMonitors([UserTier.Free]);
       nock(URL_STUB).get('/').times(2).delay(10).reply(404);
-      await schedulerService.tryPingAllMonitors();
+      await schedulerService.tryPingMonitors([UserTier.Free]);
 
       // then
       const results = await resultsPromise;
