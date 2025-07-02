@@ -59,7 +59,7 @@ export class LogAnalyticsService {
       ) buckets
       LEFT JOIN (
         SELECT 
-          toStartOfInterval(created_at, toIntervalMinute(bucket_minutes)) as log_bucket_start,
+          start_time + toIntervalMinute(bucket_minutes * toUInt64(dateDiff('minute', start_time, created_at) / bucket_minutes)) as log_bucket_start,
           countIf(level = 'info') as info_count,
           countIf(level = 'warning') as warning_count,
           countIf(level = 'error') as error_count,
@@ -77,6 +77,12 @@ export class LogAnalyticsService {
       ) log_data ON buckets.bucket_start = log_data.log_bucket_start
       ORDER BY bucket_start ASC
     `;
+
+    console.log(projectId);
+    console.log(query);
+    console.log(ClickhouseUtils.jsDateToClickhouseDate(alignedStartDate));
+    console.log(ClickhouseUtils.jsDateToClickhouseDate(alignedEndDate));
+    console.log(bucketMinutes);
 
     const result = await this.clickhouse.query({
       query,
