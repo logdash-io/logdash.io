@@ -17,7 +17,7 @@
     DotSquareIcon,
   } from 'lucide-svelte';
   import Highlight from 'svelte-highlight';
-  import { bash, csharp, type LanguageType } from 'svelte-highlight/languages';
+  import { bash, csharp, java, type LanguageType } from 'svelte-highlight/languages';
 
   type Props = {
     selectedSDK: LogdashSDK;
@@ -46,8 +46,16 @@
       code: `pip install logdash`,
     },
     [LogdashSDKName.JAVA]: {
-      language: null,
-      code: null,
+      language: bash,
+      code: `// Maven
+<dependency>
+    <groupId>io.logdash</groupId>
+    <artifactId>logdash</artifactId>
+    <version>0.2.0</version>
+</dependency>
+
+// Gradle
+implementation 'io.logdash:logdash:0.2.0'`,
     },
     [LogdashSDKName.PHP]: {
       language: null,

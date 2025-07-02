@@ -11,6 +11,7 @@
   import {
     csharp,
     go,
+    java,
     python,
     ruby,
     rust,
@@ -100,8 +101,21 @@ time.sleep(5)
 `,
     },
     [LogdashSDKName.JAVA]: {
-      language: null,
-      code: null,
+      language: java,
+      code: `import io.logdash.sdk.Logdash;
+
+var logdash = Logdash.builder()
+        .apiKey("${api_key}")
+        .build();
+
+var logger = logdash.logger();
+
+logger.info("Application started successfully");
+logger.error("An unexpected error occurred");
+logger.warn("Low disk space warning");
+
+// optionally, gracefully close logdash client
+logdash.close();`,
     },
     [LogdashSDKName.PHP]: {
       language: null,
