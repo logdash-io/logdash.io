@@ -189,6 +189,7 @@ export class LogCoreController {
       lastId: dto.lastId,
       projectId,
       limit: dto.limit ?? 50,
+      searchString: dto.searchString,
     });
 
     return logs.map((log) => LogSerializer.serialize(log));
@@ -225,6 +226,7 @@ export class LogCoreController {
         projectId,
         limit: dto.limit ?? 50,
         level: dto.level,
+        searchString: dto.searchString,
       });
     } else {
       logs = await this.logReadClickhouseService.readManyLastId({
@@ -233,6 +235,7 @@ export class LogCoreController {
         projectId,
         limit: dto.limit ?? 50,
         level: dto.level,
+        searchString: dto.searchString,
       });
     }
 
