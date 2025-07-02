@@ -5,6 +5,7 @@ import { LogAnalyticsBucketData, LogAnalyticsResponse } from './dto/log-analytic
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 import { LogAnalyticsBucketSelectionService } from './log-analytics-bucket-selection.service';
 import { LogAnalyticsDateAlignmentService } from './log-analytics-date-alignment.service';
+import { LogLevel } from '../core/enums/log-level.enum';
 
 @Injectable()
 export class LogAnalyticsService {
@@ -92,17 +93,19 @@ export class LogAnalyticsService {
     const buckets: LogAnalyticsBucketData[] = data.map((row: any) => ({
       bucketStart: ClickhouseUtils.clickhouseDateToJsDate(row.bucket_start).toISOString(),
       bucketEnd: ClickhouseUtils.clickhouseDateToJsDate(row.bucket_end).toISOString(),
-      infoCount: parseInt(row.info_count),
-      warningCount: parseInt(row.warning_count),
-      errorCount: parseInt(row.error_count),
-      httpCount: parseInt(row.http_count),
-      verboseCount: parseInt(row.verbose_count),
-      debugCount: parseInt(row.debug_count),
-      sillyCount: parseInt(row.silly_count),
-      totalCount: parseInt(row.total_count),
+      countByLevel: {
+        [LogLevel.Info]: parseInt(row.info_count),
+        [LogLevel.Warning]: parseInt(row.warning_count),
+        [LogLevel.Error]: parseInt(row.error_count),
+        [LogLevel.Http]: parseInt(row.http_count),
+        [LogLevel.Verbose]: parseInt(row.verbose_count),
+        [LogLevel.Debug]: parseInt(row.debug_count),
+        [LogLevel.Silly]: parseInt(row.silly_count),
+      },
+      countTotal: parseInt(row.total_count),
     }));
 
-    const totalLogs = buckets.reduce((sum, bucket) => sum + bucket.totalCount, 0);
+    const totalLogs = buckets.reduce((sum, bucket) => sum + bucket.countTotal, 0);
 
     return {
       buckets,

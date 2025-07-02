@@ -8,29 +8,22 @@ export class LogAnalyticsBucketData {
   @ApiProperty()
   public bucketEnd: string;
 
-  @ApiProperty()
-  public infoCount: number;
+  @ApiProperty({
+    description: 'Count of logs by level',
+    example: {
+      [LogLevel.Info]: 5,
+      [LogLevel.Warning]: 2,
+      [LogLevel.Error]: 1,
+      [LogLevel.Http]: 10,
+      [LogLevel.Verbose]: 0,
+      [LogLevel.Debug]: 3,
+      [LogLevel.Silly]: 0,
+    },
+  })
+  public countByLevel: Record<LogLevel, number>;
 
   @ApiProperty()
-  public warningCount: number;
-
-  @ApiProperty()
-  public errorCount: number;
-
-  @ApiProperty()
-  public httpCount: number;
-
-  @ApiProperty()
-  public verboseCount: number;
-
-  @ApiProperty()
-  public debugCount: number;
-
-  @ApiProperty()
-  public sillyCount: number;
-
-  @ApiProperty()
-  public totalCount: number;
+  public countTotal: number;
 }
 
 export class LogAnalyticsResponse {
