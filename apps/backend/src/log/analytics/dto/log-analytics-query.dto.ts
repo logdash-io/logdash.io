@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsDateString, IsEnum } from 'class-validator';
+import { IsDateString, IsNumber, IsOptional } from 'class-validator';
 
 export enum LogAnalyticsBucket {
   OneMinute = 1,
@@ -26,8 +26,13 @@ export class LogAnalyticsQuery {
   @IsDateString()
   public endDate: string;
 
-  @ApiProperty({ enum: LogAnalyticsBucket })
-  @IsEnum(LogAnalyticsBucket)
-  @Transform(({ value }) => parseInt(value))
-  public bucket: LogAnalyticsBucket;
+  @ApiProperty({
+    description: 'UTC offset in hours (e.g., -5 for EST, 2 for CET). Defaults to 0 (UTC)',
+    required: false,
+    default: 0,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Transform(({ value }) => (value ? parseFloat(value) : 0))
+  public utcOffsetHours?: number = 0;
 }

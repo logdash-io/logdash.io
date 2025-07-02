@@ -3,10 +3,16 @@ import { ClickHouseClient } from '@clickhouse/client';
 import { LogAnalyticsBucket, LogAnalyticsQuery } from './dto/log-analytics-query.dto';
 import { LogAnalyticsBucketData, LogAnalyticsResponse } from './dto/log-analytics-response.dto';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
+import { LogAnalyticsBucketSelectionService } from './log-analytics-bucket-selection.service';
+import { LogAnalyticsDateAlignmentService } from './log-analytics-date-alignment.service';
 
 @Injectable()
 export class LogAnalyticsService {
-  constructor(private readonly clickhouse: ClickHouseClient) {}
+  constructor(
+    private readonly clickhouse: ClickHouseClient,
+    private readonly bucketSelectionService: LogAnalyticsBucketSelectionService,
+    private readonly dateAlignmentService: LogAnalyticsDateAlignmentService,
+  ) {}
 
   public async getBucketedAnalytics(
     projectId: string,
@@ -14,7 +20,19 @@ export class LogAnalyticsService {
   ): Promise<LogAnalyticsResponse> {
     const startDate = new Date(dto.startDate);
     const endDate = new Date(dto.endDate);
-    const bucketMinutes = dto.bucket;
+    const utcOffsetHours = dto.utcOffsetHours ?? 0;
+
+    // Auto-select optimal bucket size
+    const bucketMinutes = this.bucketSelectionService.selectOptimalBucketSize(startDate, endDate);
+
+    // Align dates to bucket boundaries
+    const { alignedStartDate, alignedEndDate } =
+      this.dateAlignmentService.alignDatesToBucketBoundaries(
+        startDate,
+        endDate,
+        bucketMinutes,
+        utcOffsetHours,
+      );
 
     const query = `
       WITH 
@@ -63,8 +81,8 @@ export class LogAnalyticsService {
       query,
       query_params: {
         projectId,
-        startDate: ClickhouseUtils.jsDateToClickhouseDate(startDate),
-        endDate: ClickhouseUtils.jsDateToClickhouseDate(endDate),
+        startDate: ClickhouseUtils.jsDateToClickhouseDate(alignedStartDate),
+        endDate: ClickhouseUtils.jsDateToClickhouseDate(alignedEndDate),
         bucketMinutes,
       },
     });
