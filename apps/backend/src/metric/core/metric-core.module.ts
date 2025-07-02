@@ -7,6 +7,7 @@ import { MetricTtlModule } from '../ttl/metric-ttl.module';
 import { MetricRegisterReadModule } from '../../metric-register/read/metric-register-read.module';
 import { MetricEventModule } from '../events/metric-event.module';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
+import { NewMetricQueueingModule } from '../new-queueing/new-metric-queueing.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/c
     MetricTtlModule,
     MetricRegisterReadModule,
     MetricEventModule,
+    NewMetricQueueingModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [MetricCoreController],
