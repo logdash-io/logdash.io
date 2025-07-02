@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ProjectEntity } from '../core/entities/project.entity';
@@ -57,6 +57,12 @@ export class ProjectReadService {
 
   public async readByCreatorId(creatorId: string): Promise<ProjectNormalized[]> {
     const projects = await this.model.find({ creatorId });
+
+    return projects.map((project) => ProjectSerializer.normalize(project));
+  }
+
+  public async readManyByCreatorsIds(creatorIds: string[]): Promise<ProjectNormalized[]> {
+    const projects = await this.model.find({ creatorId: { $in: creatorIds } });
 
     return projects.map((project) => ProjectSerializer.normalize(project));
   }

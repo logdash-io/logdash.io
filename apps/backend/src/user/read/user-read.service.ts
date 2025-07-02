@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserNormalized } from '../core/entities/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
-import { UserEntity } from '../core/entities/user.entity';
 import { Model } from 'mongoose';
+import { UserEntity } from '../core/entities/user.entity';
+import { UserNormalized } from '../core/entities/user.interface';
 import { UserSerializer } from '../core/entities/user.serializer';
 import { AccountClaimStatus } from '../core/enum/account-claim-status.enum';
+import { UserTier } from '../core/enum/user-tier.enum';
 
 @Injectable()
 export class UserReadService {
@@ -44,5 +45,14 @@ export class UserReadService {
     for await (const user of cursor) {
       yield user._id.toString();
     }
+  }
+
+  public async readByTiers(tiers: UserTier[]): Promise<UserNormalized[]> {
+    const users = await this.userModel
+      .find({ tier: { $in: tiers } })
+      .lean<UserEntity[]>()
+      .exec();
+
+    return users.map((user) => UserSerializer.normalize(user));
   }
 }

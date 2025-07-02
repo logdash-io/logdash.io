@@ -1,5 +1,6 @@
-import { UserTier } from '../../user/core/enum/user-tier.enum';
+import { CronExpression } from '@nestjs/schedule';
 import { NotificationChannelType } from '../../notification-channel/core/enums/notification-target.enum';
+import { UserTier } from '../../user/core/enum/user-tier.enum';
 
 interface UserPlanConfig {
   projects: {
@@ -10,6 +11,9 @@ interface UserPlanConfig {
   };
   notificationChannels: {
     allowedTypes: NotificationChannelType[];
+  };
+  pings: {
+    frequency: CronExpression;
   };
 }
 
@@ -31,6 +35,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
     },
+    pings: {
+      frequency: CronExpression.EVERY_5_MINUTES,
+    },
   },
   [UserTier.Contributor]: {
     projects: {
@@ -41,6 +48,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     },
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
+    },
+    pings: {
+      frequency: CronExpression.EVERY_5_MINUTES,
     },
   },
   [UserTier.EarlyBird]: {
@@ -53,6 +63,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
     },
+    pings: {
+      frequency: CronExpression.EVERY_MINUTE,
+    },
   },
   [UserTier.Admin]: {
     projects: {
@@ -63,6 +76,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     },
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
+    },
+    pings: {
+      frequency: CronExpression.EVERY_MINUTE,
     },
   },
 };
