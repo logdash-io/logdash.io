@@ -6,6 +6,7 @@ export class LogAnalyticsBucketSelectionService {
   private readonly MAX_BUCKETS = 30;
 
   private readonly AVAILABLE_BUCKET_SIZES = [
+    LogAnalyticsBucket.OneMinute,
     LogAnalyticsBucket.FiveMinutes,
     LogAnalyticsBucket.TenMinutes,
     LogAnalyticsBucket.FifteenMinutes,

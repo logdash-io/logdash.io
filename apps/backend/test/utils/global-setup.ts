@@ -2,7 +2,7 @@ import { createClickHouseTestContainer } from './clickhouse-test-container-serve
 import { createRedisTestContainer } from './redis-test-container-server';
 
 export default async () => {
-  console.log('Starting global test setup...');
+  console.log('\nStarting global test setup...');
 
   try {
     await Promise.all([createClickHouseTestContainer(), createRedisTestContainer()]);

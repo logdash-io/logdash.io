@@ -1,5 +1,5 @@
-import { LogAnalyticsBucketSelectionService } from '../../src/log/analytics/log-analytics-bucket-selection.service';
-import { LogAnalyticsBucket } from '../../src/log/analytics/dto/log-analytics-query.dto';
+import { LogAnalyticsBucketSelectionService } from './log-analytics-bucket-selection.service';
+import { LogAnalyticsBucket } from './dto/log-analytics-query.dto';
 
 describe('LogAnalyticsBucketSelectionService', () => {
   let service: LogAnalyticsBucketSelectionService;
@@ -10,6 +10,15 @@ describe('LogAnalyticsBucketSelectionService', () => {
 
   describe('selectOptimalBucketSize', () => {
     describe('short time ranges', () => {
+      it('selects 1-minute buckets for 30 minute range (30 buckets)', () => {
+        const startDate = new Date('2024-01-01T10:00:00Z');
+        const endDate = new Date('2024-01-01T10:30:00Z'); // 30 minutes
+
+        const result = service.selectOptimalBucketSize(startDate, endDate);
+
+        expect(result).toBe(LogAnalyticsBucket.OneMinute);
+      });
+
       it('selects 5-minute buckets for 2.5 hour range (30 buckets)', () => {
         const startDate = new Date('2024-01-01T10:00:00Z');
         const endDate = new Date('2024-01-01T12:30:00Z'); // 150 minutes
@@ -86,13 +95,13 @@ describe('LogAnalyticsBucketSelectionService', () => {
         expect(result).toBe(LogAnalyticsBucket.EightHours);
       });
 
-      it('selects 8-hour buckets for very long ranges (fallback to largest)', () => {
+      it('selects 24-hour buckets for very long ranges (fallback to largest)', () => {
         const startDate = new Date('2024-01-01T10:00:00Z');
         const endDate = new Date('2024-02-01T10:00:00Z'); // 31 days = ~44640 minutes
 
         const result = service.selectOptimalBucketSize(startDate, endDate);
 
-        expect(result).toBe(LogAnalyticsBucket.EightHours);
+        expect(result).toBe(LogAnalyticsBucket.TwentyFourHours);
       });
     });
 
@@ -103,7 +112,7 @@ describe('LogAnalyticsBucketSelectionService', () => {
 
         const result = service.selectOptimalBucketSize(startDate, endDate);
 
-        expect(result).toBe(LogAnalyticsBucket.FiveMinutes);
+        expect(result).toBe(LogAnalyticsBucket.OneMinute);
       });
 
       it('handles exact bucket boundaries', () => {
@@ -121,7 +130,7 @@ describe('LogAnalyticsBucketSelectionService', () => {
 
         const result = service.selectOptimalBucketSize(startDate, endDate);
 
-        expect(result).toBe(LogAnalyticsBucket.FiveMinutes);
+        expect(result).toBe(LogAnalyticsBucket.OneMinute);
       });
     });
   });

@@ -82,9 +82,18 @@ export class LogAnalyticsDateAlignmentService {
           localTime.setUTCMinutes(alignedMinutesFromLocalMidnight % 60);
         }
       } else {
-        localTime.setUTCMinutes(
-          Math.ceil(localTime.getUTCMinutes() / bucketMinutes) * bucketMinutes,
-        );
+        let effectiveMinutes = localTime.getUTCMinutes();
+        if (localTime.getUTCSeconds() !== 0 || localTime.getUTCMilliseconds() !== 0) {
+          effectiveMinutes += 1;
+        }
+        const alignedMinutes = Math.ceil(effectiveMinutes / bucketMinutes) * bucketMinutes;
+
+        if (alignedMinutes >= 60) {
+          localTime.setUTCHours(localTime.getUTCHours() + Math.floor(alignedMinutes / 60));
+          localTime.setUTCMinutes(alignedMinutes % 60);
+        } else {
+          localTime.setUTCMinutes(alignedMinutes);
+        }
       }
     }
 

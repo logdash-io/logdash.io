@@ -1,5 +1,5 @@
-import { LogAnalyticsDateAlignmentService } from '../../src/log/analytics/log-analytics-date-alignment.service';
-import { LogAnalyticsBucket } from '../../src/log/analytics/dto/log-analytics-query.dto';
+import { LogAnalyticsDateAlignmentService } from './log-analytics-date-alignment.service';
+import { LogAnalyticsBucket } from './dto/log-analytics-query.dto';
 
 describe('LogAnalyticsDateAlignmentService', () => {
   let service: LogAnalyticsDateAlignmentService;
@@ -9,6 +9,38 @@ describe('LogAnalyticsDateAlignmentService', () => {
   });
 
   describe('alignDatesToBucketBoundaries', () => {
+    describe('1-minute buckets', () => {
+      it('aligns 17:02:30-17:03:45 to 17:02-17:04', () => {
+        const startDate = new Date('2024-01-01T17:02:30Z');
+        const endDate = new Date('2024-01-01T17:03:45Z');
+
+        const result = service.alignDatesToBucketBoundaries(
+          startDate,
+          endDate,
+          LogAnalyticsBucket.OneMinute,
+          0, // UTC+0
+        );
+
+        expect(result.alignedStartDate).toEqual(new Date('2024-01-01T17:02:00.000Z'));
+        expect(result.alignedEndDate).toEqual(new Date('2024-01-01T17:04:00.000Z'));
+      });
+
+      it('keeps already aligned dates unchanged', () => {
+        const startDate = new Date('2024-01-01T17:02:00.000Z');
+        const endDate = new Date('2024-01-01T17:04:00.000Z');
+
+        const result = service.alignDatesToBucketBoundaries(
+          startDate,
+          endDate,
+          LogAnalyticsBucket.OneMinute,
+          0, // UTC+0
+        );
+
+        expect(result.alignedStartDate).toEqual(new Date('2024-01-01T17:02:00.000Z'));
+        expect(result.alignedEndDate).toEqual(new Date('2024-01-01T17:04:00.000Z'));
+      });
+    });
+
     describe('5-minute buckets', () => {
       it('aligns 17:02-17:08 to 17:00-17:10', () => {
         const startDate = new Date('2024-01-01T17:02:00Z');
@@ -185,6 +217,13 @@ describe('LogAnalyticsDateAlignmentService', () => {
 
     describe('all bucket sizes', () => {
       const testCases = [
+        {
+          bucket: LogAnalyticsBucket.OneMinute,
+          startInput: '2024-01-01T10:00:30Z',
+          endInput: '2024-01-01T10:02:15Z',
+          expectedStart: '2024-01-01T10:00:00.000Z',
+          expectedEnd: '2024-01-01T10:03:00.000Z',
+        },
         {
           bucket: LogAnalyticsBucket.FiveMinutes,
           startInput: '2024-01-01T10:03:00Z',

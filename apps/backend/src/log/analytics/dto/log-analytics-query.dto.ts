@@ -3,6 +3,7 @@ import { Transform } from 'class-transformer';
 import { IsDateString, IsEnum } from 'class-validator';
 
 export enum LogAnalyticsBucket {
+  OneMinute = 1,
   FiveMinutes = 5,
   TenMinutes = 10,
   FifteenMinutes = 15,
