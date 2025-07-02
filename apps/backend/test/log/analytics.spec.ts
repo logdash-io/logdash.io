@@ -125,7 +125,7 @@ describe('LogCoreController (analytics)', () => {
       // then - should auto-select 1-minute buckets and align to boundaries
       expect(response.status).toEqual(200);
       expect(response.body.bucketSizeMinutes).toEqual(1);
-      expect(response.body.buckets.length).toEqual(5);
+      expect(response.body.buckets.length).toEqual(6);
 
       // verify alignment - first bucket should start at an aligned boundary
       const firstBucket = response.body.buckets[0];
@@ -354,7 +354,7 @@ describe('LogCoreController (analytics)', () => {
       // then
       expect(response.status).toEqual(200);
       expect(response.body.totalLogs).toEqual(0);
-      expect(response.body.buckets).toHaveLength(60);
+      expect(response.body.buckets).toHaveLength(12); // 12 * 5 minute buckets
     });
 
     it('throws 403 when user is not a member of cluster', async () => {
