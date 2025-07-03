@@ -58,8 +58,13 @@ export class HttpMonitorReadService {
     return this.httpMonitorModel.countDocuments().lean().exec();
   }
 
-  public async *readAllCursor(): AsyncGenerator<HttpMonitorNormalized> {
-    const cursor = this.httpMonitorModel.find().sort({ createdAt: -1 }).cursor();
+  public async *readManyByProjectIdsCursor(
+    projectIds: string[],
+  ): AsyncGenerator<HttpMonitorNormalized> {
+    const cursor = this.httpMonitorModel
+      .find({ projectId: { $in: projectIds } })
+      .sort({ createdAt: -1 })
+      .cursor();
 
     for await (const entity of cursor) {
       yield HttpMonitorSerializer.normalize(entity);

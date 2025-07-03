@@ -1,8 +1,9 @@
-import { createTestApp } from '../utils/bootstrap';
+import * as nock from 'nock';
 import { HttpPingSchedulerService } from '../../src/http-ping/schedule/http-ping-scheduler.service';
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { createTestApp } from '../utils/bootstrap';
 import { sleep } from '../utils/sleep';
-import * as nock from 'nock';
 
 describe('Http monitor full process', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -51,15 +52,15 @@ describe('Http monitor full process', () => {
     // at first the status is unknown
     // unknown -> up
     nock('https://chess.com').get('/').reply(200, 'ok');
-    await service.tryPingAllMonitors();
+    await service.tryPingMonitors([UserTier.Free]);
 
     // up -> down
     nock('https://chess.com').get('/').reply(500, { error: 'some funny error' });
-    await service.tryPingAllMonitors();
+    await service.tryPingMonitors([UserTier.Free]);
 
     // down -> up
     nock('https://chess.com').get('/').reply(200, 'ok');
-    await service.tryPingAllMonitors();
+    await service.tryPingMonitors([UserTier.Free]);
 
     await sleep(1000);
 
