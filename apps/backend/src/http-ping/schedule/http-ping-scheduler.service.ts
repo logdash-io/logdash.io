@@ -3,10 +3,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import axios from 'axios';
 import { HttpMonitorNormalized } from 'src/http-monitor/core/entities/http-monitor.interface';
+import { projectTierFromUserTier } from 'src/project/core/enums/project-tier.enum';
 import { ProjectReadService } from 'src/project/read/project-read.service';
 import { UserPlanConfigs } from 'src/shared/configs/user-plan-configs';
 import { UserTier } from 'src/user/core/enum/user-tier.enum';
-import { UserReadService } from 'src/user/read/user-read.service';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 import { HttpPingEventEmitter } from '../events/http-ping-event.emitter';
@@ -33,7 +33,6 @@ export class HttpPingSchedulerService {
     @Inject(MAX_CONCURRENT_REQUESTS_TOKEN)
     private readonly maxConcurrentRequests: number,
     private readonly httpPingSchedulerDataService: HttpPingSchedulerDataService,
-    private readonly userReadService: UserReadService,
     private readonly projectReadService: ProjectReadService,
   ) {}
 
@@ -76,10 +75,9 @@ export class HttpPingSchedulerService {
     const queue: QueueItem[] = [];
     const results: CreateHttpPingDto[] = [];
 
-    const usersIds = (await this.userReadService.readByTiers(userTiers)).map((u) => u.id);
-    const projectsIds = (await this.projectReadService.readManyByCreatorsIds(usersIds)).map(
-      (p) => p.id,
-    );
+    const projectsIds = (
+      await this.projectReadService.readManyByTiers(userTiers.map(projectTierFromUserTier))
+    ).map((p) => p.id);
 
     for await (const monitor of this.httpMonitorReadService.readManyByProjectIdsCursor(
       projectsIds,

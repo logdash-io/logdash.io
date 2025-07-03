@@ -1,5 +1,6 @@
 import * as nock from 'nock';
 import { HttpPingSchedulerService } from '../../src/http-ping/schedule/http-ping-scheduler.service';
+import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
@@ -76,24 +77,21 @@ describe('Http Ping (writes)', () => {
     expect(allPings.length).toBe(1000);
   }, 30000);
 
-  it('handles pings for large number of users, projects and monitors', async () => {
+  it('handles pings for large number of projects and monitors', async () => {
     // given
-    const setups = await Promise.all(
-      Array.from({ length: 1000 }, (_, i) => {
-        return bootstrap.utils.userUtils.createDefaultUser({
-          tier: UserTier.EarlyBird,
-        });
-      }),
-    );
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous({
+      userTier: UserTier.EarlyBird,
+    });
 
     const projects = await Promise.all(
-      setups.map((setup) =>
+      Array.from({ length: 1000 }, () =>
         bootstrap.utils.projectUtils.createDefaultProject({
-          userId: setup.id,
+          userId: setup.user.id,
+          tier: ProjectTier.EarlyBird,
         }),
       ),
     );
-    
+
     await Promise.all(
       projects.map((project) =>
         bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({

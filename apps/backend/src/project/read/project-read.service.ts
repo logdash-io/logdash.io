@@ -61,8 +61,8 @@ export class ProjectReadService {
     return projects.map((project) => ProjectSerializer.normalize(project));
   }
 
-  public async readManyByCreatorsIds(creatorIds: string[]): Promise<ProjectNormalized[]> {
-    const projects = await this.model.find({ creatorId: { $in: creatorIds } });
+  public async readManyByTiers(tiers: ProjectTier[]): Promise<ProjectNormalized[]> {
+    const projects = await this.model.find({ tier: { $in: tiers } });
 
     return projects.map((project) => ProjectSerializer.normalize(project));
   }
