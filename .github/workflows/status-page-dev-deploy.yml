@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - status-page
+      - dev
     paths:
       - 'apps/status-page/**'
       - '.github/workflows/**'
