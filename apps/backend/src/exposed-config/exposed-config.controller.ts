@@ -74,12 +74,16 @@ export class ExposedConfigController {
 
   @Get('/check-domain')
   public async checkDomain(@Query('domain') domain: string) {
+    console.log('domain', domain);
+
     if (domain.includes('allowed')) {
+      console.log('domain is allowed');
       return {
         message: 'OK',
       };
     }
 
+    console.log('domain is not allowed');
     throw new ForbiddenException('Domain not allowed');
   }
 }
