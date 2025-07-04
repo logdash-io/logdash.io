@@ -7,6 +7,7 @@ import { envConfig } from '$lib/domains/shared/utils/env-config.js';
 import { EventSource } from 'eventsource';
 import queryString from 'query-string';
 import type { Log } from '$lib/domains/logs/domain/log';
+import { LogsService } from '../infrastructure/logs.service.js';
 
 const logger = createLogger('logs.state', true);
 
@@ -22,13 +23,13 @@ class LogsState {
   get logs(): Log[] {
     const allLogs = Object.values(this._logs).sort((a, b) => {
       if (a.createdAt < b.createdAt) {
-        return -1;
-      }
-      if (a.createdAt > b.createdAt) {
         return 1;
       }
+      if (a.createdAt > b.createdAt) {
+        return -1;
+      }
       if (a.sequenceNumber !== undefined && b.sequenceNumber !== undefined) {
-        return a.sequenceNumber - b.sequenceNumber;
+        return b.sequenceNumber - a.sequenceNumber;
       }
       return 0;
     });
@@ -241,18 +242,17 @@ class LogsState {
   }
 
   private async fetchLogs(project_id: string, after?: string): Promise<void> {
-    const params: Record<string, string> = {};
-    if (after) params.after = after;
-    if (this._searchQuery.trim()) params.search = this._searchQuery.trim();
-
-    const qs = queryString.stringify(params);
-    const response = await fetch(`/app/api/projects/${project_id}/logs?${qs}`);
-    const { data }: { data: Log[] } = await response.json();
+    const logs = await LogsService.getProjectLogs(
+      project_id,
+      50,
+      after,
+      this._searchQuery.trim(),
+    );
 
     if (after) {
-      Object.assign(this._logs, arrayToObject<Log>(data, 'id'));
+      Object.assign(this._logs, arrayToObject<Log>(logs, 'id'));
     } else {
-      this._logs = arrayToObject<Log>(data, 'id');
+      this._logs = arrayToObject<Log>(logs, 'id');
     }
   }
 }

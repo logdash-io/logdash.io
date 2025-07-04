@@ -1,7 +1,8 @@
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
 import type { Log } from '$lib/domains/logs/domain/log';
-import type { LogGranularity } from '$lib/domains/app/projects/domain/log-granularity';
-import type { LogMetric } from '$lib/domains/app/projects/domain/log-metric';
+import type { LogGranularity } from '$lib/domains/logs/domain/log-granularity';
+import type { LogMetric } from '$lib/domains/logs/domain/log-metric';
+
 import type { Metric } from '$lib/domains/app/projects/domain/metric';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping.js';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
@@ -160,6 +161,9 @@ class LogdashAPI {
     ).then((keys) => keys.map((k) => k.value));
   }
 
+  /**
+   * @deprecated Use LogsService instead
+   */
   get_project_logs(
     project_id: string,
     access_token: string,

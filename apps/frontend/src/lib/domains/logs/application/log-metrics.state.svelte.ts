@@ -4,8 +4,8 @@ import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils.j
 import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/domains/shared/utils/cookies.utils.js';
 import { envConfig } from '$lib/domains/shared/utils/env-config.js';
 import { EventSource } from 'eventsource';
-import type { LogGranularity } from '$lib/domains/app/projects/domain/log-granularity';
-import type { LogMetric } from '$lib/domains/app/projects/domain/log-metric';
+import type { LogGranularity } from '$lib/domains/logs/domain/log-granularity';
+import type { LogMetric } from '$lib/domains/logs/domain/log-metric';
 
 type GranularLogMetrics = Record<
   LogGranularity,

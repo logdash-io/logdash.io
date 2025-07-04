@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { LogGranularity } from '$lib/domains/app/projects/domain/log-granularity';
-  import type { LogMetric } from '$lib/domains/app/projects/domain/log-metric';
+  import type { LogGranularity } from '$lib/domains/logs/domain/log-granularity';
+  import type { LogMetric } from '$lib/domains/logs/domain/log-metric';
   import { createLogger } from '$lib/domains/shared/logger';
   import * as d3 from 'd3';
   import { onMount } from 'svelte';

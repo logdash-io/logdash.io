@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { DateTime } from 'luxon';
+  import LogRowTime from './LogRowTime.svelte';
 
   type Props = {
     index: number;
@@ -9,19 +9,7 @@
     prefix?: 'full' | 'short';
   };
 
-  const {
-    date: rawDate,
-    index,
-    level,
-    message,
-    prefix = 'full',
-  }: Props = $props();
-  const [left, right] = DateTime.fromJSDate(new Date(rawDate))
-    .toLocal()
-    .toISO({ includeOffset: true })
-    .split('T');
-
-  const [date, time] = $derived([left, right.split('.')[0]]);
+  const { date: rawDate, level, message }: Props = $props();
 
   function isJsonString(str: string): boolean {
     try {
@@ -53,16 +41,7 @@
   const formattedMessage = $derived(formatMessage(message));
 </script>
 
-<div
-  class={[
-    'flex h-7 items-start gap-2.5 px-4 font-mono text-sm leading-7',
-    {
-      'hover:bg-base-100/50': level !== 'error' && level !== 'warning',
-      'bg-warning/20 text-warning-content': level === 'warning',
-      'bg-error/20 text-error-content': level === 'error',
-    },
-  ]}
->
+{#snippet logDot()}
   <div
     class={[
       'mt-2.5 inline-block h-2 w-2 shrink-0 rounded-full align-middle',
@@ -76,20 +55,44 @@
       },
     ]}
   ></div>
+{/snippet}
 
-  <div class="flex min-w-0 flex-1 flex-col-reverse sm:flex-row sm:gap-2">
-    <span class="shrink-0 text-xs leading-7 whitespace-nowrap sm:text-sm">
-      [{#if prefix === 'full'}{date} {time}{:else}{time}{/if}]
-    </span>
+<div
+  class={[
+    'bg-base-300 selection:bg-secondary/20 flex min-h-7 items-start gap-2.5 overflow-hidden px-4 font-mono text-sm leading-7',
+    {
+      'hover:bg-base-100/50': level !== 'error' && level !== 'warning',
+      'bg-warning/20 text-warning-content': level === 'warning',
+      'bg-error/20 text-error-content': level === 'error',
+    },
+  ]}
+>
+  {@render logDot()}
 
-    <div class="min-w-0 flex-1">
+  <div class="flex min-w-0 flex-1 flex-row gap-4">
+    <LogRowTime date={rawDate} {level} />
+
+    <div class="w-0 min-w-0 flex-1 overflow-hidden">
       {#if formattedMessage.isJson}
         <pre
-          class="bg-base-200 font-jetbrains text-syntax-json overflow-x-auto rounded-md p-2 text-xs whitespace-pre">{formattedMessage.content}</pre>
+          class="bg-base-200 text-syntax-json overflow-x-auto rounded-md p-2 text-xs whitespace-pre">{formattedMessage.content}</pre>
       {:else}
-        <span class="font-jetbrains break-all">
-          {formattedMessage.content}
-        </span>
+        <details class="collapse">
+          <summary
+            class="collapse-title min-h-0 cursor-pointer overflow-hidden p-0"
+          >
+            <span
+              class="block w-full overflow-hidden text-ellipsis whitespace-nowrap"
+            >
+              {formattedMessage.content}
+            </span>
+          </summary>
+          <div class="collapse-content p-0 pt-2">
+            <span class="block break-words whitespace-pre-wrap">
+              {formattedMessage.content}
+            </span>
+          </div>
+        </details>
       {/if}
     </div>
   </div>

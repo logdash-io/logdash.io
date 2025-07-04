@@ -1,13 +1,9 @@
 <script lang="ts">
-  import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
-
   type Props = {
-    projectId: string;
-    tabId: string;
-    onSearchChange?: (query: string, isSearching: boolean) => void;
+    onSearchChange?: (query: string) => void;
   };
 
-  const { projectId, tabId, onSearchChange }: Props = $props();
+  const { onSearchChange }: Props = $props();
 
   let searchInput = $state('');
   let debounceTimer = $state<ReturnType<typeof setTimeout> | null>(null);
@@ -22,27 +18,18 @@
 
     debounceTimer = setTimeout(async () => {
       const query = searchInput.trim();
-      logsState.setSearchQuery(query);
 
-      onSearchChange?.(query, query.length > 0);
-
-      if (query) {
-        await logsState.refreshLogsWithSearch(projectId, tabId);
-      } else {
-        await logsState.sync(projectId, tabId);
-      }
+      onSearchChange?.(query);
     }, 300);
   }
 
   function clearSearch(): void {
     searchInput = '';
-    logsState.clearSearch();
-    onSearchChange?.('', false);
-    logsState.sync(projectId, tabId);
+    onSearchChange?.('');
   }
 </script>
 
-<div class="relative">
+<div class="relative w-full">
   <input
     bind:value={searchInput}
     class="ld-input ld-input-padding font-jetbrains w-full pr-10 text-sm"

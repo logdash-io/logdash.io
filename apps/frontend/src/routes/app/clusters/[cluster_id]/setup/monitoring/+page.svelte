@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import ProjectClaimer from '$lib/domains/app/projects/ui/setup/ProjectClaimer.svelte';
+  import ProjectClaimer from '$lib/domains/shared/ui/setup/ProjectClaimer.svelte';
   import MonitoringSetup from '$lib/domains/app/projects/ui/setup/MonitoringSetup.svelte';
 
   type Props = {

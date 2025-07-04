@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import LoggingSetup from '$lib/domains/app/projects/ui/setup/LoggingSetup.svelte';
+  import LoggingSetup from '$lib/domains/logs/ui/setup/LoggingSetup.svelte';
   import atomOneDark from 'svelte-highlight/styles/github-dark';
   import { fade } from 'svelte/transition';
 

@@ -7,8 +7,8 @@
 @import 'tailwindcss/utilities.css';
 
 @theme {
-    --container-8xl: 90rem;
-    --container-9xl: 100rem;
+  --container-8xl: 90rem;
+  --container-9xl: 100rem;
 }
 
 @plugin 'daisyui';

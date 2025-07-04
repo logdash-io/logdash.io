@@ -23,7 +23,7 @@
     return [
       'flex h-fit w-full flex-col gap-2 relative',
       ...(Array.isArray(className) ? className : [className]),
-      ...(className.includes('ld-card-base') ? [] : ['ld-card']),
+      ...(className.includes('border') ? [] : ['ld-card']),
     ];
   });
 </script>

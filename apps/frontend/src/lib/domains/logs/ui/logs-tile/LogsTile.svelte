@@ -3,15 +3,21 @@
   import { page } from '$app/state';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import LogsListener from '$lib/domains/logs/ui/LogsListener.svelte';
-  import LogsHeader from '$lib/domains/logs/ui/components/LogsHeader.svelte';
-  import LogsSearchInput from '$lib/domains/logs/ui/components/LogsSearchInput.svelte';
-  import LogsVirtualList from '$lib/domains/logs/ui/components/LogsVirtualList.svelte';
+  import LogsHeader from './header/LogsHeader.svelte';
+  import LogsVirtualList from './LogsVirtualList.svelte';
+  import LogsAnalyticsChart from '../LogsAnalyticsChart.svelte';
 
   const projectId = $derived(page.url.searchParams.get('project_id'));
   const tabId: string = getContext('tabId');
 
   let rendered = $state(false);
-  let isSearching = $state(false);
+  let selectedDateRange = $state<{ start: Date; end: Date } | null>(null);
+
+  function handleDateRangeChange(startDate: Date, endDate: Date) {
+    selectedDateRange = { start: startDate, end: endDate };
+    // You can integrate this with your logs filtering logic
+    console.log('Date range selected:', { startDate, endDate });
+  }
 
   onMount(() => {
     const timer = setTimeout(() => {
@@ -27,17 +33,18 @@
       logsState.unsync();
     };
   });
-
-  function handleSearchChange(query: string, searching: boolean): void {
-    isSearching = searching;
-  }
 </script>
 
 <LogsListener>
-  <div class="flex flex-col gap-4">
-    <LogsHeader {isSearching} {projectId} />
+  <div class="flex flex-col space-y-6">
+    {#if projectId}
+      <LogsAnalyticsChart
+        {projectId}
+        onDateRangeChange={handleDateRangeChange}
+      />
+    {/if}
 
-    <LogsSearchInput onSearchChange={handleSearchChange} {projectId} {tabId} />
+    <LogsHeader {projectId} />
 
     <LogsVirtualList logs={logsState.logs} {projectId} {rendered} />
   </div>

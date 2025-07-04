@@ -24,6 +24,7 @@ export default defineConfig({
     },
   },
   css: {
+    devSourcemap: false,
     preprocessorOptions: {
       scss: {
         api: 'modern-compiler',

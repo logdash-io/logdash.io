@@ -8,8 +8,8 @@
   import MetricDetails from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricDetails.svelte';
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
-  import LogsLineChartTile from '$lib/domains/app/projects/ui/ProjectView/tiles/LogMetricsTile.svelte';
-  import LogsListTile from '$lib/domains/logs/ui/LogsTile.svelte';
+  import LogsLineChartTile from '$lib/domains/logs/ui/LogMetricsTile.svelte';
+  import LogsListTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
 
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
@@ -53,7 +53,7 @@
       <DataTile
         delayIn={0}
         delayOut={50}
-        class="ld-card-base overflow-hidden rounded-xl"
+        class="bg-base-300 border-secondary/15 overflow-hidden rounded-xl border"
       >
         <LogsListTile />
       </DataTile>

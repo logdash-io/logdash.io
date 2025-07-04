@@ -1,7 +1,10 @@
 <script lang="ts">
   import MetricsListener from '$lib/domains/app/projects/ui/presentational/MetricsListener.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
-  import { LogdashSDKName, type LogdashSDK } from '$lib/domains/shared/types.js';
+  import {
+    LogdashSDKName,
+    type LogdashSDK,
+  } from '$lib/domains/shared/types.js';
   import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
   import { getContext, onMount, type Snippet } from 'svelte';
   import Highlight from 'svelte-highlight';
@@ -15,8 +18,8 @@
   } from 'svelte-highlight/languages';
   import typescript from 'svelte-highlight/languages/typescript';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
-  import SDKInstaller from '$lib/domains/app/projects/ui/setup/SDKInstaller.svelte';
-  import SetupPrompt from '$lib/domains/app/projects/ui/setup/SetupPrompt.svelte';
+  import SDKInstaller from '$lib/domains/shared/ui/setup/SDKInstaller.svelte';
+  import SetupPrompt from '$lib/domains/shared/ui/setup/SetupPrompt.svelte';
 
   type Props = {
     project_id: string;

@@ -3,7 +3,7 @@
   import { intersect } from '$lib/domains/shared/ui/actions/use-intersect.svelte.js';
   import { fade } from 'svelte/transition';
   import type { Log } from '$lib/domains/logs/domain/log';
-  import EnhancedLogRow from '$lib/domains/logs/ui/components/EnhancedLogRow.svelte';
+  import EnhancedLogRow from './log-row/LogRow.svelte';
 
   type Props = {
     projectId: string;
@@ -12,22 +12,42 @@
   };
 
   const { projectId, logs, rendered }: Props = $props();
+  let virtualListRef = $state<HTMLDivElement | null>(null);
+  let scrollTop = $state(0);
+
+  function handleScroll(): void {
+    if (virtualListRef) {
+      scrollTop = virtualListRef.scrollTop;
+    }
+  }
 
   async function loadNextPage(): Promise<void> {
     if (logsState.pageIsLoading) return;
     await logsState.loadNextPage(projectId);
   }
+
+  const scrolledFromTop = $derived(scrollTop > 0);
 </script>
 
-<div class="relative flex h-full max-h-[690px] flex-1 flex-col overflow-hidden">
+<div
+  class="relative flex h-full max-h-[690px] w-full max-w-full flex-1 flex-col overflow-hidden"
+>
+  {#if scrolledFromTop}
+    <div
+      class="from-base-300 absolute top-0 left-0 h-6 w-full bg-gradient-to-b to-transparent"
+    ></div>
+  {/if}
+
   <div
-    class="styled-scrollbar flex h-full max-h-full flex-col gap-1.5 overflow-auto sm:gap-0"
+    class="styled-scrollbar flex h-full max-h-full w-full flex-col gap-1.5 overflow-auto sm:gap-0"
+    bind:this={virtualListRef}
+    onscroll={handleScroll}
   >
     {#each logs as log, index (log.id)}
       <div
         in:fade|global={{
-          duration: 800,
-          delay: rendered ? 0 : index * 150,
+          duration: 300,
+          delay: rendered ? 0 : index * 5,
         }}
       >
         <EnhancedLogRow
@@ -56,4 +76,8 @@
       {/if}
     </div>
   </div>
+
+  <div
+    class="to-base-300 absolute bottom-0 left-0 h-12 w-full bg-gradient-to-b from-transparent"
+  ></div>
 </div>

@@ -2,8 +2,8 @@
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import LogsListener from '$lib/domains/logs/ui/LogsListener.svelte';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
-  import LogsLineChartTile from '$lib/domains/app/projects/ui/ProjectView/tiles/LogMetricsTile.svelte';
-  import LogsListTile from '$lib/domains/app/projects/ui/ProjectView/tiles/logs/LogsTile.svelte';
+  import LogsLineChartTile from '$lib/domains/logs/ui/LogMetricsTile.svelte';
+  import LogsListTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
   import {
     LogdashSDKName,
     type LogdashSDK,
@@ -20,9 +20,9 @@
     type LanguageType,
   } from 'svelte-highlight/languages';
   import typescript from 'svelte-highlight/languages/typescript';
-  import { logMetricsState } from '$lib/domains/app/projects/application/log-metrics.state.svelte.js';
-  import SDKInstaller from '$lib/domains/app/projects/ui/setup/SDKInstaller.svelte';
-  import SetupPrompt from '$lib/domains/app/projects/ui/setup/SetupPrompt.svelte';
+  import { logMetricsState } from '$lib/domains/logs/application/log-metrics.state.svelte.js';
+  import SDKInstaller from '$lib/domains/shared/ui/setup/SDKInstaller.svelte';
+  import SetupPrompt from '$lib/domains/shared/ui/setup/SetupPrompt.svelte';
 
   type Props = {
     project_id: string;
