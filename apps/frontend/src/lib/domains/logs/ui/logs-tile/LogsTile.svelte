@@ -5,7 +5,7 @@
   import LogsListener from '$lib/domains/logs/ui/LogsListener.svelte';
   import LogsHeader from './header/LogsHeader.svelte';
   import LogsVirtualList from './LogsVirtualList.svelte';
-  import LogsAnalyticsChart from '../LogsAnalyticsChart.svelte';
+  import LogsAnalyticsChart from './header/LogsAnalyticsChart.svelte';
 
   const projectId = $derived(page.url.searchParams.get('project_id'));
   const tabId: string = getContext('tabId');
@@ -17,6 +17,10 @@
     selectedDateRange = { start: startDate, end: endDate };
     // You can integrate this with your logs filtering logic
     console.log('Date range selected:', { startDate, endDate });
+    logsState.setFilters({
+      startDate,
+      endDate,
+    });
   }
 
   onMount(() => {

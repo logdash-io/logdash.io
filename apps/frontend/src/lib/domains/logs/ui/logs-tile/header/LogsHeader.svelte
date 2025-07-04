@@ -2,14 +2,12 @@
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { scale } from 'svelte/transition';
   import LogsSearchInput from './LogsSearchInput.svelte';
-  import { getContext } from 'svelte';
 
   type Props = {
     projectId: string;
   };
 
   const { projectId }: Props = $props();
-  const tabId: string = getContext<string>('tabId');
 
   let sendingTestLogCooldown = $state(0);
 
@@ -25,11 +23,7 @@
   }
 
   function onSearchChange(query: string): void {
-    if (query) {
-      logsState.refreshLogsWithSearch(projectId, tabId);
-    } else {
-      logsState.sync(projectId, tabId);
-    }
+    logsState.setFilters({ searchString: query });
   }
 </script>
 
