@@ -31,7 +31,7 @@ jobs:
           port: ${{ secrets.BACKEND_DEV_SSH_PORT }}
           ssh-private-key: ${{ secrets.BACKEND_DEV_SSH_KEY }}
           server-port: 4000
-          application-port: 4000
+          application-port: 3000
           image-name: ablaszkiewicz/logdash-status-page-dev
           container-name: logdash-status-page-dev
       - name: Prune
