@@ -41,6 +41,9 @@ import { LogSerializer } from './entities/log.serializer';
 import { LogReadDirection } from './enums/log-read-direction.enum';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
 import { LogReadClickhouseService } from '../read/log-read.clickhouse-service';
+import { LogAnalyticsService } from '../analytics/log-analytics.service';
+import { LogAnalyticsQuery } from '../analytics/dto/log-analytics-query.dto';
+import { LogAnalyticsResponse } from '../analytics/dto/log-analytics-response.dto';
 
 @Controller('')
 @ApiTags('Logs')
@@ -53,6 +56,7 @@ export class LogCoreController {
     private readonly eventEmitter: EventEmitter2,
     private readonly logRateLimitService: LogRateLimitService,
     private readonly logReadClickhouseService: LogReadClickhouseService,
+    private readonly logAnalyticsService: LogAnalyticsService,
   ) {}
 
   @DemoEndpoint()
@@ -185,6 +189,7 @@ export class LogCoreController {
       lastId: dto.lastId,
       projectId,
       limit: dto.limit ?? 50,
+      searchString: dto.searchString,
     });
 
     return logs.map((log) => LogSerializer.serialize(log));
@@ -221,6 +226,7 @@ export class LogCoreController {
         projectId,
         limit: dto.limit ?? 50,
         level: dto.level,
+        searchString: dto.searchString,
       });
     } else {
       logs = await this.logReadClickhouseService.readManyLastId({
@@ -229,9 +235,23 @@ export class LogCoreController {
         projectId,
         limit: dto.limit ?? 50,
         level: dto.level,
+        searchString: dto.searchString,
       });
     }
 
     return logs.map((log) => LogSerializer.serialize(log));
+  }
+
+  @DemoEndpoint()
+  @UseInterceptors(DemoCacheInterceptor)
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Get('projects/:projectId/logs/analytics/v1')
+  @ApiResponse({ type: LogAnalyticsResponse })
+  public async getLogAnalytics(
+    @Param('projectId') projectId: string,
+    @Query() dto: LogAnalyticsQuery,
+  ): Promise<LogAnalyticsResponse> {
+    return await this.logAnalyticsService.getBucketedAnalytics(projectId, dto);
   }
 }

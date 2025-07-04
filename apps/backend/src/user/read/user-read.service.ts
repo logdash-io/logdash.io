@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserNormalized } from '../core/entities/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
-import { UserEntity } from '../core/entities/user.entity';
 import { Model } from 'mongoose';
+import { UserEntity } from '../core/entities/user.entity';
+import { UserNormalized } from '../core/entities/user.interface';
 import { UserSerializer } from '../core/entities/user.serializer';
 import { AccountClaimStatus } from '../core/enum/account-claim-status.enum';
 

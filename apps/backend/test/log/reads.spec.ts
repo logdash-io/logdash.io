@@ -526,4 +526,378 @@ describe('LogCoreController (reads)', () => {
       expect(response.body).toHaveLength(3);
     });
   });
+
+  describe('Search functionality', () => {
+    describe('GET /projects/:projectId/logs (with search)', () => {
+      it('searches logs with single word', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.models.logModel.create({
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          index: 1,
+          level: LogLevel.Info,
+          message: 'alice loves bob',
+          projectId: setup.project.id,
+        });
+
+        await bootstrap.models.logModel.create({
+          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          index: 2,
+          level: LogLevel.Info,
+          message: 'bob has cat',
+          projectId: setup.project.id,
+        });
+
+        await bootstrap.models.logModel.create({
+          createdAt: new Date('2000-01-01T11:02:00Z').toISOString(),
+          index: 3,
+          level: LogLevel.Info,
+          message: 'charlie has dog',
+          projectId: setup.project.id,
+        });
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs?searchString=alice`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].message).toEqual('alice loves bob');
+      });
+
+      it('searches logs with multiple words (AND logic)', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.models.logModel.create({
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          index: 1,
+          level: LogLevel.Info,
+          message: 'alice loves bob',
+          projectId: setup.project.id,
+        });
+
+        await bootstrap.models.logModel.create({
+          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          index: 2,
+          level: LogLevel.Info,
+          message: 'bob has cat',
+          projectId: setup.project.id,
+        });
+
+        await bootstrap.models.logModel.create({
+          createdAt: new Date('2000-01-01T11:02:00Z').toISOString(),
+          index: 3,
+          level: LogLevel.Info,
+          message: 'alice has apples',
+          projectId: setup.project.id,
+        });
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs?searchString=alice bob`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].message).toEqual('alice loves bob');
+      });
+
+      it('search is case insensitive', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.models.logModel.create({
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          index: 1,
+          level: LogLevel.Info,
+          message: 'ALICE LOVES BOB',
+          projectId: setup.project.id,
+        });
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs?searchString=alice bob`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].message).toEqual('ALICE LOVES BOB');
+      });
+
+      it('returns empty array when no logs match search', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.models.logModel.create({
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          index: 1,
+          level: LogLevel.Info,
+          message: 'alice loves bob',
+          projectId: setup.project.id,
+        });
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs?searchString=nonexistent`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(0);
+      });
+
+      it('combines search with other filters', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.models.logModel.create({
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          index: 1,
+          level: LogLevel.Info,
+          message: 'alice loves bob',
+          projectId: setup.project.id,
+        });
+
+        await bootstrap.models.logModel.create({
+          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          index: 2,
+          level: LogLevel.Error,
+          message: 'alice has error',
+          projectId: setup.project.id,
+        });
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs?searchString=alice&limit=1`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+      });
+    });
+
+    describe('GET /projects/:projectId/logs/v2 (with search)', () => {
+      it('searches logs with single word', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          message: 'alice loves bob',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          message: 'bob has cat',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:02:00Z').toISOString(),
+          message: 'charlie has dog',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?searchString=alice`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].message).toEqual('alice loves bob');
+      });
+
+      it('searches logs with multiple words (AND logic)', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          message: 'alice loves bob',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          message: 'bob has cat',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:02:00Z').toISOString(),
+          message: 'alice has apples',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?searchString=alice bob`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].message).toEqual('alice loves bob');
+      });
+
+      it('search is case insensitive', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          message: 'ALICE LOVES BOB',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?searchString=alice bob`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].message).toEqual('ALICE LOVES BOB');
+      });
+
+      it('returns empty array when no logs match search', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          message: 'alice loves bob',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?searchString=nonexistent`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(0);
+      });
+
+      it('combines search with other filters', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          message: 'alice loves bob',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          message: 'alice has error',
+          level: LogLevel.Error,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?searchString=alice&limit=1`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+      });
+
+      it('combines search with date range filter', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        const startDate = new Date('2023-01-01T11:30:00Z');
+        const endDate = new Date('2023-01-01T12:30:00Z');
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2023-01-01T11:00:00Z').toISOString(),
+          message: 'alice before range',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
+          message: 'alice in range',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2023-01-01T12:10:00Z').toISOString(),
+          message: 'bob in range',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(
+            `/projects/${setup.project.id}/logs/v2?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&searchString=alice`,
+          )
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].message).toEqual('alice in range');
+      });
+
+      it('combines search with level filter', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          message: 'alice info log',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          message: 'alice error log',
+          level: LogLevel.Error,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: new Date('2000-01-01T11:02:00Z').toISOString(),
+          message: 'bob error log',
+          level: LogLevel.Error,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?searchString=alice&level=${LogLevel.Error}`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].message).toEqual('alice error log');
+        expect(response.body[0].level).toEqual(LogLevel.Error);
+      });
+    });
+  });
 });

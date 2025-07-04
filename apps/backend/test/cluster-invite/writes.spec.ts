@@ -344,6 +344,35 @@ describe('ClusterInviteCoreController (writes)', () => {
       const updatedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
       expect(updatedCluster?.roles[invitedUser.id]).toBe(ClusterRole.Write);
     });
+
+    it('throws error when user is a member of too many clusters', async () => {
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
+
+      const { token: invitedUserToken, user: invitedUser } =
+        await bootstrap.utils.generalUtils.setupClaimed();
+
+      for (let i = 0; i < 4; i++) {
+        await bootstrap.utils.projectGroupUtils.createProjectGroup({
+          token: invitedUserToken,
+        });
+      }
+
+      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: inviterToken,
+        clusterId: cluster.id,
+        invitedUserEmail: invitedUser.email,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/cluster_invites/${invite.id}/accept`)
+        .set('Authorization', `Bearer ${invitedUserToken}`);
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toBe('You are a member of too many clusters');
+    });
   });
 
   describe('DELETE /cluster_invites/:inviteId', () => {

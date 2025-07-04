@@ -10,7 +10,6 @@ export class ClusterSerializer {
       id: entity._id.toString(),
       creatorId: entity.creatorId,
       tier: entity.tier,
-      members: entity.members,
       name: entity.name,
       roles: entity.roles,
     };
@@ -32,7 +31,6 @@ export class ClusterSerializer {
       id: normalizedCluster.id,
       creatorId: normalizedCluster.creatorId,
       tier: normalizedCluster.tier,
-      members: normalizedCluster.members,
       name: normalizedCluster.name,
       projects: params?.projects
         ? params.projects.map((project) => ({

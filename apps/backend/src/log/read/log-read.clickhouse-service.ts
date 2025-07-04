@@ -30,6 +30,7 @@ export class LogReadClickhouseService {
     level?: LogLevel;
     limit: number;
     projectId: string;
+    searchString?: string;
   }): Promise<LogNormalized[]> {
     let query: string;
     let queryParams: Record<string, any>;
@@ -48,6 +49,15 @@ export class LogReadClickhouseService {
         if (dto.level) {
           query += ` AND l.level = {level:String}`;
         }
+        if (dto.searchString && dto.searchString.trim()) {
+          const words = dto.searchString
+            .trim()
+            .split(/\s+/)
+            .filter((word) => word.length > 0);
+          words.forEach((word, index) => {
+            query += ` AND positionCaseInsensitive(l.message, {searchWord${index}:String}) > 0`;
+          });
+        }
         query += ` ORDER BY l.created_at ASC, l.sequence_number ASC 
           LIMIT {limit:UInt32}`;
       } else {
@@ -63,6 +73,15 @@ export class LogReadClickhouseService {
         if (dto.level) {
           query += ` AND l.level = {level:String}`;
         }
+        if (dto.searchString && dto.searchString.trim()) {
+          const words = dto.searchString
+            .trim()
+            .split(/\s+/)
+            .filter((word) => word.length > 0);
+          words.forEach((word, index) => {
+            query += ` AND positionCaseInsensitive(l.message, {searchWord${index}:String}) > 0`;
+          });
+        }
         query += ` ORDER BY l.created_at DESC, l.sequence_number DESC 
           LIMIT {limit:UInt32}`;
       }
@@ -74,12 +93,30 @@ export class LogReadClickhouseService {
       if (dto.level) {
         queryParams.level = dto.level;
       }
+      if (dto.searchString && dto.searchString.trim()) {
+        const words = dto.searchString
+          .trim()
+          .split(/\s+/)
+          .filter((word) => word.length > 0);
+        words.forEach((word, index) => {
+          queryParams[`searchWord${index}`] = word;
+        });
+      }
     } else {
       query = `
         SELECT * FROM logs 
         WHERE project_id = {projectId:String}`;
       if (dto.level) {
         query += ` AND level = {level:String}`;
+      }
+      if (dto.searchString && dto.searchString.trim()) {
+        const words = dto.searchString
+          .trim()
+          .split(/\s+/)
+          .filter((word) => word.length > 0);
+        words.forEach((word, index) => {
+          query += ` AND positionCaseInsensitive(message, {searchWord${index}:String}) > 0`;
+        });
       }
       query += ` ORDER BY created_at DESC, sequence_number DESC 
         LIMIT {limit:UInt32}`;
@@ -89,6 +126,15 @@ export class LogReadClickhouseService {
       };
       if (dto.level) {
         queryParams.level = dto.level;
+      }
+      if (dto.searchString && dto.searchString.trim()) {
+        const words = dto.searchString
+          .trim()
+          .split(/\s+/)
+          .filter((word) => word.length > 0);
+        words.forEach((word, index) => {
+          queryParams[`searchWord${index}`] = word;
+        });
       }
     }
 
@@ -107,6 +153,7 @@ export class LogReadClickhouseService {
     limit: number;
     projectId: string;
     level?: LogLevel;
+    searchString?: string;
   }): Promise<LogNormalized[]> {
     let query = `SELECT * FROM logs WHERE project_id = {projectId:String}`;
     const queryParams: Record<string, any> = {
@@ -127,6 +174,17 @@ export class LogReadClickhouseService {
     if (dto.level) {
       query += ` AND level = {level:String}`;
       queryParams.level = dto.level;
+    }
+
+    if (dto.searchString && dto.searchString.trim()) {
+      const words = dto.searchString
+        .trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0);
+      words.forEach((word, index) => {
+        query += ` AND positionCaseInsensitive(message, {searchWord${index}:String}) > 0`;
+        queryParams[`searchWord${index}`] = word;
+      });
     }
 
     query += ` ORDER BY created_at DESC, sequence_number DESC LIMIT {limit:UInt32}`;

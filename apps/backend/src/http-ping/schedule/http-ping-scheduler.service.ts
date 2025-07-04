@@ -3,6 +3,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import axios from 'axios';
 import { HttpMonitorNormalized } from 'src/http-monitor/core/entities/http-monitor.interface';
+import { projectTierFromUserTier } from 'src/project/core/enums/project-tier.enum';
+import { ProjectReadService } from 'src/project/read/project-read.service';
+import { UserPlanConfigs } from 'src/shared/configs/user-plan-configs';
+import { UserTier } from 'src/user/core/enum/user-tier.enum';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 import { HttpPingEventEmitter } from '../events/http-ping-event.emitter';
@@ -29,31 +33,55 @@ export class HttpPingSchedulerService {
     @Inject(MAX_CONCURRENT_REQUESTS_TOKEN)
     private readonly maxConcurrentRequests: number,
     private readonly httpPingSchedulerDataService: HttpPingSchedulerDataService,
+    private readonly projectReadService: ProjectReadService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
-  private async triggerPingAllMonitors(): Promise<void> {
+  private async triggerPingMonitors1m(): Promise<void> {
     if (process.env.NODE_ENV === 'test') {
       return;
     }
 
-    await this.tryPingAllMonitors();
+    const tiers = this.getTiersWithFrequency(CronExpression.EVERY_MINUTE);
+    await this.tryPingMonitors(tiers);
   }
 
-  public async tryPingAllMonitors(): Promise<void> {
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  private async triggerPingMonitors5m(): Promise<void> {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    const tiers = this.getTiersWithFrequency(CronExpression.EVERY_5_MINUTES);
+    await this.tryPingMonitors(tiers);
+  }
+
+  private getTiersWithFrequency(frequency: CronExpression): UserTier[] {
+    return Object.entries(UserPlanConfigs)
+      .filter(([_, value]) => value.pings.frequency === frequency)
+      .map(([key]) => key as keyof typeof UserPlanConfigs);
+  }
+
+  public async tryPingMonitors(userTiers: UserTier[]): Promise<void> {
     try {
-      await this.pingAllMonitors();
+      await this.pingMonitors(userTiers);
     } catch (error) {
       this.logger.error('Error processing HTTP pings:', { errorMessage: error.message });
     }
   }
 
-  private async pingAllMonitors(): Promise<void> {
+  private async pingMonitors(userTiers: UserTier[]): Promise<void> {
     const startTime = Date.now();
     const queue: QueueItem[] = [];
     const results: CreateHttpPingDto[] = [];
 
-    for await (const monitor of this.httpMonitorReadService.readAllCursor()) {
+    const projectsIds = (
+      await this.projectReadService.readManyByTiers(userTiers.map(projectTierFromUserTier))
+    ).map((p) => p.id);
+
+    for await (const monitor of this.httpMonitorReadService.readManyByProjectIdsCursor(
+      projectsIds,
+    )) {
       if (queue.length >= this.maxConcurrentRequests) {
         const completedItem = await Promise.race(
           queue.map(async (item) => {

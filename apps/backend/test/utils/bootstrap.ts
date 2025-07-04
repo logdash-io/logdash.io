@@ -64,6 +64,7 @@ import { SubscriptionEntity } from '../../src/subscription/core/entities/subscri
 import { SubscriptionCoreModule } from '../../src/subscription/core/subscription-core.module';
 import { AuditLogUtils } from './audit-log-utils';
 import { AuditLogCreationModule } from '../../src/audit-log/creation/audit-log-creation.module';
+import { UserUtils } from './user.utils';
 
 export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({
@@ -220,6 +221,7 @@ export async function createTestApp() {
       publicDashboardUtils: new PublicDashboardUtils(app),
       auditLogUtils: new AuditLogUtils(app),
       clusterInviteUtils: new ClusterInviteUtils(app),
+      userUtils: new UserUtils(app),
     },
     methods: {
       clearDatabase,

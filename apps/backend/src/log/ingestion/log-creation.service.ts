@@ -37,7 +37,7 @@ export class LogIngestionService {
       ),
       this.logWriteClickhouseService.createMany(enrichedCreateDtos),
     ]).catch((error) => {
-      this.logger.error('Error creating logs', { error });
+      this.logger.error('Error creating logs', { errorMessage: error.message });
     });
 
     const durationInMs = Date.now() - currentTime;

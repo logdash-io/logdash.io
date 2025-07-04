@@ -34,6 +34,7 @@ export class LogReadService {
     lastId?: string;
     limit: number;
     projectId: string;
+    searchString?: string;
   }): Promise<LogNormalized[]> {
     if (dto.direction) {
       const log = await this.getIndexOfLog(dto.lastId!);
@@ -54,6 +55,18 @@ export class LogReadService {
         findQuery.index = { $lt: log };
       }
 
+      if (dto.searchString && dto.searchString.trim()) {
+        const words = dto.searchString
+          .trim()
+          .split(/\s+/)
+          .filter((word) => word.length > 0);
+        if (words.length > 0) {
+          findQuery.$and = words.map((word) => ({
+            message: { $regex: word, $options: 'i' },
+          }));
+        }
+      }
+
       const logs = await this.logModel
         .find(findQuery)
         .sort({ index: dto.direction === LogReadDirection.Before ? -1 : 1 })
@@ -68,6 +81,18 @@ export class LogReadService {
 
     if (dto.projectId) {
       findQuery.projectId = dto.projectId;
+    }
+
+    if (dto.searchString && dto.searchString.trim()) {
+      const words = dto.searchString
+        .trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0);
+      if (words.length > 0) {
+        findQuery.$and = words.map((word) => ({
+          message: { $regex: word, $options: 'i' },
+        }));
+      }
     }
 
     const logs = await this.logModel

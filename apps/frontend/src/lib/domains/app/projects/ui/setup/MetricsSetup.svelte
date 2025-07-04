@@ -11,6 +11,7 @@
   import {
     csharp,
     go,
+    java,
     python,
     ruby,
     rust,
@@ -102,8 +103,23 @@ metrics.mutate("users", 1)
 time.sleep(5)`,
     },
     [LogdashSDKName.JAVA]: {
-      language: null,
-      code: null,
+      language: java,
+      code: `import io.logdash.sdk.Logdash;
+
+var logdash = Logdash.builder()
+        .apiKey("${api_key}")
+        .build();
+
+var metrics = logdash.metrics();
+
+// to set absolute value
+metrics.set("users", 0);
+
+// or increment / decrement by
+metrics.mutate("users", 1);
+
+// optionally, gracefully close logdash client
+logdash.close();`,
     },
     [LogdashSDKName.PHP]: {
       language: null,
