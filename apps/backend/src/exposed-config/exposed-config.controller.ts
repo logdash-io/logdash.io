@@ -72,6 +72,7 @@ export class ExposedConfigController {
     };
   }
 
+  @Public()
   @Get('/check-domain')
   public async checkDomain(@Query('domain') domain: string) {
     console.log('domain', domain);
