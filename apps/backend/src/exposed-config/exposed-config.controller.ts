@@ -1,4 +1,11 @@
-import { BadRequestException, Controller, Get, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  ForbiddenException,
+  Get,
+  InternalServerErrorException,
+  Query,
+} from '@nestjs/common';
 import { ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/core/decorators/is-public';
 import { ProjectPlanConfigs } from '../shared/configs/project-plan-configs';
@@ -63,5 +70,16 @@ export class ExposedConfigController {
       projectId: config.projectId,
       clusterId: config.clusterId,
     };
+  }
+
+  @Get('/check-domain')
+  public async checkDomain(@Query('domain') domain: string) {
+    if (domain.includes('allowed')) {
+      return {
+        message: 'OK',
+      };
+    }
+
+    throw new ForbiddenException('Domain not allowed');
   }
 }
