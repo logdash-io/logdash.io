@@ -19,6 +19,7 @@
     csharp,
     go,
     java,
+    php,
     python,
     ruby,
     rust,
@@ -122,8 +123,24 @@ logger.warn("Low disk space warning");
 logdash.close();`,
     },
     [LogdashSDKName.PHP]: {
-      language: null,
-      code: null,
+      language: php,
+      code: `<?php
+
+require_once 'vendor/autoload.php';
+
+use Logdash\\Logdash;
+
+// Create Logdash instance with API key for cloud sync
+$logdash = Logdash::create([
+    'apiKey' => '${api_key}'
+]);
+
+$logger = $logdash->logger();
+
+$logger->info("Application started successfully");
+$logger->error("An unexpected error occurred");
+$logger->warn("Low disk space warning");
+`,
     },
     [LogdashSDKName.RUBY]: {
       language: ruby,

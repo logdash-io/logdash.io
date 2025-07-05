@@ -25,6 +25,6 @@
     class="text-primary mx-auto flex items-center gap-2 font-semibold opacity-90"
   >
     <span class="loading loading-ring loading-xl"></span>
-    Listening for metrics...
+    Waiting for metrics...
   </div>
 {/if}

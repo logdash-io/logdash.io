@@ -12,6 +12,7 @@
     csharp,
     go,
     java,
+    php,
     python,
     ruby,
     rust,
@@ -124,8 +125,25 @@ metrics.mutate("users", 1);
 logdash.close();`,
     },
     [LogdashSDKName.PHP]: {
-      language: null,
-      code: null,
+      language: php,
+      code: `<?php
+
+require_once 'vendor/autoload.php';
+
+use Logdash\\Logdash;
+
+// Create Logdash instance with API key for cloud sync
+$logdash = Logdash::create([
+    'apiKey' => '${api_key}'
+]);
+
+$metrics = $logdash->metrics();
+
+// to set absolute value
+$metrics->set('users', 0);
+
+// or increment / decrement by
+$metrics->mutate('users', 1);`,
     },
     [LogdashSDKName.RUBY]: {
       language: ruby,
@@ -221,7 +239,7 @@ The prompt should output **only** this install command and this exact code block
   <MetricsTiles />
 </div>
 
-<div class="fixed top-0 left-0 z-50 flex h-full w-full bg-black/60">
+<div class="fixed top-0 left-0 z-50 flex h-full w-full bg-black/40">
   <div
     class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:w-xl sm:p-8"
   >
@@ -242,7 +260,7 @@ The prompt should output **only** this install command and this exact code block
 
     <div class="collapse-open collapse">
       <div class="px-1 py-4 font-semibold">
-        <span>2. Create Logdash instance</span>
+        <span>2. Send metrics to your service</span>
       </div>
 
       <div class="space-y-2 overflow-hidden text-sm">
@@ -274,7 +292,7 @@ The prompt should output **only** this install command and this exact code block
 
     <div class="collapse-open">
       <div class="px-1 py-4 font-semibold">
-        <span>3. Capture metrics</span>
+        <span>3. Claim your service</span>
       </div>
 
       <div class="text-sm">
