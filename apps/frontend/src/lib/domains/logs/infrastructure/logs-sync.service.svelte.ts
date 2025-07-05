@@ -17,9 +17,20 @@ export class LogsSyncService {
     onError?: () => void;
     onMessage?: (log: Log) => void;
   };
+  private _newLogHandlers: ((log: Log) => void)[] = [];
 
   get paused(): boolean {
     return this._syncConnection === null;
+  }
+
+  onLog(handler: (log: Log) => void): () => void {
+    this._newLogHandlers.push(handler);
+
+    return () => {
+      this._newLogHandlers = this._newLogHandlers.filter(
+        (handler) => handler !== handler,
+      );
+    };
   }
 
   init(config: {
@@ -86,6 +97,7 @@ export class LogsSyncService {
           logger.info('new SSE message:', event);
           const log = JSON.parse(event.data) as Log;
           this._config.onMessage?.(log);
+          this._newLogHandlers.forEach((handler) => handler(log));
           logger.debug('processed log:', log);
         } catch (e) {
           logger.error('sse message error:', e);

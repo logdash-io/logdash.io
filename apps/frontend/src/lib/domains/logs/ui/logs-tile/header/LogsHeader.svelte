@@ -6,6 +6,8 @@
   import LogsAnalyticsChart from './LogsAnalyticsChart.svelte';
   import LogsSearchInput from './LogsSearchInput.svelte';
   import LogsFilterDropdown from './LogsFilterDropdown.svelte';
+  import { untrack } from 'svelte';
+  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
 
   type Props = {
     projectId: string;
@@ -47,15 +49,16 @@
 
     try {
       const now = new Date();
-      const endTime = timeRange?.end || now;
+      const endTime = timeRange?.end;
       const startTime =
         timeRange?.start || new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const utcOffsetHours = now.getTimezoneOffset() / 60;
 
       await logAnalyticsState.fetchAnalytics(
         projectId,
         startTime.toISOString(),
-        endTime.toISOString(),
-        0, // UTC offset, can be made configurable
+        endTime?.toISOString() ?? null,
+        utcOffsetHours,
       );
     } catch (error) {
       console.error('Failed to fetch analytics data:', error);
@@ -64,7 +67,14 @@
   }
 
   $effect(() => {
-    fetchAnalyticsData(selectedDateRange);
+    untrack(() => fetchAnalyticsData(selectedDateRange));
+    const cleanup = untrack(() =>
+      logAnalyticsState.startSilentUpdates(projectId),
+    );
+
+    return () => {
+      cleanup();
+    };
   });
 </script>
 
@@ -74,20 +84,25 @@
   {/if}
 
   <div class="flex items-center justify-between gap-2.5 p-4">
-    <div class="flex h-8 w-8 shrink-0 items-center justify-center">
-      {#if logsState.syncPaused}
-        <PauseCircleIcon
-          class="h-5 w-5 shrink-0"
-          stroke="stroke-warning-content"
-        />
-      {:else}
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2">
-            <span class="loading loading-ring loading-sm"></span>
+    <Tooltip
+      content={logsState.syncPaused ? 'Sync paused' : 'Sync active'}
+      placement="top"
+    >
+      <div class="flex h-8 w-8 shrink-0 items-center justify-center">
+        {#if logsState.syncPaused}
+          <PauseCircleIcon
+            class="h-5 w-5 shrink-0"
+            stroke="stroke-warning-content"
+          />
+        {:else}
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+              <span class="loading loading-ring loading-sm"></span>
+            </div>
           </div>
-        </div>
-      {/if}
-    </div>
+        {/if}
+      </div>
+    </Tooltip>
 
     <LogsSearchInput {onSearchChange} />
 

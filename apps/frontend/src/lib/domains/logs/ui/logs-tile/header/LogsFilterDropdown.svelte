@@ -1,7 +1,7 @@
 <script lang="ts">
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
-  import { CalendarIcon, ChevronDownIcon } from 'lucide-svelte';
+  import { ChevronDownIcon, Settings2Icon } from 'lucide-svelte';
 
   type Props = {
     selectedLevel: string | null;
@@ -60,12 +60,6 @@
       level: null,
       searchString: '',
     });
-  }
-
-  function clearLocalFilters(): void {
-    startDateInput = '';
-    endDateInput = '';
-    selectedLevelLocal = null;
   }
 
   function hasActiveFilters(): boolean {
@@ -171,11 +165,11 @@
         >
           Clear All
         </button>
+
         {#if hasPendingChanges()}
           <button
             class="btn btn-subtle btn-sm flex-1"
             onclick={() => {
-              // Reset to currently applied filters
               if (selectedStartDate) {
                 startDateInput = formatDateForInput(selectedStartDate);
               } else {
@@ -192,6 +186,7 @@
             Reset
           </button>
         {/if}
+
         <button
           class={['btn btn-sm btn-primary flex-1']}
           disabled={!hasPendingChanges()}
@@ -201,9 +196,6 @@
           }}
         >
           Apply
-          {#if hasPendingChanges()}
-            <span class="badge badge-xs">!</span>
-          {/if}
         </button>
       </div>
     </div>
@@ -221,7 +213,7 @@
     ]}
     data-posthog-id="logs-filter-dropdown"
   >
-    <CalendarIcon class="h-4 w-4" />
+    <Settings2Icon class="h-4 w-4" />
     <span>Filters</span>
     {#if hasActiveFilters()}
       <span class="badge badge-xs">

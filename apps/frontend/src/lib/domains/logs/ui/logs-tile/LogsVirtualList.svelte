@@ -43,7 +43,7 @@
   {/if}
 
   <div
-    class="styled-scrollbar flex h-full max-h-full w-full flex-col gap-1.5 overflow-auto overscroll-contain px-2 sm:gap-0"
+    class="styled-scrollbar flex h-full max-h-full w-full flex-col gap-1.5 overflow-auto px-2 sm:gap-0 md:overscroll-contain"
     bind:this={virtualListRef}
     onscroll={handleScroll}
   >
