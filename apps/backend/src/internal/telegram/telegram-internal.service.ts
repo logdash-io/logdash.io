@@ -17,7 +17,7 @@ export class TelegramInternalService {
 
   @OnEvent(StripeEvents.SubscriptionDeleted)
   public async handleSubscriptionDeleted(payload: StripeSubscriptionDeletedEvent) {
-    await this.sendMessage(`User ${payload.email} subscription deleted`);
+    await this.sendMessage(`User ${payload.email} stripe subscription deleted`);
   }
 
   public async sendMessage(message: string): Promise<void> {
