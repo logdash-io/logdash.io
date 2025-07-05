@@ -98,13 +98,13 @@ class LogsState {
   }
 
   resetFilters(): void {
-    this._filters = {
+    this.setFilters({
       limit: 50,
       startDate: null,
       endDate: null,
       level: null,
       searchString: '',
-    };
+    });
   }
 
   async sync(project_id: string): Promise<void> {
