@@ -37,14 +37,12 @@ export class ExposedConfigController {
   @Get('/flaky_route')
   @Public()
   public async flakyRoute() {
-    // First 50/50 split between success and errors
     const isSuccess = Math.random() < 0.5;
 
     if (isSuccess) {
       return { message: 'OK' };
     }
 
-    // For the error cases, split remaining 50% into three equal parts
     const errorType = Math.floor(Math.random() * 3);
 
     switch (errorType) {

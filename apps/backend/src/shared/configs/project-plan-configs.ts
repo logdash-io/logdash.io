@@ -5,6 +5,7 @@ export interface ProjectPlanConfig {
   logs: {
     keepLastXLogs: number;
     rateLimitPerHour: number;
+    retentionHours: number;
   };
   logMetrics: {
     keepGranularitiesForHours: {
@@ -38,6 +39,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     logs: {
       keepLastXLogs: 1_000,
       rateLimitPerHour: 10_000,
+      retentionHours: 24 * 7, // 7 days
     },
     logMetrics: {
       keepGranularitiesForHours: {
@@ -62,6 +64,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     logs: {
       keepLastXLogs: 10_000,
       rateLimitPerHour: 50_000,
+      retentionHours: 24 * 7, // 7 days
     },
     logMetrics: {
       keepGranularitiesForHours: {
@@ -86,6 +89,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     logs: {
       keepLastXLogs: 10_000,
       rateLimitPerHour: 50_000,
+      retentionHours: 24 * 30, // 30 days
     },
     logMetrics: {
       keepGranularitiesForHours: {
@@ -110,6 +114,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     logs: {
       keepLastXLogs: 10_000,
       rateLimitPerHour: 50_000,
+      retentionHours: 24 * 30, // 30 days
     },
     logMetrics: {
       keepGranularitiesForHours: {
