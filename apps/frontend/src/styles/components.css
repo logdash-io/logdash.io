@@ -32,7 +32,11 @@
   }
 
   .ld-input-padding {
-    @apply px-3 py-2;
+    @apply px-3 py-1.5;
+  }
+
+  .btn-subtle {
+    @apply border-secondary/20 hover:border-secondary/30 border;
   }
 
   .success-card {

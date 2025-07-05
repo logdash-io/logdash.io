@@ -32,7 +32,7 @@
 <div class="relative w-full">
   <input
     bind:value={searchInput}
-    class="ld-input ld-input-padding font-jetbrains w-full pr-10 text-sm"
+    class="ld-input ld-input-padding w-full pr-10 text-sm"
     oninput={handleSearchInput}
     placeholder="Search logs..."
     type="text"

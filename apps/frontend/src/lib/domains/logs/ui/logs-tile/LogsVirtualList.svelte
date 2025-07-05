@@ -6,14 +6,12 @@
   import EnhancedLogRow from './log-row/LogRow.svelte';
 
   type Props = {
-    projectId: string;
     logs: Log[];
     rendered: boolean;
   };
 
-  const { projectId, logs, rendered }: Props = $props();
+  const { logs, rendered }: Props = $props();
   let virtualListRef = $state<HTMLDivElement | null>(null);
-  let logsContainerRef = $state<HTMLDivElement | null>(null);
   let scrollTop = $state(0);
 
   function handleScroll(): void {
@@ -28,10 +26,6 @@
   }
 
   const scrolledFromTop = $derived(scrollTop > 0);
-  const overflowsBottom = $derived(
-    logsContainerRef?.scrollTop + logsContainerRef?.clientHeight <
-      logsContainerRef?.scrollHeight,
-  );
 </script>
 
 <div
@@ -49,11 +43,29 @@
   {/if}
 
   <div
-    class="styled-scrollbar flex h-full max-h-full w-full flex-col gap-1.5 overflow-auto px-2 sm:gap-0"
+    class="styled-scrollbar flex h-full max-h-full w-full flex-col gap-1.5 overflow-auto overscroll-contain px-2 sm:gap-0"
     bind:this={virtualListRef}
     onscroll={handleScroll}
   >
-    <div bind:this={logsContainerRef} class="flex flex-col space-y-px">
+    {#if logs.length === 0 && logsState.hasFilters}
+      <div
+        class="flex h-full w-full flex-col items-center justify-center gap-2 py-16"
+      >
+        <p class="text-base-content/40 text-sm">
+          No logs found for the selected filters
+        </p>
+        <button
+          class="btn btn-sm btn-secondary"
+          onclick={() => {
+            logsState.resetFilters();
+          }}
+        >
+          Reset filters
+        </button>
+      </div>
+    {/if}
+
+    <div class="flex flex-col space-y-px">
       {#each logs as log, index (log.id)}
         <div
           in:fade|global={{

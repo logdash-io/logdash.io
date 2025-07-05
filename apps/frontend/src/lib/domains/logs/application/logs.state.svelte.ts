@@ -51,6 +51,15 @@ class LogsState {
     );
   }
 
+  get hasFilters(): boolean {
+    return Boolean(
+      this._filters.searchString.trim() ||
+        this._filters.startDate ||
+        this._filters.endDate ||
+        this._filters.level,
+    );
+  }
+
   get pageIsLoading(): boolean {
     return this._loadingPage;
   }
@@ -59,28 +68,43 @@ class LogsState {
     return logsSyncService.paused;
   }
 
+  get filters(): Partial<LogsFilters> {
+    return this._filters;
+  }
+
   set(logs: Log[]): void {
     this._logs = arrayToObject(logs, 'id');
   }
 
-  get filtersPausingSync(): boolean {
+  get shouldFiltersBlockSync(): boolean {
     return Boolean(
       this._filters.searchString.trim() ||
         this._filters.startDate ||
-        this._filters.endDate,
+        this._filters.endDate ||
+        this._filters.level,
     );
   }
 
   setFilters(filters: Partial<LogsFilters>): void {
     this._filters = { ...this._filters, ...filters };
 
-    if (this.filtersPausingSync) {
+    if (this.shouldFiltersBlockSync) {
       this.pauseSync();
     } else {
       this.resumeSync();
     }
 
     this.fetchLogs();
+  }
+
+  resetFilters(): void {
+    this._filters = {
+      limit: 50,
+      startDate: null,
+      endDate: null,
+      level: null,
+      searchString: '',
+    };
   }
 
   async sync(project_id: string): Promise<void> {
@@ -126,7 +150,7 @@ class LogsState {
   }
 
   async resumeSync(): Promise<void> {
-    if (this.filtersPausingSync) {
+    if (this.shouldFiltersBlockSync) {
       return;
     }
 

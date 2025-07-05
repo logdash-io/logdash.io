@@ -5,6 +5,7 @@
   import { scale } from 'svelte/transition';
   import LogsAnalyticsChart from './LogsAnalyticsChart.svelte';
   import LogsSearchInput from './LogsSearchInput.svelte';
+  import LogsFilterDropdown from './LogsFilterDropdown.svelte';
 
   type Props = {
     projectId: string;
@@ -90,20 +91,11 @@
 
     <LogsSearchInput {onSearchChange} />
 
-    <button
-      disabled={!selectedDateRange}
-      class="btn btn-outline btn-sm btn-secondary gap-1.5"
-      onclick={() => {
-        selectedDateRange = null;
-        logsState.setFilters({
-          searchString: '',
-          startDate: null,
-          endDate: null,
-        });
-      }}
-    >
-      <span>Clear filters</span>
-    </button>
+    <LogsFilterDropdown
+      selectedLevel={logsState.filters.level}
+      selectedStartDate={logsState.filters.startDate}
+      selectedEndDate={logsState.filters.endDate}
+    />
 
     <button
       class="btn btn-primary btn-sm gap-1.5"

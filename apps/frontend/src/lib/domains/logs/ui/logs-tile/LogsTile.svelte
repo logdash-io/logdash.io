@@ -28,5 +28,5 @@
 <div class="flex flex-col">
   <LogsHeader {projectId} />
 
-  <LogsVirtualList logs={logsState.logs} {projectId} {rendered} />
+  <LogsVirtualList logs={logsState.logs} {rendered} />
 </div>
