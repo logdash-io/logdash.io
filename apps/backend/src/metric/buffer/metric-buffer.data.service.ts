@@ -94,7 +94,7 @@ export class MetricBufferDataService {
     const metricsKey = await this.getMetricBufferChangedMetricsKey(projectId);
 
     await Promise.all([
-      this.redisService.del(`metrics-buffer:project:${projectId}:*`),
+      this.redisService.delPattern(`metrics-buffer:project:${projectId}:*`),
       this.redisService.sRem(metricsKey, projectId),
     ]);
   }
