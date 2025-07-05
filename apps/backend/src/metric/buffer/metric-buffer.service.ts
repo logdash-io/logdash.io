@@ -91,17 +91,22 @@ export class MetricBufferService {
         })),
       );
 
-    const updatesWithMetricId = updates.map((update) => ({
-      ...update,
-      metricId:
-        projectIdMetricNameToMetricRegisterEntryIdAndValue[
-          `${update.projectId}-${update.metricName}`
-        ].id,
-      baselineValue:
-        projectIdMetricNameToMetricRegisterEntryIdAndValue[
-          `${update.projectId}-${update.metricName}`
-        ].value,
-    }));
+    const updatesWithMetricId = updates
+      .map((update) => {
+        const entry =
+          projectIdMetricNameToMetricRegisterEntryIdAndValue[
+            `${update.projectId}-${update.metricName}`
+          ];
+        if (!entry?.id || !entry?.value) {
+          return null;
+        }
+        return {
+          ...update,
+          metricId: entry.id,
+          baselineValue: entry.value,
+        };
+      })
+      .filter((update): update is NonNullable<typeof update> => update !== null);
 
     await this.metricRegisterWriteService.upsertAbsoluteValues(
       updatesWithMetricId.map((update) => ({

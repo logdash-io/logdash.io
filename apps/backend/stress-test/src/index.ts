@@ -90,9 +90,7 @@ async function main() {
   console.log('Creating projects...');
 
   const projects = await Promise.all(
-    Array.from({ length: numberOfProjects }).map(() =>
-      apiClient.createProject(),
-    ),
+    Array.from({ length: numberOfProjects }).map(() => apiClient.createProject()),
   );
 
   console.log('Ingesting logs...');
@@ -113,33 +111,30 @@ async function main() {
   console.log('Reading stats...');
 
   for (const project of projects) {
-    const values = await apiClient.readProjectStats(
-      project.value,
-      project.projectId,
-    );
+    const values = await apiClient.readProjectStats(project.value, project.projectId);
 
     console.log(values);
   }
 }
 
 function test() {
-  const logdash = createLogDash({
-    apiKey: 'metbC8naqS6CwMuKla9yC7omn6uoc62b',
-    // host: 'https://dev-api.logdash.io',
+  const logdash1 = createLogDash({
+    apiKey: 'm409bnFcnhmpfQ3hozI2YkP49WTmto31',
+    host: 'https://dev-api.logdash.io',
   });
 
-  logdash.metrics.set('test1', 0);
-  logdash.metrics.set('test2', 1);
-  logdash.metrics.set('test3', 2);
-  logdash.metrics.set('test4', 3);
-  logdash.metrics.set('test5', 4);
-  logdash.metrics.set('test6', 5);
-  logdash.metrics.set('test7', 6);
-  logdash.metrics.set('test8', 7);
-  logdash.metrics.set('test9', 8);
-  logdash.metrics.set('test10', 9);
+  for (let i = 0; i < 100; i++) {
+    logdash1.metrics.set(`test${i}`, i);
+  }
 
-  logdash.logger.debug('Dupa');
+  const logdash2 = createLogDash({
+    apiKey: 'mnL6qiDcki0FZYqOWlaQD50K7pZ5gLtn',
+    host: 'https://dev-api.logdash.io',
+  });
+
+  for (let i = 0; i < 100; i++) {
+    logdash2.metrics.set(`test${i}`, i);
+  }
 }
 
 test();
