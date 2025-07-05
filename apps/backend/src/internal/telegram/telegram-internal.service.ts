@@ -10,6 +10,10 @@ import axios from 'axios';
 
 @Injectable()
 export class TelegramInternalService {
+  constructor() {
+    this.sendMessage('elo');
+  }
+
   @OnEvent(StripeEvents.PaymentSucceeded)
   public async handlePaymentSucceeded(payload: StripePaymentSucceededEvent) {
     await this.sendMessage(`User ${payload.email} got upgraded to ${payload.tier}`);
