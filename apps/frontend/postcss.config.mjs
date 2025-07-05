@@ -5,6 +5,8 @@ export default {
     '@tailwindcss/postcss': {
       config: './tailwind.config.ts',
     },
-    ...(process.env.NODE_ENV === 'production' ? [postcssOKLabFunction] : []),
+    ...(process.env.NODE_ENV === 'production'
+      ? { '@csstools/postcss-oklab-function': postcssOKLabFunction }
+      : {}),
   },
 };
