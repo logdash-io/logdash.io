@@ -27,6 +27,8 @@ export class ResendService {
       return;
     }
 
+    await this.resendTemplatedEmailsService.sendWelcomeEmail(dto.email);
+
     if (!dto.emailAccepted) {
       this.logger.log(
         `Skipping resend audience update for user because he didn't subscribe to newsletter`,
@@ -54,8 +56,6 @@ export class ResendService {
       email: dto.email,
       userId: dto.userId,
     });
-
-    await this.resendTemplatedEmailsService.sendWelcomeEmail(dto.email);
   }
 
   @OnEvent(StripeEvents.PaymentSucceeded)
