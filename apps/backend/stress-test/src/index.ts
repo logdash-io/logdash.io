@@ -118,23 +118,23 @@ async function main() {
 }
 
 function test() {
-  const logdash1 = createLogDash({
-    apiKey: 'm409bnFcnhmpfQ3hozI2YkP49WTmto31',
-    host: 'https://dev-api.logdash.io',
-  });
+  // const logdash1 = createLogDash({
+  //   apiKey: 'm409bnFcnhmpfQ3hozI2YkP49WTmto31',
+  //   host: 'https://dev-api.logdash.io',
+  // });
 
-  for (let i = 0; i < 100; i++) {
-    logdash1.metrics.set(`test${i}`, i);
-  }
+  // for (let i = 0; i < 100; i++) {
+  //   logdash1.metrics.set(`test${i}`, i);
+  // }
 
   const logdash2 = createLogDash({
     apiKey: 'mnL6qiDcki0FZYqOWlaQD50K7pZ5gLtn',
     host: 'https://dev-api.logdash.io',
   });
 
-  for (let i = 0; i < 100; i++) {
-    logdash2.metrics.set(`test${i}`, i);
-  }
+  // for (let i = 0; i < 100; i++) {
+  // }
+  logdash2.metrics.mutate(`new2`, 1);
 }
 
 test();

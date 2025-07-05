@@ -85,6 +85,8 @@ export class MetricRegisterWriteService {
   public async upsertAbsoluteValues(
     dtos: { metricRegisterEntryId: string; value: number }[],
   ): Promise<void> {
+    console.log('upsertAbsoluteValues', dtos);
+
     await this.model.bulkWrite(
       dtos.map((dto) => ({
         updateOne: {
