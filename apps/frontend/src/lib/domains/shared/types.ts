@@ -22,7 +22,7 @@ export enum LogdashSDKName {
   DOTNET = 'C#/DotNet',
   GO = 'Go',
   RUST = 'Rust',
-  OTHER = 'Other',
+  CURL = 'Curl',
 }
 
 export type LogdashSDK = {

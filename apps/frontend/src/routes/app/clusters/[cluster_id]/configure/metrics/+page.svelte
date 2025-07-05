@@ -10,6 +10,7 @@
   };
   const { data }: Props = $props();
   let tryingToClaim = $state(false);
+  const clusterId = page.params.cluster_id;
 </script>
 
 <svelte:head>
@@ -17,7 +18,7 @@
 </svelte:head>
 
 {#snippet claimer(hasLogs: boolean)}
-  <div class="mt-auto flex flex-1 items-center gap-4">
+  <div class="mt-auto flex w-full flex-1 items-center gap-4">
     <button
       onclick={() => {
         tryingToClaim = true;
@@ -42,4 +43,4 @@
   </div>
 {/snippet}
 
-<MetricsSetup {claimer} {...data} />
+<MetricsSetup {claimer} {...data} {clusterId} />

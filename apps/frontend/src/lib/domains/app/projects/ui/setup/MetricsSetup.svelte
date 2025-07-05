@@ -9,6 +9,7 @@
   import { getContext, onMount, type Snippet } from 'svelte';
   import Highlight from 'svelte-highlight';
   import {
+    bash,
     csharp,
     go,
     java,
@@ -22,15 +23,15 @@
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import SDKInstaller from '$lib/domains/shared/ui/setup/SDKInstaller.svelte';
   import SetupPrompt from '$lib/domains/shared/ui/setup/SetupPrompt.svelte';
-  import { page } from '$app/state';
-  import { goto } from '$app/navigation';
+  import CancelSetupButton from '$lib/domains/shared/ui/setup/CancelSetupButton.svelte';
 
   type Props = {
     project_id: string;
     api_key: string;
     claimer: Snippet<[boolean]>;
+    clusterId: string;
   };
-  const { project_id, claimer, api_key }: Props = $props();
+  const { project_id, claimer, api_key, clusterId }: Props = $props();
   let selectedSDK: LogdashSDK = $state();
 
   let copied = $state(false);
@@ -215,9 +216,12 @@ defer cancel()
 ld.Shutdown(ctx)
 `,
     },
-    [LogdashSDKName.OTHER]: {
-      language: null,
-      code: null,
+    [LogdashSDKName.CURL]: {
+      language: bash,
+      code: `curl -X PUT "https://api.logdash.io/metrics" \
+-H 'project-api-key: ${api_key}' \
+-H 'Content-Type: application/json' \
+-d '{"name": "users", "value": 0, "operation": "set"}'`,
     },
   };
 
@@ -241,7 +245,7 @@ The prompt should output **only** this install command and this exact code block
 
 <div class="fixed top-0 left-0 z-50 flex h-full w-full bg-black/40">
   <div
-    class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:w-xl sm:p-8"
+    class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:w-xl sm:p-8 sm:pb-6"
   >
     <div class="space-y-2">
       <h5 class="text-2xl font-semibold">Setup Metrics for your service</h5>
@@ -311,23 +315,10 @@ The prompt should output **only** this install command and this exact code block
       </div>
     </div>
 
-    <div class="mt-auto flex items-center gap-4">
-      <button
-        class="btn btn-secondary btn-soft flex-1 whitespace-nowrap"
-        data-posthog-id="public-dashboard-setup-back-button"
-        onclick={() => {
-          goto(
-            `/app/clusters/${page.params.cluster_id}?project_id=${project_id}`,
-            {
-              invalidateAll: true,
-            },
-          );
-        }}
-      >
-        Cancel
-      </button>
-
+    <div class="mt-auto flex w-full flex-col items-center gap-4">
       {@render claimer(hasMetrics)}
+
+      <CancelSetupButton id="metrics" {clusterId} projectId={project_id} />
     </div>
   </div>
 </div>

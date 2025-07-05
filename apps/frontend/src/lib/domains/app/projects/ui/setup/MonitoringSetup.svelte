@@ -10,6 +10,7 @@
   import { onMount, type Snippet } from 'svelte';
   import MonitorsListener from '$lib/domains/app/projects/ui/presentational/PingsListener.svelte';
   import { browser } from '$app/environment';
+  import CancelSetupButton from '$lib/domains/shared/ui/setup/CancelSetupButton.svelte';
 
   type Props = {
     project_id: string;
@@ -140,9 +141,9 @@
   </DataTile>
 </div>
 
-<div class="flexx hiddxen fixed top-0 left-0 z-50 h-full w-full bg-black/60">
+<div class="fixed top-0 left-0 z-50 h-full w-full bg-black/40">
   <div
-    class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:w-xl sm:p-8"
+    class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:w-xl sm:p-8 sm:pb-6"
   >
     <div class="space-y-2">
       <h5 class="text-2xl font-semibold">Setup Monitoring for your service</h5>
@@ -203,23 +204,10 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-4">
-      <button
-        class="btn btn-secondary btn-soft flex-1 whitespace-nowrap"
-        data-posthog-id="public-dashboard-setup-back-button"
-        onclick={() => {
-          goto(
-            `/app/clusters/${page.params.cluster_id}?project_id=${project_id}`,
-            {
-              invalidateAll: true,
-            },
-          );
-        }}
-      >
-        Cancel
-      </button>
-
+    <div class="mt-auto flex w-full flex-col items-center gap-4">
       {@render claimer(isHealthy)}
+
+      <CancelSetupButton id="monitoring" {clusterId} projectId={project_id} />
     </div>
   </div>
 </div>

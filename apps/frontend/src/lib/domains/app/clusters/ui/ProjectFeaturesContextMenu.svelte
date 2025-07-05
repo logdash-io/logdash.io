@@ -94,7 +94,7 @@
         e.stopPropagation();
       }}
     >
-      <span>Add features</span>
+      <span>More features</span>
       <PlusIcon class="h-5 w-5" />
     </button>
   </Tooltip>

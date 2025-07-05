@@ -8,10 +8,11 @@
     SettingsIcon,
   } from 'lucide-svelte';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
-  import {
-    publicDashboardManagerState,
-  } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
+  import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
+  import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
+  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 
   type Props = {
     clusterId: string;
@@ -26,6 +27,10 @@
 </script>
 
 {#snippet menu(close: () => void)}
+  {@const totalPublicDashboardCount = clustersState.publishedDashboardsCount}
+  {@const canAddMore =
+    totalPublicDashboardCount <
+    exposedConfigState.maxNumberOfPublicDashboards(userState.tier)}
   <ul
     class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit p-2 whitespace-nowrap shadow"
   >
@@ -59,19 +64,23 @@
       </li>
     {/if}
 
-    <li>
-      <a
-        onclick={() => {
-          goto(`/app/clusters/${cluster.id}/configure/public-dashboard`);
-          close();
-        }}
-        class="flex w-full justify-between whitespace-nowrap"
-      >
-        Settings
+    {#if !canAddMore}
+      <UpgradeButton>Upgrade to add more public dashboards</UpgradeButton>
+    {:else}
+      <li>
+        <a
+          onclick={() => {
+            goto(`/app/clusters/${cluster.id}/configure/public-dashboard`);
+            close();
+          }}
+          class="flex w-full justify-between whitespace-nowrap"
+        >
+          Settings
 
-        <SettingsIcon class="ml-1.5 h-3.5 w-3.5" />
-      </a>
-    </li>
+          <SettingsIcon class="ml-1.5 h-3.5 w-3.5" />
+        </a>
+      </li>
+    {/if}
   </ul>
 {/snippet}
 

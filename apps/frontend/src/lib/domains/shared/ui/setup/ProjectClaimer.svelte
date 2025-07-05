@@ -28,7 +28,7 @@
   }
 </script>
 
-<div class={['mt-auto flex flex-1 flex-col items-center gap-4']}>
+<div class={['mt-auto flex w-full flex-1 flex-col items-center gap-4']}>
   <div
     class={[
       'bg-base-100/60 border-base-100 flex h-fit w-full flex-col gap-2 rounded-xl border text-sm select-none',

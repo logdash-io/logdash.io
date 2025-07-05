@@ -5,6 +5,6 @@ export default {
     '@tailwindcss/postcss': {
       config: './tailwind.config.ts',
     },
-    '@csstools/postcss-oklab-function': postcssOKLabFunction,
+    // '@csstools/postcss-oklab-function': postcssOKLabFunction,
   },
 };

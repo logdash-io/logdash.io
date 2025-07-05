@@ -10,12 +10,14 @@
     type LogdashSDK,
   } from '$lib/domains/shared/types.js';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
+  import CancelSetupButton from '$lib/domains/shared/ui/setup/CancelSetupButton.svelte';
   import SDKInstaller from '$lib/domains/shared/ui/setup/SDKInstaller.svelte';
   import SetupPrompt from '$lib/domains/shared/ui/setup/SetupPrompt.svelte';
   import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
   import { getContext, onMount, type Snippet } from 'svelte';
   import Highlight from 'svelte-highlight';
   import {
+    bash,
     csharp,
     go,
     java,
@@ -34,6 +36,7 @@
   };
   const { project_id, claimer, api_key }: Props = $props();
   const hasLogs = $derived(logsState.logs.length > 0);
+  const clusterId = page.params.cluster_id;
 
   let selectedSDK: LogdashSDK = $state();
   let copied = $state(false);
@@ -204,9 +207,12 @@ defer cancel()
 ld.Shutdown(ctx)
     `,
     },
-    [LogdashSDKName.OTHER]: {
-      language: null,
-      code: null,
+    [LogdashSDKName.CURL]: {
+      language: bash,
+      code: `curl -X POST "https://api.logdash.io/logs" \
+-H "project-api-key: ${api_key}" \
+-H "Content-Type: application/json" \
+-d '{"message": "Application started successfully", "level": "info", "createdAt": "${new Date().toISOString()}", "sequenceNumber": 0}'`,
     },
   };
 
@@ -232,7 +238,7 @@ The prompt should output **only** this install command and this exact code block
 
 <div class="fixed top-0 left-0 z-50 flex h-full w-full bg-black/40">
   <div
-    class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:w-xl sm:p-8"
+    class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:w-xl sm:p-8 sm:pb-6"
   >
     <div class="space-y-2">
       <h5 class="text-2xl font-semibold">Setup Logging for your service</h5>
@@ -302,23 +308,10 @@ The prompt should output **only** this install command and this exact code block
       </div>
     </div>
 
-    <div class="mt-auto flex items-center gap-4">
-      <button
-        class="btn btn-secondary btn-soft flex-1 whitespace-nowrap"
-        data-posthog-id="public-dashboard-setup-back-button"
-        onclick={() => {
-          goto(
-            `/app/clusters/${page.params.cluster_id}?project_id=${project_id}`,
-            {
-              invalidateAll: true,
-            },
-          );
-        }}
-      >
-        Cancel
-      </button>
-
+    <div class="mt-auto flex w-full flex-col items-center gap-4">
       {@render claimer(hasLogs)}
+
+      <CancelSetupButton id="logging" {clusterId} projectId={project_id} />
     </div>
   </div>
 </div>

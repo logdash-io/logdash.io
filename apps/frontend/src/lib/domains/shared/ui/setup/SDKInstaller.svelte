@@ -7,6 +7,7 @@
   import PythonIcon from '$lib/domains/shared/icons/PythonIcon.svelte';
   import RubyIcon from '$lib/domains/shared/icons/RubyIcon.svelte';
   import RustIcon from '$lib/domains/shared/icons/RustIcon.svelte';
+  import CurlIcon from '$lib/domains/shared/icons/CurlIcon.svelte';
   import {
     type LogdashSDK,
     LogdashSDKName,
@@ -85,8 +86,8 @@ implementation 'io.logdash:logdash:0.2.0'`,
       language: bash,
       code: `cargo add logdash`,
     },
-    [LogdashSDKName.OTHER]: {
-      language: null,
+    [LogdashSDKName.CURL]: {
+      language: bash,
       code: null,
     },
   };
@@ -125,8 +126,8 @@ implementation 'io.logdash:logdash:0.2.0'`,
       icon: PhpIcon,
     },
     {
-      name: LogdashSDKName.OTHER,
-      icon: DotSquareIcon as any,
+      name: LogdashSDKName.CURL,
+      icon: CurlIcon,
     },
   ];
   let selectedSDKIndex = $state(0);
@@ -146,26 +147,11 @@ implementation 'io.logdash:logdash:0.2.0'`,
     class="dropdown dropdown-center ld-card-base z-20 overflow-visible rounded-xl p-1.5 shadow-sm"
   >
     {#each SDK_LIST as sdk}
-      {@const isSupported = !!SDK_INSTALLERS[sdk.name].code}
-      <div
-        class={[
-          'w-full rounded-xl',
-          {
-            'tooltip tooltip-left tooltip-primary': !isSupported,
-          },
-        ]}
-        data-tip={isSupported
-          ? ''
-          : 'In development, click to put higher priority.'}
-      >
+      <div class={['w-full rounded-xl']}>
         <li
           onclick={(e) => {
             e.stopPropagation();
             close();
-            if (!isSupported) {
-              toast.success('Noted!');
-              return;
-            }
 
             selectedSDKIndex = SDK_LIST.indexOf(sdk);
             sdkPopover.hidePopover();
@@ -198,26 +184,28 @@ implementation 'io.logdash:logdash:0.2.0'`,
   </Tooltip>
 </div>
 
-<div class="space-y-2 overflow-hidden text-sm">
-  <div class="relative text-base">
-    <Highlight
-      class="code-snippet selection:bg-base-100"
-      code={SDK_INSTALLERS[selectedSDK.name].code}
-      language={bash}
-    />
+{#if SDK_INSTALLERS[selectedSDK.name].code}
+  <div class="space-y-2 overflow-hidden text-sm">
+    <div class="relative text-base">
+      <Highlight
+        class="code-snippet selection:bg-base-100"
+        code={SDK_INSTALLERS[selectedSDK.name].code}
+        language={bash}
+      />
 
-    <label
-      class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute top-2 right-2 border-transparent"
-      for="copy-code-0"
-      onclick={() => {
-        navigator.clipboard.writeText(SDK_INSTALLERS[selectedSDK.name].code);
-      }}
-    >
-      <input id="copy-code-0" type="checkbox" />
+      <label
+        class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute top-2 right-2 border-transparent"
+        for="copy-code-0"
+        onclick={() => {
+          navigator.clipboard.writeText(SDK_INSTALLERS[selectedSDK.name].code);
+        }}
+      >
+        <input id="copy-code-0" type="checkbox" />
 
-      <CheckIcon class="swap-on text-success h-5 w-5" />
+        <CheckIcon class="swap-on text-success h-5 w-5" />
 
-      <Copy class="swap-off h-5 w-5" />
-    </label>
+        <Copy class="swap-off h-5 w-5" />
+      </label>
+    </div>
   </div>
-</div>
+{/if}
