@@ -7,7 +7,6 @@ import {
 } from '../../payments/stripe/stripe-event.emitter';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import axios from 'axios';
-import { UserTier } from '../../user/core/enum/user-tier.enum';
 
 @Injectable()
 export class TelegramInternalService {
@@ -16,7 +15,7 @@ export class TelegramInternalService {
   @OnEvent(StripeEvents.PaymentSucceeded)
   public async handlePaymentSucceeded(payload: StripePaymentSucceededEvent) {
     await this.sendMessage(
-      `User ${this.escapeTelegramMessage(payload.email)} got upgraded to ${this.escapeTelegramMessage(payload.tier)}`,
+      `🎉🎉🎉 User ${this.escapeTelegramMessage(payload.email)} got upgraded to ${this.escapeTelegramMessage(payload.tier)} 🎉🎉🎉`,
     );
   }
 
