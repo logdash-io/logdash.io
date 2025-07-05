@@ -3,25 +3,28 @@
   import { onMount } from 'svelte';
   import { logAnalyticsState } from '$lib/domains/logs/application/log-analytics.state.svelte.js';
   import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analytics-response.js';
+  import { AlertTriangleIcon } from 'lucide-svelte';
 
   type Props = {
-    projectId: string;
-    onDateRangeChange?: (startDate: Date, endDate: Date) => void;
+    selectedDateRange: { start: Date; end: Date } | null;
+    onDateRangeChange?: (startDate: Date | null, endDate: Date | null) => void;
   };
 
-  const { projectId, onDateRangeChange }: Props = $props();
+  let {
+    selectedDateRange: selectedRange = $bindable(),
+    onDateRangeChange,
+  }: Props = $props();
 
   let chartContainer: HTMLElement;
   let tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
   let isDragging = $state(false);
   let dragStart: Date | null = $state(null);
   let dragEnd: Date | null = $state(null);
-  let selectedRange = $state<{ start: Date; end: Date } | null>(null);
   let currentTooltipBucket: LogsAnalyticsResponse['buckets'][0] | null = null;
   let zoomedTimeRange = $state<{ start: Date; end: Date } | null>(null);
 
-  const CHART_HEIGHT = 60;
-  const MARGIN = { top: 5, right: 10, bottom: 15, left: 5 };
+  const CHART_HEIGHT = 70;
+  const MARGIN = { top: 5, right: 10, bottom: 25, left: 5 };
   const LOG_TYPES = [
     'error',
     'warning',
@@ -40,30 +43,6 @@
     '#262626',
     '#262626',
   ];
-
-  async function fetchAnalyticsData(timeRange?: {
-    start: Date;
-    end: Date;
-  }): Promise<void> {
-    if (!projectId) return;
-
-    try {
-      const now = new Date();
-      const endTime = timeRange?.end || now;
-      const startTime =
-        timeRange?.start || new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-      await logAnalyticsState.fetchAnalytics(
-        projectId,
-        startTime.toISOString(),
-        endTime.toISOString(),
-        0, // UTC offset, can be made configurable
-      );
-    } catch (error) {
-      console.error('Failed to fetch analytics data:', error);
-      // The error will be handled by the state and displayed in the UI
-    }
-  }
 
   const analyticsData = $derived(logAnalyticsState.analyticsData);
   const isLoading = $derived(logAnalyticsState.isLoading);
@@ -160,13 +139,17 @@
     });
 
     // Draw axes (X axis only)
-    chart
+    const startDate = new Date(data.buckets[0].bucketStart);
+    const endDate = new Date(data.buckets[data.buckets.length - 1].bucketEnd);
+    const middleDate = new Date((startDate.getTime() + endDate.getTime()) / 2);
+
+    const xAxis = chart
       .append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(
         d3
           .axisBottom(xScale)
-          .ticks(4)
+          .tickValues([startDate, middleDate, endDate])
           .tickFormat((d: Date) => {
             return d.toLocaleTimeString([], {
               hour: '2-digit',
@@ -174,9 +157,25 @@
             });
           }),
       )
-      .attr('color', '#94a3b8')
-      .selectAll('text')
-      .style('font-size', '9px');
+      .attr('color', '#909090');
+
+    xAxis.selectAll('text').style('font-size', '9px');
+    xAxis.selectAll('path, line').attr('stroke', '#393939');
+
+    // Align text to prevent cutoff
+    xAxis.selectAll('text').each(function (d, i) {
+      const text = d3.select(this);
+      if (i === 0) {
+        // First tick - align to start (left)
+        text.attr('text-anchor', 'start');
+      } else if (i === 2) {
+        // Last tick - align to end (right)
+        text.attr('text-anchor', 'end');
+      } else {
+        // Middle tick - keep centered
+        text.attr('text-anchor', 'middle');
+      }
+    });
 
     // Add drag selection
     addDragSelection(chart, xScale, innerWidth, innerHeight);
@@ -199,12 +198,25 @@
       null,
       undefined
     > | null = null;
+    let dragStartX: number | null = null;
+
+    // Add invisible overlay for drag interaction
+    const overlay = chart
+      .append('rect')
+      .attr('width', width)
+      .attr('height', height)
+      .attr('fill', 'transparent')
+      .attr('cursor', 'crosshair');
 
     const dragBehavior = d3
       .drag<SVGRectElement, unknown>()
       .on('start', (event) => {
         isDragging = true;
-        const [x] = d3.pointer(event);
+        // Get coordinates relative to the chart group (overlay)
+        const [rawX] = d3.pointer(event, overlay.node());
+        // Clamp coordinates to chart boundaries
+        const x = Math.max(0, Math.min(width, rawX));
+        dragStartX = x;
         dragStart = xScale.invert(x);
         dragEnd = null;
 
@@ -224,17 +236,17 @@
           .attr('stroke-width', 1);
       })
       .on('drag', (event) => {
-        if (!dragSelection || !dragStart) return;
+        if (!dragSelection || dragStartX === null) return;
 
-        const [x] = d3.pointer(event);
+        // Get coordinates relative to the chart group (overlay)
+        const [rawX] = d3.pointer(event, overlay.node());
+        // Clamp coordinates to chart boundaries
+        const x = Math.max(0, Math.min(width, rawX));
         dragEnd = xScale.invert(x);
 
         // Work with raw pixel coordinates for visual selection
-        const startX = xScale(dragStart);
-        const endX = x;
-
-        const minX = Math.min(startX, endX);
-        const maxX = Math.max(startX, endX);
+        const minX = Math.min(dragStartX, x);
+        const maxX = Math.max(dragStartX, x);
 
         dragSelection.attr('x', minX).attr('width', maxX - minX);
       })
@@ -262,19 +274,14 @@
 
         dragStart = null;
         dragEnd = null;
+        dragStartX = null;
       });
 
-    // Add invisible overlay for drag interaction
-    chart
-      .append('rect')
-      .attr('width', width)
-      .attr('height', height)
-      .attr('fill', 'transparent')
-      .attr('cursor', 'crosshair')
+    overlay
       .call(dragBehavior)
       .on('mousemove', (event) => {
         if (!isDragging) {
-          handleOverlayMouseMove(event, xScale);
+          handleOverlayMouseMove(event, xScale, width);
         }
       })
       .on('mouseout', () => {
@@ -287,8 +294,11 @@
   function handleOverlayMouseMove(
     event: any,
     xScale: d3.ScaleTime<number, number>,
+    width: number,
   ) {
-    const [x] = d3.pointer(event);
+    const [rawX] = d3.pointer(event);
+    // Clamp coordinates to chart boundaries
+    const x = Math.max(0, Math.min(width, rawX));
     const hoverDate = xScale.invert(x);
 
     // Find the bucket that corresponds to this x position
@@ -392,30 +402,35 @@
   function renderEmptyState(container: HTMLElement) {
     d3.select(container)
       .append('div')
-      .attr('class', 'flex items-center justify-center h-15 text-gray-400')
+      .attr('class', 'flex items-center justify-center text-gray-400')
+      .style('height', `${CHART_HEIGHT}px`)
       .html('<p>No log data available</p>');
   }
 
   function zoomToRange(start: Date, end: Date) {
     // Calculate 90% zoom - add 5% padding on each side
     const rangeDuration = end.getTime() - start.getTime();
-    const paddingDuration = rangeDuration * 0.05; // 5% padding on each side
+    const paddingDuration = rangeDuration * 0.02; // 5% padding on each side
 
     const zoomStart = new Date(start.getTime() - paddingDuration);
     const zoomEnd = new Date(end.getTime() + paddingDuration);
 
     zoomedTimeRange = { start: zoomStart, end: zoomEnd };
 
-    // Fetch new data for the zoomed range
-    fetchAnalyticsData(zoomedTimeRange);
+    selectedRange = { start: zoomStart, end: zoomEnd };
   }
 
   function clearSelection() {
     selectedRange = null;
     zoomedTimeRange = null;
 
-    // Fetch data for the original time range (last 24 hours)
-    fetchAnalyticsData();
+    onDateRangeChange?.(null, null);
+  }
+
+  function handleEscapeKey(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      clearSelection();
+    }
   }
 
   onMount(() => {
@@ -433,10 +448,7 @@
       .style('pointer-events', 'none')
       .style('z-index', '10')
       .style('max-width', '300px')
-      .style('font-family', 'system-ui, -apple-system, sans-serif');
-
-    // Fetch initial data
-    fetchAnalyticsData();
+      .style('font-family', 'monospace');
 
     let resizeTimeout: ReturnType<typeof setTimeout>;
     const resizeObserver = new ResizeObserver(() => {
@@ -465,12 +477,22 @@
       createChart(chartContainer, analyticsData);
     }
   });
+
+  // Handle escape key to clear selection
+  $effect(() => {
+    if (selectedRange || zoomedTimeRange) {
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => {
+        document.removeEventListener('keydown', handleEscapeKey);
+      };
+    }
+  });
 </script>
 
-<div class="space-y-4">
-  <div class="flex items-center justify-between">
-    <h3 class="text-lg font-semibold">
-      Logs Analytics
+<div class="space-y-4 p-4 pb-0 font-mono">
+  <!-- <div class="flex items-center justify-between">
+    <h3 class="text-sm font-semibold">
+      Logs
       {#if zoomedTimeRange}
         <span class="text-sm font-normal text-blue-400">(Zoomed)</span>
       {/if}
@@ -522,22 +544,29 @@
         </span>
       {/if}
     </div>
-  </div>
+  </div> -->
 
-  <div class="chart-container">
+  <div class="chart-container relative">
     {#if isLoading}
-      <div class="flex h-15 items-center justify-center text-gray-400">
-        <span class="loading loading-spinner loading-sm mr-2"></span>
+      <div
+        class="bg-base-300/50 text-secondary/60 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
+        style="height: {CHART_HEIGHT}px"
+      >
+        <span class="loading loading-spinner loading-xs mr-2"></span>
         Loading analytics data...
       </div>
     {:else if error}
-      <div class="flex h-15 items-center justify-center text-red-400">
-        <span class="mr-2">⚠️</span>
-        Failed to load analytics data: {error}
+      <div
+        class="bg-base-300/50 text-error-content absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
+        style="height: {CHART_HEIGHT}px"
+      >
+        <span class="mr-2">
+          <AlertTriangleIcon class="size-4" />
+        </span>
+        Failed to load analytics data
       </div>
-    {:else}
-      <div class="chart-wrapper w-full" bind:this={chartContainer}></div>
     {/if}
+    <div class="chart-wrapper w-full" bind:this={chartContainer}></div>
   </div>
 </div>
 
@@ -549,7 +578,7 @@
 
   .chart-wrapper {
     width: 100%;
-    min-height: 60px;
+    min-height: 70px;
     overflow: hidden;
   }
 

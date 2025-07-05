@@ -28,7 +28,7 @@
   }
 
   .ld-input {
-    @apply input-md input-ghost selection:bg-secondary/20 border-secondary/20 focus:border-primary h-full w-full rounded-lg border outline-0 focus:bg-transparent;
+    @apply input-md input-ghost selection:bg-secondary/20 border-secondary/20 hover:border-secondary/30 focus:border-primary h-full w-full rounded-lg border outline-0 transition-colors duration-250 focus:bg-transparent;
   }
 
   .ld-input-padding {

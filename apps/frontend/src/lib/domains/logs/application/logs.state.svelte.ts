@@ -22,7 +22,6 @@ class LogsState {
   });
 
   private _logs = $state<Record<Log['id'], Log>>({});
-  private _isSearching = $state<boolean>(false);
 
   get logs(): Log[] {
     const allLogs = Object.values(this._logs).sort((a, b) => {
@@ -46,10 +45,6 @@ class LogsState {
     return allLogs.filter((log) => log.message.toLowerCase().includes(query));
   }
 
-  get isSearching(): boolean {
-    return this._isSearching;
-  }
-
   get pageIsLoading(): boolean {
     return this._loadingPage;
   }
@@ -58,7 +53,7 @@ class LogsState {
     this._logs = arrayToObject(logs, 'id');
   }
 
-  setFilters(filters: Partial<LogsQueryFilters>): void {
+  setFilters(filters: Partial<LogsFilters>): void {
     this._filters = { ...this._filters, ...filters };
 
     this.fetchLogs();
@@ -94,8 +89,11 @@ class LogsState {
     }
 
     this._loadingPage = true;
-    await this.fetchLogs({ lastId: lastLog.id });
-    this._loadingPage = false;
+    try {
+      await this.fetchLogs({ lastId: lastLog.id });
+    } finally {
+      this._loadingPage = false;
+    }
   }
 
   pauseSync(): void {

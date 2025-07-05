@@ -59,7 +59,7 @@
 
 <div
   class={[
-    'bg-base-300 selection:bg-secondary/20 flex min-h-7 items-start gap-2.5 overflow-hidden px-4 font-mono text-sm leading-7',
+    'bg-base-300 selection:bg-secondary/20 flex min-h-7 items-start gap-2.5 overflow-hidden rounded-sm px-4 font-mono text-sm leading-7',
     {
       'hover:bg-base-100/50': level !== 'error' && level !== 'warning',
       'bg-warning/20 text-warning-content': level === 'warning',

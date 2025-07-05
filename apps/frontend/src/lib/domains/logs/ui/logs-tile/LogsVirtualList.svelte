@@ -23,7 +23,7 @@
 
   async function loadNextPage(): Promise<void> {
     if (logsState.pageIsLoading) return;
-    await logsState.loadNextPage(projectId);
+    await logsState.loadNextPage();
   }
 
   const scrolledFromTop = $derived(scrollTop > 0);
@@ -39,7 +39,7 @@
   {/if}
 
   <div
-    class="styled-scrollbar flex h-full max-h-full w-full flex-col gap-1.5 overflow-auto sm:gap-0"
+    class="styled-scrollbar flex h-full max-h-full w-full flex-col gap-1.5 space-y-px overflow-auto px-2 sm:gap-0"
     bind:this={virtualListRef}
     onscroll={handleScroll}
   >
