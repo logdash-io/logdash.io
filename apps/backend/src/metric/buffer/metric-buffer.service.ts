@@ -97,7 +97,7 @@ export class MetricBufferService {
           projectIdMetricNameToMetricRegisterEntryIdAndValue[
             `${update.projectId}-${update.metricName}`
           ];
-        if (!entry?.id || !entry?.value) {
+        if (!entry) {
           return null;
         }
         return {

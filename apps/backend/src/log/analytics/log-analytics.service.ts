@@ -78,12 +78,6 @@ export class LogAnalyticsService {
       ORDER BY bucket_start ASC
     `;
 
-    console.log(projectId);
-    console.log(query);
-    console.log(ClickhouseUtils.jsDateToClickhouseDate(alignedStartDate));
-    console.log(ClickhouseUtils.jsDateToClickhouseDate(alignedEndDate));
-    console.log(bucketMinutes);
-
     const result = await this.clickhouse.query({
       query,
       query_params: {

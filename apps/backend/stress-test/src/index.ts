@@ -129,7 +129,7 @@ function test() {
 
   const logdash2 = createLogDash({
     apiKey: 'mnL6qiDcki0FZYqOWlaQD50K7pZ5gLtn',
-    host: 'https://dev-api.logdash.io',
+    host: 'http://localhost:3000',
   });
 
   // for (let i = 0; i < 100; i++) {
@@ -138,3 +138,96 @@ function test() {
 }
 
 test();
+
+[
+  {
+    metricRegisterEntryId: '6869096c581bb38041e448fa',
+    value: 199,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6869096c581bb38041e44903',
+    value: 2260,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6869096c581bb38041e44902',
+    value: 428,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6869096c581bb38041e4491e',
+    value: 1344,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6869096c581bb38041e44908',
+    value: 657,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6869096c581bb38041e448fc',
+    value: 1802,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6869096c581bb38041e44901',
+    value: 1573,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6869096c581bb38041e448fe',
+    value: 2031,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6869096c581bb38041e44900',
+    value: 886,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6869096c581bb38041e4490a',
+    value: 1115,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6828db49fad05294a46ad6a1',
+    value: 38600.566666666666,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '682b8f298408d6cc05fd4b41',
+    value: 102071,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '682899cbed72982c571d8c7f',
+    value: 781,
+    operation: 'change',
+  },
+  {
+    metricRegisterEntryId: '6828916934a29393fcc4860e',
+    value: 7929359,
+    operation: 'change',
+  },
+  {
+    metricRegisterEntryId: '6828c09fb17f2e7230b4510a',
+    value: 271,
+    operation: 'change',
+  },
+  {
+    metricRegisterEntryId: '682b8be18408d6cc05fcee08',
+    value: 217920,
+    operation: 'change',
+  },
+  {
+    metricRegisterEntryId: '6828db49fad05294a46ad6a0',
+    value: 12343.233333333334,
+    operation: 'set',
+  },
+  {
+    metricRegisterEntryId: '6828e125c70d78306d64afbe',
+    value: 11919.666666666666,
+    operation: 'set',
+  },
+];
