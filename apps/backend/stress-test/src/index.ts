@@ -129,7 +129,7 @@ function test() {
 
   const logdash2 = createLogDash({
     apiKey: 'mnL6qiDcki0FZYqOWlaQD50K7pZ5gLtn',
-    host: 'https://dev-api.logdash.io',
+    host: 'http://localhost:3000',
   });
 
   // for (let i = 0; i < 100; i++) {

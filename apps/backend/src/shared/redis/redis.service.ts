@@ -67,7 +67,11 @@ export class RedisService {
 
   public async delPattern(pattern: string): Promise<void> {
     const keys = await this.keys(pattern);
-    await this.client.del(keys);
+    console.log('delPattern', keys);
+
+    if (keys.length > 0) {
+      await this.client.del(keys);
+    }
   }
 
   public async exists(key: string): Promise<boolean> {
