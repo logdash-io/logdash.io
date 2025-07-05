@@ -1,8 +1,7 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import postcssOKLabFunction from '@csstools/postcss-oklab-function';
 
-export default defineConfig(({ command }) => ({
+export default defineConfig({
   plugins: [
     sveltekit(),
     {
@@ -28,11 +27,8 @@ export default defineConfig(({ command }) => ({
         api: 'modern-compiler',
       },
     },
-    postcss: {
-      plugins: command === 'build' ? [postcssOKLabFunction] : [],
-    },
   },
   build: {
     target: ['es2015', 'ios11'],
   },
-}));
+});
