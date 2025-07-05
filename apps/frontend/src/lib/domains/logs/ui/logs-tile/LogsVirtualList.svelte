@@ -30,11 +30,16 @@
 </script>
 
 <div
-  class="relative flex h-full max-h-[690px] w-full max-w-full flex-1 flex-col overflow-hidden"
+  class="relative flex h-full max-h-[690px] w-full max-w-full flex-1 flex-col"
 >
   {#if scrolledFromTop}
     <div
-      class="from-base-300 absolute top-0 left-0 h-6 w-full bg-gradient-to-b to-transparent"
+      class="pointer-events-none absolute top-0 left-0 z-10 -mt-1 h-12 w-full"
+      style="
+        background: linear-gradient(to right, var(--color-base-200) 0%, #0f0f0f 100%);
+        mask: linear-gradient(to bottom, rgb(73 29 29) 0%, transparent 100%);
+        -webkit-mask: linear-gradient(to bottom, rgb(73 29 29) 0%, transparent 100%);
+      "
     ></div>
   {/if}
 
@@ -78,6 +83,11 @@
   </div>
 
   <div
-    class="to-base-300 absolute bottom-0 left-0 h-12 w-full bg-gradient-to-b from-transparent"
+    class="pointer-events-none absolute bottom-0 left-0 z-10 h-12 w-full"
+    style="
+      background: linear-gradient(to right, #111111 0%, var(--color-base-300) 100%);
+      mask: linear-gradient(to top, rgb(73 29 29) 0%, transparent 100%);
+      -webkit-mask: linear-gradient(to top, rgb(73 29 29) 0%, transparent 100%);
+    "
   ></div>
 </div>
