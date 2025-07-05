@@ -82,21 +82,6 @@ export class MetricRegisterWriteService {
     return entryId;
   }
 
-  public async upsertAllTimeValues(dtos: UpdateCounterAbsoluteValueDto[]): Promise<void> {
-    await this.model.bulkWrite(
-      dtos.map((dto) => ({
-        updateOne: {
-          filter: { _id: new Types.ObjectId(dto.metricRegisterEntryId) },
-          update: {
-            $set: {
-              'values.counter.absoluteValue': dto.value,
-            },
-          },
-        },
-      })),
-    );
-  }
-
   public async upsertAbsoluteValues(
     dtos: { metricRegisterEntryId: string; value: number }[],
   ): Promise<void> {

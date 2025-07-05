@@ -104,15 +104,6 @@ export class MetricIngestionService {
       );
     }
 
-    // save new baseline values
-    const allTimeValues = upsertDtos
-      .filter((dto) => dto.granularity === MetricGranularity.AllTime)
-      .map((dto) => ({
-        metricRegisterEntryId: dto.metricRegisterEntryId,
-        value: dto.value,
-      }));
-    await this.metricRegisterWriteService.upsertAllTimeValues(allTimeValues);
-
     // save metrics
     await this.metricWriteService.upsertMany(upsertDtos);
 
