@@ -5,6 +5,7 @@ import { MetricRegisterReadService } from '../../metric-register/read/metric-reg
 import { MetricBufferDataService } from './metric-buffer.data.service';
 import { RecordMetricDto } from '../ingestion/dto/record-metric.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 
 @Injectable()
 export class MetricBufferService {
@@ -12,6 +13,7 @@ export class MetricBufferService {
     private readonly metricBufferDataService: MetricBufferDataService,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
+    private readonly averageRecorder: AverageRecorder,
     private readonly logger: Logger,
   ) {}
 
@@ -118,5 +120,7 @@ export class MetricBufferService {
 
     const bufferFlushDurationMs = performance.now() - now;
     this.logger.info(`Buffer flush duration: ${bufferFlushDurationMs}ms`);
+
+    this.averageRecorder.record('metricsBufferFlushDurationMs', bufferFlushDurationMs);
   }
 }
