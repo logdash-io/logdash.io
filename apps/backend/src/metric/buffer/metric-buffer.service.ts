@@ -91,9 +91,6 @@ export class MetricBufferService {
         })),
       );
 
-    console.log(projectIdMetricNameToMetricRegisterEntryIdAndValue);
-    console.log(updates);
-
     const updatesWithMetricId = updates
       .map((update) => {
         const entry =
