@@ -264,8 +264,8 @@
           const start = dragStart < dragEnd ? dragStart : dragEnd;
           const end = dragStart < dragEnd ? dragEnd : dragStart;
 
-          // Only update if there's a meaningful range (more than 5 minutes)
-          if (end.getTime() - start.getTime() > 5 * 60000) {
+          // Only update if there's a meaningful range (more than 1 minute)
+          if (end.getTime() - start.getTime() > 1 * 60000) {
             selectedRange = { start, end };
             onDateRangeChange?.(start, end);
 
@@ -439,16 +439,13 @@
     tooltip = d3
       .select('body')
       .append('div')
-      .attr('class', 'chart-tooltip')
+      .attr('class', 'chart-tooltip ld-card-base rounded-xl')
       .style('display', 'none')
       .style('position', 'absolute')
       .style('padding', '10px')
-      .style('background', '#1e293b')
-      .style('color', '#f1f5f9')
-      .style('border-radius', '4px')
-      .style('box-shadow', '0 4px 6px -1px rgba(0, 0, 0, 0.1)')
+      .style('color', 'var(--color-base-content)')
       .style('pointer-events', 'none')
-      .style('z-index', '10')
+      .style('z-index', '99999')
       .style('max-width', '300px')
       .style('font-family', 'monospace');
 

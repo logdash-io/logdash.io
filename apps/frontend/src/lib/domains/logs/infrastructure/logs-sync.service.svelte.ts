@@ -19,10 +19,7 @@ export class LogsSyncService {
   };
 
   get paused(): boolean {
-    return (
-      this._syncConnection === null ||
-      this._syncConnection.readyState !== EventSource.OPEN
-    );
+    return this._syncConnection === null;
   }
 
   init(config: {

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
-  import { scale } from 'svelte/transition';
-  import LogsSearchInput from './LogsSearchInput.svelte';
-  import LogsAnalyticsChart from './LogsAnalyticsChart.svelte';
   import { logAnalyticsState } from '$lib/domains/logs/application/log-analytics.state.svelte.js';
-  import { onMount } from 'svelte';
+  import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
+  import PauseCircleIcon from '$lib/domains/shared/icons/PauseCircleIcon.svelte';
+  import { scale } from 'svelte/transition';
+  import LogsAnalyticsChart from './LogsAnalyticsChart.svelte';
+  import LogsSearchInput from './LogsSearchInput.svelte';
 
   type Props = {
     projectId: string;
@@ -73,10 +73,19 @@
   {/if}
 
   <div class="flex items-center justify-between gap-2.5 p-4">
-    <div class="flex items-center gap-3">
-      <div class="flex items-center gap-2">
-        <span class="loading loading-ring loading-sm"></span>
-      </div>
+    <div class="flex h-8 w-8 shrink-0 items-center justify-center">
+      {#if logsState.syncPaused}
+        <PauseCircleIcon
+          class="h-5 w-5 shrink-0"
+          stroke="stroke-warning-content"
+        />
+      {:else}
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
+            <span class="loading loading-ring loading-sm"></span>
+          </div>
+        </div>
+      {/if}
     </div>
 
     <LogsSearchInput {onSearchChange} />

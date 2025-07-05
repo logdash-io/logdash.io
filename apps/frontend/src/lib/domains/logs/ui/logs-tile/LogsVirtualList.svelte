@@ -13,6 +13,7 @@
 
   const { projectId, logs, rendered }: Props = $props();
   let virtualListRef = $state<HTMLDivElement | null>(null);
+  let logsContainerRef = $state<HTMLDivElement | null>(null);
   let scrollTop = $state(0);
 
   function handleScroll(): void {
@@ -27,6 +28,10 @@
   }
 
   const scrolledFromTop = $derived(scrollTop > 0);
+  const overflowsBottom = $derived(
+    logsContainerRef?.scrollTop + logsContainerRef?.clientHeight <
+      logsContainerRef?.scrollHeight,
+  );
 </script>
 
 <div
@@ -44,25 +49,27 @@
   {/if}
 
   <div
-    class="styled-scrollbar flex h-full max-h-full w-full flex-col gap-1.5 space-y-px overflow-auto px-2 sm:gap-0"
+    class="styled-scrollbar flex h-full max-h-full w-full flex-col gap-1.5 overflow-auto px-2 sm:gap-0"
     bind:this={virtualListRef}
     onscroll={handleScroll}
   >
-    {#each logs as log, index (log.id)}
-      <div
-        in:fade|global={{
-          duration: 300,
-          delay: rendered ? 0 : index * 5,
-        }}
-      >
-        <EnhancedLogRow
-          {index}
-          date={log.createdAt}
-          level={log.level}
-          message={log.message}
-        />
-      </div>
-    {/each}
+    <div bind:this={logsContainerRef} class="flex flex-col space-y-px">
+      {#each logs as log, index (log.id)}
+        <div
+          in:fade|global={{
+            duration: 300,
+            delay: rendered ? 0 : index * 5,
+          }}
+        >
+          <EnhancedLogRow
+            {index}
+            date={log.createdAt}
+            level={log.level}
+            message={log.message}
+          />
+        </div>
+      {/each}
+    </div>
 
     <div
       class="h-0.5 w-full shrink-0"
@@ -75,19 +82,18 @@
       }}
     ></div>
 
-    <div class="flex h-12 shrink-0 items-center justify-center gap-2">
-      {#if logsState.pageIsLoading}
+    {#if logsState.pageIsLoading}
+      <div class="flex h-12 shrink-0 items-center justify-center gap-2">
         <span class="loading loading-spinner loading-sm opacity-80"></span>
-      {/if}
-    </div>
+      </div>
+    {/if}
   </div>
 
   <div
-    class="pointer-events-none absolute bottom-0 left-0 z-10 h-12 w-full"
+    class="pointer-events-none absolute bottom-0 left-0 z-10 h-4 w-full"
     style="
       background: linear-gradient(to right, #111111 0%, var(--color-base-300) 100%);
       mask: linear-gradient(to top, rgb(73 29 29) 0%, transparent 100%);
-      -webkit-mask: linear-gradient(to top, rgb(73 29 29) 0%, transparent 100%);
-    "
+      -webkit-mask: linear-gradient(to top, rgb(73 29 29) 0%, transparent 100%);"
   ></div>
 </div>

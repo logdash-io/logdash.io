@@ -45,7 +45,10 @@ class LogsState {
     }
 
     const query = this._filters.searchString.toLowerCase();
-    return allLogs.filter((log) => log.message.toLowerCase().includes(query));
+    const queryWords = query.split(' ');
+    return allLogs.filter((log) =>
+      queryWords.every((word) => log.message.toLowerCase().includes(word)),
+    );
   }
 
   get pageIsLoading(): boolean {
@@ -60,14 +63,18 @@ class LogsState {
     this._logs = arrayToObject(logs, 'id');
   }
 
+  get filtersPausingSync(): boolean {
+    return Boolean(
+      this._filters.searchString.trim() ||
+        this._filters.startDate ||
+        this._filters.endDate,
+    );
+  }
+
   setFilters(filters: Partial<LogsFilters>): void {
     this._filters = { ...this._filters, ...filters };
 
-    if (
-      this._filters.searchString.trim() ||
-      this._filters.startDate ||
-      this._filters.endDate
-    ) {
+    if (this.filtersPausingSync) {
       this.pauseSync();
     } else {
       this.resumeSync();
@@ -119,6 +126,10 @@ class LogsState {
   }
 
   async resumeSync(): Promise<void> {
+    if (this.filtersPausingSync) {
+      return;
+    }
+
     logger.debug('resuming logs sync...');
     await this.sync(this._projectId);
   }
