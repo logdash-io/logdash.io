@@ -69,7 +69,7 @@ jobs:
           github-oauth-client-secret: ${{ secrets.BACKEND_DEV_GITHUB_OAUTH_CLIENT_SECRET }}
           github-oauth-client-id-alternative: ${{ secrets.BACKEND_DEV_GITHUB_OAUTH_CLIENT_ID_ALTERNATIVE }}
           github-oauth-client-secret-alternative: ${{ secrets.BACKEND_DEV_GITHUB_OAUTH_CLIENT_SECRET_ALTERNATIVE }}
-          resend-api-key: 'null'
+          resend-api-key: ${{ secrets.BACKEND_DEV_RESEND_API_KEY }}
           resend-audience-enabled: 'false'
           stripe-api-key-secret: ${{ secrets.BACKEND_DEV_STRIPE_API_KEY_SECRET }}
           stripe-signature: ${{ secrets.BACKEND_DEV_STRIPE_SIGNATURE }}
@@ -89,6 +89,7 @@ jobs:
           telegram-uptime-bot-token: ${{ secrets.BACKEND_DEV_TELEGRAM_UPTIME_BOT_TOKEN }}
           telegram-uptime-bot-secret: ${{ secrets.BACKEND_DEV_TELEGRAM_UPTIME_BOT_SECRET }}
           admin-super-secret-admin-key: ${{ secrets.BACKEND_DEV_ADMIN_SUPER_SECRET_ADMIN_KEY }}
+          internal-telegram-bot-token: ${{ secrets.BACKEND_DEV_INTERNAL_TELEGRAM_BOT_TOKEN }}
       - name: Prune
         uses: './.github/templates/prune'
         with:

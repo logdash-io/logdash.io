@@ -78,6 +78,9 @@ inputs:
   admin-super-secret-admin-key:
     required: true
 
+  internal-telegram-bot-token:
+    required: true
+
 runs:
   using: 'composite'
   steps:
@@ -121,4 +124,5 @@ runs:
           -e TELEGRAM_UPTIME_BOT_TOKEN=${{ inputs.telegram-uptime-bot-token }} \
           -e TELEGRAM_UPTIME_BOT_SECRET=${{ inputs.telegram-uptime-bot-secret }} \
           -e ADMIN_SUPER_SECRET_ADMIN_KEY=${{ inputs.admin-super-secret-admin-key }} \
+          -e INTERNAL_TELEGRAM_BOT_TOKEN=${{ inputs.internal-telegram-bot-token }} \
           ${{ inputs.image-name }}
