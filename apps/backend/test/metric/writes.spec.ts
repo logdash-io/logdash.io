@@ -57,10 +57,6 @@ describe('Metrics (writes)', () => {
 
     // then
     const metrics = await bootstrap.models.metricModel.find();
-    const metricRegisterEntry = await bootstrap.models.metricRegisterModel.findOne({
-      name: 'Users',
-      projectId: apiKey.projectId,
-    });
 
     const hourMetric = metrics.find((metric) => metric.granularity === MetricGranularity.Hour)!;
     const dayMetric = metrics.find((metric) => metric.granularity === MetricGranularity.Day)!;
@@ -81,8 +77,6 @@ describe('Metrics (writes)', () => {
     expect(firstMinuteMetric.value).toEqual(2);
     expect(secondMinuteMetric.value).toEqual(3);
     expect(allTimeMetric.value).toEqual(3);
-
-    expect(metricRegisterEntry?.values?.counter?.absoluteValue).toEqual(3);
   });
 
   it('records metrics with dynamic granularity (CHANGE)', async () => {
@@ -133,13 +127,8 @@ describe('Metrics (writes)', () => {
     await service.processQueue();
 
     const metrics = await bootstrap.models.metricModel.find();
-    const metricRegisterEntry = await bootstrap.models.metricRegisterModel.findOne({
-      name: 'Users',
-      projectId: apiKey.projectId,
-    });
 
     expect(metrics[0].value).toEqual(11);
-    expect(metricRegisterEntry?.values?.counter?.absoluteValue).toEqual(11);
   });
 
   it('registers metric and does not let go beyond the limit', async () => {

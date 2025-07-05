@@ -4,6 +4,7 @@ import { MetricRegisterWriteService } from '../../metric-register/write/metric-r
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { MetricBufferDataService } from './metric-buffer.data.service';
 import { RecordMetricDto } from '../ingestion/dto/record-metric.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class MetricBufferService {
@@ -38,6 +39,7 @@ export class MetricBufferService {
     }
   }
 
+  @Cron(CronExpression.EVERY_5_SECONDS)
   public async flushBuffer(): Promise<void> {
     const now = performance.now();
 
