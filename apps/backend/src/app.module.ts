@@ -27,6 +27,7 @@ import { PublicDashboardCoreModule } from './public-dashboard/core/public-dashbo
 import { SubscriptionCoreModule } from './subscription/core/subscription-core.module';
 import { AuditLogCreationModule } from './audit-log/creation/audit-log-creation.module';
 import { ClusterInviteCoreModule } from './cluster-invite/core/cluster-invite-core.module';
+import { InternalModule } from './internal/internal.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { ClusterInviteCoreModule } from './cluster-invite/core/cluster-invite-co
     PublicDashboardCoreModule,
     AuditLogCreationModule,
     ClusterInviteCoreModule,
+    InternalModule,
   ],
 })
 export class AppModule {}

@@ -6,6 +6,7 @@ import { getEnvConfig } from '../../shared/configs/env-configs';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
 import { Logger } from '@logdash/js-sdk';
 import { SubscriptionManagementService } from '../../subscription/management/subscription-management.service';
+import { StripeEventEmitter } from './stripe-event.emitter';
 
 @Injectable()
 export class StripePaymentSucceededHandler {
@@ -14,6 +15,7 @@ export class StripePaymentSucceededHandler {
     private readonly userReadService: UserReadService,
     private readonly userWriteService: UserWriteService,
     private readonly subscriptionManagementService: SubscriptionManagementService,
+    private readonly stripeEventEmitter: StripeEventEmitter,
   ) {}
 
   public async handle(event: Stripe.Event): Promise<void> {
@@ -61,6 +63,11 @@ export class StripePaymentSucceededHandler {
       userId: user.id,
       tier: UserTier.EarlyBird,
       endsAt: null,
+    });
+
+    await this.stripeEventEmitter.emitPaymentSucceeded({
+      email,
+      tier: UserTier.EarlyBird,
     });
 
     this.logger.log(`[STRIPE] Finished handling payment succeeded event`);

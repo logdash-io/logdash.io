@@ -10,6 +10,7 @@ import { StripeSubscriptionDeletedHandler } from './stripe.subscription-deleted.
 import Stripe from 'stripe';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { SubscriptionManagementModule } from '../../subscription/management/subscription-management.module';
+import { StripeEventEmitter } from './stripe-event.emitter';
 
 @Module({
   imports: [UserWriteModule, UserReadModule, UserTierModule, SubscriptionManagementModule],
@@ -22,6 +23,7 @@ import { SubscriptionManagementModule } from '../../subscription/management/subs
       provide: Stripe,
       useFactory: () => new Stripe(getEnvConfig().stripe.apiKeySecret),
     },
+    StripeEventEmitter,
   ],
   controllers: [StripeController],
 })

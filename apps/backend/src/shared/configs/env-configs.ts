@@ -80,6 +80,12 @@ interface EnvConfig {
   admin: {
     superSecretAdminKey: string;
   };
+  internal: {
+    telegram: {
+      chatId: string;
+      botToken: string;
+    };
+  };
 }
 
 interface EnvConfigs {
@@ -166,6 +172,12 @@ export const EnvConfigs: EnvConfigs = {
     admin: {
       superSecretAdminKey: process.env.ADMIN_SUPER_SECRET_ADMIN_KEY!,
     },
+    internal: {
+      telegram: {
+        botToken: process.env.INTERNAL_TELEGRAM_BOT_TOKEN!,
+        chatId: '-1002678512492',
+      },
+    },
   },
   [OurEnv.Dev]: {
     emailLoginWhitelist: {
@@ -246,6 +258,12 @@ export const EnvConfigs: EnvConfigs = {
     },
     admin: {
       superSecretAdminKey: process.env.ADMIN_SUPER_SECRET_ADMIN_KEY!,
+    },
+    internal: {
+      telegram: {
+        botToken: process.env.INTERNAL_TELEGRAM_BOT_TOKEN!,
+        chatId: '-1002678512492',
+      },
     },
   },
 };
