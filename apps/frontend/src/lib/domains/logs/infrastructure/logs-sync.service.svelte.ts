@@ -8,17 +8,24 @@ import type { Log } from '../domain/log';
 const logger = createLogger('logs-sync.service', true);
 
 export class LogsSyncService {
-  private static _syncConnection: EventSource | null = null;
-  private static _shouldReconnect = true;
-  private static _unsubscribe: (() => void) | null = null;
-  private static _config: {
+  private _syncConnection: EventSource | null = $state(null);
+  private _shouldReconnect = true;
+  private _unsubscribe: (() => void) | null = null;
+  private _config: {
     projectId: string;
     onOpen?: () => void;
     onError?: () => void;
     onMessage?: (log: Log) => void;
   };
 
-  static init(config: {
+  get paused(): boolean {
+    return (
+      this._syncConnection === null ||
+      this._syncConnection.readyState !== EventSource.OPEN
+    );
+  }
+
+  init(config: {
     projectId: string;
     onOpen?: () => void;
     onError?: () => void;
@@ -27,14 +34,14 @@ export class LogsSyncService {
     this._config = config;
   }
 
-  static get isConnected(): boolean {
+  get isConnected(): boolean {
     return (
       this._syncConnection !== null &&
       this._syncConnection.readyState === EventSource.OPEN
     );
   }
 
-  static async open(): Promise<void> {
+  async open(): Promise<void> {
     return new Promise((resolve, reject) => {
       this._unsubscribe?.();
 
@@ -112,7 +119,7 @@ export class LogsSyncService {
     });
   }
 
-  static pause(): void {
+  pause(): void {
     logger.debug('pausing logs sync...');
     this._shouldReconnect = false;
     this._unsubscribe?.();
@@ -120,7 +127,7 @@ export class LogsSyncService {
     this._syncConnection = null;
   }
 
-  static resume(): void {
+  resume(): void {
     logger.debug('resuming logs sync...');
     this._shouldReconnect = true;
     this.open().catch((error) => {
@@ -128,7 +135,7 @@ export class LogsSyncService {
     });
   }
 
-  static close(): void {
+  close(): void {
     logger.debug('closing logs sync...');
     this._shouldReconnect = false;
     this._unsubscribe?.();
@@ -136,3 +143,5 @@ export class LogsSyncService {
     this._syncConnection = null;
   }
 }
+
+export const logsSyncService = new LogsSyncService();

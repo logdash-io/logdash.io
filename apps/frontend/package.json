@@ -20,8 +20,7 @@
         "@sveltejs/adapter-vercel": "^5.6.3",
         "@sveltejs/kit": "^2.22.2",
         "@sveltejs/vite-plugin-svelte": "^5.0.3",
-        "@tailwindcss/vite": "^4.0.8",
-        "@types/chart.js": "^2.9.41",
+        "@tailwindcss/postcss": "^4.1.11",
         "@types/d3": "^7.4.3",
         "@types/luxon": "^3.6.2",
         "daisyui": "5.0.43",
@@ -29,6 +28,7 @@
         "eslint-config-prettier": "^10.0.1",
         "eslint-plugin-svelte": "^2.46.1",
         "globals": "^15.15.0",
+        "postcss": "^8.5.6",
         "prettier": "^3.5.1",
         "prettier-plugin-svelte": "^3.3.3",
         "prettier-plugin-tailwindcss": "^0.6.11",
@@ -41,10 +41,8 @@
         "vite": "^6.1.1"
     },
     "dependencies": {
-        "@carbon/charts-svelte": "^1.22.18",
         "@logdash/js-sdk": "^1.0.8",
         "axios": "^1.9.0",
-        "chart.js": "^4.4.8",
         "d3": "^7.9.0",
         "eventsource": "^4.0.0",
         "fast-deep-equal": "^3.1.3",

@@ -12,9 +12,10 @@
   import { browser } from '$app/environment';
 
   type Props = {
+    project_id: string;
     claimer: Snippet<[boolean]>;
   };
-  const { claimer }: Props = $props();
+  const { project_id, claimer }: Props = $props();
   const MIN_NAME_LENGTH = 1;
   const MAX_NAME_LENGTH = 50;
 
@@ -202,6 +203,23 @@
       </div>
     </div>
 
-    {@render claimer(isHealthy)}
+    <div class="flex items-center gap-4">
+      <button
+        class="btn btn-secondary btn-soft flex-1 whitespace-nowrap"
+        data-posthog-id="public-dashboard-setup-back-button"
+        onclick={() => {
+          goto(
+            `/app/clusters/${page.params.cluster_id}?project_id=${project_id}`,
+            {
+              invalidateAll: true,
+            },
+          );
+        }}
+      >
+        Cancel
+      </button>
+
+      {@render claimer(isHealthy)}
+    </div>
   </div>
 </div>

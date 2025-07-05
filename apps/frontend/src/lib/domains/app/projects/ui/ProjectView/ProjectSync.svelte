@@ -39,7 +39,7 @@
       if (newVisibility) {
         logger.info('Page became visible. Data sync will resume.');
         Promise.all([
-          logsState.resumeSync(projectIdToSync, tabId),
+          logsState.resumeSync(),
           logMetricsState.resumeSync(projectIdToSync, tabId),
           metricsState.resumeSync(projectIdToSync, tabId),
           previewedMetricId
@@ -103,7 +103,7 @@
       `Syncing data for project ${projectIdToSync} on tab ${tabId}. Page is visible.`,
     );
     untrack(() => metricsState.sync(projectIdToSync, tabId));
-    untrack(() => logsState.sync(projectIdToSync, tabId));
+    untrack(() => logsState.sync(projectIdToSync));
     untrack(() => logMetricsState.sync(projectIdToSync, tabId));
 
     return () => {

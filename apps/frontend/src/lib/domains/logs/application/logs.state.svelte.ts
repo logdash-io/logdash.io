@@ -4,7 +4,10 @@ import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import type { Log } from '$lib/domains/logs/domain/log';
 import { LogsService } from '../infrastructure/logs.service.js';
 import type { LogsQueryFilters } from '../domain/logs-query-filters.js';
-import { LogsSyncService } from '../infrastructure/logs-sync.service.js';
+import {
+  logsSyncService,
+  LogsSyncService,
+} from '../infrastructure/logs-sync.service.svelte.js';
 
 const logger = createLogger('logs.state', true);
 
@@ -49,12 +52,26 @@ class LogsState {
     return this._loadingPage;
   }
 
+  get syncPaused(): boolean {
+    return logsSyncService.paused;
+  }
+
   set(logs: Log[]): void {
     this._logs = arrayToObject(logs, 'id');
   }
 
   setFilters(filters: Partial<LogsFilters>): void {
     this._filters = { ...this._filters, ...filters };
+
+    if (
+      this._filters.searchString.trim() ||
+      this._filters.startDate ||
+      this._filters.endDate
+    ) {
+      this.pauseSync();
+    } else {
+      this.resumeSync();
+    }
 
     this.fetchLogs();
   }
@@ -65,7 +82,7 @@ class LogsState {
     logger.debug('syncing logs...', project_id);
     this._logs = {};
 
-    LogsSyncService.init({
+    logsSyncService.init({
       projectId: project_id,
       onOpen: () => {
         logger.debug('logs sync connection opened');
@@ -78,7 +95,7 @@ class LogsState {
       },
     });
 
-    await Promise.all([this.fetchLogs(), LogsSyncService.open()]);
+    await Promise.all([this.fetchLogs(), logsSyncService.open()]);
   }
 
   async loadNextPage(): Promise<void> {
@@ -98,7 +115,7 @@ class LogsState {
 
   pauseSync(): void {
     logger.debug('pausing logs sync...');
-    LogsSyncService.pause();
+    logsSyncService.pause();
   }
 
   async resumeSync(): Promise<void> {
@@ -108,7 +125,7 @@ class LogsState {
 
   unsync(): void {
     logger.debug('unsyncing logs...');
-    LogsSyncService.close();
+    logsSyncService.close();
   }
 
   async sendTestLog(project_id: string): Promise<void> {

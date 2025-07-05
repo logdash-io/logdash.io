@@ -44,7 +44,7 @@
 <div class="tabs z-30 gap-1.5 sm:gap-3" role="tablist">
   {#each projectsState.projects as project}
     {@const activeProject =
-    project.id === page.url.searchParams.get('project_id')}
+      project.id === page.url.searchParams.get('project_id')}
 
     <div
       onclick={() => {
@@ -56,7 +56,7 @@
       class={[
         project_badge_class,
         {
-          'ring-primary/30 ring': activeProject,
+          'ring-secondary/30 ring': activeProject,
           'pr-2': activeProject && !isOnDemoDashboard,
           // 'px-4': !activeProject,
         },

@@ -2,8 +2,6 @@ import queryString from 'query-string';
 import type { Log } from '../domain/log.js';
 import { httpClient } from '$lib/domains/shared/http/http-client.js';
 import type { LogsQueryFilters } from '../domain/logs-query-filters.js';
-import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils.js';
-import { CLIENT_ADDRESS_COOKIE_NAME } from '$lib/domains/shared/utils/cookies.utils.js';
 
 export class LogsService {
   static async getProjectLogs(
@@ -24,8 +22,6 @@ export class LogsService {
   }
 
   static async sendTestLog(project_id: string): Promise<void> {
-    return httpClient.post(`/projects/${project_id}/test-log`, {
-      ip: atob(getCookieValue(CLIENT_ADDRESS_COOKIE_NAME, document.cookie)),
-    });
+    return httpClient.post(`/projects/${project_id}/test-log`);
   }
 }

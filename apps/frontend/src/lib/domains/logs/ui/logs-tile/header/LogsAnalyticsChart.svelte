@@ -4,6 +4,8 @@
   import { logAnalyticsState } from '$lib/domains/logs/application/log-analytics.state.svelte.js';
   import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analytics-response.js';
   import { AlertTriangleIcon } from 'lucide-svelte';
+  import { cubicOut } from 'svelte/easing';
+  import { fade, fly } from 'svelte/transition';
 
   type Props = {
     selectedDateRange: { start: Date; end: Date } | null;
@@ -49,11 +51,11 @@
   const error = $derived(logAnalyticsState.error);
 
   function createChart(container: HTMLElement, data: LogsAnalyticsResponse) {
-    if (!container) return;
+    if (!container || isLoading) return;
 
     d3.select(container).selectAll('*').remove();
 
-    if (data.buckets.length === 0) {
+    if (data.buckets.length === 0 && !isLoading) {
       renderEmptyState(container);
       return;
     }
@@ -490,65 +492,10 @@
 </script>
 
 <div class="space-y-4 p-4 pb-0 font-mono">
-  <!-- <div class="flex items-center justify-between">
-    <h3 class="text-sm font-semibold">
-      Logs
-      {#if zoomedTimeRange}
-        <span class="text-sm font-normal text-blue-400">(Zoomed)</span>
-      {/if}
-    </h3>
-
-    <div class="flex items-center gap-2">
-      {#if isLoading}
-        <span class="text-sm text-gray-400">
-          <span class="loading loading-spinner loading-xs mr-1"></span>
-          Fetching data...
-        </span>
-      {:else if zoomedTimeRange}
-        <span class="text-sm text-gray-400">
-          Zoomed: {zoomedTimeRange.start.toLocaleString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-            day: 'numeric',
-            month: 'short',
-          })} - {zoomedTimeRange.end.toLocaleString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-            day: 'numeric',
-            month: 'short',
-          })}
-        </span>
-        <button class="btn btn-sm btn-outline" onclick={clearSelection}>
-          Reset Zoom
-        </button>
-      {:else if selectedRange}
-        <span class="text-sm text-gray-400">
-          Selected: {selectedRange.start.toLocaleString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-            day: 'numeric',
-            month: 'short',
-          })} - {selectedRange.end.toLocaleString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-            day: 'numeric',
-            month: 'short',
-          })}
-        </span>
-        <button class="btn btn-sm btn-outline" onclick={clearSelection}>
-          Clear
-        </button>
-      {:else}
-        <span class="text-sm text-gray-400">
-          Drag to select date range • Last 24 hours
-        </span>
-      {/if}
-    </div>
-  </div> -->
-
   <div class="chart-container relative">
     {#if isLoading}
       <div
+        transition:fade={{ duration: 200, easing: cubicOut }}
         class="bg-base-300/50 text-secondary/60 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
         style="height: {CHART_HEIGHT}px"
       >

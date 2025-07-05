@@ -1,13 +1,17 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { page } from '$app/state';
+  import { logMetricsState } from '$lib/domains/logs/application/log-metrics.state.svelte.js';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
-  import LogsListener from '$lib/domains/logs/ui/LogsListener.svelte';
-  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
-  import LogsLineChartTile from '$lib/domains/logs/ui/LogMetricsTile.svelte';
   import LogsListTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
+  import LogsListener from '$lib/domains/logs/ui/LogsListener.svelte';
   import {
     LogdashSDKName,
     type LogdashSDK,
   } from '$lib/domains/shared/types.js';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
+  import SDKInstaller from '$lib/domains/shared/ui/setup/SDKInstaller.svelte';
+  import SetupPrompt from '$lib/domains/shared/ui/setup/SetupPrompt.svelte';
   import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
   import { getContext, onMount, type Snippet } from 'svelte';
   import Highlight from 'svelte-highlight';
@@ -21,9 +25,6 @@
     type LanguageType,
   } from 'svelte-highlight/languages';
   import typescript from 'svelte-highlight/languages/typescript';
-  import { logMetricsState } from '$lib/domains/logs/application/log-metrics.state.svelte.js';
-  import SDKInstaller from '$lib/domains/shared/ui/setup/SDKInstaller.svelte';
-  import SetupPrompt from '$lib/domains/shared/ui/setup/SetupPrompt.svelte';
 
   type Props = {
     project_id: string;
@@ -39,7 +40,7 @@
 
   onMount(() => {
     const tabId: string = getContext('tabId');
-    logsState.sync(project_id, tabId);
+    logsState.sync(project_id);
     logMetricsState.sync(project_id, tabId);
     return () => {
       logsState.unsync();
@@ -210,13 +211,9 @@ The prompt should output **only** this install command and this exact code block
   <DataTile delayIn={0} delayOut={50}>
     <LogsListTile />
   </DataTile>
-
-  <DataTile delayIn={100}>
-    <LogsLineChartTile />
-  </DataTile>
 </div>
 
-<div class="fixed top-0 left-0 z-50 flex h-full w-full bg-black/60">
+<div class="fixed top-0 left-0 z-50 flex h-full w-full bg-black/40">
   <div
     class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:w-xl sm:p-8"
   >
@@ -237,7 +234,7 @@ The prompt should output **only** this install command and this exact code block
 
     <div class="collapse-open collapse">
       <div class="px-1 py-4 font-semibold">
-        <span>2. Setup fresh logger instance</span>
+        <span>2. Send logs to your service</span>
       </div>
 
       <div class="space-y-2 overflow-hidden text-sm">
@@ -269,7 +266,7 @@ The prompt should output **only** this install command and this exact code block
 
     <div class="collapse-open">
       <div class="px-1 py-4 font-semibold">
-        <span>3. Capture logs</span>
+        <span>3. Claim your service</span>
       </div>
 
       <div class="text-sm">
@@ -288,6 +285,23 @@ The prompt should output **only** this install command and this exact code block
       </div>
     </div>
 
-    {@render claimer(hasLogs)}
+    <div class="mt-auto flex items-center gap-4">
+      <button
+        class="btn btn-secondary btn-soft flex-1 whitespace-nowrap"
+        data-posthog-id="public-dashboard-setup-back-button"
+        onclick={() => {
+          goto(
+            `/app/clusters/${page.params.cluster_id}?project_id=${project_id}`,
+            {
+              invalidateAll: true,
+            },
+          );
+        }}
+      >
+        Cancel
+      </button>
+
+      {@render claimer(hasLogs)}
+    </div>
   </div>
 </div>

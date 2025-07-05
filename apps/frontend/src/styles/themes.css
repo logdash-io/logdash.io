@@ -1,3 +1,4 @@
+@plugin 'daisyui';
 @plugin 'daisyui/theme' {
   name: 'logdash';
   default: true;

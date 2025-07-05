@@ -17,7 +17,7 @@
 </svelte:head>
 
 {#snippet claimer(hasLogs: boolean)}
-  <div class="mt-auto flex items-center gap-4">
+  <div class="mt-auto flex flex-1 items-center gap-4">
     <button
       onclick={() => {
         tryingToClaim = true;

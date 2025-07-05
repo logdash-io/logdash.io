@@ -53,13 +53,9 @@
       <DataTile
         delayIn={0}
         delayOut={50}
-        class="bg-base-300 border-secondary/15 overflow-hidden rounded-xl border"
+        class="overflow-hidden rounded-xl p-0 py-4"
       >
         <LogsListTile />
-      </DataTile>
-
-      <DataTile delayIn={100}>
-        <LogsLineChartTile />
       </DataTile>
     </div>
   {/if}

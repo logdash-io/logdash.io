@@ -3,12 +3,8 @@
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
   import { onMount, type Snippet } from 'svelte';
-  import {
-    publicDashboardManagerState,
-  } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
-  import {
-    publicDashboardPrivateState,
-  } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-private.state.svelte.js';
+  import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
+  import { publicDashboardPrivateState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-private.state.svelte.js';
   import PublicDashboard from '$lib/domains/app/projects/ui/PublicDashboard.svelte';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
   import { debounce } from '$lib/domains/shared/utils/debounce.js';
@@ -183,8 +179,7 @@
           });
         }}
       >
-        <ArrowLeftIcon class="h-4 w-4" />
-        Go back
+        Cancel
       </button>
 
       {@render claimer(dashboard?.isPublic)}

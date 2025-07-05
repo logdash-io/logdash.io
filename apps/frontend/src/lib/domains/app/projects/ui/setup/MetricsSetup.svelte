@@ -21,6 +21,8 @@
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import SDKInstaller from '$lib/domains/shared/ui/setup/SDKInstaller.svelte';
   import SetupPrompt from '$lib/domains/shared/ui/setup/SetupPrompt.svelte';
+  import { page } from '$app/state';
+  import { goto } from '$app/navigation';
 
   type Props = {
     project_id: string;
@@ -291,6 +293,23 @@ The prompt should output **only** this install command and this exact code block
       </div>
     </div>
 
-    {@render claimer(hasMetrics)}
+    <div class="mt-auto flex items-center gap-4">
+      <button
+        class="btn btn-secondary btn-soft flex-1 whitespace-nowrap"
+        data-posthog-id="public-dashboard-setup-back-button"
+        onclick={() => {
+          goto(
+            `/app/clusters/${page.params.cluster_id}?project_id=${project_id}`,
+            {
+              invalidateAll: true,
+            },
+          );
+        }}
+      >
+        Cancel
+      </button>
+
+      {@render claimer(hasMetrics)}
+    </div>
   </div>
 </div>

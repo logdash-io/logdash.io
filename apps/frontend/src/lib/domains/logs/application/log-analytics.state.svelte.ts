@@ -35,7 +35,7 @@ class LogAnalyticsState {
     });
 
     this._isLoading = true;
-    this._error = null;
+    this.clearData();
 
     try {
       const data = await LogAnalyticsService.getProjectLogsAnalytics(
@@ -58,7 +58,11 @@ class LogAnalyticsState {
   }
 
   clearData(): void {
-    this._analyticsData = null;
+    this._analyticsData = {
+      buckets: [],
+      totalLogs: 0,
+      bucketSizeMinutes: 0,
+    };
     this._error = null;
   }
 }

@@ -72,7 +72,7 @@
     <LogsAnalyticsChart bind:selectedDateRange {onDateRangeChange} />
   {/if}
 
-  <div class="bg-base-300 flex items-center justify-between gap-2.5 p-4">
+  <div class="flex items-center justify-between gap-2.5 p-4">
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-2">
         <span class="loading loading-ring loading-sm"></span>
