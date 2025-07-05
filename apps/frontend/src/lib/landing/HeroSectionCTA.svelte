@@ -2,7 +2,7 @@
 	import {
 		animatedViewState,
 		AnimationDirection,
-	} from '$lib/shared/ui/animated-view.state.svelte';
+	} from '$lib/domains/shared/ui/animated-view.state.svelte';
 	import { ArrowRightIcon } from 'lucide-svelte';
 </script>
 

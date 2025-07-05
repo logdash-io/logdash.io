@@ -1,5 +1,5 @@
 <script>
-  import Logo from '$lib/shared/icons/Logo.svelte';
+  import Logo from '$lib/domains/shared/icons/Logo.svelte';
 </script>
 
 <footer class="footer sm:footer-horizontal w-full p-10">

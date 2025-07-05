@@ -3,12 +3,12 @@
   import { page } from '$app/state';
   import { isDev, uuid } from '$lib';
   import Nav from '$lib/landing/Nav.svelte';
-  import { exposedConfigState } from '$lib/shared/exposed-config/application/exposed-config.state.svelte.js';
-  import type { ExposedConfig } from '$lib/shared/exposed-config/domain/exposed-config.js';
-  import { logger } from '$lib/shared/logger/index.js';
-  import FeedbackButton from '$lib/shared/ui/components/FeedbackButton.svelte';
-  import Toaster from '$lib/shared/ui/toaster/Toaster.svelte';
-  import { envConfig } from '$lib/shared/utils/env-config';
+  import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
+  import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config.js';
+  import { logger } from '$lib/domains/shared/logger/index.js';
+  import FeedbackButton from '$lib/domains/shared/ui/components/FeedbackButton.svelte';
+  import Toaster from '$lib/domains/shared/ui/toaster/Toaster.svelte';
+  import { envConfig } from '$lib/domains/shared/utils/env-config';
   import posthog, { PostHog } from 'posthog-js';
   import { getContext, setContext, type Snippet } from 'svelte';
   import { atomOneDark } from 'svelte-highlight/styles';

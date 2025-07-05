@@ -1,6 +1,6 @@
-import { logdashAPI } from '$lib/shared/logdash.api';
-import { Feature } from '$lib/shared/types';
-import { save_access_token } from '$lib/shared/utils/cookies.utils';
+import { logdashAPI } from '$lib/domains/shared/logdash.api';
+import { Feature } from '$lib/domains/shared/types';
+import { save_access_token } from '$lib/domains/shared/utils/cookies.utils';
 import { redirect, type ServerLoadEvent } from '@sveltejs/kit';
 import queryString from 'query-string';
 

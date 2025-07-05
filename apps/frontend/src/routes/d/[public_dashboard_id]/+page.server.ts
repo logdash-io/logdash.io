@@ -1,4 +1,4 @@
-import { logdashAPI } from '$lib/shared/logdash.api.js';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.js';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

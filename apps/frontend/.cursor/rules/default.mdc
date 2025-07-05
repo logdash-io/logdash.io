@@ -1,25 +1,30 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
+
 ### 1. Code should read like a newspaper
+
 - The most important logic should come first.
-- If a function or component is used in a file, it should be defined *after* its usage.
+- If a function or component is used in a file, it should be defined _after_ its usage.
 - Prioritize top-down readability — group related logic together and avoid jumping around the file.
 
 ### 2. Respect architectural discipline
+
 - Follow **SOLID principles** wherever applicable.
 - Maintain a **clear separation of concerns** — don't mix data fetching, UI, and business logic unless explicitly necessary.
 - Distinguish between **smart (container)** and **dumb (presentational)** components.
 - Adhere to a **layered architecture**: `ui → application → infrastructure → domain -> shared`, etc.
 
 ### 3. Consistency and standards
+
 - Follow the existing conventions in this codebase: naming, folder structure, import style, etc.
 - If something is unclear or missing, **ask for context** before proceeding.
 - If you make a decision that deviates from our patterns, briefly explain why.
 
 ### 4. UX for devs and users
+
 - Code should be easy to reason about and maintain.
 - Prefer clarity over cleverness.
 - If something feels clunky, it probably needs to be refactored.
@@ -35,4 +40,4 @@ alwaysApply: true
 - always use private/public when defining class methods,
 - always include function return type
 - do NOT include bootstrap classes, project is styled with daisyui+tailwind - see app.css for custom classess
-
+- respect @deprecated annotations, do not use or extend deprecated code

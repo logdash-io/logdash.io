@@ -1,4 +1,4 @@
-import { logdashAPI } from '$lib/shared/logdash.api';
+import { logdashAPI } from '$lib/domains/shared/logdash.api';
 
 export const has_claimed_account = async (
 	access_token: string,

@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { clustersState } from '$lib/clusters/clusters/application/clusters.state.svelte.js';
-  import ClusterView from '$lib/clusters/clusters/ui/ClusterView/ClusterView.svelte';
-  import { projectsState } from '$lib/clusters/projects/application/projects.state.svelte.js';
-  import { Feature, UserTier } from '$lib/shared/types.js';
+  import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import ClusterView from '$lib/domains/app/clusters/ui/ClusterView/ClusterView.svelte';
+  import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
+  import { Feature, UserTier } from '$lib/domains/shared/types.js';
   import { onMount } from 'svelte';
   import DemoDashboardHeader from './DemoDashboardHeader.svelte';
   import Footer from '$lib/landing/Footer.svelte';
-  import FlamingoIcon from '$lib/shared/icons/FlamingoIcon.svelte';
+  import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
   import { ArrowRightIcon } from 'lucide-svelte';
 
   type Props = {
@@ -57,19 +57,15 @@
     class="ld-card text-primary-content mx-2 flex flex-col-reverse items-center justify-between py-24 text-left sm:mx-0 sm:flex-row"
   >
     <div>
-      <h2
-        class="mb-8 text-center text-3xl font-bold sm:text-left sm:text-4xl"
-      >
+      <h2 class="mb-8 text-center text-3xl font-bold sm:text-left sm:text-4xl">
         Enjoying what you see?
       </h2>
 
-      <FlamingoIcon
-        class="text-primary mx-auto mb-6 h-54 w-54 sm:hidden"
-      />
+      <FlamingoIcon class="text-primary mx-auto mb-6 h-54 w-54 sm:hidden" />
 
       <p class="mb-10 text-lg opacity-90">
-        Get started with logdash today and see how easy it is to monitor
-        your system in minutes.
+        Get started with logdash today and see how easy it is to monitor your
+        system in minutes.
       </p>
       <a
         class="btn btn-primary btn-md sm:btn-lg w-full sm:w-fit"

@@ -1,14 +1,14 @@
-import type { Cluster } from '$lib/clusters/clusters/domain/cluster';
-import { ClustersListDataPreloader } from '$lib/clusters/clusters/infrastructure/data-preloaders/clusters-list.data-preloader';
-import { resolve_data_preloader } from '$lib/shared/data-preloader/resolve-data-preloader';
-import { logdashAPI } from '$lib/shared/logdash.api.js';
-import { UserTier } from '$lib/shared/types.js';
-import { UserDataPreloader } from '$lib/shared/user/infrastructure/data-preloaders/user.data-preloader';
+import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
+import { ClustersListDataPreloader } from '$lib/domains/app/clusters/infrastructure/data-preloaders/clusters-list.data-preloader';
+import { resolve_data_preloader } from '$lib/domains/shared/data-preloader/resolve-data-preloader';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.js';
+import { UserTier } from '$lib/domains/shared/types.js';
+import { UserDataPreloader } from '$lib/domains/shared/user/infrastructure/data-preloaders/user.data-preloader';
 import {
   clear_onboarding_tier,
   get_access_token,
   get_onboarding_tier,
-} from '$lib/shared/utils/cookies.utils.js';
+} from '$lib/domains/shared/utils/cookies.utils.js';
 import { redirect, type ServerLoadEvent } from '@sveltejs/kit';
 
 export const load = async (

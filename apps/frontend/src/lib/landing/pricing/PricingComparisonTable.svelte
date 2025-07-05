@@ -1,8 +1,8 @@
 <script lang="ts">
   import { CheckIcon, MinusIcon, ShieldCheckIcon } from 'lucide-svelte';
   import { FEATURES_COMPARISON } from './feature-comparison.config.js';
-  import { UserTier } from '$lib/shared/types.js';
-  import { PAYMENT_PLANS } from '$lib/shared/payment-plans.const.js';
+  import { UserTier } from '$lib/domains/shared/types.js';
+  import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { fade } from 'svelte/transition';
   import { runGithubLogin } from './run-github-login.js';
 

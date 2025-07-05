@@ -1,7 +1,7 @@
-import { bffLogger } from '$lib/shared/bff-logger.js';
-import { logdashAPI } from '$lib/shared/logdash.api.js';
-import { get_access_token } from '$lib/shared/utils/cookies.utils.js';
-import { stripProtocol } from '$lib/shared/utils/url.js';
+import { bffLogger } from '$lib/domains/shared/bff-logger.js';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.js';
+import { get_access_token } from '$lib/domains/shared/utils/cookies.utils.js';
+import { stripProtocol } from '$lib/domains/shared/utils/url.js';
 import { json, redirect, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ params, url, cookies }) => {

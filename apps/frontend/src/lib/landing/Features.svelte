@@ -1,10 +1,10 @@
 <script>
   import { goto } from '$app/navigation';
-  import SetupMonitoringButton from '$lib/clusters/projects/ui/presentational/SetupMonitoringButton.svelte';
-  import { FEATURES } from '$lib/shared/constants/features.js';
-  import { RoutePath } from '$lib/shared/route-path.js';
-  import { Feature } from '$lib/shared/types.js';
-  import { isDev } from '$lib/shared/utils/is-dev.util.js';
+  import SetupMonitoringButton from '$lib/domains/app/projects/ui/presentational/SetupMonitoringButton.svelte';
+  import { FEATURES } from '$lib/domains/shared/constants/features.js';
+  import { RoutePath } from '$lib/domains/shared/route-path.js';
+  import { Feature } from '$lib/domains/shared/types.js';
+  import { isDev } from '$lib/domains/shared/utils/is-dev.util.js';
   import { ArrowRightIcon, TimerIcon } from 'lucide-svelte';
 </script>
 

@@ -1,5 +1,5 @@
 <script>
-	import AnimatedView from '$lib/shared/ui/AnimatedView.svelte';
+	import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
 </script>
 
 <AnimatedView class="mx-auto flex h-full max-w-3xl flex-col px-2">

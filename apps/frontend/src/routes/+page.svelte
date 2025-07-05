@@ -9,8 +9,8 @@
   import Logs from '$lib/landing/FakeLogs.svelte';
   import SystemHealth from '$lib/landing/SystemHealth.svelte';
   import WhyLogdash from '$lib/landing/WhyLogdash.svelte';
-  import FlamingoIcon from '$lib/shared/icons/FlamingoIcon.svelte';
-  import AnimatedView from '$lib/shared/ui/AnimatedView.svelte';
+  import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
+  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
   import { ArrowRightIcon } from 'lucide-svelte';
 
   type Props = {
