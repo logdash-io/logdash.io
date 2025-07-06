@@ -18,7 +18,7 @@ export class MetricTtlService {
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
-  public async removeOldLogMetrics(): Promise<void> {
+  public async removeOldMetrics(): Promise<void> {
     const cursor = this.projectReadService.getProjectsForMetricRemoval();
 
     const now = Date.now();

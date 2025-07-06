@@ -1,18 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { ProjectReadService } from '../../project/read/project-read.service';
 import { LogWriteService } from '../write/log-write.service';
-import { ProjectWriteService } from '../../project/write/project-write.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 import { Logger } from '@logdash/js-sdk';
 import { subDays } from 'date-fns';
-import { LogWriteClickhouseService } from '../write/log-write.clickhouse-service';
 require('dotenv').config();
 
 @Injectable()
 export class LogTtlService {
   constructor(
-    private readonly logWriteService: LogWriteClickhouseService,
+    private readonly logWriteService: LogWriteService,
     private readonly logger: Logger,
   ) {}
 

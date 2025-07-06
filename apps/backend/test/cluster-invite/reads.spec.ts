@@ -2,6 +2,8 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
+import { getClusterPlanConfig } from '../../src/shared/configs/cluster-plan-configs';
+import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 
 describe('ClusterInviteCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -145,7 +147,9 @@ describe('ClusterInviteCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(response.body.maxMembers).toBe(2);
+      expect(response.body.maxMembers).toBe(
+        getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers,
+      );
       expect(response.body.currentUsersCount).toBe(1);
       expect(response.body.currentInvitesCount).toBe(0);
     });
@@ -169,7 +173,9 @@ describe('ClusterInviteCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(response.body.maxMembers).toBe(2);
+      expect(response.body.maxMembers).toBe(
+        getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers,
+      );
       expect(response.body.currentUsersCount).toBe(2);
       expect(response.body.currentInvitesCount).toBe(0);
     });
@@ -193,7 +199,9 @@ describe('ClusterInviteCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(response.body.maxMembers).toBe(2);
+      expect(response.body.maxMembers).toBe(
+        getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers,
+      );
       expect(response.body.currentUsersCount).toBe(1);
       expect(response.body.currentInvitesCount).toBe(1);
     });
@@ -220,7 +228,9 @@ describe('ClusterInviteCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(response.body.members).toHaveLength(2);
+      expect(response.body.members).toHaveLength(
+        getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers,
+      );
       expect(response.body.members[0].email).toBe(user.email);
       expect(response.body.members[0].role).toBe(ClusterRole.Creator);
       expect(response.body.members[1].email).toBe(otherSetup.user.email);

@@ -7,7 +7,6 @@ import { ProjectReadService } from '../read/project-read.service';
 import { ProjectWriteService } from '../write/project-write.service';
 import { HttpMonitorRemovalService } from '../../http-monitor/removal/http-monitor-removal.service';
 import { ApiKeyWriteService } from '../../api-key/write/api-key-write.service';
-import { LogWriteClickhouseService } from '../../log/write/log-write.clickhouse-service';
 
 @Injectable()
 export class ProjectRemovalService {
@@ -15,7 +14,6 @@ export class ProjectRemovalService {
     private readonly projectReadService: ProjectReadService,
     private readonly projectWriteService: ProjectWriteService,
     private readonly logWriteService: LogWriteService,
-    private readonly logWriteClickhouseService: LogWriteClickhouseService,
     private readonly metricWriteService: MetricWriteService,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
     private readonly logger: Logger,
@@ -40,7 +38,7 @@ export class ProjectRemovalService {
     this.logger.log(`Deleting logs for project...`, {
       projectId,
     });
-    await this.logWriteClickhouseService.removeByProjectId(projectId);
+    await this.logWriteService.removeByProjectId(projectId);
 
     this.logger.log(`Deleting metrics for project...`, {
       projectId,

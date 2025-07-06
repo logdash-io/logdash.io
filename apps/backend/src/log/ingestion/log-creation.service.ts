@@ -5,7 +5,6 @@ import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.se
 import { LogIndexingService } from '../indexing/log-indexing.service';
 import { CreateLogDto } from '../write/dto/create-log.dto';
 import { LogWriteService } from '../write/log-write.service';
-import { LogWriteClickhouseService } from '../write/log-write.clickhouse-service';
 @Injectable()
 export class LogIngestionService {
   constructor(
@@ -13,7 +12,7 @@ export class LogIngestionService {
     private readonly logger: Logger,
     private readonly metrics: Metrics,
     private readonly averageRecorder: AverageRecorder,
-    private readonly logWriteClickhouseService: LogWriteClickhouseService,
+    private readonly logWriteClickhouseService: LogWriteService,
   ) {}
 
   public async createLogs(dtos: CreateLogDto[]): Promise<void> {

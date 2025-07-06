@@ -226,11 +226,8 @@ describe('ProjectCoreController (writes)', () => {
         httpMonitorId: monitor.id,
       });
 
-      const logsBeforeRemoval = await bootstrap.models.logModel.find({ projectId: project.id });
+      const logsBeforeRemoval = await bootstrap.utils.logUtils.readLogs(project.id);
       const metricsBeforeRemoval = await bootstrap.models.metricModel.find({
-        projectId: project.id,
-      });
-      const logMetricsBeforeRemoval = await bootstrap.models.logMetricModel.find({
         projectId: project.id,
       });
       const metricRegisterEntriesBeforeRemoval = await bootstrap.models.metricRegisterModel.find({
@@ -259,11 +256,8 @@ describe('ProjectCoreController (writes)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       // then
-      const logsAfterRemoval = await bootstrap.models.logModel.find({ projectId: project.id });
+      const logsAfterRemoval = await bootstrap.utils.logUtils.readLogs(project.id);
       const metricsAfterRemoval = await bootstrap.models.metricModel.find({
-        projectId: project.id,
-      });
-      const logMetricsAfterRemoval = await bootstrap.models.logMetricModel.find({
         projectId: project.id,
       });
       const metricRegisterEntriesAfterRemoval = await bootstrap.models.metricRegisterModel.find({
@@ -291,7 +285,6 @@ describe('ProjectCoreController (writes)', () => {
 
       expect(logsBeforeRemoval).toHaveLength(1);
       expect(metricsBeforeRemoval).toHaveLength(4);
-      expect(logMetricsBeforeRemoval).toHaveLength(4);
       expect(metricRegisterEntriesBeforeRemoval).toHaveLength(1);
       expect(projectsBeforeRemoval).toHaveLength(1);
       expect(apiKeysBeforeRemoval).toHaveLength(1);
@@ -301,7 +294,6 @@ describe('ProjectCoreController (writes)', () => {
 
       expect(logsAfterRemoval).toHaveLength(0);
       expect(metricsAfterRemoval).toHaveLength(0);
-      expect(logMetricsAfterRemoval).toHaveLength(0);
       expect(metricRegisterEntriesAfterRemoval).toHaveLength(0);
       expect(projectsAfterRemoval).toHaveLength(0);
       expect(apiKeysAfterRemoval).toHaveLength(0);

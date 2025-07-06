@@ -1,59 +1,49 @@
-import { Logger } from '@logdash/js-sdk';
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { Model } from 'mongoose';
-import { getOurEnv, OurEnv } from '../../shared/types/our-env.enum';
-import { LogEntity } from '../core/entities/log.entity';
-import { LogNormalized } from '../core/entities/log.interface';
-import { LogSerializer } from '../core/entities/log.serializer';
 import { CreateLogDto } from './dto/create-log.dto';
-import { LogWriteClickhouseService } from './log-write.clickhouse-service';
+import { Injectable } from '@nestjs/common';
+import { ClickHouseClient } from '@clickhouse/client';
+import { LogClickhouseEntity } from '../core/entities/log.clickhouse-entity';
 
 @Injectable()
 export class LogWriteService {
-  constructor(
-    @InjectModel(LogEntity.name) private logModel: Model<LogEntity>,
-    private readonly logger: Logger,
-  ) {}
+  constructor(private readonly clickhouse: ClickHouseClient) {}
 
-  public async create(dto: CreateLogDto): Promise<LogNormalized> {
-    const Log = await this.logModel.create({
-      createdAt: dto.createdAt.toISOString(),
-      message: dto.message,
-      level: dto.level,
-      projectId: dto.projectId,
-      index: dto.index,
+  public async create(dto: CreateLogDto): Promise<void> {
+    const log = LogClickhouseEntity.fromCreateDto(dto);
+
+    await this.clickhouse.insert({
+      table: 'logs',
+      values: [log],
+      format: 'JSONEachRow',
     });
-
-    return LogSerializer.normalize(Log);
   }
 
   public async createMany(dtos: CreateLogDto[]): Promise<void> {
-    await this.logModel.insertMany(
-      dtos.map((dto) => ({
-        _id: dto.id,
-        createdAt: dto.createdAt.toISOString(),
-        message: dto.message,
-        level: dto.level,
-        projectId: dto.projectId,
-        index: dto.index,
-      })),
-      { ordered: false },
-    );
+    if (dtos.length === 0) return;
+
+    const logs = dtos.map(LogClickhouseEntity.fromCreateDto);
+
+    const result = await this.clickhouse.insert({
+      table: 'logs',
+      values: logs,
+      format: 'JSONEachRow',
+    });
   }
 
-  public async removeForProjectWithIndexLessThan(projectId: string, index: number): Promise<void> {
-    await this.logModel.deleteMany(
-      {
-        projectId,
-        index: { $lt: index },
-      },
-      { ordered: false },
-    );
+  public async removePartition(cutOffDate: Date): Promise<void> {
+    const partitionDate = this.convertDateToPartitionDate(cutOffDate);
+
+    await this.clickhouse.command({
+      query: `ALTER TABLE logs DROP PARTITION '${partitionDate}'`,
+    });
   }
 
-  public async deleteBelongingToProject(projectId: string): Promise<void> {
-    await this.logModel.deleteMany({ projectId });
+  private convertDateToPartitionDate(date: Date): string {
+    return date.toISOString().slice(0, 10).replace(/-/g, '');
+  }
+
+  public async removeByProjectId(projectId: string): Promise<void> {
+    await this.clickhouse.command({
+      query: `DELETE FROM logs WHERE project_id='${projectId}'`,
+    });
   }
 }
