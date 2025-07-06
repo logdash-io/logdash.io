@@ -12,6 +12,7 @@ export class UserSerializer {
       tier: entity.tier,
       stripeCustomerId: entity.stripeCustomerId,
       avatarUrl: entity.avatarUrl,
+      paymentsMetadata: entity.paymentsMetadata,
     };
   }
 
@@ -23,6 +24,7 @@ export class UserSerializer {
       accountClaimStatus: normalized.accountClaimStatus,
       tier: normalized.tier,
       avatarUrl: normalized.avatarUrl,
+      paymentsMetadata: normalized.paymentsMetadata,
     };
   }
 }

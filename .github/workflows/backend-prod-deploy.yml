@@ -52,6 +52,8 @@ jobs:
           our-env: prod
           redis-url: ${{ secrets.BACKEND_PROD_REDIS_URL }}
           stripe-early-bird-price-id: ${{ secrets.BACKEND_PROD_STRIPE_EARLY_BIRD_PRICE_ID }}
+          stripe-builder-price-id: ${{ secrets.BACKEND_PROD_STRIPE_BUILDER_PRICE_ID }}
+          stripe-pro-price-id: ${{ secrets.BACKEND_PROD_STRIPE_PRO_PRICE_ID }}
           demo-dashboard-api-key: ${{ secrets.BACKEND_PROD_DEMO_DASHBOARD_API_KEY }}
           logdash-api-key: ${{ secrets.BACKEND_PROD_LOGDASH_API_KEY }}
           telegram-token: ${{ secrets.BACKEND_PROD_TELEGRAM_TOKEN }}

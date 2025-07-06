@@ -40,7 +40,6 @@ import { LogNormalized, LogSerialized } from './entities/log.interface';
 import { LogSerializer } from './entities/log.serializer';
 import { LogReadDirection } from './enums/log-read-direction.enum';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
-import { LogReadClickhouseService } from '../read/log-read.clickhouse-service';
 import { LogAnalyticsService } from '../analytics/log-analytics.service';
 import { LogAnalyticsQuery } from '../analytics/dto/log-analytics-query.dto';
 import { LogAnalyticsResponse } from '../analytics/dto/log-analytics-response.dto';
@@ -55,7 +54,7 @@ export class LogCoreController {
     private readonly logEventEmitter: LogEventEmitter,
     private readonly eventEmitter: EventEmitter2,
     private readonly logRateLimitService: LogRateLimitService,
-    private readonly logReadClickhouseService: LogReadClickhouseService,
+    private readonly logReadClickhouseService: LogReadService,
     private readonly logAnalyticsService: LogAnalyticsService,
   ) {}
 
@@ -77,7 +76,7 @@ export class LogCoreController {
     let historicalLogs$: Observable<{ data: LogSerialized }> = from([]);
 
     if (dto.lastId) {
-      const historicalLogs = await this.logReadService.readMany({
+      const historicalLogs = await this.logReadService.readManyLastId({
         projectId,
         lastId: dto.lastId,
         direction: LogReadDirection.After,
@@ -168,31 +167,6 @@ export class LogCoreController {
     });
 
     return new SuccessResponse();
-  }
-
-  @DemoEndpoint()
-  @UseInterceptors(DemoCacheInterceptor)
-  @UseGuards(ClusterMemberGuard)
-  @ApiBearerAuth()
-  @Get('projects/:projectId/logs')
-  @ApiResponse({ type: LogSerialized, isArray: true })
-  public async readNewerThanGuarded(
-    @Param('projectId') projectId: string,
-    @Query() dto: ReadLogsQuery,
-  ): Promise<LogSerialized[]> {
-    if ((dto.lastId && !dto.direction) || (!dto.lastId && dto.direction)) {
-      throw new BadRequestException('Provide either lastId and direction or neither');
-    }
-
-    const logs = await this.logReadService.readMany({
-      direction: dto.direction,
-      lastId: dto.lastId,
-      projectId,
-      limit: dto.limit ?? 50,
-      searchString: dto.searchString,
-    });
-
-    return logs.map((log) => LogSerializer.serialize(log));
   }
 
   @DemoEndpoint()

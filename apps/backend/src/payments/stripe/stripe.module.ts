@@ -11,6 +11,7 @@ import Stripe from 'stripe';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { SubscriptionManagementModule } from '../../subscription/management/subscription-management.module';
 import { StripeEventEmitter } from './stripe-event.emitter';
+import { StripeCheckoutService } from './stripe-checkout.service';
 
 @Module({
   imports: [UserWriteModule, UserReadModule, UserTierModule, SubscriptionManagementModule],
@@ -19,6 +20,7 @@ import { StripeEventEmitter } from './stripe-event.emitter';
     StripeEventsHandler,
     StripePaymentSucceededHandler,
     StripeSubscriptionDeletedHandler,
+    StripeCheckoutService,
     {
       provide: Stripe,
       useFactory: () => new Stripe(getEnvConfig().stripe.apiKeySecret),

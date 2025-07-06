@@ -67,60 +67,37 @@ export class ProjectReadService {
     return projects.map((project) => ProjectSerializer.normalize(project));
   }
 
-  public async readProjectsForLogRemoval(): Promise<
-    {
-      projectId: string;
-      currentIndex: number;
-      lastDeletionIndex: number;
-      tier: ProjectTier;
-    }[]
-  > {
-    const projects = await this.model.find(
-      {},
-      {
-        'logValues.currentIndex': 1,
-        'logValues.lastDeletionIndex': 1,
-        tier: 1,
-      },
-    );
-
-    return projects.map((project) => ({
-      projectId: project._id.toString(),
-      currentIndex: project.logValues.currentIndex,
-      lastDeletionIndex: project.logValues.lastDeletionIndex,
-      tier: project.tier,
-    }));
+  public async countProjectsByCreatorId(creatorId: string): Promise<number> {
+    return this.model.countDocuments({ creatorId });
   }
 
-  // optimize: can be optimized to directly send log removal condition to the db
-  public async *getProjectForLogRemovalCursor(): AsyncGenerator<{
-    projectId: string;
-    currentIndex: number;
-    lastDeletionIndex: number;
-    tier: ProjectTier;
-  }> {
-    const cursor = this.model
-      .find(
-        {},
-        {
-          'logValues.currentIndex': 1,
-          'logValues.lastDeletionIndex': 1,
-          tier: 1,
-        },
-      )
-      .cursor();
+  public async *readAllCoursor(): AsyncGenerator<ProjectNormalized> {
+    const cursor = this.model.find().cursor();
 
     for await (const project of cursor) {
-      yield {
-        projectId: project._id.toString(),
-        currentIndex: project.logValues.currentIndex,
-        lastDeletionIndex: project.logValues.lastDeletionIndex,
-        tier: project.tier,
-      };
+      yield ProjectSerializer.normalize(project);
     }
   }
 
-  public async *getProjectsForLogMetricRemoval(): AsyncGenerator<
+  public async readGroupedByClusterMany(
+    clusterIds: string[],
+  ): Promise<Record<string, ProjectNormalized[]>> {
+    const projects = await this.model.find({ clusterId: { $in: clusterIds } });
+
+    const result: Record<string, ProjectNormalized[]> = {};
+
+    for (const project of projects) {
+      if (!result[project.clusterId]) {
+        result[project.clusterId] = [];
+      }
+
+      result[project.clusterId].push(ProjectSerializer.normalize(project));
+    }
+
+    return result;
+  }
+
+  public async *getProjectsForMetricRemoval(): AsyncGenerator<
     {
       id: string;
       tier: ProjectTier;
@@ -150,35 +127,5 @@ export class ProjectReadService {
     if (batch.length > 0) {
       yield batch;
     }
-  }
-
-  public async countProjectsByCreatorId(creatorId: string): Promise<number> {
-    return this.model.countDocuments({ creatorId });
-  }
-
-  public async *readAllCoursor(): AsyncGenerator<ProjectNormalized> {
-    const cursor = this.model.find().cursor();
-
-    for await (const project of cursor) {
-      yield ProjectSerializer.normalize(project);
-    }
-  }
-
-  public async readGroupedByClusterMany(
-    clusterIds: string[],
-  ): Promise<Record<string, ProjectNormalized[]>> {
-    const projects = await this.model.find({ clusterId: { $in: clusterIds } });
-
-    const result: Record<string, ProjectNormalized[]> = {};
-
-    for (const project of projects) {
-      if (!result[project.clusterId]) {
-        result[project.clusterId] = [];
-      }
-
-      result[project.clusterId].push(ProjectSerializer.normalize(project));
-    }
-
-    return result;
   }
 }

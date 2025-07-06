@@ -14,6 +14,9 @@ interface EnvConfig {
   };
   stripe: {
     earlyBirdPriceId: string;
+    builderPriceId: string;
+    proPriceId: string;
+
     successUrl: string;
     returnFromBillingUrl: string;
     apiKeySecret: string;
@@ -108,6 +111,8 @@ export const EnvConfigs: EnvConfigs = {
     },
     stripe: {
       earlyBirdPriceId: process.env.STRIPE_EARLY_BIRD_PRICE_ID!,
+      builderPriceId: process.env.STRIPE_BUILDER_PRICE_ID!,
+      proPriceId: process.env.STRIPE_PRO_PRICE_ID!,
       successUrl: 'https://logdash.io/app/callbacks/payments/purchase-success',
       returnFromBillingUrl: 'https://logdash.io/app/clusters',
       apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,
@@ -193,6 +198,8 @@ export const EnvConfigs: EnvConfigs = {
     },
     stripe: {
       earlyBirdPriceId: process.env.STRIPE_EARLY_BIRD_PRICE_ID!,
+      builderPriceId: process.env.STRIPE_BUILDER_PRICE_ID!,
+      proPriceId: process.env.STRIPE_PRO_PRICE_ID!,
       successUrl: 'https://dev.logdash.io/app/callbacks/payments/purchase-success',
       returnFromBillingUrl: 'https://dev.logdash.io/app/clusters',
       apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,

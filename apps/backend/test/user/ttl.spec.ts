@@ -90,9 +90,8 @@ describe('UserTtlService', () => {
       httpMonitorId: httpMonitor._id.toString(),
     });
 
-    const logsBeforeRemoval = await bootstrap.models.logModel.find();
+    const logsBeforeRemoval = await bootstrap.utils.logUtils.readLogs(project.id);
     const metricsBeforeRemoval = await bootstrap.models.metricModel.find();
-    const logMetricsBeforeRemoval = await bootstrap.models.logMetricModel.find();
     const metricRegisterEntriesBeforeRemoval = await bootstrap.models.metricRegisterModel.find();
     const projectsBeforeRemoval = await bootstrap.models.projectModel.find();
     const clustersBeforeRemoval = await bootstrap.models.clusterModel.find();
@@ -103,9 +102,8 @@ describe('UserTtlService', () => {
     await service.deleteOldUnclaimedUsers();
 
     // then
-    const logsAfterRemoval = await bootstrap.models.logModel.find();
+    const logsAfterRemoval = await bootstrap.utils.logUtils.readLogs(project.id);
     const metricsAfterRemoval = await bootstrap.models.metricModel.find();
-    const logMetricsAfterRemoval = await bootstrap.models.logMetricModel.find();
     const metricRegisterEntriesAfterRemoval = await bootstrap.models.metricRegisterModel.find();
     const projectsAfterRemoval = await bootstrap.models.projectModel.find();
     const clustersAfterRemoval = await bootstrap.models.clusterModel.find();
@@ -114,7 +112,6 @@ describe('UserTtlService', () => {
 
     expect(logsBeforeRemoval).toHaveLength(1);
     expect(metricsBeforeRemoval).toHaveLength(4);
-    expect(logMetricsBeforeRemoval).toHaveLength(4);
     expect(metricRegisterEntriesBeforeRemoval).toHaveLength(1);
     expect(projectsBeforeRemoval).toHaveLength(1);
     expect(clustersBeforeRemoval).toHaveLength(1);
@@ -123,7 +120,6 @@ describe('UserTtlService', () => {
 
     expect(logsAfterRemoval).toHaveLength(0);
     expect(metricsAfterRemoval).toHaveLength(0);
-    expect(logMetricsAfterRemoval).toHaveLength(0);
     expect(metricRegisterEntriesAfterRemoval).toHaveLength(0);
     expect(projectsAfterRemoval).toHaveLength(0);
     expect(clustersAfterRemoval).toHaveLength(0);

@@ -1,9 +1,9 @@
 import * as request from 'supertest';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';
-import { LogWriteClickhouseService } from '../../src/log/write/log-write.clickhouse-service';
 import { CreateLogDto } from '../../src/log/write/dto/create-log.dto';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
+import { LogWriteService } from '../../src/log/write/log-write.service';
 
 describe('LogCoreController (analytics)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -24,7 +24,7 @@ describe('LogCoreController (analytics)', () => {
     it('returns bucketed analytics with auto-selected buckets', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const clickhouseService = await bootstrap.app.get(LogWriteClickhouseService);
+      const logWriteService = await bootstrap.app.get(LogWriteService);
 
       const logs: CreateLogDto[] = [
         {
@@ -57,7 +57,7 @@ describe('LogCoreController (analytics)', () => {
         },
       ];
 
-      await clickhouseService.createMany(logs);
+      await logWriteService.createMany(logs);
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -92,7 +92,7 @@ describe('LogCoreController (analytics)', () => {
     it('aligns buckets correctly for unaligned time ranges', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const clickhouseService = await bootstrap.app.get(LogWriteClickhouseService);
+      const logWriteService = await bootstrap.app.get(LogWriteService);
 
       const logs: CreateLogDto[] = [
         {
@@ -111,7 +111,7 @@ describe('LogCoreController (analytics)', () => {
         },
       ];
 
-      await clickhouseService.createMany(logs);
+      await logWriteService.createMany(logs);
 
       // when - request 17:02-17:07 (5 minutes)
       const response = await request(bootstrap.app.getHttpServer())
@@ -144,7 +144,7 @@ describe('LogCoreController (analytics)', () => {
     it('auto-selects appropriate bucket sizes for different time ranges', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const clickhouseService = await bootstrap.app.get(LogWriteClickhouseService);
+      const logWriteService = await bootstrap.app.get(LogWriteService);
 
       const logs: CreateLogDto[] = [
         {
@@ -163,7 +163,7 @@ describe('LogCoreController (analytics)', () => {
         },
       ];
 
-      await clickhouseService.createMany(logs);
+      await logWriteService.createMany(logs);
 
       // when - test with 1 hour range
       const response = await request(bootstrap.app.getHttpServer())
@@ -194,7 +194,7 @@ describe('LogCoreController (analytics)', () => {
     it('groups logs by all available levels', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const clickhouseService = await bootstrap.app.get(LogWriteClickhouseService);
+      const logWriteService = await bootstrap.app.get(LogWriteService);
 
       const logs: CreateLogDto[] = [
         {
@@ -248,7 +248,7 @@ describe('LogCoreController (analytics)', () => {
         },
       ];
 
-      await clickhouseService.createMany(logs);
+      await logWriteService.createMany(logs);
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -301,7 +301,7 @@ describe('LogCoreController (analytics)', () => {
     it('auto-selects larger buckets for longer time ranges', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const clickhouseService = await bootstrap.app.get(LogWriteClickhouseService);
+      const logWriteService = await bootstrap.app.get(LogWriteService);
 
       const logs: CreateLogDto[] = [
         {
@@ -320,7 +320,7 @@ describe('LogCoreController (analytics)', () => {
         },
       ];
 
-      await clickhouseService.createMany(logs);
+      await logWriteService.createMany(logs);
 
       // when - test with 7 day range (should select larger buckets)
       const response = await request(bootstrap.app.getHttpServer())
