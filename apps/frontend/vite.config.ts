@@ -7,7 +7,7 @@ export default defineConfig({
     {
       name: 'full-reload',
       handleHotUpdate({ server }) {
-        // return;
+        return;
         server.ws.send({
           type: 'full-reload',
           path: '*',

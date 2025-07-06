@@ -3,6 +3,7 @@ import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analyt
 import { LogAnalyticsService } from '$lib/domains/logs/infrastructure/log-analytics.service';
 import { logsSyncService } from '../infrastructure/logs-sync.service.svelte.js';
 import type { Log } from '../domain/log.js';
+import { filtersStore } from '../infrastructure/filters.store.svelte.js';
 
 const logger = createLogger('log_analytics.state', true);
 
@@ -10,17 +11,35 @@ class LogAnalyticsState {
   private _analyticsData = $state<LogsAnalyticsResponse | null>(null);
   private _isLoading = $state(false);
   private _error = $state<string | null>(null);
-  private _fetchFilter = $state<{
-    startDate: string;
-    endDate: string;
-    utcOffsetHours: number;
-  }>({
-    startDate: new Date().toISOString(),
-    endDate: new Date().toISOString(),
-    utcOffsetHours: 0,
-  });
 
   get analyticsData(): LogsAnalyticsResponse | null {
+    if (!this._analyticsData) {
+      return null;
+    }
+
+    if (filtersStore.level) {
+      return {
+        ...this._analyticsData,
+        buckets: this._analyticsData.buckets.map((bucket) => ({
+          ...bucket,
+          countByLevel: {
+            ...Object.keys(bucket.countByLevel).reduce(
+              (acc, key) => {
+                acc[key] = 0;
+                return acc;
+              },
+              {} as Record<string, number>,
+            ),
+            [filtersStore.level]: bucket.countByLevel[filtersStore.level] || 0,
+          } as Record<
+            keyof LogsAnalyticsResponse['buckets'][number]['countByLevel'],
+            number
+          >,
+          countTotal: bucket.countByLevel[filtersStore.level] || 0,
+        })),
+      };
+    }
+
     return this._analyticsData;
   }
 
@@ -32,7 +51,9 @@ class LogAnalyticsState {
     return this._error;
   }
 
-  startSilentUpdates(project_id: string): () => void {
+  sync(project_id: string): () => void {
+    this._fetchAnalytics(project_id);
+
     const UPDATE_MS_SAFETY_BUFFER = 10;
     const now = new Date();
     const msToNextMinute =
@@ -78,18 +99,17 @@ class LogAnalyticsState {
     };
   }
 
+  refresh(projectId: string): void {
+    this.clearData();
+    this._fetchAnalytics(projectId);
+  }
+
   async fetchAnalytics(
     project_id: string,
     start_date: string,
     end_date: string | null,
     utc_offset_hours?: number,
   ): Promise<void> {
-    this._fetchFilter = {
-      startDate: start_date,
-      endDate: end_date,
-      utcOffsetHours: utc_offset_hours ?? 0,
-    };
-
     logger.debug('Fetching analytics...', {
       project_id,
       start_date,
@@ -113,11 +133,15 @@ class LogAnalyticsState {
   }
 
   private async _fetchAnalytics(projectId: string): Promise<void> {
+    if (!filtersStore.startDate) {
+      return;
+    }
+
     const data = await LogAnalyticsService.getProjectLogsAnalytics(
       projectId,
-      this._fetchFilter.startDate,
-      this._fetchFilter.endDate ?? new Date().toISOString(),
-      this._fetchFilter.utcOffsetHours,
+      filtersStore.startDate,
+      filtersStore.endDate || new Date().toISOString(),
+      filtersStore.utcOffsetHours,
     );
 
     this._analyticsData = data;

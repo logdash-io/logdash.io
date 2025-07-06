@@ -1,13 +1,14 @@
 <script lang="ts">
-  import { logAnalyticsState } from '$lib/domains/logs/application/log-analytics.state.svelte.js';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import PauseCircleIcon from '$lib/domains/shared/icons/PauseCircleIcon.svelte';
   import { scale } from 'svelte/transition';
   import LogsAnalyticsChart from './LogsAnalyticsChart.svelte';
   import LogsSearchInput from './LogsSearchInput.svelte';
   import LogsFilterDropdown from './LogsFilterDropdown.svelte';
-  import { untrack } from 'svelte';
   import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
+  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
+  import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
 
   type Props = {
     projectId: string;
@@ -15,8 +16,11 @@
 
   const { projectId }: Props = $props();
 
+  const maxRetentionHours = $derived(
+    exposedConfigState.logRetentionHours(userState.tier),
+  );
+
   let sendingTestLogCooldown = $state(0);
-  let selectedDateRange = $state<{ start: Date; end: Date } | null>(null);
 
   function sendTestLog(): void {
     sendingTestLogCooldown = 5;
@@ -30,57 +34,24 @@
   }
 
   function onSearchChange(query: string): void {
-    logsState.setFilters({ searchString: query });
+    filtersStore.setFilters({ searchString: query });
   }
 
   function onDateRangeChange(startDate: Date | null, endDate: Date | null) {
-    selectedDateRange = { start: startDate, end: endDate };
-    logsState.setFilters({
+    filtersStore.setFilters({
       startDate: startDate?.toISOString(),
       endDate: endDate?.toISOString(),
     });
   }
-
-  async function fetchAnalyticsData(timeRange?: {
-    start: Date;
-    end: Date;
-  }): Promise<void> {
-    if (!projectId) return;
-
-    try {
-      const now = new Date();
-      const endTime = timeRange?.end;
-      const startTime =
-        timeRange?.start || new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const utcOffsetHours = now.getTimezoneOffset() / 60;
-
-      await logAnalyticsState.fetchAnalytics(
-        projectId,
-        startTime.toISOString(),
-        endTime?.toISOString() ?? null,
-        utcOffsetHours,
-      );
-    } catch (error) {
-      console.error('Failed to fetch analytics data:', error);
-      // The error will be handled by the state and displayed in the UI
-    }
-  }
-
-  $effect(() => {
-    untrack(() => fetchAnalyticsData(selectedDateRange));
-    const cleanup = untrack(() =>
-      logAnalyticsState.startSilentUpdates(projectId),
-    );
-
-    return () => {
-      cleanup();
-    };
-  });
 </script>
 
 <div class="flex flex-col">
   {#if projectId}
-    <LogsAnalyticsChart bind:selectedDateRange {onDateRangeChange} />
+    <LogsAnalyticsChart
+      bind:selectedStartDate={filtersStore.startDate}
+      bind:selectedEndDate={filtersStore.endDate}
+      {onDateRangeChange}
+    />
   {/if}
 
   <div class="flex items-center justify-between gap-2.5 p-4">
@@ -107,9 +78,14 @@
     <LogsSearchInput {onSearchChange} />
 
     <LogsFilterDropdown
-      selectedLevel={logsState.filters.level}
-      selectedStartDate={logsState.filters.startDate}
-      selectedEndDate={logsState.filters.endDate}
+      bind:selectedLevel={filtersStore.level}
+      bind:selectedStartDate={filtersStore.startDate}
+      bind:selectedEndDate={filtersStore.endDate}
+      searchString={filtersStore.searchString}
+      maxDateRangeHours={maxRetentionHours}
+      onClearAllClicked={() => {
+        filtersStore.reset();
+      }}
     />
 
     <button

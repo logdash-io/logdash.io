@@ -13,14 +13,16 @@
     children?: Snippet;
     enabled?: boolean;
     source?: UpgradeSource;
-    onClick?: () => void;
+    onclick?: () => void;
+    interactive?: boolean;
   };
   const {
     class: className = '',
     children,
     enabled = true,
     source = 'unknown',
-    onClick,
+    onclick: onClick,
+    interactive = true,
   }: Props = $props();
 
   const posthog = getContext<PostHog>('posthog');
@@ -39,7 +41,13 @@
 </script>
 
 <div
-  class={['cursor-pointer', className]}
+  class={[
+    'cursor-pointer',
+    className,
+    {
+      'pointer-events-none': !interactive,
+    },
+  ]}
   onclick={() => {
     onClick?.();
     if (enabled) {

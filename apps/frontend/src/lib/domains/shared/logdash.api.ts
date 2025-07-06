@@ -1,8 +1,5 @@
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
 import type { Log } from '$lib/domains/logs/domain/log';
-import type { LogGranularity } from '$lib/domains/logs/domain/log-granularity';
-import type { LogMetric } from '$lib/domains/logs/domain/log-metric';
-
 import type { Metric } from '$lib/domains/app/projects/domain/metric';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping.js';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
@@ -13,12 +10,12 @@ import type {
   NotificationChannel,
   TelegramChatInfo,
 } from '$lib/domains/app/projects/domain/telegram/telegram.types';
-import { redirect } from '@sveltejs/kit';
-import queryString from 'query-string';
-import { envConfig } from '$lib/domains/shared/utils/env-config';
-import type { User } from '$lib/domains/shared/user/domain/user';
 import { bffLogger } from '$lib/domains/shared/bff-logger';
 import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config';
+import type { User } from '$lib/domains/shared/user/domain/user';
+import { envConfig } from '$lib/domains/shared/utils/env-config';
+import { redirect } from '@sveltejs/kit';
+import queryString from 'query-string';
 
 type UnauthorizedHandler = () => void;
 
@@ -178,16 +175,6 @@ class LogdashAPI {
 
     return this.get<Log[]>(
       `${LogdashAPI.v0baseUrl}/projects/${project_id}/logs/v2?${qs}`,
-      access_token,
-    );
-  }
-
-  get_project_log_metrics(
-    project_id: string,
-    access_token: string,
-  ): Promise<Record<LogGranularity, LogMetric[]>> {
-    return this.get<Record<LogGranularity, LogMetric[]>>(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}/log_metrics`,
       access_token,
     );
   }

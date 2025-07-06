@@ -8,21 +8,14 @@ import {
   logsSyncService,
   LogsSyncService,
 } from '../infrastructure/logs-sync.service.svelte.js';
+import type { LogsFilters } from '../domain/logs-filters.js';
+import { filtersStore } from '../infrastructure/filters.store.svelte.js';
 
 const logger = createLogger('logs.state', true);
-
-type LogsFilters = Omit<LogsQueryFilters, 'lastId' | 'direction'>;
 
 class LogsState {
   private _loadingPage = $state(false);
   private _projectId: string | null = $state(null);
-  private _filters = $state<Partial<LogsFilters>>({
-    limit: 50,
-    startDate: null,
-    endDate: null,
-    level: null,
-    searchString: '',
-  });
 
   private _logs = $state<Record<Log['id'], Log>>({});
 
@@ -40,11 +33,11 @@ class LogsState {
       return 0;
     });
 
-    if (!this._filters.searchString.trim()) {
+    if (!filtersStore.searchString.trim()) {
       return allLogs;
     }
 
-    const query = this._filters.searchString.toLowerCase();
+    const query = filtersStore.searchString.toLowerCase();
     const queryWords = query.split(' ');
     return allLogs.filter((log) =>
       queryWords.every((word) => log.message.toLowerCase().includes(word)),
@@ -53,10 +46,10 @@ class LogsState {
 
   get hasFilters(): boolean {
     return Boolean(
-      this._filters.searchString.trim() ||
-        this._filters.startDate ||
-        this._filters.endDate ||
-        this._filters.level,
+      filtersStore.searchString.trim() ||
+        filtersStore.startDate ||
+        filtersStore.endDate ||
+        filtersStore.level,
     );
   }
 
@@ -69,7 +62,7 @@ class LogsState {
   }
 
   get filters(): Partial<LogsFilters> {
-    return this._filters;
+    return filtersStore.filters;
   }
 
   set(logs: Log[]): void {
@@ -78,16 +71,19 @@ class LogsState {
 
   get shouldFiltersBlockSync(): boolean {
     return Boolean(
-      this._filters.searchString.trim() ||
-        this._filters.startDate ||
-        this._filters.endDate ||
-        this._filters.level,
+      filtersStore.searchString.trim() ||
+        (filtersStore.startDate && filtersStore.endDate),
     );
   }
 
-  setFilters(filters: Partial<LogsFilters>): void {
-    this._filters = { ...this._filters, ...filters };
-
+  refresh(): void {
+    logger.debug(
+      'refreshing logs...',
+      filtersStore.searchString.trim(),
+      filtersStore.startDate,
+      filtersStore.endDate,
+      filtersStore.level,
+    );
     if (this.shouldFiltersBlockSync) {
       this.pauseSync();
     } else {
@@ -95,16 +91,6 @@ class LogsState {
     }
 
     this.fetchLogs();
-  }
-
-  resetFilters(): void {
-    this.setFilters({
-      limit: 50,
-      startDate: null,
-      endDate: null,
-      level: null,
-      searchString: '',
-    });
   }
 
   async sync(project_id: string): Promise<void> {
@@ -178,7 +164,7 @@ class LogsState {
 
   private async fetchLogs(pagination?: { lastId: string }): Promise<void> {
     const logs = await LogsService.getProjectLogs(this._projectId, {
-      ...this._filters,
+      ...filtersStore.filters,
       ...(pagination && { lastId: pagination.lastId, direction: 'before' }),
     });
 

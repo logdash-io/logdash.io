@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { logMetricsState } from '$lib/domains/logs/application/log-metrics.state.svelte.js';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { createLogger } from '$lib/domains/shared/logger';
   import { getContext, untrack, type Snippet } from 'svelte';
@@ -40,7 +39,6 @@
         logger.info('Page became visible. Data sync will resume.');
         Promise.all([
           logsState.resumeSync(),
-          logMetricsState.resumeSync(projectIdToSync, tabId),
           metricsState.resumeSync(projectIdToSync, tabId),
           previewedMetricId
             ? metricsState.previewMetric(projectIdToSync, previewedMetricId)
@@ -56,7 +54,6 @@
         clearTimeout(timeout);
         logger.info('Page became hidden. Data sync will be paused.');
         logsState.pauseSync();
-        logMetricsState.pauseSync();
         metricsState.pauseSync();
         isPageVisible = newVisibility;
       }
@@ -104,7 +101,6 @@
     );
     untrack(() => metricsState.sync(projectIdToSync, tabId));
     untrack(() => logsState.sync(projectIdToSync));
-    untrack(() => logMetricsState.sync(projectIdToSync, tabId));
 
     return () => {
       logger.info(
@@ -112,7 +108,6 @@
       );
       metricsState.unsync();
       logsState.unsync();
-      logMetricsState.unsync();
     };
   });
 </script>

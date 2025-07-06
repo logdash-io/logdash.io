@@ -188,6 +188,9 @@ importers:
       sveltekit-sse:
         specifier: ^0.13.19
         version: 0.13.19(@microsoft/fetch-event-source@2.0.1)(@sveltejs/kit@2.22.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.34.9)(vite@6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(sass-embedded@1.89.0)(terser@5.41.0)(yaml@2.8.0)))(svelte@5.34.9)(vite@6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(sass-embedded@1.89.0)(terser@5.41.0)(yaml@2.8.0)))(svelte@5.34.9)
+      svelty-picker:
+        specifier: ^6.1.5
+        version: 6.1.5(svelte@5.34.9)
       ts-pattern:
         specifier: ^5.7.1
         version: 5.7.1
@@ -856,6 +859,15 @@ packages:
   '@eslint/plugin-kit@0.3.1':
     resolution: {integrity: sha512-0J+zgWxHN+xXONWIyPWKFMgVuJoZuGiIFu8yxk7RJjxkzpGmyja5wRFqZIVtjDVOQpV+Rw0iOAjYPE2eQyjr0w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@floating-ui/core@1.7.2':
+    resolution: {integrity: sha512-wNB5ooIKHQc+Kui96jE/n69rHFWAVoxn5CAzL1Xdd8FG03cgY3MLO+GF9U3W737fYDSgPWA6MReKhBQBop6Pcw==}
+
+  '@floating-ui/dom@1.7.2':
+    resolution: {integrity: sha512-7cfaOQuCS27HD7DX+6ib2OrnW+b4ZBwDNnCcT0uTyidcmyWb03FnQqJybDBoCnpdxwBSfA94UAYlRCt7mV+TbA==}
+
+  '@floating-ui/utils@0.2.10':
+    resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
 
   '@grpc/grpc-js@1.13.4':
     resolution: {integrity: sha512-GsFaMXCkMqkKIvwCQjCrwH+GHbPKBjhwo/8ZuUkWHqbI73Kky9I+pQltrlT0+MWpedCoosda53lgjYfyEPgxBg==}
@@ -5452,6 +5464,11 @@ packages:
       '@sveltejs/kit': ^2.0.0
       svelte: ^4.0.0 || ^5.0.0-next.0
 
+  svelty-picker@6.1.5:
+    resolution: {integrity: sha512-BpgtkukWox6lMoeVQcfMbztPEN4+HCnKH+T7QdfOYNwzYo0nFW9Mt1BjCyK4Uj7zJ2lBkFljPTplN7EuNRe7MQ==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   swagger-ui-dist@5.21.0:
     resolution: {integrity: sha512-E0K3AB6HvQd8yQNSMR7eE5bk+323AUxjtCz/4ZNKiahOlPhPJxqn3UPIGs00cyY/dhrTDJ61L7C/a8u6zhGrZg==}
 
@@ -6401,6 +6418,17 @@ snapshots:
     dependencies:
       '@eslint/core': 0.14.0
       levn: 0.4.1
+
+  '@floating-ui/core@1.7.2':
+    dependencies:
+      '@floating-ui/utils': 0.2.10
+
+  '@floating-ui/dom@1.7.2':
+    dependencies:
+      '@floating-ui/core': 1.7.2
+      '@floating-ui/utils': 0.2.10
+
+  '@floating-ui/utils@0.2.10': {}
 
   '@grpc/grpc-js@1.13.4':
     dependencies:
@@ -11441,6 +11469,11 @@ snapshots:
     dependencies:
       '@microsoft/fetch-event-source': 2.0.1
       '@sveltejs/kit': 2.22.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.34.9)(vite@6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(sass-embedded@1.89.0)(terser@5.41.0)(yaml@2.8.0)))(svelte@5.34.9)(vite@6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(sass-embedded@1.89.0)(terser@5.41.0)(yaml@2.8.0))
+      svelte: 5.34.9
+
+  svelty-picker@6.1.5(svelte@5.34.9):
+    dependencies:
+      '@floating-ui/dom': 1.7.2
       svelte: 5.34.9
 
   swagger-ui-dist@5.21.0:

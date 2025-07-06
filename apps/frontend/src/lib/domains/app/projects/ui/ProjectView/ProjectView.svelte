@@ -8,7 +8,6 @@
   import MetricDetails from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricDetails.svelte';
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
-  import LogsLineChartTile from '$lib/domains/logs/ui/LogMetricsTile.svelte';
   import LogsListTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
 

@@ -95,6 +95,14 @@ class ExposedConfigState {
     return null;
   }
 
+  logRetentionHours(tier: UserTier): number {
+    if (!this._config) {
+      return 0;
+    }
+
+    return this._config.projectPlanConfigs[tier].logs.retentionHours ?? 0;
+  }
+
   formatTierName(tier: UserTier): string {
     // todo: make usertier a value object
     return match(tier)

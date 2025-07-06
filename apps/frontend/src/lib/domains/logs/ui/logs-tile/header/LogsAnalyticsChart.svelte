@@ -8,12 +8,14 @@
   import { fade, fly } from 'svelte/transition';
 
   type Props = {
-    selectedDateRange: { start: Date; end: Date } | null;
+    selectedStartDate: string | null;
+    selectedEndDate: string | null;
     onDateRangeChange?: (startDate: Date | null, endDate: Date | null) => void;
   };
 
   let {
-    selectedDateRange: selectedRange = $bindable(),
+    selectedStartDate = $bindable(),
+    selectedEndDate = $bindable(),
     onDateRangeChange,
   }: Props = $props();
 
@@ -23,7 +25,6 @@
   let dragStart: Date | null = $state(null);
   let dragEnd: Date | null = $state(null);
   let currentTooltipBucket: LogsAnalyticsResponse['buckets'][0] | null = null;
-  let zoomedTimeRange = $state<{ start: Date; end: Date } | null>(null);
 
   const CHART_HEIGHT = 70;
   const MARGIN = { top: 5, right: 10, bottom: 25, left: 5 };
@@ -84,12 +85,14 @@
       .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
 
     // Create scales
+    const timeRangeToUse = {
+      start: new Date(data.buckets[0].bucketStart),
+      end: new Date(data.buckets[data.buckets.length - 1].bucketEnd),
+    };
+
     const xScale = d3
       .scaleTime()
-      .domain([
-        new Date(data.buckets[0].bucketStart),
-        new Date(data.buckets[data.buckets.length - 1].bucketEnd),
-      ])
+      .domain([timeRangeToUse.start, timeRangeToUse.end])
       .range([0, innerWidth]);
 
     const yScale = d3
@@ -141,17 +144,13 @@
     });
 
     // Draw axes (X axis only)
-    const startDate = new Date(data.buckets[0].bucketStart);
-    const endDate = new Date(data.buckets[data.buckets.length - 1].bucketEnd);
-    const middleDate = new Date((startDate.getTime() + endDate.getTime()) / 2);
-
     const xAxis = chart
       .append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(
         d3
           .axisBottom(xScale)
-          .tickValues([startDate, middleDate, endDate])
+          .ticks(6)
           .tickFormat((d: Date) => {
             return d.toLocaleTimeString([], {
               hour: '2-digit',
@@ -161,31 +160,29 @@
       )
       .attr('color', '#909090');
 
-    xAxis.selectAll('text').style('font-size', '9px');
+    xAxis
+      .selectAll('text')
+      .style('font-size', '9px')
+      .style('font-family', 'monospace');
     xAxis.selectAll('path, line').attr('stroke', '#393939');
 
     // Align text to prevent cutoff
-    xAxis.selectAll('text').each(function (d, i) {
+    xAxis.selectAll('text').each(function (d, i, nodes) {
       const text = d3.select(this);
       if (i === 0) {
         // First tick - align to start (left)
         text.attr('text-anchor', 'start');
-      } else if (i === 2) {
+      } else if (i === nodes.length - 1) {
         // Last tick - align to end (right)
         text.attr('text-anchor', 'end');
       } else {
-        // Middle tick - keep centered
+        // Middle ticks - keep centered
         text.attr('text-anchor', 'middle');
       }
     });
 
     // Add drag selection
     addDragSelection(chart, xScale, innerWidth, innerHeight);
-
-    // Draw selected range if exists
-    if (selectedRange) {
-      drawSelectedRange(chart, xScale, innerWidth, innerHeight, selectedRange);
-    }
   }
 
   function addDragSelection(
@@ -266,11 +263,9 @@
 
           // Only update if there's a meaningful range (more than 1 minute)
           if (end.getTime() - start.getTime() > 1 * 60000) {
-            selectedRange = { start, end };
+            selectedStartDate = start.toISOString();
+            selectedEndDate = end.toISOString();
             onDateRangeChange?.(start, end);
-
-            // Zoom to 90% of the selected range
-            zoomToRange(start, end);
           }
         }
 
@@ -325,38 +320,23 @@
     }
   }
 
-  function drawSelectedRange(
-    chart: d3.Selection<SVGGElement, unknown, null, undefined>,
-    xScale: d3.ScaleTime<number, number>,
-    width: number,
-    height: number,
-    range: { start: Date; end: Date },
-  ) {
-    const startX = xScale(range.start);
-    const endX = xScale(range.end);
-
-    chart
-      .append('rect')
-      .attr('class', 'selected-range')
-      .attr('x', startX)
-      .attr('y', 0)
-      .attr('width', endX - startX)
-      .attr('height', height)
-      .attr('fill', 'rgba(59, 130, 246, 0.1)')
-      .attr('stroke', 'rgba(59, 130, 246, 0.8)')
-      .attr('stroke-width', 2)
-      .attr('pointer-events', 'none');
-  }
-
   function showTooltip(
     event: any,
     bucket: LogsAnalyticsResponse['buckets'][0],
   ) {
     const bucketStart = new Date(bucket.bucketStart);
-    const formattedDate = bucketStart.toLocaleTimeString([], {
+    const bucketEnd = new Date(bucket.bucketEnd);
+
+    const formattedDateRange = `${bucketStart.toLocaleDateString()} ${bucketStart.toLocaleTimeString(
+      [],
+      {
+        hour: '2-digit',
+        minute: '2-digit',
+      },
+    )} - ${bucketEnd.toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
-    });
+    })}`;
 
     const colorScale = d3
       .scaleOrdinal<string>()
@@ -371,7 +351,7 @@
       .style('display', 'block')
       .style('left', `${tooltipX}px`)
       .style('top', `${tooltipY}px`).html(`
-        <div class="font-semibold font-mono">${formattedDate}</div>
+        <div class="font-semibold font-mono">${formattedDateRange}</div>
         ${LOG_TYPES.map((logType) => {
           const count = bucket.countByLevel[logType];
           return count > 0
@@ -409,22 +389,9 @@
       .html('<p>No log data available</p>');
   }
 
-  function zoomToRange(start: Date, end: Date) {
-    // Calculate 90% zoom - add 5% padding on each side
-    const rangeDuration = end.getTime() - start.getTime();
-    const paddingDuration = rangeDuration * 0.02; // 5% padding on each side
-
-    const zoomStart = new Date(start.getTime() - paddingDuration);
-    const zoomEnd = new Date(end.getTime() + paddingDuration);
-
-    zoomedTimeRange = { start: zoomStart, end: zoomEnd };
-
-    selectedRange = { start: zoomStart, end: zoomEnd };
-  }
-
   function clearSelection() {
-    selectedRange = null;
-    zoomedTimeRange = null;
+    selectedStartDate = null;
+    selectedEndDate = null;
 
     onDateRangeChange?.(null, null);
   }
@@ -479,7 +446,7 @@
 
   // Handle escape key to clear selection
   $effect(() => {
-    if (selectedRange || zoomedTimeRange) {
+    if (selectedStartDate || selectedEndDate) {
       document.addEventListener('keydown', handleEscapeKey);
       return () => {
         document.removeEventListener('keydown', handleEscapeKey);

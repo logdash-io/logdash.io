@@ -98,7 +98,7 @@
                 enabled={_method !== 'GET' && !canUseAdvancedMethods}
                 source="webhook-method-restriction"
                 class="w-full"
-                onClick={() => {
+                onclick={() => {
                   if (_method === 'GET' || canUseAdvancedMethods) {
                     method = _method;
                     close();

@@ -15,6 +15,7 @@ type GranularityHours = {
 type ProjectPlanLogConfig = {
   keepLastXLogs: number;
   rateLimitPerHour: number;
+  retentionHours: number;
 };
 
 type ProjectPlanLogMetricsConfig = {

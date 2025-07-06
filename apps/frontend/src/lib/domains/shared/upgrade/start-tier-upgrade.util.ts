@@ -13,6 +13,8 @@ export type UpgradeSource =
   | 'webhook-method-restriction'
   | 'webhook-headers-restriction'
   | 'cluster-invite-limit'
+  | 'logs-filter-dropdown'
+  | 'logs-date-range'
   | 'unknown';
 
 export const startTierUpgrade = (
