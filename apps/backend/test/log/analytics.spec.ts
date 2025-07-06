@@ -4,6 +4,7 @@ import { CreateLogDto } from '../../src/log/write/dto/create-log.dto';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { LogWriteService } from '../../src/log/write/log-write.service';
+import { subHours } from 'date-fns';
 
 describe('LogCoreController (analytics)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -373,6 +374,77 @@ describe('LogCoreController (analytics)', () => {
 
       // then
       expect(response.status).toEqual(403);
+    });
+
+    it('respects retention cutoff for free tier projects', async () => {
+      // given
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const now = new Date();
+      const twentyFiveHoursAgo = subHours(now, 25);
+      const twentyThreeHoursAgo = subHours(now, 23);
+      const oneHourAgo = subHours(now, 1);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: twentyFiveHoursAgo,
+          message: 'Log from 25 hours ago',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: twentyThreeHoursAgo,
+          message: 'Log from 23 hours ago',
+          level: LogLevel.Warning,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: oneHourAgo,
+          message: 'Log from 1 hour ago',
+          level: LogLevel.Error,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      // when - request analytics starting from 25 hours ago
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: twentyFiveHoursAgo.toISOString(),
+          endDate: now.toISOString(),
+        });
+
+      // then - should only include logs within 24h retention period
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+
+      // verify only logs from within retention period are included
+      const totalCounts = response.body.buckets.reduce(
+        (totals, bucket) => ({
+          [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
+          [LogLevel.Warning]: totals[LogLevel.Warning] + bucket.countByLevel[LogLevel.Warning],
+          [LogLevel.Error]: totals[LogLevel.Error] + bucket.countByLevel[LogLevel.Error],
+          total: totals.total + bucket.countTotal,
+        }),
+        {
+          [LogLevel.Info]: 0,
+          [LogLevel.Warning]: 0,
+          [LogLevel.Error]: 0,
+          total: 0,
+        },
+      );
+
+      expect(totalCounts[LogLevel.Info]).toEqual(0);
+      expect(totalCounts[LogLevel.Warning]).toEqual(1);
+      expect(totalCounts[LogLevel.Error]).toEqual(1);
+      expect(totalCounts.total).toEqual(2);
     });
   });
 });

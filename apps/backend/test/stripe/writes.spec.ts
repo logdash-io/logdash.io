@@ -33,7 +33,7 @@ describe('StripeController (writes)', () => {
         type: 'invoice.payment_succeeded',
         data: {
           object: {
-            customer: 'mock-customer-idd',
+            customer: 'mock-customer-id',
             customer_email: user.email,
             lines: {
               data: [

@@ -43,6 +43,9 @@ import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interce
 import { LogAnalyticsService } from '../analytics/log-analytics.service';
 import { LogAnalyticsQuery } from '../analytics/dto/log-analytics-query.dto';
 import { LogAnalyticsResponse } from '../analytics/dto/log-analytics-response.dto';
+import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
+import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
+import { subHours } from 'date-fns';
 
 @Controller('')
 @ApiTags('Logs')
@@ -56,6 +59,7 @@ export class LogCoreController {
     private readonly logRateLimitService: LogRateLimitService,
     private readonly logReadClickhouseService: LogReadService,
     private readonly logAnalyticsService: LogAnalyticsService,
+    private readonly projectReadCachedService: ProjectReadCachedService,
   ) {}
 
   @DemoEndpoint()
@@ -183,6 +187,16 @@ export class LogCoreController {
       throw new BadRequestException('If using pagination, provide both lastId and direction');
     }
 
+    if (dto.startDate) {
+      const project = await this.projectReadCachedService.readProjectOrThrow(projectId);
+
+      const retentionHours = getProjectPlanConfig(project.tier).logs.retentionHours;
+
+      const cutOffDate = subHours(new Date(), retentionHours);
+
+      dto.startDate = dto.startDate < cutOffDate ? cutOffDate : dto.startDate;
+    }
+
     const logs = await this.logReadClickhouseService.readMany({
       direction: dto.direction,
       lastId: dto.lastId,
@@ -207,6 +221,13 @@ export class LogCoreController {
     @Param('projectId') projectId: string,
     @Query() dto: LogAnalyticsQuery,
   ): Promise<LogAnalyticsResponse> {
+    const project = await this.projectReadCachedService.readProjectOrThrow(projectId);
+
+    const retentionHours = getProjectPlanConfig(project.tier).logs.retentionHours;
+
+    const cutOffDate = subHours(new Date(), retentionHours);
+    dto.startDate = dto.startDate < cutOffDate ? cutOffDate : dto.startDate;
+
     return await this.logAnalyticsService.getBucketedAnalytics(projectId, dto);
   }
 }

@@ -19,8 +19,8 @@ export class LogAnalyticsService {
     projectId: string,
     dto: LogAnalyticsQuery,
   ): Promise<LogAnalyticsResponse> {
-    const startDate = new Date(dto.startDate);
-    const endDate = new Date(dto.endDate);
+    const startDate = dto.startDate;
+    const endDate = dto.endDate;
     const utcOffsetHours = dto.utcOffsetHours ?? 0;
 
     // Auto-select optimal bucket size

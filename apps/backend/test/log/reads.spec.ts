@@ -6,7 +6,7 @@ import { sleep } from '../utils/sleep';
 import { ClickHouseClient } from '@clickhouse/client';
 import { LogClickhouseNormalized } from '../../src/log/core/entities/log.interface';
 import { LogSerializer } from '../../src/log/core/entities/log.serializer';
-import { addMinutes, subMinutes } from 'date-fns';
+import { addMinutes, subMinutes, subHours } from 'date-fns';
 
 describe('LogCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -501,6 +501,51 @@ describe('LogCoreController (reads)', () => {
       expect(response.body.some((log) => log.message === 'Log before date range')).toBe(false);
       expect(response.body.some((log) => log.message === 'Log after date range')).toBe(false);
       expect(response.body.some((log) => log.message === 'Reference log')).toBe(false);
+    });
+
+    it('respects retention cutoff for free tier projects', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const now = new Date();
+      const twentyFiveHoursAgo = subHours(now, 25);
+      const twentyThreeHoursAgo = subHours(now, 23);
+      const oneHourAgo = subHours(now, 1);
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: twentyFiveHoursAgo.toISOString(),
+        message: 'Log from 25 hours ago',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: twentyThreeHoursAgo.toISOString(),
+        message: 'Log from 23 hours ago',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: oneHourAgo.toISOString(),
+        message: 'Log from 1 hour ago',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await sleep(1_500);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/logs/v2?startDate=${twentyFiveHoursAgo.toISOString()}`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toHaveLength(2);
+      expect(response.body.some((log) => log.message === 'Log from 25 hours ago')).toBe(false);
+      expect(response.body.some((log) => log.message === 'Log from 23 hours ago')).toBe(true);
+      expect(response.body.some((log) => log.message === 'Log from 1 hour ago')).toBe(true);
     });
   });
 
