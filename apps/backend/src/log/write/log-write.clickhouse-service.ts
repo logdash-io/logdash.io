@@ -28,4 +28,22 @@ export class LogWriteClickhouseService {
       format: 'JSONEachRow',
     });
   }
+
+  public async removePartition(cutOffDate: Date): Promise<void> {
+    const partitionDate = this.convertDateToPartitionDate(cutOffDate);
+
+    await this.clickhouse.query({
+      query: `ALTER TABLE logs DROP PARTITION '${partitionDate}'`,
+    });
+  }
+
+  private convertDateToPartitionDate(date: Date): string {
+    return date.toISOString().slice(0, 10).replace(/-/g, '');
+  }
+
+  public async removeByProjectId(projectId: string): Promise<void> {
+    await this.clickhouse.query({
+      query: `DELETE FROM logs WHERE project_id = '${projectId}'`,
+    });
+  }
 }

@@ -4,6 +4,10 @@ import { AuthMethod } from '../enum/auth-method.enum';
 import { AccountClaimStatus } from '../enum/account-claim-status.enum';
 import { UserTier } from '../enum/user-tier.enum';
 
+export interface PaymentsMetadata {
+  usedTrial: boolean;
+}
+
 @Schema({ collection: 'users', timestamps: true })
 export class UserEntity {
   _id: Types.ObjectId;
@@ -40,6 +44,9 @@ export class UserEntity {
 
   @Prop()
   updatedAt: Date;
+
+  @Prop({ type: Object, default: {} })
+  paymentsMetadata?: PaymentsMetadata;
 }
 
 export type UserDocument = HydratedDocument<UserEntity>;

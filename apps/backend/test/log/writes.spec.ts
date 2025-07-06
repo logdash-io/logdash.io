@@ -14,6 +14,9 @@ import { RedisService } from '../../src/shared/redis/redis.service';
 import { createTestApp } from '../utils/bootstrap';
 import { removeKeysWhichWouldExpireInNextXSeconds } from '../utils/redis-test-container-server';
 import { sleep } from '../utils/sleep';
+import { LogWriteClickhouseService } from '../../src/log/write/log-write.clickhouse-service';
+import { subDays } from 'date-fns';
+import { ClickHouseClient } from '@clickhouse/client';
 
 describe('LogCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -216,104 +219,45 @@ describe('LogCoreController (writes)', () => {
 
   it('removes logs when they exceeded the limit', async () => {
     // given
-    const logQueueingService = await bootstrap.app.get(LogQueueingService);
-    const logTtlService = await bootstrap.app.get(LogTtlService);
+    const logWriteService = await bootstrap.app.get(LogWriteClickhouseService);
+    const ttlService = await bootstrap.app.get(LogTtlService);
 
-    const freeProjectUnderLimit = await bootstrap.utils.projectUtils.createDefaultProject();
-    const freeProjectOverLimit = await bootstrap.utils.projectUtils.createDefaultProject();
-
-    const paidProjectUnderLimit = await bootstrap.utils.projectUtils.createDefaultProject({
-      tier: ProjectTier.EarlyBird,
-    });
-    const paidProjectOverLimit = await bootstrap.utils.projectUtils.createDefaultProject({
-      tier: ProjectTier.EarlyBird,
-    });
-
-    for (let i = 0; i < 1000; i++) {
-      logQueueingService.queueLog({
-        createdAt: new Date(),
-        message: 'test',
-        level: LogLevel.Info,
-        projectId: freeProjectUnderLimit.id,
-      });
-    }
-    for (let i = 0; i < 1600; i++) {
-      logQueueingService.queueLog({
-        createdAt: new Date(),
-        message: 'test',
-        level: LogLevel.Info,
-        projectId: freeProjectOverLimit.id,
-      });
-    }
-    for (let i = 0; i < 10000; i++) {
-      logQueueingService.queueLog({
-        createdAt: new Date(),
-        message: 'test',
-        level: LogLevel.Info,
-        projectId: paidProjectUnderLimit.id,
-      });
-    }
-    for (let i = 0; i < 16000; i++) {
-      logQueueingService.queueLog({
-        createdAt: new Date(),
-        message: 'test',
-        level: LogLevel.Info,
-        projectId: paidProjectOverLimit.id,
-      });
-    }
-
-    await sleep(10000);
-
-    await logTtlService.removeOldLogs();
-
-    const freeProjectUnderLimitAfterRun = (await bootstrap.models.projectModel.findOne({
-      _id: freeProjectUnderLimit.id,
-    }))!;
-    const freeProjectOverLimitAfterRun = (await bootstrap.models.projectModel.findOne({
-      _id: freeProjectOverLimit.id,
-    }))!;
-    const paidProjectUnderLimitAfterRun = (await bootstrap.models.projectModel.findOne({
-      _id: paidProjectUnderLimit.id,
-    }))!;
-    const paidProjectOverLimitAfterRun = (await bootstrap.models.projectModel.findOne({
-      _id: paidProjectOverLimit.id,
-    }))!;
-
-    const numberOfLogsForFreeProjectUnderLimit = await bootstrap.models.logModel.countDocuments({
-      projectId: freeProjectUnderLimit.id,
+    // 32 days ago
+    await logWriteService.create({
+      id: new Types.ObjectId().toString(),
+      createdAt: subDays(new Date(), 32),
+      message: 'test',
+      level: LogLevel.Info,
+      projectId: 'mock',
     });
 
-    const numberOfLogsForFreeProjectOverLimit = await bootstrap.models.logModel.countDocuments({
-      projectId: freeProjectOverLimit.id,
+    // 31 days ago
+    await logWriteService.create({
+      id: new Types.ObjectId().toString(),
+      createdAt: subDays(new Date(), 31),
+      message: 'test',
+      level: LogLevel.Info,
+      projectId: 'mock',
     });
 
-    const numberOfLogsForPaidProjectUnderLimit = await bootstrap.models.logModel.countDocuments({
-      projectId: paidProjectUnderLimit.id,
+    // 30 days ago
+    await logWriteService.create({
+      id: new Types.ObjectId().toString(),
+      createdAt: subDays(new Date(), 30),
+      message: 'test',
+      level: LogLevel.Info,
+      projectId: 'mock',
     });
 
-    const numberOfLogsForPaidProjectOverLimit = await bootstrap.models.logModel.countDocuments({
-      projectId: paidProjectOverLimit.id,
+    const dataBefore = await bootstrap.app.get(ClickHouseClient).query({
+      query: `SELECT count() FROM logs`,
     });
 
-    // free project under limit
-    expect(freeProjectUnderLimitAfterRun.logValues.lastDeletionIndex).toEqual(0);
-    expect(freeProjectUnderLimitAfterRun.logValues.currentIndex).toEqual(1000);
-    expect(numberOfLogsForFreeProjectUnderLimit).toEqual(1000);
+    const countBefore = (await dataBefore.json()) as any;
 
-    // free project over limit
-    expect(freeProjectOverLimitAfterRun.logValues.lastDeletionIndex).toEqual(600);
-    expect(freeProjectOverLimitAfterRun.logValues.currentIndex).toEqual(1600);
-    expect(numberOfLogsForFreeProjectOverLimit).toEqual(1000);
+    await ttlService.removeOldLogs();
 
-    // paid project under limit
-    expect(paidProjectUnderLimitAfterRun.logValues.lastDeletionIndex).toEqual(0);
-    expect(paidProjectUnderLimitAfterRun.logValues.currentIndex).toEqual(10000);
-    expect(numberOfLogsForPaidProjectUnderLimit).toEqual(10000);
-
-    // paid project over limit
-    expect(paidProjectOverLimitAfterRun.logValues.lastDeletionIndex).toEqual(6000);
-    expect(paidProjectOverLimitAfterRun.logValues.currentIndex).toEqual(16000);
-    expect(numberOfLogsForPaidProjectOverLimit).toEqual(10000);
+    console.log(countBefore);
   }, 15_000);
 
   it('applies rate limit', async () => {

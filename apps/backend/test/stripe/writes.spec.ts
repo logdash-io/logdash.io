@@ -4,6 +4,7 @@ import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.payment-succeeded.handler';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { StripeSubscriptionDeletedHandler } from '../../src/payments/stripe/stripe.subscription-deleted.handler';
+import * as request from 'supertest';
 
 describe('StripeController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -98,6 +99,35 @@ describe('StripeController (writes)', () => {
       expect(
         Math.abs(new Date(subscription.endsAt!).getTime() - new Date().getTime()),
       ).toBeLessThan(10_000);
+    });
+  });
+
+  describe('Checkout', () => {
+    it('throws 400 if user has already used a trial', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'test@test.com',
+        userTier: UserTier.Free,
+      });
+
+      await bootstrap.models.userModel.findByIdAndUpdate(setup.user.id, {
+        paymentsMetadata: {
+          usedTrial: true,
+        },
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get('/payments/stripe/checkout')
+        .query({
+          tier: UserTier.Builder,
+          isTrial: true,
+        })
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // then
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('User has already used a trial');
     });
   });
 });

@@ -19,8 +19,6 @@ import { HttpMonitorCoreModule } from '../../src/http-monitor/core/http-monitor-
 import { HttpPingBucketCoreModule } from '../../src/http-ping-bucket/core/http-ping-bucket-core.module';
 import { HttpPingCoreModule } from '../../src/http-ping/core/http-ping-core.module';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/schedule/http-ping-scheduler.service';
-import { LogMetricEntity } from '../../src/log-metric/core/entities/log-metric.entity';
-import { LogMetricCoreModule } from '../../src/log-metric/core/log-metric-core.module';
 import { LogEntity } from '../../src/log/core/entities/log.entity';
 import { LogCoreModule } from '../../src/log/core/log-core.module';
 import { MetricRegisterEntryEntity } from '../../src/metric-register/core/entities/metric-register-entry.entity';
@@ -75,7 +73,6 @@ export async function createTestApp() {
       UserCoreModule,
       LogCoreModule,
       ApiKeyCoreModule,
-      LogMetricCoreModule,
       ProjectCoreModule,
       ScheduleModule.forRoot(),
       MetricCoreModule,
@@ -116,7 +113,6 @@ export async function createTestApp() {
 
   const userModel: Model<UserEntity> = module.get(getModelToken(UserEntity.name));
   const logModel: Model<LogEntity> = module.get(getModelToken(LogEntity.name));
-  const logMetricModel: Model<LogMetricEntity> = module.get(getModelToken(LogMetricEntity.name));
   const projectModel: Model<ProjectEntity> = module.get(getModelToken(ProjectEntity.name));
   const metricModel: Model<MetricEntity> = module.get(getModelToken(MetricEntity.name));
   const apiKeyModel: Model<ApiKeyEntity> = module.get(getModelToken(ApiKeyEntity.name));
@@ -148,7 +144,6 @@ export async function createTestApp() {
     await Promise.all([
       userModel.deleteMany({}),
       logModel.deleteMany({}),
-      logMetricModel.deleteMany({}),
       projectModel.deleteMany({}),
       metricModel.deleteMany({}),
       apiKeyModel.deleteMany({}),
@@ -193,7 +188,6 @@ export async function createTestApp() {
     models: {
       userModel,
       logModel,
-      logMetricModel,
       projectModel,
       metricModel,
       apiKeyModel,

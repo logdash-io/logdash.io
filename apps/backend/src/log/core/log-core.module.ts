@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { LogReadModule } from '../read/log-read.module';
 import { LogWriteModule } from '../write/log-write.module';
 import { LogCoreController } from './log-core.controller';
-import { LogMetricIngestionModule } from '../../log-metric/ingestion/log-metric-ingestion.module';
 import { LogQueueingModule } from '../queueing/log-queuing.module';
 import { LogEventModule } from '../events/log-event.module';
 import { LogTtlModule } from '../ttl/log-ttl.module';
@@ -16,7 +15,6 @@ import { LogAnalyticsModule } from '../analytics/log-analytics.module';
   imports: [
     LogReadModule,
     LogWriteModule,
-    LogMetricIngestionModule,
     LogQueueingModule,
     LogEventModule,
     ApiKeyReadModule,
