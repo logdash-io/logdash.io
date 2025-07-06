@@ -17,16 +17,21 @@ export class LogTtlService {
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
-  public async removeOldLogs(): Promise<void> {
+  private async runCron(): Promise<void> {
     if (process.env.NODE_ENV === 'test') {
       return;
     }
 
     const now = new Date();
-    await this.logWriteService.removePartition(subDays(now, 32));
+
+    await this.removeOldLogs();
 
     this.logger.log(`Removed old logs`, {
       durationInMs: new Date().getTime() - now.getTime(),
     });
+  }
+
+  public async removeOldLogs(): Promise<void> {
+    await this.logWriteService.removePartition(subDays(new Date(), 32));
   }
 }

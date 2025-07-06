@@ -96,4 +96,36 @@ export class ProjectReadService {
 
     return result;
   }
+
+  public async *getProjectsForMetricRemoval(): AsyncGenerator<
+    {
+      id: string;
+      tier: ProjectTier;
+    }[]
+  > {
+    const cursor = this.model.find().cursor();
+
+    const batchSize = 20;
+
+    const batch: {
+      id: string;
+      tier: ProjectTier;
+    }[] = [];
+
+    for await (const project of cursor) {
+      batch.push({
+        id: project._id.toString(),
+        tier: project.tier,
+      });
+
+      if (batch.length === batchSize) {
+        yield batch;
+        batch.length = 0;
+      }
+    }
+
+    if (batch.length > 0) {
+      yield batch;
+    }
+  }
 }

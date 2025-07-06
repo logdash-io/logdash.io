@@ -53,14 +53,12 @@ export class StripeController {
   ): Promise<CheckoutResponse> {
     const user = await this.userReadService.readByIdOrThrow(userId);
 
-    if (query.isTrial && user.paymentsMetadata?.usedTrial) {
-      throw new BadRequestException('User has already used a trial');
-    }
+    const isTrial = !user.paymentsMetadata?.usedTrial;
 
     const checkoutUrl = await this.stripeCheckoutService.getCheckoutUrl({
       userId,
       tier: query.tier,
-      isTrial: query.isTrial,
+      isTrial: isTrial,
     });
 
     return {
