@@ -50,16 +50,9 @@
 
   $effect(() => {
     filtersStore.filters;
-    if (
-      //   !filtersStore.startDate ||
-      //   !filtersStore.endDate ||
-      !projectId
-    ) {
-      console.log('no filters');
+    if (!projectId) {
       return;
     }
-
-    console.log('refreshing!!! filters', filtersStore.filters);
 
     const cleanup = untrack(() => {
       logsState.refresh();
