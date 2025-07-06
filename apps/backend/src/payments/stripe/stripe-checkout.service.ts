@@ -41,7 +41,7 @@ export class StripeCheckoutService {
     const user = await this.userReadService.readByIdOrThrow(dto.userId);
 
     if (!user) {
-      this.logger.error(`[STRIPE] User not found while trying to initiate stripe checkout`, {
+      this.logger.error(`[STRIPE] User not found while trying to initiate stripe checkout.`, {
         userId: dto.userId,
       });
       throw new Error(`User not found while trying to initiate stripe checkout`);
