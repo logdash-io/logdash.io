@@ -48,7 +48,7 @@
   <NotificationChannelSetupModal {clusterId} />
 
   {#if hasLogging && (!previewedMetricId || isMobile) && metricsState.ready}
-    <div class="flex flex-1 flex-col gap-4">
+    <div class="z-50 flex flex-1 flex-col gap-4">
       <DataTile
         delayIn={0}
         delayOut={50}

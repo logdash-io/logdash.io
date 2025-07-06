@@ -308,7 +308,7 @@ class LogdashAPI {
 
   stripe_checkout(access_token: string): Promise<{ checkoutUrl: string }> {
     return this.get<{ checkoutUrl: string }>(
-      `${LogdashAPI.v0baseUrl}/payments/stripe/checkout`,
+      `${LogdashAPI.v0baseUrl}/payments/stripe/checkout?tier=builder`,
       access_token,
     );
   }

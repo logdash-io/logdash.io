@@ -1,44 +1,45 @@
 <script lang="ts">
+  import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
+
   type Props = {
     onSearchChange?: (query: string) => void;
   };
 
   const { onSearchChange }: Props = $props();
 
-  let searchInput = $state('');
   let debounceTimer = $state<ReturnType<typeof setTimeout> | null>(null);
 
   function handleSearchInput(event: Event): void {
     const target = event.target as HTMLInputElement;
-    searchInput = target.value;
+    filtersStore.searchString = target.value;
 
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
 
     debounceTimer = setTimeout(async () => {
-      const query = searchInput.trim();
+      const query = filtersStore.searchString.trim();
 
       onSearchChange?.(query);
     }, 300);
   }
 
   function clearSearch(): void {
-    searchInput = '';
+    filtersStore.searchString = '';
     onSearchChange?.('');
   }
 </script>
 
 <div class="relative w-full">
   <input
-    bind:value={searchInput}
+    bind:value={filtersStore.searchString}
     class="ld-input ld-input-padding w-full pr-10 text-sm"
     oninput={handleSearchInput}
     placeholder="Search logs..."
     type="text"
   />
 
-  {#if searchInput}
+  {#if filtersStore.searchString}
     <button
       type="button"
       class="hover:bg-base-300 absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 transition-colors"

@@ -108,6 +108,10 @@ class LogsState {
         logger.error('logs sync connection error');
       },
       onMessage: (log: Log) => {
+        if (filtersStore.level && log.level !== filtersStore.level) {
+          return;
+        }
+
         this._addLog(log);
       },
     });
