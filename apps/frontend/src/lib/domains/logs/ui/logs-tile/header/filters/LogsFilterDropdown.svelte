@@ -1,6 +1,8 @@
 <script lang="ts">
   import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
+  import LogLevelSelect from './LogLevelSelect.svelte';
+  import TimeRangeSelect from './TimeRangeSelect.svelte';
   import { ChevronDownIcon, Settings2Icon } from 'lucide-svelte';
   import SveltyPicker from 'svelty-picker';
 
@@ -22,16 +24,6 @@
     onClearAllClicked,
   }: Props = $props();
 
-  const LOG_LEVELS = [
-    { value: 'error', label: 'Error', color: 'bg-[#e7000b]' },
-    { value: 'warning', label: 'Warning', color: 'bg-[#fe9a00]' },
-    { value: 'info', label: 'Info', color: 'bg-[#155dfc]' },
-    { value: 'http', label: 'HTTP', color: 'bg-[#00a6a6]' },
-    { value: 'verbose', label: 'Verbose', color: 'bg-[#00a600]' },
-    { value: 'debug', label: 'Debug', color: 'bg-[#00a600]' },
-    { value: 'silly', label: 'Silly', color: 'bg-[#505050]' },
-  ];
-
   const TIME_RANGES = [
     { value: 'last-15m', label: 'Last 15 minutes', hours: 0.25 },
     { value: 'last-1h', label: 'Last hour', hours: 1 },
@@ -44,8 +36,8 @@
 
   let startDateInput = $state<string>('');
   let endDateInput = $state<string>('');
-  let selectedLevelLocal = $state<string | null>(null);
   let selectedTimeRange = $state<string>('last-24h');
+  let selectedLevelLocal = $state<string | null>(null);
 
   function formatDateForInput(dateString: string | null): string {
     if (!dateString) return '';
@@ -58,7 +50,6 @@
   ): string {
     if (!startDate || !endDate) return 'custom';
 
-    const now = new Date();
     const start = new Date(startDate);
     const end = new Date(endDate);
 
@@ -115,37 +106,13 @@
     return { startDate, endDate };
   }
 
-  function handleStartDateChange(value: string): void {
-    startDateInput = value;
-  }
-
-  function handleEndDateChange(value: string): void {
-    endDateInput = value;
-  }
-
   function handleLevelChange(level: string | null): void {
     selectedLevelLocal = level;
   }
 
-  function isTimeRangeUpgradeRequired(timeRange: { hours: number }): boolean {
-    return timeRange.hours > maxDateRangeHours;
-  }
-
-  const isCustomRangeUpgradeRequired = $derived.by(() => {
-    if (selectedTimeRange !== 'custom' || !startDateInput || !endDateInput) {
-      return false;
-    }
-
-    const start = new Date(startDateInput);
-    const end = new Date(endDateInput);
-    const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-
-    return diffHours > maxDateRangeHours;
-  });
-
   function handleTimeRangeChange(range: string): void {
     const timeRange = TIME_RANGES.find((tr) => tr.value === range);
-    if (timeRange && isTimeRangeUpgradeRequired(timeRange)) {
+    if (timeRange && timeRange.hours > maxDateRangeHours) {
       return;
     }
 
@@ -155,6 +122,11 @@
       startDateInput = formatDateForInput(startDate);
       endDateInput = formatDateForInput(endDate);
     }
+  }
+
+  function handleDateRangeChange(startDate: string, endDate: string): void {
+    startDateInput = formatDateForInput(startDate);
+    endDateInput = formatDateForInput(endDate);
   }
 
   function applyFilters(): void {
@@ -174,7 +146,7 @@
 
     selectedStartDate = dates.startDate;
     selectedEndDate = dates.endDate;
-    selectedLevel = selectedLevelLocal as any;
+    selectedLevel = selectedLevelLocal;
   }
 
   function clearAllFilters(): void {
@@ -182,6 +154,9 @@
     endDateInput = '';
     selectedLevelLocal = null;
     selectedTimeRange = 'last-24h';
+    selectedLevel = null;
+    selectedStartDate = null;
+    selectedEndDate = null;
     onClearAllClicked?.();
   }
 
@@ -193,6 +168,18 @@
         searchString?.trim(),
     );
   }
+
+  const isCustomRangeUpgradeRequired = $derived.by(() => {
+    if (selectedTimeRange !== 'custom' || !startDateInput || !endDateInput) {
+      return false;
+    }
+
+    const start = new Date(startDateInput);
+    const end = new Date(endDateInput);
+    const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+
+    return diffHours > maxDateRangeHours;
+  });
 
   function hasPendingChanges(): boolean {
     const currentTimeRange = getTimeRangeFromDates(
@@ -236,97 +223,51 @@
     class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-80 p-4 shadow"
   >
     <div class="space-y-4">
-      <div class="space-y-2">
-        <label class="block text-sm font-medium">Time Range</label>
-        <div class="grid grid-cols-1 gap-2">
-          {#each TIME_RANGES as range}
-            {@const requiresUpgrade = isTimeRangeUpgradeRequired(range)}
-            <UpgradeElement
-              class={[
-                'btn btn-sm',
-                {
-                  'btn-subtle': selectedTimeRange !== range.value,
-                  'border-primary': selectedTimeRange === range.value,
-                  'justify-between': requiresUpgrade,
-                  'justify-center': !requiresUpgrade,
-                },
-              ]}
-              onclick={() => handleTimeRangeChange(range.value)}
-              enabled={requiresUpgrade}
-              source="logs-date-range"
-            >
-              <span>{range.label}</span>
-              {#if requiresUpgrade}
-                <span class="badge badge-xs badge-primary badge-soft">
-                  Upgrade
-                </span>
-              {/if}
-            </UpgradeElement>
-          {/each}
+      <div class="flex gap-4">
+        <div class="flex-1">
+          <label class="mb-2 block text-sm font-medium">Log Level</label>
+          <LogLevelSelect
+            selectedLevel={selectedLevelLocal}
+            onLevelChange={handleLevelChange}
+          />
         </div>
 
-        {#if selectedTimeRange === 'custom'}
-          <div class="mt-3 gap-2">
-            <div class="space-y-1">
-              <label class="text-base-content/70 block text-xs font-medium">
-                From
-              </label>
-              <SveltyPicker
-                bind:value={startDateInput}
-                mode="datetime"
-                placeholder="Select start date"
-                inputClasses="ld-input ld-input-padding w-full text-xs"
-                displayFormat={'yyyy M dd, hh:ii'}
-              />
-            </div>
-            <div class="space-y-1">
-              <label class="text-base-content/70 block text-xs font-medium">
-                To
-              </label>
-              <SveltyPicker
-                bind:value={endDateInput}
-                mode="datetime"
-                placeholder="Select end date"
-                inputClasses="ld-input ld-input-padding w-full text-xs"
-                displayFormat={'yyyy M dd, hh:ii'}
-              />
-            </div>
-          </div>
-        {/if}
-      </div>
-
-      <div class="space-y-2">
-        <label class="block text-sm font-medium">Log Level</label>
-        <div class="grid grid-cols-2 gap-2">
-          <button
-            class={[
-              'btn btn-sm justify-start gap-2',
-              {
-                'btn-subtle': selectedLevelLocal !== null,
-                'border-primary': selectedLevelLocal === null,
-              },
-            ]}
-            onclick={() => handleLevelChange(null)}
-          >
-            All Levels
-          </button>
-          {#each LOG_LEVELS as level}
-            <button
-              class={[
-                'btn btn-sm justify-start gap-2',
-                {
-                  'btn-subtle': selectedLevelLocal !== level.value,
-                  'border-primary': selectedLevelLocal === level.value,
-                },
-              ]}
-              onclick={() => handleLevelChange(level.value)}
-            >
-              <div class={['h-2 w-2 rounded-full', level.color]}></div>
-              {level.label}
-            </button>
-          {/each}
+        <div class="flex-1">
+          <label class="mb-2 block text-sm font-medium">Time Range</label>
+          <TimeRangeSelect
+            {selectedTimeRange}
+            {maxDateRangeHours}
+            onTimeRangeChange={handleTimeRangeChange}
+          />
         </div>
       </div>
+
+      {#if selectedTimeRange === 'custom'}
+        <div class="space-y-1">
+          <label class="text-base-content/70 block text-xs font-medium">
+            From
+          </label>
+          <SveltyPicker
+            bind:value={startDateInput}
+            mode="datetime"
+            placeholder="Select start date"
+            inputClasses="ld-input ld-input-padding w-full text-xs"
+            displayFormat={'yyyy M dd, hh:ii'}
+          />
+        </div>
+        <div class="space-y-1">
+          <label class="text-base-content/70 block text-xs font-medium">
+            To
+          </label>
+          <SveltyPicker
+            bind:value={endDateInput}
+            mode="datetime"
+            placeholder="Select end date"
+            inputClasses="ld-input ld-input-padding w-full text-xs"
+            displayFormat={'yyyy M dd, hh:ii'}
+          />
+        </div>
+      {/if}
 
       <div class="flex gap-2 pt-2">
         <button
@@ -340,40 +281,16 @@
           Clear All
         </button>
 
-        {#if hasPendingChanges()}
-          <button
-            class="btn btn-subtle btn-sm flex-1"
-            onclick={() => {
-              if (selectedStartDate) {
-                startDateInput = formatDateForInput(selectedStartDate);
-              } else {
-                startDateInput = '';
-              }
-              if (selectedEndDate) {
-                endDateInput = formatDateForInput(selectedEndDate);
-              } else {
-                endDateInput = '';
-              }
-              selectedLevelLocal = selectedLevel;
-              selectedTimeRange = getTimeRangeFromDates(
-                selectedStartDate,
-                selectedEndDate,
-              );
-            }}
-          >
-            Reset
-          </button>
-        {/if}
-
         <UpgradeElement
           enabled={isCustomRangeUpgradeRequired}
           source="logs-filter-dropdown"
           class={[
-            'btn btn-sm btn-primary flex-1',
+            'btn btn-sm flex-1',
             {
               'justify-between': isCustomRangeUpgradeRequired,
               'justify-center': !isCustomRangeUpgradeRequired,
-              'btn-disabled': !hasPendingChanges(),
+              'btn-primary': hasPendingChanges(),
+              'btn-secondary-disabled': !hasPendingChanges(),
             },
           ]}
           interactive={hasPendingChanges()}

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
+  import { untrack } from 'svelte';
 
   type Props = {
     onSearchChange?: (query: string) => void;
@@ -8,17 +9,18 @@
   const { onSearchChange }: Props = $props();
 
   let debounceTimer = $state<ReturnType<typeof setTimeout> | null>(null);
+  let localSearchTerm = $state<string>('');
 
   function handleSearchInput(event: Event): void {
     const target = event.target as HTMLInputElement;
-    filtersStore.searchString = target.value;
+    localSearchTerm = target.value;
 
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
 
     debounceTimer = setTimeout(async () => {
-      const query = filtersStore.searchString.trim();
+      const query = localSearchTerm.trim();
 
       onSearchChange?.(query);
     }, 300);
@@ -28,18 +30,24 @@
     filtersStore.searchString = '';
     onSearchChange?.('');
   }
+
+  $effect(() => {
+    if (filtersStore.searchString !== untrack(() => localSearchTerm)) {
+      localSearchTerm = filtersStore.searchString;
+    }
+  });
 </script>
 
 <div class="relative w-full">
   <input
-    bind:value={filtersStore.searchString}
+    bind:value={localSearchTerm}
     class="ld-input ld-input-padding w-full pr-10 text-sm"
     oninput={handleSearchInput}
     placeholder="Search logs..."
     type="text"
   />
 
-  {#if filtersStore.searchString}
+  {#if localSearchTerm}
     <button
       type="button"
       class="hover:bg-base-300 absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 transition-colors"

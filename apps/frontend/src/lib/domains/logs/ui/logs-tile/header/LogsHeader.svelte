@@ -4,7 +4,7 @@
   import { scale } from 'svelte/transition';
   import LogsAnalyticsChart from './LogsAnalyticsChart.svelte';
   import LogsSearchInput from './LogsSearchInput.svelte';
-  import LogsFilterDropdown from './LogsFilterDropdown.svelte';
+  import LogsFilterDropdown from './filters/LogsFilterDropdown.svelte';
   import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
