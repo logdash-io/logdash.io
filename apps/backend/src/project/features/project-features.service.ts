@@ -3,6 +3,7 @@ import { ProjectFeature } from '../core/enums/project-feature.enum';
 import { LogReadService } from '../../log/read/log-read.service';
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
+import { Logger } from '@logdash/js-sdk';
 
 @Injectable()
 export class ProjectFeaturesService {
@@ -10,6 +11,7 @@ export class ProjectFeaturesService {
     private readonly logReadService: LogReadService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
+    private readonly logger: Logger,
   ) {}
 
   async getProjectFeatures(projectId: string): Promise<ProjectFeature[]> {
@@ -20,21 +22,36 @@ export class ProjectFeaturesService {
       if (hasLogs) {
         features.push(ProjectFeature.logging);
       }
-    } catch (error) {}
+    } catch (error) {
+      this.logger.error('Error checking if project has logs', {
+        projectId,
+        error: error.message,
+      });
+    }
 
     try {
       const hasMetrics = await this.metricRegisterReadService.existsForProject(projectId);
       if (hasMetrics) {
         features.push(ProjectFeature.metrics);
       }
-    } catch (error) {}
+    } catch (error) {
+      this.logger.error('Error checking if project has metrics', {
+        projectId,
+        error: error.message,
+      });
+    }
 
     try {
       const hasHttpMonitors = await this.httpMonitorReadService.existsForProject(projectId);
       if (hasHttpMonitors) {
         features.push(ProjectFeature.monitoring);
       }
-    } catch (error) {}
+    } catch (error) {
+      this.logger.error('Error checking if project has http monitors', {
+        projectId,
+        error: error.message,
+      });
+    }
 
     return features;
   }

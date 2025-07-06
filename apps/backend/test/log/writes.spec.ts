@@ -10,9 +10,9 @@ import { RedisService } from '../../src/shared/redis/redis.service';
 import { createTestApp } from '../utils/bootstrap';
 import { removeKeysWhichWouldExpireInNextXSeconds } from '../utils/redis-test-container-server';
 import { sleep } from '../utils/sleep';
-import { LogWriteClickhouseService } from '../../src/log/write/log-write.clickhouse-service';
 import { subDays } from 'date-fns';
 import { ClickHouseClient } from '@clickhouse/client';
+import { LogWriteService } from '../../src/log/write/log-write.service';
 
 describe('LogCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -31,7 +31,7 @@ describe('LogCoreController (writes)', () => {
 
   it('removes old partitions', async () => {
     // given
-    const logWriteService = await bootstrap.app.get(LogWriteClickhouseService);
+    const logWriteService = await bootstrap.app.get(LogWriteService);
     const ttlService = await bootstrap.app.get(LogTtlService);
 
     // 33 days ago

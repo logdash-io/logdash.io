@@ -9,17 +9,14 @@ import { LogLevel } from '../core/enums/log-level.enum';
 
 @Injectable()
 export class LogReadService {
-  constructor(
-    private readonly clickhouse: ClickHouseClient,
-    private logger: Logger,
-  ) {}
+  constructor(private readonly clickhouse: ClickHouseClient) {}
 
   public async existsForProject(projectId: string): Promise<boolean> {
     const result = await this.clickhouse.query({
-      query: `SELECT 1 FROM logs WHERE projectId = '${projectId}' LIMIT 1`,
+      query: `SELECT 1 FROM logs WHERE project_id = '${projectId}' LIMIT 1`,
     });
 
-    const data = (await result.json()) as any;
+    const data = ((await result.json()) as any).data;
 
     return data.length > 0;
   }

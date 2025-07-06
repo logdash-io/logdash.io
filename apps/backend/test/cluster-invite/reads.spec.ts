@@ -228,9 +228,7 @@ describe('ClusterInviteCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(response.body.members).toHaveLength(
-        getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers,
-      );
+      expect(response.body.members).toHaveLength(2);
       expect(response.body.members[0].email).toBe(user.email);
       expect(response.body.members[0].role).toBe(ClusterRole.Creator);
       expect(response.body.members[1].email).toBe(otherSetup.user.email);

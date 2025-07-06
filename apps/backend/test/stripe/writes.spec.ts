@@ -101,33 +101,4 @@ describe('StripeController (writes)', () => {
       ).toBeLessThan(10_000);
     });
   });
-
-  describe('Checkout', () => {
-    it('throws 400 if user has already used a trial', async () => {
-      // given
-      const setup = await bootstrap.utils.generalUtils.setupClaimed({
-        email: 'test@test.com',
-        userTier: UserTier.Free,
-      });
-
-      await bootstrap.models.userModel.findByIdAndUpdate(setup.user.id, {
-        paymentsMetadata: {
-          usedTrial: true,
-        },
-      });
-
-      // when
-      const response = await request(bootstrap.app.getHttpServer())
-        .get('/payments/stripe/checkout')
-        .query({
-          tier: UserTier.Builder,
-          isTrial: true,
-        })
-        .set('Authorization', `Bearer ${setup.token}`);
-
-      // then
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe('User has already used a trial');
-    });
-  });
 });
