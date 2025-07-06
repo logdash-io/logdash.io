@@ -163,8 +163,7 @@
   function hasActiveFilters(): boolean {
     return Boolean(
       selectedLevel ||
-        selectedStartDate ||
-        selectedEndDate ||
+        (selectedStartDate && selectedEndDate) ||
         searchString?.trim(),
     );
   }
@@ -326,7 +325,7 @@
       <span class="badge badge-xs">
         {[
           selectedLevel,
-          selectedStartDate || selectedEndDate,
+          selectedStartDate && selectedEndDate,
           searchString?.trim(),
         ].filter(Boolean).length}
       </span>
