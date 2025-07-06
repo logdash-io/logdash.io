@@ -12,6 +12,8 @@
   import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
   import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
   import { ArrowRightIcon } from 'lucide-svelte';
+  import ProblemStatement from '$lib/landing/ProblemStatement.svelte';
+  import TrustProofExample from '$lib/landing/TrustProofExample.svelte';
 
   type Props = {
     data: {
@@ -31,9 +33,9 @@
 
 <AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
   <header>
-    <div class="hero">
+    <div class="hero md:pt-14 md:pb-4">
       <div
-        class="hero-content w-full flex-col lg:flex-row lg:justify-around lg:gap-14"
+        class="hero-content w-full flex-col lg:flex-row lg:justify-around lg:gap-10"
       >
         <div
           class="flex w-full flex-col items-center justify-center gap-6 text-center lg:items-start lg:gap-10 lg:text-left"
@@ -41,7 +43,7 @@
           <h1
             class="flex flex-col items-center gap-3 text-4xl font-extrabold tracking-tight md:-mb-4 lg:items-start lg:text-6xl"
           >
-            Setup observability in minutes, not days.
+            System observability in minutes, not days.
           </h1>
 
           <p class="w-11/12 text-lg leading-relaxed opacity-80">
@@ -77,15 +79,23 @@
 
   <div class="distance h-16 sm:h-32"></div>
 
+  <ProblemStatement />
+
+  <div class="distance h-16 sm:h-32"></div>
+
   <Features />
 
   <div class="distance h-16 sm:h-32"></div>
 
-  <HowItWorks />
+  <WhyLogdash />
 
   <div class="distance h-16 sm:h-32"></div>
 
-  <WhyLogdash />
+  <TrustProofExample />
+
+  <div class="distance h-16 sm:h-32"></div>
+
+  <HowItWorks />
 
   <div class="distance h-16 sm:h-32"></div>
 

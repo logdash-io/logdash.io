@@ -4,19 +4,19 @@
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
   import { RoutePath } from '$lib/domains/shared/route-path.js';
   import { Feature } from '$lib/domains/shared/types.js';
-  import { isDev } from '$lib/domains/shared/utils/is-dev.util.js';
   import { ArrowRightIcon, TimerIcon } from 'lucide-svelte';
 </script>
 
 <div class="container mx-auto max-w-7xl px-4 py-8">
   <header class="mb-16 text-center">
     <h1 class="mb-4 text-4xl font-bold tracking-tight lg:text-5xl">
-      Platform Features
+      Get the job done, fast.
     </h1>
 
     <p class="text-base-content/70 mx-auto max-w-3xl text-xl">
-      Everything you need to improve reliability and understand your
-      mission-critical systems, infrastructure in one simple platform.
+      We do the heavy lifting so you can focus on your business. Improve
+      reliability and understand your mission-critical services in one simple
+      platform.
     </p>
   </header>
 

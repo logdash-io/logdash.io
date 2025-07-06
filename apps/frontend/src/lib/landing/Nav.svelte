@@ -6,6 +6,7 @@
     AnimationDirection,
   } from '$lib/domains/shared/ui/animated-view.state.svelte';
   import { generateGithubOAuthUrl } from '$lib/domains/shared/utils/generate-github-oauth-url';
+  import { ExternalLinkIcon } from 'lucide-svelte';
   import { onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
 
@@ -204,6 +205,10 @@
                 }}
               >
                 {name}
+
+                {#if target === '_blank'}
+                  <ExternalLinkIcon class="h-4 w-4" />
+                {/if}
               </a>
             </li>
           {/each}

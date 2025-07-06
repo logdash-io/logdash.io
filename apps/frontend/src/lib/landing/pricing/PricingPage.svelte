@@ -26,6 +26,7 @@
 <section class="my-16 px-4">
   <div class="mx-auto max-w-4xl text-center">
     <TrustProof
+      align="center"
       quote="Working with Logdash is like having an extra team on our side. It works out of the box, and anytime I share feedback, they're already on it. Real people, real support, and impressively fast."
       person="Yaroslaw Korshak"
       img="/images/testimonials/yaroslaw.png"
