@@ -76,7 +76,7 @@ export class LogCoreController {
     let historicalLogs$: Observable<{ data: LogSerialized }> = from([]);
 
     if (dto.lastId) {
-      const historicalLogs = await this.logReadService.readManyLastId({
+      const historicalLogs = await this.logReadService.readMany({
         projectId,
         lastId: dto.lastId,
         direction: LogReadDirection.After,
@@ -180,38 +180,19 @@ export class LogCoreController {
     @Query() dto: ReadLogsQuery,
   ): Promise<LogSerialized[]> {
     if ((dto.lastId && !dto.direction) || (!dto.lastId && dto.direction)) {
-      throw new BadRequestException('Provide either lastId+direction or startDate+endDate');
+      throw new BadRequestException('If using pagination, provide both lastId and direction');
     }
 
-    if (dto.lastId && (dto.startDate || dto.endDate)) {
-      throw new BadRequestException('Provide either lastId+direction or startDate+endDate');
-    }
-
-    if (dto.direction && (dto.startDate || dto.endDate)) {
-      throw new BadRequestException('Provide either lastId+direction or startDate+endDate');
-    }
-
-    let logs: LogNormalized[] = [];
-
-    if (dto.startDate || dto.endDate) {
-      logs = await this.logReadClickhouseService.readManyDateRange({
-        startDate: dto.startDate,
-        endDate: dto.endDate,
-        projectId,
-        limit: dto.limit ?? 50,
-        level: dto.level,
-        searchString: dto.searchString,
-      });
-    } else {
-      logs = await this.logReadClickhouseService.readManyLastId({
-        direction: dto.direction,
-        lastId: dto.lastId,
-        projectId,
-        limit: dto.limit ?? 50,
-        level: dto.level,
-        searchString: dto.searchString,
-      });
-    }
+    const logs = await this.logReadClickhouseService.readMany({
+      direction: dto.direction,
+      lastId: dto.lastId,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+      projectId,
+      limit: dto.limit ?? 50,
+      level: dto.level,
+      searchString: dto.searchString,
+    });
 
     return logs.map((log) => LogSerializer.serialize(log));
   }

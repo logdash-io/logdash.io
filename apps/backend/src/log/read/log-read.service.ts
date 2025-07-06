@@ -21,9 +21,11 @@ export class LogReadService {
     return data.length > 0;
   }
 
-  public async readManyLastId(dto: {
+  public async readMany(dto: {
     direction?: LogReadDirection;
     lastId?: string;
+    startDate?: Date;
+    endDate?: Date;
     level?: LogLevel;
     limit: number;
     projectId: string;
@@ -43,20 +45,6 @@ export class LogReadService {
             WHERE id = {lastId:String} AND project_id = {projectId:String}
             LIMIT 1
           )`;
-        if (dto.level) {
-          query += ` AND l.level = {level:String}`;
-        }
-        if (dto.searchString && dto.searchString.trim()) {
-          const words = dto.searchString
-            .trim()
-            .split(/\s+/)
-            .filter((word) => word.length > 0);
-          words.forEach((word, index) => {
-            query += ` AND positionCaseInsensitive(l.message, {searchWord${index}:String}) > 0`;
-          });
-        }
-        query += ` ORDER BY l.created_at ASC, l.sequence_number ASC 
-          LIMIT {limit:UInt32}`;
       } else {
         query = `
           SELECT l.* FROM logs l
@@ -67,45 +55,67 @@ export class LogReadService {
             WHERE id = {lastId:String} AND project_id = {projectId:String}
             LIMIT 1
           )`;
-        if (dto.level) {
-          query += ` AND l.level = {level:String}`;
-        }
-        if (dto.searchString && dto.searchString.trim()) {
-          const words = dto.searchString
-            .trim()
-            .split(/\s+/)
-            .filter((word) => word.length > 0);
-          words.forEach((word, index) => {
-            query += ` AND positionCaseInsensitive(l.message, {searchWord${index}:String}) > 0`;
-          });
-        }
-        query += ` ORDER BY l.created_at DESC, l.sequence_number DESC 
-          LIMIT {limit:UInt32}`;
       }
+
       queryParams = {
         projectId: dto.projectId,
         lastId: dto.lastId,
         limit: dto.limit,
       };
+
+      if (dto.startDate) {
+        query += ` AND l.created_at >= {startDate:DateTime64(3)}`;
+        queryParams.startDate = ClickhouseUtils.jsDateToClickhouseDate(dto.startDate);
+      }
+
+      if (dto.endDate) {
+        query += ` AND l.created_at <= {endDate:DateTime64(3)}`;
+        queryParams.endDate = ClickhouseUtils.jsDateToClickhouseDate(dto.endDate);
+      }
+
       if (dto.level) {
+        query += ` AND l.level = {level:String}`;
         queryParams.level = dto.level;
       }
+
       if (dto.searchString && dto.searchString.trim()) {
         const words = dto.searchString
           .trim()
           .split(/\s+/)
           .filter((word) => word.length > 0);
         words.forEach((word, index) => {
+          query += ` AND positionCaseInsensitive(l.message, {searchWord${index}:String}) > 0`;
           queryParams[`searchWord${index}`] = word;
         });
       }
+
+      if (dto.direction === LogReadDirection.After) {
+        query += ` ORDER BY l.created_at ASC, l.sequence_number ASC LIMIT {limit:UInt32}`;
+      } else {
+        query += ` ORDER BY l.created_at DESC, l.sequence_number DESC LIMIT {limit:UInt32}`;
+      }
     } else {
-      query = `
-        SELECT * FROM logs 
-        WHERE project_id = {projectId:String}`;
+      query = `SELECT * FROM logs WHERE project_id = {projectId:String}`;
+      queryParams = {
+        projectId: dto.projectId,
+        limit: dto.limit,
+      };
+
+      if (dto.startDate) {
+        query += ` AND created_at >= {startDate:DateTime64(3)}`;
+        queryParams.startDate = ClickhouseUtils.jsDateToClickhouseDate(dto.startDate);
+      }
+
+      if (dto.endDate) {
+        query += ` AND created_at <= {endDate:DateTime64(3)}`;
+        queryParams.endDate = ClickhouseUtils.jsDateToClickhouseDate(dto.endDate);
+      }
+
       if (dto.level) {
         query += ` AND level = {level:String}`;
+        queryParams.level = dto.level;
       }
+
       if (dto.searchString && dto.searchString.trim()) {
         const words = dto.searchString
           .trim()
@@ -113,78 +123,12 @@ export class LogReadService {
           .filter((word) => word.length > 0);
         words.forEach((word, index) => {
           query += ` AND positionCaseInsensitive(message, {searchWord${index}:String}) > 0`;
-        });
-      }
-      query += ` ORDER BY created_at DESC, sequence_number DESC 
-        LIMIT {limit:UInt32}`;
-      queryParams = {
-        projectId: dto.projectId,
-        limit: dto.limit,
-      };
-      if (dto.level) {
-        queryParams.level = dto.level;
-      }
-      if (dto.searchString && dto.searchString.trim()) {
-        const words = dto.searchString
-          .trim()
-          .split(/\s+/)
-          .filter((word) => word.length > 0);
-        words.forEach((word, index) => {
           queryParams[`searchWord${index}`] = word;
         });
       }
+
+      query += ` ORDER BY created_at DESC, sequence_number DESC LIMIT {limit:UInt32}`;
     }
-
-    const result = await this.clickhouse.query({
-      query,
-      query_params: queryParams,
-    });
-    const data = ((await result.json()) as any).data;
-
-    return data.map((row: any) => LogSerializer.normalizeClickhouse(row));
-  }
-
-  public async readManyDateRange(dto: {
-    startDate?: Date;
-    endDate?: Date;
-    limit: number;
-    projectId: string;
-    level?: LogLevel;
-    searchString?: string;
-  }): Promise<LogNormalized[]> {
-    let query = `SELECT * FROM logs WHERE project_id = {projectId:String}`;
-    const queryParams: Record<string, any> = {
-      projectId: dto.projectId,
-      limit: dto.limit,
-    };
-
-    if (dto.startDate) {
-      query += ` AND created_at >= {startDate:DateTime64(3)}`;
-      queryParams.startDate = ClickhouseUtils.jsDateToClickhouseDate(dto.startDate);
-    }
-
-    if (dto.endDate) {
-      query += ` AND created_at <= {endDate:DateTime64(3)}`;
-      queryParams.endDate = ClickhouseUtils.jsDateToClickhouseDate(dto.endDate);
-    }
-
-    if (dto.level) {
-      query += ` AND level = {level:String}`;
-      queryParams.level = dto.level;
-    }
-
-    if (dto.searchString && dto.searchString.trim()) {
-      const words = dto.searchString
-        .trim()
-        .split(/\s+/)
-        .filter((word) => word.length > 0);
-      words.forEach((word, index) => {
-        query += ` AND positionCaseInsensitive(message, {searchWord${index}:String}) > 0`;
-        queryParams[`searchWord${index}`] = word;
-      });
-    }
-
-    query += ` ORDER BY created_at DESC, sequence_number DESC LIMIT {limit:UInt32}`;
 
     const result = await this.clickhouse.query({
       query,

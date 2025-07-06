@@ -370,7 +370,9 @@ describe('LogCoreController (reads)', () => {
         .set('Authorization', `Bearer ${setup.token}`);
 
       expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('Provide either lastId+direction or startDate+endDate');
+      expect(response.body.message).toEqual(
+        'If using pagination, provide both lastId and direction',
+      );
     });
 
     it('throws error when combining direction with date range', async () => {
@@ -385,7 +387,9 @@ describe('LogCoreController (reads)', () => {
         .set('Authorization', `Bearer ${setup.token}`);
 
       expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual('Provide either lastId+direction or startDate+endDate');
+      expect(response.body.message).toEqual(
+        'If using pagination, provide both lastId and direction',
+      );
     });
 
     it('respects limit parameter with date range', async () => {
@@ -414,6 +418,89 @@ describe('LogCoreController (reads)', () => {
 
       expect(response.status).toEqual(200);
       expect(response.body).toHaveLength(3);
+    });
+
+    it('combines lastId/direction with date range filtering', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const baseDate = new Date('2023-01-01T12:00:00Z');
+      const startDate = new Date('2023-01-01T12:05:00Z');
+      const endDate = new Date('2023-01-01T12:25:00Z');
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
+        message: 'Reference log',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T12:02:00Z').toISOString(),
+        message: 'Log before date range',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T12:10:00Z').toISOString(),
+        message: 'Log in date range',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T12:20:00Z').toISOString(),
+        message: 'Another log in date range',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date('2023-01-01T12:30:00Z').toISOString(),
+        message: 'Log after date range',
+        level: LogLevel.Info,
+        withoutSleep: true,
+      });
+
+      await sleep(1_500);
+
+      const clickhouseClient = bootstrap.app.get(ClickHouseClient);
+
+      const orderedLogsResult = await clickhouseClient.query({
+        query: `
+          SELECT * FROM logs
+          WHERE project_id = '${setup.project.id}'
+          ORDER BY created_at ASC, sequence_number ASC
+        `,
+      });
+
+      const logsData = (await orderedLogsResult.json()) as any;
+
+      const logs: LogClickhouseNormalized[] = logsData.data.map((log: any) =>
+        LogSerializer.normalizeClickhouse(log),
+      );
+
+      const referenceLog = logs.find((log) => log.message === 'Reference log');
+      expect(referenceLog).toBeDefined();
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(
+          `/projects/${setup.project.id}/logs/v2?direction=after&lastId=${referenceLog!.id}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
+        )
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      expect(response.status).toEqual(200);
+      expect(response.body).toHaveLength(2);
+      expect(response.body.some((log) => log.message === 'Log in date range')).toBe(true);
+      expect(response.body.some((log) => log.message === 'Another log in date range')).toBe(true);
+      expect(response.body.some((log) => log.message === 'Log before date range')).toBe(false);
+      expect(response.body.some((log) => log.message === 'Log after date range')).toBe(false);
+      expect(response.body.some((log) => log.message === 'Reference log')).toBe(false);
     });
   });
 
