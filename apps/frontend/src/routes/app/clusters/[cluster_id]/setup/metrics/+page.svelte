@@ -7,13 +7,14 @@
     data: { project_id: string; api_key: string };
   };
   const { data }: Props = $props();
+  const clusterId = $derived(page.params.cluster_id);
 </script>
 
 {#snippet claimer(hasLogs: boolean)}
   <ProjectClaimer
-    nextUrl={`/app/clusters/${page.params.cluster_id}?project_id=${data.project_id}`}
+    nextUrl={`/app/clusters/${clusterId}?project_id=${data.project_id}`}
     canClaim={hasLogs}
   />
 {/snippet}
 
-<MetricsSetup {claimer} {...data} />
+<MetricsSetup {claimer} {...data} {clusterId} />

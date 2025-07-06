@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { logMetricsState } from '$lib/domains/logs/application/log-metrics.state.svelte.js';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import LogsListTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
   import LogsListener from '$lib/domains/logs/ui/LogsListener.svelte';
@@ -14,7 +12,7 @@
   import SDKInstaller from '$lib/domains/shared/ui/setup/SDKInstaller.svelte';
   import SetupPrompt from '$lib/domains/shared/ui/setup/SetupPrompt.svelte';
   import { CheckCircle, CheckIcon, Copy } from 'lucide-svelte';
-  import { getContext, onMount, type Snippet } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
   import Highlight from 'svelte-highlight';
   import {
     bash,
@@ -43,12 +41,9 @@
   let installationCode = $state('');
 
   onMount(() => {
-    const tabId: string = getContext('tabId');
     logsState.sync(project_id);
-    logMetricsState.sync(project_id, tabId);
     return () => {
       logsState.unsync();
-      logMetricsState.unsync();
     };
   });
 
