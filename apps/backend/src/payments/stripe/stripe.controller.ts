@@ -53,7 +53,7 @@ export class StripeController {
   ): Promise<CheckoutResponse> {
     const user = await this.userReadService.readByIdOrThrow(userId);
 
-    const isTrial = !user.paymentsMetadata?.usedTrial;
+    const isTrial = !user.paymentsMetadata?.trialUsed;
 
     const checkoutUrl = await this.stripeCheckoutService.getCheckoutUrl({
       userId,

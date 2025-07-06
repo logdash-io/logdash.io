@@ -5,8 +5,8 @@ import { UserTier } from '../enum/user-tier.enum';
 import { PaymentsMetadata } from './user.entity';
 
 export class PaymentsMetadataSerialized {
-  @ApiProperty()
-  usedTrial: boolean;
+  @ApiPropertyOptional()
+  trialUsed?: boolean;
 }
 
 export class UserNormalized {

@@ -5,7 +5,7 @@ import { AccountClaimStatus } from '../enum/account-claim-status.enum';
 import { UserTier } from '../enum/user-tier.enum';
 
 export interface PaymentsMetadata {
-  usedTrial: boolean;
+  trialUsed?: boolean;
 }
 
 @Schema({ collection: 'users', timestamps: true })
@@ -46,7 +46,7 @@ export class UserEntity {
   updatedAt: Date;
 
   @Prop({ type: Object, default: {} })
-  paymentsMetadata?: PaymentsMetadata;
+  paymentsMetadata: PaymentsMetadata;
 }
 
 export type UserDocument = HydratedDocument<UserEntity>;

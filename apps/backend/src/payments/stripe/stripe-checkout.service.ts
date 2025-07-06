@@ -2,7 +2,6 @@ import { Logger } from '@logdash/js-sdk';
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { UserReadService } from '../../user/read/user-read.service';
-import { StripeService } from './stripe.service';
 import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.enum';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../shared/configs/env-configs';

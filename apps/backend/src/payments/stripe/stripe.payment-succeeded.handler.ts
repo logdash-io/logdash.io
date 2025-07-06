@@ -18,6 +18,20 @@ export class StripePaymentSucceededHandler {
     private readonly stripeEventEmitter: StripeEventEmitter,
   ) {}
 
+  private async mapPriceIdToTier(priceId: string): Promise<UserTier> {
+    switch (priceId) {
+      case getEnvConfig().stripe.earlyBirdPriceId:
+        return UserTier.EarlyBird;
+      case getEnvConfig().stripe.builderPriceId:
+        return UserTier.Builder;
+      case getEnvConfig().stripe.proPriceId:
+        return UserTier.Pro;
+      default:
+        this.logger.error(`[STRIPE] Unknown price id: ${priceId}`);
+        throw new Error(`Unknown price id: ${priceId}`);
+    }
+  }
+
   public async handle(event: Stripe.Event): Promise<void> {
     this.logger.log(`[STRIPE] Handling payment succeeded event`, {
       event,
@@ -31,14 +45,14 @@ export class StripePaymentSucceededHandler {
     const customerId = event.data.object.customer;
     const email = event.data.object.customer_email;
 
-    if (priceId !== getEnvConfig().stripe.earlyBirdPriceId) {
-      this.logger.error(`[STRIPE] Unknown product for user`, {
-        email,
-        priceId,
-        customerId,
+    if (!priceId) {
+      this.logger.error(`[STRIPE] Price id is missing`, {
+        event,
       });
       return;
     }
+
+    const tier = await this.mapPriceIdToTier(priceId);
 
     if (!email) {
       this.logger.error(`[STRIPE] Invoice payment succeeded but no customer email found`, {
@@ -61,13 +75,13 @@ export class StripePaymentSucceededHandler {
 
     await this.subscriptionManagementService.applyNew({
       userId: user.id,
-      tier: UserTier.EarlyBird,
+      tier,
       endsAt: null,
     });
 
     await this.stripeEventEmitter.emitPaymentSucceeded({
       email,
-      tier: UserTier.EarlyBird,
+      tier,
     });
 
     this.logger.log(`[STRIPE] Finished handling payment succeeded event`);
