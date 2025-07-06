@@ -6,7 +6,7 @@ import { sleep } from '../utils/sleep';
 import { ClickHouseClient } from '@clickhouse/client';
 import { LogClickhouseNormalized } from '../../src/log/core/entities/log.interface';
 import { LogSerializer } from '../../src/log/core/entities/log.serializer';
-import { addMinutes, subMinutes, subHours } from 'date-fns';
+import { addMinutes, subMinutes, subHours, addHours } from 'date-fns';
 
 describe('LogCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -28,7 +28,7 @@ describe('LogCoreController (reads)', () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // given
-      const createdAt = new Date('2000-01-01T11:00:00Z');
+      const createdAt = subHours(new Date(), 12);
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
@@ -165,12 +165,12 @@ describe('LogCoreController (reads)', () => {
     it('reads logs with only startDate provided', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const baseDate = new Date('2023-01-01T12:00:00Z');
-      const startDate = new Date('2023-01-01T11:30:00Z');
+      const baseDate = subHours(new Date(), 12);
+      const startDate = subMinutes(baseDate, 30);
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T11:00:00Z').toISOString(),
+        createdAt: subHours(baseDate, 1).toISOString(),
         message: 'Before start date',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -186,7 +186,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T13:00:00Z').toISOString(),
+        createdAt: addHours(baseDate, 1).toISOString(),
         message: 'Much after start date',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -208,11 +208,11 @@ describe('LogCoreController (reads)', () => {
     it('reads logs with only endDate provided', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const endDate = new Date('2023-01-01T11:30:00Z');
+      const endDate = subHours(new Date(), 11);
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T11:00:00Z').toISOString(),
+        createdAt: subHours(new Date(), 12).toISOString(),
         message: 'Before end date',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -220,7 +220,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
+        createdAt: subHours(new Date(), 10).toISOString(),
         message: 'After end date',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -240,12 +240,12 @@ describe('LogCoreController (reads)', () => {
     it('reads logs with both startDate and endDate provided', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const startDate = new Date('2023-01-01T11:30:00Z');
-      const endDate = new Date('2023-01-01T12:30:00Z');
+      const startDate = subHours(new Date(), 12);
+      const endDate = subHours(new Date(), 11);
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T11:00:00Z').toISOString(),
+        createdAt: subHours(new Date(), 13).toISOString(),
         message: 'Before range',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -253,7 +253,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
+        createdAt: subHours(new Date(), 11.5).toISOString(),
         message: 'In range',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -261,7 +261,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T13:00:00Z').toISOString(),
+        createdAt: subHours(new Date(), 10).toISOString(),
         message: 'After range',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -283,12 +283,12 @@ describe('LogCoreController (reads)', () => {
     it('reads logs with date range and level filter', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const startDate = new Date('2023-01-01T11:30:00Z');
-      const endDate = new Date('2023-01-01T12:30:00Z');
+      const startDate = subHours(new Date(), 12);
+      const endDate = subHours(new Date(), 11);
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
+        createdAt: subHours(new Date(), 11.5).toISOString(),
         message: 'Info log in range',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -296,7 +296,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T12:10:00Z').toISOString(),
+        createdAt: subMinutes(subHours(new Date(), 11.5), 10).toISOString(),
         message: 'Error log in range',
         level: LogLevel.Error,
         withoutSleep: true,
@@ -304,7 +304,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T12:20:00Z').toISOString(),
+        createdAt: subMinutes(subHours(new Date(), 11.5), 20).toISOString(),
         message: 'Warning log in range',
         level: LogLevel.Warning,
         withoutSleep: true,
@@ -327,12 +327,12 @@ describe('LogCoreController (reads)', () => {
     it('returns empty array when no logs match date range', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const startDate = new Date('2023-01-01T11:30:00Z');
-      const endDate = new Date('2023-01-01T12:30:00Z');
+      const startDate = subHours(new Date(), 12);
+      const endDate = subHours(new Date(), 11);
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T10:00:00Z').toISOString(),
+        createdAt: subHours(new Date(), 13).toISOString(),
         message: 'Before range',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -340,7 +340,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T14:00:00Z').toISOString(),
+        createdAt: subHours(new Date(), 10).toISOString(),
         message: 'After range',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -361,7 +361,7 @@ describe('LogCoreController (reads)', () => {
     it('throws error when combining lastId with date range', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const startDate = new Date('2023-01-01T11:30:00Z');
+      const startDate = subHours(new Date(), 12);
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(
@@ -378,7 +378,7 @@ describe('LogCoreController (reads)', () => {
     it('throws error when combining direction with date range', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const startDate = new Date('2023-01-01T11:30:00Z');
+      const startDate = subHours(new Date(), 12);
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(
@@ -395,13 +395,13 @@ describe('LogCoreController (reads)', () => {
     it('respects limit parameter with date range', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const startDate = new Date('2023-01-01T11:30:00Z');
-      const endDate = new Date('2023-01-01T12:30:00Z');
+      const startDate = subHours(new Date(), 12);
+      const endDate = subHours(new Date(), 11);
 
       for (let i = 0; i < 5; i++) {
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date(`2023-01-01T12:${i.toString().padStart(2, '0')}:00Z`).toISOString(),
+          createdAt: subMinutes(subHours(new Date(), 11.5), i * 2).toISOString(),
           message: `Log ${i}`,
           level: LogLevel.Info,
           withoutSleep: true,
@@ -423,13 +423,13 @@ describe('LogCoreController (reads)', () => {
     it('combines lastId/direction with date range filtering', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const baseDate = new Date('2023-01-01T12:00:00Z');
-      const startDate = new Date('2023-01-01T12:05:00Z');
-      const endDate = new Date('2023-01-01T12:25:00Z');
+      const baseDate = subHours(new Date(), 12);
+      const startDate = subMinutes(baseDate, 5);
+      const endDate = addMinutes(baseDate, 25);
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
+        createdAt: baseDate.toISOString(),
         message: 'Reference log',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -437,7 +437,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T12:02:00Z').toISOString(),
+        createdAt: subMinutes(startDate, 2).toISOString(),
         message: 'Log before date range',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -445,7 +445,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T12:10:00Z').toISOString(),
+        createdAt: addMinutes(baseDate, 10).toISOString(),
         message: 'Log in date range',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -453,7 +453,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T12:20:00Z').toISOString(),
+        createdAt: addMinutes(baseDate, 20).toISOString(),
         message: 'Another log in date range',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -461,7 +461,7 @@ describe('LogCoreController (reads)', () => {
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: setup.apiKey.value,
-        createdAt: new Date('2023-01-01T12:30:00Z').toISOString(),
+        createdAt: addMinutes(baseDate, 30).toISOString(),
         message: 'Log after date range',
         level: LogLevel.Info,
         withoutSleep: true,
@@ -495,12 +495,12 @@ describe('LogCoreController (reads)', () => {
         .set('Authorization', `Bearer ${setup.token}`);
 
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(2);
       expect(response.body.some((log) => log.message === 'Log in date range')).toBe(true);
       expect(response.body.some((log) => log.message === 'Another log in date range')).toBe(true);
       expect(response.body.some((log) => log.message === 'Log before date range')).toBe(false);
       expect(response.body.some((log) => log.message === 'Log after date range')).toBe(false);
       expect(response.body.some((log) => log.message === 'Reference log')).toBe(false);
+      expect(response.body).toHaveLength(2);
     });
 
     it('respects retention cutoff for free tier projects', async () => {
@@ -556,7 +556,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice loves bob',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -564,7 +564,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'bob has cat',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -572,7 +572,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:02:00Z').toISOString(),
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
           message: 'charlie has dog',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -594,7 +594,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice loves bob',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -602,7 +602,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'bob has cat',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -610,7 +610,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:02:00Z').toISOString(),
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
           message: 'alice has apples',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -632,7 +632,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          createdAt: subHours(new Date(), 12).toISOString(),
           message: 'ALICE LOVES BOB',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -654,7 +654,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice loves bob',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -675,7 +675,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice loves bob',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -683,7 +683,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'alice has error',
           level: LogLevel.Error,
           withoutSleep: true,
@@ -702,12 +702,12 @@ describe('LogCoreController (reads)', () => {
       it('combines search with date range filter', async () => {
         const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-        const startDate = new Date('2023-01-01T11:30:00Z');
-        const endDate = new Date('2023-01-01T12:30:00Z');
+        const startDate = subHours(new Date(), 12);
+        const endDate = subHours(new Date(), 11);
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2023-01-01T11:00:00Z').toISOString(),
+          createdAt: subHours(new Date(), 13).toISOString(),
           message: 'alice before range',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -715,7 +715,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2023-01-01T12:00:00Z').toISOString(),
+          createdAt: subHours(new Date(), 11.5).toISOString(),
           message: 'alice in range',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -723,7 +723,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2023-01-01T12:10:00Z').toISOString(),
+          createdAt: subMinutes(subHours(new Date(), 11.5), 10).toISOString(),
           message: 'bob in range',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -747,7 +747,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:00:00Z').toISOString(),
+          createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice info log',
           level: LogLevel.Info,
           withoutSleep: true,
@@ -755,7 +755,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:01:00Z').toISOString(),
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'alice error log',
           level: LogLevel.Error,
           withoutSleep: true,
@@ -763,7 +763,7 @@ describe('LogCoreController (reads)', () => {
 
         await bootstrap.utils.logUtils.createLog({
           apiKey: setup.apiKey.value,
-          createdAt: new Date('2000-01-01T11:02:00Z').toISOString(),
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
           message: 'bob error log',
           level: LogLevel.Error,
           withoutSleep: true,

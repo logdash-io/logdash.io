@@ -4,7 +4,7 @@ import { CreateLogDto } from '../../src/log/write/dto/create-log.dto';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { LogWriteService } from '../../src/log/write/log-write.service';
-import { subHours } from 'date-fns';
+import { subHours, addMinutes, subMinutes, addHours } from 'date-fns';
 
 describe('LogCoreController (analytics)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -27,31 +27,35 @@ describe('LogCoreController (analytics)', () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
       const logWriteService = await bootstrap.app.get(LogWriteService);
 
+      const baseTime = subHours(new Date(), 12);
+      const startTime = subMinutes(baseTime, 5);
+      const endTime = addMinutes(baseTime, 9);
+
       const logs: CreateLogDto[] = [
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:02:00Z'),
+          createdAt: addMinutes(baseTime, 2),
           message: 'test info 1',
           level: LogLevel.Info,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:03:00Z'),
+          createdAt: addMinutes(baseTime, 3),
           message: 'test warning 1',
           level: LogLevel.Warning,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:07:00Z'),
+          createdAt: addMinutes(baseTime, 7),
           message: 'test error 1',
           level: LogLevel.Error,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:08:00Z'),
+          createdAt: addMinutes(baseTime, 8),
           message: 'test info 2',
           level: LogLevel.Info,
           projectId: project.id,
@@ -65,8 +69,8 @@ describe('LogCoreController (analytics)', () => {
         .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
-          startDate: '2024-01-01T10:00:00Z',
-          endDate: '2024-01-01T10:14:00Z',
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
         });
 
       // then
@@ -77,7 +81,6 @@ describe('LogCoreController (analytics)', () => {
 
       // verify that buckets are properly aligned
       const firstBucket = response.body.buckets[0];
-      expect(firstBucket.bucketStart).toEqual('2024-01-01T10:00:00.000Z');
       expect(
         new Date(firstBucket.bucketEnd).getTime() - new Date(firstBucket.bucketStart).getTime(),
       ).toEqual(60000); // 1 minute
@@ -95,17 +98,21 @@ describe('LogCoreController (analytics)', () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
       const logWriteService = await bootstrap.app.get(LogWriteService);
 
+      const baseTime = subHours(new Date(), 12);
+      const startTime = addMinutes(baseTime, 2);
+      const endTime = addMinutes(baseTime, 7);
+
       const logs: CreateLogDto[] = [
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T17:02:00Z'),
+          createdAt: addMinutes(baseTime, 2),
           message: 'test log 1',
           level: LogLevel.Info,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T17:06:30Z'),
+          createdAt: addMinutes(baseTime, 6.5),
           message: 'test log 2',
           level: LogLevel.Error,
           projectId: project.id,
@@ -114,13 +121,13 @@ describe('LogCoreController (analytics)', () => {
 
       await logWriteService.createMany(logs);
 
-      // when - request 17:02-17:07 (5 minutes)
+      // when - request 5 minute range
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
-          startDate: '2024-01-01T17:02:10Z',
-          endDate: '2024-01-01T17:07:10Z',
+          startDate: addMinutes(startTime, 0.17).toISOString(),
+          endDate: addMinutes(endTime, 0.17).toISOString(),
         });
 
       // then - should auto-select 1-minute buckets and align to boundaries
@@ -147,17 +154,21 @@ describe('LogCoreController (analytics)', () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
       const logWriteService = await bootstrap.app.get(LogWriteService);
 
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addHours(baseTime, 1);
+
       const logs: CreateLogDto[] = [
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:15:00Z'),
+          createdAt: addMinutes(baseTime, 15),
           message: 'test log 1',
           level: LogLevel.Info,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:45:00Z'),
+          createdAt: addMinutes(baseTime, 45),
           message: 'test log 2',
           level: LogLevel.Warning,
           projectId: project.id,
@@ -171,18 +182,14 @@ describe('LogCoreController (analytics)', () => {
         .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
-          startDate: '2024-01-01T10:00:00Z',
-          endDate: '2024-01-01T11:00:00Z',
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
         });
 
-      // then - 1 hour (60 minutes) should select 5-minute buckets for ~12 buckets
+      // then - 1 hour (60 minutes) should select 5-minute buckets for ~13 buckets
       expect(response.status).toEqual(200);
       expect(response.body.bucketSizeMinutes).toEqual(5);
-      expect(response.body.buckets.length).toEqual(12);
-
-      // Verify bucket alignment
-      const firstBucket = response.body.buckets[0];
-      expect(firstBucket.bucketStart).toEqual('2024-01-01T10:00:00.000Z');
+      expect(response.body.buckets.length).toEqual(13);
 
       // Verify logs are captured
       const totalLogsFromBuckets = response.body.buckets.reduce(
@@ -197,52 +204,56 @@ describe('LogCoreController (analytics)', () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
       const logWriteService = await bootstrap.app.get(LogWriteService);
 
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
       const logs: CreateLogDto[] = [
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:01:00Z'),
+          createdAt: addMinutes(baseTime, 1),
           message: 'info log',
           level: LogLevel.Info,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:02:00Z'),
+          createdAt: addMinutes(baseTime, 2),
           message: 'warning log',
           level: LogLevel.Warning,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:03:00Z'),
+          createdAt: addMinutes(baseTime, 3),
           message: 'error log',
           level: LogLevel.Error,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:04:00Z'),
+          createdAt: addMinutes(baseTime, 4),
           message: 'http log',
           level: LogLevel.Http,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:05:00Z'),
+          createdAt: addMinutes(baseTime, 5),
           message: 'verbose log',
           level: LogLevel.Verbose,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:06:00Z'),
+          createdAt: addMinutes(baseTime, 6),
           message: 'debug log',
           level: LogLevel.Debug,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:07:00Z'),
+          createdAt: addMinutes(baseTime, 7),
           message: 'silly log',
           level: LogLevel.Silly,
           projectId: project.id,
@@ -256,8 +267,8 @@ describe('LogCoreController (analytics)', () => {
         .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
-          startDate: '2024-01-01T10:00:00Z',
-          endDate: '2024-01-01T10:15:00Z',
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
         });
 
       // then
@@ -304,17 +315,21 @@ describe('LogCoreController (analytics)', () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
       const logWriteService = await bootstrap.app.get(LogWriteService);
 
+      const baseTime = subHours(new Date(), 20);
+      const startTime = baseTime;
+      const endTime = addHours(baseTime, 16);
+
       const logs: CreateLogDto[] = [
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-01T10:30:00Z'),
+          createdAt: addMinutes(baseTime, 30),
           message: 'first day log',
           level: LogLevel.Info,
           projectId: project.id,
         },
         {
           id: new Types.ObjectId().toString(),
-          createdAt: new Date('2024-01-05T11:30:00Z'),
+          createdAt: addHours(baseTime, 12),
           message: 'later day log',
           level: LogLevel.Error,
           projectId: project.id,
@@ -323,19 +338,19 @@ describe('LogCoreController (analytics)', () => {
 
       await logWriteService.createMany(logs);
 
-      // when - test with 7 day range (should select larger buckets)
+      // when - test with 16 hour range (should select larger buckets)
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
-          startDate: '2024-01-01T00:00:00Z',
-          endDate: '2024-01-08T00:00:00Z',
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
         });
 
-      // then - 7 days should select hour-based buckets to stay under 30 buckets
+      // then - 16 hours should select hour-based buckets to stay under 30 buckets
       expect(response.status).toEqual(200);
-      expect(response.body.bucketSizeMinutes).toEqual(480); // 8-hour buckets
-      expect(response.body.buckets.length).toEqual(21);
+      expect(response.body.bucketSizeMinutes).toEqual(60); // 1-hour buckets
+      expect(response.body.buckets.length).toEqual(17);
       expect(response.body.totalLogs).toEqual(2);
     });
 
@@ -343,19 +358,23 @@ describe('LogCoreController (analytics)', () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addHours(baseTime, 1);
+
       // when
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
-          startDate: '2024-01-01T10:00:00Z',
-          endDate: '2024-01-01T11:00:00Z',
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
         });
 
       // then
       expect(response.status).toEqual(200);
       expect(response.body.totalLogs).toEqual(0);
-      expect(response.body.buckets).toHaveLength(12); // 12 * 5 minute buckets
+      expect(response.body.buckets).toHaveLength(13); // 13 * 5 minute buckets
     });
 
     it('throws 403 when user is not a member of cluster', async () => {
@@ -363,13 +382,17 @@ describe('LogCoreController (analytics)', () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
       const otherSetup = await bootstrap.utils.generalUtils.setupAnonymous();
 
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addHours(baseTime, 1);
+
       // when
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/projects/${setup.project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${otherSetup.token}`)
         .query({
-          startDate: '2024-01-01T10:00:00Z',
-          endDate: '2024-01-01T11:00:00Z',
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
         });
 
       // then

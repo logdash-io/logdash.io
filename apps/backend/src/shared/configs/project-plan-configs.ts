@@ -112,7 +112,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
       retentionHours: 24 * 30, // 30 days
     },
     metrics: {
-      maxMetricsRegisterEntries: 20,
+      maxMetricsRegisterEntries: 30,
       keepGranularitiesForHours: {
         [MetricGranularity.Minute]: 24, // 1 day
         [MetricGranularity.Hour]: 7 * 24, // 7 days
