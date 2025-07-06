@@ -55,8 +55,9 @@
         class={[
           'indicator-item indicator-bottom badge-soft indicator-center badge badge-xs',
           {
-            'badge-primary': userState.tier === UserTier.EARLY_BIRD,
-            'badge-secondary': userState.tier === UserTier.FREE,
+            'badge-primary':
+              userState.isPaid && userState.tier !== UserTier.CONTRIBUTOR,
+            'badge-secondary': userState.isFree,
             'badge-warning': userState.tier === UserTier.CONTRIBUTOR,
           },
         ]}

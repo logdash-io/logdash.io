@@ -5,6 +5,7 @@
   import { fade } from 'svelte/transition';
   import PricingComparisonTable from './PricingComparisonTable.svelte';
   import { runGithubLogin } from './run-github-login.js';
+  import TrustProof from '../TrustProof.svelte';
 
   let loggingIn = $state(false);
 
@@ -14,10 +15,6 @@
   };
 
   const pricingData = {
-    header: {
-      title: 'Pricing that makes sense',
-      subtitle: "Pick a plan that's right for you and your awesome projects.",
-    },
     plans: PAYMENT_PLANS,
     footer: {
       title: "Questions? We're here to help",
@@ -26,10 +23,18 @@
   };
 </script>
 
-<section class="px-4 py-8 sm:py-16">
+<section class="my-16 px-4">
   <div class="mx-auto max-w-4xl text-center">
-    <h1 class="mb-4 text-4xl font-bold">{pricingData.header.title}</h1>
-    <p class="mb-8 text-lg opacity-80">{pricingData.header.subtitle}</p>
+    <TrustProof
+      quote="Working with Logdash is like having an extra team on our side. It works out of the box, and anytime I share feedback, they're already on it. Real people, real support, and impressively fast."
+      person="Yaroslaw Korshak"
+      img="/images/testimonials/yaroslaw.png"
+      company={{
+        who: 'CEO',
+        name: 'Resurgo.ai',
+        url: 'https://resurgo.ai',
+      }}
+    />
   </div>
 </section>
 
@@ -41,7 +46,7 @@
           <div
             class="bg-primary ring-primary flex h-16 w-full items-center justify-center rounded-xl pb-6 text-sm font-semibold ring"
           >
-            Best Value
+            Most Popular
           </div>
         {:else}
           <div class="h-16"></div>
@@ -127,7 +132,7 @@
   <div
     class="ld-card-base bg-neutral text-neutral-content mx-auto max-w-2xl rounded-xl p-8 shadow-xl"
   >
-    <p class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-80">
+    <p class="mb-2 text-xs font-semibold tracking-wide uppercase opacity-80">
       A Note from us
     </p>
     <p class="mb-6 text-lg font-extrabold">Logdash Inc.</p>

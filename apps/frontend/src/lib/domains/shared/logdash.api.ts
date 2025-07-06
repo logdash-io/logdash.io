@@ -16,6 +16,7 @@ import type { User } from '$lib/domains/shared/user/domain/user';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
 import { redirect } from '@sveltejs/kit';
 import queryString from 'query-string';
+import type { UserTier } from './types.js';
 
 type UnauthorizedHandler = () => void;
 
@@ -306,9 +307,12 @@ class LogdashAPI {
     );
   }
 
-  stripe_checkout(access_token: string): Promise<{ checkoutUrl: string }> {
+  stripe_checkout(
+    access_token: string,
+    tier: UserTier,
+  ): Promise<{ checkoutUrl: string }> {
     return this.get<{ checkoutUrl: string }>(
-      `${LogdashAPI.v0baseUrl}/payments/stripe/checkout?tier=builder`,
+      `${LogdashAPI.v0baseUrl}/payments/stripe/checkout?tier=${tier}`,
       access_token,
     );
   }

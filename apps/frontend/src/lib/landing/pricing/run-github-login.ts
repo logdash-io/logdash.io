@@ -11,8 +11,12 @@ export const runGithubLogin = (tier: UserTier) => {
     tier,
     next_url: match(tier)
       .with(
-        UserTier.EARLY_BIRD,
-        () => '/app/api/user/upgrade?source=pricing-page',
+        UserTier.BUILDER,
+        () => '/app/api/user/upgrade?source=pricing-page&tier=builder',
+      )
+      .with(
+        UserTier.PRO,
+        () => '/app/api/user/upgrade?source=pricing-page&tier=pro',
       )
       .otherwise(() => '/app/clusters'),
   });

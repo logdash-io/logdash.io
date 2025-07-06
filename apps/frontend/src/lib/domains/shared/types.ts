@@ -2,8 +2,10 @@ import type { Component } from 'svelte';
 
 export enum UserTier {
   FREE = 'free',
-  EARLY_BIRD = 'early-bird',
+  EARLY_USER = 'early-user',
   CONTRIBUTOR = 'contributor',
+  EARLY_BIRD = 'early-bird',
+  BUILDER = 'builder',
   PRO = 'pro',
 }
 

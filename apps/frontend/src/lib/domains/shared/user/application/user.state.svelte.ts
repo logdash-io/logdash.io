@@ -23,11 +23,11 @@ class UserState {
   }
 
   get isPaid(): boolean {
-    return this.tier !== UserTier.FREE;
+    return this.tier !== UserTier.FREE && this.tier !== UserTier.EARLY_USER;
   }
 
   get isFree(): boolean {
-    return this.tier === UserTier.FREE;
+    return this.tier === UserTier.FREE || this.tier === UserTier.EARLY_USER;
   }
 
   get avatar(): User['avatarUrl'] {
@@ -35,11 +35,22 @@ class UserState {
   }
 
   get hasEarlyAccess(): boolean {
-    return this.tier === UserTier.EARLY_BIRD || isDev();
+    return (
+      this.tier === UserTier.EARLY_BIRD ||
+      this.tier === UserTier.BUILDER ||
+      this.tier === UserTier.PRO ||
+      isDev()
+    );
   }
 
   get canUpgrade(): boolean {
-    return this.tier === UserTier.FREE || this.tier === UserTier.CONTRIBUTOR;
+    return (
+      this.tier === UserTier.FREE ||
+      this.tier === UserTier.CONTRIBUTOR ||
+      this.tier === UserTier.EARLY_USER ||
+      this.tier === UserTier.EARLY_BIRD ||
+      this.tier === UserTier.BUILDER
+    );
   }
 
   set(user: User): void {
