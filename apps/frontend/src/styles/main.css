@@ -1,23 +1,12 @@
-@config "../../tailwind.config.ts";
-
-@layer theme, base, components;
-
-@import 'tailwindcss/theme.css' layer(theme);
-@import 'tailwindcss/preflight.css' layer(base);
-@import 'tailwindcss/utilities.css';
-
-@layer theme, base, components;
-
-@theme {
-  --container-8xl: 90rem;
-  --container-9xl: 100rem;
-}
-
-@plugin 'daisyui';
-
+@import './tailwind.css';
 @import './base.css';
 @import './themes.css';
 @import './components.css';
 @import './scrollbar.css';
 @import './animations.css';
 @import './third-party.css';
+
+@theme {
+  --container-8xl: 90rem;
+  --container-9xl: 100rem;
+}

@@ -183,6 +183,17 @@ describe('ClusterInviteCoreController (writes)', () => {
           userTier: UserTier.Free,
         });
 
+        const otherSetup = await bootstrap.utils.generalUtils.setupClaimed({
+          email: 'other@example.com',
+          userTier: UserTier.Free,
+        });
+
+        await bootstrap.utils.projectGroupUtils.addRole({
+          clusterId: setup.cluster.id,
+          userId: otherSetup.user.id,
+          role: ClusterRole.Write,
+        });
+
         const response = await request(bootstrap.app.getHttpServer())
           .post(`/clusters/${setup.cluster.id}/cluster_invites`)
           .set('Authorization', `Bearer ${setup.token}`)
@@ -206,9 +217,20 @@ describe('ClusterInviteCoreController (writes)', () => {
           userTier: UserTier.EarlyBird,
         });
 
+        const otherSetup2 = await bootstrap.utils.generalUtils.setupClaimed({
+          email: 'other2@example.com',
+          userTier: UserTier.EarlyBird,
+        });
+
         const artificialRole = await bootstrap.utils.projectGroupUtils.addRole({
           clusterId: setup.cluster.id,
           userId: otherSetup.user.id,
+          role: ClusterRole.Write,
+        });
+
+        const artificialRole2 = await bootstrap.utils.projectGroupUtils.addRole({
+          clusterId: setup.cluster.id,
+          userId: otherSetup2.user.id,
           role: ClusterRole.Write,
         });
 
@@ -231,6 +253,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         });
 
         const invitedSetup = await bootstrap.utils.generalUtils.setupClaimed();
+        const invitedSetup2 = await bootstrap.utils.generalUtils.setupClaimed();
 
         const toInviteSetup = await bootstrap.utils.generalUtils.setupClaimed();
 
@@ -238,6 +261,11 @@ describe('ClusterInviteCoreController (writes)', () => {
           token: setup.token,
           clusterId: setup.cluster.id,
           invitedUserEmail: invitedSetup.user.email,
+        });
+        const invite2 = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+          token: setup.token,
+          clusterId: setup.cluster.id,
+          invitedUserEmail: invitedSetup2.user.email,
         });
 
         const response = await request(bootstrap.app.getHttpServer())
@@ -343,6 +371,35 @@ describe('ClusterInviteCoreController (writes)', () => {
 
       const updatedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
       expect(updatedCluster?.roles[invitedUser.id]).toBe(ClusterRole.Write);
+    });
+
+    it('throws error when user is a member of too many clusters', async () => {
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
+
+      const { token: invitedUserToken, user: invitedUser } =
+        await bootstrap.utils.generalUtils.setupClaimed();
+
+      for (let i = 0; i < 4; i++) {
+        await bootstrap.utils.projectGroupUtils.createProjectGroup({
+          token: invitedUserToken,
+        });
+      }
+
+      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: inviterToken,
+        clusterId: cluster.id,
+        invitedUserEmail: invitedUser.email,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/cluster_invites/${invite.id}/accept`)
+        .set('Authorization', `Bearer ${invitedUserToken}`);
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toBe('You are a member of too many clusters');
     });
   });
 

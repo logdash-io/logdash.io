@@ -28,6 +28,7 @@ import { ClusterInviteLimitService } from '../limit/cluster-invite-limit.service
 import { ClusterInviteCapacityResponse } from './dto/cluster-invite-capacity.response';
 import { RequireRole } from '../../cluster/decorators/require-cluster-role.decorator';
 import { ClusterRole } from '../../cluster/core/enums/cluster-role.enum';
+import { getUserPlanConfig } from '../../shared/configs/user-plan-configs';
 
 @ApiTags('Cluster Invites')
 @Controller()
@@ -184,6 +185,12 @@ export class ClusterInviteCoreController {
 
     if (invite.invitedUserEmail !== user.email) {
       throw new ForbiddenException('You can only accept invites sent to you');
+    }
+
+    const numberOfClusters = await this.clusterReadService.countBeingMemberOfClusters(user.id);
+
+    if (numberOfClusters + 1 >= getUserPlanConfig(user.tier).projects.maxNumberOfProjects) {
+      throw new BadRequestException('You are a member of too many clusters');
     }
 
     await this.clusterWriteService.addRole(invite.clusterId, user.id, invite.role);

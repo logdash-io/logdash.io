@@ -1,5 +1,5 @@
-import { UserTier } from '$lib/shared/types.js';
-import { generateGithubOAuthUrl } from '$lib/shared/utils/generate-github-oauth-url.js';
+import { UserTier } from '$lib/domains/shared/types.js';
+import { generateGithubOAuthUrl } from '$lib/domains/shared/utils/generate-github-oauth-url.js';
 import { match } from 'ts-pattern';
 
 export const runGithubLogin = (tier: UserTier) => {
@@ -11,8 +11,12 @@ export const runGithubLogin = (tier: UserTier) => {
     tier,
     next_url: match(tier)
       .with(
-        UserTier.EARLY_BIRD,
-        () => '/app/api/user/upgrade?source=pricing-page',
+        UserTier.BUILDER,
+        () => '/app/api/user/upgrade?source=pricing-page&tier=builder',
+      )
+      .with(
+        UserTier.PRO,
+        () => '/app/api/user/upgrade?source=pricing-page&tier=pro',
       )
       .otherwise(() => '/app/clusters'),
   });

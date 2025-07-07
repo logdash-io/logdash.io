@@ -32,7 +32,7 @@ export class AuditLog {
       return await this.createIfWithinRateLimit(enrichedDto);
     } catch (error) {
       this.logger.error('Error creating audit log', {
-        error,
+        error: error.message,
         dto,
       });
     }

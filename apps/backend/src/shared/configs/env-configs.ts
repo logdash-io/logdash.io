@@ -14,6 +14,9 @@ interface EnvConfig {
   };
   stripe: {
     earlyBirdPriceId: string;
+    builderPriceId: string;
+    proPriceId: string;
+
     successUrl: string;
     returnFromBillingUrl: string;
     apiKeySecret: string;
@@ -80,6 +83,12 @@ interface EnvConfig {
   admin: {
     superSecretAdminKey: string;
   };
+  internal: {
+    telegram: {
+      chatId: string;
+      botToken: string;
+    };
+  };
 }
 
 interface EnvConfigs {
@@ -102,6 +111,8 @@ export const EnvConfigs: EnvConfigs = {
     },
     stripe: {
       earlyBirdPriceId: process.env.STRIPE_EARLY_BIRD_PRICE_ID!,
+      builderPriceId: process.env.STRIPE_BUILDER_PRICE_ID!,
+      proPriceId: process.env.STRIPE_PRO_PRICE_ID!,
       successUrl: 'https://logdash.io/app/callbacks/payments/purchase-success',
       returnFromBillingUrl: 'https://logdash.io/app/clusters',
       apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,
@@ -166,6 +177,12 @@ export const EnvConfigs: EnvConfigs = {
     admin: {
       superSecretAdminKey: process.env.ADMIN_SUPER_SECRET_ADMIN_KEY!,
     },
+    internal: {
+      telegram: {
+        botToken: process.env.INTERNAL_TELEGRAM_BOT_TOKEN!,
+        chatId: '-1002678512492',
+      },
+    },
   },
   [OurEnv.Dev]: {
     emailLoginWhitelist: {
@@ -181,6 +198,8 @@ export const EnvConfigs: EnvConfigs = {
     },
     stripe: {
       earlyBirdPriceId: process.env.STRIPE_EARLY_BIRD_PRICE_ID!,
+      builderPriceId: process.env.STRIPE_BUILDER_PRICE_ID!,
+      proPriceId: process.env.STRIPE_PRO_PRICE_ID!,
       successUrl: 'https://dev.logdash.io/app/callbacks/payments/purchase-success',
       returnFromBillingUrl: 'https://dev.logdash.io/app/clusters',
       apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,
@@ -246,6 +265,12 @@ export const EnvConfigs: EnvConfigs = {
     },
     admin: {
       superSecretAdminKey: process.env.ADMIN_SUPER_SECRET_ADMIN_KEY!,
+    },
+    internal: {
+      telegram: {
+        botToken: process.env.INTERNAL_TELEGRAM_BOT_TOKEN!,
+        chatId: '-1002678512492',
+      },
     },
   },
 };

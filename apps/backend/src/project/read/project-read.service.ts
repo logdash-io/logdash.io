@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ProjectEntity } from '../core/entities/project.entity';
@@ -61,89 +61,10 @@ export class ProjectReadService {
     return projects.map((project) => ProjectSerializer.normalize(project));
   }
 
-  public async readProjectsForLogRemoval(): Promise<
-    {
-      projectId: string;
-      currentIndex: number;
-      lastDeletionIndex: number;
-      tier: ProjectTier;
-    }[]
-  > {
-    const projects = await this.model.find(
-      {},
-      {
-        'logValues.currentIndex': 1,
-        'logValues.lastDeletionIndex': 1,
-        tier: 1,
-      },
-    );
+  public async readManyByTiers(tiers: ProjectTier[]): Promise<ProjectNormalized[]> {
+    const projects = await this.model.find({ tier: { $in: tiers } });
 
-    return projects.map((project) => ({
-      projectId: project._id.toString(),
-      currentIndex: project.logValues.currentIndex,
-      lastDeletionIndex: project.logValues.lastDeletionIndex,
-      tier: project.tier,
-    }));
-  }
-
-  // optimize: can be optimized to directly send log removal condition to the db
-  public async *getProjectForLogRemovalCursor(): AsyncGenerator<{
-    projectId: string;
-    currentIndex: number;
-    lastDeletionIndex: number;
-    tier: ProjectTier;
-  }> {
-    const cursor = this.model
-      .find(
-        {},
-        {
-          'logValues.currentIndex': 1,
-          'logValues.lastDeletionIndex': 1,
-          tier: 1,
-        },
-      )
-      .cursor();
-
-    for await (const project of cursor) {
-      yield {
-        projectId: project._id.toString(),
-        currentIndex: project.logValues.currentIndex,
-        lastDeletionIndex: project.logValues.lastDeletionIndex,
-        tier: project.tier,
-      };
-    }
-  }
-
-  public async *getProjectsForLogMetricRemoval(): AsyncGenerator<
-    {
-      id: string;
-      tier: ProjectTier;
-    }[]
-  > {
-    const cursor = this.model.find().cursor();
-
-    const batchSize = 20;
-
-    const batch: {
-      id: string;
-      tier: ProjectTier;
-    }[] = [];
-
-    for await (const project of cursor) {
-      batch.push({
-        id: project._id.toString(),
-        tier: project.tier,
-      });
-
-      if (batch.length === batchSize) {
-        yield batch;
-        batch.length = 0;
-      }
-    }
-
-    if (batch.length > 0) {
-      yield batch;
-    }
+    return projects.map((project) => ProjectSerializer.normalize(project));
   }
 
   public async countProjectsByCreatorId(creatorId: string): Promise<number> {
@@ -174,5 +95,37 @@ export class ProjectReadService {
     }
 
     return result;
+  }
+
+  public async *getProjectsForMetricRemoval(): AsyncGenerator<
+    {
+      id: string;
+      tier: ProjectTier;
+    }[]
+  > {
+    const cursor = this.model.find().cursor();
+
+    const batchSize = 20;
+
+    const batch: {
+      id: string;
+      tier: ProjectTier;
+    }[] = [];
+
+    for await (const project of cursor) {
+      batch.push({
+        id: project._id.toString(),
+        tier: project.tier,
+      });
+
+      if (batch.length === batchSize) {
+        yield batch;
+        batch.length = 0;
+      }
+    }
+
+    if (batch.length > 0) {
+      yield batch;
+    }
   }
 }

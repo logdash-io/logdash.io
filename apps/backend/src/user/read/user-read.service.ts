@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserNormalized } from '../core/entities/user.interface';
 import { InjectModel } from '@nestjs/mongoose';
-import { UserEntity } from '../core/entities/user.entity';
 import { Model } from 'mongoose';
+import { UserEntity } from '../core/entities/user.entity';
+import { UserNormalized } from '../core/entities/user.interface';
 import { UserSerializer } from '../core/entities/user.serializer';
 import { AccountClaimStatus } from '../core/enum/account-claim-status.enum';
 
@@ -44,5 +44,11 @@ export class UserReadService {
     for await (const user of cursor) {
       yield user._id.toString();
     }
+  }
+
+  public async readAll(): Promise<UserNormalized[]> {
+    const users = await this.userModel.find().lean<UserEntity[]>().exec();
+
+    return users.map(UserSerializer.normalize);
   }
 }

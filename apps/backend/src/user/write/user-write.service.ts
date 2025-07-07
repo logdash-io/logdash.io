@@ -10,9 +10,7 @@ import { UserTier } from '../core/enum/user-tier.enum';
 
 @Injectable()
 export class UserWriteService {
-  constructor(
-    @InjectModel(UserEntity.name) private userModel: Model<UserEntity>,
-  ) {}
+  constructor(@InjectModel(UserEntity.name) private userModel: Model<UserEntity>) {}
 
   public async create(dto: CreateUserDto): Promise<UserNormalized> {
     const user = await this.userModel.create({
@@ -73,17 +71,18 @@ export class UserWriteService {
     return UserSerializer.normalize(user);
   }
 
-  public async updateLastActivityDate(
-    userId: string,
-    date: Date,
-  ): Promise<void> {
-    await this.userModel.updateOne(
-      { _id: new Types.ObjectId(userId) },
-      { lastActivityDate: date },
-    );
+  public async updateLastActivityDate(userId: string, date: Date): Promise<void> {
+    await this.userModel.updateOne({ _id: new Types.ObjectId(userId) }, { lastActivityDate: date });
   }
 
   public async delete(userId: string): Promise<void> {
     await this.userModel.deleteOne({ _id: new Types.ObjectId(userId) });
+  }
+
+  public async updateTrialUsed(userId: string, trialUsed: boolean): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: new Types.ObjectId(userId) },
+      { $set: { 'paymentsMetadata.trialUsed': trialUsed } },
+    );
   }
 }

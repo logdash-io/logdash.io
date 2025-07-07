@@ -5,12 +5,17 @@ import { AdminGuard } from '../../auth/core/guards/admin.guard';
 import { ExtendActiveSubscriptionBody } from './dto/extend-active-subscription.body';
 import { ApplyNewSubscriptionBody } from './dto/apply-new-subscription.body';
 import { Public } from '../../auth/core/decorators/is-public';
+import { SubscriptionTempService } from './subscription-temp.service';
+import { SuccessResponse } from '../../shared/responses/success.response';
 
 @ApiTags('Subscriptions')
 @UseGuards(AdminGuard)
 @Controller('')
 export class SubscriptionCoreController {
-  constructor(private readonly subscriptionManagementService: SubscriptionManagementService) {}
+  constructor(
+    private readonly subscriptionManagementService: SubscriptionManagementService,
+    private readonly subscriptionTempService: SubscriptionTempService,
+  ) {}
 
   @Public()
   @Post('admin/user/:userId/apply_new_subscription')
@@ -42,5 +47,16 @@ export class SubscriptionCoreController {
   @UseGuards(AdminGuard)
   public async endActiveSubscription(@Param('userId') userId: string): Promise<void> {
     await this.subscriptionManagementService.endActiveNonPaidSubscription(userId);
+  }
+
+  @Public()
+  @Post('admin/sync_subscription')
+  @UseGuards(AdminGuard)
+  public async syncEarlyUsers(): Promise<SuccessResponse> {
+    await this.subscriptionTempService.runSync();
+
+    return {
+      success: true,
+    };
   }
 }

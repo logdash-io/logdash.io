@@ -38,4 +38,12 @@ export class ReadLogsQuery {
   @IsString()
   @IsEnum(LogLevel)
   level?: LogLevel;
+
+  @ApiPropertyOptional({
+    description:
+      'Search string to filter logs. Returns logs containing all words in the search string.',
+  })
+  @IsOptional()
+  @IsString()
+  searchString?: string;
 }

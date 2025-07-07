@@ -182,9 +182,7 @@ describe('SubscriptionCoreController', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'Cannot change expiration date of early bird subscription',
-      );
+      expect(response.body.message).toBe('Cannot change expiration date of paid subscription');
     });
   });
 

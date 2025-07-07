@@ -15,8 +15,77 @@ body {
     'Kumbh Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono:
-    'JetBrains Mono', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono',
-    'Source Code Pro', monospace;
+    'Geist Mono', 'JetBrains Mono', 'SF Mono', Monaco, Inconsolata,
+    'Roboto Mono', 'Source Code Pro', monospace;
+
+  /* general */
+  --sdt-bg-main: var(--color-base-200); /** wrap background color */
+  --sdt-shadow-color: var(--color-base-100); /** wrap shadow color */
+  --sdt-wrap-shadow: 0 1px 0px 0px var(--sdt-shadow-color); /** wrap shadow settings */
+  --sdt-radius: var(--radius-lg);
+  --sdt-color: var(
+    --color-secondary
+  ); /** data to select(e.g date/time) text color (except header & buttons) */
+  --sdt-color-selected: #fff; /** selected data(e.g date/time) text color */
+  --sdt-header-color: var(
+    --color-secondary
+  ); /** header items color (e.g. text & buttons) */
+  --sdt-header-btn-bg-hover: var(
+    --color-base-200
+  ); /** header items hover background color */
+  --sdt-bg-selected: var(
+    --color-primary
+  ); /** selected data(e.g date/time) background color */
+
+  /* action buttons */
+  --sdt-today-bg: var(
+    --color-primary
+  ); /** date picker today button hover background color */
+  --sdt-today-color: var(
+    --color-secondary
+  ); /** date picker today button text & border color */
+  --sdt-clear-color: var(--color-error); /** clear button text & border color */
+  --sdt-clear-bg: transparent; /** clear button background color */
+  --sdt-clear-hover-color: var(
+    --color-secondary
+  ); /** clear button hover text color */
+  --sdt-clear-hover-bg: var(
+    --color-error
+  ); /** clear button hover background color */
+
+  /* time picker */
+  --sdt-clock-selected-bg: var(
+    --sdt-bg-selected
+  ); /** selected time background color */
+  --sdt-clock-bg: var(
+    --color-base-200
+  ); /** time picker inner circle background color */
+  --sdt-clock-color: var(
+    --sdt-color
+  ); /** time picker text color (watch "--sdt-color") */
+  --sdt-clock-color-hover: var(
+    --sdt-color
+  ); /** time picker hover text color (watch "--sdt-color") */
+  --sdt-clock-time-bg: transparent; /** time picker time background color */
+  --sdt-clock-time-bg-hover: transparent; /** time picker time selection hover background color */
+  --sdt-clock-disabled-time: #b22222; /** disabled time picker time text color */
+  --sdt-clock-disabled-time-bg: #eee; /** disabled time picker time background color */
+
+  /* date picker */
+  --sdt-table-selected-bg: var(
+    --sdt-bg-selected
+  ); /** selected date background color */
+  --sdt-table-disabled-date: #b22222; /** disabled dates text color */
+  --sdt-table-disabled-date-bg: var(
+    --color-base-200
+  ); /** disabled dates background color */
+  --sdt-table-bg: transparent; /** date picker inner table background color */
+  --sdt-table-data-bg-hover: var(
+    --color-base-100
+  ); /** table selection data hover background color */
+  --sdt-table-today-indicator: var(
+    --color-primary
+  ); /** date picker current day marker color */
 
   @apply overflow-hidden scroll-smooth tracking-wide;
 }

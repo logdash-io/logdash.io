@@ -40,7 +40,12 @@ import { LogNormalized, LogSerialized } from './entities/log.interface';
 import { LogSerializer } from './entities/log.serializer';
 import { LogReadDirection } from './enums/log-read-direction.enum';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
-import { LogReadClickhouseService } from '../read/log-read.clickhouse-service';
+import { LogAnalyticsService } from '../analytics/log-analytics.service';
+import { LogAnalyticsQuery } from '../analytics/dto/log-analytics-query.dto';
+import { LogAnalyticsResponse } from '../analytics/dto/log-analytics-response.dto';
+import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
+import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
+import { subHours } from 'date-fns';
 
 @Controller('')
 @ApiTags('Logs')
@@ -52,7 +57,9 @@ export class LogCoreController {
     private readonly logEventEmitter: LogEventEmitter,
     private readonly eventEmitter: EventEmitter2,
     private readonly logRateLimitService: LogRateLimitService,
-    private readonly logReadClickhouseService: LogReadClickhouseService,
+    private readonly logReadClickhouseService: LogReadService,
+    private readonly logAnalyticsService: LogAnalyticsService,
+    private readonly projectReadCachedService: ProjectReadCachedService,
   ) {}
 
   @DemoEndpoint()
@@ -170,22 +177,44 @@ export class LogCoreController {
   @UseInterceptors(DemoCacheInterceptor)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
-  @Get('projects/:projectId/logs')
+  @Get('projects/:projectId/logs/v2')
   @ApiResponse({ type: LogSerialized, isArray: true })
-  public async readNewerThanGuarded(
+  public async readLogsV2(
     @Param('projectId') projectId: string,
     @Query() dto: ReadLogsQuery,
   ): Promise<LogSerialized[]> {
     if ((dto.lastId && !dto.direction) || (!dto.lastId && dto.direction)) {
-      throw new BadRequestException('Provide either lastId and direction or neither');
+      throw new BadRequestException('If using pagination, provide both lastId and direction');
     }
 
-    const logs = await this.logReadService.readMany({
+    console.log('DUPA 0');
+
+    const project = await this.projectReadCachedService.readProjectOrThrow(projectId);
+
+    const retentionHours = getProjectPlanConfig(project.tier).logs.retentionHours;
+
+    const cutOffDate = subHours(new Date(), retentionHours);
+
+    if (dto.startDate) {
+      dto.startDate = dto.startDate < cutOffDate ? cutOffDate : dto.startDate;
+    } else {
+      dto.startDate = cutOffDate;
+    }
+
+    console.log('DUPA 1');
+
+    const logs = await this.logReadClickhouseService.readMany({
       direction: dto.direction,
       lastId: dto.lastId,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
       projectId,
       limit: dto.limit ?? 50,
+      level: dto.level,
+      searchString: dto.searchString,
     });
+
+    console.log('DUPA 2');
 
     return logs.map((log) => LogSerializer.serialize(log));
   }
@@ -194,44 +223,19 @@ export class LogCoreController {
   @UseInterceptors(DemoCacheInterceptor)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
-  @Get('projects/:projectId/logs/v2')
-  @ApiResponse({ type: LogSerialized, isArray: true })
-  public async readLogsV2(
+  @Get('projects/:projectId/logs/analytics/v1')
+  @ApiResponse({ type: LogAnalyticsResponse })
+  public async getLogAnalytics(
     @Param('projectId') projectId: string,
-    @Query() dto: ReadLogsQuery,
-  ): Promise<LogSerialized[]> {
-    if ((dto.lastId && !dto.direction) || (!dto.lastId && dto.direction)) {
-      throw new BadRequestException('Provide either lastId+direction or startDate+endDate');
-    }
+    @Query() dto: LogAnalyticsQuery,
+  ): Promise<LogAnalyticsResponse> {
+    const project = await this.projectReadCachedService.readProjectOrThrow(projectId);
 
-    if (dto.lastId && (dto.startDate || dto.endDate)) {
-      throw new BadRequestException('Provide either lastId+direction or startDate+endDate');
-    }
+    const retentionHours = getProjectPlanConfig(project.tier).logs.retentionHours;
 
-    if (dto.direction && (dto.startDate || dto.endDate)) {
-      throw new BadRequestException('Provide either lastId+direction or startDate+endDate');
-    }
+    const cutOffDate = subHours(new Date(), retentionHours);
+    dto.startDate = dto.startDate < cutOffDate ? cutOffDate : dto.startDate;
 
-    let logs: LogNormalized[] = [];
-
-    if (dto.startDate || dto.endDate) {
-      logs = await this.logReadClickhouseService.readManyDateRange({
-        startDate: dto.startDate,
-        endDate: dto.endDate,
-        projectId,
-        limit: dto.limit ?? 50,
-        level: dto.level,
-      });
-    } else {
-      logs = await this.logReadClickhouseService.readManyLastId({
-        direction: dto.direction,
-        lastId: dto.lastId,
-        projectId,
-        limit: dto.limit ?? 50,
-        level: dto.level,
-      });
-    }
-
-    return logs.map((log) => LogSerializer.serialize(log));
+    return await this.logAnalyticsService.getBucketedAnalytics(projectId, dto);
   }
 }

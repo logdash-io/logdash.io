@@ -1,5 +1,5 @@
-import { logdashAPI } from '$lib/shared/logdash.api';
-import { get_access_token } from '$lib/shared/utils/cookies.utils';
+import { logdashAPI } from '$lib/domains/shared/logdash.api';
+import { get_access_token } from '$lib/domains/shared/utils/cookies.utils';
 import { redirect, type ServerLoadEvent } from '@sveltejs/kit';
 
 export const load = async ({

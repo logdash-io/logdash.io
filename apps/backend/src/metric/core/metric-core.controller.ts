@@ -30,6 +30,7 @@ import { MetricCreatedEvent } from '../events/definitions/metric-created.event';
 import { MetricGranularity } from '../../metric-shared/enums/metric-granularity.enum';
 import { DemoEndpoint } from '../../demo/decorators/demo-endpoint.decorator';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
+import { NewMetricQueueingService } from '../new-queueing/new-metric-queueing.service';
 
 @Controller('')
 @ApiTags('Metrics')
@@ -40,6 +41,7 @@ export class MetricCoreController {
     private readonly apiKeyReadCachedService: ApiKeyReadCachedService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly newMetricQueueingService: NewMetricQueueingService,
   ) {}
 
   @Public()
@@ -57,6 +59,10 @@ export class MetricCoreController {
     }
 
     await this.metricQueueingService.queueMetric({
+      ...dto,
+      projectId,
+    });
+    await this.newMetricQueueingService.queueMetric({
       ...dto,
       projectId,
     });

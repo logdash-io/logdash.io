@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import MonitoringSetup from '$lib/clusters/projects/ui/setup/MonitoringSetup.svelte';
+  import MonitoringSetup from '$lib/domains/app/projects/ui/setup/MonitoringSetup.svelte';
   import { fade } from 'svelte/transition';
 
   type Props = {
@@ -14,7 +14,7 @@
 </script>
 
 {#snippet claimer(hasLogs: boolean)}
-  <div class="mt-auto flex items-center gap-4">
+  <div class="mt-auto flex w-full flex-1 items-center gap-4">
     <button
       onclick={() => {
         tryingToClaim = true;

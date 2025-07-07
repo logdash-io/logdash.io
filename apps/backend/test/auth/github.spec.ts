@@ -67,7 +67,7 @@ describe('Auth (anonymous)', () => {
 
     expect(tempUserAfterClaim).toBeNull();
     expect(clusterAfterClaim?.creatorId.toString()).toEqual(alreadyRegistered.user.id);
-    expect(clusterAfterClaim?.members).toEqual([alreadyRegistered.user.id]);
+    expect(clusterAfterClaim?.roles).toEqual({ [alreadyRegistered.user.id]: 'creator' });
   });
 
   it('logs existing user in', async () => {

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { publicDashboardPublicState } from '$lib/clusters/projects/application/public-dashboards/public-dashboard-public.state.svelte.js';
-  import PublicDashboard from '$lib/clusters/projects/ui/PublicDashboard.svelte';
+  import { publicDashboardPublicState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-public.state.svelte.js';
+  import PublicDashboard from '$lib/domains/app/projects/ui/PublicDashboard.svelte';
   import type { PageData } from './$types';
   import { onMount } from 'svelte';
 

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { CheckIcon, MinusIcon, ShieldCheckIcon } from 'lucide-svelte';
   import { FEATURES_COMPARISON } from './feature-comparison.config.js';
-  import { UserTier } from '$lib/shared/types.js';
-  import { PAYMENT_PLANS } from '$lib/shared/payment-plans.const.js';
+  import { UserTier } from '$lib/domains/shared/types.js';
+  import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { fade } from 'svelte/transition';
   import { runGithubLogin } from './run-github-login.js';
 
@@ -44,11 +44,11 @@
                   },
                 ]}
               >
-                {#if plan.tier === UserTier.EARLY_BIRD}
+                {#if plan.tier === UserTier.BUILDER}
                   <div
                     class="bg-primary text-secondary top-0 left-0 z-0 -mb-8 flex h-16 w-full items-center justify-center rounded-xl pb-8 text-xs font-semibold"
                   >
-                    Best Value
+                    Most Popular
                   </div>
                 {:else}
                   <div class="h-8"></div>
@@ -59,7 +59,7 @@
                     'relative z-10 h-80 p-4 pt-9 text-left',
                     {
                       'border-primary/60 rounded-tl-xl rounded-tr-xl border-t border-r border-l bg-[#210c15]':
-                        plan.tier === UserTier.EARLY_BIRD,
+                        plan.tier === UserTier.BUILDER,
                       'border-secondary/10 rounded-tl-2xl border border-r-0 border-b-0':
                         plan.tier === UserTier.FREE,
                       'border-secondary/10 rounded-tr-2xl border border-b-0 border-l-0':
@@ -136,7 +136,7 @@
                   'text-center',
                   {
                     'bg-primary/10 border-primary/60 border-r border-l':
-                      plan.tier === UserTier.EARLY_BIRD,
+                      plan.tier === UserTier.BUILDER,
                     'border-secondary/10 text-secondary/30 border-l':
                       plan.tier === UserTier.FREE,
                     'border-secondary/10 text-secondary/30 border-r':
@@ -194,14 +194,14 @@
                     },
                   ]}
                 >
-                  {#if typeof feature[UserTier.EARLY_BIRD] === 'boolean'}
-                    {#if feature[UserTier.EARLY_BIRD]}
+                  {#if typeof feature[UserTier.BUILDER] === 'boolean'}
+                    {#if feature[UserTier.BUILDER]}
                       <CheckIcon class="text-success mx-auto h-4 w-4" />
                     {:else}
                       <MinusIcon class="text-secondary/30 mx-auto h-4 w-4" />
                     {/if}
                   {:else}
-                    {feature[UserTier.EARLY_BIRD]}
+                    {feature[UserTier.BUILDER]}
                   {/if}
                 </td>
 

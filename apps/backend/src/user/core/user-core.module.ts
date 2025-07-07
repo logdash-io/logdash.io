@@ -7,6 +7,7 @@ import { UserEventModule } from '../events/user-event.module';
 import { UserTtlModule } from '../ttl/user-ttl.module';
 import { CustomJwtModule } from '../../auth/custom-jwt/custom-jwt.module';
 import { ClusterWriteModule } from '../../cluster/write/cluster-write.module';
+import { UserCoreService } from './user-core.service';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { ClusterWriteModule } from '../../cluster/write/cluster-write.module';
     CustomJwtModule,
     ClusterWriteModule,
   ],
-  providers: [UserCoreEventController],
+  providers: [UserCoreEventController, UserCoreService],
   controllers: [UserCoreController],
 })
 export class UserCoreModule {}

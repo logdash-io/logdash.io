@@ -9,6 +9,7 @@ import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
 import { Actor } from '../../audit-log/core/enums/actor.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
+import { MetricOperation } from '@logdash/js-sdk';
 
 @Injectable()
 export class MetricRegisterWriteService {
@@ -81,18 +82,17 @@ export class MetricRegisterWriteService {
     return entryId;
   }
 
-  public async upsertAllTimeValues(dtos: UpdateCounterAbsoluteValueDto[]): Promise<void> {
+  public async upsertAbsoluteValues(
+    dtos: { metricRegisterEntryId: string; value: number }[],
+  ): Promise<void> {
     await this.model.bulkWrite(
       dtos.map((dto) => ({
         updateOne: {
           filter: { _id: new Types.ObjectId(dto.metricRegisterEntryId) },
-          update: {
-            $set: {
-              'values.counter.absoluteValue': dto.value,
-            },
-          },
+          update: { $set: { 'values.counter.absoluteValue': dto.value } },
         },
       })),
+      { ordered: false },
     );
   }
 }

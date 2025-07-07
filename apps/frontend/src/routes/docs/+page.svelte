@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AnimatedView from '$lib/shared/ui/AnimatedView.svelte';
+	import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
 	import Footer from '$lib/landing/Footer.svelte';
 	import DocsPage from '$lib/landing/docs/DocsPage.svelte';
 </script>

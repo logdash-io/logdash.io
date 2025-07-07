@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { intersect } from '$lib/shared/ui/actions/use-intersect.svelte';
+	import { intersect } from '$lib/domains/shared/ui/actions/use-intersect.svelte';
 	import { onMount } from 'svelte';
 	import {
 		generalDocs,
@@ -185,7 +185,7 @@
 								{subsection.title}
 							</h2>
 							<div
-								class="prose mb-6 max-w-none whitespace-pre-wrap"
+								class="proxse mb-6 max-w-none whitespace-pre-wrap"
 							>
 								<p>{subsection.intro}</p>
 							</div>
@@ -198,7 +198,7 @@
 									</h3>
 
 									{#if tableKey === 'compression'}
-										<div class="prose mb-4 max-w-none">
+										<div class="prxose mb-4 max-w-none">
 											<p>
 												For improved performance, we
 												recommend compressing payloads

@@ -18,8 +18,8 @@ export class MetricTtlService {
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
-  public async removeOldLogMetrics(): Promise<void> {
-    const cursor = this.projectReadService.getProjectsForLogMetricRemoval();
+  public async removeOldMetrics(): Promise<void> {
+    const cursor = this.projectReadService.getProjectsForMetricRemoval();
 
     const now = Date.now();
 
@@ -47,14 +47,17 @@ export class MetricTtlService {
     projectId: string;
     tier: ProjectTier;
   }): Promise<RemoveMetricsDto[]> {
-    const minuteMetricsHours = getProjectPlanConfig(params.tier).metrics
-      .keepGranularitiesForHours[MetricGranularity.Minute];
+    const minuteMetricsHours = getProjectPlanConfig(params.tier).metrics.keepGranularitiesForHours[
+      MetricGranularity.Minute
+    ];
 
-    const hourMetricsHours = getProjectPlanConfig(params.tier).metrics
-      .keepGranularitiesForHours[MetricGranularity.Hour];
+    const hourMetricsHours = getProjectPlanConfig(params.tier).metrics.keepGranularitiesForHours[
+      MetricGranularity.Hour
+    ];
 
-    const dayMetricsHours = getProjectPlanConfig(params.tier).metrics
-      .keepGranularitiesForHours[MetricGranularity.Day];
+    const dayMetricsHours = getProjectPlanConfig(params.tier).metrics.keepGranularitiesForHours[
+      MetricGranularity.Day
+    ];
 
     const minuteGranularityCutoff = subHours(new Date(), minuteMetricsHours);
     const hourGranularityCutoff = subHours(new Date(), hourMetricsHours);

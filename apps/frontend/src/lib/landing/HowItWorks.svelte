@@ -2,7 +2,7 @@
 	import {
 		animatedViewState,
 		AnimationDirection,
-	} from '$lib/shared/ui/animated-view.state.svelte.js';
+	} from '$lib/domains/shared/ui/animated-view.state.svelte.js';
 	import {
 		ArrowRightIcon,
 		ChartColumnStacked,

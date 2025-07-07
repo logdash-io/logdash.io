@@ -52,6 +52,8 @@ jobs:
           our-env: prod
           redis-url: ${{ secrets.BACKEND_PROD_REDIS_URL }}
           stripe-early-bird-price-id: ${{ secrets.BACKEND_PROD_STRIPE_EARLY_BIRD_PRICE_ID }}
+          stripe-builder-price-id: ${{ secrets.BACKEND_PROD_STRIPE_BUILDER_PRICE_ID }}
+          stripe-pro-price-id: ${{ secrets.BACKEND_PROD_STRIPE_PRO_PRICE_ID }}
           demo-dashboard-api-key: ${{ secrets.BACKEND_PROD_DEMO_DASHBOARD_API_KEY }}
           logdash-api-key: ${{ secrets.BACKEND_PROD_LOGDASH_API_KEY }}
           telegram-token: ${{ secrets.BACKEND_PROD_TELEGRAM_TOKEN }}
@@ -65,6 +67,7 @@ jobs:
           telegram-uptime-bot-token: ${{ secrets.BACKEND_PROD_TELEGRAM_UPTIME_BOT_TOKEN }}
           telegram-uptime-bot-secret: ${{ secrets.BACKEND_PROD_TELEGRAM_UPTIME_BOT_SECRET }}
           admin-super-secret-admin-key: ${{ secrets.BACKEND_PROD_ADMIN_SUPER_SECRET_ADMIN_KEY }}
+          internal-telegram-bot-token: ${{ secrets.BACKEND_PROD_INTERNAL_TELEGRAM_BOT_TOKEN }}
       - name: Prune
         uses: './.github/templates/prune'
         with:

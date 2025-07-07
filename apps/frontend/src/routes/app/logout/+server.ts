@@ -2,7 +2,7 @@ import {
 	ACCESS_TOKEN_COOKIE_NAME,
 	API_KEY_COOKIE_NAME,
 	PROJECT_ID_COOKIE_NAME,
-} from '$lib/shared/utils/cookies.utils';
+} from '$lib/domains/shared/utils/cookies.utils';
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 

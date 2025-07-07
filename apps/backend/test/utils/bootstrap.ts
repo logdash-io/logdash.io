@@ -19,9 +19,6 @@ import { HttpMonitorCoreModule } from '../../src/http-monitor/core/http-monitor-
 import { HttpPingBucketCoreModule } from '../../src/http-ping-bucket/core/http-ping-bucket-core.module';
 import { HttpPingCoreModule } from '../../src/http-ping/core/http-ping-core.module';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/schedule/http-ping-scheduler.service';
-import { LogMetricEntity } from '../../src/log-metric/core/entities/log-metric.entity';
-import { LogMetricCoreModule } from '../../src/log-metric/core/log-metric-core.module';
-import { LogEntity } from '../../src/log/core/entities/log.entity';
 import { LogCoreModule } from '../../src/log/core/log-core.module';
 import { MetricRegisterEntryEntity } from '../../src/metric-register/core/entities/metric-register-entry.entity';
 import { MetricRegisterCoreModule } from '../../src/metric-register/core/metric-register-core.module';
@@ -36,7 +33,6 @@ import { ProjectCoreModule } from '../../src/project/core/project-core.module';
 import { LogdashModule } from '../../src/shared/logdash/logdash.module';
 import { RedisModule } from '../../src/shared/redis/redis.module';
 import { RedisService } from '../../src/shared/redis/redis.service';
-import { SupportCoreModule } from '../../src/support/core/support-core.module';
 import { UserEntity } from '../../src/user/core/entities/user.entity';
 import { UserCoreModule } from '../../src/user/core/user-core.module';
 import { AuthCoreModule } from './../../src/auth/core/auth-core.module';
@@ -64,6 +60,7 @@ import { SubscriptionEntity } from '../../src/subscription/core/entities/subscri
 import { SubscriptionCoreModule } from '../../src/subscription/core/subscription-core.module';
 import { AuditLogUtils } from './audit-log-utils';
 import { AuditLogCreationModule } from '../../src/audit-log/creation/audit-log-creation.module';
+import { UserUtils } from './user.utils';
 
 export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({
@@ -74,13 +71,11 @@ export async function createTestApp() {
       UserCoreModule,
       LogCoreModule,
       ApiKeyCoreModule,
-      LogMetricCoreModule,
       ProjectCoreModule,
       ScheduleModule.forRoot(),
       MetricCoreModule,
       EventEmitterModule.forRoot(),
       LogdashModule,
-      SupportCoreModule,
       HttpMonitorCoreModule,
       HttpPingCoreModule,
       HttpPingBucketCoreModule,
@@ -114,8 +109,6 @@ export async function createTestApp() {
   await app.init();
 
   const userModel: Model<UserEntity> = module.get(getModelToken(UserEntity.name));
-  const logModel: Model<LogEntity> = module.get(getModelToken(LogEntity.name));
-  const logMetricModel: Model<LogMetricEntity> = module.get(getModelToken(LogMetricEntity.name));
   const projectModel: Model<ProjectEntity> = module.get(getModelToken(ProjectEntity.name));
   const metricModel: Model<MetricEntity> = module.get(getModelToken(MetricEntity.name));
   const apiKeyModel: Model<ApiKeyEntity> = module.get(getModelToken(ApiKeyEntity.name));
@@ -146,8 +139,6 @@ export async function createTestApp() {
   const clearDatabase = async () => {
     await Promise.all([
       userModel.deleteMany({}),
-      logModel.deleteMany({}),
-      logMetricModel.deleteMany({}),
       projectModel.deleteMany({}),
       metricModel.deleteMany({}),
       apiKeyModel.deleteMany({}),
@@ -191,8 +182,6 @@ export async function createTestApp() {
     module,
     models: {
       userModel,
-      logModel,
-      logMetricModel,
       projectModel,
       metricModel,
       apiKeyModel,
@@ -220,6 +209,7 @@ export async function createTestApp() {
       publicDashboardUtils: new PublicDashboardUtils(app),
       auditLogUtils: new AuditLogUtils(app),
       clusterInviteUtils: new ClusterInviteUtils(app),
+      userUtils: new UserUtils(app),
     },
     methods: {
       clearDatabase,

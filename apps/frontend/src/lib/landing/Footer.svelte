@@ -1,14 +1,12 @@
 <script>
-  import Logo from '$lib/shared/icons/Logo.svelte';
+  import Logo from '$lib/domains/shared/icons/Logo.svelte';
 </script>
 
 <footer class="footer sm:footer-horizontal w-full p-10">
   <aside>
     <Logo class="h-10 w-10" />
-    <p>
-      logdash
-      <br />
-      A zero-config observability platform.
+    <p class="text-sm opacity-75">
+      &copy; 2025 logdash.io. All rights reserved.
     </p>
   </aside>
   <nav>

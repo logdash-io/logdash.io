@@ -1,12 +1,9 @@
-import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import postcssOKLabFunction from '@csstools/postcss-oklab-function';
 
 export default defineConfig({
   plugins: [
     sveltekit(),
-    tailwindcss(),
     {
       name: 'full-reload',
       handleHotUpdate({ server }) {
@@ -24,13 +21,11 @@ export default defineConfig({
     },
   },
   css: {
+    devSourcemap: false,
     preprocessorOptions: {
       scss: {
         api: 'modern-compiler',
       },
-    },
-    postcss: {
-      plugins: [postcssOKLabFunction],
     },
   },
   build: {

@@ -5,12 +5,20 @@ import { UserRegisteredEvent } from '../../auth/events/definitions/user-register
 import { Resend } from 'resend';
 import { Logger } from '@logdash/js-sdk';
 import { getEnvConfig } from '../../shared/configs/env-configs';
+import { ResendTemplatedEmailsService } from './resend-templated-emails.service';
+import {
+  StripeEvents,
+  StripePaymentSucceededEvent,
+} from '../../payments/stripe/stripe-event.emitter';
 
 @Injectable()
 export class ResendService {
   private resend = new Resend(getEnvConfig().resend.apiKey);
 
-  constructor(private readonly logger: Logger) {}
+  constructor(
+    private readonly logger: Logger,
+    private readonly resendTemplatedEmailsService: ResendTemplatedEmailsService,
+  ) {}
 
   @OnEvent(AuthEvents.UserRegistered)
   public async handleUserRegisteredEvent(dto: UserRegisteredEvent): Promise<void> {
@@ -18,6 +26,8 @@ export class ResendService {
       this.logger.log('Skipping resend audience update...');
       return;
     }
+
+    await this.resendTemplatedEmailsService.sendWelcomeEmail(dto.email);
 
     if (!dto.emailAccepted) {
       this.logger.log(
@@ -46,5 +56,14 @@ export class ResendService {
       email: dto.email,
       userId: dto.userId,
     });
+  }
+
+  @OnEvent(StripeEvents.PaymentSucceeded)
+  public async handlePaymentSucceededEvent(dto: StripePaymentSucceededEvent): Promise<void> {
+    if (!getEnvConfig().resend.enabled) {
+      return;
+    }
+
+    await this.resendTemplatedEmailsService.sendPaidPlanWelcomeEmail(dto.email);
   }
 }

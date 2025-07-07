@@ -1,18 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { UserTierService } from '../../user/tier/user-tier.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import Stripe from 'stripe';
-import { UserTier } from '../../user/core/enum/user-tier.enum';
 import { Logger } from '@logdash/js-sdk';
 import { SubscriptionManagementService } from '../../subscription/management/subscription-management.service';
+import { StripeEventEmitter } from './stripe-event.emitter';
 
 @Injectable()
 export class StripeSubscriptionDeletedHandler {
   constructor(
     private readonly logger: Logger,
     private readonly userReadService: UserReadService,
-    private readonly userTierService: UserTierService,
     private readonly subscriptionManagementService: SubscriptionManagementService,
+    private readonly stripeEventEmitter: StripeEventEmitter,
   ) {}
 
   public async handle(event: Stripe.Event): Promise<void> {
@@ -39,6 +38,10 @@ export class StripeSubscriptionDeletedHandler {
     );
 
     this.logger.log(`[STRIPE] Finished handling subscription deleted event`);
+
+    await this.stripeEventEmitter.emitSubscriptionDeleted({
+      email: user.email,
+    });
   }
 
   private eventIsValid(event: Stripe.Event): event is Stripe.CustomerSubscriptionDeletedEvent {
