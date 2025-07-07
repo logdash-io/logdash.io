@@ -91,7 +91,7 @@ export class MetricBufferDataService {
   }
 
   public async cleanupProjectData(projectId: string): Promise<void> {
-    const metricsKey = await this.getMetricBufferChangedMetricsKey(projectId);
+    const metricsKey = this.getMetricBufferChangedMetricsKey(projectId);
 
     await Promise.all([
       this.redisService.delPattern(`metrics-buffer:project:${projectId}:*`),

@@ -92,19 +92,17 @@ export class ExposedConfigController {
     const iterations = 1_000;
     const now = performance.now();
 
-    for (let i = 0; i < iterations; i++) {
-      await this.redisService.set(
-        `test:${i}`,
-        randomIntegerBetweenInclusive(1, 100000).toString(),
-        5,
-      );
-    }
+    await Promise.all(
+      Array.from({ length: iterations }, (_, i) =>
+        this.redisService.set(`test:${i}`, randomIntegerBetweenInclusive(1, 100000).toString(), 5),
+      ),
+    );
 
     const timeToSet = performance.now() - now;
 
-    for (let i = 0; i < iterations; i++) {
-      await this.redisService.get(`test:${i}`);
-    }
+    await Promise.all(
+      Array.from({ length: iterations }, (_, i) => this.redisService.get(`test:${i}`)),
+    );
 
     const timeToGet = performance.now() - timeToSet;
 
