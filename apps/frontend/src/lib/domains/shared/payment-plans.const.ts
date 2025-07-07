@@ -86,7 +86,7 @@ export const PAYMENT_PLANS = [
       { name: 'Custom status page domain' },
     ],
     badge: {
-      text: 'Coming soon',
+      text: 'Getting serious',
       class: 'badge-secondary',
     },
     buttonText: 'Start free trial',
