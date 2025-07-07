@@ -98,17 +98,17 @@ export class ExposedConfigController {
       ),
     );
 
-    const timeToSet = performance.now() - now;
+    const timeAfterSet = performance.now();
 
     await Promise.all(
       Array.from({ length: iterations }, (_, i) => this.redisService.get(`test:${i}`)),
     );
 
-    const timeToGet = performance.now() - timeToSet;
+    const timeAfterGet = performance.now();
 
     return {
-      timeToSet: timeToSet / iterations,
-      timeToGet: timeToGet / iterations,
+      timeToSet: (timeAfterSet - now) / iterations,
+      timeToGet: (timeAfterGet - timeAfterSet) / iterations,
     };
   }
 }
