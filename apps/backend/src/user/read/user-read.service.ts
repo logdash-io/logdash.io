@@ -45,4 +45,10 @@ export class UserReadService {
       yield user._id.toString();
     }
   }
+
+  public async readAll(): Promise<UserNormalized[]> {
+    const users = await this.userModel.find().lean<UserEntity[]>().exec();
+
+    return users.map(UserSerializer.normalize);
+  }
 }
