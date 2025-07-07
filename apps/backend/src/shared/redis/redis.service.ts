@@ -52,14 +52,14 @@ export class RedisService {
   }
 
   public async get(key: string): Promise<string | null> {
-    const now = Date.now();
+    // const now = Date.now();
     const result = await this.client.get(key);
-    const timeToGet = Date.now() - now;
+    // const timeToGet = Date.now() - now;
 
-    this.logger.log(`Got key ${key} in ${timeToGet}ms`, {
-      key,
-      timeToGet,
-    });
+    // this.logger.log(`Got key ${key} in ${timeToGet}ms`, {
+    //   key,
+    //   timeToGet,
+    // });
 
     return result;
   }
