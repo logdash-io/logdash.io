@@ -59,17 +59,17 @@
       content={logsState.syncPaused ? 'Sync paused' : 'Sync active'}
       placement="top"
     >
-      <div class="flex h-8 w-8 shrink-0 items-center justify-center">
+      <div
+        class="flex h-3 w-3 shrink-0 items-center justify-center md:h-8 md:w-8"
+      >
         {#if logsState.syncPaused}
           <PauseCircleIcon
-            class="h-5 w-5 shrink-0"
+            class="h-3 w-3 shrink-0"
             stroke="stroke-warning-content"
           />
         {:else}
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2">
-              <span class="loading loading-ring loading-sm"></span>
-            </div>
+          <div class="flex items-center gap-2">
+            <span class="loading loading-ring loading-sm"></span>
           </div>
         {/if}
       </div>

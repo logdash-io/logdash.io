@@ -139,7 +139,7 @@ class LogsState {
   }
 
   async resumeSync(): Promise<void> {
-    if (this.shouldFiltersBlockSync || !this.syncPaused) {
+    if (this.shouldFiltersBlockSync || !this.syncPaused || !this._projectId) {
       logger.debug(
         'not resuming logs sync...',
         this.shouldFiltersBlockSync,

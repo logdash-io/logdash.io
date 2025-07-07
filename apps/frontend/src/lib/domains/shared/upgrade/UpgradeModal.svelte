@@ -2,7 +2,7 @@
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { UserTier } from '$lib/domains/shared/types.js';
   import { generateGithubOAuthUrl } from '$lib/domains/shared/utils/generate-github-oauth-url.js';
-  import { CheckIcon, XIcon } from 'lucide-svelte';
+  import { CheckIcon, ShieldCheckIcon, XIcon } from 'lucide-svelte';
   import { fade, scale } from 'svelte/transition';
   import { cubicInOut } from 'svelte/easing';
   import SkyBackground from '$lib/domains/shared/upgrade/SkyBackground.svelte';
@@ -17,13 +17,13 @@
       email_accepted: false,
       flow: 'login',
       fallback_url: `/app/auth?needs_account=true`,
-      tier: UserTier.EARLY_BIRD,
+      tier: UserTier.BUILDER,
       next_url: '/app/clusters',
     });
   }
 
-  const earlyBirdPlan = PAYMENT_PLANS.find(
-    (plan) => plan.tier === UserTier.EARLY_BIRD,
+  const builderPlan = PAYMENT_PLANS.find(
+    (plan) => plan.tier === UserTier.BUILDER,
   );
 </script>
 
@@ -50,7 +50,7 @@
       }}
     >
       <button
-        class="btn btn-circle btn-ghost btn-sm absolute right-4 top-4 z-10"
+        class="btn btn-circle btn-ghost btn-sm absolute top-4 right-4 z-10"
         onclick={() => upgradeState.hideModal()}
         aria-label="Close modal"
       >
@@ -66,7 +66,7 @@
           >
             <h1 class="mb-6 text-4xl font-bold">Ready to level up?</h1>
             <p class="mb-8 text-xl opacity-90">
-              Join our early adopters and unlock the full potential of Logdash
+              Join the Builder plan and unlock even more potential of Logdash
             </p>
             <div class="space-y-4 text-lg">
               <div class="flex items-center gap-3">
@@ -85,37 +85,50 @@
           </div>
         </div>
 
-        <!-- Right half - Early Bird Plan -->
         <div class="ld-card-base flex flex-1 flex-col overflow-y-auto p-8">
           <div class="mx-auto w-full max-w-md">
-            <!-- Plan header -->
             <div class="relative mb-6">
               <div
-                class="badge badge-primary badge-soft absolute right-0 top-0 font-semibold"
+                class="badge badge-primary badge-soft absolute top-0 right-0 font-semibold"
               >
-                {earlyBirdPlan.badge.text}
+                {builderPlan.badge.text}
               </div>
               <h2 class="text-secondary mb-2 text-3xl font-bold">
-                {earlyBirdPlan.name}
+                {builderPlan.name}
               </h2>
               <div class="mb-4">
-                <span class="text-5xl font-bold">{earlyBirdPlan.price}</span>
-                <!-- <span class="text-lg opacity-75">
-                  {earlyBirdPlan.period}
-                </span> -->
+                <span class="text-5xl font-bold">{builderPlan.price}</span>
               </div>
               <p class="text-base opacity-75">
-                {earlyBirdPlan.description}
+                {builderPlan.description}
               </p>
             </div>
 
-            <!-- Divider -->
-            <div class="divider"></div>
+            <button
+              onclick={() => handleGithubLogin()}
+              disabled={loggingIn || builderPlan['disabled']}
+              class={`btn btn-lg mb-6 w-full rounded-full font-medium ${builderPlan.popular ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              {#if loggingIn}
+                <div
+                  in:fade={{ duration: 150 }}
+                  class="flex h-6 w-6 items-center justify-center"
+                >
+                  <span class="loading loading-spinner h-4 w-4"></span>
+                </div>
+              {/if}
 
-            <!-- Features list -->
+              {builderPlan.buttonText}
+            </button>
+
+            <div class="mb-4 flex items-center gap-2 text-base font-semibold">
+              <ShieldCheckIcon class="text-success h-6 w-6" />
+              {builderPlan.guarantee}
+            </div>
+
             <div class="mb-8 flex-1">
               <ul class="space-y-3">
-                {#each earlyBirdPlan.features as feature}
+                {#each builderPlan.features as feature}
                   <li class="flex items-start gap-3">
                     <CheckIcon
                       class="text-success mt-0.5 h-5 w-5 flex-shrink-0"
@@ -131,24 +144,7 @@
 
             <!-- Action button -->
             <div class="mt-auto">
-              <button
-                onclick={handleGithubLogin}
-                disabled={loggingIn}
-                class="btn btn-primary btn-lg w-full"
-              >
-                {#if loggingIn}
-                  <div
-                    in:fade={{ duration: 150 }}
-                    class="flex h-6 w-6 items-center justify-center"
-                  >
-                    <span class="loading loading-spinner h-5 w-5"></span>
-                  </div>
-                {/if}
-                Upgrade to {earlyBirdPlan.name}
-              </button>
-
-              <!-- Trial info -->
-              <p class="mt-4 text-center text-xs opacity-75">
+              <p class=" text-center text-xs opacity-75">
                 30-day trial. Full refund if you cancel within 30 days.
               </p>
             </div>
