@@ -320,7 +320,7 @@
     data-posthog-id="logs-filter-dropdown"
   >
     <Settings2Icon class="h-4 w-4" />
-    <span>Filters</span>
+    <span class="hidden md:block">Filters</span>
     {#if hasActiveFilters()}
       <span class="badge badge-xs">
         {[
@@ -330,6 +330,6 @@
         ].filter(Boolean).length}
       </span>
     {/if}
-    <ChevronDownIcon class="h-4 w-4" />
+    <ChevronDownIcon class="hidden h-4 w-4 md:block" />
   </button>
 </Tooltip>
