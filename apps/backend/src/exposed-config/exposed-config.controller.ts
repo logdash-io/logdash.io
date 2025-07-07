@@ -12,6 +12,8 @@ import { ProjectPlanConfigs } from '../shared/configs/project-plan-configs';
 import { UserPlanConfigs } from '../shared/configs/user-plan-configs';
 import { getEnvConfig } from '../shared/configs/env-configs';
 import { ClusterPlanConfigs } from '../shared/configs/cluster-plan-configs';
+import { RedisService } from '../shared/redis/redis.service';
+import { randomIntegerBetweenInclusive } from '../shared/utils/random-integer-between';
 
 export class DemoConfigResponnse {
   @ApiProperty()
@@ -24,6 +26,8 @@ export class DemoConfigResponnse {
 @ApiTags('Exposed config')
 @Controller()
 export class ExposedConfigController {
+  constructor(private readonly redisService: RedisService) {}
+
   @Get('/exposed_config')
   @Public()
   public async getExposedConfig() {
@@ -80,5 +84,33 @@ export class ExposedConfigController {
     }
 
     throw new ForbiddenException('Domain not allowed');
+  }
+
+  @Public()
+  @Get('/redis-benchmark')
+  public async redisBenchmark() {
+    const iterations = 10_000;
+    const now = performance.now();
+
+    for (let i = 0; i < iterations; i++) {
+      await this.redisService.set(
+        `test:${i}`,
+        randomIntegerBetweenInclusive(1, 100000).toString(),
+        5,
+      );
+    }
+
+    const timeToSet = performance.now() - now;
+
+    for (let i = 0; i < iterations; i++) {
+      await this.redisService.get(`test:${i}`);
+    }
+
+    const timeToGet = performance.now() - timeToSet;
+
+    return {
+      timeToSet,
+      timeToGet,
+    };
   }
 }
