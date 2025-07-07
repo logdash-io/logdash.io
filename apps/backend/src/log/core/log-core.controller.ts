@@ -187,14 +187,16 @@ export class LogCoreController {
       throw new BadRequestException('If using pagination, provide both lastId and direction');
     }
 
+    const project = await this.projectReadCachedService.readProjectOrThrow(projectId);
+
+    const retentionHours = getProjectPlanConfig(project.tier).logs.retentionHours;
+
+    const cutOffDate = subHours(new Date(), retentionHours);
+
     if (dto.startDate) {
-      const project = await this.projectReadCachedService.readProjectOrThrow(projectId);
-
-      const retentionHours = getProjectPlanConfig(project.tier).logs.retentionHours;
-
-      const cutOffDate = subHours(new Date(), retentionHours);
-
       dto.startDate = dto.startDate < cutOffDate ? cutOffDate : dto.startDate;
+    } else {
+      dto.startDate = cutOffDate;
     }
 
     const logs = await this.logReadClickhouseService.readMany({
