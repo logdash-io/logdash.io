@@ -8,6 +8,7 @@ on:
     paths:
       - 'apps/backend/**'
       - '.github/workflows/**'
+      - '.github/templates/**'
 
 jobs:
   find-tests:
