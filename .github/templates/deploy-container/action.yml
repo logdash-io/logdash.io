@@ -109,7 +109,7 @@ runs:
           --restart=always \
           --add-host=host.docker.internal:host-gateway \
           --name ${{ inputs.container-name }} \
-          -v /var/run/dragonfly/dragonfly.sock:/var/run/dragonfly/dragonfly.sock \
+          -v /var/run/dragonfly:/var/run/dragonfly \
           -e MONGO_URL=${{ inputs.mongo-url }} \
           -e GITHUB_OAUTH_CLIENT_ID=${{ inputs.github-oauth-client-id }} \
           -e GITHUB_OAUTH_CLIENT_SECRET=${{ inputs.github-oauth-client-secret }} \
