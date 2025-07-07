@@ -19,7 +19,9 @@
   >
     {#if userState.canUpgrade}
       <UpgradeButton class="mb-1" source="nav-menu" />
-    {:else}
+    {/if}
+
+    {#if userState.hasBilling}
       <li>
         <a
           class="flex w-full items-center justify-between gap-3"

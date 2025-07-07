@@ -100,14 +100,12 @@
       `Syncing data for project ${projectIdToSync} on tab ${tabId}. Page is visible.`,
     );
     untrack(() => metricsState.sync(projectIdToSync, tabId));
-    untrack(() => logsState.sync(projectIdToSync));
 
     return () => {
       logger.info(
         `Unsyncing data for project ${projectIdToSync} on tab ${tabId}.`,
       );
       metricsState.unsync();
-      logsState.unsync();
     };
   });
 </script>

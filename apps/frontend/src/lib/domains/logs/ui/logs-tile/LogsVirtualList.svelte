@@ -1,19 +1,17 @@
 <script lang="ts">
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
+  import type { Log } from '$lib/domains/logs/domain/log';
   import { intersect } from '$lib/domains/shared/ui/actions/use-intersect.svelte.js';
   import { fade } from 'svelte/transition';
-  import type { Log } from '$lib/domains/logs/domain/log';
-  import EnhancedLogRow from './log-row/LogRow.svelte';
   import { filtersStore } from '../../infrastructure/filters.store.svelte.js';
-  import { logAnalyticsState } from '../../application/log-analytics.state.svelte.js';
+  import EnhancedLogRow from './log-row/LogRow.svelte';
 
   type Props = {
     logs: Log[];
     rendered: boolean;
-    projectId: string;
   };
 
-  const { logs, rendered, projectId }: Props = $props();
+  const { logs, rendered }: Props = $props();
   let virtualListRef = $state<HTMLDivElement | null>(null);
   let scrollTop = $state(0);
 
@@ -61,8 +59,6 @@
           class="btn btn-sm btn-secondary"
           onclick={() => {
             filtersStore.reset();
-            logsState.refresh();
-            logAnalyticsState.refresh(projectId);
           }}
         >
           Reset filters

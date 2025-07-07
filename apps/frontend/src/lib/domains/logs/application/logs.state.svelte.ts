@@ -1,17 +1,13 @@
+import type { Log } from '$lib/domains/logs/domain/log';
 import { createLogger } from '$lib/domains/shared/logger';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
-import type { Log } from '$lib/domains/logs/domain/log';
-import { LogsService } from '../infrastructure/logs.service.js';
-import type { LogsQueryFilters } from '../domain/logs-query-filters.js';
-import {
-  logsSyncService,
-  LogsSyncService,
-} from '../infrastructure/logs-sync.service.svelte.js';
 import type { LogsFilters } from '../domain/logs-filters.js';
 import { filtersStore } from '../infrastructure/filters.store.svelte.js';
+import { logsSyncService } from '../infrastructure/logs-sync.service.svelte.js';
+import { LogsService } from '../infrastructure/logs.service.js';
 
-const logger = createLogger('logs.state', true);
+const logger = createLogger('logs.state', false);
 
 class LogsState {
   private _loadingPage = $state(false);
@@ -76,21 +72,24 @@ class LogsState {
     );
   }
 
-  refresh(): void {
+  resync(project_id: string, skipFetch: boolean = false): void {
+    this._projectId = project_id;
     logger.debug(
-      'refreshing logs...',
+      'resyncing logs...',
       filtersStore.searchString.trim(),
       filtersStore.startDate,
       filtersStore.endDate,
       filtersStore.level,
     );
+
     if (this.shouldFiltersBlockSync) {
+      if (!skipFetch) {
+        this.fetchLogs();
+      }
       this.pauseSync();
     } else {
       this.resumeSync();
     }
-
-    this.fetchLogs();
   }
 
   async sync(project_id: string): Promise<void> {
@@ -140,7 +139,12 @@ class LogsState {
   }
 
   async resumeSync(): Promise<void> {
-    if (this.shouldFiltersBlockSync) {
+    if (this.shouldFiltersBlockSync || !this.syncPaused) {
+      logger.debug(
+        'not resuming logs sync...',
+        this.shouldFiltersBlockSync,
+        this.syncPaused,
+      );
       return;
     }
 

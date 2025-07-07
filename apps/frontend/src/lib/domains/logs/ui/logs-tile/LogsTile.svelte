@@ -20,19 +20,15 @@
   );
 
   let rendered = $state(false);
+  let hasSynced = false;
 
   onMount(() => {
     const timer = setTimeout(() => {
       rendered = true;
     }, 500);
 
-    if (projectId) {
-      logsState.sync(projectId);
-    }
-
     return () => {
       clearTimeout(timer);
-      logsState.unsync();
     };
   });
 
@@ -55,12 +51,14 @@
     }
 
     const cleanup = untrack(() => {
-      logsState.refresh();
+      logsState.resync(projectId, !hasSynced);
+      hasSynced = true;
       return logAnalyticsState.sync(projectId);
     });
 
     return () => {
       cleanup();
+      logsState.unsync();
     };
   });
 </script>
@@ -68,5 +66,5 @@
 <div class="flex flex-col">
   <LogsHeader {projectId} />
 
-  <LogsVirtualList {projectId} logs={logsState.logs} {rendered} />
+  <LogsVirtualList logs={logsState.logs} {rendered} />
 </div>

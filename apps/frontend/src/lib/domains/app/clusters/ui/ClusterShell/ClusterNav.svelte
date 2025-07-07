@@ -65,9 +65,9 @@
 {/snippet}
 
 <div class="top-0 z-50 pb-2 sm:pb-0">
-  <div class="navbar xl:w-7xl mx-auto pb-0 pl-0 sm:pb-2 sm:pl-2">
+  <div class="navbar mx-auto pb-0 pl-0 sm:pb-2 sm:pl-2 xl:w-7xl">
     <div class="navbar-start">
-      <a class="flex items-center justify-start gap-2" href="/static">
+      <a class="flex items-center justify-start gap-2" href="/">
         <Logo class="h-10 w-10" />
         <span class="text-2xl font-bold">logdash</span>
       </a>

@@ -26,6 +26,10 @@ class UserState {
     return this.tier !== UserTier.FREE && this.tier !== UserTier.EARLY_USER;
   }
 
+  get hasBilling(): boolean {
+    return this.isPaid && this.tier !== UserTier.CONTRIBUTOR;
+  }
+
   get isFree(): boolean {
     return this.tier === UserTier.FREE || this.tier === UserTier.EARLY_USER;
   }

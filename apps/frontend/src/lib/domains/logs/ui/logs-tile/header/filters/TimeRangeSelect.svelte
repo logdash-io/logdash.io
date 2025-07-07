@@ -65,12 +65,19 @@
   </div>
 {/snippet}
 
-<Tooltip class="w-full" content={menu} interactive={true} placement="bottom">
+<Tooltip
+  class="w-full"
+  content={menu}
+  interactive={true}
+  placement="bottom"
+  trigger="click"
+  closeOnOutsideTooltipClick={true}
+>
   <button
-    class="btn btn-sm btn-subtle w-full justify-start gap-1.5"
+    class="btn btn-sm btn-subtle w-full justify-between gap-1.5"
     data-posthog-id="logs-time-range-select"
   >
     <span>{getSelectedLabel()}</span>
-    <ChevronDownIcon class="h-4 w-4" />
+    <ChevronDownIcon class="h-4 w-4 shrink-0" />
   </button>
 </Tooltip>

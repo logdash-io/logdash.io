@@ -2,12 +2,14 @@ import queryString from 'query-string';
 import type { Log } from '../domain/log.js';
 import { httpClient } from '$lib/domains/shared/http/http-client.js';
 import type { LogsQueryFilters } from '../domain/logs-query-filters.js';
+import { logger } from '$lib/domains/shared/logger/index.js';
 
 export class LogsService {
   static async getProjectLogs(
     project_id: string,
     filters: Partial<LogsQueryFilters>,
   ): Promise<Log[]> {
+    logger.debug('getting project logs', filters);
     const qs = queryString.stringify({
       ...(filters.lastId && { lastId: filters.lastId }),
       ...(filters.direction && { direction: filters.direction }),

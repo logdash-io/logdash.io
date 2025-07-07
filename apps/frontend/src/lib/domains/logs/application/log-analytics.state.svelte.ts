@@ -96,6 +96,7 @@ class LogAnalyticsState {
       clearTimeout(timeout);
       clearInterval(interval);
       cleanupLogListener();
+      this.clearData();
     };
   }
 
