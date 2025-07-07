@@ -3,6 +3,9 @@ import Stripe from 'stripe';
 import { UserReadService } from '../../user/read/user-read.service';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { Logger } from '@logdash/js-sdk';
+import { paidTiers, UserTier } from '../../user/core/enum/user-tier.enum';
+import { mapTierToPriceId } from './stripe-mapper';
+import { SubscriptionManagementService } from '../../subscription/management/subscription-management.service';
 
 @Injectable()
 export class StripeService {
@@ -10,34 +13,70 @@ export class StripeService {
     private readonly logger: Logger,
     private readonly userReadService: UserReadService,
     private readonly stripe: Stripe,
+    private readonly subscriptionManagementService: SubscriptionManagementService,
   ) {}
 
-  public async getPaymentSessionUrl(email: string): Promise<string> {
-    this.logger.log(`[STRIPE] Initiating payment session for user`, { email });
+  public async changePaidPlan(userId: string, tier: UserTier): Promise<void> {
+    this.logger.log(`[STRIPE] Initiating plan upgrade from paid to paid`, { userId, tier });
 
-    const checkoutSession = await this.stripe.checkout.sessions.create({
-      customer_email: email,
-      success_url: getEnvConfig().stripe.successUrl,
-      mode: 'subscription',
-      line_items: [
-        {
-          price: getEnvConfig().stripe.earlyBirdPriceId,
-          quantity: 1,
-        },
-      ],
-      tax_id_collection: { enabled: true },
-      billing_address_collection: 'required',
-    });
+    const user = await this.userReadService.readByIdOrThrow(userId);
 
-    if (!checkoutSession.url) {
-      this.logger.error(`[STRIPE] Payment session contained no information for user`, {
-        email,
-      });
-
-      throw new Error(`Failed to process payment for user: ${email}`);
+    if (!user) {
+      this.logger.error(`[STRIPE] User not found with id`, { userId });
+      throw new Error(`User not found with id: ${userId}`);
     }
 
-    return checkoutSession.url;
+    if (user.tier === tier) {
+      this.logger.error(`[STRIPE] User already has tier`, { userId, tier });
+      throw new Error(`User already has tier: ${tier}`);
+    }
+
+    if (!paidTiers.includes(user.tier)) {
+      this.logger.error(`[STRIPE] User is not a paid tier`, { userId, tier });
+      throw new Error(`User is not a paid tier: ${user.tier}`);
+    }
+
+    if (!user.stripeCustomerId) {
+      this.logger.error(`[STRIPE] User has no stripe customer id`, { userId });
+      throw new Error(`User has no stripe customer id`);
+    }
+
+    const subscription = await this.getActiveSubscription(user.stripeCustomerId);
+
+    const update = await this.stripe.subscriptions.update(subscription.id, {
+      items: [
+        {
+          id: subscription.items.data[0].id,
+          price: mapTierToPriceId(tier),
+        },
+      ],
+      proration_behavior: 'create_prorations',
+    });
+
+    if (!update) {
+      this.logger.error(`[STRIPE] Failed to update subscription`, {
+        userId,
+        update: JSON.stringify(update),
+      });
+      throw new Error(`Failed to update subscription`);
+    }
+
+    await this.subscriptionManagementService.changePaidPlan(userId, user.stripeCustomerId, tier);
+  }
+
+  private async getActiveSubscription(stripeCustomerId: string): Promise<Stripe.Subscription> {
+    const subscription = await this.stripe.subscriptions.list({
+      customer: stripeCustomerId,
+      status: 'active',
+      limit: 1,
+    });
+
+    if (subscription.data.length === 0) {
+      this.logger.error(`[STRIPE] User has no active subscription`, { stripeCustomerId });
+      throw new Error(`User has no active subscription`);
+    }
+
+    return subscription.data[0];
   }
 
   public async getCustomerPortalUrl(userId: string): Promise<string> {

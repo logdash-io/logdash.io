@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   Headers,
@@ -20,6 +21,7 @@ import { StripeEventsHandler } from './stripe.events-handler';
 import { StripeCheckoutService } from './stripe-checkout.service';
 import { CheckoutQuery } from './dto/checkout.query';
 import { UserReadService } from '../../user/read/user-read.service';
+import { ChangePaidPlanBody } from './dto/upgrade-subscription.body';
 
 @ApiTags('Payments (stripe)')
 @Controller('payments/stripe')
@@ -64,6 +66,15 @@ export class StripeController {
     return {
       checkoutUrl,
     };
+  }
+
+  @ApiBearerAuth()
+  @Post('change_paid_plan')
+  public async upgrade(
+    @CurrentUserId() userId: string,
+    @Body() body: ChangePaidPlanBody,
+  ): Promise<void> {
+    await this.stripeService.changePaidPlan(userId, body.tier);
   }
 
   @ApiBearerAuth()

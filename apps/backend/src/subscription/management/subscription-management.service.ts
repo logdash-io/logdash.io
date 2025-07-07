@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { SubscriptionWriteService } from '../write/subscription-write.service';
 import { SubscriptionReadService } from '../read/subscription-read.service';
-import { UserTier } from '../../user/core/enum/user-tier.enum';
+import { paidTiers, UserTier } from '../../user/core/enum/user-tier.enum';
 import { UserTierService } from '../../user/tier/user-tier.service';
 import { Logger } from '@logdash/js-sdk';
 import { ApplyNewSubscriptionDto } from './dto/try-apply-new-subscription.dto';
@@ -67,12 +67,12 @@ export class SubscriptionManagementService {
       throw new BadRequestException('User does not have active subscription');
     }
 
-    if (activeSubscription.tier === UserTier.EarlyBird) {
-      this.logger.log('Cannot change expiration date of early bird subscription', {
+    if (paidTiers.includes(activeSubscription.tier)) {
+      this.logger.log('Cannot change expiration date of paid subscription', {
         dto,
       });
 
-      throw new BadRequestException('Cannot change expiration date of early bird subscription');
+      throw new BadRequestException('Cannot change expiration date of paid subscription');
     }
 
     await this.subscriptionWriteService.updateOne({
@@ -126,5 +126,36 @@ export class SubscriptionManagementService {
     });
 
     await this.syncUserTier(userId);
+  }
+
+  public async changePaidPlan(
+    userId: string,
+    stripeCustomerId: string,
+    tier: UserTier,
+  ): Promise<void> {
+    const activeSubscription = await this.subscriptionReadService.readActiveByUserId(userId);
+
+    if (!activeSubscription) {
+      this.logger.log('Cannot upgrade non-existing subscription', { userId });
+      throw new BadRequestException('User does not have active subscription');
+    }
+
+    if (activeSubscription.tier === tier) {
+      this.logger.log('Cannot upgrade to same tier', { userId, tier });
+      throw new BadRequestException('Cannot upgrade to same tier');
+    }
+
+    if (!paidTiers.includes(activeSubscription.tier)) {
+      this.logger.log('Cannot upgrade non-paid subscription', { userId, tier });
+      throw new BadRequestException('Cannot upgrade non-paid subscription');
+    }
+
+    await this.endActiveSubscription(userId, stripeCustomerId);
+
+    await this.applyNew({
+      userId,
+      tier,
+      endsAt: null,
+    });
   }
 }

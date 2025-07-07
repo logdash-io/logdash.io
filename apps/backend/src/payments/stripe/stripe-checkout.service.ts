@@ -5,6 +5,7 @@ import { UserReadService } from '../../user/read/user-read.service';
 import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.enum';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../shared/configs/env-configs';
+import { mapTierToPriceId } from './stripe-mapper';
 
 @Injectable()
 export class StripeCheckoutService {
@@ -13,19 +14,6 @@ export class StripeCheckoutService {
     private readonly logger: Logger,
     private readonly userReadService: UserReadService,
   ) {}
-
-  private mapTierToPriceId(tier: UserTier): string {
-    switch (tier) {
-      case UserTier.EarlyBird:
-        return getEnvConfig().stripe.earlyBirdPriceId;
-      case UserTier.Builder:
-        return getEnvConfig().stripe.builderPriceId;
-      case UserTier.Pro:
-        return getEnvConfig().stripe.proPriceId;
-      default:
-        throw new Error(`Invalid tier: ${tier}`);
-    }
-  }
 
   public async getCheckoutUrl(dto: {
     userId: string;
@@ -63,7 +51,7 @@ export class StripeCheckoutService {
       mode: 'subscription',
       line_items: [
         {
-          price: this.mapTierToPriceId(dto.tier),
+          price: mapTierToPriceId(dto.tier),
           quantity: 1,
         },
       ],
