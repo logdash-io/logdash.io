@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Get,
   InternalServerErrorException,
+  Param,
   Query,
 } from '@nestjs/common';
 import { ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -87,10 +88,9 @@ export class ExposedConfigController {
   }
 
   @Public()
-  @Get('/redis-benchmark')
-  public async redisBenchmark() {
-    const iterations = 1_000;
-    const now = performance.now();
+  @Get('/redis-benchmark/:iterations')
+  public async redisBenchmark(@Param('iterations') iterations: number) {
+    const now = Date.now();
 
     await Promise.all(
       Array.from({ length: iterations }, (_, i) =>
@@ -98,13 +98,13 @@ export class ExposedConfigController {
       ),
     );
 
-    const timeAfterSet = performance.now();
+    const timeAfterSet = Date.now();
 
     await Promise.all(
       Array.from({ length: iterations }, (_, i) => this.redisService.get(`test:${i}`)),
     );
 
-    const timeAfterGet = performance.now();
+    const timeAfterGet = Date.now();
 
     return {
       timeToSet: (timeAfterSet - now) / iterations,
