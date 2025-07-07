@@ -39,6 +39,10 @@ export class HttpPingBucketAggregationService {
       return subDays(new Date(), days);
     };
 
+    const nowMinusHours = (hours: number) => {
+      return subHours(new Date(), hours);
+    };
+
     const configs = {
       [BucketsPeriod.Day]: {
         fromDate: addHours(nowMinusDays(1), 1),
@@ -49,6 +53,11 @@ export class HttpPingBucketAggregationService {
         fromDate: addHours(nowMinusDays(4), 1),
         grouping: BucketGranularity.Hour,
         expectedBucketCount: 96,
+      },
+      [BucketsPeriod.NinetyHours]: {
+        fromDate: addHours(nowMinusHours(90), 1),
+        grouping: BucketGranularity.Hour,
+        expectedBucketCount: 90,
       },
       [BucketsPeriod.NinetyDays]: {
         fromDate: nowMinusDays(89),
