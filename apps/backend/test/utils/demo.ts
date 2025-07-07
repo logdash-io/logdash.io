@@ -8,6 +8,7 @@ import { ProjectSerializer } from '../../src/project/core/entities/project.seria
 import { UserEntity } from '../../src/user/core/entities/user.entity';
 import { ProjectSerialized } from '../../src/project/core/entities/project.interface';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';
+import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 
 export class DemoUtils {
   private readonly userModel: Model<UserEntity>;
@@ -26,6 +27,7 @@ export class DemoUtils {
     const project = await this.projectModel.create({
       _id: new Types.ObjectId(getEnvConfig().demo.projectId),
       name: 'demo project',
+      tier: ProjectTier.Pro,
     });
 
     const log = await this.logModel.create({
@@ -37,9 +39,7 @@ export class DemoUtils {
     });
 
     return {
-      project: ProjectSerializer.serialize(
-        ProjectSerializer.normalize(project),
-      ),
+      project: ProjectSerializer.serialize(ProjectSerializer.normalize(project)),
     };
   }
 }
