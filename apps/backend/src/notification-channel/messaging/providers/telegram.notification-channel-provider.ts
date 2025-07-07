@@ -58,6 +58,10 @@ ${codeBlock}`;
     return `🟢  *${dto.name}* is up`;
   }
 
+  private escapeTelegramMessage(message: string): string {
+    return message.replace(/[_*[\]()~`>#+-=|{}.!&]/g, '\\$&');
+  }
+
   private async sendMessageToTelegramApi(dto: {
     botToken: string;
     chatId: string;
@@ -68,7 +72,7 @@ ${codeBlock}`;
     try {
       await axios.post(url, {
         chat_id: dto.chatId,
-        text: dto.message,
+        text: this.escapeTelegramMessage(dto.message),
       });
     } catch (error) {
       this.logger.error('Failed to send message to Telegram', {
