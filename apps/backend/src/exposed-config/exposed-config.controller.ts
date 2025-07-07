@@ -89,7 +89,7 @@ export class ExposedConfigController {
   @Public()
   @Get('/redis-benchmark')
   public async redisBenchmark() {
-    const iterations = 10_000;
+    const iterations = 1_000;
     const now = performance.now();
 
     for (let i = 0; i < iterations; i++) {
@@ -109,8 +109,8 @@ export class ExposedConfigController {
     const timeToGet = performance.now() - timeToSet;
 
     return {
-      timeToSet,
-      timeToGet,
+      timeToSet: timeToSet / iterations,
+      timeToGet: timeToGet / iterations,
     };
   }
 }
