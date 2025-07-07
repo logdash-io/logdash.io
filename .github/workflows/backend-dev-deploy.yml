@@ -75,6 +75,8 @@ jobs:
           stripe-signature: ${{ secrets.BACKEND_DEV_STRIPE_SIGNATURE }}
           our-env: dev
           redis-url: ${{ secrets.BACKEND_DEV_REDIS_URL }}
+          redis-socket-path: ${{ secrets.BACKEND_DEV_REDIS_SOCKET_PATH }}
+          redis-password: ${{ secrets.BACKEND_DEV_REDIS_PASSWORD }}
           stripe-early-bird-price-id: ${{ secrets.BACKEND_DEV_STRIPE_EARLY_BIRD_PRICE_ID }}
           stripe-builder-price-id: ${{ secrets.BACKEND_DEV_STRIPE_BUILDER_PRICE_ID }}
           stripe-pro-price-id: ${{ secrets.BACKEND_DEV_STRIPE_PRO_PRICE_ID }}
