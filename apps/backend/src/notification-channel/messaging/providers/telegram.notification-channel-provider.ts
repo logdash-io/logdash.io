@@ -51,14 +51,14 @@ I'll notify you about the status of your services`;
       return `🔴  *${dto.name}* is down
 ${codeBlock}
 Status code: ${dto.statusCode ?? 'N/A'}
-Error: ${dto.errorMessage ?? 'N/A'}
+Error: ${this.escapeTelegramString(dto.errorMessage ?? 'N/A')}
 ${codeBlock}`;
     }
 
-    return `🟢  *${dto.name}* is up`;
+    return `🟢  *${this.escapeTelegramString(dto.name)}* is up`;
   }
 
-  private escapeTelegramMessage(message: string): string {
+  private escapeTelegramString(message: string): string {
     return message.replace(/[_*[\]()~`>#+-=|{}.!&]/g, '\\$&');
   }
 
@@ -72,7 +72,7 @@ ${codeBlock}`;
     try {
       await axios.post(url, {
         chat_id: dto.chatId,
-        text: this.escapeTelegramMessage(dto.message),
+        text: dto.message,
       });
     } catch (error) {
       this.logger.error('Failed to send message to Telegram', {
