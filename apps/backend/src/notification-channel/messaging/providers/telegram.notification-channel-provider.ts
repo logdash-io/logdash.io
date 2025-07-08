@@ -59,7 +59,32 @@ ${codeBlock}`;
   }
 
   private escapeTelegramString(message: string): string {
-    return message.replace(/[_*[\]()~`>#+-=|{}.!&]/g, '\\$&');
+    const SPECIAL_CHARS = [
+      '\\',
+      '_',
+      '*',
+      '[',
+      ']',
+      '(',
+      ')',
+      '~',
+      '`',
+      '>',
+      '<',
+      '&',
+      '#',
+      '+',
+      '-',
+      '=',
+      '|',
+      '{',
+      '}',
+      '.',
+      '!',
+    ];
+
+    SPECIAL_CHARS.forEach((char) => (message = message.replaceAll(char, `\\${char}`)));
+    return message;
   }
 
   private async sendMessageToTelegramApi(dto: {

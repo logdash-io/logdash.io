@@ -16,6 +16,10 @@ describe('Http monitor full process', () => {
     await bootstrap.methods.beforeEach();
   });
 
+  afterAll(async () => {
+    await bootstrap.methods.afterAll();
+  });
+
   it('creates a monitor, pings it and sends status change message', async () => {
     // given
     const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -71,7 +75,7 @@ describe('Http monitor full process', () => {
     expect(telegramPostedDtos[1].text).toBe(`🔴  *some name* is down
 ${codeBlock}
 Status code: 500
-Error: {"error":"some funny error"}
+Error: \\{"error":"some funny error"\\}
 ${codeBlock}`);
     expect(telegramPostedDtos[2].text).toBe(`🟢  *some name* is up`);
   });
