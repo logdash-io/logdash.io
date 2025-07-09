@@ -51,11 +51,40 @@ I'll notify you about the status of your services`;
       return `🔴  *${dto.name}* is down
 ${codeBlock}
 Status code: ${dto.statusCode ?? 'N/A'}
-Error: ${dto.errorMessage ?? 'N/A'}
+Error: ${this.escapeTelegramString(dto.errorMessage ?? 'N/A')}
 ${codeBlock}`;
     }
 
-    return `🟢  *${dto.name}* is up`;
+    return `🟢  *${this.escapeTelegramString(dto.name)}* is up`;
+  }
+
+  private escapeTelegramString(message: string): string {
+    const SPECIAL_CHARS = [
+      '\\',
+      '_',
+      '*',
+      '[',
+      ']',
+      '(',
+      ')',
+      '~',
+      '`',
+      '>',
+      '<',
+      '&',
+      '#',
+      '+',
+      '-',
+      '=',
+      '|',
+      '{',
+      '}',
+      '.',
+      '!',
+    ];
+
+    SPECIAL_CHARS.forEach((char) => (message = message.replaceAll(char, `\\${char}`)));
+    return message;
   }
 
   private async sendMessageToTelegramApi(dto: {

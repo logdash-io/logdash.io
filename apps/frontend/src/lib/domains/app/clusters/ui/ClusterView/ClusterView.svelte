@@ -6,6 +6,7 @@
   import ClusterContextMenu from '$lib/domains/app/clusters/ui/ClusterContextMenu.svelte';
   import ProjectFeaturesContextMenu from '$lib/domains/app/clusters/ui/ProjectFeaturesContextMenu.svelte';
   import PublicDashboardContextMenu from '$lib/domains/app/clusters/ui/PublicDashboardContextMenu.svelte';
+  import { untrack } from 'svelte';
 
   type Props = {
     priorityClusterId?: string;
@@ -21,7 +22,7 @@
 
   const isSettingUp = $derived(
     page.url.pathname.includes('/setup') ||
-    page.url.pathname.includes('/configure'),
+      page.url.pathname.includes('/configure'),
   );
 
   $effect(() => {
@@ -29,7 +30,7 @@
       return;
     }
 
-    monitoringState.sync(clusterId);
+    untrack(() => monitoringState.sync(clusterId));
 
     return () => {
       monitoringState.unsync();

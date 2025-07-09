@@ -5,7 +5,10 @@ import { REDIS_CLIENT, REDIS_OPTIONS } from './redis.constants';
 import { ModuleRef } from '@nestjs/core';
 
 export interface RedisModuleOptions {
-  url: string;
+  url?: string;
+  socketPath?: string;
+  password?: string;
+  database?: number;
 }
 
 @Global()
@@ -31,12 +34,25 @@ export class RedisModule implements OnApplicationShutdown {
     const redisClientProvider: Provider = {
       provide: REDIS_CLIENT,
       useFactory: async () => {
-        const url = options.url;
+        const clientConfig: any = {
+          database: options.database ?? 0,
+        };
 
-        const client = createClient({
-          url,
-          database: 0,
-        });
+        if (options.socketPath) {
+          clientConfig.socket = {
+            path: options.socketPath,
+          };
+        } else if (options.url) {
+          clientConfig.url = options.url;
+        } else {
+          throw new Error('Either url or socket path must be provided');
+        }
+
+        if (options.password) {
+          clientConfig.password = options.password;
+        }
+
+        const client = createClient(clientConfig);
 
         client.on('error', (err) => {
           console.error('Redis client error', err);

@@ -10,11 +10,21 @@
   }
 
   interface Props {
+    class?: string;
     pings: Ping[];
     maxPingsToShow?: number;
+    adaptToWidth?: boolean;
   }
 
-  let { pings, maxPingsToShow = 90 }: Props = $props();
+  let {
+    pings,
+    maxPingsToShow = 90,
+    adaptToWidth = false,
+    class: className,
+  }: Props = $props();
+
+  let containerWidth = $state(0);
+  const BAR_WIDTH = 8;
 
   function formatDuration(ms: number): string {
     if (ms < 1000) return `${Math.round(ms)}ms`;
@@ -22,14 +32,34 @@
     return `${(ms / 60000).toFixed(1)}m`;
   }
 
+  const availableSlots = $derived(
+    adaptToWidth ? Math.floor(containerWidth / BAR_WIDTH) : maxPingsToShow,
+  );
+
   const pingsCount = $derived(pings?.length || 0);
-  const displayPings = $derived(pings?.slice(0, maxPingsToShow) || []);
-  const emptyPings = $derived(Math.max(0, maxPingsToShow - pingsCount));
+  const displayPings = $derived(
+    pings?.slice(0, availableSlots).reverse() || [],
+  );
+  const remainingSlots = $derived(Math.max(0, availableSlots - pingsCount));
 </script>
 
-<div class="hidden space-y-2 sm:block">
+<div
+  class={[
+    'w-full space-y-2',
+    className,
+    {
+      'overflow-hidden': adaptToWidth,
+    },
+  ]}
+  bind:clientWidth={containerWidth}
+>
   <div
-    class="flex h-6 w-fit flex-row-reverse items-end justify-end overflow-visible"
+    class={[
+      'flex h-6 w-full flex-row-reverse items-end justify-start',
+      {
+        'overflow-hidden': adaptToWidth,
+      },
+    ]}
   >
     {#if pingsCount === 0}
       <div
@@ -42,6 +72,7 @@
       {@const isHealthy = ping.statusCode >= 200 && ping.statusCode < 400}
       {@const pingStatus = isHealthy ? 'healthy' : 'unhealthy'}
       <Tooltip
+        class="relative"
         content={`${DateTime.fromJSDate(new Date(ping.createdAt)).toFormat('HH:mm')} - ${ping.statusCode} (${formatDuration(ping.responseTimeMs)})`}
         placement="top"
       >
@@ -49,14 +80,18 @@
       </Tooltip>
     {/each}
 
-    {#each Array.from({ length: emptyPings }) as _, i (i)}
-      <StatusBar status={'unknown'} />
+    {#each Array.from({ length: remainingSlots }) as _, i (i)}
+      <Tooltip content="No data available" placement="top">
+        <StatusBar status={'unknown'} />
+      </Tooltip>
     {/each}
   </div>
 
-  <div class="text-secondary/60 flex items-center justify-between text-xs">
+  <div
+    class="text-secondary/60 flex items-center justify-between font-mono text-xs"
+  >
     <span>
-      {maxPingsToShow} minutes ago
+      {availableSlots} pings ago
     </span>
     <span>Now</span>
   </div>

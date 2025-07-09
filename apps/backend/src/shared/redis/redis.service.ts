@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { RedisClientType } from '@redis/client';
 import { REDIS_CLIENT } from './redis.constants';
+import { Logger } from '@logdash/js-sdk';
 
 export enum TtlOverwriteStrategy {
   SetAlways = 'set-always',
@@ -14,7 +15,10 @@ export interface ExpiryOptions {
 
 @Injectable()
 export class RedisService {
-  public constructor(@Inject(REDIS_CLIENT) private readonly client: RedisClientType) {}
+  public constructor(
+    @Inject(REDIS_CLIENT) private readonly client: RedisClientType,
+    private readonly logger: Logger,
+  ) {}
 
   public async increment(key: string, expiryOptions?: ExpiryOptions): Promise<number> {
     const result = await this.client.incr(key);

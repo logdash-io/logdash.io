@@ -1,4 +1,5 @@
 import type { PublicDashboardData } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard-data.js';
+import { getStatusFromPings } from '../get-status-from-pings.js';
 
 export abstract class PublicDashboardState {
   protected dashboardData = $state<PublicDashboardData | null>(null);
@@ -47,43 +48,20 @@ export abstract class PublicDashboardState {
     }
   }
 
-  // Common interface methods (to be implemented by subclasses)
   abstract loadDashboard(
     dashboardId: string,
     ...args: unknown[]
   ): Promise<void>;
 
-  // Set dashboard data directly (for injected state scenarios)
   setDashboardData(data: PublicDashboardData): void {
     this.dashboardData = data;
     this.lastUpdated = new Date();
   }
 
-  // Common utility methods
   getMonitorStatus(
     monitor: PublicDashboardData['httpMonitors'][0],
   ): 'up' | 'down' | 'degraded' | 'unknown' {
-    if (!monitor.pings.length) return 'unknown';
-
-    const latestPing = monitor.pings[0];
-    const latestIsHealthy =
-      latestPing.statusCode >= 200 && latestPing.statusCode < 400;
-
-    if (!latestIsHealthy) {
-      return 'down';
-    }
-
-    // Check if any of the 10 most recent pings was an error
-    const recentPings = monitor.pings.slice(0, 10);
-    const hasRecentErrors = recentPings.some(
-      (ping) => ping.statusCode < 200 || ping.statusCode >= 400,
-    );
-
-    if (hasRecentErrors) {
-      return 'degraded';
-    }
-
-    return 'up';
+    return getStatusFromPings(monitor.pings);
   }
 
   getUptimePercentage(
@@ -108,7 +86,6 @@ export abstract class PublicDashboardState {
     return (successfulPings.length / recentPings.length) * 100;
   }
 
-  // Bucket-based uptime calculation (more accurate for status pages)
   getUptimeFromBuckets(
     monitor: PublicDashboardData['httpMonitors'][0],
     days: number = 30,
@@ -117,7 +94,7 @@ export abstract class PublicDashboardState {
       return this.getUptimePercentage(monitor, days);
 
     const recentBuckets = monitor.buckets
-      .filter((bucket) => bucket !== null) // Filter out null buckets
+      .filter((bucket) => bucket !== null)
       .slice(0, days);
 
     if (!recentBuckets.length) return 0;

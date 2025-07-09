@@ -37,7 +37,7 @@
   <div class="flex h-6 w-full gap-3 overflow-hidden leading-tight">
     <Tooltip
       class={[
-        'truncate transition-all duration-200',
+        'min-w-0 flex-shrink transition-all duration-200',
         {
           'text-secondary/60 group-hover:text-secondary':
             previewedMetricId !== metric.id,
@@ -49,7 +49,9 @@
       content={metric.name}
       placement="top"
     >
-      {metric.name}
+      <span class="truncate">
+        {metric.name}
+      </span>
     </Tooltip>
 
     <div class="ml-auto flex items-center gap-2">

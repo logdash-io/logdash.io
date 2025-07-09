@@ -3,6 +3,7 @@
   import { cubicInOut } from 'svelte/easing';
   import type { ClassValue } from 'svelte/elements';
   import { fly } from 'svelte/transition';
+  import { match } from 'ts-pattern';
   import { createLogger } from '$lib/domains/shared/logger';
 
   const logger = createLogger('Tooltip', true);
@@ -160,29 +161,28 @@
     const viewportHeight = window.innerHeight;
     const margin = 8;
 
-    // Calculate initial position relative to viewport
-    let top =
-      placement === 'top'
-        ? triggerRect.top - tooltipRect.height - margin + window.scrollY
-        : triggerRect.bottom + margin + window.scrollY;
+    let top = match(placement)
+      .with(
+        'top',
+        () => triggerRect.top - tooltipRect.height - margin + window.scrollY,
+      )
+      .with('bottom', () => triggerRect.bottom + margin + window.scrollY)
+      .exhaustive();
 
-    // Calculate horizontal position based on align prop
-    let left: number;
-    switch (align) {
-      case 'left':
-        left = triggerRect.left + window.scrollX;
-        break;
-      case 'right':
-        left = triggerRect.right - tooltipRect.width + window.scrollX;
-        break;
-      case 'center':
-      default:
-        left =
+    let left = match(align)
+      .with('left', () => triggerRect.left + window.scrollX)
+      .with(
+        'right',
+        () => triggerRect.right - tooltipRect.width + window.scrollX,
+      )
+      .with(
+        'center',
+        () =>
           triggerRect.left +
           (triggerRect.width - tooltipRect.width) / 2 +
-          window.scrollX;
-        break;
-    }
+          window.scrollX,
+      )
+      .exhaustive();
 
     // Adjust horizontal position to stay within screen bounds
     const minLeft = margin + window.scrollX;
@@ -264,6 +264,19 @@
   $effect(() => {
     if (!visible) {
       destroyPortalContainer();
+    }
+  });
+
+  $effect(() => {
+    return () => {
+      destroyPortalContainer();
+    };
+  });
+
+  // Position tooltip immediately when it's bound
+  $effect(() => {
+    if (visible && tooltip) {
+      positionTooltip();
     }
   });
 </script>

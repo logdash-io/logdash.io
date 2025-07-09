@@ -82,7 +82,7 @@
         </div>
 
         <ChevronDownIcon
-          class={`h-5 w-5 text-gray-500 transition-transform duration-200 group-hover:rotate-180 ${
+          class={`hidden h-5 w-5 text-gray-500 transition-transform duration-200 group-hover:rotate-180 sm:block ${
             open ? 'rotate-180' : ''
           }`}
         />
@@ -90,11 +90,15 @@
     </div>
 
     <div class="z-10 cursor-default sm:mt-2">
-      <PingChart {maxPingsToShow} pings={monitor.pings} />
+      <PingChart
+        class="hidden sm:block"
+        {maxPingsToShow}
+        pings={monitor.pings}
+      />
     </div>
   </div>
 
-  <div class="collapse-content p-0 text-sm">
+  <div class="collapse-content hidden p-0 text-sm sm:block">
     <div class="px-6 sm:pb-2">
       <div class="flex flex-wrap gap-6 text-sm">
         <div class="mb-1 flex items-center gap-2">

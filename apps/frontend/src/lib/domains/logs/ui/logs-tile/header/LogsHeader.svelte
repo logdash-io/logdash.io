@@ -64,7 +64,7 @@
       >
         {#if logsState.syncPaused}
           <PauseCircleIcon
-            class="h-3 w-3 shrink-0"
+            class="h-3 w-3 shrink-0 sm:h-5 sm:w-5"
             stroke="stroke-warning-content"
           />
         {:else}

@@ -64,7 +64,7 @@
       </li>
     {/if}
 
-    {#if !canAddMore}
+    {#if !canAddMore && !isPublic}
       <UpgradeButton>Upgrade to add more public dashboards</UpgradeButton>
     {:else}
       <li>
@@ -84,7 +84,13 @@
   </ul>
 {/snippet}
 
-<Tooltip class="w-full" content={menu} interactive={true} placement="bottom">
+<Tooltip
+  class="w-full"
+  content={menu}
+  interactive={true}
+  placement="bottom"
+  trigger="click"
+>
   <button
     class={[
       'btn flex w-full items-center justify-between gap-1 rounded-full',

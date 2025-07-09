@@ -48,7 +48,7 @@
     bind:this={virtualListRef}
     onscroll={handleScroll}
   >
-    {#if logs.length === 0 && logsState.hasFilters}
+    {#if logs.length === 0 && logsState.hasFilters && !logsState.fetchingLogs}
       <div
         class="flex h-full w-full flex-col items-center justify-center gap-2 py-16"
       >
@@ -95,7 +95,7 @@
       }}
     ></div>
 
-    {#if logsState.pageIsLoading}
+    {#if logsState.pageIsLoading || logsState.fetchingLogs}
       <div class="flex h-12 shrink-0 items-center justify-center gap-2">
         <span class="loading loading-spinner loading-sm opacity-80"></span>
       </div>

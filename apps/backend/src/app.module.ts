@@ -50,6 +50,8 @@ import { InternalModule } from './internal/internal.module';
     MetricRegisterCoreModule,
     RedisModule.forRoot({
       url: getEnvConfig().redis.url,
+      socketPath: getEnvConfig().redis.socketPath,
+      password: getEnvConfig().redis.password,
     }),
     ClickhouseModule,
     NotificationChannelCoreModule,

@@ -55,7 +55,9 @@ interface EnvConfig {
     url: string;
   };
   redis: {
-    url: string;
+    url?: string;
+    socketPath?: string;
+    password?: string;
   };
   resend: {
     enabled: boolean;
@@ -238,7 +240,9 @@ export const EnvConfigs: EnvConfigs = {
       url: process.env.MONGO_URL!,
     },
     redis: {
-      url: process.env.REDIS_URL!,
+      url: undefined,
+      socketPath: process.env.REDIS_SOCKET_PATH!,
+      password: process.env.REDIS_PASSWORD!,
     },
     resend: {
       enabled: true,

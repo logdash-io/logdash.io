@@ -42,8 +42,14 @@ inputs:
     required: true
   our-env:
     required: true
+
   redis-url:
     required: true
+  redis-socket-path:
+    required: true
+  redis-password:
+    required: true
+
   stripe-early-bird-price-id:
     required: true
   stripe-builder-price-id:
@@ -103,6 +109,7 @@ runs:
           --restart=always \
           --add-host=host.docker.internal:host-gateway \
           --name ${{ inputs.container-name }} \
+          -v /var/run/dragonfly:/var/run/dragonfly \
           -e MONGO_URL=${{ inputs.mongo-url }} \
           -e GITHUB_OAUTH_CLIENT_ID=${{ inputs.github-oauth-client-id }} \
           -e GITHUB_OAUTH_CLIENT_SECRET=${{ inputs.github-oauth-client-secret }} \
@@ -113,6 +120,8 @@ runs:
           -e STRIPE_SIGNATURE=${{ inputs.stripe-signature }} \
           -e OUR_ENV=${{ inputs.our-env }} \
           -e REDIS_URL=${{ inputs.redis-url }} \
+          -e REDIS_SOCKET_PATH=${{ inputs.redis-socket-path }} \
+          -e REDIS_PASSWORD=${{ inputs.redis-password }} \
           -e STRIPE_EARLY_BIRD_PRICE_ID=${{ inputs.stripe-early-bird-price-id }} \
           -e STRIPE_BUILDER_PRICE_ID=${{ inputs.stripe-builder-price-id }} \
           -e STRIPE_PRO_PRICE_ID=${{ inputs.stripe-pro-price-id }} \
