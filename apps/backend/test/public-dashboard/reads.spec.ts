@@ -109,4 +109,71 @@ describe('PublicDashboardCoreController (reads)', () => {
       expect(dashboards[0].customDomain?.status).toEqual(CustomDomainStatus.Verifying);
     });
   });
+
+  describe('GET /custom_domains/check', () => {
+    it('returns OK when domain is verified', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+        clusterId: cluster.id,
+        token,
+      });
+
+      const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+        publicDashboardId: publicDashboard.id,
+        token,
+        domain: 'verified.example.com',
+      });
+
+      await bootstrap.models.customDomainModel.findByIdAndUpdate(customDomain.id, {
+        status: CustomDomainStatus.Verified,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get('/custom_domains/check')
+        .query({ domain: 'verified.example.com' });
+
+      // then
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe('OK');
+    });
+
+    it('returns 403 when domain is not verified', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+        clusterId: cluster.id,
+        token,
+      });
+
+      await bootstrap.utils.customDomainUtils.createCustomDomain({
+        publicDashboardId: publicDashboard.id,
+        token,
+        domain: 'unverified.example.com',
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get('/custom_domains/check')
+        .query({ domain: 'unverified.example.com' });
+
+      // then
+      expect(response.status).toBe(403);
+      expect(response.body.message).toBe('Domain not verified');
+    });
+
+    it('returns 403 when domain does not exist', async () => {
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get('/custom_domains/check')
+        .query({ domain: 'nonexistent.example.com' });
+
+      // then
+      expect(response.status).toBe(403);
+      expect(response.body.message).toBe('Domain not verified');
+    });
+  });
 });

@@ -45,4 +45,13 @@ export class CustomDomainReadService {
       .exec();
     return entities.map((entity) => CustomDomainSerializer.normalize(entity));
   }
+
+  public async isVerified(domain: string): Promise<boolean> {
+    const entity = await this.customDomainModel.findOne({ domain }).exec();
+
+    if (!entity) {
+      return false;
+    }
+    return entity.status === CustomDomainStatus.Verified;
+  }
 }

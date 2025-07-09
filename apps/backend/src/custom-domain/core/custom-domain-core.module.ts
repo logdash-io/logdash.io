@@ -7,6 +7,7 @@ import { CustomDomainWriteModule } from '../write/custom-domain-write.module';
 import { PublicDashboardReadModule } from '../../public-dashboard/read/public-dashboard-read.module';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { CustomDomainRegistrationModule } from '../registration/custom-domain-registration.module';
+import { CustomDomainVerificationModule } from '../verification/custom-domain-verification.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { CustomDomainRegistrationModule } from '../registration/custom-domain-re
     CustomDomainWriteModule,
     PublicDashboardReadModule,
     CustomDomainRegistrationModule,
+    CustomDomainVerificationModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [CustomDomainCoreController],

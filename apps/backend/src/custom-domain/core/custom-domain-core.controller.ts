@@ -9,6 +9,8 @@ import {
   Body,
   BadRequestException,
   ConflictException,
+  Query,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CustomDomainReadService } from '../read/custom-domain-read.service';
@@ -18,6 +20,8 @@ import { CustomDomainSerializer } from './entities/custom-domain.serializer';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { CreateCustomDomainBody } from './dto/create-custom-domain.body';
 import { PublicDashboardReadService } from '../../public-dashboard/read/public-dashboard-read.service';
+import { Public } from '../../auth/core/decorators/is-public';
+import { CustomDomainVerificationService } from '../verification/custom-domain-verification.service';
 
 @ApiTags('Custom Domains')
 @Controller()
@@ -26,6 +30,7 @@ export class CustomDomainCoreController {
     private readonly customDomainReadService: CustomDomainReadService,
     private readonly customDomainWriteService: CustomDomainWriteService,
     private readonly publicDashboardReadService: PublicDashboardReadService,
+    private readonly customDomainVerificationService: CustomDomainVerificationService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -88,5 +93,19 @@ export class CustomDomainCoreController {
     }
 
     await this.customDomainWriteService.delete(customDomainId);
+  }
+
+  @Public()
+  @Get('/custom_domains/check')
+  public async checkDomain(@Query('domain') domain: string) {
+    const isVerified = await this.customDomainVerificationService.isVerified(domain);
+
+    if (!isVerified) {
+      throw new ForbiddenException('Domain not verified');
+    }
+
+    return {
+      message: 'OK',
+    };
   }
 }
