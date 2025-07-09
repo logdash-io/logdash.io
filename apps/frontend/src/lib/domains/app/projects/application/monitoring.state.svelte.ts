@@ -12,14 +12,25 @@ import type {
 } from '$lib/domains/app/projects/domain/monitoring/http-ping.js';
 import { httpClient } from '$lib/domains/shared/http/http-client.js';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+import { monitoringService } from '$lib/domains/app/projects/infrastructure/monitoring.service';
+import type {
+  PingBucket,
+  PingBucketPeriod,
+} from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 
 const logger = createLogger('monitoring.state', true);
+
+const MONITORING_TIME_RANGE_KEY = 'monitoring_time_range';
 
 // todo: divide api calls responsibility from state
 class MonitoringState {
   private _monitors = $state<Record<Monitor['id'], Monitor>>({});
   private _monitorPings = $state<Record<Monitor['id'], HttpPing[]>>({});
   private _previewedMonitors = $state<Record<string, HttpPing[]>>({});
+  private _pingBuckets = $state<Record<Monitor['id'], (PingBucket | null)[]>>(
+    {},
+  );
+  private _timeRange = $state<PingBucketPeriod>('90d');
   private syncConnection: EventSource | null = null;
   private previewConnection: Source | null = null;
   private _shouldReconnect = true;
@@ -33,6 +44,37 @@ class MonitoringState {
 
   get monitors(): Monitor[] {
     return this._getSortedMonitors();
+  }
+
+  get timeRange(): PingBucketPeriod {
+    return this._timeRange;
+  }
+
+  setTimeRange(period: PingBucketPeriod): void {
+    this._timeRange = period;
+    this._saveTimeRangePreference(period);
+    this.reloadAllPingBuckets();
+  }
+
+  private _loadTimeRangePreference(): PingBucketPeriod {
+    if (typeof localStorage === 'undefined') {
+      return '90d';
+    }
+
+    const saved = localStorage.getItem(MONITORING_TIME_RANGE_KEY);
+
+    if (saved && (saved === '90h' || saved === '90d')) {
+      return saved as PingBucketPeriod;
+    }
+    return '90d';
+  }
+
+  private _saveTimeRangePreference(period: PingBucketPeriod): void {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+
+    localStorage.setItem(MONITORING_TIME_RANGE_KEY, period);
   }
 
   hasNotificationChannel(monitorId: string, channelId: string): boolean {
@@ -146,7 +188,10 @@ class MonitoringState {
   }
 
   async sync(clusterId: string): Promise<void> {
-    return this._syncClusterMonitors(clusterId);
+    await Promise.all([
+      this._syncClusterMonitors(clusterId),
+      this.reloadAllPingBuckets(),
+    ]);
   }
 
   unsync(): void {
@@ -212,12 +257,81 @@ class MonitoringState {
     return code >= 200 && code < 400;
   }
 
-  syncMonitorPings(
+  loadMonitorPings(
     clusterId: string,
     projectId: string,
     monitorId: string,
   ): Promise<void> {
     return this._fetchPings(clusterId, projectId, monitorId);
+  }
+
+  getPingBuckets(monitorId: string): (PingBucket | null)[] {
+    return this._pingBuckets[monitorId] || [];
+  }
+
+  getMockedPingBuckets(): (PingBucket | null)[] {
+    const buckets: (PingBucket | null)[] = [];
+    for (let i = 0; i < 200; i++) {
+      buckets.push(null);
+    }
+    return buckets;
+  }
+
+  async loadPingBuckets(
+    monitorId: string,
+    period?: PingBucketPeriod,
+  ): Promise<void> {
+    this._timeRange = period || this._loadTimeRangePreference();
+    try {
+      const response = await monitoringService.getPingBuckets(
+        monitorId,
+        this._timeRange,
+      );
+      this._pingBuckets[monitorId] = response.buckets;
+    } catch (error) {
+      logger.error('Failed to load ping buckets:', error);
+      throw new Error('Failed to load ping buckets');
+    }
+  }
+
+  async reloadAllPingBuckets(): Promise<void> {
+    const monitorIds = Object.keys(this._monitors);
+    const promises = monitorIds.map((monitorId) =>
+      this.loadPingBuckets(monitorId, this._timeRange),
+    );
+
+    await Promise.allSettled(promises);
+  }
+
+  calculateUptime(monitorId: string): number {
+    const buckets = this.getPingBuckets(monitorId);
+    if (!buckets.length) {
+      return 0;
+    }
+
+    const validBuckets = buckets.filter(
+      (bucket): bucket is PingBucket => bucket !== null,
+    );
+
+    if (!validBuckets.length) {
+      return 0;
+    }
+
+    const totalSuccess = validBuckets.reduce(
+      (sum, bucket) => sum + bucket.successCount,
+      0,
+    );
+    const totalFailure = validBuckets.reduce(
+      (sum, bucket) => sum + bucket.failureCount,
+      0,
+    );
+    const totalPings = totalSuccess + totalFailure;
+
+    if (totalPings === 0) {
+      return 0;
+    }
+
+    return (totalSuccess / totalPings) * 100;
   }
 
   async updateMonitorName(monitorId: string, newName: string): Promise<void> {
@@ -234,7 +348,6 @@ class MonitoringState {
       name: newName.trim(),
     });
 
-    // Update local state
     this._monitors[monitorId].name = newName.trim();
   }
 
@@ -250,12 +363,10 @@ class MonitoringState {
 
     await httpClient.delete(`/http_monitors/${monitorId}`);
 
-    // Remove from local state
     delete this._monitors[monitorId];
     delete this._monitorPings[monitorId];
   }
 
-  // Private helper methods
   private _getSortedMonitors(): Monitor[] {
     return Object.values(this._monitors).sort((a, b) =>
       a.name.localeCompare(b.name),
@@ -430,6 +541,7 @@ class MonitoringState {
 
           this._monitorPings[pingData.httpMonitorId].push({
             ...pingData,
+            createdAt: new Date(pingData.createdAt),
           });
 
           this._monitors[pingData.httpMonitorId].lastStatusCode =
@@ -489,7 +601,7 @@ class MonitoringState {
     monitorId: string,
   ): Promise<void> {
     const response = await fetch(
-      `/app/api/clusters/${clusterId}/monitors/${monitorId}/pings?project_id=${projectId}&limit=10`,
+      `/app/api/clusters/${clusterId}/monitors/${monitorId}/pings?project_id=${projectId}&limit=90`,
     );
     const { data }: { data: HttpPing[] } = await response.json();
 

@@ -4,16 +4,10 @@
   import { onMount } from 'svelte';
   import { fly } from 'svelte/transition';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import {
-    notificationChannelsState,
-  } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
-  import {
-    telegramSetupState,
-  } from '$lib/domains/app/projects/application/notification-channels/telegram-setup.state.svelte.js';
+  import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
+  import { telegramSetupState } from '$lib/domains/app/projects/application/notification-channels/telegram-setup.state.svelte.js';
   import type { NotificationChannel } from '$lib/domains/app/projects/domain/telegram/telegram.types.js';
-  import {
-    notificationChannelSetupState,
-  } from '$lib/domains/app/projects/application/notification-channels/notification-channel-setup.state.svelte.js';
+  import { notificationChannelSetupState } from '$lib/domains/app/projects/application/notification-channels/notification-channel-setup.state.svelte.js';
 
   type Props = {
     clusterId: string;
@@ -62,7 +56,7 @@
 
 {#snippet menu(close: () => void)}
   <div
-    class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
+    class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit p-2 whitespace-nowrap shadow"
   >
     <ul class="">
       {#each notificationChannelsState.state.channels as channel (channel.id)}
@@ -141,7 +135,7 @@
   placement="bottom"
 >
   <button
-    class="btn btn-secondary w-full gap-1"
+    class="btn btn-outline btn-subtle btn-sm w-full gap-1"
     data-posthog-id="connect-notification-channel-button"
     onclick={(e) => {
       e.stopPropagation();

@@ -86,7 +86,7 @@
 {/snippet}
 
 {#if (!hasLogging || !hasMetrics || !hasMonitoring) && projectsState.ready}
-  <Tooltip content={menu} interactive={true} placement="bottom">
+  <Tooltip content={menu} interactive={true} placement="bottom" trigger="click">
     <button
       class="btn ld-card-base gap-1 rounded-full"
       data-posthog-id="cluster-settings-button"

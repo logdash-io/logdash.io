@@ -7,6 +7,7 @@
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { cubicInOut } from 'svelte/easing';
   import { fade, fly } from 'svelte/transition';
+  import { monitoringState } from '../../application/monitoring.state.svelte.js';
 
   type Props = {
     children: Snippet;
@@ -43,6 +44,7 @@
           previewedMetricId
             ? metricsState.previewMetric(projectIdToSync, previewedMetricId)
             : Promise.resolve(),
+          monitoringState.reloadAllPingBuckets(),
         ])
           .then(() => {
             isPageVisible = newVisibility;
@@ -110,7 +112,7 @@
   });
 </script>
 
-<div class="flex w-full max-w-full flex-col gap-4 pb-8 sm:flex-row">
+<div class="flex w-full max-w-full flex-col gap-4 pb-8 md:flex-row">
   {#if !isPageVisible}
     <div
       in:fade={{ duration: 200, easing: cubicInOut }}
@@ -119,7 +121,7 @@
     ></div>
 
     <div
-      class="bg-secondary text-secondary-content fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg px-3 py-2 shadow-lg sm:bottom-8"
+      class="bg-secondary text-secondary-content fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg px-3 py-2 shadow-lg md:bottom-8"
       in:fly={{ duration: 200, easing: cubicInOut, y: 50 }}
       out:fly={{ delay: 300, duration: 200, easing: cubicInOut, y: 50 }}
     >

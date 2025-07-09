@@ -31,7 +31,7 @@
       return;
     }
 
-    monitoringState.syncMonitorPings(
+    monitoringState.loadMonitorPings(
       page.params.cluster_id,
       projectId,
       projectMonitor?.id,

@@ -10,30 +10,24 @@
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import LogsListTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
+  import MonitoringTile from './tiles/MonitoringTile.svelte';
 
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
   const clusterId = $derived(page.params.cluster_id);
+  const projectId = $derived(page.url.searchParams.get('project_id'));
 
-  const hasLogging = $derived.by(() => {
-    const id = page.url.searchParams.get('project_id');
+  const hasLogging = $derived(
+    projectsState.hasFeature(projectId, Feature.LOGGING),
+  );
 
-    return projectsState.hasFeature(id, Feature.LOGGING);
-  });
+  const hasMetrics = $derived(
+    projectsState.hasFeature(projectId, Feature.METRICS) &&
+      metricsState.simplifiedMetrics.length > 0,
+  );
 
-  const hasMetrics = $derived.by(() => {
-    const id = page.url.searchParams.get('project_id');
-
-    return (
-      projectsState.hasFeature(id, Feature.METRICS) &&
-      metricsState.simplifiedMetrics.length > 0
-    );
-  });
-
-  const hasMonitoring = $derived.by(() => {
-    const id = page.url.searchParams.get('project_id');
-
-    return projectsState.hasFeature(id, Feature.MONITORING);
-  });
+  const hasMonitoring = $derived(
+    projectsState.hasFeature(projectId, Feature.MONITORING),
+  );
 
   const isMobile = $derived.by(() => {
     if (typeof window === 'undefined') {
@@ -47,15 +41,21 @@
 <ProjectSync>
   <NotificationChannelSetupModal {clusterId} />
 
-  {#if hasLogging && (!previewedMetricId || isMobile) && metricsState.ready}
-    <div class="flex flex-1 flex-col gap-4">
-      <DataTile
-        delayIn={0}
-        delayOut={50}
-        class="overflow-hidden rounded-xl p-0 pt-4"
-      >
-        <LogsListTile />
-      </DataTile>
+  {#if (hasLogging || hasMonitoring) && (!previewedMetricId || isMobile) && metricsState.ready}
+    <div class="flex w-full flex-1 flex-col gap-4 overflow-hidden">
+      {#if hasMonitoring}
+        <MonitoringTile {projectId} />
+      {/if}
+
+      {#if hasLogging}
+        <DataTile
+          delayIn={0}
+          delayOut={50}
+          class="overflow-hidden rounded-xl p-0 pt-4"
+        >
+          <LogsListTile />
+        </DataTile>
+      {/if}
     </div>
   {/if}
 

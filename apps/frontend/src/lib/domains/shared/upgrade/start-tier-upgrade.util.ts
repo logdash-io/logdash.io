@@ -9,12 +9,12 @@ export type UpgradeSource =
   | 'cluster-limit'
   | 'project-limit'
   | 'public-dashboard-limit'
-  | 'feature-restriction'
   | 'webhook-method-restriction'
   | 'webhook-headers-restriction'
   | 'cluster-invite-limit'
   | 'logs-filter-dropdown'
   | 'logs-date-range'
+  | 'monitor-historical-uptime'
   | 'unknown';
 
 export const startTierUpgrade = (

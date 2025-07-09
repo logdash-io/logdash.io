@@ -2,7 +2,10 @@
   import { clickShortcut } from '$lib/domains/shared/ui/actions/click-shortcut.svelte.js';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
   import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
-  import { isValidUrl, tryPrependProtocol } from '$lib/domains/shared/utils/url.js';
+  import {
+    isValidUrl,
+    tryPrependProtocol,
+  } from '$lib/domains/shared/utils/url.js';
   import { CheckIcon, XIcon } from 'lucide-svelte';
   import type { Snippet } from 'svelte';
   import { fly } from 'svelte/transition';
@@ -72,6 +75,7 @@
     content={configurator}
     trigger="click"
     class="w-full"
+    interactive={true}
   >
     <button
       in:fly={{ y: -2, duration: 100 }}

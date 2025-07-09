@@ -11,9 +11,14 @@ const logger = createLogger('logs.state', false);
 
 class LogsState {
   private _loadingPage = $state(false);
+  private _fetchingLogs = $state(false);
   private _projectId: string | null = $state(null);
 
   private _logs = $state<Record<Log['id'], Log>>({});
+
+  get fetchingLogs(): boolean {
+    return this._fetchingLogs;
+  }
 
   get logs(): Log[] {
     const allLogs = Object.values(this._logs).sort((a, b) => {
@@ -171,15 +176,21 @@ class LogsState {
   }
 
   private async fetchLogs(pagination?: { lastId: string }): Promise<void> {
-    const logs = await LogsService.getProjectLogs(this._projectId, {
-      ...filtersStore.filters,
-      ...(pagination && { lastId: pagination.lastId, direction: 'before' }),
-    });
+    this._fetchingLogs = true;
 
-    if (pagination?.lastId) {
-      Object.assign(this._logs, arrayToObject<Log>(logs, 'id'));
-    } else {
-      this._logs = arrayToObject<Log>(logs, 'id');
+    try {
+      const logs = await LogsService.getProjectLogs(this._projectId, {
+        ...filtersStore.filters,
+        ...(pagination && { lastId: pagination.lastId, direction: 'before' }),
+      });
+
+      if (pagination?.lastId) {
+        Object.assign(this._logs, arrayToObject<Log>(logs, 'id'));
+      } else {
+        this._logs = arrayToObject<Log>(logs, 'id');
+      }
+    } finally {
+      this._fetchingLogs = false;
     }
   }
 }

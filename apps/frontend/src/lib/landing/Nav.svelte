@@ -67,13 +67,13 @@
 
 {#snippet nav()}
   <nav
-    class="bg-base-300/50 sticky top-0 z-50 mx-auto hidden h-24 w-full shrink-0 items-center justify-between gap-4 px-8 backdrop-blur-lg sm:flex"
+    class="bg-base-300/50 sticky top-0 z-50 mx-auto hidden h-24 w-full shrink-0 items-center justify-between gap-4 px-8 backdrop-blur-lg lg:flex"
   >
     <div class="navbar-start">
       <a
         href="/"
         class={[
-          'flex items-center space-x-2 px-4 py-1',
+          'flex items-center space-x-2 py-1 pr-4',
           {
             'navlink-active': page.url.pathname === '/',
           },
@@ -115,6 +115,10 @@
               in:fade={{ duration: 150, delay: i * 50 }}
             >
               {name}
+
+              {#if target === '_blank'}
+                <ExternalLinkIcon class="h-4 w-4 shrink-0" />
+              {/if}
             </a>
           </li>
         {/each}
@@ -144,7 +148,7 @@
   </nav>
 
   <nav
-    class="bg-base-300 sticky top-0 z-50 flex h-16 w-full shrink-0 items-center justify-between px-4 sm:hidden"
+    class="bg-base-300 sticky top-0 z-50 flex h-16 w-full shrink-0 items-center justify-between px-4 lg:hidden"
   >
     <div class="navbar-start">
       <a
@@ -207,7 +211,7 @@
                 {name}
 
                 {#if target === '_blank'}
-                  <ExternalLinkIcon class="h-4 w-4" />
+                  <ExternalLinkIcon class="h-4 w-4 shrink-0" />
                 {/if}
               </a>
             </li>
