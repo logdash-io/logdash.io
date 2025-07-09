@@ -64,7 +64,7 @@
       </li>
     {/if}
 
-    {#if !canAddMore}
+    {#if !canAddMore && !isPublic}
       <UpgradeButton>Upgrade to add more public dashboards</UpgradeButton>
     {:else}
       <li>
