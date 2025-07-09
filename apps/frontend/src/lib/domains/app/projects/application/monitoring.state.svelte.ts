@@ -258,11 +258,11 @@ class MonitoringState {
   }
 
   loadMonitorPings(
-    clusterId: string,
     projectId: string,
     monitorId: string,
+    limit: number = 60,
   ): Promise<void> {
-    return this._fetchPings(clusterId, projectId, monitorId);
+    return this._fetchPings(projectId, monitorId, limit);
   }
 
   getPingBuckets(monitorId: string): (PingBucket | null)[] {
@@ -277,11 +277,8 @@ class MonitoringState {
     return buckets;
   }
 
-  async loadPingBuckets(
-    monitorId: string,
-    period?: PingBucketPeriod,
-  ): Promise<void> {
-    this._timeRange = period || this._loadTimeRangePreference();
+  async loadPingBuckets(monitorId: string, limit: number = 60): Promise<void> {
+    this._timeRange = this._loadTimeRangePreference();
     try {
       const response = await monitoringService.getPingBuckets(
         monitorId,
@@ -297,7 +294,7 @@ class MonitoringState {
   async reloadAllPingBuckets(): Promise<void> {
     const monitorIds = Object.keys(this._monitors);
     const promises = monitorIds.map((monitorId) =>
-      this.loadPingBuckets(monitorId, this._timeRange),
+      this.loadPingBuckets(monitorId, 60),
     );
 
     await Promise.allSettled(promises);
@@ -581,7 +578,15 @@ class MonitoringState {
     return fetch(`/app/api/clusters/${clusterId}/monitors`)
       .then((response) => response.json())
       .then(({ data }: { data: Monitor[] }) => {
-        this._monitors = arrayToObject<Monitor>(data, 'id');
+        const newMonitors = arrayToObject<Monitor>(data, 'id');
+        for (const [id, monitor] of Object.entries(newMonitors) as [
+          string,
+          Monitor,
+        ][]) {
+          if (!this._monitors[id]) {
+            this._monitors[id] = monitor;
+          }
+        }
 
         for (const monitor of data) {
           if (!this._monitorPings[monitor.id]) {
@@ -596,14 +601,15 @@ class MonitoringState {
   }
 
   private async _fetchPings(
-    clusterId: string,
     projectId: string,
     monitorId: string,
+    limit: number = 60,
   ): Promise<void> {
-    const response = await fetch(
-      `/app/api/clusters/${clusterId}/monitors/${monitorId}/pings?project_id=${projectId}&limit=90`,
-    );
-    const { data }: { data: HttpPing[] } = await response.json();
+    const data = await monitoringService.getMonitorPings({
+      projectId,
+      monitorId,
+      limit,
+    });
 
     this._monitorPings[monitorId] = data
       .map((ping) => ({

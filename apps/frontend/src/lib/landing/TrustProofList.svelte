@@ -6,19 +6,19 @@
   <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
     <div class="card ld-card p-6">
       <TrustProof
-        quote="Logs appear instantly—no lag, no waiting. The real-time speed is unmatched."
+        quote="Most tools feel like they were made for teams. Logdash feels like it was made for me."
         person="Maciej Kulon"
         company={{
-          who: 'Director Of Engineering',
-          name: 'Flip',
-          url: 'https://flip.shop?ref=logdash.io',
+          who: 'Indie SaaS Founder',
+          name: '',
+          url: '',
         }}
         img="/images/testimonials/maciej_k.webp"
       />
     </div>
     <div class="card ld-card p-6">
       <TrustProof
-        quote="Working with Logdash feels like having an extra team on your side. They actually listen, ship fast, and genuinely care about your success."
+        quote="I don’t have time for complex dashboards. I just want to know what went wrong and fix it fast. Logdash nailed that."
         person="Yaroslaw Korshak"
         company={{
           who: 'CEO',
@@ -30,12 +30,12 @@
     </div>
     <div class="card ld-card p-6">
       <TrustProof
-        quote="Lightweight, powerful, and fast. The best parts of many tools, without the clutter."
+        quote="I’m the only dev on my app. When something breaks, it’s on me. Logdash gives me answers before I even ask the question."
         person="Jerzy Wiśniewski"
         company={{
-          who: 'Software Engineer',
-          name: 'Megaron',
-          url: 'https://megaron.com.pl/?ref=logdash.io',
+          who: 'Co-Founder',
+          name: 'BlueMenu',
+          url: 'https://bluemenu.io/?ref=logdash.io',
         }}
         img="/images/testimonials/bialyjurek.webp"
       />
