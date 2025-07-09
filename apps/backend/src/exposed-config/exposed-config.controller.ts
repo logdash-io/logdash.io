@@ -57,8 +57,12 @@ export class ExposedConfigController {
     const length = sorted.length;
 
     const getPercentile = (percentile: number): number => {
-      const index = Math.ceil((percentile / 100) * length) - 1;
-      return sorted[Math.max(0, Math.min(index, length - 1))];
+      const index = (percentile / 100) * (length - 1);
+      const lowerIndex = Math.floor(index);
+      const upperIndex = Math.min(lowerIndex + 1, length - 1);
+      const weight = index - lowerIndex;
+
+      return sorted[lowerIndex] + weight * (sorted[upperIndex] - sorted[lowerIndex]);
     };
 
     return {
