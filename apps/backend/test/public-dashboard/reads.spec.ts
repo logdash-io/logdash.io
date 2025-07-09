@@ -1,6 +1,7 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { PublicDashboardSerialized } from '../../src/public-dashboard/core/entities/public-dashboard.interface';
+import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
 
 describe('PublicDashboardCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -75,6 +76,37 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       // then
       expect(response.status).toEqual(403);
+    });
+
+    it('returns custom domain when it exists', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+        clusterId: cluster.id,
+        token,
+        name: 'piety papieza',
+        isPublic: true,
+      });
+
+      await bootstrap.utils.customDomainUtils.createCustomDomain({
+        publicDashboardId: publicDashboard.id,
+        token,
+        domain: 'piety.papieza.com',
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/public_dashboards`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      const dashboards: PublicDashboardSerialized[] = response.body;
+      expect(dashboards).toHaveLength(1);
+
+      expect(dashboards[0].customDomain).toBeDefined();
+      expect(dashboards[0].customDomain?.domain).toEqual('piety.papieza.com');
+      expect(dashboards[0].customDomain?.status).toEqual(CustomDomainStatus.Verifying);
     });
   });
 });

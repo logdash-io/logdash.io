@@ -28,6 +28,8 @@ import { PublicDashboardDataQuery } from './dto/public-dashboard-data.query';
 import { UpdatePublicDashboardBody } from './dto/update-public-dashboard.body';
 import { PublicDashboardLimitService } from '../limit/public-dashboard-limit.service';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
+import { CustomDomainReadService } from '../../custom-domain/read/custom-domain-read.service';
+import { CustomDomainSerializer } from '../../custom-domain/core/entities/custom-domain.serializer';
 
 @ApiTags('Public Dashboards')
 @Controller()
@@ -40,6 +42,7 @@ export class PublicDashboardCoreController {
     private readonly projectReadService: ProjectReadService,
     private readonly publicDashboardCompositionService: PublicDashboardCompositionService,
     private readonly publicDashboardLimitService: PublicDashboardLimitService,
+    private readonly customDomainReadService: CustomDomainReadService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -120,7 +123,20 @@ export class PublicDashboardCoreController {
     @Param('clusterId') clusterId: string,
   ): Promise<PublicDashboardSerialized[]> {
     const dashboards = await this.publicDashboardReadService.readByClusterId(clusterId);
-    return PublicDashboardSerializer.serializeMany(dashboards);
+
+    const customDomains = (
+      await Promise.all(
+        dashboards.map((dashboard) =>
+          this.customDomainReadService.readByPublicDashboardId(dashboard.id),
+        ),
+      )
+    ).filter((customDomain) => customDomain !== null);
+
+    return PublicDashboardSerializer.serializeMany(dashboards, {
+      customDomains: customDomains.map((customDomain) =>
+        CustomDomainSerializer.serialize(customDomain),
+      ),
+    });
   }
 
   @Public()
