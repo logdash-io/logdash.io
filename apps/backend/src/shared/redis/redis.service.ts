@@ -13,12 +13,100 @@ export interface ExpiryOptions {
   ttlOverwriteStrategy: TtlOverwriteStrategy;
 }
 
+interface KeyTimingData {
+  times: number[];
+  lastAccessed: number;
+}
+
 @Injectable()
 export class RedisService {
+  private readonly keyTimingMap = new Map<string, KeyTimingData>();
+  private readonly maxTimingsPerKey = 1000;
+  private readonly statsInterval: NodeJS.Timeout;
+
   public constructor(
     @Inject(REDIS_CLIENT) private readonly client: RedisClientType,
     private readonly logger: Logger,
-  ) {}
+  ) {
+    this.statsInterval = setInterval(() => {
+      this.logKeyStatistics();
+    }, 5000);
+  }
+
+  private calculatePercentiles(values: number[]): { p50: number; p90: number; p99: number } {
+    const sorted = values.slice().sort((a, b) => a - b);
+    const length = sorted.length;
+
+    const getPercentile = (percentile: number): number => {
+      const index = (percentile / 100) * (length - 1);
+      const lowerIndex = Math.floor(index);
+      const upperIndex = Math.min(lowerIndex + 1, length - 1);
+      const weight = index - lowerIndex;
+
+      return sorted[lowerIndex] + weight * (sorted[upperIndex] - sorted[lowerIndex]);
+    };
+
+    return {
+      p50: getPercentile(50),
+      p90: getPercentile(90),
+      p99: getPercentile(99),
+    };
+  }
+
+  private logKeyStatistics(): void {
+    if (this.keyTimingMap.size === 0) {
+      return;
+    }
+
+    const keyStatistics: Array<{
+      key: string;
+      scannedCount: number;
+      p50: number;
+      p90: number;
+      p99: number;
+    }> = [];
+
+    for (const [key, data] of this.keyTimingMap.entries()) {
+      if (data.times.length > 0) {
+        const percentiles = this.calculatePercentiles(data.times);
+        keyStatistics.push({
+          key,
+          scannedCount: data.times.length,
+          p50: percentiles.p50,
+          p90: percentiles.p90,
+          p99: percentiles.p99,
+        });
+      }
+    }
+
+    if (keyStatistics.length > 0) {
+      this.logger.info('Redis key statistics', {
+        keys: keyStatistics,
+        totalKeys: keyStatistics.length,
+      });
+    }
+
+    this.keyTimingMap.clear();
+  }
+
+  private trackKeyTiming(key: string, duration: number): void {
+    let keyData = this.keyTimingMap.get(key);
+
+    if (!keyData) {
+      keyData = {
+        times: [],
+        lastAccessed: Date.now(),
+      };
+      this.keyTimingMap.set(key, keyData);
+    }
+
+    keyData.times.push(duration);
+    keyData.lastAccessed = Date.now();
+
+    if (keyData.times.length > this.maxTimingsPerKey) {
+      keyData.times = keyData.times.slice(-this.maxTimingsPerKey);
+    }
+  }
 
   public async increment(key: string, expiryOptions?: ExpiryOptions): Promise<number> {
     const result = await this.client.incr(key);
@@ -52,7 +140,11 @@ export class RedisService {
   }
 
   public async get(key: string): Promise<string | null> {
+    const startTime = Date.now();
     const result = await this.client.get(key);
+    const endTime = Date.now();
+
+    this.trackKeyTiming(key, endTime - startTime);
 
     return result;
   }
@@ -131,5 +223,11 @@ export class RedisService {
 
   public async keys(pattern: string): Promise<string[]> {
     return await this.client.keys(pattern);
+  }
+
+  public onModuleDestroy(): void {
+    if (this.statsInterval) {
+      clearInterval(this.statsInterval);
+    }
   }
 }
