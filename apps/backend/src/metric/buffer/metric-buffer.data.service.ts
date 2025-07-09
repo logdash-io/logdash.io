@@ -79,15 +79,19 @@ export class MetricBufferDataService {
     absoluteValue: string | null;
     deltaValue: string | null;
   }> {
-    const [operation, absoluteValue, deltaValue] = await Promise.all([
-      this.redisService.get(this.getMetricBufferLastOperationKey(projectId, metric)),
-      this.redisService.get(this.getMetricBufferValueKey(projectId, metric, MetricOperation.Set)),
-      this.redisService.get(
-        this.getMetricBufferValueKey(projectId, metric, MetricOperation.Change),
-      ),
-    ]);
+    const keys = [
+      this.getMetricBufferLastOperationKey(projectId, metric),
+      this.getMetricBufferValueKey(projectId, metric, MetricOperation.Set),
+      this.getMetricBufferValueKey(projectId, metric, MetricOperation.Change),
+    ];
 
-    return { operation, absoluteValue, deltaValue };
+    const result = await this.redisService.mGet(keys);
+
+    return {
+      operation: result[keys[0]],
+      absoluteValue: result[keys[1]],
+      deltaValue: result[keys[2]],
+    };
   }
 
   public async cleanupProjectData(projectId: string): Promise<void> {
