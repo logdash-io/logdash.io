@@ -8,6 +8,7 @@ import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 import { AuditLogCustomDomainAction } from '../../audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 import { getEnvConfig } from '../../shared/configs/env-configs';
+import { Logger } from '@logdash/js-sdk';
 
 const MAX_ATTEMPTS = 10;
 
@@ -18,6 +19,7 @@ export class CustomDomainRegistrationService {
     private readonly customDomainWriteService: CustomDomainWriteService,
     private readonly customDomainDnsService: CustomDomainDnsService,
     private readonly auditLog: AuditLog,
+    private readonly logger: Logger,
   ) {}
 
   @Cron('*/30 * * * * *')
@@ -36,6 +38,12 @@ export class CustomDomainRegistrationService {
     domain: string,
     currentAttemptCount: number,
   ): Promise<void> {
+    this.logger.info('Verifying domain...', {
+      domainId,
+      domain,
+      currentAttemptCount,
+    });
+
     await this.auditLog.create({
       action: AuditLogCustomDomainAction.AttemptIncrease,
       relatedDomain: RelatedDomain.CustomDomain,
@@ -52,6 +60,12 @@ export class CustomDomainRegistrationService {
         relatedEntityId: domainId,
       });
 
+      this.logger.info('Domain verification failed...', {
+        domainId,
+        domain,
+        currentAttemptCount,
+      });
+
       await this.customDomainWriteService.update({
         id: domainId,
         status: CustomDomainStatus.Failed,
@@ -65,6 +79,12 @@ export class CustomDomainRegistrationService {
       await this.customDomainWriteService.update({
         id: domainId,
         status: CustomDomainStatus.Verified,
+      });
+
+      this.logger.info('Domain verification succeeded...', {
+        domainId,
+        domain,
+        currentAttemptCount,
       });
 
       await this.auditLog.create({
