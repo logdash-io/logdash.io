@@ -84,6 +84,18 @@ export const FEATURES_COMPARISON = {
           [UserTier.BUILDER]: '1 (20 in total)',
           [UserTier.PRO]: '1 (50 in total)',
         },
+        {
+          name: 'Monitors ping frequency',
+          [UserTier.FREE]: '5min',
+          [UserTier.BUILDER]: '1min',
+          [UserTier.PRO]: '15s',
+        },
+        {
+          name: 'Historical uptime charts',
+          [UserTier.FREE]: false,
+          [UserTier.BUILDER]: true,
+          [UserTier.PRO]: true,
+        },
       ],
     },
     {
