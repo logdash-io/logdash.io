@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PublicDashboardReadService } from '../read/public-dashboard-read.service';
 import { PublicDashboardWriteService } from '../write/public-dashboard-write.service';
+import { PublicDashboardRemovalService } from '../removal/public-dashboard-removal.service';
 import { PublicDashboardSerialized } from './entities/public-dashboard.interface';
 import { PublicDashboardSerializer } from './entities/public-dashboard.serializer';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
@@ -34,6 +35,7 @@ export class PublicDashboardCoreController {
   constructor(
     private readonly publicDashboardReadService: PublicDashboardReadService,
     private readonly publicDashboardWriteService: PublicDashboardWriteService,
+    private readonly publicDashboardRemovalService: PublicDashboardRemovalService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly projectReadService: ProjectReadService,
     private readonly publicDashboardCompositionService: PublicDashboardCompositionService,
@@ -92,6 +94,22 @@ export class PublicDashboardCoreController {
     await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
 
     return PublicDashboardSerializer.serialize(dashboard);
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Delete('/public_dashboards/:publicDashboardId')
+  public async delete(
+    @Param('publicDashboardId') publicDashboardId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<void> {
+    const dashboard = await this.publicDashboardReadService.readById(publicDashboardId);
+
+    if (!dashboard) {
+      throw new NotFoundException('Public dashboard not found');
+    }
+
+    await this.publicDashboardRemovalService.deletePublicDashboardById(publicDashboardId, userId);
   }
 
   @UseGuards(ClusterMemberGuard)

@@ -22,6 +22,7 @@ import { ClickhouseModule } from './clickhouse/clickhouse.module';
 import { NotificationChannelCoreModule } from './notification-channel/core/notification-channel-core.module';
 import { HttpPingBucketCoreModule } from './http-ping-bucket/core/http-ping-bucket-core.module';
 import { PublicDashboardCoreModule } from './public-dashboard/core/public-dashboard-core.module';
+import { CustomDomainCoreModule } from './custom-domain/core/custom-domain-core.module';
 import { SubscriptionCoreModule } from './subscription/core/subscription-core.module';
 import { AuditLogCreationModule } from './audit-log/creation/audit-log-creation.module';
 import { ClusterInviteCoreModule } from './cluster-invite/core/cluster-invite-core.module';
@@ -56,6 +57,7 @@ import { InternalModule } from './internal/internal.module';
     ClickhouseModule,
     NotificationChannelCoreModule,
     PublicDashboardCoreModule,
+    CustomDomainCoreModule,
     AuditLogCreationModule,
     ClusterInviteCoreModule,
     InternalModule,
