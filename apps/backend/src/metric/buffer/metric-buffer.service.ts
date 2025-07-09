@@ -54,35 +54,47 @@ export class MetricBufferService {
       operation: MetricOperation;
     }[] = [];
 
+    // Collect all project-metric pairs first
+    const projectMetricPairs: { projectId: string; metrics: string[] }[] = [];
     await Promise.all(
       changedProjects.map(async (projectId) => {
         const metrics = await this.metricBufferDataService.getChangedMetrics(projectId);
-
-        await Promise.all(
-          metrics.map(async (metric) => {
-            const { operation, absoluteValue, deltaValue } =
-              await this.metricBufferDataService.getMetricData(projectId, metric);
-
-            let value = 0;
-            if (operation === MetricOperation.Set && absoluteValue) {
-              value = parseInt(absoluteValue);
-            } else if (operation === MetricOperation.Change && deltaValue && absoluteValue) {
-              value = parseInt(deltaValue) + parseInt(absoluteValue);
-            } else if (operation === MetricOperation.Change && deltaValue) {
-              value = parseInt(deltaValue);
-            }
-
-            updates.push({
-              projectId,
-              metricName: metric,
-              value,
-              operation: operation as MetricOperation,
-            });
-          }),
-        );
-
-        await this.metricBufferDataService.cleanupProjectData(projectId);
+        projectMetricPairs.push({ projectId, metrics });
       }),
+    );
+
+    // Batch get all metric data in a single mGet call
+    const allProjectMetricPairs = projectMetricPairs.flatMap(({ projectId, metrics }) =>
+      metrics.map((metricName) => ({ projectId, metricName })),
+    );
+
+    const allMetricData =
+      await this.metricBufferDataService.getBulkMetricData(allProjectMetricPairs);
+
+    // Process all metric data
+    for (const { projectId, metricName, operation, absoluteValue, deltaValue } of allMetricData) {
+      let value = 0;
+      if (operation === MetricOperation.Set && absoluteValue) {
+        value = parseInt(absoluteValue);
+      } else if (operation === MetricOperation.Change && deltaValue && absoluteValue) {
+        value = parseInt(deltaValue) + parseInt(absoluteValue);
+      } else if (operation === MetricOperation.Change && deltaValue) {
+        value = parseInt(deltaValue);
+      }
+
+      updates.push({
+        projectId,
+        metricName,
+        value,
+        operation: operation as MetricOperation,
+      });
+    }
+
+    // Start cleanup operations asynchronously (don't await yet)
+    const cleanupPromise = Promise.all(
+      changedProjects.map((projectId) =>
+        this.metricBufferDataService.cleanupProjectData(projectId),
+      ),
     );
 
     const projectIdMetricNameToMetricRegisterEntryIdAndValue =
@@ -117,6 +129,9 @@ export class MetricBufferService {
         operation: update.operation,
       })),
     );
+
+    // Ensure cleanup is complete before calculating duration
+    await cleanupPromise;
 
     const bufferFlushDurationMs = performance.now() - now;
     this.logger.info(`Buffer flush duration: ${bufferFlushDurationMs}ms`);

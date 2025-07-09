@@ -94,6 +94,80 @@ export class MetricBufferDataService {
     };
   }
 
+  public async getBulkMetricData(
+    projectMetricPairs: { projectId: string; metricName: string }[],
+  ): Promise<
+    {
+      projectId: string;
+      metricName: string;
+      operation: string | null;
+      absoluteValue: string | null;
+      deltaValue: string | null;
+    }[]
+  > {
+    if (projectMetricPairs.length === 0) {
+      return [];
+    }
+
+    const allKeys: string[] = [];
+    const keyMapping: {
+      [key: string]: { projectId: string; metricName: string; keyType: string };
+    } = {};
+
+    // Build all keys for bulk retrieval
+    for (const { projectId, metricName } of projectMetricPairs) {
+      const operationKey = this.getMetricBufferLastOperationKey(projectId, metricName);
+      const absoluteKey = this.getMetricBufferValueKey(projectId, metricName, MetricOperation.Set);
+      const deltaKey = this.getMetricBufferValueKey(projectId, metricName, MetricOperation.Change);
+
+      allKeys.push(operationKey, absoluteKey, deltaKey);
+      keyMapping[operationKey] = { projectId, metricName, keyType: 'operation' };
+      keyMapping[absoluteKey] = { projectId, metricName, keyType: 'absoluteValue' };
+      keyMapping[deltaKey] = { projectId, metricName, keyType: 'deltaValue' };
+    }
+
+    // Single mGet call for all keys
+    const results = await this.redisService.mGet(allKeys);
+
+    // Group results by project-metric pair
+    const metricDataMap = new Map<
+      string,
+      {
+        projectId: string;
+        metricName: string;
+        operation: string | null;
+        absoluteValue: string | null;
+        deltaValue: string | null;
+      }
+    >();
+
+    for (const [key, value] of Object.entries(results)) {
+      const mapping = keyMapping[key];
+      if (mapping) {
+        const mapKey = `${mapping.projectId}-${mapping.metricName}`;
+        if (!metricDataMap.has(mapKey)) {
+          metricDataMap.set(mapKey, {
+            projectId: mapping.projectId,
+            metricName: mapping.metricName,
+            operation: null,
+            absoluteValue: null,
+            deltaValue: null,
+          });
+        }
+        const data = metricDataMap.get(mapKey)!;
+        if (mapping.keyType === 'operation') {
+          data.operation = value;
+        } else if (mapping.keyType === 'absoluteValue') {
+          data.absoluteValue = value;
+        } else if (mapping.keyType === 'deltaValue') {
+          data.deltaValue = value;
+        }
+      }
+    }
+
+    return Array.from(metricDataMap.values());
+  }
+
   public async cleanupProjectData(projectId: string): Promise<void> {
     const metricsKey = this.getMetricBufferChangedMetricsKey(projectId);
 
