@@ -5,7 +5,7 @@
   } from '$lib/domains/shared/ui/animated-view.state.svelte';
 </script>
 
-<div class="flex w-full flex-col gap-4 px-8 sm:flex-row lg:w-fit lg:px-0">
+<div class="flex w-full flex-col gap-4 px-8 lg:w-fit lg:flex-row lg:px-0">
   <a
     draggable="false"
     href="/features"

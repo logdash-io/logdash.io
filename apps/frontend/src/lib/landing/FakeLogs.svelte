@@ -1,5 +1,5 @@
 <script lang="ts">
-  import LogRow from '$lib/domains/shared/ui/components/LogRow.svelte';
+  import LogRow from '$lib/landing/LogRow.svelte';
   import { FAKE_LOGS } from './data/logs.mock';
 </script>
 

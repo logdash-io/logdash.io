@@ -86,6 +86,7 @@
     content={configurator}
     placement="bottom"
     trigger="click"
+    interactive={true}
   >
     <button
       class={'ld-card-base flex cursor-pointer items-center gap-1 rounded-full px-4 py-2'}

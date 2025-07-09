@@ -59,7 +59,7 @@
 
 <div
   class={[
-    'selection:bg-secondary/20 flex min-h-7 items-start gap-2.5 overflow-hidden rounded-sm px-4 font-mono text-sm leading-7',
+    'selection:bg-secondary/20 flex min-h-7 min-w-xl items-start gap-2.5 overflow-hidden rounded-sm px-4 font-mono text-sm leading-7',
     {
       'hover:bg-base-100/50': level !== 'error' && level !== 'warning',
       'bg-warning/20 text-warning-content': level === 'warning',
@@ -69,31 +69,32 @@
 >
   {@render logDot()}
 
-  <div class="flex min-w-0 flex-1 flex-row gap-4">
-    <LogRowTime date={rawDate} {level} />
-
+  <div class="flex min-w-0 flex-1 flex-row">
     <div class="w-0 min-w-0 flex-1 overflow-hidden">
-      {#if formattedMessage.isJson}
-        <pre
-          class="bg-base-200 text-syntax-json overflow-x-auto rounded-md p-2 text-xs whitespace-pre">{formattedMessage.content}</pre>
-      {:else}
-        <details class="collapse">
-          <summary
-            class="collapse-title min-h-0 cursor-pointer overflow-hidden p-0"
-          >
+      <details class="collapse">
+        <summary
+          class="collapse-title min-h-0 cursor-pointer overflow-hidden p-0"
+        >
+          <span class="flex items-center gap-2 md:gap-4">
+            <LogRowTime date={rawDate} {level} />
             <span
               class="block w-full overflow-hidden text-ellipsis whitespace-nowrap"
             >
               {formattedMessage.content}
             </span>
-          </summary>
-          <div class="collapse-content p-0 pt-2">
-            <span class="block break-words whitespace-pre-wrap">
+          </span>
+        </summary>
+        <div class="collapse-content p-0 pt-2">
+          <span class="block break-words whitespace-pre-wrap">
+            {#if formattedMessage.isJson}
+              <pre
+                class="bg-base-200 text-syntax-json overflow-x-auto rounded-md p-2 text-xs whitespace-pre">{formattedMessage.content}</pre>
+            {:else}
               {formattedMessage.content}
-            </span>
-          </div>
-        </details>
-      {/if}
+            {/if}
+          </span>
+        </div>
+      </details>
     </div>
   </div>
 </div>
