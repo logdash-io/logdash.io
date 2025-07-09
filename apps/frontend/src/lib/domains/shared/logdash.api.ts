@@ -1,7 +1,6 @@
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
 import type { Log } from '$lib/domains/logs/domain/log';
 import type { Metric } from '$lib/domains/app/projects/domain/metric';
-import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping.js';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
 import type { Project } from '$lib/domains/app/projects/domain/project';
 import type { PublicDashboardData } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard-data.js';
@@ -368,21 +367,6 @@ class LogdashAPI {
     return this.get<Monitor[]>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/http_monitors`,
       access_token,
-    );
-  }
-
-  get_monitor_pings(dto: {
-    project_id: string;
-    monitor_id: string;
-    access_token: string;
-    limit: number;
-  }): Promise<HttpPing[]> {
-    const qs = queryString.stringify({
-      limit: dto.limit ?? 50,
-    });
-    return this.get<HttpPing[]>(
-      `${LogdashAPI.v0baseUrl}/projects/${dto.project_id}/monitors/${dto.monitor_id}/http_pings?${qs}`,
-      dto.access_token,
     );
   }
 

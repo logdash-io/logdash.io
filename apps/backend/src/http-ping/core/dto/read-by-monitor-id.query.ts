@@ -6,6 +6,6 @@ export class ReadByMonitorIdQuery {
   @ApiPropertyOptional()
   @Transform(({ value }) => Number(value))
   @IsOptional()
-  @Max(100)
+  @Max(160)
   limit?: number;
 }

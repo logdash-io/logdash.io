@@ -41,8 +41,11 @@
       </span>
 
       <span class="text-secondary/60 text-sm">
-        {company.who} at
-        <a target="_blank" href={company.url}>{company.name}</a>
+        {company.who}
+        {#if company.name}
+          at
+          <a target="_blank" href={company.url}>{company.name}</a>
+        {/if}
       </span>
     </div>
   </div>

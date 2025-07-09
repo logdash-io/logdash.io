@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { page } from '$app/state';
+  import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
+  import StatusBar from '$lib/domains/app/projects/ui/presentational/public-dashboard/StatusBar.svelte';
   import { logger } from '$lib/domains/shared/logger';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
   import { DateTime } from 'luxon';
   import type { Snippet } from 'svelte';
-  import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import StatusBar from '$lib/domains/app/projects/ui/presentational/public-dashboard/StatusBar.svelte';
-  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
 
   type Props = {
     projectId: string;
@@ -31,11 +30,7 @@
       return;
     }
 
-    monitoringState.loadMonitorPings(
-      page.params.cluster_id,
-      projectId,
-      projectMonitor?.id,
-    );
+    monitoringState.loadMonitorPings(projectId, projectMonitor?.id);
   });
 </script>
 

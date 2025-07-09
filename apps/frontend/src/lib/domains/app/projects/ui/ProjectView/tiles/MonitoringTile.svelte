@@ -12,6 +12,7 @@
   import { MonitoringTimeRangeSelector } from '../../presentational/monitoring/index.js';
   import { PingChart } from '../../presentational/public-dashboard/index.js';
   import UptimeChart from '../../presentational/public-dashboard/UptimeChart.svelte';
+  import { untrack } from 'svelte';
 
   type Props = {
     projectId: string;
@@ -43,24 +44,43 @@
   const isOnDemoDashboard = $derived(
     page.url.pathname.includes('/demo-dashboard'),
   );
+  const PING_WIDTH_PX = 8;
+  let pingsChartWidth = $state(0);
+  const pingsToLoad = $derived(
+    pingsChartWidth ? Math.floor(pingsChartWidth / PING_WIDTH_PX) : 0,
+  );
 
   $effect(() => {
-    logger.debug(`Syncing pings for project monitor: ${projectMonitor?.id}`);
-
     if (!projectMonitor || !projectId) {
       logger.warn('No project monitor found for syncing pings.');
       return;
     }
 
-    monitoringState.loadMonitorPings(
-      page.params.cluster_id,
-      projectId,
-      projectMonitor?.id,
+    logger.debug(`Syncing pings for project monitor: ${projectMonitor?.id}`);
+
+    untrack(() => {
+      return monitoringState.loadMonitorPings(
+        projectId,
+        projectMonitor?.id,
+        untrack(() => pingsToLoad),
+      );
+    });
+  });
+
+  $effect(() => {
+    if (!projectMonitor || !projectId || !isPaid) {
+      logger.warn('Skipping ping buckets sync.');
+      return;
+    }
+
+    logger.debug(
+      `Syncing ping buckets for project monitor: ${projectMonitor?.id}`,
     );
 
-    if (isPaid) {
-      monitoringState.loadPingBuckets(projectMonitor.id);
-    }
+    monitoringState.loadPingBuckets(
+      projectMonitor.id,
+      untrack(() => pingsToLoad),
+    );
   });
 
   let open = $state(false);
@@ -124,6 +144,7 @@
 
     <div
       class="z-10 flex w-full cursor-default justify-end overflow-hidden sm:mt-2"
+      bind:clientWidth={pingsChartWidth}
     >
       <PingChart
         maxPingsToShow={MAX_PINGS}

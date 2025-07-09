@@ -13,7 +13,7 @@
   import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
   import { ArrowRightIcon } from 'lucide-svelte';
   import ProblemStatement from '$lib/landing/ProblemStatement.svelte';
-  import TrustProofExample from '$lib/landing/TrustProofExample.svelte';
+  import TrustProofExample from '$lib/landing/TrustProofList.svelte';
 
   type Props = {
     data: {
