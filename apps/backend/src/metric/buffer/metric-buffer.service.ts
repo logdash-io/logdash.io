@@ -47,9 +47,6 @@ export class MetricBufferService {
 
     const changedProjects = await this.metricBufferDataService.getChangedProjects();
 
-    const changedProjectsDate = performance.now();
-    this.logger.log(`Got changed projects in ${changedProjectsDate - now}ms`);
-
     const updates: {
       projectId: string;
       metricName: string;
@@ -57,59 +54,48 @@ export class MetricBufferService {
       operation: MetricOperation;
     }[] = [];
 
+    // Collect all project-metric pairs first
+    const projectMetricPairs: { projectId: string; metrics: string[] }[] = [];
     await Promise.all(
       changedProjects.map(async (projectId) => {
         const metrics = await this.metricBufferDataService.getChangedMetrics(projectId);
-        const metricsDate = performance.now();
-
-        this.logger.log(`Got changed metrics in ${metricsDate - changedProjectsDate}ms`, {
-          projectId,
-        });
-
-        await Promise.all(
-          metrics.map(async (metric) => {
-            const { operation, absoluteValue, deltaValue } =
-              await this.metricBufferDataService.getMetricData(projectId, metric);
-
-            const getMetricDataDate = performance.now();
-            this.logger.log(`Got metric data in ${getMetricDataDate - metricsDate}ms`, {
-              projectId,
-              metric,
-            });
-
-            let value = 0;
-            if (operation === MetricOperation.Set && absoluteValue) {
-              value = parseInt(absoluteValue);
-            } else if (operation === MetricOperation.Change && deltaValue && absoluteValue) {
-              value = parseInt(deltaValue) + parseInt(absoluteValue);
-            } else if (operation === MetricOperation.Change && deltaValue) {
-              value = parseInt(deltaValue);
-            }
-
-            updates.push({
-              projectId,
-              metricName: metric,
-              value,
-              operation: operation as MetricOperation,
-            });
-          }),
-        );
-
-        const beforeCleanupProjectDataDate = performance.now();
-
-        await this.metricBufferDataService.cleanupProjectData(projectId);
-
-        const cleanupProjectDataDate = performance.now();
-        this.logger.log(
-          `Cleaned up project data in ${cleanupProjectDataDate - beforeCleanupProjectDataDate}ms`,
-          {
-            projectId,
-          },
-        );
+        projectMetricPairs.push({ projectId, metrics });
       }),
     );
 
-    const beforeReadIdsAndValuesDate = performance.now();
+    // Batch get all metric data in a single mGet call
+    const allProjectMetricPairs = projectMetricPairs.flatMap(({ projectId, metrics }) =>
+      metrics.map((metricName) => ({ projectId, metricName })),
+    );
+
+    const allMetricData =
+      await this.metricBufferDataService.getBulkMetricData(allProjectMetricPairs);
+
+    // Process all metric data
+    for (const { projectId, metricName, operation, absoluteValue, deltaValue } of allMetricData) {
+      let value = 0;
+      if (operation === MetricOperation.Set && absoluteValue) {
+        value = parseInt(absoluteValue);
+      } else if (operation === MetricOperation.Change && deltaValue && absoluteValue) {
+        value = parseInt(deltaValue) + parseInt(absoluteValue);
+      } else if (operation === MetricOperation.Change && deltaValue) {
+        value = parseInt(deltaValue);
+      }
+
+      updates.push({
+        projectId,
+        metricName,
+        value,
+        operation: operation as MetricOperation,
+      });
+    }
+
+    // Start cleanup operations asynchronously (don't await yet)
+    const cleanupPromise = Promise.all(
+      changedProjects.map((projectId) =>
+        this.metricBufferDataService.cleanupProjectData(projectId),
+      ),
+    );
 
     const projectIdMetricNameToMetricRegisterEntryIdAndValue =
       await this.metricRegisterReadService.readIdsAndValuesFromProjectIdMetricNamePairs(
@@ -118,11 +104,6 @@ export class MetricBufferService {
           metricName: update.metricName,
         })),
       );
-
-    const readIdsAndValuesDate = performance.now();
-    this.logger.log(
-      `Read ids and values in ${readIdsAndValuesDate - beforeReadIdsAndValuesDate}ms`,
-    );
 
     const updatesWithMetricId = updates
       .map((update) => {
@@ -141,8 +122,6 @@ export class MetricBufferService {
       })
       .filter((update): update is NonNullable<typeof update> => update !== null);
 
-    const beforeUpsertDate = performance.now();
-
     await this.metricRegisterWriteService.upsertAbsoluteValues(
       updatesWithMetricId.map((update) => ({
         metricRegisterEntryId: update.metricId,
@@ -151,8 +130,8 @@ export class MetricBufferService {
       })),
     );
 
-    const upsertDate = performance.now();
-    this.logger.log(`Upserted values in ${upsertDate - beforeUpsertDate}ms`);
+    // Ensure cleanup is complete before calculating duration
+    await cleanupPromise;
 
     const bufferFlushDurationMs = performance.now() - now;
     this.logger.info(`Buffer flush duration: ${bufferFlushDurationMs}ms`);
