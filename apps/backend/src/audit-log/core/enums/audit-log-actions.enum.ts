@@ -27,3 +27,9 @@ export enum AuditLogClusterAction {
   RevokedRole = 'revokedRole',
   DeletedInvite = 'deletedInvite',
 }
+
+export enum AuditLogCustomDomainAction {
+  AttemptIncrease = 'attemptIncrease',
+  VerificationSucceeded = 'verificationSucceeded',
+  VerificationFailed = 'verificationFailed',
+}

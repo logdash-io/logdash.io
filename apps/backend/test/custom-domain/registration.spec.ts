@@ -2,6 +2,7 @@ import { createTestApp } from '../utils/bootstrap';
 import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
 import { CustomDomainRegistrationService } from '../../src/custom-domain/registration/custom-domain-registration.service';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { getEnvConfig } from '../../src/shared/configs/env-configs';
 
 describe('CustomDomainRegistrationService', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -40,7 +41,7 @@ describe('CustomDomainRegistrationService', () => {
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'example.com',
       failCount: 0,
-      targetCname: 'status.logdash.io',
+      targetCname: getEnvConfig().customDomain.targetCname,
     });
 
     // when
@@ -77,7 +78,7 @@ describe('CustomDomainRegistrationService', () => {
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'example.com',
       failCount: 999,
-      targetCname: 'status.logdash.io',
+      targetCname: getEnvConfig().customDomain.targetCname,
     });
 
     // when
@@ -114,7 +115,7 @@ describe('CustomDomainRegistrationService', () => {
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'example.com',
       failCount: 999,
-      targetCname: 'status.logdash.io',
+      targetCname: getEnvConfig().customDomain.targetCname,
     });
 
     // when
@@ -153,7 +154,7 @@ describe('CustomDomainRegistrationService', () => {
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'example.com',
       failCount: 5,
-      targetCname: 'status.logdash.io',
+      targetCname: getEnvConfig().customDomain.targetCname,
     });
 
     // when
@@ -229,7 +230,7 @@ describe('CustomDomainRegistrationService', () => {
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'example.com',
       failCount: 0,
-      targetCname: 'status.logdash.io',
+      targetCname: getEnvConfig().customDomain.targetCname,
     });
 
     await registrationService.verifyDomains();
@@ -239,7 +240,7 @@ describe('CustomDomainRegistrationService', () => {
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'example.com',
       failCount: 0,
-      targetCname: 'status.logdash.io',
+      targetCname: getEnvConfig().customDomain.targetCname,
     });
 
     // when - run verification again
@@ -269,7 +270,7 @@ describe('CustomDomainRegistrationService', () => {
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'example.com',
       failCount: 999,
-      targetCname: 'status.logdash.io',
+      targetCname: getEnvConfig().customDomain.targetCname,
     });
 
     // Reach max attempts
@@ -282,7 +283,7 @@ describe('CustomDomainRegistrationService', () => {
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'example.com',
       failCount: 999,
-      targetCname: 'status.logdash.io',
+      targetCname: getEnvConfig().customDomain.targetCname,
     });
 
     // when - run verification again
@@ -326,13 +327,13 @@ describe('CustomDomainRegistrationService', () => {
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'domain1.com',
       failCount: 0,
-      targetCname: 'status.logdash.io',
+      targetCname: getEnvConfig().customDomain.targetCname,
     });
 
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'domain2.com',
       failCount: 999,
-      targetCname: 'status.logdash.io',
+      targetCname: getEnvConfig().customDomain.targetCname,
     });
 
     // when

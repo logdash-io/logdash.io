@@ -91,6 +91,9 @@ interface EnvConfig {
       botToken: string;
     };
   };
+  customDomain: {
+    targetCname: string;
+  };
 }
 
 interface EnvConfigs {
@@ -185,6 +188,9 @@ export const EnvConfigs: EnvConfigs = {
         chatId: '-1002678512492',
       },
     },
+    customDomain: {
+      targetCname: 'status.logdash.io',
+    },
   },
   [OurEnv.Dev]: {
     emailLoginWhitelist: {
@@ -275,6 +281,9 @@ export const EnvConfigs: EnvConfigs = {
         botToken: process.env.INTERNAL_TELEGRAM_BOT_TOKEN!,
         chatId: '-1002678512492',
       },
+    },
+    customDomain: {
+      targetCname: 'dev-status.logdash.io',
     },
   },
 };

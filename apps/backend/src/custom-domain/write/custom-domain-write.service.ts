@@ -8,7 +8,10 @@ import { CustomDomainSerializer } from '../core/entities/custom-domain.serialize
 import { CustomDomainNormalized } from '../core/entities/custom-domain.interface';
 import { CustomDomainStatus } from '../core/enums/custom-domain-status.enum';
 import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
-import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
+import {
+  AuditLogCustomDomainAction,
+  AuditLogEntityAction,
+} from '../../audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 
 @Injectable()
@@ -56,14 +59,33 @@ export class CustomDomainWriteService {
   }
 
   public async delete(id: string): Promise<void> {
+    await this.auditLog.create({
+      action: AuditLogEntityAction.Delete,
+      relatedDomain: RelatedDomain.CustomDomain,
+      relatedEntityId: id,
+    });
+
     await this.customDomainModel.findByIdAndDelete(id);
   }
 
   public async deleteByPublicDashboardId(publicDashboardId: string): Promise<void> {
+    await this.auditLog.create({
+      action: AuditLogEntityAction.Delete,
+      relatedDomain: RelatedDomain.CustomDomain,
+      relatedEntityId: publicDashboardId,
+      description: 'Deleted',
+    });
+
     await this.customDomainModel.deleteMany({ publicDashboardId });
   }
 
   public async incrementAttemptCount(id: string): Promise<void> {
+    await this.auditLog.create({
+      action: AuditLogCustomDomainAction.AttemptIncrease,
+      relatedDomain: RelatedDomain.CustomDomain,
+      relatedEntityId: id,
+    });
+
     await this.customDomainModel.findByIdAndUpdate(id, { $inc: { attemptCount: 1 } });
   }
 }
