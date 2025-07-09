@@ -21,51 +21,43 @@
 
 <div class="flex items-center justify-end">
   {#if !isOnDemoDashboard}
-    <div class="indicator">
-      {#if !canSwitchTabs}
-        <span class="indicator-item badge badge-soft badge-primary badge-xs">
-          PRO
-        </span>
-      {/if}
-
-      <div
-        role="tablist"
-        class={['text-secondary/90 rounded-lg font-mono shadow-none']}
-        onclickcapture={(e) => {
-          if (!canSwitchTabs) {
-            e.preventDefault();
-            e.stopPropagation();
-            upgradeState.openModal();
-            return;
-          }
-        }}
+    <div
+      role="tablist"
+      class={['text-secondary/90 rounded-lg font-mono shadow-none']}
+      onclickcapture={(e) => {
+        if (!canSwitchTabs) {
+          e.preventDefault();
+          e.stopPropagation();
+          upgradeState.openModal();
+          return;
+        }
+      }}
+    >
+      <button
+        role="tab"
+        class={[
+          'cursor-pointer',
+          {
+            'underline underline-offset-2': currentRange === hourlyOption,
+          },
+        ]}
+        onclick={() => onRangeChange(hourlyOption)}
       >
-        <button
-          role="tab"
-          class={[
-            'cursor-pointer',
-            {
-              'underline underline-offset-2': currentRange === hourlyOption,
-            },
-          ]}
-          onclick={() => onRangeChange(hourlyOption)}
-        >
-          90h
-        </button>
-        |
-        <button
-          role="tab"
-          class={[
-            'cursor-pointer',
-            {
-              'underline underline-offset-2': currentRange === dailyOption,
-            },
-          ]}
-          onclick={() => onRangeChange(dailyOption)}
-        >
-          90d
-        </button>
-      </div>
+        90h
+      </button>
+      |
+      <button
+        role="tab"
+        class={[
+          'cursor-pointer',
+          {
+            'underline underline-offset-2': currentRange === dailyOption,
+          },
+        ]}
+        onclick={() => onRangeChange(dailyOption)}
+      >
+        90d
+      </button>
     </div>
   {/if}
 </div>
