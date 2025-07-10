@@ -116,7 +116,9 @@ describe('PublicDashboardCoreController (reads)', () => {
   describe('GET /custom_domains/check', () => {
     it('returns OK when domain is verified', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
