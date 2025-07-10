@@ -174,6 +174,9 @@ export async function createTestApp() {
       clickhouseClient.query({
         query: `TRUNCATE TABLE audit_logs`,
       }),
+      clickhouseClient.query({
+        query: `TRUNCATE TABLE metrics`,
+      }),
     ]);
   };
 
@@ -230,5 +233,6 @@ export async function createTestApp() {
       beforeEach,
       afterAll,
     },
+    clickhouseClient: app.get(ClickHouseClient),
   };
 }

@@ -91,4 +91,18 @@ export class MetricRegisterReadService {
 
     return entities.map((entity) => MetricRegisterEntrySerializer.normalize(entity));
   }
+
+  public async readMetricRegisterEntriesToRecord(): Promise<
+    { metricRegisterEntryId: string; value: number }[]
+  > {
+    const entries = await this.model
+      .find({}, { _id: 1, values: 1 })
+      .lean<MetricRegisterEntryEntity[]>()
+      .exec();
+
+    return entries.map((entry) => ({
+      metricRegisterEntryId: entry._id.toString(),
+      value: entry.values?.counter?.absoluteValue ?? 0,
+    }));
+  }
 }
