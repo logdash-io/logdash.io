@@ -2,6 +2,7 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { PublicDashboardSerialized } from '../../src/public-dashboard/core/entities/public-dashboard.interface';
 import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('PublicDashboardCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -80,7 +81,9 @@ describe('PublicDashboardCoreController (reads)', () => {
 
     it('returns custom domain when it exists', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
