@@ -75,6 +75,12 @@ export class CustomDomainRegistrationService {
 
     const cnameRecord = await this.customDomainDnsService.checkCnameRecord(domain);
 
+    this.logger.info('Domain verification result', {
+      domainId,
+      domain,
+      cnameRecord,
+    });
+
     if (cnameRecord === getEnvConfig().customDomain.targetCname) {
       await this.customDomainWriteService.update({
         id: domainId,
