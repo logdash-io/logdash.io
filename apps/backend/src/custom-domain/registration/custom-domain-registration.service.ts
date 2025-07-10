@@ -10,7 +10,7 @@ import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { Logger } from '@logdash/js-sdk';
 
-const MAX_ATTEMPTS = 10;
+const MAX_ATTEMPTS = 30;
 
 @Injectable()
 export class CustomDomainRegistrationService {

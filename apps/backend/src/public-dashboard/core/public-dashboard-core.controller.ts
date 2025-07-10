@@ -139,6 +139,27 @@ export class PublicDashboardCoreController {
     });
   }
 
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Get('/public_dashboards/:publicDashboardId')
+  @ApiResponse({ type: PublicDashboardSerialized })
+  public async readById(
+    @Param('publicDashboardId') publicDashboardId: string,
+  ): Promise<PublicDashboardSerialized> {
+    const dashboard = await this.publicDashboardReadService.readById(publicDashboardId);
+
+    if (!dashboard) {
+      throw new NotFoundException('Public dashboard not found');
+    }
+
+    const customDomain =
+      await this.customDomainReadService.readByPublicDashboardId(publicDashboardId);
+
+    return PublicDashboardSerializer.serialize(dashboard, {
+      customDomain: customDomain ? CustomDomainSerializer.serialize(customDomain) : undefined,
+    });
+  }
+
   @Public()
   @Get('/public_dashboards/:publicDashboardId/public_data')
   @ApiResponse({ type: PublicDashboardDataResponse })
