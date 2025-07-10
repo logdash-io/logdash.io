@@ -15,11 +15,11 @@ jobs:
 
       - name: Install MongoDB Tools
         run: |
-          # Install MongoDB tools for mongodump
+          # Install MongoDB tools for mongodump and mongosh
           wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -
           echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
           sudo apt-get update
-          sudo apt-get install -y mongodb-database-tools
+          sudo apt-get install -y mongodb-database-tools mongodb-mongosh
         shell: bash
 
       - name: Create MongoDB Backup
@@ -47,8 +47,8 @@ jobs:
 
           # Get database statistics
           echo "📊 Collecting database statistics..."
-          mongo "${{ secrets.BACKEND_DEV_MONGO_URL }}" --quiet --eval "
-            var databases = db.adminCommand('listDatabases');
+          mongosh "${{ secrets.BACKEND_DEV_MONGO_URL }}" --quiet --eval "
+            const databases = db.adminCommand('listDatabases');
             databases.databases.forEach(function(database) {
               if (database.name !== 'admin' && database.name !== 'local' && database.name !== 'config') {
                 print('Database: ' + database.name + ' - Size: ' + (database.sizeOnDisk / 1024 / 1024).toFixed(2) + ' MB');
@@ -94,7 +94,7 @@ jobs:
           echo "backup_type=mongodb" >> backup/metadata.txt
           echo "environment=dev" >> backup/metadata.txt
           echo "created_at=$(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/metadata.txt
-          echo "mongodb_version=$(mongod --version | head -1)" >> backup/metadata.txt
+          echo "mongodb_version=$(mongosh --version | head -1)" >> backup/metadata.txt
 
           # Compress backup
           echo "🗜️ Compressing backup..."
