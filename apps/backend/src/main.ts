@@ -28,7 +28,28 @@ async function bootstrap() {
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, documentFactory);
+  SwaggerModule.setup('docs', app, documentFactory, {
+    customCss: `
+@media (prefers-color-scheme: dark) {
+  .swagger-ui {
+      filter: invert(88%) hue-rotate(180deg);
+  }
+  .swagger-ui .microlight {
+      filter: invert(100%) hue-rotate(180deg);
+  }
+}
+    `,
+    customfavIcon: '/favicon.ico',
+    customSiteTitle: 'LogDash API Documentation',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      docExpansion: 'none',
+      filter: true,
+      showExtensions: true,
+      tryItOutEnabled: true,
+    },
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
