@@ -1,4 +1,5 @@
 import { createLogDash } from '@logdash/js-sdk';
+import dns from 'dns/promises';
 
 interface ProjectResponse {
   projectId: string;
@@ -137,4 +138,22 @@ function test() {
   }
 }
 
-test();
+async function checkCnameRecord(domain: string) {
+  try {
+    const cname = await dns.resolveCname(domain);
+    console.log(`CNAME records for ${domain}:`, cname);
+    return cname;
+  } catch (error) {
+    const dnsError = error as { code?: string; message?: string };
+    if (dnsError.code === 'ENOTFOUND') {
+      console.log(`No CNAME record found for ${domain}`);
+    } else if (dnsError.code === 'ENODATA') {
+      console.log(`Domain ${domain} exists but has no CNAME record`);
+    } else {
+      console.log(`Error resolving CNAME for ${domain}:`, dnsError.message || 'Unknown error');
+    }
+    return null;
+  }
+}
+
+checkCnameRecord('allowed-status.ablaszkiewicz.pl');

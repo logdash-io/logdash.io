@@ -9,6 +9,7 @@ export class CustomDomainDnsService {
   public async checkCnameRecord(domain: string): Promise<string | null> {
     try {
       const results = await this.resolveCname(domain);
+      console.log('results', results);
       if (results && results.length > 0) {
         return results[0];
       }
