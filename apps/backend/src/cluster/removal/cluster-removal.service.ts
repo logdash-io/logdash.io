@@ -3,7 +3,7 @@ import { ClusterWriteService } from '../write/cluster-write.service';
 import { ClusterReadService } from '../read/cluster-read.service';
 import { ProjectRemovalService } from '../../project/removal/project-removal.service';
 import { Logger } from '@logdash/js-sdk';
-import { PublicDashboardWriteService } from '../../public-dashboard/write/public-dashboard-write.service';
+import { PublicDashboardRemovalService } from '../../public-dashboard/removal/public-dashboard-removal.service';
 
 @Injectable()
 export class ClusterRemovalService {
@@ -12,7 +12,7 @@ export class ClusterRemovalService {
     private readonly clusterWriteService: ClusterWriteService,
     private readonly projectRemovalService: ProjectRemovalService,
     private readonly logger: Logger,
-    private readonly publicDashboardWriteService: PublicDashboardWriteService,
+    private readonly publicDashboardRemovalService: PublicDashboardRemovalService,
   ) {}
 
   public async deleteClustersByCreatorId(creatorId: string): Promise<void> {
@@ -35,8 +35,11 @@ export class ClusterRemovalService {
 
     await this.clusterWriteService.delete(clusterId, actorUserId);
 
-    await this.projectRemovalService.deleteProjectsByClusterId(clusterId);
+    await this.projectRemovalService.deleteProjectsByClusterId(clusterId, actorUserId);
 
-    await this.publicDashboardWriteService.deleteByClusterId(clusterId);
+    await this.publicDashboardRemovalService.deletePublicDashboardsByClusterId(
+      clusterId,
+      actorUserId,
+    );
   }
 }

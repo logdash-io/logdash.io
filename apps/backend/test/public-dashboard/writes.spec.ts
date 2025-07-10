@@ -2,6 +2,7 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
 
 describe('PublicDashboardCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;

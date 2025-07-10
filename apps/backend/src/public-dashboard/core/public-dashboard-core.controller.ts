@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PublicDashboardReadService } from '../read/public-dashboard-read.service';
 import { PublicDashboardWriteService } from '../write/public-dashboard-write.service';
+import { PublicDashboardRemovalService } from '../removal/public-dashboard-removal.service';
 import { PublicDashboardSerialized } from './entities/public-dashboard.interface';
 import { PublicDashboardSerializer } from './entities/public-dashboard.serializer';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
@@ -27,6 +28,8 @@ import { PublicDashboardDataQuery } from './dto/public-dashboard-data.query';
 import { UpdatePublicDashboardBody } from './dto/update-public-dashboard.body';
 import { PublicDashboardLimitService } from '../limit/public-dashboard-limit.service';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
+import { CustomDomainReadService } from '../../custom-domain/read/custom-domain-read.service';
+import { CustomDomainSerializer } from '../../custom-domain/core/entities/custom-domain.serializer';
 
 @ApiTags('Public Dashboards')
 @Controller()
@@ -34,10 +37,12 @@ export class PublicDashboardCoreController {
   constructor(
     private readonly publicDashboardReadService: PublicDashboardReadService,
     private readonly publicDashboardWriteService: PublicDashboardWriteService,
+    private readonly publicDashboardRemovalService: PublicDashboardRemovalService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly projectReadService: ProjectReadService,
     private readonly publicDashboardCompositionService: PublicDashboardCompositionService,
     private readonly publicDashboardLimitService: PublicDashboardLimitService,
+    private readonly customDomainReadService: CustomDomainReadService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -96,13 +101,63 @@ export class PublicDashboardCoreController {
 
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
+  @Delete('/public_dashboards/:publicDashboardId')
+  public async delete(
+    @Param('publicDashboardId') publicDashboardId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<void> {
+    const dashboard = await this.publicDashboardReadService.readById(publicDashboardId);
+
+    if (!dashboard) {
+      throw new NotFoundException('Public dashboard not found');
+    }
+
+    await this.publicDashboardRemovalService.deletePublicDashboardById(publicDashboardId, userId);
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
   @Get('clusters/:clusterId/public_dashboards')
   @ApiResponse({ type: PublicDashboardSerialized, isArray: true })
   public async readByClusterId(
     @Param('clusterId') clusterId: string,
   ): Promise<PublicDashboardSerialized[]> {
     const dashboards = await this.publicDashboardReadService.readByClusterId(clusterId);
-    return PublicDashboardSerializer.serializeMany(dashboards);
+
+    const customDomains = (
+      await Promise.all(
+        dashboards.map((dashboard) =>
+          this.customDomainReadService.readByPublicDashboardId(dashboard.id),
+        ),
+      )
+    ).filter((customDomain) => customDomain !== null);
+
+    return PublicDashboardSerializer.serializeMany(dashboards, {
+      customDomains: customDomains.map((customDomain) =>
+        CustomDomainSerializer.serialize(customDomain),
+      ),
+    });
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Get('/public_dashboards/:publicDashboardId')
+  @ApiResponse({ type: PublicDashboardSerialized })
+  public async readById(
+    @Param('publicDashboardId') publicDashboardId: string,
+  ): Promise<PublicDashboardSerialized> {
+    const dashboard = await this.publicDashboardReadService.readById(publicDashboardId);
+
+    if (!dashboard) {
+      throw new NotFoundException('Public dashboard not found');
+    }
+
+    const customDomain =
+      await this.customDomainReadService.readByPublicDashboardId(publicDashboardId);
+
+    return PublicDashboardSerializer.serialize(dashboard, {
+      customDomain: customDomain ? CustomDomainSerializer.serialize(customDomain) : undefined,
+    });
   }
 
   @Public()

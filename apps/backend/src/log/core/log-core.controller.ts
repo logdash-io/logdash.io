@@ -187,8 +187,6 @@ export class LogCoreController {
       throw new BadRequestException('If using pagination, provide both lastId and direction');
     }
 
-    console.log('DUPA 0');
-
     const project = await this.projectReadCachedService.readProjectOrThrow(projectId);
 
     const retentionHours = getProjectPlanConfig(project.tier).logs.retentionHours;
@@ -201,8 +199,6 @@ export class LogCoreController {
       dto.startDate = cutOffDate;
     }
 
-    console.log('DUPA 1');
-
     const logs = await this.logReadClickhouseService.readMany({
       direction: dto.direction,
       lastId: dto.lastId,
@@ -213,8 +209,6 @@ export class LogCoreController {
       level: dto.level,
       searchString: dto.searchString,
     });
-
-    console.log('DUPA 2');
 
     return logs.map((log) => LogSerializer.serialize(log));
   }

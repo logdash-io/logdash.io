@@ -7,6 +7,8 @@ import { RelatedDomain } from '../core/enums/related-domain.enum';
 import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
 import { ClusterReadCachedService } from '../../cluster/read/cluster-read-cached.service';
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
+import { CustomDomainReadService } from '../../custom-domain/read/custom-domain-read.service';
+import { PublicDashboardReadService } from '../../public-dashboard/read/public-dashboard-read.service';
 
 const MAX_AUDIT_LOGS_PER_USER_PER_MINUTE = 60 * 10;
 
@@ -19,6 +21,8 @@ export class AuditLog {
     private readonly clusterReadCachedService: ClusterReadCachedService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly auditLogWriteService: AuditLogWriteService,
+    private readonly customDomainReadService: CustomDomainReadService,
+    private readonly publicDashboardReadService: PublicDashboardReadService,
   ) {}
 
   public async create(dto: CreateAuditLogDto): Promise<void> {
@@ -99,6 +103,52 @@ export class AuditLog {
         return {
           ...dto,
           userId: project?.creatorId,
+        };
+      }
+    }
+
+    // public dashboard
+    if (dto.relatedDomain === RelatedDomain.PublicDashboard) {
+      const publicDashboard = await this.publicDashboardReadService.readById(dto.relatedEntityId);
+
+      if (!publicDashboard) {
+        return dto;
+      }
+
+      const cluster = await this.clusterReadCachedService.readById(publicDashboard.clusterId);
+
+      if (!cluster) {
+        return dto;
+      }
+
+      return {
+        ...dto,
+        userId: cluster.creatorId,
+      };
+    }
+
+    // custom domain
+    if (dto.relatedDomain === RelatedDomain.CustomDomain) {
+      const customDomain = await this.customDomainReadService.readById(dto.relatedEntityId);
+
+      if (customDomain) {
+        const publicDashboard = await this.publicDashboardReadService.readById(
+          customDomain.publicDashboardId,
+        );
+
+        if (!publicDashboard) {
+          return dto;
+        }
+
+        const cluster = await this.clusterReadCachedService.readById(publicDashboard.clusterId);
+
+        if (!cluster) {
+          return dto;
+        }
+
+        return {
+          ...dto,
+          userId: cluster.creatorId,
         };
       }
     }

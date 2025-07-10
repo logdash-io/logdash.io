@@ -15,6 +15,8 @@ import { REQUIRE_ROLE_KEY } from '../../decorators/require-cluster-role.decorato
 import { ClusterRole } from '../../core/enums/cluster-role.enum';
 import { ClusterInviteReadService } from '../../../cluster-invite/read/cluster-invite-read.service';
 import { ClusterInviteReadModule } from '../../../cluster-invite/read/cluster-invite-read.module';
+import { CustomDomainReadService } from '../../../custom-domain/read/custom-domain-read.service';
+import { CustomDomainReadModule } from '../../../custom-domain/read/custom-domain-read.module';
 
 const CLUSTER_ID_PARAM_NAME = 'clusterId';
 const PROJECT_ID_PARAM_NAME = 'projectId';
@@ -22,6 +24,7 @@ const NOTIFICATION_CHANNEL_ID_PARAM_NAME = 'notificationChannelId';
 const HTTP_MONITOR_ID_PARAM_NAME = 'httpMonitorId';
 const PUBLIC_DASHBOARD_ID_PARAM_NAME = 'publicDashboardId';
 const CLUSTER_INVITE_ID_PARAM_NAME = 'clusterInviteId';
+const CUSTOM_DOMAIN_ID_PARAM_NAME = 'customDomainId';
 
 export const ClusterMemberGuardImports = [
   ClusterReadModule,
@@ -30,6 +33,7 @@ export const ClusterMemberGuardImports = [
   HttpMonitorReadModule,
   PublicDashboardReadModule,
   ClusterInviteReadModule,
+  CustomDomainReadModule,
 ];
 
 @Injectable()
@@ -41,6 +45,7 @@ export class ClusterMemberGuard implements CanActivate {
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly publicDashboardReadService: PublicDashboardReadService,
     private readonly clusterInviteReadService: ClusterInviteReadService,
+    private readonly customDomainReadService: CustomDomainReadService,
     private readonly reflector: Reflector,
   ) {}
 
@@ -61,6 +66,7 @@ export class ClusterMemberGuard implements CanActivate {
     const httpMonitorIdFromParams = request.params[HTTP_MONITOR_ID_PARAM_NAME];
     const publicDashboardIdFromParams = request.params[PUBLIC_DASHBOARD_ID_PARAM_NAME];
     const clusterInviteIdFromParams = request.params[CLUSTER_INVITE_ID_PARAM_NAME];
+    const customDomainIdFromParams = request.params[CUSTOM_DOMAIN_ID_PARAM_NAME];
 
     if (
       projectIdFromParams === getEnvConfig().demo.projectId ||
@@ -79,10 +85,11 @@ export class ClusterMemberGuard implements CanActivate {
       !notificationChannelIdFromParams &&
       !httpMonitorIdFromParams &&
       !publicDashboardIdFromParams &&
-      !clusterInviteIdFromParams
+      !clusterInviteIdFromParams &&
+      !customDomainIdFromParams
     ) {
       throw new ForbiddenException(
-        'Cluster ID, project ID, communication channel ID, http monitor ID, public dashboard ID or cluster invite ID not provided',
+        'Cluster ID, project ID, communication channel ID, http monitor ID, public dashboard ID, cluster invite ID or custom domain ID not provided',
       );
     }
 
@@ -129,6 +136,14 @@ export class ClusterMemberGuard implements CanActivate {
     if (clusterInviteIdFromParams) {
       return this.checkForClusterInviteId({
         clusterInviteId: clusterInviteIdFromParams,
+        userId,
+        allowedRoles,
+      });
+    }
+
+    if (customDomainIdFromParams) {
+      return this.checkForCustomDomainId({
+        customDomainId: customDomainIdFromParams,
         userId,
         allowedRoles,
       });
@@ -290,6 +305,37 @@ export class ClusterMemberGuard implements CanActivate {
     }
 
     if (!dto.allowedRoles.includes(invite.role)) {
+      throw new ForbiddenException('User does not have the required role');
+    }
+
+    return true;
+  }
+
+  private async checkForCustomDomainId(dto: {
+    customDomainId: string;
+    userId: string;
+    allowedRoles: ClusterRole[];
+  }): Promise<boolean> {
+    const customDomain = await this.customDomainReadService.readById(dto.customDomainId);
+
+    if (!customDomain) {
+      throw new ForbiddenException('Custom domain not found');
+    }
+
+    const publicDashboard = await this.publicDashboardReadService.readById(
+      customDomain.publicDashboardId,
+    );
+
+    if (!publicDashboard) {
+      throw new ForbiddenException('Public dashboard not found');
+    }
+
+    const role = await this.clusterReadCachedService.readUserRole({
+      clusterId: publicDashboard.clusterId,
+      userId: dto.userId,
+    });
+
+    if (!role || !dto.allowedRoles.includes(role)) {
       throw new ForbiddenException('User does not have the required role');
     }
 

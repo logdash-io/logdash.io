@@ -1,4 +1,4 @@
-name: Mongo backup (dev)
+name: Mongo backup (prod)
 
 on:
   schedule:
@@ -29,21 +29,21 @@ jobs:
 
           # Get current timestamp for backup name
           TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-          BACKUP_NAME="mongo_backup_dev_${TIMESTAMP}"
+          BACKUP_NAME="mongo_backup_prod_${TIMESTAMP}"
 
           echo "🔧 Starting MongoDB backup..."
           echo "📅 Backup timestamp: $TIMESTAMP"
 
           # Create MongoDB dump
           echo "🗄️ Creating MongoDB dump..."
-          mongodump --uri="${{ secrets.BACKEND_DEV_MONGO_URL }}" --out=backup/mongodb_dump
+          mongodump --uri="${{ secrets.BACKEND_PROD_MONGO_URL }}" --out=backup/mongodb_dump
 
           echo "✅ MongoDB dump completed"
 
           # Create metadata file
           echo "backup_timestamp=${TIMESTAMP}" > backup/metadata.txt
           echo "backup_type=mongodb" >> backup/metadata.txt
-          echo "environment=dev" >> backup/metadata.txt
+          echo "environment=prod" >> backup/metadata.txt
           echo "created_at=$(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/metadata.txt
 
           # Compress backup
@@ -52,6 +52,7 @@ jobs:
 
           # Set output for artifact name
           echo "BACKUP_NAME=${BACKUP_NAME}" >> $GITHUB_ENV
+
           echo "✅ Backup compressed and ready for encryption"
         shell: bash
 
