@@ -17,7 +17,7 @@ export class MetricTtlService {
     private readonly logger: Logger,
   ) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   public async removeOldMetrics(): Promise<void> {
     const cursor = this.projectReadService.getProjectsForMetricRemoval();
 
