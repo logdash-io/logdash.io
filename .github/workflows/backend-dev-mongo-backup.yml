@@ -52,7 +52,6 @@ jobs:
 
           # Set output for artifact name
           echo "BACKUP_NAME=${BACKUP_NAME}" >> $GITHUB_ENV
-
           echo "✅ Backup compressed and ready for encryption"
         shell: bash
 
