@@ -1,0 +1,136 @@
+name: Mongo backup (prod)
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # Every 15 minutes
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install MongoDB Tools
+        run: |
+          # Install MongoDB tools for mongodump
+          wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -
+          echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+          sudo apt-get update
+          sudo apt-get install -y mongodb-database-tools
+        shell: bash
+
+      - name: Create MongoDB Backup
+        run: |
+          # Create backup directory
+          mkdir -p backup
+
+          # Get current timestamp for backup name
+          TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+          BACKUP_NAME="mongo_backup_prod_${TIMESTAMP}"
+
+          echo "🔧 Starting MongoDB backup..."
+          echo "📅 Backup timestamp: $TIMESTAMP"
+
+          # Initialize backup summary
+          echo "📊 BACKUP SUMMARY" > backup/backup_summary.txt
+          echo "=================" >> backup/backup_summary.txt
+          echo "Backup started at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/backup_summary.txt
+          echo "Environment: prod" >> backup/backup_summary.txt
+          echo "" >> backup/backup_summary.txt
+
+          # Create MongoDB dump
+          echo "🗄️ Creating MongoDB dump..."
+          mongodump --uri="${{ secrets.BACKEND_PROD_MONGO_URL }}" --out=backup/mongodb_dump
+
+          # Get database statistics
+          echo "📊 Collecting database statistics..."
+          mongo "${{ secrets.BACKEND_PROD_MONGO_URL }}" --quiet --eval "
+            var databases = db.adminCommand('listDatabases');
+            databases.databases.forEach(function(database) {
+              if (database.name !== 'admin' && database.name !== 'local' && database.name !== 'config') {
+                print('Database: ' + database.name + ' - Size: ' + (database.sizeOnDisk / 1024 / 1024).toFixed(2) + ' MB');
+              }
+            });
+          " >> backup/backup_summary.txt
+
+          # Count collections and documents
+          echo "📋 Counting collections and documents..."
+          for dir in backup/mongodb_dump/*/; do
+            if [ -d "$dir" ]; then
+              DB_NAME=$(basename "$dir")
+              echo "Database: $DB_NAME" >> backup/backup_summary.txt
+              
+              # Count collections in this database
+              COLLECTION_COUNT=$(find "$dir" -name "*.bson" | wc -l)
+              echo "  Collections: $COLLECTION_COUNT" >> backup/backup_summary.txt
+              
+              # List collections with file sizes
+              for bson_file in "$dir"*.bson; do
+                if [ -f "$bson_file" ]; then
+                  COLLECTION_NAME=$(basename "$bson_file" .bson)
+                  FILE_SIZE=$(stat -c%s "$bson_file" 2>/dev/null || stat -f%z "$bson_file")
+                  FILE_SIZE_MB=$(echo "scale=2; $FILE_SIZE / 1024 / 1024" | bc -l)
+                  echo "    $COLLECTION_NAME: ${FILE_SIZE_MB} MB" >> backup/backup_summary.txt
+                fi
+              done
+              echo "" >> backup/backup_summary.txt
+            fi
+          done
+
+          # Finalize backup summary
+          echo "Backup completed at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/backup_summary.txt
+
+          # Display backup summary
+          echo ""
+          echo "📊 BACKUP COMPLETED - SUMMARY:"
+          echo "=============================="
+          cat backup/backup_summary.txt
+
+          # Create metadata file
+          echo "backup_timestamp=${TIMESTAMP}" > backup/metadata.txt
+          echo "backup_type=mongodb" >> backup/metadata.txt
+          echo "environment=prod" >> backup/metadata.txt
+          echo "created_at=$(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/metadata.txt
+          echo "mongodb_version=$(mongod --version | head -1)" >> backup/metadata.txt
+
+          # Compress backup
+          echo "🗜️ Compressing backup..."
+          tar -czf "${BACKUP_NAME}.tar.gz" backup/
+
+          # Set output for artifact name
+          echo "BACKUP_NAME=${BACKUP_NAME}" >> $GITHUB_ENV
+
+          # Display final size
+          BACKUP_SIZE=$(stat -c%s "${BACKUP_NAME}.tar.gz" 2>/dev/null || stat -f%z "${BACKUP_NAME}.tar.gz")
+          BACKUP_SIZE_MB=$(echo "scale=2; $BACKUP_SIZE / 1024 / 1024" | bc -l)
+          echo "📦 Compressed backup size: ${BACKUP_SIZE_MB} MB"
+        shell: bash
+
+      - name: Encrypt Backup
+        run: |
+          echo "🔐 Encrypting backup artifact..."
+
+          # Make script executable
+          chmod +x .github/scripts/encrypt-backup.sh
+
+          # Encrypt the backup
+          ./.github/scripts/encrypt-backup.sh \
+            "${BACKUP_NAME}.tar.gz" \
+            "${BACKUP_NAME}.tar.gz.enc" \
+            "${{ secrets.BACKEND_BACKUP_ARTIFACT_KEY }}"
+
+          # Remove unencrypted file for security
+          rm -f "${BACKUP_NAME}.tar.gz"
+
+          echo "✅ Backup encrypted and ready for upload"
+        shell: bash
+
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_NAME }}
+          path: ${{ env.BACKUP_NAME }}.tar.gz.enc
+          retention-days: 14
