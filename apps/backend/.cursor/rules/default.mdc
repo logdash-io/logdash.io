@@ -4,12 +4,25 @@ globs:
 alwaysApply: true
 ---
 
-# Rules
+# General rules
 
 - never use `.then()`. Always use normal promises,
 - do not put comments in the code,
+- always use private/public when defining class methods,
+- always provide return types for methods,
+- always add tests
+
+# Naming rules
 - enums keys are in `ThisCase`. Enum values are in `thisCase`,
 - dtos used for submodules (not for controllers) have file names in this format `some-update.dto.ts`. Class names are in this format `SomeUpdateDto`. Do not put validation in these DTOs,
-- dtos used in core module in controller have proper sufix like `UpdateXBody`, `UpdateXQuery`. If response in custom it is defined as `UpdateXResponse`,
-- always use private/public when defining class methods,
+- dtos used in core module in controller have proper sufix like `UpdateXBody`, `UpdateXQuery`. Files they are in are formatted like that `update-x.body.ts`, `update-x.query.ts`. If response in custom it is defined as `UpdateXResponse`,
+
+# Testing rules
+Always add tests. Tests are located in `/test` directory.
+- each folder is different domain,
+- usually you will find `reads.spec.ts` and `writes.spec.ts`,
+- you should usually start a test with `const setup = await bootstrap.utils.generalUtils.setupAnonymous();`. In `setup` you've got access to objects: `user`, `cluster`, `project`, `token`. Each of these objects have properties,
+- if test is testing some feature which is available only in paid tiers, then you probably want to use `.setupClaimed({ userTier: UserTier.Pro })`,
+- do not test if class validator constraints are met. I trust that it works,
+- each EP should be tested for 403 if user from different cluster tries to access it. You can achieve that by spawning `const setupB = ...` and then using `setupB.token`.
 
