@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CustomDomainSerialized } from '../../../custom-domain/core/entities/custom-domain.interface';
 
 export class PublicDashboardNormalized {
   id: string;
@@ -23,4 +24,7 @@ export class PublicDashboardSerialized {
 
   @ApiProperty()
   isPublic: boolean;
+
+  @ApiProperty({ type: CustomDomainSerialized })
+  customDomain?: CustomDomainSerialized;
 }

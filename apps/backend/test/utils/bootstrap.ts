@@ -28,6 +28,10 @@ import { NotificationChannelEntity } from '../../src/notification-channel/core/e
 import { NotificationChannelCoreModule } from '../../src/notification-channel/core/notification-channel-core.module';
 import { PublicDashboardEntity } from '../../src/public-dashboard/core/entities/public-dashboard.entity';
 import { PublicDashboardCoreModule } from '../../src/public-dashboard/core/public-dashboard-core.module';
+import { CustomDomainCoreModule } from '../../src/custom-domain/core/custom-domain-core.module';
+import { CustomDomainEntity } from '../../src/custom-domain/core/entities/custom-domain.entity';
+import { CustomDomainDnsService } from '../../src/custom-domain/dns/custom-domain-dns.service';
+import { CustomDomainDnsServiceMock } from '../../src/custom-domain/dns/custom-domain-dns.service.mock';
 import { ProjectEntity } from '../../src/project/core/entities/project.entity';
 import { ProjectCoreModule } from '../../src/project/core/project-core.module';
 import { LogdashModule } from '../../src/shared/logdash/logdash.module';
@@ -54,6 +58,7 @@ import { getRedisTestContainerUrl } from './redis-test-container-server';
 import { TelegramUtils } from './telegram-utils';
 import { WebhookUtils } from './webhook-utils';
 import { PublicDashboardUtils } from './public-dashboard-utils';
+import { CustomDomainUtils } from './custom-domain-utils';
 import { ClusterInviteUtils } from './cluster-invite-utils';
 import { StripeModule } from '../../src/payments/stripe/stripe.module';
 import { SubscriptionEntity } from '../../src/subscription/core/entities/subscription.entity';
@@ -84,6 +89,7 @@ export async function createTestApp() {
       MetricRegisterCoreModule,
       NotificationChannelCoreModule,
       PublicDashboardCoreModule,
+      CustomDomainCoreModule,
       StripeModule,
       SubscriptionCoreModule,
       AuditLogCreationModule,
@@ -98,6 +104,8 @@ export async function createTestApp() {
     .useClass(MetricsMock)
     .overrideProvider(MAX_CONCURRENT_REQUESTS_TOKEN)
     .useValue(2)
+    .overrideProvider(CustomDomainDnsService)
+    .useClass(CustomDomainDnsServiceMock)
     .compile();
 
   const app = module.createNestApplication();
@@ -128,6 +136,9 @@ export async function createTestApp() {
   const publicDashboardModel: Model<PublicDashboardEntity> = module.get(
     getModelToken(PublicDashboardEntity.name),
   );
+  const customDomainModel: Model<CustomDomainEntity> = module.get(
+    getModelToken(CustomDomainEntity.name),
+  );
   const subscriptionModel: Model<SubscriptionEntity> = module.get(
     getModelToken(SubscriptionEntity.name),
   );
@@ -148,6 +159,7 @@ export async function createTestApp() {
       clusterInviteModel.deleteMany({}),
       notificationChannelModel.deleteMany({}),
       publicDashboardModel.deleteMany({}),
+      customDomainModel.deleteMany({}),
       subscriptionModel.deleteMany({}),
       redisService.flushAll(),
       clickhouseClient.query({
@@ -191,6 +203,7 @@ export async function createTestApp() {
       clusterInviteModel,
       notificationChannelModel,
       publicDashboardModel,
+      customDomainModel,
       subscriptionModel,
     },
     utils: {
@@ -207,6 +220,7 @@ export async function createTestApp() {
       telegramUtils: new TelegramUtils(app),
       webhookUtils: new WebhookUtils(app),
       publicDashboardUtils: new PublicDashboardUtils(app),
+      customDomainUtils: new CustomDomainUtils(app),
       auditLogUtils: new AuditLogUtils(app),
       clusterInviteUtils: new ClusterInviteUtils(app),
       userUtils: new UserUtils(app),

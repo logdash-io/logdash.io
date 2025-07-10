@@ -11,12 +11,16 @@ import { PublicDashboardNormalized } from '../core/entities/public-dashboard.int
 import { AddMonitorToDashboardDto } from './dto/add-monitor-to-dashboard.dto';
 import { RemoveMonitorFromDashboardDto } from './dto/remove-monitor-from-dashboard.dto';
 import { UpdatePublicDashboardDto } from './dto/update-public-dashboard.dto';
+import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
+import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 
 @Injectable()
 export class PublicDashboardWriteService {
   constructor(
     @InjectModel(PublicDashboardEntity.name)
     private readonly publicDashboardModel: Model<PublicDashboardDocument>,
+    private readonly auditLog: AuditLog,
   ) {}
 
   public async create(dto: CreatePublicDashboardDto): Promise<PublicDashboardNormalized> {
@@ -25,6 +29,12 @@ export class PublicDashboardWriteService {
       httpMonitorsIds: dto.httpMonitorsIds || [],
       name: dto.name,
       isPublic: dto.isPublic,
+    });
+
+    await this.auditLog.create({
+      action: AuditLogEntityAction.Create,
+      relatedDomain: RelatedDomain.PublicDashboard,
+      relatedEntityId: entity.id,
     });
 
     const saved = await entity.save();
@@ -58,6 +68,10 @@ export class PublicDashboardWriteService {
       { _id: dto.publicDashboardId },
       { $pull: { httpMonitorsIds: dto.httpMonitorId } },
     );
+  }
+
+  public async deleteOnlyEntity(id: string): Promise<void> {
+    await this.publicDashboardModel.findByIdAndDelete(id);
   }
 
   public async deleteByClusterId(clusterId: string): Promise<void> {

@@ -7,4 +7,5 @@ export enum RelatedDomain {
   PublicDashboard = 'publicDashboard',
   NotificationChannel = 'notificationChannel',
   HttpMonitor = 'httpMonitor',
+  CustomDomain = 'customDomain',
 }
