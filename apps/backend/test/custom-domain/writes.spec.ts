@@ -1,6 +1,7 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('CustomDomainCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -20,7 +21,9 @@ describe('CustomDomainCoreController (writes)', () => {
   describe('POST /public_dashboards/:publicDashboardId/custom_domains', () => {
     it('creates custom domain', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
@@ -50,7 +53,9 @@ describe('CustomDomainCoreController (writes)', () => {
 
     it('returns 400 when domain is invalid', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
@@ -72,7 +77,9 @@ describe('CustomDomainCoreController (writes)', () => {
 
     it('returns 409 when domain already exists', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
@@ -104,7 +111,9 @@ describe('CustomDomainCoreController (writes)', () => {
   describe('DELETE /custom_domains/:customDomainId', () => {
     it('deletes custom domain', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
@@ -132,7 +141,9 @@ describe('CustomDomainCoreController (writes)', () => {
 
     it('deletes custom domain when public dashboard is deleted', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
@@ -154,6 +165,31 @@ describe('CustomDomainCoreController (writes)', () => {
       // then - custom domain should be deleted
       const domainAfterDelete = await bootstrap.models.customDomainModel.findById(customDomain.id);
       expect(domainAfterDelete).toBeNull();
+    });
+
+    it('does not let create custom domain when cluster tier does not support it', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Free,
+      });
+
+      const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+        clusterId: cluster.id,
+        token,
+        name: 'test dashboard',
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/public_dashboards/${publicDashboard.id}/custom_domains`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          domain: 'example.com',
+        });
+
+      // then
+      expect(response.status).toBe(403);
+      expect(response.body.message).toBe('Custom domains are not supported for this cluster tier');
     });
   });
 });

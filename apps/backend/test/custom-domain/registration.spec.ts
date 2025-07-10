@@ -24,7 +24,9 @@ describe('CustomDomainRegistrationService', () => {
 
   it('verifies domain with correct CNAME record', async () => {
     // given
-    const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+      userTier: UserTier.Pro,
+    });
 
     const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
       clusterId: cluster.id,
@@ -61,7 +63,9 @@ describe('CustomDomainRegistrationService', () => {
 
   it('increments attempt count when DNS check fails', async () => {
     // given
-    const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+      userTier: UserTier.Pro,
+    });
 
     const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
       clusterId: cluster.id,
@@ -98,7 +102,9 @@ describe('CustomDomainRegistrationService', () => {
 
   it('marks domain as failed after maximum attempts', async () => {
     // given
-    const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+      userTier: UserTier.Pro,
+    });
 
     const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
       clusterId: cluster.id,
@@ -137,7 +143,9 @@ describe('CustomDomainRegistrationService', () => {
 
   it('eventually succeeds after multiple failed attempts', async () => {
     // given
-    const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+      userTier: UserTier.Pro,
+    });
 
     const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
       clusterId: cluster.id,
@@ -176,7 +184,9 @@ describe('CustomDomainRegistrationService', () => {
 
   it('fails verification when CNAME points to wrong target', async () => {
     // given
-    const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+      userTier: UserTier.Pro,
+    });
 
     const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
       clusterId: cluster.id,
@@ -212,7 +222,9 @@ describe('CustomDomainRegistrationService', () => {
 
   it('skips domains that are already verified', async () => {
     // given
-    const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+      userTier: UserTier.Pro,
+    });
 
     const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
       clusterId: cluster.id,
@@ -252,7 +264,9 @@ describe('CustomDomainRegistrationService', () => {
 
   it('skips domains that have failed', async () => {
     // given
-    const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+      userTier: UserTier.Pro,
+    });
 
     const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
       clusterId: cluster.id,

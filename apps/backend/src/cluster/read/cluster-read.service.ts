@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ClusterEntity } from '../core/entities/cluster.entity';
@@ -17,6 +17,14 @@ export class ClusterReadService {
     const cluster = await this.model.findById(clusterId).lean<ClusterEntity>().exec();
 
     return cluster ? ClusterSerializer.normalize(cluster) : null;
+  }
+
+  public async readByIdOrThrow(clusterId: string): Promise<ClusterNormalized> {
+    const cluster = await this.readById(clusterId);
+    if (!cluster) {
+      throw new NotFoundException('Cluster not found');
+    }
+    return cluster;
   }
 
   public async readWhereUserHasAnyRole(userId: string): Promise<ClusterNormalized[]> {

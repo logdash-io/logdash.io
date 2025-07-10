@@ -2,6 +2,7 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { CustomDomainSerialized } from '../../src/custom-domain/core/entities/custom-domain.interface';
 import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('CustomDomainCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -21,7 +22,9 @@ describe('CustomDomainCoreController (reads)', () => {
   describe('GET /public_dashboards/:publicDashboardId/custom_domain', () => {
     it('reads custom domain by public dashboard id', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
@@ -52,7 +55,9 @@ describe('CustomDomainCoreController (reads)', () => {
 
     it('returns 404 when custom domain not found', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
@@ -71,8 +76,12 @@ describe('CustomDomainCoreController (reads)', () => {
 
     it('returns 403 when user is not a cluster member', async () => {
       // given
-      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
-      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupA = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
+      const setupB = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: setupA.cluster.id,

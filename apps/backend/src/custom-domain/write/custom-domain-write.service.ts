@@ -44,6 +44,9 @@ export class CustomDomainWriteService {
   public async update(dto: UpdateCustomDomainDto): Promise<CustomDomainNormalized> {
     const updateQuery: UpdateQuery<CustomDomainEntity> = {};
 
+    if (dto.domain !== undefined) {
+      updateQuery.domain = dto.domain;
+    }
     if (dto.attemptCount !== undefined) {
       updateQuery.attemptCount = dto.attemptCount;
     }
