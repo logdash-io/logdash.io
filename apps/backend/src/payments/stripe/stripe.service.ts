@@ -6,6 +6,7 @@ import { Logger } from '@logdash/js-sdk';
 import { paidTiers, UserTier } from '../../user/core/enum/user-tier.enum';
 import { mapTierToPriceId } from './stripe-mapper';
 import { SubscriptionManagementService } from '../../subscription/management/subscription-management.service';
+import { StripeEventEmitter, StripeEvents } from './stripe-event.emitter';
 
 @Injectable()
 export class StripeService {
@@ -14,6 +15,7 @@ export class StripeService {
     private readonly userReadService: UserReadService,
     private readonly stripe: Stripe,
     private readonly subscriptionManagementService: SubscriptionManagementService,
+    private readonly stripeEventsEmitter: StripeEventEmitter,
   ) {}
 
   public async changePaidPlan(userId: string, tier: UserTier): Promise<void> {
@@ -62,6 +64,11 @@ export class StripeService {
     }
 
     await this.subscriptionManagementService.changePaidPlan(userId, user.stripeCustomerId, tier);
+
+    await this.stripeEventsEmitter.emitPaymentSucceeded({
+      email: user.email,
+      tier,
+    });
   }
 
   private async getActiveSubscription(stripeCustomerId: string): Promise<Stripe.Subscription> {
