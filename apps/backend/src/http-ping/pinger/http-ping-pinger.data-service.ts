@@ -8,7 +8,7 @@ type ProjectId = Brand<string, 'ProjectId'>;
 type ClusterId = Brand<string, 'ClusterId'>;
 
 @Injectable()
-export class HttpPingSchedulerDataService {
+export class HttpPingPingerDataService {
   constructor(
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly projectReadService: ProjectReadService,

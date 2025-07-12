@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import axios from 'axios';
 import { HttpMonitorNormalized } from 'src/http-monitor/core/entities/http-monitor.interface';
+import { HttpMonitorMode } from 'src/http-monitor/core/enums/http-monitor-mode.enum';
 import { projectTierFromUserTier } from 'src/project/core/enums/project-tier.enum';
 import { ProjectReadService } from 'src/project/read/project-read.service';
 import { UserPlanConfigs } from 'src/shared/configs/user-plan-configs';
@@ -12,7 +13,7 @@ import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.se
 import { HttpPingEventEmitter } from '../events/http-ping-event.emitter';
 import { CreateHttpPingDto } from '../write/dto/create-http-ping.dto';
 import { HttpPingWriteService } from '../write/http-ping-write.service';
-import { HttpPingSchedulerDataService } from './http-ping-scheduler.data-service';
+import { HttpPingPingerDataService } from './http-ping-pinger.data-service';
 
 interface QueueItem {
   monitor: HttpMonitorNormalized;
@@ -22,7 +23,7 @@ interface QueueItem {
 export const MAX_CONCURRENT_REQUESTS_TOKEN = 'MAX_CONCURRENT_REQUESTS_TOKEN';
 
 @Injectable()
-export class HttpPingSchedulerService {
+export class HttpPingPingerService {
   constructor(
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpPingWriteService: HttpPingWriteService,
@@ -32,7 +33,7 @@ export class HttpPingSchedulerService {
     private readonly averageRecorder: AverageRecorder,
     @Inject(MAX_CONCURRENT_REQUESTS_TOKEN)
     private readonly maxConcurrentRequests: number,
-    private readonly httpPingSchedulerDataService: HttpPingSchedulerDataService,
+    private readonly httpPingPingerDataService: HttpPingPingerDataService,
     private readonly projectReadService: ProjectReadService,
   ) {}
 
@@ -79,8 +80,10 @@ export class HttpPingSchedulerService {
       await this.projectReadService.readManyByTiers(userTiers.map(projectTierFromUserTier))
     ).map((p) => p.id);
 
-    for await (const monitor of this.httpMonitorReadService.readManyByProjectIdsCursor(
+    // Only fetch monitors with 'pull' mode
+    for await (const monitor of this.httpMonitorReadService.readManyByProjectIdsCursorWithMode(
       projectsIds,
+      HttpMonitorMode.Pull,
     )) {
       if (queue.length >= this.maxConcurrentRequests) {
         const completedItem = await Promise.race(
@@ -175,7 +178,7 @@ export class HttpPingSchedulerService {
 
     const savedPings = await this.httpPingWriteService.createMany(pings);
 
-    const clusterIds = await this.httpPingSchedulerDataService.readClusterIdsByMonitorIds(
+    const clusterIds = await this.httpPingPingerDataService.readClusterIdsByMonitorIds(
       savedPings.map((ping) => ping.httpMonitorId),
     );
 

@@ -18,7 +18,6 @@ import { HttpMonitorEntity } from '../../src/http-monitor/core/entities/http-mon
 import { HttpMonitorCoreModule } from '../../src/http-monitor/core/http-monitor-core.module';
 import { HttpPingBucketCoreModule } from '../../src/http-ping-bucket/core/http-ping-bucket-core.module';
 import { HttpPingCoreModule } from '../../src/http-ping/core/http-ping-core.module';
-import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/schedule/http-ping-scheduler.service';
 import { LogCoreModule } from '../../src/log/core/log-core.module';
 import { MetricRegisterEntryEntity } from '../../src/metric-register/core/entities/metric-register-entry.entity';
 import { MetricRegisterCoreModule } from '../../src/metric-register/core/metric-register-core.module';
@@ -66,6 +65,7 @@ import { SubscriptionCoreModule } from '../../src/subscription/core/subscription
 import { AuditLogUtils } from './audit-log-utils';
 import { AuditLogCreationModule } from '../../src/audit-log/creation/audit-log-creation.module';
 import { UserUtils } from './user.utils';
+import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/pinger/http-ping-pinger.service';
 
 export async function createTestApp() {
   const module: TestingModule = await Test.createTestingModule({

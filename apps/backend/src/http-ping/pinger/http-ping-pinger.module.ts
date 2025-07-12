@@ -3,22 +3,19 @@ import { HttpMonitorReadModule } from 'src/http-monitor/read/http-monitor-read.m
 import { getEnvConfig } from 'src/shared/configs/env-configs';
 import { ProjectReadModule } from '../../project/read/project-read.module';
 import { HttpPingWriteModule } from '../write/http-ping-write.module';
-import { HttpPingSchedulerDataService } from './http-ping-scheduler.data-service';
-import {
-  HttpPingSchedulerService,
-  MAX_CONCURRENT_REQUESTS_TOKEN,
-} from './http-ping-scheduler.service';
+import { HttpPingPingerDataService } from './http-ping-pinger.data-service';
+import { HttpPingPingerService, MAX_CONCURRENT_REQUESTS_TOKEN } from './http-ping-pinger.service';
 
 @Module({
   imports: [HttpMonitorReadModule, HttpPingWriteModule, ProjectReadModule],
   providers: [
-    HttpPingSchedulerService,
-    HttpPingSchedulerDataService,
+    HttpPingPingerService,
+    HttpPingPingerDataService,
     {
       provide: MAX_CONCURRENT_REQUESTS_TOKEN,
       useValue: getEnvConfig().pings.maxConcurrentRequests,
     },
   ],
-  exports: [HttpPingSchedulerService],
+  exports: [HttpPingPingerService, HttpPingPingerDataService],
 })
-export class HttpPingSchedulerModule {}
+export class HttpPingPingerModule {}
