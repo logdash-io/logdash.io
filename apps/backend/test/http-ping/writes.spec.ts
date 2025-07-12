@@ -1,17 +1,17 @@
 import * as nock from 'nock';
-import { HttpPingSchedulerService } from '../../src/http-ping/schedule/http-ping-scheduler.service';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
+import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
 
 describe('Http Ping (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
-  let schedulerService: HttpPingSchedulerService;
+  let schedulerService: HttpPingPingerService;
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
-    schedulerService = bootstrap.app.get(HttpPingSchedulerService);
+    schedulerService = bootstrap.app.get(HttpPingPingerService);
     nock(URL_STUB).persist().get('/').delay(10).reply(200, 'ok');
   });
 

@@ -1,20 +1,20 @@
 import * as nock from 'nock';
 import { firstValueFrom, take, toArray } from 'rxjs';
 import { HttpPingCoreController } from '../../src/http-ping/core/http-ping-core.controller';
-import { HttpPingSchedulerService } from '../../src/http-ping/schedule/http-ping-scheduler.service';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
 
 describe('Http Ping (SSE)', () => {
   let controller: HttpPingCoreController;
-  let schedulerService: HttpPingSchedulerService;
+  let schedulerService: HttpPingPingerService;
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
     controller = bootstrap.app.get(HttpPingCoreController);
-    schedulerService = bootstrap.app.get(HttpPingSchedulerService);
+    schedulerService = bootstrap.app.get(HttpPingPingerService);
     nock(URL_STUB).persist().get('/').delay(10).reply(200);
   });
 
