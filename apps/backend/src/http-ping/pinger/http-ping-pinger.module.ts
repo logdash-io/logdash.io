@@ -16,6 +16,6 @@ import { HttpPingPingerService, MAX_CONCURRENT_REQUESTS_TOKEN } from './http-pin
       useValue: getEnvConfig().pings.maxConcurrentRequests,
     },
   ],
-  exports: [HttpPingPingerService],
+  exports: [HttpPingPingerService, HttpPingPingerDataService],
 })
 export class HttpPingPingerModule {}
