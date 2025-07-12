@@ -30,7 +30,10 @@
   let loadedPosthogInstance: PostHog | null = $state(null);
 
   $effect.pre(() => {
-    if (browser && !isDev()) {
+    if (!browser) {
+      return;
+    }
+    if (!isDev()) {
       posthog.init(envConfig.posthog.key, {
         api_host: envConfig.posthog.proxy,
         ui_host: envConfig.posthog.host,
@@ -40,8 +43,9 @@
           loadedPosthogInstance = ph;
         },
       });
-      setContext('posthog', posthog);
     }
+
+    setContext('posthog', posthog);
   });
   $effect.pre(() => {
     setContext('tabId', `tab-${uuid()}`);

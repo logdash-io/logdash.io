@@ -25,8 +25,8 @@
   $effect(() => {
     logger.debug(`Syncing pings for project monitor: ${projectMonitor?.id}`);
 
-    if (!projectMonitor || !projectId) {
-      logger.warn('No project monitor found for syncing pings.');
+    if (!projectMonitor || !projectId || pings.length) {
+      logger.warn('Skipping pings sync.');
       return;
     }
 

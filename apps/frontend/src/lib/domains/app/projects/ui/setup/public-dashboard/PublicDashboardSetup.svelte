@@ -1,19 +1,20 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
+  import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import { stripProtocol } from '$lib/domains/shared/utils/url.js';
-  import { onMount, type Snippet } from 'svelte';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { publicDashboardPrivateState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-private.state.svelte.js';
   import PublicDashboard from '$lib/domains/app/projects/ui/PublicDashboard.svelte';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
-  import { debounce } from '$lib/domains/shared/utils/debounce.js';
-  import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
+  import { debounce } from '$lib/domains/shared/utils/debounce.js';
+  import { stripProtocol } from '$lib/domains/shared/utils/url.js';
+  import { CheckIcon } from 'lucide-svelte';
+  import { onMount, type Snippet } from 'svelte';
+  import { cubicInOut } from 'svelte/easing';
   import { fly, scale } from 'svelte/transition';
-  import { cubicInOut, quadInOut } from 'svelte/easing';
-  import { ArrowLeftIcon, CheckIcon } from 'lucide-svelte';
-  import { goto } from '$app/navigation';
+  import CustomDomainSetup from './CustomDomainSetup.svelte';
 
   type Props = {
     dashboard_id: string;
@@ -158,6 +159,14 @@
       </div>
     </div>
 
+    <div class="collapse-open">
+      <div class="px-1 py-4 font-semibold">
+        <span>3. Configure custom domain (optional)</span>
+      </div>
+
+      <CustomDomainSetup dashboardId={dashboard_id} />
+    </div>
+
     <div class="mt-auto flex h-5 items-center justify-center gap-4 text-sm">
       {#if isLoading}
         <span class="loading loading-spinner loading-xs"></span>
@@ -171,7 +180,7 @@
 
     <div class="flex items-center gap-4">
       <button
-        class="btn btn-secondary btn-soft flex-1 whitespace-nowrap"
+        class="btn btn-secondary flex-1 whitespace-nowrap"
         data-posthog-id="public-dashboard-setup-back-button"
         onclick={() => {
           goto(`/app/clusters/${page.params.cluster_id}`, {
@@ -179,7 +188,7 @@
           });
         }}
       >
-        Cancel
+        Go back
       </button>
 
       {@render claimer(dashboard?.isPublic)}

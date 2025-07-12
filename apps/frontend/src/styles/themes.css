@@ -21,7 +21,7 @@
   --color-success: var(--color-green-600);
 
   --color-error: var(--color-red-600);
-  --color-error-content: var(--color-red-500);
+  --color-error-content: var(--color-neutral-100);
 
   --color-warning: var(--color-amber-500);
   --color-warning-content: var(--color-amber-500);
