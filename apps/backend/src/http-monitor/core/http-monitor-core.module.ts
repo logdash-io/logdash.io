@@ -6,6 +6,7 @@ import { HttpMonitorCoreController } from './http-monitor-core.controller';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { HttpMonitorStatusModule } from '../status/http-monitor-status.module';
 import { HttpPingPingerModule } from '../../http-ping/pinger/http-ping-pinger.module';
+import { HttpPingPushModule } from '../../http-ping/push/http-ping-push.module';
 import { HttpMonitorRemovalModule } from '../removal/http-monitor-removal.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { HttpMonitorRemovalModule } from '../removal/http-monitor-removal.module
     HttpMonitorLimitModule,
     HttpMonitorStatusModule,
     HttpPingPingerModule,
+    HttpPingPushModule,
     HttpMonitorRemovalModule,
     ...ClusterMemberGuardImports,
   ],
