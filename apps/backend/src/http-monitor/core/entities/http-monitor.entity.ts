@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { HttpMonitorMode } from '../enums/http-monitor-mode.enum';
 
 @Schema({ collection: 'httpMonitors', timestamps: true })
 export class HttpMonitorEntity {
@@ -16,6 +17,9 @@ export class HttpMonitorEntity {
 
   @Prop({ required: true })
   notificationChannelsIds: string[];
+
+  @Prop({ required: true, enum: HttpMonitorMode, default: HttpMonitorMode.Pull })
+  mode: HttpMonitorMode;
 
   createdAt: Date;
   updatedAt: Date;

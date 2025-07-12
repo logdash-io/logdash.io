@@ -4,7 +4,8 @@ import { HttpMonitorReadModule } from 'src/http-monitor/read/http-monitor-read.m
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { HttpPingEventModule } from '../events/http-ping-event.module';
 import { HttpPingReadModule } from '../read/http-ping-read.module';
-import { HttpPingSchedulerModule } from '../schedule/http-ping-scheduler.module';
+import { HttpPingPingerModule } from '../pinger/http-ping-pinger.module';
+import { HttpPingPushModule } from '../push/http-ping-push.module';
 import { HttpPingTtlModule } from '../ttl/http-ping-ttl.module';
 import { HttpPingWriteModule } from '../write/http-ping-write.module';
 import { HttpPingCoreController } from './http-ping-core.controller';
@@ -12,7 +13,8 @@ import { HttpPingCoreController } from './http-ping-core.controller';
 @Module({
   imports: [
     HttpModule,
-    HttpPingSchedulerModule,
+    HttpPingPingerModule,
+    HttpPingPushModule,
     HttpPingTtlModule,
     HttpPingWriteModule,
     HttpPingReadModule,

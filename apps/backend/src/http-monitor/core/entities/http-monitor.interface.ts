@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { HttpMonitorStatus } from '../../status/enum/http-monitor-status.enum';
+import { HttpMonitorMode } from '../enums/http-monitor-mode.enum';
 
 export class HttpMonitorNormalized {
   id: string;
@@ -7,6 +8,7 @@ export class HttpMonitorNormalized {
   name: string;
   url: string;
   notificationChannelsIds: string[];
+  mode: HttpMonitorMode;
 }
 
 export class HttpMonitorSerialized {
@@ -24,6 +26,9 @@ export class HttpMonitorSerialized {
 
   @ApiProperty()
   notificationChannelsIds: string[];
+
+  @ApiProperty({ enum: HttpMonitorMode })
+  mode: HttpMonitorMode;
 
   @ApiProperty({ enum: HttpMonitorStatus })
   lastStatus: HttpMonitorStatus;

@@ -23,7 +23,7 @@ import { HttpMonitorSerializer } from './entities/http-monitor.serializer';
 import { UpdateHttpMonitorBody } from './dto/update-http-monitor.body';
 import { ProjectReadService } from '../../project/read/project-read.service';
 import { HttpMonitorStatusService } from '../status/http-monitor-status.service';
-import { HttpPingSchedulerService } from '../../http-ping/schedule/http-ping-scheduler.service';
+import { HttpPingPingerService } from '../../http-ping/pinger/http-ping-pinger.service';
 import { DemoEndpoint } from 'src/demo/decorators/demo-endpoint.decorator';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
 import { HttpMonitorRemovalService } from '../removal/http-monitor-removal.service';
@@ -39,7 +39,7 @@ export class HttpMonitorCoreController {
     private readonly httpMonitorLimitService: HttpMonitorLimitService,
     private readonly projectReadService: ProjectReadService,
     private readonly httpMonitorStatusService: HttpMonitorStatusService,
-    private readonly httpPingSchedulerService: HttpPingSchedulerService,
+    private readonly httpPingPingerService: HttpPingPingerService,
     private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
     private readonly notificationChannelReadService: NotificationChannelReadService,
   ) {}
@@ -68,7 +68,7 @@ export class HttpMonitorCoreController {
     const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
 
     if (process.env.NODE_ENV !== 'test') {
-      void this.httpPingSchedulerService.pingSingleMonitor(httpMonitor.id);
+      void this.httpPingPingerService.pingSingleMonitor(httpMonitor.id);
     }
 
     return HttpMonitorSerializer.serialize(httpMonitor, status);
