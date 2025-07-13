@@ -8,7 +8,6 @@ import {
   IsString,
   IsUrl,
   MaxLength,
-  ValidateIf,
 } from 'class-validator';
 import { HttpMonitorMode } from '../enums/http-monitor-mode.enum';
 
@@ -19,16 +18,16 @@ export class CreateHttpMonitorBody {
   name: string;
 
   @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
   @MaxLength(1024)
   @IsUrl()
-  @IsOptional()
   url?: string;
 
   @ApiPropertyOptional({ enum: HttpMonitorMode, default: HttpMonitorMode.Pull })
   @IsOptional()
   @IsEnum(HttpMonitorMode)
-  mode: HttpMonitorMode;
+  mode: HttpMonitorMode = HttpMonitorMode.Pull;
 
   @ApiPropertyOptional()
   @IsOptional()
