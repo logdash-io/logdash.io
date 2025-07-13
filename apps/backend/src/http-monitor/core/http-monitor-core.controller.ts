@@ -30,6 +30,7 @@ import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interce
 import { HttpMonitorRemovalService } from '../removal/http-monitor-removal.service';
 import { NotificationChannelReadService } from '../../notification-channel/read/notification-channel-read.service';
 import { Public } from '../../auth/core/decorators/is-public';
+import { HttpMonitorMode } from './enums/http-monitor-mode.enum';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -55,6 +56,10 @@ export class HttpMonitorCoreController {
     @Body() dto: CreateHttpMonitorBody,
     @CurrentUserId() userId: string,
   ): Promise<HttpMonitorSerialized> {
+    if (dto.mode === HttpMonitorMode.Pull && !dto.url) {
+      throw new BadRequestException('URL is required for pull monitors');
+    }
+
     const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(

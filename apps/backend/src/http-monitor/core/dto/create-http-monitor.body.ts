@@ -19,10 +19,10 @@ export class CreateHttpMonitorBody {
   name: string;
 
   @ApiPropertyOptional()
-  @ValidateIf((o) => !o.mode || o.mode === HttpMonitorMode.Pull)
   @IsString()
   @MaxLength(1024)
   @IsUrl()
+  @IsOptional()
   url?: string;
 
   @ApiPropertyOptional({ enum: HttpMonitorMode, default: HttpMonitorMode.Pull })
