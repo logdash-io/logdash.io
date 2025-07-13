@@ -70,7 +70,7 @@ export class HttpMonitorStatusChangeService {
       httpMonitorId: dto.httpMonitorId,
       newStatus: dto.newStatus,
       name: httpMonitor.name,
-      url: httpMonitor.url,
+      url: httpMonitor.url ?? 'push monitor',
       errorMessage: dto.errorMessage,
       statusCode: dto.statusCode,
     });

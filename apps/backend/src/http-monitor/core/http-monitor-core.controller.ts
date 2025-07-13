@@ -56,10 +56,6 @@ export class HttpMonitorCoreController {
     @Body() dto: CreateHttpMonitorBody,
     @CurrentUserId() userId: string,
   ): Promise<HttpMonitorSerialized> {
-    if (dto.mode === HttpMonitorMode.Pull && !dto.url) {
-      throw new BadRequestException('URL is required for pull monitors');
-    }
-
     const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(

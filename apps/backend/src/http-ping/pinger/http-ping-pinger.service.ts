@@ -132,7 +132,7 @@ export class HttpPingPingerService {
   private async pingMonitor(monitor: HttpMonitorNormalized): Promise<CreateHttpPingDto> {
     const startTime = Date.now();
     try {
-      const response = await this.makeHttpRequest(monitor.url);
+      const response = await this.makeHttpRequest(monitor.url!);
       return this.createPingResult(monitor, response, startTime);
     } catch (error) {
       return this.createPingResult(monitor, null, startTime, error);
