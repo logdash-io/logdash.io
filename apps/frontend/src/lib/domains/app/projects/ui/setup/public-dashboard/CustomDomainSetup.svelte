@@ -6,6 +6,8 @@
   import { isDev } from '$lib/domains/shared/utils/is-dev.util.js';
   import { AlertTriangleIcon, CheckIcon, XIcon } from 'lucide-svelte';
   import { onMount } from 'svelte';
+  import Highlight from 'svelte-highlight';
+  import { bash } from 'svelte-highlight/languages';
 
   type Props = {
     dashboardId: string;
@@ -21,8 +23,11 @@
   const error = $derived(customDomainsState.error);
   const hasDomain = $derived(!!customDomain);
   const canSetup = $derived(userState.canSetupCustomDomain);
+  const pollingTimer = $derived(
+    customDomainsState.getPollingTimer(dashboardId),
+  );
 
-  onMount(() => {
+  $effect(() => {
     if (canSetup) {
       customDomainsState.loadCustomDomain(dashboardId);
     }
@@ -40,7 +45,7 @@
     };
   });
 
-  const handleSaveDomain = async (): Promise<void> => {
+  const saveDomain = async (): Promise<void> => {
     if (!domainInput.trim()) return;
 
     await customDomainsState.createCustomDomain(dashboardId, {
@@ -52,7 +57,16 @@
   const handleDeleteDomain = async (): Promise<void> => {
     if (!customDomain) return;
 
+    const confirmed = confirm(
+      `Are you sure you want to delete the custom domain "${customDomain.domain}"? This action cannot be undone.`,
+    );
+    if (!confirmed) return;
+
     await customDomainsState.deleteCustomDomain(dashboardId);
+  };
+
+  const handleManualCheck = async (): Promise<void> => {
+    await customDomainsState.manualCheck(dashboardId);
   };
 </script>
 
@@ -77,14 +91,20 @@
               placeholder="status.example.com"
               type="text"
               disabled={isLoading}
+              onkeydown={(e) => {
+                if (e.key === 'Enter' && !isLoading && domainInput.trim()) {
+                  e.preventDefault();
+                  saveDomain();
+                }
+              }}
             />
             <button
               class="btn btn-primary btn-sm shrink-0"
-              onclick={handleSaveDomain}
+              onclick={saveDomain}
               disabled={isLoading || !domainInput.trim()}
             >
               {#if isLoading}
-                <span class="loading loading-spinner loading-xs"></span>
+                <span class="loading loading-spinner w-3"></span>
               {/if}
               Save
             </button>
@@ -103,7 +123,7 @@
               disabled={isLoading}
             >
               {#if isLoading}
-                <span class="loading loading-spinner loading-xs"></span>
+                <span class="loading loading-spinner w-3"></span>
               {/if}
               Delete
             </button>
@@ -144,7 +164,7 @@
       >
         2. Configure DNS records
       </div>
-      <div class="collapse-content">
+      <div class="collapse-content w-full overflow-auto">
         {#if !hasDomain}
           <p class="text-base-content/50 text-sm">
             Add a custom domain first to see DNS configuration instructions.
@@ -155,42 +175,32 @@
             or AWS Route 53.
           </p>
 
-          <div class="space-y-3">
-            <div class="border-base-100 rounded-xl border p-4">
-              <p class="mb-3 text-sm">
-                To serve your page at <span class="font-semibold break-all">
-                  {customDomain.domain}
-                </span>
-                you must add these DNS records.
-              </p>
+          <div class="border-base-100 space-y-3 rounded-xl border p-4">
+            <p class="text-sm">
+              To serve your page at <span class="font-semibold break-all">
+                {customDomain.domain}
+              </span>
+              you must add these DNS records.
+            </p>
 
-              <div
-                class="alert alert-warning bg-warning/10 border-warning/30 rounded-lg"
-              >
-                <AlertTriangleIcon class="h-4 w-4 shrink-0" />
-                <span class="text-sm">
-                  If you're using Cloudflare, be careful to create these records
-                  in 'DNS-only' mode, not proxy mode.
-                </span>
-              </div>
+            <div
+              class="alert alert-warning bg-warning/10 border-warning/30 rounded-lg"
+            >
+              <AlertTriangleIcon class="h-4 w-4 shrink-0" />
+              <span class="text-sm">
+                If you're using Cloudflare, be careful to create these records
+                in 'DNS-only' mode, not proxy mode.
+              </span>
+            </div>
 
-              <div class="overflow-x-auto">
-                <table class="table-zebra table w-full">
-                  <tbody>
-                    <tr>
-                      <td class="font-mono text-xs sm:text-sm">CNAME</td>
-                      <td
-                        class="min-w-0 font-mono text-xs break-all sm:text-sm"
-                      >
-                        {customDomain.domain}
-                      </td>
-                      <td class="font-mono text-xs sm:text-sm">
-                        {isDev() ? 'dev-statuspage' : 'statuspage'}.logdash.io
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+            <div
+              class="ld-card-base w-full overflow-x-auto overflow-y-hidden rounded-xl text-sm"
+            >
+              <Highlight
+                class="code-snippet selection:bg-base-100"
+                code={`CNAME ${customDomain.domain} ${isDev() ? 'dev-statuspage' : 'statuspage'}.logdash.io`}
+                language={bash}
+              />
             </div>
           </div>
         {/if}
@@ -223,23 +233,41 @@
         3. Verify your configuration
       </div>
       <div class="collapse-content">
-        <div class="flex items-center gap-3 text-sm">
-          {#if customDomain?.status === 'verifying'}
-            <div class="text-warning flex items-center gap-4">
-              <span class="loading loading-spinner loading-xs"></span>
-              <div>
-                <div class="text-warning">Domain is pending verification</div>
+        <div class="flex items-center justify-between gap-3 text-sm">
+          <div class="flex items-center gap-3">
+            {#if customDomain?.status === 'verifying'}
+              <div class="text-warning flex items-center gap-3">
+                <span class="loading loading-spinner w-3"></span>
+                <div>
+                  <div class="text-warning">Domain is pending verification</div>
+                </div>
               </div>
-            </div>
-          {:else if customDomain?.status === 'verified'}
-            <div class="text-success flex items-center gap-2">
-              <CheckIcon class="h-4 w-4 shrink-0" />
-              <span>Domain is verified</span>
-            </div>
-          {:else}
-            <div class="text-error flex items-center gap-2">
-              <XIcon class="h-4 w-4 shrink-0" />
-              <span>Domain verification failed</span>
+            {:else if customDomain?.status === 'verified'}
+              <div class="text-success flex items-center gap-2">
+                <CheckIcon class="h-4 w-4 shrink-0" />
+                <span>Domain is verified</span>
+              </div>
+            {:else}
+              <div class="text-error flex items-center gap-2">
+                <XIcon class="h-4 w-4 shrink-0" />
+                <span>Domain verification failed</span>
+              </div>
+            {/if}
+          </div>
+
+          {#if customDomain?.status === 'verifying'}
+            <div class="flex items-center gap-2">
+              <button
+                class="btn btn-secondary btn-sm"
+                disabled={isLoading}
+                onclick={handleManualCheck}
+              >
+                {#if isLoading}
+                  <span class="loading loading-spinner w-3"></span>
+                {/if}
+
+                Check
+              </button>
             </div>
           {/if}
         </div>

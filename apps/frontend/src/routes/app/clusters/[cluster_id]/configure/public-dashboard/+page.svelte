@@ -35,6 +35,9 @@
               toast.success(
                 'Dashboard is now unpublished, you can still configure it.',
               );
+            })
+            .finally(() => {
+              tryingToClaim = false;
             });
         }}
         in:fade={{ duration: 100 }}
@@ -70,6 +73,9 @@
                 toast.success('Dashboard is now public.');
 
                 window.open(`/d/${data.dashboard_id}`, '_blank');
+              })
+              .finally(() => {
+                tryingToClaim = false;
               });
           }}
           in:fade={{ duration: 100 }}

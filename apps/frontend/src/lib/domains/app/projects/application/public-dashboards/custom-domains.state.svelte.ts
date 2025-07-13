@@ -8,6 +8,8 @@ export class CustomDomainsState {
   private _customDomains = $state<Record<string, CustomDomain | null>>({});
   private _loading = $state<Record<string, boolean>>({});
   private _error = $state<string | null>(null);
+  private _pollingTimers = $state<Record<string, number>>({});
+  private _pollingIntervals = new Map<string, NodeJS.Timeout>();
 
   public getCustomDomain(publicDashboardId: string): CustomDomain | null {
     return this._customDomains[publicDashboardId] || null;
@@ -19,6 +21,15 @@ export class CustomDomainsState {
 
   public get error(): string | null {
     return this._error;
+  }
+
+  public getPollingTimer(publicDashboardId: string): number {
+    return this._pollingTimers[publicDashboardId] || 0;
+  }
+
+  public async manualCheck(publicDashboardId: string): Promise<void> {
+    await this.loadCustomDomain(publicDashboardId);
+    this._resetPollingTimer(publicDashboardId);
   }
 
   public async loadCustomDomain(publicDashboardId: string): Promise<void> {
@@ -93,6 +104,10 @@ export class CustomDomainsState {
     this._error = message;
   }
 
+  private _resetPollingTimer(publicDashboardId: string): void {
+    this._pollingTimers[publicDashboardId] = 30;
+  }
+
   public startStatusPolling(publicDashboardId: string): (() => void) | null {
     const customDomain = this._customDomains[publicDashboardId];
 
@@ -100,12 +115,27 @@ export class CustomDomainsState {
       return null;
     }
 
-    const interval = setInterval(async () => {
+    this._resetPollingTimer(publicDashboardId);
+
+    const timerInterval = setInterval(() => {
+      this._pollingTimers[publicDashboardId] = Math.max(
+        0,
+        this._pollingTimers[publicDashboardId] - 1,
+      );
+    }, 1000);
+
+    const pollingInterval = setInterval(async () => {
       await this.loadCustomDomain(publicDashboardId);
+      this._resetPollingTimer(publicDashboardId);
     }, 30000);
 
+    this._pollingIntervals.set(publicDashboardId, timerInterval);
+
     return () => {
-      clearInterval(interval);
+      clearInterval(timerInterval);
+      clearInterval(pollingInterval);
+      this._pollingIntervals.delete(publicDashboardId);
+      this._pollingTimers[publicDashboardId] = 0;
     };
   }
 }

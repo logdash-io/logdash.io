@@ -5,6 +5,7 @@ alwaysApply: true
 ---
 
 do NOT add any comments to the code, never.
+instead of inline class conditions, use svelte's conditional classes like class={['class1', { 'class2': condition }]}
 
 ### 1. Code should read like a newspaper
 
@@ -44,4 +45,6 @@ do NOT add any comments to the code, never.
 - do NOT include bootstrap classes, project is styled with daisyui+tailwind - see app.css for custom classess
 - respect @deprecated annotations, do not use or extend deprecated code
 - do not add new things to logdash.api.ts, it's deprecated. Use infrastructure services instead
-- instead of inline class conditions, use svelte's conditional classes like class={['class1', { 'class2': condition }]}
+- try to use early returns instead of big nested if statements
+- use ts-pattern match instead of switch statements
+- instead of naming function in the UI handleSomething, use onSomething instead

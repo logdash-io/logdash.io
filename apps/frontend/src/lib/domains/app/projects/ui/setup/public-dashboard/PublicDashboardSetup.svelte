@@ -103,7 +103,9 @@
         <span>1. Select http monitors</span>
       </div>
 
-      <div class="w-full max-w-full space-y-2 truncate">
+      <div
+        class="border-base-100 w-full max-w-full truncate overflow-hidden rounded-xl border"
+      >
         {#if monitoringState.monitors.length === 0}
           <div class="flex items-center justify-center py-4">
             <span class="text-secondary/70 text-center">
@@ -115,13 +117,16 @@
           </div>
         {/if}
 
-        {#each monitoringState.monitors as monitor}
+        {#each monitoringState.monitors as monitor, index}
           <label
-            class="border-base-100 hover:bg-base-100/50 flex cursor-pointer items-center gap-1 truncate rounded-xl border p-2 px-3 transition-all select-none"
+            class={[
+              'hover:bg-base-100/50 flex cursor-pointer items-center gap-1 truncate p-2 px-3 transition-all select-none',
+              { 'border-base-100 border-t': index > 0 },
+            ]}
           >
             <input
               type="checkbox"
-              class="checkbox checkbox-sm checkbox-primary"
+              class="checkbox checkbox-xs checkbox-primary"
               checked={dashboardMonitors.includes(monitor.id)}
               disabled={isLoading}
               onchange={() => {
@@ -180,7 +185,13 @@
 
     <div class="flex items-center gap-4">
       <button
-        class="btn btn-secondary flex-1 whitespace-nowrap"
+        class={[
+          'btn flex-1 whitespace-nowrap',
+          {
+            'btn-secondary': !dashboard?.isPublic,
+            'btn-primary': dashboard?.isPublic,
+          },
+        ]}
         data-posthog-id="public-dashboard-setup-back-button"
         onclick={() => {
           goto(`/app/clusters/${page.params.cluster_id}`, {
