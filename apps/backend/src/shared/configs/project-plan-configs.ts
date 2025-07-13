@@ -1,3 +1,4 @@
+import { HttpPingCron } from '../../http-ping/core/enums/http-ping-cron.enum';
 import { MetricGranularity } from '../../metric-shared/enums/metric-granularity.enum';
 import { ProjectTier } from '../../project/core/enums/project-tier.enum';
 
@@ -16,6 +17,7 @@ export interface ProjectPlanConfig {
   };
   httpMonitors: {
     maxNumberOfMonitors: number;
+    pingFrequency: HttpPingCron;
   };
 }
 
@@ -51,6 +53,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     },
     httpMonitors: {
       maxNumberOfMonitors: 1,
+      pingFrequency: HttpPingCron.Every5Minutes,
     },
   },
   [ProjectTier.EarlyUser]: {
@@ -68,6 +71,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     },
     httpMonitors: {
       maxNumberOfMonitors: 1,
+      pingFrequency: HttpPingCron.Every5Minutes,
     },
   },
 
@@ -87,6 +91,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     },
     httpMonitors: {
       maxNumberOfMonitors: 1,
+      pingFrequency: HttpPingCron.Every5Minutes,
     },
   },
   [ProjectTier.Builder]: {
@@ -104,6 +109,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     },
     httpMonitors: {
       maxNumberOfMonitors: 1,
+      pingFrequency: HttpPingCron.EveryMinute,
     },
   },
   [ProjectTier.Pro]: {
@@ -121,6 +127,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     },
     httpMonitors: {
       maxNumberOfMonitors: 1,
+      pingFrequency: HttpPingCron.Every15Seconds,
     },
   },
 
@@ -141,6 +148,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     },
     httpMonitors: {
       maxNumberOfMonitors: 1,
+      pingFrequency: HttpPingCron.Every5Minutes,
     },
   },
   [ProjectTier.Admin]: {
@@ -158,6 +166,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     },
     httpMonitors: {
       maxNumberOfMonitors: 100,
+      pingFrequency: HttpPingCron.EveryMinute,
     },
   },
 };

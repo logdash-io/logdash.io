@@ -1,17 +1,17 @@
 import * as nock from 'nock';
-import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
-import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
+import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('Http Ping (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
-  let pingerService: HttpPingPingerService;
+  let schedulerService: HttpPingPingerService;
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
-    pingerService = bootstrap.app.get(HttpPingPingerService);
+    schedulerService = bootstrap.app.get(HttpPingPingerService);
     nock(URL_STUB).persist().get('/').delay(10).reply(200, 'ok');
   });
 
@@ -41,8 +41,8 @@ describe('Http Ping (writes)', () => {
     });
 
     // when
-    await pingerService.tryPingMonitors([ProjectTier.EarlyBird]);
-    await pingerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
 
     // then
     const pingsA = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -70,7 +70,7 @@ describe('Http Ping (writes)', () => {
     }
 
     // when
-    await pingerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
 
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
@@ -101,7 +101,7 @@ describe('Http Ping (writes)', () => {
     );
 
     // when
-    await pingerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
 
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
@@ -122,7 +122,7 @@ describe('Http Ping (writes)', () => {
     nock(anotherUrl).persist().get('/').delay(10).reply(403);
 
     // when
-    await pingerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
 
     // then
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -154,7 +154,7 @@ describe('Http Ping (writes)', () => {
     });
 
     // when
-    await pingerService.tryPingMonitors([ProjectTier.Free]);
+    await schedulerService.tryPingMonitors([ProjectTier.Free]);
 
     // then
     const pingsA = await bootstrap.utils.httpPingUtils.getMonitorPings({

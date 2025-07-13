@@ -9,6 +9,7 @@ import {
   HttpMonitorSerialized,
 } from '../../src/http-monitor/core/entities/http-monitor.interface';
 import { HttpMonitorSerializer } from '../../src/http-monitor/core/entities/http-monitor.serializer';
+import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
 export const URL_STUB = 'https://example.com';
 
 export class HttpMonitorUtils {
@@ -46,6 +47,10 @@ export class HttpMonitorUtils {
 
     if (!dto.name) {
       dto.name = 'Example monitor';
+    }
+
+    if (!dto.mode) {
+      dto.mode = HttpMonitorMode.Pull;
     }
 
     return dto as CreateHttpMonitorBody;

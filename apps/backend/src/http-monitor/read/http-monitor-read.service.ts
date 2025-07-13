@@ -75,4 +75,28 @@ export class HttpMonitorReadService {
     const result = await this.httpMonitorModel.exists({ projectId });
     return result !== null;
   }
+
+  public async *readManyByProjectIdsCursorWithMode(
+    projectIds: string[],
+    mode: string,
+  ): AsyncGenerator<HttpMonitorNormalized> {
+    const cursor = this.httpMonitorModel
+      .find({ projectId: { $in: projectIds }, mode })
+      .sort({ createdAt: -1 })
+      .cursor();
+
+    for await (const entity of cursor) {
+      yield HttpMonitorSerializer.normalize(entity);
+    }
+  }
+
+  public async readManyByMode(mode: string): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ mode })
+      .sort({ createdAt: -1 })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+
+    return HttpMonitorSerializer.normalizeMany(entities);
+  }
 }

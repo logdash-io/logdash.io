@@ -33,6 +33,7 @@ export class HttpMonitorWriteService {
       name: dto.name,
       url: dto.url,
       notificationChannelsIds: dto.notificationChannelsIds,
+      mode: dto.mode,
     });
 
     this.auditLog.create({
@@ -96,6 +97,9 @@ export class HttpMonitorWriteService {
     }
     if (dto.url) {
       updateQuery.url = dto.url;
+    }
+    if (dto.mode) {
+      updateQuery.mode = dto.mode;
     }
 
     if (dto.notificationChannelsIds) {

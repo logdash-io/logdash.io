@@ -10,6 +10,7 @@ import {
   AuditLogNotificationChannelAction,
 } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
+import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
 
 describe('HttpMonitorCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -41,6 +42,7 @@ describe('HttpMonitorCoreController (writes)', () => {
         name: 'some name',
         url: 'https://google.com',
         notificationChannelsIds: [notificationChannel.id],
+        mode: HttpMonitorMode.Pull,
       };
 
       // when
@@ -158,6 +160,7 @@ describe('HttpMonitorCoreController (writes)', () => {
         name: 'some name',
         url: 'https://google.com',
         notificationChannelsIds: [notificationChannel.id],
+        mode: HttpMonitorMode.Pull,
       };
 
       // when

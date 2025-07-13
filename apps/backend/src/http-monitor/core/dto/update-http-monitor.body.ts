@@ -1,5 +1,14 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsMongoId, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsMongoId,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+} from 'class-validator';
+import { HttpMonitorMode } from '../enums/http-monitor-mode.enum';
 
 export class UpdateHttpMonitorBody {
   @ApiPropertyOptional()
@@ -14,6 +23,11 @@ export class UpdateHttpMonitorBody {
   @MaxLength(1024)
   @IsUrl()
   url?: string;
+
+  @ApiPropertyOptional({ enum: HttpMonitorMode })
+  @IsOptional()
+  @IsEnum(HttpMonitorMode)
+  mode?: HttpMonitorMode;
 
   @ApiPropertyOptional()
   @IsOptional()
