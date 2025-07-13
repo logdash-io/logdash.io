@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { promisify } from 'util';
-import * as dns from 'dns';
+import dns from 'dns/promises';
 
 @Injectable()
 export class CustomDomainDnsService {
-  private readonly resolveCname = promisify(dns.resolveCname);
-
   public async checkCnameRecord(domain: string): Promise<string | null> {
     try {
-      const results = await this.resolveCname(domain);
+      const results = await dns.resolveCname(domain);
       if (results && results.length > 0) {
         return results[0];
       }
