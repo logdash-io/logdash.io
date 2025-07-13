@@ -171,7 +171,7 @@ export class HttpMonitorCoreController {
   }
 
   @Public()
-  @Post('/http_monitors/:httpMonitorId/push')
+  @Post('/ping/:httpMonitorId')
   async recordPing(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
     await this.httpPingPushService.record(httpMonitorId);
   }
