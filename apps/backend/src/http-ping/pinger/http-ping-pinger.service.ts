@@ -1,19 +1,19 @@
 import { Logger, Metrics } from '@logdash/js-sdk';
 import { Inject, Injectable } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import { HttpMonitorNormalized } from 'src/http-monitor/core/entities/http-monitor.interface';
 import { HttpMonitorMode } from 'src/http-monitor/core/enums/http-monitor-mode.enum';
-import { projectTierFromUserTier } from 'src/project/core/enums/project-tier.enum';
+import { ProjectTier } from 'src/project/core/enums/project-tier.enum';
 import { ProjectReadService } from 'src/project/read/project-read.service';
-import { UserPlanConfigs } from 'src/shared/configs/user-plan-configs';
-import { UserTier } from 'src/user/core/enum/user-tier.enum';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 import { HttpPingEventEmitter } from '../events/http-ping-event.emitter';
 import { CreateHttpPingDto } from '../write/dto/create-http-ping.dto';
 import { HttpPingWriteService } from '../write/http-ping-write.service';
 import { HttpPingPingerDataService } from './http-ping-pinger.data-service';
+import { HttpPingCron } from '../core/enums/http-ping-cron.enum';
+import { ProjectPlanConfigs } from '../../shared/configs/project-plan-configs';
 
 interface QueueItem {
   monitor: HttpMonitorNormalized;
@@ -37,48 +37,58 @@ export class HttpPingPingerService {
     private readonly projectReadService: ProjectReadService,
   ) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(HttpPingCron.Every15Seconds)
+  private async triggerPingMonitors15s(): Promise<void> {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    const tiers = this.getTiersWithFrequency(HttpPingCron.Every15Seconds);
+    await this.tryPingMonitors(tiers);
+  }
+
+  @Cron(HttpPingCron.EveryMinute)
   private async triggerPingMonitors1m(): Promise<void> {
     if (process.env.NODE_ENV === 'test') {
       return;
     }
 
-    const tiers = this.getTiersWithFrequency(CronExpression.EVERY_MINUTE);
+    const tiers = this.getTiersWithFrequency(HttpPingCron.EveryMinute);
     await this.tryPingMonitors(tiers);
   }
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(HttpPingCron.Every5Minutes)
   private async triggerPingMonitors5m(): Promise<void> {
     if (process.env.NODE_ENV === 'test') {
       return;
     }
 
-    const tiers = this.getTiersWithFrequency(CronExpression.EVERY_5_MINUTES);
+    const tiers = this.getTiersWithFrequency(HttpPingCron.Every5Minutes);
     await this.tryPingMonitors(tiers);
   }
 
-  private getTiersWithFrequency(frequency: CronExpression): UserTier[] {
-    return Object.entries(UserPlanConfigs)
-      .filter(([_, value]) => value.pings.frequency === frequency)
-      .map(([key]) => key as keyof typeof UserPlanConfigs);
+  private getTiersWithFrequency(frequency: HttpPingCron): ProjectTier[] {
+    return Object.entries(ProjectPlanConfigs)
+      .filter(([_, value]) => value.httpMonitors.pingFrequency === frequency)
+      .map(([key]) => key as keyof typeof ProjectPlanConfigs);
   }
 
-  public async tryPingMonitors(userTiers: UserTier[]): Promise<void> {
+  public async tryPingMonitors(projectTiers: ProjectTier[]): Promise<void> {
     try {
-      await this.pingMonitors(userTiers);
+      await this.pingMonitors(projectTiers);
     } catch (error) {
       this.logger.error('Error processing HTTP pings:', { errorMessage: error.message });
     }
   }
 
-  private async pingMonitors(userTiers: UserTier[]): Promise<void> {
+  private async pingMonitors(projectTiers: ProjectTier[]): Promise<void> {
     const startTime = Date.now();
     const queue: QueueItem[] = [];
     const results: CreateHttpPingDto[] = [];
 
-    const projectsIds = (
-      await this.projectReadService.readManyByTiers(userTiers.map(projectTierFromUserTier))
-    ).map((p) => p.id);
+    const projectsIds = (await this.projectReadService.readManyByTiers(projectTiers)).map(
+      (p) => p.id,
+    );
 
     // Only fetch monitors with 'pull' mode
     for await (const monitor of this.httpMonitorReadService.readManyByProjectIdsCursorWithMode(

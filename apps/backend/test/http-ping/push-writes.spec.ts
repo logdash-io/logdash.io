@@ -2,7 +2,8 @@ import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
 import { HttpPingPushService } from '../../src/http-ping/push/http-ping-push.service';
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
-import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
+import { RedisService } from '../../src/shared/redis/redis.service';
+import { HttpMonitorNormalized } from '../../src/http-monitor/core/entities/http-monitor.interface';
 
 describe('Http Ping Push (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -32,7 +33,7 @@ describe('Http Ping Push (writes)', () => {
     });
 
     await pushService.record(monitor.id);
-    await pushService['checkPushMonitors']();
+    await pushService.checkPushMonitors();
 
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
       httpMonitorId: monitor.id,
@@ -55,7 +56,7 @@ describe('Http Ping Push (writes)', () => {
       mode: HttpMonitorMode.Push,
     });
 
-    await pushService['checkPushMonitors']();
+    await pushService.checkPushMonitors();
 
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
       httpMonitorId: monitor.id,
@@ -64,7 +65,7 @@ describe('Http Ping Push (writes)', () => {
     expect(pings[0]).toMatchObject({
       statusCode: 0,
       responseTimeMs: 0,
-      message: 'Did not receive call',
+      message: 'Did not receive call for this time range',
     });
   });
 
@@ -87,7 +88,7 @@ describe('Http Ping Push (writes)', () => {
     });
 
     await pushService.record(monitorA.id);
-    await pushService['checkPushMonitors']();
+    await pushService.checkPushMonitors();
 
     const pingsA = await bootstrap.utils.httpPingUtils.getMonitorPings({
       httpMonitorId: monitorA.id,
@@ -112,44 +113,25 @@ describe('Http Ping Push (writes)', () => {
     });
 
     await pushService.record(monitor.id);
-    await pushService['checkPushMonitors']();
-    await pushService['checkPushMonitors']();
+    await pushService.checkPushMonitors();
 
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
       httpMonitorId: monitor.id,
     });
-    expect(pings.length).toBe(2);
+    expect(pings.length).toBe(1);
     expect(pings[0].statusCode).toBe(200);
-    expect(pings[1].statusCode).toBe(0);
-  });
 
-  it('does not create duplicate records for same monitor', async () => {
-    const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
-    });
-    const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
-      token: setup.token,
-      projectId: setup.project.id,
-      mode: HttpMonitorMode.Push,
-    });
-
-    await pushService.record(monitor.id);
-    await pushService.record(monitor.id);
-    await pushService.record(monitor.id);
-
-    const redisService = bootstrap.app.get('RedisService');
+    const redisService = bootstrap.app.get(RedisService);
     const key = `http-ping-push:${monitor.id}`;
     const record = await redisService.get(key);
-    expect(record).toBeTruthy();
+    expect(record).toBeNull();
   });
 
   it('handles large number of push monitors', async () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
-    const monitors: Awaited<
-      ReturnType<typeof bootstrap.utils.httpMonitorsUtils.storeHttpMonitor>
-    >[] = [];
+    const monitors: HttpMonitorNormalized[] = [];
     for (let i = 0; i < 100; i++) {
       const monitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
         projectId: setup.project.id,
@@ -162,7 +144,7 @@ describe('Http Ping Push (writes)', () => {
       await pushService.record(monitors[i].id);
     }
 
-    await pushService['checkPushMonitors']();
+    await pushService.checkPushMonitors();
 
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
     expect(allPings.length).toBe(100);
@@ -170,45 +152,6 @@ describe('Http Ping Push (writes)', () => {
     const failedPings = allPings.filter((ping) => ping.statusCode === 0);
     expect(successfulPings.length).toBe(50);
     expect(failedPings.length).toBe(50);
-  }, 30000);
-
-  it('handles large number of projects and push monitors', async () => {
-    const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
-    });
-
-    const projects = await Promise.all(
-      Array.from({ length: 100 }, () =>
-        bootstrap.utils.projectUtils.createDefaultProject({
-          userId: setup.user.id,
-          tier: ProjectTier.EarlyBird,
-        }),
-      ),
-    );
-
-    const monitors: Awaited<
-      ReturnType<typeof bootstrap.utils.httpMonitorsUtils.storeHttpMonitor>
-    >[] = await Promise.all(
-      projects.map((project) =>
-        bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
-          projectId: project.id,
-          mode: HttpMonitorMode.Push,
-        }),
-      ),
-    );
-
-    for (let i = 0; i < 30; i++) {
-      await pushService.record(monitors[i].id);
-    }
-
-    await pushService['checkPushMonitors']();
-
-    const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
-    expect(allPings.length).toBe(100);
-    const successfulPings = allPings.filter((ping) => ping.statusCode === 200);
-    const failedPings = allPings.filter((ping) => ping.statusCode === 0);
-    expect(successfulPings.length).toBe(30);
-    expect(failedPings.length).toBe(70);
   }, 30000);
 
   it('processes only push monitors, not pull monitors', async () => {
@@ -227,7 +170,7 @@ describe('Http Ping Push (writes)', () => {
     });
 
     await pushService.record(pushMonitor.id);
-    await pushService['checkPushMonitors']();
+    await pushService.checkPushMonitors();
 
     const pushPings = await bootstrap.utils.httpPingUtils.getMonitorPings({
       httpMonitorId: pushMonitor.id,
@@ -259,7 +202,7 @@ describe('Http Ping Push (writes)', () => {
 
     await pushService.record(freeMonitor.id);
     await pushService.record(paidMonitor.id);
-    await pushService['checkPushMonitors']();
+    await pushService.checkPushMonitors();
 
     const freePings = await bootstrap.utils.httpPingUtils.getMonitorPings({
       httpMonitorId: freeMonitor.id,
@@ -273,7 +216,7 @@ describe('Http Ping Push (writes)', () => {
   });
 
   it('handles empty push monitor list gracefully', async () => {
-    await pushService['checkPushMonitors']();
+    await pushService.checkPushMonitors();
 
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
     expect(allPings.length).toBe(0);

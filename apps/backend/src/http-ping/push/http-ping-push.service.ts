@@ -52,7 +52,7 @@ export class HttpPingPushService {
     }
   }
 
-  private async checkPushMonitors(): Promise<void> {
+  public async checkPushMonitors(): Promise<void> {
     const pushMonitors = await this.httpMonitorReadService.readManyByMode(HttpMonitorMode.Push);
 
     if (pushMonitors.length === 0) {
@@ -67,6 +67,8 @@ export class HttpPingPushService {
 
       if (record) {
         // Monitor received ping, record success
+        await this.redisService.del(key);
+
         pings.push({
           httpMonitorId: monitor.id,
           statusCode: 200,
