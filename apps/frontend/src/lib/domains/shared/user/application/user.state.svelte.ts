@@ -87,8 +87,8 @@ class UserState {
       .otherwise(() => null);
   }
 
-  upgrade(source: UpgradeSource): UserTier | null {
-    const to = this.nextUpgradeTier;
+  upgrade(source: UpgradeSource, _to?: UserTier): UserTier | null {
+    const to = _to ?? this.nextUpgradeTier;
 
     if (!to) {
       throw new Error('No next upgrade tier found');

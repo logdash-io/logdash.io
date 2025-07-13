@@ -1,5 +1,6 @@
 <script lang="ts">
   import { customDomainsState } from '$lib/domains/app/projects/application/public-dashboards/custom-domains.state.svelte.js';
+  import { UserTier } from '$lib/domains/shared/types.js';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { isDev } from '$lib/domains/shared/utils/is-dev.util.js';
@@ -56,7 +57,7 @@
 </script>
 
 {#if !canSetup}
-  <UpgradeButton source="custom-statuspage-domain">
+  <UpgradeButton to={UserTier.PRO} source="custom-statuspage-domain">
     Upgrade to Pro
   </UpgradeButton>
 {:else}

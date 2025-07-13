@@ -8,16 +8,19 @@
   import type { ClassValue } from 'svelte/elements';
   import { fade } from 'svelte/transition';
   import { userState } from '../user/application/user.state.svelte.js';
+  import type { UserTier } from '../types.js';
 
   type Props = {
     class?: ClassValue;
     children?: Snippet;
     source?: UpgradeSource;
+    to?: UserTier;
   };
   const {
     class: className = '',
     children,
     source = 'unknown',
+    to,
   }: Props = $props();
   const posthog = getContext<PostHog>('posthog');
   let upgrading = $state(false);
@@ -40,7 +43,7 @@
     class="btn btn-neutral relative w-full overflow-hidden"
     onclick={() => {
       upgrading = true;
-      const nextTier = userState.upgrade(source);
+      const nextTier = userState.upgrade(source, to);
       if (nextTier) {
         posthog.capture('upgrade_initiated', {
           source,
