@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import dns from 'dns/promises';
+import { resolveCname } from 'dns/promises';
 import { Logger } from '@logdash/js-sdk';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class CustomDomainDnsService {
 
   public async checkCnameRecord(domain: string): Promise<string | null> {
     try {
-      const results = await dns.resolveCname(domain);
+      const results = await resolveCname(domain);
       this.logger.info('CNAME records', {
         domain,
         results,
