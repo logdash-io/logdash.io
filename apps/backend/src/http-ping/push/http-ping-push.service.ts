@@ -8,6 +8,10 @@ import { HttpPingWriteService } from '../write/http-ping-write.service';
 import { HttpPingEventEmitter } from '../events/http-ping-event.emitter';
 import { CreateHttpPingDto } from '../write/dto/create-http-ping.dto';
 import { HttpPingPingerDataService } from '../pinger/http-ping-pinger.data-service';
+import { HttpPingCron } from '../core/enums/http-ping-cron.enum';
+import { ProjectTier } from 'src/project/core/enums/project-tier.enum';
+import { ProjectReadService } from 'src/project/read/project-read.service';
+import { ProjectPlanConfigs } from '../../shared/configs/project-plan-configs';
 
 const PUSH_RECORD_TTL_SECONDS = 300; // 5 minutes
 
@@ -19,6 +23,7 @@ export class HttpPingPushService {
     private readonly httpPingWriteService: HttpPingWriteService,
     private readonly httpPingEventEmitter: HttpPingEventEmitter,
     private readonly httpPingPingerDataService: HttpPingPingerDataService,
+    private readonly projectReadService: ProjectReadService,
     private readonly logger: Logger,
   ) {}
 
@@ -39,21 +44,59 @@ export class HttpPingPushService {
     await this.redisService.set(key, Date.now().toString(), PUSH_RECORD_TTL_SECONDS);
   }
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
-  private async processPushMonitors(): Promise<void> {
+  @Cron(HttpPingCron.Every15Seconds)
+  private async processPushMonitors15s(): Promise<void> {
     if (process.env.NODE_ENV === 'test') {
       return;
     }
 
+    const tiers = this.getTiersWithFrequency(HttpPingCron.Every15Seconds);
+    await this.tryCheckPushMonitors(tiers);
+  }
+
+  @Cron(HttpPingCron.EveryMinute)
+  private async processPushMonitors1m(): Promise<void> {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    const tiers = this.getTiersWithFrequency(HttpPingCron.EveryMinute);
+    await this.tryCheckPushMonitors(tiers);
+  }
+
+  @Cron(HttpPingCron.Every5Minutes)
+  private async processPushMonitors5m(): Promise<void> {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    const tiers = this.getTiersWithFrequency(HttpPingCron.Every5Minutes);
+    await this.tryCheckPushMonitors(tiers);
+  }
+
+  private getTiersWithFrequency(frequency: HttpPingCron): ProjectTier[] {
+    return Object.entries(ProjectPlanConfigs)
+      .filter(([_, value]) => value.httpMonitors.pingFrequency === frequency)
+      .map(([key]) => key as keyof typeof ProjectPlanConfigs);
+  }
+
+  public async tryCheckPushMonitors(projectTiers: ProjectTier[]): Promise<void> {
     try {
-      await this.checkPushMonitors();
+      await this.checkPushMonitors(projectTiers);
     } catch (error) {
       this.logger.error('Error processing push monitors:', { errorMessage: error.message });
     }
   }
 
-  public async checkPushMonitors(): Promise<void> {
-    const pushMonitors = await this.httpMonitorReadService.readManyByMode(HttpMonitorMode.Push);
+  public async checkPushMonitors(projectTiers: ProjectTier[]): Promise<void> {
+    const projectsIds = (await this.projectReadService.readManyByTiers(projectTiers)).map(
+      (p) => p.id,
+    );
+
+    const pushMonitors = await this.httpMonitorReadService.readManyByProjectIdsAndMode(
+      projectsIds,
+      HttpMonitorMode.Push,
+    );
 
     if (pushMonitors.length === 0) {
       return;

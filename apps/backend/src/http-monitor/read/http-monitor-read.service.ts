@@ -99,4 +99,17 @@ export class HttpMonitorReadService {
 
     return HttpMonitorSerializer.normalizeMany(entities);
   }
+
+  public async readManyByProjectIdsAndMode(
+    projectIds: string[],
+    mode: string,
+  ): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ projectId: { $in: projectIds }, mode })
+      .sort({ createdAt: -1 })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+
+    return HttpMonitorSerializer.normalizeMany(entities);
+  }
 }

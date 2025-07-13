@@ -4,6 +4,7 @@ import { HttpPingPushService } from '../../src/http-ping/push/http-ping-push.ser
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { HttpMonitorNormalized } from '../../src/http-monitor/core/entities/http-monitor.interface';
+import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import * as request from 'supertest';
 
 describe('Http Ping Push (writes)', () => {
@@ -36,7 +37,7 @@ describe('Http Ping Push (writes)', () => {
 
     // when
     await request(bootstrap.app.getHttpServer()).post(`/ping/${monitor.id}`);
-    await pushService.checkPushMonitors();
+    await pushService.checkPushMonitors(Object.values(ProjectTier));
 
     // then
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -62,7 +63,7 @@ describe('Http Ping Push (writes)', () => {
     });
 
     // when
-    await pushService.checkPushMonitors();
+    await pushService.checkPushMonitors(Object.values(ProjectTier));
 
     // then
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -97,7 +98,7 @@ describe('Http Ping Push (writes)', () => {
 
     // when
     await request(bootstrap.app.getHttpServer()).post(`/ping/${monitorA.id}`);
-    await pushService.checkPushMonitors();
+    await pushService.checkPushMonitors(Object.values(ProjectTier));
 
     // then
     const pingsA = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -125,7 +126,7 @@ describe('Http Ping Push (writes)', () => {
 
     // when
     await request(bootstrap.app.getHttpServer()).post(`/ping/${monitor.id}`);
-    await pushService.checkPushMonitors();
+    await pushService.checkPushMonitors(Object.values(ProjectTier));
 
     // then
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -159,7 +160,7 @@ describe('Http Ping Push (writes)', () => {
     }
 
     // when
-    await pushService.checkPushMonitors();
+    await pushService.checkPushMonitors(Object.values(ProjectTier));
 
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
@@ -188,7 +189,7 @@ describe('Http Ping Push (writes)', () => {
 
     // when
     await request(bootstrap.app.getHttpServer()).post(`/ping/${pushMonitor.id}`);
-    await pushService.checkPushMonitors();
+    await pushService.checkPushMonitors(Object.values(ProjectTier));
 
     // then
     const pushPings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -223,7 +224,7 @@ describe('Http Ping Push (writes)', () => {
     // when
     await request(bootstrap.app.getHttpServer()).post(`/ping/${freeMonitor.id}`);
     await request(bootstrap.app.getHttpServer()).post(`/ping/${paidMonitor.id}`);
-    await pushService.checkPushMonitors();
+    await pushService.checkPushMonitors(Object.values(ProjectTier));
 
     // then
     const freePings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -239,7 +240,7 @@ describe('Http Ping Push (writes)', () => {
 
   it('handles empty push monitor list gracefully', async () => {
     // when
-    await pushService.checkPushMonitors();
+    await pushService.checkPushMonitors(Object.values(ProjectTier));
 
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
