@@ -81,7 +81,7 @@ export class HttpPingPushService {
           httpMonitorId: monitor.id,
           statusCode: 0,
           responseTimeMs: 0,
-          message: 'Did not receive call',
+          message: 'Did not receive call for this time range',
         });
       }
     }

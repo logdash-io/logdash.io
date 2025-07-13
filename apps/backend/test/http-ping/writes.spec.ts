@@ -7,11 +7,11 @@ import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-ping
 
 describe('Http Ping (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
-  let schedulerService: HttpPingPingerService;
+  let pingerService: HttpPingPingerService;
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
-    schedulerService = bootstrap.app.get(HttpPingPingerService);
+    pingerService = bootstrap.app.get(HttpPingPingerService);
     nock(URL_STUB).persist().get('/').delay(10).reply(200, 'ok');
   });
 
@@ -41,8 +41,8 @@ describe('Http Ping (writes)', () => {
     });
 
     // when
-    await schedulerService.tryPingMonitors([UserTier.EarlyBird]);
-    await schedulerService.tryPingMonitors([UserTier.EarlyBird]);
+    await pingerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await pingerService.tryPingMonitors([ProjectTier.EarlyBird]);
 
     // then
     const pingsA = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -70,7 +70,7 @@ describe('Http Ping (writes)', () => {
     }
 
     // when
-    await schedulerService.tryPingMonitors([UserTier.EarlyBird]);
+    await pingerService.tryPingMonitors([ProjectTier.EarlyBird]);
 
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
@@ -101,7 +101,7 @@ describe('Http Ping (writes)', () => {
     );
 
     // when
-    await schedulerService.tryPingMonitors([UserTier.EarlyBird]);
+    await pingerService.tryPingMonitors([ProjectTier.EarlyBird]);
 
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
@@ -122,7 +122,7 @@ describe('Http Ping (writes)', () => {
     nock(anotherUrl).persist().get('/').delay(10).reply(403);
 
     // when
-    await schedulerService.tryPingMonitors([UserTier.EarlyBird]);
+    await pingerService.tryPingMonitors([ProjectTier.EarlyBird]);
 
     // then
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -154,7 +154,7 @@ describe('Http Ping (writes)', () => {
     });
 
     // when
-    await schedulerService.tryPingMonitors([UserTier.Free]);
+    await pingerService.tryPingMonitors([ProjectTier.Free]);
 
     // then
     const pingsA = await bootstrap.utils.httpPingUtils.getMonitorPings({

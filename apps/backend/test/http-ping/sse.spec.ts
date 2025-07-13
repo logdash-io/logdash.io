@@ -5,16 +5,17 @@ import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
+import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 
 describe('Http Ping (SSE)', () => {
   let controller: HttpPingCoreController;
-  let schedulerService: HttpPingPingerService;
+  let pingerService: HttpPingPingerService;
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
     controller = bootstrap.app.get(HttpPingCoreController);
-    schedulerService = bootstrap.app.get(HttpPingPingerService);
+    pingerService = bootstrap.app.get(HttpPingPingerService);
     nock(URL_STUB).persist().get('/').delay(10).reply(200);
   });
 
@@ -45,7 +46,7 @@ describe('Http Ping (SSE)', () => {
       const stream = await controller.streamHttpMonitorPings(setupA.cluster.id);
       const resultsPromise = firstValueFrom(stream.pipe(take(1)));
 
-      await schedulerService.tryPingMonitors([UserTier.Free]);
+      await pingerService.tryPingMonitors([ProjectTier.Free]);
 
       // then
       const results = await resultsPromise;
@@ -78,9 +79,9 @@ describe('Http Ping (SSE)', () => {
       const stream = await controller.streamHttpMonitorPings(setupA.cluster.id);
       const resultsPromise = firstValueFrom(stream.pipe(take(2), toArray()));
       nock(URL_STUB).get('/').times(2).delay(10).reply(200);
-      await schedulerService.tryPingMonitors([UserTier.Free]);
+      await pingerService.tryPingMonitors([ProjectTier.Free]);
       nock(URL_STUB).get('/').times(2).delay(10).reply(404);
-      await schedulerService.tryPingMonitors([UserTier.Free]);
+      await pingerService.tryPingMonitors([ProjectTier.Free]);
 
       // then
       const results = await resultsPromise;
