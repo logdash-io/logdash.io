@@ -4,7 +4,7 @@
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { isDev } from '$lib/domains/shared/utils/is-dev.util.js';
-  import { AlertTriangleIcon, CheckIcon, XIcon } from 'lucide-svelte';
+  import { AlertTriangleIcon, CheckIcon, XIcon, Copy } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import Highlight from 'svelte-highlight';
   import { bash } from 'svelte-highlight/languages';
@@ -16,6 +16,7 @@
   const { dashboardId }: Props = $props();
 
   let domainInput = $state('');
+  let copied = $state(false);
   const customDomain = $derived(
     customDomainsState.getCustomDomain(dashboardId),
   );
@@ -23,9 +24,6 @@
   const error = $derived(customDomainsState.error);
   const hasDomain = $derived(!!customDomain);
   const canSetup = $derived(userState.canSetupCustomDomain);
-  const pollingTimer = $derived(
-    customDomainsState.getPollingTimer(dashboardId),
-  );
 
   $effect(() => {
     if (canSetup) {
@@ -68,6 +66,26 @@
   const handleManualCheck = async (): Promise<void> => {
     await customDomainsState.manualCheck(dashboardId);
   };
+
+  const copyDnsRecord = async (): Promise<void> => {
+    if (!customDomain) return;
+
+    const dnsRecord = `CNAME ${customDomain.domain} ${isDev() ? 'dev-statuspage' : 'statuspage'}.logdash.io`;
+    await navigator.clipboard.writeText(dnsRecord);
+    copied = true;
+  };
+
+  $effect(() => {
+    if (!copied) return;
+
+    const timeout = setTimeout(() => {
+      copied = false;
+    }, 2000);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  });
 </script>
 
 {#if !canSetup}
@@ -177,7 +195,7 @@
 
           <div class="border-base-100 space-y-3 rounded-xl border p-4">
             <p class="text-sm">
-              To serve your page at <span class="font-semibold break-all">
+              To serve your page at <span class="break-all font-semibold">
                 {customDomain.domain}
               </span>
               you must add these DNS records.
@@ -196,11 +214,29 @@
             <div
               class="ld-card-base w-full overflow-x-auto overflow-y-hidden rounded-xl text-sm"
             >
-              <Highlight
-                class="code-snippet selection:bg-base-100"
-                code={`CNAME ${customDomain.domain} ${isDev() ? 'dev-statuspage' : 'statuspage'}.logdash.io`}
-                language={bash}
-              />
+              <div class="relative">
+                <Highlight
+                  class="code-snippet selection:bg-base-100"
+                  code={`CNAME ${customDomain.domain} ${isDev() ? 'dev-statuspage' : 'statuspage'}.logdash.io`}
+                  language={bash}
+                />
+
+                <label
+                  class="btn btn-sm btn-square bg-base-100 swap swap-rotate absolute right-2 top-2 border-transparent"
+                  for="copy-dns-record"
+                  onclick={copyDnsRecord}
+                >
+                  <input
+                    bind:checked={copied}
+                    id="copy-dns-record"
+                    type="checkbox"
+                  />
+
+                  <CheckIcon class="swap-on text-success h-4 w-4" />
+
+                  <Copy class="swap-off h-4 w-4" />
+                </label>
+              </div>
             </div>
           </div>
         {/if}

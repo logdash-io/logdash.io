@@ -105,7 +105,7 @@ export class CustomDomainsState {
   }
 
   private _resetPollingTimer(publicDashboardId: string): void {
-    this._pollingTimers[publicDashboardId] = 30;
+    this._pollingTimers[publicDashboardId] = 5;
   }
 
   public startStatusPolling(publicDashboardId: string): (() => void) | null {
@@ -127,7 +127,7 @@ export class CustomDomainsState {
     const pollingInterval = setInterval(async () => {
       await this.loadCustomDomain(publicDashboardId);
       this._resetPollingTimer(publicDashboardId);
-    }, 30000);
+    }, 5000);
 
     this._pollingIntervals.set(publicDashboardId, timerInterval);
 
