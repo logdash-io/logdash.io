@@ -7,6 +7,8 @@ import { HttpPingBucketAggregationService } from '../../http-ping-bucket/aggrega
 import { BucketsPeriod } from '../../http-ping-bucket/core/types/bucket-period.enum';
 import { VirtualBucket } from '../../http-ping-bucket/core/types/virtual-bucket.type';
 import { RedisService } from '../../shared/redis/redis.service';
+import { Types } from 'mongoose';
+import { CustomDomainReadService } from '../../custom-domain/read/custom-domain-read.service';
 
 const PUBLIC_CACHE_TTL_SECONDS = 60; // 1 minute
 const PRIVATE_CACHE_TTL_SECONDS = 1; // 1 second
@@ -24,6 +26,7 @@ export class PublicDashboardCompositionService {
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpPingBucketAggregationService: HttpPingBucketAggregationService,
     private readonly redisService: RedisService,
+    private readonly customDomainReadService: CustomDomainReadService,
   ) {}
 
   public async composePublicResponse(
@@ -44,7 +47,21 @@ export class PublicDashboardCompositionService {
       return cachedResponse;
     }
 
-    const response = await this.composeResponseData(publicDashboardId, period);
+    let resolvedPublicDashboardId: string | null = null;
+
+    if (Types.ObjectId.isValid(publicDashboardId)) {
+      resolvedPublicDashboardId = publicDashboardId;
+    } else {
+      const customDomain = await this.customDomainReadService.readByDomain(publicDashboardId);
+
+      if (!customDomain) {
+        throw new NotFoundException('Custom domain not found');
+      }
+
+      resolvedPublicDashboardId = customDomain.publicDashboardId;
+    }
+
+    const response = await this.composeResponseData(resolvedPublicDashboardId, period);
 
     await this.setCachedResponse(
       publicDashboardId,

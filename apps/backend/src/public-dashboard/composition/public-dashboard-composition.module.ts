@@ -5,6 +5,7 @@ import { HttpMonitorReadModule } from '../../http-monitor/read/http-monitor-read
 import { HttpPingReadModule } from '../../http-ping/read/http-ping-read.module';
 import { PublicDashboardReadModule } from '../read/public-dashboard-read.module';
 import { HttpPingBucketAggregationModule } from '../../http-ping-bucket/aggregation/http-ping-bucket-aggregation.module';
+import { CustomDomainReadModule } from '../../custom-domain/read/custom-domain-read.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { HttpPingBucketAggregationModule } from '../../http-ping-bucket/aggregat
     HttpMonitorReadModule,
     HttpPingBucketAggregationModule,
     RedisModule,
+    CustomDomainReadModule,
   ],
   providers: [PublicDashboardCompositionService],
   exports: [PublicDashboardCompositionService],
