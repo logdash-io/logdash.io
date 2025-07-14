@@ -16,13 +16,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build and push
-        uses: './.github/templates/build-and-push'
+        uses: './.github/templates/status-page-build-and-push'
         with:
           context: ./
           file: ./apps/status-page/Dockerfile
           dockerhub-username: ${{ secrets.BACKEND_DOCKERHUB_USERNAME }}
           dockerhub-token: ${{ secrets.BACKEND_DOCKERHUB_TOKEN }}
           image-name: ablaszkiewicz/logdash-status-page-dev
+          build-args: |
+            VITE_API_BASE_URL=${{ secrets.STATUS_PAGE_DEV_API_BASE_URL }}
       - name: Deploy
         uses: './.github/templates/deploy-status-page-container'
         with:

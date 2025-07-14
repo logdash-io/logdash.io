@@ -21,6 +21,9 @@ COPY tsconfig.json ./tsconfig.json
 # Install all dependencies for the monorepo
 RUN pnpm install --frozen-lockfile
 
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 # Build the status-page app
 WORKDIR /app/apps/status-page
 RUN pnpm run build
