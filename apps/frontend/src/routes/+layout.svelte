@@ -12,7 +12,7 @@
   import posthog, { PostHog } from 'posthog-js';
   import { getContext, setContext, type Snippet } from 'svelte';
   import { atomOneDark } from 'svelte-highlight/styles';
-  import '../styles/main.css';
+  import '@logdash/hyper-ui/styles';
 
   type Props = {
     children: Snippet;

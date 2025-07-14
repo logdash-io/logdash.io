@@ -1,0 +1,57 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@logdash/hyper-ui/*": [
+        "./packages/hyper-ui/src/lib/*"
+      ],
+      "@logdash/hyper-ui/styles/*": [
+        "./packages/hyper-ui/src/lib/styles/*"
+      ],
+      "@logdash/hyper-ui/types/*": [
+        "./packages/hyper-ui/src/lib/types/*"
+      ],
+      "@logdash/hyper-ui/features/*": [
+        "./packages/hyper-ui/src/lib/features/*"
+      ],
+      "@logdash/hyper-ui/presentational/*": [
+        "./packages/hyper-ui/src/lib/presentational/*"
+      ],
+      "@logdash/hyper-ui/utils/*": [
+        "./packages/hyper-ui/src/lib/utils/*"
+      ]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "packages/*/src/**/*.svelte",
+    "packages/*/src/**/*.js",
+    "packages/*/src/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".svelte-kit"
+  ]
+}

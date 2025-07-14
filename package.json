@@ -6,9 +6,7 @@
   "scripts": {
     "dev:frontend": "pnpm --filter frontend dev"
   },
-  "keywords": [
-    
-  ],
+  "keywords": [],
   "author": "",
   "license": "BSL-1.0",
   "packageManager": "pnpm@10.7.0",

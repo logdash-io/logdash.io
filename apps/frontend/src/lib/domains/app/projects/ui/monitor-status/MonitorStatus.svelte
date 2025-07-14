@@ -1,11 +1,11 @@
 <script lang="ts">
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import StatusBar from '$lib/domains/app/projects/ui/presentational/public-dashboard/StatusBar.svelte';
   import { logger } from '$lib/domains/shared/logger';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
   import { DateTime } from 'luxon';
   import type { Snippet } from 'svelte';
+  import { StatusBar } from '@logdash/hyper-ui/features';
 
   type Props = {
     projectId: string;

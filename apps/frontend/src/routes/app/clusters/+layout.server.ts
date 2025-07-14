@@ -27,9 +27,10 @@ export const load = async (
     return redirect(302, '/app/auth');
   }
 
-  if (onboardingTier === UserTier.EARLY_BIRD) {
+  if ([UserTier.BUILDER, UserTier.PRO].includes(onboardingTier)) {
     const link = await logdashAPI.stripe_checkout(
       get_access_token(event.cookies),
+      onboardingTier,
     );
     clear_onboarding_tier(event.cookies);
 

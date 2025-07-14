@@ -5,7 +5,6 @@
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { publicDashboardPrivateState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-private.state.svelte.js';
-  import PublicDashboard from '$lib/domains/app/projects/ui/PublicDashboard.svelte';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
   import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
   import { debounce } from '$lib/domains/shared/utils/debounce.js';
@@ -15,6 +14,7 @@
   import { cubicInOut } from 'svelte/easing';
   import { fly, scale } from 'svelte/transition';
   import CustomDomainSetup from './CustomDomainSetup.svelte';
+  import { PublicDashboard } from '@logdash/hyper-ui/features';
 
   type Props = {
     dashboard_id: string;
@@ -57,7 +57,7 @@
   });
 </script>
 
-<div class="bg-base-300 fixed top-0 left-0 z-50 flex h-full w-full">
+<div class="bg-base-300 fixed left-0 top-0 z-50 flex h-full w-full">
   <ResponsiveSkyBackground />
 
   <div class="z-10 mx-auto space-y-8 overflow-hidden">
@@ -80,7 +80,7 @@
   </div>
 
   <div
-    class="bg-base-200 border-base-100 top-0 right-0 z-10 flex h-full w-full max-w-2xl shrink-0 flex-col gap-4 overflow-auto border-l p-6 sm:w-xl sm:p-8"
+    class="bg-base-200 border-base-100 sm:w-xl right-0 top-0 z-10 flex h-full w-full max-w-2xl shrink-0 flex-col gap-4 overflow-auto border-l p-6 sm:p-8"
   >
     <div class="space-y-2">
       <span class="badge badge-soft badge-primary">
@@ -104,7 +104,7 @@
       </div>
 
       <div
-        class="border-base-100 w-full max-w-full truncate overflow-hidden rounded-xl border"
+        class="border-base-100 w-full max-w-full overflow-hidden truncate rounded-xl border"
       >
         {#if monitoringState.monitors.length === 0}
           <div class="flex items-center justify-center py-4">
@@ -120,7 +120,7 @@
         {#each monitoringState.monitors as monitor, index}
           <label
             class={[
-              'hover:bg-base-100/50 flex cursor-pointer items-center gap-1 truncate p-2 px-3 transition-all select-none',
+              'hover:bg-base-100/50 flex cursor-pointer select-none items-center gap-1 truncate p-2 px-3 transition-all',
               { 'border-base-100 border-t': index > 0 },
             ]}
           >

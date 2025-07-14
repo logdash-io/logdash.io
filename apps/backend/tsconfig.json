@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
@@ -6,20 +7,18 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
+    "target": "ES2017",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "paths": {
-      "src/*": ["src/*"]
-    },
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
+    "strictNullChecks": false,
+    "forceConsistentCasingInFileNames": false,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  },
-  "include": ["src/**/*"]
+    "noFallthroughCasesInSwitch": false,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  }
 }
