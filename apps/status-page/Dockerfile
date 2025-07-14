@@ -12,6 +12,12 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 # Copy the status-page app
 COPY apps/status-page ./apps/status-page
 
+# Copy packages
+COPY packages ./packages
+
+# Copy root tsconfig
+COPY tsconfig.json ./tsconfig.json
+
 # Install all dependencies for the monorepo
 RUN pnpm install --frozen-lockfile
 
