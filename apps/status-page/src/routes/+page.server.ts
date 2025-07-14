@@ -19,7 +19,7 @@ class ServerPublicDashboardService {
 }
 
 export const load: PageServerLoad = async ({ url }) => {
-	const customDomainHref = dev ? url.searchParams.get('custom-domain') : url.hostname.split('.')[0];
+	const customDomainHref = dev ? url.searchParams.get('custom-domain') : url.host;
 	if (!customDomainHref) {
 		error(404, 'Custom domain not found');
 	}

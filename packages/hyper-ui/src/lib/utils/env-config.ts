@@ -13,9 +13,9 @@ export interface EnvironmentConfig {
 }
 
 export function getEnvironmentConfig(): EnvironmentConfig {
+  // @ts-ignore
   const env = import.meta.env;
 
-  console.log("env", env);
   return {
     posthog: {
       key: env.VITE_POSTHOG_KEY,
