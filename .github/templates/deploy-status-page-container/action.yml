@@ -1,0 +1,36 @@
+name: Deploy
+
+inputs:
+  # SSH
+  host:
+    required: true
+  username:
+    required: true
+  port:
+    required: true
+  ssh-private-key:
+    required: true
+
+  # Docker
+  api-base-url:
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Update image inside VPS
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ inputs.host }}
+        USERNAME: ${{ inputs.username }}
+        PORT: ${{ inputs.port }}
+        KEY: ${{ inputs.ssh-private-key }}
+        script: |
+          docker pull ${{ inputs.image-name }}
+          docker rm -f ${{ inputs.container-name }}
+          docker run -d \
+          -p ${{ inputs.server-port }}:${{ inputs.application-port }} \
+          --restart=always \
+          --name ${{ inputs.container-name }} \
+          -e VITE_API_BASE_URL=${{ inputs.api-base-url }} \
+          ${{ inputs.image-name }}

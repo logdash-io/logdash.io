@@ -87,6 +87,8 @@ export class CustomDomainRegistrationService {
         status: CustomDomainStatus.Verified,
       });
 
+      void this.pingDomain(domain);
+
       this.logger.info('Domain verification succeeded...', {
         domainId,
         domain,
@@ -99,5 +101,9 @@ export class CustomDomainRegistrationService {
         relatedEntityId: domainId,
       });
     }
+  }
+
+  private async pingDomain(domain: string): Promise<void> {
+    await fetch(`https://${domain}`);
   }
 }

@@ -3,6 +3,7 @@ import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-do
 import { CustomDomainRegistrationService } from '../../src/custom-domain/registration/custom-domain-registration.service';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
+import { WebhookHttpMethod } from '../../src/notification-channel/core/types/webhook-options.type';
 
 describe('CustomDomainRegistrationService', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -46,6 +47,16 @@ describe('CustomDomainRegistrationService', () => {
       targetCname: getEnvConfig().customDomain.targetCname,
     });
 
+    const messages: any[] = [];
+
+    await bootstrap.utils.webhookUtils.setUpWebhookListenerWithMethod({
+      webhookUrl: 'https://example.com',
+      method: WebhookHttpMethod.GET,
+      onMessage: (message) => {
+        messages.push(message);
+      },
+    });
+
     // when
     await registrationService.verifyDomains();
 
@@ -59,6 +70,7 @@ describe('CustomDomainRegistrationService', () => {
     expect(updatedDomain.status).toBe(CustomDomainStatus.Verified);
     expect(updatedDomain.attemptCount).toBe(1);
     expect(bootstrap.utils.customDomainUtils.getDnsCallCount('example.com')).toBe(1);
+    expect(messages.length).toBe(1);
   });
 
   it('increments attempt count when DNS check fails', async () => {

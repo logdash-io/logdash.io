@@ -33,7 +33,7 @@ export class WebhookUtils {
           .post(url.pathname)
           .reply(function (uri, body) {
             dto.onMessage(body, this.req.headers);
-            return true;
+            return [200, ''];
           })
           .persist();
         break;
@@ -42,7 +42,7 @@ export class WebhookUtils {
           .get(url.pathname)
           .reply(function (uri, body) {
             dto.onMessage(body, this.req.headers);
-            return true;
+            return [200, ''];
           })
           .persist();
         break;
@@ -51,7 +51,7 @@ export class WebhookUtils {
           .put(url.pathname)
           .reply(function (uri, body) {
             dto.onMessage(body, this.req.headers);
-            return true;
+            return [200, ''];
           })
           .persist();
         break;
@@ -60,7 +60,7 @@ export class WebhookUtils {
           .delete(url.pathname)
           .reply(function (uri, body) {
             dto.onMessage(body, this.req.headers);
-            return true;
+            return [200, ''];
           })
           .persist();
         break;
@@ -69,7 +69,7 @@ export class WebhookUtils {
           .patch(url.pathname)
           .reply(function (uri, body) {
             dto.onMessage(body, this.req.headers);
-            return true;
+            return [200, ''];
           })
           .persist();
         break;
@@ -78,7 +78,7 @@ export class WebhookUtils {
           .options(url.pathname)
           .reply(function (uri, body) {
             dto.onMessage(body, this.req.headers);
-            return true;
+            return [200, ''];
           })
           .persist();
         break;
@@ -87,7 +87,7 @@ export class WebhookUtils {
           .head(url.pathname)
           .reply(function (uri, body) {
             dto.onMessage(body, this.req.headers);
-            return true;
+            return [200, ''];
           })
           .persist();
         break;

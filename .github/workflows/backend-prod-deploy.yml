@@ -32,7 +32,7 @@ jobs:
           dockerhub-token: ${{ secrets.BACKEND_DOCKERHUB_TOKEN }}
           image-name: ablaszkiewicz/logdash-backend-prod
       - name: Deploy
-        uses: './.github/templates/deploy-container'
+        uses: './.github/templates/deploy-backendcontainer'
         with:
           host: ${{ secrets.BACKEND_PROD_SSH_HOST }}
           username: ${{ secrets.BACKEND_PROD_SSH_USER }}
