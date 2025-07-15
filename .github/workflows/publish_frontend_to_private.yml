@@ -2,10 +2,9 @@ name: Publish Frontend to Private Repository
 
 on:
   push:
-    # branches: # Remove or comment out this line to trigger on any branch
-    #   - main
     paths:
-      - "apps/frontend/**" # Only run if files in apps/frontend change
+      - "apps/frontend/**"
+      - "packages/hyper-ui/**"
 
 jobs:
   publish-frontend:
@@ -48,17 +47,19 @@ jobs:
           git remote add private_mirror git@github.com:${{ secrets.FE_PRIVATE_REPO_USERNAME }}/${{ secrets.FE_PRIVATE_REPO_NAME }}.git
           git remote -v # optional sanity check
 
-          echo "Splitting subtree for apps/frontend into frontend-temp-branch..."
-          git subtree split --prefix=apps/frontend -b frontend-temp-branch
+          echo "Creating a new branch and filtering repository to include frontend and hyper-ui..."
+          # Create a new branch from the current state
+          git checkout -b frontend-temp-branch
 
-          echo "Checking out frontend-temp-branch..."
-          git checkout frontend-temp-branch
-
-          echo "Rewriting author and committer history on frontend-temp-branch to '$NEW_AUTHOR_NAME <$NEW_AUTHOR_EMAIL>'..."
-          # This command changes both the Author and Committer fields (name and email)
-          # of all commits on the current branch (frontend-temp-branch)
-          # to NEW_AUTHOR_NAME and NEW_AUTHOR_EMAIL. Original author dates are preserved.
-          git filter-repo --name-callback "return b'$NEW_AUTHOR_NAME'" \
+          echo "Filtering repository to include frontend, hyper-ui, and pnpm workspace files..."
+          # Use git-filter-repo to extract directories and workspace files while preserving structure
+          git filter-repo --path apps/frontend/ \
+                          --path packages/hyper-ui/ \
+                          --path pnpm-workspace.yaml \
+                          --path pnpm-lock.yaml \
+                          --path package.json \
+                          --path tsconfig.json \
+                          --name-callback "return b'$NEW_AUTHOR_NAME'" \
                           --email-callback "return b'$NEW_AUTHOR_EMAIL'" \
                           --force
 
