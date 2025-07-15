@@ -104,6 +104,13 @@ export class CustomDomainRegistrationService {
   }
 
   private async pingDomain(domain: string): Promise<void> {
-    await fetch(`https://${domain}`);
+    try {
+      await fetch(`https://${domain}`);
+    } catch (error) {
+      this.logger.error('Pinging domain failed', {
+        domain,
+        error: error.message,
+      });
+    }
   }
 }
