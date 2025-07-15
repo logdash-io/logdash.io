@@ -1,10 +1,10 @@
-name: Deploy status-page (dev)
+name: Deploy status-page (prod)
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - dev
+      - main
     paths:
       - 'apps/status-page/**'
       - '.github/workflows/**'
@@ -22,24 +22,24 @@ jobs:
           file: ./apps/status-page/Dockerfile
           dockerhub-username: ${{ secrets.BACKEND_DOCKERHUB_USERNAME }}
           dockerhub-token: ${{ secrets.BACKEND_DOCKERHUB_TOKEN }}
-          image-name: ablaszkiewicz/logdash-status-page-dev
+          image-name: ablaszkiewicz/logdash-status-page-prod
           build-args: |
-            VITE_API_BASE_URL=https://dev-api.logdash.io
+            VITE_API_BASE_URL=https://api.logdash.io
       - name: Deploy
         uses: './.github/templates/deploy-status-page-container'
         with:
-          host: ${{ secrets.BACKEND_DEV_SSH_HOST }}
-          username: ${{ secrets.BACKEND_DEV_SSH_USER }}
-          port: ${{ secrets.BACKEND_DEV_SSH_PORT }}
-          ssh-private-key: ${{ secrets.BACKEND_DEV_SSH_KEY }}
+          host: ${{ secrets.BACKEND_PROD_SSH_HOST }}
+          username: ${{ secrets.BACKEND_PROD_SSH_USER }}
+          port: ${{ secrets.BACKEND_PROD_SSH_PORT }}
+          ssh-private-key: ${{ secrets.BACKEND_PROD_SSH_KEY }}
           server-port: 4000
           application-port: 3000
-          image-name: ablaszkiewicz/logdash-status-page-dev
-          container-name: logdash-status-page-dev
+          image-name: ablaszkiewicz/logdash-status-page-prod
+          container-name: logdash-status-page-prod
       - name: Prune
         uses: './.github/templates/prune'
         with:
-          host: ${{ secrets.BACKEND_DEV_SSH_HOST }}
-          username: ${{ secrets.BACKEND_DEV_SSH_USER }}
-          port: ${{ secrets.BACKEND_DEV_SSH_PORT }}
-          ssh-private-key: ${{ secrets.BACKEND_DEV_SSH_KEY }}
+          host: ${{ secrets.BACKEND_PROD_SSH_HOST }}
+          username: ${{ secrets.BACKEND_PROD_SSH_USER }}
+          port: ${{ secrets.BACKEND_PROD_SSH_PORT }}
+          ssh-private-key: ${{ secrets.BACKEND_PROD_SSH_KEY }}

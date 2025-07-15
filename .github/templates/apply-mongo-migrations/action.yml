@@ -13,7 +13,7 @@ runs:
         node-version: 20.x
 
     - name: Install mongo-migrations globally
-      run: npm install -g migrate-mongo
+      run: npm install -g migrate-mongo mongodb
       shell: bash
 
     - name: Install dotenv
