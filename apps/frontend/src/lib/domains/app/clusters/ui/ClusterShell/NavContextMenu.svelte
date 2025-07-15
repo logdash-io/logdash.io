@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { RoutePath } from '$lib/domains/shared/route-path.js';
   import { UserTier } from '$lib/domains/shared/types.js';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { ExternalLinkIcon, LogOutIcon } from 'lucide-svelte';
   import type { PostHog } from 'posthog-js';

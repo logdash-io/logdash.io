@@ -1,21 +1,22 @@
 <script lang="ts">
-  import { tick, type Snippet } from 'svelte';
-  import { cubicInOut } from 'svelte/easing';
-  import type { ClassValue } from 'svelte/elements';
-  import { fly } from 'svelte/transition';
-  import { match } from 'ts-pattern';
-  import { createLogger } from '$lib/domains/shared/logger';
+  import { tick, type Snippet } from "svelte";
+  import { cubicInOut } from "svelte/easing";
+  import type { ClassValue } from "svelte/elements";
+  import { fly } from "svelte/transition";
+  import { match } from "ts-pattern";
 
-  const logger = createLogger('Tooltip', true);
+  const debug = (...args: any[]) => {
+    // console.log(...args);
+  };
 
   type Props = {
     content: string | Snippet<[() => void]>;
-    placement: 'top' | 'bottom';
+    placement: "top" | "bottom";
     children: Snippet;
     class?: ClassValue;
-    trigger?: 'hover' | 'click';
+    trigger?: "hover" | "click";
     interactive?: boolean;
-    align?: 'left' | 'center' | 'right';
+    align?: "left" | "center" | "right";
     closeOnOutsideTooltipClick?: boolean;
   };
   const {
@@ -23,9 +24,9 @@
     class: className,
     content,
     placement,
-    trigger = 'hover',
+    trigger = "hover",
     interactive = false,
-    align = 'center',
+    align = "center",
     closeOnOutsideTooltipClick = false,
   }: Props = $props();
 
@@ -39,31 +40,31 @@
 
   function createPortalContainer() {
     if (portalContainer) {
-      logger.debug('returning existing portalContainer');
+      debug("returning existing portalContainer");
       return portalContainer;
     }
 
-    portalContainer = document.createElement('div');
-    portalContainer.style.position = 'fixed';
-    portalContainer.style.top = '0';
-    portalContainer.style.left = '0';
-    portalContainer.style.zIndex = '1000';
+    portalContainer = document.createElement("div");
+    portalContainer.style.position = "fixed";
+    portalContainer.style.top = "0";
+    portalContainer.style.left = "0";
+    portalContainer.style.zIndex = "1000";
     document.body.appendChild(portalContainer);
 
-    logger.debug('created new portalContainer');
+    debug("created new portalContainer");
 
     return portalContainer;
   }
 
   function destroyPortalContainer() {
     // Clean up interactive listeners before destroying tooltip
-    if (tooltip && trigger === 'hover' && interactive) {
-      tooltip.removeEventListener('mouseenter', show);
-      tooltip.removeEventListener('mouseleave', hide);
+    if (tooltip && trigger === "hover" && interactive) {
+      tooltip.removeEventListener("mouseenter", show);
+      tooltip.removeEventListener("mouseleave", hide);
     }
 
     if (portalContainer && portalContainer.parentNode) {
-      logger.debug('destroying portalContainer');
+      debug("destroying portalContainer");
       portalContainer.parentNode.removeChild(portalContainer);
       portalContainer = null;
       tooltip = null;
@@ -93,7 +94,7 @@
 
   function hide() {
     // Only add delay for interactive tooltips on hover trigger
-    if (interactive && trigger === 'hover') {
+    if (interactive && trigger === "hover") {
       hideTimeout = setTimeout(() => {
         visible = false;
         hideTimeout = null;
@@ -112,7 +113,7 @@
   }
 
   function handleClick(event: MouseEvent) {
-    if (trigger === 'click') {
+    if (trigger === "click") {
       event.stopPropagation();
       toggle();
     }
@@ -120,31 +121,31 @@
 
   function handleClickOutside(event: MouseEvent) {
     if (
-      trigger === 'click' &&
+      trigger === "click" &&
       visible &&
       tooltip &&
       !tooltip.contains(event.target as Node) &&
       !wrapper.contains(event.target as Node)
     ) {
       const clickTarget = event.target as Element;
-      const allTooltips = document.querySelectorAll('[data-tooltip-portal]');
-      logger.debug('allTooltips', allTooltips);
+      const allTooltips = document.querySelectorAll("[data-tooltip-portal]");
+      debug("allTooltips", allTooltips);
       const isInsideAnyTooltip = Array.from(allTooltips).some((tooltipEl) =>
-        tooltipEl.contains(clickTarget),
+        tooltipEl.contains(clickTarget)
       );
 
       // Respect the closeOnOutsideTooltipClick flag
       if (closeOnOutsideTooltipClick) {
         // Close even when clicking on other tooltips
-        logger.debug(
-          'hiding tooltip via click outside (closeOnOutsideTooltipClick=true)',
+        debug(
+          "hiding tooltip via click outside (closeOnOutsideTooltipClick=true)"
         );
         hide();
       } else {
         // Only close when clicking truly outside all tooltips
         if (!isInsideAnyTooltip) {
-          logger.debug(
-            'hiding tooltip via click outside (closeOnOutsideTooltipClick=false)',
+          debug(
+            "hiding tooltip via click outside (closeOnOutsideTooltipClick=false)"
           );
           hide();
         }
@@ -163,24 +164,24 @@
 
     let top = match(placement)
       .with(
-        'top',
-        () => triggerRect.top - tooltipRect.height - margin + window.scrollY,
+        "top",
+        () => triggerRect.top - tooltipRect.height - margin + window.scrollY
       )
-      .with('bottom', () => triggerRect.bottom + margin + window.scrollY)
+      .with("bottom", () => triggerRect.bottom + margin + window.scrollY)
       .exhaustive();
 
     let left = match(align)
-      .with('left', () => triggerRect.left + window.scrollX)
+      .with("left", () => triggerRect.left + window.scrollX)
       .with(
-        'right',
-        () => triggerRect.right - tooltipRect.width + window.scrollX,
+        "right",
+        () => triggerRect.right - tooltipRect.width + window.scrollX
       )
       .with(
-        'center',
+        "center",
         () =>
           triggerRect.left +
           (triggerRect.width - tooltipRect.width) / 2 +
-          window.scrollX,
+          window.scrollX
       )
       .exhaustive();
 
@@ -207,27 +208,27 @@
 
     coords = { top, left };
 
-    tooltip.style.position = 'fixed';
-    tooltip.style.zIndex = '1000';
-    tooltip.style.top = coords.top + 'px';
-    tooltip.style.left = coords.left + 'px';
+    tooltip.style.position = "fixed";
+    tooltip.style.zIndex = "1000";
+    tooltip.style.top = coords.top + "px";
+    tooltip.style.left = coords.left + "px";
 
     // Set up interactive listeners after positioning when tooltip is ready
-    if (trigger === 'hover' && interactive) {
-      tooltip.addEventListener('mouseenter', show);
-      tooltip.addEventListener('mouseleave', hide);
+    if (trigger === "hover" && interactive) {
+      tooltip.addEventListener("mouseenter", show);
+      tooltip.addEventListener("mouseleave", hide);
     }
   }
 
   $effect(() => {
-    if (trigger === 'hover') {
-      wrapper.addEventListener('mouseenter', show);
-      wrapper.addEventListener('mouseleave', hide);
+    if (trigger === "hover") {
+      wrapper.addEventListener("mouseenter", show);
+      wrapper.addEventListener("mouseleave", hide);
 
       // Note: Interactive tooltip listeners are handled in a separate effect
-    } else if (trigger === 'click') {
-      wrapper.addEventListener('click', handleClick);
-      document.addEventListener('click', handleClickOutside);
+    } else if (trigger === "click") {
+      wrapper.addEventListener("click", handleClick);
+      document.addEventListener("click", handleClickOutside);
     }
 
     return () => {
@@ -237,12 +238,12 @@
         hideTimeout = null;
       }
 
-      if (trigger === 'hover') {
-        wrapper.removeEventListener('mouseenter', show);
-        wrapper.removeEventListener('mouseleave', hide);
-      } else if (trigger === 'click') {
-        wrapper.removeEventListener('click', handleClick);
-        document.removeEventListener('click', handleClickOutside);
+      if (trigger === "hover") {
+        wrapper.removeEventListener("mouseenter", show);
+        wrapper.removeEventListener("mouseleave", hide);
+      } else if (trigger === "click") {
+        wrapper.removeEventListener("click", handleClick);
+        document.removeEventListener("click", handleClickOutside);
       }
     };
   });
@@ -254,10 +255,10 @@
       }
     }
 
-    window.addEventListener('resize', handleWindowResize);
+    window.addEventListener("resize", handleWindowResize);
 
     return () => {
-      window.removeEventListener('resize', handleWindowResize);
+      window.removeEventListener("resize", handleWindowResize);
     };
   });
 
@@ -281,12 +282,12 @@
   });
 </script>
 
-<span class={['flex', className]} bind:this={wrapper}>
+<span class={["flex", className]} bind:this={wrapper}>
   {@render children()}
 </span>
 
 {#if visible}
-  {@const isSnippet = typeof content === 'function'}
+  {@const isSnippet = typeof content === "function"}
   {@const container = createPortalContainer()}
   {#if container}
     <div
@@ -294,9 +295,9 @@
       bind:this={tooltip}
       data-tooltip-portal
       class={[
-        'absolute',
+        "absolute",
         {
-          'bg-base-100 rounded-lg px-3 py-1 text-sm text-white shadow':
+          "bg-base-100 rounded-lg px-3 py-1 text-sm text-white shadow":
             !isSnippet,
         },
       ]}
@@ -307,7 +308,7 @@
       {#if isSnippet}
         {@render content(() => {
           setTimeout(() => {
-            logger.debug('hiding tooltip via snippet');
+            debug("hiding tooltip via snippet");
             visible = false;
           });
         })}

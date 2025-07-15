@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { ChevronDownIcon } from 'lucide-svelte';
 
   type Props = {
@@ -35,7 +35,7 @@
 
 {#snippet menu(close: () => void)}
   <div
-    class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit p-2 whitespace-nowrap shadow"
+    class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
     <ul class="">
       {#each LOG_LEVELS as level}

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import LogLevelSelect from './LogLevelSelect.svelte';
   import TimeRangeSelect from './TimeRangeSelect.svelte';

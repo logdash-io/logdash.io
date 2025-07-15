@@ -1,7 +1,7 @@
 <script lang="ts">
   import { clickShortcut } from '$lib/domains/shared/ui/actions/click-shortcut.svelte.js';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import {
     isValidUrl,
     tryPrependProtocol,

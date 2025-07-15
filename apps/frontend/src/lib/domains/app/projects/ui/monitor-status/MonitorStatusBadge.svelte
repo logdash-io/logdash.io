@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { page } from '$app/state';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import MonitorStatus from '$lib/domains/app/projects/ui/monitor-status/MonitorStatus.svelte';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
 
   const { projectId } = $props();
   const projectMonitor = $derived(

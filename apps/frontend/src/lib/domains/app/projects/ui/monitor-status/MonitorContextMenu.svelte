@@ -1,9 +1,8 @@
 <script lang="ts">
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
-  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-  import { PenLineIcon, SettingsIcon, Trash2Icon } from 'lucide-svelte';
-  import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { PenLineIcon, SettingsIcon, Trash2Icon } from 'lucide-svelte';
 
   type Props = {
     monitorId: string;

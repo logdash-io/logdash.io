@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon, TrashIcon, XIcon } from 'lucide-svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fade, fly } from 'svelte/transition';

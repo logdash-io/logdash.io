@@ -9,7 +9,7 @@
     Trash2Icon,
   } from 'lucide-svelte';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
 
   const { project } = $props();
 </script>
