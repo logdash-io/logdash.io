@@ -1,12 +1,14 @@
 {
-	"rewrites": [
-		{
-			"source": "/ingest/static/:path(.*)",
-			"destination": "https://eu-assets.i.posthog.com/static/:path*"
-		},
-		{
-			"source": "/ingest/:path(.*)",
-			"destination": "https://eu.i.posthog.com/:path*"
-		}
-	]
+  "installCommand": "cd ../.. && pnpm install",
+  "buildCommand": "pnpm build",
+  "rewrites": [
+    {
+      "source": "/ingest/static/:path(.*)",
+      "destination": "https://eu-assets.i.posthog.com/static/:path*"
+    },
+    {
+      "source": "/ingest/:path(.*)",
+      "destination": "https://eu.i.posthog.com/:path*"
+    }
+  ]
 }
