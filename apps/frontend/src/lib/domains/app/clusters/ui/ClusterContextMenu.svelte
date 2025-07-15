@@ -1,6 +1,6 @@
 <script lang="ts">
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import Tooltip from '../../../../../../../../packages/hyper-ui/src/lib/presentational/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { PenLineIcon, SettingsIcon, Trash2Icon, Users } from 'lucide-svelte';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';

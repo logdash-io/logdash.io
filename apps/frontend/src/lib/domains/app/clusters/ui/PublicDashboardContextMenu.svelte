@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import Tooltip from '../../../../../../../../packages/hyper-ui/src/lib/presentational/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import {
     CopyIcon,
     ExternalLinkIcon,

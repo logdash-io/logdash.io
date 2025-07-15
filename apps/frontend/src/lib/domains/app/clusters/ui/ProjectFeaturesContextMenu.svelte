@@ -4,7 +4,7 @@
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import SetupMonitoringButton from '$lib/domains/app/projects/ui/presentational/SetupMonitoringButton.svelte';
   import { Feature } from '$lib/domains/shared/types.js';
-  import Tooltip from '../../../../../../../../packages/hyper-ui/src/lib/presentational/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { PlusIcon } from 'lucide-svelte';
   import { fly } from 'svelte/transition';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
