@@ -8,4 +8,3 @@ export { default as StatusBadge } from "./StatusBadge.svelte";
 export { default as StatusBar } from "./StatusBar.svelte";
 export { default as SystemStatusHeader } from "./SystemStatusHeader.svelte";
 export { default as UptimeChart } from "./UptimeChart.svelte";
-export { default as Tooltip } from "./Tooltip.svelte";
