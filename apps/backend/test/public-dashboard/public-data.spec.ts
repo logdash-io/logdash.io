@@ -2,6 +2,7 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { PublicDashboardDataResponse } from '../../src/public-dashboard/core/dto/public-dashboard-data.response';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('PublicDashboardCoreController (public data read)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -18,8 +19,12 @@ describe('PublicDashboardCoreController (public data read)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  async function setupPublicDashboard(dto?: { isPublic?: boolean }) {
-    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+  async function setupPublicDashboard(dto?: { isPublic?: boolean; isPro?: boolean }) {
+    const setup = dto?.isPro
+      ? await bootstrap.utils.generalUtils.setupClaimed({
+          userTier: UserTier.Pro,
+        })
+      : await bootstrap.utils.generalUtils.setupAnonymous();
 
     const additionalProject = await bootstrap.utils.projectUtils.createDefaultProject({
       userId: setup.user.id,
@@ -65,7 +70,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
   describe('GET /public_dashboards/:publicDashboardId/public_data', () => {
     it('reads public data', async () => {
       // given
-      const setup = await setupPublicDashboard();
+      const setup = await setupPublicDashboard({ isPro: true });
 
       // when
       const response = await request(bootstrap.app.getHttpServer()).get(
@@ -87,6 +92,32 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
       expect(data.httpMonitors[0].buckets).toHaveLength(24);
       expect(data.httpMonitors[1].buckets).toHaveLength(24);
+    });
+
+    it('returns no buckets for free tier', async () => {
+      // given
+      const setup = await setupPublicDashboard({ isPro: false });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      const data = response.body as PublicDashboardDataResponse;
+
+      expect(response.status).toBe(200);
+
+      expect(data.httpMonitors).toHaveLength(2);
+
+      expect(data.httpMonitors[0].name).toBe('A');
+      expect(data.httpMonitors[0].pings).toHaveLength(1);
+
+      expect(data.httpMonitors[1].name).toBe('B');
+      expect(data.httpMonitors[1].pings).toHaveLength(1);
+
+      expect(data.httpMonitors[0].buckets).toBeUndefined();
+      expect(data.httpMonitors[1].buckets).toBeUndefined();
     });
 
     it('uses cache', async () => {
@@ -234,6 +265,25 @@ describe('PublicDashboardCoreController (public data read)', () => {
       // then
       expect(secondResponse.status).toBe(200);
       expect(secondResponse.body.httpMonitors).toHaveLength(3);
+    });
+
+    it('reads public data by custom domain', async () => {
+      // given
+      const setup = await setupPublicDashboard({ isPro: true });
+
+      const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+        domain: 'status.test.com',
+        publicDashboardId: setup.publicDashboard.id,
+        token: setup.token,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${customDomain.domain}/public_data?period=24h`,
+      );
+
+      // then
+      expect(response.status).toBe(200);
     });
   });
 

@@ -3,8 +3,8 @@ import type { Log } from '$lib/domains/logs/domain/log';
 import type { Metric } from '$lib/domains/app/projects/domain/metric';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
 import type { Project } from '$lib/domains/app/projects/domain/project';
-import type { PublicDashboardData } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard-data.js';
 import type { PublicDashboard } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard.js';
+import type { PublicDashboardData } from '@logdash/hyper-ui/features';
 import type {
   NotificationChannel,
   TelegramChatInfo,
@@ -378,12 +378,6 @@ class LogdashAPI {
     },
     access_token: string,
   ): Promise<Monitor> {
-    console.log(
-      `Creating monitor for project ${project_id} with data:`,
-      monitor,
-      access_token,
-    );
-
     return this.post<Monitor>(
       `${LogdashAPI.v0baseUrl}/projects/${project_id}/http_monitors`,
       monitor,
@@ -435,16 +429,6 @@ class LogdashAPI {
     return this.get<PublicDashboardData>(
       `${LogdashAPI.v0baseUrl}/public_dashboards/${dashboard_id}/data?period=${period}`,
       access_token,
-    );
-  }
-
-  get_public_dashboard_public_data(
-    dashboard_id: string,
-    period: '24h' | '7d' | '90d' = '90d',
-  ): Promise<PublicDashboardData> {
-    return this.get<PublicDashboardData>(
-      `${LogdashAPI.v0baseUrl}/public_dashboards/${dashboard_id}/public_data?period=${period}`,
-      '',
     );
   }
 

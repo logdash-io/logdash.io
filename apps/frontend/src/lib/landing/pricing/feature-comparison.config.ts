@@ -5,7 +5,7 @@ export const FEATURES_COMPARISON = {
   plans: [
     { name: 'Hobby', price: 'Free', tier: UserTier.FREE },
     { name: 'Builder', price: '9$/month', tier: UserTier.BUILDER },
-    { name: 'Pro', price: '$29/month', tier: UserTier.PRO },
+    { name: 'Pro', price: '$15/month', tier: UserTier.PRO },
   ],
   sections: [
     {
@@ -96,6 +96,18 @@ export const FEATURES_COMPARISON = {
           [UserTier.BUILDER]: true,
           [UserTier.PRO]: true,
         },
+        {
+          name: 'Custom status page domain',
+          [UserTier.FREE]: false,
+          [UserTier.BUILDER]: false,
+          [UserTier.PRO]: true,
+        },
+        {
+          name: 'Push pings',
+          [UserTier.FREE]: false,
+          [UserTier.BUILDER]: true,
+          [UserTier.PRO]: true,
+        },
       ],
     },
     {
@@ -180,6 +192,12 @@ export const FEATURES_COMPARISON = {
       name: 'Professional',
       icon: '⚡',
       features: [
+        {
+          name: 'Space background',
+          [UserTier.FREE]: false,
+          [UserTier.BUILDER]: false,
+          [UserTier.PRO]: true,
+        },
         {
           name: 'Multiple Collaborators',
           [UserTier.FREE]: '1 extra user per project',

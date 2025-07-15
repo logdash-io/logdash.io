@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { getEnvConfig } from './shared/configs/env-configs';
 import * as basicAuth from 'express-basic-auth';
+import { swaggerDarkModeCSS } from './swagger/swagger-dark-mode.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
@@ -28,7 +29,10 @@ async function bootstrap() {
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, documentFactory);
+  SwaggerModule.setup('docs', app, documentFactory, {
+    customCss: swaggerDarkModeCSS,
+    customSiteTitle: 'LogDash API Documentation',
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

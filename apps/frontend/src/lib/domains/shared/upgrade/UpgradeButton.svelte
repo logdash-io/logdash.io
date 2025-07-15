@@ -1,39 +1,41 @@
 <script lang="ts">
   import SkyBackground from '$lib/domains/shared/upgrade/SkyBackground.svelte';
+  import { type UpgradeSource } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
+  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { RocketIcon } from 'lucide-svelte';
-  import { getContext, type Snippet } from 'svelte';
+  import type { PostHog } from 'posthog-js';
+  import { getContext, onDestroy, type Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import { fade } from 'svelte/transition';
-  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
-  import {
-    startTierUpgrade,
-    type UpgradeSource,
-  } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
-  import type { PostHog } from 'posthog-js';
+  import { userState } from '../user/application/user.state.svelte.js';
+  import type { UserTier } from '../types.js';
 
   type Props = {
     class?: ClassValue;
     children?: Snippet;
     source?: UpgradeSource;
+    to?: UserTier;
   };
   const {
     class: className = '',
     children,
     source = 'unknown',
+    to,
   }: Props = $props();
   const posthog = getContext<PostHog>('posthog');
-  let isHovered = $state(false);
   let upgrading = $state(false);
 
-  const handleMouseEnter = () => {
+  const onMouseEnter = () => {
     upgradeState.showBackground();
-    isHovered = true;
   };
 
-  const handleMouseLeave = () => {
+  const onMouseLeave = () => {
     upgradeState.hideBackground();
-    isHovered = false;
   };
+
+  onDestroy(() => {
+    upgradeState.hideBackground();
+  });
 </script>
 
 <div class={['btn-wrapper z-10 w-full rounded-lg p-[1px]', className]}>
@@ -41,10 +43,17 @@
     class="btn btn-neutral relative w-full overflow-hidden"
     onclick={() => {
       upgrading = true;
-      startTierUpgrade(posthog, source);
+      const nextTier = userState.upgrade(source, to);
+      if (nextTier) {
+        posthog.capture('upgrade_initiated', {
+          source,
+          timestamp: new Date().toISOString(),
+          tier: nextTier,
+        });
+      }
     }}
-    onmouseenter={handleMouseEnter}
-    onmouseleave={handleMouseLeave}
+    onmouseenter={onMouseEnter}
+    onmouseleave={onMouseLeave}
   >
     <div class="absolute h-full w-full overflow-hidden">
       <SkyBackground comets={false} density={0.1} speed={10} />
@@ -105,7 +114,7 @@
       var(--clr-1),
       var(--clr-2),
       var(--clr-3),
-        /* var(--clr-2), */ /* var(--clr-1), */ var(--clr-card)
+      /* var(--clr-2), */ /* var(--clr-1), */ var(--clr-card)
     );
     border-radius: inherit;
     animation: rotate 4.5s linear infinite;

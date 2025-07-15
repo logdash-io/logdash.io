@@ -17,11 +17,11 @@ export class PublicDashboardMonitorDto {
   @ApiProperty()
   name: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     oneOf: [{ $ref: getSchemaPath(VirtualBucket) }, { type: 'null' }],
     isArray: true,
   })
-  buckets: (VirtualBucket | null)[];
+  buckets?: (VirtualBucket | null)[];
 
   @ApiProperty({
     type: PublicDashboardPingDto,

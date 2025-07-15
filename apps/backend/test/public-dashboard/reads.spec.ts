@@ -22,7 +22,9 @@ describe('PublicDashboardCoreController (reads)', () => {
   describe('GET /clusters/:clusterId/public_dashboards', () => {
     it('reads public dashboards by cluster id', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
@@ -48,7 +50,9 @@ describe('PublicDashboardCoreController (reads)', () => {
 
     it('returns empty array when no public dashboards exist for cluster', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
       const clusterId = cluster.id;
 
       // when
@@ -62,8 +66,12 @@ describe('PublicDashboardCoreController (reads)', () => {
 
     it('throws 403 when user is not a member of the cluster', async () => {
       // given
-      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
-      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupA = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
+      const setupB = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: setupA.cluster.id,
@@ -116,7 +124,9 @@ describe('PublicDashboardCoreController (reads)', () => {
   describe('GET /public_dashboards/:publicDashboardId', () => {
     it('reads public dashboard by id', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
@@ -143,8 +153,12 @@ describe('PublicDashboardCoreController (reads)', () => {
 
     it('throws 403 when user is not a member of the cluster', async () => {
       // given
-      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
-      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupA = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
+      const setupB = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: setupA.cluster.id,
@@ -195,7 +209,9 @@ describe('PublicDashboardCoreController (reads)', () => {
 
     it('returns dashboard without custom domain when it does not exist', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
@@ -251,7 +267,9 @@ describe('PublicDashboardCoreController (reads)', () => {
 
     it('returns 403 when domain is not verified', async () => {
       // given
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,

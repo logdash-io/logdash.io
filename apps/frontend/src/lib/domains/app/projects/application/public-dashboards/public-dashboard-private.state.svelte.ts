@@ -1,7 +1,7 @@
 import { logdashAPI } from '$lib/domains/shared/logdash.api';
 import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils.js';
 import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/domains/shared/utils/cookies.utils.js';
-import { PublicDashboardState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard.state.svelte.js';
+import { PublicDashboardState } from '@logdash/hyper-ui/features';
 
 export class PublicDashboardPrivateState extends PublicDashboardState {
   // Implementation of abstract method for private dashboard loading

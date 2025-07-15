@@ -1,0 +1,60 @@
+{
+  "name": "@logdash/hyper-ui",
+  "version": "0.1.0",
+  "description": "LogDash design system components and utilities built for Svelte 5 with DaisyUI and Tailwind CSS",
+  "type": "module",
+  "main": "./src/lib/index.ts",
+  "types": "./src/lib/index.ts",
+  "exports": {
+    ".": "./src/lib/index.ts",
+    "./styles": "./src/lib/styles/main.css",
+    "./styles/*": "./src/lib/styles/*.css",
+    "./types": "./src/lib/types/index.ts",
+    "./features": "./src/lib/features/index.ts",
+    "./presentational": "./src/lib/presentational/index.ts",
+    "./utils": "./src/lib/utils/index.ts",
+    "./types/*": "./src/lib/types/*.ts",
+    "./features/*": "./src/lib/features/*.ts",
+    "./presentational/*": "./src/lib/presentational/*.ts",
+    "./utils/*": "./src/lib/utils/*.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "dev": "echo 'Internal workspace package - no build needed'",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "prepare": "svelte-kit sync || echo ''"
+  },
+  "keywords": [
+    "design-system",
+    "ui",
+    "components",
+    "svelte",
+    "daisyui",
+    "tailwind",
+    "logdash"
+  ],
+  "author": "LogDash Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@sveltejs/kit": "^2.22.2",
+    "@sveltejs/package": "^2.0.0",
+    "@sveltejs/vite-plugin-svelte": "^6.0.0",
+    "svelte": "^5.34.9",
+    "svelte-check": "^4.1.4",
+    "typescript": "^5.7.3",
+    "vite": "^7.0.4"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "luxon": "^3.6.1",
+    "lucide-svelte": "^0.525.0"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0",
+    "tailwindcss": "^4.0.0",
+    "daisyui": "^5.0.0"
+  }
+}

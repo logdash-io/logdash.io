@@ -1,4 +1,3 @@
-import { CronExpression } from '@nestjs/schedule';
 import { NotificationChannelType } from '../../notification-channel/core/enums/notification-target.enum';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
 
@@ -11,9 +10,6 @@ interface UserPlanConfig {
   };
   notificationChannels: {
     allowedTypes: NotificationChannelType[];
-  };
-  pings: {
-    frequency: CronExpression;
   };
 }
 
@@ -44,9 +40,6 @@ export const UserPlanConfigs: UserPlanConfigs = {
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
     },
-    pings: {
-      frequency: CronExpression.EVERY_5_MINUTES,
-    },
   },
   [UserTier.EarlyUser]: {
     projects: {
@@ -57,9 +50,6 @@ export const UserPlanConfigs: UserPlanConfigs = {
     },
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
-    },
-    pings: {
-      frequency: CronExpression.EVERY_5_MINUTES,
     },
   },
 
@@ -74,9 +64,6 @@ export const UserPlanConfigs: UserPlanConfigs = {
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
     },
-    pings: {
-      frequency: CronExpression.EVERY_MINUTE,
-    },
   },
   [UserTier.Builder]: {
     projects: {
@@ -88,9 +75,6 @@ export const UserPlanConfigs: UserPlanConfigs = {
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
     },
-    pings: {
-      frequency: CronExpression.EVERY_MINUTE,
-    },
   },
   [UserTier.Pro]: {
     projects: {
@@ -101,9 +85,6 @@ export const UserPlanConfigs: UserPlanConfigs = {
     },
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
-    },
-    pings: {
-      frequency: CronExpression.EVERY_MINUTE,
     },
   },
 
@@ -118,9 +99,6 @@ export const UserPlanConfigs: UserPlanConfigs = {
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
     },
-    pings: {
-      frequency: CronExpression.EVERY_5_MINUTES,
-    },
   },
   [UserTier.Admin]: {
     projects: {
@@ -131,9 +109,6 @@ export const UserPlanConfigs: UserPlanConfigs = {
     },
     notificationChannels: {
       allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
-    },
-    pings: {
-      frequency: CronExpression.EVERY_MINUTE,
     },
   },
 };

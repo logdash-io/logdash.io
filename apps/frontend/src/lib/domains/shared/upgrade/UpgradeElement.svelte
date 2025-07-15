@@ -1,12 +1,10 @@
 <script lang="ts">
-  import { getContext, type Snippet } from 'svelte';
+  import { getContext, onDestroy, type Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
-  import {
-    startTierUpgrade,
-    type UpgradeSource,
-  } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
+  import type { UpgradeSource } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
   import type { PostHog } from 'posthog-js';
+  import { userState } from '../user/application/user.state.svelte.js';
 
   type Props = {
     class?: ClassValue;
@@ -38,6 +36,10 @@
       upgradeState.hideBackground();
     }
   };
+
+  onDestroy(() => {
+    upgradeState.hideBackground();
+  });
 </script>
 
 <div
@@ -51,7 +53,14 @@
   onclick={() => {
     onClick?.();
     if (enabled) {
-      startTierUpgrade(posthog, source);
+      const nextTier = userState.upgrade(source);
+      if (nextTier) {
+        posthog.capture('upgrade_initiated', {
+          source,
+          timestamp: new Date().toISOString(),
+          tier: nextTier,
+        });
+      }
     }
   }}
   onmouseenter={handleMouseEnter}

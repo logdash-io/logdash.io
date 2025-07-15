@@ -2,7 +2,6 @@
   import { page } from '$app/state';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import StatusBadge from '$lib/domains/app/projects/ui/presentational/public-dashboard/StatusBadge.svelte';
   import { logger } from '$lib/domains/shared/logger';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
@@ -10,9 +9,12 @@
   import MonitorContextMenu from '../../monitor-status/MonitorContextMenu.svelte';
   import NotificationChannelsContextMenu from '../../notification-channels/NotificationChannelsContextMenu.svelte';
   import { MonitoringTimeRangeSelector } from '../../presentational/monitoring/index.js';
-  import { PingChart } from '../../presentational/public-dashboard/index.js';
-  import UptimeChart from '../../presentational/public-dashboard/UptimeChart.svelte';
   import { untrack } from 'svelte';
+  import {
+    PingChart,
+    StatusBadge,
+    UptimeChart,
+  } from '@logdash/hyper-ui/features';
 
   type Props = {
     projectId: string;

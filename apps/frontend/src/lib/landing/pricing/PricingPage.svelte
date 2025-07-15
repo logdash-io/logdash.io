@@ -6,6 +6,7 @@
   import PricingComparisonTable from './PricingComparisonTable.svelte';
   import { runGithubLogin } from './run-github-login.js';
   import TrustProof from '../TrustProof.svelte';
+  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
 
   let loggingIn = $state(false);
 
@@ -20,6 +21,18 @@
       title: "Questions? We're here to help",
       description: 'Contact us for any questions about our pricing or features',
     },
+  };
+
+  const onMouseEnter = (plan: any) => {
+    if (plan.tier === UserTier.PRO) {
+      upgradeState.showBackground();
+    }
+  };
+
+  const onMouseLeave = (plan: any) => {
+    if (plan.tier === UserTier.PRO) {
+      upgradeState.hideBackground();
+    }
   };
 </script>
 
@@ -60,6 +73,8 @@
               'ring-primary ring': plan.popular,
             },
           ]}
+          onmouseenter={() => onMouseEnter(plan)}
+          onmouseleave={() => onMouseLeave(plan)}
         >
           <div class={['badge badge-soft badge-lg mb-4', plan.badge.class]}>
             {plan.badge.text}
@@ -133,7 +148,7 @@
   <div
     class="ld-card-base bg-neutral text-neutral-content mx-auto max-w-2xl rounded-xl p-8 shadow-xl"
   >
-    <p class="mb-2 text-xs font-semibold tracking-wide uppercase opacity-80">
+    <p class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-80">
       A Note from us
     </p>
     <p class="mb-6 text-lg font-extrabold">Logdash Inc.</p>

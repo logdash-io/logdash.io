@@ -1,19 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { promisify } from 'util';
-import * as dns from 'dns';
+import { resolveCname } from 'dns/promises';
+import { Logger } from '@logdash/js-sdk';
 
 @Injectable()
 export class CustomDomainDnsService {
-  private readonly resolveCname = promisify(dns.resolveCname);
+  constructor(private readonly logger: Logger) {}
 
   public async checkCnameRecord(domain: string): Promise<string | null> {
     try {
-      const results = await this.resolveCname(domain);
+      const results = await resolveCname(domain);
+      this.logger.info('CNAME records', {
+        domain,
+        results,
+      });
       if (results && results.length > 0) {
         return results[0];
       }
       return null;
     } catch (error) {
+      this.logger.error('Error resolving CNAME record', {
+        domain,
+        error: error.message,
+      });
       return null;
     }
   }

@@ -1,5 +1,5 @@
 import { goto } from '$app/navigation';
-import type { PostHog } from 'posthog-js';
+import { UserTier } from '../types.js';
 
 export type UpgradeSource =
   | 'nav-menu'
@@ -15,19 +15,13 @@ export type UpgradeSource =
   | 'logs-filter-dropdown'
   | 'logs-date-range'
   | 'monitor-historical-uptime'
+  | 'custom-statuspage-domain'
   | 'unknown';
 
 export const startTierUpgrade = (
-  posthog?: PostHog,
   source: UpgradeSource = 'unknown',
+  tier: UserTier = UserTier.BUILDER,
 ) => {
-  if (posthog) {
-    posthog.capture('upgrade_initiated', {
-      source,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  const params = new URLSearchParams({ source });
+  const params = new URLSearchParams({ source, tier: tier.toString() });
   goto(`/app/api/user/upgrade?${params.toString()}`);
 };

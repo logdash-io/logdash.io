@@ -4,11 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev:frontend": "pnpm --filter frontend dev"
+    "dev:frontend": "pnpm --filter frontend dev",
+    "build:frontend": "pnpm --filter frontend build"
   },
-  "keywords": [
-    
-  ],
+  "keywords": [],
   "author": "",
   "license": "BSL-1.0",
   "packageManager": "pnpm@10.7.0",

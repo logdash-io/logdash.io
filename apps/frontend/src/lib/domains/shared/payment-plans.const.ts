@@ -51,6 +51,7 @@ export const PAYMENT_PLANS = [
       { name: 'Regular catch-up calls' },
       { name: 'Early access to new features' },
       { name: 'Priority feature requests' },
+      { name: 'Push pings' },
     ],
     badge: {
       text: 'Save 10%',
@@ -63,7 +64,7 @@ export const PAYMENT_PLANS = [
   },
   {
     name: 'Pro',
-    price: '$29/mo.',
+    price: '$15/mo.',
     period: 'per month',
     description:
       'Perfect for small teams and startups. Get more projects, metrics, and support.',
@@ -84,10 +85,11 @@ export const PAYMENT_PLANS = [
       { name: 'Team management features' },
       { name: 'Custom branding options' },
       { name: 'Custom status page domain' },
+      { name: 'Space background' },
     ],
     badge: {
-      text: 'Getting serious',
-      class: 'badge-secondary',
+      text: 'Save 50%',
+      class: 'badge-primary',
     },
     buttonText: 'Start free trial',
     guarantee: '30-day money-back guarantee',

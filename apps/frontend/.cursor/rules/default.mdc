@@ -4,6 +4,10 @@ globs:
 alwaysApply: true
 ---
 
+do NOT add any comments to the code, never.
+instead of inline class conditions, use svelte's conditional classes like class={['class1', { 'class2': condition }]}
+instead of naming function in the UI handleSomething, use onSomething instead
+
 ### 1. Code should read like a newspaper
 
 - The most important logic should come first.
@@ -32,7 +36,7 @@ alwaysApply: true
 > 🧠 Tip: Write code as if you're the future maintainer — and you’ve forgotten everything.
 
 - never use `.then()`. Always use normal promises,
-- do not put comments in the code,
+- very important: do not add any comments to the produced code,
 - enums keys are in `THIS_CASE`. Enum values are in `this-case`,
 - distinguish between dtos and regular interfaces
 - keep state type within the state file
@@ -41,3 +45,6 @@ alwaysApply: true
 - always include function return type
 - do NOT include bootstrap classes, project is styled with daisyui+tailwind - see app.css for custom classess
 - respect @deprecated annotations, do not use or extend deprecated code
+- do not add new things to logdash.api.ts, it's deprecated. Use infrastructure services instead
+- try to use early returns instead of big nested if statements
+- use ts-pattern match instead of switch statements
