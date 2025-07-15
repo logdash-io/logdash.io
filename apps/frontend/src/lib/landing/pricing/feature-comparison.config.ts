@@ -193,6 +193,12 @@ export const FEATURES_COMPARISON = {
       icon: '⚡',
       features: [
         {
+          name: 'Space background',
+          [UserTier.FREE]: false,
+          [UserTier.BUILDER]: false,
+          [UserTier.PRO]: true,
+        },
+        {
           name: 'Multiple Collaborators',
           [UserTier.FREE]: '1 extra user per project',
           [UserTier.BUILDER]: '2 extra users per project',

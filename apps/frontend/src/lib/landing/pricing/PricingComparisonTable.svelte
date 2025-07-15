@@ -5,12 +5,25 @@
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { fade } from 'svelte/transition';
   import { runGithubLogin } from './run-github-login.js';
+  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
 
   let loggingIn = $state(false);
 
   const handleGithubLogin = (tier: UserTier) => {
     loggingIn = true;
     runGithubLogin(tier);
+  };
+
+  const onMouseEnter = (tier: UserTier) => {
+    if (tier === UserTier.PRO) {
+      upgradeState.showBackground();
+    }
+  };
+
+  const onMouseLeave = (tier: UserTier) => {
+    if (tier === UserTier.PRO) {
+      upgradeState.hideBackground();
+    }
   };
 </script>
 
@@ -43,7 +56,7 @@
                 >
                   {#if plan.tier === UserTier.BUILDER}
                     <div
-                      class="bg-primary text-secondary top-0 left-0 z-0 -mb-6 flex h-12 w-full items-center justify-center rounded-xl pb-6 text-xs font-semibold md:-mb-8 md:h-16 md:pb-8"
+                      class="bg-primary text-secondary left-0 top-0 z-0 -mb-6 flex h-12 w-full items-center justify-center rounded-xl pb-6 text-xs font-semibold md:-mb-8 md:h-16 md:pb-8"
                     >
                       Most Popular
                     </div>
@@ -55,14 +68,16 @@
                     class={[
                       'relative z-10 h-64 p-3 pt-6 text-left md:h-80 md:p-4 md:pt-9',
                       {
-                        'border-primary/60 rounded-tl-xl rounded-tr-xl border-t border-r border-l bg-[#210c15]':
+                        'border-primary/60 rounded-tl-xl rounded-tr-xl border-l border-r border-t bg-[#210c15]':
                           plan.tier === UserTier.BUILDER,
-                        'border-secondary/10 rounded-tl-2xl border border-r-0 border-b-0':
+                        'border-secondary/10 rounded-tl-2xl border border-b-0 border-r-0':
                           plan.tier === UserTier.FREE,
                         'border-secondary/10 rounded-tr-2xl border border-b-0 border-l-0':
                           plan.tier === UserTier.PRO,
                       },
                     ]}
+                    onmouseenter={() => onMouseEnter(plan.tier)}
+                    onmouseleave={() => onMouseLeave(plan.tier)}
                   >
                     <div
                       class={[
@@ -83,7 +98,7 @@
                         </span>
 
                         <p
-                          class="mt-2 text-xs whitespace-pre-wrap opacity-75 md:mt-4 md:text-sm"
+                          class="mt-2 whitespace-pre-wrap text-xs opacity-75 md:mt-4 md:text-sm"
                         >
                           {fullPlanConfig.description.split('.')[0]}
                         </p>
@@ -133,7 +148,7 @@
                   class={[
                     'py-3 text-center md:py-4',
                     {
-                      'bg-primary/10 border-primary/60 border-r border-l':
+                      'bg-primary/10 border-primary/60 border-l border-r':
                         plan.tier === UserTier.BUILDER,
                       'border-secondary/10 text-secondary/30 border-l':
                         plan.tier === UserTier.FREE,
@@ -141,6 +156,8 @@
                         plan.tier === UserTier.PRO,
                     },
                   ]}
+                  onmouseenter={() => onMouseEnter(plan.tier)}
+                  onmouseleave={() => onMouseLeave(plan.tier)}
                 >
                   <CheckIcon class="text-success mx-auto h-4 w-4" />
                 </td>
@@ -163,6 +180,16 @@
                       'border-none': isLast,
                     },
                   ]}
+                  onmouseenter={() => {
+                    if (feature.name === 'Space background') {
+                      upgradeState.showBackground();
+                    }
+                  }}
+                  onmouseleave={() => {
+                    if (feature.name === 'Space background') {
+                      upgradeState.hideBackground();
+                    }
+                  }}
                 >
                   <td class="py-3 text-sm font-medium md:py-4 md:text-base">
                     {feature.name}
@@ -195,7 +222,7 @@
                     class={[
                       'py-3 text-center md:py-4',
                       {
-                        'bg-primary/10 border-primary/60 border-r border-l': true,
+                        'bg-primary/10 border-primary/60 border-l border-r': true,
                         'rounded-b-xl border-b': isLastSection && isLast,
                       },
                     ]}
@@ -224,6 +251,8 @@
                         'rounded-b-xl border-b': isLastSection && isLast,
                       },
                     ]}
+                    onmouseenter={() => onMouseEnter(UserTier.PRO)}
+                    onmouseleave={() => onMouseLeave(UserTier.PRO)}
                   >
                     {#if typeof feature[UserTier.PRO] === 'boolean'}
                       {#if feature[UserTier.PRO]}
