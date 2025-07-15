@@ -47,7 +47,7 @@
   <div
     in:fade={{ duration: 300, easing: cubicInOut }}
     out:scale={{ duration: 100, easing: cubicInOut, start: 0.9 }}
-    class="fixed left-0 top-0 h-full w-full overflow-hidden"
+    class="pointer-events-none fixed left-0 top-0 h-full w-full overflow-hidden"
   >
     <SkyBackground {density} />
   </div>
