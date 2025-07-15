@@ -1,6 +1,4 @@
 {
-  "installCommand": "cd ../.. && pnpm install",
-  "buildCommand": "cd ../.. && pnpm --filter frontend build",
   "rewrites": [
     {
       "source": "/ingest/static/:path(.*)",
