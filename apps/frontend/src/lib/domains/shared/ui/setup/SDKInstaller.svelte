@@ -1,4 +1,5 @@
 <script lang="ts">
+  import CurlIcon from '$lib/domains/shared/icons/CurlIcon.svelte';
   import DotNetIcon from '$lib/domains/shared/icons/DotNetIcon.svelte';
   import GoIcon from '$lib/domains/shared/icons/GoIcon.svelte';
   import JavaIcon from '$lib/domains/shared/icons/JavaIcon.svelte';
@@ -7,26 +8,14 @@
   import PythonIcon from '$lib/domains/shared/icons/PythonIcon.svelte';
   import RubyIcon from '$lib/domains/shared/icons/RubyIcon.svelte';
   import RustIcon from '$lib/domains/shared/icons/RustIcon.svelte';
-  import CurlIcon from '$lib/domains/shared/icons/CurlIcon.svelte';
   import {
     type LogdashSDK,
     LogdashSDKName,
   } from '$lib/domains/shared/types.js';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
-  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-  import {
-    CheckIcon,
-    ChevronDownIcon,
-    Copy,
-    DotSquareIcon,
-  } from 'lucide-svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { CheckIcon, ChevronDownIcon, Copy } from 'lucide-svelte';
   import Highlight from 'svelte-highlight';
-  import {
-    bash,
-    csharp,
-    java,
-    type LanguageType,
-  } from 'svelte-highlight/languages';
+  import { bash, csharp, type LanguageType } from 'svelte-highlight/languages';
 
   type Props = {
     selectedSDK: LogdashSDK;
@@ -156,7 +145,7 @@ implementation 'io.logdash:logdash:0.2.0'`,
             selectedSDKIndex = SDK_LIST.indexOf(sdk);
             sdkPopover.hidePopover();
           }}
-          class="hover:bg-base-100/70 flex cursor-pointer flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs select-none"
+          class="hover:bg-base-100/70 flex cursor-pointer select-none flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs"
         >
           <sdk.icon class="h-4 w-4 shrink-0" />
           <div class="block">
@@ -194,7 +183,7 @@ implementation 'io.logdash:logdash:0.2.0'`,
       />
 
       <label
-        class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute top-2 right-2 border-transparent"
+        class="btn btn-md btn-square bg-base-100 swap swap-rotate absolute right-2 top-2 border-transparent"
         for="copy-code-0"
         onclick={() => {
           navigator.clipboard.writeText(SDK_INSTALLERS[selectedSDK.name].code);

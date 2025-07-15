@@ -4,7 +4,7 @@
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
   import { CheckCircle } from 'lucide-svelte';
   import { onMount, type Snippet } from 'svelte';
@@ -70,7 +70,7 @@
   }
 </script>
 
-<div class="mr-auto w-xl space-y-8">
+<div class="w-xl mr-auto space-y-8">
   <DataTile delayIn={0} delayOut={50}>
     <div class="flex w-full flex-col gap-2">
       <div class="flex w-full gap-2">
@@ -141,9 +141,9 @@
   </DataTile>
 </div>
 
-<div class="fixed top-0 left-0 z-50 h-full w-full bg-black/40">
+<div class="fixed left-0 top-0 z-50 h-full w-full bg-black/40">
   <div
-    class="bg-base-200 absolute top-0 right-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:w-xl sm:p-8 sm:pb-6"
+    class="bg-base-200 sm:w-xl absolute right-0 top-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:p-8 sm:pb-6"
   >
     <div class="space-y-2">
       <h5 class="text-2xl font-semibold">Setup Monitoring for your service</h5>

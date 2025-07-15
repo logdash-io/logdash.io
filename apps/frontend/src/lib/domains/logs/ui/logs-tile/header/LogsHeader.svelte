@@ -5,7 +5,7 @@
   import LogsAnalyticsChart from './LogsAnalyticsChart.svelte';
   import LogsSearchInput from './LogsSearchInput.svelte';
   import LogsFilterDropdown from './filters/LogsFilterDropdown.svelte';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';

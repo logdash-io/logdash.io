@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import Tooltip from '../../../../../../../../packages/hyper-ui/src/lib/presentational/Tooltip.svelte';
   import {
     CopyIcon,
     ExternalLinkIcon,
@@ -32,7 +32,7 @@
     totalPublicDashboardCount <
     exposedConfigState.maxNumberOfPublicDashboards(userState.tier)}
   <ul
-    class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit p-2 whitespace-nowrap shadow"
+    class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
     {#if isPublic}
       <li>

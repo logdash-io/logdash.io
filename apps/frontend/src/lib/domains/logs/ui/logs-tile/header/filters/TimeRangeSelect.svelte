@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import { ChevronDownIcon } from 'lucide-svelte';
 
@@ -34,7 +34,7 @@
 
 {#snippet menu(close: () => void)}
   <div
-    class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit p-2 whitespace-nowrap shadow"
+    class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
     <ul class="">
       {#each TIME_RANGES as range}

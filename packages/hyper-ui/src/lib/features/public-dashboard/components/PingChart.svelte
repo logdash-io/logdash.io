@@ -1,7 +1,7 @@
 <script lang="ts">
   import { DateTime } from "luxon";
-  import Tooltip from "./Tooltip.svelte";
   import StatusBar from "./StatusBar.svelte";
+  import Tooltip from "../../../presentational/Tooltip.svelte";
 
   interface Ping {
     createdAt: string;
@@ -55,7 +55,7 @@
 >
   <div
     class={[
-      "flex h-6 w-full flex-row-reverse items-end justify-start",
+      "flex h-7 w-full flex-row-reverse items-end justify-start",
       {
         "overflow-hidden": adaptToWidth,
       },

@@ -1,13 +1,12 @@
 <script lang="ts">
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
+  import { notificationChannelSetupState } from '$lib/domains/app/projects/application/notification-channels/notification-channel-setup.state.svelte.js';
+  import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
+  import type { NotificationChannel } from '$lib/domains/app/projects/domain/telegram/telegram.types.js';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { BellIcon, PlusIcon, Trash2Icon } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { fly } from 'svelte/transition';
-  import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
-  import { telegramSetupState } from '$lib/domains/app/projects/application/notification-channels/telegram-setup.state.svelte.js';
-  import type { NotificationChannel } from '$lib/domains/app/projects/domain/telegram/telegram.types.js';
-  import { notificationChannelSetupState } from '$lib/domains/app/projects/application/notification-channels/notification-channel-setup.state.svelte.js';
 
   type Props = {
     clusterId: string;
@@ -56,7 +55,7 @@
 
 {#snippet menu(close: () => void)}
   <div
-    class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit p-2 whitespace-nowrap shadow"
+    class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
     <ul class="">
       {#each notificationChannelsState.state.channels as channel (channel.id)}

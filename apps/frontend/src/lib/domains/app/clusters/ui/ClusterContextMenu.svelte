@@ -1,6 +1,6 @@
 <script lang="ts">
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import Tooltip from '../../../../../../../../packages/hyper-ui/src/lib/presentational/Tooltip.svelte';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { PenLineIcon, SettingsIcon, Trash2Icon, Users } from 'lucide-svelte';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
@@ -15,7 +15,7 @@
 
 {#snippet menu(close: () => void)}
   <ul
-    class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit p-2 whitespace-nowrap shadow"
+    class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
     {#if clustersState.isUserClusterCreator(userState.id, clusterId)}
       <li>

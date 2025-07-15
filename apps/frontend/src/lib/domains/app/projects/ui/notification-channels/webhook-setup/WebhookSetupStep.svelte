@@ -1,6 +1,6 @@
 <script lang="ts">
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
-  import Tooltip from '$lib/domains/shared/ui/components/Tooltip.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import { UserTier } from '$lib/domains/shared/types.js';
   import { LinkIcon, XIcon } from 'lucide-svelte';
@@ -120,14 +120,14 @@
       {/snippet}
 
       <Tooltip content={methodSelect} placement="bottom" trigger="click">
-        <button class="btn btn-transparent btn-sm absolute top-0.5 left-0">
+        <button class="btn btn-transparent btn-sm absolute left-0 top-0.5">
           {method}
         </button>
       </Tooltip>
 
       <input
         bind:value={webhookUrl}
-        class="join-item ld-input py-2 pr-3 pl-16"
+        class="join-item ld-input py-2 pl-16 pr-3"
         placeholder={'Webhook URL'}
         type="text"
       />
@@ -207,7 +207,7 @@
     </div>
   </div>
 
-  <div class="flex items-center justify-start gap-2 select-none">
+  <div class="flex select-none items-center justify-start gap-2">
     <input
       type="checkbox"
       id="assign-service-monitor"
