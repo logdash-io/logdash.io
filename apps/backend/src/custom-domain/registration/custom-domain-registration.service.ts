@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { CustomDomainReadService } from '../read/custom-domain-read.service';
 import { CustomDomainWriteService } from '../write/custom-domain-write.service';
 import { CustomDomainDnsService } from '../dns/custom-domain-dns.service';
@@ -10,7 +10,7 @@ import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { Logger } from '@logdash/js-sdk';
 
-const MAX_ATTEMPTS = 30;
+const MAX_ATTEMPTS = 60;
 
 @Injectable()
 export class CustomDomainRegistrationService {
@@ -22,7 +22,7 @@ export class CustomDomainRegistrationService {
     private readonly logger: Logger,
   ) {}
 
-  @Cron('*/30 * * * * *')
+  @Cron(CronExpression.EVERY_5_SECONDS)
   public async verifyDomains(): Promise<void> {
     const domainsToVerify = await this.customDomainReadService.readDomainsToVerify();
 

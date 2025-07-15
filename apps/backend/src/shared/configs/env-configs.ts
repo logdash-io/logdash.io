@@ -189,7 +189,7 @@ export const EnvConfigs: EnvConfigs = {
       },
     },
     customDomain: {
-      targetCname: 'status.logdash.io',
+      targetCname: 'statuspage.logdash.io',
     },
   },
   [OurEnv.Dev]: {
@@ -283,7 +283,7 @@ export const EnvConfigs: EnvConfigs = {
       },
     },
     customDomain: {
-      targetCname: 'dev-status.logdash.io',
+      targetCname: 'dev-statuspage.logdash.io',
     },
   },
 };

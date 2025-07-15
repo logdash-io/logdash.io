@@ -137,7 +137,7 @@ describe('CustomDomainRegistrationService', () => {
     });
 
     // when
-    for (let i = 0; i < 31; i++) {
+    for (let i = 0; i < 61; i++) {
       await registrationService.verifyDomains();
     }
 
@@ -149,8 +149,8 @@ describe('CustomDomainRegistrationService', () => {
       });
 
     expect(updatedDomain.status).toBe(CustomDomainStatus.Failed);
-    expect(updatedDomain.attemptCount).toBe(30);
-    expect(bootstrap.utils.customDomainUtils.getDnsCallCount('example.com')).toBe(29);
+    expect(updatedDomain.attemptCount).toBe(60);
+    expect(bootstrap.utils.customDomainUtils.getDnsCallCount('example.com')).toBe(59);
   });
 
   it('eventually succeeds after multiple failed attempts', async () => {
