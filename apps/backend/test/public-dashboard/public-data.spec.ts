@@ -70,7 +70,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
   describe('GET /public_dashboards/:publicDashboardId/public_data', () => {
     it('reads public data', async () => {
       // given
-      const setup = await setupPublicDashboard();
+      const setup = await setupPublicDashboard({ isPro: true });
 
       // when
       const response = await request(bootstrap.app.getHttpServer()).get(
@@ -92,6 +92,32 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
       expect(data.httpMonitors[0].buckets).toHaveLength(24);
       expect(data.httpMonitors[1].buckets).toHaveLength(24);
+    });
+
+    it('returns no buckets for free tier', async () => {
+      // given
+      const setup = await setupPublicDashboard({ isPro: false });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      const data = response.body as PublicDashboardDataResponse;
+
+      expect(response.status).toBe(200);
+
+      expect(data.httpMonitors).toHaveLength(2);
+
+      expect(data.httpMonitors[0].name).toBe('A');
+      expect(data.httpMonitors[0].pings).toHaveLength(1);
+
+      expect(data.httpMonitors[1].name).toBe('B');
+      expect(data.httpMonitors[1].pings).toHaveLength(1);
+
+      expect(data.httpMonitors[0].buckets).toBeUndefined();
+      expect(data.httpMonitors[1].buckets).toBeUndefined();
     });
 
     it('uses cache', async () => {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ProjectEntity } from '../core/entities/project.entity';
@@ -18,6 +18,14 @@ export class ProjectReadService {
     }
 
     return ProjectSerializer.normalize(project);
+  }
+
+  public async readByIdOrThrow(projectId: string): Promise<ProjectNormalized> {
+    const project = await this.readById(projectId);
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+    return project;
   }
 
   public async readManyByIds(projectIds: string[]): Promise<ProjectNormalized[]> {

@@ -18,7 +18,6 @@ inputs:
   # Build arguments
   build-args:
     required: false
-    description: 'Build arguments to pass to Docker build'
 
 runs:
   using: 'composite'
