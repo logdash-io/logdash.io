@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { HttpMonitorEntity } from '../core/entities/http-monitor.entity';
@@ -20,6 +20,14 @@ export class HttpMonitorReadService {
     }
 
     return HttpMonitorSerializer.normalize(entity);
+  }
+
+  public async readByIdOrThrow(id: string): Promise<HttpMonitorNormalized> {
+    const monitor = await this.readById(id);
+    if (!monitor) {
+      throw new NotFoundException('Monitor not found');
+    }
+    return monitor;
   }
 
   async readManyByIds(ids: string[]): Promise<HttpMonitorNormalized[]> {

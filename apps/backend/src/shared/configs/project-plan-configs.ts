@@ -18,6 +18,7 @@ export interface ProjectPlanConfig {
   httpMonitors: {
     maxNumberOfMonitors: number;
     pingFrequency: HttpPingCron;
+    canDisplayBuckets: boolean;
   };
 }
 
@@ -54,6 +55,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.Every5Minutes,
+      canDisplayBuckets: false,
     },
   },
   [ProjectTier.EarlyUser]: {
@@ -72,6 +74,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.Every5Minutes,
+      canDisplayBuckets: false,
     },
   },
 
@@ -92,6 +95,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.Every5Minutes,
+      canDisplayBuckets: true,
     },
   },
   [ProjectTier.Builder]: {
@@ -110,6 +114,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.EveryMinute,
+      canDisplayBuckets: true,
     },
   },
   [ProjectTier.Pro]: {
@@ -128,6 +133,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.Every15Seconds,
+      canDisplayBuckets: true,
     },
   },
 
@@ -149,6 +155,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.Every5Minutes,
+      canDisplayBuckets: true,
     },
   },
   [ProjectTier.Admin]: {
@@ -167,6 +174,7 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 100,
       pingFrequency: HttpPingCron.EveryMinute,
+      canDisplayBuckets: true,
     },
   },
 };

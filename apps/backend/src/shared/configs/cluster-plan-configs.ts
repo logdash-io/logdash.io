@@ -5,6 +5,9 @@ export interface ClusterPlanConfig {
   customDomains: {
     canCreate: boolean;
   };
+  publicDashboard: {
+    hasBuckets: boolean;
+  };
 }
 
 export interface ClusterPlanConfigs {
@@ -29,11 +32,17 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
     customDomains: {
       canCreate: false,
     },
+    publicDashboard: {
+      hasBuckets: false,
+    },
   },
   [ClusterTier.EarlyUser]: {
     maxClusterMembers: 2,
     customDomains: {
       canCreate: false,
+    },
+    publicDashboard: {
+      hasBuckets: false,
     },
   },
 
@@ -43,17 +52,26 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
     customDomains: {
       canCreate: false,
     },
+    publicDashboard: {
+      hasBuckets: true,
+    },
   },
   [ClusterTier.Builder]: {
     maxClusterMembers: 3,
     customDomains: {
       canCreate: false,
     },
+    publicDashboard: {
+      hasBuckets: true,
+    },
   },
   [ClusterTier.Pro]: {
     maxClusterMembers: 4,
     customDomains: {
       canCreate: true,
+    },
+    publicDashboard: {
+      hasBuckets: true,
     },
   },
 
@@ -63,11 +81,17 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
     customDomains: {
       canCreate: false,
     },
+    publicDashboard: {
+      hasBuckets: true,
+    },
   },
   [ClusterTier.Admin]: {
     maxClusterMembers: 100,
     customDomains: {
       canCreate: true,
+    },
+    publicDashboard: {
+      hasBuckets: true,
     },
   },
 };

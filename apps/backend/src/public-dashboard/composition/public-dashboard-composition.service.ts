@@ -3,12 +3,14 @@ import { PublicDashboardDataResponse } from '../core/dto/public-dashboard-data.r
 import { HttpPingReadService } from '../../http-ping/read/http-ping-read.service';
 import { PublicDashboardReadService } from '../read/public-dashboard-read.service';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
-import { HttpPingBucketAggregationService } from '../../http-ping-bucket/aggregation/http-ping-bucket-aggregation.service';
 import { BucketsPeriod } from '../../http-ping-bucket/core/types/bucket-period.enum';
 import { VirtualBucket } from '../../http-ping-bucket/core/types/virtual-bucket.type';
-import { RedisService } from '../../shared/redis/redis.service';
 import { Types } from 'mongoose';
 import { CustomDomainReadService } from '../../custom-domain/read/custom-domain-read.service';
+import { ClusterReadService } from '../../cluster/read/cluster-read.service';
+import { getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
+import { RedisService } from '../../shared/redis/redis.service';
+import { HttpPingBucketAggregationService } from '../../http-ping-bucket/aggregation/http-ping-bucket-aggregation.service';
 
 const PUBLIC_CACHE_TTL_SECONDS = 60; // 1 minute
 const PRIVATE_CACHE_TTL_SECONDS = 1; // 1 second
@@ -24,9 +26,10 @@ export class PublicDashboardCompositionService {
     private readonly httpPingReadService: HttpPingReadService,
     private readonly publicDashboardReadService: PublicDashboardReadService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
+    private readonly customDomainReadService: CustomDomainReadService,
+    private readonly clusterReadService: ClusterReadService,
     private readonly httpPingBucketAggregationService: HttpPingBucketAggregationService,
     private readonly redisService: RedisService,
-    private readonly customDomainReadService: CustomDomainReadService,
   ) {}
 
   public async composePublicResponse(
@@ -115,6 +118,10 @@ export class PublicDashboardCompositionService {
       throw new NotFoundException('Public dashboard not found');
     }
 
+    const cluster = await this.clusterReadService.readByIdOrThrow(dashboard.clusterId);
+
+    const shouldDisplayBuckets = getClusterPlanConfig(cluster.tier).publicDashboard.hasBuckets;
+
     const monitors = await this.httpMonitorReadService.readManyByIds(dashboard.httpMonitorsIds);
 
     const pingsByMonitorId = await this.httpPingReadService.readManyByMonitorIds(
@@ -128,7 +135,7 @@ export class PublicDashboardCompositionService {
     return {
       httpMonitors: monitors.map((monitor) => ({
         name: monitor.name,
-        buckets: bucketsByMonitorId[monitor.id],
+        buckets: shouldDisplayBuckets ? bucketsByMonitorId[monitor.id] : undefined,
         pings: pingsByMonitorId[monitor.id].map((ping) => ({
           createdAt: ping.createdAt.toISOString(),
           statusCode: ping.statusCode,

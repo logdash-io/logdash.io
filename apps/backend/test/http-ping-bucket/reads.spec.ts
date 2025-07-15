@@ -3,6 +3,7 @@ import { advanceTo } from 'jest-date-mock';
 import { Types } from 'mongoose';
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('Http Ping Bucket(reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -23,7 +24,9 @@ describe('Http Ping Bucket(reads)', () => {
   describe('GET /monitors/:httpMonitorId/http_ping_buckets', () => {
     it('forbids access when user is not in cluster', async () => {
       // given
-      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setup = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -34,9 +37,32 @@ describe('Http Ping Bucket(reads)', () => {
       expect(response.status).toBe(403);
     });
 
+    it('forbids access for free tier', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Free,
+      });
+
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        token: setup.token,
+        projectId: setup.project.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/monitors/${monitor.id}/http_ping_buckets?period=24h`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // then
+      expect(response.status).toBe(403);
+      expect(response.body.message).toBe('Buckets are not allowed for this project');
+    });
+
     it('is not found for non existent monitor', async () => {
       // given
-      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setup = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -49,7 +75,9 @@ describe('Http Ping Bucket(reads)', () => {
 
     it('does not allow invalid period', async () => {
       // given
-      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setup = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token: setup.token,
         projectId: setup.project.id,
@@ -66,7 +94,9 @@ describe('Http Ping Bucket(reads)', () => {
 
     it('gets hourly buckets for 24h period', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token,
         projectId: project.id,
@@ -132,7 +162,9 @@ describe('Http Ping Bucket(reads)', () => {
 
     it('gets virtual bucket for current hour', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token,
         projectId: project.id,
@@ -160,7 +192,9 @@ describe('Http Ping Bucket(reads)', () => {
 
     it('gets buckets only for the monitor', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token,
         projectId: project.id,
@@ -217,7 +251,9 @@ describe('Http Ping Bucket(reads)', () => {
 
     it('gets hourly buckets for 4d period', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token,
         projectId: project.id,
@@ -267,7 +303,9 @@ describe('Http Ping Bucket(reads)', () => {
 
     it('gets daily buckets for 90d period', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token,
         projectId: project.id,
@@ -320,7 +358,9 @@ describe('Http Ping Bucket(reads)', () => {
 
     it('gets virtual bucket for current day when no bucket yet created for the day', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
       const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
         token,
         projectId: project.id,
@@ -372,7 +412,9 @@ describe('Http Ping Bucket(reads)', () => {
 
   it('gets virtual bucket for current day when buckets for the day exist', async () => {
     // given
-    const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
+      userTier: UserTier.Pro,
+    });
     const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
       token,
       projectId: project.id,
