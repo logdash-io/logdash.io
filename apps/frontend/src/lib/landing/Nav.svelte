@@ -29,7 +29,7 @@
       target: '_blank',
     },
     {
-      path: 'https://logdash.io/d/685498e1e0ad21003cb3b2fa',
+      path: 'https://status.logdash.io',
       name: 'Status',
       target: '_blank',
     },

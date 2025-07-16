@@ -6,8 +6,9 @@ on:
     branches:
       - main
     paths:
-      - 'apps/status-page/**'
-      - '.github/workflows/**'
+      - "apps/status-page/**"
+      - "packages/hyper-ui/**"
+      - ".github/workflows/**"
 
 jobs:
   deploy:
@@ -16,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build and push
-        uses: './.github/templates/status-page-build-and-push'
+        uses: "./.github/templates/status-page-build-and-push"
         with:
           context: ./
           file: ./apps/status-page/Dockerfile
@@ -26,7 +27,7 @@ jobs:
           build-args: |
             VITE_API_BASE_URL=https://api.logdash.io
       - name: Deploy
-        uses: './.github/templates/deploy-status-page-container'
+        uses: "./.github/templates/deploy-status-page-container"
         with:
           host: ${{ secrets.BACKEND_PROD_SSH_HOST }}
           username: ${{ secrets.BACKEND_PROD_SSH_USER }}
@@ -37,7 +38,7 @@ jobs:
           image-name: ablaszkiewicz/logdash-status-page-prod
           container-name: logdash-status-page-prod
       - name: Prune
-        uses: './.github/templates/prune'
+        uses: "./.github/templates/prune"
         with:
           host: ${{ secrets.BACKEND_PROD_SSH_HOST }}
           username: ${{ secrets.BACKEND_PROD_SSH_USER }}
