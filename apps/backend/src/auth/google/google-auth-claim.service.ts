@@ -7,7 +7,7 @@ import {
 import { CustomJwtService } from '../custom-jwt/custom-jwt.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import { UserWriteService } from '../../user/write/user-write.service';
-import { GithubClaimProjectBody } from './dto/github-claim-project.body';
+import { GoogleClaimProjectBody } from './dto/google-claim-project.body';
 import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.enum';
 import { AuthMethod } from '../../user/core/enum/auth-method.enum';
 import { AuthEventEmitter } from '../events/auth-event.emitter';
@@ -15,14 +15,14 @@ import { ProjectLimitService } from '../../project/limit/project-limit-service';
 import { TokenResponse } from '../../shared/responses/token.response';
 import { UserNormalized } from '../../user/core/entities/user.interface';
 import { JwtPayloadDto } from '../custom-jwt/dto/jwt-payload.dto';
-import { GithubAuthDataService } from './github-auth-data.service';
+import { GoogleAuthDataService } from './google-auth-data.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { Logger } from '@logdash/js-sdk';
 import { ClusterRole } from '../../cluster/core/enums/cluster-role.enum';
 
 @Injectable()
-export class GithubAuthClaimService {
+export class GoogleAuthClaimService {
   constructor(
     private readonly jwtService: CustomJwtService,
     private readonly userReadService: UserReadService,
@@ -30,23 +30,21 @@ export class GithubAuthClaimService {
     private readonly emitter: AuthEventEmitter,
     private readonly logger: Logger,
     private readonly projectLimitService: ProjectLimitService,
-    private readonly authGithubDataService: GithubAuthDataService,
+    private readonly authGoogleDataService: GoogleAuthDataService,
     private readonly clusterReadService: ClusterReadService,
     private readonly clusterWriteService: ClusterWriteService,
   ) {}
 
-  public async claimAccount(dto: GithubClaimProjectBody): Promise<TokenResponse> {
+  public async claimAccount(dto: GoogleClaimProjectBody): Promise<TokenResponse> {
     this.logger.log(`Claiming account`, { accessToken: dto.accessToken });
 
-    const githubAccessToken = await this.authGithubDataService.getAccessToken(
-      dto.githubCode,
+    const googleAccessToken = await this.authGoogleDataService.getAccessToken(
+      dto.googleCode,
       dto.forceLocalLogin,
     );
 
-    const [email, avatar] = await Promise.all([
-      this.authGithubDataService.getGithubEmail(githubAccessToken),
-      this.authGithubDataService.getGithubAvatar(githubAccessToken),
-    ]);
+    const { email, avatar } =
+      await this.authGoogleDataService.getGoogleEmailAndAvatar(googleAccessToken);
 
     this.logger.log(`Got user email and avatar`, { email, avatar });
 
@@ -83,7 +81,6 @@ export class GithubAuthClaimService {
   ): Promise<TokenResponse> {
     this.logger.log(`Handling existing user`, { tempUserId, existingUserId });
 
-    // if user is already logged in to his account
     if (tempUserId === existingUserId) {
       this.logger.log(`User was already logged in. Skipping projects ownership propagation logic`);
       return {
@@ -135,14 +132,14 @@ export class GithubAuthClaimService {
     await this.emitter.emitUserRegisteredEvent({
       userId: dto.userId,
       email: dto.email,
-      authMethod: AuthMethod.Github,
+      authMethod: AuthMethod.Google,
       emailAccepted: dto.emailAccepted || false,
     });
 
     await this.userWriteService.update({
       id: dto.tokenPayload.id,
       accountClaimStatus: AccountClaimStatus.Claimed,
-      authMethod: AuthMethod.Github,
+      authMethod: AuthMethod.Google,
       email: dto.email,
       avatarUrl: dto.avatar,
       marketingConsent: dto.emailAccepted || false,

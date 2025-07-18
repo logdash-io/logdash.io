@@ -51,6 +51,12 @@ interface EnvConfig {
     clientIdAlternative?: string;
     clientSecretAlternative?: string;
   };
+  google: {
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    redirectUriAlternative?: string;
+  };
   mongo: {
     url: string;
   };
@@ -150,6 +156,11 @@ export const EnvConfigs: EnvConfigs = {
       clientId: process.env.GITHUB_OAUTH_CLIENT_ID!,
       clientSecret: process.env.GITHUB_OAUTH_CLIENT_SECRET!,
     },
+    google: {
+      clientId: process.env.GOOGLE_OAUTH_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
+      redirectUri: 'https://logdash.io/app/callbacks/oauth/google',
+    },
     mongo: {
       url: process.env.MONGO_URL!,
     },
@@ -241,6 +252,12 @@ export const EnvConfigs: EnvConfigs = {
       clientSecret: process.env.GITHUB_OAUTH_CLIENT_SECRET!,
       clientIdAlternative: process.env.GITHUB_OAUTH_CLIENT_ID_ALTERNATIVE!,
       clientSecretAlternative: process.env.GITHUB_OAUTH_CLIENT_SECRET_ALTERNATIVE!,
+    },
+    google: {
+      clientId: process.env.GOOGLE_OAUTH_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
+      redirectUri: 'https://dev.logdash.io/app/callbacks/oauth/google',
+      redirectUriAlternative: 'http://localhost:5173/app/callbacks/oauth/google-alternative',
     },
     mongo: {
       url: process.env.MONGO_URL!,
