@@ -263,7 +263,7 @@ export const EnvConfigs: EnvConfigs = {
       url: process.env.MONGO_URL!,
     },
     redis: {
-      url: undefined,
+      url: process.env.REDIS_URL!,
       socketPath: process.env.REDIS_SOCKET_PATH!,
       password: process.env.REDIS_PASSWORD!,
     },

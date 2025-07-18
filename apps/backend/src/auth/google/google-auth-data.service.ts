@@ -4,7 +4,7 @@ import { getEnvConfig } from '../../shared/configs/env-configs';
 @Injectable()
 export class GoogleAuthDataService {
   public async getAccessToken(code: string, forceLocalLogin?: boolean): Promise<string> {
-    const response = await fetch('https://googleapis.com/oauth2/v4/token', {
+    const response = await fetch('https://www.googleapis.com/oauth2/v4/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ export class GoogleAuthDataService {
   public async getGoogleEmailAndAvatar(
     accessToken: string,
   ): Promise<{ email: string; avatar: string }> {
-    const response = await fetch('https://googleapis.com/oauth2/v3/userinfo', {
+    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

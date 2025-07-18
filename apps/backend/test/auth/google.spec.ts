@@ -29,11 +29,11 @@ describe('Auth (google)', () => {
     });
 
     // when
-    nock('https://googleapis.com')
+    nock('https://www.googleapis.com')
       .post('/oauth2/v4/token')
       .reply(200, { access_token: 'some-token' });
 
-    nock('https://googleapis.com')
+    nock('https://www.googleapis.com')
       .get('/oauth2/v3/userinfo')
       .reply(200, { email: 'primary@test.com', picture: 'https://some-avatar.com' });
 
@@ -58,11 +58,11 @@ describe('Auth (google)', () => {
 
   it('logs existing user in', async () => {
     // given
-    nock('https://googleapis.com')
+    nock('https://www.googleapis.com')
       .post('/oauth2/v4/token')
       .reply(200, { access_token: 'some-token' });
 
-    nock('https://googleapis.com')
+    nock('https://www.googleapis.com')
       .get('/oauth2/v3/userinfo')
       .reply(200, { email: 'test@test.com', picture: 'https://some-avatar.com' });
 
@@ -87,11 +87,11 @@ describe('Auth (google)', () => {
 
   it('creates new user if not exists (and accepted terms)', async () => {
     // given
-    nock('https://googleapis.com')
+    nock('https://www.googleapis.com')
       .post('/oauth2/v4/token')
       .reply(200, { access_token: 'some-token' });
 
-    nock('https://googleapis.com')
+    nock('https://www.googleapis.com')
       .get('/oauth2/v3/userinfo')
       .reply(200, { email: 'primary@test.com', picture: 'https://some-avatar.com' });
 
@@ -117,11 +117,11 @@ describe('Auth (google)', () => {
 
   it('throws error when user does not exists and did not accept terms', async () => {
     // given
-    nock('https://googleapis.com')
+    nock('https://www.googleapis.com')
       .post('/oauth2/v4/token')
       .reply(200, { access_token: 'some-token' });
 
-    nock('https://googleapis.com')
+    nock('https://www.googleapis.com')
       .get('/oauth2/v3/userinfo')
       .reply(200, { email: 'primary@test.com', picture: 'https://some-avatar.com' });
 
