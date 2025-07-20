@@ -27,6 +27,7 @@
   <nav>
     <h6 class="footer-title">Company</h6>
     <a href="/pricing" class="link link-hover">Pricing</a>
+    <a href="/blog" class="link link-hover">Blog</a>
     <a href="https://github.com/logdash-io/logdash.io" class="link link-hover">
       Source Code
     </a>
