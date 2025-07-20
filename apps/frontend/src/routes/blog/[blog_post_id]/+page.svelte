@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import { Calendar, ArrowLeft } from 'lucide-svelte';
+  import SvelteMarkdown from 'svelte-markdown';
 
   type Props = {
     data: PageData;
@@ -15,10 +16,6 @@
       day: 'numeric',
     });
   };
-
-  const formatBody = (body: string): string => {
-    return body.replace(/\n/g, '<br>');
-  };
 </script>
 
 <svelte:head>
@@ -26,7 +23,7 @@
   <meta name="description" content={data.blogPost.title} />
 </svelte:head>
 
-<div class="mx-auto max-w-4xl px-4 py-8">
+<div class="mx-auto max-w-5xl px-4 py-8 lg:max-w-6xl lg:px-8">
   <nav class="mb-8">
     <a href="/blog" class="btn btn-ghost btn-sm">
       <ArrowLeft class="h-4 w-4" />
@@ -34,7 +31,7 @@
     </a>
   </nav>
 
-  <article class="ld-card-base rounded-xl p-8">
+  <article class="ld-card-base rounded-xl p-8 min-w-96 w-full">
     <header class="mb-8">
       <div class="mb-4 flex items-center gap-4 text-sm text-base-content/60">
         <div class="flex items-center gap-2">
@@ -59,9 +56,7 @@
     </header>
 
     <div class="prose prose-lg max-w-none">
-      <div class="text-base-content leading-relaxed">
-        {@html formatBody(data.blogPost.body)}
-      </div>
+      <SvelteMarkdown source={data.blogPost.body} />
     </div>
   </article>
 
