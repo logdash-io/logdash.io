@@ -4,6 +4,14 @@ import { RedisService } from '../../shared/redis/redis.service';
 import { Logger } from '@logdash/js-sdk';
 import { BlogPostNormalized } from '../core/entities/blog-post.interface';
 
+interface RedisSerializedBlogPost {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 @Injectable()
 export class BlogReadCachedService {
   constructor(
@@ -23,7 +31,14 @@ export class BlogReadCachedService {
     }
 
     if (blogPostJson !== null) {
-      return JSON.parse(blogPostJson) as BlogPostNormalized;
+      const serialized = JSON.parse(blogPostJson) as RedisSerializedBlogPost;
+      return {
+        id: serialized.id,
+        title: serialized.title,
+        body: serialized.body,
+        createdAt: new Date(serialized.createdAt),
+        updatedAt: new Date(serialized.updatedAt),
+      };
     }
 
     const blogPost = await this.blogReadService.readById(blogPostId);
@@ -49,14 +64,22 @@ export class BlogReadCachedService {
     return blogPost;
   }
 
-  public async readAllBlogPosts(): Promise<BlogPostNormalized[]> {
+  public async readAll(): Promise<BlogPostNormalized[]> {
     const cacheKey = 'blog-posts:list';
     const cacheTtlSeconds = 30; // 30 seconds
 
     const blogPostsJson = await this.redisService.get(cacheKey);
 
     if (blogPostsJson !== null) {
-      return JSON.parse(blogPostsJson) as BlogPostNormalized[];
+      const serialized = JSON.parse(blogPostsJson) as RedisSerializedBlogPost[];
+
+      return serialized.map((post) => ({
+        id: post.id,
+        title: post.title,
+        body: post.body,
+        createdAt: new Date(post.createdAt),
+        updatedAt: new Date(post.updatedAt),
+      }));
     }
 
     const blogPosts = await this.blogReadService.readAll();

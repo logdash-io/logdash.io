@@ -14,7 +14,7 @@ export class BlogCoreController {
   @Get('/blog_posts')
   @ApiResponse({ type: BlogPostListItem, isArray: true })
   public async readAll(): Promise<BlogPostListItem[]> {
-    const blogPosts = await this.blogReadCachedService.readAllBlogPosts();
+    const blogPosts = await this.blogReadCachedService.readAll();
     return BlogPostSerializer.serializeManyListItems(blogPosts);
   }
 
