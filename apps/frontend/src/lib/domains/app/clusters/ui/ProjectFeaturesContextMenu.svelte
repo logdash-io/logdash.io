@@ -8,6 +8,7 @@
   import { PlusIcon } from 'lucide-svelte';
   import { fly } from 'svelte/transition';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
 
   type Props = {
     clusterId: string;
@@ -69,11 +70,20 @@
         <SetupMonitoringButton
           class="flex w-full items-center justify-between"
           canAddMore={true}
-          onSubmit={(url) => {
+          onSubmit={({ name, mode }) => {
+            const params = new URLSearchParams({
+              project_id: page.url.searchParams.get('project_id'),
+              mode,
+            });
+
+            if (mode === MonitorMode.PULL) {
+              params.set('url', encodeURIComponent(name));
+            } else {
+              params.set('name', encodeURIComponent(name));
+            }
+
             goto(
-              `/app/clusters/${clusterId}/configure/monitoring?project_id=${page.url.searchParams.get(
-                'project_id',
-              )}&url=${encodeURIComponent(url)}`,
+              `/app/clusters/${clusterId}/configure/monitoring?${params.toString()}`,
             );
           }}
         >

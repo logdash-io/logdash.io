@@ -11,6 +11,7 @@
   import MonitorsListener from '$lib/domains/app/projects/ui/presentational/PingsListener.svelte';
   import { browser } from '$app/environment';
   import CancelSetupButton from '$lib/domains/shared/ui/setup/CancelSetupButton.svelte';
+  import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
 
   type Props = {
     project_id: string;
@@ -23,17 +24,34 @@
   const clusterId = $derived(page.params.cluster_id);
   const observedUrl = $derived(page.url.searchParams.get('url'));
   const nameParam = $derived(page.url.searchParams.get('name'));
+  const modeParam = $derived(page.url.searchParams.get('mode') as MonitorMode);
+  const monitorMode = $derived(modeParam || MonitorMode.PULL);
+
   const monitorName = $derived(
-    stripProtocol(decodeURIComponent(nameParam || observedUrl)),
+    stripProtocol(decodeURIComponent(nameParam || observedUrl || '')),
   );
-  const isHealthy = $derived(monitoringState.isPreviewHealthy(observedUrl));
-  const pings = $derived.by(() => monitoringState.previewPings(observedUrl));
+
+  // Only use preview functionality for pull mode
+  const isHealthy = $derived(
+    monitorMode === MonitorMode.PULL
+      ? monitoringState.isPreviewHealthy(observedUrl)
+      : true,
+  );
+  const pings = $derived.by(() =>
+    monitorMode === MonitorMode.PULL
+      ? monitoringState.previewPings(observedUrl)
+      : [],
+  );
 
   $effect(() => {
-    monitoringState.previewUrl(clusterId, observedUrl);
+    if (monitorMode === MonitorMode.PULL && observedUrl) {
+      monitoringState.previewUrl(clusterId, observedUrl);
+    }
 
     return () => {
-      monitoringState.stopUrlPreview();
+      if (monitorMode === MonitorMode.PULL) {
+        monitoringState.stopUrlPreview();
+      }
     };
   });
 
@@ -47,7 +65,7 @@
 
   onMount(() => {
     const t = setTimeout(() => {
-      if (!nameParam) {
+      if (!nameParam && observedUrl) {
         setMonitorName(stripProtocol(observedUrl));
       }
     }, 0);
@@ -70,6 +88,7 @@
   }
 </script>
 
+<<<<<<< Updated upstream
 <div class="w-xl mr-auto space-y-8">
   <DataTile delayIn={0} delayOut={50}>
     <div class="flex w-full flex-col gap-2">
@@ -78,95 +97,111 @@
           <h5 class="truncate text-2xl font-semibold">
             {monitorName}
           </h5>
+=======
+{#if monitorMode === MonitorMode.PULL}
+  <div class="w-xl mr-auto space-y-8">
+    <DataTile delayIn={0} delayOut={50}>
+      <div class="flex w-full flex-col gap-2">
+        <div class="flex w-full gap-2">
+          <div class="flex w-full items-center gap-2">
+            <h5 class="truncate text-2xl font-semibold">
+              {monitorName}
+            </h5>
+>>>>>>> Stashed changes
 
-          <div
-            class={[
-              'badge badge-soft',
-              {
-                'badge-success': isHealthy,
-                'badge-error': !isHealthy,
-              },
-            ]}
-          >
-            <span
-              class={[
-                'status',
-                {
-                  'status-success': isHealthy,
-                  'status-error': !isHealthy,
-                },
-              ]}
-            ></span>
-            {isHealthy ? 'up' : 'down'}
-          </div>
-        </div>
-
-        <span class="loading loading-ring loading-sm duration-1000"></span>
-      </div>
-
-      <div class="flex w-full flex-col gap-1">
-        <div
-          class="flex h-12 w-full items-center justify-end gap-1 overflow-hidden lg:gap-1"
-        >
-          {#each Array.from({ length: 60 - pings.length }) as _, i}
             <div
               class={[
-                'h-8 w-1.5 shrink-0 rounded-sm hover:h-12 lg:w-[7px]',
+                'badge badge-soft',
                 {
-                  'bg-gradient-to-b from-neutral-700 via-neutral-700/80 to-neutral-700': true,
-                  'bg-warning': false,
+                  'badge-success': isHealthy,
+                  'badge-error': !isHealthy,
                 },
               ]}
-            ></div>
-          {/each}
+            >
+              <span
+                class={[
+                  'status',
+                  {
+                    'status-success': isHealthy,
+                    'status-error': !isHealthy,
+                  },
+                ]}
+              ></span>
+              {isHealthy ? 'up' : 'down'}
+            </div>
+          </div>
 
-          {#each pings as ping, i}
-            {@const pingHealthy =
-              ping.statusCode >= 200 && ping.statusCode < 400}
-            <Tooltip content={`Service is up ${i}`} placement="top">
+          <span class="loading loading-ring loading-sm duration-1000"></span>
+        </div>
+
+        <div class="space-y-1">
+          <p class="text-xs opacity-60">Latest pings</p>
+
+          <div class="flex w-full flex-row gap-0.5">
+            {#each Array(100) as _, index}
+              {@const ping = pings[index]}
+              {@const pingHealthy = ping
+                ? ping.statusCode >= 200 && ping.statusCode < 400
+                : false}
+
               <div
                 class={[
-                  'h-8 w-1.5 shrink-0 rounded-sm bg-gradient-to-b hover:h-12 lg:w-[7px]',
+                  'h-5 w-1 rounded-sm',
                   {
-                    'from-green-600 via-green-600/80 to-green-600': pingHealthy,
-                    'from-red-600 via-red-600/80 to-red-600': !pingHealthy,
+                    'bg-success': pingHealthy,
+                    'bg-error': ping && !pingHealthy,
+                    'bg-base-200': !ping,
                   },
                 ]}
               ></div>
-            </Tooltip>
-          {/each}
+            {/each}
+          </div>
         </div>
       </div>
-    </div>
-  </DataTile>
-</div>
+    </DataTile>
+  </div>
+{/if}
 
+<<<<<<< Updated upstream
 <div class="fixed left-0 top-0 z-50 h-full w-full bg-black/40">
+=======
+<div class="fixed left-0 top-0 z-50 h-full w-full bg-black/10">
+>>>>>>> Stashed changes
   <div
     class="bg-base-200 sm:w-xl absolute right-0 top-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:p-8 sm:pb-6"
   >
     <div class="space-y-2">
-      <h5 class="text-2xl font-semibold">Setup Monitoring for your service</h5>
+      <h5 class="text-2xl font-semibold">
+        Setup {monitorMode === MonitorMode.PULL ? 'Pull' : 'Push'} Monitoring for
+        your service
+      </h5>
 
       <p class="text-base-content opacity-60">
-        Add url and monitor your service. Your dashboard will update
-        automatically as we send pings.
+        {#if monitorMode === MonitorMode.PULL}
+          Add URL and monitor your service. Your dashboard will update
+          automatically as we send pings.
+        {:else}
+          Create a monitor that listens for pings from your service. Your
+          dashboard will update when you send status updates.
+        {/if}
       </p>
     </div>
 
-    <div class="collapse-open collapse overflow-visible rounded-none">
-      <div class="px-1 py-4 font-semibold">
-        <span>1. Configure url</span>
+    {#if monitorMode === MonitorMode.PULL}
+      <div class="collapse-open collapse overflow-visible rounded-none">
+        <div class="px-1 py-4 font-semibold">
+          <span>1. Configure URL</span>
+        </div>
+
+        <span class="text-secondary relative truncate text-3xl font-semibold">
+          {observedUrl}
+        </span>
       </div>
-
-      <span class="text-secondary relative truncate text-3xl font-semibold">
-        {observedUrl}
-      </span>
-    </div>
+    {/if}
 
     <div class="collapse-open collapse overflow-visible rounded-none">
       <div class="px-1 py-4 font-semibold">
-        <span>2. Choose name</span>
+        <span>{monitorMode === MonitorMode.PULL ? '2' : '1'}. Choose name</span>
       </div>
 
       <div class="space-y-2 text-3xl font-semibold">
@@ -177,7 +212,9 @@
           oninput={(e) => {
             setMonitorName(e.currentTarget.value);
           }}
-          placeholder={stripProtocol(observedUrl)}
+          placeholder={monitorMode === MonitorMode.PULL
+            ? stripProtocol(observedUrl || '')
+            : 'My Service Monitor'}
           type="text"
           use:autoFocus={{
             selectAll: true,
@@ -189,23 +226,48 @@
 
     <div class="collapse-open">
       <div class="px-1 py-4 font-semibold">
-        <span>3. Capture pings</span>
+        <span>
+          {monitorMode === MonitorMode.PULL ? '3' : '2'}.
+          {monitorMode === MonitorMode.PULL
+            ? 'Capture pings'
+            : 'Integration instructions'}
+        </span>
       </div>
 
       <div class="text-sm">
-        <MonitorsListener onCaptureOnce={() => {}} url={observedUrl}>
-          <div class="flex items-center justify-start gap-2 font-semibold">
-            <CheckCircle class="text-success h-5 w-5" />
-            <span class="text-success opacity-80">
-              Pings captured successfully!
-            </span>
+        {#if monitorMode === MonitorMode.PULL}
+          <MonitorsListener onCaptureOnce={() => {}} url={observedUrl}>
+            <div class="flex items-center justify-start gap-2 font-semibold">
+              <CheckCircle class="text-success h-5 w-5" />
+              <span class="text-success opacity-80">
+                Pings captured successfully!
+              </span>
+            </div>
+          </MonitorsListener>
+        {:else}
+          <div class="space-y-4">
+            <div class="bg-base-100 rounded-lg p-4">
+              <p class="mb-2 text-sm opacity-80">
+                Your service will send status updates to this monitor. Use the
+                following endpoint:
+              </p>
+              <code class="bg-base-200 text-primary block rounded p-2 text-xs">
+                POST /api/monitors/{'{monitor_id}'}/ping
+              </code>
+            </div>
+            <div class="flex items-center justify-start gap-2 font-semibold">
+              <CheckCircle class="text-success h-5 w-5" />
+              <span class="text-success opacity-80">
+                Ready to receive pings from your service!
+              </span>
+            </div>
           </div>
-        </MonitorsListener>
+        {/if}
       </div>
     </div>
 
     <div class="mt-auto flex w-full flex-col items-center gap-4">
-      {@render claimer(isHealthy)}
+      {@render claimer(monitorMode === MonitorMode.PUSH || isHealthy)}
 
       <CancelSetupButton id="monitoring" {clusterId} projectId={project_id} />
     </div>
