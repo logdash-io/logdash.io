@@ -2,16 +2,16 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
+  import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
+  import MonitorsListener from '$lib/domains/app/projects/ui/presentational/PingsListener.svelte';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
+  import CancelSetupButton from '$lib/domains/shared/ui/setup/CancelSetupButton.svelte';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
+  import { envConfig, StatusBar } from '@logdash/hyper-ui';
   import { CheckCircle } from 'lucide-svelte';
   import { onMount, type Snippet } from 'svelte';
-  import MonitorsListener from '$lib/domains/app/projects/ui/presentational/PingsListener.svelte';
-  import { browser } from '$app/environment';
-  import CancelSetupButton from '$lib/domains/shared/ui/setup/CancelSetupButton.svelte';
-  import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
+  import { match, P } from 'ts-pattern';
 
   type Props = {
     project_id: string;
@@ -26,6 +26,7 @@
   const nameParam = $derived(page.url.searchParams.get('name'));
   const modeParam = $derived(page.url.searchParams.get('mode') as MonitorMode);
   const monitorMode = $derived(modeParam || MonitorMode.PULL);
+  let pushMonitorId = $state<string | undefined>();
 
   const monitorName = $derived(
     stripProtocol(decodeURIComponent(nameParam || observedUrl || '')),
@@ -35,7 +36,7 @@
   const isHealthy = $derived(
     monitorMode === MonitorMode.PULL
       ? monitoringState.isPreviewHealthy(observedUrl)
-      : true,
+      : monitoringState.isHealthy(pushMonitorId),
   );
   const pings = $derived.by(() =>
     monitorMode === MonitorMode.PULL
@@ -70,6 +71,18 @@
       }
     }, 0);
 
+    if (monitorMode === MonitorMode.PUSH) {
+      monitoringState
+        .createMonitor(project_id, {
+          projectId: project_id,
+          name: monitorName,
+          mode: MonitorMode.PUSH,
+        })
+        .then((monitorId) => {
+          pushMonitorId = monitorId;
+        });
+    }
+
     return () => {
       clearTimeout(t);
     };
@@ -88,7 +101,6 @@
   }
 </script>
 
-<<<<<<< Updated upstream
 <div class="w-xl mr-auto space-y-8">
   <DataTile delayIn={0} delayOut={50}>
     <div class="flex w-full flex-col gap-2">
@@ -97,76 +109,63 @@
           <h5 class="truncate text-2xl font-semibold">
             {monitorName}
           </h5>
-=======
-{#if monitorMode === MonitorMode.PULL}
-  <div class="w-xl mr-auto space-y-8">
-    <DataTile delayIn={0} delayOut={50}>
-      <div class="flex w-full flex-col gap-2">
-        <div class="flex w-full gap-2">
-          <div class="flex w-full items-center gap-2">
-            <h5 class="truncate text-2xl font-semibold">
-              {monitorName}
-            </h5>
->>>>>>> Stashed changes
 
-            <div
+          <div
+            class={[
+              'badge badge-soft',
+              {
+                'badge-success': isHealthy,
+                'badge-error': !isHealthy,
+              },
+            ]}
+          >
+            <span
               class={[
-                'badge badge-soft',
+                'status',
                 {
-                  'badge-success': isHealthy,
-                  'badge-error': !isHealthy,
+                  'status-success': isHealthy,
+                  'status-error': !isHealthy,
                 },
               ]}
-            >
-              <span
-                class={[
-                  'status',
-                  {
-                    'status-success': isHealthy,
-                    'status-error': !isHealthy,
-                  },
-                ]}
-              ></span>
-              {isHealthy ? 'up' : 'down'}
-            </div>
+            ></span>
+            {isHealthy ? 'up' : 'down'}
           </div>
-
-          <span class="loading loading-ring loading-sm duration-1000"></span>
         </div>
 
-        <div class="space-y-1">
-          <p class="text-xs opacity-60">Latest pings</p>
+        <span class="loading loading-ring loading-sm duration-1000"></span>
+      </div>
 
-          <div class="flex w-full flex-row gap-0.5">
-            {#each Array(100) as _, index}
-              {@const ping = pings[index]}
-              {@const pingHealthy = ping
-                ? ping.statusCode >= 200 && ping.statusCode < 400
-                : false}
+      <div class="space-y-1">
+        <p class="text-xs opacity-60">Latest pings</p>
 
-              <div
-                class={[
-                  'h-5 w-1 rounded-sm',
-                  {
-                    'bg-success': pingHealthy,
-                    'bg-error': ping && !pingHealthy,
-                    'bg-base-200': !ping,
-                  },
-                ]}
-              ></div>
-            {/each}
-          </div>
+        <div class="flex w-full flex-row justify-end overflow-hidden">
+          {#each Array(100) as _, index}
+            {@const ping = pings[index]}
+            {@const pingHealthy = ping
+              ? ping.statusCode >= 200 && ping.statusCode < 400
+              : false}
+
+            <StatusBar
+              status={match({ ping, pingHealthy })
+                .with(
+                  { ping: P.not(P.nullish), pingHealthy: true },
+                  () => 'up' as const,
+                )
+                .with(
+                  { ping: P.not(P.nullish), pingHealthy: false },
+                  () => 'down' as const,
+                )
+                .with({ ping: P.nullish }, () => 'unknown' as const)
+                .otherwise(() => 'unknown' as const)}
+            />
+          {/each}
         </div>
       </div>
-    </DataTile>
-  </div>
-{/if}
+    </div>
+  </DataTile>
+</div>
 
-<<<<<<< Updated upstream
-<div class="fixed left-0 top-0 z-50 h-full w-full bg-black/40">
-=======
 <div class="fixed left-0 top-0 z-50 h-full w-full bg-black/10">
->>>>>>> Stashed changes
   <div
     class="bg-base-200 sm:w-xl absolute right-0 top-0 mx-auto flex h-full w-full max-w-2xl flex-col gap-4 overflow-auto p-6 sm:p-8 sm:pb-6"
   >
@@ -226,12 +225,11 @@
 
     <div class="collapse-open">
       <div class="px-1 py-4 font-semibold">
-        <span>
-          {monitorMode === MonitorMode.PULL ? '3' : '2'}.
-          {monitorMode === MonitorMode.PULL
-            ? 'Capture pings'
-            : 'Integration instructions'}
-        </span>
+        {#if monitorMode === MonitorMode.PULL}
+          <span>2. Integration instructions</span>
+        {:else}
+          <span>3. Capture pings</span>
+        {/if}
       </div>
 
       <div class="text-sm">
@@ -252,7 +250,7 @@
                 following endpoint:
               </p>
               <code class="bg-base-200 text-primary block rounded p-2 text-xs">
-                POST /api/monitors/{'{monitor_id}'}/ping
+                POST {envConfig.apiBaseUrl}/ping/{'{monitor_id}'}
               </code>
             </div>
             <div class="flex items-center justify-start gap-2 font-semibold">

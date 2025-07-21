@@ -12,7 +12,10 @@ import type {
 } from '$lib/domains/app/projects/domain/monitoring/http-ping.js';
 import { httpClient } from '$lib/domains/shared/http/http-client.js';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-import { monitoringService } from '$lib/domains/app/projects/infrastructure/monitoring.service';
+import {
+  monitoringService,
+  type CreateMonitorDto,
+} from '$lib/domains/app/projects/infrastructure/monitoring.service';
 import type {
   PingBucket,
   PingBucketPeriod,
@@ -485,6 +488,21 @@ class MonitoringState {
       this._previewUnsubscribe?.();
       this.previewConnection = null;
     }
+  }
+
+  async createMonitor(
+    projectId: string,
+    dto: CreateMonitorDto,
+  ): Promise<string> {
+    const createdMonitor = await monitoringService.createMonitor(
+      projectId,
+      dto,
+    );
+
+    this._monitors[createdMonitor.id] = createdMonitor;
+    this._monitorPings[createdMonitor.id] = [];
+
+    return createdMonitor.id;
   }
 
   private _openMonitorStream(clusterId: string): Promise<void> {

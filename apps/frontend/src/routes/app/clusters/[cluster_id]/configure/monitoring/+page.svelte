@@ -3,6 +3,7 @@
   import { page } from '$app/state';
   import MonitoringSetup from '$lib/domains/app/projects/ui/setup/MonitoringSetup.svelte';
   import { fade } from 'svelte/transition';
+  import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
 
   type Props = {
     data: { project_id: string; api_key: string };
@@ -11,6 +12,9 @@
   let tryingToClaim = $state(false);
   const url = $derived(page.url.searchParams.get('url'));
   const name = $derived(page.url.searchParams.get('name'));
+  const mode = $derived(
+    (page.url.searchParams.get('mode') as MonitorMode) || MonitorMode.PULL,
+  );
 </script>
 
 {#snippet claimer(hasLogs: boolean)}
@@ -20,7 +24,7 @@
         tryingToClaim = true;
 
         goto(
-          `/app/api/clusters/${page.params.cluster_id}/monitors/create?project_id=${data.project_id}&url=${url}&name=${name}`,
+          `/app/api/clusters/${page.params.cluster_id}/monitors/create?project_id=${data.project_id}&url=${url}&name=${name}&mode=${mode}`,
           {
             invalidateAll: true,
           },
