@@ -48,7 +48,7 @@ I'll notify you about the status of your services`;
     const codeBlock = '```';
 
     if (dto.newStatus === HttpMonitorStatus.Down) {
-      return `🔴  *${dto.name}* is down
+      return `🔴  *${this.escapeTelegramString(dto.name)}* is down
 ${codeBlock}
 Status code: ${dto.statusCode ?? 'N/A'}
 Error: ${this.escapeTelegramString(dto.errorMessage ?? 'N/A')}
