@@ -14,7 +14,7 @@ export class HttpMonitorRemovalService {
   ) {}
 
   public async deleteByProjectId(projectId: string, actorUserId?: string): Promise<void> {
-    const monitors = await this.httpMonitorReadService.readClaimedByProjectId(projectId);
+    const monitors = await this.httpMonitorReadService.readByProjectId(projectId);
     const monitorsIds = monitors.map((monitor) => monitor.id);
 
     if (monitorsIds.length > 0) {

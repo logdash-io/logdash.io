@@ -38,6 +38,16 @@ export class HttpMonitorReadService {
     return HttpMonitorSerializer.normalizeMany(entities);
   }
 
+  async readByProjectId(projectId: string): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ projectId })
+      .sort({ createdAt: -1 })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+
+    return HttpMonitorSerializer.normalizeMany(entities);
+  }
+
   async readClaimedByProjectId(projectId: string): Promise<HttpMonitorNormalized[]> {
     const entities = await this.httpMonitorModel
       .find({ projectId, claimed: true })
