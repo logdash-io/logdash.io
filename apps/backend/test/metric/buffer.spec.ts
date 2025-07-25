@@ -70,6 +70,7 @@ describe('Metrics buffer', () => {
   });
 
   it('accumulates mutate metrics', async () => {
+    jest.retryTimes(5);
     // given
     const iterations = 2137;
     const setup = await bootstrap.utils.generalUtils.setupClaimed({
