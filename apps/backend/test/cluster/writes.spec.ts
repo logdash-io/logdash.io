@@ -186,7 +186,7 @@ describe('ClusterCoreController (writes)', () => {
       // given
       const { token, cluster, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: project.id,
         token,
       });

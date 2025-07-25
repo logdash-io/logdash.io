@@ -107,7 +107,7 @@ describe('ProjectCoreController (reads)', () => {
         // given
         const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-        await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+        await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
           projectId: project.id,
           token,
         });

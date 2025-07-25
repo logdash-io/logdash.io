@@ -24,12 +24,12 @@ describe('HttpMonitorCoreController (reads)', () => {
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
       const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setupA.token,
         projectId: setupA.project.id,
         name: 'name 1',
       });
-      await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setupB.token,
         projectId: setupB.project.id,
         name: 'name 1',
@@ -62,7 +62,7 @@ describe('HttpMonitorCoreController (reads)', () => {
       // given
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setupA.token,
         projectId: setupA.project.id,
         name: 'name 1',
@@ -106,13 +106,13 @@ describe('HttpMonitorCoreController (reads)', () => {
         userId: user.id,
       });
 
-      await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
         name: 'name 1',
       });
 
-      await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: anotherProject.id,
         name: 'name 2',

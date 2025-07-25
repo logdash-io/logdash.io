@@ -11,7 +11,15 @@ export class HttpMonitorLimitService {
   ) {}
 
   public async hasCapacity(projectId: string): Promise<boolean> {
-    const monitorsCount = await this.httpMonitorReadService.countByProjectId(projectId);
+    const notClaimedMonitorsCount =
+      await this.httpMonitorReadService.countNotClaimedByProjectId(projectId);
+
+    if (notClaimedMonitorsCount > 100) {
+      return false;
+    }
+
+    const claimedMonitorsCount =
+      await this.httpMonitorReadService.countClaimedByProjectId(projectId);
     const project = await this.projectReadCachedService.readProject(projectId);
 
     if (!project) {
@@ -20,6 +28,6 @@ export class HttpMonitorLimitService {
 
     const allowedCount = getProjectPlanConfig(project.tier).httpMonitors.maxNumberOfMonitors;
 
-    return monitorsCount + 1 <= allowedCount;
+    return claimedMonitorsCount + 1 <= allowedCount;
   }
 }

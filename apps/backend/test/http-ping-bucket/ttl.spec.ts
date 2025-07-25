@@ -21,7 +21,7 @@ describe('Http Ping Bucket (ttl)', () => {
     it('older than 90 days', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: token,
         projectId: project.id,
       });

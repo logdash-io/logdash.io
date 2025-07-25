@@ -19,7 +19,7 @@ export class HttpMonitorUtils {
     this.httpMonitorModel = this.app.get(getModelToken(HttpMonitorEntity.name));
   }
 
-  public async createHttpMonitor(
+  public async createClaimedHttpMonitor(
     dto: Partial<CreateHttpMonitorBody> & { token: string; projectId: string },
   ): Promise<HttpMonitorSerialized> {
     this.tryFillDto(dto);
@@ -29,11 +29,20 @@ export class HttpMonitorUtils {
       .set('Authorization', `Bearer ${dto.token}`)
       .send(dto);
 
+    // claim
+    await request(this.app.getHttpServer())
+      .post(`/http_monitors/${response.body.id}/claim`)
+      .set('Authorization', `Bearer ${dto.token}`);
+
     return response.body;
   }
 
   public async storeHttpMonitor(
-    dto: Partial<CreateHttpMonitorBody> & { token?: string; projectId: string },
+    dto: Partial<CreateHttpMonitorBody> & {
+      token?: string;
+      projectId: string;
+      claimed?: boolean;
+    },
   ): Promise<HttpMonitorNormalized> {
     this.tryFillDto(dto);
     const monitor = await this.httpMonitorModel.create(dto);
