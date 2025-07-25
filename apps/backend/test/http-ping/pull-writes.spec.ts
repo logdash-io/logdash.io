@@ -66,6 +66,7 @@ describe('Http Ping (writes)', () => {
       await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
         token: setup.token,
         projectId: setup.project.id,
+        claimed: true,
       });
     }
 
@@ -96,6 +97,7 @@ describe('Http Ping (writes)', () => {
       projects.map((project) =>
         bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
           projectId: project.id,
+          claimed: true,
         }),
       ),
     );
@@ -167,5 +169,42 @@ describe('Http Ping (writes)', () => {
     expect(pingsA.length).toBe(1);
     expect(pingsB.length).toBe(0);
     expect(allPings.length).toBe(1);
+  });
+
+  it('does not ping unclaimed monitors', async () => {
+    // given
+    const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous({
+      userTier: UserTier.EarlyBird,
+    });
+
+    const claimedMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+      token,
+      projectId: project.id,
+    });
+
+    const unclaimedMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+      projectId: project.id,
+      name: 'Unclaimed Monitor',
+      url: URL_STUB,
+    });
+
+    // when
+    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
+
+    // then
+    const claimedMonitorPings = await bootstrap.utils.httpPingUtils.getMonitorPings({
+      httpMonitorId: claimedMonitor.id,
+    });
+    const unclaimedMonitorPings = await bootstrap.utils.httpPingUtils.getMonitorPings({
+      httpMonitorId: unclaimedMonitor.id,
+    });
+    const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
+
+    expect(claimedMonitorPings.length).toBe(1);
+    expect(unclaimedMonitorPings.length).toBe(0);
+    expect(allPings.length).toBe(1);
+
+    // Verify the ping was created for the claimed monitor only
+    expect(allPings[0].httpMonitorId).toBe(claimedMonitor.id);
   });
 });

@@ -38,7 +38,11 @@ export class HttpMonitorUtils {
   }
 
   public async storeHttpMonitor(
-    dto: Partial<CreateHttpMonitorBody> & { token?: string; projectId: string },
+    dto: Partial<CreateHttpMonitorBody> & {
+      token?: string;
+      projectId: string;
+      claimed?: boolean;
+    },
   ): Promise<HttpMonitorNormalized> {
     this.tryFillDto(dto);
     const monitor = await this.httpMonitorModel.create(dto);

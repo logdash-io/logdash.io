@@ -86,6 +86,7 @@ describe('HttpMonitorCoreController (writes)', () => {
           projectId: project.id,
           name: `Monitor ${i}`,
           url: 'https://example.com',
+          claimed: true,
         });
       }
 
