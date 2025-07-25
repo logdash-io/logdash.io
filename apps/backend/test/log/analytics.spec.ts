@@ -4,7 +4,7 @@ import { CreateLogDto } from '../../src/log/write/dto/create-log.dto';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { LogWriteService } from '../../src/log/write/log-write.service';
-import { subHours, addMinutes, subMinutes, addHours } from 'date-fns';
+import { subHours, addMinutes, subMinutes, addHours, addSeconds } from 'date-fns';
 
 describe('LogCoreController (analytics)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -126,8 +126,8 @@ describe('LogCoreController (analytics)', () => {
         .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
-          startDate: startTime.toISOString(),
-          endDate: endTime.toISOString(),
+          startDate: addSeconds(startTime, 1).toISOString(),
+          endDate: addSeconds(endTime, 1).toISOString(),
         });
 
       // then - should auto-select 1-minute buckets and align to boundaries
