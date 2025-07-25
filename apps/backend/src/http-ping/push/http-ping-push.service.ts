@@ -107,14 +107,9 @@ export class HttpPingPushService {
       const record = await this.redisService.get(key);
 
       if (record) {
-<<<<<<< Updated upstream
         // Monitor received ping, record success
         await this.redisService.del(key);
 
-=======
-        // Monitor received ping, record success and delete the key
-        await this.redisService.del(key);
->>>>>>> Stashed changes
         pings.push({
           httpMonitorId: monitor.id,
           statusCode: 200,

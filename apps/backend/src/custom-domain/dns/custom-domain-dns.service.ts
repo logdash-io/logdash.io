@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-<<<<<<< Updated upstream
 import { resolveCname } from 'dns/promises';
 import { Logger } from '@logdash/js-sdk';
 
@@ -14,16 +13,6 @@ export class CustomDomainDnsService {
         domain,
         results,
       });
-=======
-import { promisify } from 'util';
-import dns from 'dns/promises';
-
-@Injectable()
-export class CustomDomainDnsService {
-  public async checkCnameRecord(domain: string): Promise<string | null> {
-    try {
-      const results = await dns.resolveCname(domain);
->>>>>>> Stashed changes
       if (results && results.length > 0) {
         return results[0];
       }
