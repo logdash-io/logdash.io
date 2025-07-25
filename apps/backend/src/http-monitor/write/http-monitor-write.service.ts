@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, UpdateQuery } from 'mongoose';
+import { Model, Types, UpdateQuery } from 'mongoose';
 import { CreateHttpMonitorBody } from '../core/dto/create-http-monitor.body';
 import { HttpMonitorEntity } from '../core/entities/http-monitor.entity';
 import { HttpMonitorNormalized } from '../core/entities/http-monitor.interface';
@@ -190,6 +190,12 @@ export class HttpMonitorWriteService {
 
     await this.httpMonitorModel.findByIdAndUpdate(httpMonitorId, {
       $pull: { notificationChannelsIds: notificationChannelId },
+    });
+  }
+
+  public async claim(httpMonitorId: string): Promise<void> {
+    await this.httpMonitorModel.findByIdAndUpdate(httpMonitorId, {
+      $set: { claimed: true },
     });
   }
 }

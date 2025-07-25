@@ -21,6 +21,9 @@ export class HttpMonitorEntity {
   @Prop({ required: true, enum: HttpMonitorMode, default: HttpMonitorMode.Pull })
   mode: HttpMonitorMode;
 
+  @Prop({ required: true, default: false })
+  claimed: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }

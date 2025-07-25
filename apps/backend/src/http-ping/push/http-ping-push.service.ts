@@ -93,7 +93,7 @@ export class HttpPingPushService {
       (p) => p.id,
     );
 
-    const pushMonitors = await this.httpMonitorReadService.readManyByProjectIdsAndMode(
+    const pushMonitors = await this.httpMonitorReadService.readManyClaimedByProjectIdsAndMode(
       projectsIds,
       HttpMonitorMode.Push,
     );

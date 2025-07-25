@@ -42,7 +42,7 @@ export class ProjectFeaturesService {
     }
 
     try {
-      const hasHttpMonitors = await this.httpMonitorReadService.existsForProject(projectId);
+      const hasHttpMonitors = await this.httpMonitorReadService.existsClaimedForProject(projectId);
       if (hasHttpMonitors) {
         features.push(ProjectFeature.monitoring);
       }
