@@ -36,11 +36,9 @@ export class HttpPingPushService {
     const existingRecord = await this.redisService.get(key);
 
     if (existingRecord) {
-      // Record already exists, no need to update
       return;
     }
 
-    // Record the ping with TTL
     await this.redisService.set(key, Date.now().toString(), PUSH_RECORD_TTL_SECONDS);
   }
 
@@ -109,9 +107,14 @@ export class HttpPingPushService {
       const record = await this.redisService.get(key);
 
       if (record) {
+<<<<<<< Updated upstream
         // Monitor received ping, record success
         await this.redisService.del(key);
 
+=======
+        // Monitor received ping, record success and delete the key
+        await this.redisService.del(key);
+>>>>>>> Stashed changes
         pings.push({
           httpMonitorId: monitor.id,
           statusCode: 200,
