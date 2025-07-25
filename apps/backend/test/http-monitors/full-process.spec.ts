@@ -35,7 +35,7 @@ describe('Http monitor full process', () => {
         },
       });
 
-    await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       projectId: project.id,
       token,
       notificationChannelsIds: [channel.id],

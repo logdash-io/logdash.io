@@ -184,7 +184,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: project.id,
         token,
       });
@@ -214,7 +214,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       const { token: creatorToken, project } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: project.id,
         token: creatorToken,
       });
@@ -233,7 +233,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // given
       const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: project.id,
         token,
       });
@@ -265,7 +265,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // given
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: setup.project.id,
         token: setup.token,
       });
@@ -302,7 +302,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
       const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: setupA.project.id,
         token: setupA.token,
       });
@@ -320,7 +320,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // given
       const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: project.id,
         token,
       });
@@ -345,7 +345,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // given
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: setup.project.id,
         token: setup.token,
       });
@@ -376,7 +376,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // given
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: setup.project.id,
         token: setup.token,
       });
@@ -413,7 +413,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // given
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: setup.project.id,
         token: setup.token,
       });
@@ -444,7 +444,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // given
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: setup.project.id,
         token: setup.token,
       });
@@ -468,6 +468,93 @@ describe('HttpMonitorCoreController (writes)', () => {
         userId: setup.user.id,
         action: AuditLogHttpMonitorAction.RemovedNotificationChannel,
       });
+    });
+  });
+
+  describe('POST /http_monitors/:httpMonitorId/claim', () => {
+    it('claims unclaimed monitor', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const unclaimedMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        projectId: project.id,
+        name: 'Unclaimed Monitor',
+        url: 'https://example.com',
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/http_monitors/${unclaimedMonitor.id}/claim`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(201);
+
+      const entity = await bootstrap.models.httpMonitorModel.findById(unclaimedMonitor.id);
+      expect(entity?.claimed).toBe(true);
+    });
+
+    it('throws error when project has reached monitor limit', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const maxMonitors = getProjectPlanConfig(project.tier).httpMonitors.maxNumberOfMonitors;
+
+      // Create claimed monitors up to the limit
+      for (let i = 0; i < maxMonitors; i++) {
+        await bootstrap.models.httpMonitorModel.create({
+          projectId: project.id,
+          name: `Monitor ${i}`,
+          url: 'https://example.com',
+          claimed: true,
+          notificationChannelsIds: [],
+        });
+      }
+
+      // Create an unclaimed monitor to try to claim
+      const unclaimedMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        projectId: project.id,
+        name: 'Unclaimed Monitor',
+        url: 'https://example.com',
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/http_monitors/${unclaimedMonitor.id}/claim`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(409);
+      expect(response.body.message).toBe(
+        'You have reached the maximum number of monitors for this project',
+      );
+
+      // Verify monitor remains unclaimed
+      const entity = await bootstrap.models.httpMonitorModel.findById(unclaimedMonitor.id);
+      expect(entity?.claimed).toBe(false);
+    });
+
+    it('denies access for non-cluster member', async () => {
+      // given
+      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const unclaimedMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        projectId: setupA.project.id,
+        name: 'Unclaimed Monitor',
+        url: 'https://example.com',
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/http_monitors/${unclaimedMonitor.id}/claim`)
+        .set('Authorization', `Bearer ${setupB.token}`);
+
+      // then
+      expect(response.status).toBe(403);
+
+      // Verify monitor remains unclaimed
+      const entity = await bootstrap.models.httpMonitorModel.findById(unclaimedMonitor.id);
+      expect(entity?.claimed).toBe(false);
     });
   });
 });

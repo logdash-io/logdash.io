@@ -34,6 +34,7 @@ export class HttpMonitorWriteService {
       url: dto.url,
       notificationChannelsIds: dto.notificationChannelsIds,
       mode: dto.mode,
+      claimed: false,
     });
 
     this.auditLog.create({

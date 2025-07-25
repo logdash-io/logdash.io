@@ -25,7 +25,7 @@ describe('PublicDashboardCoreController (writes)', () => {
       const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
       const clusterId = cluster.id;
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -56,7 +56,7 @@ describe('PublicDashboardCoreController (writes)', () => {
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
       const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setupB.token,
         projectId: setupB.project.id,
       });
@@ -77,7 +77,7 @@ describe('PublicDashboardCoreController (writes)', () => {
       // given
       const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -113,7 +113,7 @@ describe('PublicDashboardCoreController (writes)', () => {
         userTier: UserTier.EarlyBird,
       });
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -153,7 +153,7 @@ describe('PublicDashboardCoreController (writes)', () => {
         token,
       });
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -182,7 +182,7 @@ describe('PublicDashboardCoreController (writes)', () => {
         token,
       });
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -232,7 +232,7 @@ describe('PublicDashboardCoreController (writes)', () => {
       const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
       const clusterId = cluster.id;
 
-      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });

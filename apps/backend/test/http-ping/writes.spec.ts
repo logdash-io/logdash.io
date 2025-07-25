@@ -31,11 +31,11 @@ describe('Http Ping (writes)', () => {
     const setupB = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
-    const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitorA = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupA.token,
       projectId: setupA.project.id,
     });
-    const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitorB = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupB.token,
       projectId: setupB.project.id,
     });
@@ -114,7 +114,7 @@ describe('Http Ping (writes)', () => {
       userTier: UserTier.EarlyBird,
     });
     const anotherUrl = 'https://another-url.com';
-    const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token,
       projectId: project.id,
       url: anotherUrl,
@@ -144,11 +144,11 @@ describe('Http Ping (writes)', () => {
     const setupB = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
-    const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitorA = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupA.token,
       projectId: setupA.project.id,
     });
-    const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitorB = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupB.token,
       projectId: setupB.project.id,
     });

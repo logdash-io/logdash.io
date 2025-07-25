@@ -101,4 +101,13 @@ export class HttpMonitorReadService {
 
     return HttpMonitorSerializer.normalizeMany(entities);
   }
+
+  public async readUnclaimedOlderThan(cutoffDate: Date): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ claimed: false, createdAt: { $lt: cutoffDate } })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+
+    return HttpMonitorSerializer.normalizeMany(entities);
+  }
 }

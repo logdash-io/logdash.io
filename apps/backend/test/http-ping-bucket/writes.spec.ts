@@ -24,7 +24,7 @@ describe('Http Ping (writes)', () => {
     it('creates buckets from pings for previous hour', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
