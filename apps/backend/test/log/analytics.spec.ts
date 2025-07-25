@@ -126,8 +126,8 @@ describe('LogCoreController (analytics)', () => {
         .get(`/projects/${project.id}/logs/analytics/v1`)
         .set('Authorization', `Bearer ${token}`)
         .query({
-          startDate: addMinutes(startTime, 0.17).toISOString(),
-          endDate: addMinutes(endTime, 0.17).toISOString(),
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
         });
 
       // then - should auto-select 1-minute buckets and align to boundaries
