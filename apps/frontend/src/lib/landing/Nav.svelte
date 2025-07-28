@@ -20,6 +20,10 @@
       name: 'Pricing',
     },
     {
+      path: '/blog',
+      name: 'Blog',
+    },
+    {
       path: '/docs',
       name: 'Docs',
     },
