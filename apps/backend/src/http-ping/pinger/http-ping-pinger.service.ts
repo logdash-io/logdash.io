@@ -91,7 +91,7 @@ export class HttpPingPingerService {
     );
 
     // Only fetch monitors with 'pull' mode
-    for await (const monitor of this.httpMonitorReadService.readManyByProjectIdsCursorWithMode(
+    for await (const monitor of this.httpMonitorReadService.readManyClaimedByProjectIdsCursorWithMode(
       projectsIds,
       HttpMonitorMode.Pull,
     )) {
@@ -120,10 +120,7 @@ export class HttpPingPingerService {
   }
 
   public async pingSingleMonitor(httpMonitorId: string): Promise<void> {
-    const monitor = await this.httpMonitorReadService.readById(httpMonitorId);
-    if (!monitor) {
-      throw new Error('Monitor not found');
-    }
+    const monitor = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
 
     const ping = await this.pingMonitor(monitor);
     await this.saveCompletedPings([ping]);

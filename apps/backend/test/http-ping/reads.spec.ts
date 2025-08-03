@@ -47,7 +47,7 @@ describe('Http Ping (reads)', () => {
     it('gets pings for a monitor', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -73,7 +73,7 @@ describe('Http Ping (reads)', () => {
     it('gets pings for a monitor with limit', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });

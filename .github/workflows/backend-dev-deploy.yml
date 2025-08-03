@@ -95,6 +95,8 @@ jobs:
           telegram-uptime-bot-secret: ${{ secrets.BACKEND_DEV_TELEGRAM_UPTIME_BOT_SECRET }}
           admin-super-secret-admin-key: ${{ secrets.BACKEND_DEV_ADMIN_SUPER_SECRET_ADMIN_KEY }}
           internal-telegram-bot-token: ${{ secrets.BACKEND_DEV_INTERNAL_TELEGRAM_BOT_TOKEN }}
+          google-oauth-client-id: ${{ secrets.BACKEND_DEV_GOOGLE_OAUTH_CLIENT_ID }}
+          google-oauth-client-secret: ${{ secrets.BACKEND_DEV_GOOGLE_OAUTH_CLIENT_SECRET }}
       - name: Prune
         uses: './.github/templates/prune'
         with:

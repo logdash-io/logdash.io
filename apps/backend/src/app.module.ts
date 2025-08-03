@@ -27,6 +27,7 @@ import { SubscriptionCoreModule } from './subscription/core/subscription-core.mo
 import { AuditLogCreationModule } from './audit-log/creation/audit-log-creation.module';
 import { ClusterInviteCoreModule } from './cluster-invite/core/cluster-invite-core.module';
 import { InternalModule } from './internal/internal.module';
+import { BlogCoreModule } from './blog/core/blog-core.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { InternalModule } from './internal/internal.module';
     AuditLogCreationModule,
     ClusterInviteCoreModule,
     InternalModule,
+    BlogCoreModule,
   ],
 })
 export class AppModule {}

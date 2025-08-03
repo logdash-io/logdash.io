@@ -213,7 +213,7 @@ describe('ProjectCoreController (writes)', () => {
         value: 1,
       });
 
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         projectId: project.id,
         token: token,
       });

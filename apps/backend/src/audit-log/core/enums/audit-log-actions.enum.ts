@@ -6,6 +6,7 @@ export enum AuditLogEntityAction {
 
 export enum AuditLogUserAction {
   GithubLogin = 'githubLogin',
+  GoogleLogin = 'googleLogin',
   GotInvitedToCluster = 'gotInvitedToCluster',
   AcceptedInviteToCluster = 'acceptedInviteToCluster',
   RevokedRoleFromCluster = 'revokedRoleFromCluster',

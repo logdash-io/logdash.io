@@ -31,13 +31,13 @@ describe('PublicDashboardCoreController (public data read)', () => {
       clusterId: setup.cluster.id,
     });
 
-    const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitorA = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
       projectId: setup.project.id,
       name: 'A',
     });
 
-    const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitorB = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
       projectId: additionalProject.id,
       name: 'B',
@@ -242,7 +242,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
         clusterId: setup.cluster.id,
       });
 
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setup.token,
         projectId: project.id,
         name: 'C',
