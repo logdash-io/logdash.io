@@ -11,6 +11,7 @@ export type CreateMonitorDto = {
   projectId: string;
   name: string;
   mode: MonitorMode;
+  url?: string;
 };
 
 export class MonitoringService {
@@ -26,6 +27,10 @@ export class MonitoringService {
         },
       },
     );
+  }
+
+  getMonitors(clusterId: string): Promise<Monitor[]> {
+    return httpClient.get<Monitor[]>(`/clusters/${clusterId}/http_monitors`);
   }
 
   getMonitorPings(dto: {
@@ -44,9 +49,17 @@ export class MonitoringService {
   }
 
   createMonitor(projectId: string, dto: CreateMonitorDto): Promise<Monitor> {
+    return httpClient.post<Monitor>(`/projects/${projectId}/http_monitors`, {
+      name: dto.name,
+      mode: dto.mode,
+      url: dto.url,
+    });
+  }
+
+  claimMonitor(httpMonitorId: string): Promise<Monitor> {
     return httpClient.post<Monitor>(
-      `/projects/${projectId}/http_monitors`,
-      dto,
+      `/http_monitors/${httpMonitorId}/claim`,
+      {},
     );
   }
 }

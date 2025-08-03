@@ -55,7 +55,7 @@
 >
   <div
     class={[
-      "flex h-7 w-full flex-row-reverse items-end justify-start",
+      "flex h-8 w-full flex-row-reverse items-end justify-start",
       {
         "overflow-hidden": adaptToWidth,
       },
@@ -71,12 +71,13 @@
     {#each displayPings as ping, pingIndex (pingIndex)}
       {@const isHealthy = ping.statusCode >= 200 && ping.statusCode < 400}
       {@const pingStatus = isHealthy ? "healthy" : "unhealthy"}
+      {@const isUnknown = !ping.statusCode || ping.statusCode === 0}
       <Tooltip
         class="relative"
-        content={`${DateTime.fromJSDate(new Date(ping.createdAt)).toFormat("HH:mm")} - ${ping.statusCode} (${formatDuration(ping.responseTimeMs)})`}
+        content={`${DateTime.fromJSDate(new Date(ping.createdAt)).toFormat("HH:mm")} - code ${ping.statusCode} (${formatDuration(ping.responseTimeMs)})`}
         placement="top"
       >
-        <StatusBar status={pingStatus} />
+        <StatusBar status={isUnknown ? "unknown" : pingStatus} />
       </Tooltip>
     {/each}
 

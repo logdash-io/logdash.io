@@ -3,12 +3,12 @@
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
 
   type Props = {
-    url: string;
+    monitorId: string;
     children?: Snippet;
     onCaptureOnce?: () => void;
   };
-  const { url, children, onCaptureOnce }: Props = $props();
-  const isHealthy = $derived(monitoringState.isPreviewHealthy(url));
+  const { monitorId, children, onCaptureOnce }: Props = $props();
+  const isHealthy = $derived(monitoringState.hasSuccessfulPing(monitorId));
   let notified = $state(false);
 
   $effect(() => {

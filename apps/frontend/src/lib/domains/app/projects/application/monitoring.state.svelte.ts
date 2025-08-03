@@ -1,4 +1,3 @@
-import { source, type Source } from 'sveltekit-sse';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import { createLogger } from '$lib/domains/shared/logger';
 import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils.js';
@@ -21,7 +20,7 @@ import type {
   PingBucketPeriod,
 } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 
-const logger = createLogger('monitoring.state', true);
+const logger = createLogger('monitoring.state', false);
 
 const MONITORING_TIME_RANGE_KEY = 'monitoring_time_range';
 
@@ -29,16 +28,14 @@ const MONITORING_TIME_RANGE_KEY = 'monitoring_time_range';
 class MonitoringState {
   private _monitors = $state<Record<Monitor['id'], Monitor>>({});
   private _monitorPings = $state<Record<Monitor['id'], HttpPing[]>>({});
-  private _previewedMonitors = $state<Record<string, HttpPing[]>>({});
+  private _unclaimedMonitors = $state<Record<Monitor['id'], Monitor>>({});
   private _pingBuckets = $state<Record<Monitor['id'], (PingBucket | null)[]>>(
     {},
   );
   private _timeRange = $state<PingBucketPeriod>('90d');
   private syncConnection: EventSource | null = null;
-  private previewConnection: Source | null = null;
   private _shouldReconnect = true;
   private _unsubscribe: () => void | null = null;
-  private _previewUnsubscribe: () => void | null = null;
   private _loadingPage = $state(false);
 
   get pageIsLoading(): boolean {
@@ -226,38 +223,10 @@ class MonitoringState {
     return this.monitors.find((monitor) => monitor.url === url);
   }
 
-  previewUrl(clusterId: string, url: string): void {
-    this._startUrlPreview(clusterId, url);
-  }
-
-  stopUrlPreview(): void {
-    this._stopUrlPreview();
-  }
-
-  previewPings(url: string): HttpPing[] {
-    return this._getSortedPings(this._previewedMonitors[url]);
-  }
-
   load(clusterId: string): void {
     logger.debug('loading monitors...');
     this._loadingPage = true;
     this._fetchMonitors(clusterId);
-  }
-
-  isPreviewHealthy(url: string): boolean {
-    const last = <T>(arr: T[]): T | undefined => {
-      if (!arr || arr.length === 0) {
-        return undefined;
-      }
-      return arr[arr.length - 1];
-    };
-
-    const code = last(this._previewedMonitors[url])?.statusCode;
-
-    if (code === undefined) {
-      return false;
-    }
-    return code >= 200 && code < 400;
   }
 
   loadMonitorPings(
@@ -432,64 +401,6 @@ class MonitoringState {
     await this.sync(clusterId);
   }
 
-  private _startUrlPreview(clusterId: string, url: string): void {
-    this._stopUrlPreview();
-    this._previewedMonitors[url] = [];
-
-    this.previewConnection = source(
-      `/app/api/clusters/${clusterId}/monitors/preview`,
-      {
-        close: ({ connect }) => {
-          logger.debug('preview connection closed, reconnecting...');
-          connect();
-        },
-        error: (error) => {
-          logger.error('preview SSE error:', error);
-        },
-        open: () => {
-          logger.debug('preview SSE opened');
-        },
-        options: {
-          mode: 'cors',
-          openWhenHidden: true,
-          keepalive: true,
-          cache: 'no-cache',
-          body: JSON.stringify({
-            url,
-          }),
-        },
-      },
-    );
-
-    const value = this.previewConnection.select('ping-status');
-
-    this._previewUnsubscribe = value.subscribe((message) => {
-      try {
-        logger.info('new preview SSE message:', message);
-        if (!message.length) {
-          logger.debug('Preview SSE message empty, skipping...');
-          return;
-        }
-
-        const parsedMessage: HttpPingCreatedEvent = JSON.parse(message);
-
-        this._previewedMonitors[url].push({
-          ...parsedMessage,
-        });
-      } catch (e) {
-        logger.error('preview SSE message error:', e);
-      }
-    });
-  }
-
-  private _stopUrlPreview(): void {
-    if (this.previewConnection) {
-      logger.debug('stopping URL observation...');
-      this._previewUnsubscribe?.();
-      this.previewConnection = null;
-    }
-  }
-
   async createMonitor(
     projectId: string,
     dto: CreateMonitorDto,
@@ -499,10 +410,39 @@ class MonitoringState {
       dto,
     );
 
-    this._monitors[createdMonitor.id] = createdMonitor;
+    this._unclaimedMonitors[createdMonitor.id] = createdMonitor;
     this._monitorPings[createdMonitor.id] = [];
 
     return createdMonitor.id;
+  }
+
+  getUnclaimedMonitor(monitorId: string): Monitor | undefined {
+    return this._unclaimedMonitors[monitorId];
+  }
+
+  hasSuccessfulPing(monitorId: string): boolean {
+    const pings = this._monitorPings[monitorId];
+    if (!pings || pings.length === 0) {
+      return false;
+    }
+
+    return pings.some(
+      (ping) => ping.statusCode >= 200 && ping.statusCode < 400,
+    );
+  }
+
+  async claimMonitor(httpMonitorId: string): Promise<Monitor> {
+    const claimedMonitor = await monitoringService.claimMonitor(httpMonitorId);
+
+    // Move from unclaimed to claimed monitors
+    this._monitors[claimedMonitor.id] = claimedMonitor;
+    delete this._unclaimedMonitors[claimedMonitor.id];
+
+    if (!this._monitorPings[claimedMonitor.id]) {
+      this._monitorPings[claimedMonitor.id] = [];
+    }
+
+    return claimedMonitor;
   }
 
   private _openMonitorStream(clusterId: string): Promise<void> {
@@ -559,8 +499,11 @@ class MonitoringState {
             createdAt: new Date(pingData.createdAt),
           });
 
-          this._monitors[pingData.httpMonitorId].lastStatusCode =
-            pingData.statusCode;
+          // Update status for both claimed and unclaimed monitors
+          if (this._monitors[pingData.httpMonitorId]) {
+            this._monitors[pingData.httpMonitorId].lastStatusCode =
+              pingData.statusCode;
+          }
 
           logger.debug('added ping:', pingData);
         } catch (e) {
@@ -593,9 +536,9 @@ class MonitoringState {
   }
 
   private _fetchMonitors(clusterId: string): Promise<void> {
-    return fetch(`/app/api/clusters/${clusterId}/monitors`)
-      .then((response) => response.json())
-      .then(({ data }: { data: Monitor[] }) => {
+    return monitoringService
+      .getMonitors(clusterId)
+      .then((data) => {
         const newMonitors = arrayToObject<Monitor>(data, 'id');
         for (const [id, monitor] of Object.entries(newMonitors) as [
           string,

@@ -7,57 +7,48 @@
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import CancelSetupButton from '$lib/domains/shared/ui/setup/CancelSetupButton.svelte';
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
   import { envConfig, StatusBar } from '@logdash/hyper-ui';
-  import { CheckCircle } from 'lucide-svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { CheckCircle, CopyIcon } from 'lucide-svelte';
   import { onMount, type Snippet } from 'svelte';
   import { match, P } from 'ts-pattern';
 
   type Props = {
     project_id: string;
     claimer: Snippet<[boolean]>;
+    onMonitorCreated?: (monitorId: string) => void;
   };
-  const { project_id, claimer }: Props = $props();
+  const { project_id, claimer, onMonitorCreated }: Props = $props();
   const MIN_NAME_LENGTH = 1;
   const MAX_NAME_LENGTH = 50;
 
   const clusterId = $derived(page.params.cluster_id);
-  const observedUrl = $derived(page.url.searchParams.get('url'));
-  const nameParam = $derived(page.url.searchParams.get('name'));
+  const observedUrl = $derived(
+    decodeURIComponent(page.url.searchParams.get('url') || ''),
+  );
+  const nameParam = $derived(
+    decodeURIComponent(page.url.searchParams.get('name') || ''),
+  );
   const modeParam = $derived(page.url.searchParams.get('mode') as MonitorMode);
   const monitorMode = $derived(modeParam || MonitorMode.PULL);
-  let pushMonitorId = $state<string | undefined>();
+  let monitorId = $state<string | undefined>();
 
   const monitorName = $derived(
     stripProtocol(decodeURIComponent(nameParam || observedUrl || '')),
   );
 
-  // Only use preview functionality for pull mode
   const isHealthy = $derived(
-    monitorMode === MonitorMode.PULL
-      ? monitoringState.isPreviewHealthy(observedUrl)
-      : monitoringState.isHealthy(pushMonitorId),
+    monitorId ? monitoringState.hasSuccessfulPing(monitorId) : false,
   );
   const pings = $derived.by(() =>
-    monitorMode === MonitorMode.PULL
-      ? monitoringState.previewPings(observedUrl)
-      : [],
+    monitorId ? monitoringState.monitoringPings(monitorId) : [],
   );
+  const PINGS_VISIBLE = 80;
 
   $effect(() => {
-    if (monitorMode === MonitorMode.PULL && observedUrl) {
-      monitoringState.previewUrl(clusterId, observedUrl);
-    }
-
-    return () => {
-      if (monitorMode === MonitorMode.PULL) {
-        monitoringState.stopUrlPreview();
-      }
-    };
-  });
-
-  $effect(() => {
-    if (monitorName === nameParam) {
+    if (monitorName === decodeURIComponent(nameParam || '')) {
       return;
     }
 
@@ -71,19 +62,21 @@
       }
     }, 0);
 
-    if (monitorMode === MonitorMode.PUSH) {
-      monitoringState
-        .createMonitor(project_id, {
-          projectId: project_id,
-          name: monitorName,
-          mode: MonitorMode.PUSH,
-        })
-        .then((monitorId) => {
-          pushMonitorId = monitorId;
-        });
-    }
+    monitoringState
+      .createMonitor(project_id, {
+        projectId: project_id,
+        name: monitorName,
+        mode: monitorMode,
+        url: monitorMode === MonitorMode.PULL ? observedUrl : undefined,
+      })
+      .then((createdMonitorId) => {
+        monitorId = createdMonitorId;
+        onMonitorCreated?.(createdMonitorId);
+        monitoringState.sync(clusterId);
+      });
 
     return () => {
+      monitoringState.unsync();
       clearTimeout(t);
     };
   });
@@ -98,6 +91,17 @@
       keepFocus: true,
       noScroll: true,
     });
+  }
+
+  function onCopyEndpoint(): void {
+    if (!monitorId) {
+      toast.error('Monitor not found');
+      return;
+    }
+
+    const endpoint = `${envConfig.apiBaseUrl}/ping/${monitorId}`;
+    navigator.clipboard.writeText(endpoint);
+    toast.success('Endpoint copied to clipboard');
   }
 </script>
 
@@ -139,25 +143,20 @@
         <p class="text-xs opacity-60">Latest pings</p>
 
         <div class="flex w-full flex-row justify-end overflow-hidden">
-          {#each Array(100) as _, index}
-            {@const ping = pings[index]}
-            {@const pingHealthy = ping
-              ? ping.statusCode >= 200 && ping.statusCode < 400
-              : false}
+          {#each Array(PINGS_VISIBLE) as _, index}
+            {@const ping = pings[PINGS_VISIBLE - index - 1]}
+            {@const isHealthy =
+              ping?.statusCode >= 200 && ping?.statusCode < 400}
+            {@const isUnknown = !ping || ping.statusCode === 0}
+            {@const pingStatus = isHealthy
+              ? 'healthy'
+              : isUnknown
+                ? 'unknown'
+                : 'unhealthy'}
 
-            <StatusBar
-              status={match({ ping, pingHealthy })
-                .with(
-                  { ping: P.not(P.nullish), pingHealthy: true },
-                  () => 'up' as const,
-                )
-                .with(
-                  { ping: P.not(P.nullish), pingHealthy: false },
-                  () => 'down' as const,
-                )
-                .with({ ping: P.nullish }, () => 'unknown' as const)
-                .otherwise(() => 'unknown' as const)}
-            />
+            <Tooltip content={`${ping?.createdAt} ${index}`} placement="top">
+              <StatusBar status={pingStatus} />
+            </Tooltip>
           {/each}
         </div>
       </div>
@@ -234,7 +233,7 @@
 
       <div class="text-sm">
         {#if monitorMode === MonitorMode.PULL}
-          <MonitorsListener onCaptureOnce={() => {}} url={observedUrl}>
+          <MonitorsListener onCaptureOnce={() => {}} {monitorId}>
             <div class="flex items-center justify-start gap-2 font-semibold">
               <CheckCircle class="text-success h-5 w-5" />
               <span class="text-success opacity-80">
@@ -242,16 +241,25 @@
               </span>
             </div>
           </MonitorsListener>
-        {:else}
+        {:else if monitorId}
           <div class="space-y-4">
-            <div class="bg-base-100 rounded-lg p-4">
-              <p class="mb-2 text-sm opacity-80">
+            <div class="bg-base-100 space-y-4 rounded-lg p-4">
+              <p class="text-sm opacity-80">
                 Your service will send status updates to this monitor. Use the
                 following endpoint:
               </p>
-              <code class="bg-base-200 text-primary block rounded p-2 text-xs">
-                POST {envConfig.apiBaseUrl}/ping/{'{monitor_id}'}
+              <code
+                class="bg-base-200 text-primary block rounded p-2 font-mono text-xs"
+              >
+                POST {envConfig.apiBaseUrl}/ping/{monitorId}
               </code>
+              <button
+                onclick={onCopyEndpoint}
+                class="btn btn-sm btn-secondary gap-1"
+              >
+                <CopyIcon class="h-3 w-3" />
+                Copy endpoint
+              </button>
             </div>
             <div class="flex items-center justify-start gap-2 font-semibold">
               <CheckCircle class="text-success h-5 w-5" />
@@ -260,12 +268,17 @@
               </span>
             </div>
           </div>
+        {:else}
+          <div class="flex items-center justify-start gap-2 font-semibold">
+            <div class="loading loading-spinner loading-xs"></div>
+            <span>Preparing monitor...</span>
+          </div>
         {/if}
       </div>
     </div>
 
     <div class="mt-auto flex w-full flex-col items-center gap-4">
-      {@render claimer(monitorMode === MonitorMode.PUSH || isHealthy)}
+      {@render claimer(isHealthy)}
 
       <CancelSetupButton id="monitoring" {clusterId} projectId={project_id} />
     </div>
