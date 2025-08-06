@@ -171,7 +171,44 @@ describe('Http Ping (writes)', () => {
     expect(allPings.length).toBe(1);
   });
 
-  it('does not ping unclaimed monitors', async () => {
+  it('pings unclaimed monitors with dedicated method', async () => {
+    // given
+    const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous({
+      userTier: UserTier.EarlyBird,
+    });
+
+    const claimedMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+      token,
+      projectId: project.id,
+    });
+
+    const unclaimedMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+      projectId: project.id,
+      name: 'Unclaimed Monitor',
+      url: URL_STUB,
+    });
+
+    // when
+    await schedulerService.tryPingUnclaimedMonitors();
+
+    // then
+    const claimedMonitorPings = await bootstrap.utils.httpPingUtils.getMonitorPings({
+      httpMonitorId: claimedMonitor.id,
+    });
+    const unclaimedMonitorPings = await bootstrap.utils.httpPingUtils.getMonitorPings({
+      httpMonitorId: unclaimedMonitor.id,
+    });
+    const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
+
+    expect(claimedMonitorPings.length).toBe(0);
+    expect(unclaimedMonitorPings.length).toBe(1);
+    expect(allPings.length).toBe(1);
+
+    // Verify only the unclaimed monitor was pinged
+    expect(allPings[0].httpMonitorId).toBe(unclaimedMonitor.id);
+  });
+
+  it('does not ping unclaimed monitors when using claimed monitor method', async () => {
     // given
     const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
