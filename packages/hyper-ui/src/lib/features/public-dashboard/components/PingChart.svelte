@@ -55,7 +55,7 @@
 >
   <div
     class={[
-      "flex h-7 w-full flex-row-reverse items-end justify-start",
+      "flex h-8 w-full flex-row-reverse items-end justify-start",
       {
         "overflow-hidden": adaptToWidth,
       },
@@ -73,7 +73,7 @@
       {@const pingStatus = isHealthy ? "healthy" : "unhealthy"}
       <Tooltip
         class="relative"
-        content={`${DateTime.fromJSDate(new Date(ping.createdAt)).toFormat("HH:mm")} - ${ping.statusCode} (${formatDuration(ping.responseTimeMs)})`}
+        content={`${DateTime.fromJSDate(new Date(ping.createdAt)).toFormat("HH:mm")} - code ${ping.statusCode} (${formatDuration(ping.responseTimeMs)})`}
         placement="top"
       >
         <StatusBar status={pingStatus} />

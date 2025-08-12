@@ -9,6 +9,7 @@
   import { fade } from 'svelte/transition';
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
   import { Feature } from '$lib/domains/shared/types.js';
+  import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
 </script>
 
 <div class="flex w-full flex-col gap-4 sm:flex-row">
@@ -20,7 +21,7 @@
 
     <div class="p-6 xl:p-14">
       <FlamingoIcon
-        class="pointer-events-none aspect-square w-full rounded-2xl object-cover select-none"
+        class="pointer-events-none aspect-square w-full select-none rounded-2xl object-cover"
       />
     </div>
 
@@ -44,11 +45,20 @@
               <SetupMonitoringButton
                 class="btn btn-primary btn-sm gap-1 opacity-90"
                 canAddMore={true}
-                onSubmit={(url) => {
+                onSubmit={({ name, mode }) => {
+                  const params = new URLSearchParams({
+                    project_id: page.url.searchParams.get('project_id'),
+                    mode,
+                  });
+
+                  if (mode === MonitorMode.PULL) {
+                    params.set('url', encodeURIComponent(name));
+                  } else {
+                    params.set('name', encodeURIComponent(name));
+                  }
+
                   goto(
-                    `/app/clusters/${page.params.cluster_id}/configure/monitoring?project_id=${page.url.searchParams.get(
-                      'project_id',
-                    )}&url=${encodeURIComponent(url)}`,
+                    `/app/clusters/${page.params.cluster_id}/configure/monitoring?${params.toString()}`,
                   );
                 }}
               >

@@ -3,10 +3,9 @@ export const getStatusFromPings = (
 ): 'up' | 'down' | 'degraded' | 'unknown' => {
   if (!pings.length) return 'unknown';
 
-  const latestPing = pings[0];
+  const latestPing = pings[pings.length - 1];
   const latestIsHealthy =
     latestPing.statusCode >= 200 && latestPing.statusCode < 400;
-
   if (!latestIsHealthy) {
     return 'down';
   }

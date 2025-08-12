@@ -325,6 +325,14 @@ class LogdashAPI {
     );
   }
 
+  claim_monitor(monitor_id: string, access_token: string): Promise<void> {
+    return this.post<void>(
+      `${LogdashAPI.v0baseUrl}/http_monitors/${monitor_id}/claim`,
+      {},
+      access_token,
+    );
+  }
+
   get_demo_project_config(): Promise<{
     projectId: Project['id'];
     clusterId: Cluster['id'];
@@ -366,21 +374,6 @@ class LogdashAPI {
   get_monitors(cluster_id: string, access_token: string): Promise<Monitor[]> {
     return this.get<Monitor[]>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/http_monitors`,
-      access_token,
-    );
-  }
-
-  create_monitor(
-    project_id: string,
-    monitor: {
-      url: string;
-      name: string;
-    },
-    access_token: string,
-  ): Promise<Monitor> {
-    return this.post<Monitor>(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}/http_monitors`,
-      monitor,
       access_token,
     );
   }

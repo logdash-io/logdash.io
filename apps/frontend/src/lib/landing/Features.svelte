@@ -5,6 +5,7 @@
   import { RoutePath } from '$lib/domains/shared/route-path.js';
   import { Feature } from '$lib/domains/shared/types.js';
   import { ArrowRightIcon, TimerIcon } from 'lucide-svelte';
+  import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
 </script>
 
 <div class="container mx-auto max-w-7xl px-4 py-8">
@@ -69,10 +70,19 @@
             <SetupMonitoringButton
               class="btn btn-md hover:btn-primary btn-secondary trnasition-none mt-6 w-full"
               canAddMore={true}
-              onSubmit={(url) => {
-                goto(
-                  `${RoutePath.QUICK_SETUP}?feature=${feature.id}&url=${encodeURIComponent(url)}`,
-                );
+              onSubmit={({ name, mode }) => {
+                const params = new URLSearchParams({
+                  feature: feature.id,
+                  mode,
+                });
+
+                if (mode === MonitorMode.PULL) {
+                  params.set('url', encodeURIComponent(name));
+                } else {
+                  params.set('name', encodeURIComponent(name));
+                }
+
+                goto(`${RoutePath.QUICK_SETUP}?${params.toString()}`);
               }}
             >
               Setup monitoring
