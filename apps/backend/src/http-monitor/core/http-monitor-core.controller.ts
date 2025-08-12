@@ -71,7 +71,9 @@ export class HttpMonitorCoreController {
     const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
 
     if (process.env.NODE_ENV !== 'test') {
-      void this.httpPingPingerService.pingSingleMonitor(httpMonitor.id);
+      setTimeout(() => {
+        void this.httpPingPingerService.pingSingleMonitor(httpMonitor.id);
+      }, 1_000);
     }
 
     return HttpMonitorSerializer.serialize(httpMonitor, status);
