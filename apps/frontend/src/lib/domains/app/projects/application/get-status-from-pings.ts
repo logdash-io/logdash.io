@@ -6,12 +6,6 @@ export const getStatusFromPings = (
   const latestPing = pings[pings.length - 1];
   const latestIsHealthy =
     latestPing.statusCode >= 200 && latestPing.statusCode < 400;
-  const latestIsUnknown = !latestPing.statusCode || latestPing.statusCode === 0;
-
-  if (latestIsUnknown) {
-    return 'unknown';
-  }
-
   if (!latestIsHealthy) {
     return 'down';
   }

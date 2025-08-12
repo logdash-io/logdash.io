@@ -43,7 +43,11 @@
     monitorId ? monitoringState.hasSuccessfulPing(monitorId) : false,
   );
   const pings = $derived.by(() =>
-    monitorId ? monitoringState.monitoringPings(monitorId) : [],
+    monitorId
+      ? monitoringState.monitoringPings(monitorId).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        )
+      : [],
   );
   const PINGS_VISIBLE = 80;
 
@@ -147,7 +151,7 @@
             {@const ping = pings[PINGS_VISIBLE - index - 1]}
             {@const isHealthy =
               ping?.statusCode >= 200 && ping?.statusCode < 400}
-            {@const isUnknown = !ping || ping.statusCode === 0}
+            {@const isUnknown = ping === undefined}
             {@const pingStatus = isHealthy
               ? 'healthy'
               : isUnknown
