@@ -27,7 +27,7 @@ describe('Http Ping Push (writes)', () => {
   it('creates successful ping when push record exists', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
@@ -54,7 +54,7 @@ describe('Http Ping Push (writes)', () => {
   it('creates failed ping when no push record exists', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
@@ -80,10 +80,10 @@ describe('Http Ping Push (writes)', () => {
   it('processes multiple push monitors correctly', async () => {
     // given
     const setupA = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const setupB = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const monitorA = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupA.token,
@@ -116,7 +116,7 @@ describe('Http Ping Push (writes)', () => {
   it('deletes push record after processing', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
@@ -144,7 +144,7 @@ describe('Http Ping Push (writes)', () => {
   it('handles large number of push monitors', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const monitors: HttpMonitorNormalized[] = [];
     for (let i = 0; i < 100; i++) {
@@ -174,7 +174,7 @@ describe('Http Ping Push (writes)', () => {
   it('processes only push monitors, not pull monitors', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const pushMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
@@ -208,7 +208,7 @@ describe('Http Ping Push (writes)', () => {
       userTier: UserTier.Free,
     });
     const setupPaid = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const freeMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupFree.token,

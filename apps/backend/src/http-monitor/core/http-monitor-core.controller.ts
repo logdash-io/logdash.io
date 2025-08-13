@@ -4,6 +4,7 @@ import {
   ConflictException,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Post,
@@ -30,6 +31,8 @@ import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interce
 import { HttpMonitorRemovalService } from '../removal/http-monitor-removal.service';
 import { NotificationChannelReadService } from '../../notification-channel/read/notification-channel-read.service';
 import { Public } from '../../auth/core/decorators/is-public';
+import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
+import { HttpMonitorMode } from './enums/http-monitor-mode.enum';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -55,6 +58,15 @@ export class HttpMonitorCoreController {
     @Body() dto: CreateHttpMonitorBody,
     @CurrentUserId() userId: string,
   ): Promise<HttpMonitorSerialized> {
+    const project = await this.projectReadService.readByIdOrThrow(projectId);
+
+    if (
+      dto.mode === HttpMonitorMode.Push &&
+      !getProjectPlanConfig(project.tier).httpMonitors.canCreatePushMonitors
+    ) {
+      throw new ForbiddenException('Push monitors are not supported for this project tier');
+    }
+
     const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(
