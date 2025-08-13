@@ -11,6 +11,7 @@ import {
 } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
+import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 
 describe('HttpMonitorCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -28,6 +29,18 @@ describe('HttpMonitorCoreController (writes)', () => {
   });
 
   describe('POST /projects/:projectId/http_monitors', () => {
+    it('denies creating push monitor for non-Pro project', async () => {
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/projects/${project.id}/http_monitors`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'push monitor', mode: HttpMonitorMode.Push });
+
+      expect(response.status).toBe(403);
+      expect(response.body.message).toBe('Push monitors are not supported for this project tier');
+    });
+
     it('creates new monitor', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();

@@ -27,7 +27,7 @@ describe('Http Ping Push (writes)', () => {
   it('creates successful ping when push record exists', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
@@ -54,7 +54,7 @@ describe('Http Ping Push (writes)', () => {
   it('creates failed ping when no push record exists', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
@@ -80,10 +80,10 @@ describe('Http Ping Push (writes)', () => {
   it('processes multiple push monitors correctly', async () => {
     // given
     const setupA = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const setupB = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const monitorA = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupA.token,
@@ -116,7 +116,7 @@ describe('Http Ping Push (writes)', () => {
   it('deletes push record after processing', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
@@ -144,7 +144,7 @@ describe('Http Ping Push (writes)', () => {
   it('handles large number of push monitors', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const monitors: HttpMonitorNormalized[] = [];
     for (let i = 0; i < 100; i++) {
@@ -174,7 +174,7 @@ describe('Http Ping Push (writes)', () => {
   it('processes only push monitors, not pull monitors', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
+      userTier: UserTier.Pro,
     });
     const pushMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
@@ -200,42 +200,6 @@ describe('Http Ping Push (writes)', () => {
     });
     expect(pushPings.length).toBe(1);
     expect(pullPings.length).toBe(0);
-  });
-
-  it('respects user tiers when processing push monitors', async () => {
-    // given
-    const setupFree = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.Free,
-    });
-    const setupPaid = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.EarlyBird,
-    });
-    const freeMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
-      token: setupFree.token,
-      projectId: setupFree.project.id,
-      mode: HttpMonitorMode.Push,
-    });
-    const paidMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
-      token: setupPaid.token,
-      projectId: setupPaid.project.id,
-      mode: HttpMonitorMode.Push,
-    });
-
-    // when
-    await request(bootstrap.app.getHttpServer()).post(`/ping/${freeMonitor.id}`);
-    await request(bootstrap.app.getHttpServer()).post(`/ping/${paidMonitor.id}`);
-    await pushService.checkPushMonitors(Object.values(ProjectTier));
-
-    // then
-    const freePings = await bootstrap.utils.httpPingUtils.getMonitorPings({
-      httpMonitorId: freeMonitor.id,
-    });
-    const paidPings = await bootstrap.utils.httpPingUtils.getMonitorPings({
-      httpMonitorId: paidMonitor.id,
-    });
-
-    expect(freePings.length).toBe(1);
-    expect(paidPings.length).toBe(1);
   });
 
   it('handles empty push monitor list gracefully', async () => {
