@@ -10,6 +10,8 @@
   import type { Snippet } from 'svelte';
   import { fly } from 'svelte/transition';
   import { MonitorMode } from '../../domain/monitoring/monitor-mode.js';
+  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
+  
 
   type Props = {
     class?: string;
@@ -24,7 +26,7 @@
   const MIN_NAME_LENGTH = 3;
   const MAX_NAME_LENGTH = 800;
 
-  let selectedMode = $state(MonitorMode.PULL);
+  let selectedMode = $state<MonitorMode>(MonitorMode.PULL);
   let url = $state('');
   let monitorName = $state('');
 
@@ -33,6 +35,10 @@
     selectedMode === MonitorMode.PULL
       ? urlValid
       : monitorName.length >= MIN_NAME_LENGTH,
+  );
+  const canUsePush = $derived(userState.isPro);
+  const isSubmitDisabled = $derived(
+    !isFormValid || (selectedMode === MonitorMode.PUSH && !canUsePush),
   );
 </script>
 
@@ -58,17 +64,36 @@
       >
         Pull
       </button>
-      <button
-        class={[
-          'tab px-3',
-          { 'tab-active bg-base-100': selectedMode === MonitorMode.PUSH },
-        ]}
-        onclick={() => (selectedMode = MonitorMode.PUSH)}
-        type="button"
-      >
-        Push
-      </button>
+      {#if canUsePush}
+        <button
+          class={[
+            'tab px-3',
+            { 'tab-active bg-base-100': selectedMode === MonitorMode.PUSH },
+          ]}
+          onclick={() => (selectedMode = MonitorMode.PUSH)}
+          type="button"
+        >
+          Push
+        </button>
+      {:else}
+        <Tooltip content="Upgrade to Pro to use Push monitors" placement="bottom">
+          <button
+            class={[
+              'tab px-3',
+              {
+                'tab-active bg-base-100': selectedMode === MonitorMode.PUSH,
+                'opacity-60 cursor-not-allowed': true,
+              },
+            ]}
+            disabled={true}
+            type="button"
+          >
+            Push
+          </button>
+        </Tooltip>
+      {/if}
     </div>
+
 
     <!-- Input Section -->
     <div class="flex items-center justify-between gap-2">
@@ -93,7 +118,7 @@
       {/if}
 
       <button
-        disabled={!isFormValid}
+        disabled={isSubmitDisabled}
         class="btn btn-success btn-soft btn-sm btn-square"
         onclick={() => {
           const name =
