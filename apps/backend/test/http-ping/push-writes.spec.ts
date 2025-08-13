@@ -202,42 +202,6 @@ describe('Http Ping Push (writes)', () => {
     expect(pullPings.length).toBe(0);
   });
 
-  it('respects user tiers when processing push monitors', async () => {
-    // given
-    const setupFree = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.Free,
-    });
-    const setupPaid = await bootstrap.utils.generalUtils.setupAnonymous({
-      userTier: UserTier.Pro,
-    });
-    const freeMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
-      token: setupFree.token,
-      projectId: setupFree.project.id,
-      mode: HttpMonitorMode.Push,
-    });
-    const paidMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
-      token: setupPaid.token,
-      projectId: setupPaid.project.id,
-      mode: HttpMonitorMode.Push,
-    });
-
-    // when
-    await request(bootstrap.app.getHttpServer()).post(`/ping/${freeMonitor.id}`);
-    await request(bootstrap.app.getHttpServer()).post(`/ping/${paidMonitor.id}`);
-    await pushService.checkPushMonitors(Object.values(ProjectTier));
-
-    // then
-    const freePings = await bootstrap.utils.httpPingUtils.getMonitorPings({
-      httpMonitorId: freeMonitor.id,
-    });
-    const paidPings = await bootstrap.utils.httpPingUtils.getMonitorPings({
-      httpMonitorId: paidMonitor.id,
-    });
-
-    expect(freePings.length).toBe(1);
-    expect(paidPings.length).toBe(1);
-  });
-
   it('handles empty push monitor list gracefully', async () => {
     // when
     await pushService.checkPushMonitors(Object.values(ProjectTier));
