@@ -23,6 +23,7 @@
   const { project_id, claimer, onMonitorCreated }: Props = $props();
   const MIN_NAME_LENGTH = 1;
   const MAX_NAME_LENGTH = 50;
+  const CHECK_INTERVAL_MS = 15000;
 
   const clusterId = $derived(page.params.cluster_id);
   const observedUrl = $derived(
@@ -51,6 +52,13 @@
   );
   const PINGS_VISIBLE = 80;
 
+  let nowMs = $state(Date.now());
+  const nextCheckInMs = $derived(CHECK_INTERVAL_MS - (nowMs % CHECK_INTERVAL_MS));
+  const nextCheckInSeconds = $derived(Math.ceil(nextCheckInMs / 1000));
+  const checkProgressFraction = $derived(
+    (CHECK_INTERVAL_MS - nextCheckInMs) / CHECK_INTERVAL_MS,
+  );
+
   $effect(() => {
     if (monitorName === decodeURIComponent(nameParam || '')) {
       return;
@@ -65,6 +73,13 @@
         setMonitorName(stripProtocol(observedUrl));
       }
     }, 0);
+
+    let raf = 0;
+    const loop = () => {
+      nowMs = Date.now();
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
 
     monitoringState
       .createMonitor(project_id, {
@@ -82,6 +97,7 @@
     return () => {
       monitoringState.unsync();
       clearTimeout(t);
+      cancelAnimationFrame(raf);
     };
   });
 
@@ -247,6 +263,13 @@
           </MonitorsListener>
         {:else if monitorId}
           <div class="space-y-4">
+            <div class="bg-base-100 space-y-3 rounded-lg p-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm opacity-80">Checks every 15s</span>
+                <span class="text-xs opacity-60">Next check in {nextCheckInSeconds}s</span>
+              </div>
+              <progress class="progress progress-secondary h-2 w-full" max="1" value={checkProgressFraction}></progress>
+            </div>
             <div class="bg-base-100 space-y-4 rounded-lg p-4">
               <p class="text-sm opacity-80">
                 Your service will send status updates to this monitor. Use the
