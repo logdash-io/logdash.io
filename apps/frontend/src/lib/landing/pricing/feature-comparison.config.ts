@@ -226,7 +226,7 @@ export const FEATURES_COMPARISON = {
           name: 'Custom status page domain',
           [UserTier.FREE]: false,
           [UserTier.BUILDER]: false,
-          [UserTier.PRO]: 'Coming soon',
+          [UserTier.PRO]: true,
         },
       ],
     },

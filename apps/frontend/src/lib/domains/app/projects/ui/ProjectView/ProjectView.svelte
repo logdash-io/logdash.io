@@ -11,6 +11,7 @@
   import LogsListTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
   import MonitoringTile from './tiles/MonitoringTile.svelte';
+  import { monitoringState } from '../../application/monitoring.state.svelte.js';
 
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
   const clusterId = $derived(page.params.cluster_id);
@@ -26,7 +27,8 @@
   );
 
   const hasMonitoring = $derived(
-    projectsState.hasFeature(projectId, Feature.MONITORING),
+    projectsState.hasFeature(projectId, Feature.MONITORING) &&
+      monitoringState.monitors.length > 0,
   );
 
   const isMobile = $derived.by(() => {

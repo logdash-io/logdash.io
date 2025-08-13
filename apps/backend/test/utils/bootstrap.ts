@@ -27,6 +27,8 @@ import { NotificationChannelEntity } from '../../src/notification-channel/core/e
 import { NotificationChannelCoreModule } from '../../src/notification-channel/core/notification-channel-core.module';
 import { PublicDashboardEntity } from '../../src/public-dashboard/core/entities/public-dashboard.entity';
 import { PublicDashboardCoreModule } from '../../src/public-dashboard/core/public-dashboard-core.module';
+import { BlogPostEntity } from '../../src/blog/core/entities/blog-post.entity';
+import { BlogCoreModule } from '../../src/blog/core/blog-core.module';
 import { CustomDomainCoreModule } from '../../src/custom-domain/core/custom-domain-core.module';
 import { CustomDomainEntity } from '../../src/custom-domain/core/entities/custom-domain.entity';
 import { CustomDomainDnsService } from '../../src/custom-domain/dns/custom-domain-dns.service';
@@ -58,6 +60,7 @@ import { TelegramUtils } from './telegram-utils';
 import { WebhookUtils } from './webhook-utils';
 import { PublicDashboardUtils } from './public-dashboard-utils';
 import { CustomDomainUtils } from './custom-domain-utils';
+import { BlogUtils } from './blog-utils';
 import { ClusterInviteUtils } from './cluster-invite-utils';
 import { StripeModule } from '../../src/payments/stripe/stripe.module';
 import { SubscriptionEntity } from '../../src/subscription/core/entities/subscription.entity';
@@ -90,6 +93,7 @@ export async function createTestApp() {
       NotificationChannelCoreModule,
       PublicDashboardCoreModule,
       CustomDomainCoreModule,
+      BlogCoreModule,
       StripeModule,
       SubscriptionCoreModule,
       AuditLogCreationModule,
@@ -142,6 +146,7 @@ export async function createTestApp() {
   const subscriptionModel: Model<SubscriptionEntity> = module.get(
     getModelToken(SubscriptionEntity.name),
   );
+  const blogPostModel: Model<BlogPostEntity> = module.get(getModelToken(BlogPostEntity.name));
 
   const redisService: RedisService = module.get(RedisService);
 
@@ -161,6 +166,7 @@ export async function createTestApp() {
       publicDashboardModel.deleteMany({}),
       customDomainModel.deleteMany({}),
       subscriptionModel.deleteMany({}),
+      blogPostModel.deleteMany({}),
       redisService.flushAll(),
       clickhouseClient.query({
         query: `TRUNCATE TABLE logs`,
@@ -208,6 +214,7 @@ export async function createTestApp() {
       publicDashboardModel,
       customDomainModel,
       subscriptionModel,
+      blogPostModel,
     },
     utils: {
       projectUtils: new ProjectUtils(app),
@@ -227,6 +234,7 @@ export async function createTestApp() {
       auditLogUtils: new AuditLogUtils(app),
       clusterInviteUtils: new ClusterInviteUtils(app),
       userUtils: new UserUtils(app),
+      blogUtils: new BlogUtils(app),
     },
     methods: {
       clearDatabase,

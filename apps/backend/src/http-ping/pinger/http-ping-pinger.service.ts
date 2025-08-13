@@ -67,6 +67,15 @@ export class HttpPingPingerService {
     await this.tryPingMonitors(tiers);
   }
 
+  @Cron(HttpPingCron.Every15Seconds)
+  private async triggerPingUnclaimedMonitors15s(): Promise<void> {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    await this.tryPingUnclaimedMonitors();
+  }
+
   private getTiersWithFrequency(frequency: HttpPingCron): ProjectTier[] {
     return Object.entries(ProjectPlanConfigs)
       .filter(([_, value]) => value.httpMonitors.pingFrequency === frequency)
@@ -75,13 +84,21 @@ export class HttpPingPingerService {
 
   public async tryPingMonitors(projectTiers: ProjectTier[]): Promise<void> {
     try {
-      await this.pingMonitors(projectTiers);
+      await this.pingClaimedMonitors(projectTiers);
     } catch (error) {
       this.logger.error('Error processing HTTP pings:', { errorMessage: error.message });
     }
   }
 
-  private async pingMonitors(projectTiers: ProjectTier[]): Promise<void> {
+  public async tryPingUnclaimedMonitors(): Promise<void> {
+    try {
+      await this.pingUnclaimedMonitors();
+    } catch (error) {
+      this.logger.error('Error processing unclaimed HTTP pings:', { errorMessage: error.message });
+    }
+  }
+
+  private async pingClaimedMonitors(projectTiers: ProjectTier[]): Promise<void> {
     const startTime = Date.now();
     const queue: QueueItem[] = [];
     const results: CreateHttpPingDto[] = [];
@@ -91,7 +108,7 @@ export class HttpPingPingerService {
     );
 
     // Only fetch monitors with 'pull' mode
-    for await (const monitor of this.httpMonitorReadService.readManyByProjectIdsCursorWithMode(
+    for await (const monitor of this.httpMonitorReadService.readManyClaimedByProjectIdsCursorWithMode(
       projectsIds,
       HttpMonitorMode.Pull,
     )) {
@@ -119,11 +136,46 @@ export class HttpPingPingerService {
     this.metrics.mutate('pingsMade', results.length);
   }
 
-  public async pingSingleMonitor(httpMonitorId: string): Promise<void> {
-    const monitor = await this.httpMonitorReadService.readById(httpMonitorId);
-    if (!monitor) {
-      throw new Error('Monitor not found');
+  private async pingUnclaimedMonitors(): Promise<void> {
+    const startTime = Date.now();
+    const queue: QueueItem[] = [];
+    const results: CreateHttpPingDto[] = [];
+
+    // Get all project IDs from all tiers for unclaimed monitors
+    const allTiers = Object.keys(ProjectPlanConfigs) as ProjectTier[];
+    const projectsIds = (await this.projectReadService.readManyByTiers(allTiers)).map((p) => p.id);
+
+    // Only fetch unclaimed monitors with 'pull' mode
+    for await (const monitor of this.httpMonitorReadService.readManyUnclaimedByProjectIdsCursorWithMode(
+      projectsIds,
+      HttpMonitorMode.Pull,
+    )) {
+      if (queue.length >= this.maxConcurrentRequests) {
+        const completedItem = await Promise.race(
+          queue.map(async (item) => {
+            const result = await item.promise;
+            return { item, result };
+          }),
+        );
+        queue.splice(queue.indexOf(completedItem.item), 1);
+        results.push(completedItem.result);
+      }
+
+      queue.push({ monitor, promise: this.pingMonitor(monitor) });
     }
+
+    const remainingResults = await Promise.all(queue.map((item) => item.promise));
+    results.push(...remainingResults);
+
+    await this.saveCompletedPings(results);
+
+    const totalDuration = Date.now() - startTime;
+    await this.averageRecorder.record('unclaimedHttpPingsDurationMs', totalDuration);
+    this.metrics.mutate('unclaimedPingsMade', results.length);
+  }
+
+  public async pingSingleMonitor(httpMonitorId: string): Promise<void> {
+    const monitor = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
 
     const ping = await this.pingMonitor(monitor);
     await this.saveCompletedPings([ping]);

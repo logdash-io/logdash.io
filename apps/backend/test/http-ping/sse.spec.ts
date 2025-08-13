@@ -31,13 +31,13 @@ describe('Http Ping (SSE)', () => {
     it('receives ping events for the specified cluster', async () => {
       // given
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitorA = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setupA.token,
         projectId: setupA.project.id,
       });
 
       const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitorB = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setupB.token,
         projectId: setupB.project.id,
       });
@@ -64,13 +64,13 @@ describe('Http Ping (SSE)', () => {
       // given
       nock.cleanAll();
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitorA = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setupA.token,
         projectId: setupA.project.id,
       });
 
       const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitorB = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setupB.token,
         projectId: setupB.project.id,
       });

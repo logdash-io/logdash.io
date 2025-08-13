@@ -48,9 +48,9 @@ export class HttpMonitorReadService {
     return HttpMonitorSerializer.normalizeMany(entities);
   }
 
-  public async readByProjectIds(projectIds: string[]): Promise<HttpMonitorNormalized[]> {
+  async readClaimedByProjectId(projectId: string): Promise<HttpMonitorNormalized[]> {
     const entities = await this.httpMonitorModel
-      .find({ projectId: { $in: projectIds } })
+      .find({ projectId, claimed: true })
       .sort({ createdAt: -1 })
       .lean<HttpMonitorEntity[]>()
       .exec();
@@ -58,38 +58,39 @@ export class HttpMonitorReadService {
     return HttpMonitorSerializer.normalizeMany(entities);
   }
 
-  public async countByProjectId(projectId: string): Promise<number> {
-    return this.httpMonitorModel.countDocuments({ projectId }).lean().exec();
+  public async readClaimedByProjectIds(projectIds: string[]): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ projectId: { $in: projectIds }, claimed: true })
+      .sort({ createdAt: -1 })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+
+    return HttpMonitorSerializer.normalizeMany(entities);
+  }
+
+  public async countClaimedByProjectId(projectId: string): Promise<number> {
+    return this.httpMonitorModel.countDocuments({ projectId, claimed: true }).lean().exec();
+  }
+
+  public async countNotClaimedByProjectId(projectId: string): Promise<number> {
+    return this.httpMonitorModel.countDocuments({ projectId, claimed: false }).lean().exec();
   }
 
   public async countAll(): Promise<number> {
     return this.httpMonitorModel.countDocuments().lean().exec();
   }
 
-  public async *readManyByProjectIdsCursor(
-    projectIds: string[],
-  ): AsyncGenerator<HttpMonitorNormalized> {
-    const cursor = this.httpMonitorModel
-      .find({ projectId: { $in: projectIds } })
-      .sort({ createdAt: -1 })
-      .cursor();
-
-    for await (const entity of cursor) {
-      yield HttpMonitorSerializer.normalize(entity);
-    }
-  }
-
-  public async existsForProject(projectId: string): Promise<boolean> {
-    const result = await this.httpMonitorModel.exists({ projectId });
+  public async existsClaimedForProject(projectId: string): Promise<boolean> {
+    const result = await this.httpMonitorModel.exists({ projectId, claimed: true });
     return result !== null;
   }
 
-  public async *readManyByProjectIdsCursorWithMode(
+  public async *readManyClaimedByProjectIdsCursorWithMode(
     projectIds: string[],
     mode: string,
   ): AsyncGenerator<HttpMonitorNormalized> {
     const cursor = this.httpMonitorModel
-      .find({ projectId: { $in: projectIds }, mode })
+      .find({ projectId: { $in: projectIds }, mode, claimed: true })
       .sort({ createdAt: -1 })
       .cursor();
 
@@ -98,14 +99,18 @@ export class HttpMonitorReadService {
     }
   }
 
-  public async readManyByMode(mode: string): Promise<HttpMonitorNormalized[]> {
-    const entities = await this.httpMonitorModel
-      .find({ mode })
+  public async *readManyUnclaimedByProjectIdsCursorWithMode(
+    projectIds: string[],
+    mode: string,
+  ): AsyncGenerator<HttpMonitorNormalized> {
+    const cursor = this.httpMonitorModel
+      .find({ projectId: { $in: projectIds }, mode, claimed: false })
       .sort({ createdAt: -1 })
-      .lean<HttpMonitorEntity[]>()
-      .exec();
+      .cursor();
 
-    return HttpMonitorSerializer.normalizeMany(entities);
+    for await (const entity of cursor) {
+      yield HttpMonitorSerializer.normalize(entity);
+    }
   }
 
   public async readManyByProjectIdsAndMode(
@@ -115,6 +120,28 @@ export class HttpMonitorReadService {
     const entities = await this.httpMonitorModel
       .find({ projectId: { $in: projectIds }, mode })
       .sort({ createdAt: -1 })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+
+    return HttpMonitorSerializer.normalizeMany(entities);
+  }
+
+  public async readManyClaimedByProjectIdsAndMode(
+    projectIds: string[],
+    mode: string,
+  ): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ projectId: { $in: projectIds }, mode, claimed: true })
+      .sort({ createdAt: -1 })
+      .lean<HttpMonitorEntity[]>()
+      .exec();
+
+    return HttpMonitorSerializer.normalizeMany(entities);
+  }
+
+  public async readUnclaimedOlderThan(cutoffDate: Date): Promise<HttpMonitorNormalized[]> {
+    const entities = await this.httpMonitorModel
+      .find({ claimed: false, createdAt: { $lt: cutoffDate } })
       .lean<HttpMonitorEntity[]>()
       .exec();
 

@@ -26,9 +26,10 @@
     monitoringState.getMonitorByProjectId(projectId),
   );
   const isHealthy = $derived(monitoringState.isHealthy(projectMonitor?.id));
-  const pings = $derived(
-    monitoringState.monitoringPings(projectMonitor?.id).slice(0, MAX_PINGS),
-  );
+  const pings = $derived.by(() => {
+    const pings = monitoringState.monitoringPings(projectMonitor?.id);
+    return pings.slice(Math.max(0, pings.length - MAX_PINGS), pings.length);
+  });
   const status = $derived(getStatusFromPings(pings));
   const isPaid = $derived(userState.isPaid);
   const pingBuckets = $derived(
@@ -58,7 +59,9 @@
       return;
     }
 
-    logger.debug(`Syncing pings for project monitor: ${projectMonitor?.id}`);
+    logger.debug(
+      `Syncing pings for project monitor: ${projectMonitor?.id} (${pingsToLoad})`,
+    );
 
     untrack(() => {
       return monitoringState.loadMonitorPings(
@@ -101,7 +104,7 @@
     },
     unknown: {
       text: 'Unknown',
-      color: 'text-gray-600',
+      color: 'text-gray-400',
     },
   };
 

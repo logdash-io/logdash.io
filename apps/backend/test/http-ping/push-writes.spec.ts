@@ -29,7 +29,7 @@ describe('Http Ping Push (writes)', () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
-    const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
       projectId: setup.project.id,
       mode: HttpMonitorMode.Push,
@@ -56,7 +56,7 @@ describe('Http Ping Push (writes)', () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
-    const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
       projectId: setup.project.id,
       mode: HttpMonitorMode.Push,
@@ -85,12 +85,12 @@ describe('Http Ping Push (writes)', () => {
     const setupB = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
-    const monitorA = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitorA = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupA.token,
       projectId: setupA.project.id,
       mode: HttpMonitorMode.Push,
     });
-    const monitorB = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitorB = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupB.token,
       projectId: setupB.project.id,
       mode: HttpMonitorMode.Push,
@@ -118,7 +118,7 @@ describe('Http Ping Push (writes)', () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
-    const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
       projectId: setup.project.id,
       mode: HttpMonitorMode.Push,
@@ -176,12 +176,12 @@ describe('Http Ping Push (writes)', () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
-    const pushMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const pushMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
       projectId: setup.project.id,
       mode: HttpMonitorMode.Push,
     });
-    const pullMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const pullMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setup.token,
       projectId: setup.project.id,
       mode: HttpMonitorMode.Pull,
@@ -210,12 +210,12 @@ describe('Http Ping Push (writes)', () => {
     const setupPaid = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
-    const freeMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const freeMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupFree.token,
       projectId: setupFree.project.id,
       mode: HttpMonitorMode.Push,
     });
-    const paidMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const paidMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token: setupPaid.token,
       projectId: setupPaid.project.id,
       mode: HttpMonitorMode.Push,

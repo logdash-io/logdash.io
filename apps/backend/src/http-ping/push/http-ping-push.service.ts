@@ -36,11 +36,9 @@ export class HttpPingPushService {
     const existingRecord = await this.redisService.get(key);
 
     if (existingRecord) {
-      // Record already exists, no need to update
       return;
     }
 
-    // Record the ping with TTL
     await this.redisService.set(key, Date.now().toString(), PUSH_RECORD_TTL_SECONDS);
   }
 

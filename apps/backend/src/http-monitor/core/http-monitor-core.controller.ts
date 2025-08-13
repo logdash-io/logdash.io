@@ -30,7 +30,6 @@ import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interce
 import { HttpMonitorRemovalService } from '../removal/http-monitor-removal.service';
 import { NotificationChannelReadService } from '../../notification-channel/read/notification-channel-read.service';
 import { Public } from '../../auth/core/decorators/is-public';
-import { HttpMonitorMode } from './enums/http-monitor-mode.enum';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -72,7 +71,9 @@ export class HttpMonitorCoreController {
     const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
 
     if (process.env.NODE_ENV !== 'test') {
-      void this.httpPingPingerService.pingSingleMonitor(httpMonitor.id);
+      setTimeout(() => {
+        void this.httpPingPingerService.pingSingleMonitor(httpMonitor.id);
+      }, 1_000);
     }
 
     return HttpMonitorSerializer.serialize(httpMonitor, status);
@@ -82,7 +83,7 @@ export class HttpMonitorCoreController {
   @Get('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
   async readByProjectId(@Param('projectId') projectId: string): Promise<HttpMonitorSerialized[]> {
-    const httpMonitors = await this.httpMonitorReadService.readByProjectId(projectId);
+    const httpMonitors = await this.httpMonitorReadService.readClaimedByProjectId(projectId);
     const statuses = await this.httpMonitorStatusService.getStatuses(
       httpMonitors.map((httpMonitor) => httpMonitor.id),
     );
@@ -98,7 +99,7 @@ export class HttpMonitorCoreController {
   async readByClusterId(@Param('clusterId') clusterId: string): Promise<HttpMonitorSerialized[]> {
     const projectsIdsInCluster = await this.projectReadService.readByClusterId(clusterId);
 
-    const httpMonitors = await this.httpMonitorReadService.readByProjectIds(
+    const httpMonitors = await this.httpMonitorReadService.readClaimedByProjectIds(
       projectsIdsInCluster.map((project) => project.id),
     );
 
@@ -192,5 +193,19 @@ export class HttpMonitorCoreController {
     ) {
       throw new BadRequestException('Notification channels must belong to the same cluster');
     }
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @Post('/http_monitors/:httpMonitorId/claim')
+  async claim(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
+    const projectId = (await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId)).projectId;
+    const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
+    if (!hasCapacity) {
+      throw new ConflictException(
+        'You have reached the maximum number of monitors for this project',
+      );
+    }
+
+    await this.httpMonitorWriteService.claim(httpMonitorId);
   }
 }

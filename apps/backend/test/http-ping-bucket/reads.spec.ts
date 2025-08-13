@@ -43,7 +43,7 @@ describe('Http Ping Bucket(reads)', () => {
         userTier: UserTier.Free,
       });
 
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setup.token,
         projectId: setup.project.id,
       });
@@ -78,7 +78,7 @@ describe('Http Ping Bucket(reads)', () => {
       const setup = await bootstrap.utils.generalUtils.setupClaimed({
         userTier: UserTier.Pro,
       });
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setup.token,
         projectId: setup.project.id,
       });
@@ -97,7 +97,7 @@ describe('Http Ping Bucket(reads)', () => {
       const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
         userTier: UserTier.Pro,
       });
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -165,7 +165,7 @@ describe('Http Ping Bucket(reads)', () => {
       const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
         userTier: UserTier.Pro,
       });
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -195,11 +195,11 @@ describe('Http Ping Bucket(reads)', () => {
       const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
         userTier: UserTier.Pro,
       });
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
-      const otherMonitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const otherMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -254,7 +254,7 @@ describe('Http Ping Bucket(reads)', () => {
       const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
         userTier: UserTier.Pro,
       });
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -306,7 +306,7 @@ describe('Http Ping Bucket(reads)', () => {
       const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
         userTier: UserTier.Pro,
       });
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -361,7 +361,7 @@ describe('Http Ping Bucket(reads)', () => {
       const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
         userTier: UserTier.Pro,
       });
-      const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token,
         projectId: project.id,
       });
@@ -415,7 +415,7 @@ describe('Http Ping Bucket(reads)', () => {
     const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
       userTier: UserTier.Pro,
     });
-    const monitor = await bootstrap.utils.httpMonitorsUtils.createHttpMonitor({
+    const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token,
       projectId: project.id,
     });

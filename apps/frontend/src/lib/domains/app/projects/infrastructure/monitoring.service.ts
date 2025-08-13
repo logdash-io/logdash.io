@@ -4,6 +4,15 @@ import type {
   PingBucketPeriod,
 } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
+import type { MonitorMode } from '../domain/monitoring/monitor-mode.js';
+import type { Monitor } from '../domain/monitoring/monitor.js';
+
+export type CreateMonitorDto = {
+  projectId: string;
+  name: string;
+  mode: MonitorMode;
+  url?: string;
+};
 
 export class MonitoringService {
   getPingBuckets(
@@ -20,6 +29,10 @@ export class MonitoringService {
     );
   }
 
+  getMonitors(clusterId: string): Promise<Monitor[]> {
+    return httpClient.get<Monitor[]>(`/clusters/${clusterId}/http_monitors`);
+  }
+
   getMonitorPings(dto: {
     projectId: string;
     monitorId: string;
@@ -32,6 +45,21 @@ export class MonitoringService {
           limit: dto.limit,
         },
       },
+    );
+  }
+
+  createMonitor(projectId: string, dto: CreateMonitorDto): Promise<Monitor> {
+    return httpClient.post<Monitor>(`/projects/${projectId}/http_monitors`, {
+      name: dto.name,
+      mode: dto.mode,
+      url: dto.url,
+    });
+  }
+
+  claimMonitor(httpMonitorId: string): Promise<Monitor> {
+    return httpClient.post<Monitor>(
+      `/http_monitors/${httpMonitorId}/claim`,
+      {},
     );
   }
 }
