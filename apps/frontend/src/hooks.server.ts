@@ -26,8 +26,9 @@ export const handle: Handle = async ({ event, resolve }) => {
       method: event.request.method,
       headers,
       body: event.request.body,
-      // duplex: 'half',
-    });
+      // duplex isn't supported by sveltekit fetch, but we need it here
+      duplex: 'half',
+    } as unknown);
 
     return response;
   }
