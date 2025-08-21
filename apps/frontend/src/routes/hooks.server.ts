@@ -14,7 +14,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     url.protocol = 'https:';
     url.hostname = hostname;
     url.port = '443';
-    url.pathname = pathname.replace('/relay-b0kJ/', '');
+    url.pathname = pathname.replace('/ingest/', '');
 
     // Clone and adjust headers
     const headers = new Headers(event.request.headers);
