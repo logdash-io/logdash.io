@@ -7,13 +7,13 @@
     <div class="card ld-card p-6">
       <TrustProof
         quote="Most tools feel like they were made for teams. Logdash feels like it was made for me."
-        person="Maciej Kulon"
+        person="Bartosz Świtalski"
         company={{
           who: 'Indie SaaS Founder',
           name: '',
           url: '',
         }}
-        img="/images/testimonials/maciej_k.webp"
+        img="/images/testimonials/bsw.webp"
       />
     </div>
     <div class="card ld-card p-6">
