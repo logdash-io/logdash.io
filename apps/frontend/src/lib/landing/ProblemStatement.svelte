@@ -15,8 +15,9 @@
     </h2>
 
     <p class="mx-auto max-w-3xl text-center text-xl opacity-80">
-      From scattered logs and noisy metrics to alerts flooding your inbox when
-      things go wrong, problems are inevitable. But chaos doesn't have to be.
+      When wearing many hats shipping tomorrow's unicorns, you can’t afford to
+      lose clients because of bugs that got into your way. Problems are
+      inevitable, but chaos doesn’t have to be.
     </p>
   </div>
 </section>

@@ -1,28 +1,30 @@
-<script>
+<script lang="ts">
   import Logo from '$lib/domains/shared/icons/Logo.svelte';
+  import {
+    animatedViewState,
+    AnimationDirection,
+  } from '$lib/domains/shared/ui/animated-view.state.svelte';
+
+  const currentYear = new Date().getFullYear();
 </script>
 
 <footer class="footer sm:footer-horizontal w-full p-10">
-  <aside>
+  <a
+    href="/"
+    class={['flex items-center space-x-2 py-1 pr-4']}
+    onclick={() => {
+      animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
+    }}
+    draggable="false"
+  >
     <Logo class="h-10 w-10" />
-    <p class="text-sm opacity-75">
-      &copy; 2025 logdash.io. All rights reserved.
-    </p>
-  </aside>
+    <span class="text-2xl font-semibold">logdash</span>
+  </a>
   <nav>
-    <h6 class="footer-title">Features</h6>
-    <a href="/app/quick-setup?feature=logging" class="link link-hover">
-      Logging
-      <span class="text-info ml-2">beta</span>
-    </a>
-    <a href="/app/quick-setup?feature=metrics" class="link link-hover">
-      Metrics
-      <span class="text-info ml-2">beta</span>
-    </a>
-    <a href="/features" class="link link-hover">
-      Monitoring
-      <span class="text-primary ml-2">new</span>
-    </a>
+    <h6 class="footer-title">Product</h6>
+    <a href="/features/logging" class="link link-hover">Logging</a>
+    <a href="/features/metrics" class="link link-hover">Metrics</a>
+    <a href="/features/monitoring" class="link link-hover">Monitoring</a>
   </nav>
   <nav>
     <h6 class="footer-title">Company</h6>
@@ -39,8 +41,7 @@
       Status
     </a>
     <a href="mailto:support@logdash.io" class="link link-hover">Contact</a>
-    <!-- <a class="link link-hover">Jobs</a> -->
-    <!-- <a class="link link-hover">Press kit</a> -->
+    <a href="https://insigh.to/b/logdash" class="link link-hover">Roadmap</a>
   </nav>
   <nav>
     <h6 class="footer-title">Legal</h6>
@@ -48,4 +49,8 @@
     <a href="/privacy-policy" class="link link-hover">Privacy policy</a>
     <a href="/cookies-policy" class="link link-hover">Cookies policy</a>
   </nav>
+
+  <p class="text-sm opacity-75">
+    &copy; {currentYear} logdash.io. All rights reserved.
+  </p>
 </footer>

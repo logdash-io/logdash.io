@@ -40,7 +40,12 @@
   }
 
   .success-card {
-    @apply to-success/15 text-success border border-green-950 bg-gradient-to-br from-transparent;
+    @apply text-success;
+  }
+
+  .success-card,
+  .success-card-bg {
+    @apply to-success/15 border border-green-950 bg-gradient-to-tl from-transparent;
   }
 
   .error-card {
@@ -53,7 +58,7 @@
 
   .ld-card-base,
   .ld-card {
-    @apply from-base-200 to-base-300 border-base-100/70 border bg-gradient-to-br shadow-lg;
+    @apply from-base-200 to-base-300 border-base-100 border bg-gradient-to-br shadow-lg;
   }
 
   .ld-card {

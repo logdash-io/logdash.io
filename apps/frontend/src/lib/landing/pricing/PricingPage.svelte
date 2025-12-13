@@ -1,7 +1,12 @@
 <script lang="ts">
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { UserTier } from '$lib/domains/shared/types.js';
-  import { ArrowDownIcon, CheckIcon, ShieldCheckIcon } from 'lucide-svelte';
+  import {
+    ArrowDownIcon,
+    ArrowRightIcon,
+    CheckIcon,
+    ShieldCheckIcon,
+  } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
   import PricingComparisonTable from './PricingComparisonTable.svelte';
   import { runGithubLogin } from './run-github-login.js';
@@ -139,10 +144,10 @@
 
   <a
     href="#detailed-plans-comparison"
-    class="btn btn-xl btn-primary btn-outline mx-auto my-12 flex w-fit items-center gap-2 rounded-full font-normal"
+    class="btn btn-primary text-base-content btn-outline mx-auto my-12 flex w-fit items-center gap-2 rounded-full font-normal"
   >
     Compare plans
-    <ArrowDownIcon class="h-5 w-5" />
+    <ArrowRightIcon class="size-4" />
   </a>
 
   <div
@@ -190,12 +195,12 @@
 
       <div class="flex items-center gap-4">
         <img
-          src="/images/founders/szymeo.webp"
-          alt="Szymon Gracki"
+          src="/images/founders/simon.webp"
+          alt="Simon Gracki"
           class="h-12 w-12 rounded-full"
         />
         <div class="text-left">
-          <p class="font-medium">Szymon Gracki</p>
+          <p class="font-medium">Simon Gracki</p>
           <p class="text-sm opacity-75">Co-founder</p>
         </div>
       </div>

@@ -4,14 +4,13 @@
   import { UserTier } from '$lib/domains/shared/types.js';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { fade } from 'svelte/transition';
-  import { runGithubLogin } from './run-github-login.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
 
   let loggingIn = $state(false);
 
-  const handleGithubLogin = (tier: UserTier) => {
+  const handleSelectTier = (tier: UserTier) => {
     loggingIn = true;
-    runGithubLogin(tier);
+    window.location.href = `/app/auth?needs_account=true&tier=${tier}`;
   };
 
   const onMouseEnter = (tier: UserTier) => {
@@ -68,7 +67,7 @@
                     class={[
                       'relative z-10 h-64 p-3 pt-6 text-left md:h-80 md:p-4 md:pt-9',
                       {
-                        'border-primary/60 rounded-tl-xl rounded-tr-xl border-l border-r border-t bg-[#210c15]':
+                        'border-primary/60 rounded-tl-xl rounded-tr-xl border-l border-r border-t bg-[#160b0f]':
                           plan.tier === UserTier.BUILDER,
                         'border-secondary/10 rounded-tl-2xl border border-b-0 border-r-0':
                           plan.tier === UserTier.FREE,
@@ -89,16 +88,20 @@
                     </div>
 
                     <div class="card-body p-0 px-2 md:px-4">
-                      <h2 class="card-title text-lg font-normal md:text-2xl">
+                      <h2
+                        class="card-title text-base-content text-lg font-normal md:text-2xl"
+                      >
                         {fullPlanConfig.name}
                       </h2>
                       <div class="mt-2">
-                        <span class="text-2xl font-semibold md:text-4xl">
+                        <span
+                          class="text-base-content text-2xl font-semibold md:text-4xl"
+                        >
                           {fullPlanConfig.price}
                         </span>
 
                         <p
-                          class="mt-2 whitespace-pre-wrap text-xs opacity-75 md:mt-4 md:text-sm"
+                          class="mt-2 whitespace-pre-wrap text-xs opacity-80 md:mt-4 md:text-sm"
                         >
                           {fullPlanConfig.description.split('.')[0]}
                         </p>
@@ -106,7 +109,7 @@
 
                       <div class="card-actions my-3 justify-center md:my-4">
                         <button
-                          onclick={() => handleGithubLogin(fullPlanConfig.tier)}
+                          onclick={() => handleSelectTier(fullPlanConfig.tier)}
                           disabled={loggingIn || fullPlanConfig['disabled']}
                           class={`btn btn-sm md:btn-md w-full rounded-full text-xs font-medium md:text-sm ${fullPlanConfig.popular ? 'btn-primary' : 'btn-secondary'}`}
                         >
@@ -148,7 +151,7 @@
                   class={[
                     'py-3 text-center md:py-4',
                     {
-                      'bg-primary/10 border-primary/60 border-l border-r':
+                      'bg-primary/5 border-primary/60 border-l border-r':
                         plan.tier === UserTier.BUILDER,
                       'border-secondary/10 text-secondary/30 border-l':
                         plan.tier === UserTier.FREE,
@@ -222,7 +225,7 @@
                     class={[
                       'py-3 text-center md:py-4',
                       {
-                        'bg-primary/10 border-primary/60 border-l border-r': true,
+                        'bg-primary/5 border-primary/60 border-l border-r': true,
                         'rounded-b-xl border-b': isLastSection && isLast,
                       },
                     ]}

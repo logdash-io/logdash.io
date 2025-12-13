@@ -58,26 +58,26 @@
   >
     <div>
       <h2 class="mb-8 text-center text-3xl font-bold sm:text-left sm:text-4xl">
-        Enjoying what you see?
+        Make this dashboard your own
       </h2>
 
-      <FlamingoIcon class="text-primary mx-auto mb-6 h-54 w-54 sm:hidden" />
+      <FlamingoIcon class="text-primary h-54 w-54 mx-auto mb-6 sm:hidden" />
 
       <p class="mb-10 text-lg opacity-90">
-        Get started with logdash today and see how easy it is to monitor your
-        system in minutes.
+        Protect your revenue stream today. Zero commitment, no credit card
+        required.
       </p>
       <a
         class="btn btn-primary btn-md sm:btn-lg w-full sm:w-fit"
         data-posthog-id="demo-dashboard-cta"
-        href="/features"
+        href="/app/auth"
       >
-        Understand your system in minutes
-        <ArrowRightIcon class="ml-1 h-5 w-5 sm:ml-2 sm:h-6 sm:w-6" />
+        Start free
+        <ArrowRightIcon class="ml-1 size-4 sm:ml-2 sm:size-6" />
       </a>
     </div>
 
-    <FlamingoIcon class="text-primary hidden h-54 w-54 sm:block" />
+    <FlamingoIcon class="text-primary h-54 w-54 hidden sm:block" />
   </div>
 
   <Footer />

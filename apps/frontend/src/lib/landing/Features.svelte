@@ -16,8 +16,7 @@
 
     <p class="text-base-content/70 mx-auto max-w-3xl text-xl">
       We do the heavy lifting so you can focus on your business. Improve
-      reliability and understand your mission-critical services in one simple
-      platform.
+      reliability and understand your SaaS with one simple tool.
     </p>
   </header>
 
@@ -49,45 +48,20 @@
             {/each}
           </ul>
 
-          {#if feature.id !== Feature.MONITORING}
+          {#if feature.available}
             <a
-              {...feature.available && {
-                href: `${RoutePath.QUICK_SETUP}?feature=${feature.id}`,
-              }}
-              class="btn btn-md hover:btn-primary btn-secondary trnasition-none mt-6 w-full"
-              data-posthog-id={`features-${feature.id}-cta`}
-              aria-disabled={!feature.available}
+              href={`/features/${feature.slug}`}
+              class="btn btn-md hover:btn-primary btn-secondary mt-6 w-full"
+              data-posthog-id={`features-${feature.id}-learn-more-cta`}
             >
-              {#if !feature.available}
-                Coming soon
-                <TimerIcon class="h-5 w-5" />
-              {:else}
-                Quick Setup
-                <ArrowRightIcon class="h-5 w-5" />
-              {/if}
+              Learn more
+              <ArrowRightIcon class="h-5 w-5" />
             </a>
           {:else}
-            <SetupMonitoringButton
-              class="btn btn-md hover:btn-primary btn-secondary trnasition-none mt-6 w-full"
-              canAddMore={true}
-              onSubmit={({ name, mode }) => {
-                const params = new URLSearchParams({
-                  feature: feature.id,
-                  mode,
-                });
-
-                if (mode === MonitorMode.PULL) {
-                  params.set('url', encodeURIComponent(name));
-                } else {
-                  params.set('name', encodeURIComponent(name));
-                }
-
-                goto(`${RoutePath.QUICK_SETUP}?${params.toString()}`);
-              }}
-            >
-              Setup monitoring
-              <ArrowRightIcon class="h-4 w-4" />
-            </SetupMonitoringButton>
+            <button class="btn btn-md btn-secondary mt-6 w-full" disabled>
+              Coming soon
+              <TimerIcon class="h-5 w-5" />
+            </button>
           {/if}
         </div>
       </div>
@@ -95,17 +69,19 @@
   </section>
 
   <section class="ld-card-base rounded-xl p-8">
-    <h2 class="mb-1 text-3xl font-bold">Ready to take it for a spin?</h2>
+    <h2 class="mb-1 text-3xl font-bold">
+      Join other founders sleeping soundly tonight.
+    </h2>
     <p class="text-base-content/70 mb-4">
-      No credit card required. Understand your system in minutes, like never
-      before.
+      No credit card required. Create your account and get your first signals in
+      minutes.
     </p>
     <a
       class="btn btn-primary"
       data-posthog-id="features-open-dashboard-cta"
       href={RoutePath.AUTH}
     >
-      Open dashboard
+      Start free
     </a>
   </section>
 </div>
