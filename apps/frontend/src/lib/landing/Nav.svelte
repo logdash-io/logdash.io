@@ -5,16 +5,10 @@
     animatedViewState,
     AnimationDirection,
   } from '$lib/domains/shared/ui/animated-view.state.svelte';
-  import { generateGithubOAuthUrl } from '$lib/domains/shared/utils/generate-github-oauth-url';
   import { ExternalLinkIcon } from 'lucide-svelte';
-  import { onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
 
   const ROUTES = [
-    {
-      path: '/features',
-      name: 'Features',
-    },
     {
       path: '/pricing',
       name: 'Pricing',
@@ -44,24 +38,27 @@
     // },
   ];
 
-  let loggingIn = $state(false);
+  const FEATURES = [
+    {
+      path: '/features/logging',
+      name: 'Logging',
+    },
+    {
+      path: '/features/metrics',
+      name: 'Metrics',
+    },
+    {
+      path: '/features/monitoring',
+      name: 'Monitoring',
+    },
+  ];
+
   const currentRouteIndex = $derived(
     ROUTES.findIndex((route) => route.path === page.url.pathname),
   );
 
-  onDestroy(() => {
-    loggingIn = false;
-  });
-
-  const handleGithubLogin = () => {
-    loggingIn = true;
-    window.location.href = generateGithubOAuthUrl({
-      terms_accepted: false,
-      email_accepted: false,
-      flow: 'login',
-      fallback_url: '/app/auth?needs_account=true',
-      next_url: '/app/clusters',
-    });
+  const handleDashboardClick = () => {
+    window.location.href = '/app/clusters';
   };
 </script>
 
@@ -85,13 +82,47 @@
       >
         <Logo class="h-10 w-10" />
         <span class="text-2xl font-bold">logdash</span>
-
-        <span class="badge badge-xs font-mono text-xs opacity-70">beta</span>
       </a>
     </div>
 
     <div class="navbar-center">
       <ul class="menu menu-horizontal space-x-4 px-1 text-base font-semibold">
+        <li>
+          <div class="dropdown dropdown-hover dropdown-bottom">
+            <div
+              tabindex="0"
+              role="button"
+              class={[
+                'px-0 py-0 hover:bg-transparent',
+                {
+                  'navlink-active': page.url.pathname.startsWith('/features'),
+                },
+              ]}
+            >
+              Features
+            </div>
+            <ul
+              tabindex="0"
+              class="dropdown-content menu ld-card-base rounded-box z-[1] w-52 p-2 shadow"
+            >
+              {#each FEATURES as { path, name }}
+                <li>
+                  <a
+                    href={path}
+                    draggable="false"
+                    class={page.url.pathname === path ? 'text-primary' : ''}
+                    onclick={() => {
+                      animatedViewState.nextAnimationDirection =
+                        AnimationDirection.RIGHT;
+                    }}
+                  >
+                    {name}
+                  </a>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        </li>
         {#each ROUTES as { path, name, target }, i}
           <li>
             <a
@@ -128,20 +159,10 @@
     <div class="navbar-end">
       <div class="flex items-center space-x-4">
         <button
-          disabled={loggingIn}
           class="btn btn-outline border-primary"
-          onclick={handleGithubLogin}
+          onclick={handleDashboardClick}
         >
-          {#if loggingIn}
-            <div
-              in:fade={{ duration: 150 }}
-              class="flex h-6 w-6 items-center justify-center"
-            >
-              <span class="loading loading-spinner h-4 w-4"></span>
-            </div>
-          {/if}
-
-          Dashboard
+          Sign in
         </button>
       </div>
     </div>
@@ -186,6 +207,42 @@
           tabindex="0"
           class="menu dropdown-content menu-sm rounded-box ld-card-base z-[1] mt-3 w-52 p-4 shadow"
         >
+          <li>
+            <details>
+              <summary
+                class={page.url.pathname.startsWith('/features')
+                  ? 'text-primary'
+                  : ''}
+              >
+                Features
+              </summary>
+              <ul>
+                {#each FEATURES as { path, name }}
+                  <li>
+                    <a
+                      href={path}
+                      draggable="false"
+                      class={page.url.pathname === path ? 'text-primary' : ''}
+                      onclick={() => {
+                        animatedViewState.nextAnimationDirection =
+                          AnimationDirection.RIGHT;
+                        const focusedElement =
+                          document.activeElement as HTMLElement;
+                        if (
+                          focusedElement &&
+                          typeof focusedElement.blur === 'function'
+                        ) {
+                          focusedElement.blur(); // Close dropdown
+                        }
+                      }}
+                    >
+                      {name}
+                    </a>
+                  </li>
+                {/each}
+              </ul>
+            </details>
+          </li>
           {#each ROUTES as { path, name, target }, i}
             <li>
               <a
@@ -218,7 +275,6 @@
           {/each}
           <li>
             <button
-              disabled={loggingIn}
               class="btn btn-primary btn-sm mt-2 w-full"
               onclick={() => {
                 const focusedElement = document.activeElement as HTMLElement;
@@ -228,14 +284,10 @@
                 ) {
                   focusedElement.blur(); // Close dropdown
                 }
-                handleGithubLogin();
+                handleDashboardClick();
               }}
             >
-              {#if loggingIn}
-                <span class="loading loading-spinner h-4 w-4"></span>
-              {:else}
-                Dashboard
-              {/if}
+              Dashboard
             </button>
           </li>
         </ul>
