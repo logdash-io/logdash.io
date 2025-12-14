@@ -72,16 +72,21 @@ async function runLoginFlow(dto: {
   });
 
   if (!response.ok) {
+    bffLogger.error(`google code exchange response not ok`, response.statusText);
     const error = await readErrorMessage(response);
     throw new Error(`google login error: ${error}`);
   }
 
+  bffLogger.info(`google code exchange response ok, extracting token...`);
   const { token } = (await response.json()) as { token: string };
 
+  bffLogger.info(`saving token to cookies...`);
   saveTokenToCookies({
     cookies,
     token,
   });
+
+  bffLogger.info(`redirecting to next url...`);
 
   redirect(302, next_url || `/app/clusters`);
 }
