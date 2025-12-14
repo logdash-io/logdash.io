@@ -162,7 +162,7 @@
           class="btn btn-outline border-primary"
           onclick={handleDashboardClick}
         >
-          Sign in
+          Get started
         </button>
       </div>
     </div>
@@ -182,7 +182,6 @@
       >
         <Logo class="h-8 w-8" />
         <span class="text-xl font-bold">logdash</span>
-        <span class="badge badge-xs font-mono text-xs opacity-70">beta</span>
       </a>
     </div>
     <div class="navbar-end">

@@ -29,19 +29,36 @@
   <nav>
     <h6 class="footer-title">Company</h6>
     <a href="/pricing" class="link link-hover">Pricing</a>
-    <a href="https://github.com/logdash-io/logdash.io" class="link link-hover">
+    <a
+      target="_blank"
+      href="https://github.com/logdash-io/logdash.io"
+      class="link link-hover"
+    >
       Source Code
     </a>
     <a href="/docs" class="link link-hover">Documentation</a>
-    <a href="https://discord.gg/naftPW4Hxe" class="link link-hover">Discord</a>
     <a
+      target="_blank"
+      href="https://discord.gg/naftPW4Hxe"
+      class="link link-hover"
+    >
+      Discord
+    </a>
+    <a
+      target="_blank"
       href="https://logdash.io/d/685498e1e0ad21003cb3b2fa"
       class="link link-hover"
     >
       Status
     </a>
     <a href="mailto:support@logdash.io" class="link link-hover">Contact</a>
-    <a href="https://insigh.to/b/logdash" class="link link-hover">Roadmap</a>
+    <a
+      target="_blank"
+      href="https://insigh.to/b/logdash"
+      class="link link-hover"
+    >
+      Roadmap
+    </a>
   </nav>
   <nav>
     <h6 class="footer-title">Legal</h6>

@@ -10,7 +10,7 @@
     {
       question: 'What is Logdash?',
       answer:
-        "Think of Logdash as your go-to buddy for keeping an eye on your systems. It's a modern platform that helps you see what's happening in real-time, super easily.",
+        "Think of Logdash as your go-to buddy for keeping an eye on your apps. It's a modern platform that helps you see what's happening in real-time, super easily.",
     },
     {
       question: 'How to integrate?',

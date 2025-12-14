@@ -5,12 +5,12 @@
   const REVIEWS = [
     {
       quote:
-        'Most tools feel like they were made for teams. Logdash feels like it was made for me.',
+        'Most tools feel like they were made for enterprises. Logdash feels like it was made for me.',
       person: 'Bartosz Świtalski',
       company: {
-        who: 'Indie SaaS Founder',
-        name: '',
-        url: '',
+        who: 'Co-Founder',
+        name: 'Cryptly',
+        url: 'https://cryptly.dev?ref=logdash.io',
       },
       img: '/images/testimonials/bsw.webp',
     },
@@ -45,8 +45,8 @@
       But don't just take our word for it
     </h2>
     <p class="mx-auto max-w-3xl text-xl opacity-80">
-      Real words from founders and solo devs who ship without critical services
-      interruptions.
+      Real words from founders and solo devs already shipping without critical
+      services interruptions.
     </p>
   </div>
 
@@ -84,10 +84,10 @@
     </Marquee>
 
     <div
-      class="from-base-300 pointer-events-none absolute inset-y-0 -left-1 z-50 w-1/3 bg-gradient-to-r"
+      class="from-base-300 pointer-events-none absolute inset-y-0 -left-1 w-1/4 bg-gradient-to-r"
     ></div>
     <div
-      class="from-base-300 pointer-events-none absolute inset-y-0 -right-1 z-50 w-1/3 bg-gradient-to-l"
+      class="from-base-300 pointer-events-none absolute inset-y-0 -right-1 w-1/4 bg-gradient-to-l"
     ></div>
   </div>
 </section>

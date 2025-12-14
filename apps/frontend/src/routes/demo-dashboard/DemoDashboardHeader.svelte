@@ -1,6 +1,8 @@
-<div
-  class="ld-card-base bg-neutral text-neutral-content max-w-7xl rounded-xl p-8 text-base shadow-xl sm:mx-auto"
->
+<script lang="ts">
+  import FoundersCard from '$lib/landing/FoundersCard.svelte';
+</script>
+
+<FoundersCard class="max-w-7xl">
   <p class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-80">
     Logdash Live Demo
   </p>
@@ -34,32 +36,4 @@
     developer-first solution without the self-hosting headaches, you're in the
     right place.
   </p>
-
-  <div
-    class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-8"
-  >
-    <div class="flex items-center gap-4">
-      <img
-        src="/images/founders/olo.webp"
-        alt="Founder 1"
-        class="h-12 w-12 rounded-full"
-      />
-      <div class="text-left">
-        <p class="font-medium">Aleksander Blaszkiewicz</p>
-        <p class="text-sm">Co-founder</p>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-4">
-      <img
-        src="/images/founders/simon.webp"
-        alt="Founder 2"
-        class="h-12 w-12 rounded-full"
-      />
-      <div class="text-left">
-        <p class="font-medium">Simon Gracki</p>
-        <p class="text-sm">Co-founder</p>
-      </div>
-    </div>
-  </div>
-</div>
+</FoundersCard>

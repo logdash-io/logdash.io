@@ -4,7 +4,7 @@
   }
 
   .btn:not(.btn-circle):not(.rounded-full) {
-    @apply rounded-lg;
+    @apply rounded-xl;
   }
 
   .btn-transparent {
@@ -62,7 +62,7 @@
   }
 
   .ld-card {
-    @apply rounded-xl px-6 py-6 sm:px-8 sm:py-8;
+    @apply rounded-2xl px-6 py-6 sm:px-8 sm:py-8;
   }
 
   .ld-modal {
@@ -98,7 +98,7 @@
     @apply shrink-0;
   }
 
-  .gutter-both {
-    scrollbar-gutter: stable both-edges;
+  .gutter-stable {
+    scrollbar-gutter: stable;
   }
 }

@@ -1,6 +1,8 @@
-<div
-  class="ld-card-base bg-neutral text-neutral-content mx-2 max-w-2xl rounded-xl p-8 text-base shadow-xl sm:mx-auto"
->
+<script lang="ts">
+  import FoundersCard from './FoundersCard.svelte';
+</script>
+
+<FoundersCard>
   <p class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-80">
     Founders Memo
   </p>
@@ -14,7 +16,7 @@
 
   <p class="mb-4">
     We built Logdash because we were tired of choosing between "blindness" and
-    "enterprise complexity." We wanted a tool that respects the maker ethos:
+    "enterprise complexity." We wanted a tool that respects the makers ethos:
     Simple, effective, and profitable.
   </p>
 
@@ -33,32 +35,4 @@
     If you're ready to leave behind the noise, enterprise-first cluttered
     observability tools and self-hosted headaches, Logdash is here for you.
   </p>
-
-  <div
-    class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-8"
-  >
-    <div class="flex items-center gap-4">
-      <img
-        src="/images/founders/olo.webp"
-        alt="Founder 1"
-        class="h-12 w-12 rounded-full"
-      />
-      <div class="text-left">
-        <p class="font-medium">Aleksander Blaszkiewicz</p>
-        <p class="text-sm">Co-founder</p>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-4">
-      <img
-        src="/images/founders/simon.webp"
-        alt="Founder 2"
-        class="h-12 w-12 rounded-full"
-      />
-      <div class="text-left">
-        <p class="font-medium">Simon Gracki</p>
-        <p class="text-sm">Co-founder</p>
-      </div>
-    </div>
-  </div>
-</div>
+</FoundersCard>
