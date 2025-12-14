@@ -56,7 +56,12 @@ async function runLoginFlow(dto: {
     throw new Error('code is required');
   }
 
-  bffLogger.info(`logging in google ${code}...`);
+  bffLogger.info(`logging in google...`, {
+    googleCode: code,
+    termsAccepted: terms_accepted,
+    emailAccepted: email_accepted,
+    forceLocalLogin,
+  });
 
   const response = await fetch(`${envConfig.apiBaseUrl}/auth/google/login`, {
     method: 'POST',
