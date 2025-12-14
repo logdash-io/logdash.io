@@ -4,14 +4,13 @@
   import { UserTier } from '$lib/domains/shared/types.js';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { fade } from 'svelte/transition';
-  import { runGithubLogin } from './run-github-login.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
 
   let loggingIn = $state(false);
 
-  const handleGithubLogin = (tier: UserTier) => {
+  const handleSelectTier = (tier: UserTier) => {
     loggingIn = true;
-    runGithubLogin(tier);
+    window.location.href = `/app/auth?needs_account=true&tier=${tier}`;
   };
 
   const onMouseEnter = (tier: UserTier) => {
@@ -54,9 +53,9 @@
                     'relative h-24 w-1/4 min-w-[170px] p-0 text-center font-bold md:min-w-[180px]',
                   ]}
                 >
-                  {#if plan.tier === UserTier.BUILDER}
+                  {#if plan.tier === UserTier.PRO}
                     <div
-                      class="bg-primary text-secondary left-0 top-0 z-0 -mb-6 flex h-12 w-full items-center justify-center rounded-xl pb-6 text-xs font-semibold md:-mb-8 md:h-16 md:pb-8"
+                      class="bg-primary text-secondary left-0 top-0 z-0 -mb-6 flex h-12 w-full items-center justify-center rounded-2xl pb-6 text-xs font-semibold md:-mb-8 md:h-16 md:pb-8"
                     >
                       Most Popular
                     </div>
@@ -68,11 +67,11 @@
                     class={[
                       'relative z-10 h-64 p-3 pt-6 text-left md:h-80 md:p-4 md:pt-9',
                       {
-                        'border-primary/60 rounded-tl-xl rounded-tr-xl border-l border-r border-t bg-[#210c15]':
+                        'border-secondary/10 border-l border-r border-t border-b-0':
                           plan.tier === UserTier.BUILDER,
-                        'border-secondary/10 rounded-tl-2xl border border-b-0 border-r-0':
+                        'border-secondary/10 rounded-tl-3xl border border-b-0 border-r-0':
                           plan.tier === UserTier.FREE,
-                        'border-secondary/10 rounded-tr-2xl border border-b-0 border-l-0':
+                        'border-primary rounded-tl-2xl rounded-tr-2xl border-l border-r border-t bg-[#160b0f]':
                           plan.tier === UserTier.PRO,
                       },
                     ]}
@@ -89,24 +88,28 @@
                     </div>
 
                     <div class="card-body p-0 px-2 md:px-4">
-                      <h2 class="card-title text-lg font-normal md:text-2xl">
+                      <h2
+                        class="card-title text-base-content text-lg font-normal md:text-2xl"
+                      >
                         {fullPlanConfig.name}
                       </h2>
                       <div class="mt-2">
-                        <span class="text-2xl font-semibold md:text-4xl">
+                        <span
+                          class="text-base-content text-2xl font-semibold md:text-4xl"
+                        >
                           {fullPlanConfig.price}
                         </span>
 
                         <p
-                          class="mt-2 whitespace-pre-wrap text-xs opacity-75 md:mt-4 md:text-sm"
+                          class="mt-2 whitespace-pre-wrap text-xs opacity-80 md:mt-4 md:text-sm font-normal"
                         >
-                          {fullPlanConfig.description.split('.')[0]}
+                          {fullPlanConfig.description}
                         </p>
                       </div>
 
                       <div class="card-actions my-3 justify-center md:my-4">
                         <button
-                          onclick={() => handleGithubLogin(fullPlanConfig.tier)}
+                          onclick={() => handleSelectTier(fullPlanConfig.tier)}
                           disabled={loggingIn || fullPlanConfig['disabled']}
                           class={`btn btn-sm md:btn-md w-full rounded-full text-xs font-medium md:text-sm ${fullPlanConfig.popular ? 'btn-primary' : 'btn-secondary'}`}
                         >
@@ -139,7 +142,7 @@
                     class="text-success h-4 w-4 shrink-0 md:h-6 md:w-6"
                   />
                   <span class="text-sm md:text-base">
-                    30-Day Money Back Guarantee
+                    No commitment required
                   </span>
                 </div>
               </td>
@@ -148,11 +151,11 @@
                   class={[
                     'py-3 text-center md:py-4',
                     {
-                      'bg-primary/10 border-primary/60 border-l border-r':
+                      'border-secondary/10 text-secondary/30 border-l border-r':
                         plan.tier === UserTier.BUILDER,
                       'border-secondary/10 text-secondary/30 border-l':
                         plan.tier === UserTier.FREE,
-                      'border-secondary/10 text-secondary/30 border-r':
+                      'bg-primary/5 border-primary border-l border-r':
                         plan.tier === UserTier.PRO,
                     },
                   ]}
@@ -198,7 +201,7 @@
                     class={[
                       'border-secondary/10 border-l py-3 text-center md:py-4',
                       {
-                        'rounded-b-xl border-b': isLastSection && isLast,
+                        'rounded-b-2xl border-b': isLastSection && isLast,
                       },
                     ]}
                   >
@@ -222,8 +225,8 @@
                     class={[
                       'py-3 text-center md:py-4',
                       {
-                        'bg-primary/10 border-primary/60 border-l border-r': true,
-                        'rounded-b-xl border-b': isLastSection && isLast,
+                        'border-secondary/10 border-l border-r': true,
+                        'rounded-b-2xl border-b': isLastSection && isLast,
                       },
                     ]}
                   >
@@ -246,9 +249,10 @@
 
                   <td
                     class={[
-                      'border-secondary/10 border-r py-3 text-center md:py-4',
+                      'py-3 text-center md:py-4',
                       {
-                        'rounded-b-xl border-b': isLastSection && isLast,
+                        'bg-primary/5 border-primary border-l border-r': true,
+                        'rounded-b-2xl border-b': isLastSection && isLast,
                       },
                     ]}
                     onmouseenter={() => onMouseEnter(UserTier.PRO)}

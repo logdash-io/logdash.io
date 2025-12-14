@@ -38,24 +38,21 @@
   ],
   "author": "LogDash Team",
   "license": "MIT",
-  "devDependencies": {
-    "@sveltejs/kit": "^2.22.2",
-    "@sveltejs/package": "^2.0.0",
-    "@sveltejs/vite-plugin-svelte": "^6.0.0",
-    "svelte": "^5.34.9",
-    "svelte-check": "^4.1.4",
-    "typescript": "^5.7.3",
-    "vite": "^7.0.4"
-  },
   "dependencies": {
-    "axios": "^1.9.0",
-    "lucide-svelte": "^0.525.0",
-    "luxon": "^3.6.1",
-    "ts-pattern": "^5.7.1"
+    "axios": "catalog:",
+    "bits-ui": "^2.14.4",
+    "lucide-svelte": "catalog:",
+    "luxon": "catalog:",
+    "ts-pattern": "catalog:"
   },
   "peerDependencies": {
-    "daisyui": "^5.0.0",
-    "svelte": "^5.0.0",
-    "tailwindcss": "^4.0.0"
+    "@sveltejs/kit": "*",
+    "@sveltejs/vite-plugin-svelte": "*",
+    "daisyui": "*",
+    "svelte": "*",
+    "svelte-check": "*",
+    "tailwindcss": "*",
+    "typescript": "*",
+    "vite": "*"
   }
 }

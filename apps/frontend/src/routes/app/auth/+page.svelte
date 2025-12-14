@@ -1,32 +1,48 @@
-<script>
+<script lang="ts">
   import { page } from '$app/state';
   import NewsletterCheckbox from '$lib/domains/shared/ui/components/NewsletterCheckbox.svelte';
   import TosCheckbox from '$lib/domains/shared/ui/components/TOSCheckbox.svelte';
+  import GoogleIcon from '$lib/domains/shared/icons/GoogleIcon.svelte';
   import { generateGithubOAuthUrl } from '$lib/domains/shared/utils/generate-github-oauth-url';
+  import { generateGoogleOAuthUrl } from '$lib/domains/shared/utils/generate-google-oauth-url';
   import { onMount } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fade, scale } from 'svelte/transition';
 
   const needs_account = page.url.searchParams.get('needs_account');
+  const tier = page.url.searchParams.get('tier');
 
   let termsAccepted = $state(false);
   let emailAccepted = $state(false);
-  let loggingIn = $state(false);
+  let loggingInProvider = $state(null);
 
-  const handleGithubLogin = () => {
-    loggingIn = true;
+  const onGithubLogin = () => {
+    loggingInProvider = 'github';
     window.location.href = generateGithubOAuthUrl({
       terms_accepted: termsAccepted,
       email_accepted: emailAccepted,
       flow: 'login',
       fallback_url: '/app/auth?needs_account=true',
+      tier: tier as any,
+      next_url: '/app/clusters',
+    });
+  };
+
+  const onGoogleLogin = () => {
+    loggingInProvider = 'google';
+    window.location.href = generateGoogleOAuthUrl({
+      terms_accepted: termsAccepted,
+      email_accepted: emailAccepted,
+      flow: 'login',
+      fallback_url: '/app/auth?needs_account=true',
+      tier: tier as any,
       next_url: '/app/clusters',
     });
   };
 
   onMount(() => {
     return () => {
-      loggingIn = false;
+      loggingInProvider = null;
       termsAccepted = false;
       emailAccepted = false;
     };
@@ -74,11 +90,11 @@
         {/if}
 
         <button
-          disabled={(needs_account && !termsAccepted) || loggingIn}
+          disabled={(needs_account && !termsAccepted) || !!loggingInProvider}
           class="btn btn-secondary w-full gap-2"
-          onclick={handleGithubLogin}
+          onclick={onGithubLogin}
         >
-          {#if loggingIn}
+          {#if loggingInProvider === 'github'}
             <div
               in:fade={{ duration: 150 }}
               class="flex h-6 w-6 items-center justify-center"
@@ -99,6 +115,25 @@
           {/if}
 
           Sign {needs_account ? 'up' : 'in'} with GitHub
+        </button>
+
+        <button
+          disabled={(needs_account && !termsAccepted) || !!loggingInProvider}
+          class="btn btn-secondary w-full gap-2"
+          onclick={onGoogleLogin}
+        >
+          {#if loggingInProvider === 'google'}
+            <div
+              in:fade={{ duration: 150 }}
+              class="flex h-6 w-6 items-center justify-center"
+            >
+              <span class="loading loading-spinner h-4 w-4"></span>
+            </div>
+          {:else}
+            <GoogleIcon class="h-6 w-6" />
+          {/if}
+
+          Sign {needs_account ? 'up' : 'in'} with Google
         </button>
       </div>
     </div>

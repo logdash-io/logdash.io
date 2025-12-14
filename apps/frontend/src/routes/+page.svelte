@@ -1,73 +1,67 @@
 <script lang="ts">
+  import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
+  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
+  import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
   import FaqSection from '$lib/landing/FAQSection.svelte';
+  import Logs from '$lib/landing/FakeLogs.svelte';
   import Features from '$lib/landing/Features.svelte';
   import Footer from '$lib/landing/Footer.svelte';
   import FoundersMemo from '$lib/landing/FoundersMemo.svelte';
-  import HeaderTrustProof from '$lib/landing/HeaderTrustProof.svelte';
   import HeroSectionCTA from '$lib/landing/HeroSectionCTA.svelte';
   import HowItWorks from '$lib/landing/HowItWorks.svelte';
-  import Logs from '$lib/landing/FakeLogs.svelte';
-  import SystemHealth from '$lib/landing/SystemHealth.svelte';
-  import WhyLogdash from '$lib/landing/WhyLogdash.svelte';
-  import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
-  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
-  import { ArrowRightIcon } from 'lucide-svelte';
+  import LogdashDifference from '$lib/landing/LogdashDifference.svelte';
   import ProblemStatement from '$lib/landing/ProblemStatement.svelte';
+  import SystemHealth from '$lib/landing/SystemHealth.svelte';
   import TrustProofExample from '$lib/landing/TrustProofList.svelte';
-
-  type Props = {
-    data: {
-      anonymousProject: Promise<void>;
-    };
-  };
-  const { data }: Props = $props();
+  import WhyLogdash from '$lib/landing/WhyLogdash.svelte';
+  import PricingSection from '$lib/landing/pricing/PricingSection.svelte';
+  import PricingTrustProof from '$lib/landing/pricing/PricingTrustProof.svelte';
+  import { ArrowRightIcon } from 'lucide-svelte';
 </script>
 
 <svelte:head>
   <title>logdash</title>
   <meta
     name="description"
-    content="Modern observability platform with all you need to monitor your systems in real-time."
+    content="App health monitoring platform with all you need to stop critical issues from getting in your way."
   />
 </svelte:head>
 
 <AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
-  <header>
-    <div class="hero md:pt-14 md:pb-4">
+  <ResponsiveSkyBackground />
+
+  <header class="hero md:pb-4 md:pt-14 sm:px-8">
+    <div class="hero-content w-full flex-col lg:flex-row lg:justify-around lg:gap-10">
       <div
-        class="hero-content w-full flex-col lg:flex-row lg:justify-around lg:gap-10"
+        class="flex w-full flex-col items-center justify-center gap-6 text-center lg:items-start lg:gap-10 lg:text-left"
+      >
+        <h1
+          class="flex flex-col items-center gap-3 text-4xl font-extrabold tracking-tight md:-mb-4 lg:items-start lg:text-6xl"
+        >
+          How solo founders keep their SaaS apps healthy.
+        </h1>
+
+        <p class="w-11/12 text-lg leading-relaxed opacity-80">
+          App health monitoring platform with all you need to stop critical issues from
+          getting in your way.
+        </p>
+
+        <HeroSectionCTA />
+      </div>
+
+      <div
+        class="align-start relative flex h-[500px] w-full shrink-0 justify-center overflow-hidden lg:h-96 lg:w-1/2 lg:overflow-visible"
       >
         <div
-          class="flex w-full flex-col items-center justify-center gap-6 text-center lg:items-start lg:gap-10 lg:text-left"
+          class="rotate-z-3 sm:-rotate-z-3 absolute bottom-0 right-0 z-10 scale-90 sm:left-0 sm:right-auto lg:z-0 lg:scale-100"
         >
-          <h1
-            class="flex flex-col items-center gap-3 text-4xl font-extrabold tracking-tight md:-mb-4 lg:items-start lg:text-6xl"
-          >
-            System observability in minutes, not days.
-          </h1>
-
-          <p class="w-11/12 text-lg leading-relaxed opacity-80">
-            Cloud based observability platform with all you need to monitor your
-            system in real-time.
-          </p>
-
-          <HeroSectionCTA />
+          <SystemHealth />
         </div>
 
         <div
-          class="align-start relative flex h-[500px] w-full shrink-0 justify-center overflow-hidden lg:h-96 lg:w-1/2 lg:overflow-visible"
+          class="scale-80 -rotate-z-3 sm:rotate-z-3 absolute bottom-[120px] right-0 max-w-md lg:-bottom-4 lg:scale-100"
         >
-          <div
-            class="absolute right-0 bottom-0 z-10 scale-90 rotate-z-3 sm:right-auto sm:left-0 sm:-rotate-z-3 lg:z-0 lg:scale-100"
-          >
-            <SystemHealth />
-          </div>
-
-          <div
-            class="absolute right-0 bottom-[120px] max-w-md scale-80 -rotate-z-3 sm:rotate-z-3 lg:-bottom-4 lg:scale-100"
-          >
-            <Logs />
-          </div>
+          <Logs />
         </div>
       </div>
     </div>
@@ -75,11 +69,19 @@
 
   <div class="distance h-8"></div>
 
-  <HeaderTrustProof />
+  <ProblemStatement />
 
   <div class="distance h-16 sm:h-32"></div>
 
-  <ProblemStatement />
+  <LogdashDifference />
+
+  <div class="distance h-8 sm:h-12"></div>
+
+  <PricingTrustProof />
+
+  <div class="distance h-16 sm:h-32"></div>
+
+  <HowItWorks />
 
   <div class="distance h-16 sm:h-32"></div>
 
@@ -95,7 +97,7 @@
 
   <div class="distance h-16 sm:h-32"></div>
 
-  <HowItWorks />
+  <PricingSection />
 
   <div class="distance h-16 sm:h-32"></div>
 
@@ -107,35 +109,36 @@
 
   <div class="distance h-16 sm:h-32"></div>
 
-  <div
-    class="ld-card text-primary-content relative mx-2 flex flex-col-reverse items-center justify-between py-24 text-left sm:mx-0 sm:flex-row md:mt-14"
-  >
-    <div>
-      <h2 class="mb-2 text-center text-3xl font-bold sm:text-left sm:text-4xl">
-        Ready to Get Started?
-      </h2>
+  <div class="px-2">
+    <div
+      class="ld-card sm:min-w-4xl max-w-5xl mx-auto text-primary-content relative flex flex-col-reverse items-center justify-between py-24 text-left sm:flex-row md:mt-14"
+    >
+      <div>
+        <h2 class="mb-2 text-center text-3xl font-bold sm:text-left sm:text-4xl">
+          Let's get you vision back.
+        </h2>
 
-      <FlamingoIcon class="text-primary mx-auto mb-6 h-54 w-54 md:hidden" />
+        <FlamingoIcon class="text-primary h-54 w-54 mx-auto mb-6 md:hidden" />
 
-      <p class="mb-4 w-full text-lg opacity-90 md:w-1/2 lg:w-4/5 xl:w-full">
-        Our flamingo is ready, are you?
-        <br />
-        Get started with logdash today and see how easy it is to monitor your systems
-        in real-time.
-      </p>
-      <a
-        href="/features"
-        class="btn btn-primary btn-md sm:btn-lg w-full sm:w-fit"
-        data-posthog-id="landing-final-section-cta"
-      >
-        Understand your system in minutes
-        <ArrowRightIcon class="ml-1 h-5 w-5 sm:ml-2 sm:h-6 sm:w-6" />
-      </a>
+        <p class="mb-4 w-full text-base opacity-80 md:w-1/2 lg:w-4/5 xl:w-full">
+          Create your free account and get clarity in minutes.
+          <br />
+          Credit card is not required.
+        </p>
+        <a
+          href="/app/auth"
+          class="btn btn-primary w-full sm:w-fit"
+          data-posthog-id="landing-final-section-cta"
+        >
+          Get started
+          <ArrowRightIcon class="ml-1 size-4" />
+        </a>
+      </div>
+
+      <FlamingoIcon
+        class="text-primary absolute bottom-8 right-8 hidden h-64 w-64 md:block"
+      />
     </div>
-
-    <FlamingoIcon
-      class="text-primary absolute right-8 bottom-8 hidden h-64 w-64 md:block"
-    />
   </div>
 
   <div class="distance h-16 sm:h-32"></div>

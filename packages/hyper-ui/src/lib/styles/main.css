@@ -1,12 +1,14 @@
-@import './tailwind.css';
-@import './base.css';
-@import './themes.css';
-@import './components.css';
-@import './scrollbar.css';
-@import './animations.css';
-@import './third-party.css';
+@import "./tailwind.css";
+@import "./base.css";
+@import "./themes.css";
+@import "./components.css";
+@import "./scrollbar.css";
+@import "./animations.css";
+@import "./third-party.css";
 
 @theme {
   --container-8xl: 90rem;
   --container-9xl: 100rem;
+
+  --z-top: 2147483647;
 }

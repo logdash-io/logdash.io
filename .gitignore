@@ -8,6 +8,7 @@ tmp
 .wrangler
 /.svelte-kit
 /build
+.pnpm-store
 
 # OS
 .DS_Store
