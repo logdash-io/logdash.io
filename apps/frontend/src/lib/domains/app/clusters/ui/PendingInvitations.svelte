@@ -47,8 +47,8 @@
           <div class="flex flex-1 items-center">
             <div class="text-sm font-medium">
               {invitation.clusterName} • Invited {formatDate(
-              invitation.createdAt,
-            )} • {invitation.role === ClusterRole.CREATOR ? 'Admin' : 'Write'}
+                invitation.createdAt,
+              )} • {invitation.role === ClusterRole.CREATOR ? 'Admin' : 'Write'}
               access
             </div>
           </div>

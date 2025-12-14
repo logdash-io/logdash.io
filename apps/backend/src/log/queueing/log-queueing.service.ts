@@ -37,7 +37,7 @@ export class LogQueueingService {
     this.queuedDtos = [];
   }
 
-  @Cron(CronExpression.EVERY_SECOND)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   public async simulateOneSecondTraffic(): Promise<void> {
     if (process.env.NODE_ENV === 'test' || getOurEnv() === OurEnv.Prod) {
       return;

@@ -1,5 +1,5 @@
 import { dev } from '$app/environment';
-import { bffLogger } from '$lib/domains/shared/bff-logger';
+import { bffLogger } from '$lib/domains/shared/bff-logger.server';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
 import {
   get_access_token,
@@ -63,7 +63,12 @@ async function runLoginFlow(dto: {
     throw new Error('code is required');
   }
 
-  bffLogger.info(`logging in google ${code}...`);
+  bffLogger.info(`logging in google...`, {
+    googleCode: code,
+    termsAccepted: terms_accepted,
+    emailAccepted: email_accepted,
+    forceLocalLogin,
+  });
 
   const response = await fetch(`${envConfig.apiBaseUrl}/auth/google/login`, {
     method: 'POST',
@@ -79,16 +84,24 @@ async function runLoginFlow(dto: {
   });
 
   if (!response.ok) {
+    bffLogger.error(
+      `google code exchange response not ok`,
+      response.statusText,
+    );
     const error = await readErrorMessage(response);
     throw new Error(`google login error: ${error}`);
   }
 
+  bffLogger.info(`google code exchange response ok, extracting token...`);
   const { token } = (await response.json()) as { token: string };
 
+  bffLogger.info(`saving token to cookies...`);
   saveTokenToCookies({
     cookies,
     token,
   });
+
+  bffLogger.info(`redirecting to next url...`);
 
   redirect(302, next_url || `/app/clusters`);
 }

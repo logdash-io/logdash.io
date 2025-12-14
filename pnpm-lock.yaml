@@ -224,6 +224,9 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@fontsource-variable/geist-mono':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@fontsource-variable/kumbh-sans':
         specifier: ^5.2.7
         version: 5.2.7
@@ -1001,6 +1004,9 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
+
+  '@fontsource-variable/geist-mono@5.2.7':
+    resolution: {integrity: sha512-ZKlZ5sjtalb2TwXKs400mAGDlt/+2ENLNySPx0wTz3bP3mWARCsUW+rpxzZc7e05d2qGch70pItt3K4qttbIYA==}
 
   '@fontsource-variable/kumbh-sans@5.2.7':
     resolution: {integrity: sha512-ryUExOjM0qPdWD215y/hWHLtqcyefIIN0tRLnPOC6eYLvP2DYJ1ub0GGSZ6WIg3Hsh0DK6SQKz2dDvAV3cngZg==}
@@ -6764,6 +6770,8 @@ snapshots:
       '@floating-ui/utils': 0.2.10
 
   '@floating-ui/utils@0.2.10': {}
+
+  '@fontsource-variable/geist-mono@5.2.7': {}
 
   '@fontsource-variable/kumbh-sans@5.2.7': {}
 

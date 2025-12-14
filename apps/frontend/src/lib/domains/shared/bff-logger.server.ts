@@ -1,8 +1,7 @@
 import { createLogDash } from '@logdash/js-sdk';
-import { envConfig } from '$lib/domains/shared/utils/env-config';
 
 const { logger } = createLogDash({
-  apiKey: envConfig.bffLogdashApiKey,
+  apiKey: process.env.LOGDASH_API_KEY,
 });
 
 export const bffLogger = logger;

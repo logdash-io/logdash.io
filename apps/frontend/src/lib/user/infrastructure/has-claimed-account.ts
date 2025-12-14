@@ -1,9 +1,9 @@
-import { logdashAPI } from '$lib/domains/shared/logdash.api';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.server';
 
 export const has_claimed_account = async (
-	access_token: string,
+  access_token: string,
 ): Promise<boolean> => {
-	const user = await logdashAPI.get_me(access_token);
+  const user = await logdashAPI.get_me(access_token);
 
-	return user.accountClaimStatus === 'claimed';
+  return user.accountClaimStatus === 'claimed';
 };

@@ -1,6 +1,6 @@
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
 import type { Project } from '$lib/domains/app/projects/domain/project.js';
-import { logdashAPI } from '$lib/domains/shared/logdash.api.js';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.server.js';
 import { redirect, type ServerLoadEvent } from '@sveltejs/kit';
 
 export const load = async ({

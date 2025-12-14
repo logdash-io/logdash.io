@@ -163,8 +163,8 @@
   function hasActiveFilters(): boolean {
     return Boolean(
       selectedLevel ||
-        (selectedStartDate && selectedEndDate) ||
-        searchString?.trim(),
+      (selectedStartDate && selectedEndDate) ||
+      searchString?.trim(),
     );
   }
 

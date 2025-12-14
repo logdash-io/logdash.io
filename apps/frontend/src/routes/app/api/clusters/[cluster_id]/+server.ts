@@ -1,4 +1,4 @@
-import { logdashAPI } from '$lib/domains/shared/logdash.api';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.server';
 import { get_access_token } from '$lib/domains/shared/utils/cookies.utils';
 import { json, type RequestHandler } from '@sveltejs/kit';
 

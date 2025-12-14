@@ -7,8 +7,10 @@ import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils';
 import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/domains/shared/utils/cookies.utils';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
 
-export interface HttpRequestOptions
-  extends Omit<AxiosRequestConfig, 'url' | 'method'> {
+export interface HttpRequestOptions extends Omit<
+  AxiosRequestConfig,
+  'url' | 'method'
+> {
   requireAuth?: boolean;
   customToken?: string;
 }

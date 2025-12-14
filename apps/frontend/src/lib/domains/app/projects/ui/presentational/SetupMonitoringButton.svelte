@@ -11,7 +11,6 @@
   import { fly } from 'svelte/transition';
   import { MonitorMode } from '../../domain/monitoring/monitor-mode.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  
 
   type Props = {
     class?: string;
@@ -76,7 +75,10 @@
           Push
         </button>
       {:else}
-        <Tooltip content="Upgrade to Pro to use Push monitors" placement="bottom">
+        <Tooltip
+          content="Upgrade to Pro to use Push monitors"
+          placement="bottom"
+        >
           <button
             class={[
               'tab px-3',
@@ -93,7 +95,6 @@
         </Tooltip>
       {/if}
     </div>
-
 
     <!-- Input Section -->
     <div class="flex items-center justify-between gap-2">

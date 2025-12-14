@@ -1,8 +1,6 @@
 <script lang="ts">
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
-  import {
-    telegramSetupState,
-  } from '$lib/domains/app/projects/application/notification-channels/telegram-setup.state.svelte.js';
+  import { telegramSetupState } from '$lib/domains/app/projects/application/notification-channels/telegram-setup.state.svelte.js';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { NotificationChannelType } from '$lib/domains/shared/exposed-config/domain/exposed-config.js';
   import Modal from '$lib/domains/shared/ui/Modal.svelte';
@@ -10,16 +8,10 @@
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { BellIcon, LinkIcon, SendIcon } from 'lucide-svelte';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import {
-    notificationChannelSetupState,
-  } from '$lib/domains/app/projects/application/notification-channels/notification-channel-setup.state.svelte.js';
-  import {
-    notificationChannelsState,
-  } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
-  import TelegramAlertingSetup
-    from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/TelegramAlertingSetup.svelte';
-  import WebhookSetupStep
-    from '$lib/domains/app/projects/ui/notification-channels/webhook-setup/WebhookSetupStep.svelte';
+  import { notificationChannelSetupState } from '$lib/domains/app/projects/application/notification-channels/notification-channel-setup.state.svelte.js';
+  import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
+  import TelegramAlertingSetup from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/TelegramAlertingSetup.svelte';
+  import WebhookSetupStep from '$lib/domains/app/projects/ui/notification-channels/webhook-setup/WebhookSetupStep.svelte';
 
   type Props = {
     clusterId: string;
@@ -154,7 +146,7 @@
         withAssignment: boolean;
         url: string;
         name: string;
-        headers: Record<string, string>;
+        headers: Record;
         method: string;
       }) => {
         notificationChannelsState

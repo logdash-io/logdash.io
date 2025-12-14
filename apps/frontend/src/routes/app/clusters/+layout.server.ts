@@ -1,7 +1,7 @@
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
 import { ClustersListDataPreloader } from '$lib/domains/app/clusters/infrastructure/data-preloaders/clusters-list.data-preloader';
 import { resolve_data_preloader } from '$lib/domains/shared/data-preloader/resolve-data-preloader';
-import { logdashAPI } from '$lib/domains/shared/logdash.api.js';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.server.js';
 import { UserTier } from '$lib/domains/shared/types.js';
 import { UserDataPreloader } from '$lib/domains/shared/user/infrastructure/data-preloaders/user.data-preloader';
 import {

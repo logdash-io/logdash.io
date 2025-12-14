@@ -14,6 +14,7 @@
   import { getContext, setContext, type Snippet } from 'svelte';
   import { atomOneDark } from 'svelte-highlight/styles';
   import '@fontsource-variable/kumbh-sans';
+  import '@fontsource-variable/geist-mono';
   import '@logdash/hyper-ui/styles';
   import { ScrollArea } from '@logdash/hyper-ui/presentational';
 
@@ -23,7 +24,9 @@
   };
   let { children, data }: Props = $props();
   let scrollContainer: HTMLDivElement | null = $state(null);
-  const isDemoDashboard = $derived(page.url.pathname.includes('/demo-dashboard'));
+  const isDemoDashboard = $derived(
+    page.url.pathname.includes('/demo-dashboard'),
+  );
   const RECORDED_ROUTES = ['/', '/setup', '/configure', '/pricing'];
   const shouldRecordRoute = $derived(
     RECORDED_ROUTES.some((path) => page.url.pathname.includes(path)),

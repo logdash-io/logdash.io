@@ -45,15 +45,20 @@
   );
   const pings = $derived.by(() =>
     monitorId
-      ? monitoringState.monitoringPings(monitorId).sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        )
+      ? monitoringState
+          .monitoringPings(monitorId)
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          )
       : [],
   );
   const PINGS_VISIBLE = 80;
 
   let nowMs = $state(Date.now());
-  const nextCheckInMs = $derived(CHECK_INTERVAL_MS - (nowMs % CHECK_INTERVAL_MS));
+  const nextCheckInMs = $derived(
+    CHECK_INTERVAL_MS - (nowMs % CHECK_INTERVAL_MS),
+  );
   const nextCheckInSeconds = $derived(Math.ceil(nextCheckInMs / 1000));
   const checkProgressFraction = $derived(
     (CHECK_INTERVAL_MS - nextCheckInMs) / CHECK_INTERVAL_MS,
@@ -266,9 +271,15 @@
             <div class="bg-base-100 space-y-3 rounded-lg p-4">
               <div class="flex items-center justify-between">
                 <span class="text-sm opacity-80">Checks every 15s</span>
-                <span class="text-xs opacity-60">Next check in {nextCheckInSeconds}s</span>
+                <span class="text-xs opacity-60">
+                  Next check in {nextCheckInSeconds}s
+                </span>
               </div>
-              <progress class="progress progress-secondary h-2 w-full" max="1" value={checkProgressFraction}></progress>
+              <progress
+                class="progress progress-secondary h-2 w-full"
+                max="1"
+                value={checkProgressFraction}
+              ></progress>
             </div>
             <div class="bg-base-100 space-y-4 rounded-lg p-4">
               <p class="text-sm opacity-80">
