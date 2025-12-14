@@ -22,7 +22,7 @@
   <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
     <!-- Logdash Side -->
     <div
-      class="ld-card-base text-base-content relative overflow-hidden rounded-3xl border p-8"
+      class="ld-card-base text-base-content relative flex flex-col gap-8 overflow-hidden rounded-3xl border p-8"
     >
       <div class="mb-6">
         <h3 class="flex items-center gap-2 text-2xl font-bold">
@@ -78,13 +78,14 @@
           <div>
             <span class="font-bold">Peace of Mind:</span>
             <span class="opacity-80">
-              Focus on shipping features. We watch your back.
+              Focus on shipping features. We watch your back even when you
+              sleep.
             </span>
           </div>
         </li>
       </ul>
 
-      <div class="border-primary/20 mt-8 border-t pt-6">
+      <div class="border-base-100/80 mt-auto border-t pt-6">
         <div class="flex flex-wrap items-center gap-3">
           <span class="text-lg font-bold">Result:</span>
           <span
@@ -99,7 +100,7 @@
 
     <!-- On Your Own Side -->
     <div
-      class="bg-error/10 border-error/20 relative overflow-hidden rounded-3xl border p-8"
+      class="from-error/10 relative flex flex-col gap-8 overflow-hidden rounded-3xl border border-red-950 bg-gradient-to-br to-transparent p-8"
     >
       <div class="mb-6">
         <h3 class="flex items-center gap-2 text-2xl font-bold">
@@ -160,7 +161,7 @@
         </li>
       </ul>
 
-      <div class="border-error/20 mt-8 border-t pt-6">
+      <div class="border-error/20 mt-8 mt-auto border-t pt-6">
         <div class="flex flex-wrap items-center gap-3">
           <span class="text-lg font-bold">Result:</span>
           <span class="bg-error text-error-content rounded px-3 py-1 font-bold">

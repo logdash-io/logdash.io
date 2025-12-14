@@ -1,117 +1,117 @@
 <script lang="ts">
-	import { GiftIcon } from 'lucide-svelte';
-	import type { PostHog } from 'posthog-js';
-	import { getContext } from 'svelte';
+  import { BubblesIcon, GiftIcon, LightbulbIcon } from 'lucide-svelte';
+  import type { PostHog } from 'posthog-js';
+  import { getContext } from 'svelte';
 
-	let message = $state('');
-	let open = $state(false);
-	let rating = $state(5);
-	// svelte-ignore non_reactive_update
-	let textarea: HTMLTextAreaElement | null = null;
-	const posthog = getContext<PostHog>('posthog');
+  let message = $state('');
+  let open = $state(false);
+  let rating = $state(5);
+  // svelte-ignore non_reactive_update
+  let textarea: HTMLTextAreaElement | null = null;
+  const posthog = getContext<PostHog>('posthog');
 
-	const captureFeedback = () => {
-		posthog.capture('feedback_collected', {
-			message,
-			rating,
-		});
-		message = '';
-	};
+  const captureFeedback = () => {
+    posthog.capture('feedback_collected', {
+      message,
+      rating,
+    });
+    message = '';
+  };
 
-	$effect(() => {
-		if (open) {
-			textarea.focus();
-		}
-	});
+  $effect(() => {
+    if (open) {
+      textarea.focus();
+    }
+  });
 </script>
 
 <div class="fixed bottom-4 right-4 z-50">
-	<div class="relative">
-		<button
-			onclick={() => {
-				open = !open;
-			}}
-			class="btn btn-outline text-primary btn-neutral border-primary/20 btn-md bg-base-300"
-			data-posthog-id="share-feedback-button"
-		>
-			<GiftIcon class="h-5 w-5" />
-			Share Feedback
-		</button>
+  <div class="relative">
+    <button
+      onclick={() => {
+        open = !open;
+      }}
+      class="btn btn-md"
+      data-posthog-id="share-feedback-button"
+    >
+      <LightbulbIcon class="size-4 text-amber-400" />
+      Feedback?
+    </button>
 
-		{#if open}
-			<div
-				class="ld-card-base focus-within:ring-primary/40 absolute bottom-12 right-0 flex h-52 w-72 flex-col rounded-xl ring ring-transparent"
-			>
-				<textarea
-					bind:this={textarea}
-					class="h-full w-full resize-none rounded-xl border-none p-4 text-base outline-0"
-					placeholder="How could we improve Logdash?"
-					autofocus
-					bind:value={message}
-				></textarea>
+    {#if open}
+      <div
+        class="ld-card-base focus-within:ring-primary/40 absolute bottom-12 right-0 flex h-52 w-72 flex-col rounded-xl ring ring-transparent"
+      >
+        <textarea
+          bind:this={textarea}
+          class="h-full w-full resize-none rounded-xl border-none p-4 text-base outline-0"
+          placeholder="What can we do to make your life easier with Logdash?"
+          autofocus
+          bind:value={message}
+        ></textarea>
 
-				<div class="flex items-center justify-end gap-2 p-2">
-					<div class="rating rating-sm mx-auto gap-0.5">
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-primary"
-							aria-label="1 star"
-							onclick={() => (rating = 1)}
-							checked={rating === 1}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-primary"
-							aria-label="2 star"
-							onclick={() => (rating = 2)}
-							checked={rating === 2}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-primary"
-							aria-label="3 star"
-							onclick={() => (rating = 3)}
-							checked={rating === 3}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-primary"
-							aria-label="4 star"
-							onclick={() => (rating = 4)}
-							checked={rating === 4}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-primary"
-							aria-label="5 star"
-							onclick={() => (rating = 5)}
-							checked={rating === 5}
-						/>
-					</div>
+        <div class="flex items-center justify-end gap-2 p-2">
+          <div class="rating rating-sm mx-auto gap-0.5">
+            <input
+              type="radio"
+              name="rating-2"
+              class="mask mask-star-2 bg-primary"
+              aria-label="1 star"
+              onclick={() => (rating = 1)}
+              checked={rating === 1}
+            />
+            <input
+              type="radio"
+              name="rating-2"
+              class="mask mask-star-2 bg-primary"
+              aria-label="2 star"
+              onclick={() => (rating = 2)}
+              checked={rating === 2}
+            />
+            <input
+              type="radio"
+              name="rating-2"
+              class="mask mask-star-2 bg-primary"
+              aria-label="3 star"
+              onclick={() => (rating = 3)}
+              checked={rating === 3}
+            />
+            <input
+              type="radio"
+              name="rating-2"
+              class="mask mask-star-2 bg-primary"
+              aria-label="4 star"
+              onclick={() => (rating = 4)}
+              checked={rating === 4}
+            />
+            <input
+              type="radio"
+              name="rating-2"
+              class="mask mask-star-2 bg-primary"
+              aria-label="5 star"
+              onclick={() => (rating = 5)}
+              checked={rating === 5}
+            />
+          </div>
 
-					<button
-						class="btn btn-sm btn-secondary"
-						onclick={() => (open = false)}
-					>
-						Cancel
-					</button>
+          <button
+            class="btn btn-sm btn-secondary"
+            onclick={() => (open = false)}
+          >
+            Cancel
+          </button>
 
-					<button
-						onclick={() => {
-							captureFeedback();
-							open = false;
-						}}
-						class="btn btn-sm btn-primary"
-					>
-						Send
-					</button>
-				</div>
-			</div>
-		{/if}
-	</div>
+          <button
+            onclick={() => {
+              captureFeedback();
+              open = false;
+            }}
+            class="btn btn-sm btn-primary"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    {/if}
+  </div>
 </div>

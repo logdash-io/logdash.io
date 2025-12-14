@@ -8,6 +8,7 @@
   import Footer from '$lib/landing/Footer.svelte';
   import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
   import { ArrowRightIcon } from 'lucide-svelte';
+  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
 
   type Props = {
     data: {
@@ -46,7 +47,10 @@
   <title>Demo Dashboard | logdash</title>
 </svelte:head>
 
-<div class="w-full max-w-7xl space-y-4 px-4 pb-4 sm:space-y-8 sm:px-0 sm:pb-8">
+<!-- <div class="w-full max-w-7xl space-y-4 px-4 pb-4 sm:space-y-8 sm:px-0 sm:pb-8"> -->
+<AnimatedView
+  class="relative mx-auto flex w-full max-w-7xl flex-col px-8 space-y-4"
+>
   <DemoDashboardHeader />
 
   <div class="ld-card relative mx-auto w-full max-w-7xl p-4">
@@ -81,4 +85,4 @@
   </div>
 
   <Footer />
-</div>
+</AnimatedView>

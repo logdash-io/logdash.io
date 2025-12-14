@@ -1,5 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import transformLucideImports from 'vite-plugin-transform-lucide-imports';
 
 export default defineConfig({
   plugins: [
@@ -14,6 +15,7 @@ export default defineConfig({
         });
       },
     },
+    transformLucideImports(),
   ],
   server: {
     hmr: {

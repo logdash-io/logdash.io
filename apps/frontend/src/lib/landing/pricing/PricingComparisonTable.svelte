@@ -53,7 +53,7 @@
                     'relative h-24 w-1/4 min-w-[170px] p-0 text-center font-bold md:min-w-[180px]',
                   ]}
                 >
-                  {#if plan.tier === UserTier.BUILDER}
+                  {#if plan.tier === UserTier.PRO}
                     <div
                       class="bg-primary text-secondary left-0 top-0 z-0 -mb-6 flex h-12 w-full items-center justify-center rounded-xl pb-6 text-xs font-semibold md:-mb-8 md:h-16 md:pb-8"
                     >
@@ -67,11 +67,11 @@
                     class={[
                       'relative z-10 h-64 p-3 pt-6 text-left md:h-80 md:p-4 md:pt-9',
                       {
-                        'border-primary/60 rounded-tl-xl rounded-tr-xl border-l border-r border-t bg-[#160b0f]':
+                        'border-secondary/10 border-l border-r border-t border-b-0':
                           plan.tier === UserTier.BUILDER,
                         'border-secondary/10 rounded-tl-2xl border border-b-0 border-r-0':
                           plan.tier === UserTier.FREE,
-                        'border-secondary/10 rounded-tr-2xl border border-b-0 border-l-0':
+                        'border-primary/60 rounded-tl-xl rounded-tr-xl border-l border-r border-t bg-[#160b0f]':
                           plan.tier === UserTier.PRO,
                       },
                     ]}
@@ -101,9 +101,9 @@
                         </span>
 
                         <p
-                          class="mt-2 whitespace-pre-wrap text-xs opacity-80 md:mt-4 md:text-sm"
+                          class="mt-2 whitespace-pre-wrap text-xs opacity-80 md:mt-4 md:text-sm font-normal"
                         >
-                          {fullPlanConfig.description.split('.')[0]}
+                          {fullPlanConfig.description}
                         </p>
                       </div>
 
@@ -142,7 +142,7 @@
                     class="text-success h-4 w-4 shrink-0 md:h-6 md:w-6"
                   />
                   <span class="text-sm md:text-base">
-                    30-Day Money Back Guarantee
+                    No commitment required
                   </span>
                 </div>
               </td>
@@ -151,11 +151,11 @@
                   class={[
                     'py-3 text-center md:py-4',
                     {
-                      'bg-primary/5 border-primary/60 border-l border-r':
+                      'border-secondary/10 text-secondary/30 border-l border-r':
                         plan.tier === UserTier.BUILDER,
                       'border-secondary/10 text-secondary/30 border-l':
                         plan.tier === UserTier.FREE,
-                      'border-secondary/10 text-secondary/30 border-r':
+                      'bg-primary/5 border-primary/60 border-l border-r':
                         plan.tier === UserTier.PRO,
                     },
                   ]}
@@ -225,7 +225,7 @@
                     class={[
                       'py-3 text-center md:py-4',
                       {
-                        'bg-primary/5 border-primary/60 border-l border-r': true,
+                        'border-secondary/10 border-l border-r': true,
                         'rounded-b-xl border-b': isLastSection && isLast,
                       },
                     ]}
@@ -249,8 +249,9 @@
 
                   <td
                     class={[
-                      'border-secondary/10 border-r py-3 text-center md:py-4',
+                      'py-3 text-center md:py-4',
                       {
+                        'bg-primary/5 border-primary/60 border-l border-r': true,
                         'rounded-b-xl border-b': isLastSection && isLast,
                       },
                     ]}
