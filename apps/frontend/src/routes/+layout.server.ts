@@ -1,5 +1,5 @@
 import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config.js';
-import { logdashAPI } from '$lib/domains/shared/logdash.api.js';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.server.js';
 
 export const load = async (): Promise<{
   exposedConfig: ExposedConfig;

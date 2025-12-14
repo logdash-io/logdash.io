@@ -1,4 +1,4 @@
-import { logdashAPI } from '$lib/domains/shared/logdash.api.js';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.server.js';
 import { get_access_token } from '$lib/domains/shared/utils/cookies.utils.js';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
@@ -28,12 +28,11 @@ export const POST: RequestHandler = async ({ params, cookies }) => {
 
 export const DELETE: RequestHandler = async ({ params, cookies }) => {
   try {
-    const dashboard =
-      await logdashAPI.remove_http_monitor_from_public_dashboard(
-        params.dashboard_id,
-        params.monitor_id,
-        get_access_token(cookies),
-      );
+    const dashboard = await logdashAPI.remove_http_monitor_from_public_dashboard(
+      params.dashboard_id,
+      params.monitor_id,
+      get_access_token(cookies),
+    );
 
     return json({
       success: true,

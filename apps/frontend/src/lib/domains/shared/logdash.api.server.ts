@@ -391,17 +391,6 @@ class LogdashAPI {
     );
   }
 
-  get_public_dashboard_data(
-    dashboard_id: string,
-    access_token: string,
-    period: '24h' | '7d' | '90d' = '90d',
-  ): Promise<PublicDashboardData> {
-    return this.get<PublicDashboardData>(
-      `${LogdashAPI.v0baseUrl}/public_dashboards/${dashboard_id}/data?period=${period}`,
-      access_token,
-    );
-  }
-
   add_http_monitor_to_public_dashboard(
     dashboard_id: string,
     monitor_id: string,

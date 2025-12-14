@@ -1,22 +1,16 @@
-import { logdashAPI } from '$lib/domains/shared/logdash.api';
-import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils.js';
-import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/domains/shared/utils/cookies.utils.js';
+import { publicDashboardsService } from '$lib/domains/app/projects/infrastructure/public-dashboards.service';
 import { PublicDashboardState } from '@logdash/hyper-ui/features';
+import { SvelteDate } from 'svelte/reactivity';
 
 export class PublicDashboardPrivateState extends PublicDashboardState {
-  // Implementation of abstract method for private dashboard loading
   async loadDashboard(dashboardId: string): Promise<void> {
     try {
       this.loading = true;
 
-      // This calls the private/authenticated endpoint
-      const data = await logdashAPI.get_public_dashboard_data(
-        dashboardId,
-        getCookieValue(ACCESS_TOKEN_COOKIE_NAME, document.cookie),
-      );
+      const data = await publicDashboardsService.getPublicDashboardData(dashboardId);
       this.dashboardData = data;
 
-      this.lastUpdated = new Date();
+      this.lastUpdated = new SvelteDate();
     } catch (error) {
       console.error('Failed to load private dashboard:', error);
       throw error;
