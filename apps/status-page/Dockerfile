@@ -29,7 +29,7 @@ WORKDIR /app/apps/status-page
 RUN pnpm run build
 
 # Remove development dependencies
-RUN pnpm prune --prod
+RUN CI=true && pnpm prune --prod
 
 # Expose port
 EXPOSE 3000
