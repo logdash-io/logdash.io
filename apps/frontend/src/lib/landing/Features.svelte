@@ -20,7 +20,7 @@
     class="mb-16 max-w-5xl mx-auto grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
   >
     {#each FEATURES as feature (feature.id)}
-      <div class="ld-card-base group overflow-hidden rounded-2xl p-2">
+      <div class="ld-card-base group overflow-hidden rounded-3xl p-2">
         <div class="w-full p-6">
           <div class="mb-6 text-5xl">
             <feature.icon class="text-primary h-10 w-10" />
@@ -49,12 +49,12 @@
               data-posthog-id={`features-${feature.id}-learn-more-cta`}
             >
               Learn more
-              <ArrowRightIcon class="h-5 w-5" />
+              <ArrowRightIcon class="size-4" />
             </a>
           {:else}
             <button class="btn btn-md btn-secondary mt-6 w-full" disabled>
               Coming soon
-              <TimerIcon class="h-5 w-5" />
+              <TimerIcon class="size-4" />
             </button>
           {/if}
         </div>

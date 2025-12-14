@@ -62,11 +62,11 @@
   }
 
   .ld-card {
-    @apply rounded-2xl px-6 py-6 sm:px-8 sm:py-8;
+    @apply rounded-3xl px-6 py-6 sm:px-8 sm:py-8;
   }
 
   .ld-modal {
-    @apply from-base-200 to-base-300 border-base-100/50 rounded-xl border bg-gradient-to-br p-8 shadow-lg;
+    @apply from-base-200 to-base-300 border-base-100/50 rounded-3xl border bg-gradient-to-br p-8 shadow-lg;
   }
 
   .status {

@@ -55,7 +55,7 @@
                 >
                   {#if plan.tier === UserTier.PRO}
                     <div
-                      class="bg-primary text-secondary left-0 top-0 z-0 -mb-6 flex h-12 w-full items-center justify-center rounded-xl pb-6 text-xs font-semibold md:-mb-8 md:h-16 md:pb-8"
+                      class="bg-primary text-secondary left-0 top-0 z-0 -mb-6 flex h-12 w-full items-center justify-center rounded-2xl pb-6 text-xs font-semibold md:-mb-8 md:h-16 md:pb-8"
                     >
                       Most Popular
                     </div>
@@ -69,9 +69,9 @@
                       {
                         'border-secondary/10 border-l border-r border-t border-b-0':
                           plan.tier === UserTier.BUILDER,
-                        'border-secondary/10 rounded-tl-2xl border border-b-0 border-r-0':
+                        'border-secondary/10 rounded-tl-3xl border border-b-0 border-r-0':
                           plan.tier === UserTier.FREE,
-                        'border-primary/60 rounded-tl-xl rounded-tr-xl border-l border-r border-t bg-[#160b0f]':
+                        'border-primary rounded-tl-2xl rounded-tr-2xl border-l border-r border-t bg-[#160b0f]':
                           plan.tier === UserTier.PRO,
                       },
                     ]}
@@ -155,7 +155,7 @@
                         plan.tier === UserTier.BUILDER,
                       'border-secondary/10 text-secondary/30 border-l':
                         plan.tier === UserTier.FREE,
-                      'bg-primary/5 border-primary/60 border-l border-r':
+                      'bg-primary/5 border-primary border-l border-r':
                         plan.tier === UserTier.PRO,
                     },
                   ]}
@@ -201,7 +201,7 @@
                     class={[
                       'border-secondary/10 border-l py-3 text-center md:py-4',
                       {
-                        'rounded-b-xl border-b': isLastSection && isLast,
+                        'rounded-b-2xl border-b': isLastSection && isLast,
                       },
                     ]}
                   >
@@ -226,7 +226,7 @@
                       'py-3 text-center md:py-4',
                       {
                         'border-secondary/10 border-l border-r': true,
-                        'rounded-b-xl border-b': isLastSection && isLast,
+                        'rounded-b-2xl border-b': isLastSection && isLast,
                       },
                     ]}
                   >
@@ -251,8 +251,8 @@
                     class={[
                       'py-3 text-center md:py-4',
                       {
-                        'bg-primary/5 border-primary/60 border-l border-r': true,
-                        'rounded-b-xl border-b': isLastSection && isLast,
+                        'bg-primary/5 border-primary border-l border-r': true,
+                        'rounded-b-2xl border-b': isLastSection && isLast,
                       },
                     ]}
                     onmouseenter={() => onMouseEnter(UserTier.PRO)}

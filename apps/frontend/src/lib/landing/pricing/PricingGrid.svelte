@@ -40,7 +40,7 @@
     <div class="relative flex flex-col">
       {#if plan.popular}
         <div
-          class="bg-primary ring-primary flex h-20 w-full items-center justify-center rounded-t-2xl pb-10 -mb-4 text-sm font-semibold ring"
+          class="bg-primary ring-primary flex h-20 w-full items-center justify-center rounded-t-3xl pb-10 -mb-4 text-sm font-semibold ring"
         >
           Most popular
         </div>
@@ -50,7 +50,7 @@
 
       <div
         class={[
-          'card ld-card-base relative -mt-6 overflow-visible rounded-2xl p-8 shadow-xl',
+          'card ld-card-base relative -mt-6 overflow-visible rounded-3xl p-8 shadow-xl',
           {
             'ring-primary ring': plan.popular,
           },
@@ -69,7 +69,7 @@
           <div class="mt-2">
             <span class="text-4xl font-semibold">{plan.price}</span>
 
-            <p class="mt-4 text-sm opacity-75">
+            <p class="mt-4 text-sm opacity-75 h-10">
               {plan.description}
             </p>
           </div>

@@ -12,7 +12,7 @@
 
 <div
   class={[
-    'ld-card-base bg-neutral text-neutral-content mx-2 rounded-2xl p-8 text-base shadow-xl sm:mx-auto',
+    'ld-card-base bg-neutral text-neutral-content mx-2 rounded-3xl p-8 text-base shadow-xl sm:mx-auto',
     className,
   ]}
 >

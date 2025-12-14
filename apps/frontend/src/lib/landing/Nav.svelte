@@ -5,8 +5,8 @@
     animatedViewState,
     AnimationDirection,
   } from '$lib/domains/shared/ui/animated-view.state.svelte';
-  import { ExternalLinkIcon } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
 
   const ROUTES = [
     {
@@ -15,27 +15,8 @@
     },
     {
       path: '/docs',
-      name: 'Docs',
+      name: 'Documentation',
     },
-    {
-      path: 'https://discord.gg/naftPW4Hxe',
-      name: 'Discord',
-      target: '_blank',
-    },
-    {
-      path: 'https://status.logdash.io',
-      name: 'Status',
-      target: '_blank',
-    },
-    {
-      path: 'https://github.com/logdash-io/logdash.io',
-      name: 'Source',
-      target: '_blank',
-    },
-    // {
-    // 	path: '/about-us',
-    // 	name: 'About us',
-    // },
   ];
 
   const FEATURES = [
@@ -61,6 +42,25 @@
     window.location.href = '/app/clusters';
   };
 </script>
+
+{#snippet featuresMenu()}
+  <ul class="menu ld-card-base rounded-box z-[1] w-52 p-2 shadow">
+    {#each FEATURES as { path, name }}
+      <li>
+        <a
+          href={path}
+          draggable="false"
+          class={page.url.pathname === path ? 'text-primary' : ''}
+          onclick={() => {
+            animatedViewState.nextAnimationDirection = AnimationDirection.RIGHT;
+          }}
+        >
+          {name}
+        </a>
+      </li>
+    {/each}
+  </ul>
+{/snippet}
 
 {#snippet nav()}
   <nav
@@ -88,12 +88,16 @@
     <div class="navbar-center">
       <ul class="menu menu-horizontal space-x-4 px-1 text-base font-semibold">
         <li>
-          <div class="dropdown dropdown-hover dropdown-bottom">
+          <Tooltip
+            class="p-0"
+            placement="bottom"
+            content={featuresMenu}
+            interactive={true}
+          >
             <div
-              tabindex="0"
               role="button"
               class={[
-                'px-0 py-0 hover:bg-transparent',
+                'px-3 py-1.5 hover:bg-transparent relative',
                 {
                   'navlink-active': page.url.pathname.startsWith('/features'),
                 },
@@ -101,33 +105,12 @@
             >
               Features
             </div>
-            <ul
-              tabindex="0"
-              class="dropdown-content menu ld-card-base rounded-box z-[1] w-52 p-2 shadow"
-            >
-              {#each FEATURES as { path, name }}
-                <li>
-                  <a
-                    href={path}
-                    draggable="false"
-                    class={page.url.pathname === path ? 'text-primary' : ''}
-                    onclick={() => {
-                      animatedViewState.nextAnimationDirection =
-                        AnimationDirection.RIGHT;
-                    }}
-                  >
-                    {name}
-                  </a>
-                </li>
-              {/each}
-            </ul>
-          </div>
+          </Tooltip>
         </li>
-        {#each ROUTES as { path, name, target }, i}
+        {#each ROUTES as { path, name }, i}
           <li>
             <a
               href={path}
-              target={target ? target : undefined}
               draggable="false"
               class={[
                 'hover:bg-transparent',
@@ -146,10 +129,6 @@
               in:fade={{ duration: 150, delay: i * 50 }}
             >
               {name}
-
-              {#if target === '_blank'}
-                <ExternalLinkIcon class="h-4 w-4 shrink-0" />
-              {/if}
             </a>
           </li>
         {/each}
@@ -242,11 +221,10 @@
               </ul>
             </details>
           </li>
-          {#each ROUTES as { path, name, target }, i}
+          {#each ROUTES as { path, name }, i}
             <li>
               <a
                 href={path}
-                target={target ? target : undefined}
                 draggable="false"
                 class={page.url.pathname === path ? 'text-primary' : ''}
                 onclick={() => {
@@ -265,10 +243,6 @@
                 }}
               >
                 {name}
-
-                {#if target === '_blank'}
-                  <ExternalLinkIcon class="h-4 w-4 shrink-0" />
-                {/if}
               </a>
             </li>
           {/each}
