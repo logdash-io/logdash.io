@@ -224,6 +224,9 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@fontsource-variable/kumbh-sans':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@logdash/hyper-ui':
         specifier: workspace:*
         version: link:../../packages/hyper-ui
@@ -998,6 +1001,9 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
+
+  '@fontsource-variable/kumbh-sans@5.2.7':
+    resolution: {integrity: sha512-ryUExOjM0qPdWD215y/hWHLtqcyefIIN0tRLnPOC6eYLvP2DYJ1ub0GGSZ6WIg3Hsh0DK6SQKz2dDvAV3cngZg==}
 
   '@grpc/grpc-js@1.13.4':
     resolution: {integrity: sha512-GsFaMXCkMqkKIvwCQjCrwH+GHbPKBjhwo/8ZuUkWHqbI73Kky9I+pQltrlT0+MWpedCoosda53lgjYfyEPgxBg==}
@@ -6758,6 +6764,8 @@ snapshots:
       '@floating-ui/utils': 0.2.10
 
   '@floating-ui/utils@0.2.10': {}
+
+  '@fontsource-variable/kumbh-sans@5.2.7': {}
 
   '@grpc/grpc-js@1.13.4':
     dependencies:
