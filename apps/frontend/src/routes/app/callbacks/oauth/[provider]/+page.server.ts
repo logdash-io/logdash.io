@@ -63,37 +63,37 @@ async function runLoginFlow(dto: {
     forceLocalLogin,
   });
 
-  const response = await fetch(`${envConfig.apiBaseUrl}/auth/google/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      googleCode: code,
-      termsAccepted: terms_accepted,
-      emailAccepted: email_accepted,
-      forceLocalLogin,
-    }),
-  });
+  // const response = await fetch(`${envConfig.apiBaseUrl}/auth/google/login`, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify({
+  //     googleCode: code,
+  //     termsAccepted: terms_accepted,
+  //     emailAccepted: email_accepted,
+  //     forceLocalLogin,
+  //   }),
+  // });
 
-  if (!response.ok) {
-    bffLogger.error(`google code exchange response not ok`, response.statusText);
-    const error = await readErrorMessage(response);
-    throw new Error(`google login error: ${error}`);
-  }
+  // if (!response.ok) {
+  //   bffLogger.error(`google code exchange response not ok`, response.statusText);
+  //   const error = await readErrorMessage(response);
+  //   throw new Error(`google login error: ${error}`);
+  // }
 
-  bffLogger.info(`google code exchange response ok, extracting token...`);
-  const { token } = (await response.json()) as { token: string };
+  // bffLogger.info(`google code exchange response ok, extracting token...`);
+  // const { token } = (await response.json()) as { token: string };
 
-  bffLogger.info(`saving token to cookies...`);
-  saveTokenToCookies({
-    cookies,
-    token,
-  });
+  // bffLogger.info(`saving token to cookies...`);
+  // saveTokenToCookies({
+  //   cookies,
+  //   token,
+  // });
 
-  bffLogger.info(`redirecting to next url...`);
+  // bffLogger.info(`redirecting to next url...`);
 
-  redirect(302, next_url || `/app/clusters`);
+  // redirect(302, next_url || `/app/clusters`);
 }
 
 async function runClaimFlow(dto: {
