@@ -34,7 +34,7 @@
 
   function getScrollPositions(): Record<string, number> {
     try {
-      return JSON.parse(localStorage.getItem(SCROLL_KEY) || '{}');
+      return JSON.parse(sessionStorage.getItem(SCROLL_KEY) || '{}');
     } catch {
       return {};
     }
@@ -44,7 +44,7 @@
     if (!scrollContainer) return;
     const positions = getScrollPositions();
     positions[page.url.pathname] = scrollContainer.scrollTop;
-    localStorage.setItem(SCROLL_KEY, JSON.stringify(positions));
+    sessionStorage.setItem(SCROLL_KEY, JSON.stringify(positions));
   }
 
   function restoreScrollPosition(): boolean {

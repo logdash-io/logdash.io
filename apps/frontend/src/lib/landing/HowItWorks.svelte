@@ -5,14 +5,14 @@
   } from '$lib/domains/shared/ui/animated-view.state.svelte.js';
   import { ArrowRightIcon } from 'lucide-svelte';
   import { githubDark } from 'svelte-highlight/styles';
+  import FrameworksList from './FrameworksList.svelte';
 
   const steps = [
     {
       number: 1,
       badgeClass: 'bg-primary text-primary-content shadow-primary/20',
       title: 'You: Configure project',
-      description:
-        'Create a project and enable features. Usually takes 3-5 minutes.',
+      description: 'Create a project and enable features. Usually takes 3-5 minutes.',
     },
     {
       number: 2,
@@ -90,6 +90,10 @@
         See the live demo
         <ArrowRightIcon class="size-4" />
       </a>
+    </div>
+
+    <div class="mt-8">
+      <FrameworksList />
     </div>
   </div>
 </section>
