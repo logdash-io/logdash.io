@@ -1,4 +1,4 @@
-import { bffLogger } from '$lib/domains/shared/bff-logger.js';
+import { bffLogger } from '$lib/domains/shared/bff-logger.server.js';
 import { logdashAPI } from '$lib/domains/shared/logdash.api.js';
 import { get_access_token } from '$lib/domains/shared/utils/cookies.utils.js';
 import { json, redirect, type RequestHandler } from '@sveltejs/kit';

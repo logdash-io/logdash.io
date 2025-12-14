@@ -2,7 +2,7 @@ import { logdashAPI } from '$lib/domains/shared/logdash.api';
 import { get_access_token } from '$lib/domains/shared/utils/cookies.utils';
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { bffLogger } from '$lib/domains/shared/bff-logger.js';
+import { bffLogger } from '$lib/domains/shared/bff-logger.server.js';
 import { UserTier } from '$lib/domains/shared/types.js';
 
 export const GET: RequestHandler = async ({ cookies, url }) => {

@@ -9,7 +9,7 @@ import type {
   NotificationChannel,
   TelegramChatInfo,
 } from '$lib/domains/app/projects/domain/telegram/telegram.types';
-import { bffLogger } from '$lib/domains/shared/bff-logger';
+import { bffLogger } from '$lib/domains/shared/bff-logger.server.js';
 import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config';
 import type { User } from '$lib/domains/shared/user/domain/user';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
@@ -30,9 +30,7 @@ class LogdashAPI {
   registerUnauthorizedHandler(handler: UnauthorizedHandler): () => void {
     this.unauthorizedHandlers.push(handler);
     return () => {
-      this.unauthorizedHandlers = this.unauthorizedHandlers.filter(
-        (h) => h !== handler,
-      );
+      this.unauthorizedHandlers = this.unauthorizedHandlers.filter((h) => h !== handler);
     };
   }
 
@@ -129,33 +127,26 @@ class LogdashAPI {
     access_token?: string;
     error?: string;
   }> {
-    return this.post<{ token: string }>(
-      `${LogdashAPI.v0baseUrl}/auth/github/login`,
-      {
-        githubCode: dto.code,
-        termsAccepted: dto.terms_accepted,
-        emailAccepted: dto.email_accepted,
-        forceLocalLogin: dto.is_local_env,
-      },
-    )
+    return this.post<{ token: string }>(`${LogdashAPI.v0baseUrl}/auth/github/login`, {
+      githubCode: dto.code,
+      termsAccepted: dto.terms_accepted,
+      emailAccepted: dto.email_accepted,
+      forceLocalLogin: dto.is_local_env,
+    })
       .then((data) => ({ access_token: data.token }))
       .catch((error) => ({ error }));
   }
 
-  get_project_api_keys(
-    access_token: string,
-    project_id: string,
-  ): Promise<string[]> {
+  get_project_api_keys(access_token: string, project_id: string): Promise<string[]> {
     return this.get<
       {
         id: string;
         value: string;
         projectId: string;
       }[]
-    >(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}/api_keys`,
-      access_token,
-    ).then((keys) => keys.map((k) => k.value));
+    >(`${LogdashAPI.v0baseUrl}/projects/${project_id}/api_keys`, access_token).then(
+      (keys) => keys.map((k) => k.value),
+    );
   }
 
   /**
@@ -225,10 +216,7 @@ class LogdashAPI {
     return this.get<User>(`${LogdashAPI.v0baseUrl}/users/me`, access_token);
   }
 
-  get_cluster_projects(
-    cluster_id: string,
-    access_token: string,
-  ): Promise<Project[]> {
+  get_cluster_projects(cluster_id: string, access_token: string): Promise<Project[]> {
     return this.get<Project[]>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/projects`,
       access_token,
@@ -241,10 +229,7 @@ class LogdashAPI {
    * @returns
    */
   get_user_clusters(access_token: string): Promise<Cluster[]> {
-    return this.get<Cluster[]>(
-      `${LogdashAPI.v0baseUrl}/users/me/clusters`,
-      access_token,
-    );
+    return this.get<Cluster[]>(`${LogdashAPI.v0baseUrl}/users/me/clusters`, access_token);
   }
 
   get_telegram_invite_link(access_token: string): Promise<{ url: string }> {
@@ -285,10 +270,7 @@ class LogdashAPI {
     );
   }
 
-  get_project_metrics(
-    project_id: string,
-    access_token: string,
-  ): Promise<Metric[]> {
+  get_project_metrics(project_id: string, access_token: string): Promise<Metric[]> {
     return this.get<Metric[]>(
       `${LogdashAPI.v0baseUrl}/projects/${project_id}/metrics`,
       access_token,
@@ -316,9 +298,7 @@ class LogdashAPI {
     );
   }
 
-  stripe_billing_portal(
-    access_token: string,
-  ): Promise<{ customerPortalUrl: string }> {
+  stripe_billing_portal(access_token: string): Promise<{ customerPortalUrl: string }> {
     return this.get<{ customerPortalUrl: string }>(
       `${LogdashAPI.v0baseUrl}/payments/stripe/customer_portal`,
       access_token,
@@ -365,10 +345,7 @@ class LogdashAPI {
       '`${LogdashAPI.v0baseUrl}/exposed_config`:',
       `${LogdashAPI.v0baseUrl}/exposed_config`,
     );
-    return this.get<ExposedConfig>(
-      `${LogdashAPI.v0baseUrl}/exposed_config`,
-      '',
-    );
+    return this.get<ExposedConfig>(`${LogdashAPI.v0baseUrl}/exposed_config`, '');
   }
 
   get_monitors(cluster_id: string, access_token: string): Promise<Monitor[]> {
@@ -507,11 +484,7 @@ class LogdashAPI {
     );
   }
 
-  private post<T>(
-    url: string,
-    body: unknown,
-    access_token?: string,
-  ): Promise<T> {
+  private post<T>(url: string, body: unknown, access_token?: string): Promise<T> {
     bffLogger.info(
       JSON.stringify({
         url,
@@ -539,11 +512,7 @@ class LogdashAPI {
     );
   }
 
-  private put<T>(
-    url: string,
-    body: unknown,
-    access_token?: string,
-  ): Promise<T> {
+  private put<T>(url: string, body: unknown, access_token?: string): Promise<T> {
     return this.performFetch<T>(
       url,
       {
