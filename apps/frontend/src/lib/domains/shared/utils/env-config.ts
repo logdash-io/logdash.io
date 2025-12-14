@@ -10,7 +10,6 @@ export interface EnvironmentConfig {
   google: {
     clientId: string;
   };
-  bffLogdashApiKey: string;
   apiBaseUrl: string;
   stage: 'live' | 'pre-live' | 'local';
 }
@@ -28,7 +27,6 @@ export function getEnvironmentConfig(): EnvironmentConfig {
     google: {
       clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
     },
-    bffLogdashApiKey: import.meta.env.VITE_LOGDASH_API_KEY,
     apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
     stage: import.meta.env.VITE_STAGE || 'local',
   };
