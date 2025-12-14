@@ -13,8 +13,8 @@ html,
 body {
   --font-sans: "Kumbh Sans Variable", system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "Geist Mono", "JetBrains Mono", "SF Mono", Monaco, Inconsolata,
-    "Roboto Mono", "Source Code Pro", monospace;
+  --font-mono: "Geist Mono Variable", "JetBrains Mono", "SF Mono", Monaco,
+    Inconsolata, "Roboto Mono", "Source Code Pro", monospace;
 
   /* general */
   --sdt-bg-main: var(--color-base-200); /** wrap background color */

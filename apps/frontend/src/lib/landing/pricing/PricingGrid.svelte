@@ -128,7 +128,7 @@
   {/snippet}
 
   <div class="flex items-center justify-center text-sm">
-    <Tooltip {content} placement="top">
+    <Tooltip interactive={true} {content} placement="top">
       <span class="text-primary cursor-help underline font-medium">tldr</span>
     </Tooltip>
   </div>

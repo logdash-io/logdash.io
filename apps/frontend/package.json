@@ -42,6 +42,7 @@
     "vite-plugin-transform-lucide-imports": "^0.3.0"
   },
   "dependencies": {
+    "@fontsource-variable/geist-mono": "^5.2.7",
     "@fontsource-variable/kumbh-sans": "^5.2.7",
     "@logdash/hyper-ui": "workspace:*",
     "@logdash/js-sdk": "^1.0.8",
