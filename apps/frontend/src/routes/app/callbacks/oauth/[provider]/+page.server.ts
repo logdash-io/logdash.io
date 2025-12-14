@@ -7,7 +7,12 @@ import {
   save_onboarding_tier,
 } from '$lib/domains/shared/utils/cookies.utils';
 import type { GoogleCallbackState } from '$lib/domains/shared/utils/generate-google-oauth-url';
-import { isRedirect, redirect, type Cookies, type ServerLoadEvent } from '@sveltejs/kit';
+import {
+  isRedirect,
+  redirect,
+  type Cookies,
+  type ServerLoadEvent,
+} from '@sveltejs/kit';
 
 async function readErrorMessage(response: Response): Promise<string> {
   const contentType = response.headers.get('content-type') || '';
@@ -32,7 +37,9 @@ async function readErrorMessage(response: Response): Promise<string> {
 }
 
 function saveTokenToCookies(dto: { cookies: Cookies; token: string }): void {
-  const expiration = new Date(JSON.parse(atob(dto.token.split('.')[1])).exp * 1000);
+  const expiration = new Date(
+    JSON.parse(atob(dto.token.split('.')[1])).exp * 1000,
+  );
 
   save_access_token(dto.cookies, dto.token, {
     maxAge: expiration.getTime() - Date.now(),
@@ -77,7 +84,10 @@ async function runLoginFlow(dto: {
   });
 
   if (!response.ok) {
-    bffLogger.error(`google code exchange response not ok`, response.statusText);
+    bffLogger.error(
+      `google code exchange response not ok`,
+      response.statusText,
+    );
     const error = await readErrorMessage(response);
     throw new Error(`google login error: ${error}`);
   }
@@ -153,7 +163,11 @@ async function runClaimFlow(dto: {
   redirect(302, next_url || `/app/clusters`);
 }
 
-export const load = async ({ url, cookies, params }: ServerLoadEvent): Promise<void> => {
+export const load = async ({
+  url,
+  cookies,
+  params,
+}: ServerLoadEvent): Promise<void> => {
   if (!['google', 'google-alternative'].includes(params.provider)) {
     redirect(302, '/');
   }

@@ -31,7 +31,9 @@
   <ResponsiveSkyBackground />
 
   <header class="hero md:pb-4 md:pt-14 sm:px-8">
-    <div class="hero-content w-full flex-col lg:flex-row lg:justify-around lg:gap-10">
+    <div
+      class="hero-content w-full flex-col lg:flex-row lg:justify-around lg:gap-10"
+    >
       <div
         class="flex w-full flex-col items-center justify-center gap-6 text-center lg:items-start lg:gap-10 lg:text-left"
       >
@@ -42,8 +44,8 @@
         </h1>
 
         <p class="w-11/12 text-lg leading-relaxed opacity-80">
-          App health monitoring platform with all you need to stop critical issues from
-          getting in your way.
+          App health monitoring platform with all you need to stop critical
+          issues from getting in your way.
         </p>
 
         <HeroSectionCTA />
@@ -114,7 +116,9 @@
       class="ld-card sm:min-w-4xl max-w-5xl mx-auto text-primary-content relative flex flex-col-reverse items-center justify-between py-24 text-left sm:flex-row md:mt-14"
     >
       <div>
-        <h2 class="mb-2 text-center text-3xl font-bold sm:text-left sm:text-4xl">
+        <h2
+          class="mb-2 text-center text-3xl font-bold sm:text-left sm:text-4xl"
+        >
           Let's get you vision back.
         </h2>
 

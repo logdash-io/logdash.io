@@ -6,7 +6,11 @@ import type { RequestHandler } from './$types';
 export const PUT: RequestHandler = async ({ cookies, request, params }) => {
   const body = await request.json();
 
-  await logdashAPI.update_project(params.project_id, body, get_access_token(cookies));
+  await logdashAPI.update_project(
+    params.project_id,
+    body,
+    get_access_token(cookies),
+  );
 
   return json({
     status: 200,

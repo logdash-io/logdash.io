@@ -28,11 +28,12 @@ export const POST: RequestHandler = async ({ params, cookies }) => {
 
 export const DELETE: RequestHandler = async ({ params, cookies }) => {
   try {
-    const dashboard = await logdashAPI.remove_http_monitor_from_public_dashboard(
-      params.dashboard_id,
-      params.monitor_id,
-      get_access_token(cookies),
-    );
+    const dashboard =
+      await logdashAPI.remove_http_monitor_from_public_dashboard(
+        params.dashboard_id,
+        params.monitor_id,
+        get_access_token(cookies),
+      );
 
     return json({
       success: true,

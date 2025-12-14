@@ -14,11 +14,13 @@
     </h1>
 
     <p class="text-base-content/70 mx-auto max-w-3xl text-xl">
-      Validate your MVP for <span class="font-mono text-base-content font-semibold">
+      Validate your MVP for <span
+        class="font-mono text-base-content font-semibold"
+      >
         $0
       </span>
-      . Keep your burn rate low and upgrade only when you have revenue to protect, we'll have
-      your back.
+      . Keep your burn rate low and upgrade only when you have revenue to protect,
+      we'll have your back.
     </p>
 
     <div class="mt-6 flex justify-center">

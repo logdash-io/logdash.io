@@ -20,7 +20,10 @@ export const load = async (
   const onboardingTier = get_onboarding_tier(event.cookies);
   const user = await resolve_data_preloader(UserDataPreloader)(event);
 
-  if (user.user.accountClaimStatus === 'anonymous' && !url.pathname.includes('/setup')) {
+  if (
+    user.user.accountClaimStatus === 'anonymous' &&
+    !url.pathname.includes('/setup')
+  ) {
     return redirect(302, '/app/auth');
   }
 

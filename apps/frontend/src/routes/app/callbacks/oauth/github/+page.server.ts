@@ -7,7 +7,12 @@ import {
   save_onboarding_tier,
 } from '$lib/domains/shared/utils/cookies.utils';
 import type { GithubCallbackState } from '$lib/domains/shared/utils/generate-github-oauth-url';
-import { isRedirect, redirect, type Cookies, type ServerLoadEvent } from '@sveltejs/kit';
+import {
+  isRedirect,
+  redirect,
+  type Cookies,
+  type ServerLoadEvent,
+} from '@sveltejs/kit';
 
 async function runLoginFlow(dto: {
   cookies: Cookies;
@@ -34,7 +39,9 @@ async function runLoginFlow(dto: {
   }
 
   bffLogger.info(`github login success: ${access_token}`);
-  const expiration = new Date(JSON.parse(atob(access_token.split('.')[1])).exp * 1000);
+  const expiration = new Date(
+    JSON.parse(atob(access_token.split('.')[1])).exp * 1000,
+  );
 
   save_access_token(cookies, access_token, {
     maxAge: expiration.getTime() - Date.now(),
@@ -74,7 +81,9 @@ async function runClaimFlow(dto: {
     throw new Error(`github claim error: ${error}`);
   }
 
-  const expiration = new Date(JSON.parse(atob(access_token.split('.')[1])).exp * 1000);
+  const expiration = new Date(
+    JSON.parse(atob(access_token.split('.')[1])).exp * 1000,
+  );
 
   save_access_token(cookies, access_token, {
     maxAge: expiration.getTime() - Date.now(),
@@ -83,7 +92,10 @@ async function runClaimFlow(dto: {
   redirect(302, next_url || `/app/clusters`);
 }
 
-export const load = async ({ url, cookies }: ServerLoadEvent): Promise<void> => {
+export const load = async ({
+  url,
+  cookies,
+}: ServerLoadEvent): Promise<void> => {
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
   bffLogger.debug(`github oauth callback ${JSON.stringify({ code, state })}`);

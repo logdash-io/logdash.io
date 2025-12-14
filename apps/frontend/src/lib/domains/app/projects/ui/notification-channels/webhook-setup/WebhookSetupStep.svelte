@@ -236,15 +236,12 @@
           withAssignment: assignToServiceMonitor,
           url: webhookUrl,
           name: webhookName,
-          headers: headers.reduce(
-            (acc, header) => {
-              if (header.key && header.value) {
-                acc[header.key] = header.value;
-              }
-              return acc;
-            },
-            {} as Record<string, string>,
-          ),
+          headers: headers.reduce((acc, header) => {
+            if (header.key && header.value) {
+              acc[header.key] = header.value;
+            }
+            return acc;
+          }, {} as Record),
           method,
         })}
     >

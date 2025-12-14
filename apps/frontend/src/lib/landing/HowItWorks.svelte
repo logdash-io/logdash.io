@@ -12,7 +12,8 @@
       number: 1,
       badgeClass: 'bg-primary text-primary-content shadow-primary/20',
       title: 'You: Configure project',
-      description: 'Create a project and enable features. Usually takes 3-5 minutes.',
+      description:
+        'Create a project and enable features. Usually takes 3-5 minutes.',
     },
     {
       number: 2,

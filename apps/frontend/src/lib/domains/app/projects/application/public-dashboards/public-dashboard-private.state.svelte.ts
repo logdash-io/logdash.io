@@ -7,7 +7,8 @@ export class PublicDashboardPrivateState extends PublicDashboardState {
     try {
       this.loading = true;
 
-      const data = await publicDashboardsService.getPublicDashboardData(dashboardId);
+      const data =
+        await publicDashboardsService.getPublicDashboardData(dashboardId);
       this.dashboardData = data;
 
       this.lastUpdated = new SvelteDate();

@@ -48,9 +48,9 @@ class LogsState {
   get hasFilters(): boolean {
     return Boolean(
       filtersStore.searchString.trim() ||
-        filtersStore.startDate ||
-        filtersStore.endDate ||
-        filtersStore.level,
+      filtersStore.startDate ||
+      filtersStore.endDate ||
+      filtersStore.level,
     );
   }
 
@@ -73,7 +73,7 @@ class LogsState {
   get shouldFiltersBlockSync(): boolean {
     return Boolean(
       filtersStore.searchString.trim() ||
-        (filtersStore.startDate && filtersStore.endDate),
+      (filtersStore.startDate && filtersStore.endDate),
     );
   }
 

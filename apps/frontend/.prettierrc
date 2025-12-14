@@ -2,16 +2,14 @@
   "useTabs": false,
   "singleQuote": true,
   "trailingComma": "all",
-  "printWidth": 90,
+  "printWidth": 80,
   "semi": true,
   "proseWrap": "preserve",
   "endOfLine": "lf",
   "tabWidth": 2,
   "arrowParens": "always",
   "htmlWhitespaceSensitivity": "ignore",
-  "plugins": [
-    "prettier-plugin-svelte"
-  ],
+  "plugins": ["prettier-plugin-svelte"],
   "overrides": [
     {
       "files": "*.svelte",
