@@ -1,12 +1,12 @@
 import type { DataPreloader } from '$lib/domains/shared/data-preloader/data-preloader';
-import { logdashAPI } from '$lib/domains/shared/logdash.api';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.server';
 import { get_access_token } from '$lib/domains/shared/utils/cookies.utils';
 import type { ServerLoadEvent } from '@sveltejs/kit';
 import type { Metric } from '$lib/domains/app/projects/domain/metric.js';
 
-export class InitialMetricsDataPreloader
-  implements DataPreloader<{ initialMetrics: Metric[] }>
-{
+export class InitialMetricsDataPreloader implements DataPreloader<{
+  initialMetrics: Metric[];
+}> {
   async preload({
     cookies,
     params,

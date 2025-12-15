@@ -1,5 +1,5 @@
 <script>
-  import TrustProof from './TrustProof.svelte';
+  import TrustProof from './Testimonial.svelte';
 </script>
 
 <div class="flex flex-col items-start gap-2 px-6">

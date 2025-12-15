@@ -9,7 +9,7 @@ import type {
   NotificationChannel,
   TelegramChatInfo,
 } from '$lib/domains/app/projects/domain/telegram/telegram.types';
-import { bffLogger } from '$lib/domains/shared/bff-logger';
+import { bffLogger } from '$lib/domains/shared/bff-logger.server.js';
 import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config';
 import type { User } from '$lib/domains/shared/user/domain/user';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
@@ -410,17 +410,6 @@ class LogdashAPI {
   ): Promise<PublicDashboard[]> {
     return this.get<PublicDashboard[]>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/public_dashboards`,
-      access_token,
-    );
-  }
-
-  get_public_dashboard_data(
-    dashboard_id: string,
-    access_token: string,
-    period: '24h' | '7d' | '90d' = '90d',
-  ): Promise<PublicDashboardData> {
-    return this.get<PublicDashboardData>(
-      `${LogdashAPI.v0baseUrl}/public_dashboards/${dashboard_id}/data?period=${period}`,
       access_token,
     );
   }

@@ -1,20 +1,12 @@
 <script lang="ts">
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import {
-    notificationChannelsState,
-  } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
-  import {
-    telegramSetupState,
-  } from '$lib/domains/app/projects/application/notification-channels/telegram-setup.state.svelte.js';
-  import TelegramErrorStep
-    from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramErrorStep.svelte';
-  import TelegramSetupStep
-    from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramSetupStep.svelte';
-  import TelegramSuccessStep
-    from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramSuccessStep.svelte';
-  import TelegramWaitingStep
-    from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramWaitingStep.svelte';
+  import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
+  import { telegramSetupState } from '$lib/domains/app/projects/application/notification-channels/telegram-setup.state.svelte.js';
+  import TelegramErrorStep from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramErrorStep.svelte';
+  import TelegramSetupStep from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramSetupStep.svelte';
+  import TelegramSuccessStep from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramSuccessStep.svelte';
+  import TelegramWaitingStep from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramWaitingStep.svelte';
 
   type Props = {
     clusterId: string;

@@ -1,6 +1,6 @@
 import { dev } from '$app/environment';
-import { bffLogger } from '$lib/domains/shared/bff-logger';
-import { logdashAPI } from '$lib/domains/shared/logdash.api';
+import { bffLogger } from '$lib/domains/shared/bff-logger.server';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.server';
 import {
   get_access_token,
   save_access_token,

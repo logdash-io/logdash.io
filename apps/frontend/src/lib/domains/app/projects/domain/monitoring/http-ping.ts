@@ -1,10 +1,10 @@
 export type HttpPing = {
-	id: string;
-	httpMonitorId: string;
-	statusCode: number;
-	responseTimeMs: number;
-	message?: string;
-	createdAt: Date;
+  id: string;
+  httpMonitorId: string;
+  statusCode: number;
+  responseTimeMs: number;
+  message?: string;
+  createdAt: Date;
 };
 
 export interface HttpPingCreatedEvent {
@@ -16,4 +16,3 @@ export interface HttpPingCreatedEvent {
   createdAt: Date;
   clusterId: string;
 }
-

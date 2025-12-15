@@ -5,65 +5,62 @@
     animatedViewState,
     AnimationDirection,
   } from '$lib/domains/shared/ui/animated-view.state.svelte';
-  import { generateGithubOAuthUrl } from '$lib/domains/shared/utils/generate-github-oauth-url';
-  import { ExternalLinkIcon } from 'lucide-svelte';
-  import { onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
 
   const ROUTES = [
-    {
-      path: '/features',
-      name: 'Features',
-    },
     {
       path: '/pricing',
       name: 'Pricing',
     },
     {
       path: '/docs',
-      name: 'Docs',
+      name: 'Documentation',
     },
-    {
-      path: 'https://discord.gg/naftPW4Hxe',
-      name: 'Discord',
-      target: '_blank',
-    },
-    {
-      path: 'https://status.logdash.io',
-      name: 'Status',
-      target: '_blank',
-    },
-    {
-      path: 'https://github.com/logdash-io/logdash.io',
-      name: 'Source',
-      target: '_blank',
-    },
-    // {
-    // 	path: '/about-us',
-    // 	name: 'About us',
-    // },
   ];
 
-  let loggingIn = $state(false);
+  const FEATURES = [
+    {
+      path: '/features/logging',
+      name: 'Logging',
+    },
+    {
+      path: '/features/metrics',
+      name: 'Metrics',
+    },
+    {
+      path: '/features/monitoring',
+      name: 'Monitoring',
+    },
+  ];
+
   const currentRouteIndex = $derived(
     ROUTES.findIndex((route) => route.path === page.url.pathname),
   );
 
-  onDestroy(() => {
-    loggingIn = false;
-  });
-
-  const handleGithubLogin = () => {
-    loggingIn = true;
-    window.location.href = generateGithubOAuthUrl({
-      terms_accepted: false,
-      email_accepted: false,
-      flow: 'login',
-      fallback_url: '/app/auth?needs_account=true',
-      next_url: '/app/clusters',
-    });
+  const handleDashboardClick = () => {
+    window.location.href = '/app/clusters';
   };
 </script>
+
+{#snippet featuresMenu()}
+  <ul class="menu ld-card-base rounded-box z-[1] w-52 p-2 shadow">
+    {#each FEATURES as { path, name }}
+      <li>
+        <a
+          href={path}
+          draggable="false"
+          class={page.url.pathname === path ? 'text-primary' : ''}
+          onclick={() => {
+            animatedViewState.nextAnimationDirection = AnimationDirection.RIGHT;
+          }}
+        >
+          {name}
+        </a>
+      </li>
+    {/each}
+  </ul>
+{/snippet}
 
 {#snippet nav()}
   <nav
@@ -85,18 +82,35 @@
       >
         <Logo class="h-10 w-10" />
         <span class="text-2xl font-bold">logdash</span>
-
-        <span class="badge badge-xs font-mono text-xs opacity-70">beta</span>
       </a>
     </div>
 
     <div class="navbar-center">
       <ul class="menu menu-horizontal space-x-4 px-1 text-base font-semibold">
-        {#each ROUTES as { path, name, target }, i}
+        <li>
+          <Tooltip
+            class="p-0"
+            placement="bottom"
+            content={featuresMenu}
+            interactive={true}
+          >
+            <div
+              role="button"
+              class={[
+                'px-3 py-1.5 hover:bg-transparent relative',
+                {
+                  'navlink-active': page.url.pathname.startsWith('/features'),
+                },
+              ]}
+            >
+              Features
+            </div>
+          </Tooltip>
+        </li>
+        {#each ROUTES as { path, name }, i}
           <li>
             <a
               href={path}
-              target={target ? target : undefined}
               draggable="false"
               class={[
                 'hover:bg-transparent',
@@ -115,10 +129,6 @@
               in:fade={{ duration: 150, delay: i * 50 }}
             >
               {name}
-
-              {#if target === '_blank'}
-                <ExternalLinkIcon class="h-4 w-4 shrink-0" />
-              {/if}
             </a>
           </li>
         {/each}
@@ -128,20 +138,10 @@
     <div class="navbar-end">
       <div class="flex items-center space-x-4">
         <button
-          disabled={loggingIn}
           class="btn btn-outline border-primary"
-          onclick={handleGithubLogin}
+          onclick={handleDashboardClick}
         >
-          {#if loggingIn}
-            <div
-              in:fade={{ duration: 150 }}
-              class="flex h-6 w-6 items-center justify-center"
-            >
-              <span class="loading loading-spinner h-4 w-4"></span>
-            </div>
-          {/if}
-
-          Dashboard
+          Get started
         </button>
       </div>
     </div>
@@ -161,7 +161,6 @@
       >
         <Logo class="h-8 w-8" />
         <span class="text-xl font-bold">logdash</span>
-        <span class="badge badge-xs font-mono text-xs opacity-70">beta</span>
       </a>
     </div>
     <div class="navbar-end">
@@ -186,11 +185,46 @@
           tabindex="0"
           class="menu dropdown-content menu-sm rounded-box ld-card-base z-[1] mt-3 w-52 p-4 shadow"
         >
-          {#each ROUTES as { path, name, target }, i}
+          <li>
+            <details>
+              <summary
+                class={page.url.pathname.startsWith('/features')
+                  ? 'text-primary'
+                  : ''}
+              >
+                Features
+              </summary>
+              <ul>
+                {#each FEATURES as { path, name }}
+                  <li>
+                    <a
+                      href={path}
+                      draggable="false"
+                      class={page.url.pathname === path ? 'text-primary' : ''}
+                      onclick={() => {
+                        animatedViewState.nextAnimationDirection =
+                          AnimationDirection.RIGHT;
+                        const focusedElement =
+                          document.activeElement as HTMLElement;
+                        if (
+                          focusedElement &&
+                          typeof focusedElement.blur === 'function'
+                        ) {
+                          focusedElement.blur(); // Close dropdown
+                        }
+                      }}
+                    >
+                      {name}
+                    </a>
+                  </li>
+                {/each}
+              </ul>
+            </details>
+          </li>
+          {#each ROUTES as { path, name }, i}
             <li>
               <a
                 href={path}
-                target={target ? target : undefined}
                 draggable="false"
                 class={page.url.pathname === path ? 'text-primary' : ''}
                 onclick={() => {
@@ -209,16 +243,11 @@
                 }}
               >
                 {name}
-
-                {#if target === '_blank'}
-                  <ExternalLinkIcon class="h-4 w-4 shrink-0" />
-                {/if}
               </a>
             </li>
           {/each}
           <li>
             <button
-              disabled={loggingIn}
               class="btn btn-primary btn-sm mt-2 w-full"
               onclick={() => {
                 const focusedElement = document.activeElement as HTMLElement;
@@ -228,14 +257,10 @@
                 ) {
                   focusedElement.blur(); // Close dropdown
                 }
-                handleGithubLogin();
+                handleDashboardClick();
               }}
             >
-              {#if loggingIn}
-                <span class="loading loading-spinner h-4 w-4"></span>
-              {:else}
-                Dashboard
-              {/if}
+              Dashboard
             </button>
           </li>
         </ul>

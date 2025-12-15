@@ -1,6 +1,6 @@
 @plugin 'daisyui';
 @plugin 'daisyui/theme' {
-  name: 'logdash';
+  name: "logdash";
   default: true;
   prefersdark: true;
   color-scheme: dark;

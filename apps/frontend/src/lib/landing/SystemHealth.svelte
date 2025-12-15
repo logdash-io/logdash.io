@@ -39,7 +39,7 @@
 </script>
 
 <div
-  class="ld-card-base flex max-w-md flex-col gap-4 overflow-hidden rounded-xl p-6 lg:p-8 lg:pt-6"
+  class="ld-card-base flex max-w-md flex-col gap-4 overflow-hidden rounded-3xl p-6 lg:p-8 lg:pt-6"
 >
   <h5 class="text-center text-lg">All Systems Operational</h5>
 

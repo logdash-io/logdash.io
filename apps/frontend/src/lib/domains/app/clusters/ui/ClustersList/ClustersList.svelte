@@ -114,8 +114,8 @@
 
           {#if (column === 0 && clustersState.clusters.length % 2 === 0) || (column === 1 && clustersState.clusters.length % 2 === 1)}
             {@const delay =
-            ANIMATION_DELAY *
-            (clustersState.clusters.length / CLUSTERS_COLUMNS + 10)}
+              ANIMATION_DELAY *
+              (clustersState.clusters.length / CLUSTERS_COLUMNS + 10)}
 
             <ClusterCreatorTile
               canAddMore={canCreate}

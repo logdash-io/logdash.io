@@ -1,10 +1,10 @@
 const sleep = (ms: number): Promise<void> =>
-	new Promise((resolve) => setTimeout(resolve, ms));
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 export const load = (): {
-	anonymousProject: Promise<void>;
+  anonymousProject: Promise<void>;
 } => {
-	return {
-		anonymousProject: sleep(0),
-	};
+  return {
+    anonymousProject: sleep(0),
+  };
 };

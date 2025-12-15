@@ -8,14 +8,14 @@
 <div class="flex w-full flex-col gap-4 px-8 lg:w-fit lg:flex-row lg:px-0">
   <a
     draggable="false"
-    href="/features"
+    href="/app/auth"
     class="btn btn-primary w-full lg:w-fit"
     onclick={() => {
       animatedViewState.nextAnimationDirection = AnimationDirection.RIGHT;
     }}
     data-posthog-id="hero-section-explore-features-cta"
   >
-    Explore Features
+    Start free
   </a>
 
   <a

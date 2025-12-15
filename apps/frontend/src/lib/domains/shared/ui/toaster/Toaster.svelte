@@ -3,7 +3,10 @@
   import { flip } from 'svelte/animate';
   import { cubicInOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
-  import { toast, type Toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import {
+    toast,
+    type Toast,
+  } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 
   function dismissToast(id: string) {
     toast.remove(id);

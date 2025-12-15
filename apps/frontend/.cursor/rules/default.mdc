@@ -36,6 +36,7 @@ instead of naming function in the UI handleSomething, use onSomething instead
 > 🧠 Tip: Write code as if you're the future maintainer — and you’ve forgotten everything.
 
 - never use `.then()`. Always use normal promises,
+- always use `Tooltip` from `@logdash/hyper-ui/presentational` instead of daisyui `tooltip` class,
 - very important: do not add any comments to the produced code,
 - enums keys are in `THIS_CASE`. Enum values are in `this-case`,
 - distinguish between dtos and regular interfaces

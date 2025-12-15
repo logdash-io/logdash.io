@@ -4,7 +4,7 @@
   }
 
   .btn:not(.btn-circle):not(.rounded-full) {
-    @apply rounded-lg;
+    @apply rounded-xl;
   }
 
   .btn-transparent {
@@ -40,7 +40,12 @@
   }
 
   .success-card {
-    @apply to-success/15 text-success border border-green-950 bg-gradient-to-br from-transparent;
+    @apply text-success;
+  }
+
+  .success-card,
+  .success-card-bg {
+    @apply to-success/15 border border-green-950 bg-gradient-to-tl from-transparent;
   }
 
   .error-card {
@@ -53,15 +58,15 @@
 
   .ld-card-base,
   .ld-card {
-    @apply from-base-200 to-base-300 border-base-100/70 border bg-gradient-to-br shadow-lg;
+    @apply from-base-200 to-base-300 border-base-100 border bg-gradient-to-br shadow-lg;
   }
 
   .ld-card {
-    @apply rounded-xl px-6 py-6 sm:px-8 sm:py-8;
+    @apply rounded-3xl px-6 py-6 sm:px-8 sm:py-8;
   }
 
   .ld-modal {
-    @apply from-base-200 to-base-300 border-base-100/50 rounded-xl border bg-gradient-to-br p-8 shadow-lg;
+    @apply from-base-200 to-base-300 border-base-100/50 rounded-3xl border bg-gradient-to-br p-8 shadow-lg;
   }
 
   .status {
@@ -93,7 +98,7 @@
     @apply shrink-0;
   }
 
-  .gutter-both {
-    scrollbar-gutter: stable both-edges;
+  .gutter-stable {
+    scrollbar-gutter: stable;
   }
 }

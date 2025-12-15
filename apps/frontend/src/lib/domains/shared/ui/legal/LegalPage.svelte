@@ -2,6 +2,8 @@
   import Logo from '$lib/domains/shared/icons/Logo.svelte';
   import LegalDocument from '$lib/domains/shared/ui/legal/LegalDocument.svelte';
   import type { LegalDocumentDefinition } from '$lib/domains/shared/ui/legal/LegalDocumentDefinition';
+  import Footer from '$lib/landing/Footer.svelte';
+  import AnimatedView from '../AnimatedView.svelte';
 
   type Props = {
     definition: LegalDocumentDefinition;
@@ -14,18 +16,20 @@
   <title>{title} | logdash</title>
 </svelte:head>
 
-<div
-  class="bg-base-300 absolute mx-auto h-full w-full overflow-auto p-2 lg:py-8"
->
-  <div class="ld-modal relative mx-auto flex max-w-4xl flex-col gap-4">
-    <div class="flex items-center justify-center gap-4">
-      <Logo class="h-14 w-14" />
+<AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
+  <div class="py-16">
+    <div class="ld-modal relative mx-auto flex max-w-4xl flex-col gap-4">
+      <div class="flex items-center justify-center gap-4">
+        <Logo class="h-14 w-14" />
 
-      <h1 class="text-center text-2xl font-semibold lg:text-3xl">
-        {title}
-      </h1>
+        <h1 class="text-center text-2xl font-semibold lg:text-3xl">
+          {title}
+        </h1>
+      </div>
+
+      <LegalDocument {definition} />
     </div>
-
-    <LegalDocument {definition} />
   </div>
-</div>
+
+  <Footer />
+</AnimatedView>

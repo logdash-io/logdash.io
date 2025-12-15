@@ -4,7 +4,7 @@
 </script>
 
 <div
-  class="ld-card-base flex flex-col gap-1.5 rounded-xl p-8 py-6 shadow-2xl lg:pt-6"
+  class="ld-card-base flex flex-col gap-1.5 rounded-3xl p-8 py-6 shadow-2xl lg:pt-6"
 >
   <h5 class="mb-2 text-center text-lg">Recent Logs</h5>
 

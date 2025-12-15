@@ -4,8 +4,8 @@ export const PAYMENT_PLANS = [
   {
     name: 'Hobby',
     price: 'Free forever',
-    description:
-      'Great for kicking the tires or for your personal stuff. No credit card required.',
+    description: 'Great for kicking the tires or for your personal stuff.',
+    tldr: 'Validate your MVP in minutes. Zero friction, zero cost.',
     features: [
       { name: 'Unlimited projects' },
       { name: 'Up to 5 services' },
@@ -33,8 +33,8 @@ export const PAYMENT_PLANS = [
     name: 'Builder',
     price: '$9/mo.',
     period: 'per month',
-    description:
-      'Ideal for teams and projects that need more features and support.',
+    description: 'When things are getting more serious.',
+    tldr: 'Your 24/7 safety net. We watch the servers so you can sleep.',
     features: [
       { name: 'Everything in Hobby, plus:' },
       { name: 'Up to 20 services' },
@@ -58,16 +58,16 @@ export const PAYMENT_PLANS = [
       class: 'badge-primary',
     },
     buttonText: 'Start free trial',
-    guarantee: '30-day money-back guarantee',
+    guarantee: 'No commitment required',
     tier: UserTier.BUILDER,
-    popular: true,
+    popular: false,
   },
   {
     name: 'Pro',
     price: '$15/mo.',
     period: 'per month',
-    description:
-      'Perfect for small teams and startups. Get more projects, metrics, and support.',
+    description: '"Sky is the limit" option for seasoned professionals.',
+    tldr: 'Take the training wheels off, forget about the limits & squeeze every drop of juice from logdash.',
     features: [
       { name: 'Everything in Builder, plus:' },
       { name: 'Up to 50 services' },
@@ -92,9 +92,9 @@ export const PAYMENT_PLANS = [
       class: 'badge-primary',
     },
     buttonText: 'Start free trial',
-    guarantee: '30-day money-back guarantee',
+    guarantee: 'No commitment required',
     tier: UserTier.PRO,
-    popular: false,
+    popular: true,
     disabled: false,
   },
 ] as const;

@@ -1,5 +1,5 @@
 import type { Project } from '$lib/domains/app/projects/domain/project';
-import { logdashAPI } from '$lib/domains/shared/logdash.api';
+import { logdashAPI } from '$lib/domains/shared/logdash.api.server';
 import { get_access_token } from '$lib/domains/shared/utils/cookies.utils';
 import { type ServerLoadEvent } from '@sveltejs/kit';
 
