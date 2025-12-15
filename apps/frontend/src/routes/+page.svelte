@@ -17,15 +17,25 @@
   import PricingSection from '$lib/landing/pricing/PricingSection.svelte';
   import PricingTrustProof from '$lib/landing/pricing/PricingTrustProof.svelte';
   import { ArrowRightIcon } from 'lucide-svelte';
+  import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Logdash',
+    url: 'https://logdash.io',
+    logo: 'https://logdash.io/logo.png',
+    sameAs: ['https://x.com/logdash_io'],
+    description: 'SaaS health monitoring for solo founders.',
+  };
 </script>
 
-<svelte:head>
-  <title>logdash</title>
-  <meta
-    name="description"
-    content="App health monitoring platform with all you need to stop critical issues from getting in your way."
-  />
-</svelte:head>
+<SeoMeta
+  title="Logdash - SaaS Health Monitoring for Solo Founders"
+  description="App health monitoring platform with all you need to stop critical issues from getting in your way. Logs, metrics, and uptime monitoring in one place."
+  keywords="saas monitoring, solo founder tools, log management, server monitoring, uptime monitoring, logdash"
+  {jsonLd}
+/>
 
 <AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
   <ResponsiveSkyBackground />
