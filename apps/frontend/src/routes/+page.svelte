@@ -12,7 +12,7 @@
   import LogdashDifference from '$lib/landing/LogdashDifference.svelte';
   import ProblemStatement from '$lib/landing/ProblemStatement.svelte';
   import SystemHealth from '$lib/landing/SystemHealth.svelte';
-  import TrustProofExample from '$lib/landing/TrustProofList.svelte';
+  import TrustProofExample from '$lib/landing/TestimonialsList.svelte';
   import WhyLogdash from '$lib/landing/WhyLogdash.svelte';
   import PricingSection from '$lib/landing/pricing/PricingSection.svelte';
   import PricingTrustProof from '$lib/landing/pricing/PricingTrustProof.svelte';

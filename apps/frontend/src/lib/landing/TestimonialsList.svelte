@@ -1,5 +1,5 @@
 <script lang="ts">
-  import TrustProof from './TrustProof.svelte';
+  import TrustProof from './Testimonial.svelte';
   import Marquee from '$lib/domains/shared/ui/components/Marquee.svelte';
 
   const REVIEWS = [
