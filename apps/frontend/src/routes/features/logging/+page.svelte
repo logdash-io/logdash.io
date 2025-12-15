@@ -3,6 +3,7 @@
   import Footer from '$lib/landing/Footer.svelte';
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
   import { RoutePath } from '$lib/domains/shared/route-path.js';
+  import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
   import {
     ArrowRightIcon,
     ChartSplineIcon,
@@ -29,15 +30,28 @@
       icon: TagIcon,
     },
   ];
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Logdash Logging',
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Cloud',
+    description: 'Unified logging with the fastest search on the planet.',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+  };
 </script>
 
-<svelte:head>
-  <title>Logging | Logdash</title>
-  <meta
-    name="description"
-    content="Stop tab-switching to find bugs. Logdash unifies logs from all your sources into one simple, searchable stream."
-  />
-</svelte:head>
+<SeoMeta
+  title="Unified Logging | Logdash"
+  description="Stop tab-switching to find bugs. Logdash unifies logs from all your sources into one simple, searchable stream."
+  keywords="unified logging, log management, centralized logs, vercel logs, supabase logs, logdash logging"
+  {jsonLd}
+/>
 
 <AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
   <!-- Centralized Hero Section -->

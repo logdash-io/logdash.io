@@ -3,6 +3,7 @@
   import Footer from '$lib/landing/Footer.svelte';
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
   import { RoutePath } from '$lib/domains/shared/route-path.js';
+  import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
   import {
     ActivityIcon,
     ArrowRightIcon,
@@ -29,15 +30,29 @@
       icon: ZapIcon,
     },
   ];
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Logdash Metrics',
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Cloud',
+    description:
+      'Vital signs for your business. Simple counters, gauges, and system health metrics.',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+  };
 </script>
 
-<svelte:head>
-  <title>Metrics | Logdash</title>
-  <meta
-    name="description"
-    content="Know if your code is slow before your users do. Simple counters, gauges, and system health metrics without the complexity."
-  />
-</svelte:head>
+<SeoMeta
+  title="System Metrics & Health | Logdash"
+  description="Know if your code is slow before your users do. Track counters, gauges, and system health metrics without the complexity of Prometheus."
+  keywords="system metrics, app health, counters, gauges, prometheus alternative, performance monitoring, logdash metrics"
+  {jsonLd}
+/>
 
 <AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
   <!-- Centralized Hero Section -->

@@ -3,6 +3,7 @@
   import Footer from '$lib/landing/Footer.svelte';
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
   import { RoutePath } from '$lib/domains/shared/route-path.js';
+  import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
   import {
     ActivityIcon,
     ArrowRightIcon,
@@ -29,15 +30,29 @@
       icon: BellIcon,
     },
   ];
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Logdash Monitoring',
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Cloud',
+    description:
+      'Your silent partner. Simple uptime monitoring that lets you sleep without worrying about your app going down.',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+  };
 </script>
 
-<svelte:head>
-  <title>Monitoring | Logdash</title>
-  <meta
-    name="description"
-    content="Your silent partner. Simple uptime monitoring that lets you sleep without worrying about your app going down."
-  />
-</svelte:head>
+<SeoMeta
+  title="Uptime Monitoring | Logdash"
+  description="Your silent partner. Simple uptime monitoring that lets you sleep without worrying about your app going down. 24/7 checks and instant alerts."
+  keywords="uptime monitoring, website monitoring, server status, downtime alerts, logdash monitoring"
+  {jsonLd}
+/>
 
 <AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
   <!-- Centralized Hero Section -->
