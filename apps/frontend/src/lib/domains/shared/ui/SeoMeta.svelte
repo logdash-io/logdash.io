@@ -19,7 +19,7 @@
     jsonLd,
   }: Props = $props();
 
-  const baseUrl = 'https://logdash.io';
+  const baseUrl = page.url.origin;
   const canonicalUrl = $derived(`${baseUrl}${page.url.pathname}`);
   const imageUrl = $derived(
     image.startsWith('http') ? image : `${baseUrl}${image}`,
