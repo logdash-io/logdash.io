@@ -19,7 +19,7 @@
     jsonLd,
   }: Props = $props();
 
-  const baseUrl = page.url.origin;
+  const baseUrl = $derived(page.data.origin ?? page.url.origin);
   const canonicalUrl = $derived(`${baseUrl}${page.url.pathname}`);
   const imageUrl = $derived(
     image.startsWith('http') ? image : `${baseUrl}${image}`,
