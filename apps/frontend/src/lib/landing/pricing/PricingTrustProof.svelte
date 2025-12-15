@@ -1,5 +1,5 @@
 <script>
-  import TrustProof from '../TrustProof.svelte';
+  import TrustProof from '../Testimonial.svelte';
 </script>
 
 <div class="mx-auto max-w-4xl text-center px-4">

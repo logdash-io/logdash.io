@@ -8,5 +8,6 @@
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,
   "editor.renderWhitespace": "selection",
-  "editor.renderControlCharacters": false
+  "editor.renderControlCharacters": false,
+  "tailwindCSS.experimental.configFile": "../../packages/hyper-ui/src/lib/styles/main.css"
 }
