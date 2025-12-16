@@ -8,6 +8,7 @@
     autoHideDelay = 1000,
     thumbMinSize = 40,
     viewportRef = $bindable(null),
+    onscroll,
     children,
   }: ScrollAreaProps = $props();
 
@@ -83,7 +84,7 @@
     }
   }
 
-  function handleScroll() {
+  function handleScroll(event: Event) {
     updateScrollbars();
 
     if (hasVerticalScroll && (orientation === "y" || orientation === "xy")) {
@@ -101,6 +102,8 @@
         if (!isDraggingX) showHorizontal = false;
       }, autoHideDelay);
     }
+
+    onscroll?.(event);
   }
 
   function handleVerticalTrackClick(e: MouseEvent) {

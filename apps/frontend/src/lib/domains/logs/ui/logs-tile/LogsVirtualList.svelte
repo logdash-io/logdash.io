@@ -5,6 +5,7 @@
   import { fade } from 'svelte/transition';
   import { filtersStore } from '../../infrastructure/filters.store.svelte.js';
   import EnhancedLogRow from './log-row/LogRow.svelte';
+  import { ScrollArea } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     logs: Log[];
@@ -12,12 +13,12 @@
   };
 
   const { logs, rendered }: Props = $props();
-  let virtualListRef = $state<HTMLDivElement | null>(null);
   let scrollTop = $state(0);
 
-  function handleScroll(): void {
-    if (virtualListRef) {
-      scrollTop = virtualListRef.scrollTop;
+  function handleScroll(event: Event): void {
+    const target = event.currentTarget as HTMLDivElement;
+    if (target) {
+      scrollTop = target.scrollTop;
     }
   }
 
@@ -43,9 +44,8 @@
     ></div>
   {/if}
 
-  <div
+  <ScrollArea
     class="styled-scrollbar flex h-full max-h-full w-full flex-col gap-1.5 overflow-auto px-2 sm:gap-0 md:overscroll-contain"
-    bind:this={virtualListRef}
     onscroll={handleScroll}
   >
     {#if logs.length === 0 && logsState.hasFilters && !logsState.fetchingLogs}
@@ -100,7 +100,7 @@
         <span class="loading loading-spinner loading-sm opacity-80"></span>
       </div>
     {/if}
-  </div>
+  </ScrollArea>
 
   <div
     class="pointer-events-none absolute bottom-0 left-0 z-10 h-4 w-full"
