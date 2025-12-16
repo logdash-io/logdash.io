@@ -38,7 +38,7 @@
   });
 </script>
 
-<div class={['btn-wrapper z-10 w-full rounded-lg p-[1px]', className]}>
+<div class={['btn-wrapper z-10 w-full rounded-[13px] p-[1px]', className]}>
   <button
     class="btn btn-neutral relative w-full overflow-hidden"
     onclick={() => {
