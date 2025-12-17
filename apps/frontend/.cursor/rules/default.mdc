@@ -20,6 +20,7 @@ instead of naming function in the UI handleSomething, use onSomething instead
 - Maintain a **clear separation of concerns** — don't mix data fetching, UI, and business logic unless explicitly necessary.
 - Distinguish between **smart (container)** and **dumb (presentational)** components.
 - Adhere to a **layered architecture**: `ui → application → infrastructure → domain -> shared`, etc.
+- **Routes should have minimal HTML markup** — the `/routes` directory should only contain thin wrappers. All actual UI components and markup should live in `lib/domains` for ease of navigation.
 
 ### 3. Consistency and standards
 

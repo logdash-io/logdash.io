@@ -8,7 +8,6 @@
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import ClusterCreatorTile from '$lib/domains/app/clusters/ui/ClustersList/ClusterCreatorTile.svelte';
   import { type Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
-  import queryString from 'query-string';
   import ClusterContextMenu from '$lib/domains/app/clusters/ui/ClusterContextMenu.svelte';
 
   type Props = {
@@ -37,14 +36,16 @@
 </script>
 
 {#snippet clusterTile(cluster: Cluster, i: number)}
-  {@const qs = queryString.stringify({
-    project_id: cluster.projects?.[0].id,
-  })}
+  {@const firstProjectId = cluster.projects?.[0]?.id}
   <div
     draggable="false"
     role="button"
     onclick={() => {
-      goto(`/app/clusters/${cluster.id}?${qs}`);
+      if (firstProjectId) {
+        goto(`/app/clusters/${cluster.id}/${firstProjectId}`);
+      } else {
+        goto(`/app/clusters/${cluster.id}`);
+      }
     }}
     class="ld-card-base h-fit w-full cursor-pointer rounded-xl p-7"
   >
@@ -69,7 +70,7 @@
         <div class="w-full gap-2">
           {#each cluster.projects as project}
             <a
-              href={`/app/clusters/${cluster.id}?project_id=${project.id}`}
+              href={`/app/clusters/${cluster.id}/${project.id}`}
               draggable="false"
               role="button"
               onclick={(e) => {

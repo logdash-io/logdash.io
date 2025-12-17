@@ -17,7 +17,7 @@
   const logger = createLogger('ProjectView');
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
   const projectIdToSync = $derived.by(() => {
-    const id = page.url.searchParams.get('project_id');
+    const id = page.params.project_id;
 
     if (!id) {
       logger.error('Synchronization failed due to missing projectId');
@@ -112,7 +112,7 @@
   });
 </script>
 
-<div class="flex w-full max-w-full flex-col gap-4 pb-8 md:flex-row">
+<div class="flex w-full max-w-full flex-col gap-1.5 pb-8 md:flex-row">
   {#if !isPageVisible}
     <div
       in:fade={{ duration: 200, easing: cubicInOut }}

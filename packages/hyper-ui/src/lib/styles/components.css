@@ -57,12 +57,19 @@
   }
 
   .ld-card-base,
+  .ld-card-bg,
   .ld-card {
-    @apply from-base-200 to-base-300 border-base-100 border bg-gradient-to-br shadow-lg;
+    @apply bg-base-200;
+    /* @apply from-base-200 to-base-300 bg-gradient-to-br; */
+  }
+
+  .ld-card-base,
+  .ld-card {
+    @apply border-base-100/50 border shadow-lg;
   }
 
   .ld-card {
-    @apply rounded-3xl px-6 py-6 sm:px-8 sm:py-8;
+    @apply rounded-3xl px-6 py-6 sm:px-6 sm:py-6;
   }
 
   .ld-modal {

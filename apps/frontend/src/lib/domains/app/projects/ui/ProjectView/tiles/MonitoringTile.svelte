@@ -118,7 +118,7 @@
 </script>
 
 <div
-  class="ld-card-base relative w-full overflow-hidden rounded-xl bg-white shadow-sm"
+  class="ld-card-base relative w-full overflow-hidden rounded-3xl bg-white shadow-sm"
 >
   <div
     class="flex w-full flex-col items-end justify-center overflow-hidden p-6"

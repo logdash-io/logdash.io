@@ -15,7 +15,7 @@
 
   const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
   const clusterId = $derived(page.params.cluster_id);
-  const projectId = $derived(page.url.searchParams.get('project_id'));
+  const projectId = $derived(page.params.project_id);
 
   const hasLogging = $derived(
     projectsState.hasFeature(projectId, Feature.LOGGING),
@@ -44,7 +44,7 @@
   <NotificationChannelSetupModal {clusterId} />
 
   {#if (hasLogging || hasMonitoring) && (!previewedMetricId || isMobile) && metricsState.ready}
-    <div class="flex w-full flex-1 flex-col gap-4 overflow-hidden">
+    <div class="flex w-full flex-1 flex-col gap-2 overflow-hidden">
       {#if hasMonitoring}
         <MonitoringTile {projectId} />
       {/if}
@@ -53,7 +53,7 @@
         <DataTile
           delayIn={0}
           delayOut={50}
-          class="overflow-hidden rounded-xl p-0 pt-4"
+          class="overflow-hidden rounded-3xl p-0 pt-3"
         >
           <LogsListTile />
         </DataTile>
@@ -62,7 +62,7 @@
   {/if}
 
   {#if previewedMetricId && projectsState.ready && hasLogging && metricsState.ready}
-    <div class="flex flex-1 flex-col gap-4">
+    <div class="flex flex-1 flex-col gap-3">
       <MetricDetails />
     </div>
   {/if}
@@ -74,7 +74,7 @@
   {/if}
 
   {#if previewedMetricId && projectsState.ready && !hasLogging}
-    <div class="flex flex-1 flex-col gap-4">
+    <div class="flex flex-1 flex-col gap-3">
       <MetricDetails />
     </div>
   {/if}

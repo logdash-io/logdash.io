@@ -18,5 +18,5 @@ export const GET: RequestHandler = async ({ params, url, cookies }) => {
 
   await logdashAPI.claim_monitor(monitorId, get_access_token(cookies));
 
-  redirect(303, `/app/clusters/${params.cluster_id}?project_id=${projectId}`);
+  redirect(303, `/app/clusters/${params.cluster_id}/${projectId}`);
 };

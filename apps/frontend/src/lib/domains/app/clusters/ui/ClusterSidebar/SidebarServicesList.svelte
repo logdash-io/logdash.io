@@ -8,10 +8,12 @@
   import { Tooltip } from '@logdash/hyper-ui/presentational';
 
   const currentCluster = $derived(clustersState.get(page.params.cluster_id));
-  const activeProjectId = $derived(page.url.searchParams.get('project_id'));
+  const activeProjectId = $derived(
+    page.params.project_id || page.url.searchParams.get('project_id'),
+  );
 
   function onServiceSelect(projectId: string): void {
-    goto(`/app/clusters/${page.params.cluster_id}?project_id=${projectId}`);
+    goto(`/app/clusters/${page.params.cluster_id}/${projectId}`);
   }
 
   function getServiceHealthStatus(projectId: string): boolean | null {
@@ -28,9 +30,7 @@
 </script>
 
 <div class="flex flex-1 flex-col gap-1">
-  <span
-    class="px-2 text-xs font-medium uppercase tracking-wide text-base-content/50"
-  >
+  <span class="p-2 text-sm font-medium tracking-wide text-base-content/50">
     Services
   </span>
   <nav class="flex flex-col gap-0.5">
@@ -41,10 +41,10 @@
       <button
         onclick={() => onServiceSelect(project.id)}
         class={[
-          'flex w-full items-center gap-2 rounded-xl px-3.5 py-1.5 cursor-pointer',
+          'flex text-sm w-full items-center gap-2 rounded-lg p-2 cursor-pointer',
           {
             'bg-base-100 text-base-content': isActive,
-            'hover:bg-base-200': !isActive,
+            'hover:bg-base-100/80': !isActive,
           },
         ]}
       >

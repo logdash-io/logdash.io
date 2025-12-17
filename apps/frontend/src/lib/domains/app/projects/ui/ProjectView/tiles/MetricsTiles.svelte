@@ -34,42 +34,11 @@
   });
 </script>
 
-{#snippet header()}
-  <div
-    class="bg-primary ring-primary absolute top-0 left-0 z-0 flex h-12 w-full items-start justify-between rounded-t-lg text-sm leading-6 ring"
-  >
-    <div
-      transition:fly={{
-        duration: 200,
-        easing: cubicInOut,
-        y: 5,
-      }}
-      class="flex h-full w-full items-start justify-between gap-3 overflow-hidden px-3 py-1.5"
-    >
-      <span>Previewing</span>
-
-      <button
-        class="btn btn-secondary btn-soft btn-xs"
-        onclick={() => {
-          page.url.searchParams.delete('metric_id');
-          goto(page.url.href);
-        }}
-        data-posthog-id="close-metric-preview-button"
-      >
-        Close
-        <XIcon class="h-3.5 w-3.5" />
-      </button>
-    </div>
-  </div>
-{/snippet}
-
-{#snippet emptyHeader()}{/snippet}
-
 <MetricsListener>
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-1.5">
     {#if metricsState.simplifiedMetrics.length >= currentMetricsLimit && !isDemoDashboard}
       <div
-        class="bg-primary/20 text-primary flex w-full items-center gap-2 rounded-lg px-3 py-1.5"
+        class="bg-primary/20 text-primary flex w-full items-center gap-2 rounded-full px-3 py-1.5"
       >
         <AlertTriangleIcon class="text-primary h-4 w-4 shrink-0" />
         <span class="text-sm">
@@ -112,3 +81,34 @@
     {/each}
   </div>
 </MetricsListener>
+
+{#snippet header()}
+  <div
+    class="bg-primary ring-primary absolute top-0 left-0 z-0 flex h-12 w-full items-start justify-between rounded-t-lg text-sm leading-6 ring"
+  >
+    <div
+      transition:fly={{
+        duration: 200,
+        easing: cubicInOut,
+        y: 5,
+      }}
+      class="flex h-full w-full items-start justify-between gap-3 overflow-hidden px-3 py-1.5"
+    >
+      <span>Previewing</span>
+
+      <button
+        class="btn btn-secondary btn-soft btn-xs"
+        onclick={() => {
+          page.url.searchParams.delete('metric_id');
+          goto(page.url.href);
+        }}
+        data-posthog-id="close-metric-preview-button"
+      >
+        Close
+        <XIcon class="h-3.5 w-3.5" />
+      </button>
+    </div>
+  </div>
+{/snippet}
+
+{#snippet emptyHeader()}{/snippet}

@@ -22,7 +22,7 @@
       onclick={() => {
         tryingToClaim = true;
         goto(
-          `/app/clusters/${page.params.cluster_id}?project_id=${page.url.searchParams.get('project_id')}`,
+          `/app/clusters/${page.params.cluster_id}/${page.params.project_id}`,
           {
             invalidateAll: true,
           },

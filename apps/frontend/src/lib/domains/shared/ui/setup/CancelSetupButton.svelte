@@ -14,9 +14,7 @@
 <a
   class="text-secondary/60 text-xs whitespace-nowrap"
   data-posthog-id="{id}-cancel-setup-button"
-  href={isSettingUp
-    ? `/features`
-    : `/app/clusters/${clusterId}?project_id=${projectId}`}
+  href={isSettingUp ? `/features` : `/app/clusters/${clusterId}/${projectId}`}
 >
   Cancel
 </a>
