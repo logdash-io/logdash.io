@@ -19,7 +19,7 @@
   const pingsCount = $derived(displayPings.length);
 </script>
 
-<div class={["w-full space-y-2", className]}>
+<div class={["w-full space-y-2 overflow-hidden", className]}>
   <StatusHistoryBar pings={displayPings} height={6} />
 
   <div

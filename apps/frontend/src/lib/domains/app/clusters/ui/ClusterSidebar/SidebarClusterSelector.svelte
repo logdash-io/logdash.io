@@ -67,11 +67,11 @@
           class={[
             'size-7 rounded-md flex items-center justify-center',
             {
-              'bg-primary/20 border border-primary/5': currentCluster,
+              'bg-primary/15 border border-primary/5': currentCluster,
             },
           ]}
         >
-          <CubeIcon class="size-4.5 shrink-0" />
+          <CubeIcon class="size-4.5 shrink-0 text-primary" />
         </div>
         {currentCluster?.name || 'Select cluster'}
       </span>

@@ -21,8 +21,8 @@
   <NotificationChannelSetupModal {clusterId} />
 
   {#if hasMonitoring && projectsState.ready}
-    <div class="flex w-full flex-1 flex-col gap-4 overflow-hidden">
-      <MonitoringTile {projectId} />
+    <div class="flex w-full flex-1 flex-col gap-4 overflow-hidden max-w-3xl">
+      <MonitoringTile {projectId} expanded={true} />
     </div>
   {:else if projectsState.ready}
     <EmptyState />

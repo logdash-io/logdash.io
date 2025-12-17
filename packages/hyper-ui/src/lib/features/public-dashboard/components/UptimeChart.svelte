@@ -54,9 +54,9 @@
   }
 </script>
 
-<div class={["w-full space-y-2", className]}>
+<div class={["w-full space-y-2 overflow-hidden", className]}>
   <div
-    class="flex w-full items-end"
+    class="flex w-full items-end overflow-hidden"
     style="height: {height}px; gap: {GAP_PX}px;"
   >
     {#if segments.length === 0}
@@ -68,7 +68,10 @@
     {:else}
       {#each segments as segment, index (index)}
         {@const colorClass = statusColors[segment.status]}
-        <div class="min-w-2" style="flex-grow: {segment.bucketCount};">
+        <div
+          class="min-w-0.5 flex-shrink"
+          style="flex-grow: {segment.bucketCount};"
+        >
           <Tooltip content={getTooltipContent(segment)} placement="top">
             <div
               class={[
