@@ -217,7 +217,7 @@
       </p>
     </div>
 
-    <div class="flex items-center justify-between px-6 py-4 ld-card-bg">
+    <div class="flex items-center justify-between px-6 py-4">
       <div class="flex items-center gap-4">
         <div class="rounded-lg bg-error/10 p-2.5">
           <Trash2Icon class="h-5 w-5 text-error" />

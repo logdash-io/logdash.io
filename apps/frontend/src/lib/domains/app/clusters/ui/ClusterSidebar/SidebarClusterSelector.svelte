@@ -4,7 +4,7 @@
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { ChevronDownIcon } from 'lucide-svelte';
+  import { ChevronDownIcon, ChevronRightIcon } from 'lucide-svelte';
 
   const currentCluster = $derived(clustersState.get(page.params.cluster_id));
 
@@ -31,7 +31,7 @@
           <button
             onclick={() => onClusterSelect(cluster.id, close)}
             class={[
-              'flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-left',
+              'flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-left text-sm',
               {
                 'bg-base-100': isActive,
                 'hover:bg-base-100': !isActive,
@@ -54,22 +54,30 @@
     class="w-full"
     content={clusterDropdownMenu}
     interactive={true}
-    placement="bottom"
+    placement="right"
+    align="top"
     trigger="click"
     closeOnOutsideTooltipClick={true}
   >
     <button
-      class="flex items-center cursor-pointer justify-between gap-2 hover:bg-base-100 rounded-lg p-1.5"
+      class="flex group items-center cursor-pointer justify-between gap-1.5 hover:bg-base-100 rounded-lg p-1 pr-2 w-full select-none"
     >
       <span class="flex items-center gap-2 truncate font-medium">
         <div
-          class="size-7 bg-primary/30 border border-primary/20 rounded-lg flex items-center justify-center"
+          class={[
+            'size-7 rounded-md flex items-center justify-center',
+            {
+              'bg-primary/20 border border-primary/5': currentCluster,
+            },
+          ]}
         >
-          <CubeIcon class="size-5 shrink-0" />
+          <CubeIcon class="size-4.5 shrink-0" />
         </div>
         {currentCluster?.name || 'Select cluster'}
       </span>
-      <ChevronDownIcon class="h-4 w-4 shrink-0" />
+      <ChevronRightIcon
+        class="size-4.5 shrink-0 text-base-content/50 group-hover:translate-x-0.5 transition-transform group-hover:text-base-content"
+      />
     </button>
   </Tooltip>
 </div>

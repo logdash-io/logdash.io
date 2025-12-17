@@ -79,7 +79,7 @@
   );
 
   const tabClass = (active: boolean) => [
-    'px-4 py-2 text-sm font-medium transition-colors rounded-lg',
+    'px-4 py-2 text-sm font-medium transition-colors ld-card-rounding',
     {
       'bg-base-100 text-base-content shadow-sm': active,
       'text-base-content/70 hover:text-base-content hover:bg-base-100/50':
@@ -88,9 +88,7 @@
   ];
 </script>
 
-<div
-  class="sticky top-0 z-20 flex items-center gap-2 bg-base-300/20 px-4 py-3 backdrop-blur-sm"
->
+<div class="z-20 flex items-center gap-2 bg-base-300/20 px-4 backdrop-blur-sm">
   {#if hasMissingFeatures && projectsState.ready}
     <Tooltip
       content={addFeaturesMenu}

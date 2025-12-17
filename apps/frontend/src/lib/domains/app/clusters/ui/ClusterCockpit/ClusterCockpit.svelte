@@ -48,15 +48,13 @@
   }
 </script>
 
-<div class="flex w-full flex-col gap-6 p-6">
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold">{cluster?.name || 'Project'}</h1>
-      <p class="text-base-content/60 text-sm">Overview of all services</p>
-    </div>
+<div class="flex w-full flex-col gap-4 p-3">
+  <div class="flex items-start flex-col">
+    <h1 class="text-xl font-semibold">{cluster?.name || 'Project'}</h1>
+    <p class="text-base-content/60 text-sm">Services overview</p>
   </div>
 
-  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+  <div class="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
     {#each cluster?.projects || [] as project}
       {@const healthStatus = getServiceHealthStatus(project.id)}
       {@const projectHasMonitor = hasMonitor(project.id)}
@@ -66,7 +64,7 @@
 
       <button
         onclick={() => onServiceSelect(project.id)}
-        class="ld-card-base group flex cursor-pointer flex-col gap-4 rounded-2xl p-4 transition-all hover:bg-base-100/50"
+        class="ld-card-base group flex cursor-pointer flex-col gap-4 ld-card-rounding p-4 transition-all hover:bg-base-100/50"
       >
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-3">

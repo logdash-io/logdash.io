@@ -5,7 +5,8 @@
   import { logger } from '$lib/domains/shared/logger';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import { ChevronDownIcon, TrendingUpIcon } from 'lucide-svelte';
+  import TrendingLinesIcon from '$lib/domains/shared/icons/TrendingLinesIcon.svelte';
+  import { ChevronDownIcon } from 'lucide-svelte';
   import MonitorContextMenu from '../../monitor-status/MonitorContextMenu.svelte';
   import NotificationChannelsContextMenu from '../../notification-channels/NotificationChannelsContextMenu.svelte';
   import { MonitoringTimeRangeSelector } from '../../presentational/monitoring/index.js';
@@ -118,7 +119,7 @@
 </script>
 
 <div
-  class="ld-card-base relative w-full overflow-hidden rounded-3xl bg-white shadow-sm"
+  class="ld-card-bg ld-card-border ld-card-rounding relative w-full overflow-hidden"
 >
   <div
     class="flex w-full flex-col items-end justify-center overflow-hidden p-6"
@@ -148,7 +149,7 @@
     </div>
 
     <div
-      class="z-10 flex w-full cursor-default justify-end overflow-hidden sm:mt-2"
+      class="z-10 flex w-full cursor-default overflow-hidden sm:mt-2"
       bind:clientWidth={pingsChartWidth}
     >
       <PingChart
@@ -157,7 +158,6 @@
           ...ping,
           createdAt: ping.createdAt.toISOString(),
         }))}
-        adaptToWidth={true}
       />
     </div>
   </div>
@@ -181,13 +181,12 @@
       {/if}
 
       <div
-        class="mb-1 flex flex-wrap items-center justify-between gap-6 text-sm"
+        class="mb-2 flex flex-wrap items-center justify-between gap-6 text-sm"
       >
         <div class="flex items-center gap-2">
-          <TrendingUpIcon class="text-success h-4 w-4" />
-          <span class="text-gray-600 dark:text-gray-300">
+          <span class="text-base-content/80">
             {timeRange === '90h' ? '90-hour' : '90-day'} Uptime:
-            <span class="font-mono font-medium text-gray-900 dark:text-white">
+            <span class="font-mono font-medium text-base-content">
               {uptime?.toFixed(2)}%
             </span>
           </span>
@@ -204,16 +203,10 @@
         <UptimeChart
           buckets={pingBuckets}
           maxBucketsToShow={90}
-          adaptToWidth={true}
           timeLabel={timeRange === '90h' ? 'hours ago' : 'days ago'}
         />
       {:else}
-        <UptimeChart
-          buckets={pingBuckets}
-          adaptToWidth={true}
-          timeLabel="days ago"
-          class=""
-        />
+        <UptimeChart buckets={pingBuckets} timeLabel="days ago" />
       {/if}
     </div>
   </div>

@@ -60,20 +60,25 @@
   .ld-card-bg,
   .ld-card {
     @apply bg-base-200;
-    /* @apply from-base-200 to-base-300 bg-gradient-to-br; */
   }
 
   .ld-card-base,
-  .ld-card {
-    @apply border-base-100/50 border shadow-lg;
+  .ld-card,
+  .ld-card-border {
+    @apply border-base-100/50 border;
+  }
+
+  .ld-card,
+  .ld-card-rounding {
+    @apply rounded-3xl;
   }
 
   .ld-card {
-    @apply rounded-3xl px-6 py-6 sm:px-6 sm:py-6;
+    @apply px-6 py-6 sm:px-6 sm:py-6;
   }
 
   .ld-modal {
-    @apply from-base-200 to-base-300 border-base-100/50 rounded-3xl border bg-gradient-to-br p-8 shadow-lg;
+    @apply from-base-200 to-base-300 border-base-100/50 rounded-2xl border bg-gradient-to-br p-8 shadow-lg;
   }
 
   .status {

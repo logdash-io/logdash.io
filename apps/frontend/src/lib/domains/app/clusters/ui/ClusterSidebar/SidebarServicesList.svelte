@@ -6,11 +6,13 @@
   import MonitorStatus from '$lib/domains/app/projects/ui/monitor-status/MonitorStatus.svelte';
   import HexagonIcon from '$lib/domains/shared/icons/HexagonIcon.svelte';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import SidebarMenuItem from './SidebarMenuItem.svelte';
 
   const currentCluster = $derived(clustersState.get(page.params.cluster_id));
   const activeProjectId = $derived(
     page.params.project_id || page.url.searchParams.get('project_id'),
   );
+  const clusterId = $derived(page.params.cluster_id);
 
   function onServiceSelect(projectId: string): void {
     goto(`/app/clusters/${page.params.cluster_id}/${projectId}`);
@@ -38,15 +40,10 @@
       {@const isActive = project.id === activeProjectId}
       {@const healthStatus = getServiceHealthStatus(project.id)}
       {@const projectHasMonitor = hasMonitor(project.id)}
-      <button
+      <SidebarMenuItem
         onclick={() => onServiceSelect(project.id)}
-        class={[
-          'flex text-sm w-full items-center gap-2 rounded-lg p-2 cursor-pointer',
-          {
-            'bg-base-100 text-base-content': isActive,
-            'hover:bg-base-100/80': !isActive,
-          },
-        ]}
+        {isActive}
+        disabled={!clusterId}
       >
         {#if projectHasMonitor}
           {#snippet monitorTooltipContent()}
@@ -65,7 +62,7 @@
           <HexagonIcon class="size-4 shrink-0 text-base-content/30" />
         {/if}
         <span class="truncate">{project.name}</span>
-      </button>
+      </SidebarMenuItem>
     {/each}
   </nav>
 </div>

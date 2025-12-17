@@ -13,17 +13,18 @@
   const posthog = getContext<PostHog>('posthog');
 </script>
 
-<div class="mt-auto">
+<div class="mt-auto p-1">
   <Tooltip
     class="w-full"
     content={userProfileMenu}
     interactive={true}
-    placement="top"
+    placement="right"
+    align="bottom"
     trigger="click"
     closeOnOutsideTooltipClick={true}
   >
     <button
-      class="flex w-full items-center gap-3 rounded-lg px-2 py-2 hover:bg-base-200"
+      class="flex w-full items-center gap-3 rounded-2xl px-2 py-2 hover:bg-base-100 cursor-pointer"
     >
       <div
         class={[
@@ -64,9 +65,7 @@
 </div>
 
 {#snippet userProfileMenu()}
-  <ul
-    class="menu dropdown-content ld-card-base rounded-box z-1 w-56 p-2 shadow"
-  >
+  <ul class="menu dropdown-content ld-card-base rounded-2xl z-1 w-56 p-2">
     {#if userState.canUpgrade}
       <UpgradeButton class="mb-1" source="nav-menu" />
     {/if}
@@ -74,7 +73,7 @@
     {#if userState.hasBilling}
       <li>
         <a
-          class="flex w-full items-center gap-3"
+          class="flex w-full items-center gap-3 rounded-xl"
           onclick={() => {
             goto('/app/api/user/billing');
           }}
@@ -87,7 +86,7 @@
 
     {#if userState.isPro}
       <li>
-        <label class="flex w-full cursor-pointer items-center gap-3">
+        <label class="flex w-full cursor-pointer items-center gap-3 rounded-xl">
           <input
             type="checkbox"
             class="checkbox checkbox-xs checkbox-primary"
@@ -103,7 +102,7 @@
 
     <li>
       <a
-        class="flex w-full items-center gap-3"
+        class="flex w-full items-center gap-3 rounded-xl"
         onclick={() => {
           posthog.reset();
         }}

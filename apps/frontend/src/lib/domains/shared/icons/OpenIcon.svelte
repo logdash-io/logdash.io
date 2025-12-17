@@ -9,19 +9,23 @@
   xmlns="http://www.w3.org/2000/svg"
 >
   <path
-    d="M9.02 2.84004L3.63 7.04004C2.73 7.74004 2 9.23004 2 10.36V17.77C2 20.09 3.89 21.99 6.21 21.99H17.79C20.11 21.99 22 20.09 22 17.78V10.5C22 9.29004 21.19 7.74004 20.2 7.05004L14.02 2.72004C12.62 1.74004 10.37 1.79004 9.02 2.84004Z"
+    d="M12 3C4.5885 3 3 4.5885 3 12C3 19.4115 4.5885 21 12 21C19.4115 21 21 19.4115 21 12"
     stroke="currentColor"
-    stroke-width="1.5"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+  <path
+    d="M20.5 3.5L15 9"
+    stroke="currentColor"
+    stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
   <path
-    d="M12 17.99V14.99"
+    d="M16 3H20.6717C20.853 3 21 3.14703 21 3.32837V8"
     stroke="currentColor"
-    stroke-width="1.5"
+    stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
 </svg>
-
-

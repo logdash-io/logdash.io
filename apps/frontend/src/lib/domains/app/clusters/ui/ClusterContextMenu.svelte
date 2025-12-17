@@ -2,14 +2,18 @@
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-  import { PenLineIcon, SettingsIcon, Trash2Icon, Users } from 'lucide-svelte';
+  import { PenLineIcon, Trash2Icon, Users } from 'lucide-svelte';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { clusterInvitesState } from '$lib/domains/app/clusters/application/cluster-invites.state.svelte.js';
+  import CircularHealthChart, {
+    type ServiceStatus,
+  } from '$lib/domains/app/clusters/ui/ClustersList/CircularHealthChart.svelte';
 
   type Props = {
     clusterId: string;
+    services?: { id: string; status: ServiceStatus }[];
   };
-  const { clusterId }: Props = $props();
+  const { clusterId, services = [] }: Props = $props();
   const cluster = $derived(clustersState.get(clusterId));
 </script>
 
@@ -115,12 +119,12 @@
 
 <Tooltip content={menu} interactive={true} placement="bottom">
   <button
-    class="btn btn-circle ld-card-base gap-1"
+    class="cursor-pointer"
     data-posthog-id="cluster-settings-button"
     onclick={(e) => {
       e.stopPropagation();
     }}
   >
-    <SettingsIcon class="h-5 w-5" />
+    <CircularHealthChart {services} size={24} strokeWidth={3} gapSize={4} />
   </button>
 </Tooltip>

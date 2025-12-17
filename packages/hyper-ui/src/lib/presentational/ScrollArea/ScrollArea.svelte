@@ -229,7 +229,14 @@
 <div class="scroll-area-root relative overflow-hidden {className}">
   <div
     bind:this={viewport}
-    class="scroll-area-viewport z-0 h-full w-full overflow-auto"
+    class={[
+      "scroll-area-viewport z-0 h-full w-full",
+      {
+        "overflow-auto": orientation === "xy",
+        "overflow-x-auto": orientation === "x",
+        "overflow-y-auto": orientation === "y",
+      },
+    ]}
     onscroll={handleScroll}
   >
     {@render children()}

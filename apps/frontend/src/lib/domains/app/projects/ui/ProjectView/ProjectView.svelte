@@ -44,7 +44,7 @@
   <NotificationChannelSetupModal {clusterId} />
 
   {#if (hasLogging || hasMonitoring) && (!previewedMetricId || isMobile) && metricsState.ready}
-    <div class="flex w-full flex-1 flex-col gap-2 overflow-hidden">
+    <div class="flex w-full flex-1 flex-col gap-1.5 overflow-hidden">
       {#if hasMonitoring}
         <MonitoringTile {projectId} />
       {/if}
@@ -53,7 +53,7 @@
         <DataTile
           delayIn={0}
           delayOut={50}
-          class="overflow-hidden rounded-3xl p-0 pt-3"
+          class="overflow-hidden ld-card-rounding p-0 pt-3"
         >
           <LogsListTile />
         </DataTile>

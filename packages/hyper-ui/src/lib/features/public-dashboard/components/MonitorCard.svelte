@@ -103,9 +103,9 @@
       <div class="flex flex-wrap gap-6 text-sm">
         <div class="mb-1 flex items-center gap-2">
           <TrendingUpIcon class="text-success h-4 w-4" />
-          <span class="text-gray-600 dark:text-gray-300">
+          <span class="text-base-content/80">
             90-day Uptime:
-            <span class="font-mono font-medium text-gray-900 dark:text-white">
+            <span class="font-mono font-medium text-base-content">
               {uptime.toFixed(2)}%
             </span>
           </span>

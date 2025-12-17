@@ -24,12 +24,10 @@
 <div class="w-full h-dvh flex">
   <ClusterSidebar />
 
-  <ScrollArea
-    class="relative mx-auto flex h-full w-full flex-col gap-4 p-4 pt-0 lg:p-0"
-  >
+  <ScrollArea class="relative mx-auto flex h-full w-full flex-col">
     <ResponsiveSkyBackground />
-    <div class="mx-auto flex h-full max-h-full w-full xl:w-7xl">
-      <div class="relative flex h-full w-full flex-col items-center">
+    <div class="mx-auto flex h-full max-h-full w-full">
+      <div class="relative flex h-full w-full flex-col items-center p-3">
         <PendingInvitations />
         {@render children()}
       </div>
