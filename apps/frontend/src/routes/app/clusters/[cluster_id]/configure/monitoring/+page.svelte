@@ -27,12 +27,9 @@
         tryingToClaim = true;
         await monitoringService.claimMonitor(monitorId);
 
-        goto(
-          `/app/clusters/${page.params.cluster_id}/?project_id=${data.project_id}`,
-          {
-            invalidateAll: true,
-          },
-        );
+        goto(`/app/clusters/${page.params.cluster_id}/${data.project_id}`, {
+          invalidateAll: true,
+        });
       }}
       in:fade={{ duration: 100 }}
       class={['btn btn-primary flex-1 whitespace-nowrap']}

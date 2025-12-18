@@ -14,7 +14,7 @@
     clusterId: string;
   };
   const { clusterId }: Props = $props();
-  const projectId = $derived(page.url.searchParams.get('project_id'));
+  const projectId = $derived(page.params.project_id);
 
   const hasLogging = $derived(
     projectsState.hasFeature(projectId, Feature.LOGGING),
@@ -36,9 +36,7 @@
         <button
           in:fly={{ y: -2, duration: 100 }}
           onclick={() => {
-            goto(
-              `/app/clusters/${clusterId}/configure/logging?project_id=${page.url.searchParams.get('project_id')}`,
-            );
+            goto(`/app/clusters/${clusterId}/${projectId}/configure/logging`);
           }}
           class="flex w-full items-center justify-between"
         >
@@ -53,9 +51,7 @@
         <button
           in:fly={{ y: -2, duration: 100 }}
           onclick={() => {
-            goto(
-              `/app/clusters/${clusterId}/configure/metrics?project_id=${page.url.searchParams.get('project_id')}`,
-            );
+            goto(`/app/clusters/${clusterId}/${projectId}/configure/metrics`);
           }}
           class="flex w-full items-center justify-between"
         >
@@ -72,7 +68,7 @@
           canAddMore={true}
           onSubmit={({ name, mode }) => {
             const params = new URLSearchParams({
-              project_id: page.url.searchParams.get('project_id'),
+              project_id: projectId,
               mode,
             });
 
@@ -83,7 +79,7 @@
             }
 
             goto(
-              `/app/clusters/${clusterId}/configure/monitoring?${params.toString()}`,
+              `/app/clusters/${clusterId}/${projectId}/configure/monitoring?${params.toString()}`,
             );
           }}
         >

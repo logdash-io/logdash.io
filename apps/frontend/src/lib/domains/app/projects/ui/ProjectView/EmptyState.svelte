@@ -32,6 +32,7 @@
 
   <div class="flex w-full flex-col gap-4 sm:w-3/5">
     {#each FEATURES as feature, i}
+      {@const projectId = page.params.project_id}
       <DataTile class="group" delayIn={i * 15}>
         <div
           class="text-secondary/60 group-hover:text-secondary flex flex-col items-start justify-between gap-4 transition-all"
@@ -47,7 +48,7 @@
                 canAddMore={true}
                 onSubmit={({ name, mode }) => {
                   const params = new URLSearchParams({
-                    project_id: page.url.searchParams.get('project_id'),
+                    project_id: projectId,
                     mode,
                   });
 
@@ -75,9 +76,8 @@
                   }
 
                   goto(
-                    `/app/clusters/${page.params.cluster_id}/configure/${feature.id}?project_id=${page.url.searchParams.get(
-                      'project_id',
-                    )}`,
+                    // todo change to `/app/clusters/${page.params.cluster_id}/${projectId}/configure/${feature.id}`,
+                    `/app/clusters/${page.params.cluster_id}/configure/${feature.id}/${projectId}`,
                   );
                 }}
               >

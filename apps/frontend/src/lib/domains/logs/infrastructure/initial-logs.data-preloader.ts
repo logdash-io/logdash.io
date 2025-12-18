@@ -4,14 +4,20 @@ import { get_access_token } from '$lib/domains/shared/utils/cookies.utils';
 import type { ServerLoadEvent } from '@sveltejs/kit';
 import type { Log } from '$lib/domains/logs/domain/log.js';
 
-export class InitialLogsDataPreloader implements DataPreloader<{
-  initialLogs: Log[];
-}> {
+export class InitialLogsDataPreloader
+  implements
+    DataPreloader<{
+      initialLogs: Log[];
+    }>
+{
   async preload({
     cookies,
     url,
+    params,
   }: ServerLoadEvent): Promise<{ initialLogs: Log[] }> {
-    if (!url.searchParams.has('project_id')) {
+    const projectId = params.project_id || url.searchParams.get('project_id');
+
+    if (!projectId) {
       return {
         initialLogs: [],
       };
@@ -19,7 +25,7 @@ export class InitialLogsDataPreloader implements DataPreloader<{
 
     const initialLogs =
       (await logdashAPI.get_project_logs(
-        url.searchParams.get('project_id'),
+        projectId,
         get_access_token(cookies),
       )) || [];
 

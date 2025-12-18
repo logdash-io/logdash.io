@@ -82,10 +82,9 @@
         projectsState
           .createProject(page.params.cluster_id, name)
           .then((projectId) => {
-            goto(
-              `/app/clusters/${page.params.cluster_id}/?project_id=${projectId}`,
-              { replaceState: true },
-            );
+            goto(`/app/clusters/${page.params.cluster_id}/${projectId}`, {
+              replaceState: true,
+            });
             toast.success(
               `Service ${name} created successfully, you can now configure it.`,
               5000,

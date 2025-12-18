@@ -12,7 +12,7 @@
 
 {#snippet claimer(hasLogs: boolean)}
   <ProjectClaimer
-    nextUrl={`/app/clusters/${clusterId}?project_id=${data.project_id}`}
+    nextUrl={`/app/clusters/${clusterId}/${data.project_id}`}
     canClaim={hasLogs}
   />
 {/snippet}

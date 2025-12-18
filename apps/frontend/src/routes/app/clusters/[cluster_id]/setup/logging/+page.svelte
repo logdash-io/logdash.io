@@ -11,7 +11,7 @@
 
 {#snippet claimer(hasLogs: boolean)}
   <ProjectClaimer
-    nextUrl={`/app/clusters/${page.params.cluster_id}?project_id=${data.project_id}`}
+    nextUrl={`/app/clusters/${page.params.cluster_id}/${data.project_id}`}
     canClaim={hasLogs}
   />
 {/snippet}

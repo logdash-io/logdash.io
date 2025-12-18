@@ -57,16 +57,28 @@
   }
 
   .ld-card-base,
+  .ld-card-bg,
   .ld-card {
-    @apply from-base-200 to-base-300 border-base-100 border bg-gradient-to-br shadow-lg;
+    @apply bg-base-200;
+  }
+
+  .ld-card-base,
+  .ld-card,
+  .ld-card-border {
+    @apply border-base-100/50 border;
+  }
+
+  .ld-card,
+  .ld-card-rounding {
+    @apply rounded-3xl;
   }
 
   .ld-card {
-    @apply rounded-3xl px-6 py-6 sm:px-8 sm:py-8;
+    @apply px-6 py-6 sm:px-6 sm:py-6;
   }
 
   .ld-modal {
-    @apply from-base-200 to-base-300 border-base-100/50 rounded-3xl border bg-gradient-to-br p-8 shadow-lg;
+    @apply from-base-200 to-base-300 border-base-100/50 rounded-2xl border bg-gradient-to-br p-8 shadow-lg;
   }
 
   .status {

@@ -35,7 +35,7 @@
       data-posthog-id="share-feedback-button"
     >
       <LightbulbIcon class="size-4 text-amber-400" />
-      Feedback?
+      Suggest improvement
     </button>
 
     {#if open}

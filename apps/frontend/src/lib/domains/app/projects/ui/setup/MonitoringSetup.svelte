@@ -8,9 +8,9 @@
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import CancelSetupButton from '$lib/domains/shared/ui/setup/CancelSetupButton.svelte';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import { envConfig } from '$lib/domains/shared/utils/env-config';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
-  import { envConfig, StatusBar } from '@logdash/hyper-ui';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { PingChart } from '@logdash/hyper-ui/features';
   import { CheckCircle, CopyIcon } from 'lucide-svelte';
   import { onMount, type Snippet } from 'svelte';
   import { match, P } from 'ts-pattern';
@@ -43,17 +43,12 @@
   const isHealthy = $derived(
     monitorId ? monitoringState.hasSuccessfulPing(monitorId) : false,
   );
+  const PINGS_VISIBLE = 80;
   const pings = $derived.by(() =>
     monitorId
-      ? monitoringState
-          .monitoringPings(monitorId)
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          )
+      ? monitoringState.monitoringPings(monitorId).slice(-PINGS_VISIBLE)
       : [],
   );
-  const PINGS_VISIBLE = 80;
 
   let nowMs = $state(Date.now());
   const nextCheckInMs = $derived(
@@ -167,23 +162,13 @@
       <div class="space-y-1">
         <p class="text-xs opacity-60">Latest pings</p>
 
-        <div class="flex w-full flex-row justify-end overflow-hidden">
-          {#each Array(PINGS_VISIBLE) as _, index}
-            {@const ping = pings[PINGS_VISIBLE - index - 1]}
-            {@const isHealthy =
-              ping?.statusCode >= 200 && ping?.statusCode < 400}
-            {@const isUnknown = ping === undefined}
-            {@const pingStatus = isHealthy
-              ? 'healthy'
-              : isUnknown
-                ? 'unknown'
-                : 'unhealthy'}
-
-            <Tooltip content={`${ping?.createdAt} ${index}`} placement="top">
-              <StatusBar status={pingStatus} />
-            </Tooltip>
-          {/each}
-        </div>
+        <PingChart
+          maxPingsToShow={PINGS_VISIBLE}
+          pings={pings.map((ping) => ({
+            ...ping,
+            createdAt: ping.createdAt.toISOString(),
+          }))}
+        />
       </div>
     </div>
   </DataTile>
