@@ -2,7 +2,7 @@
   import SkyBackground from '$lib/domains/shared/upgrade/SkyBackground.svelte';
   import { type UpgradeSource } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
-  import { RocketIcon } from 'lucide-svelte';
+  import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
   import type { PostHog } from 'posthog-js';
   import { getContext, onDestroy, type Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';

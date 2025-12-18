@@ -15,7 +15,8 @@
   const { children }: Props = $props();
 
   const logger = createLogger('ProjectView');
-  const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
+  const previewedMetricId = $derived(page.params.metric_id);
+  const clusterId = $derived(page.params.cluster_id);
   const projectIdToSync = $derived.by(() => {
     const id = page.params.project_id;
 
@@ -82,8 +83,7 @@
       metricsState.ready &&
       !metricsState.getById(previewedMetricId)
     ) {
-      page.url.searchParams.delete('metric_id');
-      goto(page.url.href);
+      goto(`/app/clusters/${clusterId}/${projectIdToSync}/metrics`);
     }
   });
 
@@ -121,13 +121,13 @@
     ></div>
 
     <div
-      class="bg-secondary text-secondary-content fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg px-3 py-2 shadow-lg md:bottom-8"
+      class="bg-secondary text-secondary-content fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-2 shadow-lg md:bottom-8"
       in:fly={{ duration: 200, easing: cubicInOut, y: 50 }}
       out:fly={{ delay: 300, duration: 200, easing: cubicInOut, y: 50 }}
     >
-      <div class="flex items-center gap-2">
-        <div class="loading loading-spinner loading-sm"></div>
-        <span>Resuming data sync...</span>
+      <div class="flex items-center gap-2 text-sm font-medium">
+        <div class="loading loading-spinner loading-xs"></div>
+        <span>Updating...</span>
       </div>
     </div>
   {/if}

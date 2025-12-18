@@ -43,9 +43,22 @@
 
   const currentPath = $derived(page.url.pathname);
 
-  const isActive = (path: string) => {
+  const metricsPath = $derived.by(() => {
+    const lastPreviewedId = metricsState.getLastPreviewedMetricId(projectId);
+    const metricId =
+      lastPreviewedId && metricsState.getById(lastPreviewedId)
+        ? lastPreviewedId
+        : metricsState.simplifiedMetrics[0]?.id;
+
+    return metricId ? `${basePath}/metrics/${metricId}` : `${basePath}/metrics`;
+  });
+
+  const isActive = (tabId: string, path: string) => {
     if (path === basePath) {
       return currentPath === basePath || currentPath === `${basePath}/`;
+    }
+    if (tabId === 'metrics') {
+      return currentPath.startsWith(`${basePath}/metrics`);
     }
     return currentPath.startsWith(path);
   };
@@ -68,7 +81,7 @@
     {
       id: 'metrics',
       label: 'Metrics',
-      path: `${basePath}/metrics`,
+      path: metricsPath,
       always: false,
       icon: MetricsIcon,
     },
@@ -132,7 +145,10 @@
     {#each visibleTabs as tab}
       <a
         href={tab.path}
-        class={[...tabClass(isActive(tab.path)), 'flex items-center gap-1.5']}
+        class={[
+          ...tabClass(isActive(tab.id, tab.path)),
+          'flex items-center gap-1.5',
+        ]}
       >
         <tab.icon class="h-4 w-4" />
         {tab.label}

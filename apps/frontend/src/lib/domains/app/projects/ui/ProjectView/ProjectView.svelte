@@ -13,7 +13,7 @@
   import MonitoringTile from './tiles/MonitoringTile.svelte';
   import { monitoringState } from '../../application/monitoring.state.svelte.js';
 
-  const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
+  const previewedMetricId = $derived(page.params.metric_id);
   const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
 

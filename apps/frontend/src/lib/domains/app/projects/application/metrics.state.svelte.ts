@@ -57,6 +57,22 @@ class MetricsState {
     this.fetchMetricDetails(project_id, metric_id);
   }
 
+  getLastPreviewedMetricId(projectId: string): string | null {
+    if (typeof sessionStorage === 'undefined') {
+      return null;
+    }
+
+    return sessionStorage.getItem(`metrics:lastPreviewed:${projectId}`);
+  }
+
+  setLastPreviewedMetricId(projectId: string, metricId: string): void {
+    if (typeof sessionStorage === 'undefined') {
+      return;
+    }
+
+    sessionStorage.setItem(`metrics:lastPreviewed:${projectId}`, metricId);
+  }
+
   set(metrics: SimplifiedMetric[]): void {
     this._simplifiedMetrics = arrayToObject(metrics, 'id');
     this._initialized = true;

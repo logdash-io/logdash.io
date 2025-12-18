@@ -6,16 +6,24 @@
   import { UserTier } from '$lib/domains/shared/types.js';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import { AlertTriangleIcon, XIcon } from 'lucide-svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
   import MetricsListener from '$lib/domains/app/projects/ui/presentational/MetricsListener.svelte';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import MetricTile from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricTile.svelte';
+  import DangerIcon from '$lib/domains/shared/icons/DangerIcon.svelte';
+  import CloseIcon from '$lib/domains/shared/icons/CloseIcon.svelte';
+  import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
 
-  const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
+  const previewedMetricId = $derived(page.params.metric_id);
+  const clusterId = $derived(page.params.cluster_id);
+  const projectId = $derived(page.params.project_id);
   const isDemoDashboard = $derived(
     page.url.pathname.includes('/demo-dashboard'),
+  );
+  const previewedMetric = $derived(
+    previewedMetricId ? metricsState.getById(previewedMetricId) : null,
   );
   const currentMetricsLimit = $derived(
     exposedConfigState.maxRegisteredMetrics(userState.tier),
@@ -37,23 +45,22 @@
 <MetricsListener>
   <div class="flex flex-col gap-1.5">
     {#if metricsState.simplifiedMetrics.length >= currentMetricsLimit && !isDemoDashboard}
-      <div
-        class="bg-primary/20 text-primary flex w-full items-center gap-2 rounded-full px-3 py-1.5"
-      >
-        <AlertTriangleIcon class="text-primary h-4 w-4 shrink-0" />
-        <span class="text-sm">
-          {#if userState.canUpgrade}
-            <UpgradeElement source="metrics-limit">
-              Upgrade to add
-              <strong>{metricsLimitPlanDifference}x</strong>
-              more metrics to this project.
-            </UpgradeElement>
-          {:else}
-            <a class="underline" href="mailto:contact@logdash.io">Contact us</a>
-            to add more metrics to this project.
-          {/if}
-        </span>
-      </div>
+      <span class="text-sm">
+        {#if userState.canUpgrade}
+          <UpgradeElement
+            source="metrics-limit"
+            class="bg-primary/20 text-primary flex w-full items-center gap-1 rounded-full px-3 py-1.5"
+          >
+            <RocketIcon class="text-primary size-3.5 shrink-0 mr-1" />
+            Add
+            <strong>{metricsLimitPlanDifference}x</strong>
+            more metrics to this project.
+          </UpgradeElement>
+        {:else}
+          <a class="underline" href="mailto:contact@logdash.io">Contact us</a>
+          to add more metrics to this project.
+        {/if}
+      </span>
     {/if}
 
     {#each metricsState.simplifiedMetrics as metric}
@@ -76,7 +83,7 @@
         delayIn={0}
         delayOut={50}
       >
-        <MetricTile deletionDisabled={isDemoDashboard} id={metric.id} />
+        <MetricTile id={metric.id} />
       </DataTile>
     {/each}
   </div>
@@ -84,7 +91,7 @@
 
 {#snippet header()}
   <div
-    class="bg-primary ring-primary absolute top-0 left-0 z-0 flex h-12 w-full items-start justify-between rounded-t-lg text-sm leading-6 ring"
+    class="bg-primary ring-primary absolute top-0 left-0 z-0 flex h-16 w-full items-start justify-between rounded-t-2xl text-sm leading-6 ring"
   >
     <div
       transition:fly={{
@@ -96,17 +103,27 @@
     >
       <span>Previewing</span>
 
-      <button
-        class="btn btn-secondary btn-soft btn-xs"
-        onclick={() => {
-          page.url.searchParams.delete('metric_id');
-          goto(page.url.href);
-        }}
-        data-posthog-id="close-metric-preview-button"
-      >
-        Close
-        <XIcon class="h-3.5 w-3.5" />
-      </button>
+      <div class="flex items-center gap-1">
+        {#if !isDemoDashboard && previewedMetric}
+          <button
+            class="btn text-base-content hover:text-error btn-soft btn-xs gap-1"
+            onclick={() => {
+              if (
+                confirm(
+                  `Are you sure you want to delete ${previewedMetric.name} metric?`,
+                )
+              ) {
+                metricsState.delete(projectId, previewedMetricId);
+                goto(`/app/clusters/${clusterId}/${projectId}/metrics`);
+              }
+            }}
+            data-posthog-id="delete-metric-button"
+          >
+            <CloseIcon class="size-3.5" />
+            Delete
+          </button>
+        {/if}
+      </div>
     </div>
   </div>
 {/snippet}
