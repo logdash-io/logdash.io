@@ -26,8 +26,8 @@
 
   <ScrollArea class="relative mx-auto flex h-full w-full flex-col">
     <ResponsiveSkyBackground />
-    <div class="mx-auto flex h-full max-h-full w-full">
-      <div class="relative flex h-full w-full flex-col items-center p-3">
+    <div class="mx-auto flex h-full max-h-full w-full max-w-5xl">
+      <div class="relative flex h-full w-full flex-col items-center p-4">
         <PendingInvitations />
         {@render children()}
       </div>

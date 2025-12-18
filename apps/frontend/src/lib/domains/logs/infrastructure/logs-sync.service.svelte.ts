@@ -50,6 +50,8 @@ export class LogsSyncService {
   }
 
   async open(): Promise<void> {
+    this._shouldReconnect = true;
+
     return new Promise((resolve, reject) => {
       this._unsubscribe?.();
 

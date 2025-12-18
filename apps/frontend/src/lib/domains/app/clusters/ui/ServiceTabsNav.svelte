@@ -11,6 +11,11 @@
   import { PlusIcon } from 'lucide-svelte';
   import { fly } from 'svelte/transition';
   import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
+  import HomeIcon from '$lib/domains/shared/icons/HomeIcon.svelte';
+  import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
+  import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
+  import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
+  import SettingsIcon from '$lib/domains/shared/icons/SettingsIcon.svelte';
 
   type Props = {
     clusterId: string;
@@ -46,25 +51,40 @@
   };
 
   const tabs = $derived([
-    { id: 'overview', label: 'Overview', path: basePath, always: true },
-    { id: 'logs', label: 'Logs', path: `${basePath}/logs`, always: false },
+    {
+      id: 'overview',
+      label: 'Overview',
+      path: basePath,
+      always: true,
+      icon: HomeIcon,
+    },
+    {
+      id: 'logs',
+      label: 'Logs',
+      path: `${basePath}/logs`,
+      always: false,
+      icon: LogsIcon,
+    },
     {
       id: 'metrics',
       label: 'Metrics',
       path: `${basePath}/metrics`,
       always: false,
+      icon: MetricsIcon,
     },
     {
       id: 'monitoring',
       label: 'Monitoring',
       path: `${basePath}/monitoring`,
       always: false,
+      icon: MonitoringIcon,
     },
     {
       id: 'settings',
       label: 'Settings',
       path: `${basePath}/settings`,
       always: true,
+      icon: SettingsIcon,
     },
   ]);
 
@@ -88,7 +108,7 @@
   ];
 </script>
 
-<div class="z-20 flex items-center gap-2 bg-base-300/20 px-4 backdrop-blur-sm">
+<div class="z-20 flex items-center gap-2 bg-base-300/20 backdrop-blur-sm">
   {#if hasMissingFeatures && projectsState.ready}
     <Tooltip
       content={addFeaturesMenu}
@@ -110,7 +130,11 @@
 
   <nav class="flex items-center gap-1">
     {#each visibleTabs as tab}
-      <a href={tab.path} class={tabClass(isActive(tab.path))}>
+      <a
+        href={tab.path}
+        class={[...tabClass(isActive(tab.path)), 'flex items-center gap-1.5']}
+      >
+        <tab.icon class="h-4 w-4" />
         {tab.label}
       </a>
     {/each}

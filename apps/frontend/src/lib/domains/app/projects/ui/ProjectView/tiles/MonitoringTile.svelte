@@ -37,10 +37,11 @@
   const pingsToLoad = $derived(
     pingsChartWidth ? Math.floor(pingsChartWidth / PING_WIDTH_PX) : 0,
   );
+  const maxPingsToShow = $derived(pingsToLoad || MAX_PINGS);
 
   const pings = $derived.by(() => {
     const allPings = monitoringState.monitoringPings(monitorId);
-    return allPings.slice(Math.max(0, allPings.length - MAX_PINGS));
+    return allPings.slice(-maxPingsToShow);
   });
 
   const status = $derived(getStatusFromPings(pings));
@@ -136,7 +137,7 @@
       class="z-10 flex w-full cursor-default overflow-hidden sm:mt-2"
       bind:clientWidth={pingsChartWidth}
     >
-      <PingChart maxPingsToShow={MAX_PINGS} pings={formattedPings} />
+      <PingChart {maxPingsToShow} pings={formattedPings} />
     </div>
   </button>
 

@@ -65,10 +65,10 @@
   </title>
 </svelte:head>
 
-<div class="flex w-full flex-col">
+<div class="flex w-full flex-col gap-4 p-1">
   <ServiceTabsNav {clusterId} {projectId} />
 
-  <div class="flex-1 p-4">
+  <div class="flex-1">
     {@render children?.()}
   </div>
 </div>

@@ -56,15 +56,13 @@
 
   <div class="flex items-center justify-between gap-2.5 p-4">
     <Tooltip
-      content={logsState.syncPaused ? 'Sync paused' : 'Sync active'}
+      content={logsState.shouldFiltersBlockSync ? 'Sync paused' : 'Sync active'}
       placement="top"
     >
-      <div
-        class="flex h-3 w-3 shrink-0 items-center justify-center md:h-8 md:w-8"
-      >
-        {#if logsState.syncPaused}
+      <div class="flex size-4 shrink-0 items-center justify-center md:size-8">
+        {#if logsState.shouldFiltersBlockSync}
           <PauseCircleIcon
-            class="h-3 w-3 shrink-0 sm:h-5 sm:w-5"
+            class="size-4 shrink-0 sm:h-5 sm:w-5"
             stroke="stroke-warning-content"
           />
         {:else}
@@ -89,7 +87,7 @@
     />
 
     <button
-      class="btn btn-primary btn-sm gap-1.5"
+      class="btn btn-secondary btn-sm gap-1.5"
       data-posthog-id="send-test-log-button"
       disabled={sendingTestLogCooldown > 0}
       onclick={sendTestLog}

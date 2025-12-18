@@ -20,7 +20,7 @@
       <DataTile
         delayIn={0}
         delayOut={50}
-        class="overflow-hidden rounded-xl p-0 pt-4"
+        class="overflow-hidden ld-card-rounding p-0 pt-4"
       >
         <LogsListTile />
       </DataTile>
