@@ -20,7 +20,7 @@
 </script>
 
 <svelte:head>
-  <title>all_clusters | logdash</title>
+  <title>Projects | Logdash</title>
 </svelte:head>
 
 <ClustersList canCreate={totalProjectsCount < tierMaxProjects} />

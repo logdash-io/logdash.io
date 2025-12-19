@@ -6,6 +6,7 @@
   import { cubicInOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
   import ClusterCreatorTile from '$lib/domains/app/clusters/ui/ClustersList/ClusterCreatorTile.svelte';
   import CircularHealthChart, {
     type ServiceStatus,
@@ -13,6 +14,7 @@
   import ClusterHealthSummary from '$lib/domains/app/clusters/ui/ClustersList/ClusterHealthSummary.svelte';
   import { type Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
   import { Feature } from '$lib/domains/shared/types.js';
+  import type { MonitorStatus } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
 
   type Props = {
     canCreate: boolean;
@@ -21,25 +23,31 @@
   const ANIMATION_DELAY = 15;
   const CLUSTERS_COLUMNS = 2;
 
-  const MOCKED_STATUSES: ServiceStatus[] = [
-    'healthy',
-    'healthy',
-    'healthy',
-    'unhealthy',
-    'degraded',
-    'unknown',
-    'healthy',
-    'healthy',
-  ];
-
   let mounted = $state(false);
 
   onMount(() => {
     mounted = true;
+
+    const clusterIds = clustersState.clusters.map((c) => c.id);
+    const stopPolling = clusterHealthState.startPolling(clusterIds);
+
+    return () => {
+      stopPolling();
+    };
   });
 
-  function getMockedStatus(index: number): ServiceStatus {
-    return MOCKED_STATUSES[index % MOCKED_STATUSES.length];
+  function mapMonitorStatusToServiceStatus(
+    status: MonitorStatus | undefined,
+  ): ServiceStatus {
+    switch (status) {
+      case 'up':
+        return 'healthy';
+      case 'down':
+        return 'unhealthy';
+      case 'unknown':
+      default:
+        return 'unknown';
+    }
   }
 
   function getClusterServices(cluster: Cluster): {
@@ -48,12 +56,20 @@
     status: ServiceStatus;
     features: Feature[];
   }[] {
-    return (cluster.projects || []).map((project, index) => ({
-      id: project.id,
-      name: project.name,
-      status: getMockedStatus(index),
-      features: project.features || [],
-    }));
+    return (cluster.projects || []).map((project) => {
+      const monitor = clusterHealthState.getMonitorByProjectId(
+        cluster.id,
+        project.id,
+      );
+      const status = mapMonitorStatusToServiceStatus(monitor?.lastStatus);
+
+      return {
+        id: project.id,
+        name: project.name,
+        status,
+        features: project.features || [],
+      };
+    });
   }
 
   const projectsPerColumn = $derived.by(() => {
