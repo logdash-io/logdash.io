@@ -23,7 +23,10 @@
   const posthog = getContext<PostHog>('posthog');
   const isClustersRoot = $derived(page.url.pathname === '/app/clusters');
 
-  $effect.pre(() => {
+  userState.set(data.user);
+  clustersState.set(data.clusters);
+
+  $effect(() => {
     userState.set(data.user);
     clustersState.set(data.clusters);
   });

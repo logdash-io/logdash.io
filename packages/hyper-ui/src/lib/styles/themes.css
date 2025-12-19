@@ -29,6 +29,6 @@
   --color-info: var(--color-blue-600);
 
   --radius-selector: var(--radius-md);
-  --radius-field: var(--radius-lg);
+  --radius-field: var(--radius-xl);
   --radius-box: var(--radius-xl);
 }

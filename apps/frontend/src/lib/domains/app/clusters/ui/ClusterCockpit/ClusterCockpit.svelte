@@ -5,7 +5,7 @@
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { getStatusFromMonitor } from '$lib/domains/app/clusters/application/get-status-from-monitor.js';
   import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
-  import ServiceCard from './ServiceCard.svelte';
+  import ServiceCard from './ServiceTile.svelte';
   import EmptyState from './EmptyState.svelte';
 
   type Props = {

@@ -12,8 +12,6 @@ type ClusterInvitesStateType = {
   isLoading: boolean;
   isCreating: boolean;
   isDeleting: boolean;
-  isModalOpen: boolean;
-  currentClusterId: string | null;
 };
 
 class ClusterInvitesState {
@@ -23,8 +21,6 @@ class ClusterInvitesState {
     isLoading: false,
     isCreating: false,
     isDeleting: false,
-    isModalOpen: false,
-    currentClusterId: null,
   });
 
   get invites(): ClusterInvite[] {
@@ -45,14 +41,6 @@ class ClusterInvitesState {
 
   get isDeleting(): boolean {
     return this._state.isDeleting;
-  }
-
-  get isModalOpen(): boolean {
-    return this._state.isModalOpen;
-  }
-
-  get currentClusterId(): string | null {
-    return this._state.currentClusterId;
   }
 
   get canInviteMore(): boolean {
@@ -152,17 +140,6 @@ class ClusterInvitesState {
     } finally {
       this._state.isDeleting = false;
     }
-  }
-
-  openModal(clusterId: string): void {
-    this._state.isModalOpen = true;
-    this._state.currentClusterId = clusterId;
-  }
-
-  closeModal(): void {
-    this._state.isModalOpen = false;
-    this._state.currentClusterId = null;
-    this.reset();
   }
 
   reset(): void {

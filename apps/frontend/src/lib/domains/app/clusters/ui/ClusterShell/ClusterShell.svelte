@@ -1,14 +1,11 @@
 <script lang="ts">
-  import ClusterNav from '$lib/domains/app/clusters/ui/ClusterShell/ClusterNav.svelte';
-  import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
-  import ClusterManageTeamModal from '$lib/domains/app/clusters/ui/ClusterShell/ClusterManageTeamModal.svelte';
-  import PendingInvitations from '$lib/domains/app/clusters/ui/PendingInvitations.svelte';
-  import { clusterInvitesState } from '$lib/domains/app/clusters/application/cluster-invites.state.svelte.js';
   import { userInvitationsState } from '$lib/domains/app/clusters/application/user-invitations.state.svelte.js';
+  import ClusterSidebar from '$lib/domains/app/clusters/ui/ClusterSidebar/ClusterSidebar.svelte';
+  import PendingInvitations from '$lib/domains/app/clusters/ui/PendingInvitations.svelte';
+  import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
+  import { ScrollArea } from '@logdash/hyper-ui/presentational';
   import type { Snippet } from 'svelte';
   import { onMount } from 'svelte';
-  import ClusterSidebar from '$lib/domains/app/clusters/ui/ClusterSidebar/ClusterSidebar.svelte';
-  import { ScrollArea } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     children: Snippet;
@@ -34,11 +31,3 @@
     </div>
   </ScrollArea>
 </div>
-
-{#if clusterInvitesState.currentClusterId}
-  <ClusterManageTeamModal
-    clusterId={clusterInvitesState.currentClusterId}
-    isOpen={clusterInvitesState.isModalOpen}
-    onClose={() => clusterInvitesState.closeModal()}
-  />
-{/if}
