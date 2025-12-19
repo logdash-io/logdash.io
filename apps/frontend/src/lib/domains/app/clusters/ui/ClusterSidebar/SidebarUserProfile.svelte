@@ -3,6 +3,7 @@
   import { proSkyBackgroundState } from '$lib/domains/shared/pro-features/pro-sky-background.state.svelte.js';
   import { RoutePath } from '$lib/domains/shared/route-path.js';
   import { UserTier } from '$lib/domains/shared/types.js';
+  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
@@ -60,6 +61,7 @@
           {userState.tier.replaceAll('-', ' ')}
         </span>
       </div>
+      <ChevronRightIcon class="size-4 text-base-content/50" />
     </button>
   </Tooltip>
 </div>
