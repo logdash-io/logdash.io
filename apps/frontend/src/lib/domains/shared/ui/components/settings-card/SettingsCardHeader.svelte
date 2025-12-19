@@ -16,7 +16,7 @@
 
 <div
   class={[
-    'border-b px-6 py-4',
+    'border-b p-4 px-5',
     {
       'border-base-100': variant === 'default',
       'border-error/20 bg-error/5': variant === 'danger',

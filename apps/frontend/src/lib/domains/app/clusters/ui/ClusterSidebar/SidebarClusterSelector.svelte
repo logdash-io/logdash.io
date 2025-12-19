@@ -73,7 +73,7 @@
         >
           <CubeIcon class="size-4.5 shrink-0 text-primary" />
         </div>
-        {currentCluster?.name || 'Select cluster'}
+        {currentCluster?.name || 'Select project'}
       </span>
       <ChevronRightIcon
         class="size-4.5 shrink-0 text-base-content/50 group-hover:translate-x-0.5 transition-transform group-hover:text-base-content"

@@ -33,7 +33,7 @@
     projectsState.set([
       {
         id: data.projectId,
-        name: 'Logdash (prod)',
+        name: 'Logdash (demo)',
         creatorId: 'demo',
         features: [Feature.LOGGING, Feature.METRICS],
         members: [],

@@ -29,7 +29,7 @@
 </script>
 
 <div
-  class="ld-card-base relative flex h-full max-h-32 w-full items-center justify-between gap-2 overflow-hidden rounded-xl"
+  class="ld-card-base relative flex h-full max-h-32 w-full items-center justify-between gap-2 overflow-hidden ld-card-rounding"
   in:fly|global={{
     y: -5,
     duration: 400,
@@ -41,7 +41,7 @@
     <div
       in:fly={{ y: -5, duration: 200, easing: cubicOut }}
       class={[
-        'absolute top-1/2 flex h-full w-full -translate-y-1/2 items-center justify-between gap-2 rounded-xl border border-transparent pr-6 transition-colors',
+        'absolute top-1/2 flex h-full w-full -translate-y-1/2 items-center justify-between gap-2 ld-card-rounding border border-transparent pr-6 transition-colors',
         {
           'focus-within:border-success/50':
             projectName.length >= MIN_NAME_LENGTH &&
@@ -101,7 +101,7 @@
   {:else}
     <button
       in:fly={{ y: -5, duration: 200, easing: cubicOut }}
-      class="absolute flex h-full w-full cursor-pointer items-center justify-between gap-2 rounded-xl px-8"
+      class="absolute flex h-full w-full cursor-pointer items-center justify-between gap-2 px-8"
       role="button"
       onclick={(e) => {
         if (editMode) {

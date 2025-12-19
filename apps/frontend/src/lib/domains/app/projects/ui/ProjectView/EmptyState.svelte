@@ -10,6 +10,7 @@
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
   import { Feature } from '$lib/domains/shared/types.js';
   import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
+  import LogdashBlindFlamingo from '$lib/domains/shared/icons/LogdashBlindFlamingo.svelte';
 </script>
 
 <div class="flex w-full flex-col gap-4 sm:flex-row">
@@ -17,10 +18,10 @@
     class="ld-card flex h-fit w-full flex-col gap-4 rounded-2xl text-center sm:w-2/5"
     in:fade={{ easing: cubicInOut, duration: 300 }}
   >
-    <h5 class="text-2xl font-semibold">Where features?</h5>
+    <h5 class="text-2xl font-semibold">No features enabled</h5>
 
     <div class="p-6 xl:p-14">
-      <FlamingoIcon
+      <LogdashBlindFlamingo
         class="pointer-events-none aspect-square w-full select-none rounded-2xl object-cover"
       />
     </div>

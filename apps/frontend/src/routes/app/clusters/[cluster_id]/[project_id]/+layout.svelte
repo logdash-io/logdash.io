@@ -65,7 +65,7 @@
   </title>
 </svelte:head>
 
-<div class="flex w-full flex-col gap-4 p-1">
+<div class="flex w-full flex-col gap-4 p-2">
   <ServiceTabsNav {clusterId} {projectId} />
 
   <div class="flex-1">

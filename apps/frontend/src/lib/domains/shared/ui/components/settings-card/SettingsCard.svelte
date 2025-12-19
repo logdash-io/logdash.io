@@ -19,7 +19,7 @@
     'overflow-hidden rounded-3xl',
     {
       'ld-card-base': variant === 'default',
-      'border border-error/20': variant === 'danger',
+      'border border-error/30 bg-error/10': variant === 'danger',
     },
     className,
   ]}

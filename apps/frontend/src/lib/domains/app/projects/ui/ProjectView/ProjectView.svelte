@@ -68,7 +68,7 @@
   {/if}
 
   {#if hasMetrics && metricsState.ready}
-    <div class="w-full shrink-0 sm:w-96">
+    <div class="w-full shrink-0 sm:w-80">
       <MetricsTiles />
     </div>
   {/if}
