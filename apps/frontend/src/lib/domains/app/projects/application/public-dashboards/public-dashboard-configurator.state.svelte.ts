@@ -1,14 +1,12 @@
-type Dashboard = {
-  id: string;
-  name: string;
-  isPublic: boolean;
-  httpMonitorsIds: string[];
-};
+import { publicDashboardsService } from '$lib/domains/app/projects/infrastructure/public-dashboards.service';
+import type { PublicDashboard } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard';
 
 export class PublicDashboardManagerState {
-  private _dashboards = $state<Record<Dashboard['id'], Dashboard>>({});
+  private _dashboards = $state<Record<PublicDashboard['id'], PublicDashboard>>(
+    {},
+  );
 
-  getDashboard(dashboardId: string): Dashboard | undefined {
+  getDashboard(dashboardId: string): PublicDashboard | undefined {
     return this._dashboards[dashboardId];
   }
 
@@ -20,35 +18,27 @@ export class PublicDashboardManagerState {
     }>,
   ): Promise<void> {
     try {
-      const response = await fetch(
-        `/app/api/public-dashboards/${dashboardId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(dto),
-        },
+      const data = await publicDashboardsService.updatePublicDashboard(
+        dashboardId,
+        dto,
       );
-      const { data } = await response.json();
       this._dashboards[data.id] = data;
     } catch (error) {
-      console.error('Failed to create or update public dashboard:', error);
+      console.error('Failed to update public dashboard:', error);
       throw error;
     }
   }
 
   async addMonitor(dashboardId: string, monitorId: string): Promise<void> {
     try {
-      await fetch(
-        `/app/api/public-dashboards/${dashboardId}/monitors/${monitorId}`,
-        {
-          method: 'POST',
-        },
+      await publicDashboardsService.addMonitorToDashboard(
+        dashboardId,
+        monitorId,
       );
       if (!this._dashboards[dashboardId]) {
         this._dashboards[dashboardId] = {
           id: dashboardId,
+          clusterId: '',
           name: '',
           isPublic: false,
           httpMonitorsIds: [],
@@ -65,11 +55,9 @@ export class PublicDashboardManagerState {
 
   async removeMonitor(dashboardId: string, monitorId: string): Promise<void> {
     try {
-      await fetch(
-        `/app/api/public-dashboards/${dashboardId}/monitors/${monitorId}`,
-        {
-          method: 'DELETE',
-        },
+      await publicDashboardsService.removeMonitorFromDashboard(
+        dashboardId,
+        monitorId,
       );
       if (this._dashboards[dashboardId]) {
         this._dashboards[dashboardId].httpMonitorsIds = this._dashboards[
@@ -96,16 +84,13 @@ export class PublicDashboardManagerState {
 
   async loadPublicDashboards(clusterId: string): Promise<void> {
     try {
-      const response = await fetch(
-        `/app/api/clusters/${clusterId}/public-dashboards`,
-      );
-      const { data } = await response.json();
+      const data = await publicDashboardsService.getPublicDashboards(clusterId);
       this._dashboards = data.reduce(
         (acc, dashboard) => {
           acc[dashboard.id] = dashboard;
           return acc;
         },
-        {} as Record<Dashboard['id'], Dashboard>,
+        {} as Record<PublicDashboard['id'], PublicDashboard>,
       );
     } catch (error) {
       console.error('Failed to load public dashboards:', error);

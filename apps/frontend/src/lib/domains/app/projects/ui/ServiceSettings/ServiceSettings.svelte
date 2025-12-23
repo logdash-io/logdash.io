@@ -198,26 +198,32 @@
       variant="danger"
     />
 
-    <SettingsCardItem icon={TrashIcon} iconVariant="danger" showBorder={false}>
-      {#snippet children()}
-        <p class="font-medium">Delete Service</p>
-        <p class="text-base-content/60 text-sm">
-          Permanently delete this service and all its data
-        </p>
-      {/snippet}
-      {#snippet action()}
-        <button
-          onclick={onDeleteService}
-          disabled={projectsState.isDeletingProject(projectId)}
-          class="btn btn-error btn-outline btn-sm"
-        >
-          {#if projectsState.isDeletingProject(projectId)}
-            <span class="loading loading-spinner loading-xs"></span>
-          {:else}
-            Delete
-          {/if}
-        </button>
-      {/snippet}
-    </SettingsCardItem>
+    <div class="ld-card-bg">
+      <SettingsCardItem
+        icon={TrashIcon}
+        iconVariant="danger"
+        showBorder={false}
+      >
+        {#snippet children()}
+          <p class="font-medium">Delete Service</p>
+          <p class="text-base-content/60 text-sm">
+            Permanently delete this service and all its data
+          </p>
+        {/snippet}
+        {#snippet action()}
+          <button
+            onclick={onDeleteService}
+            disabled={projectsState.isDeletingProject(projectId)}
+            class="btn btn-error btn-outline btn-sm"
+          >
+            {#if projectsState.isDeletingProject(projectId)}
+              <span class="loading loading-spinner loading-xs"></span>
+            {:else}
+              Delete
+            {/if}
+          </button>
+        {/snippet}
+      </SettingsCardItem>
+    </div>
   </SettingsCard>
 </div>

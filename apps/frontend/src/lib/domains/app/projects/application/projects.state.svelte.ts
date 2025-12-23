@@ -1,6 +1,8 @@
 import { Feature } from '$lib/domains/shared/types.js';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import type { Project } from '$lib/domains/app/projects/domain/project';
+import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
+import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 
 // todo: divide api calls responsibility from state
 class ProjectsState {
@@ -38,7 +40,6 @@ class ProjectsState {
   }
 
   set(projects: Project[]): void {
-    console.log('projects', projects);
     this._projects = arrayToObject(projects, 'id');
     this._initialized = true;
   }
@@ -123,6 +124,39 @@ class ProjectsState {
     delete this._apiKeys[projectId];
     delete this._loadingApiKey[projectId];
     delete this._deletingProject[projectId];
+  }
+
+  async addFeature(projectId: string, feature: Feature): Promise<void> {
+    const project = this._projects[projectId];
+    if (!project) {
+      return;
+    }
+
+    if (project.selectedFeatures?.includes(feature)) {
+      return;
+    }
+
+    const previousFeatures = project.selectedFeatures || [];
+    const updatedFeatures = [...previousFeatures, feature];
+
+    this._projects[projectId] = {
+      ...project,
+      selectedFeatures: updatedFeatures,
+    };
+
+    try {
+      await ProjectsService.updateProject(projectId, {
+        selectedFeatures: updatedFeatures,
+      });
+    } catch (error) {
+      this._projects[projectId] = {
+        ...project,
+        selectedFeatures: previousFeatures,
+      };
+
+      toast.error('Failed to add feature to project');
+      throw error;
+    }
   }
 }
 

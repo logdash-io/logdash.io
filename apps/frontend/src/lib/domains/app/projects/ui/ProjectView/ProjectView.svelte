@@ -49,8 +49,7 @@
       metricsState.simplifiedMetrics.length > 0,
   );
   const hasMonitoring = $derived(
-    projectsState.hasConfiguredFeature(projectId, Feature.MONITORING) &&
-      monitoringState.monitors.length > 0,
+    Boolean(monitoringState.getMonitorByProjectId(projectId)),
   );
 
   const isMobile = $derived.by(() => {

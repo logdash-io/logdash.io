@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
@@ -116,25 +117,6 @@
 </script>
 
 <div class="z-20 flex items-center gap-2 bg-base-300/20 backdrop-blur-sm">
-  {#if hasMissingSelectedFeatures && projectsState.ready}
-    <Tooltip
-      content={addFeaturesMenu}
-      interactive={true}
-      placement="bottom"
-      trigger="click"
-    >
-      <button
-        class={[...tabClass(false), 'flex items-center gap-1.5']}
-        data-posthog-id="add-features-tab-button"
-        onclick={(e) => {
-          e.stopPropagation();
-        }}
-      >
-        <PlusIcon class="h-4 w-4" />
-      </button>
-    </Tooltip>
-  {/if}
-
   <nav class="flex items-center gap-1">
     {#each visibleTabs as tab}
       <a
@@ -148,49 +130,96 @@
         {tab.label}
       </a>
     {/each}
+
+    {#if hasMissingSelectedFeatures && projectsState.ready}
+      <Tooltip
+        content={addFeaturesMenu}
+        interactive={true}
+        placement="bottom"
+        trigger="click"
+      >
+        <button
+          class={[
+            ...tabClass(false),
+            'cursor-pointer flex items-center gap-1.5',
+          ]}
+          data-posthog-id="add-features-tab-button"
+          onclick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <PlusIcon class="h-4 w-4" />
+          Add
+        </button>
+      </Tooltip>
+    {/if}
   </nav>
 </div>
 
 {#snippet addFeaturesMenu(close: () => void)}
   <ul
-    class="menu dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
+    class="menu dropdown-content text-secondary ld-card-base rounded-2xl z-1 w-fit whitespace-nowrap p-2 shadow"
   >
     {#if !selectedLogging && projectsState.ready}
       <li class="py-0.5">
-        <a
-          href={`${basePath}/logs`}
+        <button
           in:fly={{ y: -2, duration: 100 }}
-          class="flex w-full items-center justify-between"
+          class="flex w-full items-center justify-start"
+          onclick={async () => {
+            try {
+              await projectsState.addFeature(projectId, Feature.LOGGING);
+              close();
+              goto(`${basePath}/logs`);
+            } catch {
+              close();
+            }
+          }}
         >
-          Add logging
-          <PlusIcon class="h-4 w-4" />
-        </a>
+          <LogsIcon class="size-4" />
+          Logging
+        </button>
       </li>
     {/if}
 
     {#if !selectedMetrics && projectsState.ready}
       <li class="py-0.5">
-        <a
-          href={`${basePath}/metrics`}
+        <button
           in:fly={{ y: -2, duration: 100 }}
-          class="flex w-full items-center justify-between"
+          class="flex w-full items-center justify-start"
+          onclick={async () => {
+            try {
+              await projectsState.addFeature(projectId, Feature.METRICS);
+              close();
+              goto(metricsPath);
+            } catch {
+              close();
+            }
+          }}
         >
-          Add metrics
-          <PlusIcon class="h-4 w-4" />
-        </a>
+          <MetricsIcon class="size-4" />
+          Metrics
+        </button>
       </li>
     {/if}
 
     {#if !selectedMonitoring && clustersState.ready}
       <li class="py-0.5">
-        <a
-          href={`${basePath}/monitoring`}
+        <button
           in:fly={{ y: -2, duration: 100 }}
-          class="flex w-full items-center justify-between"
+          class="flex w-full items-center justify-start"
+          onclick={async () => {
+            try {
+              await projectsState.addFeature(projectId, Feature.MONITORING);
+              close();
+              goto(`${basePath}/monitoring`);
+            } catch {
+              close();
+            }
+          }}
         >
-          Add monitoring
-          <PlusIcon class="h-4 w-4" />
-        </a>
+          <MonitoringIcon class="size-4" />
+          Monitoring
+        </button>
       </li>
     {/if}
   </ul>

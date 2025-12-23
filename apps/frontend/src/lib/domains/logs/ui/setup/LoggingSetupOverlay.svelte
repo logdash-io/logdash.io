@@ -80,14 +80,17 @@
 {/snippet}
 
 <div
-  class="absolute inset-0 z-50 flex items-center justify-center bg-base-300/80 backdrop-blur-xs"
+  class="absolute group inset-0 z-50 flex items-center justify-center bg-base-300/80 backdrop-blur-[2px]"
 >
   <div
     class="flex flex-col items-center gap-2 ld-card-bg p-2 rounded-2xl ld-card-border"
   >
     <p class="text-sm text-base-content opacity-60">Integrate Logging</p>
 
-    <button class="btn btn-secondary gap-2 pr-1" onclick={onCopyPrompt}>
+    <button
+      class="btn btn-secondary gap-2 pr-1 opacity-80 group-hover:opacity-100 transition-opacity"
+      onclick={onCopyPrompt}
+    >
       {@render copyIcon()}
       Copy prompt
 

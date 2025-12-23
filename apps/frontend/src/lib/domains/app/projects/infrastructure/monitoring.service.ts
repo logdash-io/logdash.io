@@ -14,6 +14,12 @@ export type CreateMonitorDto = {
   url?: string;
 };
 
+export type UpdateMonitorDto = {
+  name?: string;
+  url?: string;
+  mode?: MonitorMode;
+};
+
 export class MonitoringService {
   getPingBuckets(
     monitorId: string,
@@ -61,6 +67,10 @@ export class MonitoringService {
       `/http_monitors/${httpMonitorId}/claim`,
       {},
     );
+  }
+
+  updateMonitor(monitorId: string, dto: UpdateMonitorDto): Promise<Monitor> {
+    return httpClient.put<Monitor>(`/http_monitors/${monitorId}`, dto);
   }
 }
 
