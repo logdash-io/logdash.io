@@ -43,6 +43,7 @@ export class MonitoringService {
     projectId: string;
     monitorId: string;
     limit: number;
+    signal?: AbortSignal;
   }): Promise<HttpPing[]> {
     return httpClient.get<HttpPing[]>(
       `/projects/${dto.projectId}/monitors/${dto.monitorId}/http_pings`,
@@ -50,6 +51,7 @@ export class MonitoringService {
         params: {
           limit: dto.limit,
         },
+        signal: dto.signal,
       },
     );
   }

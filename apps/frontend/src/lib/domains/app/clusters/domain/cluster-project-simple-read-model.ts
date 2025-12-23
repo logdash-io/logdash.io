@@ -4,5 +4,5 @@ export type ClusterProjectReadModel = {
   id: string;
   name: string;
   features: Feature[];
-  selectedFeatures: Feature[];
+  selectedFeatures?: Feature[];
 };

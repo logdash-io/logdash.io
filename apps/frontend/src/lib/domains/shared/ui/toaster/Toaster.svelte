@@ -69,9 +69,6 @@
         ></div>
 
         <div class="flex flex-col justify-start gap-0.5 py-0.5">
-          <!-- <span class="text-base font-semibold capitalize">
-            {_toast.type}
-          </span> -->
           <span class="text-secondary/80 flex-1 whitespace-pre-wrap break-all">
             {_toast.message}
           </span>
