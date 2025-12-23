@@ -6,6 +6,6 @@ export type Project = {
   members: string[];
   creatorId: string;
   features: Feature[];
-  selectedFeatures: Feature[];
+  selectedFeatures?: Feature[];
   tier: 'free' | 'early-bird';
 };

@@ -45,8 +45,14 @@ class ProjectsState {
   }
 
   hasFeature(projectId: string, feature: Feature): boolean {
+    const project = this._projects[projectId];
+    if (!project) {
+      return false;
+    }
+
     return (
-      this._projects[projectId]?.selectedFeatures?.includes(feature) ?? false
+      project.selectedFeatures?.includes(feature) ??
+      project.features.includes(feature)
     );
   }
 

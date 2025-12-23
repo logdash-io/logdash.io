@@ -82,7 +82,7 @@
 {/snippet}
 
 <div
-  class="absolute group inset-0 z-50 flex items-start pt-[30%] justify-center bg-base-300/80 backdrop-blur-xs"
+  class="absolute group inset-0 z-10 flex items-start pt-[30%] justify-center bg-base-300/80 backdrop-blur-xs"
 >
   <div
     class="ld-card-bg ld-card-border flex flex-col items-center gap-2 rounded-2xl p-2"
