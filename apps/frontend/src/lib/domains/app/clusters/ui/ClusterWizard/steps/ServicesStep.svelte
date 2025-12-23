@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
   import { Feature } from '$lib/domains/shared/types.js';
   import ServiceCard from '../ServiceCard.svelte';
@@ -20,6 +21,18 @@
   const activeExpandedId = $derived(
     expandedServiceId ?? services[services.length - 1]?.id ?? null,
   );
+
+  onMount(() => {
+    const firstServiceId = services[0]?.id;
+    if (firstServiceId) {
+      setTimeout(() => {
+        const input = document.getElementById(
+          `service-input-${firstServiceId}`,
+        );
+        input?.focus();
+      }, 50);
+    }
+  });
 
   function onAddService(): void {
     const id = wizardState.addService();

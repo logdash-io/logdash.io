@@ -1,11 +1,18 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
   import { fly } from 'svelte/transition';
   import ColorPalette from '../ColorPalette.svelte';
 
+  let inputRef: HTMLInputElement;
+
   const step = $derived(wizardState.step);
   const project = $derived(wizardState.project);
   const canProceed = $derived(wizardState.canProceedToStep2);
+
+  onMount(() => {
+    inputRef?.focus();
+  });
 
   function onNameChange(e: Event): void {
     const target = e.target as HTMLInputElement;
@@ -23,6 +30,7 @@
 
 <div class="flex flex-col gap-6">
   <input
+    bind:this={inputRef}
     id="project-name"
     type="text"
     placeholder="Project Name"
