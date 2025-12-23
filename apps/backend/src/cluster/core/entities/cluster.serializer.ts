@@ -12,6 +12,7 @@ export class ClusterSerializer {
       tier: entity.tier,
       name: entity.name,
       roles: entity.roles,
+      color: entity.color,
     };
   }
 
@@ -36,6 +37,7 @@ export class ClusterSerializer {
         ? params.projects.map((project) => ({
             id: project.id,
             name: project.name,
+            selectedFeatures: project.selectedFeatures,
           }))
         : undefined,
       features: params?.features,
@@ -47,6 +49,7 @@ export class ClusterSerializer {
           }))
         : undefined,
       roles: normalizedCluster.roles,
+      color: normalizedCluster.color,
     };
   }
 

@@ -70,6 +70,7 @@ export class ClusterCoreController {
       roles: {
         [userId]: ClusterRole.Creator,
       },
+      color: body.color,
     });
 
     return ClusterSerializer.serialize(cluster);

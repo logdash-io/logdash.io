@@ -11,6 +11,7 @@ export class ProjectSerializer {
       members: entity.members,
       creatorId: entity.creatorId,
       tier: entity.tier,
+      selectedFeatures: entity.selectedFeatures || [],
     };
   }
 

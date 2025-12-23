@@ -32,10 +32,7 @@
     startProgress();
   });
 
-  afterNavigate(({ from, to }) => {
-    if (from?.url.pathname === to?.url.pathname) {
-      return;
-    }
+  afterNavigate(() => {
     completeProgress();
   });
 </script>

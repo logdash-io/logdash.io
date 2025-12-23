@@ -10,6 +10,7 @@ export class ProjectNormalized {
   creatorId: string;
   members: string[];
   tier: ProjectTier;
+  selectedFeatures: ProjectFeature[];
 }
 
 export class ProjectSerialized {
@@ -33,6 +34,9 @@ export class ProjectSerialized {
 
   @ApiPropertyOptional({ enum: ProjectFeature, isArray: true })
   features?: ProjectFeature[];
+
+  @ApiPropertyOptional({ enum: ProjectFeature, isArray: true })
+  selectedFeatures?: ProjectFeature[];
 
   @ApiPropertyOptional({ type: RateLimit, isArray: true })
   rateLimits?: RateLimit[];

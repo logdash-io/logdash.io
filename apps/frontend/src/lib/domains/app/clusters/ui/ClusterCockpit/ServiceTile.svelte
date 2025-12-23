@@ -22,7 +22,7 @@
   class="ld-card-base group flex cursor-pointer flex-col gap-3 ld-card-rounding p-4 transition-all hover:bg-base-100/50"
 >
   <div class="flex items-start justify-between">
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 min-w-0 flex-1">
       <div
         class={[
           'flex h-10 w-10 items-center justify-center rounded-xl',
@@ -46,8 +46,8 @@
           ]}
         />
       </div>
-      <div class="flex flex-col items-start">
-        <h3 class="font-semibold">{name}</h3>
+      <div class="flex flex-col items-start min-w-0 flex-1">
+        <h3 class="font-semibold truncate max-w-full">{name}</h3>
         <span class={['text-xs', statusConfig.color]}>
           {statusConfig.text}
         </span>

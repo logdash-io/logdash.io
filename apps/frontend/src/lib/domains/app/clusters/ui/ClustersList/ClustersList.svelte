@@ -1,6 +1,5 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { PlusIcon } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
@@ -94,12 +93,6 @@
       <ClusterCreatorTile
         canAddMore={canCreate}
         delayIn={clustersState.clusters.length * ANIMATION_DELAY}
-        onSubmit={(name) => {
-          clustersState.create(name).then((createdClusterId) => {
-            toast.success('Project created!');
-            goto(`/app/clusters/${createdClusterId}`);
-          });
-        }}
       />
     </div>
 
@@ -115,16 +108,7 @@
               ANIMATION_DELAY *
               (clustersState.clusters.length / CLUSTERS_COLUMNS + 10)}
 
-            <ClusterCreatorTile
-              canAddMore={canCreate}
-              delayIn={delay}
-              onSubmit={(name) => {
-                clustersState.create(name).then((createdClusterId) => {
-                  toast.success('Project created!');
-                  goto(`/app/clusters/${createdClusterId}`);
-                });
-              }}
-            />
+            <ClusterCreatorTile canAddMore={canCreate} delayIn={delay} />
           {/if}
         </div>
       {/each}
