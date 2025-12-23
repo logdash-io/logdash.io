@@ -1,3 +1,4 @@
+import { ProjectFeature } from '../../core/enums/project-feature.enum';
 import { ProjectTier } from '../../core/enums/project-tier.enum';
 
 export class CreateProjectDto {
@@ -5,4 +6,5 @@ export class CreateProjectDto {
   userId: string;
   clusterId: string;
   tier: ProjectTier;
+  selectedFeatures?: ProjectFeature[];
 }

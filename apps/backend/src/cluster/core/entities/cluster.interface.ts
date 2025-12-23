@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ClusterTier } from '../enums/cluster-tier.enum';
 import { ClusterFeature } from '../enums/cluster-feature.enum';
 import { ClusterRole } from '../enums/cluster-role.enum';
+import { ProjectFeature } from '../../../project/core/enums/project-feature.enum';
 
 export class SimplifiedProject {
   @ApiProperty()
@@ -9,6 +10,9 @@ export class SimplifiedProject {
 
   @ApiProperty()
   name: string;
+
+  @ApiPropertyOptional({ enum: ProjectFeature, isArray: true })
+  selectedFeatures?: ProjectFeature[];
 }
 
 export class SimplifiedPublicDashboard {
@@ -28,6 +32,7 @@ export class ClusterNormalized {
   creatorId: string;
   tier: ClusterTier;
   roles: Record<string, ClusterRole>;
+  color?: string;
 }
 
 export class ClusterSerialized {
@@ -54,4 +59,7 @@ export class ClusterSerialized {
 
   @ApiProperty({ type: Object, enum: ClusterRole })
   roles: Record<string, ClusterRole>;
+
+  @ApiPropertyOptional()
+  color?: string;
 }

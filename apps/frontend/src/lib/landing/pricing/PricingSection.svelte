@@ -10,7 +10,7 @@
 <div class="container mx-auto max-w-7xl px-4 gap-8">
   <header class="sm:mb-16 mb-8 text-center">
     <h1 class="mb-4 text-4xl font-bold tracking-tight">
-      Pricing that matches your pace.
+      Cheaper than clients compliants.
     </h1>
 
     <p class="text-base-content/70 mx-auto max-w-3xl text-xl">

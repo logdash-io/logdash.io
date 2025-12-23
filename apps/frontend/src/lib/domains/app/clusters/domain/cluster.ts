@@ -12,4 +12,5 @@ export type Cluster = {
     name: string;
     isPublic: boolean;
   }[];
+  color?: string;
 };

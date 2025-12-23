@@ -124,6 +124,7 @@ export class ProjectCoreController {
       userId,
       clusterId,
       tier: projectTier,
+      selectedFeatures: dto.selectedFeatures,
     });
 
     const apiKey = await this.apiKeyWriteService.createApiKey({

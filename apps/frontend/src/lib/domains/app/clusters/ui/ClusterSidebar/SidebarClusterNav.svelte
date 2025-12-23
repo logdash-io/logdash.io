@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
@@ -15,6 +16,8 @@
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { ChevronRightIcon } from 'lucide-svelte';
   import SidebarMenuItem from './SidebarMenuItem.svelte';
+
+  const isWizardMode = $derived(wizardState.isActive);
 
   const clusterId = $derived(page.params.cluster_id);
   const currentPath = $derived(page.url.pathname);
@@ -93,7 +96,7 @@
   <SidebarMenuItem
     href="/app/clusters/{clusterId}"
     isActive={isCockpitActive}
-    disabled={!clusterId}
+    disabled={!clusterId || isWizardMode}
   >
     <HomeIcon class="size-4 shrink-0" />
     <span class="truncate">Home</span>
@@ -102,7 +105,7 @@
   <SidebarMenuItem
     href="/app/clusters/{clusterId}/settings"
     isActive={isSettingsActive}
-    disabled={!clusterId}
+    disabled={!clusterId || isWizardMode}
   >
     <SettingsIcon class="size-4 shrink-0" />
     <span class="truncate">Settings</span>
@@ -118,7 +121,7 @@
     closeOnOutsideTooltipClick={true}
   >
     <button
-      disabled={!clusterId}
+      disabled={!clusterId || isWizardMode}
       class={[
         'group flex w-full text-sm items-center gap-2 rounded-lg p-2 px-2.5',
         {

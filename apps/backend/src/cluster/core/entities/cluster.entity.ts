@@ -18,6 +18,9 @@ export class ClusterEntity {
 
   @Prop({ default: {}, type: Object })
   roles: Record<string, ClusterRole>;
+
+  @Prop()
+  color?: string;
 }
 
 export type ClusterDocument = HydratedDocument<ClusterEntity>;

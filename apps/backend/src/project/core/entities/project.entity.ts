@@ -32,6 +32,9 @@ export class ProjectEntity {
 
   @Prop()
   tier: ProjectTier;
+
+  @Prop({ type: [String], default: [] })
+  selectedFeatures: string[];
 }
 
 export type ProjectDocument = HydratedDocument<ProjectEntity>;

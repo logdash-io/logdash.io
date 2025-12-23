@@ -6,4 +6,5 @@ export class CreateClusterDto {
   creatorId: string;
   tier: ClusterTier;
   roles: Record<string, ClusterRole>;
+  color?: string;
 }

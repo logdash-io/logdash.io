@@ -32,6 +32,7 @@ export class ClusterWriteService {
       creatorId: dto.creatorId,
       tier: dto.tier,
       roles: dto.roles,
+      color: dto.color,
     });
 
     this.metrics.mutate('clustersCreated', 1);
