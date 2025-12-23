@@ -141,7 +141,7 @@
         <h5 class="text-lg font-semibold">
           {cluster.name}
         </h5>
-        {#if hasServices}
+        <!-- {#if hasServices}
           <CircularHealthChart
             services={services.map((s) => ({
               id: s.id,
@@ -156,7 +156,7 @@
               goto(`/app/clusters/${cluster.id}/${serviceId}`);
             }}
           />
-        {/if}
+        {/if} -->
       </div>
 
       {#if hasServices}

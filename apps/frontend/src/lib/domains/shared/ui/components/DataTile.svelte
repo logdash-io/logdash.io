@@ -14,16 +14,22 @@
     children: Snippet;
     class?: ClassValue;
     parentClass?: ClassValue;
-    header?: Snippet;
+    header?: () => ReturnType<Snippet>;
     delayIn?: number;
     delayOut?: number;
   } = $props();
+
+  const flattenCls = (cls: ClassValue): string => {
+    return Array.isArray(cls) ? cls.join(' ') : String(cls);
+  };
 
   const cls = $derived.by(() => {
     return [
       'flex h-fit w-full flex-col gap-2 relative',
       ...(Array.isArray(className) ? className : [className]),
-      ...(className.includes('p-') ? ['ld-card-base'] : ['ld-card']),
+      ...(flattenCls(className).includes('p-')
+        ? ['ld-card-base']
+        : ['ld-card']),
     ];
   });
 </script>

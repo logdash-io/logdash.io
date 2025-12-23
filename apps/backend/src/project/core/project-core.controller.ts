@@ -97,6 +97,7 @@ export class ProjectCoreController {
       {
         id: projectId,
         name: dto.name,
+        selectedFeatures: dto.selectedFeatures,
       },
       userId,
     );

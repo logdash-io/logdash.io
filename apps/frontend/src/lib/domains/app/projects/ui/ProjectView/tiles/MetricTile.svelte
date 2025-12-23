@@ -9,8 +9,9 @@
 
   type Props = {
     id: string;
+    disabled?: boolean;
   };
-  const { id }: Props = $props();
+  const { id, disabled = false }: Props = $props();
   const previewedMetricId = $derived(page.params.metric_id);
   const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
@@ -64,7 +65,7 @@
     {formatNumber(metric.value)}
   </Tooltip>
 
-  {#if previewedMetricId !== metric.id}
+  {#if previewedMetricId !== metric.id && !disabled}
     <button
       transition:fly={{
         duration: 200,

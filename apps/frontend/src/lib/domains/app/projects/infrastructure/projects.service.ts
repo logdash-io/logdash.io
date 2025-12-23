@@ -12,6 +12,11 @@ export interface CreateProjectResponse {
   apiKey: string;
 }
 
+export interface UpdateProjectDto {
+  name?: string;
+  selectedFeatures?: Feature[];
+}
+
 export class ProjectsService {
   static async createProject(
     clusterId: string,
@@ -31,5 +36,12 @@ export class ProjectsService {
       projects.map((project) => this.createProject(clusterId, project)),
     );
     return results;
+  }
+
+  static async updateProject(
+    projectId: string,
+    dto: UpdateProjectDto,
+  ): Promise<void> {
+    return httpClient.put<void>(`/projects/${projectId}`, dto);
   }
 }

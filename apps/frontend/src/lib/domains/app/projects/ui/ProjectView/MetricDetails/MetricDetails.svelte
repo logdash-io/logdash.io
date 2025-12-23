@@ -24,10 +24,7 @@
   let dayDataTimeRange: string = $state(ChartOptions[ChartType.DAY].SMALL);
 
   $effect(() => {
-    if (!projectId || !previewedMetricId) {
-      logger.warn(
-        'MetricDetails: Synchronization failed due to missing projectId or metricId',
-      );
+    if (!projectId || !previewedMetricId || metricsState.isUsingFakeData) {
       return;
     }
 
@@ -41,6 +38,14 @@
   const isPaid = $derived(userState.isPaid);
 
   const { minuteData, hourData, dayData } = $derived.by(() => {
+    if (metricsState.isUsingFakeData) {
+      return {
+        minuteData: metricsState.getFakeChartData(MetricGranularity.MINUTE),
+        hourData: metricsState.getFakeChartData(MetricGranularity.HOUR),
+        dayData: metricsState.getFakeChartData(MetricGranularity.DAY),
+      };
+    }
+
     const minuteData = metricsState.metricsByMetricRegisterId(
       previewedMetricId,
       MetricGranularity.MINUTE,

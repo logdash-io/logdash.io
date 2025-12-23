@@ -47,7 +47,7 @@
   {#each toast.activeToasts as _toast (_toast.id)}
     {@const config = getToastConfig(_toast.type)}
     <div
-      class="alert ld-card-base relative flex w-80 max-w-[320px] animate-none overflow-hidden rounded-xl px-3 shadow-lg"
+      class="alert ld-card-base pr-10 relative flex w-80 max-w-[320px] animate-none overflow-hidden rounded-xl px-3 shadow-lg"
       in:fly|global={{
         duration: 200,
         y: 15,
@@ -63,15 +63,15 @@
       <div class="flex w-full shrink-0 items-start justify-start gap-4">
         <div
           class={[
-            'min-h-14 min-w-1.5 max-w-1.5 flex-1 shrink-0 self-stretch rounded-full',
+            'min-w-1.5 max-w-1.5 flex-1 shrink-0 self-stretch rounded-full',
             config.bg,
           ]}
         ></div>
 
         <div class="flex flex-col justify-start gap-0.5 py-0.5">
-          <span class="text-base font-semibold capitalize">
+          <!-- <span class="text-base font-semibold capitalize">
             {_toast.type}
-          </span>
+          </span> -->
           <span class="text-secondary/80 flex-1 whitespace-pre-wrap break-all">
             {_toast.message}
           </span>

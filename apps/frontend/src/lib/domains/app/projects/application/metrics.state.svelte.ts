@@ -10,6 +10,12 @@ import {
   type Metric,
   type SimplifiedMetric,
 } from '$lib/domains/app/projects/domain/metric';
+import {
+  FAKE_METRICS,
+  generateFakeMinuteData,
+  generateFakeHourData,
+  generateFakeDayData,
+} from '$lib/domains/app/projects/domain/fake-metrics-data.js';
 
 const logger = createLogger('metrics.state', true);
 
@@ -34,6 +40,15 @@ class MetricsState {
     return Object.values(this._simplifiedMetrics);
   }
 
+  get displayMetrics(): SimplifiedMetric[] {
+    const realMetrics = this.simplifiedMetrics;
+    return realMetrics.length > 0 ? realMetrics : FAKE_METRICS;
+  }
+
+  get isUsingFakeData(): boolean {
+    return this.simplifiedMetrics.length === 0;
+  }
+
   get ready(): boolean {
     return this._initialized;
   }
@@ -43,7 +58,22 @@ class MetricsState {
   }
 
   getById(id: string): SimplifiedMetric | undefined {
-    return this._simplifiedMetrics[id];
+    const real = this._simplifiedMetrics[id];
+    if (real) return real;
+    return FAKE_METRICS.find((m) => m.id === id);
+  }
+
+  getFakeChartData(granularity: MetricGranularity): { x: string; y: number }[] {
+    switch (granularity) {
+      case MetricGranularity.MINUTE:
+        return generateFakeMinuteData();
+      case MetricGranularity.HOUR:
+        return generateFakeHourData();
+      case MetricGranularity.DAY:
+        return generateFakeDayData();
+      default:
+        return [];
+    }
   }
 
   metricsByMetricRegisterId(

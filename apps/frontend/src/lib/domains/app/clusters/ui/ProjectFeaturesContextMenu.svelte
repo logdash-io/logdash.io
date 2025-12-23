@@ -1,29 +1,27 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
-  import SetupMonitoringButton from '$lib/domains/app/projects/ui/presentational/SetupMonitoringButton.svelte';
   import { Feature } from '$lib/domains/shared/types.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { PlusIcon } from 'lucide-svelte';
   import { fly } from 'svelte/transition';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
-  import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
 
   type Props = {
     clusterId: string;
   };
   const { clusterId }: Props = $props();
   const projectId = $derived(page.params.project_id);
+  const basePath = $derived(`/app/clusters/${clusterId}/${projectId}`);
 
   const hasLogging = $derived(
-    projectsState.hasFeature(projectId, Feature.LOGGING),
+    projectsState.hasConfiguredFeature(projectId, Feature.LOGGING),
   );
   const hasMetrics = $derived(
-    projectsState.hasFeature(projectId, Feature.METRICS),
+    projectsState.hasConfiguredFeature(projectId, Feature.METRICS),
   );
   const hasMonitoring = $derived(
-    projectsState.hasFeature(projectId, Feature.MONITORING),
+    projectsState.hasConfiguredFeature(projectId, Feature.MONITORING),
   );
 </script>
 
@@ -33,59 +31,40 @@
   >
     {#if !hasLogging && projectsState.ready}
       <li class="py-0.5">
-        <button
+        <a
+          href={`${basePath}/logs`}
           in:fly={{ y: -2, duration: 100 }}
-          onclick={() => {
-            goto(`/app/clusters/${clusterId}/${projectId}/configure/logging`);
-          }}
           class="flex w-full items-center justify-between"
         >
           Add logging
           <PlusIcon class="h-4 w-4" />
-        </button>
+        </a>
       </li>
     {/if}
 
     {#if !hasMetrics && projectsState.ready}
       <li class="py-0.5">
-        <button
+        <a
+          href={`${basePath}/metrics`}
           in:fly={{ y: -2, duration: 100 }}
-          onclick={() => {
-            goto(`/app/clusters/${clusterId}/${projectId}/configure/metrics`);
-          }}
           class="flex w-full items-center justify-between"
         >
           Add metrics
           <PlusIcon class="h-4 w-4" />
-        </button>
+        </a>
       </li>
     {/if}
 
     {#if !hasMonitoring && clustersState.ready}
       <li class="py-0.5">
-        <SetupMonitoringButton
+        <a
+          href={`${basePath}/monitoring`}
+          in:fly={{ y: -2, duration: 100 }}
           class="flex w-full items-center justify-between"
-          canAddMore={true}
-          onSubmit={({ name, mode }) => {
-            const params = new URLSearchParams({
-              project_id: projectId,
-              mode,
-            });
-
-            if (mode === MonitorMode.PULL) {
-              params.set('url', encodeURIComponent(name));
-            } else {
-              params.set('name', encodeURIComponent(name));
-            }
-
-            goto(
-              `/app/clusters/${clusterId}/${projectId}/configure/monitoring?${params.toString()}`,
-            );
-          }}
         >
           Add monitoring
           <PlusIcon class="h-4 w-4" />
-        </SetupMonitoringButton>
+        </a>
       </li>
     {/if}
   </ul>

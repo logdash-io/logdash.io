@@ -2,19 +2,17 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
+  import MetricsListener from '$lib/domains/app/projects/ui/presentational/MetricsListener.svelte';
+  import MetricTile from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricTile.svelte';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
+  import CloseIcon from '$lib/domains/shared/icons/CloseIcon.svelte';
+  import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
   import { UserTier } from '$lib/domains/shared/types.js';
+  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { cubicInOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
-  import MetricsListener from '$lib/domains/app/projects/ui/presentational/MetricsListener.svelte';
-  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
-  import MetricTile from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricTile.svelte';
-  import DangerIcon from '$lib/domains/shared/icons/DangerIcon.svelte';
-  import CloseIcon from '$lib/domains/shared/icons/CloseIcon.svelte';
-  import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
-  import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
 
   const previewedMetricId = $derived(page.params.metric_id);
   const clusterId = $derived(page.params.cluster_id);
@@ -44,7 +42,7 @@
 
 <MetricsListener>
   <div class="flex flex-col gap-1.5">
-    {#if metricsState.simplifiedMetrics.length >= currentMetricsLimit && !isDemoDashboard}
+    {#if metricsState.simplifiedMetrics.length >= currentMetricsLimit && !isDemoDashboard && !metricsState.isUsingFakeData}
       <span class="text-sm">
         {#if userState.canUpgrade}
           <UpgradeElement
@@ -63,27 +61,33 @@
       </span>
     {/if}
 
-    {#each metricsState.simplifiedMetrics as metric}
+    {#each metricsState.displayMetrics as metric}
       <DataTile
-        header={previewedMetricId === metric.id ? header : emptyHeader}
+        header={previewedMetricId === metric.id && !metricsState.isUsingFakeData
+          ? header
+          : emptyHeader}
         parentClass={[
           'group relative transition-all duration-200',
           {
-            'pt-9': previewedMetricId === metric.id,
-            'pt-0': previewedMetricId !== metric.id,
+            'pt-9':
+              previewedMetricId === metric.id && !metricsState.isUsingFakeData,
+            'pt-0':
+              previewedMetricId !== metric.id || metricsState.isUsingFakeData,
           },
         ]}
         class={[
           'z-10 ring',
           {
-            'ring-primary': metric.id === previewedMetricId,
-            'ring-transparent': metric.id !== previewedMetricId,
+            'ring-primary':
+              metric.id === previewedMetricId && !metricsState.isUsingFakeData,
+            'ring-transparent':
+              metric.id !== previewedMetricId || metricsState.isUsingFakeData,
           },
         ]}
         delayIn={0}
         delayOut={50}
       >
-        <MetricTile id={metric.id} />
+        <MetricTile id={metric.id} disabled={metricsState.isUsingFakeData} />
       </DataTile>
     {/each}
   </div>

@@ -32,7 +32,7 @@
   const projectName = $derived(
     clustersState.clusters
       .find((c) => c.id === clusterId)
-      ?.projects.find((p) => p.id === projectId)?.name,
+      ?.projects?.find((p) => p.id === projectId)?.name,
   );
 
   $effect(() => {
@@ -42,14 +42,6 @@
   });
 
   $effect(() => {
-    const isSettingUp =
-      page.url.pathname.includes('/setup') ||
-      page.url.pathname.includes('/configure');
-
-    if (isSettingUp) {
-      return;
-    }
-
     untrack(() => monitoringState.sync(clusterId));
 
     return () => {

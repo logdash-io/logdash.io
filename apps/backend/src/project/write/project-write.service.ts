@@ -128,6 +128,10 @@ export class ProjectWriteService {
       updateQuery.clusterId = dto.clusterId;
     }
 
+    if (dto.selectedFeatures) {
+      updateQuery.selectedFeatures = dto.selectedFeatures;
+    }
+
     return updateQuery;
   }
 
