@@ -6,13 +6,13 @@
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
   import MonitoringTile from '$lib/domains/app/projects/ui/ProjectView/tiles/MonitoringTile.svelte';
   import NotificationChannelSetupModal from '$lib/domains/app/projects/ui/notification-channels/NotificationChannelSetupModal.svelte';
-  import EmptyState from '$lib/domains/app/projects/ui/ProjectView/EmptyState.svelte';
+  import MonitoringSetupInline from '$lib/domains/app/projects/ui/setup/MonitoringSetupInline.svelte';
 
   const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
 
   const hasMonitoring = $derived(
-    projectsState.hasFeature(projectId, Feature.MONITORING) &&
+    projectsState.hasConfiguredFeature(projectId, Feature.MONITORING) &&
       monitoringState.monitors.length > 0,
   );
 </script>
@@ -25,6 +25,6 @@
       <MonitoringTile {projectId} expanded={true} />
     </div>
   {:else if projectsState.ready}
-    <EmptyState />
+    <MonitoringSetupInline {projectId} />
   {/if}
 </ProjectSync>

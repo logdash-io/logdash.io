@@ -25,7 +25,7 @@
   const project = $derived(
     clustersState.clusters
       .find((c) => c.id === clusterId)
-      ?.projects.find((p) => p.id === projectId),
+      ?.projects?.find((p) => p.id === projectId),
   );
 
   let newName = $state('');
@@ -83,6 +83,7 @@
     }
 
     await projectsState.deleteProject(projectId);
+    await clustersState.load();
     goto(`/app/clusters/${clusterId}`);
     toast.success('Service deleted successfully', 5000);
   }

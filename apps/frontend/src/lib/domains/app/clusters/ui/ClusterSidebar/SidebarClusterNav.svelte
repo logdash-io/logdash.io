@@ -131,7 +131,7 @@
       ]}
     >
       <PublicDashboardIcon class="size-4 shrink-0" />
-      <span class="truncate">Public Dashboard</span>
+      <span class="truncate">Status pages</span>
       <ChevronRightIcon
         class="size-4 shrink-0 ml-auto text-base-content/50 group-hover:translate-x-0.5 transition-transform group-hover:text-base-content"
       />

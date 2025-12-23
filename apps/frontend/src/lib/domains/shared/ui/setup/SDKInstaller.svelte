@@ -37,7 +37,7 @@
   const SDK_INSTALLERS: SDKInstallers = {
     [LogdashSDKName.NODE_JS]: {
       language: bash,
-      code: `npm install @logdash/js-sdk`,
+      code: `npm install @logdash/node`,
     },
     [LogdashSDKName.PYTHON]: {
       language: bash,

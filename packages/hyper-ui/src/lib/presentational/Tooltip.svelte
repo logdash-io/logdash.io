@@ -9,8 +9,10 @@
     // console.log(...args);
   };
 
+  type SnippetWithClose = (close: () => void) => ReturnType<Snippet>;
+
   type Props = {
-    content: string | Snippet<[() => void]>;
+    content: string | Snippet<[() => void]> | SnippetWithClose;
     placement: "top" | "bottom" | "left" | "right";
     children: Snippet;
     class?: ClassValue;

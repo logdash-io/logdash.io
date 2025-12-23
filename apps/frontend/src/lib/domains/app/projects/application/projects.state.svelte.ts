@@ -38,12 +38,19 @@ class ProjectsState {
   }
 
   set(projects: Project[]): void {
+    console.log('projects', projects);
     this._projects = arrayToObject(projects, 'id');
     this._initialized = true;
   }
 
   hasFeature(projectId: string, feature: Feature): boolean {
-    return this._projects[projectId]?.features.includes(feature);
+    return (
+      this._projects[projectId]?.selectedFeatures?.includes(feature) ?? false
+    );
+  }
+
+  hasConfiguredFeature(projectId: string, feature: Feature): boolean {
+    return this._projects[projectId]?.features?.includes(feature) ?? false;
   }
 
   getApiKey(projectId: string): Promise<string> {
@@ -99,23 +106,23 @@ class ProjectsState {
     });
   }
 
-  deleteProject(projectId: string): Promise<void> {
+  async deleteProject(projectId: string): Promise<void> {
     if (this._deletingProject[projectId]) {
-      return Promise.resolve();
+      return;
     }
     this._deletingProject[projectId] = true;
 
-    return fetch(`/app/api/projects/${projectId}`, {
+    await fetch(`/app/api/projects/${projectId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-    }).then(() => {
-      delete this._projects[projectId];
-      delete this._apiKeys[projectId];
-      delete this._loadingApiKey[projectId];
-      delete this._deletingProject[projectId];
     });
+
+    delete this._projects[projectId];
+    delete this._apiKeys[projectId];
+    delete this._loadingApiKey[projectId];
+    delete this._deletingProject[projectId];
   }
 }
 

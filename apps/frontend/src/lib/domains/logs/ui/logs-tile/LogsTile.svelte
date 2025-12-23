@@ -63,7 +63,7 @@
   });
 </script>
 
-<div class="flex flex-col">
+<div class="flex flex-col min-h-[35rem]">
   <LogsHeader {projectId} />
 
   <LogsVirtualList logs={logsState.logs} {rendered} />
