@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import PauseCircleIcon from '$lib/domains/shared/icons/PauseCircleIcon.svelte';
   import { scale } from 'svelte/transition';
@@ -15,6 +16,10 @@
   };
 
   const { projectId }: Props = $props();
+
+  const isOnDemoDashboard = $derived(
+    page.url.pathname.includes('/demo-dashboard'),
+  );
 
   const maxRetentionHours = $derived(
     exposedConfigState.logRetentionHours(userState.tier),
@@ -86,18 +91,23 @@
       }}
     />
 
-    <button
-      class="btn btn-secondary btn-sm gap-1.5"
-      data-posthog-id="send-test-log-button"
-      disabled={sendingTestLogCooldown > 0}
-      onclick={sendTestLog}
-    >
-      <span>Send test log</span>
-      {#if sendingTestLogCooldown > 0}
-        <span class="font-mono" in:scale|global={{ start: 0.8, duration: 200 }}>
-          ({sendingTestLogCooldown}s)
-        </span>
-      {/if}
-    </button>
+    {#if isOnDemoDashboard}
+      <button
+        class="btn btn-secondary btn-sm gap-1.5"
+        data-posthog-id="send-test-log-button"
+        disabled={sendingTestLogCooldown > 0}
+        onclick={sendTestLog}
+      >
+        <span>Send test log</span>
+        {#if sendingTestLogCooldown > 0}
+          <span
+            class="font-mono"
+            in:scale|global={{ start: 0.8, duration: 200 }}
+          >
+            ({sendingTestLogCooldown}s)
+          </span>
+        {/if}
+      </button>
+    {/if}
   </div>
 </div>

@@ -17,18 +17,25 @@
   import MetricsSetupOverlay from '$lib/domains/app/projects/ui/setup/MetricsSetupOverlay.svelte';
   import { monitoringState } from '../../application/monitoring.state.svelte.js';
 
+  type Props = {
+    priorityProjectId?: string;
+    priorityClusterId?: string;
+  };
+
+  const { priorityProjectId, priorityClusterId }: Props = $props();
+
   let apiKey = $state<string | undefined>();
+
+  const previewedMetricId = $derived(page.params.metric_id);
+  const clusterId = $derived(priorityClusterId ?? page.params.cluster_id);
+  const projectId = $derived(priorityProjectId ?? page.params.project_id);
+  const basePath = $derived(`/app/clusters/${clusterId}/${projectId}`);
 
   onMount(() => {
     projectsState.getApiKey(projectId).then((key) => {
       apiKey = key;
     });
   });
-
-  const previewedMetricId = $derived(page.params.metric_id);
-  const clusterId = $derived(page.params.cluster_id);
-  const projectId = $derived(page.params.project_id);
-  const basePath = $derived(`/app/clusters/${clusterId}/${projectId}`);
 
   const selectedLogging = $derived(
     projectsState.hasFeature(projectId, Feature.LOGGING),
@@ -61,7 +68,7 @@
   });
 </script>
 
-<ProjectSync>
+<ProjectSync {priorityProjectId} {priorityClusterId}>
   <NotificationChannelSetupModal {clusterId} />
 
   {#if (selectedLogging || selectedMonitoring) && (!previewedMetricId || isMobile) && metricsState.ready}
@@ -89,7 +96,7 @@
             },
           ]}
         >
-          <LogsTile />
+          <LogsTile {priorityProjectId} />
           {#if !hasLogging}
             <LoggingSetupOverlay {apiKey} />
           {/if}

@@ -11,14 +11,16 @@
 
   type Props = {
     children: Snippet;
+    priorityProjectId?: string;
+    priorityClusterId?: string;
   };
-  const { children }: Props = $props();
+  const { children, priorityProjectId, priorityClusterId }: Props = $props();
 
   const logger = createLogger('ProjectView');
   const previewedMetricId = $derived(page.params.metric_id);
-  const clusterId = $derived(page.params.cluster_id);
+  const clusterId = $derived(priorityClusterId ?? page.params.cluster_id);
   const projectIdToSync = $derived.by(() => {
-    const id = page.params.project_id;
+    const id = priorityProjectId ?? page.params.project_id;
 
     if (!id) {
       logger.error('Synchronization failed due to missing projectId');

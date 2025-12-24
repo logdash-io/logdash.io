@@ -126,9 +126,12 @@
     type="button"
     class={[
       'flex w-full flex-col items-end justify-center overflow-hidden p-6',
-      { 'cursor-pointer group hover:bg-base-100/30': !expanded },
+      {
+        'cursor-pointer group hover:bg-base-100/30':
+          !expanded && !isOnDemoDashboard,
+      },
     ]}
-    disabled={expanded}
+    disabled={expanded || isOnDemoDashboard}
     onclick={onNavigateToMonitoring}
   >
     <MonitoringHeader name={monitorName} {status} showArrow={!expanded} />

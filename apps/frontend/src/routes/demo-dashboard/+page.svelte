@@ -1,9 +1,10 @@
 <script lang="ts">
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
-  import ClusterView from '$lib/domains/app/clusters/ui/ClusterView/ClusterView.svelte';
+  import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
+  import ProjectView from '$lib/domains/app/projects/ui/ProjectView/ProjectView.svelte';
   import { Feature, UserTier } from '$lib/domains/shared/types.js';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import DemoDashboardHeader from './DemoDashboardHeader.svelte';
   import Footer from '$lib/landing/Footer.svelte';
   import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
@@ -35,11 +36,19 @@
         id: data.projectId,
         name: 'Logdash (demo)',
         creatorId: 'demo',
-        features: [Feature.LOGGING, Feature.METRICS],
+        features: [Feature.LOGGING, Feature.METRICS, Feature.MONITORING],
         members: [],
         tier: UserTier.FREE,
       },
     ]);
+  });
+
+  $effect(() => {
+    untrack(() => monitoringState.sync(data.clusterId));
+
+    return () => {
+      monitoringState.unsync();
+    };
   });
 </script>
 
@@ -54,7 +63,10 @@
   <DemoDashboardHeader />
 
   <div class="ld-card relative mx-auto w-full max-w-7xl p-4">
-    <ClusterView priorityClusterId={data.clusterId} />
+    <ProjectView
+      priorityProjectId={data.projectId}
+      priorityClusterId={data.clusterId}
+    />
   </div>
 
   <div
