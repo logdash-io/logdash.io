@@ -5,8 +5,8 @@
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { Feature } from '$lib/domains/shared/types.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { PlusIcon } from 'lucide-svelte';
+  import { ScrollArea, Tooltip } from '@logdash/hyper-ui/presentational';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { fly } from 'svelte/transition';
   import HomeIcon from '$lib/domains/shared/icons/HomeIcon.svelte';
   import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
@@ -116,7 +116,10 @@
   ];
 </script>
 
-<div class="z-20 flex items-center gap-2 bg-base-300/20 backdrop-blur-sm">
+<ScrollArea
+  orientation="x"
+  class="z-20 flex items-center gap-2 bg-base-300/20 backdrop-blur-sm"
+>
   <nav class="flex items-center gap-1">
     {#each visibleTabs as tab}
       <a
@@ -154,7 +157,7 @@
       </Tooltip>
     {/if}
   </nav>
-</div>
+</ScrollArea>
 
 {#snippet addFeaturesMenu(close: () => void)}
   <ul

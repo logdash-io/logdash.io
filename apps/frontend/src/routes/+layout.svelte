@@ -147,7 +147,7 @@
     </main>
 
     {#if !page.url.pathname.includes('/setup') && !page.url.pathname.includes('/configure')}
-      <FeedbackButton />
+      <FeedbackButton hideOnMobile={true} />
     {/if}
   {:else}
     <ScrollArea

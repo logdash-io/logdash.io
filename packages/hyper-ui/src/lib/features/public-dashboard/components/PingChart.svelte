@@ -15,7 +15,13 @@
 
   let { pings, maxPingsToShow = 90, class: className }: Props = $props();
 
-  const displayPings = $derived(pings?.slice(-maxPingsToShow) || []);
+  const sortedPings = $derived(
+    [...(pings || [])].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    )
+  );
+  const displayPings = $derived(sortedPings.slice(-maxPingsToShow));
   const pingsCount = $derived(displayPings.length);
 </script>
 

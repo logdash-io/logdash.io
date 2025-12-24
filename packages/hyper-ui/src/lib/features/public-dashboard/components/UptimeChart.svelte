@@ -27,7 +27,13 @@
 
   const GAP_PX = 2;
 
-  const displayBuckets = $derived(buckets?.slice(-maxBucketsToShow) || []);
+  const sortedBuckets = $derived(
+    [...(buckets || [])].sort((a, b) => {
+      if (!a || !b) return 0;
+      return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+    })
+  );
+  const displayBuckets = $derived(sortedBuckets.slice(-maxBucketsToShow));
   const segments = $derived(groupBucketsByStatus(displayBuckets));
   const bucketsCount = $derived(displayBuckets.length);
 

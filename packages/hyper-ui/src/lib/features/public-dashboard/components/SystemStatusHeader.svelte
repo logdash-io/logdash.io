@@ -1,11 +1,6 @@
 <script lang="ts">
   import { DateTime } from "luxon";
-  import {
-    CheckCircleIcon,
-    AlertTriangleIcon,
-    XCircleIcon,
-    ClockIcon,
-  } from "lucide-svelte";
+  import { CheckIcon, DangerIcon, CloseIcon, ClockIcon } from "../../../icons";
   import { onMount } from "svelte";
 
   type SystemStatus = "operational" | "degraded" | "outage" | "unknown";
@@ -23,32 +18,32 @@
       text: "All Systems Operational",
       color: "text-green-600",
       bgColor:
-        "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/10",
-      borderColor: "border-green-200 dark:border-success/10",
-      icon: CheckCircleIcon,
+        "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/20",
+      borderColor: "border-green-200 dark:border-success/5",
+      icon: CheckIcon,
     },
     degraded: {
       text: "Partial System Outage",
       color: "text-yellow-600",
       bgColor:
-        "bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-900/10",
+        "bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-900/20",
       borderColor: "border-yellow-200 dark:border-yellow-800/10",
-      icon: AlertTriangleIcon,
+      icon: DangerIcon,
     },
     outage: {
       text: "Major System Outage",
       color: "text-red-600",
       bgColor:
-        "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/10",
+        "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/20",
       borderColor: "border-red-200 dark:border-red-800/10",
-      icon: XCircleIcon,
+      icon: CloseIcon,
     },
     unknown: {
       text: "Status Unknown",
-      color: "text-gray-600",
+      color: "text-neutral-600",
       bgColor:
-        "bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-900/10",
-      borderColor: "border-gray-200 dark:border-gray-800/10",
+        "bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-800/40 dark:to-neutral-800/40",
+      borderColor: "border-neutral-200 dark:border-neutral-800/50",
       icon: ClockIcon,
     },
   };
@@ -82,29 +77,22 @@
   });
 </script>
 
-<div
-  class={`mb-4 rounded-xl border p-6 ${config.bgColor} ${config.borderColor}`}
->
+<div class={`mb-1.5 ld-card-rounding px-3 py-1.5`}>
   <div class="flex items-center justify-between">
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2">
       {#if config.icon}
         {@const IconComponent = config.icon}
-        <IconComponent class={`h-6 w-6 ${config.color}`} />
+        <IconComponent class={`size-5 ${config.color}`} />
       {/if}
 
-      <div>
-        <h2 class={`text-lg font-semibold ${config.color}`}>
-          {config.text}
-        </h2>
-        <p class="text-sm text-gray-600 dark:text-gray-300">
-          {userFriendlyLastUpdated}
-        </p>
-      </div>
+      <h2 class={`text-base font-normal ${config.color}`}>
+        {config.text}
+      </h2>
     </div>
 
     <div class="text-right">
-      <div class="text-sm text-gray-500">
-        {monitorCount} service{monitorCount !== 1 ? "s" : ""}
+      <div class="text-sm text-neutral-500">
+        {monitorCount} component{monitorCount !== 1 ? "s" : ""}
       </div>
     </div>
   </div>

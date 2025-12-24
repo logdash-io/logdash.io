@@ -9,7 +9,13 @@
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 
-  const projectId = $derived(page.params.project_id);
+  type Props = {
+    priorityProjectId?: string;
+  };
+
+  const { priorityProjectId }: Props = $props();
+
+  const projectId = $derived(priorityProjectId ?? page.params.project_id);
 
   const maxRetentionHours = $derived(
     exposedConfigState.logRetentionHours(userState.tier),

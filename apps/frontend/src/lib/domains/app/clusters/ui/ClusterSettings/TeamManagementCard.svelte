@@ -8,7 +8,7 @@
   } from '$lib/domains/shared/ui/components/settings-card';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import AtIcon from '$lib/domains/shared/icons/AtIcon.svelte';
-  import DangerIcon from '$lib/domains/shared/icons/DangerIcon.svelte';
+  import { DangerIcon } from '@logdash/hyper-ui/icons';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
 
   type Props = {

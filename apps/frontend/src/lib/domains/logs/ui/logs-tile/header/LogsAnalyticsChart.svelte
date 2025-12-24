@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { logAnalyticsState } from '$lib/domains/logs/application/log-analytics.state.svelte.js';
   import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analytics-response.js';
-  import { AlertTriangleIcon } from 'lucide-svelte';
+  import { DangerIcon } from '@logdash/hyper-ui/icons';
   import { cubicOut } from 'svelte/easing';
   import { fade, fly } from 'svelte/transition';
 
@@ -472,7 +472,7 @@
         style="height: {CHART_HEIGHT}px"
       >
         <span class="mr-2">
-          <AlertTriangleIcon class="size-4" />
+          <DangerIcon class="size-4" />
         </span>
         Failed to load analytics data
       </div>

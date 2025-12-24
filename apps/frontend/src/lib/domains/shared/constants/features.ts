@@ -1,4 +1,6 @@
-import { ChartSplineIcon, HeartPulseIcon, LogsIcon } from 'lucide-svelte';
+import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
+import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
+import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
 import { Feature } from '$lib/domains/shared/types';
 
 export const FEATURES = [
@@ -20,7 +22,7 @@ export const FEATURES = [
     id: Feature.METRICS,
     slug: 'metrics',
     title: 'Metrics',
-    icon: ChartSplineIcon,
+    icon: MetricsIcon,
     description:
       'Track the numbers that matter and spot trends early, from latency to signups, without a complicated setup.',
     benefits: [
@@ -34,7 +36,7 @@ export const FEATURES = [
     id: Feature.MONITORING,
     slug: 'monitoring',
     title: 'Monitoring',
-    icon: HeartPulseIcon,
+    icon: MonitoringIcon,
     description:
       'Know when your app is down, and get alerted before it turns into a support thread.',
     benefits: [

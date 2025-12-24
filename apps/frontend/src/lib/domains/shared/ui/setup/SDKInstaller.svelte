@@ -8,12 +8,11 @@
   import PythonIcon from '$lib/domains/shared/icons/PythonIcon.svelte';
   import RubyIcon from '$lib/domains/shared/icons/RubyIcon.svelte';
   import RustIcon from '$lib/domains/shared/icons/RustIcon.svelte';
-  import {
-    type LogdashSDK,
-    LogdashSDKName,
-  } from '$lib/domains/shared/types.js';
+  import { type LogdashSDK, LogdashSDKName } from '$lib/domains/shared/types';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { CheckIcon, ChevronDownIcon, Copy } from 'lucide-svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
+  import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
+  import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import Highlight from 'svelte-highlight';
   import { bash, csharp, type LanguageType } from 'svelte-highlight/languages';
 
@@ -193,7 +192,7 @@ implementation 'io.logdash:logdash:0.2.0'`,
 
         <CheckIcon class="swap-on text-success h-5 w-5" />
 
-        <Copy class="swap-off h-5 w-5" />
+        <CopyIcon class="swap-off h-5 w-5" />
       </label>
     </div>
   </div>

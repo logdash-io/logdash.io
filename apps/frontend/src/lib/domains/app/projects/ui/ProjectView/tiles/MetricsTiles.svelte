@@ -5,7 +5,7 @@
   import MetricsListener from '$lib/domains/app/projects/ui/presentational/MetricsListener.svelte';
   import MetricTile from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricTile.svelte';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
-  import CloseIcon from '$lib/domains/shared/icons/CloseIcon.svelte';
+  import { CloseIcon } from '@logdash/hyper-ui/icons';
   import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
   import { UserTier } from '$lib/domains/shared/types.js';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';

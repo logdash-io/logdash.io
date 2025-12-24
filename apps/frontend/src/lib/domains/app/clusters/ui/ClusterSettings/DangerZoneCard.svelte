@@ -8,7 +8,7 @@
     SettingsCardItem,
   } from '$lib/domains/shared/ui/components/settings-card';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
-  import DangerIcon from '$lib/domains/shared/icons/DangerIcon.svelte';
+  import { DangerIcon } from '@logdash/hyper-ui/icons';
 
   type Props = {
     clusterId: string;

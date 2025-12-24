@@ -36,20 +36,6 @@ class LogdashAPI {
     };
   }
 
-  create_anonymous_user(): Promise<{
-    access_token: string;
-    cluster_id: string;
-  }> {
-    return this.post<{ token: string; cluster: { id: string } }>(
-      `${LogdashAPI.v0baseUrl}/users/anonymous`,
-      {},
-      '',
-    ).then(({ token, cluster }) => ({
-      access_token: token,
-      cluster_id: cluster.id,
-    }));
-  }
-
   create_cluster(name: string, access_token: string): Promise<Cluster> {
     return this.post<Cluster>(
       `${LogdashAPI.v0baseUrl}/users/me/clusters`,
@@ -196,31 +182,6 @@ class LogdashAPI {
     );
   }
 
-  async claim_account(dto: {
-    github_code: string;
-    anon_jwt_token: string;
-    terms_accepted: boolean;
-    email_accepted: boolean;
-    is_local_env: boolean;
-  }): Promise<{
-    access_token?: string;
-    error?: string;
-  }> {
-    return this.post<{ token: string }>(
-      `${LogdashAPI.v0baseUrl}/auth/github/claim`,
-      {
-        githubCode: dto.github_code,
-        accessToken: dto.anon_jwt_token,
-        termsAccepted: dto.terms_accepted,
-        emailAccepted: dto.email_accepted,
-        forceLocalLogin: dto.is_local_env,
-      },
-      dto.anon_jwt_token,
-    )
-      .then((data) => ({ access_token: data.token }))
-      .catch((error) => ({ error }));
-  }
-
   async get_me(access_token: string): Promise<User> {
     return this.get<User>(`${LogdashAPI.v0baseUrl}/users/me`, access_token);
   }
@@ -321,14 +282,6 @@ class LogdashAPI {
   ): Promise<{ customerPortalUrl: string }> {
     return this.get<{ customerPortalUrl: string }>(
       `${LogdashAPI.v0baseUrl}/payments/stripe/customer_portal`,
-      access_token,
-    );
-  }
-
-  claim_monitor(monitor_id: string, access_token: string): Promise<void> {
-    return this.post<void>(
-      `${LogdashAPI.v0baseUrl}/http_monitors/${monitor_id}/claim`,
-      {},
       access_token,
     );
   }

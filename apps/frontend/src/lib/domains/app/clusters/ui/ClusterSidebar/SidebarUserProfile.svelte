@@ -7,7 +7,8 @@
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { ExternalLinkIcon, LogOutIcon } from 'lucide-svelte';
+  import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
+  import LogoutIcon from '$lib/domains/shared/icons/LogoutIcon.svelte';
   import type { PostHog } from 'posthog-js';
   import { getContext } from 'svelte';
 
@@ -66,10 +67,16 @@
   </Tooltip>
 </div>
 
-{#snippet userProfileMenu()}
+{#snippet userProfileMenu(close: () => void)}
   <ul class="menu dropdown-content ld-card-base rounded-2xl z-1 w-56 p-2">
     {#if userState.canUpgrade}
-      <UpgradeButton class="mb-1" source="nav-menu" />
+      <UpgradeButton
+        class="mb-1"
+        source="nav-menu"
+        onclick={() => {
+          close();
+        }}
+      />
     {/if}
 
     {#if userState.hasBilling}
@@ -80,7 +87,7 @@
             goto('/app/api/user/billing');
           }}
         >
-          <ExternalLinkIcon class="inline h-4 w-4" />
+          <OpenIcon class="inline h-4 w-4" />
           Billing
         </a>
       </li>
@@ -110,7 +117,7 @@
         }}
         href={RoutePath.LOGOUT}
       >
-        <LogOutIcon class="inline h-4 w-4" />
+        <LogoutIcon class="inline h-4 w-4" />
         Logout
       </a>
     </li>

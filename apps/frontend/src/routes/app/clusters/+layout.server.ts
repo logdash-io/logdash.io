@@ -16,16 +16,8 @@ export const load = async (
 ): Promise<{
   clusters: Cluster[];
 }> => {
-  const { url } = event;
   const onboardingTier = get_onboarding_tier(event.cookies);
   const user = await resolve_data_preloader(UserDataPreloader)(event);
-
-  if (
-    user.user.accountClaimStatus === 'anonymous' &&
-    !url.pathname.includes('/setup')
-  ) {
-    return redirect(302, '/app/auth');
-  }
 
   if ([UserTier.BUILDER, UserTier.PRO].includes(onboardingTier)) {
     const link = await logdashAPI.stripe_checkout(

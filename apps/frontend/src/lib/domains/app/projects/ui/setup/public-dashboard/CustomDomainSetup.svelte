@@ -1,11 +1,10 @@
 <script lang="ts">
   import { customDomainsState } from '$lib/domains/app/projects/application/public-dashboards/custom-domains.state.svelte.js';
-  import { UserTier } from '$lib/domains/shared/types.js';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { isDev } from '$lib/domains/shared/utils/is-dev.util.js';
-  import { AlertTriangleIcon, CheckIcon, XIcon, Copy } from 'lucide-svelte';
-  import { onMount } from 'svelte';
+  import { CheckIcon, CloseIcon, DangerIcon } from '@logdash/hyper-ui/icons';
+  import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import Highlight from 'svelte-highlight';
   import { bash } from 'svelte-highlight/languages';
 
@@ -89,8 +88,8 @@
 </script>
 
 {#if !canSetup}
-  <UpgradeButton to={UserTier.PRO} source="custom-statuspage-domain">
-    Upgrade to Pro
+  <UpgradeButton source="custom-statuspage-domain">
+    Available in Pro plan
   </UpgradeButton>
 {:else}
   <p class="text-base-content/70 mb-3">
@@ -150,7 +149,7 @@
 
         {#if error}
           <div class="alert error-card mt-4">
-            <XIcon class="h-4 w-4 shrink-0" />
+            <CloseIcon class="h-4 w-4 shrink-0" />
             <span class="break-words">{error}</span>
           </div>
         {/if}
@@ -204,7 +203,7 @@
             <div
               class="alert alert-warning bg-warning/10 border-warning/30 rounded-lg"
             >
-              <AlertTriangleIcon class="h-4 w-4 shrink-0" />
+              <DangerIcon class="size-4 shrink-0" />
               <span class="text-sm">
                 If you're using Cloudflare, be careful to create these records
                 in 'DNS-only' mode, not proxy mode.
@@ -234,7 +233,7 @@
 
                   <CheckIcon class="swap-on text-success h-4 w-4" />
 
-                  <Copy class="swap-off h-4 w-4" />
+                  <CopyIcon class="swap-off h-4 w-4" />
                 </label>
               </div>
             </div>
@@ -285,7 +284,7 @@
               </div>
             {:else}
               <div class="text-error flex items-center gap-2">
-                <XIcon class="h-4 w-4 shrink-0" />
+                <CloseIcon class="h-4 w-4 shrink-0" />
                 <span>Domain verification failed</span>
               </div>
             {/if}

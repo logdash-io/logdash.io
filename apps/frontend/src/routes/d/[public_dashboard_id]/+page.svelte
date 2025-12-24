@@ -15,9 +15,11 @@
   });
 </script>
 
-<PublicDashboard
-  enablePolling={true}
-  onRefresh={() => publicDashboardPublicState.loadDashboard(data.dashboardId)}
-  pollingInterval={60}
-  state={publicDashboardPublicState}
-/>
+<div class="mx-auto max-w-xl w-full">
+  <PublicDashboard
+    enablePolling={true}
+    onRefresh={() => publicDashboardPublicState.loadDashboard(data.dashboardId)}
+    pollingInterval={60}
+    state={publicDashboardPublicState}
+  />
+</div>

@@ -9,7 +9,7 @@
     SettingsCardItem,
   } from '$lib/domains/shared/ui/components/settings-card/index.js';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
-  import DangerIcon from '$lib/domains/shared/icons/DangerIcon.svelte';
+  import { DangerIcon } from '@logdash/hyper-ui/icons';
   import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
   import HashIcon from '$lib/domains/shared/icons/HashIcon.svelte';
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';

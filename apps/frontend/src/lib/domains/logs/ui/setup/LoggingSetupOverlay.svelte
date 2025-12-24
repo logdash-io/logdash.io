@@ -3,7 +3,9 @@
   import { generateSetupPrompt } from '$lib/domains/logs/domain/setup-prompt.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { CheckIcon, ChevronDownIcon, CopyIcon } from 'lucide-svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
+  import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
+  import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import { scale } from 'svelte/transition';
   import { elasticOut } from 'svelte/easing';
 

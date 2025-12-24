@@ -4,9 +4,8 @@ import { envConfig } from '$lib/domains/shared/utils/env-config';
 export type GithubCallbackState = {
   terms_accepted: boolean;
   email_accepted: boolean;
-  flow: 'claim' | 'login';
+  flow: 'login';
   fallback_url: string;
-  cluster_id?: string;
   tier?: UserTier;
   next_url: string;
 };

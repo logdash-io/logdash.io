@@ -1,7 +1,5 @@
 <script lang="ts">
-  import type { ClassValue } from 'svelte/elements';
-
-  const { class: className = '' }: { class?: ClassValue } = $props();
+  const { class: className = '' } = $props();
 </script>
 
 <svg
@@ -11,23 +9,23 @@
   xmlns="http://www.w3.org/2000/svg"
 >
   <path
-    d="M12 9V14"
+    d="M8.90002 7.55999C9.21002 3.95999 11.06 2.48999 15.11 2.48999H15.24C19.71 2.48999 21.5 4.27999 21.5 8.74999V15.27C21.5 19.74 19.71 21.53 15.24 21.53H15.11C11.09 21.53 9.24002 20.08 8.91002 16.54"
     stroke="currentColor"
     stroke-width="1.5"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
   <path
-    d="M12.0001 21.41H5.94005C2.47005 21.41 1.02005 18.93 2.70005 15.9L5.82006 10.28L8.76006 5.00003C10.5401 1.79003 13.4601 1.79003 15.2401 5.00003L18.1801 10.29L21.3001 15.91C22.9801 18.94 21.5201 21.42 18.0601 21.42H12.0001V21.41Z"
+    d="M15 12H3.62"
     stroke="currentColor"
     stroke-width="1.5"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
   <path
-    d="M11.9945 17H12.0035"
+    d="M5.85 8.6499L2.5 11.9999L5.85 15.3499"
     stroke="currentColor"
-    stroke-width="2"
+    stroke-width="1.5"
     stroke-linecap="round"
     stroke-linejoin="round"
   />

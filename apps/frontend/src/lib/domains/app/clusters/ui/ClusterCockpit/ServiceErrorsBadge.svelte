@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
-  import DangerIcon from '$lib/domains/shared/icons/DangerIcon.svelte';
-  import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
+  import { DangerIcon, CheckIcon } from '@logdash/hyper-ui/icons';
 
   type Props = {
     projectId: string;

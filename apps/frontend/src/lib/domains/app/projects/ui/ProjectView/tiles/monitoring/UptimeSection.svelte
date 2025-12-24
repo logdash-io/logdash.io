@@ -23,7 +23,7 @@
 </script>
 
 <div class="w-full p-0 text-sm">
-  <div class="relative w-full px-6 sm:pb-6">
+  <div class="relative w-full px-6 pb-6">
     {#if !isPaid}
       <div class="absolute inset-0 z-10 -mt-6 flex items-center justify-center">
         <div
@@ -31,7 +31,7 @@
         >
           <div class="w-fit">
             <UpgradeButton source="monitor-historical-uptime">
-              Enable historical uptime
+              Unlock historical uptime with Pro plan
             </UpgradeButton>
           </div>
         </div>

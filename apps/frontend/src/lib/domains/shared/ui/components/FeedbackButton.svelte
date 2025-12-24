@@ -1,7 +1,12 @@
 <script lang="ts">
-  import { BubblesIcon, GiftIcon, LightbulbIcon } from 'lucide-svelte';
+  import LightbulbIcon from '$lib/domains/shared/icons/LightbulbIcon.svelte';
   import type { PostHog } from 'posthog-js';
   import { getContext } from 'svelte';
+
+  type Props = {
+    hideOnMobile?: boolean;
+  };
+  const { hideOnMobile = false }: Props = $props();
 
   let message = $state('');
   let open = $state(false);
@@ -25,16 +30,18 @@
   });
 </script>
 
-<div class="fixed bottom-4 right-4 z-50">
+<div
+  class={['fixed bottom-4 right-4 z-50', { 'hidden lg:block': hideOnMobile }]}
+>
   <div class="relative">
     <button
       onclick={() => {
         open = !open;
       }}
-      class="btn btn-md"
+      class="btn md:btn-md btn-sm"
       data-posthog-id="share-feedback-button"
     >
-      <LightbulbIcon class="size-4 text-amber-400" />
+      <LightbulbIcon class="size-3.5 md:size-4 text-amber-400" />
       Suggest improvement
     </button>
 
