@@ -1,11 +1,10 @@
 <script lang="ts">
   import { customDomainsState } from '$lib/domains/app/projects/application/public-dashboards/custom-domains.state.svelte.js';
-  import { UserTier } from '$lib/domains/shared/types.js';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { isDev } from '$lib/domains/shared/utils/is-dev.util.js';
-  import { AlertTriangleIcon, CheckIcon, XIcon, Copy } from 'lucide-svelte';
-  import { onMount } from 'svelte';
+  import { DangerIcon } from '@logdash/hyper-ui/icons';
+  import { CheckIcon, XIcon, Copy } from 'lucide-svelte';
   import Highlight from 'svelte-highlight';
   import { bash } from 'svelte-highlight/languages';
 
@@ -89,7 +88,7 @@
 </script>
 
 {#if !canSetup}
-  <UpgradeButton to={UserTier.PRO} source="custom-statuspage-domain">
+  <UpgradeButton source="custom-statuspage-domain">
     Available in Pro plan
   </UpgradeButton>
 {:else}
@@ -204,7 +203,7 @@
             <div
               class="alert alert-warning bg-warning/10 border-warning/30 rounded-lg"
             >
-              <AlertTriangleIcon class="h-4 w-4 shrink-0" />
+              <DangerIcon class="size-4 shrink-0" />
               <span class="text-sm">
                 If you're using Cloudflare, be careful to create these records
                 in 'DNS-only' mode, not proxy mode.

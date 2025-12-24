@@ -66,10 +66,16 @@
   </Tooltip>
 </div>
 
-{#snippet userProfileMenu()}
+{#snippet userProfileMenu(close: () => void)}
   <ul class="menu dropdown-content ld-card-base rounded-2xl z-1 w-56 p-2">
     {#if userState.canUpgrade}
-      <UpgradeButton class="mb-1" source="nav-menu" />
+      <UpgradeButton
+        class="mb-1"
+        source="nav-menu"
+        onclick={() => {
+          close();
+        }}
+      />
     {/if}
 
     {#if userState.hasBilling}

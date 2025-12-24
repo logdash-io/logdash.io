@@ -7,9 +7,7 @@
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
   import ClusterCreatorTile from '$lib/domains/app/clusters/ui/ClustersList/ClusterCreatorTile.svelte';
-  import CircularHealthChart, {
-    type ServiceStatus,
-  } from '$lib/domains/app/clusters/ui/ClustersList/CircularHealthChart.svelte';
+  import { type ServiceStatus } from '$lib/domains/app/clusters/ui/ClustersList/CircularHealthChart.svelte';
   import ClusterHealthSummary from '$lib/domains/app/clusters/ui/ClustersList/ClusterHealthSummary.svelte';
   import { type Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
   import { Feature } from '$lib/domains/shared/types.js';
@@ -141,22 +139,6 @@
         <h5 class="text-lg font-semibold">
           {cluster.name}
         </h5>
-        <!-- {#if hasServices}
-          <CircularHealthChart
-            services={services.map((s) => ({
-              id: s.id,
-              name: s.name,
-              status: s.status,
-            }))}
-            size={28}
-            strokeWidth={4}
-            gapSize={4}
-            clusterId={cluster.id}
-            onServiceClick={(serviceId) => {
-              goto(`/app/clusters/${cluster.id}/${serviceId}`);
-            }}
-          />
-        {/if} -->
       </div>
 
       {#if hasServices}
@@ -179,7 +161,6 @@
         </div>
       {:else}
         <div class="flex flex-col items-center gap-3 py-4">
-          <CircularHealthChart services={[]} size={60} strokeWidth={4} />
           <div class="text-center">
             <p class="text-base-content/60 text-sm">No services configured</p>
             <p class="text-base-content/40 text-xs">

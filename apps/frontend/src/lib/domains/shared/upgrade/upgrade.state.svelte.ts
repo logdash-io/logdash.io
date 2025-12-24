@@ -1,7 +1,10 @@
+import type { UpgradeSource } from './start-tier-upgrade.util.js';
+
 class UpgradeState {
   private _modalVisible = $state(false);
   private _backgroundVisible = $state(false);
   private _hideBackgroundTimeout: ReturnType<typeof setTimeout> | null = null;
+  private _source = $state<UpgradeSource>('unknown');
 
   get modalOpen(): boolean {
     return this._modalVisible;
@@ -9,6 +12,10 @@ class UpgradeState {
 
   get backgroundVisible(): boolean {
     return this._backgroundVisible;
+  }
+
+  get source(): UpgradeSource {
+    return this._source;
   }
 
   showBackground(): void {
@@ -26,7 +33,8 @@ class UpgradeState {
     }, 200);
   }
 
-  openModal(): void {
+  openModal(source: UpgradeSource = 'unknown'): void {
+    this._source = source;
     this._modalVisible = true;
   }
 
