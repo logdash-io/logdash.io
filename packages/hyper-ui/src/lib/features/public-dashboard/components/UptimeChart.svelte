@@ -1,14 +1,11 @@
 <script lang="ts">
-  import { DateTime } from "luxon";
   import Tooltip from "../../../presentational/Tooltip.svelte";
-  import StatusBar from "./StatusBar.svelte";
-
-  interface Bucket {
-    timestamp: string;
-    successCount: number;
-    failureCount: number;
-    averageLatencyMs: number;
-  }
+  import {
+    groupBucketsByStatus,
+    formatBucketTimeRange,
+    type Bucket,
+    type BucketSegment,
+  } from "../utils/group-buckets-by-status";
 
   interface Props {
     class?: string;
@@ -16,88 +13,90 @@
     maxBucketsToShow?: number;
     adaptToWidth?: boolean;
     timeLabel?: string;
+    height?: number;
   }
 
   let {
     buckets,
-    maxBucketsToShow,
+    maxBucketsToShow = 90,
     adaptToWidth = false,
     timeLabel = "days ago",
+    height = 6,
     class: className,
   }: Props = $props();
 
-  let containerWidth = $state(0);
-  const BAR_WIDTH = 8;
+  const GAP_PX = 2;
 
-  function getUptimeFromBucket(bucket: Bucket | null | undefined): number {
-    if (!bucket) return 100; // No data = assume up
-    const total = bucket.successCount + bucket.failureCount;
-    if (total === 0) return 100;
-    return (bucket.successCount / total) * 100;
-  }
-
-  function getBucketStatus(
-    bucket: Bucket | null | undefined
-  ): "up" | "degraded" | "down" | "unknown" {
-    if (!bucket) return "unknown";
-    const uptime = getUptimeFromBucket(bucket);
-    if (uptime >= 99.99) return "up";
-    if (uptime >= 50) return "degraded";
-    return "down";
-  }
-
-  const availableSlots = $derived(
-    adaptToWidth ? Math.floor(containerWidth / BAR_WIDTH) : maxBucketsToShow
+  const sortedBuckets = $derived(
+    [...(buckets || [])].sort((a, b) => {
+      if (!a || !b) return 0;
+      return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+    })
   );
+  const displayBuckets = $derived(sortedBuckets.slice(-maxBucketsToShow));
+  const segments = $derived(groupBucketsByStatus(displayBuckets));
+  const bucketsCount = $derived(displayBuckets.length);
 
-  const bucketsCount = $derived(buckets?.length || 0);
-  const displayBuckets = $derived(buckets?.slice(0, availableSlots) || []);
-  const emptyBuckets = $derived(Math.max(0, availableSlots - bucketsCount));
+  const statusColors = {
+    up: "bg-gradient-to-b from-green-600 via-green-600/80 to-green-600",
+    degraded:
+      "bg-gradient-to-b from-yellow-600 via-yellow-600/80 to-yellow-600",
+    down: "bg-gradient-to-b from-red-700 via-red-700/80 to-red-700",
+    unknown: "bg-base-100",
+  };
+
+  function getTooltipContent(segment: BucketSegment): string {
+    const statusLabels = {
+      up: "Healthy",
+      degraded: "Degraded",
+      down: "Down",
+      unknown: "No data",
+    };
+    const status = statusLabels[segment.status];
+    const timeRange = formatBucketTimeRange(segment.startTime, segment.endTime);
+    const uptime = segment.avgUptime.toFixed(1);
+
+    return `${status} • ${segment.bucketCount} ${segment.bucketCount > 1 ? "periods" : "period"} • ${timeRange} • ${uptime}% uptime`;
+  }
 </script>
 
-<div
-  class={[
-    "w-full space-y-2",
-    className,
-    {
-      "overflow-hidden": adaptToWidth,
-    },
-  ]}
-  bind:clientWidth={containerWidth}
->
+<div class={["w-full space-y-2 overflow-hidden", className]}>
   <div
-    class={[
-      "flex h-7 w-full flex-row-reverse items-end justify-start",
-      {
-        "overflow-visible": !adaptToWidth,
-      },
-    ]}
+    class="flex w-full items-end overflow-hidden"
+    style="height: {height}px; gap: {GAP_PX}px;"
   >
-    {#each displayBuckets as bucket, bucketIndex (bucketIndex)}
-      {@const bucketStatus = getBucketStatus(bucket)}
-      {@const uptime = getUptimeFromBucket(bucket)}
-      <Tooltip
-        content={bucket
-          ? `${DateTime.fromJSDate(new Date(bucket.timestamp)).toFormat("MMM dd, HH:mm")} - ${uptime.toFixed(1)}% uptime`
-          : "No data available for this day"}
-        placement="top"
-      >
-        <StatusBar status={bucketStatus} />
-      </Tooltip>
-    {/each}
-
-    {#each Array.from({ length: emptyBuckets }) as _, i (i)}
-      <Tooltip content="No data available" placement="top">
-        <StatusBar status={"unknown"} />
-      </Tooltip>
-    {/each}
+    {#if segments.length === 0}
+      <div
+        class="w-full flex-shrink-0 rounded-full dark:bg-base-100"
+        style="height: {height}px;"
+        title="No data available"
+      ></div>
+    {:else}
+      {#each segments as segment, index (index)}
+        {@const colorClass = statusColors[segment.status]}
+        <div
+          class="min-w-0.5 flex-shrink"
+          style="flex-grow: {segment.bucketCount};"
+        >
+          <Tooltip content={getTooltipContent(segment)} placement="top">
+            <div
+              class={[
+                "h-full w-full rounded-full transition-all duration-150 hover:opacity-80",
+                colorClass,
+              ]}
+              style="height: {height}px;"
+            ></div>
+          </Tooltip>
+        </div>
+      {/each}
+    {/if}
   </div>
 
   <div
     class="text-secondary/60 flex items-center justify-between font-mono text-xs"
   >
     <span>
-      {availableSlots}
+      {bucketsCount}
       {timeLabel}
     </span>
     <span>Now</span>

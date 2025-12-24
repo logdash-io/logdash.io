@@ -63,11 +63,11 @@ export const FEATURES_COMPARISON = {
       ],
     },
     {
-      name: 'Dashboards',
+      name: 'Status Pages',
       icon: '📊',
       features: [
         {
-          name: 'Public dashboards',
+          name: 'Status pages',
           [UserTier.FREE]: '1',
           [UserTier.BUILDER]: '5',
           [UserTier.PRO]: '15',

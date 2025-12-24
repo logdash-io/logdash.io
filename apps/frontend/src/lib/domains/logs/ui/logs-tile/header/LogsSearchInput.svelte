@@ -43,7 +43,7 @@
     bind:value={localSearchTerm}
     class="ld-input ld-input-padding w-full pr-10 text-sm"
     oninput={handleSearchInput}
-    placeholder="Search logs..."
+    placeholder="Filter logs..."
     type="text"
   />
 

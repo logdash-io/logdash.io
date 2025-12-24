@@ -9,14 +9,16 @@
     // console.log(...args);
   };
 
+  type SnippetWithClose = (close: () => void) => ReturnType<Snippet>;
+
   type Props = {
-    content: string | Snippet<[() => void]>;
-    placement: "top" | "bottom";
+    content: string | Snippet<[() => void]> | SnippetWithClose;
+    placement: "top" | "bottom" | "left" | "right";
     children: Snippet;
     class?: ClassValue;
     trigger?: "hover" | "click";
     interactive?: boolean;
-    align?: "left" | "center" | "right";
+    align?: "left" | "center" | "right" | "top" | "bottom";
     closeOnOutsideTooltipClick?: boolean;
   };
   const {
@@ -162,28 +164,47 @@
     const viewportHeight = window.innerHeight;
     const margin = 8;
 
-    let top = match(placement)
-      .with(
-        "top",
-        () => triggerRect.top - tooltipRect.height - margin + window.scrollY
-      )
-      .with("bottom", () => triggerRect.bottom + margin + window.scrollY)
-      .exhaustive();
+    let top: number;
+    let left: number;
 
-    let left = match(align)
-      .with("left", () => triggerRect.left + window.scrollX)
-      .with(
-        "right",
-        () => triggerRect.right - tooltipRect.width + window.scrollX
-      )
-      .with(
-        "center",
-        () =>
-          triggerRect.left +
-          (triggerRect.width - tooltipRect.width) / 2 +
-          window.scrollX
-      )
-      .exhaustive();
+    if (placement === "left" || placement === "right") {
+      if (align === "top") {
+        top = triggerRect.top + window.scrollY;
+      } else if (align === "bottom") {
+        top = triggerRect.bottom - tooltipRect.height + window.scrollY;
+      } else {
+        top =
+          triggerRect.top +
+          (triggerRect.height - tooltipRect.height) / 2 +
+          window.scrollY;
+      }
+
+      left =
+        placement === "left"
+          ? triggerRect.left - tooltipRect.width - margin + window.scrollX
+          : triggerRect.right + margin + window.scrollX;
+    } else {
+      top = match(placement)
+        .with(
+          "top",
+          () => triggerRect.top - tooltipRect.height - margin + window.scrollY
+        )
+        .with("bottom", () => triggerRect.bottom + margin + window.scrollY)
+        .exhaustive();
+
+      left = match(align)
+        .with("left", () => triggerRect.left + window.scrollX)
+        .with(
+          "right",
+          () => triggerRect.right - tooltipRect.width + window.scrollX
+        )
+        .otherwise(
+          () =>
+            triggerRect.left +
+            (triggerRect.width - tooltipRect.width) / 2 +
+            window.scrollX
+        );
+    }
 
     // Adjust horizontal position to stay within screen bounds
     const minLeft = margin + window.scrollX;

@@ -2,7 +2,6 @@ import { dev } from '$app/environment';
 import { bffLogger } from '$lib/domains/shared/bff-logger.server';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
 import {
-  get_access_token,
   save_access_token,
   save_onboarding_tier,
 } from '$lib/domains/shared/utils/cookies.utils';
@@ -106,63 +105,6 @@ async function runLoginFlow(dto: {
   redirect(302, next_url || `/app/clusters`);
 }
 
-async function runClaimFlow(dto: {
-  cookies: Cookies;
-  code: string | null;
-  state: GoogleCallbackState;
-  forceLocalLogin: boolean;
-}): Promise<void> {
-  const {
-    cookies,
-    code,
-    forceLocalLogin,
-    state: { cluster_id, email_accepted, next_url },
-  } = dto;
-
-  if (!cluster_id) {
-    throw new Error('cluster_id is required for claiming');
-  }
-
-  if (!code) {
-    throw new Error('code is required');
-  }
-
-  const anon_access_token = get_access_token(cookies);
-
-  if (!anon_access_token) {
-    throw new Error('anon access token is required for claiming');
-  }
-
-  bffLogger.info(`claiming google ${JSON.stringify({ code })}...`);
-
-  const response = await fetch(`${envConfig.apiBaseUrl}/auth/google/claim`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      googleCode: code,
-      accessToken: anon_access_token,
-      emailAccepted: email_accepted,
-      forceLocalLogin,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await readErrorMessage(response);
-    throw new Error(`google claim error: ${error}`);
-  }
-
-  const { token } = (await response.json()) as { token: string };
-
-  saveTokenToCookies({
-    cookies,
-    token,
-  });
-
-  redirect(302, next_url || `/app/clusters`);
-}
-
 export const load = async ({
   url,
   cookies,
@@ -195,21 +137,12 @@ export const load = async ({
 
   try {
     const forceLocalLogin = dev || params.provider === 'google-alternative';
-    if (decodedState.flow === 'login') {
-      await runLoginFlow({
-        cookies,
-        code,
-        state: decodedState,
-        forceLocalLogin,
-      });
-    } else if (decodedState.flow === 'claim') {
-      await runClaimFlow({
-        cookies,
-        code,
-        state: decodedState,
-        forceLocalLogin,
-      });
-    }
+    await runLoginFlow({
+      cookies,
+      code,
+      state: decodedState,
+      forceLocalLogin,
+    });
   } catch (result) {
     if (isRedirect(result)) {
       throw result;

@@ -14,6 +14,7 @@ import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 import {
   monitoringService,
   type CreateMonitorDto,
+  type UpdateMonitorDto,
 } from '$lib/domains/app/projects/infrastructure/monitoring.service';
 import type {
   PingBucket,
@@ -37,6 +38,7 @@ class MonitoringState {
   private _shouldReconnect = true;
   private _unsubscribe: () => void | null = null;
   private _loadingPage = $state(false);
+  private _pingsAbortControllers = new Map<string, AbortController>();
 
   get pageIsLoading(): boolean {
     return this._loadingPage;
@@ -256,7 +258,8 @@ class MonitoringState {
         monitorId,
         this._timeRange,
       );
-      this._pingBuckets[monitorId] = response.buckets;
+      // Backend returns newest-first, chart expects oldest-first (left = old, right = now)
+      this._pingBuckets[monitorId] = response.buckets.reverse();
     } catch (error) {
       logger.error('Failed to load ping buckets:', error);
       throw new Error('Failed to load ping buckets');
@@ -434,7 +437,6 @@ class MonitoringState {
   async claimMonitor(httpMonitorId: string): Promise<Monitor> {
     const claimedMonitor = await monitoringService.claimMonitor(httpMonitorId);
 
-    // Move from unclaimed to claimed monitors
     this._monitors[claimedMonitor.id] = claimedMonitor;
     delete this._unclaimedMonitors[claimedMonitor.id];
 
@@ -443,6 +445,26 @@ class MonitoringState {
     }
 
     return claimedMonitor;
+  }
+
+  async updateMonitor(
+    monitorId: string,
+    dto: UpdateMonitorDto,
+  ): Promise<Monitor> {
+    const updatedMonitor = await monitoringService.updateMonitor(
+      monitorId,
+      dto,
+    );
+
+    if (this._monitors[monitorId]) {
+      this._monitors[monitorId] = updatedMonitor;
+    }
+
+    if (this._unclaimedMonitors[monitorId]) {
+      this._unclaimedMonitors[monitorId] = updatedMonitor;
+    }
+
+    return updatedMonitor;
   }
 
   private _openMonitorStream(clusterId: string): Promise<void> {
@@ -535,30 +557,29 @@ class MonitoringState {
     });
   }
 
-  private _fetchMonitors(clusterId: string): Promise<void> {
-    return monitoringService
-      .getMonitors(clusterId)
-      .then((data) => {
-        const newMonitors = arrayToObject<Monitor>(data, 'id');
-        for (const [id, monitor] of Object.entries(newMonitors) as [
-          string,
-          Monitor,
-        ][]) {
-          if (!this._monitors[id]) {
-            this._monitors[id] = monitor;
-          }
-        }
+  private async _fetchMonitors(clusterId: string): Promise<void> {
+    try {
+      const data = await monitoringService.getMonitors(clusterId);
+      const newMonitors = arrayToObject<Monitor>(data, 'id');
 
-        for (const monitor of data) {
-          if (!this._monitorPings[monitor.id]) {
-            this._monitorPings[monitor.id] = [];
-          }
+      for (const [id, monitor] of Object.entries(newMonitors) as [
+        string,
+        Monitor,
+      ][]) {
+        if (!this._monitors[id]) {
+          this._monitors[id] = monitor;
         }
-      })
-      .catch((error) => {
-        logger.error('Failed to fetch monitors:', error);
-        throw new Error('Failed to fetch monitors');
-      });
+      }
+
+      for (const monitor of data) {
+        if (!this._monitorPings[monitor.id]) {
+          this._monitorPings[monitor.id] = [];
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to fetch monitors:', error);
+      throw new Error('Failed to fetch monitors');
+    }
   }
 
   private async _fetchPings(
@@ -566,26 +587,46 @@ class MonitoringState {
     monitorId: string,
     limit: number = 60,
   ): Promise<void> {
-    const data = await monitoringService.getMonitorPings({
-      projectId,
-      monitorId,
-      limit,
-    });
+    const existingController = this._pingsAbortControllers.get(monitorId);
+    if (existingController) {
+      existingController.abort();
+    }
 
-    this._monitorPings[monitorId] = data
-      .map((ping) => ({
-        ...ping,
-        createdAt: new Date(ping.createdAt),
-      }))
-      .sort((a, b) => {
-        if (a.createdAt < b.createdAt) {
-          return -1;
-        }
-        if (a.createdAt > b.createdAt) {
-          return 1;
-        }
-        return 0;
+    const controller = new AbortController();
+    this._pingsAbortControllers.set(monitorId, controller);
+
+    try {
+      const data = await monitoringService.getMonitorPings({
+        projectId,
+        monitorId,
+        limit,
+        signal: controller.signal,
       });
+
+      this._monitorPings[monitorId] = data
+        .map((ping) => ({
+          ...ping,
+          createdAt: new Date(ping.createdAt),
+        }))
+        .sort((a, b) => {
+          if (a.createdAt < b.createdAt) {
+            return -1;
+          }
+          if (a.createdAt > b.createdAt) {
+            return 1;
+          }
+          return 0;
+        });
+    } catch (error) {
+      if (error instanceof Error && error.name === 'CanceledError') {
+        return;
+      }
+      throw error;
+    } finally {
+      if (this._pingsAbortControllers.get(monitorId) === controller) {
+        this._pingsAbortControllers.delete(monitorId);
+      }
+    }
   }
 }
 

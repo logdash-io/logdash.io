@@ -56,9 +56,13 @@
 
 <AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
   <!-- Centralized Hero Section -->
-  <section class="mx-auto w-full max-w-4xl px-6 pb-16 pt-24 text-center">
+  <section
+    class="mx-auto w-full max-w-4xl px-6 pb-16 pt-16 md:pt-24 text-center"
+  >
     <div class="mb-8 flex justify-center">
-      <div class="flex items-center gap-3">
+      <div
+        class="flex items-center gap-3 size-22 rounded-3xl bg-primary/10 fcc"
+      >
         <Icon class="text-primary h-12 w-12" />
       </div>
     </div>

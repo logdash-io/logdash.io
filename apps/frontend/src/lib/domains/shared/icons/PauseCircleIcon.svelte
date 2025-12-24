@@ -16,11 +16,23 @@
   ></g>
   <g id="SVGRepo_iconCarrier">
     <path
-      d="M9.5 15V9M14.5 15V9M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+      d="M14 9L14 15"
       class={strokeClassName}
       stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
+    ></path>
+    <path
+      d="M10 9L10 15"
+      class={strokeClassName}
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    ></path>
+    <path
+      d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z"
+      class={strokeClassName}
+      stroke-width="2"
     ></path>
   </g>
 </svg>

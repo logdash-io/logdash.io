@@ -6,7 +6,9 @@
   import Modal from '$lib/domains/shared/ui/Modal.svelte';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import { BellIcon, LinkIcon, SendIcon } from 'lucide-svelte';
+  import BellIcon from '$lib/domains/shared/icons/BellIcon.svelte';
+  import LinkIcon from '$lib/domains/shared/icons/LinkIcon.svelte';
+  import SendIcon from '$lib/domains/shared/icons/SendIcon.svelte';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { notificationChannelSetupState } from '$lib/domains/app/projects/application/notification-channels/notification-channel-setup.state.svelte.js';
   import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
@@ -146,7 +148,7 @@
         withAssignment: boolean;
         url: string;
         name: string;
-        headers: Record;
+        headers: Record<string, string>;
         method: string;
       }) => {
         notificationChannelsState

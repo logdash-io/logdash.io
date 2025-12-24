@@ -3,16 +3,21 @@
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { ArrowRightIcon, TrashIcon, XIcon } from 'lucide-svelte';
+  import { ArrowRightIcon } from 'lucide-svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fade, fly } from 'svelte/transition';
 
   type Props = {
     id: string;
-    deletionDisabled?: boolean;
+    disabled?: boolean;
   };
-  const { id, deletionDisabled }: Props = $props();
-  const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
+  const { id, disabled = false }: Props = $props();
+  const previewedMetricId = $derived(page.params.metric_id);
+  const clusterId = $derived(page.params.cluster_id);
+  const projectId = $derived(page.params.project_id);
+  const isOnDemoDashboard = $derived(
+    page.url.pathname.includes('/demo-dashboard'),
+  );
 
   const metric = $derived(metricsState.getById(id));
 
@@ -34,66 +39,27 @@
     'relative flex flex-col items-start justify-between gap-1 text-base font-semibold',
   ]}
 >
-  <div class="flex h-6 w-full gap-3 overflow-hidden leading-tight">
-    <Tooltip
-      class={[
-        'min-w-0 flex-shrink transition-all duration-200',
-        {
-          'text-secondary/60 group-hover:text-secondary':
-            previewedMetricId !== metric.id,
-        },
-        {
-          'text-secondary': previewedMetricId === metric.id,
-        },
-      ]}
-      content={metric.name}
-      placement="top"
-    >
-      <span class="truncate">
-        {metric.name}
-      </span>
-    </Tooltip>
+  <Tooltip
+    class={[
+      'min-w-0 flex-shrink transition-all duration-200',
+      {
+        'text-secondary/60 group-hover:text-secondary':
+          previewedMetricId !== metric.id,
+      },
+      {
+        'text-secondary': previewedMetricId === metric.id,
+      },
+    ]}
+    content={metric.name}
+    placement="top"
+  >
+    <span class="truncate">
+      {metric.name}
+    </span>
+  </Tooltip>
+</div>
 
-    <div class="ml-auto flex items-center gap-2">
-      {#if previewedMetricId !== metric.id}
-        <button
-          transition:fly={{
-            duration: 200,
-            easing: cubicInOut,
-            y: 5,
-          }}
-          class="btn btn-secondary btn-soft btn-xs"
-          onclick={() => {
-            page.url.searchParams.set('metric_id', metric.id);
-            goto(page.url.href);
-          }}
-          data-posthog-id="preview-metric-button"
-        >
-          Preview <ArrowRightIcon class="h-3.5 w-3.5" />
-        </button>
-      {/if}
-
-      {#if !deletionDisabled}
-        <button
-          class="btn btn-error btn-square btn-soft btn-xs"
-          onclick={() => {
-            if (
-              confirm(`Are you sure you want to delete ${metric.name} metric?`)
-            ) {
-              metricsState.delete(
-                page.url.searchParams.get('project_id'),
-                metric.id,
-              );
-            }
-          }}
-          data-posthog-id="delete-metric-button"
-        >
-          <TrashIcon class="h-3.5 w-3.5" />
-        </button>
-      {/if}
-    </div>
-  </div>
-
+<div class="flex w-full gap-3 overflow-hidden leading-tight items-end">
   <Tooltip
     class="mr-auto font-mono text-4xl font-semibold"
     content={metric.value.toString()}
@@ -101,4 +67,38 @@
   >
     {formatNumber(metric.value)}
   </Tooltip>
+
+  {#if previewedMetricId !== metric.id && !disabled}
+    {#if isOnDemoDashboard}
+      <Tooltip content="Not available in demo" placement="top">
+        <button
+          transition:fly={{
+            duration: 200,
+            easing: cubicInOut,
+            y: 5,
+          }}
+          class="btn btn-secondary btn-soft btn-xs ml-auto opacity-50 cursor-not-allowed"
+          disabled
+        >
+          Preview <ArrowRightIcon class="h-3.5 w-3.5" />
+        </button>
+      </Tooltip>
+    {:else}
+      <button
+        transition:fly={{
+          duration: 200,
+          easing: cubicInOut,
+          y: 5,
+        }}
+        class="btn btn-secondary btn-soft btn-xs ml-auto"
+        onclick={() => {
+          metricsState.setLastPreviewedMetricId(projectId, metric.id);
+          goto(`/app/clusters/${clusterId}/${projectId}/metrics/${metric.id}`);
+        }}
+        data-posthog-id="preview-metric-button"
+      >
+        Preview <ArrowRightIcon class="h-3.5 w-3.5" />
+      </button>
+    {/if}
+  {/if}
 </div>

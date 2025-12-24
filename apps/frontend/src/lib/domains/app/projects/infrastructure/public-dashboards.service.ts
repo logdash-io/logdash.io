@@ -9,6 +9,19 @@ export class PublicDashboardsService {
     );
   }
 
+  createPublicDashboard(
+    clusterId: string,
+    name: string,
+  ): Promise<PublicDashboard> {
+    return httpClient.post<PublicDashboard>(
+      `/clusters/${clusterId}/public_dashboards`,
+      {
+        name,
+        isPublic: false,
+      },
+    );
+  }
+
   getPublicDashboardData(
     dashboardId: string,
     period: '24h' | '7d' | '90d' = '90d',
@@ -23,39 +36,34 @@ export class PublicDashboardsService {
     );
   }
 
-  // todo: migrate these methods from ldAPI
-  // createPublicDashboard(clusterId: string): Promise<PublicDashboard> {
-  //   return httpClient.post<PublicDashboard>(`/clusters/${clusterId}/public_dashboards`, {
-  //     name: 'Status Page',
-  //     isPublic: false,
-  //   });
-  // }
+  updatePublicDashboard(
+    dashboardId: string,
+    update: Partial<{ name: string; isPublic: boolean }>,
+  ): Promise<PublicDashboard> {
+    return httpClient.put<PublicDashboard>(
+      `/public_dashboards/${dashboardId}`,
+      update,
+    );
+  }
 
-  // updatePublicDashboard(
-  //   dashboardId: string,
-  //   update: Partial<{ name: string; isPublic: boolean }>,
-  // ): Promise<PublicDashboard> {
-  //   return httpClient.put<PublicDashboard>(`/public_dashboards/${dashboardId}`, update);
-  // }
+  addMonitorToDashboard(
+    dashboardId: string,
+    monitorId: string,
+  ): Promise<PublicDashboard> {
+    return httpClient.post<PublicDashboard>(
+      `/public_dashboards/${dashboardId}/monitors/${monitorId}`,
+      {},
+    );
+  }
 
-  // addMonitorToDashboard(
-  //   dashboardId: string,
-  //   monitorId: string,
-  // ): Promise<PublicDashboard> {
-  //   return httpClient.post<PublicDashboard>(
-  //     `/public_dashboards/${dashboardId}/monitors/${monitorId}`,
-  //     {},
-  //   );
-  // }
-
-  // removeMonitorFromDashboard(
-  //   dashboardId: string,
-  //   monitorId: string,
-  // ): Promise<PublicDashboard> {
-  //   return httpClient.delete<PublicDashboard>(
-  //     `/public_dashboards/${dashboardId}/monitors/${monitorId}`,
-  //   );
-  // }
+  removeMonitorFromDashboard(
+    dashboardId: string,
+    monitorId: string,
+  ): Promise<PublicDashboard> {
+    return httpClient.delete<PublicDashboard>(
+      `/public_dashboards/${dashboardId}/monitors/${monitorId}`,
+    );
+  }
 }
 
 export const publicDashboardsService = new PublicDashboardsService();

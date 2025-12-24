@@ -33,6 +33,7 @@ export class ProjectWriteService {
       },
       tier: dto.tier,
       clusterId: dto.clusterId,
+      selectedFeatures: dto.selectedFeatures || [],
     });
 
     const projectNormalized = ProjectSerializer.normalize(project);
@@ -125,6 +126,10 @@ export class ProjectWriteService {
 
     if (dto.clusterId) {
       updateQuery.clusterId = dto.clusterId;
+    }
+
+    if (dto.selectedFeatures) {
+      updateQuery.selectedFeatures = dto.selectedFeatures;
     }
 
     return updateQuery;

@@ -7,5 +7,6 @@ export interface ScrollAreaProps {
   autoHideDelay?: number;
   thumbMinSize?: number;
   viewportRef?: HTMLDivElement | null;
+  onscroll?: (event: Event) => void;
   children: Snippet;
 }

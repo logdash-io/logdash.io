@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { SendIcon, CheckIcon, CopyIcon } from 'lucide-svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
+  import SendIcon from '$lib/domains/shared/icons/SendIcon.svelte';
+  import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import { browser } from '$app/environment';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 

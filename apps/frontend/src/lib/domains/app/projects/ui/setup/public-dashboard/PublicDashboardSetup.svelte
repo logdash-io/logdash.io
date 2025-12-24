@@ -9,7 +9,7 @@
   import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
   import { debounce } from '$lib/domains/shared/utils/debounce.js';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
-  import { CheckIcon } from 'lucide-svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
   import { onMount, type Snippet } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fly, scale } from 'svelte/transition';
@@ -89,9 +89,7 @@
         {/if}
       </span>
 
-      <h5 class="text-2xl font-semibold">
-        Setup Public Dashboard for your project
-      </h5>
+      <h5 class="text-2xl font-semibold">Setup Status Page for your project</h5>
 
       <p class="text-base-content opacity-60">
         Share status of your services with the world.
@@ -152,7 +150,7 @@
 
       <div class="text-sm">
         <p class="mb-2">
-          The name will be used in the header of your public dashboard.
+          The name will be used in the header of your status page.
         </p>
         <input
           bind:value={dashboardName}

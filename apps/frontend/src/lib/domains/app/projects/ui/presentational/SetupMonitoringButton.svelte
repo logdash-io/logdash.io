@@ -6,7 +6,7 @@
     isValidUrl,
     tryPrependProtocol,
   } from '$lib/domains/shared/utils/url.js';
-  import { CheckIcon, XIcon } from 'lucide-svelte';
+  import { CheckIcon, CloseIcon } from '@logdash/hyper-ui/icons';
   import type { Snippet } from 'svelte';
   import { fly } from 'svelte/transition';
   import { MonitorMode } from '../../domain/monitoring/monitor-mode.js';
@@ -139,7 +139,7 @@
         onclick={close}
         use:clickShortcut={{ key: 'Escape' }}
       >
-        <XIcon class="h-4 w-4" />
+        <CloseIcon class="h-4 w-4" />
       </button>
     </div>
   </div>

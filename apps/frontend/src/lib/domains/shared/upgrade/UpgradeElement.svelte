@@ -4,7 +4,6 @@
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import type { UpgradeSource } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
   import type { PostHog } from 'posthog-js';
-  import { userState } from '../user/application/user.state.svelte.js';
 
   type Props = {
     class?: ClassValue;
@@ -25,15 +24,26 @@
 
   const posthog = getContext<PostHog>('posthog');
 
-  const handleMouseEnter = () => {
+  const onMouseEnter = (): void => {
     if (enabled) {
       upgradeState.showBackground();
     }
   };
 
-  const handleMouseLeave = () => {
+  const onMouseLeave = (): void => {
     if (enabled) {
       upgradeState.hideBackground();
+    }
+  };
+
+  const onElementClick = (): void => {
+    onClick?.();
+    if (enabled) {
+      posthog?.capture('upgrade_button_clicked', {
+        source,
+        timestamp: new Date().toISOString(),
+      });
+      upgradeState.openModal(source);
     }
   };
 
@@ -50,21 +60,9 @@
       'pointer-events-none': !interactive,
     },
   ]}
-  onclick={() => {
-    onClick?.();
-    if (enabled) {
-      const nextTier = userState.upgrade(source);
-      if (nextTier) {
-        posthog.capture('upgrade_initiated', {
-          source,
-          timestamp: new Date().toISOString(),
-          tier: nextTier,
-        });
-      }
-    }
-  }}
-  onmouseenter={handleMouseEnter}
-  onmouseleave={handleMouseLeave}
+  onclick={onElementClick}
+  onmouseenter={onMouseEnter}
+  onmouseleave={onMouseLeave}
   role="button"
 >
   {@render children?.()}

@@ -1,6 +1,8 @@
 import { Feature } from '$lib/domains/shared/types.js';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import type { Project } from '$lib/domains/app/projects/domain/project';
+import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
+import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 
 // todo: divide api calls responsibility from state
 class ProjectsState {
@@ -43,7 +45,19 @@ class ProjectsState {
   }
 
   hasFeature(projectId: string, feature: Feature): boolean {
-    return this._projects[projectId]?.features.includes(feature);
+    const project = this._projects[projectId];
+    if (!project) {
+      return false;
+    }
+
+    return (
+      project.selectedFeatures?.includes(feature) ||
+      project.features.includes(feature)
+    );
+  }
+
+  hasConfiguredFeature(projectId: string, feature: Feature): boolean {
+    return this._projects[projectId]?.features?.includes(feature) ?? false;
   }
 
   getApiKey(projectId: string): Promise<string> {
@@ -99,23 +113,56 @@ class ProjectsState {
     });
   }
 
-  deleteProject(projectId: string): Promise<void> {
+  async deleteProject(projectId: string): Promise<void> {
     if (this._deletingProject[projectId]) {
-      return Promise.resolve();
+      return;
     }
     this._deletingProject[projectId] = true;
 
-    return fetch(`/app/api/projects/${projectId}`, {
+    await fetch(`/app/api/projects/${projectId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-    }).then(() => {
-      delete this._projects[projectId];
-      delete this._apiKeys[projectId];
-      delete this._loadingApiKey[projectId];
-      delete this._deletingProject[projectId];
     });
+
+    delete this._projects[projectId];
+    delete this._apiKeys[projectId];
+    delete this._loadingApiKey[projectId];
+    delete this._deletingProject[projectId];
+  }
+
+  async addFeature(projectId: string, feature: Feature): Promise<void> {
+    const project = this._projects[projectId];
+    if (!project) {
+      return;
+    }
+
+    if (project.selectedFeatures?.includes(feature)) {
+      return;
+    }
+
+    const previousFeatures = project.selectedFeatures || [];
+    const updatedFeatures = [...previousFeatures, feature];
+
+    this._projects[projectId] = {
+      ...project,
+      selectedFeatures: updatedFeatures,
+    };
+
+    try {
+      await ProjectsService.updateProject(projectId, {
+        selectedFeatures: updatedFeatures,
+      });
+    } catch (error) {
+      this._projects[projectId] = {
+        ...project,
+        selectedFeatures: previousFeatures,
+      };
+
+      toast.error('Failed to add feature to project');
+      throw error;
+    }
   }
 }
 

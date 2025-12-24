@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import PauseCircleIcon from '$lib/domains/shared/icons/PauseCircleIcon.svelte';
   import { scale } from 'svelte/transition';
@@ -15,6 +16,10 @@
   };
 
   const { projectId }: Props = $props();
+
+  const isOnDemoDashboard = $derived(
+    page.url.pathname.includes('/demo-dashboard'),
+  );
 
   const maxRetentionHours = $derived(
     exposedConfigState.logRetentionHours(userState.tier),
@@ -56,15 +61,13 @@
 
   <div class="flex items-center justify-between gap-2.5 p-4">
     <Tooltip
-      content={logsState.syncPaused ? 'Sync paused' : 'Sync active'}
+      content={logsState.shouldFiltersBlockSync ? 'Sync paused' : 'Sync active'}
       placement="top"
     >
-      <div
-        class="flex h-3 w-3 shrink-0 items-center justify-center md:h-8 md:w-8"
-      >
-        {#if logsState.syncPaused}
+      <div class="flex size-4 shrink-0 items-center justify-center md:size-8">
+        {#if logsState.shouldFiltersBlockSync}
           <PauseCircleIcon
-            class="h-3 w-3 shrink-0 sm:h-5 sm:w-5"
+            class="size-4 shrink-0 sm:h-5 sm:w-5"
             stroke="stroke-warning-content"
           />
         {:else}
@@ -88,18 +91,23 @@
       }}
     />
 
-    <button
-      class="btn btn-primary btn-sm gap-1.5"
-      data-posthog-id="send-test-log-button"
-      disabled={sendingTestLogCooldown > 0}
-      onclick={sendTestLog}
-    >
-      <span>Send test log</span>
-      {#if sendingTestLogCooldown > 0}
-        <span class="font-mono" in:scale|global={{ start: 0.8, duration: 200 }}>
-          ({sendingTestLogCooldown}s)
-        </span>
-      {/if}
-    </button>
+    {#if isOnDemoDashboard}
+      <button
+        class="btn btn-secondary btn-sm gap-1.5"
+        data-posthog-id="send-test-log-button"
+        disabled={sendingTestLogCooldown > 0}
+        onclick={sendTestLog}
+      >
+        <span>Send test log</span>
+        {#if sendingTestLogCooldown > 0}
+          <span
+            class="font-mono"
+            in:scale|global={{ start: 0.8, duration: 200 }}
+          >
+            ({sendingTestLogCooldown}s)
+          </span>
+        {/if}
+      </button>
+    {/if}
   </div>
 </div>

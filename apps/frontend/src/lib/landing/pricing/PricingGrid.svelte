@@ -2,7 +2,8 @@
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { UserTier } from '$lib/domains/shared/types.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
-  import { CheckIcon, ShieldCheckIcon } from 'lucide-svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
+  import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
   import { fade } from 'svelte/transition';
   import { runGithubLogin } from './run-github-login.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';

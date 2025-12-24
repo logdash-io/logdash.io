@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, type Snippet } from "svelte";
+  import { fly } from "svelte/transition";
 
   interface Props {
     enablePolling?: boolean;
     pollingInterval?: number;
     onRefresh?: () => void;
     loading?: boolean;
+    children?: Snippet;
   }
 
   let {
@@ -13,6 +15,7 @@
     pollingInterval = 60,
     onRefresh,
     loading = false,
+    children,
   }: Props = $props();
 
   let timeToNextRefresh = $state(pollingInterval);
@@ -66,18 +69,31 @@
   });
 </script>
 
-<div class="mb-8 flex items-center justify-between px-1 text-center">
+<div class="mb-8 flex flex-col items-start justify-start px-1 text-left">
   <h1 class="text-secondary text-2xl font-semibold">
-    <slot />
+    {@render children?.()}
   </h1>
   {#if enablePolling}
     <div
-      class="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-300"
+      class="grid overflow-hidden text-left text-xs text-neutral-600 dark:text-neutral-500"
     >
       {#if loading}
-        <div class="loading-spinner loading loading-xs"></div>
+        <span
+          class="col-start-1 row-start-1 font-mono"
+          in:fly={{ y: -12, duration: 200 }}
+          out:fly={{ y: 12, duration: 200 }}
+        >
+          Refreshing...
+        </span>
+      {:else}
+        <span
+          class="col-start-1 row-start-1 font-mono"
+          in:fly={{ y: -12, duration: 200 }}
+          out:fly={{ y: 12, duration: 200 }}
+        >
+          Auto-refresh in {timeToNextRefresh}s
+        </span>
       {/if}
-      <span class="font-mono">Auto-refresh in {timeToNextRefresh}s</span>
     </div>
   {/if}
 </div>

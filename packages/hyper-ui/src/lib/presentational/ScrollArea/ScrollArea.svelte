@@ -8,6 +8,7 @@
     autoHideDelay = 1000,
     thumbMinSize = 40,
     viewportRef = $bindable(null),
+    onscroll,
     children,
   }: ScrollAreaProps = $props();
 
@@ -83,7 +84,7 @@
     }
   }
 
-  function handleScroll() {
+  function handleScroll(event: Event) {
     updateScrollbars();
 
     if (hasVerticalScroll && (orientation === "y" || orientation === "xy")) {
@@ -101,6 +102,8 @@
         if (!isDraggingX) showHorizontal = false;
       }, autoHideDelay);
     }
+
+    onscroll?.(event);
   }
 
   function handleVerticalTrackClick(e: MouseEvent) {
@@ -226,7 +229,14 @@
 <div class="scroll-area-root relative overflow-hidden {className}">
   <div
     bind:this={viewport}
-    class="scroll-area-viewport z-0 h-full w-full overflow-auto"
+    class={[
+      "scroll-area-viewport z-0 h-full w-full",
+      {
+        "overflow-auto": orientation === "xy",
+        "overflow-x-auto": orientation === "x",
+        "overflow-y-auto": orientation === "y",
+      },
+    ]}
     onscroll={handleScroll}
   >
     {@render children()}

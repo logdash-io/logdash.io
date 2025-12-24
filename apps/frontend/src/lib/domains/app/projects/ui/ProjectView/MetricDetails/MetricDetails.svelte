@@ -14,7 +14,8 @@
   import MetricBreakdownChart from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricBreakdownChart.svelte';
   import TimeRangeSelector from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/TimeRangeSelector.svelte';
 
-  const previewedMetricId = $derived(page.url.searchParams.get('metric_id'));
+  const previewedMetricId = $derived(page.params.metric_id);
+  const projectId = $derived(page.params.project_id);
 
   let minuteDataTimeRange: string = $state(
     ChartOptions[ChartType.MINUTE].SMALL,
@@ -23,12 +24,7 @@
   let dayDataTimeRange: string = $state(ChartOptions[ChartType.DAY].SMALL);
 
   $effect(() => {
-    const projectId = page.url.searchParams.get('project_id');
-
-    if (!projectId || !previewedMetricId) {
-      logger.warn(
-        'MetricDetails: Synchronization failed due to missing projectId or metricId',
-      );
+    if (!projectId || !previewedMetricId || metricsState.isUsingFakeData) {
       return;
     }
 
@@ -42,20 +38,28 @@
   const isPaid = $derived(userState.isPaid);
 
   const { minuteData, hourData, dayData } = $derived.by(() => {
+    if (metricsState.isUsingFakeData) {
+      return {
+        minuteData: metricsState.getFakeChartData(MetricGranularity.MINUTE),
+        hourData: metricsState.getFakeChartData(MetricGranularity.HOUR),
+        dayData: metricsState.getFakeChartData(MetricGranularity.DAY),
+      };
+    }
+
     const minuteData = metricsState.metricsByMetricRegisterId(
-      page.url.searchParams.get('metric_id'),
+      previewedMetricId,
       MetricGranularity.MINUTE,
     );
     const hourData = metricsState.metricsByMetricRegisterId(
-      page.url.searchParams.get('metric_id'),
+      previewedMetricId,
       MetricGranularity.HOUR,
     );
     const dayData = metricsState.metricsByMetricRegisterId(
-      page.url.searchParams.get('metric_id'),
+      previewedMetricId,
       MetricGranularity.DAY,
     );
     const allTimeData = metricsState.metricsByMetricRegisterId(
-      page.url.searchParams.get('metric_id'),
+      previewedMetricId,
       MetricGranularity.ALL_TIME,
     );
     const metricsData = [
@@ -106,8 +110,8 @@
 </script>
 
 {#snippet previewedMetricSubtitle()}
-  <p class="mb-4 text-sm text-gray-500">
-    Previewing {metricsState.getById(previewedMetricId)?.name} metric
+  <p class="mb-4 text-sm text-base-content/50 font-medium">
+    {metricsState.getById(previewedMetricId)?.name}
   </p>
 {/snippet}
 

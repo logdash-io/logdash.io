@@ -2,35 +2,41 @@
   import SkyBackground from '$lib/domains/shared/upgrade/SkyBackground.svelte';
   import { type UpgradeSource } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
-  import { RocketIcon } from 'lucide-svelte';
-  import type { PostHog } from 'posthog-js';
+  import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
   import { getContext, onDestroy, type Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
-  import { fade } from 'svelte/transition';
-  import { userState } from '../user/application/user.state.svelte.js';
-  import type { UserTier } from '../types.js';
+  import type { PostHog } from 'posthog-js';
 
   type Props = {
     class?: ClassValue;
     children?: Snippet;
     source?: UpgradeSource;
-    to?: UserTier;
+    onclick?: () => void;
   };
   const {
     class: className = '',
     children,
     source = 'unknown',
-    to,
+    onclick: onClickProp,
   }: Props = $props();
-  const posthog = getContext<PostHog>('posthog');
-  let upgrading = $state(false);
 
-  const onMouseEnter = () => {
+  const posthog = getContext<PostHog>('posthog');
+
+  const onMouseEnter = (): void => {
     upgradeState.showBackground();
   };
 
-  const onMouseLeave = () => {
+  const onMouseLeave = (): void => {
     upgradeState.hideBackground();
+  };
+
+  const onClick = (): void => {
+    onClickProp?.();
+    posthog?.capture('upgrade_button_clicked', {
+      source,
+      timestamp: new Date().toISOString(),
+    });
+    upgradeState.openModal(source);
   };
 
   onDestroy(() => {
@@ -38,20 +44,10 @@
   });
 </script>
 
-<div class={['btn-wrapper z-10 w-full rounded-lg p-[1px]', className]}>
+<div class={['btn-wrapper z-10 w-full rounded-[13px] p-[1px]', className]}>
   <button
     class="btn btn-neutral relative w-full overflow-hidden"
-    onclick={() => {
-      upgrading = true;
-      const nextTier = userState.upgrade(source, to);
-      if (nextTier) {
-        posthog.capture('upgrade_initiated', {
-          source,
-          timestamp: new Date().toISOString(),
-          tier: nextTier,
-        });
-      }
-    }}
+    onclick={onClick}
     onmouseenter={onMouseEnter}
     onmouseleave={onMouseLeave}
   >
@@ -66,16 +62,7 @@
         Upgrade your plan
       {/if}
 
-      {#if upgrading}
-        <div
-          in:fade={{ duration: 150 }}
-          class="flex h-4 w-4 items-center justify-center"
-        >
-          <span class="loading loading-xs loading-spinner"></span>
-        </div>
-      {:else}
-        <RocketIcon class="inline h-4 w-4" />
-      {/if}
+      <RocketIcon class="inline h-4 w-4" />
     </div>
   </button>
 </div>

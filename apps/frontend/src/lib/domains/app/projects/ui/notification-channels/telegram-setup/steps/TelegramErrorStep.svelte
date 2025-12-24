@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AlertTriangleIcon } from 'lucide-svelte';
+  import { DangerIcon } from '@logdash/hyper-ui/icons';
 
   interface Props {
     errorMessage: string;
@@ -15,7 +15,7 @@
     <div
       class="error-card flex h-14 w-14 items-center justify-center rounded-full"
     >
-      <AlertTriangleIcon class="h-6 w-6" />
+      <DangerIcon class="h-6 w-6" />
     </div>
 
     <div class="flex flex-col items-start">

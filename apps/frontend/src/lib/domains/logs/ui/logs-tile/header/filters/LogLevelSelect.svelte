@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { ChevronDownIcon } from 'lucide-svelte';
+  import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
 
   type Props = {
     selectedLevel: string | null;

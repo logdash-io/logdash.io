@@ -97,6 +97,7 @@ export class ProjectCoreController {
       {
         id: projectId,
         name: dto.name,
+        selectedFeatures: dto.selectedFeatures,
       },
       userId,
     );
@@ -124,6 +125,7 @@ export class ProjectCoreController {
       userId,
       clusterId,
       tier: projectTier,
+      selectedFeatures: dto.selectedFeatures,
     });
 
     const apiKey = await this.apiKeyWriteService.createApiKey({
