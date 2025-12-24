@@ -31,10 +31,10 @@
       onclick={() => {
         open = !open;
       }}
-      class="btn btn-md"
+      class="btn md:btn-md btn-sm"
       data-posthog-id="share-feedback-button"
     >
-      <LightbulbIcon class="size-4 text-amber-400" />
+      <LightbulbIcon class="size-3.5 md:size-4 text-amber-400" />
       Suggest improvement
     </button>
 

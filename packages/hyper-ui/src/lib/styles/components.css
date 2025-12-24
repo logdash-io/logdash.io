@@ -11,6 +11,21 @@
     @apply border-0 bg-transparent shadow-none;
   }
 
+  .btn-error {
+    --btn-color: oklch(from var(--color-error) l c h / 0.15);
+    --btn-fg: var(--color-error);
+    border: none;
+  }
+
+  .btn-error:hover {
+    --btn-color: oklch(from var(--color-error) l c h / 0.25);
+  }
+
+  .btn-error:disabled {
+    --btn-color: oklch(from var(--color-error) l c h / 0.15);
+    --btn-fg: oklch(from var(--color-error-content) l c h / 0.25);
+  }
+
   .code-snippet > .hljs {
     @apply from-base-300 to-base-200 border-base-200 rounded-xl border bg-gradient-to-br shadow-lg;
   }

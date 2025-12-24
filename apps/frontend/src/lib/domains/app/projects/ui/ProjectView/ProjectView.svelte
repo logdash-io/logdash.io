@@ -104,10 +104,10 @@
     </div>
   {/if}
 
-  {#if selectedMetrics && metricsState.ready && apiKey}
+  {#if selectedMetrics && metricsState.ready}
     <div class="relative w-full shrink-0 sm:w-80 h-fit">
       <MetricsTiles />
-      {#if metricsState.isUsingFakeData && projectsState.ready}
+      {#if metricsState.isUsingFakeData && projectsState.ready && apiKey}
         <MetricsSetupOverlay {apiKey} />
       {/if}
     </div>

@@ -12,6 +12,7 @@
     "./types": "./src/lib/types/index.ts",
     "./features": "./src/lib/features/index.ts",
     "./presentational": "./src/lib/presentational/index.ts",
+    "./icons": "./src/lib/icons/index.ts",
     "./utils": "./src/lib/utils/index.ts",
     "./types/*": "./src/lib/types/*.ts",
     "./features/*": "./src/lib/features/*.ts",

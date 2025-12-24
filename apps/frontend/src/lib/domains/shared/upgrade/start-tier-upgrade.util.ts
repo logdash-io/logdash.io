@@ -1,4 +1,3 @@
-import { goto } from '$app/navigation';
 import { UserTier } from '../types.js';
 
 export type UpgradeSource =
@@ -9,6 +8,7 @@ export type UpgradeSource =
   | 'cluster-limit'
   | 'project-limit'
   | 'public-dashboard-limit'
+  | 'status-page-limit'
   | 'webhook-method-restriction'
   | 'webhook-headers-restriction'
   | 'cluster-invite-limit'
@@ -21,7 +21,7 @@ export type UpgradeSource =
 export const startTierUpgrade = (
   source: UpgradeSource = 'unknown',
   tier: UserTier = UserTier.BUILDER,
-) => {
+): void => {
   const params = new URLSearchParams({ source, tier: tier.toString() });
-  goto(`/app/api/user/upgrade?${params.toString()}`);
+  window.location.href = `/app/api/user/upgrade?${params.toString()}`;
 };

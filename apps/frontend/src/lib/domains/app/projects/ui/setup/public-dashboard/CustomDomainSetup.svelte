@@ -90,7 +90,7 @@
 
 {#if !canSetup}
   <UpgradeButton to={UserTier.PRO} source="custom-statuspage-domain">
-    Upgrade to Pro
+    Available in Pro plan
   </UpgradeButton>
 {:else}
   <p class="text-base-content/70 mb-3">

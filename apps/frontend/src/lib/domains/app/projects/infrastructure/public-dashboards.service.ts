@@ -9,6 +9,19 @@ export class PublicDashboardsService {
     );
   }
 
+  createPublicDashboard(
+    clusterId: string,
+    name: string,
+  ): Promise<PublicDashboard> {
+    return httpClient.post<PublicDashboard>(
+      `/clusters/${clusterId}/public_dashboards`,
+      {
+        name,
+        isPublic: false,
+      },
+    );
+  }
+
   getPublicDashboardData(
     dashboardId: string,
     period: '24h' | '7d' | '90d' = '90d',

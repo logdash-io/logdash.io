@@ -10,6 +10,20 @@ export class PublicDashboardManagerState {
     return this._dashboards[dashboardId];
   }
 
+  async create(clusterId: string, name: string): Promise<PublicDashboard> {
+    try {
+      const data = await publicDashboardsService.createPublicDashboard(
+        clusterId,
+        name,
+      );
+      this._dashboards[data.id] = data;
+      return data;
+    } catch (error) {
+      console.error('Failed to create status page:', error);
+      throw error;
+    }
+  }
+
   async update(
     dashboardId: string,
     dto: Partial<{

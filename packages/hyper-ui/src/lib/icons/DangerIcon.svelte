@@ -1,7 +1,5 @@
 <script lang="ts">
-  import type { ClassValue } from 'svelte/elements';
-
-  const { class: className = '' }: { class?: ClassValue } = $props();
+  const { class: className = "" }: { class?: string } = $props();
 </script>
 
 <svg

@@ -51,7 +51,7 @@ class ProjectsState {
     }
 
     return (
-      project.selectedFeatures?.includes(feature) ??
+      project.selectedFeatures?.includes(feature) ||
       project.features.includes(feature)
     );
   }

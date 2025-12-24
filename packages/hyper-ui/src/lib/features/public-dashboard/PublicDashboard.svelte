@@ -16,6 +16,9 @@
     enablePolling?: boolean;
     pollingInterval?: number;
     onRefresh?: () => void;
+    withBranding?: boolean;
+    withHeader?: boolean;
+    expanded?: boolean;
   }
 
   let {
@@ -26,6 +29,9 @@
     enablePolling = true,
     pollingInterval = 60,
     onRefresh,
+    withBranding = true,
+    withHeader = true,
+    expanded = false,
   }: Props = $props();
 
   const dashboardData = $derived(dashboardState.data);
@@ -37,27 +43,28 @@
 
 <svelte:head>
   <title>{pageName}</title>
-  <meta
-    content="Real-time status dashboard for our services"
-    name="description"
-  />
+  <meta content="Real-time status page for your project" name="description" />
 </svelte:head>
 
-<div class="mx-auto h-full w-fit max-w-none">
-  <div class="w-fit px-4 py-8 sm:px-6 lg:px-8">
-    <DashboardTitle {enablePolling} {loading} {onRefresh} {pollingInterval}>
-      {pageName}
-    </DashboardTitle>
+<div class="mx-auto h-full w-full max-w-none">
+  <div class="w-full px-4 py-8 sm:px-6 lg:px-8">
+    {#if withBranding}
+      <DashboardTitle {enablePolling} {loading} {onRefresh} {pollingInterval}>
+        {pageName}
+      </DashboardTitle>
+    {/if}
 
     {#if dashboardData && dashboardData.httpMonitors.length > 0}
-      <SystemStatusHeader
-        {systemStatus}
-        {lastUpdated}
-        monitorCount={dashboardData.httpMonitors.length}
-      />
+      {#if withHeader}
+        <SystemStatusHeader
+          {systemStatus}
+          {lastUpdated}
+          monitorCount={dashboardData.httpMonitors.length}
+        />
+      {/if}
 
       <div class="mb-4">
-        <div class="space-y-4">
+        <div class="space-y-1.5">
           {#each dashboardData.httpMonitors as monitor, index (index)}
             {@const status = dashboardState.getMonitorStatus(monitor)}
             {@const uptime = dashboardState.getUptimeFromBuckets(monitor, 90)}
@@ -68,6 +75,7 @@
               {uptime}
               {maxBucketsToShow}
               {maxPingsToShow}
+              defaultExpanded={expanded}
             />
           {/each}
         </div>
@@ -79,6 +87,8 @@
       />
     {/if}
 
-    <DashboardFooter />
+    {#if withBranding}
+      <DashboardFooter />
+    {/if}
   </div>
 </div>

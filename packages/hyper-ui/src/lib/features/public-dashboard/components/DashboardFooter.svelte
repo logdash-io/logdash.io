@@ -1,4 +1,4 @@
-<p class="mt-auto text-center text-sm text-gray-500">
+<p class="mt-auto text-center text-sm text-neutral-500">
   Powered by <a
     target="_blank"
     href="https://logdash.io?ref=statuspage"

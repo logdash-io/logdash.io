@@ -8,7 +8,7 @@
   import ServicesStep from './steps/ServicesStep.svelte';
   import { fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
-  import CloseIcon from '$lib/domains/shared/icons/CloseIcon.svelte';
+  import { CloseIcon } from '@logdash/hyper-ui/icons';
   import { goto } from '$app/navigation';
 
   let containerRef: HTMLDivElement;
