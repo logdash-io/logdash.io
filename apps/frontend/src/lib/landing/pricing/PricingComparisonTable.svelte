@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { CheckIcon, MinusIcon, ShieldCheckIcon } from 'lucide-svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
+  import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
+  import MinusIcon from '$lib/domains/shared/icons/MinusIcon.svelte';
   import { FEATURES_COMPARISON } from './feature-comparison.config.js';
   import { UserTier } from '$lib/domains/shared/types.js';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';

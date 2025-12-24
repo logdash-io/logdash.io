@@ -31,7 +31,7 @@
         >
           <div class="w-fit">
             <UpgradeButton source="monitor-historical-uptime">
-              Enable historical uptime
+              Unlock historical uptime with Pro plan
             </UpgradeButton>
           </div>
         </div>

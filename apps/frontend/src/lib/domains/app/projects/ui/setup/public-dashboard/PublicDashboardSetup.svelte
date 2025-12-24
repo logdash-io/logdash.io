@@ -9,7 +9,7 @@
   import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
   import { debounce } from '$lib/domains/shared/utils/debounce.js';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
-  import { CheckIcon } from 'lucide-svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
   import { onMount, type Snippet } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fly, scale } from 'svelte/transition';

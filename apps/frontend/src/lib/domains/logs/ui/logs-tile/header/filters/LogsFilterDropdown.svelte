@@ -3,7 +3,8 @@
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import LogLevelSelect from './LogLevelSelect.svelte';
   import TimeRangeSelect from './TimeRangeSelect.svelte';
-  import { ChevronDownIcon, Settings2Icon } from 'lucide-svelte';
+  import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
+  import SettingsIcon from '$lib/domains/shared/icons/SettingsIcon.svelte';
   import SveltyPicker from 'svelty-picker';
 
   type Props = {
@@ -163,8 +164,8 @@
   function hasActiveFilters(): boolean {
     return Boolean(
       selectedLevel ||
-      (selectedStartDate && selectedEndDate) ||
-      searchString?.trim(),
+        (selectedStartDate && selectedEndDate) ||
+        searchString?.trim(),
     );
   }
 
@@ -319,7 +320,7 @@
     ]}
     data-posthog-id="logs-filter-dropdown"
   >
-    <Settings2Icon class="h-4 w-4" />
+    <SettingsIcon class="h-4 w-4" />
     <span class="hidden md:block">Filters</span>
     {#if hasActiveFilters()}
       <span class="badge badge-xs">

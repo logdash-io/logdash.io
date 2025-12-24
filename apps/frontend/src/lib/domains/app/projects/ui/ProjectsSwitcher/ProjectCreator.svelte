@@ -2,7 +2,8 @@
   import { clickShortcut } from '$lib/domains/shared/ui/actions/click-shortcut.svelte.js';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { CheckIcon, PlusIcon, XIcon } from 'lucide-svelte';
+  import { CheckIcon, CloseIcon } from '@logdash/hyper-ui/icons';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
 
   type Props = {
@@ -61,7 +62,7 @@
         onclick={close}
         use:clickShortcut={{ key: 'Escape' }}
       >
-        <XIcon class="h-4 w-4" />
+        <CloseIcon class="h-4 w-4" />
       </button>
     {:else}
       <div class="flex w-full items-center justify-between gap-2 pl-8">
@@ -73,7 +74,7 @@
           class="btn btn-error btn-soft btn-sm btn-square"
           onclick={close}
         >
-          <XIcon class="h-4 w-4" />
+          <CloseIcon class="h-4 w-4" />
         </button>
       </div>
     {/if}

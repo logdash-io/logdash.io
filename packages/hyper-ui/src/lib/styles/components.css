@@ -11,6 +11,10 @@
     @apply border-0 bg-transparent shadow-none;
   }
 
+  .fcc {
+    @apply flex items-center justify-center;
+  }
+
   .btn-error {
     --btn-color: oklch(from var(--color-error) l c h / 0.15);
     --btn-fg: var(--color-error);

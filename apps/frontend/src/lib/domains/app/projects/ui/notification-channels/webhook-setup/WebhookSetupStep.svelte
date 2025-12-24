@@ -3,7 +3,8 @@
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import { UserTier } from '$lib/domains/shared/types.js';
-  import { LinkIcon, XIcon } from 'lucide-svelte';
+  import { CloseIcon } from '@logdash/hyper-ui/icons';
+  import LinkIcon from '$lib/domains/shared/icons/LinkIcon.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 
   type Header = {
@@ -177,7 +178,7 @@
               headers.splice(index, 1);
             }}
           >
-            <XIcon class="h-4 w-4" />
+            <CloseIcon class="h-4 w-4" />
           </button>
         </div>
       {/each}
@@ -200,7 +201,7 @@
         >
           <span>Add header</span>
           {#if !canUseCustomHeaders}
-            <span class="badge badge-primary badge-sm">Upgrade</span>
+            <span class="badge badge-primary badge-sm">Builder plan</span>
           {/if}
         </button>
       </UpgradeElement>
@@ -236,12 +237,15 @@
           withAssignment: assignToServiceMonitor,
           url: webhookUrl,
           name: webhookName,
-          headers: headers.reduce((acc, header) => {
-            if (header.key && header.value) {
-              acc[header.key] = header.value;
-            }
-            return acc;
-          }, {} as Record),
+          headers: headers.reduce(
+            (acc, header) => {
+              if (header.key && header.value) {
+                acc[header.key] = header.value;
+              }
+              return acc;
+            },
+            {} as Record<string, string>,
+          ),
           method,
         })}
     >

@@ -11,7 +11,8 @@
   } from '$lib/domains/shared/utils/url.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { CheckIcon, CopyIcon } from 'lucide-svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
+  import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import { untrack } from 'svelte';
 
   type Props = {

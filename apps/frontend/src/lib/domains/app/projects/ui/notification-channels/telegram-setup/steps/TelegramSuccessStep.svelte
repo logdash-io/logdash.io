@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CheckIcon } from 'lucide-svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
 
   type Props = {
     chatName: string;

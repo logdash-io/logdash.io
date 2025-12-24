@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { BubblesIcon, GiftIcon, LightbulbIcon } from 'lucide-svelte';
+  import LightbulbIcon from '$lib/domains/shared/icons/LightbulbIcon.svelte';
   import type { PostHog } from 'posthog-js';
   import { getContext } from 'svelte';
 

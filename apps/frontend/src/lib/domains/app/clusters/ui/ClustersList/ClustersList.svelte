@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { PlusIcon } from 'lucide-svelte';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { onMount } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';

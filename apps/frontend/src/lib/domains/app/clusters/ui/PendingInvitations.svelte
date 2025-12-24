@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CheckIcon, XIcon } from 'lucide-svelte';
+  import { CheckIcon, CloseIcon } from '@logdash/hyper-ui/icons';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { userInvitationsState } from '$lib/domains/app/clusters/application/user-invitations.state.svelte.js';
   import { ClusterRole } from '$lib/domains/app/clusters/domain/cluster-invite.js';
@@ -77,7 +77,7 @@
               {#if userInvitationsState.isDeclining}
                 <span class="loading loading-spinner loading-xs"></span>
               {:else}
-                <XIcon class="h-4 w-4" />
+                <CloseIcon class="h-4 w-4" />
                 Decline
               {/if}
             </button>

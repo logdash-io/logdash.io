@@ -1,7 +1,8 @@
 <script lang="ts">
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { UserTier } from '$lib/domains/shared/types.js';
-  import { CheckIcon, ShieldCheckIcon, XIcon } from 'lucide-svelte';
+  import { CheckIcon, CloseIcon } from '@logdash/hyper-ui/icons';
+  import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { fade, scale } from 'svelte/transition';
   import { cubicInOut } from 'svelte/easing';
@@ -106,7 +107,7 @@
         onclick={() => upgradeState.hideModal()}
         aria-label="Close modal"
       >
-        <XIcon class="h-4 w-4" />
+        <CloseIcon class="h-4 w-4" />
       </button>
 
       <div class="mb-8 text-center">

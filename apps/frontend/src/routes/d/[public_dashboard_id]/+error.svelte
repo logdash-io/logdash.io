@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { ExternalLink } from 'lucide-svelte';
+  import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
 </script>
 
 <div class="p-8 sm:p-32">
@@ -25,7 +25,7 @@
         rel="noopener noreferrer"
         class="btn btn-sm btn-secondary"
       >
-        Report bug <ExternalLink class="inline h-4 w-4" />
+        Report bug <OpenIcon class="inline h-4 w-4" />
       </a>
     </div>
   </div>

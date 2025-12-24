@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { Plus } from 'lucide-svelte';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { fly } from 'svelte/transition';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
 
@@ -36,7 +36,7 @@
       <h5 class="text-lg font-semibold">Create new project</h5>
 
       <div class="badge badge-lg badge-soft badge-primary rounded-full">
-        <Plus class="h-4 w-4" />
+        <PlusIcon class="h-4 w-4" />
       </div>
     </button>
   {:else}

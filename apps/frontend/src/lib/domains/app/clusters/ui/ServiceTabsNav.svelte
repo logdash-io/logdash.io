@@ -6,7 +6,7 @@
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { Feature } from '$lib/domains/shared/types.js';
   import { ScrollArea, Tooltip } from '@logdash/hyper-ui/presentational';
-  import { PlusIcon } from 'lucide-svelte';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { fly } from 'svelte/transition';
   import HomeIcon from '$lib/domains/shared/icons/HomeIcon.svelte';
   import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
