@@ -3,6 +3,11 @@
   import type { PostHog } from 'posthog-js';
   import { getContext } from 'svelte';
 
+  type Props = {
+    hideOnMobile?: boolean;
+  };
+  const { hideOnMobile = false }: Props = $props();
+
   let message = $state('');
   let open = $state(false);
   let rating = $state(5);
@@ -25,7 +30,9 @@
   });
 </script>
 
-<div class="fixed bottom-4 right-4 z-50">
+<div
+  class={['fixed bottom-4 right-4 z-50', { 'hidden lg:block': hideOnMobile }]}
+>
   <div class="relative">
     <button
       onclick={() => {

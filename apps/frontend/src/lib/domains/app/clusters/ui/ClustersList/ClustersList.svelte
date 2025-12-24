@@ -82,8 +82,8 @@
 </script>
 
 {#if mounted}
-  <div class="px-3 flex w-full gap-4 pb-8">
-    <div class="flex w-full flex-col gap-4 sm:hidden">
+  <div class="flex w-full gap-1.5 pb-8">
+    <div class="flex w-full flex-col gap-1.5 sm:hidden">
       {#each clustersState.clusters as cluster, i}
         {@render clusterTile(cluster, i)}
       {/each}
