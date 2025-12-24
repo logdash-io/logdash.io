@@ -357,6 +357,12 @@ importers:
 
   apps/status-page:
     dependencies:
+      '@fontsource-variable/geist-mono':
+        specifier: ^5.2.7
+        version: 5.2.7
+      '@fontsource-variable/kumbh-sans':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@logdash/hyper-ui':
         specifier: workspace:*
         version: link:../../packages/hyper-ui
