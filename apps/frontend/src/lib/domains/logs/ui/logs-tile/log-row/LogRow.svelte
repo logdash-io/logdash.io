@@ -1,100 +1,65 @@
 <script lang="ts">
+  import { LOG_LEVELS_MAP } from '$lib/domains/logs/domain/log-level-metadata.js';
+  import type { LogLevel } from '$lib/domains/logs/domain/log-level.js';
   import LogRowTime from './LogRowTime.svelte';
 
   type Props = {
     index: number;
     date: Date;
-    level: string;
+    level: LogLevel;
     message: string;
-    prefix?: 'full' | 'short';
+    namespace?: string;
+    isSelected?: boolean;
+    onclick?: () => void;
   };
 
-  const { date: rawDate, level, message }: Props = $props();
+  const {
+    date: rawDate,
+    level,
+    message,
+    namespace,
+    isSelected = false,
+    onclick,
+  }: Props = $props();
 
-  function isJsonString(str: string): boolean {
-    try {
-      const parsed = JSON.parse(str);
-      return typeof parsed === 'object' && parsed !== null;
-    } catch {
-      return false;
-    }
-  }
-
-  function formatMessage(msg: string): { isJson: boolean; content: string } {
-    const trimmed = msg.trim();
-
-    if (isJsonString(trimmed)) {
-      try {
-        const parsed = JSON.parse(trimmed);
-        return {
-          isJson: true,
-          content: JSON.stringify(parsed, null, 2),
-        };
-      } catch {
-        return { isJson: false, content: msg };
-      }
-    }
-
-    return { isJson: false, content: msg };
-  }
-
-  const formattedMessage = $derived(formatMessage(message));
+  const dotColor = $derived(LOG_LEVELS_MAP[level].color);
 </script>
 
-{#snippet logDot()}
-  <div
-    class={[
-      'mt-2.5 inline-block h-2 w-2 shrink-0 rounded-full align-middle',
-      {
-        'bg-[#155dfc]': level === 'info',
-        'bg-[#fe9a00]': level === 'warning',
-        'bg-[#e7000b]': level === 'error',
-        'bg-[#00a6a6]': level === 'http',
-        'bg-[#00a600]': level === 'verbose' || level === 'debug',
-        'bg-[#505050]': level === 'silly',
-      },
-    ]}
-  ></div>
-{/snippet}
-
-<div
+<button
+  type="button"
   class={[
-    'selection:bg-secondary/20 flex min-h-7 w-full max-w-full items-start gap-2.5 overflow-hidden rounded-md px-4 font-mono text-sm leading-7',
+    'flex h-7 w-full max-w-full cursor-pointer items-center gap-2.5 rounded-md px-4 text-left font-mono text-sm leading-7 outline-0',
     {
-      'hover:bg-base-100/50': level !== 'error' && level !== 'warning',
-      'bg-warning/20 text-warning-content': level === 'warning',
-      'bg-error/20 text-error-content': level === 'error',
+      'bg-base-100': isSelected && level !== 'error' && level !== 'warning',
+      'hover:bg-base-100/50':
+        !isSelected && level !== 'error' && level !== 'warning',
+      'bg-warning/20 text-warning-content hover:bg-warning/30':
+        level === 'warning' && !isSelected,
+      'bg-warning/40 text-warning-content': level === 'warning' && isSelected,
+      'bg-error/20 text-error-content hover:bg-error/30':
+        level === 'error' && !isSelected,
+      'bg-error/40 text-error-content': level === 'error' && isSelected,
     },
   ]}
+  {onclick}
 >
-  {@render logDot()}
+  <div class={['inline-block h-2 w-2 shrink-0 rounded-full', dotColor]}></div>
 
-  <div class="flex min-w-0 flex-1 flex-row">
-    <div class="w-0 min-w-0 flex-1 overflow-hidden">
-      <details class="collapse">
-        <summary
-          class="collapse-title min-h-0 cursor-pointer overflow-hidden p-0"
+  <span class="flex min-w-0 flex-1 items-center gap-2 md:gap-4">
+    <span class="flex shrink-0 items-center gap-2">
+      {#if namespace}
+        <span
+          class="shrink-0 rounded-sm bg-base-300 px-[5px] py-[3px] text-xs leading-none"
         >
-          <span class="flex items-center gap-2 md:gap-4">
-            <LogRowTime date={rawDate} {level} />
-            <span
-              class="block w-full overflow-hidden text-ellipsis whitespace-nowrap"
-            >
-              {formattedMessage.content}
-            </span>
-          </span>
-        </summary>
-        <div class="collapse-content max-w-full p-0 pt-2">
-          <span class="block max-w-full break-words whitespace-pre-wrap">
-            {#if formattedMessage.isJson}
-              <pre
-                class="bg-base-200 text-syntax-json max-w-full overflow-x-auto rounded-md p-2 text-xs whitespace-pre">{formattedMessage.content}</pre>
-            {:else}
-              {formattedMessage.content}
-            {/if}
-          </span>
-        </div>
-      </details>
-    </div>
-  </div>
-</div>
+          {namespace}
+        </span>
+      {/if}
+      <LogRowTime date={rawDate} {level} />
+    </span>
+    <span
+      class="block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
+    >
+      {message}
+    </span>
+  </span>
+</button>

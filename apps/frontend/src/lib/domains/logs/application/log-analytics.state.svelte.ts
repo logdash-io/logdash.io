@@ -3,6 +3,7 @@ import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analyt
 import { LogAnalyticsService } from '$lib/domains/logs/infrastructure/log-analytics.service';
 import { logsSyncService } from '../infrastructure/logs-sync.service.svelte.js';
 import type { Log } from '../domain/log.js';
+import type { LogLevel } from '../domain/log-level.js';
 import { filtersStore } from '../infrastructure/filters.store.svelte.js';
 
 const logger = createLogger('log_analytics.state', true);
@@ -17,25 +18,28 @@ class LogAnalyticsState {
       return null;
     }
 
-    if (filtersStore.level) {
+    if (filtersStore.levels.length > 0) {
+      const selectedLevels = filtersStore.levels;
       return {
         ...this._analyticsData,
         buckets: this._analyticsData.buckets.map((bucket) => ({
           ...bucket,
-          countByLevel: {
-            ...Object.keys(bucket.countByLevel).reduce(
-              (acc, key) => {
-                acc[key] = 0;
-                return acc;
-              },
-              {} as Record<string, number>,
-            ),
-            [filtersStore.level]: bucket.countByLevel[filtersStore.level] || 0,
-          } as Record<
+          countByLevel: Object.keys(bucket.countByLevel).reduce(
+            (acc, key) => {
+              acc[key] = selectedLevels.includes(key as LogLevel)
+                ? bucket.countByLevel[key] || 0
+                : 0;
+              return acc;
+            },
+            {} as Record<string, number>,
+          ) as Record<
             keyof LogsAnalyticsResponse['buckets'][number]['countByLevel'],
             number
           >,
-          countTotal: bucket.countByLevel[filtersStore.level] || 0,
+          countTotal: selectedLevels.reduce(
+            (sum, level) => sum + (bucket.countByLevel[level] || 0),
+            0,
+          ),
         })),
       };
     }

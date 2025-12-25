@@ -7,4 +7,5 @@ export type Log = {
   createdAt: Date;
   index?: number;
   sequenceNumber?: number;
+  namespace?: string;
 };

@@ -29,6 +29,7 @@ export class LogSerializer {
       level: entity.level as unknown as LogLevel,
       projectId: entity.project_id,
       sequenceNumber: entity.sequence_number,
+      namespace: entity.namespace,
     };
   }
 
@@ -39,6 +40,7 @@ export class LogSerializer {
       message: normalized.message,
       level: normalized.level,
       index: normalized.index,
+      namespace: normalized.namespace,
     };
   }
 
@@ -49,6 +51,7 @@ export class LogSerializer {
       message: normalized.message,
       level: normalized.level,
       sequenceNumber: normalized.sequenceNumber,
+      namespace: normalized.namespace,
     };
   }
 }
