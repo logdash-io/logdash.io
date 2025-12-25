@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { LogNormalized } from '../core/entities/log.interface';
 import { LogSerializer } from '../core/entities/log.serializer';
 import { LogReadDirection } from '../core/enums/log-read-direction.enum';
-import { Logger } from '@logdash/js-sdk';
 import { ClickHouseClient } from '@clickhouse/client';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 import { LogLevel } from '../core/enums/log-level.enum';
@@ -27,12 +26,15 @@ export class LogReadService {
     startDate?: Date;
     endDate?: Date;
     level?: LogLevel;
+    levels?: LogLevel[];
     limit: number;
     projectId: string;
     searchString?: string;
   }): Promise<LogNormalized[]> {
     let query: string;
     let queryParams: Record<string, any>;
+
+    const effectiveLevels = dto.levels?.length ? dto.levels : dto.level ? [dto.level] : null;
 
     if (dto.lastId && dto.direction) {
       if (dto.direction === LogReadDirection.After) {
@@ -73,9 +75,9 @@ export class LogReadService {
         queryParams.endDate = ClickhouseUtils.jsDateToClickhouseDate(dto.endDate);
       }
 
-      if (dto.level) {
-        query += ` AND l.level = {level:String}`;
-        queryParams.level = dto.level;
+      if (effectiveLevels) {
+        query += ` AND l.level IN ({levels:Array(String)})`;
+        queryParams.levels = effectiveLevels;
       }
 
       if (dto.searchString && dto.searchString.trim()) {
@@ -111,9 +113,9 @@ export class LogReadService {
         queryParams.endDate = ClickhouseUtils.jsDateToClickhouseDate(dto.endDate);
       }
 
-      if (dto.level) {
-        query += ` AND level = {level:String}`;
-        queryParams.level = dto.level;
+      if (effectiveLevels) {
+        query += ` AND level IN ({levels:Array(String)})`;
+        queryParams.levels = effectiveLevels;
       }
 
       if (dto.searchString && dto.searchString.trim()) {

@@ -207,6 +207,7 @@ export class LogCoreController {
       projectId,
       limit: dto.limit ?? 50,
       level: dto.level,
+      levels: dto.levels,
       searchString: dto.searchString,
     });
 

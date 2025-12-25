@@ -469,5 +469,187 @@ describe('LogCoreController (analytics)', () => {
       expect(totalCounts[LogLevel.Error]).toEqual(1);
       expect(totalCounts.total).toEqual(2);
     });
+
+    it('filters analytics by multiple levels', async () => {
+      // given
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'info log',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'warning log',
+          level: LogLevel.Warning,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'error log',
+          level: LogLevel.Error,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 4),
+          message: 'debug log',
+          level: LogLevel.Debug,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      // when - filter only error and warning
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          levels: [LogLevel.Error, LogLevel.Warning],
+        });
+
+      // then
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+
+      const totalCounts = response.body.buckets.reduce(
+        (totals, bucket) => ({
+          [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
+          [LogLevel.Warning]: totals[LogLevel.Warning] + bucket.countByLevel[LogLevel.Warning],
+          [LogLevel.Error]: totals[LogLevel.Error] + bucket.countByLevel[LogLevel.Error],
+          [LogLevel.Debug]: totals[LogLevel.Debug] + bucket.countByLevel[LogLevel.Debug],
+          total: totals.total + bucket.countTotal,
+        }),
+        {
+          [LogLevel.Info]: 0,
+          [LogLevel.Warning]: 0,
+          [LogLevel.Error]: 0,
+          [LogLevel.Debug]: 0,
+          total: 0,
+        },
+      );
+
+      expect(totalCounts[LogLevel.Info]).toEqual(0);
+      expect(totalCounts[LogLevel.Warning]).toEqual(1);
+      expect(totalCounts[LogLevel.Error]).toEqual(1);
+      expect(totalCounts[LogLevel.Debug]).toEqual(0);
+      expect(totalCounts.total).toEqual(2);
+    });
+
+    it('returns all levels when no levels filter provided', async () => {
+      // given
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'info log',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'error log',
+          level: LogLevel.Error,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      // when - no levels filter
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+        });
+
+      // then - all logs returned
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
+
+    it('filters analytics by single level in levels array', async () => {
+      // given
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'info log',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'error log',
+          level: LogLevel.Error,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      // when - filter only error
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          levels: [LogLevel.Error],
+        });
+
+      // then
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(1);
+
+      const totalCounts = response.body.buckets.reduce(
+        (totals, bucket) => ({
+          [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
+          [LogLevel.Error]: totals[LogLevel.Error] + bucket.countByLevel[LogLevel.Error],
+          total: totals.total + bucket.countTotal,
+        }),
+        {
+          [LogLevel.Info]: 0,
+          [LogLevel.Error]: 0,
+          total: 0,
+        },
+      );
+
+      expect(totalCounts[LogLevel.Info]).toEqual(0);
+      expect(totalCounts[LogLevel.Error]).toEqual(1);
+      expect(totalCounts.total).toEqual(1);
+    });
   });
 });

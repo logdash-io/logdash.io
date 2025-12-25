@@ -13,33 +13,6 @@ class LogAnalyticsState {
   private _error = $state<string | null>(null);
 
   get analyticsData(): LogsAnalyticsResponse | null {
-    if (!this._analyticsData) {
-      return null;
-    }
-
-    if (filtersStore.level) {
-      return {
-        ...this._analyticsData,
-        buckets: this._analyticsData.buckets.map((bucket) => ({
-          ...bucket,
-          countByLevel: {
-            ...Object.keys(bucket.countByLevel).reduce(
-              (acc, key) => {
-                acc[key] = 0;
-                return acc;
-              },
-              {} as Record<string, number>,
-            ),
-            [filtersStore.level]: bucket.countByLevel[filtersStore.level] || 0,
-          } as Record<
-            keyof LogsAnalyticsResponse['buckets'][number]['countByLevel'],
-            number
-          >,
-          countTotal: bucket.countByLevel[filtersStore.level] || 0,
-        })),
-      };
-    }
-
     return this._analyticsData;
   }
 
@@ -138,11 +111,15 @@ class LogAnalyticsState {
       return;
     }
 
+    const levels =
+      filtersStore.levels.length > 0 ? filtersStore.levels : undefined;
+
     const data = await LogAnalyticsService.getProjectLogsAnalytics(
       projectId,
       filtersStore.startDate,
       filtersStore.endDate || new Date().toISOString(),
       filtersStore.utcOffsetHours,
+      levels,
     );
 
     this._analyticsData = data;

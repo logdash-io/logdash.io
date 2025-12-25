@@ -55,7 +55,15 @@
     filtersStore.toggleLevel(level);
   }
 
-  function onLevelSelectAndClose(level: LogLevel, close: () => void): void {
+  function onLevelClick(
+    e: MouseEvent,
+    level: LogLevel,
+    close: () => void,
+  ): void {
+    if (e.metaKey || e.shiftKey) {
+      filtersStore.toggleLevel(level);
+      return;
+    }
     filtersStore.setLevels([level]);
     close();
   }
@@ -120,7 +128,7 @@
             </label>
             <button
               class="flex flex-1 cursor-pointer items-center gap-2 text-left"
-              onclick={() => onLevelSelectAndClose(level.value, close)}
+              onclick={(e: MouseEvent) => onLevelClick(e, level.value, close)}
             >
               <span class={['h-2 w-2 rounded-full', level.color]}></span>
               <span>{level.label}</span>

@@ -10,15 +10,25 @@ export class LogsService {
     filters: Partial<LogsQueryFilters>,
   ): Promise<Log[]> {
     logger.debug('getting project logs', filters);
-    const qs = queryString.stringify({
-      ...(filters.lastId && { lastId: filters.lastId }),
-      ...(filters.direction && { direction: filters.direction }),
-      limit: filters.limit ?? 50,
-      ...(filters.searchString && { searchString: filters.searchString }),
-      ...(filters.startDate && { startDate: filters.startDate }),
-      ...(filters.endDate && { endDate: filters.endDate }),
-      ...(filters.level && { level: filters.level }),
-    });
+
+    const levels = filters.levels?.length
+      ? filters.levels
+      : filters.level
+        ? [filters.level]
+        : undefined;
+
+    const qs = queryString.stringify(
+      {
+        ...(filters.lastId && { lastId: filters.lastId }),
+        ...(filters.direction && { direction: filters.direction }),
+        limit: filters.limit ?? 50,
+        ...(filters.searchString && { searchString: filters.searchString }),
+        ...(filters.startDate && { startDate: filters.startDate }),
+        ...(filters.endDate && { endDate: filters.endDate }),
+        ...(levels && { levels }),
+      },
+      { arrayFormat: 'none' },
+    );
 
     return httpClient.get<Log[]>(`/projects/${project_id}/logs/v2?${qs}`);
   }
