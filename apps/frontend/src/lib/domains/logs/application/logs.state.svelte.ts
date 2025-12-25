@@ -50,7 +50,7 @@ class LogsState {
       filtersStore.searchString.trim() ||
         filtersStore.startDate ||
         filtersStore.endDate ||
-        filtersStore.level,
+        filtersStore.levels.length > 0,
     );
   }
 
@@ -109,7 +109,10 @@ class LogsState {
         logger.error('logs sync connection error');
       },
       onMessage: (log: Log) => {
-        if (filtersStore.level && log.level !== filtersStore.level) {
+        if (
+          filtersStore.levels.length > 0 &&
+          !filtersStore.levels.includes(log.level)
+        ) {
           return;
         }
 

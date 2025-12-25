@@ -59,7 +59,7 @@
 
 <div
   class={[
-    'selection:bg-secondary/20 flex min-h-7 min-w-xl items-start gap-2.5 overflow-hidden rounded-md px-4 font-mono text-sm leading-7',
+    'selection:bg-secondary/20 flex min-h-7 w-full max-w-full items-start gap-2.5 overflow-hidden rounded-md px-4 font-mono text-sm leading-7',
     {
       'hover:bg-base-100/50': level !== 'error' && level !== 'warning',
       'bg-warning/20 text-warning-content': level === 'warning',
@@ -84,11 +84,11 @@
             </span>
           </span>
         </summary>
-        <div class="collapse-content p-0 pt-2">
-          <span class="block break-words whitespace-pre-wrap">
+        <div class="collapse-content max-w-full p-0 pt-2">
+          <span class="block max-w-full break-words whitespace-pre-wrap">
             {#if formattedMessage.isJson}
               <pre
-                class="bg-base-200 text-syntax-json overflow-x-auto rounded-md p-2 text-xs whitespace-pre">{formattedMessage.content}</pre>
+                class="bg-base-200 text-syntax-json max-w-full overflow-x-auto rounded-md p-2 text-xs whitespace-pre">{formattedMessage.content}</pre>
             {:else}
               {formattedMessage.content}
             {/if}

@@ -6,6 +6,7 @@
   import LogsAnalyticsChart from './LogsAnalyticsChart.svelte';
   import LogsSearchInput from './LogsSearchInput.svelte';
   import LogsFilterDropdown from './filters/LogsFilterDropdown.svelte';
+  import LogsFilterChips from './filters/LogsFilterChips.svelte';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
@@ -60,36 +61,9 @@
   {/if}
 
   <div class="flex items-center justify-between gap-2.5 p-4">
-    <Tooltip
-      content={logsState.shouldFiltersBlockSync ? 'Sync paused' : 'Sync active'}
-      placement="top"
-    >
-      <div class="flex size-4 shrink-0 items-center justify-center md:size-8">
-        {#if logsState.shouldFiltersBlockSync}
-          <PauseCircleIcon
-            class="size-4 shrink-0 sm:h-5 sm:w-5"
-            stroke="stroke-warning-content"
-          />
-        {:else}
-          <div class="flex items-center gap-2">
-            <span class="loading loading-ring loading-sm"></span>
-          </div>
-        {/if}
-      </div>
-    </Tooltip>
+    <LogsFilterDropdown maxDateRangeHours={maxRetentionHours} />
 
     <LogsSearchInput {onSearchChange} />
-
-    <LogsFilterDropdown
-      bind:selectedLevel={filtersStore.level}
-      bind:selectedStartDate={filtersStore.startDate}
-      bind:selectedEndDate={filtersStore.endDate}
-      searchString={filtersStore.searchString}
-      maxDateRangeHours={maxRetentionHours}
-      onClearAllClicked={() => {
-        filtersStore.reset();
-      }}
-    />
 
     {#if isOnDemoDashboard}
       <button
@@ -109,5 +83,25 @@
         {/if}
       </button>
     {/if}
+
+    <Tooltip
+      content={logsState.shouldFiltersBlockSync ? 'Sync paused' : 'Sync active'}
+      placement="top"
+    >
+      <div class="flex size-4 shrink-0 items-center justify-center md:size-8">
+        {#if logsState.shouldFiltersBlockSync}
+          <PauseCircleIcon
+            class="size-4 shrink-0 sm:h-5 sm:w-5"
+            stroke="stroke-warning-content"
+          />
+        {:else}
+          <div class="flex items-center gap-2">
+            <span class="loading loading-ring loading-sm"></span>
+          </div>
+        {/if}
+      </div>
+    </Tooltip>
   </div>
+
+  <LogsFilterChips />
 </div>

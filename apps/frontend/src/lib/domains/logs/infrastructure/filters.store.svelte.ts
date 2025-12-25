@@ -1,3 +1,4 @@
+import type { LogLevel } from '../domain/log-level';
 import type { LogsFilters } from '../domain/logs-filters.js';
 
 export class FiltersStore {
@@ -6,11 +7,13 @@ export class FiltersStore {
   searchString = $state<string>('');
   startDate = $state<string | null>(null);
   endDate = $state<string | null>(null);
-  level = $state<
-    'error' | 'info' | 'warning' | 'http' | 'verbose' | 'debug' | 'silly' | null
-  >(null);
+  levels = $state<LogLevel[]>([]);
   limit = $state<number>(50);
   utcOffsetHours = $state<number>(0);
+
+  get level(): LogLevel | null {
+    return this.levels.length > 0 ? this.levels[0] : null;
+  }
 
   get filters(): LogsFilters {
     return {
@@ -23,8 +26,26 @@ export class FiltersStore {
     };
   }
 
+  toggleLevel(level: LogLevel): void {
+    if (this.levels.includes(level)) {
+      this.levels = this.levels.filter((l) => l !== level);
+    } else {
+      this.levels = [...this.levels, level];
+    }
+  }
+
+  setLevels(levels: LogLevel[]): void {
+    this.levels = levels;
+  }
+
+  hasLevel(level: LogLevel): boolean {
+    return this.levels.includes(level);
+  }
+
   setFilters(
-    filters: Partial<LogsFilters & { defaultStartDate: string }>,
+    filters: Partial<
+      LogsFilters & { defaultStartDate: string; levels: LogLevel[] }
+    >,
   ): void {
     if (filters.searchString !== undefined) {
       this.searchString = filters.searchString;
@@ -36,7 +57,10 @@ export class FiltersStore {
       this.endDate = filters.endDate;
     }
     if (filters.level !== undefined) {
-      this.level = filters.level;
+      this.levels = filters.level ? [filters.level] : [];
+    }
+    if (filters.levels !== undefined) {
+      this.levels = filters.levels;
     }
     if (filters.limit !== undefined) {
       this.limit = filters.limit;
@@ -53,7 +77,7 @@ export class FiltersStore {
     this.searchString = '';
     this.startDate = this._defaultStartDate;
     this.endDate = null;
-    this.level = null;
+    this.levels = [];
     this.limit = 50;
     this.utcOffsetHours = 0;
   }

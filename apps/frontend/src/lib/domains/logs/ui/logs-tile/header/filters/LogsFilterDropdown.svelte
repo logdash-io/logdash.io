@@ -1,333 +1,318 @@
 <script lang="ts">
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
-  import LogLevelSelect from './LogLevelSelect.svelte';
-  import TimeRangeSelect from './TimeRangeSelect.svelte';
   import FilterIcon from '$lib/domains/shared/icons/FilterIcon.svelte';
+  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import SveltyPicker from 'svelty-picker';
+  import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
+  import type { LogLevel } from '$lib/domains/logs/domain/log-level';
+  import { LOG_LEVELS } from '$lib/domains/logs/domain/log-level-metadata';
+  import {
+    TIME_RANGE_PRESETS,
+    type TimeRangeValue,
+    getDatesForTimeRange,
+    formatTimeRangeLabel,
+    isTimeRangeExceedingLimit,
+    isCustomRangeExceedingLimit,
+  } from '$lib/domains/logs/domain/time-range';
 
   type Props = {
-    selectedLevel: string | null;
-    selectedStartDate: string | null;
-    selectedEndDate: string | null;
-    searchString: string;
     maxDateRangeHours: number;
-    onClearAllClicked?: () => void;
   };
 
-  let {
-    selectedLevel = $bindable(),
-    selectedStartDate = $bindable(),
-    selectedEndDate = $bindable(),
-    searchString,
-    maxDateRangeHours,
-    onClearAllClicked,
-  }: Props = $props();
+  const { maxDateRangeHours }: Props = $props();
 
-  const TIME_RANGES = [
-    { value: 'last-15m', label: 'Last 15 minutes', hours: 0.25 },
-    { value: 'last-1h', label: 'Last hour', hours: 1 },
-    { value: 'last-4h', label: 'Last 4 hours', hours: 4 },
-    { value: 'last-24h', label: 'Last 24 hours', hours: 24 },
-    { value: 'last-7d', label: 'Last 7 days', hours: 168 },
-    { value: 'last-30d', label: 'Last 30 days', hours: 720 },
-    { value: 'custom', label: 'Custom', hours: 0 },
-  ];
+  let hoveredMenu = $state<'level' | 'time-range' | null>(null);
+  let showCustomDatePicker = $state(false);
+  let customStartDate = $state('');
+  let customEndDate = $state('');
 
-  let startDateInput = $state<string>('');
-  let endDateInput = $state<string>('');
-  let selectedTimeRange = $state<string>('last-24h');
-  let selectedLevelLocal = $state<string | null>(null);
+  const activeFilterCount = $derived.by(() => {
+    let count = 0;
+    if (filtersStore.levels.length > 0) count++;
+    if (filtersStore.startDate && filtersStore.endDate) count++;
+    if (filtersStore.searchString?.trim()) count++;
+    return count;
+  });
 
-  function formatDateForInput(dateString: string | null): string {
-    if (!dateString) return '';
-    return new Date(dateString).toISOString().slice(0, 16);
+  const hasActiveFilters = $derived(activeFilterCount > 0);
+
+  const currentTimeRangeLabel = $derived(
+    formatTimeRangeLabel(filtersStore.startDate, filtersStore.endDate),
+  );
+
+  const isCustomRangeUpgradeRequired = $derived(
+    customStartDate &&
+      customEndDate &&
+      isCustomRangeExceedingLimit(
+        customStartDate,
+        customEndDate,
+        maxDateRangeHours,
+      ),
+  );
+
+  function onLevelToggle(level: LogLevel): void {
+    filtersStore.toggleLevel(level);
   }
 
-  function getTimeRangeFromDates(
-    startDate: string | null,
-    endDate: string | null,
-  ): string {
-    if (!startDate || !endDate) return 'custom';
-
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    const diffMs = end.getTime() - start.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-
-    if (diffMinutes === 15) return 'last-15m';
-    if (diffMinutes === 60) return 'last-1h';
-    if (diffMinutes === 240) return 'last-4h';
-    if (diffMinutes === 1440) return 'last-24h';
-    if (diffMinutes === 10080) return 'last-7d';
-    if (diffMinutes === 43200) return 'last-30d';
-
-    return 'custom';
+  function onLevelSelectAndClose(level: LogLevel, close: () => void): void {
+    filtersStore.setLevels([level]);
+    close();
   }
 
-  function getDatesForTimeRange(range: string): {
-    startDate: string;
-    endDate: string;
-  } {
-    const now = new Date();
-    const endDate = now.toISOString();
-    let startDate: string;
-
-    switch (range) {
-      case 'last-15m':
-        startDate = new Date(now.getTime() - 15 * 60 * 1000).toISOString();
-        break;
-      case 'last-1h':
-        startDate = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
-        break;
-      case 'last-4h':
-        startDate = new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString();
-        break;
-      case 'last-24h':
-        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-        break;
-      case 'last-7d':
-        startDate = new Date(
-          now.getTime() - 7 * 24 * 60 * 60 * 1000,
-        ).toISOString();
-        break;
-      case 'last-30d':
-        startDate = new Date(
-          now.getTime() - 30 * 24 * 60 * 60 * 1000,
-        ).toISOString();
-        break;
-      default:
-        startDate = startDateInput
-          ? new Date(startDateInput).toISOString()
-          : '';
-    }
-
-    return { startDate, endDate };
-  }
-
-  function handleLevelChange(level: string | null): void {
-    selectedLevelLocal = level;
-  }
-
-  function handleTimeRangeChange(range: string): void {
-    const timeRange = TIME_RANGES.find((tr) => tr.value === range);
-    if (timeRange && timeRange.hours > maxDateRangeHours) {
+  function onTimeRangeSelect(
+    rangeValue: TimeRangeValue,
+    close: () => void,
+  ): void {
+    if (rangeValue === 'custom') {
+      showCustomDatePicker = true;
       return;
     }
 
-    selectedTimeRange = range;
-    if (range !== 'custom') {
-      const { startDate, endDate } = getDatesForTimeRange(range);
-      startDateInput = formatDateForInput(startDate);
-      endDateInput = formatDateForInput(endDate);
-    }
+    const { startDate, endDate } = getDatesForTimeRange(rangeValue);
+    filtersStore.setFilters({ startDate, endDate });
+    close();
   }
 
-  function handleDateRangeChange(startDate: string, endDate: string): void {
-    startDateInput = formatDateForInput(startDate);
-    endDateInput = formatDateForInput(endDate);
+  function onCustomDateApply(close: () => void): void {
+    if (!customStartDate || !customEndDate) return;
+
+    filtersStore.setFilters({
+      startDate: new Date(customStartDate).toISOString(),
+      endDate: new Date(customEndDate).toISOString(),
+    });
+    showCustomDatePicker = false;
+    close();
   }
 
-  function applyFilters(): void {
-    if (selectedTimeRange === 'custom' && isCustomRangeUpgradeRequired) {
-      return;
-    }
-
-    const dates =
-      selectedTimeRange === 'custom'
-        ? {
-            startDate: startDateInput
-              ? new Date(startDateInput).toISOString()
-              : null,
-            endDate: endDateInput ? new Date(endDateInput).toISOString() : null,
-          }
-        : getDatesForTimeRange(selectedTimeRange);
-
-    selectedStartDate = dates.startDate;
-    selectedEndDate = dates.endDate;
-    selectedLevel = selectedLevelLocal;
+  function onCustomDateCancel(): void {
+    showCustomDatePicker = false;
+    customStartDate = '';
+    customEndDate = '';
   }
-
-  function clearAllFilters(): void {
-    startDateInput = '';
-    endDateInput = '';
-    selectedLevelLocal = null;
-    selectedTimeRange = 'last-24h';
-    selectedLevel = null;
-    selectedStartDate = null;
-    selectedEndDate = null;
-    onClearAllClicked?.();
-  }
-
-  function hasActiveFilters(): boolean {
-    return Boolean(
-      selectedLevel ||
-        (selectedStartDate && selectedEndDate) ||
-        searchString?.trim(),
-    );
-  }
-
-  const isCustomRangeUpgradeRequired = $derived.by(() => {
-    if (selectedTimeRange !== 'custom' || !startDateInput || !endDateInput) {
-      return false;
-    }
-
-    const start = new Date(startDateInput);
-    const end = new Date(endDateInput);
-    const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-
-    return diffHours > maxDateRangeHours;
-  });
-
-  function hasPendingChanges(): boolean {
-    const currentTimeRange = getTimeRangeFromDates(
-      selectedStartDate,
-      selectedEndDate,
-    );
-
-    const timeRangeChanged = selectedTimeRange !== currentTimeRange;
-
-    const customRangeChanged =
-      selectedTimeRange === 'custom' &&
-      (startDateInput !== formatDateForInput(selectedStartDate) ||
-        endDateInput !== formatDateForInput(selectedEndDate));
-
-    const levelChanged = selectedLevelLocal !== selectedLevel;
-
-    return timeRangeChanged || customRangeChanged || levelChanged;
-  }
-
-  $effect(() => {
-    if (selectedStartDate) {
-      startDateInput = formatDateForInput(selectedStartDate);
-    } else {
-      startDateInput = '';
-    }
-    if (selectedEndDate) {
-      endDateInput = formatDateForInput(selectedEndDate);
-    } else {
-      endDateInput = '';
-    }
-    selectedLevelLocal = selectedLevel;
-    selectedTimeRange = getTimeRangeFromDates(
-      selectedStartDate,
-      selectedEndDate,
-    );
-  });
 </script>
 
-{#snippet menu(close: () => void)}
+{#snippet levelSubmenu(close: () => void)}
   <div
-    class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-80 p-4 shadow"
+    class="ld-card-base rounded-box absolute -top-2 left-full z-50 w-fit whitespace-nowrap p-1 shadow-lg"
+    onmouseenter={() => (hoveredMenu = 'level')}
   >
-    <div class="space-y-4">
-      <div class="flex gap-4">
-        <div class="flex-1">
-          <label class="mb-2 block text-sm font-medium">Log Level</label>
-          <LogLevelSelect
-            selectedLevel={selectedLevelLocal}
-            onLevelChange={handleLevelChange}
-          />
-        </div>
-
-        <div class="flex-1">
-          <label class="mb-2 block text-sm font-medium">Time Range</label>
-          <TimeRangeSelect
-            {selectedTimeRange}
-            {maxDateRangeHours}
-            onTimeRangeChange={handleTimeRangeChange}
-          />
-        </div>
-      </div>
-
-      {#if selectedTimeRange === 'custom'}
-        <div class="space-y-1">
-          <label class="text-base-content/70 block text-xs font-medium">
-            From
-          </label>
-          <SveltyPicker
-            bind:value={startDateInput}
-            mode="datetime"
-            placeholder="Select start date"
-            inputClasses="ld-input ld-input-padding w-full text-xs"
-            displayFormat={'yyyy M dd, hh:ii'}
-          />
-        </div>
-        <div class="space-y-1">
-          <label class="text-base-content/70 block text-xs font-medium">
-            To
-          </label>
-          <SveltyPicker
-            bind:value={endDateInput}
-            mode="datetime"
-            placeholder="Select end date"
-            inputClasses="ld-input ld-input-padding w-full text-xs"
-            displayFormat={'yyyy M dd, hh:ii'}
-          />
-        </div>
+    <ul class="dropdown-content p-0">
+      {#each LOG_LEVELS as level}
+        {@const isSelected = filtersStore.hasLevel(level.value)}
+        <li>
+          <div
+            class={[
+              'hover:bg-base-100 group flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5',
+              { 'bg-base-100': isSelected },
+            ]}
+          >
+            <label
+              class="flex cursor-pointer items-center"
+              onclick={(e: MouseEvent) => e.stopPropagation()}
+            >
+              <input
+                type="checkbox"
+                class="checkbox checkbox-xs"
+                checked={isSelected}
+                onchange={() => onLevelToggle(level.value)}
+              />
+            </label>
+            <button
+              class="flex flex-1 cursor-pointer items-center gap-2 text-left"
+              onclick={() => onLevelSelectAndClose(level.value, close)}
+            >
+              <span class={['h-2 w-2 rounded-full', level.color]}></span>
+              <span>{level.label}</span>
+            </button>
+          </div>
+        </li>
+      {/each}
+      {#if filtersStore.levels.length > 0}
+        <li class="border-base-100 mt-1 border-t pt-1">
+          <button
+            class="hover:bg-base-100 text-base-content/60 w-full rounded-lg px-3 py-1.5 text-left text-xs"
+            onclick={() => filtersStore.setLevels([])}
+          >
+            Clear all levels
+          </button>
+        </li>
       {/if}
+    </ul>
+  </div>
+{/snippet}
 
-      <div class="flex gap-2 pt-2">
-        <button
-          class="btn btn-secondary btn-sm flex-1"
-          onclick={() => {
-            clearAllFilters();
-            close();
-          }}
-          disabled={!hasActiveFilters()}
-        >
-          Clear All
-        </button>
+{#snippet timeRangeSubmenu(close: () => void)}
+  <div
+    class="ld-card-base rounded-box absolute -top-2 left-full z-50 w-fit whitespace-nowrap p-2 shadow-lg"
+    onmouseenter={() => (hoveredMenu = 'time-range')}
+  >
+    <ul class="menu p-0">
+      {#each TIME_RANGE_PRESETS as range}
+        {@const requiresUpgrade = isTimeRangeExceedingLimit(
+          range.hours,
+          maxDateRangeHours,
+        )}
+        <li>
+          <UpgradeElement
+            class={[
+              'hover:bg-base-100 flex w-full items-center justify-between gap-4 rounded-lg px-3 py-1.5 text-left',
+              { 'bg-base-100': currentTimeRangeLabel === range.label },
+            ]}
+            onclick={() => onTimeRangeSelect(range.value, close)}
+            enabled={requiresUpgrade}
+            source="logs-date-range"
+            interactive={true}
+          >
+            <span>{range.label}</span>
+            {#if requiresUpgrade}
+              <span class="badge badge-xs badge-primary badge-soft">
+                Upgrade
+              </span>
+            {/if}
+          </UpgradeElement>
+        </li>
+      {/each}
+    </ul>
+  </div>
+{/snippet}
 
-        <UpgradeElement
-          enabled={isCustomRangeUpgradeRequired}
-          source="logs-filter-dropdown"
-          class={[
-            'btn btn-sm flex-1',
-            {
-              'justify-between': isCustomRangeUpgradeRequired,
-              'justify-center': !isCustomRangeUpgradeRequired,
-              'btn-primary': hasPendingChanges(),
-              'btn-secondary-disabled': !hasPendingChanges(),
-            },
-          ]}
-          interactive={hasPendingChanges()}
-          onclick={() => {
-            applyFilters();
-            close();
-          }}
-        >
-          <span>Apply</span>
-          {#if isCustomRangeUpgradeRequired}
-            <span class="badge badge-xs badge-secondary">Upgrade</span>
-          {/if}
-        </UpgradeElement>
+{#snippet customDatePickerContent(close: () => void)}
+  <div class="w-56 space-y-3 p-2">
+    <div class="text-sm font-medium">Custom Range</div>
+    <div class="space-y-2">
+      <div class="space-y-1">
+        <label class="text-base-content/70 block text-xs">From</label>
+        <SveltyPicker
+          bind:value={customStartDate}
+          mode="datetime"
+          placeholder="Start date"
+          inputClasses="ld-input ld-input-padding w-full text-xs"
+          displayFormat={'yyyy M dd, hh:ii'}
+        />
       </div>
+      <div class="space-y-1">
+        <label class="text-base-content/70 block text-xs">To</label>
+        <SveltyPicker
+          bind:value={customEndDate}
+          mode="datetime"
+          placeholder="End date"
+          inputClasses="ld-input ld-input-padding w-full text-xs"
+          displayFormat={'yyyy M dd, hh:ii'}
+        />
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button
+        class="btn btn-secondary btn-xs flex-1"
+        onclick={onCustomDateCancel}
+      >
+        Cancel
+      </button>
+      <UpgradeElement
+        enabled={isCustomRangeUpgradeRequired}
+        source="logs-filter-dropdown"
+        class={[
+          'btn btn-xs flex-1',
+          {
+            'btn-primary': customStartDate && customEndDate,
+            'btn-secondary-disabled': !customStartDate || !customEndDate,
+          },
+        ]}
+        interactive={Boolean(customStartDate && customEndDate)}
+        onclick={() => onCustomDateApply(close)}
+      >
+        Apply
+      </UpgradeElement>
     </div>
   </div>
 {/snippet}
 
-<Tooltip content={menu} interactive={true} placement="bottom" trigger="click">
+{#snippet menu(close: () => void)}
+  <div
+    class="fixed inset-0 z-[-1]"
+    onmousedown={close}
+    role="button"
+    tabindex="-1"
+  ></div>
+  <div
+    class="dropdown-content text-secondary ld-card-base z-1 w-fit rounded-2xl p-0.5 shadow"
+  >
+    {#if showCustomDatePicker}
+      {@render customDatePickerContent(close)}
+    {:else}
+      <ul class="dropdown-content w-fit whitespace-nowrap p-1">
+        <li
+          class="relative"
+          onmouseenter={() => (hoveredMenu = 'level')}
+          onmouseleave={() => (hoveredMenu = null)}
+        >
+          <div
+            class={[
+              'flex w-full cursor-pointer items-center justify-between gap-6 rounded-xl px-3 py-2',
+              { 'bg-base-100': hoveredMenu === 'level' },
+            ]}
+          >
+            <span class="flex items-center gap-2">
+              <span>Level</span>
+              {#if filtersStore.levels.length > 0}
+                <span class="badge badge-xs badge-primary badge-soft">
+                  {filtersStore.levels.length}
+                </span>
+              {/if}
+            </span>
+            <ChevronRightIcon class="h-4 w-4 opacity-50" />
+          </div>
+          {#if hoveredMenu === 'level'}
+            {@render levelSubmenu(close)}
+          {/if}
+        </li>
+
+        <li
+          class="relative"
+          onmouseenter={() => (hoveredMenu = 'time-range')}
+          onmouseleave={() => (hoveredMenu = null)}
+        >
+          <div
+            class={[
+              'flex w-full cursor-pointer items-center justify-between gap-6 rounded-lg px-3 py-2',
+              { 'bg-base-100': hoveredMenu === 'time-range' },
+            ]}
+          >
+            <span>Time Range</span>
+            <ChevronRightIcon class="h-4 w-4 opacity-50" />
+          </div>
+          {#if hoveredMenu === 'time-range'}
+            {@render timeRangeSubmenu(close)}
+          {/if}
+        </li>
+      </ul>
+    {/if}
+  </div>
+{/snippet}
+
+<Tooltip
+  content={menu}
+  interactive={true}
+  placement="bottom"
+  trigger="click"
+  closeOnOutsideTooltipClick={true}
+>
   <button
     class={[
       'btn btn-sm btn-subtle gap-1.5',
       {
-        'btn-outline': !hasActiveFilters(),
-        'btn-secondary': hasActiveFilters(),
+        'btn-outline': !hasActiveFilters,
+        'btn-secondary': hasActiveFilters,
       },
     ]}
     data-posthog-id="logs-filter-dropdown"
   >
     <FilterIcon class="size-3.5" />
     <span class="hidden md:block">Filter</span>
-    {#if hasActiveFilters()}
+    {#if hasActiveFilters}
       <span class="badge badge-xs">
-        {[
-          selectedLevel,
-          selectedStartDate && selectedEndDate,
-          searchString?.trim(),
-        ].filter(Boolean).length}
+        {activeFilterCount}
       </span>
     {/if}
   </button>
