@@ -6,4 +6,5 @@ export class QueueLogDto {
   level: LogLevel;
   projectId: string;
   index?: number;
+  namespace?: string;
 }

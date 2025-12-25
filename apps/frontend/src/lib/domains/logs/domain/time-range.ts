@@ -22,7 +22,7 @@ export const TIME_RANGE_PRESETS: TimeRangePreset[] = [
   { value: 'last-24h', label: 'Last 24 hours', hours: 24 },
   { value: 'last-7d', label: 'Last 7 days', hours: 168 },
   { value: 'last-30d', label: 'Last 30 days', hours: 720 },
-  { value: 'custom', label: 'Custom', hours: 0 },
+  // { value: 'custom', label: 'Custom', hours: 0 },
 ];
 
 export function getDatesForTimeRange(rangeValue: TimeRangeValue): {

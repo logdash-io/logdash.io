@@ -8,4 +8,5 @@ export class CreateLogDto {
   projectId: string;
   index?: number;
   sequenceNumber?: number;
+  namespace?: string;
 }

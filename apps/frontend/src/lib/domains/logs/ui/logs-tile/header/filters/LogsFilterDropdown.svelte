@@ -15,14 +15,36 @@
     isTimeRangeExceedingLimit,
     isCustomRangeExceedingLimit,
   } from '$lib/domains/logs/domain/time-range';
+  import type { NamespaceMetadata } from '$lib/domains/logs/domain/namespace-metadata.js';
+  import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
+  import { onMount } from 'svelte';
 
   type Props = {
     maxDateRangeHours: number;
+    projectId: string;
   };
 
-  const { maxDateRangeHours }: Props = $props();
+  const { maxDateRangeHours, projectId }: Props = $props();
 
-  let hoveredMenu = $state<'level' | 'time-range' | null>(null);
+  let hoveredMenu = $state<'level' | 'time-range' | 'namespace' | null>(null);
+  let availableNamespaces = $state<NamespaceMetadata[]>([]);
+  let loadingNamespaces = $state(false);
+
+  async function fetchNamespaces(): Promise<void> {
+    if (loadingNamespaces) return;
+    loadingNamespaces = true;
+    try {
+      availableNamespaces = await LogsService.getLogsNamespaces(projectId);
+    } catch {
+      availableNamespaces = [];
+    } finally {
+      loadingNamespaces = false;
+    }
+  }
+
+  onMount(() => {
+    fetchNamespaces();
+  });
   let showCustomDatePicker = $state(false);
   let customStartDate = $state('');
   let customEndDate = $state('');
@@ -30,6 +52,7 @@
   const activeFilterCount = $derived.by(() => {
     let count = 0;
     if (filtersStore.levels.length > 0) count++;
+    if (filtersStore.namespaces.length > 0) count++;
     if (filtersStore.startDate && filtersStore.endDate) count++;
     if (filtersStore.searchString?.trim()) count++;
     return count;
@@ -68,6 +91,23 @@
     close();
   }
 
+  function onNamespaceToggle(namespace: string): void {
+    filtersStore.toggleNamespace(namespace);
+  }
+
+  function onNamespaceClick(
+    e: MouseEvent,
+    namespace: string,
+    close: () => void,
+  ): void {
+    if (e.metaKey || e.shiftKey) {
+      filtersStore.toggleNamespace(namespace);
+      return;
+    }
+    filtersStore.setNamespaces([namespace]);
+    close();
+  }
+
   function onTimeRangeSelect(
     rangeValue: TimeRangeValue,
     close: () => void,
@@ -100,9 +140,27 @@
   }
 </script>
 
+<Tooltip
+  content={menu}
+  interactive={true}
+  placement="bottom"
+  trigger="click"
+  closeOnOutsideTooltipClick={true}
+>
+  <button
+    class={[
+      'fcc rounded-full p-1 px-2 gap-1.5 h-fit bg-base-300 border border-secondary/20 cursor-pointer hover:border-secondary/30',
+    ]}
+    data-posthog-id="logs-filter-dropdown"
+  >
+    <FilterIcon class="size-3.5" />
+    <span class="hidden md:block text-sm">Filter</span>
+  </button>
+</Tooltip>
+
 {#snippet levelSubmenu(close: () => void)}
   <div
-    class="ld-card-base rounded-box absolute -top-2 left-full z-50 w-fit whitespace-nowrap p-1 shadow-lg"
+    class="ld-card-base rounded-box absolute -top-2 left-full z-50 w-fit whitespace-nowrap p-1.5 shadow-lg"
     onmouseenter={() => (hoveredMenu = 'level')}
   >
     <ul class="dropdown-content p-0">
@@ -152,10 +210,10 @@
 
 {#snippet timeRangeSubmenu(close: () => void)}
   <div
-    class="ld-card-base rounded-box absolute -top-2 left-full z-50 w-fit whitespace-nowrap p-2 shadow-lg"
+    class="ld-card-base rounded-box absolute -top-2 left-full z-50 w-56 whitespace-nowrap p-1.5 shadow-lg"
     onmouseenter={() => (hoveredMenu = 'time-range')}
   >
-    <ul class="menu p-0">
+    <ul class="p-0">
       {#each TIME_RANGE_PRESETS as range}
         {@const requiresUpgrade = isTimeRangeExceedingLimit(
           range.hours,
@@ -167,7 +225,13 @@
               'hover:bg-base-100 flex w-full items-center justify-between gap-4 rounded-lg px-3 py-1.5 text-left',
               { 'bg-base-100': currentTimeRangeLabel === range.label },
             ]}
-            onclick={() => onTimeRangeSelect(range.value, close)}
+            onclick={() => {
+              if (requiresUpgrade) {
+                close();
+                return;
+              }
+              onTimeRangeSelect(range.value, close);
+            }}
             enabled={requiresUpgrade}
             source="logs-date-range"
             interactive={true}
@@ -181,6 +245,62 @@
           </UpgradeElement>
         </li>
       {/each}
+    </ul>
+  </div>
+{/snippet}
+
+{#snippet namespaceSubmenu(close: () => void)}
+  <div
+    class="ld-card-base rounded-box absolute -top-2 left-full z-50 w-fit whitespace-nowrap p-1 shadow-lg"
+    onmouseenter={() => (hoveredMenu = 'namespace')}
+  >
+    <ul class="dropdown-content p-0">
+      {#if loadingNamespaces}
+        <li class="px-3 py-1.5 text-base-content/60">Loading...</li>
+      {:else if availableNamespaces.length === 0}
+        <li class="px-3 py-1.5 text-base-content/60">No namespaces</li>
+      {:else}
+        {#each availableNamespaces as nsMetadata}
+          {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
+          <li>
+            <div
+              class={[
+                'hover:bg-base-100 group flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5',
+                { 'bg-base-100': isSelected },
+              ]}
+            >
+              <label
+                class="flex cursor-pointer items-center"
+                onclick={(e: MouseEvent) => e.stopPropagation()}
+              >
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-xs"
+                  checked={isSelected}
+                  onchange={() => onNamespaceToggle(nsMetadata.namespace)}
+                />
+              </label>
+              <button
+                class="flex flex-1 cursor-pointer items-center gap-2 text-left"
+                onclick={(e: MouseEvent) =>
+                  onNamespaceClick(e, nsMetadata.namespace, close)}
+              >
+                <span>{nsMetadata.namespace}</span>
+              </button>
+            </div>
+          </li>
+        {/each}
+        {#if filtersStore.namespaces.length > 0}
+          <li class="border-base-100 mt-1 border-t pt-1">
+            <button
+              class="hover:bg-base-100 text-base-content/60 w-full rounded-lg px-3 py-1.5 text-left text-xs"
+              onclick={() => filtersStore.setNamespaces([])}
+            >
+              Clear all namespaces
+            </button>
+          </li>
+        {/if}
+      {/if}
     </ul>
   </div>
 {/snippet}
@@ -249,7 +369,7 @@
     {#if showCustomDatePicker}
       {@render customDatePickerContent(close)}
     {:else}
-      <ul class="dropdown-content w-fit whitespace-nowrap p-1">
+      <ul class="dropdown-content w-fit whitespace-nowrap p-1 text-sm">
         <li
           class="relative"
           onmouseenter={() => (hoveredMenu = 'level')}
@@ -264,7 +384,7 @@
             <span class="flex items-center gap-2">
               <span>Level</span>
               {#if filtersStore.levels.length > 0}
-                <span class="badge badge-xs badge-primary badge-soft">
+                <span class="badge badge-xs badge-secondary badge-soft">
                   {filtersStore.levels.length}
                 </span>
               {/if}
@@ -294,34 +414,33 @@
             {@render timeRangeSubmenu(close)}
           {/if}
         </li>
+
+        <li
+          class="relative"
+          onmouseenter={() => (hoveredMenu = 'namespace')}
+          onmouseleave={() => (hoveredMenu = null)}
+        >
+          <div
+            class={[
+              'flex w-full cursor-pointer items-center justify-between gap-6 rounded-xl px-3 py-2',
+              { 'bg-base-100': hoveredMenu === 'namespace' },
+            ]}
+          >
+            <span class="flex items-center gap-2">
+              <span>Namespace</span>
+              {#if filtersStore.namespaces.length > 0}
+                <span class="badge badge-xs badge-primary badge-soft">
+                  {filtersStore.namespaces.length}
+                </span>
+              {/if}
+            </span>
+            <ChevronRightIcon class="h-4 w-4 opacity-50" />
+          </div>
+          {#if hoveredMenu === 'namespace'}
+            {@render namespaceSubmenu(close)}
+          {/if}
+        </li>
       </ul>
     {/if}
   </div>
 {/snippet}
-
-<Tooltip
-  content={menu}
-  interactive={true}
-  placement="bottom"
-  trigger="click"
-  closeOnOutsideTooltipClick={true}
->
-  <button
-    class={[
-      'btn btn-sm btn-subtle gap-1.5',
-      {
-        'btn-outline': !hasActiveFilters,
-        'btn-secondary': hasActiveFilters,
-      },
-    ]}
-    data-posthog-id="logs-filter-dropdown"
-  >
-    <FilterIcon class="size-3.5" />
-    <span class="hidden md:block">Filter</span>
-    {#if hasActiveFilters}
-      <span class="badge badge-xs">
-        {activeFilterCount}
-      </span>
-    {/if}
-  </button>
-</Tooltip>

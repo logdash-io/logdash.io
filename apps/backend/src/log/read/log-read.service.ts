@@ -5,6 +5,7 @@ import { LogReadDirection } from '../core/enums/log-read-direction.enum';
 import { ClickHouseClient } from '@clickhouse/client';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 import { LogLevel } from '../core/enums/log-level.enum';
+import { NamespaceMetadata } from './dto/namespace-metadata.dto';
 
 @Injectable()
 export class LogReadService {
@@ -30,6 +31,7 @@ export class LogReadService {
     limit: number;
     projectId: string;
     searchString?: string;
+    namespaces?: string[];
   }): Promise<LogNormalized[]> {
     let query: string;
     let queryParams: Record<string, any>;
@@ -80,6 +82,11 @@ export class LogReadService {
         queryParams.levels = effectiveLevels;
       }
 
+      if (dto.namespaces?.length) {
+        query += ` AND l.namespace IN ({namespaces:Array(String)})`;
+        queryParams.namespaces = dto.namespaces;
+      }
+
       if (dto.searchString && dto.searchString.trim()) {
         const words = dto.searchString
           .trim()
@@ -118,6 +125,11 @@ export class LogReadService {
         queryParams.levels = effectiveLevels;
       }
 
+      if (dto.namespaces?.length) {
+        query += ` AND namespace IN ({namespaces:Array(String)})`;
+        queryParams.namespaces = dto.namespaces;
+      }
+
       if (dto.searchString && dto.searchString.trim()) {
         const words = dto.searchString
           .trim()
@@ -139,5 +151,27 @@ export class LogReadService {
     const data = ((await result.json()) as any).data;
 
     return data.map((row: any) => LogSerializer.normalizeClickhouse(row));
+  }
+
+  public async getUniqueNamespaces(projectId: string): Promise<NamespaceMetadata[]> {
+    const result = await this.clickhouse.query({
+      query: `
+        SELECT 
+          namespace, 
+          MAX(created_at) as last_log_date 
+        FROM logs 
+        WHERE project_id = {projectId:String} AND namespace IS NOT NULL 
+        GROUP BY namespace 
+        ORDER BY last_log_date DESC
+      `,
+      query_params: { projectId },
+    });
+
+    const data = ((await result.json()) as any).data;
+
+    return data.map((row: any) => ({
+      namespace: row.namespace,
+      lastLogDate: ClickhouseUtils.clickhouseDateToJsDate(row.last_log_date).toISOString(),
+    }));
   }
 }

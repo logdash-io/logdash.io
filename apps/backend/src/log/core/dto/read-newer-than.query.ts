@@ -57,4 +57,14 @@ export class ReadLogsQuery {
   @IsOptional()
   @IsString()
   searchString?: string;
+
+  @ApiPropertyOptional({
+    isArray: true,
+    description: 'Filter logs by multiple namespaces.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
+  namespaces?: string[];
 }

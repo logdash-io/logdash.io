@@ -11,11 +11,12 @@ export class FiltersStore {
   startDate = $state<string | null>(null);
   endDate = $state<string | null>(null);
   levels = $state<LogLevel[]>([]);
+  namespaces = $state<string[]>([]);
   limit = $state<number>(50);
   utcOffsetHours = $state<number>(0);
 
-  get level(): LogLevel | null {
-    return this.levels.length > 0 ? this.levels[0] : null;
+  get defaultStartDate(): string | null {
+    return this._defaultStartDate;
   }
 
   get filters(): LogsFilters {
@@ -23,8 +24,8 @@ export class FiltersStore {
       searchString: this.searchString,
       startDate: this.startDate,
       endDate: this.endDate,
-      level: this.level,
       levels: this.levels,
+      namespaces: this.namespaces,
       limit: this.limit,
       utcOffsetHours: this.utcOffsetHours,
     };
@@ -37,6 +38,7 @@ export class FiltersStore {
     const persisted = filtersPersistenceService.loadFilters(userId, projectId);
     if (persisted) {
       this.levels = persisted.levels || [];
+      this.namespaces = persisted.namespaces || [];
       this.startDate = persisted.startDate;
       this.endDate = persisted.endDate;
       this.searchString = persisted.searchString || '';
@@ -50,6 +52,7 @@ export class FiltersStore {
 
     filtersPersistenceService.saveFilters(this._userId, this._projectId, {
       levels: this.levels,
+      namespaces: this.namespaces,
       startDate: this.startDate,
       endDate: this.endDate,
       searchString: this.searchString,
@@ -74,9 +77,36 @@ export class FiltersStore {
     return this.levels.includes(level);
   }
 
+  toggleNamespace(namespace: string): void {
+    if (this.namespaces.includes(namespace)) {
+      this.namespaces = this.namespaces.filter((n) => n !== namespace);
+    } else {
+      this.namespaces = [...this.namespaces, namespace];
+    }
+    this.persistFilters();
+  }
+
+  setNamespaces(namespaces: string[]): void {
+    this.namespaces = namespaces;
+    this.persistFilters();
+  }
+
+  hasNamespace(namespace: string): boolean {
+    return this.namespaces.includes(namespace);
+  }
+
+  clearNamespaces(): void {
+    this.namespaces = [];
+    this.persistFilters();
+  }
+
   setFilters(
     filters: Partial<
-      LogsFilters & { defaultStartDate: string; levels: LogLevel[] }
+      LogsFilters & {
+        defaultStartDate: string;
+        levels: LogLevel[];
+        namespaces: string[];
+      }
     >,
   ): void {
     if (filters.searchString !== undefined) {
@@ -88,11 +118,11 @@ export class FiltersStore {
     if (filters.endDate !== undefined) {
       this.endDate = filters.endDate;
     }
-    if (filters.level !== undefined) {
-      this.levels = filters.level ? [filters.level] : [];
-    }
     if (filters.levels !== undefined) {
       this.levels = filters.levels;
+    }
+    if (filters.namespaces !== undefined) {
+      this.namespaces = filters.namespaces;
     }
     if (filters.limit !== undefined) {
       this.limit = filters.limit;
@@ -111,6 +141,7 @@ export class FiltersStore {
     this.startDate = this._defaultStartDate;
     this.endDate = null;
     this.levels = [];
+    this.namespaces = [];
     this.limit = 50;
     this.utcOffsetHours = 0;
     this.persistFilters();

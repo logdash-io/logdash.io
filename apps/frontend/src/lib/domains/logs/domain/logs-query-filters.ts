@@ -6,7 +6,7 @@ export type LogsQueryFilters = {
   limit: number;
   startDate: string;
   endDate: string;
-  level: LogLevel;
   levels: LogLevel[];
   searchString: string;
+  namespaces: string[];
 };

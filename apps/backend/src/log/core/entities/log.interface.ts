@@ -8,6 +8,7 @@ export class LogNormalized {
   level: LogLevel;
   projectId: string;
   index: number;
+  namespace?: string;
 }
 
 export class LogClickhouseNormalized {
@@ -17,6 +18,7 @@ export class LogClickhouseNormalized {
   level: LogLevel;
   projectId: string;
   sequenceNumber: number;
+  namespace?: string;
 }
 
 export class LogSerialized {
@@ -34,6 +36,9 @@ export class LogSerialized {
 
   @ApiProperty()
   index: number;
+
+  @ApiProperty({ required: false })
+  namespace?: string;
 }
 
 export class LogClickhouseSerialized {
@@ -51,4 +56,7 @@ export class LogClickhouseSerialized {
 
   @ApiProperty()
   sequenceNumber: number;
+
+  @ApiProperty({ required: false })
+  namespace?: string;
 }

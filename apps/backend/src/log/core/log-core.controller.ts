@@ -46,6 +46,7 @@ import { LogAnalyticsResponse } from '../analytics/dto/log-analytics-response.dt
 import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 import { subHours } from 'date-fns';
+import { NamespaceMetadata } from '../read/dto/namespace-metadata.dto';
 
 @Controller('')
 @ApiTags('Logs')
@@ -209,9 +210,22 @@ export class LogCoreController {
       level: dto.level,
       levels: dto.levels,
       searchString: dto.searchString,
+      namespaces: dto.namespaces,
     });
 
     return logs.map((log) => LogSerializer.serialize(log));
+  }
+
+  @DemoEndpoint()
+  @UseInterceptors(DemoCacheInterceptor)
+  @UseGuards(ClusterMemberGuard)
+  @ApiBearerAuth()
+  @Get('projects/:projectId/logs/namespaces')
+  @ApiResponse({ type: NamespaceMetadata, isArray: true })
+  public async getUniqueNamespaces(
+    @Param('projectId') projectId: string,
+  ): Promise<NamespaceMetadata[]> {
+    return await this.logReadClickhouseService.getUniqueNamespaces(projectId);
   }
 
   @DemoEndpoint()

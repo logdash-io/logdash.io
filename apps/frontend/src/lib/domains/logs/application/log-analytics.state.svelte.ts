@@ -3,6 +3,7 @@ import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analyt
 import { LogAnalyticsService } from '$lib/domains/logs/infrastructure/log-analytics.service';
 import { logsSyncService } from '../infrastructure/logs-sync.service.svelte.js';
 import type { Log } from '../domain/log.js';
+import type { LogLevel } from '../domain/log-level.js';
 import { filtersStore } from '../infrastructure/filters.store.svelte.js';
 
 const logger = createLogger('log_analytics.state', true);
@@ -13,6 +14,36 @@ class LogAnalyticsState {
   private _error = $state<string | null>(null);
 
   get analyticsData(): LogsAnalyticsResponse | null {
+    if (!this._analyticsData) {
+      return null;
+    }
+
+    if (filtersStore.levels.length > 0) {
+      const selectedLevels = filtersStore.levels;
+      return {
+        ...this._analyticsData,
+        buckets: this._analyticsData.buckets.map((bucket) => ({
+          ...bucket,
+          countByLevel: Object.keys(bucket.countByLevel).reduce(
+            (acc, key) => {
+              acc[key] = selectedLevels.includes(key as LogLevel)
+                ? bucket.countByLevel[key] || 0
+                : 0;
+              return acc;
+            },
+            {} as Record<string, number>,
+          ) as Record<
+            keyof LogsAnalyticsResponse['buckets'][number]['countByLevel'],
+            number
+          >,
+          countTotal: selectedLevels.reduce(
+            (sum, level) => sum + (bucket.countByLevel[level] || 0),
+            0,
+          ),
+        })),
+      };
+    }
+
     return this._analyticsData;
   }
 
@@ -39,11 +70,11 @@ class LogAnalyticsState {
     logger.debug('scheduling update in ', msToNextMinute, 'ms');
     const timeout = setTimeout(() => {
       logger.debug('executing scheduler - fetching analytics');
-      this._fetchAnalytics(project_id);
+      this._fetchAnalytics(project_id, { silent: true });
 
       logger.debug('setting up interval');
       interval = setInterval(() => {
-        this._fetchAnalytics(project_id);
+        this._fetchAnalytics(project_id, { silent: true });
       }, 60000);
     }, msToNextMinute);
 
@@ -74,56 +105,51 @@ class LogAnalyticsState {
   }
 
   refresh(projectId: string): void {
-    this.clearData();
     this._fetchAnalytics(projectId);
   }
 
-  async fetchAnalytics(
-    project_id: string,
-    start_date: string,
-    end_date: string | null,
-    utc_offset_hours?: number,
-  ): Promise<void> {
-    logger.debug('Fetching analytics...', {
-      project_id,
-      start_date,
-      end_date,
-      utc_offset_hours,
-    });
+  async fetchAnalytics(projectId: string): Promise<void> {
+    await this._fetchAnalytics(projectId);
+  }
 
-    this._isLoading = true;
-    this.clearData();
+  private async _fetchAnalytics(
+    projectId: string,
+    options: { silent?: boolean } = {},
+  ): Promise<void> {
+    const startDate = filtersStore.startDate ?? filtersStore.defaultStartDate;
+
+    if (!startDate) {
+      return;
+    }
+
+    if (!options.silent) {
+      this._isLoading = true;
+    }
 
     try {
-      this._fetchAnalytics(project_id);
+      const levels =
+        filtersStore.levels.length > 0 ? filtersStore.levels : undefined;
+
+      const data = await LogAnalyticsService.getProjectLogsAnalytics(
+        projectId,
+        startDate,
+        filtersStore.endDate || new Date().toISOString(),
+        filtersStore.utcOffsetHours,
+        levels,
+      );
+
+      this._analyticsData = data;
+      logger.debug('Fetched analytics data:', data);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       this._error = errorMessage;
       logger.error('Error fetching analytics:', error);
     } finally {
-      this._isLoading = false;
+      if (!options.silent) {
+        this._isLoading = false;
+      }
     }
-  }
-
-  private async _fetchAnalytics(projectId: string): Promise<void> {
-    if (!filtersStore.startDate) {
-      return;
-    }
-
-    const levels =
-      filtersStore.levels.length > 0 ? filtersStore.levels : undefined;
-
-    const data = await LogAnalyticsService.getProjectLogsAnalytics(
-      projectId,
-      filtersStore.startDate,
-      filtersStore.endDate || new Date().toISOString(),
-      filtersStore.utcOffsetHours,
-      levels,
-    );
-
-    this._analyticsData = data;
-    logger.debug('Fetched analytics data:', data);
   }
 
   clearData(): void {

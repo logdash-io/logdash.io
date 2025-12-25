@@ -6,6 +6,7 @@ export type FiltersPersistenceData = {
   startDate: string | null;
   endDate: string | null;
   searchString: string;
+  namespaces?: string[];
 };
 
 const STORAGE_KEY_PREFIX = 'logs-filters';
