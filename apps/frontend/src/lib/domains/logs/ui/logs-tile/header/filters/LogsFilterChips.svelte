@@ -125,7 +125,7 @@
           trigger="click"
           closeOnOutsideTooltipClick={true}
         >
-          <span class="flex items-center gap-1.5 cursor-pointer">
+          <span class="flex items-center gap-1.5 cursor-pointer select-none">
             {@render levelChipContent()}
           </span>
         </Tooltip>

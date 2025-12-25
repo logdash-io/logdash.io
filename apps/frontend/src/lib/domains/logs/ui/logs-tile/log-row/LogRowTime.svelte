@@ -15,6 +15,7 @@
     const diffSeconds = Math.floor(diffMs / 1000);
     const diffMinutes = Math.floor(diffSeconds / 60);
     const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
 
     if (diffSeconds < 60) {
       return `< 1m`;
@@ -24,7 +25,11 @@
       return `${diffMinutes}m`;
     }
 
-    return `${diffHours}h`;
+    if (diffHours < 24) {
+      return `${diffHours}h`;
+    }
+
+    return `${diffDays}d`;
   }
 
   let timeAgo = $state(formatTimeAgo(rawDate));

@@ -129,7 +129,7 @@
     @apply shrink-0;
   }
 
-  .gutter-stable {
-    scrollbar-gutter: stable;
+  .checkbox.checkbox-xs {
+    @apply rounded-sm;
   }
 }

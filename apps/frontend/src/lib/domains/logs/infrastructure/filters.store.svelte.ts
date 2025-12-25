@@ -18,6 +18,10 @@ export class FiltersStore {
     return this.levels.length > 0 ? this.levels[0] : null;
   }
 
+  get defaultStartDate(): string | null {
+    return this._defaultStartDate;
+  }
+
   get filters(): LogsFilters {
     return {
       searchString: this.searchString,
