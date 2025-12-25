@@ -39,11 +39,21 @@
 </script>
 
 <div class="relative w-full">
+  <svg
+    class="text-base-content/40 pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <circle cx="11" cy="11" r="8"></circle>
+    <path d="m21 21-4.35-4.35"></path>
+  </svg>
+
   <input
     bind:value={localSearchTerm}
-    class="ld-input ld-input-padding w-full pr-10 text-sm"
+    class="ld-input w-full pl-9 pr-10 text-sm py-1.5"
     oninput={handleSearchInput}
-    placeholder="Filter logs..."
+    placeholder="Search logs..."
     type="text"
   />
 
@@ -67,15 +77,5 @@
         ></path>
       </svg>
     </button>
-  {:else}
-    <svg
-      class="text-base-content/40 absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <circle cx="11" cy="11" r="8"></circle>
-      <path d="m21 21-4.35-4.35"></path>
-    </svg>
   {/if}
 </div>

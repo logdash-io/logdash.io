@@ -16,6 +16,7 @@
   const { priorityProjectId }: Props = $props();
 
   const projectId = $derived(priorityProjectId ?? page.params.project_id);
+  const userId = $derived(userState.id);
 
   const maxRetentionHours = $derived(
     exposedConfigState.logRetentionHours(userState.tier),
@@ -41,10 +42,12 @@
   $effect(() => {
     projectId;
     untrack(() => {
-      filtersStore.reset();
+      if (userId && projectId) {
+        filtersStore.initPersistence(userId, projectId);
+      }
       filtersStore.setFilters({
-        startDate: defaultStartDate.toISOString(),
-        endDate: null,
+        startDate: filtersStore.startDate || defaultStartDate.toISOString(),
+        endDate: filtersStore.endDate || null,
         defaultStartDate: defaultStartDate.toISOString(),
       });
     });

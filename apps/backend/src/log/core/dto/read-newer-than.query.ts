@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDate, IsDateString, IsEnum, IsOptional, IsString, Max } from 'class-validator';
+import { IsArray, IsDate, IsEnum, IsOptional, IsString, Max } from 'class-validator';
 import { LogReadDirection } from '../enums/log-read-direction.enum';
 import { Transform } from 'class-transformer';
 import { LogLevel } from '../enums/log-level.enum';
@@ -33,11 +33,22 @@ export class ReadLogsQuery {
   @IsOptional()
   endDate?: Date;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ deprecated: true })
   @IsOptional()
   @IsString()
   @IsEnum(LogLevel)
   level?: LogLevel;
+
+  @ApiPropertyOptional({
+    enum: LogLevel,
+    isArray: true,
+    description: 'Filter logs by multiple levels. Takes precedence over level if both provided.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(LogLevel, { each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
+  levels?: LogLevel[];
 
   @ApiPropertyOptional({
     description:

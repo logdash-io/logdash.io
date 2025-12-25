@@ -17,7 +17,7 @@
     const diffHours = Math.floor(diffMinutes / 60);
 
     if (diffSeconds < 60) {
-      return `${Math.max(0, diffSeconds)}s`;
+      return `< 1m`;
     }
 
     if (diffMinutes < 60) {
@@ -59,5 +59,5 @@
 </script>
 
 <span class={['text-sm leading-7 whitespace-nowrap tabular-nums', textColor]}>
-  {timeAgo}
+  {timeAgo} ago
 </span>

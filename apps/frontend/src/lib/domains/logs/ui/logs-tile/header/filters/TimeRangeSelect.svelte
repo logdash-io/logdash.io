@@ -2,6 +2,10 @@
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
+  import {
+    TIME_RANGE_PRESETS,
+    isTimeRangeExceedingLimit,
+  } from '$lib/domains/logs/domain/time-range';
 
   type Props = {
     selectedTimeRange: string;
@@ -12,23 +16,9 @@
   const { selectedTimeRange, maxDateRangeHours, onTimeRangeChange }: Props =
     $props();
 
-  const TIME_RANGES = [
-    { value: 'last-15m', label: 'Last 15 minutes', hours: 0.25 },
-    { value: 'last-1h', label: 'Last hour', hours: 1 },
-    { value: 'last-4h', label: 'Last 4 hours', hours: 4 },
-    { value: 'last-24h', label: 'Last 24 hours', hours: 24 },
-    { value: 'last-7d', label: 'Last 7 days', hours: 168 },
-    { value: 'last-30d', label: 'Last 30 days', hours: 720 },
-    { value: 'custom', label: 'Custom', hours: 0 },
-  ];
-
   function getSelectedLabel(): string {
-    const range = TIME_RANGES.find((r) => r.value === selectedTimeRange);
+    const range = TIME_RANGE_PRESETS.find((r) => r.value === selectedTimeRange);
     return range?.label || 'Last 24 hours';
-  }
-
-  function isTimeRangeUpgradeRequired(timeRange: { hours: number }): boolean {
-    return timeRange.hours > maxDateRangeHours;
   }
 </script>
 
@@ -37,8 +27,11 @@
     class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
     <ul class="">
-      {#each TIME_RANGES as range}
-        {@const requiresUpgrade = isTimeRangeUpgradeRequired(range)}
+      {#each TIME_RANGE_PRESETS as range}
+        {@const requiresUpgrade = isTimeRangeExceedingLimit(
+          range.hours,
+          maxDateRangeHours,
+        )}
         <li
           class="hover:bg-base-100 flex items-center justify-start rounded-lg px-3"
         >
