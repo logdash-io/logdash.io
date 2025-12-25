@@ -48,23 +48,37 @@
   );
 
   const FILTER_CHIP_CLASS =
-    'bg-base-300 border-base-100 flex items-center gap-1.5 rounded-full border py-1 pr-1 pl-2.5 text-sm';
+    'bg-base-300 border-secondary/20 flex items-center gap-1.5 rounded-full border py-1 pr-1 pl-2.5 text-sm';
 
   function onQuickFilterErrors(): void {
     filtersStore.setLevels(['error']);
+  }
+
+  function onQuickFilterWarnings(): void {
+    filtersStore.setLevels(['warning']);
   }
 </script>
 
 {#if !hasActiveFilters}
   <div class="flex items-center gap-2">
     <button
-      class="bg-base-300 text-base-content/60 hover:text-base-content border-base-content/30 flex items-center gap-1.5 rounded-full border border-dashed py-1 px-2.5 text-sm transition-colors cursor-pointer"
+      class="whitespace-nowrap bg-base-300 text-base-content/60 hover:text-base-content border-base-content/30 flex items-center gap-1.5 rounded-full border border-dashed py-1 px-2.5 text-sm transition-colors cursor-pointer"
       onclick={onQuickFilterErrors}
     >
       <span
         class={['h-2 w-2 rounded-full', LOG_LEVELS_MAP['error'].color]}
       ></span>
       <span>Filter only errors</span>
+    </button>
+
+    <button
+      class="whitespace-nowrap bg-base-300 text-base-content/60 hover:text-base-content border-base-content/30 flex items-center gap-1.5 rounded-full border border-dashed py-1 px-2.5 text-sm transition-colors cursor-pointer"
+      onclick={onQuickFilterWarnings}
+    >
+      <span
+        class={['h-2 w-2 rounded-full', LOG_LEVELS_MAP['warning'].color]}
+      ></span>
+      <span>Filter only warnings</span>
     </button>
   </div>
 {/if}

@@ -149,7 +149,7 @@
 >
   <button
     class={[
-      'fcc rounded-full p-1 px-2 gap-1.5 h-fit bg-base-300 border border-base-100 cursor-pointer hover:border-base-content/20',
+      'fcc rounded-full p-1 px-2 gap-1.5 h-fit bg-base-300 border border-secondary/20 cursor-pointer hover:border-secondary/30',
     ]}
     data-posthog-id="logs-filter-dropdown"
   >
