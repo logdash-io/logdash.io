@@ -68,7 +68,7 @@
     navigator.clipboard.writeText(setupPrompt);
     copied = true;
     toast.success(
-      'Setup prompt copied! Paste it into your favourite AI assistant.',
+      'Setup prompt copied! Paste it into your favorite AI assistant.',
       5000,
     );
   }

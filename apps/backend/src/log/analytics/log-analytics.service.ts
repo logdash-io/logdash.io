@@ -24,6 +24,7 @@ export class LogAnalyticsService {
     const utcOffsetHours = dto.utcOffsetHours ?? 0;
     const levels = dto.levels;
     const namespaces = dto.namespaces;
+    const searchString = dto.searchString;
 
     const bucketMinutes = this.bucketSelectionService.selectOptimalBucketSize(startDate, endDate);
 
@@ -37,11 +38,25 @@ export class LogAnalyticsService {
 
     const hasLevelsFilter = levels && levels.length > 0;
     const hasNamespacesFilter = namespaces && namespaces.length > 0;
+    const hasSearchFilter = searchString && searchString.trim().length > 0;
 
     const levelFilterClause = hasLevelsFilter ? `AND level IN ({levels:Array(String)})` : '';
     const namespaceFilterClause = hasNamespacesFilter
       ? `AND namespace IN ({namespaces:Array(String)})`
       : '';
+
+    let searchFilterClause = '';
+    const searchWords: string[] = [];
+    if (hasSearchFilter) {
+      const words = searchString
+        .trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0);
+      searchWords.push(...words);
+      words.forEach((_, index) => {
+        searchFilterClause += ` AND positionCaseInsensitive(message, {searchWord${index}:String}) > 0`;
+      });
+    }
 
     const levelCountExpressions = hasLevelsFilter
       ? `
@@ -96,6 +111,7 @@ export class LogAnalyticsService {
           AND created_at < end_time
           ${levelFilterClause}
           ${namespaceFilterClause}
+          ${searchFilterClause}
         GROUP BY log_bucket_start
       ) log_data ON buckets.bucket_start = log_data.log_bucket_start
       ORDER BY bucket_start ASC
@@ -114,6 +130,12 @@ export class LogAnalyticsService {
 
     if (hasNamespacesFilter) {
       queryParams.namespaces = namespaces;
+    }
+
+    if (hasSearchFilter) {
+      searchWords.forEach((word, index) => {
+        queryParams[`searchWord${index}`] = word;
+      });
     }
 
     const result = await this.clickhouse.query({

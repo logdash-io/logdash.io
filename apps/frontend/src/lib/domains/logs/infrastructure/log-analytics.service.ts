@@ -10,6 +10,8 @@ export class LogAnalyticsService {
     end_date: string,
     utc_offset_hours?: number,
     levels?: LogLevel[],
+    namespaces?: string[],
+    search_string?: string,
   ): Promise<LogsAnalyticsResponse> {
     const qs = queryString.stringify(
       {
@@ -19,6 +21,9 @@ export class LogAnalyticsService {
           utcOffsetHours: utc_offset_hours.toString(),
         }),
         ...(levels && levels.length > 0 && { levels }),
+        ...(namespaces && namespaces.length > 0 && { namespaces }),
+        ...(search_string &&
+          search_string.trim() && { searchString: search_string }),
       },
       { arrayFormat: 'none' },
     );
