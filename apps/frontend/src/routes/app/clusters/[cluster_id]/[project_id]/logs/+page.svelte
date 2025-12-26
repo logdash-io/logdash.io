@@ -7,7 +7,6 @@
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import LogsTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
   import LoggingSetupOverlay from '$lib/domains/logs/ui/setup/LoggingSetupOverlay.svelte';
-  import { onMount } from 'svelte';
 
   const projectId = $derived(page.params.project_id);
 
@@ -15,14 +14,6 @@
     projectsState.hasConfiguredFeature(projectId, Feature.LOGGING) ||
       logsState.logs.length > 0,
   );
-
-  let apiKey = $state<string | undefined>();
-
-  onMount(() => {
-    projectsState.getApiKey(projectId).then((key) => {
-      apiKey = key;
-    });
-  });
 </script>
 
 <ProjectSync>
@@ -38,8 +29,8 @@
       ]}
     >
       <LogsTile />
-      {#if !hasLogging && projectsState.ready && apiKey}
-        <LoggingSetupOverlay {apiKey} />
+      {#if !hasLogging && projectsState.ready}
+        <LoggingSetupOverlay {projectId} />
       {/if}
     </DataTile>
   </div>

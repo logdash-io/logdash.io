@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { onMount } from 'svelte';
   import { Feature } from '$lib/domains/shared/types.js';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
@@ -24,18 +23,10 @@
 
   const { priorityProjectId, priorityClusterId }: Props = $props();
 
-  let apiKey = $state<string | undefined>();
-
   const previewedMetricId = $derived(page.params.metric_id);
   const clusterId = $derived(priorityClusterId ?? page.params.cluster_id);
   const projectId = $derived(priorityProjectId ?? page.params.project_id);
   const basePath = $derived(`/app/clusters/${clusterId}/${projectId}`);
-
-  onMount(() => {
-    projectsState.getApiKey(projectId).then((key) => {
-      apiKey = key;
-    });
-  });
 
   const selectedLogging = $derived(
     projectsState.hasFeature(projectId, Feature.LOGGING),
@@ -85,7 +76,7 @@
         {/if}
       {/if}
 
-      {#if selectedLogging && projectsState.ready && apiKey}
+      {#if selectedLogging && projectsState.ready}
         <DataTile
           delayIn={0}
           delayOut={50}
@@ -98,7 +89,7 @@
         >
           <LogsTile {priorityProjectId} />
           {#if !hasLogging}
-            <LoggingSetupOverlay {apiKey} />
+            <LoggingSetupOverlay {projectId} />
           {/if}
         </DataTile>
       {/if}
@@ -114,8 +105,8 @@
   {#if selectedMetrics && metricsState.ready}
     <div class="relative w-full shrink-0 sm:w-80 h-fit">
       <MetricsTiles />
-      {#if metricsState.isUsingFakeData && projectsState.ready && apiKey}
-        <MetricsSetupOverlay {apiKey} />
+      {#if metricsState.isUsingFakeData && projectsState.ready}
+        <MetricsSetupOverlay {projectId} />
       {/if}
     </div>
   {/if}

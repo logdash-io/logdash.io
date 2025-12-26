@@ -1,6 +1,7 @@
 <script lang="ts">
   import { SDK_LIST } from '$lib/domains/logs/domain/sdk-config.js';
   import { generateMetricsSetupPrompt } from '$lib/domains/app/projects/domain/metrics-setup-prompt.js';
+  import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
@@ -10,17 +11,15 @@
   import { elasticOut } from 'svelte/easing';
 
   type Props = {
-    apiKey: string;
+    projectId: string;
   };
-  const { apiKey }: Props = $props();
+  const { projectId }: Props = $props();
 
   let copied = $state(false);
   let selectedSDKIndex = $state(0);
 
   const selectedSDK = $derived(SDK_LIST[selectedSDKIndex]);
-  const setupPrompt = $derived(
-    generateMetricsSetupPrompt(selectedSDK.name, apiKey),
-  );
+  const isLoading = $derived(projectsState.isLoadingApiKey(projectId));
 
   $effect(() => {
     if (!copied) return;
@@ -32,7 +31,9 @@
     return () => clearTimeout(timeout);
   });
 
-  function onCopyPrompt(): void {
+  async function onCopyPrompt(): Promise<void> {
+    const apiKey = await projectsState.getApiKey(projectId);
+    const setupPrompt = generateMetricsSetupPrompt(selectedSDK.name, apiKey);
     navigator.clipboard.writeText(setupPrompt);
     copied = true;
     toast.success(
@@ -94,8 +95,13 @@
     <button
       class="btn btn-secondary gap-2 pr-1 opacity-80 group-hover:opacity-100 transition-opacity"
       onclick={onCopyPrompt}
+      disabled={isLoading}
     >
-      {@render copyIcon()}
+      {#if isLoading}
+        <span class="loading loading-spinner loading-xs"></span>
+      {:else}
+        {@render copyIcon()}
+      {/if}
       Copy prompt
 
       <Tooltip

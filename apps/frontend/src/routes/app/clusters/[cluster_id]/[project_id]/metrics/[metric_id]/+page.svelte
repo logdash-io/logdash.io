@@ -6,15 +6,8 @@
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
   import MetricDetails from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricDetails.svelte';
   import MetricsSetupOverlay from '$lib/domains/app/projects/ui/setup/MetricsSetupOverlay.svelte';
-  import { onMount } from 'svelte';
 
   const projectId = $derived(page.params.project_id);
-
-  let apiKey = $state<string | undefined>();
-
-  onMount(async () => {
-    apiKey = await projectsState.getApiKey(projectId);
-  });
 </script>
 
 <ProjectSync>
@@ -27,8 +20,8 @@
       <MetricsTiles />
     </div>
 
-    {#if metricsState.isUsingFakeData && projectsState.ready && metricsState.ready && apiKey}
-      <MetricsSetupOverlay {apiKey} />
+    {#if metricsState.isUsingFakeData && projectsState.ready && metricsState.ready}
+      <MetricsSetupOverlay {projectId} />
     {/if}
   </div>
 </ProjectSync>
