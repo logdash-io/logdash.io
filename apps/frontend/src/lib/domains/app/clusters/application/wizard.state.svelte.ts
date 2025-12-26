@@ -29,14 +29,12 @@ type WizardStateType = {
 };
 
 export const PROJECT_COLORS = [
-  '#6366f1',
-  '#8b5cf6',
-  '#ec4899',
-  '#f97316',
-  '#22c55e',
-  '#14b8a6',
-  '#ef4444',
-  '#3b82f6',
+  '#e7000b',
+  '#fe9a00',
+  '#155dfc',
+  '#00a6a6',
+  '#00a600',
+  '#505050',
 ];
 
 const TEMP_CLUSTER_ID = 'temp-wizard';

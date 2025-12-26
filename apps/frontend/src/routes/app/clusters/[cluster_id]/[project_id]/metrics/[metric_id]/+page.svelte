@@ -12,7 +12,7 @@
 
 <ProjectSync>
   <div class="relative flex w-full max-w-full flex-col gap-1.5 md:flex-row">
-    <div class="sticky top-4 flex flex-1 flex-col gap-1.5 self-start">
+    <div class="flex flex-1 flex-col gap-1.5 md:sticky md:top-4 md:self-start">
       <MetricDetails />
     </div>
 

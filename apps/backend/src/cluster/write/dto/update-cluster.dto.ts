@@ -5,4 +5,5 @@ export class UpdateClusterDto {
   name?: string;
   creatorId?: string;
   roles?: Record<string, ClusterRole>;
+  color?: string;
 }
