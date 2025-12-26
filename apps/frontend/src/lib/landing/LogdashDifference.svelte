@@ -40,13 +40,13 @@
       },
       {
         icon: FocusIcon,
-        title: 'We (unified dashboard):',
+        title: 'Us (unified dashboard):',
         description:
           'Logs, metrics, and uptime in one view. No jumping between AWS, Vercel, and other tools.',
       },
       {
         icon: BellIcon,
-        title: 'We (watching your back):',
+        title: 'Us (watching your back):',
         description:
           'We check up on your app once per 15 seconds. Get notified on Telegram/Discord only when it matters.',
       },
@@ -114,8 +114,7 @@
           'relative flex flex-col gap-8 overflow-hidden rounded-3xl border p-8',
           {
             'ld-card-base text-base-content': isPrimary,
-            'from-error/10 border-red-950 bg-gradient-to-br to-transparent':
-              !isPrimary,
+            'bg-error/15 border-red-950': !isPrimary,
           },
         ]}
       >

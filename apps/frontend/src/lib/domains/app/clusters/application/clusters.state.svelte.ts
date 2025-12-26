@@ -58,6 +58,16 @@ class ClustersState {
     return this._clusters[id]?.name || '';
   }
 
+  setColorPreview(id: string, color: string | undefined): void {
+    if (!this._clusters[id]) {
+      return;
+    }
+    this._clusters[id] = {
+      ...this._clusters[id],
+      color,
+    };
+  }
+
   set(clusters: Cluster[]): void {
     this._clusters = arrayToObject(clusters, 'id');
     this._initialized = true;
@@ -85,18 +95,32 @@ class ClustersState {
       throw new Error(`Cluster with id ${id} does not exist`);
     }
 
-    if (existingCluster.name === update.name) {
-      return Promise.resolve();
+    const hasNameChange =
+      update.name !== undefined && existingCluster.name !== update.name;
+    const hasColorChange =
+      update.color !== undefined && existingCluster.color !== update.color;
+
+    if (!hasNameChange && !hasColorChange) {
+      return;
     }
 
-    this._clusters[id].name = update.name;
+    this._clusters[id] = {
+      ...this._clusters[id],
+      ...(hasNameChange && { name: update.name }),
+      ...(hasColorChange && { color: update.color }),
+    };
+
+    this._requestStatus = 'updating';
 
     await fetch(`/app/api/clusters/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(update),
+      body: JSON.stringify({
+        name: this._clusters[id].name,
+        color: this._clusters[id].color,
+      }),
     }).finally(() => {
       this._requestStatus = null;
     });

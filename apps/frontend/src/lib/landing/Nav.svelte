@@ -7,30 +7,60 @@
   } from '$lib/domains/shared/ui/animated-view.state.svelte';
   import { fade } from 'svelte/transition';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
+  import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
+  import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
+  import { comparisons } from '$lib/landing/compare/compare.data';
 
   const ROUTES = [
     {
+      path: '/guides',
+      name: 'Guides',
+      matchPrefix: true,
+    },
+    // {
+    //   path: '/use-cases',
+    //   name: 'Use Cases',
+    //   matchPrefix: true,
+    // },
+    {
       path: '/pricing',
       name: 'Pricing',
-    },
-    {
-      path: '/docs',
-      name: 'Documentation',
+      matchPrefix: false,
     },
   ];
+
+  const COMPARISONS = comparisons.map((c) => ({
+    path: `/vs/${c.slug}`,
+    name: c.title,
+  }));
+
+  function isRouteActive(
+    routePath: string,
+    matchPrefix: boolean,
+    pathname: string,
+  ): boolean {
+    if (matchPrefix) {
+      return pathname.startsWith(routePath);
+    }
+    return pathname === routePath;
+  }
 
   const FEATURES = [
     {
       path: '/features/logging',
       name: 'Logging',
+      icon: LogsIcon,
     },
     {
       path: '/features/metrics',
       name: 'Metrics',
+      icon: MetricsIcon,
     },
     {
       path: '/features/monitoring',
       name: 'Monitoring',
+      icon: MonitoringIcon,
     },
   ];
 
@@ -45,7 +75,27 @@
 
 {#snippet featuresMenu()}
   <ul class="menu ld-card-base rounded-box z-[1] w-52 p-2 shadow">
-    {#each FEATURES as { path, name }}
+    {#each FEATURES as { path, name, icon: Icon }}
+      <li>
+        <a
+          href={path}
+          draggable="false"
+          class={page.url.pathname === path ? 'text-primary' : ''}
+          onclick={() => {
+            animatedViewState.nextAnimationDirection = AnimationDirection.RIGHT;
+          }}
+        >
+          <Icon class="size-4 text-secondary" />
+          {name}
+        </a>
+      </li>
+    {/each}
+  </ul>
+{/snippet}
+
+{#snippet compareMenu()}
+  <ul class="menu ld-card-base rounded-box z-[1] w-52 p-2 shadow">
+    {#each COMPARISONS as { path, name }}
       <li>
         <a
           href={path}
@@ -107,7 +157,7 @@
             </div>
           </Tooltip>
         </li>
-        {#each ROUTES as { path, name }, i}
+        {#each ROUTES as { path, name, matchPrefix }, i}
           <li>
             <a
               href={path}
@@ -115,7 +165,11 @@
               class={[
                 'hover:bg-transparent',
                 {
-                  'navlink-active': page.url.pathname === path,
+                  'navlink-active': isRouteActive(
+                    path,
+                    matchPrefix,
+                    page.url.pathname,
+                  ),
                 },
               ]}
               onclick={() => {
@@ -132,6 +186,26 @@
             </a>
           </li>
         {/each}
+        <li>
+          <Tooltip
+            class="p-0"
+            placement="bottom"
+            content={compareMenu}
+            interactive={true}
+          >
+            <div
+              role="button"
+              class={[
+                'px-3 py-1.5 hover:bg-transparent relative',
+                {
+                  'navlink-active': page.url.pathname.startsWith('/vs'),
+                },
+              ]}
+            >
+              Compare
+            </div>
+          </Tooltip>
+        </li>
       </ul>
     </div>
 
@@ -221,12 +295,14 @@
               </ul>
             </details>
           </li>
-          {#each ROUTES as { path, name }, i}
+          {#each ROUTES as { path, name, matchPrefix }, i}
             <li>
               <a
                 href={path}
                 draggable="false"
-                class={page.url.pathname === path ? 'text-primary' : ''}
+                class={isRouteActive(path, matchPrefix, page.url.pathname)
+                  ? 'text-primary'
+                  : ''}
                 onclick={() => {
                   const animationDirection =
                     i > currentRouteIndex
@@ -238,7 +314,7 @@
                     focusedElement &&
                     typeof focusedElement.blur === 'function'
                   ) {
-                    focusedElement.blur(); // Close dropdown
+                    focusedElement.blur();
                   }
                 }}
               >
@@ -246,6 +322,42 @@
               </a>
             </li>
           {/each}
+          <li>
+            <details>
+              <summary
+                class={page.url.pathname.startsWith('/vs')
+                  ? 'text-primary'
+                  : ''}
+              >
+                Compare
+              </summary>
+              <ul>
+                {#each COMPARISONS as { path, name }}
+                  <li>
+                    <a
+                      href={path}
+                      draggable="false"
+                      class={page.url.pathname === path ? 'text-primary' : ''}
+                      onclick={() => {
+                        animatedViewState.nextAnimationDirection =
+                          AnimationDirection.RIGHT;
+                        const focusedElement =
+                          document.activeElement as HTMLElement;
+                        if (
+                          focusedElement &&
+                          typeof focusedElement.blur === 'function'
+                        ) {
+                          focusedElement.blur();
+                        }
+                      }}
+                    >
+                      {name}
+                    </a>
+                  </li>
+                {/each}
+              </ul>
+            </details>
+          </li>
           <li>
             <button
               class="btn btn-primary btn-sm mt-2 w-full"
@@ -255,7 +367,7 @@
                   focusedElement &&
                   typeof focusedElement.blur === 'function'
                 ) {
-                  focusedElement.blur(); // Close dropdown
+                  focusedElement.blur();
                 }
                 handleDashboardClick();
               }}

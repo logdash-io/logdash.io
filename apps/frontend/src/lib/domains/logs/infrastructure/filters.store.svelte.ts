@@ -35,6 +35,14 @@ export class FiltersStore {
     this._userId = userId;
     this._projectId = projectId;
 
+    this.searchString = '';
+    this.startDate = null;
+    this.endDate = null;
+    this.levels = [];
+    this.namespaces = [];
+    this.limit = 50;
+    this.utcOffsetHours = 0;
+
     const persisted = filtersPersistenceService.loadFilters(userId, projectId);
     if (persisted) {
       this.levels = persisted.levels || [];

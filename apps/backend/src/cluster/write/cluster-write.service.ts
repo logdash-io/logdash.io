@@ -77,6 +77,10 @@ export class ClusterWriteService {
       updateQuery.creatorId = dto.creatorId;
     }
 
+    if (dto.color) {
+      updateQuery.color = dto.color;
+    }
+
     return updateQuery;
   }
 

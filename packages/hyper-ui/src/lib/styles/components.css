@@ -68,7 +68,7 @@
   }
 
   .error-card {
-    @apply to-error/15 text-error border border-red-950 bg-gradient-to-br from-transparent;
+    @apply bg-error/10 text-error border border-error/30;
   }
 
   .primary-card {

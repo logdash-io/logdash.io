@@ -13,13 +13,13 @@
       badgeClass: 'bg-primary text-primary-content shadow-primary/20',
       title: 'You: Configure project',
       description:
-        'Create a project and enable features. Usually takes 3-5 minutes.',
+        'Create a project and enable features. It usually takes 1-2 minutes.',
     },
     {
       number: 2,
       badgeClass: 'bg-secondary text-secondary-content shadow-secondary/20',
       title: 'LLM: Integrates Logdash into your codebase',
-      descriptionHtml: `Paste our <code>llms.txt</code> context. Your AI assistant writes the integration code for you instantly.`,
+      descriptionHtml: `Paste our integration prompt into your AI assistant. It'll write the integration code for you instantly.`,
     },
     {
       number: 3,
