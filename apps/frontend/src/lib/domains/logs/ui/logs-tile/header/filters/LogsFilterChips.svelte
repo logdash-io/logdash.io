@@ -10,8 +10,6 @@
   import { CloseIcon } from '@logdash/hyper-ui/icons';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
 
-  let availableNamespaces = namespacesState.namespaces;
-
   function onLevelToggle(level: LogLevel): void {
     filtersStore.toggleLevel(level);
   }
@@ -213,7 +211,7 @@
   <div class="ld-card-base rounded-2xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Namespace</div>
     <ul class="dropdown-content p-0">
-      {#each availableNamespaces as nsMetadata}
+      {#each namespacesState.namespaces as nsMetadata}
         {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
         <li>
           <label
