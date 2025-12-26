@@ -120,6 +120,6 @@
 
   <div class="flex flex-wrap gap-2 p-4 pt-0">
     <LogsFilterDropdown maxDateRangeHours={maxRetentionHours} {projectId} />
-    <LogsFilterChips />
+    <LogsFilterChips {projectId} />
   </div>
 </div>

@@ -8,10 +8,19 @@
     LOG_LEVELS_MAP,
   } from '$lib/domains/logs/domain/log-level-metadata';
   import { formatTimeRangeLabel } from '$lib/domains/logs/domain/time-range';
+  import type { NamespaceMetadata } from '$lib/domains/logs/domain/namespace-metadata.js';
+  import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
+  import { onMount } from 'svelte';
 
-  function onLevelToggle(level: LogLevel): void {
+  type Props = {
+    projectId: string;
+  };
+
+  const { projectId }: Props = $props();
+
+  let availableNamespaces = function onLevelToggle(level: LogLevel): void {
     filtersStore.toggleLevel(level);
-  }
+  };
 
   function onClearLevels(e: MouseEvent): void {
     e.stopPropagation();
@@ -210,18 +219,22 @@
   <div class="ld-card-base rounded-2xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Namespace</div>
     <ul class="dropdown-content p-0">
-      {#each filtersStore.namespaces as namespace}
+      {#each availableNamespaces as nsMetadata}
+        {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
         <li>
           <label
-            class="hover:bg-base-100 bg-base-100 flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5"
+            class={[
+              'hover:bg-base-100 flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5',
+              { 'bg-base-100': isSelected },
+            ]}
           >
             <input
               type="checkbox"
               class="checkbox checkbox-xs"
-              checked={true}
-              onchange={() => onNamespaceToggle(namespace)}
+              checked={isSelected}
+              onchange={() => onNamespaceToggle(nsMetadata.namespace)}
             />
-            <span>{namespace}</span>
+            <span>{nsMetadata.namespace}</span>
           </label>
         </li>
       {/each}
