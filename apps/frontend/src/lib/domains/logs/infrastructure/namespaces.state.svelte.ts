@@ -1,3 +1,4 @@
+import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte';
 import type { NamespaceMetadata } from '../domain/namespace-metadata';
 import { LogsService } from './logs.service';
 
@@ -15,17 +16,15 @@ class NamespacesState {
   }
 
   async init(projectId: string): Promise<void> {
+    if (this._projectId === projectId) return;
+
     this._projectId = projectId;
-    await this.fetch();
-  }
-
-  async fetch(): Promise<void> {
-    if (!this._projectId || this._loading) return;
-
     this._loading = true;
+
     try {
-      this._namespaces = await LogsService.getLogsNamespaces(this._projectId);
+      this._namespaces = await LogsService.getLogsNamespaces(projectId);
     } catch {
+      toast.error('Failed to load namespaces. Please try again later.');
       this._namespaces = [];
     } finally {
       this._loading = false;

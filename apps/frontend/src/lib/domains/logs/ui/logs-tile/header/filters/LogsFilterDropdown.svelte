@@ -70,6 +70,13 @@
       filtersStore.toggleLevel(level);
       return;
     }
+    const isOnlySelectedLevel =
+      filtersStore.levels.length === 1 && filtersStore.hasLevel(level);
+    if (isOnlySelectedLevel) {
+      filtersStore.setLevels([]);
+      close();
+      return;
+    }
     filtersStore.setLevels([level]);
     close();
   }
@@ -85,6 +92,14 @@
   ): void {
     if (e.metaKey || e.shiftKey) {
       filtersStore.toggleNamespace(namespace);
+      return;
+    }
+    const isOnlySelectedNamespace =
+      filtersStore.namespaces.length === 1 &&
+      filtersStore.hasNamespace(namespace);
+    if (isOnlySelectedNamespace) {
+      filtersStore.setNamespaces([]);
+      close();
       return;
     }
     filtersStore.setNamespaces([namespace]);
@@ -150,11 +165,12 @@
       {#each LOG_LEVELS as level}
         {@const isSelected = filtersStore.hasLevel(level.value)}
         <li>
-          <div
+          <button
             class={[
-              'hover:bg-base-100 group flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5',
+              'hover:bg-base-100 group flex w-full cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5',
               { 'bg-base-100': isSelected },
             ]}
+            onclick={(e: MouseEvent) => onLevelClick(e, level.value, close)}
           >
             <label
               class="flex cursor-pointer items-center"
@@ -167,14 +183,9 @@
                 onchange={() => onLevelToggle(level.value)}
               />
             </label>
-            <button
-              class="flex flex-1 cursor-pointer items-center gap-2 text-left"
-              onclick={(e: MouseEvent) => onLevelClick(e, level.value, close)}
-            >
-              <span class={['h-2 w-2 rounded-full', level.color]}></span>
-              <span>{level.label}</span>
-            </button>
-          </div>
+            <span class={['h-2 w-2 rounded-full', level.color]}></span>
+            <span>{level.label}</span>
+          </button>
         </li>
       {/each}
       {#if filtersStore.levels.length > 0}
@@ -246,11 +257,13 @@
         {#each availableNamespaces as nsMetadata}
           {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
           <li>
-            <div
+            <button
               class={[
-                'hover:bg-base-100 group flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5',
+                'hover:bg-base-100 group flex w-full cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5',
                 { 'bg-base-100': isSelected },
               ]}
+              onclick={(e: MouseEvent) =>
+                onNamespaceClick(e, nsMetadata.namespace, close)}
             >
               <label
                 class="flex cursor-pointer items-center"
@@ -263,26 +276,10 @@
                   onchange={() => onNamespaceToggle(nsMetadata.namespace)}
                 />
               </label>
-              <button
-                class="flex flex-1 cursor-pointer items-center gap-2 text-left"
-                onclick={(e: MouseEvent) =>
-                  onNamespaceClick(e, nsMetadata.namespace, close)}
-              >
-                <span>{nsMetadata.namespace}</span>
-              </button>
-            </div>
-          </li>
-        {/each}
-        {#if filtersStore.namespaces.length > 0}
-          <li class="border-base-100 mt-1 border-t pt-1">
-            <button
-              class="hover:bg-base-100 text-base-content/60 w-full rounded-lg px-3 py-1.5 text-left text-xs"
-              onclick={() => filtersStore.setNamespaces([])}
-            >
-              Clear all namespaces
+              <span>{nsMetadata.namespace}</span>
             </button>
           </li>
-        {/if}
+        {/each}
       {/if}
     </ul>
   </div>
@@ -366,11 +363,14 @@
           >
             <span class="flex items-center gap-2">
               <span>Level</span>
-              {#if filtersStore.levels.length > 0}
-                <span class="badge badge-xs badge-secondary badge-soft">
-                  {filtersStore.levels.length}
-                </span>
-              {/if}
+              <span
+                class={[
+                  'badge badge-xs badge-secondary badge-soft min-w-4',
+                  { invisible: filtersStore.levels.length === 0 },
+                ]}
+              >
+                {filtersStore.levels.length || 0}
+              </span>
             </span>
             <ChevronRightIcon class="h-4 w-4 opacity-50" />
           </div>
@@ -411,11 +411,14 @@
           >
             <span class="flex items-center gap-2">
               <span>Namespace</span>
-              {#if filtersStore.namespaces.length > 0}
-                <span class="badge badge-xs badge-primary badge-soft">
-                  {filtersStore.namespaces.length}
-                </span>
-              {/if}
+              <span
+                class={[
+                  'badge badge-xs badge-secondary badge-soft min-w-6',
+                  { invisible: filtersStore.namespaces.length === 0 },
+                ]}
+              >
+                {filtersStore.namespaces.length || 0}
+              </span>
             </span>
             <ChevronRightIcon class="h-4 w-4 opacity-50" />
           </div>

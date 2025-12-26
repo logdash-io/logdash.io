@@ -43,9 +43,16 @@
 
   const sameTypeCount = $derived(logPreviewState.sameTypeLogsCount);
   const currentPosition = $derived(logPreviewState.currentIndexInSameType + 1);
+  const isNamespaceLocked = $derived(
+    logPreviewState.lockedNamespace === log?.namespace && log?.namespace,
+  );
 
   function onClose(): void {
     logPreviewState.close();
+  }
+
+  function onNamespaceClick(): void {
+    logPreviewState.toggleNamespaceLock();
   }
 
   function onBackdropClick(): void {
@@ -103,9 +110,18 @@
             {log.level}
           </span>
           {#if log.namespace}
-            <span class="rounded bg-base-300 px-1.5 py-0.5 text-xs">
+            <button
+              class={[
+                'rounded px-1.5 py-0.5 text-xs cursor-pointer transition-all outline-0',
+                {
+                  'bg-base-300 hover:bg-base-100': !isNamespaceLocked,
+                  'bg-primary/20 ring-1 ring-primary': isNamespaceLocked,
+                },
+              ]}
+              onclick={onNamespaceClick}
+            >
               {log.namespace}
-            </span>
+            </button>
           {/if}
         </span>
         <span class="font-mono text-xs opacity-40">{formattedDate}</span>

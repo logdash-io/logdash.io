@@ -7,6 +7,7 @@ class LogPreviewState {
   private _currentIndexInSameTypeCache = $state<number>(-1);
   private _currentIndexInAllLogs = $state<number>(-1);
   private _sameTypeCount = $state<number>(0);
+  private _lockedNamespace = $state<string | null>(null);
 
   get selectedLog(): Log | null {
     return this._selectedLog;
@@ -43,6 +44,14 @@ class LogPreviewState {
     );
   }
 
+  get lockedNamespace(): string | null {
+    return this._lockedNamespace;
+  }
+
+  get isNamespaceLocked(): boolean {
+    return this._lockedNamespace !== null;
+  }
+
   setLogs(logs: Log[]): void {
     this._logs = logs;
     if (this._selectedLog) {
@@ -61,6 +70,7 @@ class LogPreviewState {
     this._currentIndexInSameTypeCache = -1;
     this._currentIndexInAllLogs = -1;
     this._sameTypeCount = 0;
+    this._lockedNamespace = null;
   }
 
   toggle(log: Log): void {
@@ -69,6 +79,17 @@ class LogPreviewState {
     } else {
       this.open(log);
     }
+  }
+
+  toggleNamespaceLock(): void {
+    if (!this._selectedLog) return;
+
+    if (this._lockedNamespace === this._selectedLog.namespace) {
+      this._lockedNamespace = null;
+    } else {
+      this._lockedNamespace = this._selectedLog.namespace ?? null;
+    }
+    this._updateCaches();
   }
 
   goToPrevSameType(): void {
@@ -110,9 +131,13 @@ class LogPreviewState {
     this._currentIndexInAllLogs = this._logs.findIndex(
       (l) => l.id === selectedId,
     );
-    this._sameTypeLogsCache = this._logs.filter(
-      (l) => l.level === selectedLevel,
-    );
+
+    this._sameTypeLogsCache = this._logs.filter((l) => {
+      const matchesLevel = l.level === selectedLevel;
+      if (!this._lockedNamespace) return matchesLevel;
+      return matchesLevel && l.namespace === this._lockedNamespace;
+    });
+
     this._sameTypeCount = this._sameTypeLogsCache.length;
     this._currentIndexInSameTypeCache = this._sameTypeLogsCache.findIndex(
       (l) => l.id === selectedId,

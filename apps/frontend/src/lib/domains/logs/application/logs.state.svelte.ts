@@ -156,11 +156,7 @@ class LogsState {
 
     this._initialized = true;
 
-    await Promise.all([
-      this.fetchLogs(),
-      logsSyncService.open(),
-      namespacesState.init(project_id),
-    ]);
+    await Promise.all([this.fetchLogs(), logsSyncService.open()]);
   }
 
   async loadNextPage(): Promise<void> {
@@ -200,7 +196,6 @@ class LogsState {
   unsync(): void {
     logger.debug('unsyncing logs...');
     logsSyncService.close();
-    namespacesState.reset();
   }
 
   async sendTestLog(project_id: string): Promise<void> {

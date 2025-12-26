@@ -6,6 +6,7 @@
   import LogsVirtualList from './LogsVirtualList.svelte';
   import { logAnalyticsState } from '../../application/log-analytics.state.svelte.js';
   import { filtersStore } from '../../infrastructure/filters.store.svelte.js';
+  import { namespacesState } from '../../infrastructure/namespaces.state.svelte.js';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 
@@ -51,6 +52,16 @@
         defaultStartDate: defaultStartDate.toISOString(),
       });
     });
+  });
+
+  $effect(() => {
+    if (!projectId) return;
+
+    namespacesState.init(projectId);
+
+    return () => {
+      namespacesState.reset();
+    };
   });
 
   $effect(() => {
