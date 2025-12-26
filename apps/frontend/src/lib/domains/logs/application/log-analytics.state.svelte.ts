@@ -3,7 +3,6 @@ import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analyt
 import { LogAnalyticsService } from '$lib/domains/logs/infrastructure/log-analytics.service';
 import { logsSyncService } from '../infrastructure/logs-sync.service.svelte.js';
 import type { Log } from '../domain/log.js';
-import type { LogLevel } from '../domain/log-level.js';
 import { filtersStore } from '../infrastructure/filters.store.svelte.js';
 
 const logger = createLogger('log_analytics.state', true);
@@ -14,36 +13,6 @@ class LogAnalyticsState {
   private _error = $state<string | null>(null);
 
   get analyticsData(): LogsAnalyticsResponse | null {
-    if (!this._analyticsData) {
-      return null;
-    }
-
-    if (filtersStore.levels.length > 0) {
-      const selectedLevels = filtersStore.levels;
-      return {
-        ...this._analyticsData,
-        buckets: this._analyticsData.buckets.map((bucket) => ({
-          ...bucket,
-          countByLevel: Object.keys(bucket.countByLevel).reduce(
-            (acc, key) => {
-              acc[key] = selectedLevels.includes(key as LogLevel)
-                ? bucket.countByLevel[key] || 0
-                : 0;
-              return acc;
-            },
-            {} as Record<string, number>,
-          ) as Record<
-            keyof LogsAnalyticsResponse['buckets'][number]['countByLevel'],
-            number
-          >,
-          countTotal: selectedLevels.reduce(
-            (sum, level) => sum + (bucket.countByLevel[level] || 0),
-            0,
-          ),
-        })),
-      };
-    }
-
     return this._analyticsData;
   }
 
@@ -79,6 +48,10 @@ class LogAnalyticsState {
     }, msToNextMinute);
 
     const cleanupLogListener = logsSyncService.onLog((log: Log) => {
+      if (!this._matchesActiveFilters(log)) {
+        return;
+      }
+
       logger.debug(
         'ANALYTICS: New log received:',
         log,
@@ -168,6 +141,38 @@ class LogAnalyticsState {
       bucketSizeMinutes: 0,
     };
     this._error = null;
+  }
+
+  private _matchesActiveFilters(log: Log): boolean {
+    if (
+      filtersStore.levels.length > 0 &&
+      !filtersStore.levels.includes(log.level)
+    ) {
+      return false;
+    }
+
+    if (
+      filtersStore.namespaces.length > 0 &&
+      !filtersStore.namespaces.includes(log.namespace ?? '')
+    ) {
+      return false;
+    }
+
+    if (filtersStore.searchString?.trim()) {
+      const queryWords = filtersStore.searchString.toLowerCase().split(' ');
+      const messageMatch = queryWords.every((word) =>
+        log.message.toLowerCase().includes(word),
+      );
+      const namespaceMatch =
+        log.namespace &&
+        queryWords.every((word) => log.namespace!.toLowerCase().includes(word));
+
+      if (!messageMatch && !namespaceMatch) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
 

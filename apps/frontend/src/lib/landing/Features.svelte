@@ -49,6 +49,7 @@
               data-posthog-id={`features-${feature.id}-learn-more-cta`}
             >
               Learn more
+              <span class="sr-only">about {feature.title}</span>
               <ArrowRightIcon class="size-4" />
             </a>
           {:else}
