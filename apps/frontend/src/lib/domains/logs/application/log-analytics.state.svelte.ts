@@ -129,6 +129,13 @@ class LogAnalyticsState {
     try {
       const levels =
         filtersStore.levels.length > 0 ? filtersStore.levels : undefined;
+      const namespaces =
+        filtersStore.namespaces.length > 0
+          ? filtersStore.namespaces
+          : undefined;
+      const searchString = filtersStore.searchString?.trim()
+        ? filtersStore.searchString
+        : undefined;
 
       const data = await LogAnalyticsService.getProjectLogsAnalytics(
         projectId,
@@ -136,6 +143,8 @@ class LogAnalyticsState {
         filtersStore.endDate || new Date().toISOString(),
         filtersStore.utcOffsetHours,
         levels,
+        namespaces,
+        searchString,
       );
 
       this._analyticsData = data;

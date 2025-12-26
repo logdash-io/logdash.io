@@ -859,5 +859,245 @@ describe('LogCoreController (analytics)', () => {
       expect(response.status).toEqual(200);
       expect(response.body.totalLogs).toEqual(2);
     });
+
+    it('filters analytics by single word search string', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'User logged in successfully',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'Payment processed',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'User logged out',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          searchString: 'logged',
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
+
+    it('filters analytics by multiple words search string', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'User logged in successfully',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'User logged out',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'System logged error',
+          level: LogLevel.Error,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          searchString: 'User logged',
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
+
+    it('filters analytics case-insensitively by search string', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'USER logged in',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'user logged out',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'Payment processed',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          searchString: 'user',
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
+
+    it('combines search string with level and namespace filters', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'User login failed',
+          level: LogLevel.Error,
+          projectId: project.id,
+          namespace: 'auth',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'User login succeeded',
+          level: LogLevel.Info,
+          projectId: project.id,
+          namespace: 'auth',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'User login failed',
+          level: LogLevel.Error,
+          projectId: project.id,
+          namespace: 'api',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 4),
+          message: 'Payment processed',
+          level: LogLevel.Error,
+          projectId: project.id,
+          namespace: 'auth',
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          searchString: 'login',
+          levels: [LogLevel.Error],
+          namespaces: ['auth'],
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(1);
+    });
+
+    it('returns all logs when no search string filter provided', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'User logged in',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'Payment processed',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
   });
 });

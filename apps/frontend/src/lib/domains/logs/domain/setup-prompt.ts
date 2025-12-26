@@ -10,9 +10,9 @@ export function getCodeSnippet(
 
 const logdash = new Logdash("${apiKey}");
 
-logger.info("Application started successfully")
-logger.error("An unexpected error occurred")
-logger.warn("Low disk space warning")
+logdash.info("Application started successfully")
+logdash.error("An unexpected error occurred")
+logdash.warn("Low disk space warning")
 
 // namespaces
 const authLogdash = logdash.withNamespace('auth');
@@ -23,6 +23,33 @@ authLogdash.warn("Password reset requested");
 
 // graceful shutdown
 logdash.flush();
+`,
+    [LogdashSDKName.NEXT_JS]: `// lib/logdash.ts
+import { Logdash } from '@logdash/node';
+export const logdash = new Logdash("${apiKey}");
+
+// middleware.ts
+import { logdash } from './lib/logdash';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  logdash.info(\`Request: \${request.method} \${request.nextUrl.pathname}\`);
+  return NextResponse.next();
+}
+`,
+    [LogdashSDKName.SVELTE_KIT]: `// src/lib/logdash.ts
+import { Logdash } from '@logdash/node';
+export const logdash = new Logdash("${apiKey}");
+
+// src/hooks.server.ts
+import { logdash } from '$lib/logdash';
+import type { Handle } from '@sveltejs/kit';
+
+export const handle: Handle = async ({ event, resolve }) => {
+  logdash.info(\`Request: \${event.request.method} \${event.url.pathname}\`);
+  return resolve(event);
+};
 `,
     [LogdashSDKName.PYTHON]: `from logdash import create_logdash
 

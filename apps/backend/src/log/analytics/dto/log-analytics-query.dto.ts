@@ -59,4 +59,12 @@ export class LogAnalyticsQuery {
   @IsString({ each: true })
   @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
   public namespaces?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      'Search string to filter logs. Returns logs containing all words in the search string.',
+  })
+  @IsOptional()
+  @IsString()
+  public searchString?: string;
 }

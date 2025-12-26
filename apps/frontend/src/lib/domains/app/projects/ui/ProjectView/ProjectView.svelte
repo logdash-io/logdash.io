@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { onMount } from 'svelte';
   import { Feature } from '$lib/domains/shared/types.js';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
@@ -10,11 +9,10 @@
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import LogsTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
-  import LoggingSetupOverlay from '$lib/domains/logs/ui/setup/LoggingSetupOverlay.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
   import MonitoringTile from './tiles/MonitoringTile.svelte';
   import UnconfiguredFeatureTile from './UnconfiguredFeatureTile.svelte';
-  import MetricsSetupOverlay from '$lib/domains/app/projects/ui/setup/MetricsSetupOverlay.svelte';
+  import UnifiedSetupOverlay from '$lib/domains/app/projects/ui/setup/UnifiedSetupOverlay.svelte';
   import { monitoringState } from '../../application/monitoring.state.svelte.js';
 
   type Props = {
@@ -24,18 +22,10 @@
 
   const { priorityProjectId, priorityClusterId }: Props = $props();
 
-  let apiKey = $state<string | undefined>();
-
   const previewedMetricId = $derived(page.params.metric_id);
   const clusterId = $derived(priorityClusterId ?? page.params.cluster_id);
   const projectId = $derived(priorityProjectId ?? page.params.project_id);
   const basePath = $derived(`/app/clusters/${clusterId}/${projectId}`);
-
-  onMount(() => {
-    projectsState.getApiKey(projectId).then((key) => {
-      apiKey = key;
-    });
-  });
 
   const selectedLogging = $derived(
     projectsState.hasFeature(projectId, Feature.LOGGING),
@@ -85,7 +75,7 @@
         {/if}
       {/if}
 
-      {#if selectedLogging && projectsState.ready && apiKey}
+      {#if selectedLogging && projectsState.ready}
         <DataTile
           delayIn={0}
           delayOut={50}
@@ -98,7 +88,7 @@
         >
           <LogsTile {priorityProjectId} />
           {#if !hasLogging}
-            <LoggingSetupOverlay {apiKey} />
+            <UnifiedSetupOverlay {projectId} />
           {/if}
         </DataTile>
       {/if}
@@ -114,8 +104,8 @@
   {#if selectedMetrics && metricsState.ready}
     <div class="relative w-full shrink-0 sm:w-80 h-fit">
       <MetricsTiles />
-      {#if metricsState.isUsingFakeData && projectsState.ready && apiKey}
-        <MetricsSetupOverlay {apiKey} />
+      {#if metricsState.isUsingFakeData && projectsState.ready}
+        <UnifiedSetupOverlay {projectId} />
       {/if}
     </div>
   {/if}

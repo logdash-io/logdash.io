@@ -65,6 +65,12 @@ class LogsState {
       result = result.filter((log) => filtersStore.levels.includes(log.level));
     }
 
+    if (filtersStore.namespaces.length > 0) {
+      result = result.filter((log) =>
+        filtersStore.namespaces.includes(log.namespace ?? ''),
+      );
+    }
+
     if (filtersStore.searchString.trim()) {
       const query = filtersStore.searchString.toLowerCase();
       const queryWords = query.split(' ');
@@ -81,7 +87,8 @@ class LogsState {
       filtersStore.searchString.trim() ||
         filtersStore.startDate ||
         filtersStore.endDate ||
-        filtersStore.levels.length > 0,
+        filtersStore.levels.length > 0 ||
+        filtersStore.namespaces.length > 0,
     );
   }
 
@@ -148,6 +155,23 @@ class LogsState {
           !filtersStore.levels.includes(log.level)
         ) {
           return;
+        }
+
+        if (
+          filtersStore.namespaces.length > 0 &&
+          !filtersStore.namespaces.includes(log.namespace ?? '')
+        ) {
+          return;
+        }
+
+        if (filtersStore.searchString.trim()) {
+          const queryWords = filtersStore.searchString.toLowerCase().split(' ');
+          const messageMatches = queryWords.every((word) =>
+            log.message.toLowerCase().includes(word),
+          );
+          if (!messageMatches) {
+            return;
+          }
         }
 
         this._addLog(log);

@@ -86,7 +86,7 @@
       secondaryTextColor,
     ]}
   >
-    [{timeAgo}]
+    {timeAgo}
   </span>
 {:else}
   <span class="flex text-sm leading-7 whitespace-nowrap tabular-nums shrink-0">
