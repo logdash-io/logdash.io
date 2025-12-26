@@ -8,7 +8,6 @@
   import MenuIcon from '$lib/domains/shared/icons/MenuIcon.svelte';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
-  import Footer from '$lib/landing/Footer.svelte';
 
   interface Props {
     children: import('svelte').Snippet;
@@ -42,7 +41,7 @@
 
     <aside
       class={[
-        'bg-base-300 fixed left-0 top-24 z-50 h-[calc(100vh-6rem)] w-64 shrink-0 overflow-y-auto border-r border-base-200 p-4 transition-transform md:sticky md:bg-transparent md:translate-x-0',
+        'bg-base-300 fixed left-0 md:top-24 top-16 z-50 h-[calc(100vh-5rem)] md:h-[calc(100vh-6rem)] w-64 shrink-0 overflow-y-auto border-r border-base-200 p-4 transition-transform md:sticky md:bg-transparent md:translate-x-0',
         {
           '-translate-x-full':
             !documentationState.mobileMenuOpen &&
@@ -197,13 +196,17 @@
 {/snippet}
 
 {#snippet mobileMenuButton()}
-  <button
-    class="btn btn-ghost btn-sm fixed left-4 top-28 z-40 md:hidden"
-    onclick={() => documentationState.toggleMobileMenu()}
-    aria-label="Toggle menu"
+  <div
+    class="bg-base-200 ld-card-border size-12 rounded-xl fixed left-4 bottom-4 z-40 md:hidden fcc"
   >
-    <MenuIcon class="h-5 w-5" />
-  </button>
+    <button
+      class="btn btn-ghost btn-sm"
+      onclick={() => documentationState.toggleMobileMenu()}
+      aria-label="Toggle menu"
+    >
+      <MenuIcon class="size-7" />
+    </button>
+  </div>
 {/snippet}
 
 {#snippet mobileMenuOverlay()}
