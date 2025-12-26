@@ -15,9 +15,7 @@
     isTimeRangeExceedingLimit,
     isCustomRangeExceedingLimit,
   } from '$lib/domains/logs/domain/time-range';
-  import type { NamespaceMetadata } from '$lib/domains/logs/domain/namespace-metadata.js';
-  import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
-  import { onMount } from 'svelte';
+  import { namespacesState } from '$lib/domains/logs/infrastructure/namespaces.state.svelte.js';
 
   type Props = {
     maxDateRangeHours: number;
@@ -27,24 +25,9 @@
   const { maxDateRangeHours, projectId }: Props = $props();
 
   let hoveredMenu = $state<'level' | 'time-range' | 'namespace' | null>(null);
-  let availableNamespaces = $state<NamespaceMetadata[]>([]);
-  let loadingNamespaces = $state(false);
 
-  async function fetchNamespaces(): Promise<void> {
-    if (loadingNamespaces) return;
-    loadingNamespaces = true;
-    try {
-      availableNamespaces = await LogsService.getLogsNamespaces(projectId);
-    } catch {
-      availableNamespaces = [];
-    } finally {
-      loadingNamespaces = false;
-    }
-  }
-
-  onMount(() => {
-    fetchNamespaces();
-  });
+  const availableNamespaces = $derived(namespacesState.namespaces);
+  const loadingNamespaces = $derived(namespacesState.loading);
   let showCustomDatePicker = $state(false);
   let customStartDate = $state('');
   let customEndDate = $state('');

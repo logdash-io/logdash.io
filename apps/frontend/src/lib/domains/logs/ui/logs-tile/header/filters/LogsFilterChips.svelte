@@ -1,26 +1,20 @@
 <script lang="ts">
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { CloseIcon } from '@logdash/hyper-ui/icons';
-  import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
   import type { LogLevel } from '$lib/domains/logs/domain/log-level';
   import {
     LOG_LEVELS,
     LOG_LEVELS_MAP,
   } from '$lib/domains/logs/domain/log-level-metadata';
   import { formatTimeRangeLabel } from '$lib/domains/logs/domain/time-range';
-  import type { NamespaceMetadata } from '$lib/domains/logs/domain/namespace-metadata.js';
-  import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
-  import { onMount } from 'svelte';
+  import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
+  import { namespacesState } from '$lib/domains/logs/infrastructure/namespaces.state.svelte';
+  import { CloseIcon } from '@logdash/hyper-ui/icons';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
 
-  type Props = {
-    projectId: string;
-  };
+  let availableNamespaces = namespacesState.namespaces;
 
-  const { projectId }: Props = $props();
-
-  let availableNamespaces = function onLevelToggle(level: LogLevel): void {
+  function onLevelToggle(level: LogLevel): void {
     filtersStore.toggleLevel(level);
-  };
+  }
 
   function onClearLevels(e: MouseEvent): void {
     e.stopPropagation();
@@ -77,7 +71,7 @@
       <span
         class={['h-2 w-2 rounded-full', LOG_LEVELS_MAP['error'].color]}
       ></span>
-      <span>Filter only errors</span>
+      <span>Show only errors</span>
     </button>
 
     <button
@@ -87,7 +81,7 @@
       <span
         class={['h-2 w-2 rounded-full', LOG_LEVELS_MAP['warning'].color]}
       ></span>
-      <span>Filter only warnings</span>
+      <span>Show only warnings</span>
     </button>
   </div>
 {/if}

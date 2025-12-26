@@ -1,12 +1,12 @@
-name: 'Run test batch'
+name: "Run test batch"
 
 inputs:
   test-batch:
-    description: 'Space-separated list of test files to run'
+    description: "Space-separated list of test files to run"
     required: true
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup Node.js
       uses: actions/setup-node@v3
@@ -31,12 +31,13 @@ runs:
         npx jest --testPathPattern="$REGEX_PATTERN" --runInBand --forceExit
       shell: bash
       env:
-        OUR_ENV: 'dev'
-        AUTH_JWT_SECRET: 'test'
-        TELEGRAM_UPTIME_BOT_TOKEN: 'token'
-        TELEGRAM_UPTIME_BOT_SECRET: 'secret'
-        STRIPE_EARLY_BIRD_PRICE_ID: 'test-early-bird-price-id'
-        STRIPE_BUILDER_PRICE_ID: 'test-builder-price-id'
-        STRIPE_PRO_PRICE_ID: 'test-pro-price-id'
-        STRIPE_API_KEY_SECRET: 'test-api-key-secret'
-        ADMIN_SUPER_SECRET_ADMIN_KEY: 'test'
+        NODE_OPTIONS: "--max-old-space-size=4096"
+        OUR_ENV: "dev"
+        AUTH_JWT_SECRET: "test"
+        TELEGRAM_UPTIME_BOT_TOKEN: "token"
+        TELEGRAM_UPTIME_BOT_SECRET: "secret"
+        STRIPE_EARLY_BIRD_PRICE_ID: "test-early-bird-price-id"
+        STRIPE_BUILDER_PRICE_ID: "test-builder-price-id"
+        STRIPE_PRO_PRICE_ID: "test-pro-price-id"
+        STRIPE_API_KEY_SECRET: "test-api-key-secret"
+        ADMIN_SUPER_SECRET_ADMIN_KEY: "test"
