@@ -14,6 +14,35 @@ logdash.setMetric('users', 0);
 logdash.mutateMetric('users', 1);
 
 logdash.flush();`,
+    [LogdashSDKName.NEXT_JS]: `// lib/logdash.ts
+import { Logdash } from '@logdash/node';
+export const logdash = new Logdash("${apiKey}");
+
+// middleware.ts - track edge function performance
+import { logdash } from './lib/logdash';
+import { NextResponse } from 'next/server';
+
+export function middleware(request) {
+  const start = Date.now();
+  const response = NextResponse.next();
+  logdash.mutateMetric('requests', 1);
+  logdash.setMetric('last_request_duration_ms', Date.now() - start);
+  return response;
+}`,
+    [LogdashSDKName.SVELTE_KIT]: `// src/lib/logdash.ts
+import { Logdash } from '@logdash/node';
+export const logdash = new Logdash("${apiKey}");
+
+// src/hooks.server.ts - track route performance
+import { logdash } from '$lib/logdash';
+
+export const handle = async ({ event, resolve }) => {
+  const start = Date.now();
+  const response = await resolve(event);
+  logdash.mutateMetric('requests', 1);
+  logdash.setMetric('last_request_duration_ms', Date.now() - start);
+  return response;
+};`,
     [LogdashSDKName.PYTHON]: `from logdash import create_logdash
 
 logdash = create_logdash({

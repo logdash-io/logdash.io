@@ -5,7 +5,7 @@
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
   import MetricDetails from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricDetails.svelte';
-  import MetricsSetupOverlay from '$lib/domains/app/projects/ui/setup/MetricsSetupOverlay.svelte';
+  import UnifiedSetupOverlay from '$lib/domains/app/projects/ui/setup/UnifiedSetupOverlay.svelte';
 
   const projectId = $derived(page.params.project_id);
 </script>
@@ -21,7 +21,7 @@
     </div>
 
     {#if metricsState.isUsingFakeData && projectsState.ready && metricsState.ready}
-      <MetricsSetupOverlay {projectId} />
+      <UnifiedSetupOverlay {projectId} />
     {/if}
   </div>
 </ProjectSync>

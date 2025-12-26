@@ -17,6 +17,8 @@ export enum Feature {
 
 export enum LogdashSDKName {
   NODE_JS = 'NodeJS',
+  NEXT_JS = 'NextJS',
+  SVELTE_KIT = 'SvelteKit',
   PYTHON = 'Python',
   JAVA = 'Java',
   PHP = 'PHP',

@@ -9,11 +9,10 @@
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import LogsTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
-  import LoggingSetupOverlay from '$lib/domains/logs/ui/setup/LoggingSetupOverlay.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
   import MonitoringTile from './tiles/MonitoringTile.svelte';
   import UnconfiguredFeatureTile from './UnconfiguredFeatureTile.svelte';
-  import MetricsSetupOverlay from '$lib/domains/app/projects/ui/setup/MetricsSetupOverlay.svelte';
+  import UnifiedSetupOverlay from '$lib/domains/app/projects/ui/setup/UnifiedSetupOverlay.svelte';
   import { monitoringState } from '../../application/monitoring.state.svelte.js';
 
   type Props = {
@@ -89,7 +88,7 @@
         >
           <LogsTile {priorityProjectId} />
           {#if !hasLogging}
-            <LoggingSetupOverlay {projectId} />
+            <UnifiedSetupOverlay {projectId} />
           {/if}
         </DataTile>
       {/if}
@@ -106,7 +105,7 @@
     <div class="relative w-full shrink-0 sm:w-80 h-fit">
       <MetricsTiles />
       {#if metricsState.isUsingFakeData && projectsState.ready}
-        <MetricsSetupOverlay {projectId} />
+        <UnifiedSetupOverlay {projectId} />
       {/if}
     </div>
   {/if}

@@ -6,7 +6,7 @@
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import LogsTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
-  import LoggingSetupOverlay from '$lib/domains/logs/ui/setup/LoggingSetupOverlay.svelte';
+  import UnifiedSetupOverlay from '$lib/domains/app/projects/ui/setup/UnifiedSetupOverlay.svelte';
 
   const projectId = $derived(page.params.project_id);
 
@@ -30,7 +30,7 @@
     >
       <LogsTile />
       {#if !hasLogging && projectsState.ready}
-        <LoggingSetupOverlay {projectId} />
+        <UnifiedSetupOverlay {projectId} />
       {/if}
     </DataTile>
   </div>
