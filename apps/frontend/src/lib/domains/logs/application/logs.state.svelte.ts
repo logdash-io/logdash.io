@@ -1,11 +1,12 @@
 import type { Log } from '$lib/domains/logs/domain/log';
 import { createLogger } from '$lib/domains/shared/logger';
-import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
-import type { LogsFilters } from '../domain/logs-filters.js';
-import { filtersStore } from '../infrastructure/filters.store.svelte.js';
-import { logsSyncService } from '../infrastructure/logs-sync.service.svelte.js';
-import { LogsService } from '../infrastructure/logs.service.js';
+import type { LogsFilters } from '../domain/logs-filters';
+import { filtersStore } from '../infrastructure/filters.store.svelte';
+import { logsSyncService } from '../infrastructure/logs-sync.service.svelte';
+import { LogsService } from '../infrastructure/logs.service';
+import { namespacesState } from '../infrastructure/namespaces.state.svelte';
 
 const logger = createLogger('logs.state', false);
 
@@ -140,6 +141,8 @@ class LogsState {
         logger.error('logs sync connection error');
       },
       onMessage: (log: Log) => {
+        namespacesState.addFromLog(log.namespace);
+
         if (
           filtersStore.levels.length > 0 &&
           !filtersStore.levels.includes(log.level)

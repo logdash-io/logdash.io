@@ -23,6 +23,7 @@ export class LogAnalyticsService {
     const endDate = dto.endDate;
     const utcOffsetHours = dto.utcOffsetHours ?? 0;
     const levels = dto.levels;
+    const namespaces = dto.namespaces;
 
     const bucketMinutes = this.bucketSelectionService.selectOptimalBucketSize(startDate, endDate);
 
@@ -35,8 +36,12 @@ export class LogAnalyticsService {
       );
 
     const hasLevelsFilter = levels && levels.length > 0;
+    const hasNamespacesFilter = namespaces && namespaces.length > 0;
 
     const levelFilterClause = hasLevelsFilter ? `AND level IN ({levels:Array(String)})` : '';
+    const namespaceFilterClause = hasNamespacesFilter
+      ? `AND namespace IN ({namespaces:Array(String)})`
+      : '';
 
     const levelCountExpressions = hasLevelsFilter
       ? `
@@ -90,6 +95,7 @@ export class LogAnalyticsService {
           AND created_at >= start_time 
           AND created_at < end_time
           ${levelFilterClause}
+          ${namespaceFilterClause}
         GROUP BY log_bucket_start
       ) log_data ON buckets.bucket_start = log_data.log_bucket_start
       ORDER BY bucket_start ASC
@@ -104,6 +110,10 @@ export class LogAnalyticsService {
 
     if (hasLevelsFilter) {
       queryParams.levels = levels;
+    }
+
+    if (hasNamespacesFilter) {
+      queryParams.namespaces = namespaces;
     }
 
     const result = await this.clickhouse.query({

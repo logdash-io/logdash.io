@@ -133,6 +133,7 @@ export class LogCoreController {
       level: dto.level,
       message: dto.message,
       sequenceNumber: dto.sequenceNumber,
+      namespace: dto.namespace,
     });
 
     return new SuccessResponse();
@@ -168,6 +169,7 @@ export class LogCoreController {
         level: logDto.level,
         message: logDto.message,
         sequenceNumber: logDto.sequenceNumber,
+        namespace: logDto.namespace,
       });
     });
 

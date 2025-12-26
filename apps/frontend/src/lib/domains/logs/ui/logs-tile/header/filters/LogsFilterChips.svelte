@@ -1,13 +1,14 @@
 <script lang="ts">
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { CloseIcon } from '@logdash/hyper-ui/icons';
-  import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
   import type { LogLevel } from '$lib/domains/logs/domain/log-level';
   import {
     LOG_LEVELS,
     LOG_LEVELS_MAP,
   } from '$lib/domains/logs/domain/log-level-metadata';
   import { formatTimeRangeLabel } from '$lib/domains/logs/domain/time-range';
+  import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
+  import { namespacesState } from '$lib/domains/logs/infrastructure/namespaces.state.svelte';
+  import { CloseIcon } from '@logdash/hyper-ui/icons';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
 
   function onLevelToggle(level: LogLevel): void {
     filtersStore.toggleLevel(level);
@@ -68,7 +69,7 @@
       <span
         class={['h-2 w-2 rounded-full', LOG_LEVELS_MAP['error'].color]}
       ></span>
-      <span>Filter only errors</span>
+      <span>Show only errors</span>
     </button>
 
     <button
@@ -78,7 +79,7 @@
       <span
         class={['h-2 w-2 rounded-full', LOG_LEVELS_MAP['warning'].color]}
       ></span>
-      <span>Filter only warnings</span>
+      <span>Show only warnings</span>
     </button>
   </div>
 {/if}
@@ -210,18 +211,22 @@
   <div class="ld-card-base rounded-2xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Namespace</div>
     <ul class="dropdown-content p-0">
-      {#each filtersStore.namespaces as namespace}
+      {#each namespacesState.namespaces as nsMetadata}
+        {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
         <li>
           <label
-            class="hover:bg-base-100 bg-base-100 flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5"
+            class={[
+              'hover:bg-base-100 flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5',
+              { 'bg-base-100': isSelected },
+            ]}
           >
             <input
               type="checkbox"
               class="checkbox checkbox-xs"
-              checked={true}
-              onchange={() => onNamespaceToggle(namespace)}
+              checked={isSelected}
+              onchange={() => onNamespaceToggle(nsMetadata.namespace)}
             />
-            <span>{namespace}</span>
+            <span>{nsMetadata.namespace}</span>
           </label>
         </li>
       {/each}

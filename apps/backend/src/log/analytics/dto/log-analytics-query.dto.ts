@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsArray, IsDate, IsEnum, IsNumber, IsOptional } from 'class-validator';
+import { IsArray, IsDate, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { LogLevel } from '../../core/enums/log-level.enum';
 
 export enum LogAnalyticsBucket {
@@ -49,4 +49,14 @@ export class LogAnalyticsQuery {
   @IsEnum(LogLevel, { each: true })
   @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
   public levels?: LogLevel[];
+
+  @ApiPropertyOptional({
+    isArray: true,
+    description: 'Filter analytics by multiple namespaces.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
+  public namespaces?: string[];
 }

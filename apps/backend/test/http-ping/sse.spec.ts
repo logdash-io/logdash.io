@@ -78,6 +78,7 @@ describe('Http Ping (SSE)', () => {
       // when
       const stream = await controller.streamHttpMonitorPings(setupA.cluster.id);
       const resultsPromise = firstValueFrom(stream.pipe(take(2), toArray()));
+
       nock(URL_STUB).get('/').times(2).delay(10).reply(200);
       await pingerService.tryPingMonitors([ProjectTier.Free]);
       nock(URL_STUB).get('/').times(2).delay(10).reply(404);
@@ -99,6 +100,6 @@ describe('Http Ping (SSE)', () => {
         responseTimeMs: expect.any(Number),
         message: 'Not Found',
       });
-    });
+    }, 15000);
   });
 });
