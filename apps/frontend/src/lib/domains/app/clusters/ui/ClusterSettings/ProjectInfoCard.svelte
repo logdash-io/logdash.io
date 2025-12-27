@@ -1,5 +1,6 @@
 <script lang="ts">
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import ColorPalette from '$lib/domains/app/clusters/ui/ClusterWizard/ColorPalette.svelte';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import {
     SettingsCard,
@@ -10,6 +11,7 @@
   import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import HashIcon from '$lib/domains/shared/icons/HashIcon.svelte';
+  import PaletteIcon from '$lib/domains/shared/icons/PaletteIcon.svelte';
 
   type Props = {
     clusterId: string;
@@ -21,6 +23,8 @@
 
   let newName = $state('');
   let isEditingName = $state(false);
+  let isEditingColor = $state(false);
+  let originalColor = $state<string | undefined>('');
 
   $effect(() => {
     if (cluster?.name) {
@@ -61,6 +65,32 @@
   function onKeydown(e: KeyboardEvent): void {
     if (e.key === 'Enter') onSaveRename();
     if (e.key === 'Escape') onCancelRenaming();
+  }
+
+  function onStartEditingColor(): void {
+    originalColor = cluster?.color;
+    isEditingColor = true;
+  }
+
+  function onCancelEditingColor(): void {
+    clustersState.setColorPreview(clusterId, originalColor);
+    isEditingColor = false;
+  }
+
+  function onColorSelect(color: string): void {
+    clustersState.setColorPreview(clusterId, color);
+  }
+
+  async function onSaveColor(): Promise<void> {
+    const currentColor = cluster?.color;
+    if (currentColor === originalColor) {
+      isEditingColor = false;
+      return;
+    }
+
+    await clustersState.update(clusterId, { color: currentColor });
+    toast.success('Project color updated successfully', 5000);
+    isEditingColor = false;
   }
 </script>
 
@@ -112,6 +142,63 @@
             class="btn btn-ghost btn-sm text-base-content/60"
           >
             Rename
+            <ChevronRightIcon class="h-4 w-4" />
+          </button>
+        {/if}
+      {/snippet}
+    </SettingsCardItem>
+
+    <SettingsCardItem icon={PaletteIcon}>
+      {#snippet children()}
+        <p class="text-base-content/60 text-sm">Project Color</p>
+        {#if isEditingColor}
+          <div class="mt-2">
+            <ColorPalette
+              selectedColor={cluster?.color ?? ''}
+              onSelect={onColorSelect}
+            />
+          </div>
+        {:else}
+          <div class="flex items-center gap-2">
+            {#if cluster?.color}
+              <div
+                class="size-3.5 rounded-md"
+                style="background-color: {cluster.color}"
+              ></div>
+              <p class="font-mono text-sm">{cluster.color}</p>
+            {:else}
+              <p class="text-base-content/50 text-sm">No color set</p>
+            {/if}
+          </div>
+        {/if}
+      {/snippet}
+
+      {#snippet action()}
+        {#if isEditingColor}
+          <button
+            onclick={onCancelEditingColor}
+            class="btn btn-ghost btn-sm"
+            disabled={clustersState.isUpdating}
+          >
+            Cancel
+          </button>
+          <button
+            onclick={onSaveColor}
+            class="btn btn-primary btn-sm"
+            disabled={clustersState.isUpdating}
+          >
+            {#if clustersState.isUpdating}
+              <span class="loading loading-spinner loading-xs"></span>
+            {:else}
+              Save
+            {/if}
+          </button>
+        {:else}
+          <button
+            onclick={onStartEditingColor}
+            class="btn btn-ghost btn-sm text-base-content/60"
+          >
+            Change
             <ChevronRightIcon class="h-4 w-4" />
           </button>
         {/if}

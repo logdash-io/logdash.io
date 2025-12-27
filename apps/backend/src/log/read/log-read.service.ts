@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { LogNormalized } from '../core/entities/log.interface';
 import { LogSerializer } from '../core/entities/log.serializer';
 import { LogReadDirection } from '../core/enums/log-read-direction.enum';
-import { Logger } from '@logdash/js-sdk';
 import { ClickHouseClient } from '@clickhouse/client';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 import { LogLevel } from '../core/enums/log-level.enum';
+import { NamespaceMetadata } from './dto/namespace-metadata.dto';
 
 @Injectable()
 export class LogReadService {
@@ -27,12 +27,16 @@ export class LogReadService {
     startDate?: Date;
     endDate?: Date;
     level?: LogLevel;
+    levels?: LogLevel[];
     limit: number;
     projectId: string;
     searchString?: string;
+    namespaces?: string[];
   }): Promise<LogNormalized[]> {
     let query: string;
     let queryParams: Record<string, any>;
+
+    const effectiveLevels = dto.levels?.length ? dto.levels : dto.level ? [dto.level] : null;
 
     if (dto.lastId && dto.direction) {
       if (dto.direction === LogReadDirection.After) {
@@ -73,9 +77,14 @@ export class LogReadService {
         queryParams.endDate = ClickhouseUtils.jsDateToClickhouseDate(dto.endDate);
       }
 
-      if (dto.level) {
-        query += ` AND l.level = {level:String}`;
-        queryParams.level = dto.level;
+      if (effectiveLevels) {
+        query += ` AND l.level IN ({levels:Array(String)})`;
+        queryParams.levels = effectiveLevels;
+      }
+
+      if (dto.namespaces?.length) {
+        query += ` AND l.namespace IN ({namespaces:Array(String)})`;
+        queryParams.namespaces = dto.namespaces;
       }
 
       if (dto.searchString && dto.searchString.trim()) {
@@ -111,9 +120,14 @@ export class LogReadService {
         queryParams.endDate = ClickhouseUtils.jsDateToClickhouseDate(dto.endDate);
       }
 
-      if (dto.level) {
-        query += ` AND level = {level:String}`;
-        queryParams.level = dto.level;
+      if (effectiveLevels) {
+        query += ` AND level IN ({levels:Array(String)})`;
+        queryParams.levels = effectiveLevels;
+      }
+
+      if (dto.namespaces?.length) {
+        query += ` AND namespace IN ({namespaces:Array(String)})`;
+        queryParams.namespaces = dto.namespaces;
       }
 
       if (dto.searchString && dto.searchString.trim()) {
@@ -137,5 +151,27 @@ export class LogReadService {
     const data = ((await result.json()) as any).data;
 
     return data.map((row: any) => LogSerializer.normalizeClickhouse(row));
+  }
+
+  public async getUniqueNamespaces(projectId: string): Promise<NamespaceMetadata[]> {
+    const result = await this.clickhouse.query({
+      query: `
+        SELECT 
+          namespace, 
+          MAX(created_at) as last_log_date 
+        FROM logs 
+        WHERE project_id = {projectId:String} AND namespace IS NOT NULL 
+        GROUP BY namespace 
+        ORDER BY last_log_date DESC
+      `,
+      query_params: { projectId },
+    });
+
+    const data = ((await result.json()) as any).data;
+
+    return data.map((row: any) => ({
+      namespace: row.namespace,
+      lastLogDate: ClickhouseUtils.clickhouseDateToJsDate(row.last_log_date).toISOString(),
+    }));
   }
 }

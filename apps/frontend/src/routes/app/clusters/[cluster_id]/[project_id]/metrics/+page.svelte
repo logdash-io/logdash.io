@@ -6,17 +6,10 @@
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
   import MetricDetails from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricDetails.svelte';
-  import MetricsSetupOverlay from '$lib/domains/app/projects/ui/setup/MetricsSetupOverlay.svelte';
-  import { onMount } from 'svelte';
+  import UnifiedSetupOverlay from '$lib/domains/app/projects/ui/setup/UnifiedSetupOverlay.svelte';
 
   const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
-
-  let apiKey = $state<string | undefined>();
-
-  onMount(async () => {
-    apiKey = await projectsState.getApiKey(projectId);
-  });
 
   $effect(() => {
     if (!metricsState.ready || metricsState.isUsingFakeData) {
@@ -42,7 +35,9 @@
 <ProjectSync>
   <div class="relative flex w-full max-w-full flex-col gap-1.5 md:flex-row">
     {#if metricsState.isUsingFakeData}
-      <div class="sticky top-4 flex flex-1 flex-col gap-1.5 self-start">
+      <div
+        class="flex flex-1 flex-col gap-1.5 md:sticky md:top-4 md:self-start"
+      >
         <MetricDetails />
       </div>
     {/if}
@@ -51,8 +46,8 @@
       <MetricsTiles />
     </div>
 
-    {#if metricsState.isUsingFakeData && projectsState.ready && metricsState.ready && apiKey}
-      <MetricsSetupOverlay {apiKey} />
+    {#if metricsState.isUsingFakeData && projectsState.ready && metricsState.ready}
+      <UnifiedSetupOverlay {projectId} />
     {/if}
   </div>
 </ProjectSync>

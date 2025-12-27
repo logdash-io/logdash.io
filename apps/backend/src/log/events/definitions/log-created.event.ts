@@ -7,4 +7,5 @@ export interface LogCreatedEvent {
   level: LogLevel;
   projectId: string;
   sequenceNumber?: number;
+  namespace?: string;
 }

@@ -13,6 +13,7 @@ instead of naming function in the UI handleSomething, use onSomething instead
 - The most important logic should come first.
 - If a function or component is used in a file, it should be defined _after_ its usage.
 - Prioritize top-down readability — group related logic together and avoid jumping around the file.
+- In Svelte components with snippets: main HTML template first, then snippet definitions below.
 
 ### 2. Respect architectural discipline
 

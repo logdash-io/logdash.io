@@ -1,27 +1,46 @@
 import type { Log } from '$lib/domains/logs/domain/log';
 import { createLogger } from '$lib/domains/shared/logger';
-import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
-import type { LogsFilters } from '../domain/logs-filters.js';
-import { filtersStore } from '../infrastructure/filters.store.svelte.js';
-import { logsSyncService } from '../infrastructure/logs-sync.service.svelte.js';
-import { LogsService } from '../infrastructure/logs.service.js';
+import type { LogsFilters } from '../domain/logs-filters';
+import { filtersStore } from '../infrastructure/filters.store.svelte';
+import { logsSyncService } from '../infrastructure/logs-sync.service.svelte';
+import { LogsService } from '../infrastructure/logs.service';
+import { namespacesState } from '../infrastructure/namespaces.state.svelte';
 
 const logger = createLogger('logs.state', false);
+
+const MAX_LOGS = 3000;
+
+function trimLogsObject(logs: Record<Log['id'], Log>): Record<Log['id'], Log> {
+  const logIds = Object.keys(logs);
+  if (logIds.length <= MAX_LOGS) {
+    return logs;
+  }
+
+  const sortedLogs = Object.values(logs).sort((a, b) => {
+    if (a.createdAt < b.createdAt) return -1;
+    if (a.createdAt > b.createdAt) return 1;
+    return 0;
+  });
+
+  const logsToKeep = sortedLogs.slice(logIds.length - MAX_LOGS);
+  logger.debug(
+    `Trimmed ${logIds.length - MAX_LOGS} old logs, keeping ${MAX_LOGS}`,
+  );
+  return arrayToObject(logsToKeep, 'id');
+}
 
 class LogsState {
   private _loadingPage = $state(false);
   private _fetchingLogs = $state(false);
   private _projectId: string | null = $state(null);
+  private _initialized = false;
 
-  private _logs = $state<Record<Log['id'], Log>>({});
+  private _logs = $state.raw<Record<Log['id'], Log>>({});
 
-  get fetchingLogs(): boolean {
-    return this._fetchingLogs;
-  }
-
-  get logs(): Log[] {
-    const allLogs = Object.values(this._logs).sort((a, b) => {
+  private _sortedLogs = $derived.by(() => {
+    return Object.values(this._logs).sort((a, b) => {
       if (a.createdAt < b.createdAt) {
         return 1;
       }
@@ -33,16 +52,34 @@ class LogsState {
       }
       return 0;
     });
+  });
 
-    if (!filtersStore.searchString.trim()) {
-      return allLogs;
+  get fetchingLogs(): boolean {
+    return this._fetchingLogs;
+  }
+
+  get logs(): Log[] {
+    let result = this._sortedLogs;
+
+    if (filtersStore.levels.length > 0) {
+      result = result.filter((log) => filtersStore.levels.includes(log.level));
     }
 
-    const query = filtersStore.searchString.toLowerCase();
-    const queryWords = query.split(' ');
-    return allLogs.filter((log) =>
-      queryWords.every((word) => log.message.toLowerCase().includes(word)),
-    );
+    if (filtersStore.namespaces.length > 0) {
+      result = result.filter((log) =>
+        filtersStore.namespaces.includes(log.namespace ?? ''),
+      );
+    }
+
+    if (filtersStore.searchString.trim()) {
+      const query = filtersStore.searchString.toLowerCase();
+      const queryWords = query.split(' ');
+      result = result.filter((log) =>
+        queryWords.every((word) => log.message.toLowerCase().includes(word)),
+      );
+    }
+
+    return result;
   }
 
   get hasFilters(): boolean {
@@ -50,7 +87,8 @@ class LogsState {
       filtersStore.searchString.trim() ||
         filtersStore.startDate ||
         filtersStore.endDate ||
-        filtersStore.level,
+        filtersStore.levels.length > 0 ||
+        filtersStore.namespaces.length > 0,
     );
   }
 
@@ -67,7 +105,7 @@ class LogsState {
   }
 
   set(logs: Log[]): void {
-    this._logs = arrayToObject(logs, 'id');
+    this._logs = trimLogsObject(arrayToObject(logs, 'id'));
   }
 
   get shouldFiltersBlockSync(): boolean {
@@ -81,7 +119,7 @@ class LogsState {
       filtersStore.searchString.trim(),
       filtersStore.startDate,
       filtersStore.endDate,
-      filtersStore.level,
+      filtersStore.levels,
     );
 
     if (this.shouldFiltersBlockSync) {
@@ -98,6 +136,7 @@ class LogsState {
     this._projectId = project_id;
     this.unsync();
     logger.debug('syncing logs...', project_id);
+
     this._logs = {};
 
     logsSyncService.init({
@@ -109,13 +148,37 @@ class LogsState {
         logger.error('logs sync connection error');
       },
       onMessage: (log: Log) => {
-        if (filtersStore.level && log.level !== filtersStore.level) {
+        namespacesState.addFromLog(log.namespace);
+
+        if (
+          filtersStore.levels.length > 0 &&
+          !filtersStore.levels.includes(log.level)
+        ) {
           return;
+        }
+
+        if (
+          filtersStore.namespaces.length > 0 &&
+          !filtersStore.namespaces.includes(log.namespace ?? '')
+        ) {
+          return;
+        }
+
+        if (filtersStore.searchString.trim()) {
+          const queryWords = filtersStore.searchString.toLowerCase().split(' ');
+          const messageMatches = queryWords.every((word) =>
+            log.message.toLowerCase().includes(word),
+          );
+          if (!messageMatches) {
+            return;
+          }
         }
 
         this._addLog(log);
       },
     });
+
+    this._initialized = true;
 
     await Promise.all([this.fetchLogs(), logsSyncService.open()]);
   }
@@ -169,7 +232,8 @@ class LogsState {
   }
 
   private _addLog(log: Log): void {
-    this._logs[log.id] = log;
+    const updated = { ...this._logs, [log.id]: log };
+    this._logs = trimLogsObject(updated);
   }
 
   private async fetchLogs(pagination?: { lastId: string }): Promise<void> {
@@ -182,9 +246,10 @@ class LogsState {
       });
 
       if (pagination?.lastId) {
-        Object.assign(this._logs, arrayToObject<Log>(logs, 'id'));
+        const merged = { ...this._logs, ...arrayToObject<Log>(logs, 'id') };
+        this._logs = trimLogsObject(merged);
       } else {
-        this._logs = arrayToObject<Log>(logs, 'id');
+        this._logs = trimLogsObject(arrayToObject<Log>(logs, 'id'));
       }
     } finally {
       this._fetchingLogs = false;

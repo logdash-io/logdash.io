@@ -7,67 +7,66 @@ import { match } from 'ts-pattern';
 
 // todo: divide api calls responsibility from state
 class ExposedConfigState {
-  private _config = $state<ExposedConfig>();
+  config = $state<ExposedConfig | undefined>();
 
   set(config: ExposedConfig): void {
-    this._config = config;
+    this.config = config;
   }
 
   logsHourlyRateLimit(tier: UserTier): number {
-    if (!this._config) {
+    if (!this.config) {
       return 0;
     }
 
-    return this._config.projectPlanConfigs[tier].logs.rateLimitPerHour ?? 0;
+    return this.config.projectPlanConfigs[tier].logs.rateLimitPerHour ?? 0;
   }
 
   maxRegisteredMetrics(tier: UserTier): number {
-    if (!this._config) {
+    if (!this.config) {
       return 0;
     }
 
     return (
-      this._config.projectPlanConfigs[tier].metrics.maxMetricsRegisterEntries ??
+      this.config.projectPlanConfigs[tier].metrics.maxMetricsRegisterEntries ??
       0
     );
   }
 
   maxNumberOfProjects(tier: UserTier): number {
-    if (!this._config) {
+    if (!this.config) {
       return 0;
     }
 
-    return this._config.userPlanConfigs[tier].projects.maxNumberOfProjects ?? 0;
+    return this.config.userPlanConfigs[tier].projects.maxNumberOfProjects ?? 0;
   }
 
   maxNumberOfPublicDashboards(tier: UserTier): number {
-    if (!this._config) {
+    if (!this.config) {
       return 0;
     }
 
     return (
-      this._config.userPlanConfigs[tier].publicDashboards
+      this.config.userPlanConfigs[tier].publicDashboards
         .maxNumberOfPublicDashboards ?? 0
     );
   }
 
   maxNumberOfHttpMonitors(tier: UserTier): number {
-    if (!this._config) {
+    if (!this.config) {
       return 0;
     }
 
     return (
-      this._config.projectPlanConfigs[tier].httpMonitors.maxNumberOfMonitors ??
-      0
+      this.config.projectPlanConfigs[tier].httpMonitors.maxNumberOfMonitors ?? 0
     );
   }
 
   allowedNotificationChannels(tier: UserTier): NotificationChannelType[] {
-    if (!this._config) {
+    if (!this.config) {
       return [];
     }
 
-    const tierConfig = this._config.userPlanConfigs[tier];
+    const tierConfig = this.config.userPlanConfigs[tier];
     if (!tierConfig || !tierConfig.notificationChannels) {
       return [];
     }
@@ -79,7 +78,7 @@ class ExposedConfigState {
   firstTierWithNotificationChannel(
     channelType: NotificationChannelType,
   ): UserTier | null {
-    if (!this._config) {
+    if (!this.config) {
       return null;
     }
 
@@ -96,11 +95,11 @@ class ExposedConfigState {
   }
 
   logRetentionHours(tier: UserTier): number {
-    if (!this._config) {
+    if (!this.config) {
       return 0;
     }
 
-    return this._config.projectPlanConfigs[tier].logs.retentionHours ?? 0;
+    return this.config.projectPlanConfigs[tier].logs.retentionHours ?? 0;
   }
 
   formatTierName(tier: UserTier): string {

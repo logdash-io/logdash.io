@@ -47,7 +47,7 @@
   }
 
   .ld-input {
-    @apply input-md input-ghost selection:bg-secondary/20 border-secondary/20 hover:border-secondary/30 focus:border-primary h-full w-full rounded-lg border outline-0 transition-colors duration-250 focus:bg-transparent;
+    @apply input-md input-ghost selection:bg-secondary/20 border-secondary/20 hover:border-secondary/30 focus:border-primary h-full w-full rounded-xl border outline-0 transition-colors duration-250 focus:bg-transparent;
   }
 
   .ld-input-padding {
@@ -68,7 +68,7 @@
   }
 
   .error-card {
-    @apply to-error/15 text-error border border-red-950 bg-gradient-to-br from-transparent;
+    @apply bg-error/10 text-error border border-error/30;
   }
 
   .primary-card {
@@ -129,7 +129,7 @@
     @apply shrink-0;
   }
 
-  .gutter-stable {
-    scrollbar-gutter: stable;
+  .checkbox.checkbox-xs {
+    @apply rounded-sm;
   }
 }

@@ -22,11 +22,12 @@ export class LogAnalyticsService {
     const startDate = dto.startDate;
     const endDate = dto.endDate;
     const utcOffsetHours = dto.utcOffsetHours ?? 0;
+    const levels = dto.levels;
+    const namespaces = dto.namespaces;
+    const searchString = dto.searchString;
 
-    // Auto-select optimal bucket size
     const bucketMinutes = this.bucketSelectionService.selectOptimalBucketSize(startDate, endDate);
 
-    // Align dates to bucket boundaries
     const { alignedStartDate, alignedEndDate } =
       this.dateAlignmentService.alignDatesToBucketBoundaries(
         startDate,
@@ -34,6 +35,48 @@ export class LogAnalyticsService {
         bucketMinutes,
         utcOffsetHours,
       );
+
+    const hasLevelsFilter = levels && levels.length > 0;
+    const hasNamespacesFilter = namespaces && namespaces.length > 0;
+    const hasSearchFilter = searchString && searchString.trim().length > 0;
+
+    const levelFilterClause = hasLevelsFilter ? `AND level IN ({levels:Array(String)})` : '';
+    const namespaceFilterClause = hasNamespacesFilter
+      ? `AND namespace IN ({namespaces:Array(String)})`
+      : '';
+
+    let searchFilterClause = '';
+    const searchWords: string[] = [];
+    if (hasSearchFilter) {
+      const words = searchString
+        .trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0);
+      searchWords.push(...words);
+      words.forEach((_, index) => {
+        searchFilterClause += ` AND positionCaseInsensitive(message, {searchWord${index}:String}) > 0`;
+      });
+    }
+
+    const levelCountExpressions = hasLevelsFilter
+      ? `
+          countIf(level = 'info' AND level IN ({levels:Array(String)})) as info_count,
+          countIf(level = 'warning' AND level IN ({levels:Array(String)})) as warning_count,
+          countIf(level = 'error' AND level IN ({levels:Array(String)})) as error_count,
+          countIf(level = 'http' AND level IN ({levels:Array(String)})) as http_count,
+          countIf(level = 'verbose' AND level IN ({levels:Array(String)})) as verbose_count,
+          countIf(level = 'debug' AND level IN ({levels:Array(String)})) as debug_count,
+          countIf(level = 'silly' AND level IN ({levels:Array(String)})) as silly_count,
+          countIf(level IN ({levels:Array(String)})) as total_count`
+      : `
+          countIf(level = 'info') as info_count,
+          countIf(level = 'warning') as warning_count,
+          countIf(level = 'error') as error_count,
+          countIf(level = 'http') as http_count,
+          countIf(level = 'verbose') as verbose_count,
+          countIf(level = 'debug') as debug_count,
+          countIf(level = 'silly') as silly_count,
+          count() as total_count`;
 
     const query = `
       WITH 
@@ -60,32 +103,44 @@ export class LogAnalyticsService {
       LEFT JOIN (
         SELECT 
           start_time + toIntervalMinute(bucket_minutes * toUInt64(dateDiff('minute', start_time, created_at) / bucket_minutes)) as log_bucket_start,
-          countIf(level = 'info') as info_count,
-          countIf(level = 'warning') as warning_count,
-          countIf(level = 'error') as error_count,
-          countIf(level = 'http') as http_count,
-          countIf(level = 'verbose') as verbose_count,
-          countIf(level = 'debug') as debug_count,
-          countIf(level = 'silly') as silly_count,
-          count() as total_count
+          ${levelCountExpressions}
         FROM logs
         WHERE 
           project_id = {projectId:String}
           AND created_at >= start_time 
           AND created_at < end_time
+          ${levelFilterClause}
+          ${namespaceFilterClause}
+          ${searchFilterClause}
         GROUP BY log_bucket_start
       ) log_data ON buckets.bucket_start = log_data.log_bucket_start
       ORDER BY bucket_start ASC
     `;
 
+    const queryParams: Record<string, any> = {
+      projectId,
+      startDate: ClickhouseUtils.jsDateToClickhouseDate(alignedStartDate),
+      endDate: ClickhouseUtils.jsDateToClickhouseDate(alignedEndDate),
+      bucketMinutes,
+    };
+
+    if (hasLevelsFilter) {
+      queryParams.levels = levels;
+    }
+
+    if (hasNamespacesFilter) {
+      queryParams.namespaces = namespaces;
+    }
+
+    if (hasSearchFilter) {
+      searchWords.forEach((word, index) => {
+        queryParams[`searchWord${index}`] = word;
+      });
+    }
+
     const result = await this.clickhouse.query({
       query,
-      query_params: {
-        projectId,
-        startDate: ClickhouseUtils.jsDateToClickhouseDate(alignedStartDate),
-        endDate: ClickhouseUtils.jsDateToClickhouseDate(alignedEndDate),
-        bucketMinutes,
-      },
+      query_params: queryParams,
     });
 
     const data = ((await result.json()) as any).data;

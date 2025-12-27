@@ -469,5 +469,635 @@ describe('LogCoreController (analytics)', () => {
       expect(totalCounts[LogLevel.Error]).toEqual(1);
       expect(totalCounts.total).toEqual(2);
     });
+
+    it('filters analytics by multiple levels', async () => {
+      // given
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'info log',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'warning log',
+          level: LogLevel.Warning,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'error log',
+          level: LogLevel.Error,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 4),
+          message: 'debug log',
+          level: LogLevel.Debug,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      // when - filter only error and warning
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          levels: [LogLevel.Error, LogLevel.Warning],
+        });
+
+      // then
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+
+      const totalCounts = response.body.buckets.reduce(
+        (totals, bucket) => ({
+          [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
+          [LogLevel.Warning]: totals[LogLevel.Warning] + bucket.countByLevel[LogLevel.Warning],
+          [LogLevel.Error]: totals[LogLevel.Error] + bucket.countByLevel[LogLevel.Error],
+          [LogLevel.Debug]: totals[LogLevel.Debug] + bucket.countByLevel[LogLevel.Debug],
+          total: totals.total + bucket.countTotal,
+        }),
+        {
+          [LogLevel.Info]: 0,
+          [LogLevel.Warning]: 0,
+          [LogLevel.Error]: 0,
+          [LogLevel.Debug]: 0,
+          total: 0,
+        },
+      );
+
+      expect(totalCounts[LogLevel.Info]).toEqual(0);
+      expect(totalCounts[LogLevel.Warning]).toEqual(1);
+      expect(totalCounts[LogLevel.Error]).toEqual(1);
+      expect(totalCounts[LogLevel.Debug]).toEqual(0);
+      expect(totalCounts.total).toEqual(2);
+    });
+
+    it('returns all levels when no levels filter provided', async () => {
+      // given
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'info log',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'error log',
+          level: LogLevel.Error,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      // when - no levels filter
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+        });
+
+      // then - all logs returned
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
+
+    it('filters analytics by single level in levels array', async () => {
+      // given
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'info log',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'error log',
+          level: LogLevel.Error,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      // when - filter only error
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          levels: [LogLevel.Error],
+        });
+
+      // then
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(1);
+
+      const totalCounts = response.body.buckets.reduce(
+        (totals, bucket) => ({
+          [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
+          [LogLevel.Error]: totals[LogLevel.Error] + bucket.countByLevel[LogLevel.Error],
+          total: totals.total + bucket.countTotal,
+        }),
+        {
+          [LogLevel.Info]: 0,
+          [LogLevel.Error]: 0,
+          total: 0,
+        },
+      );
+
+      expect(totalCounts[LogLevel.Info]).toEqual(0);
+      expect(totalCounts[LogLevel.Error]).toEqual(1);
+      expect(totalCounts.total).toEqual(1);
+    });
+
+    it('filters analytics by single namespace', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'api log',
+          level: LogLevel.Info,
+          projectId: project.id,
+          namespace: 'api',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'worker log',
+          level: LogLevel.Info,
+          projectId: project.id,
+          namespace: 'worker',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'cron log',
+          level: LogLevel.Info,
+          projectId: project.id,
+          namespace: 'cron',
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          namespaces: ['api'],
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(1);
+    });
+
+    it('filters analytics by multiple namespaces', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'api log',
+          level: LogLevel.Info,
+          projectId: project.id,
+          namespace: 'api',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'worker log',
+          level: LogLevel.Info,
+          projectId: project.id,
+          namespace: 'worker',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'cron log',
+          level: LogLevel.Info,
+          projectId: project.id,
+          namespace: 'cron',
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          namespaces: ['api', 'worker'],
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
+
+    it('combines namespace and level filters', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'api info log',
+          level: LogLevel.Info,
+          projectId: project.id,
+          namespace: 'api',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'api error log',
+          level: LogLevel.Error,
+          projectId: project.id,
+          namespace: 'api',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'worker error log',
+          level: LogLevel.Error,
+          projectId: project.id,
+          namespace: 'worker',
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          namespaces: ['api'],
+          levels: [LogLevel.Error],
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(1);
+
+      const totalCounts = response.body.buckets.reduce(
+        (totals, bucket) => ({
+          [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
+          [LogLevel.Error]: totals[LogLevel.Error] + bucket.countByLevel[LogLevel.Error],
+          total: totals.total + bucket.countTotal,
+        }),
+        {
+          [LogLevel.Info]: 0,
+          [LogLevel.Error]: 0,
+          total: 0,
+        },
+      );
+
+      expect(totalCounts[LogLevel.Info]).toEqual(0);
+      expect(totalCounts[LogLevel.Error]).toEqual(1);
+      expect(totalCounts.total).toEqual(1);
+    });
+
+    it('returns all logs when no namespace filter provided', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'api log',
+          level: LogLevel.Info,
+          projectId: project.id,
+          namespace: 'api',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'log without namespace',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
+
+    it('filters analytics by single word search string', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'User logged in successfully',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'Payment processed',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'User logged out',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          searchString: 'logged',
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
+
+    it('filters analytics by multiple words search string', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'User logged in successfully',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'User logged out',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'System logged error',
+          level: LogLevel.Error,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          searchString: 'User logged',
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
+
+    it('filters analytics case-insensitively by search string', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'USER logged in',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'user logged out',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'Payment processed',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          searchString: 'user',
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
+
+    it('combines search string with level and namespace filters', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'User login failed',
+          level: LogLevel.Error,
+          projectId: project.id,
+          namespace: 'auth',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'User login succeeded',
+          level: LogLevel.Info,
+          projectId: project.id,
+          namespace: 'auth',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 3),
+          message: 'User login failed',
+          level: LogLevel.Error,
+          projectId: project.id,
+          namespace: 'api',
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 4),
+          message: 'Payment processed',
+          level: LogLevel.Error,
+          projectId: project.id,
+          namespace: 'auth',
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+          searchString: 'login',
+          levels: [LogLevel.Error],
+          namespaces: ['auth'],
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(1);
+    });
+
+    it('returns all logs when no search string filter provided', async () => {
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const logWriteService = await bootstrap.app.get(LogWriteService);
+
+      const baseTime = subHours(new Date(), 12);
+      const startTime = baseTime;
+      const endTime = addMinutes(baseTime, 15);
+
+      const logs: CreateLogDto[] = [
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 1),
+          message: 'User logged in',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+        {
+          id: new Types.ObjectId().toString(),
+          createdAt: addMinutes(baseTime, 2),
+          message: 'Payment processed',
+          level: LogLevel.Info,
+          projectId: project.id,
+        },
+      ];
+
+      await logWriteService.createMany(logs);
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: endTime.toISOString(),
+        });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.totalLogs).toEqual(2);
+    });
   });
 });

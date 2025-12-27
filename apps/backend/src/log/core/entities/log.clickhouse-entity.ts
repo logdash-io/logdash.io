@@ -26,6 +26,8 @@ export class LogClickhouseEntity {
 
   message: string;
 
+  namespace?: string;
+
   public static fromCreateDto(dto: CreateLogDto): LogClickhouseEntity {
     return {
       id: dto.id,
@@ -34,6 +36,7 @@ export class LogClickhouseEntity {
       sequence_number: dto.sequenceNumber ?? 0,
       level: ourLogLevelToClickhouseLogLevel[dto.level],
       message: dto.message,
+      namespace: dto.namespace,
     };
   }
 }

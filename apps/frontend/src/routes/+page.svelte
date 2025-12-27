@@ -7,6 +7,7 @@
   import Features from '$lib/landing/Features.svelte';
   import Footer from '$lib/landing/Footer.svelte';
   import FoundersMemo from '$lib/landing/FoundersMemo.svelte';
+  import FoundersSocialProof from '$lib/landing/FoundersSocialProof.svelte';
   import HeroSectionCTA from '$lib/landing/HeroSectionCTA.svelte';
   import HowItWorks from '$lib/landing/HowItWorks.svelte';
   import LogdashDifference from '$lib/landing/LogdashDifference.svelte';
@@ -50,7 +51,7 @@
         <h1
           class="flex flex-col items-center gap-3 text-4xl font-extrabold tracking-tight md:-mb-4 lg:items-start lg:text-6xl"
         >
-          How solo founders keep their SaaS apps healthy.
+          How SaaS founders keep their apps healthy.
         </h1>
 
         <p class="w-11/12 text-lg leading-relaxed opacity-80">
@@ -59,6 +60,8 @@
         </p>
 
         <HeroSectionCTA />
+
+        <FoundersSocialProof />
       </div>
 
       <div

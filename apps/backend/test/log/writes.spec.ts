@@ -298,4 +298,101 @@ describe('LogCoreController (writes)', () => {
       expect(responseAfterReset.status).toEqual(201);
     }, 10_000);
   });
+
+  describe('Namespace support', () => {
+    it('creates log with namespace via single endpoint', async () => {
+      const { apiKey, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const date = new Date();
+
+      const dto: CreateLogBody = {
+        createdAt: date.toISOString(),
+        message: 'test with namespace',
+        level: LogLevel.Info,
+        namespace: 'api',
+      };
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/logs')
+        .set('project-api-key', apiKey.value)
+        .send(dto);
+
+      expect(response.status).toEqual(201);
+
+      await sleep(1_500);
+
+      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+
+      expect(logs).toHaveLength(1);
+      expect(logs[0].namespace).toEqual('api');
+    });
+
+    it('creates batch logs with different namespaces', async () => {
+      const { apiKey, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const date = new Date();
+
+      const batchDto: CreateLogsBatchBody = {
+        logs: [
+          {
+            createdAt: date.toISOString(),
+            message: 'api log',
+            level: LogLevel.Info,
+            namespace: 'api',
+          },
+          {
+            createdAt: date.toISOString(),
+            message: 'worker log',
+            level: LogLevel.Info,
+            namespace: 'worker',
+          },
+          {
+            createdAt: date.toISOString(),
+            message: 'cron log',
+            level: LogLevel.Info,
+            namespace: 'cron',
+          },
+        ],
+      };
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/logs/batch')
+        .set('project-api-key', apiKey.value)
+        .send(batchDto);
+
+      expect(response.status).toEqual(201);
+
+      await sleep(1_500);
+
+      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+
+      expect(logs).toHaveLength(3);
+      expect(logs.find((log) => log.namespace === 'api')).toBeDefined();
+      expect(logs.find((log) => log.namespace === 'worker')).toBeDefined();
+      expect(logs.find((log) => log.namespace === 'cron')).toBeDefined();
+    });
+
+    it('accepts logs without namespace for backward compatibility', async () => {
+      const { apiKey, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const date = new Date();
+
+      const dto: CreateLogBody = {
+        createdAt: date.toISOString(),
+        message: 'test without namespace',
+        level: LogLevel.Info,
+      };
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/logs')
+        .set('project-api-key', apiKey.value)
+        .send(dto);
+
+      expect(response.status).toEqual(201);
+
+      await sleep(1_500);
+
+      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+
+      expect(logs).toHaveLength(1);
+      expect(logs[0].namespace).toBeUndefined();
+    });
+  });
 });

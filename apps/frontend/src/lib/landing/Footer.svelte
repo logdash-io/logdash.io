@@ -9,17 +9,22 @@
 </script>
 
 <footer class="footer sm:footer-horizontal w-full p-10">
-  <a
-    href="/"
-    class={['flex items-center space-x-2 py-1 pr-4']}
-    onclick={() => {
-      animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
-    }}
-    draggable="false"
-  >
-    <Logo class="h-10 w-10" />
-    <span class="text-2xl font-semibold">logdash</span>
-  </a>
+  <div class="flex flex-col">
+    <a
+      href="/"
+      class={['flex items-center space-x-2 py-1 pr-4']}
+      onclick={() => {
+        animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
+      }}
+      draggable="false"
+    >
+      <Logo class="h-10 w-10" />
+      <span class="text-2xl font-semibold">logdash</span>
+    </a>
+    <p class="text-sm opacity-75">
+      &copy; {currentYear} logdash.io. All rights reserved.
+    </p>
+  </div>
   <nav>
     <h6 class="footer-title">Product</h6>
     <a href="/features/logging" class="link link-hover">Logging</a>
@@ -36,7 +41,7 @@
     >
       Source Code
     </a>
-    <a href="/docs" class="link link-hover">Documentation</a>
+    <a href="/guides" class="link link-hover">Guides</a>
     <a
       target="_blank"
       href="https://discord.gg/naftPW4Hxe"
@@ -66,8 +71,4 @@
     <a href="/privacy-policy" class="link link-hover">Privacy policy</a>
     <a href="/cookies-policy" class="link link-hover">Cookies policy</a>
   </nav>
-
-  <p class="text-sm opacity-75">
-    &copy; {currentYear} logdash.io. All rights reserved.
-  </p>
 </footer>

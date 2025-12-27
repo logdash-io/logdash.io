@@ -460,7 +460,7 @@
     {#if isLoading}
       <div
         transition:fade={{ duration: 200, easing: cubicOut }}
-        class="bg-base-300/50 text-secondary/60 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
+        class="bg-base-200 text-secondary/60 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
         style="height: {CHART_HEIGHT}px"
       >
         <span class="loading loading-spinner loading-xs mr-2"></span>
@@ -468,7 +468,7 @@
       </div>
     {:else if error}
       <div
-        class="bg-base-300/50 text-error-content absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
+        class="bg-base-200/50 text-error-content absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
         style="height: {CHART_HEIGHT}px"
       >
         <span class="mr-2">

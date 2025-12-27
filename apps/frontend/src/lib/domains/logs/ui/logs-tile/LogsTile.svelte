@@ -6,6 +6,7 @@
   import LogsVirtualList from './LogsVirtualList.svelte';
   import { logAnalyticsState } from '../../application/log-analytics.state.svelte.js';
   import { filtersStore } from '../../infrastructure/filters.store.svelte.js';
+  import { namespacesState } from '../../infrastructure/namespaces.state.svelte.js';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 
@@ -16,6 +17,7 @@
   const { priorityProjectId }: Props = $props();
 
   const projectId = $derived(priorityProjectId ?? page.params.project_id);
+  const userId = $derived(userState.id);
 
   const maxRetentionHours = $derived(
     exposedConfigState.logRetentionHours(userState.tier),
@@ -41,13 +43,25 @@
   $effect(() => {
     projectId;
     untrack(() => {
-      filtersStore.reset();
+      if (userId && projectId) {
+        filtersStore.initPersistence(userId, projectId);
+      }
       filtersStore.setFilters({
-        startDate: defaultStartDate.toISOString(),
-        endDate: null,
+        startDate: filtersStore.startDate || defaultStartDate.toISOString(),
+        endDate: filtersStore.endDate || null,
         defaultStartDate: defaultStartDate.toISOString(),
       });
     });
+  });
+
+  $effect(() => {
+    if (!projectId) return;
+
+    namespacesState.init(projectId);
+
+    return () => {
+      namespacesState.reset();
+    };
   });
 
   $effect(() => {

@@ -782,4 +782,547 @@ describe('LogCoreController (reads)', () => {
       });
     });
   });
+
+  describe('Multiple levels filtering', () => {
+    describe('GET /projects/:projectId/logs/v2 (with levels array)', () => {
+      it('filters logs by multiple levels', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'info log',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
+          message: 'error log',
+          level: LogLevel.Error,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
+          message: 'warning log',
+          level: LogLevel.Warning,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 3).toISOString(),
+          message: 'debug log',
+          level: LogLevel.Debug,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(
+            `/projects/${setup.project.id}/logs/v2?levels=${LogLevel.Error}&levels=${LogLevel.Warning}`,
+          )
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(2);
+        expect(
+          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
+        ).toBe(true);
+      });
+
+      it('filters logs by single level in levels array', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'info log',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
+          message: 'error log',
+          level: LogLevel.Error,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?levels=${LogLevel.Error}`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].level).toEqual(LogLevel.Error);
+      });
+
+      it('levels takes precedence over level when both provided', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'info log',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
+          message: 'error log',
+          level: LogLevel.Error,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
+          message: 'warning log',
+          level: LogLevel.Warning,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(
+            `/projects/${setup.project.id}/logs/v2?level=${LogLevel.Info}&levels=${LogLevel.Error}&levels=${LogLevel.Warning}`,
+          )
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(2);
+        expect(
+          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
+        ).toBe(true);
+        expect(response.body.some((log) => log.level === LogLevel.Info)).toBe(false);
+      });
+
+      it('combines multiple levels with search filter', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'alice info log',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
+          message: 'alice error log',
+          level: LogLevel.Error,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
+          message: 'bob error log',
+          level: LogLevel.Error,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 3).toISOString(),
+          message: 'alice warning log',
+          level: LogLevel.Warning,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(
+            `/projects/${setup.project.id}/logs/v2?searchString=alice&levels=${LogLevel.Error}&levels=${LogLevel.Warning}`,
+          )
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(2);
+        expect(response.body.every((log) => log.message.includes('alice'))).toBe(true);
+        expect(
+          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
+        ).toBe(true);
+      });
+
+      it('combines multiple levels with date range filter', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        const startDate = subHours(new Date(), 12);
+        const endDate = subHours(new Date(), 11);
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 11.5).toISOString(),
+          message: 'error log in range',
+          level: LogLevel.Error,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 11.5), 10).toISOString(),
+          message: 'warning log in range',
+          level: LogLevel.Warning,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 11.5), 20).toISOString(),
+          message: 'info log in range',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 13).toISOString(),
+          message: 'error log outside range',
+          level: LogLevel.Error,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(
+            `/projects/${setup.project.id}/logs/v2?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&levels=${LogLevel.Error}&levels=${LogLevel.Warning}`,
+          )
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(2);
+        expect(
+          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
+        ).toBe(true);
+      });
+    });
+  });
+
+  describe('Namespace filtering', () => {
+    describe('GET /projects/:projectId/logs/v2 (with namespaces)', () => {
+      it('filters logs by single namespace', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'api log',
+          level: LogLevel.Info,
+          namespace: 'api',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
+          message: 'worker log',
+          level: LogLevel.Info,
+          namespace: 'worker',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
+          message: 'cron log',
+          level: LogLevel.Info,
+          namespace: 'cron',
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?namespaces=api`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].namespace).toEqual('api');
+      });
+
+      it('filters logs by multiple namespaces', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'api log',
+          level: LogLevel.Info,
+          namespace: 'api',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
+          message: 'worker log',
+          level: LogLevel.Info,
+          namespace: 'worker',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
+          message: 'cron log',
+          level: LogLevel.Info,
+          namespace: 'cron',
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?namespaces=api&namespaces=worker`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(2);
+        expect(response.body.every((log) => ['api', 'worker'].includes(log.namespace))).toBe(true);
+      });
+
+      it('returns logs with namespace in response', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'api log',
+          level: LogLevel.Info,
+          namespace: 'my-namespace',
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].namespace).toEqual('my-namespace');
+      });
+
+      it('combines namespace filter with level filter', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'api info log',
+          level: LogLevel.Info,
+          namespace: 'api',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
+          message: 'api error log',
+          level: LogLevel.Error,
+          namespace: 'api',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
+          message: 'worker error log',
+          level: LogLevel.Error,
+          namespace: 'worker',
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?namespaces=api&levels=${LogLevel.Error}`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].namespace).toEqual('api');
+        expect(response.body[0].level).toEqual(LogLevel.Error);
+      });
+
+      it('combines namespace filter with search filter', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'alice api log',
+          level: LogLevel.Info,
+          namespace: 'api',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
+          message: 'bob api log',
+          level: LogLevel.Info,
+          namespace: 'api',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
+          message: 'alice worker log',
+          level: LogLevel.Info,
+          namespace: 'worker',
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2?namespaces=api&searchString=alice`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].message).toEqual('alice api log');
+        expect(response.body[0].namespace).toEqual('api');
+      });
+
+      it('returns all logs when namespace not provided', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'api log',
+          level: LogLevel.Info,
+          namespace: 'api',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
+          message: 'worker log',
+          level: LogLevel.Info,
+          namespace: 'worker',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
+          message: 'no namespace log',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/v2`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(3);
+      });
+    });
+  });
+
+  describe('Get unique namespaces', () => {
+    describe('GET /projects/:projectId/logs/namespaces', () => {
+      it('returns unique namespaces sorted by recency', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'old api log',
+          level: LogLevel.Info,
+          namespace: 'api',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
+          message: 'worker log',
+          level: LogLevel.Info,
+          namespace: 'worker',
+          withoutSleep: true,
+        });
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subMinutes(subHours(new Date(), 11), 0).toISOString(),
+          message: 'newer api log',
+          level: LogLevel.Info,
+          namespace: 'api',
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/namespaces`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(2);
+        expect(response.body[0].namespace).toEqual('api');
+        expect(response.body[1].namespace).toEqual('worker');
+        expect(response.body[0].lastLogDate).toBeDefined();
+        expect(response.body[1].lastLogDate).toBeDefined();
+      });
+
+      it('returns empty array when no logs have namespaces', async () => {
+        const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.logUtils.createLog({
+          apiKey: setup.apiKey.value,
+          createdAt: subHours(new Date(), 12).toISOString(),
+          message: 'log without namespace',
+          level: LogLevel.Info,
+          withoutSleep: true,
+        });
+
+        await sleep(1_500);
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setup.project.id}/logs/namespaces`)
+          .set('Authorization', `Bearer ${setup.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(0);
+      });
+
+      it('returns 403 if user does not belong to cluster', async () => {
+        const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+        const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/projects/${setupA.project.id}/logs/namespaces`)
+          .set('Authorization', `Bearer ${setupB.token}`);
+
+        expect(response.status).toEqual(403);
+      });
+    });
+  });
 });

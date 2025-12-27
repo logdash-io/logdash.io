@@ -65,7 +65,7 @@
           <CubeIcon class="size-4 shrink-0 text-primary" />
         </div>
       {/if}
-      <span class="text-lg font-medium truncate max-w-32">{clusterName}</span>
+      <span class="text-lg font-medium truncate max-w-52">{clusterName}</span>
     </div>
 
     <a

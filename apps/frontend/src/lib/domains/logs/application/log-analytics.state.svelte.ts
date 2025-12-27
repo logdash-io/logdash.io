@@ -13,33 +13,6 @@ class LogAnalyticsState {
   private _error = $state<string | null>(null);
 
   get analyticsData(): LogsAnalyticsResponse | null {
-    if (!this._analyticsData) {
-      return null;
-    }
-
-    if (filtersStore.level) {
-      return {
-        ...this._analyticsData,
-        buckets: this._analyticsData.buckets.map((bucket) => ({
-          ...bucket,
-          countByLevel: {
-            ...Object.keys(bucket.countByLevel).reduce(
-              (acc, key) => {
-                acc[key] = 0;
-                return acc;
-              },
-              {} as Record<string, number>,
-            ),
-            [filtersStore.level]: bucket.countByLevel[filtersStore.level] || 0,
-          } as Record<
-            keyof LogsAnalyticsResponse['buckets'][number]['countByLevel'],
-            number
-          >,
-          countTotal: bucket.countByLevel[filtersStore.level] || 0,
-        })),
-      };
-    }
-
     return this._analyticsData;
   }
 
@@ -66,15 +39,19 @@ class LogAnalyticsState {
     logger.debug('scheduling update in ', msToNextMinute, 'ms');
     const timeout = setTimeout(() => {
       logger.debug('executing scheduler - fetching analytics');
-      this._fetchAnalytics(project_id);
+      this._fetchAnalytics(project_id, { silent: true });
 
       logger.debug('setting up interval');
       interval = setInterval(() => {
-        this._fetchAnalytics(project_id);
+        this._fetchAnalytics(project_id, { silent: true });
       }, 60000);
     }, msToNextMinute);
 
     const cleanupLogListener = logsSyncService.onLog((log: Log) => {
+      if (!this._matchesActiveFilters(log)) {
+        return;
+      }
+
       logger.debug(
         'ANALYTICS: New log received:',
         log,
@@ -101,52 +78,60 @@ class LogAnalyticsState {
   }
 
   refresh(projectId: string): void {
-    this.clearData();
     this._fetchAnalytics(projectId);
   }
 
-  async fetchAnalytics(
-    project_id: string,
-    start_date: string,
-    end_date: string | null,
-    utc_offset_hours?: number,
-  ): Promise<void> {
-    logger.debug('Fetching analytics...', {
-      project_id,
-      start_date,
-      end_date,
-      utc_offset_hours,
-    });
+  async fetchAnalytics(projectId: string): Promise<void> {
+    await this._fetchAnalytics(projectId);
+  }
 
-    this._isLoading = true;
-    this.clearData();
+  private async _fetchAnalytics(
+    projectId: string,
+    options: { silent?: boolean } = {},
+  ): Promise<void> {
+    const startDate = filtersStore.startDate ?? filtersStore.defaultStartDate;
+
+    if (!startDate) {
+      return;
+    }
+
+    if (!options.silent) {
+      this._isLoading = true;
+    }
 
     try {
-      this._fetchAnalytics(project_id);
+      const levels =
+        filtersStore.levels.length > 0 ? filtersStore.levels : undefined;
+      const namespaces =
+        filtersStore.namespaces.length > 0
+          ? filtersStore.namespaces
+          : undefined;
+      const searchString = filtersStore.searchString?.trim()
+        ? filtersStore.searchString
+        : undefined;
+
+      const data = await LogAnalyticsService.getProjectLogsAnalytics(
+        projectId,
+        startDate,
+        filtersStore.endDate || new Date().toISOString(),
+        filtersStore.utcOffsetHours,
+        levels,
+        namespaces,
+        searchString,
+      );
+
+      this._analyticsData = data;
+      logger.debug('Fetched analytics data:', data);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       this._error = errorMessage;
       logger.error('Error fetching analytics:', error);
     } finally {
-      this._isLoading = false;
+      if (!options.silent) {
+        this._isLoading = false;
+      }
     }
-  }
-
-  private async _fetchAnalytics(projectId: string): Promise<void> {
-    if (!filtersStore.startDate) {
-      return;
-    }
-
-    const data = await LogAnalyticsService.getProjectLogsAnalytics(
-      projectId,
-      filtersStore.startDate,
-      filtersStore.endDate || new Date().toISOString(),
-      filtersStore.utcOffsetHours,
-    );
-
-    this._analyticsData = data;
-    logger.debug('Fetched analytics data:', data);
   }
 
   clearData(): void {
@@ -156,6 +141,38 @@ class LogAnalyticsState {
       bucketSizeMinutes: 0,
     };
     this._error = null;
+  }
+
+  private _matchesActiveFilters(log: Log): boolean {
+    if (
+      filtersStore.levels.length > 0 &&
+      !filtersStore.levels.includes(log.level)
+    ) {
+      return false;
+    }
+
+    if (
+      filtersStore.namespaces.length > 0 &&
+      !filtersStore.namespaces.includes(log.namespace ?? '')
+    ) {
+      return false;
+    }
+
+    if (filtersStore.searchString?.trim()) {
+      const queryWords = filtersStore.searchString.toLowerCase().split(' ');
+      const messageMatch = queryWords.every((word) =>
+        log.message.toLowerCase().includes(word),
+      );
+      const namespaceMatch =
+        log.namespace &&
+        queryWords.every((word) => log.namespace!.toLowerCase().includes(word));
+
+      if (!messageMatch && !namespaceMatch) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
 

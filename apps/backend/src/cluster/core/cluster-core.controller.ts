@@ -141,6 +141,7 @@ export class ClusterCoreController {
       {
         id: clusterId,
         name: body.name,
+        color: body.color,
       },
       userId,
     );

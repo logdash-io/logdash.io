@@ -1,6 +1,11 @@
 <script lang="ts">
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
+  import {
+    LOG_LEVELS,
+    getLogLevelMetadata,
+  } from '$lib/domains/logs/domain/log-level-metadata';
+  import type { LogLevel } from '$lib/domains/logs/domain/log-level';
 
   type Props = {
     selectedLevel: string | null;
@@ -9,27 +14,23 @@
 
   const { selectedLevel, onLevelChange }: Props = $props();
 
-  const LOG_LEVELS = [
-    { value: 'error', label: 'Error', color: 'bg-[#e7000b]' },
-    { value: 'warning', label: 'Warning', color: 'bg-[#fe9a00]' },
-    { value: 'info', label: 'Info', color: 'bg-[#155dfc]' },
-    { value: 'http', label: 'HTTP', color: 'bg-[#00a6a6]' },
-    { value: 'verbose', label: 'Verbose', color: 'bg-[#00a600]' },
-    { value: 'debug', label: 'Debug', color: 'bg-[#00a600]' },
-    { value: 'silly', label: 'Silly', color: 'bg-[#505050]' },
-    { value: null, label: 'All Levels', color: 'bg-[#ffffff]' },
-  ];
+  const ALL_LEVELS_OPTION = {
+    value: null,
+    label: 'All Levels',
+    color: 'bg-[#ffffff]',
+  };
+  const levelOptions = [...LOG_LEVELS, ALL_LEVELS_OPTION];
 
   function getSelectedLabel(): string {
     if (!selectedLevel) return 'All Levels';
-    const level = LOG_LEVELS.find((l) => l.value === selectedLevel);
-    return level?.label || 'All Levels';
+    return (
+      getLogLevelMetadata(selectedLevel as LogLevel)?.label || 'All Levels'
+    );
   }
 
   function getSelectedColor(): string | null {
     if (!selectedLevel) return null;
-    const level = LOG_LEVELS.find((l) => l.value === selectedLevel);
-    return level?.color || null;
+    return getLogLevelMetadata(selectedLevel as LogLevel)?.color || null;
   }
 </script>
 
@@ -38,7 +39,7 @@
     class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
     <ul class="">
-      {#each LOG_LEVELS as level}
+      {#each levelOptions as level}
         <li
           class="hover:bg-base-100 flex items-center justify-start rounded-lg px-3"
         >

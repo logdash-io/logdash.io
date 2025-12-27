@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsDate, IsNumber, IsOptional } from 'class-validator';
+import { IsArray, IsDate, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { LogLevel } from '../../core/enums/log-level.enum';
 
 export enum LogAnalyticsBucket {
   OneMinute = 1,
@@ -37,4 +38,33 @@ export class LogAnalyticsQuery {
   @IsNumber()
   @Transform(({ value }) => (value ? parseFloat(value) : 0))
   public utcOffsetHours?: number = 0;
+
+  @ApiPropertyOptional({
+    enum: LogLevel,
+    isArray: true,
+    description: 'Filter analytics by multiple log levels.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(LogLevel, { each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
+  public levels?: LogLevel[];
+
+  @ApiPropertyOptional({
+    isArray: true,
+    description: 'Filter analytics by multiple namespaces.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
+  public namespaces?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      'Search string to filter logs. Returns logs containing all words in the search string.',
+  })
+  @IsOptional()
+  @IsString()
+  public searchString?: string;
 }
