@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { subMinutes } from 'date-fns';
 import { HttpMonitorReadService } from '../read/http-monitor-read.service';
 import { HttpMonitorRemovalService } from '../removal/http-monitor-removal.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { HTTP_MONITORS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 @Injectable()
 export class HttpMonitorTtlService {
   constructor(
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
-    private readonly logger: Logger,
+    @Inject(HTTP_MONITORS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)

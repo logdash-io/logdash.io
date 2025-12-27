@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { RedisService, TtlOverwriteStrategy } from '../../shared/redis/redis.service';
 import { CreateAuditLogDto } from '../write/dto/create-audit-log.dto';
 import { AuditLogWriteService } from '../write/audit-log-write.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { AUDIT_LOGS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { RelatedDomain } from '../core/enums/related-domain.enum';
 import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
 import { ClusterReadCachedService } from '../../cluster/read/cluster-read-cached.service';
@@ -16,7 +17,7 @@ const MAX_AUDIT_LOGS_PER_USER_PER_MINUTE = 60 * 10;
 export class AuditLog {
   constructor(
     private readonly redisService: RedisService,
-    private readonly logger: Logger,
+    @Inject(AUDIT_LOGS_LOGGER) private readonly logger: LogdashLogger,
     private readonly projectReadCachedService: ProjectReadCachedService,
     private readonly clusterReadCachedService: ClusterReadCachedService,
     private readonly metricRegisterReadService: MetricRegisterReadService,

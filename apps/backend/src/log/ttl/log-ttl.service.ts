@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { LogWriteService } from '../write/log-write.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { LOGS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { subDays } from 'date-fns';
 require('dotenv').config();
 
@@ -9,7 +10,7 @@ require('dotenv').config();
 export class LogTtlService {
   constructor(
     private readonly logWriteService: LogWriteService,
-    private readonly logger: Logger,
+    @Inject(LOGS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)

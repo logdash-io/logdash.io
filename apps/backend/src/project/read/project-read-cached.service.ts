@@ -1,15 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ProjectReadService } from './project-read.service';
-import { ProjectTier } from '../core/enums/project-tier.enum';
 import { RedisService } from '../../shared/redis/redis.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { PROJECTS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { ProjectNormalized } from '../core/entities/project.interface';
 
 @Injectable()
 export class ProjectReadCachedService {
   constructor(
     private readonly projectReadService: ProjectReadService,
-    private readonly logger: Logger,
+    @Inject(PROJECTS_LOGGER) private readonly logger: LogdashLogger,
     private readonly redisService: RedisService,
   ) {}
 

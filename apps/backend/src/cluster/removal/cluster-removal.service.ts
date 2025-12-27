@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ClusterWriteService } from '../write/cluster-write.service';
 import { ClusterReadService } from '../read/cluster-read.service';
 import { ProjectRemovalService } from '../../project/removal/project-removal.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { CLUSTERS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { PublicDashboardRemovalService } from '../../public-dashboard/removal/public-dashboard-removal.service';
 
 @Injectable()
@@ -11,7 +12,7 @@ export class ClusterRemovalService {
     private readonly clusterReadService: ClusterReadService,
     private readonly clusterWriteService: ClusterWriteService,
     private readonly projectRemovalService: ProjectRemovalService,
-    private readonly logger: Logger,
+    @Inject(CLUSTERS_LOGGER) private readonly logger: LogdashLogger,
     private readonly publicDashboardRemovalService: PublicDashboardRemovalService,
   ) {}
 

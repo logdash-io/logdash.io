@@ -1,5 +1,6 @@
-import { Logger } from '@logdash/js-sdk';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { CLUSTERS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { RedisService } from '../../shared/redis/redis.service';
 import { ClusterTier } from '../core/enums/cluster-tier.enum';
 import { ClusterReadService } from './cluster-read.service';
@@ -10,7 +11,7 @@ import { ClusterRole } from '../core/enums/cluster-role.enum';
 export class ClusterReadCachedService {
   constructor(
     private readonly clusterReadService: ClusterReadService,
-    private readonly logger: Logger,
+    @Inject(CLUSTERS_LOGGER) private readonly logger: LogdashLogger,
     private readonly redisService: RedisService,
   ) {}
 

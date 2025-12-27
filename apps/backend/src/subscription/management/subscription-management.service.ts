@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { SubscriptionWriteService } from '../write/subscription-write.service';
 import { SubscriptionReadService } from '../read/subscription-read.service';
 import { paidTiers, UserTier } from '../../user/core/enum/user-tier.enum';
 import { UserTierService } from '../../user/tier/user-tier.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { SUBSCRIPTIONS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { ApplyNewSubscriptionDto } from './dto/try-apply-new-subscription.dto';
 import { ChangeActiveSubscriptionEndsAtDto } from './dto/change-active-subscrription-ends-at.dto';
 import { subSeconds } from 'date-fns';
@@ -14,7 +15,7 @@ export class SubscriptionManagementService {
     private readonly subscriptionReadService: SubscriptionReadService,
     private readonly subscriptionWriteService: SubscriptionWriteService,
     private readonly userTierService: UserTierService,
-    private readonly logger: Logger,
+    @Inject(SUBSCRIPTIONS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   public async syncUserTier(userId: string): Promise<void> {

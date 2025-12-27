@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@clickhouse/client": "^0.2.10",
-    "@logdash/js-sdk": "^1.0.9",
+    "@logdash/node": "^1.0.0",
     "@nestjs/axios": "^4.0.0",
     "@nestjs/common": "^11.1.3",
     "@nestjs/core": "^11.1.3",
@@ -100,6 +100,7 @@
     "globalSetup": "<rootDir>/test/utils/global-setup.ts",
     "globalTeardown": "<rootDir>/test/utils/global-teardown.ts",
     "moduleNameMapper": {
+      "^@logdash/node$": "<rootDir>/test/__mocks__/@logdash/node.ts",
       "^src/(.*)$": "<rootDir>/src/$1"
     }
   }

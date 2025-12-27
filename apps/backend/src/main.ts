@@ -9,6 +9,7 @@ import { swaggerDarkModeCSS } from './swagger/swagger-dark-mode.js';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
+  app.enableShutdownHooks();
   app.enableCors({ origin: '*' });
 
   const envConfig = getEnvConfig();

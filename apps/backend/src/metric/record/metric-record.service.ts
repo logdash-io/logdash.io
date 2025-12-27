@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { MetricWriteClickhouseService } from '../write/metric-write.clickhouse-service';
 import { Types } from 'mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { METRICS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 @Injectable()
 export class MetricRecordService {
   constructor(
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly metricWriteClickhouseService: MetricWriteClickhouseService,
-    private readonly logger: Logger,
+    @Inject(METRICS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   @Cron(CronExpression.EVERY_5_SECONDS)

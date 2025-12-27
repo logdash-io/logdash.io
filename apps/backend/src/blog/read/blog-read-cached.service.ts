@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { BlogReadService } from './blog-read.service';
 import { RedisService } from '../../shared/redis/redis.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { BLOG_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { BlogPostNormalized } from '../core/entities/blog-post.interface';
 
 interface RedisSerializedBlogPost {
@@ -16,7 +17,7 @@ interface RedisSerializedBlogPost {
 export class BlogReadCachedService {
   constructor(
     private readonly blogReadService: BlogReadService,
-    private readonly logger: Logger,
+    @Inject(BLOG_LOGGER) private readonly logger: LogdashLogger,
     private readonly redisService: RedisService,
   ) {}
 

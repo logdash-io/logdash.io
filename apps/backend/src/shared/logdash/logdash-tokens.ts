@@ -1,0 +1,68 @@
+export const AUTH_LOGGER = Symbol('AUTH_LOGGER');
+export const USERS_LOGGER = Symbol('USERS_LOGGER');
+export const CLUSTERS_LOGGER = Symbol('CLUSTERS_LOGGER');
+export const PROJECTS_LOGGER = Symbol('PROJECTS_LOGGER');
+export const LOGS_LOGGER = Symbol('LOGS_LOGGER');
+export const METRICS_LOGGER = Symbol('METRICS_LOGGER');
+export const METRIC_REGISTER_LOGGER = Symbol('METRIC_REGISTER_LOGGER');
+export const HTTP_PINGS_LOGGER = Symbol('HTTP_PINGS_LOGGER');
+export const HTTP_PING_BUCKETS_LOGGER = Symbol('HTTP_PING_BUCKETS_LOGGER');
+export const HTTP_MONITORS_LOGGER = Symbol('HTTP_MONITORS_LOGGER');
+export const STRIPE_LOGGER = Symbol('STRIPE_LOGGER');
+export const NOTIFICATIONS_LOGGER = Symbol('NOTIFICATIONS_LOGGER');
+export const CUSTOM_DNS_LOGGER = Symbol('CUSTOM_DNS_LOGGER');
+export const SUBSCRIPTIONS_LOGGER = Symbol('SUBSCRIPTIONS_LOGGER');
+export const EMAILS_LOGGER = Symbol('EMAILS_LOGGER');
+export const BLOG_LOGGER = Symbol('BLOG_LOGGER');
+export const STATUS_PAGES_LOGGER = Symbol('STATUS_PAGES_LOGGER');
+export const AUDIT_LOGS_LOGGER = Symbol('AUDIT_LOGS_LOGGER');
+export const API_KEYS_LOGGER = Symbol('API_KEYS_LOGGER');
+export const REDIS_LOGGER = Symbol('REDIS_LOGGER');
+
+export const LOGDASH_METRICS = Symbol('LOGDASH_METRICS');
+
+export const ALL_LOGGER_TOKENS = [
+  AUTH_LOGGER,
+  USERS_LOGGER,
+  CLUSTERS_LOGGER,
+  PROJECTS_LOGGER,
+  LOGS_LOGGER,
+  METRICS_LOGGER,
+  METRIC_REGISTER_LOGGER,
+  HTTP_PINGS_LOGGER,
+  HTTP_PING_BUCKETS_LOGGER,
+  HTTP_MONITORS_LOGGER,
+  STRIPE_LOGGER,
+  NOTIFICATIONS_LOGGER,
+  CUSTOM_DNS_LOGGER,
+  SUBSCRIPTIONS_LOGGER,
+  EMAILS_LOGGER,
+  BLOG_LOGGER,
+  STATUS_PAGES_LOGGER,
+  AUDIT_LOGS_LOGGER,
+  API_KEYS_LOGGER,
+  REDIS_LOGGER,
+];
+
+export const NAMESPACE_MAP: Record<symbol, string> = {
+  [AUTH_LOGGER]: 'auth',
+  [USERS_LOGGER]: 'users',
+  [CLUSTERS_LOGGER]: 'clusters',
+  [PROJECTS_LOGGER]: 'projects',
+  [LOGS_LOGGER]: 'logs',
+  [METRICS_LOGGER]: 'metrics',
+  [METRIC_REGISTER_LOGGER]: 'metric-register',
+  [HTTP_PINGS_LOGGER]: 'http-pings',
+  [HTTP_PING_BUCKETS_LOGGER]: 'http-ping-buckets',
+  [HTTP_MONITORS_LOGGER]: 'http-monitors',
+  [STRIPE_LOGGER]: 'stripe',
+  [NOTIFICATIONS_LOGGER]: 'notifications',
+  [CUSTOM_DNS_LOGGER]: 'custom-dns',
+  [SUBSCRIPTIONS_LOGGER]: 'subscriptions',
+  [EMAILS_LOGGER]: 'emails',
+  [BLOG_LOGGER]: 'blog',
+  [STATUS_PAGES_LOGGER]: 'status-pages',
+  [AUDIT_LOGS_LOGGER]: 'audit-logs',
+  [API_KEYS_LOGGER]: 'api-keys',
+  [REDIS_LOGGER]: 'redis',
+};

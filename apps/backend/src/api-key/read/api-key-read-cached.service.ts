@@ -1,5 +1,6 @@
-import { Logger } from '@logdash/js-sdk';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { API_KEYS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { Types } from 'mongoose';
 import { RedisService } from '../../shared/redis/redis.service';
 import { ApiKeyReadService } from './api-key-read.service';
@@ -10,7 +11,7 @@ const NON_EXISTENT = 'non-existent';
 export class ApiKeyReadCachedService {
   constructor(
     private readonly apiKeyReadService: ApiKeyReadService,
-    private readonly logger: Logger,
+    @Inject(API_KEYS_LOGGER) private readonly logger: LogdashLogger,
     private readonly redisService: RedisService,
   ) {}
 

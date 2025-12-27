@@ -1,5 +1,7 @@
-import { Logger, Metrics } from '@logdash/js-sdk';
 import { Inject, Injectable } from '@nestjs/common';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { LogdashMetrics } from '../../shared/logdash/aggregate-metrics';
+import { HTTP_PINGS_LOGGER, LOGDASH_METRICS } from '../../shared/logdash/logdash-tokens';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import { HttpMonitorNormalized } from 'src/http-monitor/core/entities/http-monitor.interface';
@@ -28,8 +30,8 @@ export class HttpPingPingerService {
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpPingWriteService: HttpPingWriteService,
     private readonly httpPingEventEmitter: HttpPingEventEmitter,
-    private readonly logger: Logger,
-    private readonly metrics: Metrics,
+    @Inject(HTTP_PINGS_LOGGER) private readonly logger: LogdashLogger,
+    @Inject(LOGDASH_METRICS) private readonly metrics: LogdashMetrics,
     private readonly averageRecorder: AverageRecorder,
     @Inject(MAX_CONCURRENT_REQUESTS_TOKEN)
     private readonly maxConcurrentRequests: number,
@@ -133,7 +135,7 @@ export class HttpPingPingerService {
 
     const totalDuration = Date.now() - startTime;
     await this.averageRecorder.record('httpPingsDurationMs', totalDuration);
-    this.metrics.mutate('pingsMade', results.length);
+    this.metrics.mutateMetric('pingsMade', results.length);
   }
 
   private async pingUnclaimedMonitors(): Promise<void> {
@@ -171,7 +173,7 @@ export class HttpPingPingerService {
 
     const totalDuration = Date.now() - startTime;
     await this.averageRecorder.record('unclaimedHttpPingsDurationMs', totalDuration);
-    this.metrics.mutate('unclaimedPingsMade', results.length);
+    this.metrics.mutateMetric('unclaimedPingsMade', results.length);
   }
 
   public async pingSingleMonitor(httpMonitorId: string): Promise<void> {

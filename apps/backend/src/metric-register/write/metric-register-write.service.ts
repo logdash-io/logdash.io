@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { Actor } from '../../audit-log/core/enums/actor.enum';
+import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
+import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
+import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 import { MetricRegisterEntryEntity } from '../core/entities/metric-register-entry.entity';
 import { CreateMetricRegisterEntryDto } from './dto/create-metric-register-entry.dto';
 import { RemoveMetricRegisterEntryDto } from './dto/remove-metric-register-entry.dto';
-import { UpdateCounterAbsoluteValueDto } from './dto/update-counter-absolute-value.dto';
-import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
-import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
-import { Actor } from '../../audit-log/core/enums/actor.enum';
-import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
-import { MetricOperation } from '@logdash/js-sdk';
 
 @Injectable()
 export class MetricRegisterWriteService {

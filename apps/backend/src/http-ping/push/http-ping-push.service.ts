@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { HTTP_PINGS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { RedisService } from '../../shared/redis/redis.service';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { HttpMonitorMode } from '../../http-monitor/core/enums/http-monitor-mode.enum';
@@ -24,7 +25,7 @@ export class HttpPingPushService {
     private readonly httpPingEventEmitter: HttpPingEventEmitter,
     private readonly httpPingPingerDataService: HttpPingPingerDataService,
     private readonly projectReadService: ProjectReadService,
-    private readonly logger: Logger,
+    @Inject(HTTP_PINGS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   private getPushRecordKey(httpMonitorId: string): string {

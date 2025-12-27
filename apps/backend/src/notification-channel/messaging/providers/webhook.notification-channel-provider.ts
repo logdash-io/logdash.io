@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import {
   NotificationChannelProvider,
   SendHttpMonitorAlertMessageSpecificProviderDto,
   SendWelcomeMessageSpecificProviderDto,
 } from '../notification-channel-provider';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../../shared/logdash/aggregate-logger';
+import { NOTIFICATIONS_LOGGER } from '../../../shared/logdash/logdash-tokens';
 import { WebhookHttpMethod, WebhookOptions } from '../../core/types/webhook-options.type';
 
 @Injectable()
 export class WebhookNotificationChannelProvider implements NotificationChannelProvider {
-  constructor(private readonly logger: Logger) {}
+  constructor(@Inject(NOTIFICATIONS_LOGGER) private readonly logger: LogdashLogger) {}
 
   public async sendHttpMonitorAlertMessage(
     dto: SendHttpMonitorAlertMessageSpecificProviderDto,

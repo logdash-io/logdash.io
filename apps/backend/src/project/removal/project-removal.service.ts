@@ -1,5 +1,6 @@
-import { Logger } from '@logdash/js-sdk';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { PROJECTS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { LogWriteService } from '../../log/write/log-write.service';
 import { MetricRegisterWriteService } from '../../metric-register/write/metric-register-write.service';
 import { MetricWriteService } from '../../metric/write/metric-write.service';
@@ -16,7 +17,7 @@ export class ProjectRemovalService {
     private readonly logWriteService: LogWriteService,
     private readonly metricWriteService: MetricWriteService,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
-    private readonly logger: Logger,
+    @Inject(PROJECTS_LOGGER) private readonly logger: LogdashLogger,
     private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
     private readonly apiKeyWriteService: ApiKeyWriteService,
   ) {}

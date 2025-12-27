@@ -1,5 +1,4 @@
 import { ClickHouseClient } from '@clickhouse/client';
-import { Logger, Metrics } from '@logdash/js-sdk';
 import { ValidationPipe } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/mongoose';
@@ -69,9 +68,10 @@ import { AuditLogUtils } from './audit-log-utils';
 import { AuditLogCreationModule } from '../../src/audit-log/creation/audit-log-creation.module';
 import { UserUtils } from './user.utils';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/pinger/http-ping-pinger.service';
+import { ALL_LOGGER_TOKENS, LOGDASH_METRICS } from '../../src/shared/logdash/logdash-tokens';
 
 export async function createTestApp() {
-  const module: TestingModule = await Test.createTestingModule({
+  let moduleBuilder = Test.createTestingModule({
     imports: [
       rootMongooseTestModule(),
       rootClickHouseTestModule(),
@@ -101,16 +101,23 @@ export async function createTestApp() {
         url: getRedisTestContainerUrl(),
       }),
     ],
-  })
-    .overrideProvider(Logger)
-    .useClass(LoggerMock)
-    .overrideProvider(Metrics)
+  });
+
+  // Override all logger tokens with the mock
+  for (const token of ALL_LOGGER_TOKENS) {
+    moduleBuilder = moduleBuilder.overrideProvider(token).useClass(LoggerMock);
+  }
+
+  // Override metrics token with the mock
+  moduleBuilder = moduleBuilder
+    .overrideProvider(LOGDASH_METRICS)
     .useClass(MetricsMock)
     .overrideProvider(MAX_CONCURRENT_REQUESTS_TOKEN)
     .useValue(2)
     .overrideProvider(CustomDomainDnsService)
-    .useClass(CustomDomainDnsServiceMock)
-    .compile();
+    .useClass(CustomDomainDnsServiceMock);
+
+  const module: TestingModule = await moduleBuilder.compile();
 
   const app = module.createNestApplication();
   app.useGlobalPipes(

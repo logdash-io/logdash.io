@@ -1,9 +1,9 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
   Headers,
+  Inject,
   Post,
   Query,
   RawBodyRequest,
@@ -16,7 +16,8 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { CheckoutResponse } from './dto/checkout.response';
 import { CustomerPortalResponse } from './dto/customer-portal.response';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { STRIPE_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { StripeEventsHandler } from './stripe.events-handler';
 import { StripeCheckoutService } from './stripe-checkout.service';
 import { CheckoutQuery } from './dto/checkout.query';
@@ -30,7 +31,7 @@ export class StripeController {
     private readonly stripeService: StripeService,
     private readonly stripeEventsHandler: StripeEventsHandler,
     private readonly stripeCheckoutService: StripeCheckoutService,
-    private readonly logger: Logger,
+    @Inject(STRIPE_LOGGER) private readonly logger: LogdashLogger,
     private readonly userReadService: UserReadService,
   ) {}
 

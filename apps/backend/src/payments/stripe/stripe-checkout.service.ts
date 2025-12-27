@@ -1,5 +1,6 @@
-import { Logger } from '@logdash/js-sdk';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { STRIPE_LOGGER } from '../../shared/logdash/logdash-tokens';
 import Stripe from 'stripe';
 import { UserReadService } from '../../user/read/user-read.service';
 import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.enum';
@@ -11,7 +12,7 @@ import { mapTierToPriceId } from './stripe-mapper';
 export class StripeCheckoutService {
   constructor(
     private readonly stripe: Stripe,
-    private readonly logger: Logger,
+    @Inject(STRIPE_LOGGER) private readonly logger: LogdashLogger,
     private readonly userReadService: UserReadService,
   ) {}
 

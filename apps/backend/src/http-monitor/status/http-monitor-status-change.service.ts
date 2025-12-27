@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { HttpPingEvent } from '../../http-ping/events/http-ping-event.enum';
 import { HttpPingCreatedEvent } from '../../http-ping/events/definitions/http-ping-created.event';
@@ -7,7 +7,8 @@ import { RedisService } from '../../shared/redis/redis.service';
 import { NotificationChannelMessagingService } from '../../notification-channel/messaging/notification-channel-messaging.service';
 import { HttpMonitorReadService } from '../read/http-monitor-read.service';
 import { HttpMonitorStatusService } from './http-monitor-status.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { HTTP_MONITORS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 @Injectable()
 export class HttpMonitorStatusChangeService {
@@ -15,7 +16,7 @@ export class HttpMonitorStatusChangeService {
     private readonly notificationChannelMessagingService: NotificationChannelMessagingService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpMonitorStatusService: HttpMonitorStatusService,
-    private readonly logger: Logger,
+    @Inject(HTTP_MONITORS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   @OnEvent(HttpPingEvent.HttpPingCreatedEvent)

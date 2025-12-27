@@ -1,87 +1,81 @@
-import { Logger } from '@logdash/js-sdk';
-import { PublicMethods } from '../types/public-methods';
+import { Logdash } from '@logdash/node';
 
-export class AggregateLogger implements PublicMethods<Logger> {
+export interface LogdashLogger {
+  debug(...data: any[]): void;
+  info(...data: any[]): void;
+  warn(...data: any[]): void;
+  error(...data: any[]): void;
+  http(...data: any[]): void;
+  log(...data: any[]): void;
+  silly(...data: any[]): void;
+  verbose(...data: any[]): void;
+}
+
+export class AggregateLogger implements LogdashLogger {
   constructor(
     private readonly dto: {
-      sensitiveDataLoggers: Logger[];
-      publicDataLoggers: Logger[];
+      sensitiveDataLoggers: Logdash[];
+      publicDataLoggers: Logdash[];
     },
   ) {}
 
-  unsensitiveData(...data: any[]): any {
+  private unsensitiveData(...data: any[]): any {
     return data[0];
   }
 
-  debug(...data: any[]): void {
+  public debug(...data: any[]): void {
     this.dto.sensitiveDataLoggers.forEach((logger) => logger.debug(...data));
 
     const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) =>
-      logger.debug(unsensitivedData),
-    );
+    this.dto.publicDataLoggers.forEach((logger) => logger.debug(unsensitivedData));
   }
 
-  info(...data: any[]): void {
+  public info(...data: any[]): void {
     this.dto.sensitiveDataLoggers.forEach((logger) => logger.info(...data));
 
     const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) =>
-      logger.info(unsensitivedData),
-    );
+    this.dto.publicDataLoggers.forEach((logger) => logger.info(unsensitivedData));
   }
 
-  warn(...data: any[]): void {
+  public warn(...data: any[]): void {
     this.dto.sensitiveDataLoggers.forEach((logger) => logger.warn(...data));
 
     const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) =>
-      logger.warn(unsensitivedData),
-    );
+    this.dto.publicDataLoggers.forEach((logger) => logger.warn(unsensitivedData));
   }
 
-  error(...data: any[]): void {
+  public error(...data: any[]): void {
     this.dto.sensitiveDataLoggers.forEach((logger) => logger.error(...data));
 
     const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) =>
-      logger.error(unsensitivedData),
-    );
+    this.dto.publicDataLoggers.forEach((logger) => logger.error(unsensitivedData));
   }
 
-  http(...data: any[]): void {
+  public http(...data: any[]): void {
     this.dto.sensitiveDataLoggers.forEach((logger) => logger.http(...data));
 
     const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) =>
-      logger.http(unsensitivedData),
-    );
+    this.dto.publicDataLoggers.forEach((logger) => logger.http(unsensitivedData));
   }
 
-  log(...data: any[]): void {
-    this.dto.sensitiveDataLoggers.forEach((logger) => logger.log(...data));
+  public log(...data: any[]): void {
+    this.dto.sensitiveDataLoggers.forEach((logger) => logger.debug(...data));
 
     const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) =>
-      logger.log(unsensitivedData),
-    );
+    this.dto.publicDataLoggers.forEach((logger) => logger.debug(unsensitivedData));
   }
 
-  silly(...data: any[]): void {
+  public silly(...data: any[]): void {
     this.dto.sensitiveDataLoggers.forEach((logger) => logger.silly(...data));
 
     const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) =>
-      logger.silly(unsensitivedData),
-    );
+    this.dto.publicDataLoggers.forEach((logger) => logger.silly(unsensitivedData));
   }
 
-  verbose(...data: any[]): void {
+  public verbose(...data: any[]): void {
     this.dto.sensitiveDataLoggers.forEach((logger) => logger.verbose(...data));
 
     const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) =>
-      logger.verbose(unsensitivedData),
-    );
+    this.dto.publicDataLoggers.forEach((logger) => logger.verbose(unsensitivedData));
   }
 }

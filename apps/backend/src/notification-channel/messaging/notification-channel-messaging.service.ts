@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { NotificationChannelProvider } from './notification-channel-provider';
 import { NotificationChannelReadService } from '../read/notification-channel-read.service';
 import { NotificationChannelType } from '../core/enums/notification-target.enum';
 import { TelegramNotificationChannelProvider } from './providers/telegram.notification-channel-provider';
 import { NotificationChannelNormalized } from '../core/entities/notification-channel.interface';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { NOTIFICATIONS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { SendHttpMonitorAlertMessageDto } from './dto/send-http-monitor-alert-message.dto';
 import { WebhookNotificationChannelProvider } from './providers/webhook.notification-channel-provider';
 
@@ -14,7 +15,7 @@ export class NotificationChannelMessagingService {
     private readonly telegramMessagingProvider: TelegramNotificationChannelProvider,
     private readonly webhookMessagingProvider: WebhookNotificationChannelProvider,
     private readonly notificationChannelReadService: NotificationChannelReadService,
-    private readonly logger: Logger,
+    @Inject(NOTIFICATIONS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   public async sendHttpMonitorAlertMessage(dto: SendHttpMonitorAlertMessageDto): Promise<void> {

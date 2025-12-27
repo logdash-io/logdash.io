@@ -1,5 +1,9 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".spec.ts$",
@@ -7,5 +11,8 @@
   "globalTeardown": "<rootDir>/utils/global-teardown.ts",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@logdash/node$": "<rootDir>/__mocks__/@logdash/node.ts"
   }
 }

@@ -6,18 +6,72 @@ settings:
 
 catalogs:
   default:
+    '@sveltejs/adapter-vercel':
+      specifier: ^6.2.0
+      version: 6.2.0
+    '@sveltejs/kit':
+      specifier: ^2.49.2
+      version: 2.49.2
+    '@sveltejs/vite-plugin-svelte':
+      specifier: ^6.2.1
+      version: 6.2.1
+    '@tailwindcss/postcss':
+      specifier: ^4.1.11
+      version: 4.1.11
     axios:
       specifier: ^1.13.2
       version: 1.13.2
+    daisyui:
+      specifier: 5.5.14
+      version: 5.5.14
+    eslint:
+      specifier: ^9.39.2
+      version: 9.39.2
+    eslint-config-prettier:
+      specifier: ^10.1.8
+      version: 10.1.8
+    eslint-plugin-svelte:
+      specifier: ^3.13.1
+      version: 3.13.1
     lucide-svelte:
       specifier: ^0.562.0
       version: 0.562.0
     luxon:
       specifier: ^3.7.2
       version: 3.7.2
+    postcss:
+      specifier: ^8.5.6
+      version: 8.5.6
+    prettier:
+      specifier: ^3.5.1
+      version: 3.5.3
+    prettier-plugin-svelte:
+      specifier: ^3.3.3
+      version: 3.4.0
+    prettier-plugin-tailwindcss:
+      specifier: ^0.7.2
+      version: 0.7.2
+    svelte:
+      specifier: ^5.46.0
+      version: 5.46.0
+    svelte-check:
+      specifier: ^4.3.5
+      version: 4.3.5
+    tailwindcss:
+      specifier: ^4.1.18
+      version: 4.1.18
     ts-pattern:
       specifier: ^5.9.0
       version: 5.9.0
+    typescript:
+      specifier: ^5.9.3
+      version: 5.9.3
+    typescript-eslint:
+      specifier: ^8.50.1
+      version: 8.50.1
+    vite:
+      specifier: ^7.3.0
+      version: 7.3.0
 
 importers:
 
@@ -28,9 +82,9 @@ importers:
       '@clickhouse/client':
         specifier: ^0.2.10
         version: 0.2.10
-      '@logdash/js-sdk':
-        specifier: ^1.0.9
-        version: 1.0.9
+      '@logdash/node':
+        specifier: ^1.0.0
+        version: 1.0.2
       '@nestjs/axios':
         specifier: ^4.0.0
         version: 4.0.0(@nestjs/common@11.1.3(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.9.0)(rxjs@7.8.2)
@@ -179,9 +233,9 @@ importers:
       '@logdash/hyper-ui':
         specifier: workspace:*
         version: link:../../packages/hyper-ui
-      '@logdash/js-sdk':
-        specifier: ^1.0.8
-        version: 1.0.9
+      '@logdash/node':
+        specifier: ^1.0.0
+        version: 1.0.2
       axios:
         specifier: 'catalog:'
         version: 1.13.2
@@ -408,7 +462,7 @@ importers:
         version: 5.46.0
       svelte-check:
         specifier: '*'
-        version: 4.2.1(picomatch@4.0.2)(svelte@5.34.9)(typescript@5.8.3)
+        version: 4.2.1(picomatch@4.0.3)(svelte@5.46.0)(typescript@5.8.3)
       tailwindcss:
         specifier: '*'
         version: 4.1.11
@@ -1402,8 +1456,8 @@ packages:
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
 
-  '@logdash/js-sdk@1.0.9':
-    resolution: {integrity: sha512-l+omnzjlxvOwOGufVQW2+9exGBuzrFE/3mPEuV6BmCF58GWe7RaE6AERrumijEdHJ5YwmDh49YPE7I3LfXKmPg==}
+  '@logdash/node@1.0.2':
+    resolution: {integrity: sha512-8vvCn2mmfbBYn0pNiVMsv5IU2tzVO1IJxrDLGqU60PG+8G8LTEimlxaUkNhvkSDtQQrsA88ov/MuhcPmospA2Q==}
     engines: {node: '>=18'}
 
   '@lukeed/csprng@1.1.0':
@@ -3094,6 +3148,10 @@ packages:
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
+
+  chalk@5.6.2:
+    resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
+    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   char-regex@1.0.2:
     resolution: {integrity: sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw==}
@@ -7069,11 +7127,6 @@ snapshots:
       eslint: 9.27.0(jiti@2.4.2)
       eslint-visitor-keys: 3.4.3
 
-  '@eslint-community/eslint-utils@4.7.0(eslint@9.39.2(jiti@2.4.2))':
-    dependencies:
-      eslint: 9.39.2(jiti@2.4.2)
-      eslint-visitor-keys: 3.4.3
-
   '@eslint-community/eslint-utils@4.9.0(eslint@9.27.0(jiti@2.4.2))':
     dependencies:
       eslint: 9.27.0(jiti@2.4.2)
@@ -7589,9 +7642,9 @@ snapshots:
 
   '@js-sdsl/ordered-map@4.4.2': {}
 
-  '@logdash/js-sdk@1.0.9':
+  '@logdash/node@1.0.2':
     dependencies:
-      chalk: 4.1.2
+      chalk: 5.6.2
 
   '@lukeed/csprng@1.1.0': {}
 
@@ -7602,7 +7655,7 @@ snapshots:
       https-proxy-agent: 7.0.6
       node-fetch: 2.7.0
       nopt: 8.1.0
-      semver: 7.7.2
+      semver: 7.7.3
       tar: 7.4.3
     transitivePeerDependencies:
       - encoding
@@ -9467,6 +9520,8 @@ snapshots:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
 
+  chalk@5.6.2: {}
+
   char-regex@1.0.2: {}
 
   chardet@0.7.0: {}
@@ -10098,7 +10153,7 @@ snapshots:
 
   eslint-plugin-svelte@3.13.1(eslint@9.39.2(jiti@2.4.2))(svelte@5.46.0)(ts-node@10.9.2(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.15.29)(typescript@5.9.3)):
     dependencies:
-      '@eslint-community/eslint-utils': 4.7.0(eslint@9.39.2(jiti@2.4.2))
+      '@eslint-community/eslint-utils': 4.9.0(eslint@9.39.2(jiti@2.4.2))
       '@jridgewell/sourcemap-codec': 1.5.5
       eslint: 9.39.2(jiti@2.4.2)
       esutils: 2.0.3
@@ -10107,7 +10162,7 @@ snapshots:
       postcss: 8.5.6
       postcss-load-config: 3.1.4(postcss@8.5.6)(ts-node@10.9.2(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.15.29)(typescript@5.9.3))
       postcss-safe-parser: 7.0.1(postcss@8.5.6)
-      semver: 7.7.2
+      semver: 7.7.3
       svelte-eslint-parser: 1.4.1(svelte@5.46.0)
     optionalDependencies:
       svelte: 5.46.0
@@ -10386,6 +10441,10 @@ snapshots:
   fdir@6.4.6(picomatch@4.0.2):
     optionalDependencies:
       picomatch: 4.0.2
+
+  fdir@6.4.6(picomatch@4.0.3):
+    optionalDependencies:
+      picomatch: 4.0.3
 
   fdir@6.5.0(picomatch@4.0.2):
     optionalDependencies:
@@ -12561,6 +12620,18 @@ snapshots:
     transitivePeerDependencies:
       - picomatch
 
+  svelte-check@4.2.1(picomatch@4.0.3)(svelte@5.46.0)(typescript@5.8.3):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.25
+      chokidar: 4.0.3
+      fdir: 6.4.6(picomatch@4.0.3)
+      picocolors: 1.1.1
+      sade: 1.8.1
+      svelte: 5.46.0
+      typescript: 5.8.3
+    transitivePeerDependencies:
+      - picomatch
+
   svelte-check@4.3.5(picomatch@4.0.3)(svelte@5.46.0)(typescript@5.9.3):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
@@ -12586,9 +12657,9 @@ snapshots:
 
   svelte-eslint-parser@1.4.1(svelte@5.46.0):
     dependencies:
-      eslint-scope: 8.3.0
-      eslint-visitor-keys: 4.2.0
-      espree: 10.3.0
+      eslint-scope: 8.4.0
+      eslint-visitor-keys: 4.2.1
+      espree: 10.4.0
       postcss: 8.5.6
       postcss-scss: 4.0.9(postcss@8.5.6)
       postcss-selector-parser: 7.1.0

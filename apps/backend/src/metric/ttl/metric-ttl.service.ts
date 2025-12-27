@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { subHours } from 'date-fns';
 import { MetricGranularity } from '../../metric-shared/enums/metric-granularity.enum';
@@ -7,14 +7,15 @@ import { ProjectTier } from '../../project/core/enums/project-tier.enum';
 import { MetricWriteService } from '../write/metric-write.service';
 import { RemoveMetricsDto } from '../write/dto/remove-metrics.dto';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { METRICS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 @Injectable()
 export class MetricTtlService {
   constructor(
     private readonly metricWriteService: MetricWriteService,
     private readonly projectReadService: ProjectReadService,
-    private readonly logger: Logger,
+    @Inject(METRICS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   @Cron(CronExpression.EVERY_10_MINUTES)

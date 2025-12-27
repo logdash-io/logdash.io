@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { UserReadService } from '../../user/read/user-read.service';
 import { getEnvConfig } from '../../shared/configs/env-configs';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { STRIPE_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { paidTiers, UserTier } from '../../user/core/enum/user-tier.enum';
 import { mapTierToPriceId } from './stripe-mapper';
 import { SubscriptionManagementService } from '../../subscription/management/subscription-management.service';
@@ -11,7 +12,7 @@ import { StripeEventEmitter, StripeEvents } from './stripe-event.emitter';
 @Injectable()
 export class StripeService {
   constructor(
-    private readonly logger: Logger,
+    @Inject(STRIPE_LOGGER) private readonly logger: LogdashLogger,
     private readonly userReadService: UserReadService,
     private readonly stripe: Stripe,
     private readonly subscriptionManagementService: SubscriptionManagementService,
