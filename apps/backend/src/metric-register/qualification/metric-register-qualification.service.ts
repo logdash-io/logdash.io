@@ -1,11 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { MetricRegisterReadService } from '../read/metric-register-read.service';
 import { QualifyMetricDto } from './dto/qualify-metric.dto';
 import { groupBy } from '../../shared/utils/group-by';
 import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
 import { MetricRegisterWriteService } from '../write/metric-register-write.service';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { METRIC_REGISTER_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 // When customer wants to add metric, he may hit a limit of registered metrics
 // as the registration process is automatic. This service is needed as the first
@@ -20,7 +21,7 @@ export class MetricRegisterQualificationService {
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly projectReadCachedService: ProjectReadCachedService,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
-    private readonly logger: Logger,
+    @Inject(METRIC_REGISTER_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   public async qualifyMetrics(dtos: QualifyMetricDto[]): Promise<QualifyMetricDto[]> {

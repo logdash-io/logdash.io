@@ -1,6 +1,7 @@
-import { Metrics } from '@logdash/js-sdk';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { LogdashMetrics } from './aggregate-metrics';
+import { LOGDASH_METRICS } from './logdash-tokens';
 
 interface MetricToRecord {
   sum: number;
@@ -11,7 +12,7 @@ interface MetricToRecord {
 export class AverageRecorder {
   private recordedMetrics: Record<string, MetricToRecord> = {};
 
-  constructor(private readonly metrics: Metrics) {}
+  constructor(@Inject(LOGDASH_METRICS) private readonly metrics: LogdashMetrics) {}
 
   public async record(metric: string, value: number): Promise<void> {
     if (!this.recordedMetrics[metric]) {
@@ -23,18 +24,16 @@ export class AverageRecorder {
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
-  private async dispatch() {
-    const metrics = Object.entries(this.recordedMetrics).map(
-      ([metric, { sum, count }]) => {
-        return {
-          metric,
-          value: sum / count,
-        };
-      },
-    );
+  private async dispatch(): Promise<void> {
+    const metrics = Object.entries(this.recordedMetrics).map(([metric, { sum, count }]) => {
+      return {
+        metric,
+        value: sum / count,
+      };
+    });
 
     metrics.forEach(({ metric, value }) => {
-      this.metrics.set(metric, value);
+      this.metrics.setMetric(metric, value);
     });
 
     this.recordedMetrics = {};

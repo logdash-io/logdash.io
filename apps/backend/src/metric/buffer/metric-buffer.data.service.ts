@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RedisService } from '../../shared/redis/redis.service';
-import { MetricOperation } from '@logdash/js-sdk';
+import { MetricOperation } from '../core/enums/metric-operation.enum';
 
 @Injectable()
 export class MetricBufferDataService {

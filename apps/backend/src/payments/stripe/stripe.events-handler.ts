@@ -1,14 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { getEnvConfig } from '../../shared/configs/env-configs';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { STRIPE_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { StripePaymentSucceededHandler } from './stripe.payment-succeeded.handler';
 import { StripeSubscriptionDeletedHandler } from './stripe.subscription-deleted.handler';
 
 @Injectable()
 export class StripeEventsHandler {
   constructor(
-    private readonly logger: Logger,
+    @Inject(STRIPE_LOGGER) private readonly logger: LogdashLogger,
     private readonly stripe: Stripe,
     private readonly stripePaymentSucceededHandler: StripePaymentSucceededHandler,
     private readonly stripeSubscriptionDeletedHandler: StripeSubscriptionDeletedHandler,

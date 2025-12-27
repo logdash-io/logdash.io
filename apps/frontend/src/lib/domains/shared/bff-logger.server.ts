@@ -1,7 +1,5 @@
-import { createLogDash } from '@logdash/js-sdk';
+import { Logdash } from '@logdash/node';
 
-const { logger } = createLogDash({
-  apiKey: process.env.LOGDASH_API_KEY,
-});
+const logdash = new Logdash(process.env.LOGDASH_API_KEY);
 
-export const bffLogger = logger;
+export const bffLogger = logdash;

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { MetricWriteService } from '../write/metric-write.service';
 import { MetricBucketingService } from '../../metric-shared/bucketing/metric-bucketing.service';
 import { RecordMetricDto } from './dto/record-metric.dto';
@@ -13,7 +13,8 @@ import { MetricCreatedEvent } from '../events/definitions/metric-created.event';
 import { parseFlexibleDate } from '../../shared/utils/parse-flexible-date';
 import { UpsertMetricDto } from '../write/dto/upsert-metric.dto';
 import { MetricOperation } from '../core/enums/metric-operation.enum';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { METRICS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { MetricRegisterWriteService } from '../../metric-register/write/metric-register-write.service';
@@ -30,7 +31,7 @@ export class MetricIngestionService {
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly metricRegisterQualificationService: MetricRegisterQualificationService,
     private readonly metricEventEmitter: MetricEventEmitter,
-    private readonly logger: Logger,
+    @Inject(METRICS_LOGGER) private readonly logger: LogdashLogger,
     private readonly averageRecorder: AverageRecorder,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
   ) {}

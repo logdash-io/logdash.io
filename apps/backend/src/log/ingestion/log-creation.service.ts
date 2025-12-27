@@ -1,5 +1,7 @@
-import { Logger, Metrics } from '@logdash/js-sdk';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { LogdashMetrics } from '../../shared/logdash/aggregate-metrics';
+import { LOGDASH_METRICS, LOGS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 import { LogIndexingService } from '../indexing/log-indexing.service';
@@ -9,8 +11,8 @@ import { LogWriteService } from '../write/log-write.service';
 export class LogIngestionService {
   constructor(
     private readonly logIndexingService: LogIndexingService,
-    private readonly logger: Logger,
-    private readonly metrics: Metrics,
+    @Inject(LOGS_LOGGER) private readonly logger: LogdashLogger,
+    @Inject(LOGDASH_METRICS) private readonly metrics: LogdashMetrics,
     private readonly averageRecorder: AverageRecorder,
     private readonly logWriteClickhouseService: LogWriteService,
   ) {}
@@ -35,7 +37,7 @@ export class LogIngestionService {
       });
     }
 
-    this.metrics.mutate('logsCreated', dtos.length);
+    this.metrics.mutateMetric('logsCreated', dtos.length);
     this.averageRecorder.record('logsCreationDurationMs', durationInMs);
   }
 }

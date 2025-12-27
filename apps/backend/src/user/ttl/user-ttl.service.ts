@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UserReadService } from '../read/user-read.service';
 import { UserWriteService } from '../write/user-write.service';
 import { subHours } from 'date-fns';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ClusterRemovalService } from '../../cluster/removal/cluster-removal.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { USERS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 @Injectable()
 export class UserTtlService {
@@ -13,18 +14,14 @@ export class UserTtlService {
     private readonly userReadService: UserReadService,
     private readonly userWriteService: UserWriteService,
     private readonly clusterRemovalService: ClusterRemovalService,
-    private readonly logger: Logger,
+    @Inject(USERS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   public async deleteOldUnclaimedUsers(): Promise<void> {
-    const cutoffDate = subHours(
-      new Date(),
-      getEnvConfig().anonymousAccounts.removeAfterHours,
-    );
+    const cutoffDate = subHours(new Date(), getEnvConfig().anonymousAccounts.removeAfterHours);
 
-    const cursor =
-      this.userReadService.readUnclaimedUserIdsCreatedBeforeCursor(cutoffDate);
+    const cursor = this.userReadService.readUnclaimedUserIdsCreatedBeforeCursor(cutoffDate);
 
     for await (const userId of cursor) {
       try {

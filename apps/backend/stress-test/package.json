@@ -13,6 +13,6 @@
     "@types/node": "^22.13.8"
   },
   "dependencies": {
-    "@logdash/js-sdk": "^1.0.8"
+    "@logdash/node": "^1.0.0"
   }
 }

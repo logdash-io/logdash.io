@@ -1,5 +1,6 @@
-import { Logger } from '@logdash/js-sdk';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { HTTP_PING_BUCKETS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { subHours } from 'date-fns';
 import {
@@ -14,7 +15,7 @@ export class HttpPingBucketIngestionService {
   constructor(
     private readonly httpPingAggregationService: HttpPingAggregationService,
     private readonly httpPingBucketWriteService: HttpPingBucketWriteService,
-    private readonly logger: Logger,
+    @Inject(HTTP_PING_BUCKETS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)

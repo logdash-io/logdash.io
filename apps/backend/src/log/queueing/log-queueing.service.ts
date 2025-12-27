@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateLogDto } from '../write/dto/create-log.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LogIngestionService } from '../ingestion/log-creation.service';
@@ -6,7 +6,8 @@ import { QueueLogDto } from './dto/queue-log.dto';
 import { Types } from 'mongoose';
 import { QueueLogResult } from './dto/queue-log.result';
 import { getOurEnv, OurEnv } from '../../shared/types/our-env.enum';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { LOGS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 @Injectable()
 export class LogQueueingService {
@@ -14,7 +15,7 @@ export class LogQueueingService {
 
   constructor(
     private readonly logCreationService: LogIngestionService,
-    private readonly logger: Logger,
+    @Inject(LOGS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   public queueLog(dto: QueueLogDto): QueueLogResult {

@@ -1,5 +1,6 @@
-import { Logger } from '@logdash/js-sdk';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { STATUS_PAGES_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { PublicDashboardReadService } from '../read/public-dashboard-read.service';
 import { PublicDashboardWriteService } from '../write/public-dashboard-write.service';
 import { CustomDomainWriteService } from '../../custom-domain/write/custom-domain-write.service';
@@ -10,7 +11,7 @@ export class PublicDashboardRemovalService {
     private readonly publicDashboardReadService: PublicDashboardReadService,
     private readonly publicDashboardWriteService: PublicDashboardWriteService,
     private readonly customDomainWriteService: CustomDomainWriteService,
-    private readonly logger: Logger,
+    @Inject(STATUS_PAGES_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   public async deletePublicDashboardsByClusterId(

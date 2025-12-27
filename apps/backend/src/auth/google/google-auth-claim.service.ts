@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -18,7 +19,8 @@ import { JwtPayloadDto } from '../custom-jwt/dto/jwt-payload.dto';
 import { GoogleAuthDataService } from './google-auth-data.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { AUTH_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { ClusterRole } from '../../cluster/core/enums/cluster-role.enum';
 
 @Injectable()
@@ -28,7 +30,7 @@ export class GoogleAuthClaimService {
     private readonly userReadService: UserReadService,
     private readonly userWriteService: UserWriteService,
     private readonly emitter: AuthEventEmitter,
-    private readonly logger: Logger,
+    @Inject(AUTH_LOGGER) private readonly logger: LogdashLogger,
     private readonly projectLimitService: ProjectLimitService,
     private readonly authGoogleDataService: GoogleAuthDataService,
     private readonly clusterReadService: ClusterReadService,

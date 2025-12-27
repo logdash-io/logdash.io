@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { MetricOperation } from '@logdash/js-sdk';
 import {
   AddToSetResult,
   MetricRegisterRedisService,
