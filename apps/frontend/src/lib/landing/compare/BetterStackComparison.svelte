@@ -1,20 +1,22 @@
 <script lang="ts">
   import MinusIcon from '$lib/domains/shared/icons/MinusIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
-  import { posthogComparisonData, featureComparisonData } from './compare.data';
+  import {
+    betterStackComparisonData,
+    betterStackFeatureComparisonData,
+  } from './compare.data';
   import { ArrowRightIcon } from 'lucide-svelte';
 </script>
 
 <div class="mx-auto flex w-full max-w-4xl flex-col gap-24 px-4 py-16 sm:px-8">
-  <!-- Headline & Sub-headline -->
   <header class="flex flex-col gap-6 text-center">
     <h1 class="text-4xl font-extrabold leading-tight md:text-6xl">
-      Logdash vs PostHog
+      Logdash vs Better Stack
     </h1>
     <p class="text-base-content/70 mx-auto max-w-2xl text-xl leading-relaxed">
-      PostHog is great, we use it at Logdash too. It’s the most powerful
-      analytics tool on the market. But despite some features overlap, it's a
-      fundamentally different tool. Let's break it down.
+      Better Stack is a solid monitoring platform. Both tools target startups
+      and founders. The difference? Logdash unifies everything into one simple
+      product, while Better Stack spreads features across multiple tools.
     </p>
 
     <div
@@ -27,7 +29,6 @@
     </div>
   </header>
 
-  <!-- THE COMPARISON -->
   <section class="flex flex-col gap-8">
     <div class="text-center">
       <h3 class="text-3xl font-bold">Who is who and what is what?</h3>
@@ -45,7 +46,7 @@
             <th
               class="border-b border-r border-base-content/10 bg-base-200/30 px-6 py-5 text-left text-base font-medium"
             >
-              PostHog
+              Better Stack
             </th>
             <th
               class="border-b border-base-content/10 bg-base-200/30 px-6 py-5 text-left text-base font-medium"
@@ -55,12 +56,12 @@
           </tr>
         </thead>
         <tbody>
-          {#each posthogComparisonData as point, i}
+          {#each betterStackComparisonData as point, i}
             <tr>
               <td
                 class={[
                   'border-r border-base-content/10 px-6 py-5 font-medium',
-                  { 'border-b': i < posthogComparisonData.length - 1 },
+                  { 'border-b': i < betterStackComparisonData.length - 1 },
                 ]}
               >
                 {point.feature}
@@ -68,7 +69,7 @@
               <td
                 class={[
                   'border-r border-base-content/10 px-6 py-5',
-                  { 'border-b': i < posthogComparisonData.length - 1 },
+                  { 'border-b': i < betterStackComparisonData.length - 1 },
                 ]}
               >
                 <div class="flex items-center gap-2">
@@ -87,7 +88,7 @@
                   'px-6 py-5',
                   {
                     'border-b border-base-content/10':
-                      i < posthogComparisonData.length - 1,
+                      i < betterStackComparisonData.length - 1,
                   },
                 ]}
               >
@@ -113,14 +114,12 @@
     <div class="text-center">
       <h2
         class="text-base-content/40 mb-2 text-sm font-bold uppercase tracking-widest"
-      >
-        <!-- The "No-Nonsense" Comparison -->
-      </h2>
+      ></h2>
       <h3 class="text-3xl font-bold">The "No-Nonsense" Comparison</h3>
       <p class="text-base-content/70 mx-auto mt-4 max-w-2xl text-lg">
-        Same Engine, Different Philosophy. Both tools are built on ClickHouse,
-        giving you the same enterprise-grade reliability and speed. We don’t
-        optimize for feature count - they have more. We optimize for clarity.
+        Both tools serve founders. Better Stack has more products. Logdash has
+        more integration. Choose based on your preference: suite of tools or
+        unified platform.
       </p>
     </div>
 
@@ -128,19 +127,19 @@
       <div class="grid md:grid-cols-2">
         <div class="bg-base-200/30 p-6 sm:p-8">
           <div class="mb-2 font-bold uppercase tracking-wide">
-            The "PostHog" Path
+            The "Better Stack" Path
             <br />
-            (Maximum Control)
+            (Multiple Products)
           </div>
           <ol class="text-base-content/80 mt-4 list-decimal space-y-2 pl-5">
-            <li>You install the SDK.</li>
-            <li>Then you manually build insights.</li>
-            <li>Then you configure ingestion pipelines.</li>
-            <li>Then you debug your configuration.</li>
+            <li>You sign up for Better Uptime.</li>
+            <li>Then you add Logtail for logs.</li>
+            <li>Then you purchase status pages separately.</li>
+            <li>Then you manage multiple billing.</li>
           </ol>
           <div class="mt-6 border-l-2 border-dashed pl-4">
             <div class="text-sm font-bold">Result:</div>
-            <div class="text-lg">Powerful data, eventually.</div>
+            <div class="text-lg">Good features, fragmented experience.</div>
           </div>
         </div>
 
@@ -151,26 +150,29 @@
             <div class="text-primary mb-2 font-bold uppercase tracking-wide">
               The "Logdash" Path
               <br />
-              (Maximum Speed)
+              (Unified Platform)
             </div>
             <ol
               class="text-base-content/80 mt-4 list-decimal space-y-2 pl-5 font-medium"
             >
-              <li>Your LLM integrates the SDK.</li>
+              <li>You add the SDK.</li>
+              <li>
+                Monitoring, logs, metrics, and status pages work together.
+              </li>
             </ol>
           </div>
           <div class="border-primary/40 mt-6 border-l-2 pl-4">
             <div class="text-sm font-bold">Result:</div>
             <div class="text-lg font-bold">
-              You see your logs, errors, and KPIs instantly.
+              Everything in one place, one price, one login.
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <p class="text-base-content/80 italic text-center px-3 sm:pb-0">
-      Logdash removes the "Tax of Complexity" from your observability.
+    <p class="text-base-content/80 italic text-center px-3 pb-2 sm:pb-0">
+      Logdash removes the fragmentation from your monitoring stack.
     </p>
   </section>
 
@@ -191,7 +193,7 @@
             <th
               class="border-b border-r border-base-content/10 bg-base-200/30 px-6 py-5 text-left text-base font-medium"
             >
-              PostHog
+              Better Stack
             </th>
             <th
               class="border-b border-base-content/10 bg-base-200/30 px-6 py-5 text-left text-base font-medium"
@@ -201,12 +203,14 @@
           </tr>
         </thead>
         <tbody>
-          {#each featureComparisonData as point, i}
+          {#each betterStackFeatureComparisonData as point, i}
             <tr>
               <td
                 class={[
                   'border-r border-base-content/10 px-6 py-5 font-medium',
-                  { 'border-b': i < featureComparisonData.length - 1 },
+                  {
+                    'border-b': i < betterStackFeatureComparisonData.length - 1,
+                  },
                 ]}
               >
                 {point.feature}
@@ -214,7 +218,9 @@
               <td
                 class={[
                   'border-r border-base-content/10 px-6 py-5',
-                  { 'border-b': i < featureComparisonData.length - 1 },
+                  {
+                    'border-b': i < betterStackFeatureComparisonData.length - 1,
+                  },
                 ]}
               >
                 <div class="flex items-center gap-2">
@@ -233,7 +239,7 @@
                   'px-6 py-5',
                   {
                     'border-b border-base-content/10':
-                      i < featureComparisonData.length - 1,
+                      i < betterStackFeatureComparisonData.length - 1,
                   },
                 ]}
               >
@@ -259,18 +265,18 @@
     <div class="text-center">
       <h2
         class="text-base-content/40 mb-2 text-sm font-bold uppercase tracking-widest"
-      >
-        <!-- Wise old man said -->
-      </h2>
-      <h3 class="text-3xl font-bold">The Trade-off: Control vs. Speed.</h3>
+      ></h2>
+      <h3 class="text-3xl font-bold">The Trade-off: Suite vs. Platform.</h3>
     </div>
 
     <div class="grid gap-8 md:grid-cols-2">
       <div class="ld-card bg-base-200/50 p-8">
-        <h4 class="mb-4 text-xl font-bold">PostHog is like Photoshop.</h4>
+        <h4 class="mb-4 text-xl font-bold">
+          Better Stack is like separate apps.
+        </h4>
         <p class="text-base-content/80 text-lg leading-relaxed">
-          You can do almost anything with it, but you need to learn layers,
-          masks, and filters. It’s designed for experts who need total control.
+          You get dedicated tools for uptime, logs, and incidents. Each is good,
+          but they don't talk to each other seamlessly.
         </p>
       </div>
 
@@ -279,34 +285,32 @@
           <span class="bg-primary/10 text-primary rounded-lg px-2 py-1">
             Logdash
           </span>
-          is like Instagram Filters.
+          is like a unified workspace.
         </h4>
         <p class="text-base-content/80 text-lg leading-relaxed">
-          You press a button, and it looks perfect immediately. It’s designed
-          for founders who need to move fast.
+          Everything is designed to work together from day one. One dashboard,
+          one mental model, one experience.
         </p>
       </div>
     </div>
 
     <p class="text-center text-base-content/80 text-lg">
-      Do you want to configure the tool, or do you want to get the juice (fast)?
+      Do you want separate products, or do you want one cohesive platform?
     </p>
   </section>
 
-  <!-- FINAL CTA -->
   <section class="mb-12 text-center">
     <h2 class="mb-4 text-3xl font-bold leading-normal">
-      Keep PostHog for the deep dives.
+      Both are great choices.
       <br />
-      Use Logdash for the daily drive.
+      We just think differently about integration.
     </h2>
     <p class="text-base-content/70 mx-auto mb-8 max-w-2xl text-xl">
-      You don't have to replace PostHog to enjoy Logdash.
-      <br />
-      Just don't use a quantum computer to check your pulse.
+      Better Stack offers you best-of-breed products. Logdash offers you a
+      unified experience. Try both and see which philosophy fits your workflow.
       <br />
       <span class="text-base-content font-medium">
-        See how simple "simple" can be.
+        See how unified monitoring feels.
       </span>
     </p>
     <a href="/demo-dashboard" class="btn btn-primary gap-2">
