@@ -89,6 +89,9 @@
         }
       ]
     },
+    "transformIgnorePatterns": [
+      "node_modules/(?!@logdash)"
+    ],
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
