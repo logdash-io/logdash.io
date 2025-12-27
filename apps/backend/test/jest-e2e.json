@@ -1,5 +1,9 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".spec.ts$",
@@ -8,7 +12,7 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "transformIgnorePatterns": [
-    "node_modules/(?!@logdash)"
-  ]
+  "moduleNameMapper": {
+    "^@logdash/node$": "<rootDir>/__mocks__/@logdash/node.ts"
+  }
 }
