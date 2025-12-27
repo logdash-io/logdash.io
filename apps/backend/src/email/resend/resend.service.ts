@@ -3,7 +3,8 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { AuthEvents } from '../../auth/events/auth-events.enum';
 import { UserRegisteredEvent } from '../../auth/events/definitions/user-registered.event';
 import { Resend } from 'resend';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { EMAILS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { ResendTemplatedEmailsService } from './resend-templated-emails.service';
 import {
@@ -16,7 +17,7 @@ export class ResendService {
   private resend = new Resend(getEnvConfig().resend.apiKey);
 
   constructor(
-    private readonly logger: Logger,
+    @Inject(EMAILS_LOGGER) private readonly logger: LogdashLogger,
     private readonly resendTemplatedEmailsService: ResendTemplatedEmailsService,
   ) {}
 

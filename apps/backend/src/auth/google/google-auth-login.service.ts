@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CustomJwtService } from '../custom-jwt/custom-jwt.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import { UserWriteService } from '../../user/write/user-write.service';
@@ -8,7 +8,9 @@ import { AuthEventEmitter } from '../events/auth-event.emitter';
 import { GoogleLoginBody } from './dto/google-login.body';
 import { TokenResponse } from '../../shared/responses/token.response';
 import { GoogleAuthDataService } from './google-auth-data.service';
-import { Logger, Metrics } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { LogdashMetrics } from '../../shared/logdash/aggregate-metrics';
+import { AUTH_LOGGER, LOGDASH_METRICS } from '../../shared/logdash/logdash-tokens';
 import { AuditLogUserAction } from '../../audit-log/core/enums/audit-log-actions.enum';
 import { Actor } from '../../audit-log/core/enums/actor.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
@@ -21,9 +23,9 @@ export class GoogleAuthLoginService {
     private readonly userReadService: UserReadService,
     private readonly userWriteService: UserWriteService,
     private readonly emitter: AuthEventEmitter,
-    private readonly logger: Logger,
+    @Inject(AUTH_LOGGER) private readonly logger: LogdashLogger,
     private readonly authGoogleDataService: GoogleAuthDataService,
-    private readonly metrics: Metrics,
+    @Inject(LOGDASH_METRICS) private readonly metrics: LogdashMetrics,
     private readonly auditLog: AuditLog,
   ) {}
 
@@ -69,7 +71,7 @@ export class GoogleAuthLoginService {
         emailAccepted: dto.emailAccepted || false,
       });
 
-      this.metrics.mutate('loginGoogle', 1);
+      this.metrics.mutateMetric('loginGoogle', 1);
 
       this.auditLog.create({
         userId: user.id,
@@ -86,7 +88,7 @@ export class GoogleAuthLoginService {
 
     this.logger.log(`Logged in existing user`, { email, userId: user.id });
 
-    this.metrics.mutate('loginGoogle', 1);
+    this.metrics.mutateMetric('loginGoogle', 1);
 
     this.auditLog.create({
       userId: user.id,

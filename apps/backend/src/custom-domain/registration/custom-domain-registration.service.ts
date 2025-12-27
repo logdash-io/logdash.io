@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CustomDomainReadService } from '../read/custom-domain-read.service';
 import { CustomDomainWriteService } from '../write/custom-domain-write.service';
@@ -8,7 +8,8 @@ import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 import { AuditLogCustomDomainAction } from '../../audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 import { getEnvConfig } from '../../shared/configs/env-configs';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { CUSTOM_DNS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 const MAX_ATTEMPTS = 60;
 
@@ -19,7 +20,7 @@ export class CustomDomainRegistrationService {
     private readonly customDomainWriteService: CustomDomainWriteService,
     private readonly customDomainDnsService: CustomDomainDnsService,
     private readonly auditLog: AuditLog,
-    private readonly logger: Logger,
+    @Inject(CUSTOM_DNS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   @Cron(CronExpression.EVERY_5_SECONDS)

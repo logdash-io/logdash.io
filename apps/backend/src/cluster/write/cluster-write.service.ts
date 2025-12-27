@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, UpdateQuery } from 'mongoose';
 import { ClusterEntity } from '../core/entities/cluster.entity';
@@ -7,7 +7,8 @@ import { ClusterNormalized } from '../core/entities/cluster.interface';
 import { ClusterSerializer } from '../core/entities/cluster.serializer';
 import { UpdateClusterDto } from './dto/update-cluster.dto';
 import { ClusterTier } from '../core/enums/cluster-tier.enum';
-import { Metrics } from '@logdash/js-sdk';
+import { LogdashMetrics } from '../../shared/logdash/aggregate-metrics';
+import { LOGDASH_METRICS } from '../../shared/logdash/logdash-tokens';
 import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 import {
   AuditLogClusterAction,
@@ -22,7 +23,7 @@ export class ClusterWriteService {
   constructor(
     @InjectModel(ClusterEntity.name)
     private model: Model<ClusterEntity>,
-    private readonly metrics: Metrics,
+    @Inject(LOGDASH_METRICS) private readonly metrics: LogdashMetrics,
     private readonly auditLog: AuditLog,
   ) {}
 
@@ -35,7 +36,7 @@ export class ClusterWriteService {
       color: dto.color,
     });
 
-    this.metrics.mutate('clustersCreated', 1);
+    this.metrics.mutateMetric('clustersCreated', 1);
 
     this.auditLog.create({
       userId: dto.creatorId,

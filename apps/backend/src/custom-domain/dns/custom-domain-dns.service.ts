@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { resolveCname } from 'dns/promises';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { CUSTOM_DNS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 @Injectable()
 export class CustomDomainDnsService {
-  constructor(private readonly logger: Logger) {}
+  constructor(@Inject(CUSTOM_DNS_LOGGER) private readonly logger: LogdashLogger) {}
 
   public async checkCnameRecord(domain: string): Promise<string | null> {
     try {

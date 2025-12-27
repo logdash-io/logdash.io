@@ -1,4 +1,4 @@
-import { createLogDash } from '@logdash/js-sdk';
+import { Logdash } from '@logdash/node';
 import dns from 'dns/promises';
 
 interface ProjectResponse {
@@ -119,22 +119,20 @@ async function main() {
 }
 
 function test() {
-  // const logdash1 = createLogDash({
-  //   apiKey: 'm409bnFcnhmpfQ3hozI2YkP49WTmto31',
+  // const logdash1 = new Logdash('m409bnFcnhmpfQ3hozI2YkP49WTmto31', {
   //   host: 'https://dev-api.logdash.io',
   // });
 
   // for (let i = 0; i < 100; i++) {
-  //   logdash1.metrics.set(`test${i}`, i);
+  //   logdash1.setMetric(`test${i}`, i);
   // }
 
-  const logdash2 = createLogDash({
-    apiKey: 'mnL6qiDcki0FZYqOWlaQD50K7pZ5gLtn',
+  const logdash2 = new Logdash('mnL6qiDcki0FZYqOWlaQD50K7pZ5gLtn', {
     host: 'https://dev-api.logdash.io',
   });
 
   for (let i = 0; i < 100; i++) {
-    logdash2.metrics.mutate(`new${i}`, 1);
+    logdash2.mutateMetric(`new${i}`, 1);
   }
 }
 

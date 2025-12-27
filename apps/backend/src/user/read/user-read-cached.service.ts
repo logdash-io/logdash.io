@@ -1,14 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UserReadService } from './user-read.service';
 import { UserTier } from '../core/enum/user-tier.enum';
 import { RedisService } from '../../shared/redis/redis.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { USERS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 @Injectable()
 export class UserReadCachedService {
   constructor(
     private readonly userReadService: UserReadService,
-    private readonly logger: Logger,
+    @Inject(USERS_LOGGER) private readonly logger: LogdashLogger,
     private readonly redisService: RedisService,
   ) {}
 

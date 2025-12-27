@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ProjectEntity } from '../core/entities/project.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, UpdateQuery } from 'mongoose';
@@ -8,7 +8,8 @@ import { ProjectSerializer } from '../core/entities/project.serializer';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectTier } from '../core/enums/project-tier.enum';
 import { ProjectEventEmitter } from '../events/project-event.emitter';
-import { Metrics } from '@logdash/js-sdk';
+import { LogdashMetrics } from '../../shared/logdash/aggregate-metrics';
+import { LOGDASH_METRICS } from '../../shared/logdash/logdash-tokens';
 import { Actor } from '../../audit-log/core/enums/actor.enum';
 import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
@@ -19,7 +20,7 @@ export class ProjectWriteService {
   constructor(
     @InjectModel(ProjectEntity.name) private model: Model<ProjectEntity>,
     private readonly projectEventEmitter: ProjectEventEmitter,
-    private readonly metrics: Metrics,
+    @Inject(LOGDASH_METRICS) private readonly metrics: LogdashMetrics,
     private readonly auditLog: AuditLog,
   ) {}
 
@@ -51,7 +52,7 @@ export class ProjectWriteService {
       relatedEntityId: projectNormalized.id,
     });
 
-    this.metrics.mutate('projectsCreated', 1);
+    this.metrics.mutateMetric('projectsCreated', 1);
 
     return projectNormalized;
   }

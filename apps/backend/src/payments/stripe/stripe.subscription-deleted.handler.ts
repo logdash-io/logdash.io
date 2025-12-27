@@ -1,14 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UserReadService } from '../../user/read/user-read.service';
 import Stripe from 'stripe';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { STRIPE_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { SubscriptionManagementService } from '../../subscription/management/subscription-management.service';
 import { StripeEventEmitter } from './stripe-event.emitter';
 
 @Injectable()
 export class StripeSubscriptionDeletedHandler {
   constructor(
-    private readonly logger: Logger,
+    @Inject(STRIPE_LOGGER) private readonly logger: LogdashLogger,
     private readonly userReadService: UserReadService,
     private readonly subscriptionManagementService: SubscriptionManagementService,
     private readonly stripeEventEmitter: StripeEventEmitter,

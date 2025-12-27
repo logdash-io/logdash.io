@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ProjectFeature } from '../core/enums/project-feature.enum';
 import { LogReadService } from '../../log/read/log-read.service';
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { PROJECTS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 @Injectable()
 export class ProjectFeaturesService {
@@ -11,7 +12,7 @@ export class ProjectFeaturesService {
     private readonly logReadService: LogReadService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
-    private readonly logger: Logger,
+    @Inject(PROJECTS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   async getProjectFeatures(projectId: string): Promise<ProjectFeature[]> {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import {
   NotificationChannelProvider,
@@ -6,12 +6,13 @@ import {
   SendWelcomeMessageSpecificProviderDto,
 } from '../notification-channel-provider';
 import { TelegramOptions } from '../../core/types/telegram-options.type';
-import { Logger } from '@logdash/js-sdk';
+import { LogdashLogger } from '../../../shared/logdash/aggregate-logger';
+import { NOTIFICATIONS_LOGGER } from '../../../shared/logdash/logdash-tokens';
 import { HttpMonitorStatus } from '../../../http-monitor/status/enum/http-monitor-status.enum';
 
 @Injectable()
 export class TelegramNotificationChannelProvider implements NotificationChannelProvider {
-  constructor(private readonly logger: Logger) {}
+  constructor(@Inject(NOTIFICATIONS_LOGGER) private readonly logger: LogdashLogger) {}
 
   public async sendHttpMonitorAlertMessage(
     dto: SendHttpMonitorAlertMessageSpecificProviderDto,

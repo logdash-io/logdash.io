@@ -1,6 +1,6 @@
 import { createTestApp } from '../utils/bootstrap';
 import { NewMetricQueueingService } from '../../src/metric/new-queueing/new-metric-queueing.service';
-import { MetricOperation } from '@logdash/js-sdk';
+import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
 import { MetricBufferService } from '../../src/metric/buffer/metric-buffer.service';
 import { randomIntegerBetweenInclusive } from '../../src/shared/utils/random-integer-between';
 import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-configs';

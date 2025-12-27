@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { Logger, MetricOperation } from '@logdash/js-sdk';
+import { Inject, Injectable } from '@nestjs/common';
+import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { METRICS_LOGGER } from '../../shared/logdash/logdash-tokens';
+import { MetricOperation } from '../core/enums/metric-operation.enum';
 import { MetricRegisterWriteService } from '../../metric-register/write/metric-register-write.service';
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { MetricBufferDataService } from './metric-buffer.data.service';
@@ -14,7 +16,7 @@ export class MetricBufferService {
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly averageRecorder: AverageRecorder,
-    private readonly logger: Logger,
+    @Inject(METRICS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
   public async addToBuffer(dto: RecordMetricDto): Promise<void> {
