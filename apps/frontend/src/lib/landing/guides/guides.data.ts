@@ -79,5 +79,6 @@ export const migrationPrompt = `Migrate my codebase from @logdash/js-sdk to @log
 3. Replace initialization: Change \`const { logger, metrics } = createLogDash({ apiKey: '...' })\` to \`const logdash = new Logdash('...')\`
 4. Replace logger calls: Change \`logger.info/error/warn/debug()\` to \`logdash.info/error/warn/debug()\`
 5. Replace metrics calls: Change \`metrics.set()\` to \`logdash.setMetric()\` and \`metrics.mutate()\` to \`logdash.mutateMetric()\`
+6. On program exit, call \`logdash.flush()\` to ensure all logs and metrics are sent.
 
 Keep the same API key values. The new SDK uses a class-based API where logging and metrics are methods on the same Logdash instance.`;
