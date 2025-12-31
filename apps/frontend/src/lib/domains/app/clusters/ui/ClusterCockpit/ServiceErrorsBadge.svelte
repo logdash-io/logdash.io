@@ -1,6 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
+  import { page } from '$app/state';
   import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
+  import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
   import { DangerIcon, CheckIcon } from '@logdash/hyper-ui/icons';
 
   type Props = {
@@ -12,6 +15,8 @@
   const POLL_INTERVAL_MS = 60 * 1000;
   const ONE_HOUR_MS = 60 * 60 * 1000;
   const MAX_ERRORS = 100;
+
+  const clusterId = $derived(page.params.cluster_id);
 
   let errorCount = $state(0);
   let loading = $state(true);
@@ -26,7 +31,7 @@
 
     try {
       const logs = await LogsService.getProjectLogs(projectId, {
-        level: 'error',
+        levels: ['error'],
         startDate: oneHourAgo,
         limit: MAX_ERRORS,
       });
@@ -36,6 +41,12 @@
     } finally {
       loading = false;
     }
+  }
+
+  function onBadgeClick(e: MouseEvent): void {
+    e.stopPropagation();
+    filtersStore.setLevels(['error']);
+    goto(`/app/clusters/${clusterId}/${projectId}/logs`);
   }
 
   onMount(() => {
@@ -50,10 +61,13 @@
     <div class="loading loading-spinner w-3.5 text-base-content/60"></div>
   </div>
 {:else if errorCount > 0}
-  <div class="flex items-center gap-1.5 rounded-lg bg-error/10 px-2 py-1">
+  <button
+    onclick={onBadgeClick}
+    class="flex items-center gap-1.5 rounded-lg bg-error/10 px-2 py-1 transition-colors hover:bg-error/20 cursor-pointer"
+  >
     <DangerIcon class="size-3 text-error" />
     <span class="text-xs text-error">{errorLabel}</span>
-  </div>
+  </button>
 {:else}
   <div class="flex items-center gap-1.5 rounded-lg bg-success/10 px-2 py-1">
     <CheckIcon class="size-3 text-success" />
