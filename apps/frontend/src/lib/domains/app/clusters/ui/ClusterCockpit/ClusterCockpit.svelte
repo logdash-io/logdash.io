@@ -6,6 +6,7 @@
   import { getStatusFromMonitor } from '$lib/domains/app/clusters/application/get-status-from-monitor.js';
   import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
   import ServiceCard from './ServiceTile.svelte';
+  import CreateServiceTile from './CreateServiceTile.svelte';
   import EmptyState from './EmptyState.svelte';
 
   type Props = {
@@ -45,18 +46,20 @@
     <p class="text-base-content/60 text-sm">Project overview</p>
   </div>
 
-  <div class="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-    {#each projects as project}
-      <ServiceCard
-        projectId={project.id}
-        name={project.name}
-        status={getStatus(project.id)}
-        onclick={() => onServiceSelect(project.id)}
-      />
-    {/each}
+  {#if projects.length === 0}
+    <EmptyState {clusterId} />
+  {:else}
+    <div class="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+      {#each projects as project}
+        <ServiceCard
+          projectId={project.id}
+          name={project.name}
+          status={getStatus(project.id)}
+          onclick={() => onServiceSelect(project.id)}
+        />
+      {/each}
 
-    {#if !projects.length}
-      <EmptyState />
-    {/if}
-  </div>
+      <CreateServiceTile {clusterId} />
+    </div>
+  {/if}
 </div>
