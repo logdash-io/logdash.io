@@ -77,7 +77,7 @@
       const errorPromises = servicesWithLogging.map(async (service) => {
         try {
           const logs = await LogsService.getProjectLogs(service.id, {
-            level: 'error',
+            levels: ['error'],
             limit: 3,
           });
           return logs.map((log) => ({
