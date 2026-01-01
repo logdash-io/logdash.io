@@ -31,7 +31,7 @@ describe('Metrics (writes)', () => {
 
     // when
     await bootstrap.utils.metricUtils.recordMetric({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       value: 1,
       apiKey: apiKey.value,
       operation: MetricOperation.Set,
@@ -40,7 +40,7 @@ describe('Metrics (writes)', () => {
     advanceBy(30 * 1_000);
 
     await bootstrap.utils.metricUtils.recordMetric({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       value: 2,
       apiKey: apiKey.value,
       operation: MetricOperation.Set,
@@ -49,7 +49,7 @@ describe('Metrics (writes)', () => {
     advanceBy(60 * 1_000);
 
     await bootstrap.utils.metricUtils.recordMetric({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       value: 3,
       apiKey: apiKey.value,
       operation: MetricOperation.Set,
@@ -90,25 +90,25 @@ describe('Metrics (writes)', () => {
 
     await service.queueMetrics([
       {
-        name: 'Users',
+        metricRegisterEntryId: 'users',
         value: 100,
         projectId: apiKey.projectId,
         operation: MetricOperation.Change,
       },
       {
-        name: 'Users',
+        metricRegisterEntryId: 'users',
         value: 100,
         projectId: apiKey.projectId,
         operation: MetricOperation.Change,
       },
       {
-        name: 'Users',
+        metricRegisterEntryId: 'users',
         value: 100,
         projectId: apiKey.projectId,
         operation: MetricOperation.Change,
       },
       {
-        name: 'Users',
+        metricRegisterEntryId: 'users',
         value: 10,
         projectId: apiKey.projectId,
         operation: MetricOperation.Set,
@@ -118,7 +118,7 @@ describe('Metrics (writes)', () => {
     await service.processQueue();
 
     await service.queueMetric({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       value: 1,
       projectId: apiKey.projectId,
       operation: MetricOperation.Change,
@@ -229,28 +229,28 @@ describe('Metrics (writes)', () => {
     const now = new Date();
 
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getMinuteBucket(twoHoursAgo),
       granularity: MetricGranularity.Minute,
       value: 5,
       projectId: apiKey.projectId,
     });
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getMinuteBucket(now),
       granularity: MetricGranularity.Minute,
       value: 5,
       projectId: apiKey.projectId,
     });
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getHourBucket(now),
       granularity: MetricGranularity.Hour,
       value: 5,
       projectId: apiKey.projectId,
     });
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getDayBucket(now),
       granularity: MetricGranularity.Day,
       value: 5,
@@ -277,28 +277,28 @@ describe('Metrics (writes)', () => {
     const now = new Date();
 
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getMinuteBucket(now),
       granularity: MetricGranularity.Minute,
       value: 5,
       projectId: apiKey.projectId,
     });
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getHourBucket(twoHoursAgo),
       granularity: MetricGranularity.Hour,
       value: 5,
       projectId: apiKey.projectId,
     });
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getHourBucket(twoDaysAgo),
       granularity: MetricGranularity.Hour,
       value: 5,
       projectId: apiKey.projectId,
     });
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getDayBucket(now),
       granularity: MetricGranularity.Day,
       value: 5,
@@ -325,28 +325,28 @@ describe('Metrics (writes)', () => {
     const now = new Date();
 
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getMinuteBucket(now),
       granularity: MetricGranularity.Minute,
       value: 5,
       projectId: apiKey.projectId,
     });
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getHourBucket(now),
       granularity: MetricGranularity.Hour,
       value: 5,
       projectId: apiKey.projectId,
     });
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getDayBucket(twoDaysAgo),
       granularity: MetricGranularity.Day,
       value: 5,
       projectId: apiKey.projectId,
     });
     await bootstrap.models.metricModel.create({
-      name: 'Users',
+      metricRegisterEntryId: 'users',
       timeBucket: MetricBucketingService.getDayBucket(tenDaysAgo),
       granularity: MetricGranularity.Day,
       value: 5,
