@@ -75,13 +75,15 @@ describe('UserTtlService', () => {
       throw new Error('Cluster not found for user');
     }
 
-    const project = await bootstrap.models.projectModel.findOne({ clusterId: cluster._id });
+    const project = await bootstrap.models.projectModel.findOne({
+      clusterId: cluster._id.toString(),
+    });
     if (!project) {
       throw new Error('Project not found for cluster');
     }
 
     const httpMonitor = await bootstrap.models.httpMonitorModel.create({
-      projectId: project._id,
+      projectId: project._id.toString(),
       name: 'Test Monitor',
       url: 'https://example.com',
     });
