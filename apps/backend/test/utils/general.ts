@@ -155,7 +155,15 @@ export class GeneralUtils {
           customer: 'mock-customer-id',
           customer_email: userEmail,
           lines: {
-            data: [{ price: { id: getEnvConfig().stripe.earlyBirdPriceId } }],
+            data: [
+              {
+                pricing: {
+                  price_details: {
+                    price: { id: getEnvConfig().stripe.earlyBirdPriceId },
+                  },
+                },
+              },
+            ],
           },
         },
       },
