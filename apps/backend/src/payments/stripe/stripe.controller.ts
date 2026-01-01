@@ -54,6 +54,8 @@ export class StripeController {
     @Query() query: CheckoutQuery,
     @CurrentUserId() userId: string,
   ): Promise<CheckoutResponse> {
+    this.logger.log(`Checkout request received`, { userId, tier: query.tier });
+
     const user = await this.userReadService.readByIdOrThrow(userId);
 
     const isTrial = !user.paymentsMetadata?.trialUsed;
@@ -75,6 +77,8 @@ export class StripeController {
     @CurrentUserId() userId: string,
     @Body() body: ChangePaidPlanBody,
   ): Promise<void> {
+    this.logger.log(`Change paid plan request received`, { userId, tier: body.tier });
+
     await this.stripeService.changePaidPlan(userId, body.tier);
   }
 
@@ -83,6 +87,8 @@ export class StripeController {
   public async getCustomerPortalUrl(
     @CurrentUserId() userId: string,
   ): Promise<CustomerPortalResponse> {
+    this.logger.log(`Customer portal request received`, { userId });
+
     const url = await this.stripeService.getCustomerPortalUrl(userId);
     return {
       customerPortalUrl: url,

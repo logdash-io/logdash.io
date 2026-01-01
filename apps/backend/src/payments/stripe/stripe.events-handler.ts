@@ -23,12 +23,12 @@ export class StripeEventsHandler {
         getEnvConfig().stripe.signature,
       );
     } catch (error) {
-      this.logger.log('[STRIPE] Error while getting stripe event', { error });
+      this.logger.error('Error while getting stripe event', { error });
     }
   }
 
   public async handleEvent(event: Stripe.Event): Promise<void> {
-    this.logger.log(`[STRIPE] Handling stripe event`, { event });
+    this.logger.log(`Handling stripe event`, { event });
 
     if (event.type === 'invoice.payment_succeeded') {
       return await this.stripePaymentSucceededHandler.handle(event);
@@ -37,5 +37,7 @@ export class StripeEventsHandler {
     if (event.type === 'customer.subscription.deleted') {
       return await this.stripeSubscriptionDeletedHandler.handle(event);
     }
+
+    this.logger.warn(`Unhandled event type, skipping`, { eventType: event.type });
   }
 }

@@ -5,9 +5,7 @@ import { UserEntity, UserSchema } from '../core/entities/user.entity';
 import { UserReadCachedService } from './user-read-cached.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: UserEntity.name, schema: UserSchema }]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: UserEntity.name, schema: UserSchema }])],
   providers: [UserReadService, UserReadCachedService],
   exports: [UserReadService, UserReadCachedService],
 })

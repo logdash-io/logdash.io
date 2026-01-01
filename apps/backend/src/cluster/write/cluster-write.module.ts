@@ -4,11 +4,7 @@ import { ClusterWriteService } from './cluster-write.service';
 import { ClusterEntity, ClusterSchema } from '../core/entities/cluster.entity';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: ClusterEntity.name, schema: ClusterSchema },
-    ]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: ClusterEntity.name, schema: ClusterSchema }])],
   providers: [ClusterWriteService],
   exports: [ClusterWriteService],
 })

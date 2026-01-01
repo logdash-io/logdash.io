@@ -7,9 +7,7 @@ export class ClusterFeaturesService {
     return [];
   }
 
-  async getClusterFeaturesMany(
-    clusterIds: string[],
-  ): Promise<Record<string, ClusterFeature[]>> {
+  async getClusterFeaturesMany(clusterIds: string[]): Promise<Record<string, ClusterFeature[]>> {
     const result: Record<string, ClusterFeature[]> = {};
 
     await Promise.all(

@@ -74,6 +74,12 @@ export class StripeCheckoutService {
       throw new Error(`Failed to process payment for user: ${user.email}`);
     }
 
+    this.logger.log(`Checkout URL generated successfully`, {
+      userId: dto.userId,
+      tier: dto.tier,
+      isTrial: dto.isTrial,
+    });
+
     return checkoutSession.url;
   }
 }
