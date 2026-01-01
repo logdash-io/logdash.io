@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 @Schema({ collection: 'publicDashboards', timestamps: true })
 export class PublicDashboardEntity {
-  _id: string;
+  _id: Types.ObjectId;
 
   @Prop()
   clusterId: string;

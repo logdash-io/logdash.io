@@ -42,7 +42,8 @@ export class StripePaymentSucceededHandler {
       return;
     }
 
-    const priceId = event.data.object.lines.data[0].price?.id;
+    const price = event.data.object.lines.data[0].pricing?.price_details?.price;
+    const priceId = typeof price === 'string' ? price : price?.id;
     const customerId = event.data.object.customer;
     const email = event.data.object.customer_email;
 
@@ -96,7 +97,7 @@ export class StripePaymentSucceededHandler {
       return false;
     }
 
-    if (!event.data.object.lines.data[0].price) {
+    if (!event.data.object.lines.data[0].pricing?.price_details?.price) {
       this.logger.error(`[STRIPE] Price is missing`, {
         event,
       });

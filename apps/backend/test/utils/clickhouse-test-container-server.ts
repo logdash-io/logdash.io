@@ -39,7 +39,7 @@ export const rootClickHouseTestModule = () => {
           const options = global.clickhouseContainer.getClientOptions();
 
           const client = createClient({
-            host: options.url,
+            url: options.url,
             username: options.username,
             password: options.password,
             database: options.database,
