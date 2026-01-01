@@ -33,7 +33,11 @@ if [ "$FILE_SIZE" -lt 160 ]; then
     exit 1
 fi
 
-# Extract salt, IV, and HMAC from the beginning of the file
+# Create temp directory for intermediate files
+TEMP_DIR=$(mktemp -d)
+trap "rm -rf $TEMP_DIR" EXIT
+
+# Extract salt, IV, and HMAC from the beginning of the file (first 160 bytes are text header)
 SALT=$(head -c 64 "$ENCRYPTED_FILE")
 IV=$(head -c 96 "$ENCRYPTED_FILE" | tail -c 32)
 HMAC=$(head -c 160 "$ENCRYPTED_FILE" | tail -c 64)
@@ -64,11 +68,12 @@ echo "🔍 Extracted HMAC: ${HMAC:0:16}..."
 DERIVED_KEY=$(echo -n "$ENCRYPTION_KEY$SALT" | openssl dgst -sha256 -binary | xxd -p -c 64)
 HMAC_KEY=$(echo -n "$ENCRYPTION_KEY$SALT$IV" | openssl dgst -sha256 -binary | xxd -p -c 64)
 
-# Extract encrypted data (skip first 160 bytes which contain salt, IV, and HMAC)
-ENCRYPTED_DATA=$(tail -c +161 "$ENCRYPTED_FILE")
+# Extract encrypted data to temp file (skip first 160 bytes which contain salt, IV, and HMAC)
+ENCRYPTED_TEMP="$TEMP_DIR/encrypted.bin"
+tail -c +161 "$ENCRYPTED_FILE" > "$ENCRYPTED_TEMP"
 
-# Verify HMAC before decrypting
-CALCULATED_HMAC=$(echo -n "$ENCRYPTED_DATA" | openssl dgst -sha256 -hmac "$HMAC_KEY" -binary | xxd -p -c 64)
+# Verify HMAC before decrypting (compute from file, not variable)
+CALCULATED_HMAC=$(openssl dgst -sha256 -hmac "$HMAC_KEY" -binary "$ENCRYPTED_TEMP" | xxd -p -c 64)
 
 if [ "$HMAC" != "$CALCULATED_HMAC" ]; then
     echo "❌ HMAC verification failed - file may be corrupted or tampered with"
@@ -77,14 +82,17 @@ fi
 
 echo "✅ HMAC verification passed"
 
-# Decrypt the data
-echo -n "$ENCRYPTED_DATA" | base64 -d | openssl enc -aes-256-cbc -d -K "$DERIVED_KEY" -iv "$IV" -out "$OUTPUT_FILE"
+# Decrypt the data (stream from file to file)
+if ! openssl enc -aes-256-cbc -d -K "$DERIVED_KEY" -iv "$IV" -in "$ENCRYPTED_TEMP" -out "$OUTPUT_FILE"; then
+    echo "❌ Decryption failed"
+    exit 1
+fi
 
-if [ $? -eq 0 ]; then
+if [ -f "$OUTPUT_FILE" ]; then
     echo "✅ Backup decrypted successfully"
     echo "📊 Encrypted size: $(stat -c%s "$ENCRYPTED_FILE" 2>/dev/null || stat -f%z "$ENCRYPTED_FILE") bytes"
     echo "📊 Decrypted size: $(stat -c%s "$OUTPUT_FILE" 2>/dev/null || stat -f%z "$OUTPUT_FILE") bytes"
 else
-    echo "❌ Decryption failed"
+    echo "❌ Decryption failed - output file not created"
     exit 1
-fi 
+fi
