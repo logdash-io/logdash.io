@@ -3,16 +3,22 @@
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import { Feature } from '$lib/domains/shared/types.js';
   import {
     SettingsCard,
     SettingsCardHeader,
     SettingsCardItem,
   } from '$lib/domains/shared/ui/components/settings-card/index.js';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
+  import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
   import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
   import HashIcon from '$lib/domains/shared/icons/HashIcon.svelte';
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
+  import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
+  import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
+  import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
 
   type Props = {
@@ -96,6 +102,69 @@
     if (e.key === 'Escape') {
       onCancelRenaming();
     }
+  }
+
+  const basePath = $derived(`/app/clusters/${clusterId}/${projectId}`);
+
+  const hasLogging = $derived(
+    projectsState.hasFeature(projectId, Feature.LOGGING),
+  );
+  const hasMetrics = $derived(
+    projectsState.hasFeature(projectId, Feature.METRICS),
+  );
+  const hasMonitoring = $derived(
+    projectsState.hasFeature(projectId, Feature.MONITORING),
+  );
+
+  const availableFeatures = $derived.by(() => {
+    const features: Array<{
+      id: Feature;
+      label: string;
+      description: string;
+      icon: typeof LogsIcon;
+      path: string;
+    }> = [];
+
+    if (!hasLogging) {
+      features.push({
+        id: Feature.LOGGING,
+        label: 'Logging',
+        description: 'Collect and analyze logs from your service',
+        icon: LogsIcon,
+        path: `${basePath}/logs`,
+      });
+    }
+
+    if (!hasMetrics) {
+      features.push({
+        id: Feature.METRICS,
+        label: 'Metrics',
+        description: 'Track custom metrics and performance indicators',
+        icon: MetricsIcon,
+        path: `${basePath}/metrics`,
+      });
+    }
+
+    if (!hasMonitoring) {
+      features.push({
+        id: Feature.MONITORING,
+        label: 'Monitoring',
+        description: 'Monitor uptime with HTTP health checks',
+        icon: MonitoringIcon,
+        path: `${basePath}/monitoring`,
+      });
+    }
+
+    return features;
+  });
+
+  let addingFeature = $state<Feature | null>(null);
+
+  async function onAddFeature(feature: Feature, path: string): Promise<void> {
+    addingFeature = feature;
+    await projectsState.addFeature(projectId, feature);
+    addingFeature = null;
+    goto(path);
   }
 </script>
 
@@ -189,6 +258,43 @@
       {/snippet}
     </SettingsCardItem>
   </SettingsCard>
+
+  {#if availableFeatures.length > 0}
+    <SettingsCard>
+      <SettingsCardHeader
+        title="Features"
+        description="Add additional capabilities to your service"
+        icon={CubeIcon}
+      />
+
+      {#each availableFeatures as feature, index (feature.id)}
+        <SettingsCardItem
+          icon={feature.icon}
+          showBorder={index < availableFeatures.length - 1}
+        >
+          {#snippet children()}
+            <p class="font-medium">{feature.label}</p>
+            <p class="text-base-content/60 text-sm">{feature.description}</p>
+          {/snippet}
+          {#snippet action()}
+            <button
+              onclick={() => onAddFeature(feature.id, feature.path)}
+              disabled={addingFeature !== null}
+              class="btn btn-primary btn-outline btn-sm"
+              data-posthog-id="add-feature-settings-button"
+            >
+              {#if addingFeature === feature.id}
+                <span class="loading loading-spinner loading-xs"></span>
+              {:else}
+                <PlusIcon class="size-4" />
+                Add
+              {/if}
+            </button>
+          {/snippet}
+        </SettingsCardItem>
+      {/each}
+    </SettingsCard>
+  {/if}
 
   <SettingsCard variant="danger">
     <SettingsCardHeader

@@ -8,7 +8,6 @@
   import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
   import ClusterCreatorTile from '$lib/domains/app/clusters/ui/ClustersList/ClusterCreatorTile.svelte';
   import { type ServiceStatus } from '$lib/domains/app/clusters/ui/ClustersList/CircularHealthChart.svelte';
-  import ClusterHealthSummary from '$lib/domains/app/clusters/ui/ClustersList/ClusterHealthSummary.svelte';
   import { type Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
   import { Feature } from '$lib/domains/shared/types.js';
   import type { MonitorStatus } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
@@ -142,7 +141,7 @@
       </div>
 
       {#if hasServices}
-        <ClusterHealthSummary clusterId={cluster.id} {services} />
+        <!-- <ClusterHealthSummary clusterId={cluster.id} {services} /> -->
 
         <div class="flex flex-wrap gap-1.5">
           {#each cluster.projects as project}
