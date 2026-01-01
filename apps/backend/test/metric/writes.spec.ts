@@ -31,7 +31,7 @@ describe('Metrics (writes)', () => {
 
     // when
     await bootstrap.utils.metricUtils.recordMetric({
-      metricRegisterEntryId: 'users',
+      name: 'users',
       value: 1,
       apiKey: apiKey.value,
       operation: MetricOperation.Set,
@@ -40,7 +40,7 @@ describe('Metrics (writes)', () => {
     advanceBy(30 * 1_000);
 
     await bootstrap.utils.metricUtils.recordMetric({
-      metricRegisterEntryId: 'users',
+      name: 'users',
       value: 2,
       apiKey: apiKey.value,
       operation: MetricOperation.Set,
@@ -49,7 +49,7 @@ describe('Metrics (writes)', () => {
     advanceBy(60 * 1_000);
 
     await bootstrap.utils.metricUtils.recordMetric({
-      metricRegisterEntryId: 'users',
+      name: 'users',
       value: 3,
       apiKey: apiKey.value,
       operation: MetricOperation.Set,
@@ -90,25 +90,25 @@ describe('Metrics (writes)', () => {
 
     await service.queueMetrics([
       {
-        metricRegisterEntryId: 'users',
+        name: 'users',
         value: 100,
         projectId: apiKey.projectId,
         operation: MetricOperation.Change,
       },
       {
-        metricRegisterEntryId: 'users',
+        name: 'users',
         value: 100,
         projectId: apiKey.projectId,
         operation: MetricOperation.Change,
       },
       {
-        metricRegisterEntryId: 'users',
+        name: 'users',
         value: 100,
         projectId: apiKey.projectId,
         operation: MetricOperation.Change,
       },
       {
-        metricRegisterEntryId: 'users',
+        name: 'users',
         value: 10,
         projectId: apiKey.projectId,
         operation: MetricOperation.Set,
@@ -118,7 +118,7 @@ describe('Metrics (writes)', () => {
     await service.processQueue();
 
     await service.queueMetric({
-      metricRegisterEntryId: 'users',
+      name: 'users',
       value: 1,
       projectId: apiKey.projectId,
       operation: MetricOperation.Change,
