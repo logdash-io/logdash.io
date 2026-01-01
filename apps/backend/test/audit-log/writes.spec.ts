@@ -104,6 +104,7 @@ describe('Audit logs (writes)', () => {
     );
 
     // then
+    await sleep(1000);
     const count = await bootstrap.utils.auditLogUtils.countUserAuditLogs(setup.user.id);
 
     expect(count).toBe(600);

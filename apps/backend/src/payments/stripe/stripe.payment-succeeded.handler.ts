@@ -70,31 +70,58 @@ export class StripePaymentSucceededHandler {
       return;
     }
 
-    await this.userWriteService.update({
-      stripeCustomerId: customerId as string,
-      id: user.id,
-    });
+    try {
+      await this.userWriteService.update({
+        stripeCustomerId: customerId as string,
+        id: user.id,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to update user with stripe customer id`, {
+        userId: user.id,
+        stripeCustomerId: customerId,
+        error,
+      });
+      throw error;
+    }
 
     this.logger.log(`Updated user with stripe customer id`, {
       userId: user.id,
       stripeCustomerId: customerId,
     });
 
-    await this.subscriptionManagementService.applyNew({
-      userId: user.id,
-      tier,
-      endsAt: null,
-    });
+    try {
+      await this.subscriptionManagementService.applyNew({
+        userId: user.id,
+        tier,
+        endsAt: null,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to apply new subscription`, {
+        userId: user.id,
+        tier,
+        error,
+      });
+      throw error;
+    }
 
     this.logger.log(`Applied new subscription`, {
       userId: user.id,
       tier,
     });
 
-    await this.stripeEventEmitter.emitPaymentSucceeded({
-      email,
-      tier,
-    });
+    try {
+      await this.stripeEventEmitter.emitPaymentSucceeded({
+        email,
+        tier,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to emit payment succeeded event`, {
+        email,
+        tier,
+        error,
+      });
+      throw error;
+    }
 
     this.logger.log(`Finished handling payment succeeded event`, {
       userId: user.id,

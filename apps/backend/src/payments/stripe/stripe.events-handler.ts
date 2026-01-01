@@ -15,7 +15,7 @@ export class StripeEventsHandler {
     private readonly stripeSubscriptionDeletedHandler: StripeSubscriptionDeletedHandler,
   ) {}
 
-  public async decryptEvent(body: any, signature: string): Promise<any> {
+  public async decryptEvent(body: any, signature: string): Promise<Stripe.Event | undefined> {
     try {
       return await this.stripe.webhooks.constructEvent(
         body,

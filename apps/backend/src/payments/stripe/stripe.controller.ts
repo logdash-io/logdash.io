@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -44,6 +45,11 @@ export class StripeController {
     this.logger.log(`Received stripe webhook event`);
 
     const event = await this.stripeEventsHandler.decryptEvent(req.rawBody, stripeSignature);
+
+    if (!event) {
+      this.logger.error(`Failed to decrypt stripe webhook event`);
+      throw new BadRequestException(`Failed to decrypt stripe webhook event`);
+    }
 
     await this.stripeEventsHandler.handleEvent(event);
   }
