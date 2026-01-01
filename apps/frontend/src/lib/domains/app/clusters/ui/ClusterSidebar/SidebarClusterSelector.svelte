@@ -17,9 +17,7 @@
   );
   const clusterColor = $derived(currentCluster?.color);
   const clusterName = $derived(currentCluster?.name || 'No project selected');
-  const isDisabled = $derived(
-    !isWizardMode && page.url.pathname === '/app/clusters',
-  );
+  const isDisabled = false;
 
   function onClusterSelect(clusterId: string, close: () => void): void {
     const cluster = clustersState.get(clusterId);
