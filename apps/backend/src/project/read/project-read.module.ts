@@ -5,11 +5,7 @@ import { ProjectEntity, ProjectSchema } from '../core/entities/project.entity';
 import { ProjectReadCachedService } from './project-read-cached.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: ProjectEntity.name, schema: ProjectSchema },
-    ]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: ProjectEntity.name, schema: ProjectSchema }])],
   providers: [ProjectReadService, ProjectReadCachedService],
   exports: [ProjectReadService, ProjectReadCachedService],
 })

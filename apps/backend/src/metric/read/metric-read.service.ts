@@ -9,9 +9,7 @@ import { ReadBaselineValuesDto } from './dto/read-baseline-values.dto';
 
 @Injectable()
 export class MetricReadService {
-  constructor(
-    @InjectModel(MetricEntity.name) private model: Model<MetricEntity>,
-  ) {}
+  constructor(@InjectModel(MetricEntity.name) private model: Model<MetricEntity>) {}
 
   public async readByProjectId(projectId: string): Promise<MetricNormalized[]> {
     const metrics = await this.model
@@ -37,9 +35,7 @@ export class MetricReadService {
     return metrics.map((metric) => MetricSerializer.normalize(metric));
   }
 
-  public async readBaselineValues(
-    dto: ReadBaselineValuesDto,
-  ): Promise<Record<string, number>> {
+  public async readBaselineValues(dto: ReadBaselineValuesDto): Promise<Record<string, number>> {
     const metrics = await this.model
       .find({
         metricRegisterEntryId: { $in: dto.metricRegisterEntryIds },

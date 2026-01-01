@@ -80,7 +80,7 @@ export class HttpPingReadService {
       (acc, ping) => {
         acc[ping.http_monitor_id] = [
           ...(acc[ping.http_monitor_id] || []),
-          HttpPingSerializer.normalize(ping as HttpPingEntity),
+          HttpPingSerializer.normalize(ping),
         ];
         return acc;
       },

@@ -4,11 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MetricReadService } from './metric-read.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: MetricEntity.name, schema: MetricSchema },
-    ]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: MetricEntity.name, schema: MetricSchema }])],
   providers: [MetricReadService],
   exports: [MetricReadService],
 })

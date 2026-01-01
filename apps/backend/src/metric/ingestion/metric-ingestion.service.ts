@@ -133,12 +133,13 @@ export class MetricIngestionService {
 
     const durationMs = new Date().getTime() - now.getTime();
 
-    if (durationMs > getEnvConfig().metrics.metricCreationDurationWarnThreshold) {
-      this.logger.warn(`Recorded metrics`, {
-        durationMs,
-        count: upsertDtos.length,
-      });
-    }
+    // todo: add metrics alerting for the metricsCreationDurationMs
+    // if (durationMs > getEnvConfig().metrics.metricCreationDurationWarnThreshold) {
+    //   this.logger.warn(`Recorded metrics`, {
+    //     durationMs,
+    //     count: upsertDtos.length,
+    //   });
+    // }
 
     this.averageRecorder.record('metricsCreationDurationMs', durationMs);
   }

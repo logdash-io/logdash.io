@@ -9,12 +9,7 @@ export class UserCoreEventController {
   constructor(private readonly userWriteService: UserWriteService) {}
 
   @OnEvent(AuthEvents.UserLoggedInEvent)
-  public async handleUserLoggedInEvent(
-    payload: UserLoggedInEvent,
-  ): Promise<void> {
-    await this.userWriteService.updateLastActivityDate(
-      payload.userId,
-      new Date(),
-    );
+  public async handleUserLoggedInEvent(payload: UserLoggedInEvent): Promise<void> {
+    await this.userWriteService.updateLastActivityDate(payload.userId, new Date());
   }
 }

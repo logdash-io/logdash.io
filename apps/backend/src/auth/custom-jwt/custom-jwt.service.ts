@@ -12,7 +12,7 @@ export class CustomJwtService {
 
   public async getTokenPayload(token: string): Promise<JwtPayloadDto | null> {
     try {
-      return (await this.jwtService.verifyAsync(token)) as JwtPayloadDto;
+      return await this.jwtService.verifyAsync<JwtPayloadDto>(token);
     } catch (e) {
       return null;
     }

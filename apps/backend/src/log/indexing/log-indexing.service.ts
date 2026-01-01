@@ -11,25 +11,20 @@ export class LogIndexingService {
     private readonly projectWriteService: ProjectWriteService,
   ) {}
 
-  public async enrichWithIndexes(
-    dtos: CreateLogDto[],
-  ): Promise<CreateLogDto[]> {
+  public async enrichWithIndexes(dtos: CreateLogDto[]): Promise<CreateLogDto[]> {
     const projectIds = dtos.map((dto) => dto.projectId);
     const uniqueProjectIds = [...new Set(projectIds)];
 
-    const indexes =
-      await this.projectReadService.readCurrentIndexMany(uniqueProjectIds);
+    const indexes = await this.projectReadService.readCurrentIndexMany(uniqueProjectIds);
 
     const groupedByProjectId = groupBy(dtos, 'projectId');
 
-    const numberOfLogsPerProject = Object.keys(groupedByProjectId).map(
-      (projectId) => {
-        return {
-          projectId,
-          count: groupedByProjectId[projectId].length,
-        };
-      },
-    );
+    const numberOfLogsPerProject = Object.keys(groupedByProjectId).map((projectId) => {
+      return {
+        projectId,
+        count: groupedByProjectId[projectId].length,
+      };
+    });
 
     const updateIndexesDto: Record<string, number> = {};
 
@@ -45,18 +40,13 @@ export class LogIndexingService {
     for (const projectId of uniqueProjectIds) {
       const projectDtos = groupedByProjectId[projectId];
 
-      dtosToReturn.push(
-        ...this.enrichBelongingToSameProject(projectDtos, indexes[projectId]),
-      );
+      dtosToReturn.push(...this.enrichBelongingToSameProject(projectDtos, indexes[projectId]));
     }
 
     return dtosToReturn;
   }
 
-  private enrichBelongingToSameProject(
-    dtos: CreateLogDto[],
-    initialIndex: number,
-  ): CreateLogDto[] {
+  private enrichBelongingToSameProject(dtos: CreateLogDto[], initialIndex: number): CreateLogDto[] {
     dtos.sort((a, b) => {
       if (a.createdAt < b.createdAt) return -1;
       if (a.createdAt > b.createdAt) return 1;

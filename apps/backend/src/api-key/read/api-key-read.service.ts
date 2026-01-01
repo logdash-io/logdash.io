@@ -7,17 +7,10 @@ import { ApiKeySerializer } from '../core/entities/api-key.serializer';
 
 @Injectable()
 export class ApiKeyReadService {
-  constructor(
-    @InjectModel(ApiKeyEntity.name) private apiKeyModel: Model<ApiKeyEntity>,
-  ) {}
+  constructor(@InjectModel(ApiKeyEntity.name) private apiKeyModel: Model<ApiKeyEntity>) {}
 
-  public async readApiKeyByValue(
-    value: string,
-  ): Promise<ApiKeyNormalized | null> {
-    const apiKey = await this.apiKeyModel
-      .findOne({ value })
-      .lean<ApiKeyEntity>()
-      .exec();
+  public async readApiKeyByValue(value: string): Promise<ApiKeyNormalized | null> {
+    const apiKey = await this.apiKeyModel.findOne({ value }).lean<ApiKeyEntity>().exec();
 
     if (!apiKey) {
       return null;
@@ -26,13 +19,8 @@ export class ApiKeyReadService {
     return ApiKeySerializer.normalize(apiKey);
   }
 
-  public async readApiKeysByProjectId(
-    projectId: string,
-  ): Promise<ApiKeyNormalized[]> {
-    const apiKeys = await this.apiKeyModel
-      .find({ projectId })
-      .lean<ApiKeyEntity[]>()
-      .exec();
+  public async readApiKeysByProjectId(projectId: string): Promise<ApiKeyNormalized[]> {
+    const apiKeys = await this.apiKeyModel.find({ projectId }).lean<ApiKeyEntity[]>().exec();
 
     return apiKeys.map((apiKey) => ApiKeySerializer.normalize(apiKey));
   }
