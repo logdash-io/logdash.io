@@ -46,15 +46,26 @@ export class StripeService {
 
     const subscription = await this.getActiveSubscription(user.stripeCustomerId);
 
-    const update = await this.stripe.subscriptions.update(subscription.id, {
-      items: [
-        {
-          id: subscription.items.data[0].id,
-          price: mapTierToPriceId(tier),
-        },
-      ],
-      proration_behavior: 'create_prorations',
-    });
+    let update: Stripe.Subscription;
+
+    try {
+      update = await this.stripe.subscriptions.update(subscription.id, {
+        items: [
+          {
+            id: subscription.items.data[0].id,
+            price: mapTierToPriceId(tier),
+          },
+        ],
+        proration_behavior: 'create_prorations',
+      });
+    } catch (error) {
+      this.logger.error(`Failed to update subscription in Stripe`, {
+        userId,
+        subscriptionId: subscription.id,
+        error,
+      });
+      throw error;
+    }
 
     if (!update) {
       this.logger.error(`Failed to update subscription`, {
@@ -64,12 +75,30 @@ export class StripeService {
       throw new Error(`Failed to update subscription`);
     }
 
-    await this.subscriptionManagementService.changePaidPlan(userId, user.stripeCustomerId, tier);
+    try {
+      await this.subscriptionManagementService.changePaidPlan(userId, user.stripeCustomerId, tier);
+    } catch (error) {
+      this.logger.error(`Failed to change paid plan in subscription management`, {
+        userId,
+        tier,
+        error,
+      });
+      throw error;
+    }
 
-    await this.stripeEventsEmitter.emitPaymentSucceeded({
-      email: user.email,
-      tier,
-    });
+    try {
+      await this.stripeEventsEmitter.emitPaymentSucceeded({
+        email: user.email,
+        tier,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to emit payment succeeded event`, {
+        userId,
+        tier,
+        error,
+      });
+      throw error;
+    }
 
     this.logger.log(`Plan change completed successfully`, {
       userId,
@@ -79,11 +108,21 @@ export class StripeService {
   }
 
   private async getActiveSubscription(stripeCustomerId: string): Promise<Stripe.Subscription> {
-    const subscription = await this.stripe.subscriptions.list({
-      customer: stripeCustomerId,
-      status: 'active',
-      limit: 1,
-    });
+    let subscription: Stripe.ApiList<Stripe.Subscription>;
+
+    try {
+      subscription = await this.stripe.subscriptions.list({
+        customer: stripeCustomerId,
+        status: 'active',
+        limit: 1,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to list subscriptions from Stripe`, {
+        stripeCustomerId,
+        error,
+      });
+      throw error;
+    }
 
     if (subscription.data.length === 0) {
       this.logger.error(`User has no active subscription`, { stripeCustomerId });
@@ -106,10 +145,21 @@ export class StripeService {
       throw new Error(`User with id: ${userId} has no stripe customer id`);
     }
 
-    const session = await this.stripe.billingPortal.sessions.create({
-      customer: user.stripeCustomerId,
-      return_url: getEnvConfig().stripe.returnFromBillingUrl,
-    });
+    let session: Stripe.BillingPortal.Session;
+
+    try {
+      session = await this.stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: getEnvConfig().stripe.returnFromBillingUrl,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to create billing portal session`, {
+        userId,
+        stripeCustomerId: user.stripeCustomerId,
+        error,
+      });
+      throw error;
+    }
 
     this.logger.log(`Customer portal URL generated successfully`, { userId });
 

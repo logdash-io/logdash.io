@@ -16,7 +16,7 @@ export class StripeSubscriptionDeletedHandler {
   ) {}
 
   public async handle(event: Stripe.Event): Promise<void> {
-    this.logger.log(`[STRIPE] Handling subscription deleted event`, {
+    this.logger.log(`Handling subscription deleted event`, {
       event,
     });
 
@@ -29,32 +29,52 @@ export class StripeSubscriptionDeletedHandler {
     const user = await this.userReadService.readByStripeCustomerId(stripeCustomerId as string);
 
     if (!user) {
-      this.logger.error(`[STRIPE] User not found`, { stripeCustomerId, event });
+      this.logger.error(`User not found`, { stripeCustomerId, event });
       return;
     }
 
-    await this.subscriptionManagementService.endActiveSubscription(
-      user.id,
-      stripeCustomerId as string,
-    );
+    try {
+      await this.subscriptionManagementService.endActiveSubscription(
+        user.id,
+        stripeCustomerId as string,
+      );
+    } catch (error) {
+      this.logger.error(`Failed to end active subscription`, {
+        userId: user.id,
+        stripeCustomerId,
+        error,
+      });
+      throw error;
+    }
 
-    this.logger.log(`[STRIPE] Finished handling subscription deleted event`);
-
-    await this.stripeEventEmitter.emitSubscriptionDeleted({
-      email: user.email,
+    this.logger.log(`Finished handling subscription deleted event`, {
+      userId: user.id,
+      stripeCustomerId,
     });
+
+    try {
+      await this.stripeEventEmitter.emitSubscriptionDeleted({
+        email: user.email,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to emit subscription deleted event`, {
+        email: user.email,
+        error,
+      });
+      throw error;
+    }
   }
 
   private eventIsValid(event: Stripe.Event): event is Stripe.CustomerSubscriptionDeletedEvent {
     if (event.type !== 'customer.subscription.deleted') {
-      this.logger.error(`[STRIPE] Invalid event type for subscription deleted handler`, {
+      this.logger.error(`Invalid event type for subscription deleted handler`, {
         event,
       });
       return false;
     }
 
     if (!event.data.object.customer || typeof event.data.object.customer !== 'string') {
-      this.logger.error(`[STRIPE] Customer is missing or not a string`, {
+      this.logger.error(`Customer is missing or not a string`, {
         event,
       });
       return false;
