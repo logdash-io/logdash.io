@@ -24,18 +24,25 @@
   const selectedSDK = $derived(SDK_LIST[sdkSelectionState.selectedIndex]);
   const isLoading = $derived(projectsState.isLoadingApiKey(projectId));
 
-  const hasLogging = $derived(
+  const hasLoggingFeature = $derived(
+    projectsState.hasFeature(projectId, Feature.LOGGING),
+  );
+  const hasMetricsFeature = $derived(
+    projectsState.hasFeature(projectId, Feature.METRICS),
+  );
+
+  const isLoggingConfigured = $derived(
     projectsState.hasConfiguredFeature(projectId, Feature.LOGGING) ||
       logsState.logs.length > 0,
   );
 
-  const hasMetrics = $derived(
+  const isMetricsConfigured = $derived(
     projectsState.hasConfiguredFeature(projectId, Feature.METRICS) ||
       !metricsState.isUsingFakeData,
   );
 
-  const needsLogging = $derived(!hasLogging);
-  const needsMetrics = $derived(!hasMetrics);
+  const needsLogging = $derived(hasLoggingFeature && !isLoggingConfigured);
+  const needsMetrics = $derived(hasMetricsFeature && !isMetricsConfigured);
 
   const overlayTitle = $derived.by(() => {
     if (needsLogging && needsMetrics) return 'Integrate Logging & Metrics';
