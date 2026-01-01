@@ -25,7 +25,7 @@ export class UserEntity {
   accountClaimStatus: AccountClaimStatus;
 
   @Prop({ type: Date })
-  lastActivityDate: string;
+  lastActivityDate: Date;
 
   @Prop()
   tier: UserTier;

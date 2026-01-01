@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { CustomDomainStatus } from '../enums/custom-domain-status.enum';
 
 @Schema({ collection: 'customDomains', timestamps: true })
 export class CustomDomainEntity {
-  _id: string;
+  _id: Types.ObjectId;
 
   @Prop({ required: true })
   domain: string;
