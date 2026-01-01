@@ -5,11 +5,7 @@ import { ProjectReadModule } from '../../project/read/project-read.module';
 import { MetricRegisterWriteModule } from '../write/metric-register-write.module';
 
 @Module({
-  imports: [
-    MetricRegisterReadModule,
-    ProjectReadModule,
-    MetricRegisterWriteModule,
-  ],
+  imports: [MetricRegisterReadModule, ProjectReadModule, MetricRegisterWriteModule],
   providers: [MetricRegisterQualificationService],
   exports: [MetricRegisterQualificationService],
 })

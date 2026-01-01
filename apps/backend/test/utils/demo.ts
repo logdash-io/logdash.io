@@ -32,7 +32,7 @@ export class DemoUtils {
 
     const log = await this.logModel.create({
       message: 'Hello',
-      projectId: project._id,
+      projectId: project._id.toString(),
       index: 0,
       createdAt: new Date(),
       level: LogLevel.Info,

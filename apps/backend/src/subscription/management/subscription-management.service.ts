@@ -23,10 +23,15 @@ export class SubscriptionManagementService {
 
     if (!activeSubscription) {
       await this.userTierService.updateUserTier(userId, UserTier.Free);
+      this.logger.log('Synced user tier to Free (no active subscription)', { userId });
     }
 
     if (activeSubscription) {
       await this.userTierService.updateUserTier(userId, activeSubscription.tier);
+      this.logger.log('Synced user tier to active subscription tier', {
+        userId,
+        tier: activeSubscription.tier,
+      });
     }
   }
 
@@ -53,6 +58,12 @@ export class SubscriptionManagementService {
     });
 
     await this.userTierService.updateUserTier(dto.userId, dto.tier);
+
+    this.logger.log('Applied new subscription successfully', {
+      userId: dto.userId,
+      tier: dto.tier,
+      endsAt: dto.endsAt,
+    });
   }
 
   public async changeActiveSubscriptionExpirationDate(
@@ -127,6 +138,12 @@ export class SubscriptionManagementService {
     });
 
     await this.syncUserTier(userId);
+
+    this.logger.log('Ended active subscription successfully', {
+      userId,
+      stripeCustomerId,
+      subscriptionId: activeSubscription.id,
+    });
   }
 
   public async changePaidPlan(
@@ -157,6 +174,13 @@ export class SubscriptionManagementService {
       userId,
       tier,
       endsAt: null,
+    });
+
+    this.logger.log('Changed paid plan successfully', {
+      userId,
+      stripeCustomerId,
+      newTier: tier,
+      previousTier: activeSubscription.tier,
     });
   }
 }

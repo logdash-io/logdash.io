@@ -28,9 +28,8 @@ export class MetricSerializer {
           ? 'all-time'
           : parseFlexibleDate(normalized.timeBucket).toISOString(),
       name:
-        normalizedRegisterEntries.find(
-          (entry) => entry.id === normalized.metricRegisterEntryId,
-        )?.name || 'unknown',
+        normalizedRegisterEntries.find((entry) => entry.id === normalized.metricRegisterEntryId)
+          ?.name || 'unknown',
       value: normalized.value,
       metricRegisterEntryId: normalized.metricRegisterEntryId,
       granularity: normalized.granularity,

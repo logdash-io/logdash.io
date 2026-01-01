@@ -38,12 +38,12 @@ export class LogQueueingService {
     this.queuedDtos = [];
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
-  public async simulateOneSecondTraffic(): Promise<void> {
-    if (process.env.NODE_ENV === 'test' || getOurEnv() === OurEnv.Prod) {
-      return;
-    }
+  // @Cron(CronExpression.EVERY_10_SECONDS)
+  // public async simulateOneSecondTraffic(): Promise<void> {
+  //   if (process.env.NODE_ENV === 'test' || getOurEnv() === OurEnv.Prod) {
+  //     return;
+  //   }
 
-    this.logger.log('Stress test log');
-  }
+  //   this.logger.log('Stress test log');
+  // }
 }

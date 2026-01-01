@@ -5,11 +5,7 @@ import { ClusterEntity, ClusterSchema } from '../core/entities/cluster.entity';
 import { ClusterReadCachedService } from './cluster-read-cached.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: ClusterEntity.name, schema: ClusterSchema },
-    ]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: ClusterEntity.name, schema: ClusterSchema }])],
   providers: [ClusterReadService, ClusterReadCachedService],
   exports: [ClusterReadService, ClusterReadCachedService],
 })

@@ -38,8 +38,10 @@ describe('StripeController (writes)', () => {
             lines: {
               data: [
                 {
-                  price: {
-                    id: getEnvConfig().stripe.earlyBirdPriceId,
+                  pricing: {
+                    price_details: {
+                      price: { id: getEnvConfig().stripe.earlyBirdPriceId },
+                    },
                   },
                 },
               ],
@@ -84,8 +86,10 @@ describe('StripeController (writes)', () => {
             lines: {
               data: [
                 {
-                  price: {
-                    id: getEnvConfig().stripe.builderPriceId,
+                  pricing: {
+                    price_details: {
+                      price: { id: getEnvConfig().stripe.builderPriceId },
+                    },
                   },
                 },
               ],
@@ -128,8 +132,10 @@ describe('StripeController (writes)', () => {
             lines: {
               data: [
                 {
-                  price: {
-                    id: getEnvConfig().stripe.proPriceId,
+                  pricing: {
+                    price_details: {
+                      price: { id: getEnvConfig().stripe.proPriceId },
+                    },
                   },
                 },
               ],

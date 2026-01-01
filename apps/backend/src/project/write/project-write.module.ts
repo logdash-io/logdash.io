@@ -4,11 +4,7 @@ import { ProjectEntity, ProjectSchema } from '../core/entities/project.entity';
 import { ProjectWriteService } from './project-write.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: ProjectEntity.name, schema: ProjectSchema },
-    ]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: ProjectEntity.name, schema: ProjectSchema }])],
   providers: [ProjectWriteService],
   exports: [ProjectWriteService],
 })

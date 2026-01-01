@@ -5,6 +5,7 @@ import { Types } from 'mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { METRICS_LOGGER } from '../../shared/logdash/logdash-tokens';
+import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 
 @Injectable()
 export class MetricRecordService {
@@ -12,6 +13,7 @@ export class MetricRecordService {
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly metricWriteClickhouseService: MetricWriteClickhouseService,
     @Inject(METRICS_LOGGER) private readonly logger: LogdashLogger,
+    private readonly averageRecorder: AverageRecorder,
   ) {}
 
   @Cron(CronExpression.EVERY_5_SECONDS)
@@ -41,9 +43,13 @@ export class MetricRecordService {
     );
 
     const end = performance.now();
+    const durationMs = end - start;
 
-    this.logger.info('Recorded clickhouse metrics', {
-      durationMs: end - start,
-    });
+    // todo: add metrics alerting for the clickhouse_metrics_recording_ms
+    // this.logger.info('Recorded clickhouse metrics', {
+    //   durationMs,
+    // });
+
+    this.averageRecorder.record('clickhouse_metrics_recording_ms', durationMs);
   }
 }

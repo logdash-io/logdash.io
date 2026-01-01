@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { ClusterTier } from '../enums/cluster-tier.enum';
 import { ClusterRole } from '../enums/cluster-role.enum';
 
 @Schema({ collection: 'clusters', timestamps: true })
 export class ClusterEntity {
-  _id: string;
+  _id: Types.ObjectId;
 
   @Prop()
   name: string;

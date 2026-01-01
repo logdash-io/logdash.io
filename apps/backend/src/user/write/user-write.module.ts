@@ -4,9 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserEntity, UserSchema } from '../core/entities/user.entity';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: UserEntity.name, schema: UserSchema }]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: UserEntity.name, schema: UserSchema }])],
   providers: [UserWriteService],
   exports: [UserWriteService],
 })

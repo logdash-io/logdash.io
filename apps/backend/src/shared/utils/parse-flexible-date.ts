@@ -8,13 +8,9 @@ export function parseFlexibleDate(dateString: string): Date {
     timePart = '00';
   }
 
-  const normalizedTime = timePart
-    .split(':')
-    .concat(['00', '00'])
-    .slice(0, 2)
-    .join(':');
+  const normalizedTime = timePart.split(':').concat(['00', '00']).slice(0, 2).join(':');
 
-  let fullDateString = `${datePart}T${normalizedTime}:00Z`;
+  const fullDateString = `${datePart}T${normalizedTime}:00Z`;
 
   return new Date(fullDateString);
 }

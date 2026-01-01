@@ -54,7 +54,7 @@ describe('ClusterCoreController (writes)', () => {
         _id: new Types.ObjectId(),
         name: `Cluster ${index}`,
         creatorId: userId,
-        members: [userId],
+        roles: { [userId]: ClusterRole.Creator },
         tier: ClusterTier.Free,
       }));
 
@@ -162,7 +162,7 @@ describe('ClusterCoreController (writes)', () => {
         _id: new Types.ObjectId(),
         name: 'Test Cluster',
         creatorId: creator.id,
-        members: [creator.id], // Only creator is a member
+        roles: { [creator.id]: ClusterRole.Creator },
         tier: ClusterTier.Free,
       });
 

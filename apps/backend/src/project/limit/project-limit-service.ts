@@ -13,11 +13,9 @@ export class ProjectLimitService {
   public async newProjectWouldBeWithinLimit(userId: string): Promise<boolean> {
     const tier = await this.userReadCachedService.readTier(userId);
 
-    const allowedNumberOfProjects =
-      getUserPlanConfig(tier).projects.maxNumberOfProjects;
+    const allowedNumberOfProjects = getUserPlanConfig(tier).projects.maxNumberOfProjects;
 
-    const currentNumberOfProjects =
-      await this.projectReadService.countProjectsByCreatorId(userId);
+    const currentNumberOfProjects = await this.projectReadService.countProjectsByCreatorId(userId);
 
     return currentNumberOfProjects + 1 <= allowedNumberOfProjects;
   }

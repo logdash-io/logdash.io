@@ -1,8 +1,5 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import {
-  RedisService,
-  TtlOverwriteStrategy,
-} from '../../shared/redis/redis.service';
+import { RedisService, TtlOverwriteStrategy } from '../../shared/redis/redis.service';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 
 const adjectives = ['happy', 'angry', 'excited', 'curious', 'capable'];

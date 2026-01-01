@@ -28,13 +28,13 @@ export class StripePaymentSucceededHandler {
       case getEnvConfig().stripe.proPriceId:
         return UserTier.Pro;
       default:
-        this.logger.error(`[STRIPE] Unknown price id: ${priceId}`);
+        this.logger.error(`Unknown price id: ${priceId}`);
         throw new Error(`Unknown price id: ${priceId}`);
     }
   }
 
   public async handle(event: Stripe.Event): Promise<void> {
-    this.logger.log(`[STRIPE] Handling payment succeeded event`, {
+    this.logger.log(`Handling payment succeeded event`, {
       event,
     });
 
@@ -42,12 +42,13 @@ export class StripePaymentSucceededHandler {
       return;
     }
 
-    const priceId = event.data.object.lines.data[0].price?.id;
+    const price = event.data.object.lines.data[0].pricing?.price_details?.price;
+    const priceId = typeof price === 'string' ? price : price?.id;
     const customerId = event.data.object.customer;
     const email = event.data.object.customer_email;
 
     if (!priceId) {
-      this.logger.error(`[STRIPE] Price id is missing`, {
+      this.logger.error(`Price id is missing`, {
         event,
       });
       return;
@@ -56,7 +57,7 @@ export class StripePaymentSucceededHandler {
     const tier = await this.mapPriceIdToTier(priceId);
 
     if (!email) {
-      this.logger.error(`[STRIPE] Invoice payment succeeded but no customer email found`, {
+      this.logger.error(`Invoice payment succeeded but no customer email found`, {
         event,
       });
       return;
@@ -65,39 +66,80 @@ export class StripePaymentSucceededHandler {
     const user = await this.userReadService.readByEmail(email);
 
     if (!user) {
-      this.logger.error(`[STRIPE] User not found`, { email });
+      this.logger.error(`User not found`, { email });
       return;
     }
 
-    await this.userWriteService.update({
-      stripeCustomerId: customerId as string,
-      id: user.id,
+    try {
+      await this.userWriteService.update({
+        stripeCustomerId: customerId as string,
+        id: user.id,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to update user with stripe customer id`, {
+        userId: user.id,
+        stripeCustomerId: customerId,
+        error,
+      });
+      throw error;
+    }
+
+    this.logger.log(`Updated user with stripe customer id`, {
+      userId: user.id,
+      stripeCustomerId: customerId,
     });
 
-    await this.subscriptionManagementService.applyNew({
+    try {
+      await this.subscriptionManagementService.applyNew({
+        userId: user.id,
+        tier,
+        endsAt: null,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to apply new subscription`, {
+        userId: user.id,
+        tier,
+        error,
+      });
+      throw error;
+    }
+
+    this.logger.log(`Applied new subscription`, {
       userId: user.id,
       tier,
-      endsAt: null,
     });
 
-    await this.stripeEventEmitter.emitPaymentSucceeded({
+    try {
+      await this.stripeEventEmitter.emitPaymentSucceeded({
+        email,
+        tier,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to emit payment succeeded event`, {
+        email,
+        tier,
+        error,
+      });
+      throw error;
+    }
+
+    this.logger.log(`Finished handling payment succeeded event`, {
+      userId: user.id,
       email,
       tier,
     });
-
-    this.logger.log(`[STRIPE] Finished handling payment succeeded event`);
   }
 
   private eventIsValid(event: Stripe.Event): event is Stripe.InvoicePaymentSucceededEvent {
     if (event.type !== 'invoice.payment_succeeded') {
-      this.logger.error(`[STRIPE] Invalid event type for payment succeeded handler`, {
+      this.logger.error(`Invalid event type for payment succeeded handler`, {
         event,
       });
       return false;
     }
 
-    if (!event.data.object.lines.data[0].price) {
-      this.logger.error(`[STRIPE] Price is missing`, {
+    if (!event.data.object.lines.data[0].pricing?.price_details?.price) {
+      this.logger.error(`Price is missing`, {
         event,
       });
 
@@ -105,7 +147,7 @@ export class StripePaymentSucceededHandler {
     }
 
     if (!event.data.object.customer_email) {
-      this.logger.error(`[STRIPE] Customer email is missing`, {
+      this.logger.error(`Customer email is missing`, {
         event,
       });
 
@@ -113,7 +155,7 @@ export class StripePaymentSucceededHandler {
     }
 
     if (!event.data.object.customer || typeof event.data.object.customer !== 'string') {
-      this.logger.error(`[STRIPE] Customer is missing or not a string`, {
+      this.logger.error(`Customer is missing or not a string`, {
         event,
       });
 

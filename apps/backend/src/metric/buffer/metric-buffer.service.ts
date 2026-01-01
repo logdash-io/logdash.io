@@ -136,7 +136,8 @@ export class MetricBufferService {
     await cleanupPromise;
 
     const bufferFlushDurationMs = performance.now() - now;
-    this.logger.info(`Buffer flush duration: ${bufferFlushDurationMs}ms`);
+    // todo: add metrics alerting for the metricsBufferFlushDurationMs
+    // this.logger.info(`Buffer flush duration: ${bufferFlushDurationMs}ms`);
 
     this.averageRecorder.record('metricsBufferFlushDurationMs', bufferFlushDurationMs);
   }

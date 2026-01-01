@@ -38,7 +38,7 @@ export class ProjectUtils {
     });
 
     const apiKey = await this.apiKeyModel.create({
-      projectId: project._id,
+      projectId: project._id.toString(),
       value: `some-api-key-${Math.random()}`,
     });
 

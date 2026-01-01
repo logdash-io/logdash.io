@@ -5,11 +5,7 @@ import { ApiKeyReadService } from './api-key-read.service';
 import { ApiKeyReadCachedService } from './api-key-read-cached.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: ApiKeyEntity.name, schema: ApiKeySchema },
-    ]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: ApiKeyEntity.name, schema: ApiKeySchema }])],
   providers: [ApiKeyReadService, ApiKeyReadCachedService],
   exports: [ApiKeyReadService, ApiKeyReadCachedService],
 })

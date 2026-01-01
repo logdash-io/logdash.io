@@ -111,7 +111,7 @@ export const EnvConfigs: EnvConfigs = {
   [OurEnv.Prod]: {
     emailLoginWhitelist: {
       enabled: false,
-      whitelistedEmails: (process.env.WHITELISTED_EMAILS ?? '')!.split(','),
+      whitelistedEmails: (process.env.WHITELISTED_EMAILS ?? '').split(','),
     },
     logdash: {
       apiKey: process.env.LOGDASH_API_KEY!,
@@ -206,7 +206,7 @@ export const EnvConfigs: EnvConfigs = {
   [OurEnv.Dev]: {
     emailLoginWhitelist: {
       enabled: true,
-      whitelistedEmails: (process.env.WHITELISTED_EMAILS ?? '')!.split(','),
+      whitelistedEmails: (process.env.WHITELISTED_EMAILS ?? '').split(','),
     },
     logdash: {
       apiKey: process.env.LOGDASH_API_KEY!,

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MetricEntity } from '../core/entities/metric.entity';
-import { FilterQuery, Model } from 'mongoose';
+import { QueryFilter, Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { UpsertMetricDto } from './dto/upsert-metric.dto';
 import { RemoveMetricsDto } from './dto/remove-metrics.dto';
@@ -9,9 +9,7 @@ import { MetricBucketingService } from '../../metric-shared/bucketing/metric-buc
 
 @Injectable()
 export class MetricWriteService {
-  constructor(
-    @InjectModel(MetricEntity.name) private model: Model<MetricEntity>,
-  ) {}
+  constructor(@InjectModel(MetricEntity.name) private model: Model<MetricEntity>) {}
 
   public async upsertMany(dtos: UpsertMetricDto[]): Promise<void> {
     await this.model.bulkWrite(
@@ -38,7 +36,7 @@ export class MetricWriteService {
   }
 
   public async removeMany(dtos: RemoveMetricsDto[]): Promise<void> {
-    const query: FilterQuery<MetricEntity> = {
+    const query: QueryFilter<MetricEntity> = {
       $or: [],
     };
 
@@ -69,9 +67,7 @@ export class MetricWriteService {
     await this.model.deleteMany({ projectId }, { ordered: false });
   }
 
-  public async deleteByMetricRegisterEntryId(
-    metricRegisterEntryId: string,
-  ): Promise<void> {
+  public async deleteByMetricRegisterEntryId(metricRegisterEntryId: string): Promise<void> {
     await this.model.deleteMany({ metricRegisterEntryId }, { ordered: false });
   }
 }
