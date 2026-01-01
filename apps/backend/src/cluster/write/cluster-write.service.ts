@@ -99,7 +99,7 @@ export class ClusterWriteService {
       });
     });
 
-    await this.model.updateMany({ creatorId: new Types.ObjectId(creatorId) }, { tier });
+    await this.model.updateMany({ creatorId }, { tier });
   }
 
   public async delete(id: string, actorUserId?: string): Promise<void> {
