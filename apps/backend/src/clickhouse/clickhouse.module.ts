@@ -8,9 +8,9 @@ import { getEnvConfig } from '../shared/configs/env-configs';
     {
       provide: ClickHouseClient,
       useFactory: async (): Promise<ClickHouseClient> => {
-        const clickHouseConfig = getEnvConfig().clickhouse;
+        const { host, ...restOfConfig } = getEnvConfig().clickhouse;
 
-        const client = createClient({ ...clickHouseConfig });
+        const client = createClient({ ...restOfConfig, url: host });
 
         const pingResult = await client.ping();
 
