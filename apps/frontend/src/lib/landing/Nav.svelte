@@ -50,16 +50,19 @@
     {
       path: '/features/logging',
       name: 'Logging',
+      description: 'Stream and search logs in real-time',
       icon: LogsIcon,
     },
     {
       path: '/features/metrics',
       name: 'Metrics',
+      description: 'Track counters, gauges and histograms',
       icon: MetricsIcon,
     },
     {
       path: '/features/monitoring',
       name: 'Monitoring',
+      description: 'Monitor uptime and get instant alerts',
       icon: MonitoringIcon,
     },
   ];
@@ -73,24 +76,39 @@
   };
 </script>
 
-{#snippet featuresMenu()}
-  <ul class="menu ld-card-base rounded-box z-[1] w-52 p-2 shadow">
-    {#each FEATURES as { path, name, icon: Icon }}
-      <li>
-        <a
-          href={path}
-          draggable="false"
-          class={page.url.pathname === path ? 'text-primary' : ''}
-          onclick={() => {
-            animatedViewState.nextAnimationDirection = AnimationDirection.RIGHT;
-          }}
+{#snippet featuresMenu(close: () => void)}
+  <div class="ld-card-base rounded-box z-[1] w-fit p-2 shadow-lg space-y-1">
+    {#each FEATURES as { path, name, description, icon: Icon }}
+      <a
+        href={path}
+        draggable="false"
+        class={[
+          'flex items-center gap-3 rounded-lg p-2 hover:bg-base-100/80 group transition-colors duration-150',
+        ]}
+        onclick={() => {
+          close();
+          animatedViewState.nextAnimationDirection = AnimationDirection.RIGHT;
+        }}
+      >
+        <div
+          class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-base-content/10 bg-base-200"
         >
-          <Icon class="size-4 text-secondary" />
-          {name}
-        </a>
-      </li>
+          <Icon
+            class={[
+              'size-5 text-base-content/70 group-hover:text-primary transition-colors duration-150',
+              { 'text-primary': page.url.pathname === path },
+            ]}
+          />
+        </div>
+        <div class="flex flex-col">
+          <span class={['font-semibold text-sm']}>
+            {name}
+          </span>
+          <span class="text-sm text-base-content/60">{description}</span>
+        </div>
+      </a>
     {/each}
-  </ul>
+  </div>
 {/snippet}
 
 {#snippet compareMenu()}
