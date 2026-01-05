@@ -55,7 +55,7 @@
             more metrics to this project.
           </UpgradeElement>
         {:else}
-          <a class="underline" href="mailto:contact@logdash.io">Contact us</a>
+          <a class="underline" href="mailto:logdash.contact@gmail.com">Contact us</a>
           to add more metrics to this project.
         {/if}
       </span>
