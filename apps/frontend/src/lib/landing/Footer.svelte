@@ -56,7 +56,9 @@
     >
       Status
     </a>
-    <a href="mailto:support@logdash.io" class="link link-hover">Contact</a>
+    <a href="mailto:logdash.contact@gmail.com" class="link link-hover">
+      Contact
+    </a>
     <a
       target="_blank"
       href="https://insigh.to/b/logdash"
