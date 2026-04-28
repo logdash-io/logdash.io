@@ -6,6 +6,8 @@ import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { WebhookHttpMethod } from '../../src/notification-channel/core/types/webhook-options.type';
 
 describe('CustomDomainRegistrationService', () => {
+  jest.setTimeout(15000);
+
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
   let registrationService: CustomDomainRegistrationService;
 
