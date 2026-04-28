@@ -3,25 +3,25 @@ packages:
   - packages/*
 
 catalog:
-  "@sveltejs/adapter-vercel": ^6.2.0
-  "@sveltejs/kit": ^2.49.2
+  "@sveltejs/adapter-vercel": ^6.3.3
+  "@sveltejs/kit": ^2.58.0
   "@sveltejs/vite-plugin-svelte": ^6.2.1
   "@tailwindcss/postcss": ^4.1.11
   daisyui: 5.5.14
   eslint: ^9.39.2
   eslint-config-prettier: ^10.1.8
   eslint-plugin-svelte: ^3.13.1
-  postcss: ^8.5.6
+  postcss: ^8.5.12
   prettier: ^3.5.1
   prettier-plugin-svelte: ^3.3.3
   prettier-plugin-tailwindcss: ^0.7.2
-  svelte: ^5.46.0
+  svelte: ^5.55.5
   svelte-check: ^4.3.5
   tailwindcss: ^4.1.18
   typescript: ^5.9.3
   typescript-eslint: ^8.50.1
-  vite: ^7.3.0
-  axios: ^1.13.2
+  vite: ^7.3.2
+  axios: ^1.15.2
   lucide-svelte: ^0.562.0
   luxon: ^3.7.2
   ts-pattern: ^5.9.0

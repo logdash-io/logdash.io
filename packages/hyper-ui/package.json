@@ -41,10 +41,20 @@
   "license": "MIT",
   "dependencies": {
     "axios": "catalog:",
-    "bits-ui": "^2.14.4",
+    "bits-ui": "^2.18.0",
     "lucide-svelte": "catalog:",
     "luxon": "catalog:",
     "ts-pattern": "catalog:"
+  },
+  "devDependencies": {
+    "@sveltejs/kit": "catalog:",
+    "@sveltejs/vite-plugin-svelte": "catalog:",
+    "daisyui": "catalog:",
+    "svelte": "catalog:",
+    "svelte-check": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@sveltejs/kit": "*",

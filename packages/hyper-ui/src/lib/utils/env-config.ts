@@ -9,7 +9,7 @@ export interface EnvironmentConfig {
   };
   bffLogdashApiKey: string;
   apiBaseUrl: string;
-  stage: "live" | "pre-live" | "local";
+  stage: "live" | "preview" | "local";
 }
 
 export function getEnvironmentConfig(): EnvironmentConfig {
