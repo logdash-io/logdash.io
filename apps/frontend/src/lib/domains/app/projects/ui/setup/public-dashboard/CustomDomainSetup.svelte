@@ -2,7 +2,6 @@
   import { customDomainsState } from '$lib/domains/app/projects/application/public-dashboards/custom-domains.state.svelte.js';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import { isDev } from '$lib/domains/shared/utils/is-dev.util.js';
   import { CheckIcon, CloseIcon, DangerIcon } from '@logdash/hyper-ui/icons';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import Highlight from 'svelte-highlight';
@@ -69,7 +68,7 @@
   const copyDnsRecord = async (): Promise<void> => {
     if (!customDomain) return;
 
-    const dnsRecord = `CNAME ${customDomain.domain} ${isDev() ? 'dev-statuspage' : 'statuspage'}.logdash.io`;
+    const dnsRecord = `CNAME ${customDomain.domain} statuspage.logdash.io`;
     await navigator.clipboard.writeText(dnsRecord);
     copied = true;
   };
@@ -216,7 +215,7 @@
               <div class="relative">
                 <Highlight
                   class="code-snippet selection:bg-base-100"
-                  code={`CNAME ${customDomain.domain} ${isDev() ? 'dev-statuspage' : 'statuspage'}.logdash.io`}
+                  code={`CNAME ${customDomain.domain} statuspage.logdash.io`}
                   language={bash}
                 />
 

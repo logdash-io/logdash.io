@@ -54,6 +54,8 @@ interface EnvConfig {
   google: {
     clientId: string;
     clientSecret: string;
+    clientIdAlternative?: string;
+    clientSecretAlternative?: string;
     redirectUri: string;
     redirectUriAlternative?: string;
   };
@@ -104,7 +106,7 @@ interface EnvConfig {
 
 interface EnvConfigs {
   [OurEnv.Prod]: EnvConfig;
-  [OurEnv.Dev]: EnvConfig;
+  [OurEnv.Local]: EnvConfig;
 }
 
 export const EnvConfigs: EnvConfigs = {
@@ -155,11 +157,18 @@ export const EnvConfigs: EnvConfigs = {
     github: {
       clientId: process.env.GITHUB_OAUTH_CLIENT_ID!,
       clientSecret: process.env.GITHUB_OAUTH_CLIENT_SECRET!,
+      clientIdAlternative: process.env.GITHUB_OAUTH_CLIENT_ID_LOCAL!,
+      clientSecretAlternative: process.env.GITHUB_OAUTH_CLIENT_SECRET_LOCAL!,
     },
     google: {
       clientId: process.env.GOOGLE_OAUTH_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
+      clientIdAlternative: process.env.GOOGLE_OAUTH_CLIENT_ID_LOCAL!,
+      clientSecretAlternative: process.env.GOOGLE_OAUTH_CLIENT_SECRET_LOCAL!,
       redirectUri: 'https://logdash.io/app/callbacks/oauth/google',
+      redirectUriAlternative:
+        process.env.GOOGLE_OAUTH_REDIRECT_URI_LOCAL ??
+        'http://localhost:5173/app/callbacks/oauth/google-alternative',
     },
     mongo: {
       url: process.env.MONGO_URL!,
@@ -203,7 +212,7 @@ export const EnvConfigs: EnvConfigs = {
       targetCname: 'statuspage.logdash.io',
     },
   },
-  [OurEnv.Dev]: {
+  [OurEnv.Local]: {
     emailLoginWhitelist: {
       enabled: true,
       whitelistedEmails: (process.env.WHITELISTED_EMAILS ?? '').split(','),
@@ -219,8 +228,8 @@ export const EnvConfigs: EnvConfigs = {
       earlyBirdPriceId: process.env.STRIPE_EARLY_BIRD_PRICE_ID!,
       builderPriceId: process.env.STRIPE_BUILDER_PRICE_ID!,
       proPriceId: process.env.STRIPE_PRO_PRICE_ID!,
-      successUrl: 'https://dev.logdash.io/app/callbacks/payments/purchase-success',
-      returnFromBillingUrl: 'https://dev.logdash.io/app/clusters',
+      successUrl: 'http://localhost:5173/app/callbacks/payments/purchase-success',
+      returnFromBillingUrl: 'http://localhost:5173/app/clusters',
       apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,
       signature: process.env.STRIPE_SIGNATURE!,
     },
@@ -238,7 +247,7 @@ export const EnvConfigs: EnvConfigs = {
       clusterId: '682844d37f296819db10b9a5',
       projectId: '682844d37f296819db10b9a9',
       logdashApiKey: process.env.DEMO_DASHBOARD_API_KEY!,
-      logdashHost: 'https://dev-api.logdash.io',
+      logdashHost: 'https://api.logdash.io',
       addTestLogRateLimit: {
         timeWindowSeconds: 60,
         limit: 10,
@@ -256,7 +265,9 @@ export const EnvConfigs: EnvConfigs = {
     google: {
       clientId: process.env.GOOGLE_OAUTH_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
-      redirectUri: 'https://dev.logdash.io/app/callbacks/oauth/google',
+      clientIdAlternative: process.env.GOOGLE_OAUTH_CLIENT_ID_ALTERNATIVE!,
+      clientSecretAlternative: process.env.GOOGLE_OAUTH_CLIENT_SECRET_ALTERNATIVE!,
+      redirectUri: 'http://localhost:5173/app/callbacks/oauth/google',
       redirectUriAlternative: 'http://localhost:5173/app/callbacks/oauth/google-alternative',
     },
     mongo: {
@@ -300,7 +311,7 @@ export const EnvConfigs: EnvConfigs = {
       },
     },
     customDomain: {
-      targetCname: 'dev-statuspage.logdash.io',
+      targetCname: 'statuspage.logdash.io',
     },
   },
 };
