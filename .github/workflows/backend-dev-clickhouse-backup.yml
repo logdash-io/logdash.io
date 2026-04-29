@@ -1,8 +1,6 @@
 name: Clickhouse backup (dev)
 
 on:
-  schedule:
-    - cron: '*/15 * * * *' # Every 15 minutes
   workflow_dispatch:
 
 jobs:
