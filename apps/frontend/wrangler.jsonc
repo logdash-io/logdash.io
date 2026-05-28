@@ -11,4 +11,13 @@
   "observability": {
     "enabled": true,
   },
+  "vars": {
+    "VITE_POSTHOG_KEY": "phc_z0enAmNPcCT1IkHnNU7TVo4DcrC1YzPgCK42UYib0kJ",
+    "VITE_POSTHOG_HOST": "https://eu.posthog.com",
+    "VITE_POSTHOG_PROXY": "/ingest/",
+    "VITE_GITHUB_CLIENT_ID": "Ov23liSHxH2asHmTy1M4",
+    "VITE_GOOGLE_CLIENT_ID": "814987938118-s1gf11r5trjsm6k6d08fkkosa48lrpbo.apps.googleusercontent.com",
+    "VITE_API_BASE_URL": "https://api.logdash.io",
+    "VITE_STAGE": "live",
+  },
 }
