@@ -29,9 +29,9 @@ inputs:
   github-oauth-client-secret:
     required: true
   github-oauth-client-id-alternative:
-    required: true
+    required: false
   github-oauth-client-secret-alternative:
-    required: true
+    required: false
   resend-api-key:
     required: true
   resend-audience-enabled:
@@ -46,9 +46,9 @@ inputs:
   redis-url:
     required: true
   redis-socket-path:
-    required: true
+    required: false
   redis-password:
-    required: true
+    required: false
 
   stripe-early-bird-price-id:
     required: true
@@ -70,7 +70,7 @@ inputs:
   clickhouse-host:
     required: true
   clickhouse-port:
-    required: true
+    required: false
   clickhouse-user:
     required: true
   clickhouse-password:
@@ -95,6 +95,16 @@ inputs:
     required: true
   google-oauth-client-secret:
     required: true
+  google-oauth-client-id-local:
+    required: false
+  google-oauth-client-secret-local:
+    required: false
+  github-oauth-client-id-local:
+    required: false
+  github-oauth-client-secret-local:
+    required: false
+  google-oauth-redirect-uri-local:
+    required: false
 
 runs:
   using: 'composite'
@@ -147,4 +157,9 @@ runs:
           -e INTERNAL_TELEGRAM_BOT_TOKEN=${{ inputs.internal-telegram-bot-token }} \
           -e GOOGLE_OAUTH_CLIENT_ID=${{ inputs.google-oauth-client-id }} \
           -e GOOGLE_OAUTH_CLIENT_SECRET=${{ inputs.google-oauth-client-secret }} \
+          -e GOOGLE_OAUTH_CLIENT_ID_LOCAL=${{ inputs.google-oauth-client-id-local }} \
+          -e GOOGLE_OAUTH_CLIENT_SECRET_LOCAL=${{ inputs.google-oauth-client-secret-local }} \
+          -e GITHUB_OAUTH_CLIENT_ID_LOCAL=${{ inputs.github-oauth-client-id-local }} \
+          -e GITHUB_OAUTH_CLIENT_SECRET_LOCAL=${{ inputs.github-oauth-client-secret-local }} \
+          -e GOOGLE_OAUTH_REDIRECT_URI_LOCAL=${{ inputs.google-oauth-redirect-uri-local }} \
           ${{ inputs.image-name }}

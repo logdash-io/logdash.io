@@ -40,27 +40,32 @@ export class AuditLogUtils {
   }
 
   public async assertAuditLog(dto: Partial<AuditLogNormalized>): Promise<AuditLogEntity> {
-    await sleep(200);
+    const timeoutAt = Date.now() + 3000;
+    let auditLogs: AuditLogEntity[] = [];
 
-    const response = await this.clickhouseClient.query({
-      query: `SELECT * FROM audit_logs`,
-      format: 'JSONEachRow',
-    });
+    while (Date.now() < timeoutAt) {
+      const response = await this.clickhouseClient.query({
+        query: `SELECT * FROM audit_logs`,
+        format: 'JSONEachRow',
+      });
 
-    const auditLogs = (await response.json()) as any as AuditLogEntity[];
+      auditLogs = (await response.json()) as any as AuditLogEntity[];
+
+      const matchingAuditLog = auditLogs.find((auditLog) => this.matchAuditLog(auditLog, dto));
+
+      if (matchingAuditLog) {
+        return matchingAuditLog;
+      }
+
+      await sleep(200);
+    }
 
     if (auditLogs.length === 0) {
       throw new Error('No audit logs found');
     }
 
-    const matchingAuditLog = auditLogs.find((auditLog) => this.matchAuditLog(auditLog, dto));
-
-    if (!matchingAuditLog) {
-      console.log('All audit logs: ', auditLogs);
-      throw new Error('No matching audit log found');
-    }
-
-    return matchingAuditLog;
+    console.log('All audit logs: ', auditLogs);
+    throw new Error('No matching audit log found');
   }
 
   public async countUserAuditLogs(userId: string): Promise<number> {

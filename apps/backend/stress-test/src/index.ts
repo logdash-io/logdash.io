@@ -120,7 +120,7 @@ async function main() {
 
 function test() {
   // const logdash1 = new Logdash('m409bnFcnhmpfQ3hozI2YkP49WTmto31', {
-  //   host: 'https://dev-api.logdash.io',
+  //   host: 'https://api.logdash.io',
   // });
 
   // for (let i = 0; i < 100; i++) {
@@ -128,7 +128,7 @@ function test() {
   // }
 
   const logdash2 = new Logdash('mnL6qiDcki0FZYqOWlaQD50K7pZ5gLtn', {
-    host: 'https://dev-api.logdash.io',
+    host: 'https://api.logdash.io',
   });
 
   for (let i = 0; i < 100; i++) {

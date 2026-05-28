@@ -1,6 +1,7 @@
 import { dev } from '$app/environment';
 import type { UserTier } from '$lib/domains/shared/types.js';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
+import { isLocal } from '$lib/domains/shared/utils/is-dev.util';
 
 export type GoogleCallbackState = {
   terms_accepted: boolean;
@@ -17,7 +18,7 @@ export const generateGoogleOAuthUrl = (
 ): string => {
   const redirectUri =
     options?.redirectUri ||
-    (dev
+    (isLocal() || dev
       ? 'http://localhost:5173/app/callbacks/oauth/google-alternative'
       : `${window.location.origin}/app/callbacks/oauth/google`);
 

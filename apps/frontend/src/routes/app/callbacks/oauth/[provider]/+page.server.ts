@@ -1,6 +1,7 @@
 import { dev } from '$app/environment';
 import { bffLogger } from '$lib/domains/shared/bff-logger.server';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
+import { isLocal } from '$lib/domains/shared/utils/is-dev.util';
 import {
   save_access_token,
   save_onboarding_tier,
@@ -136,7 +137,7 @@ export const load = async ({
   }
 
   try {
-    const forceLocalLogin = dev || params.provider === 'google-alternative';
+    const forceLocalLogin = isLocal() || dev || params.provider === 'google-alternative';
     await runLoginFlow({
       cookies,
       code,

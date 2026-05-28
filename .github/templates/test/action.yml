@@ -32,7 +32,7 @@ runs:
       shell: bash
       env:
         NODE_OPTIONS: "--max-old-space-size=4096"
-        OUR_ENV: "dev"
+        OUR_ENV: "local"
         AUTH_JWT_SECRET: "test"
         TELEGRAM_UPTIME_BOT_TOKEN: "token"
         TELEGRAM_UPTIME_BOT_SECRET: "secret"

@@ -8,6 +8,7 @@ on:
     paths:
       - 'apps/backend/**'
       - '.github/workflows/**'
+      - '.github/templates/**'
 
 jobs:
   test:
@@ -70,6 +71,11 @@ jobs:
           internal-telegram-bot-token: ${{ secrets.BACKEND_PROD_INTERNAL_TELEGRAM_BOT_TOKEN }}
           google-oauth-client-id: ${{ secrets.BACKEND_PROD_GOOGLE_OAUTH_CLIENT_ID }}
           google-oauth-client-secret: ${{ secrets.BACKEND_PROD_GOOGLE_OAUTH_CLIENT_SECRET }}
+          google-oauth-client-id-local: ${{ secrets.BACKEND_PROD_GOOGLE_OAUTH_CLIENT_ID_LOCAL }}
+          google-oauth-client-secret-local: ${{ secrets.BACKEND_PROD_GOOGLE_OAUTH_CLIENT_SECRET_LOCAL }}
+          github-oauth-client-id-local: ${{ secrets.BACKEND_PROD_GITHUB_OAUTH_CLIENT_ID_LOCAL }}
+          github-oauth-client-secret-local: ${{ secrets.BACKEND_PROD_GITHUB_OAUTH_CLIENT_SECRET_LOCAL }}
+          google-oauth-redirect-uri-local: http://localhost:5173/app/callbacks/oauth/google-alternative
       - name: Prune
         uses: './.github/templates/prune'
         with:

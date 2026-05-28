@@ -41,7 +41,7 @@ export function getBasicTemplate(dto: BasicEmailTemplateDto) {
             <img
               alt="LogDash Logo"
               height="75"
-              src="https://dev.logdash.io/logo-light-horizontal.png"
+              src="https://logdash.io/logo-light-horizontal.png"
               style="
                 margin-left: auto;
                 margin-right: auto;

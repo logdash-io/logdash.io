@@ -1,6 +1,7 @@
 import { dev } from '$app/environment';
 import { bffLogger } from '$lib/domains/shared/bff-logger.server';
 import { logdashAPI } from '$lib/domains/shared/logdash.api.server';
+import { isLocal } from '$lib/domains/shared/utils/is-dev.util';
 import {
   save_access_token,
   save_onboarding_tier,
@@ -30,7 +31,7 @@ async function runLoginFlow(dto: {
     code,
     terms_accepted,
     email_accepted,
-    is_local_env: dev,
+    is_local_env: isLocal() || dev,
   });
 
   if (error) {
