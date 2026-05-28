@@ -15,6 +15,9 @@ import {
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
+import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
+import { Resource } from '../../personal-api-key/core/enums/resource.enum';
+import { Action } from '../../personal-api-key/core/enums/action.enum';
 import { HttpMonitorLimitService } from '../limit/http-monitor-limit.service';
 import { HttpMonitorReadService } from '../read/http-monitor-read.service';
 import { HttpMonitorWriteService } from '../write/http-monitor-write.service';
@@ -92,6 +95,7 @@ export class HttpMonitorCoreController {
   }
 
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Read)
   @Get('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
   async readByProjectId(@Param('projectId') projectId: string): Promise<HttpMonitorSerialized[]> {
@@ -106,6 +110,7 @@ export class HttpMonitorCoreController {
   @DemoEndpoint()
   @UseInterceptors(DemoCacheInterceptor)
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Read)
   @Get('/clusters/:clusterId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
   async readByClusterId(@Param('clusterId') clusterId: string): Promise<HttpMonitorSerialized[]> {

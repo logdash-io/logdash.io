@@ -74,6 +74,9 @@ interface EnvConfig {
   auth: {
     jwtSecret: string;
   };
+  personalApiKey: {
+    hmacSecret: string;
+  };
   swagger: {
     username: string;
     password: string;
@@ -183,6 +186,9 @@ export const EnvConfigs: EnvConfigs = {
     auth: {
       jwtSecret: process.env.AUTH_JWT_SECRET!,
     },
+    personalApiKey: {
+      hmacSecret: process.env.PERSONAL_API_KEY_HMAC_SECRET!,
+    },
     swagger: {
       username: 'admin',
       password: process.env.SWAGGER_PASSWORD!,
@@ -284,6 +290,10 @@ export const EnvConfigs: EnvConfigs = {
     },
     auth: {
       jwtSecret: process.env.AUTH_JWT_SECRET!,
+    },
+    personalApiKey: {
+      hmacSecret:
+        process.env.PERSONAL_API_KEY_HMAC_SECRET ?? 'local-dev-personal-api-key-hmac-secret',
     },
     swagger: {
       username: 'admin',

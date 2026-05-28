@@ -23,6 +23,9 @@ import { MetricSerializer } from './entities/metric.serializer';
 import { ApiKeyReadCachedService } from '../../api-key/read/api-key-read-cached.service';
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
+import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
+import { Resource } from '../../personal-api-key/core/enums/resource.enum';
+import { Action } from '../../personal-api-key/core/enums/action.enum';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { filter, fromEvent, map, Observable } from 'rxjs';
 import { MetricEvents } from '../events/metric-events.enum';
@@ -97,6 +100,7 @@ export class MetricCoreController {
   @DemoEndpoint()
   @UseInterceptors(DemoCacheInterceptor)
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Metrics, Action.Read)
   @ApiBearerAuth()
   @Get('projects/:projectId/metrics/:metricRegisterEntryId')
   @ApiResponse({ type: MetricSerialized, isArray: true })
@@ -123,6 +127,7 @@ export class MetricCoreController {
   @DemoEndpoint()
   @UseInterceptors(DemoCacheInterceptor)
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Metrics, Action.Read)
   @ApiBearerAuth()
   @Get('projects/:projectId/metrics')
   @ApiResponse({ type: SimpleMetric, isArray: true })

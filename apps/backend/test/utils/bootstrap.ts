@@ -9,6 +9,9 @@ import { Model } from 'mongoose';
 import * as nock from 'nock';
 import { ApiKeyCoreModule } from '../../src/api-key/core/api-key-core.module';
 import { ApiKeyEntity } from '../../src/api-key/core/entities/api-key.entity';
+import { PersonalApiKeyCoreModule } from '../../src/personal-api-key/core/personal-api-key-core.module';
+import { OverviewCoreModule } from '../../src/overview/core/overview-core.module';
+import { PersonalApiKeyEntity } from '../../src/personal-api-key/core/entities/personal-api-key.entity';
 import { ClusterCoreModule } from '../../src/cluster/core/cluster-core.module';
 import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
 import { ClusterInviteCoreModule } from '../../src/cluster-invite/core/cluster-invite-core.module';
@@ -79,6 +82,8 @@ export async function createTestApp() {
       UserCoreModule,
       LogCoreModule,
       ApiKeyCoreModule,
+      PersonalApiKeyCoreModule,
+      OverviewCoreModule,
       ProjectCoreModule,
       ScheduleModule.forRoot(),
       MetricCoreModule,
@@ -131,6 +136,9 @@ export async function createTestApp() {
   const projectModel: Model<ProjectEntity> = module.get(getModelToken(ProjectEntity.name));
   const metricModel: Model<MetricEntity> = module.get(getModelToken(MetricEntity.name));
   const apiKeyModel: Model<ApiKeyEntity> = module.get(getModelToken(ApiKeyEntity.name));
+  const personalApiKeyModel: Model<PersonalApiKeyEntity> = module.get(
+    getModelToken(PersonalApiKeyEntity.name),
+  );
   const metricRegisterModel: Model<MetricRegisterEntryEntity> = module.get(
     getModelToken(MetricRegisterEntryEntity.name),
   );
@@ -165,6 +173,7 @@ export async function createTestApp() {
       projectModel.deleteMany({}),
       metricModel.deleteMany({}),
       apiKeyModel.deleteMany({}),
+      personalApiKeyModel.deleteMany({}),
       metricRegisterModel.deleteMany({}),
       httpMonitorModel.deleteMany({}),
       clusterModel.deleteMany({}),
@@ -213,6 +222,7 @@ export async function createTestApp() {
       projectModel,
       metricModel,
       apiKeyModel,
+      personalApiKeyModel,
       metricRegisterModel,
       httpMonitorModel,
       clusterModel,

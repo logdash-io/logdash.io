@@ -14,6 +14,9 @@ import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessResponse } from 'src/shared/responses/success.response';
 import { ApiKeyWriteService } from '../../api-key/write/api-key-write.service';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
+import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
+import { Resource } from '../../personal-api-key/core/enums/resource.enum';
+import { Action } from '../../personal-api-key/core/enums/action.enum';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { LogRateLimitService } from '../../log/rate-limit/log-rate-limit.service';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
@@ -47,6 +50,7 @@ export class ProjectCoreController {
   ) {}
 
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Projects, Action.Read)
   @Get('projects/:projectId')
   @ApiResponse({ type: ProjectSerialized })
   public async readById(@Param('projectId') projectId: string): Promise<ProjectSerialized> {
@@ -72,6 +76,7 @@ export class ProjectCoreController {
   }
 
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Projects, Action.Read)
   @Get('clusters/:clusterId/projects')
   @ApiResponse({ type: ProjectSerialized, isArray: true })
   public async readBelongingToCluster(
