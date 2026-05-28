@@ -45,14 +45,14 @@ export class CustomDomainRegistrationService {
       currentAttemptCount,
     });
 
-    await this.auditLog.create({
-      action: AuditLogCustomDomainAction.AttemptIncrease,
-      relatedDomain: RelatedDomain.CustomDomain,
-      relatedEntityId: domainId,
-    });
+    const newAttemptCount = await this.customDomainWriteService.incrementAttemptCount(
+      domainId,
+      MAX_ATTEMPTS,
+    );
 
-    await this.customDomainWriteService.incrementAttemptCount(domainId);
-    const newAttemptCount = currentAttemptCount + 1;
+    if (newAttemptCount === null) {
+      return;
+    }
 
     if (newAttemptCount >= MAX_ATTEMPTS) {
       await this.auditLog.create({

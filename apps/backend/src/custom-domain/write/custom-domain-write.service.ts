@@ -82,13 +82,27 @@ export class CustomDomainWriteService {
     await this.customDomainModel.deleteMany({ publicDashboardId });
   }
 
-  public async incrementAttemptCount(id: string): Promise<void> {
+  public async incrementAttemptCount(id: string, maxAttempts: number): Promise<number | null> {
+    const updated = await this.customDomainModel.findOneAndUpdate(
+      {
+        _id: id,
+        status: CustomDomainStatus.Verifying,
+        attemptCount: { $lt: maxAttempts },
+      },
+      { $inc: { attemptCount: 1 } },
+      { new: true },
+    );
+
+    if (!updated) {
+      return null;
+    }
+
     await this.auditLog.create({
       action: AuditLogCustomDomainAction.AttemptIncrease,
       relatedDomain: RelatedDomain.CustomDomain,
       relatedEntityId: id,
     });
 
-    await this.customDomainModel.findByIdAndUpdate(id, { $inc: { attemptCount: 1 } });
+    return updated.attemptCount;
   }
 }
