@@ -1,6 +1,9 @@
 import { getOurEnv, OurEnv } from '../types/our-env.enum';
 
 interface EnvConfig {
+  app: {
+    url: string;
+  };
   emailLoginWhitelist: {
     enabled: boolean;
     whitelistedEmails: string[];
@@ -114,6 +117,9 @@ interface EnvConfigs {
 
 export const EnvConfigs: EnvConfigs = {
   [OurEnv.Prod]: {
+    app: {
+      url: process.env.APP_URL ?? 'https://logdash.io',
+    },
     emailLoginWhitelist: {
       enabled: false,
       whitelistedEmails: (process.env.WHITELISTED_EMAILS ?? '').split(','),
@@ -219,6 +225,9 @@ export const EnvConfigs: EnvConfigs = {
     },
   },
   [OurEnv.Local]: {
+    app: {
+      url: process.env.APP_URL ?? 'http://localhost:5173',
+    },
     emailLoginWhitelist: {
       enabled: true,
       whitelistedEmails: (process.env.WHITELISTED_EMAILS ?? '').split(','),

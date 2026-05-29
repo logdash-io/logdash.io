@@ -52,6 +52,15 @@ A verdict, not a row dump. Exposed at `GET /overview`, `GET /clusters/:clusterId
 `GET /projects/:projectId/overview`. The `ld` CLI maps bare `ld` and `ld status` onto it.
 _Avoid_: "tldr" (jargon; collides with the tldr-pages tool), "dashboard", "summary".
 
+**CLI authorization** (the `ld login` flow):
+A device-authorization handoff that mints a [[#credentials|Personal API Key]] for the CLI
+without a localhost callback. Two codes, never conflated: the **device code** is the
+high-entropy secret the CLI holds and polls with (the only thing that can retrieve the key);
+the **user code** is the short, glanceable handle carried in the magic link and shown in both
+the terminal and the consent modal so the human can confirm they match. Approval happens in
+the browser (session-authenticated) via the auto-opened consent modal. See ADR-0003.
+_Avoid_: "OAuth flow" (no token exchange / consent-grant protocol), "callback flow".
+
 ## Example dialogue
 
 > **Dev:** A customer's ingest key leaked from their mobile app. Blast radius?

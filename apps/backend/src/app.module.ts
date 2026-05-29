@@ -30,6 +30,7 @@ import { InternalModule } from './internal/internal.module';
 import { BlogCoreModule } from './blog/core/blog-core.module';
 import { PersonalApiKeyCoreModule } from './personal-api-key/core/personal-api-key-core.module';
 import { OverviewCoreModule } from './overview/core/overview-core.module';
+import { CliAuthModule } from './cli-auth/core/cli-auth.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { OverviewCoreModule } from './overview/core/overview-core.module';
     BlogCoreModule,
     PersonalApiKeyCoreModule,
     OverviewCoreModule,
+    CliAuthModule,
   ],
 })
 export class AppModule {}

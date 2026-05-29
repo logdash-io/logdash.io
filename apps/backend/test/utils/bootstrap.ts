@@ -10,6 +10,7 @@ import * as nock from 'nock';
 import { ApiKeyCoreModule } from '../../src/api-key/core/api-key-core.module';
 import { ApiKeyEntity } from '../../src/api-key/core/entities/api-key.entity';
 import { PersonalApiKeyCoreModule } from '../../src/personal-api-key/core/personal-api-key-core.module';
+import { CliAuthModule } from '../../src/cli-auth/core/cli-auth.module';
 import { OverviewCoreModule } from '../../src/overview/core/overview-core.module';
 import { PersonalApiKeyEntity } from '../../src/personal-api-key/core/entities/personal-api-key.entity';
 import { ClusterCoreModule } from '../../src/cluster/core/cluster-core.module';
@@ -83,6 +84,7 @@ export async function createTestApp() {
       LogCoreModule,
       ApiKeyCoreModule,
       PersonalApiKeyCoreModule,
+      CliAuthModule,
       OverviewCoreModule,
       ProjectCoreModule,
       ScheduleModule.forRoot(),
