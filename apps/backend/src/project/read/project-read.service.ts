@@ -48,6 +48,12 @@ export class ProjectReadService {
     return projects.map((project) => ProjectSerializer.normalize(project));
   }
 
+  public async readByClusterIds(clusterIds: string[]): Promise<ProjectNormalized[]> {
+    const projects = await this.model.find({ clusterId: { $in: clusterIds } });
+
+    return projects.map((project) => ProjectSerializer.normalize(project));
+  }
+
   public async readCurrentIndexMany(projectIds: string[]): Promise<Record<string, number>> {
     const projects = await this.model.find(
       { _id: { $in: projectIds } },

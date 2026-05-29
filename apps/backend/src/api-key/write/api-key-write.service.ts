@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ApiKeyEntity } from '../core/entities/api-key.entity';
@@ -22,25 +23,29 @@ export class ApiKeyWriteService {
   }
 
   private generateApiKeyValue(): string {
-    const timestamp = Date.now().toString(36);
+    return 'ldi_' + this.base62(randomBytes(24));
+  }
 
-    const resultArray = new Array(32).fill('');
-
+  private base62(bytes: Buffer): string {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
 
-    for (let i = 0; i < timestamp.length; i++) {
-      const position = (i * 7) % 32;
-      resultArray[position] = timestamp[i];
+    let value = 0n;
+    for (const byte of bytes) {
+      value = (value << 8n) | BigInt(byte);
     }
 
-    for (let i = 0; i < 32; i++) {
-      if (!resultArray[i]) {
-        resultArray[i] = characters.charAt(Math.floor(Math.random() * charactersLength));
-      }
+    if (value === 0n) {
+      return characters[0];
     }
 
-    return resultArray.join('');
+    const base = BigInt(characters.length);
+    let result = '';
+    while (value > 0n) {
+      result = characters[Number(value % base)] + result;
+      value = value / base;
+    }
+
+    return result;
   }
 
   public async deleteByProjectId(projectId: string): Promise<void> {

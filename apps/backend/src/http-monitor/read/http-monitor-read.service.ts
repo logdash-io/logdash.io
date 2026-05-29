@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { HttpMonitorEntity } from '../core/entities/http-monitor.entity';
 import { HttpMonitorNormalized } from '../core/entities/http-monitor.interface';
 import { HttpMonitorSerializer } from '../core/entities/http-monitor.serializer';
+import { HttpMonitorMode } from '../core/enums/http-monitor-mode.enum';
 
 @Injectable()
 export class HttpMonitorReadService {
@@ -90,7 +91,7 @@ export class HttpMonitorReadService {
     mode: string,
   ): AsyncGenerator<HttpMonitorNormalized> {
     const cursor = this.httpMonitorModel
-      .find({ projectId: { $in: projectIds }, mode, claimed: true })
+      .find({ projectId: { $in: projectIds }, mode: mode as HttpMonitorMode, claimed: true })
       .sort({ createdAt: -1 })
       .cursor();
 
@@ -104,7 +105,7 @@ export class HttpMonitorReadService {
     mode: string,
   ): AsyncGenerator<HttpMonitorNormalized> {
     const cursor = this.httpMonitorModel
-      .find({ projectId: { $in: projectIds }, mode, claimed: false })
+      .find({ projectId: { $in: projectIds }, mode: mode as HttpMonitorMode, claimed: false })
       .sort({ createdAt: -1 })
       .cursor();
 
@@ -118,7 +119,7 @@ export class HttpMonitorReadService {
     mode: string,
   ): Promise<HttpMonitorNormalized[]> {
     const entities = await this.httpMonitorModel
-      .find({ projectId: { $in: projectIds }, mode })
+      .find({ projectId: { $in: projectIds }, mode: mode as HttpMonitorMode })
       .sort({ createdAt: -1 })
       .lean<HttpMonitorEntity[]>()
       .exec();
@@ -131,7 +132,7 @@ export class HttpMonitorReadService {
     mode: string,
   ): Promise<HttpMonitorNormalized[]> {
     const entities = await this.httpMonitorModel
-      .find({ projectId: { $in: projectIds }, mode, claimed: true })
+      .find({ projectId: { $in: projectIds }, mode: mode as HttpMonitorMode, claimed: true })
       .sort({ createdAt: -1 })
       .lean<HttpMonitorEntity[]>()
       .exec();

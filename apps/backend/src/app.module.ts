@@ -28,6 +28,9 @@ import { AuditLogCreationModule } from './audit-log/creation/audit-log-creation.
 import { ClusterInviteCoreModule } from './cluster-invite/core/cluster-invite-core.module';
 import { InternalModule } from './internal/internal.module';
 import { BlogCoreModule } from './blog/core/blog-core.module';
+import { PersonalApiKeyCoreModule } from './personal-api-key/core/personal-api-key-core.module';
+import { OverviewCoreModule } from './overview/core/overview-core.module';
+import { CliAuthModule } from './cli-auth/core/cli-auth.module';
 
 @Module({
   imports: [
@@ -63,6 +66,9 @@ import { BlogCoreModule } from './blog/core/blog-core.module';
     ClusterInviteCoreModule,
     InternalModule,
     BlogCoreModule,
+    PersonalApiKeyCoreModule,
+    OverviewCoreModule,
+    CliAuthModule,
   ],
 })
 export class AppModule {}

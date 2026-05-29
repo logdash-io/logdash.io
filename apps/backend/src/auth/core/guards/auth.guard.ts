@@ -1,14 +1,28 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CustomJwtService } from '../../custom-jwt/custom-jwt.service';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/is-public';
 import { DEMO_ENDPOINT_KEY } from '../../../demo/decorators/demo-endpoint.decorator';
 import { getEnvConfig } from '../../../shared/configs/env-configs';
+import { PersonalApiKeyAuthService } from '../../../personal-api-key/auth/personal-api-key-auth.service';
+import { ALL_ACCESS } from '../../../personal-api-key/core/scope-presets';
+import { Action } from '../../../personal-api-key/core/enums/action.enum';
+import { ScopeEntry } from '../../../personal-api-key/core/types/scope-entry.type';
+import { REQUIRE_SCOPE_KEY } from '../decorators/require-scope.decorator';
+import { ALLOW_ANY_PERSONAL_KEY_KEY } from '../decorators/allow-any-personal-key.decorator';
+import { PERSONAL_API_KEY_PREFIX } from '../../../personal-api-key/core/personal-api-key.token';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: CustomJwtService,
+    private readonly personalApiKeyAuthService: PersonalApiKeyAuthService,
     private reflector: Reflector,
   ) {}
 
@@ -41,6 +55,7 @@ export class AuthGuard implements CanActivate {
         return true;
       }
 
+      // Demo users are JWT-like; missing viaPersonalKey ⇒ all-access.
       request['user'] = payload;
 
       return true;
@@ -51,13 +66,69 @@ export class AuthGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException();
     }
+
+    if (token.startsWith(PERSONAL_API_KEY_PREFIX)) {
+      const authed = await this.personalApiKeyAuthService.verify(token);
+
+      if (!authed) {
+        throw new UnauthorizedException();
+      }
+
+      request['user'] = {
+        id: authed.userId,
+        scopes: authed.scopes,
+        access: authed.access,
+        viaPersonalKey: true,
+      };
+
+      return this.enforceScope(context, request);
+    }
+
     const payload = await this.jwtService.getTokenPayload(token);
 
     if (!payload) {
       throw new UnauthorizedException();
     }
 
-    request['user'] = payload;
+    request['user'] = {
+      id: payload.id,
+      scopes: ALL_ACCESS,
+      access: { kind: 'all' },
+      viaPersonalKey: false,
+    };
+
+    return true;
+  }
+
+  private enforceScope(context: ExecutionContext, request: any): boolean {
+    const allowAnyPersonalKey = this.reflector.getAllAndOverride<boolean>(
+      ALLOW_ANY_PERSONAL_KEY_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (allowAnyPersonalKey) {
+      return true;
+    }
+
+    const required = this.reflector.getAllAndOverride<{ resource: string; action: Action }>(
+      REQUIRE_SCOPE_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    // Fail-closed: a personal key hitting an endpoint with no @RequireScope is denied.
+    if (!required) {
+      throw new ForbiddenException('This endpoint is not available to personal API keys');
+    }
+
+    const scopes: ScopeEntry[] = request.user.scopes ?? [];
+    const action = scopes.find((s) => s.resource === required.resource)?.action ?? Action.None;
+
+    const ok =
+      action === Action.Write || (action === Action.Read && required.action === Action.Read);
+
+    if (!ok) {
+      throw new ForbiddenException(`Missing scope ${required.resource}:${required.action}`);
+    }
 
     return true;
   }

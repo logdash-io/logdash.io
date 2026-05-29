@@ -12,6 +12,9 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { filter, fromEvent, map, Observable } from 'rxjs';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
+import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
+import { Resource } from '../../personal-api-key/core/enums/resource.enum';
+import { Action } from '../../personal-api-key/core/enums/action.enum';
 import { DemoEndpoint } from '../../demo/decorators/demo-endpoint.decorator';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { HttpPingCreatedEvent } from '../events/definitions/http-ping-created.event';
@@ -35,6 +38,7 @@ export class HttpPingCoreController {
 
   @UseInterceptors(DemoCacheInterceptor)
   @DemoEndpoint()
+  @RequireScope(Resource.Monitors, Action.Read)
   @Get('projects/:projectId/monitors/:monitorId/http_pings')
   @ApiResponse({ type: HttpPingSerialized, isArray: true })
   async readByMonitorIdQuery(

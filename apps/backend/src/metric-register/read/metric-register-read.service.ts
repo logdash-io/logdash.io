@@ -83,6 +83,21 @@ export class MetricRegisterReadService {
     return result;
   }
 
+  // Metric values carry no timestamp; the cheapest "is a metric still being
+  // reported" signal we have is the creation time of the most recent metric
+  // register entry for the project (embedded in its ObjectId). Returns null
+  // when the project has never registered a metric.
+  public async getLastMetricReceivedAt(projectId: string): Promise<Date | null> {
+    const entry = await this.model
+      .findOne({ projectId })
+      .sort({ _id: -1 })
+      .select({ _id: 1 })
+      .lean<{ _id: { getTimestamp(): Date } }>()
+      .exec();
+
+    return entry ? entry._id.getTimestamp() : null;
+  }
+
   public async readBelongingToProject(projectId: string): Promise<MetricRegisterEntryNormalized[]> {
     const entities = await this.model
       .find({ projectId })

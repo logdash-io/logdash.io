@@ -17,6 +17,7 @@ import { ClusterInviteReadService } from '../../../cluster-invite/read/cluster-i
 import { ClusterInviteReadModule } from '../../../cluster-invite/read/cluster-invite-read.module';
 import { CustomDomainReadService } from '../../../custom-domain/read/custom-domain-read.service';
 import { CustomDomainReadModule } from '../../../custom-domain/read/custom-domain-read.module';
+import { AccessRestriction } from '../../../personal-api-key/core/types/access-restriction.type';
 
 const CLUSTER_ID_PARAM_NAME = 'clusterId';
 const PROJECT_ID_PARAM_NAME = 'projectId';
@@ -59,6 +60,8 @@ export class ClusterMemberGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     const userId = request.user?.id;
+    const access: AccessRestriction | undefined = request.user?.access;
+    const viaPersonalKey: boolean | undefined = request.user?.viaPersonalKey;
 
     const clusterIdFromParams = request.params[CLUSTER_ID_PARAM_NAME];
     const projectIdFromParams = request.params[PROJECT_ID_PARAM_NAME];
@@ -98,6 +101,8 @@ export class ClusterMemberGuard implements CanActivate {
         clusterId: clusterIdFromParams,
         userId,
         allowedRoles,
+        access,
+        viaPersonalKey,
       });
     }
 
@@ -106,6 +111,8 @@ export class ClusterMemberGuard implements CanActivate {
         projectId: projectIdFromParams,
         userId,
         allowedRoles,
+        access,
+        viaPersonalKey,
       });
     }
 
@@ -114,6 +121,8 @@ export class ClusterMemberGuard implements CanActivate {
         notificationChannelId: notificationChannelIdFromParams,
         userId,
         allowedRoles,
+        access,
+        viaPersonalKey,
       });
     }
 
@@ -122,6 +131,8 @@ export class ClusterMemberGuard implements CanActivate {
         httpMonitorId: httpMonitorIdFromParams,
         userId,
         allowedRoles,
+        access,
+        viaPersonalKey,
       });
     }
 
@@ -130,6 +141,8 @@ export class ClusterMemberGuard implements CanActivate {
         publicDashboardId: publicDashboardIdFromParams,
         userId,
         allowedRoles,
+        access,
+        viaPersonalKey,
       });
     }
 
@@ -138,6 +151,8 @@ export class ClusterMemberGuard implements CanActivate {
         clusterInviteId: clusterInviteIdFromParams,
         userId,
         allowedRoles,
+        access,
+        viaPersonalKey,
       });
     }
 
@@ -146,16 +161,63 @@ export class ClusterMemberGuard implements CanActivate {
         customDomainId: customDomainIdFromParams,
         userId,
         allowedRoles,
+        access,
+        viaPersonalKey,
       });
     }
 
     throw new ForbiddenException('Invalid request');
   }
 
+  /**
+   * Personal-API-key access restriction. Returns true for JWT/session users
+   * (viaPersonalKey falsy) and for `{kind:'all'}` keys. For `{kind:'clusters'}`
+   * the resolved clusterId must be in the allow-list; for `{kind:'projects'}`
+   * the resolved projectId must be in the allow-list. A project-scoped key
+   * therefore cannot reach a cluster-level endpoint (projectId undefined).
+   */
+  private accessAllows(
+    access: AccessRestriction | undefined,
+    viaPersonalKey: boolean | undefined,
+    clusterId: string | undefined,
+    projectId: string | undefined,
+  ): boolean {
+    if (!viaPersonalKey) {
+      return true;
+    }
+
+    if (!access || access.kind === 'all') {
+      return true;
+    }
+
+    if (access.kind === 'clusters') {
+      return clusterId !== undefined && access.ids.includes(clusterId);
+    }
+
+    if (access.kind === 'projects') {
+      return projectId !== undefined && access.ids.includes(projectId);
+    }
+
+    return false;
+  }
+
+  private assertAccessAllows(dto: {
+    access?: AccessRestriction;
+    viaPersonalKey?: boolean;
+    clusterId?: string;
+    projectId?: string;
+  }): void {
+    if (!this.accessAllows(dto.access, dto.viaPersonalKey, dto.clusterId, dto.projectId)) {
+      throw new ForbiddenException('Personal API key is not scoped to this cluster/project');
+    }
+  }
+
   private async checkForProjectId(dto: {
     projectId: string;
     userId: string;
     allowedRoles: ClusterRole[];
+    access?: AccessRestriction;
+    viaPersonalKey?: boolean;
   }): Promise<boolean> {
     const project = await this.projectReadCachedService.readProject(dto.projectId);
 
@@ -176,6 +238,13 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('User does not have the required role');
     }
 
+    this.assertAccessAllows({
+      access: dto.access,
+      viaPersonalKey: dto.viaPersonalKey,
+      clusterId: project.clusterId,
+      projectId: dto.projectId,
+    });
+
     return true;
   }
 
@@ -183,6 +252,8 @@ export class ClusterMemberGuard implements CanActivate {
     clusterId: string;
     userId: string;
     allowedRoles: ClusterRole[];
+    access?: AccessRestriction;
+    viaPersonalKey?: boolean;
   }): Promise<boolean> {
     const role = await this.clusterReadCachedService.readUserRole({
       clusterId: dto.clusterId,
@@ -197,6 +268,13 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('User does not have the required role');
     }
 
+    this.assertAccessAllows({
+      access: dto.access,
+      viaPersonalKey: dto.viaPersonalKey,
+      clusterId: dto.clusterId,
+      projectId: undefined,
+    });
+
     return true;
   }
 
@@ -204,6 +282,8 @@ export class ClusterMemberGuard implements CanActivate {
     notificationChannelId: string;
     userId: string;
     allowedRoles: ClusterRole[];
+    access?: AccessRestriction;
+    viaPersonalKey?: boolean;
   }): Promise<boolean> {
     const channel = await this.notificationChannelReadService.readById(dto.notificationChannelId);
 
@@ -224,6 +304,13 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('User does not have the required role');
     }
 
+    this.assertAccessAllows({
+      access: dto.access,
+      viaPersonalKey: dto.viaPersonalKey,
+      clusterId: channel.clusterId,
+      projectId: undefined,
+    });
+
     return true;
   }
 
@@ -231,6 +318,8 @@ export class ClusterMemberGuard implements CanActivate {
     httpMonitorId: string;
     userId: string;
     allowedRoles: ClusterRole[];
+    access?: AccessRestriction;
+    viaPersonalKey?: boolean;
   }): Promise<boolean> {
     const httpMonitor = await this.httpMonitorReadService.readById(dto.httpMonitorId);
 
@@ -257,6 +346,13 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('User does not have the required role');
     }
 
+    this.assertAccessAllows({
+      access: dto.access,
+      viaPersonalKey: dto.viaPersonalKey,
+      clusterId: project.clusterId,
+      projectId: httpMonitor.projectId,
+    });
+
     return true;
   }
 
@@ -264,6 +360,8 @@ export class ClusterMemberGuard implements CanActivate {
     publicDashboardId: string;
     userId: string;
     allowedRoles: ClusterRole[];
+    access?: AccessRestriction;
+    viaPersonalKey?: boolean;
   }): Promise<boolean> {
     const publicDashboard = await this.publicDashboardReadService.readById(dto.publicDashboardId);
 
@@ -284,6 +382,13 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('User does not have the required role');
     }
 
+    this.assertAccessAllows({
+      access: dto.access,
+      viaPersonalKey: dto.viaPersonalKey,
+      clusterId: publicDashboard.clusterId,
+      projectId: undefined,
+    });
+
     return true;
   }
 
@@ -291,6 +396,8 @@ export class ClusterMemberGuard implements CanActivate {
     clusterInviteId: string;
     userId: string;
     allowedRoles: ClusterRole[];
+    access?: AccessRestriction;
+    viaPersonalKey?: boolean;
   }): Promise<boolean> {
     const invite = await this.clusterInviteReadService.readById(dto.clusterInviteId);
 
@@ -308,6 +415,13 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('User does not have the required role');
     }
 
+    this.assertAccessAllows({
+      access: dto.access,
+      viaPersonalKey: dto.viaPersonalKey,
+      clusterId: invite.clusterId,
+      projectId: undefined,
+    });
+
     return true;
   }
 
@@ -315,6 +429,8 @@ export class ClusterMemberGuard implements CanActivate {
     customDomainId: string;
     userId: string;
     allowedRoles: ClusterRole[];
+    access?: AccessRestriction;
+    viaPersonalKey?: boolean;
   }): Promise<boolean> {
     const customDomain = await this.customDomainReadService.readById(dto.customDomainId);
 
@@ -338,6 +454,13 @@ export class ClusterMemberGuard implements CanActivate {
     if (!role || !dto.allowedRoles.includes(role)) {
       throw new ForbiddenException('User does not have the required role');
     }
+
+    this.assertAccessAllows({
+      access: dto.access,
+      viaPersonalKey: dto.viaPersonalKey,
+      clusterId: publicDashboard.clusterId,
+      projectId: undefined,
+    });
 
     return true;
   }

@@ -23,6 +23,9 @@ import {
 import { Observable, concat, filter, from, fromEvent, map } from 'rxjs';
 import { ApiKeyReadCachedService } from '../../api-key/read/api-key-read-cached.service';
 import { Public } from '../../auth/core/decorators/is-public';
+import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
+import { Resource } from '../../personal-api-key/core/enums/resource.enum';
+import { Action } from '../../personal-api-key/core/enums/action.enum';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { SuccessResponse } from '../../shared/responses/success.response';
 import { LogCreatedEvent } from '../events/definitions/log-created.event';
@@ -179,6 +182,7 @@ export class LogCoreController {
   @DemoEndpoint()
   @UseInterceptors(DemoCacheInterceptor)
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Logs, Action.Read)
   @ApiBearerAuth()
   @Get('projects/:projectId/logs/v2')
   @ApiResponse({ type: LogSerialized, isArray: true })

@@ -128,6 +128,88 @@ class LogdashAPI {
       .catch((error) => ({ error }));
   }
 
+  get_personal_api_keys(access_token: string): Promise<
+    {
+      id: string;
+      prefix: string;
+      label: string;
+      scopes: { resource: string; action: string }[];
+      access: Record<string, unknown>;
+      expiresAt?: string;
+      lastUsedAt?: string;
+      createdAt: string;
+    }[]
+  > {
+    return this.get(
+      `${LogdashAPI.v0baseUrl}/personal-api-keys`,
+      access_token,
+    );
+  }
+
+  create_personal_api_key(
+    access_token: string,
+    body: {
+      label: string;
+      scopes: { resource: string; action: string }[];
+      access: Record<string, unknown>;
+      expiresAt?: string;
+    },
+  ): Promise<{
+    id: string;
+    prefix: string;
+    value: string;
+    label: string;
+    scopes: { resource: string; action: string }[];
+    access: Record<string, unknown>;
+    expiresAt?: string;
+    createdAt: string;
+  }> {
+    return this.post(
+      `${LogdashAPI.v0baseUrl}/personal-api-keys`,
+      body,
+      access_token,
+    );
+  }
+
+  revoke_personal_api_key(access_token: string, id: string): Promise<void> {
+    return this.performFetch<void>(
+      `${LogdashAPI.v0baseUrl}/personal-api-keys/${id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      access_token,
+    );
+  }
+
+  approve_cli_auth(
+    access_token: string,
+    body: {
+      userCode: string;
+      scopes?: { resource: string; action: string }[];
+      access?: Record<string, unknown>;
+    },
+  ): Promise<{ status: 'approved'; prefix: string }> {
+    return this.post(
+      `${LogdashAPI.v0baseUrl}/auth/cli/approve`,
+      body,
+      access_token,
+    );
+  }
+
+  deny_cli_auth(
+    access_token: string,
+    body: { userCode: string },
+  ): Promise<{ status: 'denied' }> {
+    return this.post(
+      `${LogdashAPI.v0baseUrl}/auth/cli/deny`,
+      body,
+      access_token,
+    );
+  }
+
   get_project_api_keys(
     access_token: string,
     project_id: string,

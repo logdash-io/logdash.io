@@ -8,4 +8,5 @@ export enum RelatedDomain {
   NotificationChannel = 'notificationChannel',
   HttpMonitor = 'httpMonitor',
   CustomDomain = 'customDomain',
+  PersonalApiKey = 'personalApiKey',
 }

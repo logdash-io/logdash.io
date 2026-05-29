@@ -153,6 +153,55 @@ export class LogReadService {
     return data.map((row: any) => LogSerializer.normalizeClickhouse(row));
   }
 
+  public async countByLevelsSince(dto: {
+    projectId: string;
+    levels: LogLevel[];
+    since: Date;
+  }): Promise<number> {
+    const result = await this.clickhouse.query({
+      query: `
+        SELECT count() AS count
+        FROM logs
+        WHERE project_id = {projectId:String}
+        AND level IN ({levels:Array(String)})
+        AND created_at >= {since:DateTime64(3)}
+      `,
+      query_params: {
+        projectId: dto.projectId,
+        levels: dto.levels,
+        since: ClickhouseUtils.jsDateToClickhouseDate(dto.since),
+      },
+    });
+
+    const data = ((await result.json()) as any).data;
+
+    return data.length > 0 ? Number(data[0].count) : 0;
+  }
+
+  public async getLastLogReceivedAt(projectId: string): Promise<Date | null> {
+    const result = await this.clickhouse.query({
+      query: `
+        SELECT MAX(created_at) AS last_log_at
+        FROM logs
+        WHERE project_id = {projectId:String}
+      `,
+      query_params: { projectId },
+    });
+
+    const data = ((await result.json()) as any).data;
+
+    if (data.length === 0 || !data[0].last_log_at) {
+      return null;
+    }
+
+    // ClickHouse returns the zero date when there are no matching rows.
+    if (data[0].last_log_at.startsWith('1970-01-01')) {
+      return null;
+    }
+
+    return ClickhouseUtils.clickhouseDateToJsDate(data[0].last_log_at);
+  }
+
   public async getUniqueNamespaces(projectId: string): Promise<NamespaceMetadata[]> {
     const result = await this.clickhouse.query({
       query: `

@@ -10,6 +10,9 @@ import { AccountClaimStatus } from './enum/account-claim-status.enum';
 import { TokenResponse } from '../../shared/responses/token.response';
 import { CustomJwtService } from '../../auth/custom-jwt/custom-jwt.service';
 import { Public } from '../../auth/core/decorators/is-public';
+import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
+import { Resource } from '../../personal-api-key/core/enums/resource.enum';
+import { Action } from '../../personal-api-key/core/enums/action.enum';
 import { CreateAnonymousUserResponse } from './dto/create-anonymous-user.response';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { ClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
@@ -28,6 +31,7 @@ export class UserCoreController {
   ) {}
 
   @Get('me')
+  @RequireScope(Resource.Account, Action.Read)
   @ApiResponse({ type: UserSerialized })
   public async readCurrentUser(@CurrentUserId() userId): Promise<UserSerialized> {
     const user = await this.userReadService.readByIdOrThrow(userId);
