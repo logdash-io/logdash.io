@@ -13,7 +13,9 @@ export class BlogReadService {
   ) {}
 
   public async readAll(): Promise<BlogPostNormalized[]> {
-    const entities = await this.blogPostModel.find().sort({ createdAt: -1 }).exec();
+    // _id is a stable, monotonic tiebreaker so posts created within the same
+    // millisecond keep a deterministic newest-first order.
+    const entities = await this.blogPostModel.find().sort({ createdAt: -1, _id: -1 }).exec();
     return entities.map((entity) => BlogPostSerializer.normalize(entity));
   }
 
