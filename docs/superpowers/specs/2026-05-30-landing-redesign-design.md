@@ -104,7 +104,8 @@ Single scrolling page. New components live in `src/lib/landing/` (replacing/augm
 - The framed demo peeks at the hero's bottom edge; on scroll, hero text translates up + fades while the frame `translateY`s to center and **scales** 0.8→1.0; past ~55% it reveals (overlay peels) and goes LIVE.
 - **Reveal also on hover** of the frame.
 - **Hotspots → popovers** on: the red `payments` service (Uptime), the log stream (Logs), the metrics rail (Metrics).
-- **Demo source decision:** curate from / embed the existing `demo-dashboard` route (`apps/frontend/src/routes/demo-dashboard`) so it is the *real* product, not a static fake. Implementation may start with a faithful curated render and progress to embedding the live route. **(Open: live-embed vs curated component — decide in plan.)**
+- **Demo source — RESOLVED (jury 6–1, 2026-05-30):** Build a **curated, lightweight landing-only demo component** (no backend, full deterministic control of scroll-scale / peel / hotspot choreography), reusing `@logdash/hyper-ui` primitives and the **established landing-fake pattern** (`FakeLogs.svelte`, `SystemHealth.svelte`, `FakeMonitoringTile.svelte`). Do **NOT** embed the real `ProjectView` / `/demo-dashboard` in the hero — it carries a server `load`, global-state mutation, a live SSE/polling `monitoringState.sync()`, `page.params`/`goto` coupling and visibility listeners, all hostile to above-the-fold LCP and to deterministic animation. The **"Explore live demo" CTA links to the real `/demo-dashboard`** so the authentic, always-current product is one click away (visual-drift risk bounded; the hero demo is a curated marketing surface, not a feature-parity guarantee).
+- **Terminology (sharpened):** **"hero demo"** = the curated centerpiece component on the landing; **"demo dashboard"** = the real `/demo-dashboard` route. Keep these distinct in code + copy.
 - Respect `prefers-reduced-motion`: fall back to a static, already-revealed framed screenshot (no scroll-scrub).
 
 ### 5.3 Proof strip
@@ -113,7 +114,7 @@ Single scrolling page. New components live in `src/lib/landing/` (replacing/augm
 
 ### 5.4 One-line install
 - Label "Ridiculously simple" → H2 "Live in 60 seconds. One line, not a weekend."
-- Tabbed code block (Node / Python / Go). **Use the real `@logdash/node` SDK API** (verify exact `createLogdash`/`logger`/`metrics` signatures against the SDK before shipping copy).
+- Tabbed code block (Node / Python / …). **Use the real current `@logdash/node` API** (per `src/lib/domains/logs/domain/setup-prompt.ts`): `import { Logdash } from '@logdash/node'; const logdash = new Logdash(key); logdash.info(...); logdash.withNamespace('auth')`. ⚠️ The `createLogdash({ apiKey })` + destructured `{ logger, metrics }` form is the **deprecated `@logdash/js-sdk`** API (the repo ships a migration guide *away* from it) — it must **not** appear. Confirm the metrics method name on the new SDK before shipping copy.
 - Caption: "That's the whole integration. It just shows up in your dashboard."
 
 ### 5.5 Three pillars
@@ -173,8 +174,8 @@ Captured from the original ask; needs its own mockups + design pass before imple
 
 - **Proof numbers** (founders, events/day) — need real figures.
 - **Testimonials** — need real quotes + permission.
-- **Demo centerpiece** — live-embed the `demo-dashboard` route vs. a curated render? (decide in plan)
-- **Install snippet** — confirm exact `@logdash/node` API surface.
+- ~~**Demo centerpiece** — live-embed vs curated render~~ → **RESOLVED: curated** (see §5.2; jury 6–1, 2026-05-30).
+- ~~**Install snippet** — confirm exact `@logdash/node` API surface~~ → **RESOLVED: `new Logdash(key)`** (see §5.4); only the metrics method name still to confirm.
 - **Flamingo ramp** — define full primitive ramp for the brand, or keep single 500/600.
 - **Light theme** — out of scope now, but semantic tokens should leave the door open.
 
