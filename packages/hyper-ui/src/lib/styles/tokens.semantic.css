@@ -1,0 +1,18 @@
+/* Tier 2 exposure — make semantic tokens usable as Tailwind utilities.
+   @theme inline keeps them pointing at the runtime vars (themeable),
+   so `bg-surface`, `bg-surface-raised`, `text-fg-muted`, `border-line`,
+   `bg-brand`, `text-brand-soft`, etc. all work and follow the active theme.
+   The runtime vars (--surface, --fg, …) are declared in themes.css. */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+}

@@ -7,21 +7,38 @@
 
   --depth: 0;
 
-  --root-bg: var(--color-neutral-950);
-  --color-primary: var(--color-pink-600);
-  --color-primary-content: var(--color-neutral-100);
-  --color-secondary: var(--color-neutral-100);
-  --color-secondary-content: var(--color-neutral-950);
+  /* ── Tier 2: semantic tokens (DARK mapping → primitives) ──
+     A future light theme re-declares these same names against the
+     light end of the ramp; everything downstream follows. */
+  --surface: var(--color-grey-950); /* app background */
+  --surface-raised: var(--color-grey-900); /* panels */
+  --surface-elevated: var(--color-grey-800); /* cards, inputs */
+  --surface-overlay: var(--color-grey-850); /* popovers, menus */
+  --line: var(--color-grey-800); /* borders */
+  --line-soft: var(--color-grey-850); /* hairline dividers */
+  --fg: var(--color-grey-100); /* primary text */
+  --fg-muted: var(--color-grey-400); /* secondary text */
+  --fg-faint: var(--color-grey-600); /* tertiary text */
+  --brand: var(--color-flamingo-600);
+  --brand-soft: var(--color-flamingo-500);
 
-  --color-base-300: var(--color-neutral-950);
-  --color-base-200: var(--color-neutral-900);
-  --color-base-100: var(--color-neutral-800);
-  --color-base-content: var(--color-neutral-100);
+  /* ── daisyUI bridge → semantic layer ── */
+  --root-bg: var(--surface);
+
+  --color-primary: var(--brand);
+  --color-primary-content: var(--fg);
+  --color-secondary: var(--color-grey-100);
+  --color-secondary-content: var(--color-grey-950);
+
+  --color-base-300: var(--surface);
+  --color-base-200: var(--surface-raised);
+  --color-base-100: var(--surface-elevated);
+  --color-base-content: var(--fg);
 
   --color-success: var(--color-green-600);
 
   --color-error: var(--color-red-600);
-  --color-error-content: var(--color-neutral-100);
+  --color-error-content: var(--color-grey-100);
 
   --color-warning: var(--color-amber-500);
   --color-warning-content: var(--color-amber-500);

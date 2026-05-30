@@ -1,6 +1,8 @@
 @import "./tailwind.css";
+@import "./tokens.primitives.css";
 @import "./base.css";
 @import "./themes.css";
+@import "./tokens.semantic.css";
 @import "./components.css";
 @import "./scrollbar.css";
 @import "./animations.css";
