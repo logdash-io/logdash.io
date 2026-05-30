@@ -1,99 +1,197 @@
 <script lang="ts">
-  // Define a type for your FAQ items
   type FaqItem = {
     question: string;
     answer: string;
   };
 
-  // Sample FAQ data - replace with your actual data source
   const faqs: FaqItem[] = [
     {
-      question: 'What is Logdash?',
+      question: 'Do I have to host anything?',
       answer:
-        "Think of Logdash as your go-to buddy for keeping an eye on your apps. It's a modern platform that helps you see what's happening in real-time, super easily.",
+        "No. logdash is fully managed — no servers, no agents, no storage to babysit. Add the SDK and you're done.",
     },
     {
-      question: 'How to integrate?',
+      question: 'What languages & frameworks work?',
       answer:
-        "Not tough at all! We've got straightforward guides and tools for most setups. You'll likely be up and running faster than you can make a coffee.",
+        'Node, Next.js, Python, Go, Rust, Bun, Deno — and a plain REST API for everything else.',
     },
     {
-      question: 'What is your refund policy?',
+      question: 'How is this different from Grafana/Prometheus?',
       answer:
-        'We offer a questions-free full refund within 30 days of your subscription.',
+        'Same visibility, none of the setup or maintenance. You skip the weekend of wiring and the forever of babysitting.',
     },
     {
-      question: 'Free plan or trial?',
+      question: 'Will it slow my app down?',
       answer:
-        "Yep! We've got a free plan that's great for smaller projects, and you can take the premium features for a spin with our trial. No strings attached.",
+        'No — the SDK is async and fire-and-forget. Sending data never blocks your request path.',
     },
     {
-      question: 'What kind of support?',
+      question: 'Is there really a free tier?',
       answer:
-        "We've got your back. There's plenty of info in our docs, a community forum to chat with other users, and if you're on a paid plan, we can come onboard to help you out.",
-    },
-    {
-      question: 'Can Logdash scale?',
-      answer:
-        'For sure! Logdash is built to grow with you. It can handle tons of log data, no sweat, whether your app is tiny or massive.',
-    },
-    {
-      question: 'How is pricing set?',
-      answer:
-        "It's mainly about how much data you send, how long you want to keep it, and which features you're using. Pop over to our pricing page – it lays everything out clearly.",
-    },
-    {
-      question: 'What is "zero config"?',
-      answer:
-        'It means you can get started really quickly without a lot of complicated setup. We try to make things as plug-and-play as possible so you can focus on your app, not on configuring your infrastructure.',
-    },
-    {
-      question: 'Can I self-host Logdash?',
-      answer:
-        "Right now, Logdash is a cloud-based service. This helps us make sure it's always up, running smoothly, and easy for you to use without worrying about server maintenance. We might explore self-hosting options down the road if there's enough demand!",
+        'Yes, no credit card. Perfect for side projects; upgrade only when you need more.',
     },
   ];
+
+  let open = $state<number | null>(0);
+
+  function toggle(i: number) {
+    open = open === i ? null : i;
+  }
 </script>
 
-<section id="faq" class="">
-  <div class="mx-auto max-w-4xl px-8 sm:px-6 lg:px-8">
-    <div class="text-center">
-      <h2
-        class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-white"
-      >
-        Frequently Asked Questions
-      </h2>
-      <p class="mt-2 text-lg leading-relaxed text-gray-600 dark:text-gray-300">
-        Have a different question? <a
-          href="https://discord.gg/naftPW4Hxe"
-          target="_blank"
-          class="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
-        >
-          Reach out on Discord
-        </a>
-      </p>
+<section id="faq" class="faq">
+  <div class="inner">
+    <div class="head">
+      <span class="label">Questions</span>
+      <h2>The short answers</h2>
     </div>
 
-    <div class="mt-12">
-      <!-- 
-              Grid layout:
-              - 1 column by default (mobile)
-              - 2 columns on medium screens and up (md:grid-cols-2)
-              - gap-x-8 for horizontal space between columns
-              - gap-y-10 for vertical space between FAQ items
-            -->
-      <dl class="gap-x-8 md:columns-2">
-        {#each faqs as faq (faq.question)}
-          <div class="mb-10 break-inside-avoid lg:mb-12">
-            <dt class="text-base-content text-lg font-semibold leading-7">
-              {faq.question}
-            </dt>
-            <dd class="text-base-content/70 mt-2 text-base">
-              {faq.answer}
-            </dd>
+    <ul class="list">
+      {#each faqs as faq, i (faq.question)}
+        <li class="card" class:open={open === i}>
+          <button
+            class="q"
+            type="button"
+            aria-expanded={open === i}
+            onclick={() => toggle(i)}
+          >
+            <span class="qtext">{faq.question}</span>
+            <span class="chev" aria-hidden="true"></span>
+          </button>
+          <div class="a" hidden={open !== i}>
+            <p>{faq.answer}</p>
           </div>
-        {/each}
-      </dl>
-    </div>
+        </li>
+      {/each}
+    </ul>
   </div>
 </section>
+
+<style>
+  .faq {
+    width: 100%;
+    background: var(--surface);
+    padding: clamp(64px, 9vw, 120px) 24px;
+  }
+  .inner {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .head {
+    text-align: center;
+    margin-bottom: clamp(36px, 5vw, 56px);
+  }
+  .label {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brand);
+    margin-bottom: 12px;
+  }
+  .head h2 {
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-weight: 800;
+    color: var(--fg);
+  }
+
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .card {
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+  }
+  .card.open {
+    border-color: color-mix(in srgb, var(--brand) 45%, var(--line));
+  }
+
+  .q {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    color: var(--fg);
+    font-size: clamp(15px, 1.5vw, 17px);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .q:hover {
+    color: var(--fg);
+  }
+  .qtext {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .chev {
+    position: relative;
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+  }
+  .chev::before,
+  .chev::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 11px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--fg-muted);
+    transform: translate(-50%, -50%);
+    transition:
+      transform 0.25s ease,
+      background 0.2s ease;
+  }
+  .chev::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  .card.open .chev::after {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  .card.open .chev::before,
+  .card.open .chev::after {
+    background: var(--brand);
+  }
+
+  .a {
+    padding: 0 20px 18px;
+  }
+  .a p {
+    margin: 0;
+    color: var(--fg-muted);
+    font-size: clamp(14px, 1.4vw, 16px);
+    line-height: 1.6;
+    max-width: 60ch;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card,
+    .chev,
+    .chev::before,
+    .chev::after {
+      transition: none;
+    }
+  }
+</style>

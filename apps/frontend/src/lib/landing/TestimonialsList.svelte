@@ -1,6 +1,5 @@
 <script lang="ts">
-  import TrustProof from './Testimonial.svelte';
-  import Marquee from '$lib/domains/shared/ui/components/Marquee.svelte';
+  import Testimonial from './Testimonial.svelte';
 
   const REVIEWS = [
     {
@@ -39,55 +38,63 @@
   ];
 </script>
 
-<section class="container mx-auto px-4">
-  <div class="mb-12 text-center">
-    <h2 class="mb-2 text-3xl font-bold md:text-4xl">
-      But don't just take our word for it
-    </h2>
-    <p class="mx-auto max-w-3xl text-xl opacity-80">
-      Real words from founders and solo devs already shipping without critical
-      services interruptions.
-    </p>
-  </div>
+<section class="testimonials">
+  <div class="inner">
+    <div class="label">From founders like you</div>
+    <h2>Set up between two coffees</h2>
 
-  <div class="relative flex flex-col gap-6">
-    <Marquee pauseOnHover={true} duration="45s" gap="1.5rem" className="w-full">
+    <div class="grid">
       {#each REVIEWS as review (review.person)}
-        <div class="card ld-card w-[340px] shrink-0 p-6 sm:w-[420px]">
-          <TrustProof
-            quote={review.quote}
-            person={review.person}
-            company={review.company}
-            img={review.img}
-          />
-        </div>
+        <Testimonial
+          quote={review.quote}
+          person={review.person}
+          company={review.company}
+          img={review.img}
+        />
       {/each}
-    </Marquee>
-
-    <Marquee
-      pauseOnHover={true}
-      duration="45s"
-      gap="1.5rem"
-      reverse={true}
-      className="w-full"
-    >
-      {#each REVIEWS as review (review.person)}
-        <div class="card ld-card w-[340px] shrink-0 p-6 sm:w-[420px]">
-          <TrustProof
-            quote={review.quote}
-            person={review.person}
-            company={review.company}
-            img={review.img}
-          />
-        </div>
-      {/each}
-    </Marquee>
-
-    <div
-      class="from-base-300 pointer-events-none absolute inset-y-0 -left-1 w-1/4 bg-gradient-to-r"
-    ></div>
-    <div
-      class="from-base-300 pointer-events-none absolute inset-y-0 -right-1 w-1/4 bg-gradient-to-l"
-    ></div>
+    </div>
   </div>
 </section>
+
+<style>
+  .testimonials {
+    width: 100%;
+    background: var(--surface);
+    padding: clamp(64px, 9vh, 96px) 24px;
+  }
+  .inner {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+  .label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand-soft);
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  h2 {
+    font-size: clamp(28px, 3.6vw, 42px);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-weight: 800;
+    color: var(--fg);
+    text-align: center;
+    margin: 0 auto;
+    max-width: 20ch;
+  }
+  .grid {
+    margin-top: clamp(36px, 5vh, 56px);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 820px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
