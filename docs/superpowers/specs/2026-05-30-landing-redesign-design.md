@@ -34,10 +34,12 @@ The visitor is **not** comparing logdash to enterprise tools (Datadog / New Reli
 - A signature **scroll-reveal demo centerpiece** that doubles as a guided, click-to-explore product tour.
 - Copy that sells against **blindness** and **DIY**, in the maker voice.
 
-**Non-Goals (this spec)**
-- The full app-shell/nav rework (defined as Phase 2; needs its own design pass + mockups).
-- Backend/API changes. Pricing values are product decisions already made ($29/mo, $9/mo billed yearly).
+**Scope (per szymeo, 2026-05-30): the full initiative — tokens + landing + app-shell/nav rework**, built production-ready and conversion-optimized. Landing + tokens are fully designed; the **nav-hierarchy redesign needs a short design/mock pass first** (the layout changes are already decided — see §6).
+
+**Non-Goals**
+- Backend/API changes. Pricing values are already decided ($29/mo, $9/mo billed yearly).
 - A new brand identity — the logo stays.
+- **Fabricated social proof.** All testimonials/metrics must be REAL (see §5.3 / §5.7) — deceptive proof is an FTC/trust risk and is out of bounds.
 
 ---
 
@@ -109,7 +111,7 @@ Single scrolling page. New components live in `src/lib/landing/` (replacing/augm
 - Respect `prefers-reduced-motion`: fall back to a static, already-revealed framed screenshot (no scroll-scrub).
 
 ### 5.3 Proof strip
-- Stat row: founders monitoring • events/day • 15s check interval • 60s to first data. **(Numbers are placeholders — need real data before launch.)**
+- Stat row: founders monitoring • events/day • 15s check interval • 60s to first data. **Numbers must be REAL** — source from PostHog/backend usage + GitHub stars during build (Claude can pull real figures via the PostHog MCP); never fabricate.
 - "Works with your stack" chips: Node.js, Next.js, Python, Go, Rust, Bun, Deno, REST API.
 
 ### 5.4 One-line install
@@ -124,7 +126,7 @@ Single scrolling page. New components live in `src/lib/landing/` (replacing/augm
 - "Flying blind costs more than you think" → 3 columns: **Fly blind** (✗), **Roll your own** (✗), **logdash** (✓, highlighted). Directly answers the C/D visitor. No enterprise comparison.
 
 ### 5.7 Social proof
-- 3 maker testimonials (quote + avatar + name + context). **Placeholder quotes — replace with real ones.**
+- 3 maker testimonials (quote + avatar + name + context). **Must be REAL, attributed, permissioned quotes** — never fabricate. If none exist yet, omit the section or substitute verifiable proof (GitHub stars, real usage, customer logos) until real quotes are available.
 
 ### 5.8 Pricing
 - "One small bill. Not an enterprise contract." + Monthly/Yearly toggle (default Yearly). Free $0 / Pro $29 (or $9 yearly). No credit card.
@@ -140,9 +142,9 @@ Single scrolling page. New components live in `src/lib/landing/` (replacing/augm
 
 ---
 
-## 6. Phase 2 — App Shell & Navigation Rework (defined, not yet designed)
+## 6. App Shell & Navigation Rework (in scope)
 
-Captured from the original ask; needs its own mockups + design pass before implementation.
+The layout changes below are decided. The **nav-hierarchy redesign needs a short design/mock pass** (visual companion) as the *first task* of this workstream, before its implementation.
 
 - **Left sidebar:** drop the `ld-card-base` background so it reads as integrated, not a floating boxed card (`ClusterSidebar.svelte`).
 - **Center content:** remove the `max-w-4xl` clamp in `ClusterShell.svelte`; let it use full width.
@@ -166,14 +168,14 @@ Captured from the original ask; needs its own mockups + design pass before imple
 
 1. **Tokens foundation** (§4) — unblocks everything.
 2. **Landing redesign** (§5) on top of tokens.
-3. **App shell & nav** (§6) — separate design pass + spec, then build.
+3. **App shell & nav** (§6) — short design/mock pass first, then build.
 
 ---
 
 ## 9. Open Questions / Placeholders
 
-- **Proof numbers** (founders, events/day) — need real figures.
-- **Testimonials** — need real quotes + permission.
+- **Proof numbers** — pull REAL figures (PostHog/backend usage, GitHub stars) during build; no fabrication.
+- **Testimonials** — need REAL, permissioned quotes from szymeo; until then omit or use verifiable proof. Never fabricate.
 - ~~**Demo centerpiece** — live-embed vs curated render~~ → **RESOLVED: curated** (see §5.2; jury 6–1, 2026-05-30).
 - ~~**Install snippet** — confirm exact `@logdash/node` API surface~~ → **RESOLVED: `new Logdash(key)`** (see §5.4); only the metrics method name still to confirm.
 - **Flamingo ramp** — define full primitive ramp for the brand, or keep single 500/600.
