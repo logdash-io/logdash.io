@@ -33,7 +33,7 @@
 
   <ScrollArea class="relative mx-auto flex h-full w-full flex-col">
     <ResponsiveSkyBackground />
-    <div class="mx-auto flex h-full max-h-full w-full max-w-4xl">
+    <div class="mx-auto flex h-full max-h-full w-full">
       <div
         class="relative flex h-full w-full flex-col items-center p-1 pb-20 md:p-2 md:px-4 lg:pb-2"
       >

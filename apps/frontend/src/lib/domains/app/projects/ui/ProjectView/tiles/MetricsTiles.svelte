@@ -38,12 +38,16 @@
 
     return upgradedMetricsLimit / currentMetricsLimit;
   });
+
+  const useTwoColumns = $derived(metricsState.displayMetrics.length > 3);
 </script>
 
 <MetricsListener>
-  <div class="flex flex-col gap-1.5">
+  <div
+    class={['grid grid-cols-1 gap-1.5', { 'xl:grid-cols-2': useTwoColumns }]}
+  >
     {#if metricsState.simplifiedMetrics.length >= currentMetricsLimit && !isDemoDashboard && !metricsState.isUsingFakeData}
-      <span class="text-sm">
+      <span class="text-sm xl:col-span-2">
         {#if userState.canUpgrade}
           <UpgradeElement
             source="metrics-limit"
@@ -55,7 +59,9 @@
             more metrics to this project.
           </UpgradeElement>
         {:else}
-          <a class="underline" href="mailto:logdash.contact@gmail.com">Contact us</a>
+          <a class="underline" href="mailto:logdash.contact@gmail.com">
+            Contact us
+          </a>
           to add more metrics to this project.
         {/if}
       </span>
