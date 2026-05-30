@@ -27,3 +27,6 @@ dist
 
 # Tool artifacts
 .playwright-mcp/
+
+# Superpowers process artifacts (specs/plans — local only)
+docs/superpowers/
