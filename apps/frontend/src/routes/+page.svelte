@@ -1,19 +1,15 @@
 <script lang="ts">
   import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
   import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
-  import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
   import FaqSection from '$lib/landing/FAQSection.svelte';
-  import Logs from '$lib/landing/FakeLogs.svelte';
   import Features from '$lib/landing/Features.svelte';
   import Footer from '$lib/landing/Footer.svelte';
   import FoundersMemo from '$lib/landing/FoundersMemo.svelte';
-  import FoundersSocialProof from '$lib/landing/FoundersSocialProof.svelte';
-  import HeroSectionCTA from '$lib/landing/HeroSectionCTA.svelte';
   import HowItWorks from '$lib/landing/HowItWorks.svelte';
   import LogdashDifference from '$lib/landing/LogdashDifference.svelte';
   import ProblemStatement from '$lib/landing/ProblemStatement.svelte';
-  import SystemHealth from '$lib/landing/SystemHealth.svelte';
   import TrustProofExample from '$lib/landing/TestimonialsList.svelte';
+  import HeroDemoReveal from '$lib/landing/hero/HeroDemoReveal.svelte';
   import WhyLogdash from '$lib/landing/WhyLogdash.svelte';
   import PricingSection from '$lib/landing/pricing/PricingSection.svelte';
   import PricingTrustProof from '$lib/landing/pricing/PricingTrustProof.svelte';
@@ -38,50 +34,9 @@
   {jsonLd}
 />
 
+<HeroDemoReveal />
+
 <AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
-  <ResponsiveSkyBackground />
-
-  <header class="hero md:pb-4 md:pt-14 sm:px-8">
-    <div
-      class="hero-content w-full flex-col lg:flex-row lg:justify-around lg:gap-10"
-    >
-      <div
-        class="flex w-full flex-col items-center justify-center gap-6 text-center lg:items-start lg:gap-10 lg:text-left"
-      >
-        <h1
-          class="flex flex-col items-center gap-3 text-4xl font-extrabold tracking-tight md:-mb-4 lg:items-start lg:text-6xl"
-        >
-          How SaaS founders keep their apps healthy.
-        </h1>
-
-        <p class="w-11/12 text-lg leading-relaxed opacity-80">
-          App health monitoring platform with all you need to stop critical
-          issues from getting in your way.
-        </p>
-
-        <HeroSectionCTA />
-
-        <FoundersSocialProof />
-      </div>
-
-      <div
-        class="align-start relative flex h-[500px] w-full shrink-0 justify-center overflow-hidden lg:h-96 lg:w-1/2 lg:overflow-visible"
-      >
-        <div
-          class="rotate-z-3 sm:-rotate-z-3 absolute bottom-0 right-0 z-10 scale-90 sm:left-0 sm:right-auto lg:z-0 lg:scale-100"
-        >
-          <SystemHealth />
-        </div>
-
-        <div
-          class="scale-80 -rotate-z-3 sm:rotate-z-3 absolute bottom-[120px] right-0 max-w-md lg:-bottom-4 lg:scale-100"
-        >
-          <Logs />
-        </div>
-      </div>
-    </div>
-  </header>
-
   <div class="distance h-8"></div>
 
   <ProblemStatement />
