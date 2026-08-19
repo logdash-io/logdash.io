@@ -35,10 +35,14 @@ describe('Auth (google)', () => {
 
     nock('https://www.googleapis.com')
       .get('/oauth2/v3/userinfo')
-      .reply(200, { email: 'primary@test.com', picture: 'https://some-avatar.com' });
+      .reply(200, {
+        email: 'primary@test.com',
+        email_verified: true,
+        picture: 'https://some-avatar.com',
+      });
 
     await request(bootstrap.app.getHttpServer()).post('/auth/google/claim').send({
-      code: 'whatever',
+      googleCode: 'whatever',
       accessToken: anonymous.token,
     });
 
@@ -64,7 +68,11 @@ describe('Auth (google)', () => {
 
     nock('https://www.googleapis.com')
       .get('/oauth2/v3/userinfo')
-      .reply(200, { email: 'test@test.com', picture: 'https://some-avatar.com' });
+      .reply(200, {
+        email: 'test@test.com',
+        email_verified: true,
+        picture: 'https://some-avatar.com',
+      });
 
     const existingUser = await bootstrap.utils.generalUtils.setupClaimed({
       email: 'test@test.com',
@@ -74,7 +82,7 @@ describe('Auth (google)', () => {
     const loginResponse = await request(bootstrap.app.getHttpServer())
       .post('/auth/google/login')
       .send({
-        code: 'whatever',
+        googleCode: 'whatever',
       });
 
     // then
@@ -93,13 +101,17 @@ describe('Auth (google)', () => {
 
     nock('https://www.googleapis.com')
       .get('/oauth2/v3/userinfo')
-      .reply(200, { email: 'primary@test.com', picture: 'https://some-avatar.com' });
+      .reply(200, {
+        email: 'primary@test.com',
+        email_verified: true,
+        picture: 'https://some-avatar.com',
+      });
 
     // when
     const loginResponse = await request(bootstrap.app.getHttpServer())
       .post('/auth/google/login')
       .send({
-        code: 'whatever',
+        googleCode: 'whatever',
         termsAccepted: true,
         emailAccepted: true,
       });
@@ -115,6 +127,69 @@ describe('Auth (google)', () => {
     });
   });
 
+  it('does not log user in when google email is not verified', async () => {
+    // given
+    nock('https://www.googleapis.com')
+      .post('/oauth2/v4/token')
+      .reply(200, { access_token: 'some-token' });
+
+    nock('https://www.googleapis.com').get('/oauth2/v3/userinfo').reply(200, {
+      email: 'test@test.com',
+      email_verified: false,
+      picture: 'https://some-avatar.com',
+    });
+
+    await bootstrap.utils.generalUtils.setupClaimed({
+      email: 'test@test.com',
+    });
+
+    // when
+    const loginResponse = await request(bootstrap.app.getHttpServer())
+      .post('/auth/google/login')
+      .send({
+        googleCode: 'whatever',
+      });
+
+    // then
+    expect(loginResponse.status).toEqual(401);
+    expect(loginResponse.body.message).toEqual('Google email is not verified');
+  });
+
+  it('does not log user in when account was created with another auth method', async () => {
+    // given
+    nock('https://www.googleapis.com')
+      .post('/oauth2/v4/token')
+      .reply(200, { access_token: 'some-token' });
+
+    nock('https://www.googleapis.com').get('/oauth2/v3/userinfo').reply(200, {
+      email: 'test@test.com',
+      email_verified: true,
+      picture: 'https://some-avatar.com',
+    });
+
+    const existingUser = await bootstrap.utils.generalUtils.setupClaimed({
+      email: 'test@test.com',
+    });
+
+    await bootstrap.models.userModel.updateOne(
+      { _id: new Types.ObjectId(existingUser.user.id) },
+      { authMethod: AuthMethod.Github },
+    );
+
+    // when
+    const loginResponse = await request(bootstrap.app.getHttpServer())
+      .post('/auth/google/login')
+      .send({
+        googleCode: 'whatever',
+      });
+
+    // then
+    expect(loginResponse.status).toEqual(401);
+    expect(loginResponse.body.message).toEqual(
+      'Account was created with a different sign in method',
+    );
+  });
+
   it('throws error when user does not exists and did not accept terms', async () => {
     // given
     nock('https://www.googleapis.com')
@@ -123,13 +198,17 @@ describe('Auth (google)', () => {
 
     nock('https://www.googleapis.com')
       .get('/oauth2/v3/userinfo')
-      .reply(200, { email: 'primary@test.com', picture: 'https://some-avatar.com' });
+      .reply(200, {
+        email: 'primary@test.com',
+        email_verified: true,
+        picture: 'https://some-avatar.com',
+      });
 
     // when
     const loginResponse = await request(bootstrap.app.getHttpServer())
       .post('/auth/google/login')
       .send({
-        code: 'whatever',
+        googleCode: 'whatever',
         termsAccepted: false,
       });
 

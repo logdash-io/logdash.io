@@ -13,6 +13,7 @@ describe('Telegram notification channel', () => {
 
   beforeEach(async () => {
     await bootstrap.methods.beforeEach();
+    bootstrap.utils.telegramUtils.suppressWelcomeMessages();
   });
 
   afterAll(async () => {
@@ -29,7 +30,7 @@ describe('Telegram notification channel', () => {
           clusterId: cluster.id,
           token,
           options: {
-            botToken: 'valid-bot-token',
+            botToken: '123456:valid-bot-token',
             chatId: 'valid-chat-id',
           },
         });
@@ -80,7 +81,7 @@ ${codeBlock}`,
           clusterId: cluster.id,
           token,
           options: {
-            botToken: 'valid-bot-token',
+            botToken: '123456:valid-bot-token',
             chatId: 'valid-chat-id',
           },
         });

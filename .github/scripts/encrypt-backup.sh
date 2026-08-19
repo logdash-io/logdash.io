@@ -1,6 +1,10 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
+
+# Number of PBKDF2 iterations used to derive the encryption/HMAC keys.
+# Keep this in sync with decrypt-backup.sh (PBKDF2_ITERATIONS).
+PBKDF2_ITERATIONS=600000
 
 if [ $# -ne 3 ]; then
     echo "Usage: $0 <input_file> <output_file> <encryption_key>"
@@ -22,13 +26,18 @@ if [ -z "$ENCRYPTION_KEY" ]; then
     exit 1
 fi
 
+if ! openssl kdf -help >/dev/null 2>&1; then
+    echo "❌ 'openssl kdf' is not available (OpenSSL 3.0+ required for PBKDF2 key derivation)"
+    exit 1
+fi
+
 echo "🔐 Encrypting backup file..."
 echo "📁 Input: $INPUT_FILE"
 echo "📁 Output: $OUTPUT_FILE"
 
 # Create temp directory for intermediate files
 TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR" EXIT
+trap 'rm -rf "$TEMP_DIR"' EXIT
 
 # Generate a random salt and IV
 SALT=$(openssl rand -hex 32)
@@ -37,8 +46,25 @@ IV=$(openssl rand -hex 16)
 echo "🔑 Generated salt: ${SALT:0:16}..."
 echo "🔑 Generated IV: ${IV:0:8}..."
 
-# Derive encryption key from the provided key using the salt
-DERIVED_KEY=$(echo -n "$ENCRYPTION_KEY$SALT" | openssl dgst -sha256 -binary | xxd -p -c 64)
+# Derive 64 bytes of key material with PBKDF2-HMAC-SHA256 ($PBKDF2_ITERATIONS iterations).
+# First 32 bytes -> AES-256 key, last 32 bytes -> HMAC-SHA256 key.
+# This replaces the previous single-pass SHA-256 derivation, which was trivially
+# brute-forceable offline because it was not a KDF (no work factor).
+KEY_MATERIAL=$(openssl kdf \
+    -keylen 64 \
+    -kdfopt "digest:SHA256" \
+    -kdfopt "pass:$ENCRYPTION_KEY" \
+    -kdfopt "hexsalt:$SALT" \
+    -kdfopt "iter:$PBKDF2_ITERATIONS" \
+    -binary PBKDF2 | xxd -p -c 128)
+
+if [ "${#KEY_MATERIAL}" -ne 128 ]; then
+    echo "❌ Key derivation failed (expected 64 bytes of key material)"
+    exit 1
+fi
+
+DERIVED_KEY="${KEY_MATERIAL:0:64}"
+HMAC_KEY="${KEY_MATERIAL:64:64}"
 
 # Encrypt the file using AES-256-CBC - stream directly to temp file (binary, no base64)
 ENCRYPTED_TEMP="$TEMP_DIR/encrypted.bin"
@@ -49,11 +75,8 @@ fi
 
 echo "🔒 File encrypted, computing HMAC..."
 
-# Derive HMAC key
-HMAC_KEY=$(echo -n "$ENCRYPTION_KEY$SALT$IV" | openssl dgst -sha256 -binary | xxd -p -c 64)
-
 # Calculate HMAC of encrypted data for authentication (stream from file)
-HMAC=$(openssl dgst -sha256 -hmac "$HMAC_KEY" -binary "$ENCRYPTED_TEMP" | xxd -p -c 64)
+HMAC=$(openssl dgst -sha256 -mac HMAC -macopt "hexkey:$HMAC_KEY" -binary "$ENCRYPTED_TEMP" | xxd -p -c 64)
 
 echo "🔏 HMAC computed: ${HMAC:0:16}..."
 

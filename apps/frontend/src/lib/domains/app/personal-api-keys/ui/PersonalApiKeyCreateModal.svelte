@@ -6,6 +6,10 @@
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
   import SegmentedControl from './SegmentedControl.svelte';
   import {
+    cliAuthErrorMessage,
+    type CliAuthRequest,
+  } from '../domain/cli-auth.js';
+  import {
     ACTIONS,
     PRESETS,
     RESOURCES,
@@ -22,7 +26,8 @@
     isOpen: boolean;
     onClose: () => void;
     mode?: 'manage' | 'cli';
-    userCode?: string;
+    /** The pending `ld login` request, resolved from the code the user typed. */
+    cliRequest?: CliAuthRequest | null;
     initialPreset?: PresetId;
     onCreated?: () => void;
   };
@@ -31,7 +36,7 @@
     isOpen,
     onClose,
     mode = 'manage',
-    userCode,
+    cliRequest = null,
     initialPreset = 'cli',
     onCreated,
   }: Props = $props();
@@ -39,7 +44,8 @@
   let label = $state('');
   let preset = $state<PresetId>('cli');
   let scopes = $state<ScopeEntry[]>(presetToScopes('cli'));
-  let accessKind = $state<AccessRestriction['kind']>('all');
+  // `null` in CLI mode: granting reach must be an explicit choice, never a default.
+  let accessKind = $state<AccessRestriction['kind'] | null>('all');
   let selectedClusterIds = $state<string[]>([]);
   let selectedProjectIds = $state<string[]>([]);
   let expiresAt = $state('');
@@ -67,7 +73,7 @@
       preset = initialPreset;
       scopes = presetToScopes(initialPreset);
       label = '';
-      accessKind = 'all';
+      accessKind = mode === 'cli' ? null : 'all';
       selectedClusterIds = [];
       selectedProjectIds = [];
       expiresAt = '';
@@ -129,6 +135,10 @@
     return { kind: 'all' };
   }
 
+  function formatTimestamp(value: string): string {
+    return new Date(value).toLocaleString();
+  }
+
   function activeScopes(): ScopeEntry[] {
     return scopes.filter((entry) => entry.action !== 'none');
   }
@@ -146,6 +156,11 @@
       return;
     }
 
+    if (mode === 'cli' && accessKind === null) {
+      toast.warning('Choose what this key is allowed to reach', 5000);
+      return;
+    }
+
     submitting = true;
 
     try {
@@ -154,14 +169,15 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userCode,
+            userCode: cliRequest?.userCode,
             scopes: activeScopes(),
             access: buildAccess(),
           }),
         });
 
         if (!response.ok) {
-          throw new Error('Failed to approve');
+          toast.error(cliAuthErrorMessage(response.status), 5000);
+          return;
         }
 
         cliResult = 'approved';
@@ -206,11 +222,12 @@
       const response = await fetch('/app/api/user/cli-auth/deny', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userCode }),
+        body: JSON.stringify({ userCode: cliRequest?.userCode }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to deny');
+        toast.error(cliAuthErrorMessage(response.status), 5000);
+        return;
       }
 
       cliResult = 'denied';
@@ -301,15 +318,40 @@
         </h2>
       </div>
 
-      {#if mode === 'cli' && userCode}
+      {#if mode === 'cli' && cliRequest}
         <div
-          class="border-primary/40 bg-primary/10 rounded-lg border p-3 text-sm"
+          class="border-primary/40 bg-primary/10 flex flex-col gap-2 rounded-lg border p-3 text-sm"
         >
           <p class="text-base-content/70">
-            Confirm this code matches your terminal:
+            A CLI on
+            <span class="text-base-content font-mono font-semibold">
+              {cliRequest.clientIp || 'an unknown address'}
+            </span>
+            is requesting access to your account.
           </p>
-          <p class="mt-1 font-mono text-xl font-bold tracking-widest">
-            {userCode}
+          <dl class="text-base-content/70 flex flex-col gap-1 text-xs">
+            <div class="flex justify-between gap-3">
+              <dt>Code</dt>
+              <dd class="text-base-content font-mono font-semibold">
+                {cliRequest.userCode}
+              </dd>
+            </div>
+            <div class="flex justify-between gap-3">
+              <dt>Client (self-reported)</dt>
+              <dd class="text-base-content truncate font-mono">
+                {cliRequest.clientUserAgent || 'not reported'}
+              </dd>
+            </div>
+            <div class="flex justify-between gap-3">
+              <dt>Requested</dt>
+              <dd class="text-base-content">
+                {formatTimestamp(cliRequest.requestedAt)}
+              </dd>
+            </div>
+          </dl>
+          <p class="text-base-content/60 text-xs">
+            If you did not just run <span class="font-mono">ld login</span> on
+            that machine, deny this request.
           </p>
         </div>
       {/if}
@@ -363,6 +405,11 @@
 
           <div class="flex flex-col gap-2">
             <span class="text-sm font-medium">Access</span>
+            {#if mode === 'cli'}
+              <p class="text-base-content/60 -mt-1 text-xs">
+                Pick what this key may reach. Nothing is selected by default.
+              </p>
+            {/if}
             <SegmentedControl
               options={accessOptions}
               value={accessKind}
@@ -426,6 +473,14 @@
                 class="input w-full"
               />
             </div>
+          {:else}
+            <div class="flex flex-col gap-1.5">
+              <span class="text-sm font-medium">Expiry</span>
+              <p class="text-base-content/60 text-xs">
+                CLI keys always expire after 30 days. You can revoke this one
+                sooner from Account → API keys.
+              </p>
+            </div>
           {/if}
         </div>
       </div>
@@ -448,7 +503,7 @@
         <button
           type="button"
           class="btn btn-primary"
-          disabled={submitting}
+          disabled={submitting || (mode === 'cli' && accessKind === null)}
           onclick={onSubmit}
         >
           {#if submitting}

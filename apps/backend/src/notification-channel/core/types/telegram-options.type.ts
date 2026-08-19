@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+
+/**
+ * Telegram bot token format: `<bot id>:<secret>`. Enforced so the value cannot
+ * carry slashes or query separators into the api url path.
+ */
+const TELEGRAM_BOT_TOKEN_REGEX = /^\d+:[A-Za-z0-9_-]+$/;
 
 export class TelegramOptionsValidator {
   @ApiPropertyOptional({
@@ -8,6 +14,7 @@ export class TelegramOptionsValidator {
   @IsOptional()
   @IsString()
   @MaxLength(1024)
+  @Matches(TELEGRAM_BOT_TOKEN_REGEX)
   public botToken?: string;
 
   @ApiProperty()

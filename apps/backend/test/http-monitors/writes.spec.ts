@@ -12,6 +12,7 @@ import {
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
+import * as nock from 'nock';
 
 describe('HttpMonitorCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -21,10 +22,20 @@ describe('HttpMonitorCoreController (writes)', () => {
   });
 
   beforeEach(async () => {
+    // `beforeEach` calls nock.cleanAll(), so the telegram interceptor has to be
+    // registered after it, once per test.
     await bootstrap.methods.beforeEach();
+    // Creating a telegram notification channel posts a setup message to the
+    // telegram api. Intercept it so this suite never touches the network.
+    nock('https://api.telegram.org')
+      .persist()
+      .post(/^\/bot[^/]+\/sendMessage/)
+      .query(true)
+      .reply(200, { ok: true, result: { message_id: 1 } });
   });
 
   afterAll(async () => {
+    nock.cleanAll();
     await bootstrap.methods.afterAll();
   });
 
@@ -49,6 +60,7 @@ describe('HttpMonitorCoreController (writes)', () => {
         await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
           clusterId: project.clusterId,
           token,
+          options: { botToken: '123456:valid-bot-token' },
         });
 
       const dto: CreateHttpMonitorBody = {
@@ -126,6 +138,7 @@ describe('HttpMonitorCoreController (writes)', () => {
           clusterId: setupB.cluster.id,
           token: setupB.token,
           options: {
+            botToken: '123456:valid-bot-token',
             chatId: 'some-chat-id',
           },
         });
@@ -168,6 +181,7 @@ describe('HttpMonitorCoreController (writes)', () => {
         await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
           clusterId: project.clusterId,
           token,
+          options: { botToken: '123456:valid-bot-token' },
         });
 
       const dto: CreateHttpMonitorBody = {
@@ -369,6 +383,7 @@ describe('HttpMonitorCoreController (writes)', () => {
           clusterId: setup.cluster.id,
           token: setup.token,
           options: {
+            botToken: '123456:valid-bot-token',
             chatId: 'some-chat-id',
           },
         });
@@ -400,6 +415,7 @@ describe('HttpMonitorCoreController (writes)', () => {
           clusterId: setup.cluster.id,
           token: setup.token,
           options: {
+            botToken: '123456:valid-bot-token',
             chatId: 'some-chat-id',
           },
         });
@@ -437,6 +453,7 @@ describe('HttpMonitorCoreController (writes)', () => {
           clusterId: setup.cluster.id,
           token: setup.token,
           options: {
+            botToken: '123456:valid-bot-token',
             chatId: 'some-chat-id',
           },
         });
@@ -468,6 +485,7 @@ describe('HttpMonitorCoreController (writes)', () => {
           clusterId: setup.cluster.id,
           token: setup.token,
           options: {
+            botToken: '123456:valid-bot-token',
             chatId: 'some-chat-id',
           },
         });

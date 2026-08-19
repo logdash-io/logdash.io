@@ -6,8 +6,10 @@ import { GithubClaimProjectBody } from './dto/github-claim-project.body';
 import { GithubLoginBody } from './dto/github-login.body';
 import { TokenResponse } from '../../shared/responses/token.response';
 import { GithubAuthClaimService } from './github-auth-claim.service';
+import { ThrottleAccountCreation } from '../../shared/throttling/rate-limit.decorator';
 
 @Public()
+@ThrottleAccountCreation()
 @Controller('auth/github')
 @ApiTags('Auth (github)')
 export class GithubAuthController {

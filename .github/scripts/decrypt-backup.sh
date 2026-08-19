@@ -1,6 +1,10 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
+
+# Number of PBKDF2 iterations used to derive the encryption/HMAC keys.
+# Keep this in sync with encrypt-backup.sh (PBKDF2_ITERATIONS).
+PBKDF2_ITERATIONS=600000
 
 if [ $# -ne 3 ]; then
     echo "Usage: $0 <encrypted_file> <output_file> <encryption_key>"
@@ -35,19 +39,19 @@ fi
 
 # Create temp directory for intermediate files
 TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR" EXIT
+trap 'rm -rf "$TEMP_DIR"' EXIT
 
 # Extract salt, IV, and HMAC from the beginning of the file (first 160 bytes are text header)
 SALT=$(head -c 64 "$ENCRYPTED_FILE")
 IV=$(head -c 96 "$ENCRYPTED_FILE" | tail -c 32)
 HMAC=$(head -c 160 "$ENCRYPTED_FILE" | tail -c 64)
 
-# Validate salt, IV, and HMAC format (should be hex)
+# Validate salt, IV, and HMAC format (should be hex).
+# There is deliberately NO plaintext passthrough here: a file that does not carry a
+# valid header is rejected rather than copied through unauthenticated.
 if ! echo "$SALT" | grep -qE '^[0-9a-fA-F]{64}$'; then
-    echo "⚠️  File doesn't appear to be encrypted with our format, copying as-is (backward compatibility)"
-    cp "$ENCRYPTED_FILE" "$OUTPUT_FILE"
-    echo "✅ File copied successfully (unencrypted)"
-    exit 0
+    echo "❌ Invalid salt format - file is not a valid encrypted backup"
+    exit 1
 fi
 
 if ! echo "$IV" | grep -qE '^[0-9a-fA-F]{32}$'; then
@@ -64,23 +68,54 @@ echo "🔍 Extracted salt: ${SALT:0:16}..."
 echo "🔍 Extracted IV: ${IV:0:16}..."
 echo "🔍 Extracted HMAC: ${HMAC:0:16}..."
 
-# Derive encryption key and HMAC key using the same method as encryption
-DERIVED_KEY=$(echo -n "$ENCRYPTION_KEY$SALT" | openssl dgst -sha256 -binary | xxd -p -c 64)
-HMAC_KEY=$(echo -n "$ENCRYPTION_KEY$SALT$IV" | openssl dgst -sha256 -binary | xxd -p -c 64)
-
 # Extract encrypted data to temp file (skip first 160 bytes which contain salt, IV, and HMAC)
 ENCRYPTED_TEMP="$TEMP_DIR/encrypted.bin"
 tail -c +161 "$ENCRYPTED_FILE" > "$ENCRYPTED_TEMP"
 
-# Verify HMAC before decrypting (compute from file, not variable)
-CALCULATED_HMAC=$(openssl dgst -sha256 -hmac "$HMAC_KEY" -binary "$ENCRYPTED_TEMP" | xxd -p -c 64)
+DERIVED_KEY=""
 
-if [ "$HMAC" != "$CALCULATED_HMAC" ]; then
-    echo "❌ HMAC verification failed - file may be corrupted or tampered with"
-    exit 1
+# Preferred derivation: PBKDF2-HMAC-SHA256, 64 bytes split into AES key + HMAC key.
+if openssl kdf -help >/dev/null 2>&1; then
+    KEY_MATERIAL=$(openssl kdf \
+        -keylen 64 \
+        -kdfopt "digest:SHA256" \
+        -kdfopt "pass:$ENCRYPTION_KEY" \
+        -kdfopt "hexsalt:$SALT" \
+        -kdfopt "iter:$PBKDF2_ITERATIONS" \
+        -binary PBKDF2 | xxd -p -c 128)
+
+    if [ "${#KEY_MATERIAL}" -eq 128 ]; then
+        CANDIDATE_KEY="${KEY_MATERIAL:0:64}"
+        CANDIDATE_HMAC_KEY="${KEY_MATERIAL:64:64}"
+        CALCULATED_HMAC=$(openssl dgst -sha256 -mac HMAC -macopt "hexkey:$CANDIDATE_HMAC_KEY" -binary "$ENCRYPTED_TEMP" | xxd -p -c 64)
+
+        if [ "$HMAC" = "$CALCULATED_HMAC" ]; then
+            DERIVED_KEY="$CANDIDATE_KEY"
+            echo "✅ HMAC verification passed (PBKDF2, $PBKDF2_ITERATIONS iterations)"
+        fi
+    fi
 fi
 
-echo "✅ HMAC verification passed"
+# Legacy derivation: single-pass SHA-256 (weak KDF), kept only so that backups
+# produced before the PBKDF2 migration can still be restored. The HMAC is still
+# verified - this path never skips authentication.
+# TODO: remove once all pre-PBKDF2 backups have aged out of retention.
+if [ -z "$DERIVED_KEY" ]; then
+    LEGACY_KEY=$(echo -n "$ENCRYPTION_KEY$SALT" | openssl dgst -sha256 -binary | xxd -p -c 64)
+    LEGACY_HMAC_KEY=$(echo -n "$ENCRYPTION_KEY$SALT$IV" | openssl dgst -sha256 -binary | xxd -p -c 64)
+    LEGACY_CALCULATED_HMAC=$(openssl dgst -sha256 -hmac "$LEGACY_HMAC_KEY" -binary "$ENCRYPTED_TEMP" | xxd -p -c 64)
+
+    if [ "$HMAC" = "$LEGACY_CALCULATED_HMAC" ]; then
+        DERIVED_KEY="$LEGACY_KEY"
+        echo "⚠️  HMAC verification passed using the LEGACY single-pass SHA-256 derivation"
+        echo "⚠️  This backup predates the PBKDF2 migration and its passphrase is brute-forceable offline"
+    fi
+fi
+
+if [ -z "$DERIVED_KEY" ]; then
+    echo "❌ HMAC verification failed - wrong key, or file is corrupted or tampered with"
+    exit 1
+fi
 
 # Decrypt the data (stream from file to file)
 if ! openssl enc -aes-256-cbc -d -K "$DERIVED_KEY" -iv "$IV" -in "$ENCRYPTED_TEMP" -out "$OUTPUT_FILE"; then

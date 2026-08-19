@@ -12,7 +12,9 @@ export class CustomJwtService {
 
   public async getTokenPayload(token: string): Promise<JwtPayloadDto | null> {
     try {
-      return await this.jwtService.verifyAsync<JwtPayloadDto>(token);
+      return await this.jwtService.verifyAsync<JwtPayloadDto>(token, {
+        algorithms: ['HS256'],
+      });
     } catch (e) {
       return null;
     }

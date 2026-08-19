@@ -1,17 +1,37 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsObject, IsOptional } from 'class-validator';
+import { ApiExtraModels, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { IsEnum, IsObject, IsOptional, ValidateIf, ValidateNested } from 'class-validator';
 import { NotificationChannelType } from '../enums/notification-target.enum';
-import { TelegramOptions } from '../types/telegram-options.type';
-import { WebhookOptions } from '../types/webhook-options.type';
+import { TelegramOptionsValidator } from '../types/telegram-options.type';
+import { WebhookOptionsValidator } from '../types/webhook-options.type';
 
+@ApiExtraModels(TelegramOptionsValidator, WebhookOptionsValidator)
 export class UpdateNotificationChannelBody {
   @ApiPropertyOptional({ enum: NotificationChannelType })
   @IsEnum(NotificationChannelType)
   @IsOptional()
   public type?: NotificationChannelType;
 
-  @ApiPropertyOptional()
-  @IsObject()
+  @ApiPropertyOptional({
+    oneOf: [
+      { $ref: getSchemaPath(TelegramOptionsValidator) },
+      { $ref: getSchemaPath(WebhookOptionsValidator) },
+    ],
+  })
   @IsOptional()
-  public options?: TelegramOptions | WebhookOptions;
+  // only discriminable when the body states the type; the authoritative check
+  // runs in NotificationChannelOptionsValidationService against the stored type
+  @ValidateIf((body) => body.type !== undefined)
+  @ValidateNested()
+  @Transform(({ obj, value }) => {
+    if (obj.type === NotificationChannelType.Telegram) {
+      return Object.assign(new TelegramOptionsValidator(), value);
+    }
+    if (obj.type === NotificationChannelType.Webhook) {
+      return Object.assign(new WebhookOptionsValidator(), value);
+    }
+    return value;
+  })
+  @IsObject()
+  public options?: TelegramOptionsValidator | WebhookOptionsValidator;
 }

@@ -2,7 +2,6 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { createTestApp } from '../utils/bootstrap';
-import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { NotificationChannelSerialized } from '../../src/notification-channel/core/entities/notification-channel.interface';
 
 describe('NotificationChannelCoreController (reads)', () => {
@@ -17,6 +16,7 @@ describe('NotificationChannelCoreController (reads)', () => {
 
   beforeEach(async () => {
     await bootstrap.methods.beforeEach();
+    bootstrap.utils.telegramUtils.suppressWelcomeMessages();
   });
 
   afterAll(async () => {
@@ -34,7 +34,7 @@ describe('NotificationChannelCoreController (reads)', () => {
           clusterId: cluster.id,
           token,
           options: {
-            botToken: 'valid-bot-token',
+            botToken: '123456:valid-bot-token',
             chatId: 'valid-chat-id-1',
           },
         });
@@ -43,8 +43,9 @@ describe('NotificationChannelCoreController (reads)', () => {
         await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
           clusterId: cluster.id,
           token,
+          // no botToken -> the server enriches the channel with the built-in
+          // uptime bot token, which the serializer must then hide again
           options: {
-            botToken: getEnvConfig().notificationChannels.telegramUptimeBot.token,
             chatId: 'valid-chat-id-2',
           },
         });
@@ -64,7 +65,7 @@ describe('NotificationChannelCoreController (reads)', () => {
       )!;
 
       expect(customNotificationChannelResponse.options).toEqual({
-        botToken: 'valid-bot-token',
+        botToken: '123456:valid-bot-token',
         chatId: 'valid-chat-id-1',
       });
 

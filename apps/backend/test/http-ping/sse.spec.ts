@@ -24,6 +24,9 @@ describe('Http Ping (SSE)', () => {
   });
 
   afterAll(async () => {
+    // nock interceptors are global and survive across spec files when jest runs
+    // in band, so make sure this suite does not leak its mocks into the next one.
+    nock.cleanAll();
     await bootstrap.methods.afterAll();
   });
 

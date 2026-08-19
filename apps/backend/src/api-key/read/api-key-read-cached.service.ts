@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import * as crypto from 'crypto';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { API_KEYS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { Types } from 'mongoose';
@@ -16,13 +17,15 @@ export class ApiKeyReadCachedService {
   ) {}
 
   public async readProjectId(apiKeyValue: string): Promise<string | null> {
-    const cacheKey = `api-key:${apiKeyValue}:project-id`;
+    const cacheKey = `api-key:${this.hashApiKeyValue(apiKeyValue)}:project-id`;
     const cacheTtlSeconds = 60;
 
     const projectId = await this.redisService.get(cacheKey);
 
     if (projectId === NON_EXISTENT) {
-      throw Error('API key not found. You have to wait 60 seconds before trying again');
+      throw new UnauthorizedException(
+        'API key not found. You have to wait 60 seconds before trying again',
+      );
     }
 
     if (projectId !== null && Types.ObjectId.isValid(projectId)) {
@@ -33,12 +36,16 @@ export class ApiKeyReadCachedService {
 
     if (!apiKey) {
       await this.redisService.set(cacheKey, NON_EXISTENT, cacheTtlSeconds);
-      this.logger.error(`API key not found`, { apiKeyValue });
+      this.logger.error(`API key not found`, { apiKeyPrefix: apiKeyValue.slice(0, 8) });
       return null;
     }
 
     await this.redisService.set(cacheKey, apiKey.projectId, cacheTtlSeconds);
 
     return apiKey.projectId;
+  }
+
+  private hashApiKeyValue(apiKeyValue: string): string {
+    return crypto.createHash('sha256').update(apiKeyValue).digest('hex');
   }
 }

@@ -15,7 +15,7 @@ runs:
   using: 'composite'
   steps:
     - name: Update image inside VPS
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
       with:
         host: ${{ inputs.host }}
         USERNAME: ${{ inputs.username }}

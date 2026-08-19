@@ -21,12 +21,7 @@ export default defineConfig({
 		}
 	},
 	css: {
-		devSourcemap: false,
-		preprocessorOptions: {
-			scss: {
-				api: 'modern-compiler'
-			}
-		}
+		devSourcemap: false
 	},
 	build: {
 		target: ['es2015', 'ios11']

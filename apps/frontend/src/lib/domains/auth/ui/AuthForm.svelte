@@ -3,8 +3,10 @@
   import { cubicInOut } from 'svelte/easing';
   import { fade, scale } from 'svelte/transition';
   import { onMount } from 'svelte';
-  import { generateGithubOAuthUrl } from '$lib/domains/shared/utils/generate-github-oauth-url';
-  import { generateGoogleOAuthUrl } from '$lib/domains/shared/utils/generate-google-oauth-url';
+  import {
+    startOAuthLogin,
+    type OAuthProvider,
+  } from '$lib/domains/auth/application/start-oauth-login';
   import NewsletterCheckbox from '$lib/domains/shared/ui/components/NewsletterCheckbox.svelte';
   import TosCheckbox from '$lib/domains/shared/ui/components/TOSCheckbox.svelte';
   import GoogleIcon from '$lib/domains/shared/icons/GoogleIcon.svelte';
@@ -17,33 +19,28 @@
   let termsAccepted = $state(false);
   let emailAccepted = $state(false);
   let loggingInProvider = $state<string | null>(null);
+  let loginError = $state<string | null>(null);
 
   const isButtonDisabled = $derived(
     (needsAccount && !termsAccepted) || !!loggingInProvider,
   );
 
-  const onGithubLogin = () => {
-    loggingInProvider = 'github';
-    window.location.href = generateGithubOAuthUrl({
-      terms_accepted: termsAccepted,
-      email_accepted: emailAccepted,
-      flow: 'login',
-      fallback_url: '/app/auth?needs_account=true',
-      tier: tier as any,
-      next_url: '/app/clusters',
-    });
-  };
+  const onLogin = async (provider: OAuthProvider) => {
+    loggingInProvider = provider;
+    loginError = null;
 
-  const onGoogleLogin = () => {
-    loggingInProvider = 'google';
-    window.location.href = generateGoogleOAuthUrl({
-      terms_accepted: termsAccepted,
-      email_accepted: emailAccepted,
-      flow: 'login',
-      fallback_url: '/app/auth?needs_account=true',
-      tier: tier as any,
-      next_url: '/app/clusters',
-    });
+    try {
+      await startOAuthLogin({
+        provider,
+        terms_accepted: termsAccepted,
+        email_accepted: emailAccepted,
+        tier: tier as any,
+        next_url: '/app/clusters',
+      });
+    } catch {
+      loggingInProvider = null;
+      loginError = 'Something went wrong. Please try again.';
+    }
   };
 
   onMount(() => {
@@ -51,6 +48,7 @@
       loggingInProvider = null;
       termsAccepted = false;
       emailAccepted = false;
+      loginError = null;
     };
   });
 </script>
@@ -98,7 +96,7 @@
         <button
           disabled={isButtonDisabled}
           class="btn btn-secondary w-full gap-2"
-          onclick={onGithubLogin}
+          onclick={() => onLogin('github')}
         >
           {#if loggingInProvider === 'github'}
             <div
@@ -116,7 +114,7 @@
         <button
           disabled={isButtonDisabled}
           class="btn btn-secondary w-full gap-2"
-          onclick={onGoogleLogin}
+          onclick={() => onLogin('google')}
         >
           {#if loggingInProvider === 'google'}
             <div
@@ -133,6 +131,10 @@
           Sign {needsAccount ? 'up' : 'in'} with Google
         </button>
       </div>
+
+      {#if loginError}
+        <p class="text-error mt-4 text-sm">{loginError}</p>
+      {/if}
 
       <div class="mt-6 text-sm">
         {#if needsAccount}

@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CustomJwtService } from '../custom-jwt/custom-jwt.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import { UserWriteService } from '../../user/write/user-write.service';
@@ -32,10 +32,7 @@ export class GoogleAuthLoginService {
   public async login(dto: GoogleLoginBody): Promise<TokenResponse> {
     this.logger.log(`Logging user in...`);
 
-    const accessToken = await this.authGoogleDataService.getAccessToken(
-      dto.googleCode,
-      dto.forceLocalLogin,
-    );
+    const accessToken = await this.authGoogleDataService.getAccessToken(dto.googleCode);
 
     const { email, avatar } = await this.authGoogleDataService.getGoogleEmailAndAvatar(accessToken);
 
@@ -47,6 +44,15 @@ export class GoogleAuthLoginService {
     const user = await this.userReadService.readByEmail(email);
 
     this.logger.log(`After reading user by email`, { email, userId: user?.id });
+
+    if (user && user.authMethod && user.authMethod !== AuthMethod.Google) {
+      this.logger.warn(`Account was created with a different auth method`, {
+        email,
+        userId: user.id,
+        authMethod: user.authMethod,
+      });
+      throw new UnauthorizedException('Account was created with a different sign in method');
+    }
 
     if (!user && !dto.termsAccepted) {
       this.logger.warn('Cannot create new account without accepting terms');
@@ -84,6 +90,11 @@ export class GoogleAuthLoginService {
       return {
         token: await this.jwtService.sign({ id: user.id }),
       };
+    }
+
+    if (!user.authMethod) {
+      // legacy accounts created before the auth method was persisted
+      await this.userWriteService.update({ id: user.id, authMethod: AuthMethod.Google });
     }
 
     this.logger.log(`Logged in existing user`, { email, userId: user.id });

@@ -10,10 +10,19 @@ export class MetricUtils {
   public async recordMetric(
     dto: RecordMetricBody & { apiKey: string; withoutSleep?: boolean },
   ): Promise<void> {
+    // The API body only carries the metric itself - `apiKey` travels in a header
+    // and `withoutSleep` is test-only. Sending them would be rejected by the
+    // global ValidationPipe (`forbidNonWhitelisted`).
+    const body: RecordMetricBody = {
+      name: dto.name,
+      value: dto.value,
+      operation: dto.operation,
+    };
+
     const response = await request(this.app.getHttpServer())
       .put('/metrics')
       .set('project-api-key', dto.apiKey)
-      .send(dto);
+      .send(body);
 
     if (!dto.withoutSleep) {
       await sleep(1500);

@@ -13,9 +13,10 @@ export class WebhookUtils {
 
     nock(`${url.protocol}//${url.host}`)
       .post(url.pathname)
+      // nock requires a function reply to return a [status, body] tuple.
       .reply(function (uri, body) {
         dto.onMessage(body, this.req.headers);
-        return true;
+        return [200, ''];
       })
       .persist();
   }

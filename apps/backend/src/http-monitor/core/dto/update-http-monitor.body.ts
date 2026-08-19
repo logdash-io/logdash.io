@@ -8,6 +8,7 @@ import {
   IsUrl,
   MaxLength,
 } from 'class-validator';
+import { IsSafeUrl } from '../../../shared/ssrf/is-safe-url.decorator';
 import { HttpMonitorMode } from '../enums/http-monitor-mode.enum';
 
 export class UpdateHttpMonitorBody {
@@ -22,6 +23,7 @@ export class UpdateHttpMonitorBody {
   @IsString()
   @MaxLength(1024)
   @IsUrl()
+  @IsSafeUrl()
   url?: string;
 
   @ApiPropertyOptional({ enum: HttpMonitorMode })

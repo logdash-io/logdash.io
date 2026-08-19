@@ -8,7 +8,11 @@ export enum OurEnv {
 export function getOurEnv(): OurEnv {
   const env = process.env.OUR_ENV;
 
-  if (!env || env === 'dev' || env === OurEnv.Local) {
+  if (!env) {
+    throw new Error('OUR_ENV is not set');
+  }
+
+  if (env === 'dev' || env === OurEnv.Local) {
     return OurEnv.Local;
   }
 

@@ -20,6 +20,9 @@ describe('Http Ping (writes)', () => {
   });
 
   afterAll(async () => {
+    // nock interceptors are global and survive across spec files when jest runs
+    // in band, so make sure this suite does not leak its mocks into the next one.
+    nock.cleanAll();
     await bootstrap.methods.afterAll();
   });
 
@@ -115,7 +118,11 @@ describe('Http Ping (writes)', () => {
     const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
-    const anotherUrl = 'https://another-url.com';
+    // The pinger runs every url through the ssrf guard, which resolves the
+    // hostname before the request is made, so nock alone is not enough - the
+    // host has to be a real, publicly resolvable one. example.net is reserved
+    // for documentation (RFC 2606) and resolves to a public address.
+    const anotherUrl = 'https://example.net';
     const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
       token,
       projectId: project.id,

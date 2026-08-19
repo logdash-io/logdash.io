@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { RedisService } from '../../shared/redis/redis.service';
+import { RedisService, TtlOverwriteStrategy } from '../../shared/redis/redis.service';
 import {
+  CLI_AUTH_LOOKUP_MAX_ATTEMPTS,
+  CLI_AUTH_LOOKUP_WINDOW_SECONDS,
   CLI_AUTH_POLL_INTERVAL_SECONDS,
   CLI_AUTH_TTL_SECONDS,
   CliAuthPendingRecord,
@@ -9,6 +11,7 @@ import {
 const RECORD_PREFIX = 'cli-auth:device:'; // value = JSON record, keyed by hmac(deviceCode)
 const USER_CODE_INDEX_PREFIX = 'cli-auth:user-code:'; // value = hmac(deviceCode), keyed by userCode
 const POLL_THROTTLE_PREFIX = 'cli-auth:poll-throttle:'; // existence = polled within interval
+const LOOKUP_ATTEMPTS_PREFIX = 'cli-auth:lookup-attempts:'; // value = userCode lookups in window, keyed by userId
 
 /**
  * Redis-backed store for the CLI device-authorization flow. Holds the pending
@@ -30,6 +33,10 @@ export class CliAuthStoreService {
 
   private throttleKey(deviceCodeHash: string): string {
     return `${POLL_THROTTLE_PREFIX}${deviceCodeHash}`;
+  }
+
+  private lookupAttemptsKey(userId: string): string {
+    return `${LOOKUP_ATTEMPTS_PREFIX}${userId}`;
   }
 
   public async create(record: CliAuthPendingRecord): Promise<void> {
@@ -110,6 +117,21 @@ export class CliAuthStoreService {
     await this.redis.set(key, '1', CLI_AUTH_POLL_INTERVAL_SECONDS);
 
     return false;
+  }
+
+  /**
+   * userCode lookup rate-limit (same shape as the poll limiter above, counting
+   * instead of gating): returns true once this session user has burned their
+   * lookup budget for the window, so a guessing loop cannot walk the userCode
+   * space of pending records. Counted whether or not the code resolved.
+   */
+  public async exceededLookupBudget(userId: string): Promise<boolean> {
+    const attempts = await this.redis.increment(this.lookupAttemptsKey(userId), {
+      ttlSeconds: CLI_AUTH_LOOKUP_WINDOW_SECONDS,
+      ttlOverwriteStrategy: TtlOverwriteStrategy.SetOnlyIfNoExpiry,
+    });
+
+    return attempts > CLI_AUTH_LOOKUP_MAX_ATTEMPTS;
   }
 
   private remainingTtlSeconds(createdAt: number): number {

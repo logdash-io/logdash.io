@@ -55,7 +55,9 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
+# Never un-ignore an env file here. This repository is public: anything matched by a
+# `!` rule below is world-readable the moment it is committed. The dotenv-vault blob
+# (.env.vault) was removed for exactly that reason - deploys read secrets from GitHub
+# Secrets, not from a committed ciphertext file.
 .env*
 .flaskenv*
-!.env.project
-!.env.vault

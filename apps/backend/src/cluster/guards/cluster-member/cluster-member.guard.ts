@@ -18,6 +18,8 @@ import { ClusterInviteReadModule } from '../../../cluster-invite/read/cluster-in
 import { CustomDomainReadService } from '../../../custom-domain/read/custom-domain-read.service';
 import { CustomDomainReadModule } from '../../../custom-domain/read/custom-domain-read.module';
 import { AccessRestriction } from '../../../personal-api-key/core/types/access-restriction.type';
+import { UserReadService } from '../../../user/read/user-read.service';
+import { UserReadModule } from '../../../user/read/user-read.module';
 
 const CLUSTER_ID_PARAM_NAME = 'clusterId';
 const PROJECT_ID_PARAM_NAME = 'projectId';
@@ -35,6 +37,7 @@ export const ClusterMemberGuardImports = [
   PublicDashboardReadModule,
   ClusterInviteReadModule,
   CustomDomainReadModule,
+  UserReadModule,
 ];
 
 @Injectable()
@@ -47,6 +50,7 @@ export class ClusterMemberGuard implements CanActivate {
     private readonly publicDashboardReadService: PublicDashboardReadService,
     private readonly clusterInviteReadService: ClusterInviteReadService,
     private readonly customDomainReadService: CustomDomainReadService,
+    private readonly userReadService: UserReadService,
     private readonly reflector: Reflector,
   ) {}
 
@@ -405,14 +409,23 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('Cluster invite not found');
     }
 
-    const cluster = await this.clusterReadCachedService.readById(invite.clusterId);
+    const role = await this.clusterReadCachedService.readUserRole({
+      clusterId: invite.clusterId,
+      userId: dto.userId,
+    });
 
-    if (!cluster) {
-      throw new ForbiddenException('Cluster not found');
-    }
+    if (role) {
+      if (!dto.allowedRoles.includes(role)) {
+        throw new ForbiddenException('User does not have the required role');
+      }
+    } else {
+      // The invited user is not a member of the cluster yet but still has to be
+      // able to act on the invite addressed to them (for example decline it).
+      const user = await this.userReadService.readByIdOrThrow(dto.userId);
 
-    if (!dto.allowedRoles.includes(invite.role)) {
-      throw new ForbiddenException('User does not have the required role');
+      if (user.email !== invite.invitedUserEmail) {
+        throw new ForbiddenException('User is not a member of this cluster');
+      }
     }
 
     this.assertAccessAllows({

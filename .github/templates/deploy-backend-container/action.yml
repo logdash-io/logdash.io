@@ -66,6 +66,8 @@ inputs:
     required: true
   auth-jwt-secret:
     required: true
+  personal-api-key-hmac-secret:
+    required: true
 
   clickhouse-host:
     required: true
@@ -110,7 +112,7 @@ runs:
   using: 'composite'
   steps:
     - name: Update image inside VPS
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
       with:
         host: ${{ inputs.host }}
         USERNAME: ${{ inputs.username }}
@@ -145,6 +147,7 @@ runs:
           -e TELEGRAM_TOKEN=${{ inputs.telegram-token }} \
           -e WHITELISTED_EMAILS=${{ inputs.whitelisted-emails }} \
           -e AUTH_JWT_SECRET=${{ inputs.auth-jwt-secret }} \
+          -e PERSONAL_API_KEY_HMAC_SECRET=${{ inputs.personal-api-key-hmac-secret }} \
           -e CLICKHOUSE_HOST=${{ inputs.clickhouse-host }} \
           -e CLICKHOUSE_PORT=${{ inputs.clickhouse-port }} \
           -e CLICKHOUSE_USER=${{ inputs.clickhouse-user }} \

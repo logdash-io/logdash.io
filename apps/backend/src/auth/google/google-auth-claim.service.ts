@@ -40,10 +40,7 @@ export class GoogleAuthClaimService {
   public async claimAccount(dto: GoogleClaimProjectBody): Promise<TokenResponse> {
     this.logger.log(`Claiming account`, { accessToken: dto.accessToken });
 
-    const googleAccessToken = await this.authGoogleDataService.getAccessToken(
-      dto.googleCode,
-      dto.forceLocalLogin,
-    );
+    const googleAccessToken = await this.authGoogleDataService.getAccessToken(dto.googleCode);
 
     const { email, avatar } =
       await this.authGoogleDataService.getGoogleEmailAndAvatar(googleAccessToken);

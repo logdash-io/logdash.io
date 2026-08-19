@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
       - name: Run tests
         uses: './.github/templates/test'
 
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
       - name: Build and push
         uses: './.github/templates/build-and-push'
         with:
@@ -60,6 +60,7 @@ jobs:
           telegram-token: ${{ secrets.BACKEND_PROD_TELEGRAM_TOKEN }}
           whitelisted-emails: ${{ secrets.BACKEND_PROD_WHITELISTED_EMAILS }}
           auth-jwt-secret: ${{ secrets.BACKEND_PROD_AUTH_JWT_SECRET }}
+          personal-api-key-hmac-secret: ${{ secrets.BACKEND_PROD_PERSONAL_API_KEY_HMAC_SECRET }}
           clickhouse-host: ${{ secrets.BACKEND_PROD_CLICKHOUSE_HOST }}:${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT }}
           clickhouse-user: ${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}
           clickhouse-password: ${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}

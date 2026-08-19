@@ -88,12 +88,21 @@ ${codeBlock}`;
     return message;
   }
 
+  /**
+   * The token is `<bot id>:<secret>`. Percent encoding stops a malformed token
+   * from escaping into another api path; the colon, which is a legal path
+   * character, is restored so well formed tokens hit the exact same url.
+   */
+  private encodeBotToken(botToken: string): string {
+    return encodeURIComponent(botToken).replace(/%3A/gi, ':');
+  }
+
   private async sendMessageToTelegramApi(dto: {
     botToken: string;
     chatId: string;
     message: string;
   }) {
-    const url = `https://api.telegram.org/bot${dto.botToken}/sendMessage?parse_mode=MarkdownV2`;
+    const url = `https://api.telegram.org/bot${this.encodeBotToken(dto.botToken)}/sendMessage?parse_mode=MarkdownV2`;
 
     try {
       await axios.post(url, {

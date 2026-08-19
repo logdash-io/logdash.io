@@ -38,6 +38,14 @@
       language: bash,
       code: `npm install @logdash/node`,
     },
+    [LogdashSDKName.NEXT_JS]: {
+      language: bash,
+      code: `npm install @logdash/node`,
+    },
+    [LogdashSDKName.SVELTE_KIT]: {
+      language: bash,
+      code: `npm install @logdash/node`,
+    },
     [LogdashSDKName.PYTHON]: {
       language: bash,
       code: `pip install logdash`,

@@ -7,6 +7,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { clear } from 'jest-date-mock';
 import { Model } from 'mongoose';
 import * as nock from 'nock';
+import { ThrottlerStorage } from '@nestjs/throttler';
+import { ThrottlerStorageService } from '@nestjs/throttler/dist/throttler.service';
+import { ThrottlingModule } from '../../src/shared/throttling/throttling.module';
 import { ApiKeyCoreModule } from '../../src/api-key/core/api-key-core.module';
 import { ApiKeyEntity } from '../../src/api-key/core/entities/api-key.entity';
 import { PersonalApiKeyCoreModule } from '../../src/personal-api-key/core/personal-api-key-core.module';
@@ -79,6 +82,7 @@ export async function createTestApp() {
     imports: [
       rootMongooseTestModule(),
       rootClickHouseTestModule(),
+      ThrottlingModule,
       AuthCoreModule,
       UserCoreModule,
       LogCoreModule,
@@ -127,9 +131,14 @@ export async function createTestApp() {
   const module: TestingModule = await moduleBuilder.compile();
 
   const app = module.createNestApplication();
+  // Must mirror src/main.ts, otherwise e2e tests exercise different validation
+  // rules than production.
   app.useGlobalPipes(
     new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
       transform: true,
+      transformOptions: { enableImplicitConversion: true },
     }),
   );
   await app.init();
@@ -169,7 +178,23 @@ export async function createTestApp() {
 
   const clickhouseClient = app.get(ClickHouseClient);
 
+  const throttlerStorage: ThrottlerStorageService = module.get(ThrottlerStorage);
+
+  const resetRateLimits = () => {
+    // Account creation is rate limited per IP (10/min) and every e2e request
+    // comes from 127.0.0.1, so a suite of >10 tests would otherwise start
+    // getting 429s. `storage.clear()` alone leaves the per-hit expiry timers
+    // scheduled, and they dereference the removed record when they fire -
+    // `onApplicationShutdown()` cancels them.
+    throttlerStorage.onApplicationShutdown();
+    throttlerStorage.storage.clear();
+  };
+
   const clearDatabase = async () => {
+    // Several specs call clearDatabase() directly instead of going through
+    // methods.beforeEach(), so the rate-limit reset lives here to cover both.
+    resetRateLimits();
+
     await Promise.all([
       userModel.deleteMany({}),
       projectModel.deleteMany({}),
@@ -186,23 +211,17 @@ export async function createTestApp() {
       subscriptionModel.deleteMany({}),
       blogPostModel.deleteMany({}),
       redisService.flushAll(),
-      clickhouseClient.query({
-        query: `TRUNCATE TABLE logs`,
-      }),
-      clickhouseClient.query({
-        query: `TRUNCATE TABLE http_pings`,
-      }),
-      clickhouseClient.query({
-        query: `TRUNCATE TABLE http_ping_buckets`,
-      }),
-      clickhouseClient.query({
-        query: `TRUNCATE TABLE audit_logs`,
-      }),
-      clickhouseClient.query({
-        query: `TRUNCATE TABLE metrics`,
-      }),
+      // `command()` rather than `query()`: query() leaves the response stream
+      // undrained, so the TRUNCATE can land *after* the next test has started
+      // writing and silently wipe its rows.
+      clickhouseClient.command({ query: `TRUNCATE TABLE logs` }),
+      clickhouseClient.command({ query: `TRUNCATE TABLE http_pings` }),
+      clickhouseClient.command({ query: `TRUNCATE TABLE http_ping_buckets` }),
+      clickhouseClient.command({ query: `TRUNCATE TABLE audit_logs` }),
+      clickhouseClient.command({ query: `TRUNCATE TABLE metrics` }),
     ]);
   };
+
 
   const beforeEach = async () => {
     clear();

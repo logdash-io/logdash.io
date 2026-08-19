@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import axios from 'axios';
+import { safeHttpRequest } from '../../../shared/ssrf/safe-http-request';
 import {
   NotificationChannelProvider,
   SendHttpMonitorAlertMessageSpecificProviderDto,
@@ -8,6 +8,12 @@ import {
 import { LogdashLogger } from '../../../shared/logdash/aggregate-logger';
 import { NOTIFICATIONS_LOGGER } from '../../../shared/logdash/logdash-tokens';
 import { WebhookHttpMethod, WebhookOptions } from '../../core/types/webhook-options.type';
+
+const METHODS_WITH_BODY: WebhookHttpMethod[] = [
+  WebhookHttpMethod.POST,
+  WebhookHttpMethod.PUT,
+  WebhookHttpMethod.PATCH,
+];
 
 @Injectable()
 export class WebhookNotificationChannelProvider implements NotificationChannelProvider {
@@ -46,45 +52,16 @@ export class WebhookNotificationChannelProvider implements NotificationChannelPr
     bodyToSend: any;
   }) {
     try {
-      switch (dto.method) {
-        case WebhookHttpMethod.POST:
-          await axios.post(dto.url, dto.bodyToSend, {
-            headers: dto.headers,
-          });
-          break;
-        case WebhookHttpMethod.GET:
-          await axios.get(dto.url, {
-            headers: dto.headers,
-          });
-          break;
-        case WebhookHttpMethod.PUT:
-          await axios.put(dto.url, dto.bodyToSend, {
-            headers: dto.headers,
-          });
-          break;
-        case WebhookHttpMethod.DELETE:
-          await axios.delete(dto.url, {
-            headers: dto.headers,
-          });
-          break;
-        case WebhookHttpMethod.PATCH:
-          await axios.patch(dto.url, dto.bodyToSend, {
-            headers: dto.headers,
-          });
-          break;
-        case WebhookHttpMethod.OPTIONS:
-          await axios.options(dto.url, {
-            headers: dto.headers,
-          });
-          break;
-        case WebhookHttpMethod.HEAD:
-          await axios.head(dto.url, {
-            headers: dto.headers,
-          });
-          break;
-        default:
-          throw new Error(`Unsupported HTTP method: ${dto.method}`);
+      if (!Object.values(WebhookHttpMethod).includes(dto.method)) {
+        throw new Error(`Unsupported HTTP method: ${dto.method}`);
       }
+
+      await safeHttpRequest({
+        url: dto.url,
+        method: dto.method,
+        headers: dto.headers,
+        data: METHODS_WITH_BODY.includes(dto.method) ? dto.bodyToSend : undefined,
+      });
     } catch (error) {
       this.logger.error('Failed to send message to webhook', {
         url: dto.url,

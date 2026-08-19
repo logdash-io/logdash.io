@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsDate, IsEnum, IsOptional, IsString, Max } from 'class-validator';
+import { IsArray, IsDate, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { LogReadDirection } from '../enums/log-read-direction.enum';
 import { Transform } from 'class-transformer';
 import { LogLevel } from '../enums/log-level.enum';
@@ -17,8 +17,10 @@ export class ReadLogsQuery {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsInt()
+  @Min(1)
   @Max(100)
-  @Transform(({ value }) => Number(value))
+  @Transform(({ value }) => (value === undefined ? undefined : Number(value)))
   limit?: number;
 
   @ApiPropertyOptional()

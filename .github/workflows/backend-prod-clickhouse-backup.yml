@@ -1,9 +1,31 @@
+# ⚠️ SECURITY - READ BEFORE RE-ENABLING ARTIFACT UPLOAD ⚠️
+#
+# This repository is PUBLIC. GitHub Actions artifacts on a public repository can be
+# downloaded by ANY GitHub user, so uploading a `SELECT * FORMAT Native` dump of every
+# ClickHouse table as an artifact publishes the entire production analytics database.
+# Encryption is the only thing that stood between that dump and the world, and it is a
+# single shared passphrase.
+#
+# The "Upload Backup Artifact" step below is therefore gated behind an explicit
+# `publish_artifact` workflow_dispatch input and is OFF for scheduled runs.
+#
+# TODO(security): replace the artifact sink with a private object store - push the
+# encrypted dump to a private S3/R2 bucket with SSE-KMS and a bucket lifecycle policy,
+# authenticating via OIDC role assumption rather than long-lived keys. Until that lands,
+# scheduled runs produce NO retained backup: either finish this migration or disable the
+# schedule. Do not simply flip `publish_artifact` on.
 name: Clickhouse backup (prod)
 
 on:
   schedule:
     - cron: '*/15 * * * *'
   workflow_dispatch:
+    inputs:
+      publish_artifact:
+        description: '⚠️ Upload the encrypted backup as a PUBLICLY DOWNLOADABLE workflow artifact. Leave off unless you understand the exposure.'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   backup:
@@ -11,7 +33,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Install ClickHouse Client
         run: |
@@ -131,9 +153,18 @@ jobs:
           echo "✅ Backup encrypted and ready for upload"
         shell: bash
 
+      # ⚠️ Publishes production data to a PUBLIC repository's artifact storage.
+      # Gated off by default - see the security note at the top of this file.
       - name: Upload Backup Artifact
+        if: ${{ inputs.publish_artifact }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BACKUP_NAME }}
           path: ${{ env.BACKUP_NAME }}.tar.gz.enc
           retention-days: 14
+
+      - name: Warn - backup not retained
+        if: ${{ !inputs.publish_artifact }}
+        run: |
+          echo "::warning title=Backup not retained::Artifact upload is disabled because this is a public repository. The backup was created and discarded. See the TODO at the top of .github/workflows/backend-prod-clickhouse-backup.yml - a private S3/R2 sink still needs to be wired up."
+        shell: bash

@@ -1,13 +1,18 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import {
+    cliAuthErrorMessage,
+    type CliAuthRequest,
+  } from '$lib/domains/app/personal-api-keys/domain/cli-auth.js';
   import PersonalApiKeyCreateModal from '$lib/domains/app/personal-api-keys/ui/PersonalApiKeyCreateModal.svelte';
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
-  import type { PageData } from './$types';
 
-  let { data }: { data: PageData } = $props();
-
-  let modalOpen = $state(true);
+  let userCode = $state('');
+  let checking = $state(false);
+  let error = $state<string | null>(null);
+  let request = $state<CliAuthRequest | null>(null);
 
   // The access picker reads clusters/projects from clustersState. This page
   // lives outside the /app/clusters layout, so load them on the client.
@@ -17,35 +22,88 @@
     }
   });
 
+  async function onLookup(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+
+    if (userCode.trim() === '') {
+      return;
+    }
+
+    checking = true;
+    error = null;
+
+    try {
+      const response = await fetch('/app/api/user/cli-auth/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userCode: userCode.trim() }),
+      });
+
+      if (!response.ok) {
+        error = cliAuthErrorMessage(response.status);
+        return;
+      }
+
+      request = await response.json();
+    } catch (cause) {
+      error = cliAuthErrorMessage(0);
+      console.error(cause);
+    } finally {
+      checking = false;
+    }
+  }
+
   function onClose(): void {
-    modalOpen = false;
-    goto('/app/account/api-keys');
+    request = null;
+    void goto(resolve('/app/account/api-keys'));
   }
 </script>
 
 <div class="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
-  <div class="flex flex-col items-center gap-3 text-center">
+  <div class="flex w-full max-w-md flex-col items-center gap-3 text-center">
     <div class="bg-base-100 rounded-lg p-3">
       <KeyIcon class="text-primary size-6" />
     </div>
     <h1 class="text-xl font-semibold">Authorize CLI access</h1>
-    <p class="text-base-content/70 max-w-md text-sm">
-      A device is requesting access to your Logdash account. Confirm the code
-      below matches the one shown in your terminal before approving.
+    <p class="text-base-content/70 text-sm">
+      Type the code shown in your terminal. We never fill it in for you — if
+      someone sent you a link with a code already in it, close this page.
     </p>
-    {#if data.userCode}
-      <div
-        class="border-primary/40 bg-primary/10 rounded-lg border px-4 py-2 font-mono text-lg font-bold tracking-widest"
+
+    <form class="mt-2 flex w-full flex-col gap-3" onsubmit={onLookup}>
+      <input
+        bind:value={userCode}
+        class="input w-full text-center font-mono text-lg tracking-widest uppercase"
+        placeholder="XXXX-XXXX"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+        maxlength="16"
+        aria-label="Code from your terminal"
+      />
+
+      {#if error}
+        <p class="text-error text-sm">{error}</p>
+      {/if}
+
+      <button
+        type="submit"
+        class="btn btn-primary w-full"
+        disabled={checking || userCode.trim() === ''}
       >
-        {data.userCode}
-      </div>
-    {/if}
+        {#if checking}
+          <span class="loading loading-spinner loading-xs"></span>
+        {:else}
+          Continue
+        {/if}
+      </button>
+    </form>
   </div>
 
   <PersonalApiKeyCreateModal
-    isOpen={modalOpen}
+    isOpen={request !== null}
     mode="cli"
-    userCode={data.userCode}
+    cliRequest={request}
     initialPreset="cli"
     {onClose}
   />

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlingModule } from './shared/throttling/throttling.module';
 import { ApiKeyCoreModule } from './api-key/core/api-key-core.module';
 import { AuthCoreModule } from './auth/core/auth-core.module';
 import { ClusterCoreModule } from './cluster/core/cluster-core.module';
@@ -40,6 +41,7 @@ import { CliAuthModule } from './cli-auth/core/cli-auth.module';
     UserCoreModule,
     LogCoreModule,
     ScheduleModule.forRoot(),
+    ThrottlingModule,
     ApiKeyCoreModule,
     ProjectCoreModule,
     MetricCoreModule,

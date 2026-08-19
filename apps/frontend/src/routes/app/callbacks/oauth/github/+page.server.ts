@@ -6,7 +6,11 @@ import {
   save_access_token,
   save_onboarding_tier,
 } from '$lib/domains/shared/utils/cookies.utils';
-import type { GithubCallbackState } from '$lib/domains/shared/utils/generate-github-oauth-url';
+import {
+  consume_oauth_state,
+  type OAuthStatePayload,
+} from '$lib/domains/shared/utils/oauth-state.server';
+import { safe_redirect_path } from '$lib/domains/shared/utils/safe-redirect.util';
 import {
   isRedirect,
   redirect,
@@ -14,10 +18,12 @@ import {
   type ServerLoadEvent,
 } from '@sveltejs/kit';
 
+const FALLBACK_URL = '/app/auth?needs_account=true';
+
 async function runLoginFlow(dto: {
   cookies: Cookies;
   code: string | null;
-  state: GithubCallbackState;
+  state: OAuthStatePayload;
 }): Promise<void> {
   const {
     code,
@@ -25,29 +31,28 @@ async function runLoginFlow(dto: {
     state: { terms_accepted, email_accepted, next_url },
   } = dto;
 
-  bffLogger.info(`logging in github ${dto.code}...`);
+  bffLogger.info(`logging in github...`);
 
   const { error, access_token } = await logdashAPI.github_login({
     code,
     terms_accepted,
     email_accepted,
-    is_local_env: isLocal() || dev,
   });
 
   if (error) {
     throw new Error(`github login error: ${error}`);
   }
 
-  bffLogger.info(`github login success: ${access_token}`);
+  bffLogger.info(`github login success`);
   const expiration = new Date(
     JSON.parse(atob(access_token.split('.')[1])).exp * 1000,
   );
 
   save_access_token(cookies, access_token, {
-    maxAge: expiration.getTime() - Date.now(),
+    maxAge: Math.floor((expiration.getTime() - Date.now()) / 1000),
   });
 
-  redirect(302, next_url || `/app/clusters`);
+  redirect(302, safe_redirect_path(next_url, '/app/clusters'));
 }
 
 export const load = async ({
@@ -55,20 +60,22 @@ export const load = async ({
   cookies,
 }: ServerLoadEvent): Promise<void> => {
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  bffLogger.debug(`github oauth callback ${JSON.stringify({ code, state })}`);
+  const state = consume_oauth_state(cookies, url.searchParams.get('state'));
 
-  const decodedState: GithubCallbackState = JSON.parse(atob(state));
+  if (!state) {
+    bffLogger.error(`github oauth callback with missing or mismatched state`);
+    redirect(302, FALLBACK_URL);
+  }
 
-  if (decodedState.tier) {
-    save_onboarding_tier(cookies, decodedState.tier);
+  if (state.tier) {
+    save_onboarding_tier(cookies, state.tier);
   }
 
   try {
     await runLoginFlow({
       cookies,
       code,
-      state: decodedState,
+      state,
     });
   } catch (result) {
     if (isRedirect(result)) {
@@ -76,6 +83,6 @@ export const load = async ({
     }
 
     bffLogger.error(`github oauth callback error ${result}`);
-    redirect(302, decodedState.fallback_url || '/');
+    redirect(302, FALLBACK_URL);
   }
 };

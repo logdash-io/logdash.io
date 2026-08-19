@@ -1,2 +1,8 @@
 dist
 node_modules
+
+# Secrets. Also covered by apps/backend/.gitignore, repeated here so this directory is
+# safe on its own.
+.env
+.env.*
+!.env.example

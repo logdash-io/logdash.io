@@ -15,6 +15,10 @@ describe('Audit logs (writes)', () => {
 
   beforeEach(async () => {
     await bootstrap.methods.beforeEach();
+    // The shared `clearDatabase` truncates ClickHouse with `query()` and never
+    // drains the response, so the truncate can still be in flight when the test
+    // starts writing audit logs. Re-issue it with `command()`, which does wait.
+    await bootstrap.clickhouseClient.command({ query: 'TRUNCATE TABLE audit_logs' });
   });
 
   afterAll(async () => {

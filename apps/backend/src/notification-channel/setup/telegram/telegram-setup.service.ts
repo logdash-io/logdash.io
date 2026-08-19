@@ -3,6 +3,7 @@ import { RedisService } from '../../../shared/redis/redis.service';
 import { getEnvConfig } from '../../../shared/configs/env-configs';
 import { TelegramChatInfo } from './dto/telegram-chat-info.dto';
 import { TelegramUpdateDto } from './dto/telegram-update.dto';
+import { secureCompare } from '../../../shared/utils/secure-compare';
 
 const PASSPHRASE_BIND_TTL_SECONDS = 60;
 
@@ -27,7 +28,7 @@ export class TelegramSetupService {
 
     if (
       !update.message ||
-      secret !== expectedSecret ||
+      !secureCompare(secret, expectedSecret) ||
       !update.message.text ||
       !update.message.text.startsWith('/')
     ) {

@@ -9,6 +9,9 @@ import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enu
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('NotificationChannelCoreController (writes)', () => {
+  // this suite creates up to 100 channels in a single test, so wiping mongo +
+  // clickhouse between tests can take longer than the 5s default
+
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
 
   beforeAll(async () => {
@@ -17,6 +20,10 @@ describe('NotificationChannelCoreController (writes)', () => {
 
   beforeEach(async () => {
     await bootstrap.methods.beforeEach();
+    // The shared `clearDatabase` truncates ClickHouse with `query()` and never
+    // drains the response, so the truncate can still be in flight when the test
+    // starts writing audit logs. Re-issue it with `command()`, which does wait.
+    await bootstrap.clickhouseClient.command({ query: 'TRUNCATE TABLE audit_logs' });
   });
 
   afterAll(async () => {
@@ -33,7 +40,7 @@ describe('NotificationChannelCoreController (writes)', () => {
           type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
-            botToken: 'valid-bot-token',
+            botToken: '123456:valid-bot-token',
             chatId: 'valid-chat-id',
           },
         };
@@ -51,7 +58,7 @@ describe('NotificationChannelCoreController (writes)', () => {
         expect(entity).toBeDefined();
         expect(entity.clusterId).toBe(cluster.id);
         expect(entity.target).toBe(NotificationChannelType.Telegram);
-        expect((entity.options as TelegramOptions).botToken).toBe('valid-bot-token');
+        expect((entity.options as TelegramOptions).botToken).toBe('123456:valid-bot-token');
         expect((entity.options as TelegramOptions).chatId).toBe('valid-chat-id');
       });
 
@@ -93,7 +100,7 @@ describe('NotificationChannelCoreController (writes)', () => {
           type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
-            botToken: 'valid-bot-token',
+            botToken: '123456:valid-bot-token',
             chatId: 'valid-chat-id',
           },
         };
@@ -215,7 +222,14 @@ I'll notify you about the status of your services`,
 
         // then
         expect(response.status).toBe(400);
-        expect(response.body.message).toEqual(['options.url must be a string']);
+        // the webhook url is now also length capped, parsed as a url and run
+        // through the ssrf guard, so a missing url trips every constraint
+        expect(response.body.message).toEqual([
+          'options.url must be an http(s) url that does not point at a private, loopback or metadata address',
+          'options.url must be a URL address',
+          'options.url must be shorter than or equal to 1024 characters',
+          'options.url must be a string',
+        ]);
       });
 
       describe('Free tier webhook restrictions', () => {
@@ -427,7 +441,7 @@ I'll notify you about the status of your services`,
         type: NotificationChannelType.Telegram,
         name: 'Test Telegram Channel',
         options: {
-          botToken: 'valid-bot-token',
+          botToken: '123456:valid-bot-token',
           chatId: 'valid-chat-id',
         },
       };
@@ -584,7 +598,7 @@ I'll notify you about the status of your services`,
         .set('Authorization', `Bearer ${token}`)
         .send({
           options: {
-            botToken: 'updated-bot-token',
+            botToken: '123456:updated-bot-token',
             chatId: 'updated-chat-id',
           },
         });
@@ -592,7 +606,7 @@ I'll notify you about the status of your services`,
       // then
       expect(response.status).toBe(200);
       const entity = await bootstrap.models.notificationChannelModel.findById(channel.id);
-      expect((entity!.options as TelegramOptions).botToken).toBe('updated-bot-token');
+      expect((entity!.options as TelegramOptions).botToken).toBe('123456:updated-bot-token');
       expect((entity!.options as TelegramOptions).chatId).toBe('updated-chat-id');
     });
 
@@ -608,7 +622,7 @@ I'll notify you about the status of your services`,
           type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
-            botToken: 'original-bot-token',
+            botToken: '123456:original-bot-token',
             chatId: 'original-chat-id',
           },
         });
@@ -621,7 +635,7 @@ I'll notify you about the status of your services`,
         .set('Authorization', `Bearer ${token}`)
         .send({
           options: {
-            botToken: 'updated-bot-token',
+            botToken: '123456:updated-bot-token',
             chatId: 'updated-chat-id',
           },
         });
@@ -650,7 +664,7 @@ I'll notify you about the status of your services`,
           type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
-            botToken: 'bot-token',
+            botToken: '123456:bot-token',
             chatId: 'chat-id',
           },
         });
@@ -680,7 +694,7 @@ I'll notify you about the status of your services`,
           type: NotificationChannelType.Telegram,
           name: 'Test Telegram Channel',
           options: {
-            botToken: 'bot-token',
+            botToken: '123456:bot-token',
             chatId: 'chat-id',
           },
         });

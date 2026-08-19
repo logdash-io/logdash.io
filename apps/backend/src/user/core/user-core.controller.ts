@@ -14,6 +14,7 @@ import { RequireScope } from '../../auth/core/decorators/require-scope.decorator
 import { Resource } from '../../personal-api-key/core/enums/resource.enum';
 import { Action } from '../../personal-api-key/core/enums/action.enum';
 import { CreateAnonymousUserResponse } from './dto/create-anonymous-user.response';
+import { ThrottleAccountCreation } from '../../shared/throttling/rate-limit.decorator';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { ClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
 import { ClusterSerializer } from '../../cluster/core/entities/cluster.serializer';
@@ -51,6 +52,7 @@ export class UserCoreController {
   }
 
   @Public()
+  @ThrottleAccountCreation()
   @Post('anonymous')
   @ApiResponse({ type: CreateAnonymousUserResponse })
   public async createAnonymousUser(): Promise<CreateAnonymousUserResponse> {

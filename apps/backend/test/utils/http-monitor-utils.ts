@@ -24,10 +24,20 @@ export class HttpMonitorUtils {
   ): Promise<HttpMonitorSerialized> {
     this.tryFillDto(dto);
 
+    // The global ValidationPipe runs with `forbidNonWhitelisted`, so only the
+    // properties declared on CreateHttpMonitorBody may go into the request body.
+    // `token` and `projectId` are transport details, not part of the payload.
+    const body: CreateHttpMonitorBody = {
+      name: dto.name!,
+      url: dto.url,
+      mode: dto.mode!,
+      notificationChannelsIds: dto.notificationChannelsIds,
+    };
+
     const response = await request(this.app.getHttpServer())
       .post(`/projects/${dto.projectId}/http_monitors`)
       .set('Authorization', `Bearer ${dto.token}`)
-      .send(dto);
+      .send(body);
 
     // claim
     await request(this.app.getHttpServer())

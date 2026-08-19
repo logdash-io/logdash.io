@@ -1,8 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validateSync } from 'class-validator';
 import { NotificationChannelOptions } from './entities/notification-channel.entity';
 import { NotificationChannelType } from './enums/notification-target.enum';
-import { TelegramOptions } from './types/telegram-options.type';
-import { WebhookOptions, WebhookHttpMethod } from './types/webhook-options.type';
+import { TelegramOptions, TelegramOptionsValidator } from './types/telegram-options.type';
+import {
+  WebhookOptions,
+  WebhookOptionsValidator,
+  WebhookHttpMethod,
+} from './types/webhook-options.type';
 import { NotificationChannelReadService } from '../read/notification-channel-read.service';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
 
@@ -15,9 +21,16 @@ export class NotificationChannelOptionsValidationService {
     target: NotificationChannelType,
     clusterId: string,
     userTier?: UserTier,
+    excludeNotificationChannelId?: string,
   ): Promise<void> {
+    this.validateOptionsShape(options, target);
+
     if (target === NotificationChannelType.Telegram) {
-      await this.validateTelegramOptions(options as TelegramOptions, clusterId);
+      await this.validateTelegramOptions(
+        options as TelegramOptions,
+        clusterId,
+        excludeNotificationChannelId,
+      );
     }
 
     if (target === NotificationChannelType.Webhook) {
@@ -25,9 +38,33 @@ export class NotificationChannelOptionsValidationService {
     }
   }
 
+  /**
+   * Structural validation keyed on the authoritative channel type rather than
+   * on whatever the request body claimed, so the update path cannot smuggle in
+   * options the create path would have rejected.
+   */
+  private validateOptionsShape(
+    options: NotificationChannelOptions,
+    target: NotificationChannelType,
+  ): void {
+    const instance =
+      target === NotificationChannelType.Telegram
+        ? plainToInstance(TelegramOptionsValidator, options)
+        : plainToInstance(WebhookOptionsValidator, options);
+
+    const errors = validateSync(instance);
+
+    if (errors.length > 0) {
+      throw new BadRequestException(
+        errors.flatMap((error) => Object.values(error.constraints ?? {})),
+      );
+    }
+  }
+
   private async validateTelegramOptions(
     options: TelegramOptions,
     clusterId: string,
+    excludeNotificationChannelId?: string,
   ): Promise<void> {
     const existingChannel =
       await this.notificationChannelReadService.readExistingTelegramChannelByChatIdAndClusterId(
@@ -35,7 +72,7 @@ export class NotificationChannelOptionsValidationService {
         clusterId,
       );
 
-    if (existingChannel) {
+    if (existingChannel && existingChannel.id !== excludeNotificationChannelId) {
       throw new BadRequestException('Channel with this chatId already exists');
     }
   }

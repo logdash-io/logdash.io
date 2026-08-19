@@ -18,6 +18,9 @@ describe('Http monitor full process', () => {
   });
 
   afterAll(async () => {
+    // nock interceptors are global and survive across spec files when jest runs
+    // in band, so make sure this suite does not leak its mocks into the next one.
+    nock.cleanAll();
     await bootstrap.methods.afterAll();
   });
 
@@ -30,7 +33,7 @@ describe('Http monitor full process', () => {
         clusterId: cluster.id,
         token,
         options: {
-          botToken: 'some-valid-token',
+          botToken: '123456:some-valid-token',
           chatId: 'some-valid-chat-id',
         },
       });

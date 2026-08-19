@@ -5,10 +5,6 @@ import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monito
 import type { Project } from '$lib/domains/app/projects/domain/project';
 import type { PublicDashboard } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard.js';
 import type { PublicDashboardData } from '@logdash/hyper-ui/features';
-import type {
-  NotificationChannel,
-  TelegramChatInfo,
-} from '$lib/domains/app/projects/domain/telegram/telegram.types';
 import { bffLogger } from '$lib/domains/shared/bff-logger.server.js';
 import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config';
 import type { User } from '$lib/domains/shared/user/domain/user';
@@ -110,7 +106,6 @@ class LogdashAPI {
     code: string;
     terms_accepted: boolean;
     email_accepted: boolean;
-    is_local_env: boolean;
   }): Promise<{
     access_token?: string;
     error?: string;
@@ -121,7 +116,6 @@ class LogdashAPI {
         githubCode: dto.code,
         termsAccepted: dto.terms_accepted,
         emailAccepted: dto.email_accepted,
-        forceLocalLogin: dto.is_local_env,
       },
     )
       .then((data) => ({ access_token: data.token }))
@@ -294,37 +288,6 @@ class LogdashAPI {
     return this.get<{ url: string }>(
       `${LogdashAPI.v0baseUrl}/support/telegram/invite-link`,
       access_token,
-    );
-  }
-
-  get_telegram_chat_info(passphrase: string): Promise<TelegramChatInfo> {
-    const cookies = document?.cookie || '';
-    const tokenMatch = cookies.match(/access_token=([^;]+)/);
-    const accessToken = tokenMatch ? tokenMatch[1] : '';
-
-    return this.get<TelegramChatInfo>(
-      `${LogdashAPI.v0baseUrl}/notification_channel_setup/telegram/chat_info?passphrase=${encodeURIComponent(passphrase)}`,
-      accessToken,
-    );
-  }
-
-  create_telegram_notification_channel(
-    clusterId: string,
-    options: { chatId: string },
-  ): Promise<NotificationChannel> {
-    const cookies = document?.cookie || '';
-    const tokenMatch = cookies.match(/access_token=([^;]+)/);
-    const accessToken = tokenMatch ? tokenMatch[1] : '';
-
-    return this.post<NotificationChannel>(
-      `${LogdashAPI.v0baseUrl}/clusters/${clusterId}/notification_channels`,
-      {
-        type: 'telegram',
-        options: {
-          chatId: options.chatId,
-        },
-      },
-      accessToken,
     );
   }
 
@@ -536,20 +499,6 @@ class LogdashAPI {
     body: unknown,
     access_token?: string,
   ): Promise<T> {
-    bffLogger.info(
-      JSON.stringify({
-        url,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(access_token && {
-            Authorization: `Bearer {access_token}`,
-          }),
-        },
-        body: JSON.stringify(body),
-      }),
-    );
-
     return this.performFetch<T>(
       url,
       {

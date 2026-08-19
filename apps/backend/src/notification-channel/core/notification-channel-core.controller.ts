@@ -100,6 +100,22 @@ export class NotificationChannelCoreController {
     @Body() dto: UpdateNotificationChannelBody,
     @CurrentUserId() userId: string,
   ): Promise<void> {
+    const channel = await this.notificationChannelReadService.readById(id);
+
+    if (dto.options) {
+      const userTier = await this.userReadCachedService.readTier(userId);
+
+      // the stored target is authoritative here - the body cannot pick which
+      // option shape (and which tier restrictions) it gets validated against
+      await this.notificationChannelOptionsValidationService.validateOptions(
+        dto.options,
+        channel.target,
+        channel.clusterId,
+        userTier,
+        id,
+      );
+    }
+
     await this.notificationChannelWriteService.update(
       {
         id,

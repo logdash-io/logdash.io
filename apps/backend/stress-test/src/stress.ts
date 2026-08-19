@@ -1,4 +1,5 @@
 import { createLogDash } from '@logdash/core';
+import { requireApiKey } from './env';
 
 const bigJson = {
   key1: 'value1',
@@ -64,7 +65,7 @@ const bigJson = {
 };
 
 const { logger } = createLogDash({
-  apiKey: 'mXDkPpQ86FzoUVlS5tI8luD3a9ZskQh3',
+  apiKey: requireApiKey(),
 });
 
 // logger.info('Hello logdash!');

@@ -1,5 +1,15 @@
 import { getOurEnv, OurEnv } from '../types/our-env.enum';
 
+function requireEnv(name: string): string {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`${name} is not set`);
+  }
+
+  return value;
+}
+
 interface EnvConfig {
   app: {
     url: string;
@@ -193,7 +203,11 @@ export const EnvConfigs: EnvConfigs = {
       jwtSecret: process.env.AUTH_JWT_SECRET!,
     },
     personalApiKey: {
-      hmacSecret: process.env.PERSONAL_API_KEY_HMAC_SECRET!,
+      // Lazy: `envConfigs` is a single literal holding every environment's
+      // branch, so an eager requireEnv would demand prod secrets in local runs.
+      get hmacSecret(): string {
+        return requireEnv('PERSONAL_API_KEY_HMAC_SECRET');
+      },
     },
     swagger: {
       username: 'admin',
@@ -301,8 +315,11 @@ export const EnvConfigs: EnvConfigs = {
       jwtSecret: process.env.AUTH_JWT_SECRET!,
     },
     personalApiKey: {
-      hmacSecret:
-        process.env.PERSONAL_API_KEY_HMAC_SECRET ?? 'local-dev-personal-api-key-hmac-secret',
+      // Lazy: `envConfigs` is a single literal holding every environment's
+      // branch, so an eager requireEnv would demand prod secrets in local runs.
+      get hmacSecret(): string {
+        return requireEnv('PERSONAL_API_KEY_HMAC_SECRET');
+      },
     },
     swagger: {
       username: 'admin',

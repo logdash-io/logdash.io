@@ -1,4 +1,4 @@
-import { advanceBy } from 'jest-date-mock';
+import { advanceBy, advanceTo } from 'jest-date-mock';
 import * as nock from 'nock';
 import { HttpPingBucketIngestionService } from '../../src/http-ping-bucket/ingestion/http-ping-bucket-ingestion.service';
 import { createTestApp } from '../utils/bootstrap';
@@ -13,10 +13,18 @@ describe('Http Ping (writes)', () => {
   });
 
   beforeEach(async () => {
+    // Bucket ingestion aggregates a whole clock hour, so the test has to run on
+    // a frozen clock. With the real clock still ticking, two pings written a few
+    // hundred milliseconds apart can straddle an hour boundary and land in
+    // different buckets.
+    advanceTo(new Date('2025-05-10T12:30:00.000Z'));
     await bootstrap.methods.clearDatabase();
   });
 
   afterAll(async () => {
+    // nock interceptors are global and survive across spec files when jest runs
+    // in band, so make sure this suite does not leak its mocks into the next one.
+    nock.cleanAll();
     await bootstrap.methods.afterAll();
   });
 

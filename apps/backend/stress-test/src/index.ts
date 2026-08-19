@@ -1,5 +1,6 @@
 import { Logdash } from '@logdash/node';
 import dns from 'dns/promises';
+import { apiHost, requireApiKey } from './env';
 
 interface ProjectResponse {
   projectId: string;
@@ -119,16 +120,14 @@ async function main() {
 }
 
 function test() {
-  // const logdash1 = new Logdash('m409bnFcnhmpfQ3hozI2YkP49WTmto31', {
-  //   host: 'https://api.logdash.io',
-  // });
+  // const logdash1 = new Logdash(requireSecondaryApiKey(), { host: apiHost() });
 
   // for (let i = 0; i < 100; i++) {
   //   logdash1.setMetric(`test${i}`, i);
   // }
 
-  const logdash2 = new Logdash('mnL6qiDcki0FZYqOWlaQD50K7pZ5gLtn', {
-    host: 'https://api.logdash.io',
+  const logdash2 = new Logdash(requireApiKey(), {
+    host: apiHost(),
   });
 
   for (let i = 0; i < 100; i++) {
