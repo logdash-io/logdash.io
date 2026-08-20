@@ -1,30 +1,19 @@
-# ⚠️ SECURITY - READ BEFORE RE-ENABLING ARTIFACT UPLOAD ⚠️
+# This repository is PUBLIC, so GitHub Actions artifacts here are downloadable by any
+# GitHub user. The encrypted mongodump below is therefore only as private as
+# BACKEND_BACKUP_ARTIFACT_KEY: keep it a high-entropy random value, never a passphrase,
+# and rotate it if it is ever suspected of leaking.
 #
-# This repository is PUBLIC. GitHub Actions artifacts on a public repository can be
-# downloaded by ANY GitHub user, so uploading a full production `mongodump` as an
-# artifact publishes the entire production database. Encryption is the only thing that
-# stood between that dump and the world, and it is a single shared passphrase.
+# encrypt-backup.sh derives keys with PBKDF2-HMAC-SHA256 at 600k iterations. Artifacts
+# created before that change used a single SHA-256 pass and are much cheaper to attack.
 #
-# The "Upload Backup Artifact" step below is therefore gated behind an explicit
-# `publish_artifact` workflow_dispatch input and is OFF for scheduled runs.
-#
-# TODO(security): replace the artifact sink with a private object store - push the
-# encrypted dump to a private S3/R2 bucket with SSE-KMS and a bucket lifecycle policy,
-# authenticating via OIDC role assumption rather than long-lived keys. Until that lands,
-# scheduled runs produce NO retained backup: either finish this migration or disable the
-# schedule. Do not simply flip `publish_artifact` on.
+# TODO(security): move the sink to a private S3/R2 bucket with SSE-KMS, authenticating
+# via OIDC role assumption, so the dumps are not public at all.
 name: Mongo backup (prod)
 
 on:
   schedule:
     - cron: '*/15 * * * *' # Every 15 minutes
   workflow_dispatch:
-    inputs:
-      publish_artifact:
-        description: '⚠️ Upload the encrypted backup as a PUBLICLY DOWNLOADABLE workflow artifact. Leave off unless you understand the exposure.'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   backup:
@@ -96,18 +85,10 @@ jobs:
           echo "✅ Backup encrypted and ready for upload"
         shell: bash
 
-      # ⚠️ Publishes production data to a PUBLIC repository's artifact storage.
-      # Gated off by default - see the security note at the top of this file.
       - name: Upload Backup Artifact
-        if: ${{ inputs.publish_artifact }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BACKUP_NAME }}
           path: ${{ env.BACKUP_NAME }}.tar.gz.enc
           retention-days: 14
 
-      - name: Warn - backup not retained
-        if: ${{ !inputs.publish_artifact }}
-        run: |
-          echo "::warning title=Backup not retained::Artifact upload is disabled because this is a public repository. The backup was created and discarded. See the TODO at the top of .github/workflows/backend-prod-mongo-backup.yml - a private S3/R2 sink still needs to be wired up."
-        shell: bash
