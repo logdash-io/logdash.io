@@ -12,6 +12,8 @@ runs:
       uses: actions/setup-node@v5
       with:
         node-version: 20.x
+        cache: npm
+        cache-dependency-path: apps/backend/package-lock.json
 
     - name: Install dependencies
       run: cd apps/backend && npm ci
