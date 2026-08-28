@@ -13,11 +13,6 @@ The backup system encrypts all database dump artifacts before uploading them as 
 - **Key derivation** using PBKDF2-HMAC-SHA256 with 600,000 iterations
 - **HMAC verification** to detect tampering or corruption - decryption always fails closed
 
-> **Encryption is not a substitute for keeping backups out of a public repository.**
-> Workflow artifacts on a public repo are downloadable by any GitHub user. The
-> artifact upload steps in the backup workflows are gated off by default; see the
-> TODO in `.github/workflows/backend-prod-*-backup.yml`.
-
 ## Scripts
 
 ### `encrypt-backup.sh`
@@ -67,8 +62,7 @@ The encryption system uses the following GitHub secret:
 2. Compresses backup into tar.gz
 3. **Encrypts** the compressed backup using AES-256-CBC + HMAC
 4. Removes unencrypted backup for security
-5. Uploading the encrypted backup as a workflow artifact is **disabled by default** - see
-   `publish_artifact` in the backup workflows
+5. Uploads the encrypted backup as a workflow artifact (14 day retention)
 
 ### Restore Workflow
 
