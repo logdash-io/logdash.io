@@ -75,8 +75,16 @@ fi
 
 echo "🔒 File encrypted, computing HMAC..."
 
-# Calculate HMAC of encrypted data for authentication (stream from file)
-HMAC=$(openssl dgst -sha256 -mac HMAC -macopt "hexkey:$HMAC_KEY" -binary "$ENCRYPTED_TEMP" | xxd -p -c 64)
+# Calculate HMAC over IV || ciphertext (stream from file). The IV has to be
+# inside the MAC: it lives in the plaintext header, and an unauthenticated IV
+# lets anyone who can rewrite the artifact flip bits in the first plaintext
+# block while decrypt-backup.sh still reports a passing HMAC.
+# Keep this in sync with decrypt-backup.sh.
+IV_TEMP="$TEMP_DIR/iv.bin"
+printf '%s' "$IV" | xxd -r -p > "$IV_TEMP"
+
+HMAC=$(cat "$IV_TEMP" "$ENCRYPTED_TEMP" |
+    openssl dgst -sha256 -mac HMAC -macopt "hexkey:$HMAC_KEY" -binary | xxd -p -c 64)
 
 echo "🔏 HMAC computed: ${HMAC:0:16}..."
 

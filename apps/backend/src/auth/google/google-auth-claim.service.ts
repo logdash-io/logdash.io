@@ -38,7 +38,9 @@ export class GoogleAuthClaimService {
   ) {}
 
   public async claimAccount(dto: GoogleClaimProjectBody): Promise<TokenResponse> {
-    this.logger.log(`Claiming account`, { accessToken: dto.accessToken });
+    // never log dto.accessToken - it is a live session jwt that stays valid for
+    // the claimed account until it expires
+    this.logger.log(`Claiming account`);
 
     const googleAccessToken = await this.authGoogleDataService.getAccessToken(dto.googleCode);
 
@@ -55,6 +57,8 @@ export class GoogleAuthClaimService {
     }
 
     const userId = tokenPayload.id;
+
+    this.logger.log(`Access token verified`, { userId });
 
     const userWithThisEmail = await this.userReadService.readByEmail(email);
 

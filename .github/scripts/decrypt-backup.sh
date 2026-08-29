@@ -74,6 +74,11 @@ tail -c +161 "$ENCRYPTED_FILE" > "$ENCRYPTED_TEMP"
 
 DERIVED_KEY=""
 
+# The current format MACs IV || ciphertext so that the IV in the plaintext header
+# is authenticated too. Keep this in sync with encrypt-backup.sh.
+IV_TEMP="$TEMP_DIR/iv.bin"
+printf '%s' "$IV" | xxd -r -p > "$IV_TEMP"
+
 # Preferred derivation: PBKDF2-HMAC-SHA256, 64 bytes split into AES key + HMAC key.
 if openssl kdf -help >/dev/null 2>&1; then
     KEY_MATERIAL=$(openssl kdf \
@@ -87,7 +92,8 @@ if openssl kdf -help >/dev/null 2>&1; then
     if [ "${#KEY_MATERIAL}" -eq 128 ]; then
         CANDIDATE_KEY="${KEY_MATERIAL:0:64}"
         CANDIDATE_HMAC_KEY="${KEY_MATERIAL:64:64}"
-        CALCULATED_HMAC=$(openssl dgst -sha256 -mac HMAC -macopt "hexkey:$CANDIDATE_HMAC_KEY" -binary "$ENCRYPTED_TEMP" | xxd -p -c 64)
+        CALCULATED_HMAC=$(cat "$IV_TEMP" "$ENCRYPTED_TEMP" |
+            openssl dgst -sha256 -mac HMAC -macopt "hexkey:$CANDIDATE_HMAC_KEY" -binary | xxd -p -c 64)
 
         if [ "$HMAC" = "$CALCULATED_HMAC" ]; then
             DERIVED_KEY="$CANDIDATE_KEY"

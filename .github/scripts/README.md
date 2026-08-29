@@ -96,13 +96,15 @@ Encrypted files use a custom format:
 
 - Salt: 64 hex characters (32 bytes) - PBKDF2 salt
 - IV: 32 hex characters (16 bytes) - initialization vector for AES-CBC
-- HMAC: 64 hex characters (32 bytes) - HMAC-SHA256 over the ciphertext
+- HMAC: 64 hex characters (32 bytes) - HMAC-SHA256 over the IV followed by the ciphertext
 - Encrypted data: raw AES-256-CBC ciphertext (not base64 encoded)
 
 ## Security Details
 
 - **Encryption**: AES-256-CBC
-- **Authentication**: HMAC-SHA256 over the ciphertext (encrypt-then-MAC), verified before decryption
+- **Authentication**: HMAC-SHA256 over `IV || ciphertext` (encrypt-then-MAC), verified before decryption.
+  The IV is inside the MAC because it is carried in the plaintext header; leaving it out would let anyone
+  who can rewrite the artifact alter the first plaintext block without failing verification
 - **Key Derivation**: PBKDF2-HMAC-SHA256, 600,000 iterations, 64 bytes of output split into
   a 32-byte AES key and a 32-byte HMAC key
 - **IV Generation**: Cryptographically secure random bytes

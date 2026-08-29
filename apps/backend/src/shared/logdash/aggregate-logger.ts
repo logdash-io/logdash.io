@@ -1,4 +1,5 @@
 import { Logdash } from '@logdash/node';
+import { redactSecrets } from './redact-secrets';
 
 export interface LogdashLogger {
   debug(...data: any[]): void;
@@ -10,6 +11,8 @@ export interface LogdashLogger {
   silly(...data: any[]): void;
   verbose(...data: any[]): void;
 }
+
+type LogdashLevel = 'debug' | 'info' | 'warn' | 'error' | 'http' | 'silly' | 'verbose';
 
 export class AggregateLogger implements LogdashLogger {
   constructor(
@@ -23,59 +26,49 @@ export class AggregateLogger implements LogdashLogger {
     return data[0];
   }
 
-  public debug(...data: any[]): void {
-    this.dto.sensitiveDataLoggers.forEach((logger) => logger.debug(...data));
+  /**
+   * Credential shaped values are stripped before anything is written, including
+   * to the sensitive stream - a session token in a log line stays usable to
+   * everyone who can read that stream until it expires.
+   */
+  private emit(level: LogdashLevel, data: any[]): void {
+    const redacted = data.map((entry) => redactSecrets(entry));
 
-    const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) => logger.debug(unsensitivedData));
+    this.dto.sensitiveDataLoggers.forEach((logger) => logger[level](...redacted));
+
+    const unsensitivedData = this.unsensitiveData(...redacted);
+    this.dto.publicDataLoggers.forEach((logger) => logger[level](unsensitivedData));
+  }
+
+  public debug(...data: any[]): void {
+    this.emit('debug', data);
   }
 
   public info(...data: any[]): void {
-    this.dto.sensitiveDataLoggers.forEach((logger) => logger.info(...data));
-
-    const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) => logger.info(unsensitivedData));
+    this.emit('info', data);
   }
 
   public warn(...data: any[]): void {
-    this.dto.sensitiveDataLoggers.forEach((logger) => logger.warn(...data));
-
-    const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) => logger.warn(unsensitivedData));
+    this.emit('warn', data);
   }
 
   public error(...data: any[]): void {
-    this.dto.sensitiveDataLoggers.forEach((logger) => logger.error(...data));
-
-    const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) => logger.error(unsensitivedData));
+    this.emit('error', data);
   }
 
   public http(...data: any[]): void {
-    this.dto.sensitiveDataLoggers.forEach((logger) => logger.http(...data));
-
-    const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) => logger.http(unsensitivedData));
+    this.emit('http', data);
   }
 
   public log(...data: any[]): void {
-    this.dto.sensitiveDataLoggers.forEach((logger) => logger.debug(...data));
-
-    const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) => logger.debug(unsensitivedData));
+    this.emit('debug', data);
   }
 
   public silly(...data: any[]): void {
-    this.dto.sensitiveDataLoggers.forEach((logger) => logger.silly(...data));
-
-    const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) => logger.silly(unsensitivedData));
+    this.emit('silly', data);
   }
 
   public verbose(...data: any[]): void {
-    this.dto.sensitiveDataLoggers.forEach((logger) => logger.verbose(...data));
-
-    const unsensitivedData = this.unsensitiveData(...data);
-    this.dto.publicDataLoggers.forEach((logger) => logger.verbose(unsensitivedData));
+    this.emit('verbose', data);
   }
 }

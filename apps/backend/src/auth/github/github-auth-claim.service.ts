@@ -38,7 +38,9 @@ export class GithubAuthClaimService {
   ) {}
 
   public async claimAccount(dto: GithubClaimProjectBody): Promise<TokenResponse> {
-    this.logger.log(`Claiming account`, { accessToken: dto.accessToken });
+    // never log dto.accessToken - it is a live session jwt that stays valid for
+    // the claimed account until it expires
+    this.logger.log(`Claiming account`);
 
     const githubAccessToken = await this.authGithubDataService.getAccessToken(dto.githubCode);
 
@@ -57,6 +59,8 @@ export class GithubAuthClaimService {
     }
 
     const userId = tokenPayload.id;
+
+    this.logger.log(`Access token verified`, { userId });
 
     const userWithThisEmail = await this.userReadService.readByEmail(email);
 

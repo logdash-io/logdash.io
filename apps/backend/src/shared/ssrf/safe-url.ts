@@ -103,13 +103,36 @@ export function isSafeUrlSyntax(rawUrl: string): boolean {
   return parseSafeUrl(rawUrl) !== null;
 }
 
+export interface VettedAddress {
+  address: string;
+  family: 4 | 6;
+}
+
+export interface VettedUrl {
+  url: URL;
+  /**
+   * The addresses the request is allowed to connect to. Callers have to pin
+   * these instead of letting the http client resolve the hostname a second
+   * time, otherwise a dns record that alternates between a public address and a
+   * private one passes the check here and is re-resolved to the private address
+   * for the request itself (dns rebinding).
+   *
+   * All of them, not just the first, so that dual stack hosts keep their
+   * failover - every entry has been checked.
+   */
+  addresses: VettedAddress[];
+}
+
 /**
  * Request time guard. On top of the syntax checks it resolves the hostname and
  * rejects the url when any of the returned addresses is private. Must be called
  * right before every request, including every redirect hop, because dns answers
  * can change between validation and use.
+ *
+ * Returns the vetted addresses so the caller can connect to exactly what was
+ * checked.
  */
-export async function assertPublicUrl(rawUrl: string): Promise<URL> {
+export async function assertPublicUrl(rawUrl: string): Promise<VettedUrl> {
   const url = parseSafeUrl(rawUrl);
 
   if (!url) {
@@ -118,21 +141,28 @@ export async function assertPublicUrl(rawUrl: string): Promise<URL> {
 
   const hostname = normalizeHostname(url.hostname);
 
-  if (isIP(hostname)) {
-    return url;
+  const version = isIP(hostname);
+  if (version) {
+    return { url, addresses: [{ address: hostname, family: version === 6 ? 6 : 4 }] };
   }
 
-  const addresses = await lookup(hostname, { all: true, verbatim: true });
+  const resolved = await lookup(hostname, { all: true, verbatim: true });
 
-  if (addresses.length === 0) {
+  if (resolved.length === 0) {
     throw new Error(`Blocked request to ${hostname}: hostname did not resolve`);
   }
 
-  for (const { address } of addresses) {
+  for (const { address } of resolved) {
     if (isBlockedIp(address)) {
       throw new Error(`Blocked request to ${hostname}: resolves to private address ${address}`);
     }
   }
 
-  return url;
+  return {
+    url,
+    addresses: resolved.map(({ address, family }) => ({
+      address,
+      family: family === 6 ? 6 : 4,
+    })),
+  };
 }
