@@ -110,7 +110,7 @@ export class ClusterReadCachedService {
     const cachedResult = await this.redisService.get(cacheKey);
 
     if (cachedResult !== null) {
-      return cachedResult as ClusterRole;
+      return cachedResult === 'null' ? null : (cachedResult as ClusterRole);
     }
 
     const cluster = await this.clusterReadService.readById(dto.clusterId);

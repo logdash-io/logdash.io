@@ -68,8 +68,16 @@ export class LogAnalyticsDateAlignmentService {
 
     if (needsAlignment) {
       if (bucketMinutes >= 60) {
-        const totalMinutesFromLocalMidnight =
-          localTime.getUTCHours() * 60 + localTime.getUTCMinutes();
+        let totalMinutesFromLocalMidnight = localTime.getUTCHours() * 60 + localTime.getUTCMinutes();
+
+        // A leftover second still belongs to the next bucket, so it has to push
+        // the value past the boundary before rounding up - otherwise an end date
+        // such as 20:00:37 would be rounded *down* to 20:00 and the trailing
+        // partial bucket would be dropped.
+        if (localTime.getUTCSeconds() !== 0 || localTime.getUTCMilliseconds() !== 0) {
+          totalMinutesFromLocalMidnight += 1;
+        }
+
         const alignedMinutesFromLocalMidnight =
           Math.ceil(totalMinutesFromLocalMidnight / bucketMinutes) * bucketMinutes;
 

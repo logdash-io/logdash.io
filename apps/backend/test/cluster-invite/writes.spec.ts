@@ -450,7 +450,32 @@ describe('ClusterInviteCoreController (writes)', () => {
         .set('Authorization', `Bearer ${otherSetup.token}`);
 
       expect(response.statusCode).toBe(403);
-      expect(response.body.message).toBe('You can only delete invites you have sent or received');
+      expect(response.body.message).toBe('User is not a member of this cluster');
+    });
+
+    it('allows invited user to delete (decline) invite', async () => {
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'admin@example.com',
+        userTier: UserTier.Admin,
+      });
+
+      const { token: invitedUserToken, user: invitedUser } =
+        await bootstrap.utils.generalUtils.setupClaimed();
+
+      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: inviterToken,
+        clusterId: cluster.id,
+        invitedUserEmail: invitedUser.email,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/cluster_invites/${invite.id}`)
+        .set('Authorization', `Bearer ${invitedUserToken}`);
+
+      expect(response.statusCode).toBe(200);
+
+      const invites = await bootstrap.models.clusterInviteModel.find({});
+      expect(invites.length).toBe(0);
     });
   });
 });

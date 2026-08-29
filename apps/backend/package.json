@@ -13,7 +13,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest --runInBand --forceExit",
+    "test": "NODE_OPTIONS=--max-old-space-size=4096 jest --runInBand --forceExit",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -34,14 +34,16 @@
     "@nestjs/platform-express": "^11.1.19",
     "@nestjs/schedule": "^6.1.0",
     "@nestjs/swagger": "^11.4.2",
+    "@nestjs/throttler": "^6.5.0",
     "@redis/client": "^5.10.0",
-    "axios": "^1.15.2",
+    "axios": "^1.18.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "express-basic-auth": "^1.2.1",
-    "mongoose": "^9.1.1",
+    "helmet": "^8.3.0",
+    "mongoose": "^9.7.2",
     "reflect-metadata": "^0.2.2",
     "resend": "^6.12.2",
     "rxjs": "^7.8.2",
@@ -75,7 +77,33 @@
     "typescript": "^5.9.3"
   },
   "overrides": {
-    "svix": "1.92.2"
+    "@babel/core": "7.29.6",
+    "@grpc/grpc-js": "1.13.5",
+    "@protobufjs/utf8": "1.1.1",
+    "@sveltejs/kit": "2.70.2",
+    "@xhmikosr/decompress": "10.2.1",
+    "body-parser": "2.3.0",
+    "brace-expansion": "5.0.9",
+    "esbuild": "0.28.1",
+    "fast-uri": "3.1.5",
+    "form-data": "4.0.6",
+    "immutable": "5.1.8",
+    "js-yaml": "4.3.1",
+    "multer": "2.2.0",
+    "nanoid": "3.3.18",
+    "piscina": "4.9.3",
+    "postcss": "8.5.23",
+    "protobufjs": "7.6.5",
+    "qs": "6.15.2",
+    "rollup": "4.59.0",
+    "sharp": "0.35.0",
+    "svix": "1.92.2",
+    "tar": "7.5.21",
+    "tmp": "0.2.7",
+    "undici": "7.29.0",
+    "uuid": "11.1.1",
+    "vite": "7.3.5",
+    "ws": "8.21.0"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -99,6 +127,7 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "setupFiles": [
+      "<rootDir>/test/utils/setup-env.ts",
       "jest-date-mock"
     ],
     "globalSetup": "<rootDir>/test/utils/global-setup.ts",
@@ -106,6 +135,7 @@
     "moduleNameMapper": {
       "^@logdash/node$": "<rootDir>/test/__mocks__/@logdash/node.ts",
       "^src/(.*)$": "<rootDir>/src/$1"
-    }
+    },
+    "testTimeout": 30000
   }
 }

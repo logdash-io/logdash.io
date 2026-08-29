@@ -1,3 +1,13 @@
+# This repository is PUBLIC, so GitHub Actions artifacts here are downloadable by any
+# GitHub user. The encrypted mongodump below is therefore only as private as
+# BACKEND_BACKUP_ARTIFACT_KEY: keep it a high-entropy random value, never a passphrase,
+# and rotate it if it is ever suspected of leaking.
+#
+# encrypt-backup.sh derives keys with PBKDF2-HMAC-SHA256 at 600k iterations. Artifacts
+# created before that change used a single SHA-256 pass and are much cheaper to attack.
+#
+# TODO(security): move the sink to a private S3/R2 bucket with SSE-KMS, authenticating
+# via OIDC role assumption, so the dumps are not public at all.
 name: Mongo backup (prod)
 
 on:
@@ -11,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Install MongoDB Tools
         run: |
@@ -81,3 +91,4 @@ jobs:
           name: ${{ env.BACKUP_NAME }}
           path: ${{ env.BACKUP_NAME }}.tar.gz.enc
           retention-days: 14
+

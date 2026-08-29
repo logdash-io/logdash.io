@@ -13,6 +13,11 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
   beforeEach(async () => {
     await bootstrap.methods.beforeEach();
+    // The shared `clearDatabase` truncates ClickHouse with `query()` and never
+    // drains the response, so the truncate can still be in flight when this test
+    // starts inserting pings. Re-issue it with `command()`, which does wait.
+    await bootstrap.clickhouseClient.command({ query: 'TRUNCATE TABLE http_pings' });
+    await bootstrap.clickhouseClient.command({ query: 'TRUNCATE TABLE http_ping_buckets' });
   });
 
   afterAll(async () => {

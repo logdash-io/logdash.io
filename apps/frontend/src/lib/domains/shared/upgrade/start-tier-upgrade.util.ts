@@ -18,10 +18,20 @@ export type UpgradeSource =
   | 'custom-statuspage-domain'
   | 'unknown';
 
-export const startTierUpgrade = (
+export const startTierUpgrade = async (
   source: UpgradeSource = 'unknown',
   tier: UserTier = UserTier.BUILDER,
-): void => {
+): Promise<void> => {
   const params = new URLSearchParams({ source, tier: tier.toString() });
-  window.location.href = `/app/api/user/upgrade?${params.toString()}`;
+  const response = await fetch(`/app/api/user/upgrade?${params.toString()}`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Could not start the upgrade to ${tier}`);
+  }
+
+  const { checkoutUrl } = (await response.json()) as { checkoutUrl: string };
+
+  window.location.href = checkoutUrl;
 };

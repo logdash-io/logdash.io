@@ -38,6 +38,7 @@ describe('Auth (anonymous)', () => {
         {
           email: 'primary@test.com',
           primary: true,
+          verified: true,
         },
       ]);
 
@@ -80,6 +81,7 @@ describe('Auth (anonymous)', () => {
         {
           email: 'a@a.pl',
           primary: true,
+          verified: true,
         },
       ]);
     nock('https://api.github.com')

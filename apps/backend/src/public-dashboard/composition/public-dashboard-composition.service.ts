@@ -136,7 +136,9 @@ export class PublicDashboardCompositionService {
       httpMonitors: monitors.map((monitor) => ({
         name: monitor.name,
         buckets: shouldDisplayBuckets ? bucketsByMonitorId[monitor.id] : undefined,
-        pings: pingsByMonitorId[monitor.id].map((ping) => ({
+        // A monitor that has never been pinged has no entry in the map - it must
+        // render as an empty series, not blow up the whole dashboard.
+        pings: (pingsByMonitorId[monitor.id] ?? []).map((ping) => ({
           createdAt: ping.createdAt.toISOString(),
           statusCode: ping.statusCode,
           responseTimeMs: ping.responseTimeMs,

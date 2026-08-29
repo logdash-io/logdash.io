@@ -249,6 +249,12 @@ export class PublicDashboardCoreController {
       throw new NotFoundException('Http monitor not found');
     }
 
+    const project = await this.projectReadService.readById(monitor.projectId);
+
+    if (project?.clusterId !== dashboard.clusterId) {
+      throw new NotFoundException('Monitor does not belong to the same cluster');
+    }
+
     await this.publicDashboardWriteService.removeMonitorFromDashboard({
       publicDashboardId: publicDashboardId,
       httpMonitorId: httpMonitorId,

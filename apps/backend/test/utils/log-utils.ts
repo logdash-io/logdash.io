@@ -17,10 +17,21 @@ export class LogUtils {
   public async createLog(
     dto: CreateLogBody & { apiKey: string; withoutSleep?: boolean },
   ): Promise<void> {
+    // The API body only carries the log itself - `apiKey` travels in a header
+    // and `withoutSleep` is test-only. Sending them would be rejected by the
+    // global ValidationPipe (`forbidNonWhitelisted`).
+    const body: CreateLogBody = {
+      createdAt: dto.createdAt,
+      message: dto.message,
+      level: dto.level,
+      sequenceNumber: dto.sequenceNumber,
+      namespace: dto.namespace,
+    };
+
     const response = await request(this.app.getHttpServer())
       .post('/logs')
       .set('project-api-key', dto.apiKey)
-      .send(dto);
+      .send(body);
 
     if (dto.withoutSleep === undefined || dto.withoutSleep === false) {
       await sleep(1000);

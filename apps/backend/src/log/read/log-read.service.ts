@@ -13,7 +13,8 @@ export class LogReadService {
 
   public async existsForProject(projectId: string): Promise<boolean> {
     const result = await this.clickhouse.query({
-      query: `SELECT 1 FROM logs WHERE project_id = '${projectId}' LIMIT 1`,
+      query: `SELECT 1 FROM logs WHERE project_id = {projectId:String} LIMIT 1`,
+      query_params: { projectId },
     });
 
     const data = ((await result.json()) as any).data;

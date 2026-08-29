@@ -19,12 +19,14 @@ export class MetricRegisterCoreController {
   @UseGuards(ClusterMemberGuard)
   @ApiResponse({ type: SuccessResponse })
   public async removeMetricRegisterEntry(
+    @Param('projectId') projectId: string,
     @Param('id') id: string,
     @CurrentUserId() userId: string,
   ): Promise<SuccessResponse> {
     const entryId = await this.metricRegisterWriteService.removeById(
       {
         id,
+        projectId,
       },
       userId,
     );

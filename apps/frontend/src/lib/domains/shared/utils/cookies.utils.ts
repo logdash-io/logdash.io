@@ -4,6 +4,11 @@ import type { UserTier } from '$lib/domains/shared/types.js';
 export const PROJECT_ID_COOKIE_NAME = 'logdash_project_id';
 export const API_KEY_COOKIE_NAME = 'logdash_api_key';
 export const ACCESS_TOKEN_COOKIE_NAME = 'logdash_access_token_v0';
+/**
+ * The session token is only ever needed under /app, so it is not attached to
+ * landing pages or to the /ingest analytics proxy.
+ */
+export const ACCESS_TOKEN_COOKIE_PATH = '/app';
 
 export const get_api_key = (cookies: Cookies): string | undefined => {
   return cookies.get('logdash_api_key');
@@ -28,8 +33,11 @@ export const save_access_token = (
   },
 ): void => {
   cookies.set(ACCESS_TOKEN_COOKIE_NAME, access_token, {
-    path: '/',
+    path: ACCESS_TOKEN_COOKIE_PATH,
     maxAge: 60 * 60 * 24 * 7,
+    // TODO: the browser data layer (http-client + the SSE streams) still calls
+    // the api directly with this token, so it cannot be httpOnly until those
+    // calls are proxied through the /app/api bff.
     httpOnly: false,
     ...options,
   });

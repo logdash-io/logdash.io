@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsObject, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import { IsSafeUrl } from '../../../shared/ssrf/is-safe-url.decorator';
 
 export enum WebhookHttpMethod {
   GET = 'GET',
@@ -14,6 +15,9 @@ export enum WebhookHttpMethod {
 export class WebhookOptionsValidator {
   @ApiProperty()
   @IsString()
+  @MaxLength(1024)
+  @IsUrl()
+  @IsSafeUrl()
   public url: string;
 
   @ApiPropertyOptional()

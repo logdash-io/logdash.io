@@ -39,6 +39,14 @@ export class GeneralUtils {
     // user
     const userResponse = await request(this.app.getHttpServer()).post('/users/anonymous').send();
 
+    // Fail loudly here: swallowing a non-2xx turns every rate limit or
+    // validation error into a confusing `undefined.id` far from the cause.
+    if (userResponse.status !== 201) {
+      throw new Error(
+        `setupAnonymous: POST /users/anonymous returned ${userResponse.status}: ${JSON.stringify(userResponse.body)}`,
+      );
+    }
+
     const token: string = userResponse.body.token;
     const user: UserSerialized = userResponse.body.user;
 

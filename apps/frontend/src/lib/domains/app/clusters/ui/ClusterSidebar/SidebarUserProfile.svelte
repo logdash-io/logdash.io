@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { proSkyBackgroundState } from '$lib/domains/shared/pro-features/pro-sky-background.state.svelte.js';
-  import { RoutePath } from '$lib/domains/shared/route-path.js';
+  import { logout } from '$lib/domains/auth/application/logout.js';
   import { UserTier } from '$lib/domains/shared/types.js';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
@@ -110,16 +110,17 @@
     {/if}
 
     <li>
-      <a
+      <button
+        type="button"
         class="flex w-full items-center gap-3 rounded-xl"
         onclick={() => {
           posthog.reset();
+          logout();
         }}
-        href={RoutePath.LOGOUT}
       >
         <LogoutIcon class="inline h-4 w-4" />
         Logout
-      </a>
+      </button>
     </li>
   </ul>
 {/snippet}

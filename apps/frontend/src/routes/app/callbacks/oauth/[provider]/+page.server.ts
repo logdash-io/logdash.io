@@ -6,13 +6,19 @@ import {
   save_access_token,
   save_onboarding_tier,
 } from '$lib/domains/shared/utils/cookies.utils';
-import type { GoogleCallbackState } from '$lib/domains/shared/utils/generate-google-oauth-url';
+import {
+  consume_oauth_state,
+  type OAuthStatePayload,
+} from '$lib/domains/shared/utils/oauth-state.server';
+import { safe_redirect_path } from '$lib/domains/shared/utils/safe-redirect.util';
 import {
   isRedirect,
   redirect,
   type Cookies,
   type ServerLoadEvent,
 } from '@sveltejs/kit';
+
+const FALLBACK_URL = '/app/auth?needs_account=true';
 
 async function readErrorMessage(response: Response): Promise<string> {
   const contentType = response.headers.get('content-type') || '';
@@ -42,20 +48,18 @@ function saveTokenToCookies(dto: { cookies: Cookies; token: string }): void {
   );
 
   save_access_token(dto.cookies, dto.token, {
-    maxAge: expiration.getTime() - Date.now(),
+    maxAge: Math.floor((expiration.getTime() - Date.now()) / 1000),
   });
 }
 
 async function runLoginFlow(dto: {
   cookies: Cookies;
   code: string | null;
-  state: GoogleCallbackState;
-  forceLocalLogin: boolean;
+  state: OAuthStatePayload;
 }): Promise<void> {
   const {
     cookies,
     code,
-    forceLocalLogin,
     state: { terms_accepted, email_accepted, next_url },
   } = dto;
 
@@ -64,10 +68,8 @@ async function runLoginFlow(dto: {
   }
 
   bffLogger.info(`logging in google...`, {
-    googleCode: code,
     termsAccepted: terms_accepted,
     emailAccepted: email_accepted,
-    forceLocalLogin,
   });
 
   const response = await fetch(`${envConfig.apiBaseUrl}/auth/google/login`, {
@@ -79,7 +81,6 @@ async function runLoginFlow(dto: {
       googleCode: code,
       termsAccepted: terms_accepted,
       emailAccepted: email_accepted,
-      forceLocalLogin,
     }),
   });
 
@@ -103,7 +104,7 @@ async function runLoginFlow(dto: {
 
   bffLogger.info(`redirecting to next url...`);
 
-  redirect(302, next_url || `/app/clusters`);
+  redirect(302, safe_redirect_path(next_url, '/app/clusters'));
 }
 
 export const load = async ({
@@ -111,38 +112,30 @@ export const load = async ({
   cookies,
   params,
 }: ServerLoadEvent): Promise<void> => {
-  if (!['google', 'google-alternative'].includes(params.provider)) {
+  const allowedProviders =
+    isLocal() || dev ? ['google', 'google-alternative'] : ['google'];
+
+  if (!allowedProviders.includes(params.provider)) {
     redirect(302, '/');
   }
 
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  bffLogger.debug(
-    `google oauth callback ${JSON.stringify({ code, state, provider: params.provider })}`,
-  );
+  const state = consume_oauth_state(cookies, url.searchParams.get('state'));
 
-  let decodedState: GoogleCallbackState;
-  try {
-    if (!state) {
-      throw new Error('state is required');
-    }
-    decodedState = JSON.parse(atob(state)) as GoogleCallbackState;
-  } catch (error) {
-    bffLogger.error(`google oauth callback state decode error ${error}`);
-    redirect(302, '/');
+  if (!state) {
+    bffLogger.error(`google oauth callback with missing or mismatched state`);
+    redirect(302, FALLBACK_URL);
   }
 
-  if (decodedState.tier) {
-    save_onboarding_tier(cookies, decodedState.tier);
+  if (state.tier) {
+    save_onboarding_tier(cookies, state.tier);
   }
 
   try {
-    const forceLocalLogin = isLocal() || dev || params.provider === 'google-alternative';
     await runLoginFlow({
       cookies,
       code,
-      state: decodedState,
-      forceLocalLogin,
+      state,
     });
   } catch (result) {
     if (isRedirect(result)) {
@@ -150,6 +143,6 @@ export const load = async ({
     }
 
     bffLogger.error(`google oauth callback error ${result}`);
-    redirect(302, decodedState.fallback_url || '/');
+    redirect(302, FALLBACK_URL);
   }
 };

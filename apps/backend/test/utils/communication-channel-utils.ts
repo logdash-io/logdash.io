@@ -5,7 +5,6 @@ import { TelegramOptions } from '../../src/notification-channel/core/types/teleg
 import { WebhookOptions } from '../../src/notification-channel/core/types/webhook-options.type';
 import * as request from 'supertest';
 import { CreateNotificationChannelBody } from '../../src/notification-channel/core/dto/create-notification-channel.body';
-import { getEnvConfig } from '../../src/shared/configs/env-configs';
 
 export class NotificationChannelUtils {
   constructor(private readonly app: INestApplication<any>) {}
@@ -18,9 +17,10 @@ export class NotificationChannelUtils {
   }): Promise<NotificationChannelNormalized> {
     const options = dto.options || {};
 
-    if (!options.botToken) {
-      options.botToken = getEnvConfig().notificationChannels.telegramUptimeBot.token;
-    }
+    // Deliberately no botToken default: `botToken` now has to look like a real
+    // telegram token (`<bot id>:<secret>`), and omitting it is how a channel
+    // opts into the built-in uptime bot - the server fills it in after
+    // validation, exactly like it does in production.
 
     if (!options.chatId) {
       options.chatId = 'some-chat-id';

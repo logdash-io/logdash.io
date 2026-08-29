@@ -1,7 +1,8 @@
 import { createLogDash } from '@logdash/core';
+import { requireApiKey } from './env';
 
 const { logger } = createLogDash({
-  apiKey: 'mNDlsgqmlvU4dkacZsWAu4I9fSZNfTNf',
+  apiKey: requireApiKey(),
 });
 
 for (let i = 0; i < 50; i++) {

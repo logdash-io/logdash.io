@@ -6,7 +6,8 @@
 
   type Props = {
     options: Option[];
-    value: T;
+    /** `null` renders nothing selected — used where a choice must be explicit. */
+    value: T | null;
     onChange: (value: T) => void;
     size?: 'sm' | 'xs';
   };

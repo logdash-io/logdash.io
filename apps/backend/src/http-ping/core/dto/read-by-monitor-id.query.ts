@@ -1,11 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, Max } from 'class-validator';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class ReadByMonitorIdQuery {
   @ApiPropertyOptional()
-  @Transform(({ value }) => Number(value))
+  @Transform(({ value }) => (value === undefined ? undefined : Number(value)))
   @IsOptional()
+  @IsInt()
+  @Min(1)
   @Max(160)
   limit?: number;
 }

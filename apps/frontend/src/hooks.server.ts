@@ -20,6 +20,10 @@ export const handle: Handle = async ({ event, resolve }) => {
     const headers = new Headers(event.request.headers);
     headers.set('Accept-Encoding', '');
     headers.set('host', hostname);
+    // the proxy is same-origin, so the browser attaches our first-party
+    // credentials - they must never reach the analytics vendor
+    headers.delete('cookie');
+    headers.delete('authorization');
 
     // Proxy the request to the external host
     const response = await fetch(url.toString(), {
@@ -30,7 +34,15 @@ export const handle: Handle = async ({ event, resolve }) => {
       duplex: 'half',
     } as unknown);
 
-    return response;
+    // and it must not be able to set cookies on our origin either
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('set-cookie');
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+    });
   }
 
   const response = await resolve(event);

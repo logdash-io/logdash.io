@@ -10,9 +10,15 @@
 
   let loggingIn = $state(false);
 
-  const handleGithubLogin = (tier: UserTier) => {
+  const handleGithubLogin = async (tier: UserTier) => {
     loggingIn = true;
-    runGithubLogin(tier);
+
+    try {
+      await runGithubLogin(tier);
+    } catch (error) {
+      loggingIn = false;
+      console.error(error);
+    }
   };
 
   const pricingData = {

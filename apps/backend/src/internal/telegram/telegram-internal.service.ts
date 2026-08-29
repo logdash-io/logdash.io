@@ -31,16 +31,10 @@ export class TelegramInternalService {
     const chatId = getEnvConfig().internal.telegram.chatId;
     const url = `https://api.telegram.org/bot${token}/sendMessage?parse_mode=MarkdownV2`;
 
-    console.log('Token: ', token);
-    console.log('ChatId: ', chatId);
-    console.log('Will send message to telegram: ', message);
-
-    const response = await axios.post(url, {
+    await axios.post(url, {
       chat_id: chatId,
       text: message,
     });
-
-    console.log('Response: ', response.data);
   }
 
   private escapeTelegramMessage(message: string): string {

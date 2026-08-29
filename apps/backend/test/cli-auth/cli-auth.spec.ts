@@ -27,14 +27,16 @@ describe('CLI authorization (device-authorization flow)', () => {
 
   const server = () => bootstrap.app.getHttpServer();
 
-  const start = async () => {
-    const response = await request(server()).post('/auth/cli/start').send();
+  const start = async (userAgent = 'ld/1.2.3 (test)') => {
+    const response = await request(server())
+      .post('/auth/cli/start')
+      .set('User-Agent', userAgent)
+      .send();
     expect(response.status).toBe(201);
     return response.body as {
       deviceCode: string;
       userCode: string;
       verificationUri: string;
-      verificationUriComplete: string;
       expiresIn: number;
       interval: number;
     };
@@ -42,6 +44,22 @@ describe('CLI authorization (device-authorization flow)', () => {
 
   const poll = async (deviceCode: string) =>
     request(server()).post('/auth/cli/poll').send({ deviceCode });
+
+  const lookup = async (token: string, userCode: string) =>
+    request(server())
+      .post('/auth/cli/lookup')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ userCode });
+
+  // `access` is mandatory now: the consent screen must make reach an explicit choice.
+  const approve = async (
+    token: string,
+    body: Record<string, unknown>,
+  ) =>
+    request(server())
+      .post('/auth/cli/approve')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ access: { kind: 'all' }, ...body });
 
   // expire ALL pending records by clearing the redis store (TTL elapsed equivalent)
   const expireAll = async () => {
@@ -69,7 +87,11 @@ describe('CLI authorization (device-authorization flow)', () => {
       expect(result.expiresIn).toBe(600);
       expect(result.interval).toBe(5);
       expect(result.verificationUri).toContain('/app/authorize-cli');
-      expect(result.verificationUriComplete).toContain('user_code=');
+      // ADR-0003 invariant #3: the userCode is NEVER carried in a URL. A magic link
+      // with the code pre-filled turns the consent check into a rubber stamp.
+      expect(result).not.toHaveProperty('verificationUriComplete');
+      expect(result.verificationUri).not.toContain(result.userCode);
+      expect(JSON.stringify(result.verificationUri)).not.toContain('user_code');
     });
 
     it('returns distinct codes across calls', async () => {
@@ -134,10 +156,7 @@ describe('CLI authorization (device-authorization flow)', () => {
       const { deviceCode, userCode } = await start();
 
       // approve under the session JWT
-      const approveResponse = await request(server())
-        .post('/auth/cli/approve')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ userCode });
+      const approveResponse = await approve(token, { userCode });
 
       expect(approveResponse.status).toBe(200);
       expect(approveResponse.body.status).toBe('approved');
@@ -181,10 +200,7 @@ describe('CLI authorization (device-authorization flow)', () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { userCode } = await start();
 
-      await request(server())
-        .post('/auth/cli/approve')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ userCode });
+      await approve(token, { userCode });
 
       // attacker holds only the userCode (glanceable). Try it as a deviceCode.
       const attempts = [userCode, userCode.replace('-', ''), userCode.toLowerCase()];
@@ -205,10 +221,7 @@ describe('CLI authorization (device-authorization flow)', () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { deviceCode, userCode } = await start();
 
-      await request(server())
-        .post('/auth/cli/approve')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ userCode });
+      await approve(token, { userCode });
 
       // exfil attempts with the userCode
       await poll(userCode);
@@ -238,10 +251,7 @@ describe('CLI authorization (device-authorization flow)', () => {
 
       await expireAll();
 
-      const response = await request(server())
-        .post('/auth/cli/approve')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ userCode });
+      const response = await approve(token, { userCode });
 
       expect(response.status).toBe(404);
     });
@@ -249,10 +259,7 @@ describe('CLI authorization (device-authorization flow)', () => {
     it('approve on a completely unknown userCode -> 404', async () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const response = await request(server())
-        .post('/auth/cli/approve')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ userCode: 'ABCD-EFGH' });
+      const response = await approve(token, { userCode: 'ABCD-EFGH' });
 
       expect(response.status).toBe(404);
     });
@@ -285,14 +292,11 @@ describe('CLI authorization (device-authorization flow)', () => {
   });
 
   describe('minted key scopes/access', () => {
-    it('uses CLI_DEFAULT scopes + access:all when none supplied', async () => {
+    it('uses CLI_DEFAULT scopes when none supplied, with the caller-chosen access', async () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { deviceCode, userCode } = await start();
 
-      await request(server())
-        .post('/auth/cli/approve')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ userCode });
+      await approve(token, { userCode, access: { kind: 'all' } });
 
       const value = (await poll(deviceCode)).body.value;
 
@@ -340,14 +344,11 @@ describe('CLI authorization (device-authorization flow)', () => {
       const { deviceCode, userCode } = await start();
 
       // custom read-only-on-P1 key
-      await request(server())
-        .post('/auth/cli/approve')
-        .set('Authorization', `Bearer ${owner.token}`)
-        .send({
-          userCode,
-          scopes: [{ resource: Resource.Projects, action: Action.Read }],
-          access: { kind: 'projects', ids: [owner.project.id] },
-        });
+      await approve(owner.token, {
+        userCode,
+        scopes: [{ resource: Resource.Projects, action: Action.Read }],
+        access: { kind: 'projects', ids: [owner.project.id] },
+      });
 
       const value = (await poll(deviceCode)).body.value;
 
@@ -381,6 +382,139 @@ describe('CLI authorization (device-authorization flow)', () => {
       // immediate second poll -> throttled
       const second = await poll(deviceCode);
       expect(second.body.status).toBe('slow_down');
+    });
+  });
+
+  describe('anti-phishing: the code is typed, never carried in a link', () => {
+    it('binds the request to the initiating client and surfaces it on lookup', async () => {
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { userCode } = await start('ld/9.9.9 (some-box)');
+
+      const response = await lookup(token, userCode);
+
+      expect(response.status).toBe(200);
+      expect(response.body.userCode).toBe(userCode);
+      expect(response.body.clientUserAgent).toBe('ld/9.9.9 (some-box)');
+      expect(typeof response.body.clientIp).toBe('string');
+      expect(response.body.clientIp.length).toBeGreaterThan(0);
+      expect(typeof response.body.requestedAt).toBe('string');
+      // the lookup NEVER hands back anything the CLI polls with
+      expect(response.body).not.toHaveProperty('deviceCode');
+      expect(response.body).not.toHaveProperty('value');
+    });
+
+    it('lookup on an unknown code -> 404', async () => {
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const response = await lookup(token, 'ABCD-EFGH');
+
+      expect(response.status).toBe(404);
+    });
+
+    it('rejects lookup WITHOUT a session token (401)', async () => {
+      const { userCode } = await start();
+
+      const response = await request(server())
+        .post('/auth/cli/lookup')
+        .send({ userCode });
+
+      expect(response.status).toBe(401);
+    });
+  });
+
+  describe('brute-force budget on userCode lookups (ADR-0003 invariant #2)', () => {
+    it('stops answering after the per-user attempt budget is spent', async () => {
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // 20 misses are answered normally...
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const response = await lookup(token, 'ABCD-EFGH');
+        expect(response.status).toBe(404);
+      }
+
+      // ...the 21st is refused outright, so the ~40-bit code cannot be walked
+      const exhausted = await lookup(token, 'ABCD-EFGH');
+      expect(exhausted.status).toBe(429);
+
+      // and the budget covers approve too, not just lookup
+      const { userCode } = await start();
+      const approveResponse = await approve(token, { userCode });
+      expect(approveResponse.status).toBe(429);
+    });
+
+    it('the budget is per user — another user is unaffected', async () => {
+      const noisy = await bootstrap.utils.generalUtils.setupAnonymous();
+      const quiet = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      for (let attempt = 0; attempt < 21; attempt++) {
+        await lookup(noisy.token, 'ABCD-EFGH');
+      }
+      expect((await lookup(noisy.token, 'ABCD-EFGH')).status).toBe(429);
+
+      const { userCode } = await start();
+      expect((await lookup(quiet.token, userCode)).status).toBe(200);
+    });
+  });
+
+  describe('approve payload validation', () => {
+    it('rejects an approve with no access choice (no implicit all-access)', async () => {
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { userCode } = await start();
+
+      const response = await request(server())
+        .post('/auth/cli/approve')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ userCode });
+
+      expect(response.status).toBe(400);
+    });
+
+    it.each([
+      ['unknown kind', { kind: 'everything' }],
+      ['clusters with no ids', { kind: 'clusters' }],
+      ['ids as a bare string (would degrade to a substring match)', {
+        kind: 'clusters',
+        ids: 'someSubstring',
+      }],
+      ['ids that are not object ids', { kind: 'projects', ids: ['not-an-id'] }],
+    ])('rejects a malformed access restriction: %s', async (_label, access) => {
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { userCode } = await start();
+
+      const response = await approve(token, { userCode, access });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('rejects scopes with an unknown resource or action', async () => {
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { userCode } = await start();
+
+      const response = await approve(token, {
+        userCode,
+        scopes: [{ resource: 'everything', action: 'admin' }],
+      });
+
+      expect(response.status).toBe(400);
+    });
+  });
+
+  describe('minted CLI keys always expire', () => {
+    it('sets an expiry on the key it mints', async () => {
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { userCode } = await start();
+
+      const approveResponse = await approve(token, { userCode });
+      expect(approveResponse.status).toBe(200);
+      expect(typeof approveResponse.body.expiresAt).toBe('string');
+
+      const listResponse = await request(server())
+        .get('/personal-api-keys')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(listResponse.body).toHaveLength(1);
+      expect(listResponse.body[0].expiresAt).toBeTruthy();
+      expect(new Date(listResponse.body[0].expiresAt).getTime()).toBeGreaterThan(Date.now());
     });
   });
 });

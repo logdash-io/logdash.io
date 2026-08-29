@@ -4,6 +4,11 @@ import { CustomDomainRegistrationService } from '../../src/custom-domain/registr
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { WebhookHttpMethod } from '../../src/notification-channel/core/types/webhook-options.type';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import * as nock from 'nock';
+
+/** Domains this suite verifies, and which the service therefore pings. */
+const PINGED_HOSTS = ['example.com', 'domain1.com', 'domain2.com'];
 
 describe('CustomDomainRegistrationService', () => {
   jest.setTimeout(15000);
@@ -13,15 +18,29 @@ describe('CustomDomainRegistrationService', () => {
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
+    // The domain verification cron runs every 5 seconds. Left running it races
+    // with the explicit verification these tests drive, and silently bumps
+    // attemptCount/dns call counts.
+    bootstrap.app
+      .get(SchedulerRegistry)
+      .getCronJobs()
+      .forEach((job) => job.stop());
     registrationService = bootstrap.app.get(CustomDomainRegistrationService);
   });
 
   beforeEach(async () => {
     await bootstrap.methods.beforeEach();
     bootstrap.utils.customDomainUtils.resetDnsMock();
+    // A verified domain is pinged over the network (fire and forget). Block just
+    // those hosts - without it the suite issues real requests to example.com,
+    // which is slow and leaks "cannot log after tests are done" into the
+    // suites that follow. Everything else (mongo/redis/clickhouse) stays open.
+    nock.disableNetConnect();
+    nock.enableNetConnect((host) => !PINGED_HOSTS.some((pinged) => host.startsWith(pinged)));
   });
 
   afterAll(async () => {
+    nock.enableNetConnect();
     await bootstrap.methods.afterAll();
   });
 

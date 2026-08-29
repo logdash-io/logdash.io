@@ -10,9 +10,8 @@ The backup system encrypts all database dump artifacts before uploading them as 
 
 - **AES-256-CBC encryption** with HMAC-SHA256 authentication for strong security
 - **Unique salt and IV** for each backup to prevent rainbow table attacks
-- **Key derivation** using SHA-256 to strengthen the encryption key
-- **HMAC verification** to detect tampering or corruption
-- **Backward compatibility** with existing unencrypted backups
+- **Key derivation** using PBKDF2-HMAC-SHA256 with 600,000 iterations
+- **HMAC verification** to detect tampering or corruption - decryption always fails closed
 
 ## Scripts
 
@@ -34,7 +33,8 @@ Encrypts a backup file using AES-256-CBC encryption with HMAC authentication.
 
 ### `decrypt-backup.sh`
 
-Decrypts an encrypted backup file with HMAC verification. Includes backward compatibility for unencrypted files.
+Decrypts an encrypted backup file with HMAC verification. Fails closed: a file without a
+valid header, with a bad HMAC, or with the wrong key is rejected and no output is written.
 
 **Usage:**
 
@@ -46,16 +46,6 @@ Decrypts an encrypted backup file with HMAC verification. Includes backward comp
 
 ```bash
 ./decrypt-backup.sh backup.tar.gz.enc backup.tar.gz "$ENCRYPTION_KEY"
-```
-
-### `test-encryption.sh`
-
-Tests the encryption and decryption process to ensure everything works correctly.
-
-**Usage:**
-
-```bash
-./test-encryption.sh
 ```
 
 ## GitHub Secrets
@@ -71,13 +61,13 @@ The encryption system uses the following GitHub secret:
 1. Creates ClickHouse backup
 2. Compresses backup into tar.gz
 3. **Encrypts** the compressed backup using AES-256-CBC + HMAC
-4. Uploads encrypted backup as artifact
-5. Removes unencrypted backup for security
+4. Removes unencrypted backup for security
+5. Uploads the encrypted backup as a workflow artifact (14 day retention)
 
 ### Restore Workflow
 
 1. Downloads backup artifact
-2. **Decrypts** and **verifies HMAC** of the backup (with backward compatibility)
+2. **Decrypts** and **verifies HMAC** of the backup
 3. Extracts and validates backup
 4. Restores database tables
 
@@ -101,27 +91,31 @@ openssl rand -hex 32
 Encrypted files use a custom format:
 
 ```
-[64-byte salt][32-byte IV][64-byte HMAC][base64-encoded encrypted data]
+[64 ASCII hex chars: salt][32 ASCII hex chars: IV][64 ASCII hex chars: HMAC][raw AES-256-CBC ciphertext]
 ```
 
-- Salt: 64 hex characters (32 bytes) - used for key derivation
+- Salt: 64 hex characters (32 bytes) - PBKDF2 salt
 - IV: 32 hex characters (16 bytes) - initialization vector for AES-CBC
-- HMAC: 64 hex characters (32 bytes) - HMAC-SHA256 for authentication
-- Encrypted data: AES-256-CBC encrypted backup, base64 encoded
+- HMAC: 64 hex characters (32 bytes) - HMAC-SHA256 over the IV followed by the ciphertext
+- Encrypted data: raw AES-256-CBC ciphertext (not base64 encoded)
 
 ## Security Details
 
-- **Encryption**: AES-256-CBC mode (compatible with older OpenSSL versions)
-- **Authentication**: HMAC-SHA256 to prevent tampering
-- **Key Derivation**: SHA-256 hash of (master_key + salt)
-- **HMAC Key**: SHA-256 hash of (master_key + salt + IV)
+- **Encryption**: AES-256-CBC
+- **Authentication**: HMAC-SHA256 over `IV || ciphertext` (encrypt-then-MAC), verified before decryption.
+  The IV is inside the MAC because it is carried in the plaintext header; leaving it out would let anyone
+  who can rewrite the artifact alter the first plaintext block without failing verification
+- **Key Derivation**: PBKDF2-HMAC-SHA256, 600,000 iterations, 64 bytes of output split into
+  a 32-byte AES key and a 32-byte HMAC key
 - **IV Generation**: Cryptographically secure random bytes
 
-## Backward Compatibility
+`openssl kdf` (OpenSSL 3.0+) is required. Both scripts fail loudly if it is unavailable.
 
-The decryption script automatically detects whether a file is encrypted or not:
+## Legacy Backups
 
-- If encrypted (has valid salt/IV/HMAC header): decrypts and verifies the file
-- If unencrypted: copies the file as-is for compatibility
-
-This ensures existing unencrypted backups continue to work during the transition period.
+Backups produced before the PBKDF2 migration used a single unsalted SHA-256 pass as the
+"KDF", which is not a KDF at all and is brute-forceable offline at GPU speed.
+`decrypt-backup.sh` still accepts those files so that artifacts already in retention can be
+restored, but **only after their HMAC verifies** - it never skips authentication and it
+never passes an unauthenticated file through. Remove that branch once all pre-migration
+backups have aged out.

@@ -5,6 +5,7 @@ import { ClusterSerialized } from '../../src/cluster/core/entities/cluster.inter
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 import { Model, Types } from 'mongoose';
 import { getModelToken } from '@nestjs/mongoose';
+import { CreateClusterBody } from '../../src/cluster/core/dto/create-cluster.body';
 
 export class ClusterUtils {
   private readonly clusterModel: Model<ClusterEntity>;
@@ -20,10 +21,15 @@ export class ClusterUtils {
       dto.name = 'My first project group';
     }
 
+    // Only the documented fields may be sent - the bearer token travels in a
+    // header and anything else is rejected by the global ValidationPipe
+    // (`forbidNonWhitelisted`).
+    const body: CreateClusterBody = { name: dto.name };
+
     const response = await request(this.app.getHttpServer())
       .post('/users/me/clusters')
       .set('Authorization', `Bearer ${dto.token}`)
-      .send(dto);
+      .send(body);
 
     return response.body;
   }

@@ -6,8 +6,10 @@ import { GoogleClaimProjectBody } from './dto/google-claim-project.body';
 import { GoogleLoginBody } from './dto/google-login.body';
 import { TokenResponse } from '../../shared/responses/token.response';
 import { GoogleAuthClaimService } from './google-auth-claim.service';
+import { ThrottleOauthExchange } from '../../shared/throttling/rate-limit.decorator';
 
 @Public()
+@ThrottleOauthExchange()
 @Controller('auth/google')
 @ApiTags('Auth (google)')
 export class GoogleAuthController {

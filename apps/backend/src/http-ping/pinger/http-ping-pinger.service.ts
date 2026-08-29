@@ -3,7 +3,7 @@ import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { LogdashMetrics } from '../../shared/logdash/aggregate-metrics';
 import { HTTP_PINGS_LOGGER, LOGDASH_METRICS } from '../../shared/logdash/logdash-tokens';
 import { Cron } from '@nestjs/schedule';
-import axios from 'axios';
+import { safeHttpRequest } from '../../shared/ssrf/safe-http-request';
 import { HttpMonitorNormalized } from 'src/http-monitor/core/entities/http-monitor.interface';
 import { HttpMonitorMode } from 'src/http-monitor/core/enums/http-monitor-mode.enum';
 import { ProjectTier } from 'src/project/core/enums/project-tier.enum';
@@ -194,7 +194,11 @@ export class HttpPingPingerService {
   }
 
   private async makeHttpRequest(url: string) {
-    return axios.get(url, {
+    // the url is re-validated here, and on every redirect hop, because dns
+    // answers can change between monitor creation and the actual ping
+    return safeHttpRequest({
+      url,
+      method: 'GET',
       timeout: 10000,
       validateStatus: () => true,
     });

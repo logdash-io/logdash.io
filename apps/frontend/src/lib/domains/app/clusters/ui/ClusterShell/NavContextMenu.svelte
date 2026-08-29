@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { RoutePath } from '$lib/domains/shared/route-path.js';
+  import { logout } from '$lib/domains/auth/application/logout.js';
   import { UserTier } from '$lib/domains/shared/types.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
@@ -54,16 +54,17 @@
     {/if}
 
     <li>
-      <a
+      <button
+        type="button"
         class="flex w-full items-center gap-3"
         onclick={() => {
           posthog.reset();
+          logout();
         }}
-        href={RoutePath.LOGOUT}
       >
         <LogoutIcon class="inline h-4 w-4" />
         Logout
-      </a>
+      </button>
     </li>
   </ul>
 {/snippet}

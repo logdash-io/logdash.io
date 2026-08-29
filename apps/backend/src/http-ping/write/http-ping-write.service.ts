@@ -36,16 +36,17 @@ export class HttpPingWriteService {
 
   public async deleteOlderThan(date: Date): Promise<void> {
     await this.clickhouse.command({
-      query: `DELETE FROM http_pings WHERE created_at < '${ClickhouseUtils.jsDateToClickhouseDate(date)}'`,
+      query: `DELETE FROM http_pings WHERE created_at < {date:DateTime64(3)}`,
+      query_params: { date: ClickhouseUtils.jsDateToClickhouseDate(date) },
     });
   }
 
   public async deleteByMonitorIds(monitorIds: string[]): Promise<void> {
     if (monitorIds.length === 0) return;
 
-    const monitorIdsStr = monitorIds.map((id) => `'${id}'`).join(',');
     await this.clickhouse.command({
-      query: `DELETE FROM http_pings WHERE http_monitor_id IN (${monitorIdsStr})`,
+      query: `DELETE FROM http_pings WHERE http_monitor_id IN ({monitorIds:Array(FixedString(24))})`,
+      query_params: { monitorIds },
     });
   }
 }

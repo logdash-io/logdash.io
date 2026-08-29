@@ -7,7 +7,9 @@ import { envConfig } from '@logdash/hyper-ui';
 class ServerPublicDashboardService {
 	static async getPublicData(dashboardIdOrUrl: string, period: '24h' | '7d' | '90d' = '90d') {
 		const response = await fetch(
-			`${envConfig.apiBaseUrl}/public_dashboards/${dashboardIdOrUrl}/public_data?period=${period}`
+			`${envConfig.apiBaseUrl}/public_dashboards/${encodeURIComponent(
+				dashboardIdOrUrl
+			)}/public_data?period=${period}`
 		);
 
 		if (!response.ok) {

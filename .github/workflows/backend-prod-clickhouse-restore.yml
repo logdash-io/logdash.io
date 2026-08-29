@@ -31,7 +31,7 @@ jobs:
         shell: bash
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Install ClickHouse Client
         run: |
@@ -51,31 +51,30 @@ jobs:
         run: |
           cd restore
 
-          # Find the backup file (encrypted or unencrypted)
+          # Only encrypted, HMAC-authenticated backups are accepted. Backups have been
+          # encrypted since 2025-06-17 and retention is 14 days, so an unencrypted
+          # artifact can only mean something tampered with or replaced it.
           ENCRYPTED_FILE=$(find . -name "clickhouse_backup_prod_*.tar.gz.enc" | head -1)
-          BACKUP_FILE=$(find . -name "clickhouse_backup_prod_*.tar.gz" | head -1)
 
-          if [ -n "$ENCRYPTED_FILE" ]; then
-            echo "Found encrypted backup file: $ENCRYPTED_FILE"
-            
-            # Make script executable
-            chmod +x ../.github/scripts/decrypt-backup.sh
-            
-            # Decrypt the backup
-            DECRYPTED_FILE="${ENCRYPTED_FILE%.enc}"
-            echo "🔓 Decrypting backup..."
-            ../.github/scripts/decrypt-backup.sh \
-              "$ENCRYPTED_FILE" \
-              "$DECRYPTED_FILE" \
-              "${{ secrets.BACKEND_BACKUP_ARTIFACT_KEY }}"
-            
-            BACKUP_FILE="$DECRYPTED_FILE"
-          elif [ -n "$BACKUP_FILE" ]; then
-            echo "Found unencrypted backup file: $BACKUP_FILE (backward compatibility)"
-          else
-            echo "❌ No backup file found in artifact"
+          if [ -z "$ENCRYPTED_FILE" ]; then
+            echo "❌ No encrypted backup file (clickhouse_backup_prod_*.tar.gz.enc) found in artifact"
             exit 1
           fi
+
+          echo "Found encrypted backup file: $ENCRYPTED_FILE"
+
+          # Make script executable
+          chmod +x ../.github/scripts/decrypt-backup.sh
+
+          # Decrypt the backup (fails closed if the HMAC does not verify)
+          DECRYPTED_FILE="${ENCRYPTED_FILE%.enc}"
+          echo "🔓 Decrypting backup..."
+          ../.github/scripts/decrypt-backup.sh \
+            "$ENCRYPTED_FILE" \
+            "$DECRYPTED_FILE" \
+            "${{ secrets.BACKEND_BACKUP_ARTIFACT_KEY }}"
+
+          BACKUP_FILE="$DECRYPTED_FILE"
 
           echo "Using backup file: $BACKUP_FILE"
 

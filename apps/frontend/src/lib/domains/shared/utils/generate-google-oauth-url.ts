@@ -1,36 +1,16 @@
-import { dev } from '$app/environment';
-import type { UserTier } from '$lib/domains/shared/types.js';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
-import { isLocal } from '$lib/domains/shared/utils/is-dev.util';
-
-export type GoogleCallbackState = {
-  terms_accepted: boolean;
-  email_accepted: boolean;
-  flow: 'login';
-  fallback_url: string;
-  tier?: UserTier;
-  next_url: string;
-};
 
 export const generateGoogleOAuthUrl = (
-  state: GoogleCallbackState,
-  options?: { redirectUri?: string },
+  state: string,
+  options: { redirectUri: string },
 ): string => {
-  const redirectUri =
-    options?.redirectUri ||
-    (isLocal() || dev
-      ? 'http://localhost:5173/app/callbacks/oauth/google-alternative'
-      : `${window.location.origin}/app/callbacks/oauth/google`);
-
   const params = new URLSearchParams({
     client_id: envConfig.google.clientId,
-    redirect_uri: redirectUri,
+    redirect_uri: options.redirectUri,
     response_type: 'code',
     scope: 'openid email profile',
-    state: btoa(JSON.stringify(state || {})),
+    state,
   });
 
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-  console.log('url', url);
-  return url;
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 };

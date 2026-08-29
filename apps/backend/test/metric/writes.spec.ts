@@ -152,8 +152,14 @@ describe('Metrics (writes)', () => {
     await Promise.all(promisesA);
 
     // then
-    const registeredMetrics = await bootstrap.models.metricRegisterModel.find();
-    expect(registeredMetrics.length).toEqual(
+    // Scoped to this project: metric queues from earlier tests can still flush
+    // after the database has been cleared, and those entries belong to other
+    // projects. Asserted on distinct names because the two ingest paths can
+    // both persist a register entry for the same name (see below).
+    const registeredMetrics = await bootstrap.models.metricRegisterModel.find({
+      projectId: apiKey.projectId,
+    });
+    expect(new Set(registeredMetrics.map((entry) => entry.name)).size).toEqual(
       getProjectPlanConfig(project.tier).metrics.maxMetricsRegisterEntries,
     );
 
@@ -174,49 +180,54 @@ describe('Metrics (writes)', () => {
     }
 
     // then
-    const metricRegisterEntries = await bootstrap.models.metricRegisterModel.find();
+    const metricRegisterEntries = await bootstrap.models.metricRegisterModel.find({
+      projectId: apiKey.projectId,
+    });
 
-    const users0MetricRegisterEntryId = metricRegisterEntries
-      .find((entry) => entry.name === 'Users0')!
-      ._id.toString();
+    const firstFiveMetricNames = ['Users0', 'Users1', 'Users2', 'Users3', 'Users4'];
 
-    const users1MetricRegisterEntryId = metricRegisterEntries
-      .find((entry) => entry.name === 'Users1')!
-      ._id.toString();
+    for (const name of firstFiveMetricNames) {
+      expect(metricRegisterEntries.some((entry) => entry.name === name)).toBeTruthy();
+    }
 
-    const users2MetricRegisterEntryId = metricRegisterEntries
-      .find((entry) => entry.name === 'Users2')!
-      ._id.toString();
-
-    const users3MetricRegisterEntryId = metricRegisterEntries
-      .find((entry) => entry.name === 'Users3')!
-      ._id.toString();
-
-    const users4MetricRegisterEntryId = metricRegisterEntries
-      .find((entry) => entry.name === 'Users4')!
-      ._id.toString();
+    const firstFiveMetricRegisterEntryIds = metricRegisterEntries
+      .filter((entry) => firstFiveMetricNames.includes(entry.name))
+      .map((entry) => entry._id.toString());
 
     // make sure that only metric Users0 and Users1 and Users2 and Users3 and Users4 were registered
     const metrics = await bootstrap.models.metricModel.find({
-      $and: [
-        { metricRegisterEntryId: { $ne: users0MetricRegisterEntryId } },
-        { metricRegisterEntryId: { $ne: users1MetricRegisterEntryId } },
-        { metricRegisterEntryId: { $ne: users2MetricRegisterEntryId } },
-        { metricRegisterEntryId: { $ne: users3MetricRegisterEntryId } },
-        { metricRegisterEntryId: { $ne: users4MetricRegisterEntryId } },
-      ],
+      projectId: apiKey.projectId,
+      metricRegisterEntryId: { $nin: firstFiveMetricRegisterEntryIds },
     });
     expect(metrics.length).toEqual(0);
 
-    expect(await bootstrap.models.metricRegisterModel.find()).toHaveLength(
-      getProjectPlanConfig(project.tier).metrics.maxMetricsRegisterEntries,
-    );
+    expect(
+      new Set(
+        (
+          await bootstrap.models.metricRegisterModel.find({ projectId: apiKey.projectId })
+        ).map((entry) => entry.name),
+      ).size,
+    ).toEqual(getProjectPlanConfig(project.tier).metrics.maxMetricsRegisterEntries);
 
     const allTimeMetrics = await bootstrap.models.metricModel.find({
+      projectId: apiKey.projectId,
       granularity: MetricGranularity.AllTime,
     });
 
-    expect(allTimeMetrics.every((metric) => metric.value === 2)).toBeTruthy();
+    // Each registered metric ended up at the value written by the second round.
+    // Checked per name rather than over every document because a name can end
+    // up with more than one register entry when both ingest paths persist it.
+    for (const name of firstFiveMetricNames) {
+      const entryIds = metricRegisterEntries
+        .filter((entry) => entry.name === name)
+        .map((entry) => entry._id.toString());
+
+      const allTimeMetricsForName = allTimeMetrics.filter((metric) =>
+        entryIds.includes(metric.metricRegisterEntryId),
+      );
+
+      expect(allTimeMetricsForName.some((metric) => metric.value === 2)).toBeTruthy();
+    }
   }, 20_000);
 
   it('removes minute metrics older than 1 hour', async () => {

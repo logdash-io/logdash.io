@@ -95,7 +95,10 @@ class UserState {
     }
 
     if (!this.hasBilling) {
-      startTierUpgrade(source, to);
+      startTierUpgrade(source, to).catch((error) => {
+        toast.error('Failed to upgrade your plan');
+        console.error(error);
+      });
     } else {
       UsersService.changePaidPlan(to)
         .then(() => {

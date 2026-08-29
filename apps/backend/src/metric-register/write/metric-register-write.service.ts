@@ -59,6 +59,7 @@ export class MetricRegisterWriteService {
   ): Promise<string | null> {
     const entry = await this.model.findOne({
       _id: new Types.ObjectId(dto.id),
+      projectId: dto.projectId,
     });
 
     if (!entry) {

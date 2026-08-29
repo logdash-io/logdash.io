@@ -17,9 +17,11 @@ export class PublicDashboardUtils {
     const response = await request(this.app.getHttpServer())
       .post(`/clusters/${params.clusterId}/public_dashboards`)
       .set('Authorization', `Bearer ${params.token}`)
+      // The global ValidationPipe whitelists + forbids unknown properties, so the
+      // body must contain exactly what `CreatePublicDashboardBody` declares. The
+      // cluster id is a path parameter, not a body field.
       .send({
-        clusterId: params.clusterId,
-        httpMonitorsIds: params.httpMonitorsIds,
+        ...(params.httpMonitorsIds ? { httpMonitorsIds: params.httpMonitorsIds } : {}),
         name: params.name || 'test',
         isPublic: params.isPublic === undefined ? true : params.isPublic,
       });
@@ -30,9 +32,13 @@ export class PublicDashboardUtils {
   public async updatePublicDashboard(
     params: UpdatePublicDashboardBody & { token: string; id: string },
   ): Promise<void> {
+    const { token, id, ...body } = params;
+
     await request(this.app.getHttpServer())
-      .put(`/public_dashboards/${params.id}`)
-      .set('Authorization', `Bearer ${params.token}`)
-      .send(params);
+      .put(`/public_dashboards/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      // `token`/`id` are transport details, not part of the body contract - the
+      // whitelisting ValidationPipe rejects them.
+      .send(body);
   }
 }

@@ -32,6 +32,12 @@ export class LogWriteService {
   public async removePartition(cutOffDate: Date): Promise<void> {
     const partitionDate = this.convertDateToPartitionDate(cutOffDate);
 
+    // clickhouse does not bind query parameters inside a partition expression,
+    // so the value is asserted to be a bare YYYYMMDD literal instead
+    if (!/^\d{8}$/.test(partitionDate)) {
+      throw new Error(`Invalid partition date: ${partitionDate}`);
+    }
+
     await this.clickhouse.command({
       query: `ALTER TABLE logs DROP PARTITION '${partitionDate}'`,
     });
@@ -43,7 +49,8 @@ export class LogWriteService {
 
   public async removeByProjectId(projectId: string): Promise<void> {
     await this.clickhouse.command({
-      query: `DELETE FROM logs WHERE project_id='${projectId}'`,
+      query: `DELETE FROM logs WHERE project_id = {projectId:String}`,
+      query_params: { projectId },
     });
   }
 }
