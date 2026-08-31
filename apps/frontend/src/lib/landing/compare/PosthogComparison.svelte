@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import MinusIcon from '$lib/domains/shared/icons/MinusIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { posthogComparisonData, featureComparisonData } from './compare.data';
@@ -20,7 +21,7 @@
     <div
       class="mt-4 flex flex-col items-center justify-center gap-4 sm:flex-row"
     >
-      <a href="/app/auth" class="btn btn-primary w-full sm:w-auto">
+      <a href={resolve('/app/auth')} class="btn btn-primary w-full sm:w-auto">
         Start free
         <ArrowRightIcon class="size-4" />
       </a>
@@ -55,7 +56,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each posthogComparisonData as point, i}
+          {#each posthogComparisonData as point, i (point.feature)}
             <tr>
               <td
                 class={[
@@ -201,7 +202,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each featureComparisonData as point, i}
+          {#each featureComparisonData as point, i (point.feature)}
             <tr>
               <td
                 class={[
@@ -309,7 +310,7 @@
         See how simple "simple" can be.
       </span>
     </p>
-    <a href="/demo-dashboard" class="btn btn-primary gap-2">
+    <a href={resolve('/demo-dashboard')} class="btn btn-primary gap-2">
       Start free
       <ArrowRightIcon class="size-4" />
     </a>

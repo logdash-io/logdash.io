@@ -169,16 +169,15 @@
               {/each}
             </tr>
 
-            {#each FEATURES_COMPARISON.sections as section, parentIndex}
+            {#each FEATURES_COMPARISON.sections as section (section.name)}
               {@const isLastSection =
                 section ===
                 FEATURES_COMPARISON.sections[
                   FEATURES_COMPARISON.sections.length - 1
                 ]}
-              {#each section.features as feature, index}
+              {#each section.features as feature (feature.name)}
                 {@const isLast =
                   feature === section.features[section.features.length - 1]}
-                {@const isFirstFeature = parentIndex === 0 && index === 0}
                 <tr
                   class={[
                     {

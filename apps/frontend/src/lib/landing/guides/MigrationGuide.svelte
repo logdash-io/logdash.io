@@ -49,7 +49,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each migrationChanges as change}
+          {#each migrationChanges as change (change.aspect)}
             <tr class="border-base-content/5 border-b">
               <td class="py-4 font-medium">{change.aspect}</td>
               <td class="py-4">
@@ -74,7 +74,7 @@
   <section class="flex flex-col gap-6">
     <h2 class="text-2xl font-semibold">New Features</h2>
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      {#each newFeatures as feature}
+      {#each newFeatures as feature (feature.title)}
         <div class="ld-card flex flex-col gap-3 p-6">
           <h3 class="text-lg font-semibold">{feature.title}</h3>
           <p class="text-base-content/70 text-sm">{feature.description}</p>

@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
   import { RoutePath } from '$lib/domains/shared/route-path.js';
   import { ArrowRightIcon, TimerIcon } from 'lucide-svelte';
@@ -35,7 +36,7 @@
 
         <div class="p-6">
           <ul class="list-disc space-y-2 pl-5">
-            {#each feature.benefits as benefit}
+            {#each feature.benefits as benefit, i (i)}
               <li class="text-base-content/80">
                 {benefit}
               </li>
@@ -44,7 +45,7 @@
 
           {#if feature.available}
             <a
-              href={`/features/${feature.slug}`}
+              href={resolve(`/features/${feature.slug}`)}
               class="btn btn-md hover:btn-primary btn-secondary mt-6 w-full"
               data-posthog-id={`features-${feature.id}-learn-more-cta`}
             >
@@ -74,7 +75,7 @@
     <a
       class="btn btn-primary"
       data-posthog-id="features-open-dashboard-cta"
-      href={RoutePath.AUTH}
+      href={resolve(RoutePath.AUTH)}
     >
       Start free
     </a>

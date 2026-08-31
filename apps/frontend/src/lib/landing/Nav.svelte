@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
+  import type { Pathname } from '$app/types';
   import Logo from '$lib/domains/shared/icons/Logo.svelte';
   import {
     animatedViewState,
@@ -28,10 +30,10 @@
       name: 'Pricing',
       matchPrefix: false,
     },
-  ];
+  ] as const;
 
   const COMPARISONS = comparisons.map((c) => ({
-    path: `/vs/${c.slug}`,
+    path: `/vs/${c.slug}` as Extract<Pathname, `/vs/${string}`>,
     name: c.title,
   }));
 
@@ -65,7 +67,7 @@
       description: 'Monitor uptime and get instant alerts',
       icon: MonitoringIcon,
     },
-  ];
+  ] as const;
 
   const currentRouteIndex = $derived(
     ROUTES.findIndex((route) => route.path === page.url.pathname),
@@ -78,9 +80,9 @@
 
 {#snippet featuresMenu(close: () => void)}
   <div class="ld-card-base rounded-box z-[1] w-fit p-2 shadow-lg space-y-1">
-    {#each FEATURES as { path, name, description, icon: Icon }}
+    {#each FEATURES as { path, name, description, icon: Icon } (path)}
       <a
-        href={path}
+        href={resolve(path)}
         draggable="false"
         class={[
           'flex items-center gap-3 rounded-lg p-2 hover:bg-base-100/80 group transition-colors duration-150',
@@ -113,10 +115,10 @@
 
 {#snippet compareMenu()}
   <ul class="menu ld-card-base rounded-box z-[1] w-52 p-2 shadow">
-    {#each COMPARISONS as { path, name }}
+    {#each COMPARISONS as { path, name } (path)}
       <li>
         <a
-          href={path}
+          href={resolve(path)}
           draggable="false"
           class={page.url.pathname === path ? 'text-primary' : ''}
           onclick={() => {
@@ -139,7 +141,7 @@
     >
       <div class="navbar-start">
         <a
-          href="/"
+          href={resolve('/')}
           class="flex items-center space-x-2 py-1 pr-4"
           onclick={() => {
             animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
@@ -173,10 +175,10 @@
               </div>
             </Tooltip>
           </li>
-          {#each ROUTES as { path, name, matchPrefix }, i}
+          {#each ROUTES as { path, name, matchPrefix }, i (path)}
             <li>
               <a
-                href={path}
+                href={resolve(path)}
                 draggable="false"
                 class={[
                   'hover:bg-transparent',
@@ -243,7 +245,7 @@
   >
     <div class="navbar-start">
       <a
-        href="/"
+        href={resolve('/')}
         class="flex items-center space-x-2 py-1"
         onclick={() => {
           animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
@@ -286,10 +288,10 @@
                 Features
               </summary>
               <ul>
-                {#each FEATURES as { path, name }}
+                {#each FEATURES as { path, name } (path)}
                   <li>
                     <a
-                      href={path}
+                      href={resolve(path)}
                       draggable="false"
                       class={page.url.pathname === path ? 'text-primary' : ''}
                       onclick={() => {
@@ -312,10 +314,10 @@
               </ul>
             </details>
           </li>
-          {#each ROUTES as { path, name, matchPrefix }, i}
+          {#each ROUTES as { path, name, matchPrefix }, i (path)}
             <li>
               <a
-                href={path}
+                href={resolve(path)}
                 draggable="false"
                 class={isRouteActive(path, matchPrefix, page.url.pathname)
                   ? 'text-primary'
@@ -349,10 +351,10 @@
                 Compare
               </summary>
               <ul>
-                {#each COMPARISONS as { path, name }}
+                {#each COMPARISONS as { path, name } (path)}
                   <li>
                     <a
-                      href={path}
+                      href={resolve(path)}
                       draggable="false"
                       class={page.url.pathname === path ? 'text-primary' : ''}
                       onclick={() => {

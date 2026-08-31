@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
   import { ArrowRightIcon } from 'lucide-svelte';
   import PricingGrid from './PricingGrid.svelte';
   import {
@@ -30,7 +31,7 @@
   </section>
 
   <a
-    href="/pricing#detailed-plans-comparison"
+    href={resolve('/pricing#detailed-plans-comparison')}
     onclick={() => {
       animatedViewState.nextAnimationDirection = AnimationDirection.RIGHT;
     }}

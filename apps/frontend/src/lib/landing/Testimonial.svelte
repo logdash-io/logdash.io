@@ -44,6 +44,7 @@
         {company.who}
         {#if company.name}
           at
+          <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
           <a target="_blank" href={company.url}>{company.name}</a>
         {/if}
       </span>

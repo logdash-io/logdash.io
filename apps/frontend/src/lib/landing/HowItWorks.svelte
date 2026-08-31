@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
   import {
     animatedViewState,
     AnimationDirection,
@@ -19,7 +20,7 @@
       number: 2,
       badgeClass: 'bg-secondary text-secondary-content shadow-secondary/20',
       title: 'LLM: Integrates Logdash into your codebase',
-      descriptionHtml: `Paste our integration prompt into your AI assistant. It'll write the integration code for you instantly.`,
+      description: `Paste our integration prompt into your AI assistant. It'll write the integration code for you instantly.`,
     },
     {
       number: 3,
@@ -32,6 +33,7 @@
 </script>
 
 <svelte:head>
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -- static stylesheet shipped by svelte-highlight -->
   {@html githubDark}
 </svelte:head>
 
@@ -49,7 +51,7 @@
     <div
       class="bg-base-200/80 border-base-100 flex flex-col gap-12 rounded-3xl border-t p-8"
     >
-      {#each steps as step}
+      {#each steps as step (step.number)}
         <div class="flex flex-col gap-6 md:flex-row">
           <div class="shrink-0">
             <div
@@ -66,15 +68,9 @@
               {step.title}
             </h3>
 
-            {#if step.descriptionHtml}
-              <p class="text-base-content/70 text-base leading-relaxed">
-                {@html step.descriptionHtml}
-              </p>
-            {:else}
-              <p class="text-base-content/70 text-base leading-relaxed">
-                {step.description}
-              </p>
-            {/if}
+            <p class="text-base-content/70 text-base leading-relaxed">
+              {step.description}
+            </p>
           </div>
         </div>
       {/each}
@@ -85,7 +81,7 @@
         onclick={() => {
           animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
         }}
-        href="/demo-dashboard"
+        href={resolve('/demo-dashboard')}
         class="btn btn-secondary gap-1"
       >
         See the live demo

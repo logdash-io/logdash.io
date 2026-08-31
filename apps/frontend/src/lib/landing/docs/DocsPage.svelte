@@ -108,13 +108,13 @@
     class="sticky top-32 hidden h-fit max-h-[calc(100vh-5rem)] shrink-0 overflow-y-auto sm:block"
   >
     <ul class="menu menu-compact p-0">
-      {#each sections as section}
+      {#each sections as section (section.id)}
         <li>
           <div class={$activeSection === section.id ? 'font-semibold' : ''}>
             <a href={`#${section.id}`}>{section.title}</a>
           </div>
           <ul class="pl-4">
-            {#each section.subsections as subsection}
+            {#each section.subsections as subsection (subsection.id)}
               <li>
                 <a
                   href={`#${subsection.id}`}
@@ -133,7 +133,7 @@
   </div>
 
   <div class="flex-1">
-    {#each sections as section}
+    {#each sections as section (section.id)}
       <section
         id={section.id}
         class="mb-12"
@@ -147,7 +147,7 @@
       >
         <h1 class="mb-6 text-3xl font-bold">{section.title}</h1>
 
-        {#each section.subsections as subsection}
+        {#each section.subsections as subsection (subsection.id)}
           {#if subsection.type === 'general'}
             <section
               id={subsection.id}
@@ -175,7 +175,7 @@
               </div>
 
               {#if subsection.tables}
-                {#each Object.entries(subsection.tables) as [tableKey, tableData]}
+                {#each Object.entries(subsection.tables) as [tableKey, tableData] (tableKey)}
                   <h3 class="mb-3 text-xl font-semibold">
                     {tableTitles[tableKey as TableType] || tableKey}
                   </h3>
@@ -196,19 +196,21 @@
                     <table class="table-zebra table w-full">
                       <thead>
                         <tr>
-                          {#each tableData.headers as header}
+                          {#each tableData.headers as header, i (i)}
                             <th>{header}</th>
                           {/each}
                         </tr>
                       </thead>
                       <tbody>
-                        {#each tableData.rows as row}
+                        {#each tableData.rows as row, rowIndex (rowIndex)}
                           <tr>
-                            {#each row as cell, cellIndex}
+                            {#each row as cell, cellIndex (cellIndex)}
                               <td>
-                                {@html cellIndex === 0 && tableKey === 'headers'
-                                  ? `<code>${cell}</code>`
-                                  : cell}
+                                {#if cellIndex === 0 && tableKey === 'headers'}
+                                  <code>{cell}</code>
+                                {:else}
+                                  {cell}
+                                {/if}
                               </td>
                             {/each}
                           </tr>
@@ -243,12 +245,14 @@
               </h2>
 
               <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {#each subsection.sections as sdkSection}
+                {#each subsection.sections as sdkSection (sdkSection.id)}
+                  <!-- eslint-disable svelte/no-navigation-without-resolve -- external docs URL -->
                   <a
                     href={`${subsection.docsPath}${sdkSection.path}`}
                     target="_blank"
                     class="ld-card shadow-md transition-shadow hover:shadow-lg"
                   >
+                    <!-- eslint-enable svelte/no-navigation-without-resolve -->
                     <h3 class="card-title">
                       {sdkSection.title}
                     </h3>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import {
     animatedViewState,
     AnimationDirection,
@@ -8,7 +9,7 @@
 <div class="flex w-full flex-col gap-4 px-8 lg:w-fit lg:flex-row lg:px-0">
   <a
     draggable="false"
-    href="/app/auth"
+    href={resolve('/app/auth')}
     class="btn btn-primary w-full lg:w-fit"
     onclick={() => {
       animatedViewState.nextAnimationDirection = AnimationDirection.RIGHT;
@@ -19,7 +20,7 @@
   </a>
 
   <a
-    href="/demo-dashboard"
+    href={resolve('/demo-dashboard')}
     draggable="false"
     onclick={() => {
       animatedViewState.nextAnimationDirection = AnimationDirection.RIGHT;

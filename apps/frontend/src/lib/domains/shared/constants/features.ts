@@ -46,4 +46,4 @@ export const FEATURES = [
     ],
     available: true,
   },
-];
+] as const;

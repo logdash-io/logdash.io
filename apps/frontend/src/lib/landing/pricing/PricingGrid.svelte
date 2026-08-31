@@ -29,13 +29,13 @@
     },
   };
 
-  const onMouseEnter = (plan: any) => {
+  const onMouseEnter = (plan: (typeof PAYMENT_PLANS)[number]) => {
     if (plan.tier === UserTier.PRO) {
       upgradeState.showBackground();
     }
   };
 
-  const onMouseLeave = (plan: any) => {
+  const onMouseLeave = (plan: (typeof PAYMENT_PLANS)[number]) => {
     if (plan.tier === UserTier.PRO) {
       upgradeState.hideBackground();
     }
@@ -43,7 +43,7 @@
 </script>
 
 <div class="mx-auto mb-8 grid max-w-7xl gap-8 md:grid-cols-3">
-  {#each pricingData.plans as plan}
+  {#each pricingData.plans as plan (plan.tier)}
     <div class="relative flex flex-col">
       {#if plan.popular}
         <div
@@ -106,7 +106,7 @@
           </div>
 
           <ul class="mb-8 space-y-3 text-base">
-            {#each plan.features as feature}
+            {#each plan.features as feature (feature.name)}
               <li class="flex items-center gap-3">
                 <CheckIcon class="text-success h-5 w-5 flex-shrink-0" />
 
@@ -125,7 +125,7 @@
 <div class="mx-auto max-w-5xl mt-8">
   {#snippet content()}
     <div class="flex flex-col gap-3 p-2 max-w-sm ld-card">
-      {#each pricingData.plans as plan}
+      {#each pricingData.plans as plan (plan.tier)}
         <div>
           <span class="text-primary font-medium">{plan.name}:</span>
           <span class="text-base-content">{plan.tldr}</span>
