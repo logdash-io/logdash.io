@@ -16,7 +16,7 @@
 
   <p class="mb-4">
     We built Logdash because we were tired of choosing between "blindness" and
-    "enterprise complexity." We wanted a tool that respects the makers ethos:
+    "enterprise complexity." We wanted a tool that respects the maker's ethos:
     Simple, effective, and profitable.
   </p>
 
@@ -27,7 +27,7 @@
 
   <ul class="mb-4 list-inside list-disc">
     <li>Sleep better knowing your SaaS is healthy</li>
-    <li>Setup in 3 minutes—no DevOps degree required</li>
+    <li>Setup in 3 minutes - no DevOps degree required</li>
     <li>Catch silent errors before they kill your MRR</li>
   </ul>
 

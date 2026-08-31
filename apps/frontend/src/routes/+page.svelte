@@ -132,7 +132,7 @@
         <h2
           class="mb-2 text-center text-3xl font-bold sm:text-left sm:text-4xl"
         >
-          Let's get you vision back.
+          Let's get your vision back.
         </h2>
 
         <FlamingoIcon class="text-primary h-54 w-54 mx-auto mb-6 md:hidden" />

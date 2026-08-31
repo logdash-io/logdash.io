@@ -1,11 +1,9 @@
 <script lang="ts">
-  // Define a type for your FAQ items
   type FaqItem = {
     question: string;
     answer: string;
   };
 
-  // Sample FAQ data - replace with your actual data source
   const faqs: FaqItem[] = [
     {
       question: 'What is Logdash?',
@@ -20,7 +18,7 @@
     {
       question: 'What is your refund policy?',
       answer:
-        'We offer a questions-free full refund within 30 days of your subscription.',
+        'We offer a no-questions-asked full refund within 30 days of your subscription.',
     },
     {
       question: 'Free plan or trial?',
@@ -40,7 +38,7 @@
     {
       question: 'How is pricing set?',
       answer:
-        "It's mainly about how much data you send, how long you want to keep it, and which features you're using. Pop over to our pricing page – it lays everything out clearly.",
+        "It's mainly about how much data you send, how long you want to keep it, and which features you're using. Pop over to our pricing page - it lays everything out clearly.",
     },
     {
       question: 'What is "zero config"?',
@@ -59,15 +57,15 @@
   <div class="mx-auto max-w-4xl px-8 sm:px-6 lg:px-8">
     <div class="text-center">
       <h2
-        class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-white"
+        class="text-base-content text-3xl font-extrabold tracking-tight sm:text-4xl"
       >
         Frequently Asked Questions
       </h2>
-      <p class="mt-2 text-lg leading-relaxed text-gray-600 dark:text-gray-300">
+      <p class="text-base-content/70 mt-2 text-lg leading-relaxed">
         Have a different question? <a
           href="https://discord.gg/naftPW4Hxe"
           target="_blank"
-          class="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
+          class="link link-hover text-primary font-medium"
         >
           Reach out on Discord
         </a>
@@ -75,13 +73,6 @@
     </div>
 
     <div class="mt-12">
-      <!-- 
-              Grid layout:
-              - 1 column by default (mobile)
-              - 2 columns on medium screens and up (md:grid-cols-2)
-              - gap-x-8 for horizontal space between columns
-              - gap-y-10 for vertical space between FAQ items
-            -->
       <dl class="gap-x-8 md:columns-2">
         {#each faqs as faq (faq.question)}
           <div class="mb-10 break-inside-avoid lg:mb-12">

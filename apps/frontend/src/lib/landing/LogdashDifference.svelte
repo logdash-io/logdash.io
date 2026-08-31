@@ -74,7 +74,7 @@
       },
       {
         icon: TriangleAlertIcon,
-        title: 'You (glueing together fragmented data):',
+        title: 'You (gluing together fragmented data):',
         description:
           'Manually correlating timestamps across Vercel logs and database metrics.',
       },
