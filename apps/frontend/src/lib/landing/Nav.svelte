@@ -132,109 +132,108 @@
 
 {#snippet nav()}
   <nav
-    class="bg-base-300/50 sticky top-0 z-50 mx-auto hidden h-24 w-full shrink-0 items-center justify-between gap-4 px-8 backdrop-blur-lg lg:flex"
+    class="bg-base-300/50 sticky top-0 z-50 hidden h-20 w-full shrink-0 backdrop-blur-lg lg:flex"
   >
-    <div class="navbar-start">
-      <a
-        href="/"
-        class={[
-          'flex items-center space-x-2 py-1 pr-4',
-          {
-            'navlink-active': page.url.pathname === '/',
-          },
-        ]}
-        onclick={() => {
-          animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
-        }}
-        draggable="false"
-      >
-        <Logo class="h-10 w-10" />
-        <span class="text-2xl font-bold">logdash</span>
-      </a>
-    </div>
-
-    <div class="navbar-center">
-      <ul class="menu menu-horizontal space-x-4 px-1 text-base font-semibold">
-        <li>
-          <Tooltip
-            class="p-0"
-            placement="bottom"
-            content={featuresMenu}
-            interactive={true}
-          >
-            <div
-              role="button"
-              class={[
-                'px-3 py-1.5 hover:bg-transparent relative',
-                {
-                  'navlink-active': page.url.pathname.startsWith('/features'),
-                },
-              ]}
-            >
-              Features
-            </div>
-          </Tooltip>
-        </li>
-        {#each ROUTES as { path, name, matchPrefix }, i}
-          <li>
-            <a
-              href={path}
-              draggable="false"
-              class={[
-                'hover:bg-transparent',
-                {
-                  'navlink-active': isRouteActive(
-                    path,
-                    matchPrefix,
-                    page.url.pathname,
-                  ),
-                },
-              ]}
-              onclick={() => {
-                const animationDirection =
-                  i > currentRouteIndex
-                    ? AnimationDirection.RIGHT
-                    : AnimationDirection.LEFT;
-
-                animatedViewState.nextAnimationDirection = animationDirection;
-              }}
-              in:fade={{ duration: 150, delay: i * 50 }}
-            >
-              {name}
-            </a>
-          </li>
-        {/each}
-        <li>
-          <Tooltip
-            class="p-0"
-            placement="bottom"
-            content={compareMenu}
-            interactive={true}
-          >
-            <div
-              role="button"
-              class={[
-                'px-3 py-1.5 hover:bg-transparent relative',
-                {
-                  'navlink-active': page.url.pathname.startsWith('/vs'),
-                },
-              ]}
-            >
-              Compare
-            </div>
-          </Tooltip>
-        </li>
-      </ul>
-    </div>
-
-    <div class="navbar-end">
-      <div class="flex items-center space-x-4">
-        <button
-          class="btn btn-outline border-primary"
-          onclick={handleDashboardClick}
+    <div
+      class="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-12"
+    >
+      <div class="navbar-start">
+        <a
+          href="/"
+          class="flex items-center space-x-2 py-1 pr-4"
+          onclick={() => {
+            animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
+          }}
+          draggable="false"
         >
-          Get started
-        </button>
+          <Logo class="h-10 w-10" />
+          <span class="text-2xl font-bold">logdash</span>
+        </a>
+      </div>
+
+      <div class="navbar-center">
+        <ul class="menu menu-horizontal space-x-4 px-1 text-base font-semibold">
+          <li>
+            <Tooltip
+              class="p-0"
+              placement="bottom"
+              content={featuresMenu}
+              interactive={true}
+            >
+              <div
+                role="button"
+                class={[
+                  'px-3 py-1.5 hover:bg-transparent relative',
+                  {
+                    'navlink-active': page.url.pathname.startsWith('/features'),
+                  },
+                ]}
+              >
+                Features
+              </div>
+            </Tooltip>
+          </li>
+          {#each ROUTES as { path, name, matchPrefix }, i}
+            <li>
+              <a
+                href={path}
+                draggable="false"
+                class={[
+                  'hover:bg-transparent',
+                  {
+                    'navlink-active': isRouteActive(
+                      path,
+                      matchPrefix,
+                      page.url.pathname,
+                    ),
+                  },
+                ]}
+                onclick={() => {
+                  const animationDirection =
+                    i > currentRouteIndex
+                      ? AnimationDirection.RIGHT
+                      : AnimationDirection.LEFT;
+
+                  animatedViewState.nextAnimationDirection = animationDirection;
+                }}
+                in:fade={{ duration: 150, delay: i * 50 }}
+              >
+                {name}
+              </a>
+            </li>
+          {/each}
+          <li>
+            <Tooltip
+              class="p-0"
+              placement="bottom"
+              content={compareMenu}
+              interactive={true}
+            >
+              <div
+                role="button"
+                class={[
+                  'px-3 py-1.5 hover:bg-transparent relative',
+                  {
+                    'navlink-active': page.url.pathname.startsWith('/vs'),
+                  },
+                ]}
+              >
+                Compare
+              </div>
+            </Tooltip>
+          </li>
+        </ul>
+      </div>
+
+      <div class="navbar-end">
+        <div class="flex items-center space-x-4">
+          <button
+            class="btn btn-outline border-primary"
+            onclick={handleDashboardClick}
+          >
+            Get started
+          </button>
+        </div>
       </div>
     </div>
   </nav>
@@ -400,3 +399,34 @@
 {/snippet}
 
 {@render nav()}
+
+<style>
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      translate: 0 var(--menu-drop, 0px);
+      filter: blur(var(--menu-blur, 0px));
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0px);
+    }
+  }
+
+  /* Only the center menu drops in; the bar itself stays still. */
+  .navbar-center {
+    --menu-drop: -4px;
+    --menu-blur: 3px;
+    animation: menu-in 0.8s cubic-bezier(0.25, 1, 0.5, 1) 350ms backwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .navbar-center {
+      --menu-drop: 0px;
+      --menu-blur: 0px;
+      animation-duration: 0.4s;
+      animation-delay: 0ms;
+    }
+  }
+</style>

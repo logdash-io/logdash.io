@@ -37,7 +37,7 @@
       [{#if prefix === 'full'}{date} {time}{:else}{time}{/if}]
     </span>
 
-    <span class="break-all">
+    <span class="break-words">
       {message}
     </span>
   </div>

@@ -46,7 +46,7 @@
     </h2>
     <p class="mx-auto max-w-3xl text-xl opacity-80">
       Real words from founders and solo devs already shipping without critical
-      services interruptions.
+      service interruptions.
     </p>
   </div>
 

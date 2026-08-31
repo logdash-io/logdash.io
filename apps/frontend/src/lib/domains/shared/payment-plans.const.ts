@@ -9,7 +9,7 @@ export const PAYMENT_PLANS = [
     features: [
       { name: 'Unlimited projects' },
       { name: 'Max 5 services' },
-      { name: 'Max 5 http monitors' },
+      { name: 'Max 5 HTTP monitors' },
       { name: 'Max 1 status page' },
       { name: 'Max 5 metrics per service' },
       { name: 'Max 1 collaborator per project' },
@@ -38,7 +38,7 @@ export const PAYMENT_PLANS = [
     features: [
       { name: 'Everything in Hobby, plus:' },
       { name: 'Max 20 services' },
-      { name: 'Max 20 http monitors' },
+      { name: 'Max 20 HTTP monitors' },
       { name: 'Max 5 status pages' },
       { name: 'Max 10 metrics per service' },
       { name: 'Max 2 collaborators per project' },
@@ -71,7 +71,7 @@ export const PAYMENT_PLANS = [
     features: [
       { name: 'Everything in Builder, plus:' },
       { name: 'Max 50 services' },
-      { name: 'Max 50 http monitors' },
+      { name: 'Max 50 HTTP monitors' },
       { name: 'Max 15 status pages' },
       { name: 'Max 30 metrics per service' },
       { name: 'Max 3 collaborators per project' },

@@ -6,9 +6,9 @@
 
 <div class="container mx-auto max-w-7xl px-4 gap-8">
   <header class="mb-16 text-center">
-    <h1 class="mb-4 text-4xl font-bold tracking-tight">
+    <h2 class="mb-4 text-4xl font-bold tracking-tight">
       Overwhelmingly simple.
-    </h1>
+    </h2>
 
     <p class="text-base-content/70 mx-auto max-w-3xl text-xl">
       We do the heavy lifting so you can focus on your business. Improve
@@ -25,9 +25,9 @@
           <div class="mb-6 text-5xl">
             <feature.icon class="text-primary h-10 w-10" />
           </div>
-          <h2 class="card-title mb-4 text-2xl">
+          <h3 class="card-title mb-4 text-2xl">
             {feature.title}
-          </h2>
+          </h3>
           <p class="text-base-content/70">
             {feature.description}
           </p>

@@ -9,9 +9,9 @@
 
 <div class="container mx-auto max-w-7xl px-4 gap-8">
   <header class="sm:mb-16 mb-8 text-center">
-    <h1 class="mb-4 text-4xl font-bold tracking-tight">
+    <h2 class="mb-4 text-4xl font-bold tracking-tight">
       Cheaper than customer complaints.
-    </h1>
+    </h2>
 
     <p class="text-base-content/70 mx-auto max-w-3xl text-xl">
       Validate your MVP without paying a dime. Keep your burn rate low and
@@ -19,7 +19,7 @@
     </p>
 
     <div class="mt-6 flex justify-center">
-      <div class="badge badge-soft badge-primary gap-2">
+      <div class="badge badge-soft badge-primary h-auto gap-2 py-1 text-center">
         We're just getting started - claim limited time offer
       </div>
     </div>
