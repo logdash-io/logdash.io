@@ -46,7 +46,7 @@
       class="hero-content w-full flex-col lg:flex-row lg:justify-around lg:gap-10"
     >
       <div
-        class="flex w-full flex-col items-center justify-center gap-6 text-center lg:items-start lg:gap-10 lg:text-left"
+        class="hero-copy flex w-full flex-col items-center justify-center gap-6 text-center lg:items-start lg:gap-10 lg:text-left"
       >
         <h1
           class="flex flex-col items-center gap-3 text-4xl font-extrabold tracking-tight md:-mb-4 lg:items-start lg:text-6xl"
@@ -65,7 +65,7 @@
       </div>
 
       <div
-        class="align-start relative flex h-[500px] w-full shrink-0 justify-center overflow-hidden lg:h-96 lg:w-1/2 lg:overflow-visible"
+        class="hero-visual align-start relative flex h-[500px] w-full shrink-0 justify-center overflow-hidden lg:h-96 lg:w-1/2 lg:overflow-visible"
       >
         <div
           class="rotate-z-3 sm:-rotate-z-3 absolute bottom-0 right-0 z-10 scale-90 sm:left-0 sm:right-auto lg:z-0 lg:scale-100"
@@ -164,3 +164,66 @@
 
   <div class="distance h-12"></div>
 </AnimatedView>
+
+<style>
+  @keyframes hero-in {
+    from {
+      opacity: var(--hero-fade-from, 0);
+      translate: 0 var(--hero-rise, 0px);
+      filter: blur(var(--hero-blur, 0px));
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0px);
+    }
+  }
+
+  /* Staggered by visual importance: heading leads with a blur dissolve,
+     supporting elements follow lighter, social proof just fades. Travel is
+     small and durations long enough that the entrances overlap into one
+     calm wave rather than popping in one by one. */
+  .hero-copy > :global(*) {
+    --hero-rise: 4px;
+    animation: hero-in 1.6s cubic-bezier(0.25, 1, 0.5, 1) backwards;
+  }
+
+  .hero-copy > :global(*:nth-child(1)) {
+    --hero-blur: 6px;
+  }
+
+  .hero-copy > :global(*:nth-child(2)) {
+    --hero-blur: 4px;
+    animation-delay: 150ms;
+  }
+
+  .hero-copy > :global(*:nth-child(3)) {
+    --hero-rise: 3px;
+    animation-duration: 1.5s;
+    animation-delay: 300ms;
+  }
+
+  .hero-copy > :global(*:nth-child(4)) {
+    --hero-rise: 0px;
+    animation-duration: 1.3s;
+    animation-delay: 450ms;
+  }
+
+  .hero-visual {
+    --hero-rise: 6px;
+    --hero-blur: 6px;
+    animation: hero-in 1.9s cubic-bezier(0.25, 1, 0.5, 1) 250ms backwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* :nth-child(n) matches everything; it only mirrors the specificity of the
+       per-child rules above so these later declarations win the tie. */
+    .hero-copy > :global(*:nth-child(n)),
+    .hero-visual {
+      --hero-rise: 0px;
+      --hero-blur: 0px;
+      animation-duration: 0.4s;
+      animation-delay: 0ms;
+    }
+  }
+</style>

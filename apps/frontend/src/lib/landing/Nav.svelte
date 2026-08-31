@@ -399,3 +399,34 @@
 {/snippet}
 
 {@render nav()}
+
+<style>
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      translate: 0 var(--menu-drop, 0px);
+      filter: blur(var(--menu-blur, 0px));
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+      filter: blur(0px);
+    }
+  }
+
+  /* Only the center menu drops in; the bar itself stays still. */
+  .navbar-center {
+    --menu-drop: -4px;
+    --menu-blur: 3px;
+    animation: menu-in 0.8s cubic-bezier(0.25, 1, 0.5, 1) 350ms backwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .navbar-center {
+      --menu-drop: 0px;
+      --menu-blur: 0px;
+      animation-duration: 0.4s;
+      animation-delay: 0ms;
+    }
+  }
+</style>
