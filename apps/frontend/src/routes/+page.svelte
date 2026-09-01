@@ -19,6 +19,7 @@
   import PricingTrustProof from '$lib/landing/pricing/PricingTrustProof.svelte';
   import { ArrowRightIcon } from 'lucide-svelte';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
+  import { resolve } from '$app/paths';
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -143,7 +144,7 @@
           Credit card is not required.
         </p>
         <a
-          href="/app/auth"
+          href={resolve('/app/auth')}
           class="btn btn-primary w-full sm:w-fit"
           data-posthog-id="landing-final-section-cta"
         >

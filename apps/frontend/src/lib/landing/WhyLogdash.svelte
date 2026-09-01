@@ -34,7 +34,7 @@
     </div>
 
     <div class="mx-auto flex max-w-3xl flex-col gap-6">
-      {#each features as feature}
+      {#each features as feature (feature.title)}
         <div class="card shadow-xl">
           <div class="card-body flex flex-row items-start gap-6">
             <div

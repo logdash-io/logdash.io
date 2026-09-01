@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import MinusIcon from '$lib/domains/shared/icons/MinusIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import {
@@ -22,7 +23,7 @@
     <div
       class="mt-4 flex flex-col items-center justify-center gap-4 sm:flex-row"
     >
-      <a href="/app/auth" class="btn btn-primary w-full sm:w-auto">
+      <a href={resolve('/app/auth')} class="btn btn-primary w-full sm:w-auto">
         Start free
         <ArrowRightIcon class="size-4" />
       </a>
@@ -56,7 +57,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each datadogComparisonData as point, i}
+          {#each datadogComparisonData as point, i (point.feature)}
             <tr>
               <td
                 class={[
@@ -202,7 +203,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each datadogFeatureComparisonData as point, i}
+          {#each datadogFeatureComparisonData as point, i (point.feature)}
             <tr>
               <td
                 class={[
@@ -308,7 +309,7 @@
         See how affordable observability can be.
       </span>
     </p>
-    <a href="/demo-dashboard" class="btn btn-primary gap-2">
+    <a href={resolve('/demo-dashboard')} class="btn btn-primary gap-2">
       Start free
       <ArrowRightIcon class="size-4" />
     </a>

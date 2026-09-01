@@ -1,6 +1,8 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
+  import type { Pathname } from '$app/types';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { SDK_LIST } from '$lib/domains/logs/domain/sdk-config';
   import { documentationState } from './documentation.state.svelte';
@@ -15,8 +17,10 @@
 
   let { children }: Props = $props();
 
-  function getPagePath(slug: string): string {
-    return slug ? `/guides/${slug}` : '/guides';
+  type GuidesPath = Extract<Pathname, `/guides${string}`>;
+
+  function getPagePath(slug: string): GuidesPath {
+    return (slug ? `/guides/${slug}` : '/guides') as GuidesPath;
   }
 
   function isActivePath(href: string): boolean {
@@ -29,7 +33,12 @@
 
   function onSelectSDK(index: number, close: () => void): void {
     const newUrl = documentationState.buildUrlWithSDK(page.url, index);
-    goto(newUrl, { replaceState: true, keepFocus: true });
+    // newUrl is the current /guides pathname plus an ?sdk= query, which
+    // resolve() passes through untouched.
+    goto(resolve(newUrl as GuidesPath), {
+      replaceState: true,
+      keepFocus: true,
+    });
     close();
   }
 </script>
@@ -89,7 +98,7 @@
   <ul
     class="dropdown dropdown-center ld-card-base z-20 overflow-visible rounded-xl p-1.5 shadow-lg"
   >
-    {#each SDK_LIST as sdk, index}
+    {#each SDK_LIST as sdk, index (sdk.name)}
       {@render sdkMenuItem(sdk, index, close)}
     {/each}
   </ul>
@@ -117,10 +126,10 @@
   </div>
 {/snippet}
 
-{#snippet navLink(href: string, title: string, isActive: boolean)}
+{#snippet navLink(href: GuidesPath, title: string, isActive: boolean)}
   <li>
     <a
-      {href}
+      href={resolve(href)}
       onclick={() => documentationState.closeMobileMenu()}
       class={[
         'block rounded-lg px-3 py-1.5 text-sm transition-colors hover:bg-base-100',
@@ -137,12 +146,14 @@
 
 {#snippet externalNavLink(title: string, url: string)}
   <li>
+    <!-- eslint-disable svelte/no-navigation-without-resolve -- external URL -->
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
       class="flex items-center justify-between rounded-lg px-3 py-1.5 text-sm text-base-content/70 transition-colors hover:bg-base-100"
     >
+      <!-- eslint-enable svelte/no-navigation-without-resolve -->
       <span>{title}</span>
       <OpenIcon class="h-3 w-3 opacity-50" />
     </a>
@@ -162,7 +173,7 @@
     <div>
       {@render navSection('Getting Started')}
       <ul class="flex flex-col gap-0.5">
-        {#each gettingStartedPages as gettingStartedPage}
+        {#each gettingStartedPages as gettingStartedPage (gettingStartedPage.slug)}
           {@const path = getPagePath(gettingStartedPage.slug)}
           {@render navLink(path, gettingStartedPage.title, isActivePath(path))}
         {/each}
@@ -172,7 +183,7 @@
     <div>
       {@render navSection(`${documentationState.selectedSDK.name} SDK`)}
       <ul class="flex flex-col gap-0.5">
-        {#each documentationState.sdkGuides as guide}
+        {#each documentationState.sdkGuides as guide (guide.id)}
           {@render externalNavLink(guide.title, guide.externalUrl)}
         {/each}
       </ul>
@@ -182,12 +193,9 @@
       <div>
         {@render navSection('Migrate')}
         <ul class="flex flex-col gap-0.5">
-          {#each documentationState.internalGuides as guide}
-            {@render navLink(
-              `/guides/${guide.slug}`,
-              guide.title,
-              isActivePath(`/guides/${guide.slug}`),
-            )}
+          {#each documentationState.internalGuides as guide (guide.id)}
+            {@const path = getPagePath(guide.slug)}
+            {@render navLink(path, guide.title, isActivePath(path))}
           {/each}
         </ul>
       </div>

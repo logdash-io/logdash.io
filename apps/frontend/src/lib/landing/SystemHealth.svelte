@@ -43,14 +43,14 @@
 >
   <h5 class="text-center text-lg">All Systems Operational</h5>
 
-  {#each SERVICES as service}
+  {#each SERVICES as service (service.name)}
     <div class="flex w-full flex-col gap-1">
       <span>{service.name}</span>
 
       <div
         class="flex h-6 w-full items-center justify-start gap-1 overflow-hidden lg:gap-1"
       >
-        {#each new Array(isMobile ? 30 : 50) as _, i}
+        {#each new Array(isMobile ? 30 : 50), i (i)}
           <div
             class={[
               'h-full w-1.5 shrink-0 rounded-xs lg:w-1.5',

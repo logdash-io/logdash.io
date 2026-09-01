@@ -29,7 +29,7 @@
   </h3>
 
   <div class="mx-auto flex max-w-4xl flex-wrap justify-center gap-8 md:gap-8">
-    {#each frameworks as framework}
+    {#each frameworks as framework (framework.name)}
       <Tooltip content={framework.name} placement="top">
         <framework.icon
           class="size-10 grayscale transition-all duration-150 hover:grayscale-0"

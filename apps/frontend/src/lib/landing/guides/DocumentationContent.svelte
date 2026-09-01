@@ -24,7 +24,7 @@
   }
 </script>
 
-{#each docSections as section}
+{#each docSections as section (section.id)}
   <section
     id={section.id}
     class="mb-16 scroll-mt-32"
@@ -42,7 +42,7 @@
     </div>
 
     {#if section.tables}
-      {#each Object.entries(section.tables) as [tableKey, tableData]}
+      {#each Object.entries(section.tables) as [tableKey, tableData] (tableKey)}
         {@render dataTable(tableKey, tableData as Table)}
       {/each}
     {/if}
@@ -58,15 +58,15 @@
       <table class="table-zebra table w-full">
         <thead>
           <tr>
-            {#each tableData.headers as header}
+            {#each tableData.headers as header, i (i)}
               <th class="text-base-content/70">{header}</th>
             {/each}
           </tr>
         </thead>
         <tbody>
-          {#each tableData.rows as row}
+          {#each tableData.rows as row, rowIndex (rowIndex)}
             <tr>
-              {#each row as cell}
+              {#each row as cell, cellIndex (cellIndex)}
                 <td>{cell}</td>
               {/each}
             </tr>

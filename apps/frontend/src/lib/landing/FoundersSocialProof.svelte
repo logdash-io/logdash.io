@@ -12,7 +12,7 @@
   class="mt-2 flex flex-col items-center gap-3 lg:flex-row lg:items-center lg:gap-4"
 >
   <div class="avatar-group -space-x-3 p-1">
-    {#each avatars as avatar}
+    {#each avatars as avatar (avatar.src)}
       <div
         class="avatar bg-base-200 border-primary border ring-[3px] ring-base-300 ring-offset-base-300"
       >

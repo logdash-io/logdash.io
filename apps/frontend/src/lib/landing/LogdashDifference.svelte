@@ -107,7 +107,7 @@
   </div>
 
   <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-    {#each cards as card}
+    {#each cards as card (card.variant)}
       {@const isPrimary = card.variant === 'primary'}
       <div
         class={[
@@ -136,7 +136,7 @@
         </div>
 
         <ul class="space-y-6">
-          {#each card.features as feature}
+          {#each card.features as feature (feature.title)}
             <li class="flex gap-4">
               <div class="mt-1 shrink-0">
                 <feature.icon
