@@ -120,8 +120,8 @@
               {scopeSummary(key)}
             </p>
             <p class="text-base-content/60 text-xs">
-              {accessSummary(key)} · Last used {formatDate(key.lastUsedAt)} ·
-              Created {formatDate(key.createdAt)}
+              {accessSummary(key)} · Last used {formatDate(key.lastUsedAt)} · Created
+              {formatDate(key.createdAt)}
             </p>
           {/snippet}
           {#snippet action()}

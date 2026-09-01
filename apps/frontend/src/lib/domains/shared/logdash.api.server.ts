@@ -134,10 +134,7 @@ class LogdashAPI {
       createdAt: string;
     }[]
   > {
-    return this.get(
-      `${LogdashAPI.v0baseUrl}/personal-api-keys`,
-      access_token,
-    );
+    return this.get(`${LogdashAPI.v0baseUrl}/personal-api-keys`, access_token);
   }
 
   create_personal_api_key(

@@ -110,7 +110,9 @@
   }
 
   function scopeAction(resource: Resource): Action {
-    return scopes.find((entry) => entry.resource === resource)?.action ?? 'none';
+    return (
+      scopes.find((entry) => entry.resource === resource)?.action ?? 'none'
+    );
   }
 
   function toggleCluster(id: string): void {
@@ -312,9 +314,7 @@
           <KeyIcon class="text-primary size-5" />
         </div>
         <h2 class="text-lg font-semibold">
-          {mode === 'cli'
-            ? 'Authorize CLI access'
-            : 'Create personal API key'}
+          {mode === 'cli' ? 'Authorize CLI access' : 'Create personal API key'}
         </h2>
       </div>
 
@@ -350,8 +350,8 @@
             </div>
           </dl>
           <p class="text-base-content/60 text-xs">
-            If you did not just run <span class="font-mono">ld login</span> on
-            that machine, deny this request.
+            If you did not just run <span class="font-mono">ld login</span>
+             on that machine, deny this request.
           </p>
         </div>
       {/if}
@@ -467,11 +467,7 @@
           {#if mode === 'manage'}
             <div class="flex flex-col gap-1.5">
               <span class="text-sm font-medium">Expiry (optional)</span>
-              <input
-                bind:value={expiresAt}
-                type="date"
-                class="input w-full"
-              />
+              <input bind:value={expiresAt} type="date" class="input w-full" />
             </div>
           {:else}
             <div class="flex flex-col gap-1.5">
