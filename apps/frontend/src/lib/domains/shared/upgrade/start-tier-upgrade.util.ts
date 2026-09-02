@@ -1,4 +1,7 @@
+import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 import { UserTier } from '../types.js';
+import { userState } from '../user/application/user.state.svelte.js';
 
 export type UpgradeSource =
   | 'nav-menu'
@@ -22,6 +25,12 @@ export const startTierUpgrade = async (
   source: UpgradeSource = 'unknown',
   tier: UserTier = UserTier.BUILDER,
 ): Promise<void> => {
+  if (userState.isAnonymous) {
+    await goto(resolve(`/app/auth?flow=claim&tier=${tier}`));
+
+    return;
+  }
+
   const params = new URLSearchParams({ source, tier: tier.toString() });
   const response = await fetch(`/app/api/user/upgrade?${params.toString()}`, {
     method: 'POST',

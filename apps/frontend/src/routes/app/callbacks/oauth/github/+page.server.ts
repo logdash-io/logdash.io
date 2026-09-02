@@ -1,3 +1,4 @@
+import { claimAnonymousAccount } from '$lib/domains/auth/application/claim-anonymous-account.server';
 import { bffLogger } from '$lib/domains/shared/bff-logger.server';
 import { logdashAPI } from '$lib/domains/shared/logdash.api.server';
 import {
@@ -70,6 +71,19 @@ export const load = async ({
   }
 
   try {
+    if (state.flow === 'claim') {
+      const outcome = await claimAnonymousAccount({
+        cookies,
+        provider: 'github',
+        code,
+        state,
+      });
+
+      if (outcome.kind === 'redirect') {
+        redirect(302, outcome.redirectTo);
+      }
+    }
+
     await runLoginFlow({
       cookies,
       code,
