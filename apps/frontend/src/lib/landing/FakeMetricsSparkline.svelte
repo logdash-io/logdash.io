@@ -1,4 +1,6 @@
 <script lang="ts">
+  const gradientId = $props.id();
+
   const VALUES = [
     18, 22, 19, 27, 24, 31, 29, 38, 34, 41, 46, 43, 52, 49, 58, 55, 64, 71, 67,
     78, 74, 86, 91, 88, 97,
@@ -51,7 +53,7 @@
     aria-label="Signups trending up over the last 24 hours"
   >
     <defs>
-      <linearGradient id="fake-metrics-fill" x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
         <stop
           offset="0%"
           stop-color="var(--color-primary)"
@@ -65,7 +67,7 @@
       </linearGradient>
     </defs>
 
-    <polygon points={areaPoints} fill="url(#fake-metrics-fill)" />
+    <polygon points={areaPoints} fill="url(#{gradientId})" />
 
     <polyline
       {points}

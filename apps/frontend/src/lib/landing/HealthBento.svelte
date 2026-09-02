@@ -155,7 +155,7 @@
     {@render tileCopy(Icon, title, body, route, linkLabel, posthogId)}
 
     <div
-      class="border-base-100/50 bg-base-300/50 flex flex-1 items-end border-t p-4 sm:p-5"
+      class="border-base-100/50 bg-base-300/50 flex flex-1 border-t p-4 sm:p-5"
     >
       {@render visual()}
     </div>
