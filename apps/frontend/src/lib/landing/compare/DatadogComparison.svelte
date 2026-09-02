@@ -313,7 +313,11 @@
         See how affordable observability can be.
       </span>
     </p>
-    <a href={resolve('/demo-dashboard')} class="btn btn-primary gap-2">
+    <a
+      href={resolve('/app/quick-setup')}
+      rel="nofollow"
+      class="btn btn-primary gap-2"
+    >
       Start free
       <ArrowRightIcon class="size-4" />
     </a>
