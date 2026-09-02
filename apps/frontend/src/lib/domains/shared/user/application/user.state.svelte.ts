@@ -5,7 +5,6 @@ import {
   startTierUpgrade,
   type UpgradeSource,
 } from '../../upgrade/start-tier-upgrade.util.js';
-import { posthog } from 'posthog-js';
 import { UsersService } from '../infrastructure/users.service.js';
 import { match } from 'ts-pattern';
 import { toast } from '../../ui/toaster/toast.state.svelte.js';
@@ -59,13 +58,18 @@ class UserState {
     );
   }
 
+  get isAnonymous(): boolean {
+    return this._user?.accountClaimStatus === 'anonymous';
+  }
+
   get canUpgrade(): boolean {
     return (
-      this.tier === UserTier.FREE ||
-      this.tier === UserTier.CONTRIBUTOR ||
-      this.tier === UserTier.EARLY_USER ||
-      this.tier === UserTier.EARLY_BIRD ||
-      this.tier === UserTier.BUILDER
+      (this.tier === UserTier.FREE ||
+        this.tier === UserTier.CONTRIBUTOR ||
+        this.tier === UserTier.EARLY_USER ||
+        this.tier === UserTier.EARLY_BIRD ||
+        this.tier === UserTier.BUILDER) &&
+      !this.isAnonymous
     );
   }
 
