@@ -1,4 +1,3 @@
-import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error';
 import { Feature } from '$lib/domains/shared/types';
 import { AnonymousStartError } from '../domain/anonymous-preview';
 import { anonymousSessionService } from '../infrastructure/anonymous-session.service';
@@ -31,12 +30,16 @@ export const createAnonymousSession =
 
       return { clusterId, projectId };
     } catch (error) {
-      throw AnonymousStartError.fromStatus(readHttpErrorStatus(error));
+      throw AnonymousStartError.from(error);
     }
   };
 
 export const ensureAnonymousSession = async (): Promise<AnonymousSession> => {
   const session = await sessionService.probeSession();
+
+  if (session.unavailable) {
+    throw AnonymousStartError.fromStatus();
+  }
 
   if (session.user && session.token) {
     const clusters = await anonymousSessionService.listClusters(session.token);

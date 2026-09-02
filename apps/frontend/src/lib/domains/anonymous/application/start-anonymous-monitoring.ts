@@ -1,4 +1,3 @@
-import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error';
 import { Feature } from '$lib/domains/shared/types';
 import { tryPrependProtocol } from '$lib/domains/shared/utils/url';
 import {
@@ -46,6 +45,6 @@ export const startAnonymousMonitoring = async (dto: {
       createdAt: Date.now(),
     };
   } catch (error) {
-    throw AnonymousStartError.fromStatus(readHttpErrorStatus(error));
+    throw AnonymousStartError.from(error);
   }
 };

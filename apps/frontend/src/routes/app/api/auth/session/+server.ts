@@ -28,7 +28,9 @@ export const GET: RequestHandler = async ({ cookies }) => {
 
       return json({ user: null });
     })
-    .with({ kind: 'unavailable' }, () => json({ user: null }))
+    .with({ kind: 'unavailable' }, () =>
+      json({ user: null, unavailable: true }),
+    )
     .exhaustive();
 };
 
@@ -74,6 +76,26 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
       { error: 'Only anonymous sessions can be installed this way' },
       { status: 403 },
     );
+  }
+
+  const installedToken = get_access_token(cookies);
+
+  if (installedToken && installedToken !== token) {
+    const installed = await readSessionUser(installedToken);
+
+    if (installed.kind === 'unavailable') {
+      return json({ error: 'Session check is unavailable' }, { status: 503 });
+    }
+
+    if (
+      installed.kind === 'ok' &&
+      installed.user.accountClaimStatus !== 'anonymous'
+    ) {
+      return json(
+        { error: 'A claimed session is already installed' },
+        { status: 409 },
+      );
+    }
   }
 
   save_access_token(cookies, token, { maxAge });

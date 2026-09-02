@@ -1,3 +1,4 @@
+import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error';
 import { match } from 'ts-pattern';
 
 const MAX_NAME_LENGTH = 64;
@@ -26,6 +27,33 @@ export class AnonymousStartError extends Error {
     super(message);
     this.name = 'AnonymousStartError';
     this.kind = kind;
+  }
+
+  public static from(error: unknown): AnonymousStartError {
+    if (error instanceof AnonymousStartError) {
+      return error;
+    }
+
+    return AnonymousStartError.fromStatus(readHttpErrorStatus(error));
+  }
+
+  public static fromClaim(error: unknown): AnonymousStartError {
+    if (error instanceof AnonymousStartError) {
+      return error;
+    }
+
+    const status = readHttpErrorStatus(error);
+
+    return match(status)
+      .with(
+        409,
+        () =>
+          new AnonymousStartError(
+            'limit-reached',
+            'This project already has its monitor. Open your dashboard to manage it.',
+          ),
+      )
+      .otherwise(() => AnonymousStartError.fromStatus(status));
   }
 
   public static fromStatus(status?: number): AnonymousStartError {

@@ -34,6 +34,11 @@ export type AnonymousPreviewDemo = {
   pings: HttpPing[];
 };
 
+type DemoTarget = {
+  projectId: string;
+  monitorId: string;
+};
+
 type StoredAnonymousPreview = {
   preview: AnonymousPreview;
   createdAt: number;
@@ -46,6 +51,7 @@ class AnonymousPreviewState {
   private _creatingStep = $state<AnonymousStartStep | null>(null);
   private _error = $state<AnonymousStartError | null>(null);
   private _demo = $state<AnonymousPreviewDemo>({ monitor: null, pings: [] });
+  private _demoTarget: DemoTarget | null = null;
   private _initialized = false;
   private _previewPollTimer: ReturnType<typeof setInterval> | null = null;
   private _demoPollTimer: ReturnType<typeof setInterval> | null = null;
@@ -80,6 +86,7 @@ class AnonymousPreviewState {
     }
 
     this._initialized = true;
+    this._watchVisibility();
     this._restorePreview();
 
     if (this._phase === 'previewing') {
@@ -92,6 +99,7 @@ class AnonymousPreviewState {
 
   public destroy(): void {
     this._initialized = false;
+    this._unwatchVisibility();
     this._stopPreviewPolling();
     this._stopDemoPolling();
   }
@@ -104,9 +112,13 @@ class AnonymousPreviewState {
       return;
     }
 
+    this._stopPreviewPolling();
     this._stopDemoPolling();
-    this._error = null;
+    this._clearStoredPreview();
+
+    this._preview = null;
     this._pings = [];
+    this._error = null;
     this._creatingStep = 'account';
     this._phase = 'creating';
 
@@ -123,7 +135,7 @@ class AnonymousPreviewState {
       logger.error('Failed to create the anonymous dashboard', error);
 
       this._creatingStep = null;
-      this._error = this._toStartError(error);
+      this._error = AnonymousStartError.from(error);
       this._phase = 'error';
 
       return;
@@ -146,8 +158,6 @@ class AnonymousPreviewState {
       return;
     }
 
-    posthog.capture('anonymous_dashboard_opened');
-
     let claimed: AnonymousPreview;
 
     try {
@@ -155,16 +165,16 @@ class AnonymousPreviewState {
     } catch (error) {
       logger.error('Failed to open the anonymous dashboard', error);
 
-      this._error = this._toStartError(error);
+      this._stopPreviewPolling();
+      this._error = AnonymousStartError.fromClaim(error);
       this._phase = 'error';
 
       return;
     }
 
-    this._stopPreviewPolling();
-    this._preview = claimed;
-    this._phase = 'ended';
-    this._clearStoredPreview();
+    posthog.capture('anonymous_dashboard_opened');
+
+    this._resetToIdle();
 
     await goto(
       resolve(
@@ -174,15 +184,7 @@ class AnonymousPreviewState {
   }
 
   public retry(): void {
-    this._stopPreviewPolling();
-    this._clearStoredPreview();
-
-    this._error = null;
-    this._preview = null;
-    this._pings = [];
-    this._creatingStep = null;
-    this._phase = 'idle';
-
+    this._resetToIdle();
     this._startDemoPolling();
   }
 
@@ -213,8 +215,29 @@ class AnonymousPreviewState {
     }
   }
 
+  private _isMonitorGone(error: unknown): boolean {
+    const status = readHttpErrorStatus(error);
+
+    return status === 403 || status === 404;
+  }
+
+  private _resetToIdle(): void {
+    this._stopPreviewPolling();
+    this._clearStoredPreview();
+
+    this._preview = null;
+    this._pings = [];
+    this._creatingStep = null;
+    this._error = null;
+    this._phase = 'idle';
+  }
+
   private _startPreviewPolling(): void {
     this._stopPreviewPolling();
+
+    if (this._isHidden()) {
+      return;
+    }
 
     void this._refreshPings();
 
@@ -235,20 +258,26 @@ class AnonymousPreviewState {
   private async _refreshPings(): Promise<void> {
     const preview = this._preview;
 
-    if (!preview) {
+    if (!preview || !this._isLivePreview(preview)) {
       return;
     }
 
     try {
-      this._pings = await anonymousSessionService.readPings(
+      const pings = await anonymousSessionService.readPings(
         preview.projectId,
         preview.monitorId,
         preview.token,
       );
+
+      if (!this._isLivePreview(preview)) {
+        return;
+      }
+
+      this._pings = pings;
     } catch (error) {
       logger.debug('Failed to read the preview pings', error);
 
-      if (readHttpErrorStatus(error) !== 404) {
+      if (!this._isLivePreview(preview) || readHttpErrorStatus(error) !== 404) {
         return;
       }
 
@@ -257,13 +286,24 @@ class AnonymousPreviewState {
     }
   }
 
+  private _isLivePreview(preview: AnonymousPreview): boolean {
+    return (
+      this._phase === 'previewing' &&
+      this._preview?.monitorId === preview.monitorId
+    );
+  }
+
   private _startDemoPolling(): void {
     this._stopDemoPolling();
+
+    if (this._isHidden()) {
+      return;
+    }
 
     void this._refreshDemo();
 
     this._demoPollTimer = setInterval(() => {
-      void this._refreshDemo();
+      void this._refreshDemoPings();
     }, DEMO_POLL_INTERVAL_MS);
   }
 
@@ -277,6 +317,15 @@ class AnonymousPreviewState {
   }
 
   private async _refreshDemo(): Promise<void> {
+    if (this._demoTarget) {
+      await this._refreshDemoPings();
+      return;
+    }
+
+    await this._loadDemoTarget();
+  }
+
+  private async _loadDemoTarget(): Promise<void> {
     try {
       const target = await anonymousSessionService.readDemo();
       const monitors = await anonymousSessionService.readDemoMonitors(
@@ -292,15 +341,67 @@ class AnonymousPreviewState {
         return;
       }
 
-      const pings = await anonymousSessionService.readDemoPings(
-        target.projectId,
-        monitor.id,
-      );
+      this._demoTarget = { projectId: target.projectId, monitorId: monitor.id };
+      this._demo = { monitor, pings: [] };
 
-      this._demo = { monitor, pings };
+      await this._refreshDemoPings();
     } catch (error) {
-      logger.debug('Failed to refresh the demo showcase', error);
+      logger.debug('Failed to load the demo showcase', error);
     }
+  }
+
+  private async _refreshDemoPings(): Promise<void> {
+    const target = this._demoTarget;
+
+    if (!target) {
+      return;
+    }
+
+    try {
+      this._demo.pings = await anonymousSessionService.readDemoPings(
+        target.projectId,
+        target.monitorId,
+      );
+    } catch (error) {
+      logger.debug('Failed to refresh the demo pings', error);
+    }
+  }
+
+  private _watchVisibility(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
+  }
+
+  private _unwatchVisibility(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    document.removeEventListener('visibilitychange', this._onVisibilityChange);
+  }
+
+  private _onVisibilityChange = (): void => {
+    if (this._isHidden()) {
+      this._stopPreviewPolling();
+      this._stopDemoPolling();
+      return;
+    }
+
+    if (this._phase === 'previewing') {
+      this._startPreviewPolling();
+      return;
+    }
+
+    if (this._phase === 'idle') {
+      this._startDemoPolling();
+    }
+  };
+
+  private _isHidden(): boolean {
+    return typeof document !== 'undefined' && document.hidden;
   }
 
   private _restorePreview(): void {
@@ -358,20 +459,6 @@ class AnonymousPreviewState {
     }
 
     sessionStorage.removeItem(PREVIEW_STORAGE_KEY);
-  }
-
-  private _isMonitorGone(error: unknown): boolean {
-    const status = readHttpErrorStatus(error);
-
-    return status === 403 || status === 404;
-  }
-
-  private _toStartError(error: unknown): AnonymousStartError {
-    if (error instanceof AnonymousStartError) {
-      return error;
-    }
-
-    return AnonymousStartError.fromStatus(readHttpErrorStatus(error));
   }
 }
 

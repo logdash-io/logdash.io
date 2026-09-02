@@ -5,6 +5,7 @@ const SESSION_ENDPOINT = '/app/api/auth/session';
 export type SessionProbe = {
   user: User | null;
   token?: string;
+  unavailable?: boolean;
 };
 
 export class SessionService {
@@ -14,7 +15,7 @@ export class SessionService {
     });
 
     if (!response.ok) {
-      return { user: null };
+      return { user: null, unavailable: true };
     }
 
     return (await response.json()) as SessionProbe;
