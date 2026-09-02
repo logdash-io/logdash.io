@@ -14,11 +14,14 @@
     <div class="flex w-full flex-col gap-1">
       <span class="text-base-content/70 text-sm">{service.name}</span>
 
-      <div class="flex h-4 w-full items-center gap-1 overflow-hidden">
+      <div
+        class="flex h-6 w-full items-center gap-[3px] overflow-hidden"
+        aria-hidden="true"
+      >
         {#each new Array(BARS_COUNT), i (i)}
           <div
             class={[
-              'h-full min-w-0 flex-1 rounded-xs',
+              'h-full min-w-0 flex-1 rounded-full',
               {
                 'bg-success': service.unhealthyIndex !== i,
                 'bg-warning': service.unhealthyIndex === i,
