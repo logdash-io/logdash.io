@@ -581,6 +581,32 @@ describe('HttpMonitorCoreController (writes)', () => {
       expect(entity?.claimed).toBe(true);
     });
 
+    it('claims a monitor while the project sits at the unclaimed monitor budget', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const unclaimedMonitors = await Promise.all(
+        Array.from({ length: 3 }, (_, index) =>
+          bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+            projectId: project.id,
+            name: `Unclaimed monitor ${index}`,
+            url: 'https://example.com',
+          }),
+        ),
+      );
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/http_monitors/${unclaimedMonitors[0].id}/claim`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(201);
+
+      const entity = await bootstrap.models.httpMonitorModel.findById(unclaimedMonitors[0].id);
+      expect(entity?.claimed).toBe(true);
+    });
+
     it('throws error when project has reached monitor limit', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();

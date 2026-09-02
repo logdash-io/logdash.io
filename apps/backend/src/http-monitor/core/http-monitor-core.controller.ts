@@ -218,7 +218,7 @@ export class HttpMonitorCoreController {
   @Post('/http_monitors/:httpMonitorId/claim')
   async claim(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
     const projectId = (await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId)).projectId;
-    const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
+    const hasCapacity = await this.httpMonitorLimitService.hasClaimedCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(
         'You have reached the maximum number of monitors for this project',

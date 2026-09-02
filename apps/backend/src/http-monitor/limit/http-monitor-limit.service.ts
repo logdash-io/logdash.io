@@ -20,6 +20,10 @@ export class HttpMonitorLimitService {
       return false;
     }
 
+    return this.hasClaimedCapacity(projectId);
+  }
+
+  public async hasClaimedCapacity(projectId: string): Promise<boolean> {
     const claimedMonitorsCount =
       await this.httpMonitorReadService.countClaimedByProjectId(projectId);
     const project = await this.projectReadCachedService.readProject(projectId);
