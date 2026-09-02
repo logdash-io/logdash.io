@@ -1,64 +1,27 @@
 <script lang="ts">
-  const SERVICES = [
-    {
-      name: 'API',
-      status: 'up',
-      uptime: '100%',
-      responseTime: '100ms',
-      randomUnhealthyIndex: 13,
-    },
-    {
-      name: 'Database',
-      status: 'up',
-      uptime: '100%',
-      responseTime: '100ms',
-      randomUnhealthyIndex: -1,
-    },
-    {
-      name: 'Cache',
-      status: 'up',
-      uptime: '100%',
-      responseTime: '100ms',
-      randomUnhealthyIndex: 2,
-    },
-    {
-      name: 'Queue',
-      status: 'up',
-      uptime: '100%',
-      responseTime: '100ms',
-      randomUnhealthyIndex: 5,
-    },
-  ];
+  const BARS_COUNT = 45;
 
-  const isMobile = $derived.by(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth < 768;
-    }
-    return false;
-  });
+  const SERVICES = [
+    { name: 'API', unhealthyIndex: 13 },
+    { name: 'Database', unhealthyIndex: -1 },
+    { name: 'Cache', unhealthyIndex: 2 },
+    { name: 'Queue', unhealthyIndex: 5 },
+  ];
 </script>
 
-<div
-  class="ld-card-base flex max-w-md flex-col gap-4 overflow-hidden rounded-3xl p-6 lg:p-8 lg:pt-6"
->
-  <h5 class="text-center text-lg">All Systems Operational</h5>
-
+<div class="flex w-full flex-col gap-3">
   {#each SERVICES as service (service.name)}
     <div class="flex w-full flex-col gap-1">
-      <span>{service.name}</span>
+      <span class="text-base-content/70 text-sm">{service.name}</span>
 
-      <div
-        class="flex h-6 w-full items-center justify-start gap-1 overflow-hidden lg:gap-1"
-      >
-        {#each new Array(isMobile ? 30 : 50), i (i)}
+      <div class="flex h-4 w-full items-center gap-1 overflow-hidden">
+        {#each new Array(BARS_COUNT), i (i)}
           <div
             class={[
-              'h-full w-1.5 shrink-0 rounded-xs lg:w-1.5',
+              'h-full min-w-0 flex-1 rounded-xs',
               {
-                'bg-success':
-                  service.randomUnhealthyIndex === -1 ||
-                  service.randomUnhealthyIndex !== i,
-                'bg-warning': service.randomUnhealthyIndex === i,
+                'bg-success': service.unhealthyIndex !== i,
+                'bg-warning': service.unhealthyIndex === i,
               },
             ]}
           ></div>

@@ -9,14 +9,12 @@
 </script>
 
 <div
-  class="mt-2 flex flex-col items-center gap-3 lg:flex-row lg:items-center lg:gap-4"
+  class="border-base-content/10 bg-base-200/60 inline-flex items-center gap-2.5 rounded-full border py-1.5 pl-1.5 pr-3.5 backdrop-blur-sm"
 >
-  <div class="avatar-group -space-x-3 p-1">
+  <div class="avatar-group -space-x-2">
     {#each avatars as avatar (avatar.src)}
-      <div
-        class="avatar bg-base-200 border-primary border ring-[3px] ring-base-300 ring-offset-base-300"
-      >
-        <div class="w-9">
+      <div class="avatar bg-base-200 border-primary/70 border">
+        <div class="w-5 sm:w-6">
           <img
             class="grayscale-100"
             src={avatar.src}
@@ -28,10 +26,8 @@
     {/each}
   </div>
 
-  <div class="flex flex-col items-center lg:items-start">
-    <span class="text-base-content text-sm font-medium">
-      Join founders processing
-    </span>
-    <span class="text-primary text-sm font-semibold">2M+ logs monthly</span>
-  </div>
+  <span class="text-base-content/70 text-xs font-medium sm:text-sm">
+    Founders processing
+    <span class="text-base-content font-semibold">2M+ logs monthly</span>
+  </span>
 </div>
