@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
   import Footer from '$lib/landing/Footer.svelte';
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
@@ -79,7 +80,8 @@
 
     <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
       <a
-        href={RoutePath.AUTH}
+        href={resolve(RoutePath.QUICK_SETUP)}
+        rel="nofollow"
         class="btn btn-primary w-full sm:w-auto"
         data-posthog-id="feature-logging-cta"
       >
@@ -87,7 +89,7 @@
         <ArrowRightIcon class="ml-1 size-4" />
       </a>
       <a
-        href="/demo-dashboard"
+        href={resolve('/demo-dashboard')}
         class="btn btn-secondary w-full sm:w-auto"
         data-posthog-id="feature-logging-demo-cta"
       >
@@ -153,7 +155,7 @@
 
     <!-- Feature Highlights -->
     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-      {#each benefits as benefit}
+      {#each benefits as benefit (benefit.text)}
         <div class="ld-card-base rounded-3xl p-6 text-left">
           <div
             class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
@@ -174,7 +176,7 @@
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
       <a
         class="ld-card-base rounded-3xl p-8 transition-all hover:-translate-y-1 hover:shadow-lg"
-        href="/features/metrics"
+        href={resolve('/features/metrics')}
         data-posthog-id="feature-logging-other-metrics"
       >
         <div
@@ -187,7 +189,7 @@
       </a>
       <a
         class="ld-card-base rounded-3xl p-8 transition-all hover:-translate-y-1 hover:shadow-lg"
-        href="/features/monitoring"
+        href={resolve('/features/monitoring')}
         data-posthog-id="feature-logging-other-monitoring"
       >
         <div

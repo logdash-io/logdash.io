@@ -23,7 +23,11 @@
     <div
       class="mt-4 flex flex-col items-center justify-center gap-4 sm:flex-row"
     >
-      <a href={resolve('/app/auth')} class="btn btn-primary w-full sm:w-auto">
+      <a
+        href={resolve('/app/quick-setup')}
+        rel="nofollow"
+        class="btn btn-primary w-full sm:w-auto"
+      >
         Start free
         <ArrowRightIcon class="size-4" />
       </a>
