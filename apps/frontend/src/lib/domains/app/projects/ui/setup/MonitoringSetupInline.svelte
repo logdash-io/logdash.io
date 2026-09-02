@@ -224,7 +224,7 @@
             placeholder="https://example.com/health"
           />
           <p class="text-xs opacity-60">
-            We'll ping this URL every 15 seconds to check if it's healthy.
+            Checked every 5 minutes on the free plan, every 15 seconds on Pro.
           </p>
         </div>
       {:else}
