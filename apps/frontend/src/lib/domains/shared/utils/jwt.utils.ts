@@ -19,3 +19,15 @@ export const decodeJwtPayload = (token: string): JwtPayload | null => {
     return null;
   }
 };
+
+export const tokenMaxAge = (token: string): number | null => {
+  const payload = decodeJwtPayload(token);
+
+  if (!payload?.exp) {
+    return null;
+  }
+
+  const maxAge = payload.exp - Math.floor(Date.now() / 1000);
+
+  return maxAge > 0 ? maxAge : null;
+};

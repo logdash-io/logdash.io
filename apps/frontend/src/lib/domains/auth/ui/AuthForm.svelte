@@ -28,8 +28,24 @@
   );
   const tier = $derived(params.get('tier') as UserTier | null);
   const isExpired = $derived(params.get('expired') === '1');
-  const hasProjectLimitError = $derived(
-    params.get('error') === 'project-limit',
+  const claimErrorMessage = $derived(
+    match(params.get('error'))
+      .with(
+        'project-limit',
+        () =>
+          'That account has reached its project limit. Free a slot there, then claim again. Your temporary dashboard is still here.',
+      )
+      .with(
+        'unavailable',
+        () =>
+          'We could not reach the server. Your dashboard is untouched. Try again.',
+      )
+      .with(
+        'claim-failed',
+        () =>
+          'Claiming did not go through. Your dashboard is untouched. Try again.',
+      )
+      .otherwise(() => null),
   );
   const requiresConsent = $derived(mode !== 'login');
   const nextUrl = $derived(
@@ -142,13 +158,12 @@
         </div>
       {/if}
 
-      {#if hasProjectLimitError}
+      {#if claimErrorMessage}
         <div
           class="alert alert-error bg-error/10 border-error/30 mb-6 rounded-xl text-left text-sm"
           role="alert"
         >
-          That account has reached its project limit. Free a slot there, then
-          claim again. Your temporary dashboard is still here.
+          {claimErrorMessage}
         </div>
       {/if}
 

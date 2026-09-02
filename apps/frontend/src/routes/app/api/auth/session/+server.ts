@@ -5,7 +5,7 @@ import {
   get_access_token,
   save_access_token,
 } from '$lib/domains/shared/utils/cookies.utils';
-import { decodeJwtPayload } from '$lib/domains/shared/utils/jwt.utils';
+import { tokenMaxAge } from '$lib/domains/shared/utils/jwt.utils';
 import { json, type Cookies } from '@sveltejs/kit';
 import { match } from 'ts-pattern';
 import type { RequestHandler } from './$types';
@@ -129,18 +129,6 @@ const readJsonBody = async (
   } catch {
     return null;
   }
-};
-
-const tokenMaxAge = (token: string): number | null => {
-  const payload = decodeJwtPayload(token);
-
-  if (!payload?.exp) {
-    return null;
-  }
-
-  const maxAge = payload.exp - Math.floor(Date.now() / 1000);
-
-  return maxAge > 0 ? maxAge : null;
 };
 
 const clearAccessToken = (cookies: Cookies): void => {

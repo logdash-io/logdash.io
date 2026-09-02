@@ -6,16 +6,18 @@ import {
 import { readSessionUser } from '$lib/domains/auth/infrastructure/read-session-user.server';
 import { bffLogger } from '$lib/domains/shared/bff-logger.server';
 import {
+  clear_onboarding_tier,
   get_access_token,
   save_access_token,
 } from '$lib/domains/shared/utils/cookies.utils';
-import { decodeJwtPayload } from '$lib/domains/shared/utils/jwt.utils';
+import { tokenMaxAge } from '$lib/domains/shared/utils/jwt.utils';
 import type { OAuthStatePayload } from '$lib/domains/shared/utils/oauth-state.server';
 import { safe_redirect_path } from '$lib/domains/shared/utils/safe-redirect.util';
 import type { Cookies } from '@sveltejs/kit';
 
 const CLAIMED_URL = '/app/clusters?claimed=1';
-const PROJECT_LIMIT_URL = '/app/auth?flow=claim&error=project-limit';
+
+type ClaimErrorCode = 'project-limit' | 'unavailable' | 'claim-failed';
 
 export type OAuthClaimOutcome =
   | { kind: 'redirect'; redirectTo: string }
@@ -30,7 +32,9 @@ export const claimAnonymousAccount = async (dto: {
   const { cookies, provider, code, state } = dto;
 
   if (!code) {
-    throw new Error('code is required');
+    bffLogger.error(`claim callback without a provider code`);
+
+    return failedClaim(cookies, 'claim-failed');
   }
 
   const accessToken = get_access_token(cookies);
@@ -43,9 +47,17 @@ export const claimAnonymousAccount = async (dto: {
 
   const session = await readSessionUser(accessToken);
 
+  if (session.kind === 'unavailable') {
+    bffLogger.error(
+      `claim callback could not verify the session, leaving it untouched`,
+    );
+
+    return failedClaim(cookies, 'unavailable');
+  }
+
   if (session.kind !== 'ok') {
     bffLogger.info(
-      `claim callback with an unusable session (${session.kind}), falling back to login`,
+      `claim callback with an ${session.kind} session, falling back to login`,
     );
 
     return { kind: 'login' };
@@ -61,6 +73,18 @@ export const claimAnonymousAccount = async (dto: {
 
   bffLogger.info(`claiming ${provider} account...`);
 
+  return runClaim({ cookies, provider, code, accessToken, state });
+};
+
+const runClaim = async (dto: {
+  cookies: Cookies;
+  provider: OAuthProvider;
+  code: string;
+  accessToken: string;
+  state: OAuthStatePayload;
+}): Promise<OAuthClaimOutcome> => {
+  const { cookies, provider, code, accessToken, state } = dto;
+
   try {
     const { token } = await claimAccount(provider, {
       code,
@@ -69,7 +93,15 @@ export const claimAnonymousAccount = async (dto: {
       emailAccepted: state.email_accepted,
     });
 
-    saveClaimedToken(cookies, token);
+    const maxAge = tokenMaxAge(token);
+
+    if (!maxAge) {
+      bffLogger.error(`${provider} claim returned an unusable token`);
+
+      return failedClaim(cookies, 'claim-failed');
+    }
+
+    save_access_token(cookies, token, { maxAge });
 
     bffLogger.info(`${provider} claim success`);
 
@@ -83,25 +115,20 @@ export const claimAnonymousAccount = async (dto: {
         `${provider} claim rejected, target account is at its project limit`,
       );
 
-      return { kind: 'redirect', redirectTo: PROJECT_LIMIT_URL };
+      return failedClaim(cookies, 'project-limit');
     }
 
-    throw error;
+    bffLogger.error(`${provider} claim failed ${error}`);
+
+    return failedClaim(cookies, 'claim-failed');
   }
 };
 
-const saveClaimedToken = (cookies: Cookies, token: string): void => {
-  const payload = decodeJwtPayload(token);
+const failedClaim = (
+  cookies: Cookies,
+  code: ClaimErrorCode,
+): OAuthClaimOutcome => {
+  clear_onboarding_tier(cookies);
 
-  if (!payload?.exp) {
-    throw new Error('claimed token is malformed');
-  }
-
-  const maxAge = payload.exp - Math.floor(Date.now() / 1000);
-
-  if (maxAge <= 0) {
-    throw new Error('claimed token is already expired');
-  }
-
-  save_access_token(cookies, token, { maxAge });
+  return { kind: 'redirect', redirectTo: `/app/auth?flow=claim&error=${code}` };
 };
