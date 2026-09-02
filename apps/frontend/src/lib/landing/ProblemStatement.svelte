@@ -7,7 +7,7 @@
     <LogdashBlindFlamingo class="mx-auto mb-8 h-64 w-auto" />
 
     <h2
-      class="text-secondary mb-4 text-center text-3xl font-extrabold md:text-4xl"
+      class="text-secondary mb-4 text-center text-4xl font-extrabold sm:text-5xl"
     >
       Stuff breaks. That’s expected.
       <br />

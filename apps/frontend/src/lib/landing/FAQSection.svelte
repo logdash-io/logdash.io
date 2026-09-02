@@ -4,7 +4,17 @@
     answer: string;
   };
 
-  const faqs: FaqItem[] = [
+  const FAQS: FaqItem[] = [
+    {
+      question: 'Do I need an account?',
+      answer:
+        'No. Paste a URL and you get a dashboard instantly. Claim it with GitHub or Google within 24 hours to keep it.',
+    },
+    {
+      question: 'What happens to my temporary dashboard?',
+      answer:
+        'It expires 24 hours after you create it unless you claim it. Claim it and everything stays: your monitors, logs and metrics.',
+    },
     {
       question: 'What is Logdash?',
       answer:
@@ -16,19 +26,19 @@
         "Not tough at all! We've got straightforward guides and tools for most setups. You'll likely be up and running faster than you can make a coffee.",
     },
     {
+      question: 'Can I try it before paying?',
+      answer:
+        'Yes. Start with a live dashboard without an account or a card, and take your time with logs, metrics and monitoring. You only pay once Logdash is worth paying for.',
+    },
+    {
       question: 'What is your refund policy?',
       answer:
         'We offer a no-questions-asked full refund within 30 days of your subscription.',
     },
     {
-      question: 'Free plan or trial?',
-      answer:
-        "Yep! We've got a free plan that's great for smaller projects, and you can take the premium features for a spin with our trial. No strings attached.",
-    },
-    {
       question: 'What kind of support?',
       answer:
-        "We've got your back. There's plenty of info in our docs, a community forum to chat with other users, and if you're on a paid plan, we can come onboard to help you out.",
+        "We've got your back. There's plenty of info in our docs, a community forum to chat with other users, and if you're a paying customer, we can come onboard to help you out.",
     },
     {
       question: 'Can Logdash scale?',
@@ -53,18 +63,21 @@
   ];
 </script>
 
-<section id="faq" class="">
-  <div class="mx-auto max-w-4xl px-8 sm:px-6 lg:px-8">
+<section id="faq" class="w-full px-4">
+  <div class="mx-auto max-w-3xl">
     <div class="text-center">
       <h2
-        class="text-base-content text-3xl font-extrabold tracking-tight sm:text-4xl"
+        class="text-base-content text-4xl font-extrabold tracking-tighter sm:text-5xl"
       >
-        Frequently Asked Questions
+        Frequently asked questions
       </h2>
-      <p class="text-base-content/70 mt-2 text-lg leading-relaxed">
-        Have a different question? <a
+
+      <p class="text-base-content/70 mt-3 text-lg leading-relaxed">
+        Have a different question?
+        <a
           href="https://discord.gg/naftPW4Hxe"
           target="_blank"
+          rel="noreferrer"
           class="link link-hover text-primary font-medium"
         >
           Reach out on Discord
@@ -72,19 +85,18 @@
       </p>
     </div>
 
-    <div class="mt-12">
-      <dl class="gap-x-8 md:columns-2">
-        {#each faqs as faq (faq.question)}
-          <div class="mb-10 break-inside-avoid lg:mb-12">
-            <dt class="text-base-content text-lg font-semibold leading-7">
-              {faq.question}
-            </dt>
-            <dd class="text-base-content/70 mt-2 text-base">
-              {faq.answer}
-            </dd>
+    <div class="mt-12 flex flex-col gap-3">
+      {#each FAQS as faq (faq.question)}
+        <details class="ld-card-base collapse-arrow collapse rounded-2xl">
+          <summary class="collapse-title text-base font-semibold">
+            {faq.question}
+          </summary>
+
+          <div class="collapse-content text-base-content/70 text-base">
+            {faq.answer}
           </div>
-        {/each}
-      </dl>
+        </details>
+      {/each}
     </div>
   </div>
 </section>

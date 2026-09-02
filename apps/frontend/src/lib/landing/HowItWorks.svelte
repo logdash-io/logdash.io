@@ -1,84 +1,83 @@
-<script>
+<script lang="ts">
   import { resolve } from '$app/paths';
   import {
     animatedViewState,
     AnimationDirection,
   } from '$lib/domains/shared/ui/animated-view.state.svelte.js';
   import { ArrowRightIcon } from 'lucide-svelte';
-  import { githubDark } from 'svelte-highlight/styles';
 
-  const steps = [
+  type Step = {
+    number: number;
+    title: string;
+    description: string;
+  };
+
+  const STEPS: Step[] = [
     {
       number: 1,
-      title: 'You: Configure project',
-      description:
-        'Create a project and enable features. It usually takes 1-2 minutes.',
+      title: 'Paste your URL.',
+      description: 'Monitoring starts in seconds.',
     },
     {
       number: 2,
-      title: 'LLM: Integrates Logdash into your codebase',
-      description: `Paste our integration prompt into your AI assistant. It'll write the integration code for you instantly.`,
+      title: 'Paste our prompt into your LLM.',
+      description: 'Logs and metrics wired in minutes.',
     },
     {
       number: 3,
-      title: 'We: Watch your back',
-      description:
-        'We monitor your app 24/7 so you can focus on building and getting ahead. Sleep soundly.',
+      title: 'Get alerted.',
+      description: 'Telegram, Discord, webhook.',
     },
   ];
-</script>
 
-<svelte:head>
-  <!-- eslint-disable-next-line svelte/no-at-html-tags -- static stylesheet shipped by svelte-highlight -->
-  {@html githubDark}
-</svelte:head>
+  function onSeeDemo(): void {
+    animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
+  }
+</script>
 
 <section id="how-it-works" class="w-full rounded-3xl px-4">
   <div class="mx-auto max-w-5xl">
     <div class="mb-12 text-center">
-      <h2 class="text-secondary mb-4 text-4xl font-extrabold tracking-tight">
-        How it works
+      <h2
+        class="text-secondary mb-4 text-4xl font-extrabold tracking-tighter sm:text-5xl"
+      >
+        Live in two minutes
       </h2>
       <p class="text-base-content/70 text-lg">
-        From setup to insights in 3 simple steps. We handle the infrastructure.
+        Three steps, no infrastructure to run. We handle the rest.
       </p>
     </div>
 
     <div
-      class="bg-base-200/80 border-base-100 flex flex-col gap-12 rounded-3xl border-t p-8"
+      class="bg-base-200/80 border-base-100 grid grid-cols-1 gap-8 rounded-3xl border-t p-8 md:grid-cols-3 md:grid-rows-[auto_auto_auto] md:gap-x-8 md:gap-y-0 md:p-10"
     >
-      {#each steps as step (step.number)}
-        <div class="flex flex-col gap-6 md:flex-row">
-          <div class="shrink-0">
-            <div
-              class={[
-                'flex size-14 items-center justify-center rounded-2xl text-2xl font-bold bg-base-100/60 border-base-100 border-t',
-              ]}
-            >
-              {step.number}
-            </div>
+      {#each STEPS as step (step.number)}
+        <div
+          class="flex flex-col gap-4 md:row-span-3 md:grid md:grid-rows-subgrid md:gap-y-4"
+        >
+          <div
+            class="bg-base-100/60 border-base-100 flex size-14 shrink-0 items-center justify-center rounded-2xl border-t text-2xl font-bold"
+          >
+            {step.number}
           </div>
 
-          <div class="flex flex-col">
-            <h3 class="text-base-content text-xl font-semibold">
-              {step.title}
-            </h3>
+          <h3 class="text-base-content text-xl font-semibold">
+            {step.title}
+          </h3>
 
-            <p class="text-base-content/70 text-base leading-relaxed">
-              {step.description}
-            </p>
-          </div>
+          <p class="text-base-content/70 text-base leading-relaxed">
+            {step.description}
+          </p>
         </div>
       {/each}
     </div>
 
-    <div class="mt-12 mx-auto w-fit">
+    <div class="mx-auto mt-12 w-fit">
       <a
-        onclick={() => {
-          animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
-        }}
+        onclick={onSeeDemo}
         href={resolve('/demo-dashboard')}
         class="btn btn-secondary gap-1"
+        data-posthog-id="how-it-works-demo-cta"
       >
         See the live demo
         <ArrowRightIcon class="size-4" />
