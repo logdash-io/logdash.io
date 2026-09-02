@@ -16,20 +16,20 @@ export const GET: RequestHandler = async ({ cookies }) => {
   const token = get_access_token(cookies);
 
   if (!token) {
-    return json({ user: null });
+    return sessionJson({ user: null });
   }
 
   const result = await readSessionUser(token);
 
   return match(result)
-    .with({ kind: 'ok' }, ({ user }) => json({ user, token }))
+    .with({ kind: 'ok' }, ({ user }) => sessionJson({ user, token }))
     .with({ kind: 'unauthorized' }, { kind: 'not-found' }, () => {
       clearAccessToken(cookies);
 
-      return json({ user: null });
+      return sessionJson({ user: null });
     })
     .with({ kind: 'unavailable' }, () =>
-      json({ user: null, unavailable: true }),
+      sessionJson({ user: null, unavailable: true }),
     )
     .exhaustive();
 };
@@ -38,41 +38,47 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
   const fetchSite = request.headers.get('sec-fetch-site') ?? '';
 
   if (!SAME_SITE_FETCH_SITES.includes(fetchSite)) {
-    return json(
+    return sessionJson(
       { error: 'Cross site requests are not allowed' },
       { status: 403 },
     );
   }
 
   if (!request.headers.get('content-type')?.includes('application/json')) {
-    return json({ error: 'Json body is required' }, { status: 415 });
+    return sessionJson({ error: 'Json body is required' }, { status: 415 });
   }
 
   const body = await readJsonBody(request);
   const token = body?.token;
 
   if (typeof token !== 'string' || token.length === 0) {
-    return json({ error: 'Token is required' }, { status: 400 });
+    return sessionJson({ error: 'Token is required' }, { status: 400 });
   }
 
   const maxAge = tokenMaxAge(token);
 
   if (!maxAge) {
-    return json({ error: 'Token is expired or malformed' }, { status: 400 });
+    return sessionJson(
+      { error: 'Token is expired or malformed' },
+      { status: 400 },
+    );
   }
 
   const result = await readSessionUser(token);
 
   if (result.kind === 'unavailable') {
-    return json({ error: 'Session check is unavailable' }, { status: 503 });
+    return sessionJson(
+      { error: 'Session check is unavailable' },
+      { status: 503 },
+    );
   }
 
   if (result.kind !== 'ok') {
-    return json({ error: 'Token is not valid' }, { status: 401 });
+    return sessionJson({ error: 'Token is not valid' }, { status: 401 });
   }
 
   if (result.user.accountClaimStatus !== 'anonymous') {
-    return json(
+    return sessionJson(
       { error: 'Only anonymous sessions can be installed this way' },
       { status: 403 },
     );
@@ -84,14 +90,17 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
     const installed = await readSessionUser(installedToken);
 
     if (installed.kind === 'unavailable') {
-      return json({ error: 'Session check is unavailable' }, { status: 503 });
+      return sessionJson(
+        { error: 'Session check is unavailable' },
+        { status: 503 },
+      );
     }
 
     if (
       installed.kind === 'ok' &&
       installed.user.accountClaimStatus !== 'anonymous'
     ) {
-      return json(
+      return sessionJson(
         { error: 'A claimed session is already installed' },
         { status: 409 },
       );
@@ -100,8 +109,17 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 
   save_access_token(cookies, token, { maxAge });
 
-  return json({ user: result.user });
+  return sessionJson({ user: result.user });
 };
+
+const sessionJson = (body: unknown, init?: ResponseInit): Response =>
+  json(body, {
+    ...init,
+    headers: {
+      'Cache-Control': 'no-store',
+      Vary: 'Cookie',
+    },
+  });
 
 const readJsonBody = async (
   request: Request,
