@@ -15,5 +15,10 @@ export class GoogleClaimProjectBody {
   @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
+  termsAccepted?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
   emailAccepted?: boolean;
 }

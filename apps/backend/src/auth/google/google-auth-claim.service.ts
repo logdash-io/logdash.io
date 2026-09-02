@@ -72,6 +72,7 @@ export class GoogleAuthClaimService {
         email,
         emailAccepted: dto.emailAccepted,
         existingTempUserById,
+        termsAccepted: dto.termsAccepted,
         tokenPayload,
         userId,
       });
@@ -123,6 +124,7 @@ export class GoogleAuthClaimService {
     userId: string;
     existingTempUserById: UserNormalized;
     emailAccepted?: boolean;
+    termsAccepted?: boolean;
     tokenPayload: JwtPayloadDto;
     avatar: string;
   }): Promise<TokenResponse> {
@@ -130,6 +132,11 @@ export class GoogleAuthClaimService {
 
     if (dto.existingTempUserById.accountClaimStatus === AccountClaimStatus.Claimed) {
       throw new BadRequestException('User already claimed');
+    }
+
+    if (!dto.termsAccepted) {
+      this.logger.warn('Cannot create new account without accepting terms');
+      throw new BadRequestException('Cannot create new account without accepting terms');
     }
 
     await this.emitter.emitUserRegisteredEvent({
