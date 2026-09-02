@@ -1,8 +1,13 @@
+<script module lang="ts">
+  export const HERO_URL_INPUT_ID = 'hero-url-input';
+</script>
+
 <script lang="ts">
   import {
     anonymousPreviewState,
     type AnonymousPreviewSource,
   } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
+  import { scrollIntoViewCentered } from '$lib/domains/shared/utils/scroll';
   import {
     isValidUrl,
     tryPrependProtocol,
@@ -49,14 +54,11 @@
       return;
     }
 
-    document.getElementById(HERO_SHOWCASE_ID)?.scrollIntoView({
-      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
-      block: 'center',
-    });
-  }
+    const showcase = document.getElementById(HERO_SHOWCASE_ID);
 
-  function prefersReducedMotion(): boolean {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (showcase) {
+      scrollIntoViewCentered(showcase);
+    }
   }
 
   function onInput(): void {
@@ -74,6 +76,7 @@
           'ld-input ld-input-padding rounded-full! px-5 text-base',
           { 'border-error/60! focus:border-error!': validationMessage },
         ]}
+        id={compact ? undefined : HERO_URL_INPUT_ID}
         type="text"
         name="url"
         inputmode="url"

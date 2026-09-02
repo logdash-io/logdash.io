@@ -46,7 +46,7 @@
   );
 </script>
 
-<div id={HERO_SHOWCASE_ID} class="showcase-glow relative w-full">
+<div id={HERO_SHOWCASE_ID} class="ld-radial-glow relative w-full">
   <div
     class="ld-card-base relative z-1 rounded-[2rem] p-1.5 shadow-[0_24px_64px_rgba(0,0,0,0.45)] sm:p-2"
   >
@@ -94,26 +94,3 @@
     </div>
   </div>
 </div>
-
-<style>
-  .showcase-glow {
-    isolation: isolate;
-  }
-
-  .showcase-glow::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -12%;
-    bottom: 50%;
-    left: -12%;
-    z-index: 0;
-    pointer-events: none;
-    background: radial-gradient(
-      44% 50% at 50% 50%,
-      oklch(from var(--color-primary) l c h / 0.34) 0%,
-      oklch(from var(--color-warning) l c h / 0.1) 45%,
-      transparent 78%
-    );
-  }
-</style>

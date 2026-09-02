@@ -96,6 +96,27 @@
     @apply px-6 py-6 sm:px-6 sm:py-6;
   }
 
+  .ld-radial-glow {
+    isolation: isolate;
+  }
+
+  .ld-radial-glow::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -12%;
+    bottom: 50%;
+    left: -12%;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      44% 50% at 50% 50%,
+      oklch(from var(--color-primary) l c h / 0.34) 0%,
+      oklch(from var(--color-warning) l c h / 0.1) 45%,
+      transparent 78%
+    );
+  }
+
   .ld-modal {
     @apply from-base-200 to-base-300 border-base-100/50 rounded-2xl border bg-gradient-to-br p-8 shadow-lg;
   }
