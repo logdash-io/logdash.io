@@ -252,7 +252,7 @@
 
       {#if mode === 'signup'}
         <a
-          href="{resolve('/app')}/quick-setup"
+          href={resolve('/app/quick-setup')}
           data-posthog-id="auth-continue-anonymous-cta"
           class="text-base-content/50 hover:text-base-content/80 mt-2 text-sm transition-colors"
         >

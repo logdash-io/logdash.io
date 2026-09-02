@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import MetricsListener from '$lib/domains/app/projects/ui/presentational/MetricsListener.svelte';
@@ -54,6 +55,16 @@
             <strong>{metricsLimitPlanDifference}x</strong>
             more metrics to this project.
           </UpgradeElement>
+        {:else if userState.isAnonymous}
+          <a
+            class="underline"
+            href={resolve(
+              `/app/auth?flow=claim&next_url=${encodeURIComponent(`${page.url.pathname}?claimed=1`)}`,
+            )}
+            data-posthog-id="metrics-tiles-claim-cta"
+          >
+            Claim your dashboard to unlock more metrics
+          </a>
         {:else}
           <a class="underline" href="mailto:logdash.contact@gmail.com">
             Contact us
@@ -63,7 +74,7 @@
       </span>
     {/if}
 
-    {#each metricsState.displayMetrics as metric}
+    {#each metricsState.displayMetrics as metric (metric.id)}
       <DataTile
         header={previewedMetricId === metric.id && !metricsState.isUsingFakeData
           ? header
@@ -120,7 +131,9 @@
                 )
               ) {
                 metricsState.delete(projectId, previewedMetricId);
-                goto(`/app/clusters/${clusterId}/${projectId}/metrics`);
+                goto(
+                  resolve(`/app/clusters/${clusterId}/${projectId}/metrics`),
+                );
               }
             }}
             data-posthog-id="delete-metric-button"
