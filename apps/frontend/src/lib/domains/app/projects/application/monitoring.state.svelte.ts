@@ -11,6 +11,7 @@ import type {
 } from '$lib/domains/app/projects/domain/monitoring/http-ping.js';
 import { httpClient } from '$lib/domains/shared/http/http-client.js';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 import {
   monitoringService,
   type CreateMonitorDto,
@@ -252,6 +253,12 @@ class MonitoringState {
   }
 
   async loadPingBuckets(monitorId: string): Promise<void> {
+    // Historical uptime is a paid feature; asking for it on a free plan only
+    // earns a 403 behind the upgrade overlay.
+    if (!userState.isPaid) {
+      return;
+    }
+
     this._timeRange = this._loadTimeRangePreference();
     try {
       const response = await monitoringService.getPingBuckets(
