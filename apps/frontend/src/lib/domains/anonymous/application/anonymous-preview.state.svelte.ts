@@ -197,7 +197,7 @@ class AnonymousPreviewState {
 
       return preview;
     } catch (error) {
-      if (readHttpErrorStatus(error) !== 404) {
+      if (!this._isMonitorGone(error)) {
         throw error;
       }
 
@@ -358,6 +358,12 @@ class AnonymousPreviewState {
     }
 
     sessionStorage.removeItem(PREVIEW_STORAGE_KEY);
+  }
+
+  private _isMonitorGone(error: unknown): boolean {
+    const status = readHttpErrorStatus(error);
+
+    return status === 403 || status === 404;
   }
 
   private _toStartError(error: unknown): AnonymousStartError {
