@@ -2,6 +2,7 @@
   import { page } from '$app/state';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
+  import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error.js';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { envConfig } from '$lib/domains/shared/utils/env-config';
@@ -22,6 +23,8 @@
 
   const MIN_NAME_LENGTH = 3;
   const MAX_NAME_LENGTH = 800;
+  const MONITOR_LIMIT_MESSAGE =
+    'Too many monitors waiting to be set up. Try again in a few minutes.';
 
   const clusterId = $derived(page.params.cluster_id);
 
@@ -64,8 +67,12 @@
         url: undefined,
       });
       pendingMonitorId = createdMonitorId;
-    } catch {
-      toast.error('Failed to create monitor');
+    } catch (error) {
+      toast.error(
+        readHttpErrorStatus(error) === 409
+          ? MONITOR_LIMIT_MESSAGE
+          : 'Failed to create monitor',
+      );
     } finally {
       isCreatingPushMonitor = false;
     }
@@ -77,22 +84,49 @@
     isSubmitting = true;
 
     try {
-      const finalUrl =
-        selectedMode === MonitorMode.PULL ? tryPrependProtocol(url) : undefined;
+      if (selectedMode === MonitorMode.PUSH) {
+        await finishPushSetup();
+      } else {
+        await finishPullSetup();
+      }
 
-      const createdMonitorId = await monitoringState.createMonitor(projectId, {
-        projectId,
-        name: monitorName,
-        mode: selectedMode,
-        url: finalUrl,
-      });
-
-      await monitoringState.claimMonitor(createdMonitorId);
       await monitoringState.sync(clusterId);
-    } catch {
-      toast.error('Failed to setup monitoring');
+    } catch (error) {
+      toast.error(
+        readHttpErrorStatus(error) === 409
+          ? MONITOR_LIMIT_MESSAGE
+          : 'Failed to setup monitoring',
+      );
       isSubmitting = false;
     }
+  }
+
+  async function finishPushSetup(): Promise<void> {
+    if (!pendingMonitorId) {
+      throw new Error('Push monitor is not ready yet');
+    }
+
+    const pendingMonitor =
+      monitoringState.getUnclaimedMonitor(pendingMonitorId);
+
+    if (pendingMonitor && pendingMonitor.name !== monitorName) {
+      await monitoringState.updateMonitor(pendingMonitorId, {
+        name: monitorName,
+      });
+    }
+
+    await monitoringState.claimMonitor(pendingMonitorId);
+  }
+
+  async function finishPullSetup(): Promise<void> {
+    const createdMonitorId = await monitoringState.createMonitor(projectId, {
+      projectId,
+      name: monitorName,
+      mode: MonitorMode.PULL,
+      url: tryPrependProtocol(url),
+    });
+
+    await monitoringState.claimMonitor(createdMonitorId);
   }
 
   function onCopyEndpoint(): void {
@@ -163,8 +197,11 @@
     <div class="space-y-4">
       {#if selectedMode === MonitorMode.PULL}
         <div class="space-y-2">
-          <label class="label font-medium">Monitor name</label>
+          <label class="label font-medium" for="monitor-name-pull">
+            Monitor name
+          </label>
           <input
+            id="monitor-name-pull"
             bind:value={monitorName}
             minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
@@ -175,8 +212,11 @@
         </div>
 
         <div class="space-y-2">
-          <label class="label font-medium">URL to monitor</label>
+          <label class="label font-medium" for="monitor-url">
+            URL to monitor
+          </label>
           <input
+            id="monitor-url"
             bind:value={url}
             minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
@@ -189,8 +229,11 @@
         </div>
       {:else}
         <div class="space-y-2">
-          <label class="label font-medium">Monitor name</label>
+          <label class="label font-medium" for="monitor-name-push">
+            Monitor name
+          </label>
           <input
+            id="monitor-name-push"
             bind:value={monitorName}
             minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
