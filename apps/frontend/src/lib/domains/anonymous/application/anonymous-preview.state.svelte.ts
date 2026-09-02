@@ -1,4 +1,3 @@
-import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor';
@@ -174,9 +173,11 @@ class AnonymousPreviewState {
 
     posthog.capture('anonymous_dashboard_opened');
 
-    this._resetToIdle();
+    this._stopPreviewPolling();
+    this._stopDemoPolling();
+    this._clearStoredPreview();
 
-    await goto(
+    window.location.assign(
       resolve(
         `/app/clusters/${claimed.clusterId}/${claimed.projectId}/monitoring`,
       ),
