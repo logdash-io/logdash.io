@@ -100,6 +100,61 @@ describe('HttpMonitorCoreController (writes)', () => {
       expect(response.status).toBe(400);
     });
 
+    it('throws error when project already holds the unclaimed monitor budget', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const createMonitor = () =>
+        request(bootstrap.app.getHttpServer())
+          .post(`/projects/${project.id}/http_monitors`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({ name: 'Unclaimed monitor', url: 'https://example.com' });
+
+      for (let index = 0; index < 3; index++) {
+        expect((await createMonitor()).status).toBe(201);
+      }
+
+      // when
+      const response = await createMonitor();
+
+      // then
+      expect(response.status).toBe(409);
+      expect(response.body.message).toBe(
+        'You have reached the maximum number of monitors for this project',
+      );
+      expect(await bootstrap.models.httpMonitorModel.countDocuments({ claimed: false })).toBe(3);
+    });
+
+    it('refuses the 21st monitor creation from one address within a minute', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      // the budget is per address, so spreading the creates over fresh projects,
+      // each with its own unclaimed monitor budget, does not buy any more of them
+      const projects = await Promise.all(
+        Array.from({ length: 21 }, () =>
+          bootstrap.utils.projectUtils.createDefaultProject({
+            userId: setup.user.id,
+            clusterId: setup.cluster.id,
+          }),
+        ),
+      );
+
+      // when
+      const statuses: number[] = [];
+      for (const project of projects) {
+        const response = await request(bootstrap.app.getHttpServer())
+          .post(`/projects/${project.id}/http_monitors`)
+          .set('Authorization', `Bearer ${setup.token}`)
+          .send({ name: 'Monitor', url: 'https://example.com' });
+
+        statuses.push(response.status);
+      }
+
+      // then
+      expect(statuses.slice(0, 20)).toEqual(Array.from({ length: 20 }, () => 201));
+      expect(statuses[20]).toBe(429);
+    });
+
     it('throws error when cluster has reached monitor limit', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();

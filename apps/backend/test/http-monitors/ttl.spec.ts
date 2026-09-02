@@ -22,6 +22,15 @@ describe('Http Monitor (ttl)', () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
+      // claimed first: the project may hold only a few unclaimed monitors at a
+      // time, and claiming frees the slot the create took
+      const claimedMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+        token: token,
+        projectId: project.id,
+        name: 'Claimed monitor',
+        url: 'https://example-claimed.com',
+      });
+
       const oldUnclaimedMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
         projectId: project.id,
         name: 'Old unclaimed monitor',
@@ -34,13 +43,6 @@ describe('Http Monitor (ttl)', () => {
         projectId: project.id,
         name: 'Recent unclaimed monitor',
         url: 'https://example-recent.com',
-      });
-
-      const claimedMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
-        token: token,
-        projectId: project.id,
-        name: 'Claimed monitor',
-        url: 'https://example-claimed.com',
       });
 
       // when

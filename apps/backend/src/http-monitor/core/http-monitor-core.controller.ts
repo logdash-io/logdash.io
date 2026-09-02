@@ -36,6 +36,7 @@ import { NotificationChannelReadService } from '../../notification-channel/read/
 import { Public } from '../../auth/core/decorators/is-public';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 import { HttpMonitorMode } from './enums/http-monitor-mode.enum';
+import { ThrottleMonitorCreation } from '../../shared/throttling/rate-limit.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -54,6 +55,7 @@ export class HttpMonitorCoreController {
   ) {}
 
   @UseGuards(ClusterMemberGuard)
+  @ThrottleMonitorCreation()
   @Post('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized })
   async create(
