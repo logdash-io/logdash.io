@@ -28,3 +28,4 @@ package-lock.json
 # playwright
 test-results/
 playwright-report/
+e2e/_*
