@@ -3,19 +3,17 @@
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
   import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
   import FaqSection from '$lib/landing/FAQSection.svelte';
-  import Features from '$lib/landing/Features.svelte';
   import FinalCta from '$lib/landing/FinalCta.svelte';
   import Footer from '$lib/landing/Footer.svelte';
   import FoundersMemo from '$lib/landing/FoundersMemo.svelte';
   import FrameworksList from '$lib/landing/FrameworksList.svelte';
+  import HealthBento from '$lib/landing/HealthBento.svelte';
   import Hero from '$lib/landing/hero/Hero.svelte';
   import HowItWorks from '$lib/landing/HowItWorks.svelte';
   import LogdashDifference from '$lib/landing/LogdashDifference.svelte';
+  import PricingCta from '$lib/landing/pricing/PricingCta.svelte';
   import ProblemStatement from '$lib/landing/ProblemStatement.svelte';
   import TestimonialsList from '$lib/landing/TestimonialsList.svelte';
-  import WhyLogdash from '$lib/landing/WhyLogdash.svelte';
-  import PricingSection from '$lib/landing/pricing/PricingSection.svelte';
-  import PricingTrustProof from '$lib/landing/pricing/PricingTrustProof.svelte';
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -52,11 +50,7 @@
 
     <div class="distance h-16 sm:h-32"></div>
 
-    <Features />
-
-    <div class="distance h-16 sm:h-32"></div>
-
-    <WhyLogdash />
+    <HealthBento />
 
     <div class="distance h-16 sm:h-32"></div>
 
@@ -72,11 +66,7 @@
 
     <div class="distance h-16 sm:h-32"></div>
 
-    <PricingSection />
-
-    <div class="distance h-8 sm:h-12"></div>
-
-    <PricingTrustProof />
+    <PricingCta />
 
     <div class="distance h-16 sm:h-32"></div>
 
