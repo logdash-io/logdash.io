@@ -20,11 +20,6 @@
       name: 'Guides',
       matchPrefix: true,
     },
-    // {
-    //   path: '/use-cases',
-    //   name: 'Use Cases',
-    //   matchPrefix: true,
-    // },
     {
       path: '/pricing',
       name: 'Pricing',
@@ -73,13 +68,17 @@
     ROUTES.findIndex((route) => route.path === page.url.pathname),
   );
 
-  const handleDashboardClick = () => {
-    window.location.href = '/app/clusters';
-  };
+  function onCloseDropdown(): void {
+    const focusedElement = document.activeElement as HTMLElement | null;
+
+    if (focusedElement && typeof focusedElement.blur === 'function') {
+      focusedElement.blur();
+    }
+  }
 </script>
 
 {#snippet featuresMenu(close: () => void)}
-  <div class="ld-card-base rounded-box z-[1] w-fit p-2 shadow-lg space-y-1">
+  <div class="ld-card-base rounded-box z-[1] w-fit space-y-1 p-2 shadow-lg">
     {#each FEATURES as { path, name, description, icon: Icon } (path)}
       <a
         href={resolve(path)}
@@ -93,7 +92,7 @@
         }}
       >
         <div
-          class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-base-content/10 bg-base-200"
+          class="border-base-content/10 bg-base-200 flex size-10 shrink-0 items-center justify-center rounded-lg border"
         >
           <Icon
             class={[
@@ -106,7 +105,7 @@
           <span class={['font-semibold text-sm']}>
             {name}
           </span>
-          <span class="text-sm text-base-content/60">{description}</span>
+          <span class="text-base-content/60 text-sm">{description}</span>
         </div>
       </a>
     {/each}
@@ -133,132 +132,144 @@
 {/snippet}
 
 {#snippet nav()}
-  <nav
-    class="bg-base-300/50 sticky top-0 z-50 hidden h-20 w-full shrink-0 backdrop-blur-lg lg:flex"
-  >
+  <nav class="sticky top-3 z-50 hidden w-full shrink-0 px-4 pb-3 lg:block">
     <div
-      class="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-12"
+      class="border-base-content/10 bg-base-300/70 mx-auto grid h-14 w-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 rounded-full border px-5 shadow-lg backdrop-blur-xl"
     >
-      <div class="navbar-start">
-        <a
-          href={resolve('/')}
-          class="flex items-center space-x-2 py-1 pr-4"
-          onclick={() => {
-            animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
-          }}
-          draggable="false"
-        >
-          <Logo class="h-10 w-10" />
-          <span class="text-2xl font-bold">logdash</span>
-        </a>
-      </div>
-
-      <div class="navbar-center">
-        <ul class="menu menu-horizontal space-x-4 px-1 text-base font-semibold">
-          <li>
-            <Tooltip
-              class="p-0"
-              placement="bottom"
-              content={featuresMenu}
-              interactive={true}
-            >
-              <div
-                role="button"
-                class={[
-                  'px-3 py-1.5 hover:bg-transparent relative',
-                  {
-                    'navlink-active': page.url.pathname.startsWith('/features'),
-                  },
-                ]}
-              >
-                Features
-              </div>
-            </Tooltip>
-          </li>
-          {#each ROUTES as { path, name, matchPrefix }, i (path)}
-            <li>
-              <a
-                href={resolve(path)}
-                draggable="false"
-                class={[
-                  'hover:bg-transparent',
-                  {
-                    'navlink-active': isRouteActive(
-                      path,
-                      matchPrefix,
-                      page.url.pathname,
-                    ),
-                  },
-                ]}
-                onclick={() => {
-                  const animationDirection =
-                    i > currentRouteIndex
-                      ? AnimationDirection.RIGHT
-                      : AnimationDirection.LEFT;
-
-                  animatedViewState.nextAnimationDirection = animationDirection;
-                }}
-                in:fade={{ duration: 150, delay: i * 50 }}
-              >
-                {name}
-              </a>
-            </li>
-          {/each}
-          <li>
-            <Tooltip
-              class="p-0"
-              placement="bottom"
-              content={compareMenu}
-              interactive={true}
-            >
-              <div
-                role="button"
-                class={[
-                  'px-3 py-1.5 hover:bg-transparent relative',
-                  {
-                    'navlink-active': page.url.pathname.startsWith('/vs'),
-                  },
-                ]}
-              >
-                Compare
-              </div>
-            </Tooltip>
-          </li>
-        </ul>
-      </div>
-
-      <div class="navbar-end">
-        <div class="flex items-center space-x-4">
-          <button
-            class="btn btn-outline border-primary"
-            onclick={handleDashboardClick}
-          >
-            Get started
-          </button>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <nav
-    class="bg-base-300 sticky top-0 z-50 flex h-16 w-full shrink-0 items-center justify-between px-4 lg:hidden"
-  >
-    <div class="navbar-start">
       <a
         href={resolve('/')}
-        class="flex items-center space-x-2 py-1"
+        class="flex w-fit items-center gap-2 justify-self-start py-1"
         onclick={() => {
           animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
         }}
         draggable="false"
       >
         <Logo class="h-8 w-8" />
-        <span class="text-xl font-bold">logdash</span>
+        <span class="text-xl font-bold tracking-tight">logdash</span>
       </a>
+
+      <ul
+        class="navbar-center menu menu-horizontal justify-self-center px-1 text-sm font-semibold"
+      >
+        <li>
+          <Tooltip
+            class="p-0"
+            placement="bottom"
+            content={featuresMenu}
+            interactive={true}
+          >
+            <div
+              role="button"
+              class={[
+                'px-3 py-1.5 text-base-content/70 hover:text-base-content hover:bg-transparent transition-colors duration-150 relative',
+                {
+                  'navlink-active text-base-content':
+                    page.url.pathname.startsWith('/features'),
+                },
+              ]}
+            >
+              Features
+            </div>
+          </Tooltip>
+        </li>
+        {#each ROUTES as { path, name, matchPrefix }, i (path)}
+          <li>
+            <a
+              href={resolve(path)}
+              draggable="false"
+              class={[
+                'px-3 py-1.5 text-base-content/70 hover:text-base-content hover:bg-transparent transition-colors duration-150',
+                {
+                  'navlink-active text-base-content': isRouteActive(
+                    path,
+                    matchPrefix,
+                    page.url.pathname,
+                  ),
+                },
+              ]}
+              onclick={() => {
+                const animationDirection =
+                  i > currentRouteIndex
+                    ? AnimationDirection.RIGHT
+                    : AnimationDirection.LEFT;
+
+                animatedViewState.nextAnimationDirection = animationDirection;
+              }}
+              in:fade={{ duration: 150, delay: i * 50 }}
+            >
+              {name}
+            </a>
+          </li>
+        {/each}
+        <li>
+          <Tooltip
+            class="p-0"
+            placement="bottom"
+            content={compareMenu}
+            interactive={true}
+          >
+            <div
+              role="button"
+              class={[
+                'px-3 py-1.5 text-base-content/70 hover:text-base-content hover:bg-transparent transition-colors duration-150 relative',
+                {
+                  'navlink-active text-base-content':
+                    page.url.pathname.startsWith('/vs'),
+                },
+              ]}
+            >
+              Compare
+            </div>
+          </Tooltip>
+        </li>
+      </ul>
+
+      <div class="flex items-center gap-2 justify-self-end">
+        <a
+          href={resolve('/app/auth')}
+          draggable="false"
+          class="btn btn-ghost btn-sm rounded-full px-4 font-semibold"
+          data-posthog-id="nav-login-cta"
+        >
+          Log in
+        </a>
+
+        <a
+          href={resolve('/app/quick-setup')}
+          draggable="false"
+          rel="nofollow"
+          class="btn btn-primary btn-sm rounded-full px-5 font-semibold"
+          data-posthog-id="nav-get-started-cta"
+        >
+          Get started
+        </a>
+      </div>
     </div>
-    <div class="navbar-end">
+  </nav>
+
+  <nav class="sticky top-3 z-50 w-full shrink-0 px-4 pb-3 lg:hidden">
+    <div
+      class="border-base-content/10 bg-base-300/70 mx-auto flex h-14 w-full items-center justify-between rounded-full border pl-5 pr-3 shadow-lg backdrop-blur-xl"
+    >
+      <a
+        href={resolve('/')}
+        class="flex items-center gap-2 py-1"
+        onclick={() => {
+          animatedViewState.nextAnimationDirection = AnimationDirection.LEFT;
+        }}
+        draggable="false"
+      >
+        <Logo class="h-7 w-7" />
+        <span class="text-lg font-bold tracking-tight">logdash</span>
+      </a>
+
       <div class="dropdown dropdown-end">
-        <label tabindex="0" class="btn btn-square btn-transparent">
+        <div
+          tabindex="0"
+          role="button"
+          class="btn btn-transparent btn-square btn-sm"
+          aria-label="Open menu"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-6 w-6"
@@ -273,10 +284,9 @@
               d="M4 6h16M4 12h16M4 18h16"
             />
           </svg>
-        </label>
+        </div>
         <ul
-          tabindex="0"
-          class="menu dropdown-content menu-sm rounded-box ld-card-base z-[1] mt-3 w-52 p-4 shadow"
+          class="menu dropdown-content menu-sm rounded-box ld-card-base z-[1] mt-3 w-56 p-4 shadow-lg"
         >
           <li>
             <details>
@@ -297,14 +307,7 @@
                       onclick={() => {
                         animatedViewState.nextAnimationDirection =
                           AnimationDirection.RIGHT;
-                        const focusedElement =
-                          document.activeElement as HTMLElement;
-                        if (
-                          focusedElement &&
-                          typeof focusedElement.blur === 'function'
-                        ) {
-                          focusedElement.blur(); // Close dropdown
-                        }
+                        onCloseDropdown();
                       }}
                     >
                       {name}
@@ -328,13 +331,7 @@
                       ? AnimationDirection.RIGHT
                       : AnimationDirection.LEFT;
                   animatedViewState.nextAnimationDirection = animationDirection;
-                  const focusedElement = document.activeElement as HTMLElement;
-                  if (
-                    focusedElement &&
-                    typeof focusedElement.blur === 'function'
-                  ) {
-                    focusedElement.blur();
-                  }
+                  onCloseDropdown();
                 }}
               >
                 {name}
@@ -360,14 +357,7 @@
                       onclick={() => {
                         animatedViewState.nextAnimationDirection =
                           AnimationDirection.RIGHT;
-                        const focusedElement =
-                          document.activeElement as HTMLElement;
-                        if (
-                          focusedElement &&
-                          typeof focusedElement.blur === 'function'
-                        ) {
-                          focusedElement.blur();
-                        }
+                        onCloseDropdown();
                       }}
                     >
                       {name}
@@ -377,22 +367,28 @@
               </ul>
             </details>
           </li>
-          <li>
-            <button
-              class="btn btn-primary btn-sm mt-2 w-full"
-              onclick={() => {
-                const focusedElement = document.activeElement as HTMLElement;
-                if (
-                  focusedElement &&
-                  typeof focusedElement.blur === 'function'
-                ) {
-                  focusedElement.blur();
-                }
-                handleDashboardClick();
-              }}
+          <li class="mt-3">
+            <a
+              href={resolve('/app/auth')}
+              draggable="false"
+              class="btn btn-ghost btn-sm w-full rounded-full font-semibold"
+              data-posthog-id="nav-login-cta"
+              onclick={onCloseDropdown}
             >
-              Dashboard
-            </button>
+              Log in
+            </a>
+          </li>
+          <li class="mt-2">
+            <a
+              href={resolve('/app/quick-setup')}
+              draggable="false"
+              rel="nofollow"
+              class="btn btn-primary btn-sm w-full rounded-full font-semibold"
+              data-posthog-id="nav-get-started-cta"
+              onclick={onCloseDropdown}
+            >
+              Get started
+            </a>
           </li>
         </ul>
       </div>
@@ -416,7 +412,6 @@
     }
   }
 
-  /* Only the center menu drops in; the bar itself stays still. */
   .navbar-center {
     --menu-drop: -4px;
     --menu-blur: 3px;
