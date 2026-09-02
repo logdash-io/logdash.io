@@ -12,7 +12,9 @@
     isValidUrl,
     tryPrependProtocol,
   } from '$lib/domains/shared/utils/url';
+  import { page } from '$app/state';
   import { ArrowRightIcon } from 'lucide-svelte';
+  import { onMount } from 'svelte';
   import { HERO_SHOWCASE_ID } from './HeroShowcase.svelte';
 
   type Props = {
@@ -24,6 +26,19 @@
 
   let url = $state('');
   let validationMessage = $state<string | null>(null);
+
+  /**
+   * A submit that lands before hydration falls back to the browser's native
+   * GET, which reloads `/` with `?url=`. Read it back so the typed address
+   * survives instead of silently vanishing.
+   */
+  onMount(() => {
+    const submitted = page.url.searchParams.get('url')?.trim();
+
+    if (submitted && !url) {
+      url = submitted;
+    }
+  });
 
   const isCreating = $derived(anonymousPreviewState.phase === 'creating');
   const submitPosthogId = $derived(`${source}-monitor-url-submit-cta`);

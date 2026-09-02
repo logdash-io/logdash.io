@@ -43,6 +43,9 @@ async function readStoredPreview(page: Page): Promise<StoredPreview | null> {
 }
 
 async function startMonitoring(page: Page, url: string): Promise<void> {
+  // A click before hydration falls back to a native form GET, so wait for the
+  // client to take over before driving the form.
+  await page.waitForLoadState('networkidle');
   await page.getByLabel('Your app URL').first().fill(url);
   await page.getByRole('button', { name: 'Start monitoring' }).first().click();
 }
