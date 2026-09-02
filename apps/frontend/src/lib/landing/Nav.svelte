@@ -134,7 +134,7 @@
 {#snippet nav()}
   <nav class="sticky top-3 z-50 hidden w-full shrink-0 px-4 pb-3 lg:block">
     <div
-      class="border-base-content/10 bg-base-300/70 mx-auto grid h-14 w-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 rounded-full border px-5 shadow-lg backdrop-blur-xl"
+      class="border-base-content/10 bg-base-300/70 mx-auto grid h-14 w-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 rounded-full border px-6 shadow-lg backdrop-blur-xl"
     >
       <a
         href={resolve('/')}

@@ -234,9 +234,9 @@
 {/snippet}
 
 {#snippet errorTile()}
-  {@render tileHeader('Could not start', 'Something got in the way', 'down')}
+  {@render tileHeader('Could not start', 'Something got in the way', 'unknown')}
 
-  <p class="text-base-content/70 flex-1 text-sm leading-relaxed">
+  <p class="text-error/90 flex-1 text-sm leading-relaxed" role="alert">
     {anonymousPreviewState.error?.message}
   </p>
 

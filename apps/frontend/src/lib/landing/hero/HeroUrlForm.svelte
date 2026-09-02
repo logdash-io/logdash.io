@@ -8,6 +8,7 @@
     tryPrependProtocol,
   } from '$lib/domains/shared/utils/url';
   import { ArrowRightIcon } from 'lucide-svelte';
+  import { HERO_SHOWCASE_ID } from './HeroShowcase.svelte';
 
   type Props = {
     source: AnonymousPreviewSource;
@@ -38,8 +39,24 @@
     }
 
     validationMessage = null;
+    revealShowcase();
 
     await anonymousPreviewState.submit(tryPrependProtocol(value), source);
+  }
+
+  function revealShowcase(): void {
+    if (source === 'hero') {
+      return;
+    }
+
+    document.getElementById(HERO_SHOWCASE_ID)?.scrollIntoView({
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      block: 'center',
+    });
+  }
+
+  function prefersReducedMotion(): boolean {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   function onInput(): void {

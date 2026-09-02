@@ -1,3 +1,7 @@
+<script module lang="ts">
+  export const HERO_SHOWCASE_ID = 'hero-showcase';
+</script>
+
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
   import { previewNameFromUrl } from '$lib/domains/anonymous/domain/anonymous-preview';
@@ -42,7 +46,7 @@
   );
 </script>
 
-<div class="showcase-glow relative w-full">
+<div id={HERO_SHOWCASE_ID} class="showcase-glow relative w-full">
   <div
     class="ld-card-base relative z-1 rounded-[2rem] p-1.5 shadow-[0_24px_64px_rgba(0,0,0,0.45)] sm:p-2"
   >
