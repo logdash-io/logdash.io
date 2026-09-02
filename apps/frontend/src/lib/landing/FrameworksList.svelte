@@ -24,8 +24,10 @@
 </script>
 
 <div class="w-full text-center">
-  <h3 class="text-base-content/50 mb-6 text-base font-medium">
-    Integrates with your favorite tech stack
+  <h3
+    class="text-base-content/50 mb-6 text-sm font-semibold tracking-[0.14em] uppercase"
+  >
+    Works with your stack
   </h3>
 
   <div class="mx-auto flex max-w-4xl flex-wrap justify-center gap-8 md:gap-8">

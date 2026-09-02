@@ -6,25 +6,21 @@
   } from '$lib/domains/shared/ui/animated-view.state.svelte.js';
   import { ArrowRightIcon } from 'lucide-svelte';
   import { githubDark } from 'svelte-highlight/styles';
-  import FrameworksList from './FrameworksList.svelte';
 
   const steps = [
     {
       number: 1,
-      badgeClass: 'bg-primary text-primary-content shadow-primary/20',
       title: 'You: Configure project',
       description:
         'Create a project and enable features. It usually takes 1-2 minutes.',
     },
     {
       number: 2,
-      badgeClass: 'bg-secondary text-secondary-content shadow-secondary/20',
       title: 'LLM: Integrates Logdash into your codebase',
       description: `Paste our integration prompt into your AI assistant. It'll write the integration code for you instantly.`,
     },
     {
       number: 3,
-      badgeClass: 'bg-accent text-accent-content shadow-accent/20',
       title: 'We: Watch your back',
       description:
         'We monitor your app 24/7 so you can focus on building and getting ahead. Sleep soundly.',
@@ -87,10 +83,6 @@
         See the live demo
         <ArrowRightIcon class="size-4" />
       </a>
-    </div>
-
-    <div class="mt-8">
-      <FrameworksList />
     </div>
   </div>
 </section>
