@@ -351,7 +351,7 @@
           </dl>
           <p class="text-base-content/60 text-xs">
             If you did not just run <span class="font-mono">ld login</span>
-             on that machine, deny this request.
+            on that machine, deny this request.
           </p>
         </div>
       {/if}
