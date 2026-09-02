@@ -6,6 +6,17 @@
   import FoundersCard from '$lib/landing/FoundersCard.svelte';
 </script>
 
+<section class="mx-auto mt-16 flex max-w-3xl flex-col items-center gap-4 px-4 text-center">
+  <h1 class="text-4xl font-bold sm:text-5xl">
+    Start free. Upgrade when it pays for itself.
+  </h1>
+
+  <p class="text-base-content/70 text-lg">
+    Every plan comes with uptime monitoring, logs, metrics and status pages. No
+    credit card to start.
+  </p>
+</section>
+
 <section class="my-16 px-4">
   <PricingTrustProof />
 </section>
