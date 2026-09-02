@@ -32,7 +32,8 @@
     class="text-secondary/60 flex items-center justify-between font-mono text-xs"
   >
     <span>
-      {pingsCount} pings ago
+      {pingsCount}
+      {pingsCount === 1 ? "ping" : "pings"} ago
     </span>
     <span>Now</span>
   </div>

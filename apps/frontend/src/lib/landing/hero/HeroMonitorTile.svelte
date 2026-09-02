@@ -143,7 +143,10 @@
   <div class="flex flex-col gap-2">
     <StatusHistoryBar pings={demoPings} height={18} />
 
-    {@render tileFooter(`${demoPings.length} checks ago`, 'Now')}
+    {@render tileFooter(
+      `${demoPings.length} ${demoPings.length === 1 ? 'check' : 'checks'} ago`,
+      'Now',
+    )}
   </div>
 {/snippet}
 

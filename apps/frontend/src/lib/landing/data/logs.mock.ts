@@ -15,7 +15,7 @@ export const FAKE_LOGS = [
   },
   {
     id: 'log_ywees75vi',
-    timestamp: '2025-02-22T01:43:23.024Z',
+    timestamp: '2025-02-22T01:43:19.412Z',
     level: 'info',
     message: 'Payment processed successfully',
     service: 'auth-service',
@@ -30,7 +30,7 @@ export const FAKE_LOGS = [
   },
   {
     id: 'log_37x6v9cop',
-    timestamp: '2025-02-22T01:43:23.024Z',
+    timestamp: '2025-02-22T01:43:12.887Z',
     level: 'error',
     message: 'Payment processing failed',
     service: 'order-service',
@@ -44,7 +44,7 @@ export const FAKE_LOGS = [
   },
   {
     id: 'log_jlor9u6km',
-    timestamp: '2025-02-22T01:43:23.024Z',
+    timestamp: '2025-02-22T01:43:04.209Z',
     level: 'info',
     message: 'User successfully authenticated',
     service: 'auth-service',
@@ -58,7 +58,7 @@ export const FAKE_LOGS = [
   },
   {
     id: 'log_hn1fnzkcf',
-    timestamp: '2025-02-22T01:43:23.024Z',
+    timestamp: '2025-02-22T01:42:58.663Z',
     level: 'error',
     message: 'Authentication failed - Invalid credentials',
     service: 'user-service',
@@ -72,7 +72,7 @@ export const FAKE_LOGS = [
   },
   {
     id: 'log_fac6vgkd2',
-    timestamp: '2025-02-22T01:43:23.024Z',
+    timestamp: '2025-02-22T01:42:51.145Z',
     level: 'warning',
     message: 'High API latency detected',
     service: 'auth-service',
@@ -87,7 +87,7 @@ export const FAKE_LOGS = [
   },
   {
     id: 'log_ehh77ij6e',
-    timestamp: '2025-02-22T01:43:23.024Z',
+    timestamp: '2025-02-22T01:42:44.930Z',
     level: 'warning',
     message: 'Database connection pool nearing capacity',
     service: 'notification-service',
