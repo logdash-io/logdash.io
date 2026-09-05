@@ -1,13 +1,12 @@
 <script lang="ts">
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
-  import MagicWandIcon from '$lib/domains/shared/icons/MagicWandIcon.svelte';
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte';
   import { CheckIcon } from 'lucide-svelte';
   import {
     migrationChanges,
     migrationPrompt,
     newFeatures,
   } from './guides.data';
-  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte';
 
   let copied = $state(false);
 
@@ -21,106 +20,114 @@
   }
 </script>
 
-<div class="flex w-full flex-col gap-12">
-  <header class="flex flex-col gap-4">
-    <h1 class="text-3xl font-bold sm:text-4xl">
-      Migrating from @logdash/js-sdk to @logdash/node
+<article class="flex w-full max-w-2xl flex-col">
+  <header class="flex flex-col gap-3">
+    <h1 class="text-4xl font-medium tracking-[-0.03em]">
+      Migrate to @logdash/node
     </h1>
-    <p class="text-base-content/70 text-lg">
-      The new @logdash/node package provides a simpler, unified API that puts
-      logging and metrics into a single interface. This guide will help you
-      migrate your existing codebase.
+    <p class="text-neutral-400 text-lg leading-7">
+      The @logdash/node package replaces @logdash/js-sdk and puts logging and
+      metrics behind one class. Here is everything that changed, and a prompt
+      that does the work for you.
     </p>
   </header>
 
-  <section class="flex flex-col gap-6">
-    <h2 class="text-2xl font-semibold">What Changed</h2>
+  <div class="mt-10 flex flex-col gap-5">
+    <h2
+      id="what-changed"
+      class="mt-6 scroll-mt-24 text-xl font-medium tracking-[-0.02em]"
+    >
+      What changed
+    </h2>
     <div class="overflow-x-auto">
-      <table class="table w-full">
+      <table class="w-full text-sm">
         <thead>
-          <tr class="border-base-content/10 border-b">
-            <th class="text-base-content/60 text-left font-medium">Aspect</th>
-            <th class="text-base-content/60 text-left font-medium">
-              Old (@logdash/js-sdk)
+          <tr class="border-hairline border-b">
+            <th class="text-neutral-500 pr-6 pb-2.5 text-left font-medium">
+              Aspect
             </th>
-            <th class="text-base-content/60 text-left font-medium">
-              New (@logdash/node)
+            <th class="text-neutral-500 pr-6 pb-2.5 text-left font-medium">
+              @logdash/js-sdk
+            </th>
+            <th class="text-neutral-500 pb-2.5 text-left font-medium">
+              @logdash/node
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-hairline divide-y">
           {#each migrationChanges as change (change.aspect)}
-            <tr class="border-base-content/5 border-b">
-              <td class="py-4 font-medium">{change.aspect}</td>
-              <td class="py-4">
-                <code class="bg-base-300 rounded px-2 py-1 text-sm">
+            <tr>
+              <td class="py-3 pr-6 align-top whitespace-nowrap">
+                {change.aspect}
+              </td>
+              <td class="py-3 pr-6 align-top">
+                <code class="text-neutral-400 font-mono text-[13px]">
                   {change.oldSdk}
                 </code>
               </td>
-              <td class="py-4">
-                <code
-                  class="bg-primary/5 text-primary rounded px-2 py-1 text-sm"
-                >
-                  {change.newSdk}
-                </code>
+              <td class="py-3 align-top">
+                <code class="font-mono text-[13px]">{change.newSdk}</code>
               </td>
             </tr>
           {/each}
         </tbody>
       </table>
     </div>
-  </section>
 
-  <section class="flex flex-col gap-6">
-    <h2 class="text-2xl font-semibold">New Features</h2>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <h2
+      id="new-in-logdash-node"
+      class="mt-6 scroll-mt-24 text-xl font-medium tracking-[-0.02em]"
+    >
+      New in @logdash/node
+    </h2>
+    <div
+      class="bg-hairline border-hairline grid grid-cols-1 gap-px overflow-hidden rounded-xl border"
+    >
       {#each newFeatures as feature (feature.title)}
-        <div class="ld-card flex flex-col gap-3 p-6">
-          <h3 class="text-lg font-semibold">{feature.title}</h3>
-          <p class="text-base-content/70 text-sm">{feature.description}</p>
+        <div class="bg-base-300 flex flex-col gap-3 p-5">
+          <div class="flex flex-col gap-1">
+            <span class="text-[15px] font-medium">{feature.title}</span>
+            <span class="text-neutral-400 text-sm leading-6">
+              {feature.description}
+            </span>
+          </div>
           <pre
-            class="bg-base-300 overflow-x-auto rounded-lg p-4 text-sm"><code>{feature.example}</code></pre>
+            class="bg-base-200 overflow-x-auto rounded-lg px-3.5 py-3 font-mono text-[13px] leading-6"><code>{feature.example}</code></pre>
         </div>
       {/each}
     </div>
-  </section>
 
-  <section class="flex flex-col gap-6">
-    <h2 class="text-2xl font-semibold">Migrate with AI</h2>
-    <p class="text-base-content/70">
-      Copy the migration prompt below and paste it into your AI assistant
-      (Claude, ChatGPT, Cursor, etc.) to automatically migrate your codebase.
+    <h2
+      id="migrate-with-ai"
+      class="mt-6 scroll-mt-24 text-xl font-medium tracking-[-0.02em]"
+    >
+      Migrate with AI
+    </h2>
+    <p class="text-neutral-400 text-[15px] leading-7">
+      Copy the prompt into Claude, ChatGPT or Cursor and let it rewrite the
+      imports and calls across your codebase.
     </p>
-
-    <div class="ld-card relative flex flex-col gap-4 p-6">
-      <div class="flex items-center gap-3">
-        <div
-          class="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg"
-        >
-          <MagicWandIcon class="h-5 w-5" />
-        </div>
-        <div>
-          <h3 class="font-semibold">AI Migration Prompt</h3>
-          <p class="text-base-content/60 text-sm">
-            Click to copy the prompt to your clipboard
-          </p>
-        </div>
-
+    <div class="border-hairline overflow-hidden rounded-xl border">
+      <div
+        class="border-hairline flex items-center justify-between border-b py-2 pr-2 pl-4"
+      >
+        <span class="text-sm font-medium">Migration prompt</span>
         <button
-          class={['btn btn-sm gap-2 ml-auto btn-primary']}
+          type="button"
+          class="btn btn-subtle btn-xs gap-1.5 rounded-full px-3"
           onclick={onCopyPrompt}
         >
           {#if copied}
-            <CheckIcon class="size-4" />
+            <CheckIcon class="size-3.5" />
+            Copied
           {:else}
-            <CopyIcon class="size-4" />
+            <CopyIcon class="size-3.5" />
+            Copy
           {/if}
-          Copy
         </button>
       </div>
-
       <pre
-        class="bg-base-300 overflow-x-auto rounded-lg p-4 sm:p-6 text-xs leading-relaxed whitespace-pre-wrap">{migrationPrompt}</pre>
+        class="text-neutral-300 overflow-x-auto px-4 py-4 font-mono text-xs leading-relaxed whitespace-pre-wrap">{migrationPrompt}</pre>
     </div>
-  </section>
-</div>
+  </div>
+</article>

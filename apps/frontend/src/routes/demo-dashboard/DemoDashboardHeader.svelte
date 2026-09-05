@@ -2,8 +2,10 @@
   import FoundersCard from '$lib/landing/FoundersCard.svelte';
 </script>
 
-<FoundersCard class="max-w-7xl">
-  <p class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-80">
+<FoundersCard class="max-w-landing">
+  <p
+    class="text-neutral-300 mb-2 text-xs font-semibold tracking-wide uppercase"
+  >
     Logdash Live Demo
   </p>
   <p class="mb-6 text-lg font-extrabold">Our Production Dashboard</p>

@@ -27,13 +27,13 @@
         'bg-[#e7000b]': level === 'error',
         'bg-[#00a6a6]': level === 'http',
         'bg-[#00a600]': level === 'verbose' || level === 'debug',
-        'bg-[#505050]': level === 'silly',
+        'bg-neutral-600': level === 'silly',
       },
     ]}
   ></div>
 
   <div class="flex min-w-0 flex-col-reverse sm:flex-row sm:gap-2">
-    <span class="text-base-content/60 text-xs whitespace-nowrap sm:text-sm">
+    <span class="text-neutral-400 text-xs whitespace-nowrap sm:text-sm">
       [{#if prefix === 'full'}{date} {time}{:else}{time}{/if}]
     </span>
 

@@ -66,7 +66,7 @@
           Get a dashboard, instantly
         </h2>
 
-        <p class="text-base-content/70">
+        <p class="text-neutral-400">
           No signup. Just a live dashboard to try logs, metrics and monitoring.
         </p>
 

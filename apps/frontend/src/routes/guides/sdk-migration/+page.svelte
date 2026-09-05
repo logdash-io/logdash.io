@@ -1,8 +1,6 @@
 <script lang="ts">
-  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
-  import MigrationGuide from '$lib/landing/guides/MigrationGuide.svelte';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
-  import Footer from '$lib/landing/Footer.svelte';
+  import MigrationGuide from '$lib/landing/guides/MigrationGuide.svelte';
 </script>
 
 <SeoMeta
@@ -11,9 +9,4 @@
   keywords="logdash migration, js-sdk to node, sdk migration guide, logdash upgrade"
 />
 
-<AnimatedView class="mx-auto w-full">
-  <div class="mx-auto max-w-3xl">
-    <MigrationGuide />
-  </div>
-  <Footer />
-</AnimatedView>
+<MigrationGuide />

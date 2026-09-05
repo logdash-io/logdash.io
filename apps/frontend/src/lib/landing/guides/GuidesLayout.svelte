@@ -1,231 +1,166 @@
 <script lang="ts">
-  import { page } from '$app/state';
-  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import type { Pathname } from '$app/types';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import { SDK_LIST } from '$lib/domains/logs/domain/sdk-config';
-  import { documentationState } from './documentation.state.svelte';
-  import { gettingStartedPages } from './documentation.data';
-  import MenuIcon from '$lib/domains/shared/icons/MenuIcon.svelte';
-  import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
+  import { page } from '$app/state';
+  import type { Snippet } from 'svelte';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
+  import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
+  import Footer from '$lib/landing/Footer.svelte';
+  import PageView from '$lib/landing/PageView.svelte';
+  import DocsToc from './DocsToc.svelte';
+  import {
+    docsSidebar,
+    type DocsPath,
+    type DocsSidebarItem,
+  } from './documentation.data';
 
-  interface Props {
-    children: import('svelte').Snippet;
+  type Props = {
+    children: Snippet;
+  };
+
+  const { children }: Props = $props();
+
+  let mobileOpen = $state(false);
+  let article: HTMLElement | undefined = $state();
+
+  const currentTitle = $derived(
+    docsSidebar
+      .flatMap((group) => group.items)
+      .find((item) => !item.external && item.href === page.url.pathname)
+      ?.title ?? 'Docs',
+  );
+
+  /** Narrowed up front: type guards do not survive into template closures. */
+  function internalPath(item: DocsSidebarItem): DocsPath | null {
+    return item.external === true ? null : item.href;
   }
 
-  let { children }: Props = $props();
-
-  type GuidesPath = Extract<Pathname, `/guides${string}`>;
-
-  function getPagePath(slug: string): GuidesPath {
-    return (slug ? `/guides/${slug}` : '/guides') as GuidesPath;
+  function isCurrent(item: DocsSidebarItem): boolean {
+    return internalPath(item) === page.url.pathname;
   }
 
-  function isActivePath(href: string): boolean {
-    return page.url.pathname === href;
-  }
-
-  $effect(() => {
-    documentationState.syncFromUrl(page.url);
-  });
-
-  function onSelectSDK(index: number, close: () => void): void {
-    const newUrl = documentationState.buildUrlWithSDK(page.url, index);
-    // newUrl is the current /guides pathname plus an ?sdk= query, which
-    // resolve() passes through untouched.
-    goto(resolve(newUrl as GuidesPath), {
-      replaceState: true,
-      keepFocus: true,
-    });
-    close();
+  function linkClass(current: boolean): string[] {
+    return [
+      'flex min-h-8 items-center gap-2.5 rounded-lg px-2.5 text-sm leading-5 transition-ink duration-150',
+      current
+        ? 'bg-neutral-900 text-base-content'
+        : 'text-neutral-400 hover:text-base-content',
+    ];
   }
 </script>
 
-<div class="flex h-dvh w-full flex-col">
-  <div class="relative flex w-full flex-1">
-    {@render mobileMenuButton()}
-    {@render mobileMenuOverlay()}
-
+<!--
+  One bounded frame, the way a reference site reads: hairlines close it on
+  both sides, sitting on the same x as the nav's logo and button (the column
+  inset every landing cell uses), a sticky list of pages on the left, one
+  column of prose in the middle and, from xl, the article's own headings on
+  the right. Below md the page list folds into a row under the nav that
+  names the current page.
+-->
+<div class="mx-auto w-full max-w-landing px-4 sm:px-6 lg:px-10">
+  <div class="border-hairline flex w-full flex-col border-x md:flex-row">
     <aside
-      class={[
-        'bg-base-300 fixed left-0 md:top-24 top-16 z-50 h-[calc(100vh-5rem)] md:h-[calc(100vh-6rem)] w-64 shrink-0 overflow-y-auto border-r border-base-200 p-4 transition-transform md:sticky md:bg-transparent md:translate-x-0',
-        {
-          '-translate-x-full':
-            !documentationState.mobileMenuOpen &&
-            typeof window !== 'undefined' &&
-            window.innerWidth < 768,
-          'translate-x-0':
-            documentationState.mobileMenuOpen ||
-            (typeof window !== 'undefined' && window.innerWidth >= 768),
-        },
-      ]}
+      class="border-hairline hidden w-60 shrink-0 border-r md:block lg:w-64"
     >
-      {@render sdkSelector()}
-      {@render sidebarNav()}
+      <nav
+        aria-label="Docs"
+        class="sticky top-16 max-h-[calc(100dvh-4rem)] overflow-y-auto px-4 py-8 lg:px-6 lg:py-10"
+      >
+        {@render groups()}
+      </nav>
     </aside>
 
-    <main class="min-w-0 flex-1 overflow-y-auto px-6 py-8 lg:pl-8 lg:pr-4">
-      <div class="relative">
+    <div class="border-hairline border-b md:hidden">
+      <button
+        type="button"
+        class="flex w-full items-center justify-between px-4 py-3 text-sm font-medium sm:px-6"
+        aria-expanded={mobileOpen}
+        onclick={() => (mobileOpen = !mobileOpen)}
+      >
+        <span class="flex items-center gap-2">
+          <span class="text-neutral-500">Docs</span>
+          <span class="text-neutral-600">/</span>
+          <span>{currentTitle}</span>
+        </span>
+        <ChevronDownIcon
+          class={[
+            'text-neutral-500 size-4 transition-transform duration-200 ease-out',
+            { 'rotate-180': mobileOpen },
+          ]}
+        />
+      </button>
+      {#if mobileOpen}
+        <nav
+          aria-label="Docs"
+          class="border-hairline border-t px-4 py-5 sm:px-6"
+        >
+          {@render groups()}
+        </nav>
+      {/if}
+    </div>
+
+    <main
+      bind:this={article}
+      class="min-w-0 flex-1 px-4 py-10 sm:px-6 lg:px-10 lg:py-14 xl:px-12"
+    >
+      <!-- Only the article transitions between docs pages; the sidebar stays. -->
+      <PageView keyOf={(url) => url.pathname}>
         {@render children()}
-      </div>
+      </PageView>
     </main>
+
+    <aside class="ld-hairline-dashed-l hidden w-60 shrink-0 xl:block">
+      <DocsToc container={article} />
+    </aside>
   </div>
 </div>
 
-{#snippet sdkMenuItem(
-  sdk: (typeof SDK_LIST)[number],
-  index: number,
-  close: () => void,
-)}
-  <li
-    onclick={(e) => {
-      e.stopPropagation();
-      onSelectSDK(index, close);
-    }}
-    class={[
-      'hover:bg-base-100/70 flex cursor-pointer select-none flex-row items-center justify-start gap-2.5 rounded-lg px-3 py-2 text-sm',
-      { 'bg-base-100': index === documentationState.selectedSDKIndex },
-    ]}
-  >
-    <sdk.icon class="h-4 w-4 shrink-0" />
-    <span>{sdk.name}</span>
-  </li>
-{/snippet}
+<div class="border-hairline w-full border-t">
+  <Footer />
+</div>
 
-{#snippet sdkMenu(close: () => void)}
-  <ul
-    class="dropdown dropdown-center ld-card-base z-20 overflow-visible rounded-xl p-1.5 shadow-lg"
-  >
-    {#each SDK_LIST as sdk, index (sdk.name)}
-      {@render sdkMenuItem(sdk, index, close)}
-    {/each}
-  </ul>
-{/snippet}
-
-{#snippet sdkSelector()}
-  <div class="mb-4 border-b border-base-200 pb-4">
-    <Tooltip
-      content={sdkMenu}
-      interactive={true}
-      placement="bottom"
-      align="right"
-      trigger="click"
-    >
-      <button
-        class="btn btn-ghost btn-sm w-full justify-between gap-2 font-semibold"
-      >
-        <span class="flex items-center gap-2">
-          <documentationState.selectedSDK.icon class="h-5 w-5 shrink-0" />
-          <span>{documentationState.selectedSDK.name}</span>
-        </span>
-        <ChevronDownIcon class="h-4 w-4 shrink-0 opacity-50" />
-      </button>
-    </Tooltip>
-  </div>
-{/snippet}
-
-{#snippet navLink(href: GuidesPath, title: string, isActive: boolean)}
-  <li>
-    <a
-      href={resolve(href)}
-      onclick={() => documentationState.closeMobileMenu()}
-      class={[
-        'block rounded-lg px-3 py-1.5 text-sm transition-colors hover:bg-base-100',
-        {
-          'bg-base-200 font-medium text-primary': isActive,
-          'text-base-content/70': !isActive,
-        },
-      ]}
-    >
-      {title}
-    </a>
-  </li>
-{/snippet}
-
-{#snippet externalNavLink(title: string, url: string)}
-  <li>
-    <!-- eslint-disable svelte/no-navigation-without-resolve -- external URL -->
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="flex items-center justify-between rounded-lg px-3 py-1.5 text-sm text-base-content/70 transition-colors hover:bg-base-100"
-    >
-      <!-- eslint-enable svelte/no-navigation-without-resolve -->
-      <span>{title}</span>
-      <OpenIcon class="h-3 w-3 opacity-50" />
-    </a>
-  </li>
-{/snippet}
-
-{#snippet navSection(title: string)}
-  <h3
-    class="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-base-content/50"
-  >
-    {title}
-  </h3>
-{/snippet}
-
-{#snippet sidebarNav()}
-  <nav class="flex flex-col gap-6">
-    <div>
-      {@render navSection('Getting Started')}
-      <ul class="flex flex-col gap-0.5">
-        {#each gettingStartedPages as gettingStartedPage (gettingStartedPage.slug)}
-          {@const path = getPagePath(gettingStartedPage.slug)}
-          {@render navLink(path, gettingStartedPage.title, isActivePath(path))}
-        {/each}
-      </ul>
-    </div>
-
-    <div>
-      {@render navSection(`${documentationState.selectedSDK.name} SDK`)}
-      <ul class="flex flex-col gap-0.5">
-        {#each documentationState.sdkGuides as guide (guide.id)}
-          {@render externalNavLink(guide.title, guide.externalUrl)}
-        {/each}
-      </ul>
-    </div>
-
-    {#if documentationState.internalGuides.length > 0}
-      <div>
-        {@render navSection('Migrate')}
-        <ul class="flex flex-col gap-0.5">
-          {#each documentationState.internalGuides as guide (guide.id)}
-            {@const path = getPagePath(guide.slug)}
-            {@render navLink(path, guide.title, isActivePath(path))}
+{#snippet groups()}
+  <div class="flex flex-col gap-7">
+    {#each docsSidebar as group (group.title)}
+      <div class="flex flex-col gap-1">
+        <h3 class="mb-1 px-2.5 text-sm font-medium">{group.title}</h3>
+        <ul class="flex flex-col gap-px">
+          {#each group.items as item (item.href)}
+            <li>
+              {@render sidebarLink(item)}
+            </li>
           {/each}
         </ul>
       </div>
-    {/if}
-  </nav>
-{/snippet}
-
-{#snippet mobileMenuButton()}
-  <div
-    class="bg-base-200 ld-card-border size-12 rounded-xl fixed left-4 bottom-4 z-40 md:hidden fcc"
-  >
-    <button
-      class="btn btn-ghost btn-sm"
-      onclick={() => documentationState.toggleMobileMenu()}
-      aria-label="Toggle menu"
-    >
-      <MenuIcon class="size-7" />
-    </button>
+    {/each}
   </div>
 {/snippet}
 
-{#snippet mobileMenuOverlay()}
-  {#if documentationState.mobileMenuOpen}
-    <div
-      class="fixed inset-0 z-40 bg-black/50 md:hidden"
-      onclick={() => documentationState.closeMobileMenu()}
-      onkeydown={(e) =>
-        e.key === 'Escape' && documentationState.closeMobileMenu()}
-      role="button"
-      tabindex="-1"
-    ></div>
+{#snippet sidebarLink(item: DocsSidebarItem)}
+  {@const Icon = item.icon}
+  {@const path = internalPath(item)}
+  {#if !path}
+    <!-- eslint-disable svelte/no-navigation-without-resolve -- external README -->
+    <a
+      href={item.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      class={linkClass(false)}
+    >
+      <!-- eslint-enable svelte/no-navigation-without-resolve -->
+      {#if Icon}
+        <Icon class="size-4 shrink-0" />
+      {/if}
+      <span>{item.title}</span>
+      <OpenIcon class="text-neutral-600 ml-auto size-3 shrink-0" />
+    </a>
+  {:else}
+    <a
+      href={resolve(path)}
+      class={linkClass(isCurrent(item))}
+      aria-current={isCurrent(item) ? 'page' : undefined}
+      onclick={() => (mobileOpen = false)}
+    >
+      {item.title}
+    </a>
   {/if}
 {/snippet}

@@ -1,48 +1,95 @@
 <script lang="ts">
+  import { prefersReducedMotion } from 'svelte/motion';
+
   const gradientId = $props.id();
 
-  const VALUES = [
-    18, 22, 19, 27, 24, 31, 29, 38, 34, 41, 46, 43, 52, 49, 58, 55, 64, 71, 67,
-    78, 74, 86, 91, 88, 97,
-  ];
-
+  const VISIBLE_SAMPLES = 40;
+  const SAMPLE_MS = 1_500;
   const VIEWBOX_WIDTH = 240;
   const VIEWBOX_HEIGHT = 72;
+  const STEP = VIEWBOX_WIDTH / (VISIBLE_SAMPLES - 1);
+  const SEED = [
+    38, 41, 37, 44, 52, 47, 43, 49, 58, 63, 55, 48, 45, 51, 46, 42, 39, 44, 57,
+    66, 61, 54, 49, 47, 53, 59, 64, 71, 62, 56, 50, 46, 44, 48, 55, 61, 58, 52,
+    47, 45, 43,
+  ];
 
-  const minValue = Math.min(...VALUES);
-  const maxValue = Math.max(...VALUES);
+  let samples = $state<number[]>(SEED);
+  let plot = $state<SVGGElement | null>(null);
+  let slide: Animation | null = null;
 
-  const points = VALUES.map((value, index) => {
-    const x = (index / (VALUES.length - 1)) * VIEWBOX_WIDTH;
-    const y =
-      VIEWBOX_HEIGHT -
-      ((value - minValue) / (maxValue - minValue)) * (VIEWBOX_HEIGHT - 8) -
-      4;
+  const current = $derived(samples[samples.length - 1]);
+  const peak = $derived(Math.max(...samples));
 
-    return `${x.toFixed(2)},${y.toFixed(2)}`;
-  }).join(' ');
+  const points = $derived(
+    samples
+      .map((value, index) => `${(index * STEP).toFixed(2)},${toY(value)}`)
+      .join(' '),
+  );
+  const areaPoints = $derived(
+    `0,${VIEWBOX_HEIGHT} ${points} ${(VISIBLE_SAMPLES * STEP).toFixed(2)},${VIEWBOX_HEIGHT}`,
+  );
 
-  const areaPoints = `0,${VIEWBOX_HEIGHT} ${points} ${VIEWBOX_WIDTH},${VIEWBOX_HEIGHT}`;
+  $effect(() => {
+    const timer = window.setInterval(() => {
+      samples = [...samples.slice(1), nextSample(samples[samples.length - 1])];
+      startSlide();
+    }, SAMPLE_MS);
+
+    return () => {
+      window.clearInterval(timer);
+      slide?.cancel();
+    };
+  });
+
+  function startSlide(): void {
+    if (!plot || prefersReducedMotion.current) {
+      return;
+    }
+
+    slide?.cancel();
+    slide = plot.animate(
+      [
+        { transform: 'translateX(0px)' },
+        { transform: `translateX(${-STEP}px)` },
+      ],
+      { duration: SAMPLE_MS, easing: 'linear', fill: 'forwards' },
+    );
+  }
+
+  function nextSample(previous: number): number {
+    const drift = (Math.random() - 0.5) * 14;
+    const spike = Math.random() < 0.06 ? 18 : 0;
+    const pullToBaseline = (46 - previous) * 0.12;
+
+    return Math.round(
+      Math.min(96, Math.max(8, previous + drift + spike + pullToBaseline)),
+    );
+  }
+
+  function toY(value: number): string {
+    return (VIEWBOX_HEIGHT - (value / 100) * (VIEWBOX_HEIGHT - 8) - 4).toFixed(
+      2,
+    );
+  }
 </script>
 
-<div
-  class="ld-card-base flex h-full w-full flex-col gap-4 rounded-2xl p-5 sm:p-6"
->
-  <div class="flex items-start justify-between gap-4">
-    <div class="flex flex-col gap-1">
-      <span
-        class="text-base-content/40 text-[11px] font-semibold tracking-[0.14em] uppercase"
-      >
-        Signups today
-      </span>
-      <span class="text-2xl font-semibold tabular-nums">1,284</span>
+<div class="flex h-full w-full flex-col gap-5">
+  <div class="flex flex-col gap-0.5">
+    <span class="text-neutral-500 text-xs">Live metric</span>
+    <h3 class="text-base font-medium">CPU usage</h3>
+  </div>
+
+  <div class="flex flex-wrap gap-x-10 gap-y-3 sm:gap-x-14">
+    <div class="flex flex-col gap-0.5">
+      <span class="text-neutral-500 text-xs">Now</span>
+      <span class="text-2xl font-medium tabular-nums">{current}%</span>
     </div>
 
-    <span
-      class="bg-success/15 text-success shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums"
-    >
-      +18.4%
-    </span>
+    <div class="flex flex-col gap-0.5">
+      <span class="text-neutral-500 text-xs">60 s peak</span>
+      <span class="text-2xl font-medium tabular-nums">{peak}%</span>
+    </div>
   </div>
 
   <svg
@@ -50,7 +97,7 @@
     viewBox="0 0 {VIEWBOX_WIDTH} {VIEWBOX_HEIGHT}"
     preserveAspectRatio="none"
     role="img"
-    aria-label="Signups trending up over the last 24 hours"
+    aria-label="CPU usage over the last 60 seconds"
   >
     <defs>
       <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -67,23 +114,25 @@
       </linearGradient>
     </defs>
 
-    <polygon points={areaPoints} fill="url(#{gradientId})" />
+    <g bind:this={plot}>
+      <polygon points={areaPoints} fill="url(#{gradientId})" />
 
-    <polyline
-      {points}
-      fill="none"
-      stroke="var(--color-primary)"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      vector-effect="non-scaling-stroke"
-    />
+      <polyline
+        {points}
+        fill="none"
+        stroke="var(--color-primary)"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        vector-effect="non-scaling-stroke"
+      />
+    </g>
   </svg>
 
   <div
-    class="text-base-content/40 flex items-center justify-between font-mono text-xs"
+    class="text-neutral-600 flex items-center justify-between font-mono text-xs"
   >
-    <span>24 h ago</span>
+    <span>60 s ago</span>
     <span>Now</span>
   </div>
 </div>

@@ -1,102 +1,27 @@
-export const FAKE_LOGS = [
-  {
-    id: 'log_fghjoylld',
-    timestamp: '2025-02-22T01:43:23.024Z',
-    level: 'info',
-    message: 'Cache invalidation completed',
-    service: 'user-service',
-    userId: 'usr_291',
-    ip: '192.168.0.52',
-    requestId: 'req_n7tta4aam',
-    metadata: {
-      keysCleared: 150,
-      duration: '2s',
-    },
-  },
-  {
-    id: 'log_ywees75vi',
-    timestamp: '2025-02-22T01:43:19.412Z',
-    level: 'info',
-    message: 'Payment processed successfully',
-    service: 'auth-service',
-    userId: 'usr_443',
-    ip: '192.168.0.52',
-    requestId: 'req_rr066chyu',
-    metadata: {
-      action: 'payment',
-      service: 'payment-service',
-      amount: '$99.99',
-    },
-  },
-  {
-    id: 'log_37x6v9cop',
-    timestamp: '2025-02-22T01:43:12.887Z',
-    level: 'error',
-    message: 'Payment processing failed',
-    service: 'order-service',
-    userId: 'usr_892',
-    ip: '192.168.0.52',
-    requestId: 'req_wzlmspsu0',
-    metadata: {
-      errorCode: 'PAY_ERR_001',
-      reason: 'Insufficient funds',
-    },
-  },
-  {
-    id: 'log_jlor9u6km',
-    timestamp: '2025-02-22T01:43:04.209Z',
-    level: 'info',
-    message: 'User successfully authenticated',
-    service: 'auth-service',
-    userId: 'usr_291',
-    ip: '10.0.0.241',
-    requestId: 'req_wdl7fvc3y',
-    metadata: {
-      action: 'login',
-      service: 'auth-service',
-    },
-  },
-  {
-    id: 'log_hn1fnzkcf',
-    timestamp: '2025-02-22T01:42:58.663Z',
-    level: 'error',
-    message: 'Authentication failed - Invalid credentials',
-    service: 'user-service',
-    userId: 'usr_443',
-    ip: '192.168.0.52',
-    requestId: 'req_hqgjn2vrt',
-    metadata: {
-      attemptCount: 3,
-      lockoutThreshold: 5,
-    },
-  },
-  {
-    id: 'log_fac6vgkd2',
-    timestamp: '2025-02-22T01:42:51.145Z',
-    level: 'warning',
-    message: 'High API latency detected',
-    service: 'auth-service',
-    userId: 'usr_892',
-    ip: '10.0.0.241',
-    requestId: 'req_55exiqd1j',
-    metadata: {
-      latency: '450ms',
-      threshold: '400ms',
-      endpoint: '/api/v1/users',
-    },
-  },
-  {
-    id: 'log_ehh77ij6e',
-    timestamp: '2025-02-22T01:42:44.930Z',
-    level: 'warning',
-    message: 'Database connection pool nearing capacity',
-    service: 'notification-service',
-    userId: 'usr_291',
-    ip: '192.168.1.103',
-    requestId: 'req_7onhcxvc4',
-    metadata: {
-      currentConnections: 85,
-      maxConnections: 100,
-    },
-  },
+export type FakeLogLevel = 'info' | 'warning' | 'error' | 'http' | 'debug';
+
+export type FakeLogTemplate = {
+  level: FakeLogLevel;
+  message: string;
+};
+
+export const FAKE_LOG_POOL: FakeLogTemplate[] = [
+  { level: 'info', message: 'Cache invalidation completed' },
+  { level: 'info', message: 'Payment processed successfully' },
+  { level: 'error', message: 'Payment processing failed' },
+  { level: 'info', message: 'User successfully authenticated' },
+  { level: 'error', message: 'Authentication failed - Invalid credentials' },
+  { level: 'warning', message: 'High API latency detected' },
+  { level: 'warning', message: 'Database connection pool nearing capacity' },
+  { level: 'http', message: 'POST /api/checkout 201 in 342 ms' },
+  { level: 'info', message: 'Webhook delivered to stripe.com' },
+  { level: 'debug', message: 'Cron billing-reconcile finished in 1.2 s' },
+  { level: 'http', message: 'GET /api/users/me 200 in 48 ms' },
+  { level: 'warning', message: 'Retrying email delivery (attempt 2/5)' },
+  { level: 'info', message: 'New workspace created: acme-inc' },
+  { level: 'error', message: 'Redis command timed out after 5000 ms' },
+  { level: 'http', message: 'GET /health 200 in 3 ms' },
+  { level: 'info', message: 'Deployment v2.14.3 is live' },
+  { level: 'debug', message: 'Session cache warmed for 1,204 users' },
+  { level: 'http', message: 'PATCH /api/projects/42 200 in 91 ms' },
 ];

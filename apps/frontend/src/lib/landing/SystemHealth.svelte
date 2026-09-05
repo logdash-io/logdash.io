@@ -12,7 +12,7 @@
 <div class="flex w-full flex-col gap-3">
   {#each SERVICES as service (service.name)}
     <div class="flex w-full flex-col gap-1">
-      <span class="text-base-content/70 text-sm">{service.name}</span>
+      <span class="text-neutral-400 text-sm">{service.name}</span>
 
       <div
         class="flex h-6 w-full items-center gap-[3px] overflow-hidden"

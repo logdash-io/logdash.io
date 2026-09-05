@@ -5,18 +5,13 @@
     type AnonymousStartStep,
   } from '$lib/domains/anonymous/domain/anonymous-preview';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings';
-  import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
-  import SystemHealth from '$lib/landing/SystemHealth.svelte';
   import { StatusBadge, StatusHistoryBar } from '@logdash/hyper-ui/features';
   import { ArrowRightIcon } from 'lucide-svelte';
-
-  type ChartPing = {
-    createdAt: string;
-    statusCode: number;
-    responseTimeMs: number;
-  };
-
-  type TileStatus = 'up' | 'down' | 'degraded' | 'unknown';
+  import {
+    toChartPings,
+    type ChartPing,
+    type MonitorStatus,
+  } from './hero-pings';
 
   type TileStat = {
     label: string;
@@ -34,37 +29,22 @@
   const phase = $derived(anonymousPreviewState.phase);
 
   const previewPings = $derived(toChartPings(anonymousPreviewState.pings));
-  const previewStatus = $derived<TileStatus>(getStatusFromPings(previewPings));
-  const lastPreviewPing = $derived(previewPings.at(-1) ?? null);
+  const previewStatus = $derived<MonitorStatus>(
+    getStatusFromPings(previewPings),
+  );
   const previewHost = $derived(
     anonymousPreviewState.preview
       ? previewNameFromUrl(anonymousPreviewState.preview.url)
       : 'your app',
   );
-  const previewStats = $derived<TileStat[]>([
-    {
-      label: 'Response',
-      value: lastPreviewPing ? `${lastPreviewPing.responseTimeMs} ms` : '--',
-    },
-    {
-      label: 'Status',
-      value: lastPreviewPing ? `${lastPreviewPing.statusCode}` : '--',
-    },
-    { label: 'Checks', value: `${previewPings.length}` },
-  ]);
+  const previewStats = $derived(statsFor(previewPings));
 
-  const demoMonitor = $derived(anonymousPreviewState.demo.monitor);
   const demoPings = $derived(toChartPings(anonymousPreviewState.demo.pings));
-  const demoStatus = $derived<TileStatus>(getStatusFromPings(demoPings));
-  const lastDemoPing = $derived(demoPings.at(-1) ?? null);
-  const demoStats = $derived<TileStat[]>([
-    {
-      label: 'Response',
-      value: lastDemoPing ? `${lastDemoPing.responseTimeMs} ms` : '--',
-    },
-    { label: 'Uptime', value: toUptime(demoPings) },
-    { label: 'Checks', value: `${demoPings.length}` },
-  ]);
+  const demoStatus = $derived<MonitorStatus>(getStatusFromPings(demoPings));
+  const demoHost = $derived(
+    anonymousPreviewState.demo.monitor?.name ?? 'logdash.io',
+  );
+  const demoStats = $derived(statsFor(demoPings));
 
   const activeStepIndex = $derived(
     CREATING_STEPS.findIndex(
@@ -72,26 +52,14 @@
     ),
   );
 
-  function toChartPings(pings: HttpPing[]): ChartPing[] {
-    return pings
-      .map((ping) => ({
-        createdAt: new Date(ping.createdAt).toISOString(),
-        statusCode: ping.statusCode,
-        responseTimeMs: ping.responseTimeMs,
-      }))
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  }
+  function statsFor(pings: ChartPing[]): TileStat[] {
+    const last = pings.at(-1) ?? null;
 
-  function toUptime(pings: ChartPing[]): string {
-    if (!pings.length) {
-      return '--';
-    }
-
-    const healthy = pings.filter(
-      (ping) => ping.statusCode >= 200 && ping.statusCode < 400,
-    ).length;
-
-    return `${Math.round((healthy / pings.length) * 100)}%`;
+    return [
+      { label: 'Response', value: last ? `${last.responseTimeMs} ms` : '--' },
+      { label: 'Status', value: last ? `${last.statusCode}` : '--' },
+      { label: 'Checks', value: `${pings.length}` },
+    ];
   }
 
   async function onOpenDashboard(): Promise<void> {
@@ -113,10 +81,10 @@
   }
 </script>
 
-<div
-  class="ld-card-base flex h-full min-h-64 w-full flex-col justify-between gap-5 rounded-2xl p-5 sm:p-6"
->
-  {#if phase === 'creating'}
+<div class="flex w-full flex-col gap-4 px-4 py-4">
+  {#if phase === 'idle'}
+    {@render demoTile()}
+  {:else if phase === 'creating'}
     {@render creatingTile()}
   {:else if phase === 'previewing'}
     {@render previewingTile()}
@@ -124,53 +92,18 @@
     {@render endedTile()}
   {:else if phase === 'error'}
     {@render errorTile()}
-  {:else if demoMonitor}
-    {@render demoTile()}
-  {:else}
-    {@render fallbackTile()}
   {/if}
 </div>
-
-{#snippet demoTile()}
-  {@render tileHeader(
-    'Live: our production API',
-    demoMonitor?.name ?? '',
-    demoStatus,
-  )}
-
-  {@render tileStats(demoStats)}
-
-  <div class="flex flex-col gap-2">
-    <StatusHistoryBar pings={demoPings} height={18} />
-
-    {@render tileFooter(
-      `${demoPings.length} ${demoPings.length === 1 ? 'check' : 'checks'} ago`,
-      'Now',
-    )}
-  </div>
-{/snippet}
-
-{#snippet fallbackTile()}
-  {@render tileHeader(
-    'Live: our production API',
-    'All systems operational',
-    'up',
-  )}
-
-  <div class="flex flex-1 flex-col justify-center">
-    <SystemHealth />
-  </div>
-{/snippet}
 
 {#snippet creatingTile()}
   {@render tileHeader('Setting up', 'Building your dashboard', 'unknown')}
 
-  <ol class="flex flex-1 flex-col justify-center gap-3">
+  <ol class="flex flex-col gap-3">
     {#each CREATING_STEPS as step, index (step.key)}
       <li class="flex items-center gap-3">
         {#if index < activeStepIndex}
           <span
-            class="bg-success/15 text-success flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
+            class="bg-success/15 text-success flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
           >
             &check;
           </span>
@@ -182,16 +115,14 @@
           </span>
         {:else}
           <span
-            class="border-base-content/20 size-5 shrink-0 rounded-full border border-dashed"
+            class="border-neutral-700 size-5 shrink-0 rounded-full border border-dashed"
           ></span>
         {/if}
 
         <span
           class={[
-            'text-sm transition-colors duration-200',
-            index <= activeStepIndex
-              ? 'text-base-content'
-              : 'text-base-content/40',
+            'text-sm transition-ink duration-200',
+            index <= activeStepIndex ? 'text-base-content' : 'text-neutral-500',
           ]}
         >
           {step.label}
@@ -200,7 +131,19 @@
     {/each}
   </ol>
 
-  <div class="bg-base-100/60 h-[18px] w-full animate-pulse rounded-full"></div>
+  <div class="bg-neutral-800 h-[18px] w-full animate-pulse rounded-full"></div>
+{/snippet}
+
+{#snippet demoTile()}
+  {@render tileHeader('Live monitor', demoHost, demoStatus)}
+
+  {@render tileStats(demoStats)}
+
+  {@render historyBar(
+    demoPings,
+    'Checking every 15 s',
+    demoPings.length ? 'Now' : 'Loading checks',
+  )}
 {/snippet}
 
 {#snippet previewingTile()}
@@ -208,28 +151,33 @@
 
   {@render tileStats(previewStats)}
 
+  {@render historyBar(
+    previewPings,
+    'Checking every 15 s during preview',
+    previewPings.length ? 'Now' : 'Waiting for the first check',
+  )}
+
+  {@render previewActions()}
+{/snippet}
+
+{#snippet historyBar(pings: ChartPing[], left: string, right: string)}
   <div class="flex flex-col gap-2">
-    {#if previewPings.length}
-      <StatusHistoryBar pings={previewPings} height={18} />
+    {#if pings.length}
+      <StatusHistoryBar {pings} height={18} />
     {:else}
       <div
-        class="bg-base-100/60 h-[18px] w-full animate-pulse rounded-full"
+        class="bg-neutral-800 h-[18px] w-full animate-pulse rounded-full"
       ></div>
     {/if}
 
-    {@render tileFooter(
-      'Checking every 15 s during preview',
-      previewPings.length ? 'Now' : 'Waiting for the first check',
-    )}
+    {@render tileFooter(left, right)}
   </div>
-
-  {@render previewActions()}
 {/snippet}
 
 {#snippet endedTile()}
   {@render tileHeader('Preview ended', previewHost, 'unknown')}
 
-  <p class="text-base-content/70 flex-1 text-sm leading-relaxed">
+  <p class="text-neutral-400 text-sm leading-relaxed">
     Preview ended. Open your dashboard to keep monitoring {previewHost}.
   </p>
 
@@ -239,14 +187,14 @@
 {#snippet errorTile()}
   {@render tileHeader('Could not start', 'Something got in the way', 'unknown')}
 
-  <p class="text-error/90 flex-1 text-sm leading-relaxed" role="alert">
+  <p class="text-error/90 text-sm leading-relaxed" role="alert">
     {anonymousPreviewState.error?.message}
   </p>
 
   <div>
     <button
       type="button"
-      class="btn btn-primary btn-sm rounded-full px-5 font-semibold"
+      class="btn btn-primary btn-sm rounded-full px-5 font-medium"
       data-posthog-id="hero-preview-retry-cta"
       onclick={onRetry}
     >
@@ -259,7 +207,7 @@
   <div class="flex flex-wrap items-center gap-2">
     <button
       type="button"
-      class="btn btn-primary btn-sm rounded-full px-5 font-semibold"
+      class="btn btn-primary btn-sm rounded-full px-5 font-medium"
       data-posthog-id="hero-open-dashboard-cta"
       disabled={isOpening}
       onclick={onOpenDashboard}
@@ -273,7 +221,7 @@
 
     <button
       type="button"
-      class="btn btn-ghost btn-subtle btn-sm rounded-full px-4 font-semibold"
+      class="btn btn-subtle btn-sm rounded-full px-4 font-medium"
       data-posthog-id="hero-setup-alerts-cta"
       disabled={isOpening}
       onclick={onOpenDashboard}
@@ -283,16 +231,12 @@
   </div>
 {/snippet}
 
-{#snippet tileHeader(eyebrow: string, title: string, status: TileStatus)}
-  <div class="flex flex-col gap-1">
-    <span
-      class="text-base-content/40 truncate text-[11px] font-semibold tracking-[0.14em] uppercase"
-    >
-      {eyebrow}
-    </span>
+{#snippet tileHeader(eyebrow: string, title: string, status: MonitorStatus)}
+  <div class="flex flex-col gap-0.5">
+    <span class="text-neutral-500 truncate text-xs">{eyebrow}</span>
 
     <div class="flex items-center justify-between gap-3">
-      <h3 class="min-w-0 truncate text-lg font-semibold">{title}</h3>
+      <h3 class="min-w-0 truncate text-base font-medium">{title}</h3>
 
       <div class="shrink-0">
         <StatusBadge {status} showText={true} />
@@ -305,12 +249,8 @@
   <div class="flex flex-wrap gap-x-10 gap-y-3 sm:gap-x-14">
     {#each stats as stat (stat.label)}
       <div class="flex min-w-0 flex-col gap-0.5">
-        <span
-          class="text-base-content/40 text-[11px] font-semibold tracking-[0.1em] uppercase"
-        >
-          {stat.label}
-        </span>
-        <span class="truncate text-xl font-semibold tabular-nums">
+        <span class="text-neutral-500 text-xs">{stat.label}</span>
+        <span class="truncate text-2xl font-medium tabular-nums">
           {stat.value}
         </span>
       </div>
@@ -320,7 +260,7 @@
 
 {#snippet tileFooter(left: string, right: string)}
   <div
-    class="text-base-content/40 flex items-center justify-between gap-3 font-mono text-xs"
+    class="text-neutral-500 flex items-center justify-between gap-3 font-mono text-xs"
   >
     <span class="truncate">{left}</span>
     <span class="shrink-0">{right}</span>

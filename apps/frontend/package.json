@@ -2,6 +2,7 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.1",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
@@ -11,7 +12,9 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
-    "lint": "prettier --check . && eslint .",
+    "lint": "prettier --check . && eslint . && node scripts/check-solid-colours.mjs && node scripts/check-background-transitions.mjs",
+    "check:colours": "node scripts/check-solid-colours.mjs",
+    "check:transitions": "node scripts/check-background-transitions.mjs",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
@@ -45,7 +48,7 @@
   },
   "dependencies": {
     "@fontsource-variable/geist-mono": "^5.2.7",
-    "@fontsource-variable/kumbh-sans": "^5.2.7",
+    "@fontsource-variable/inter": "^5.2.7",
     "@logdash/hyper-ui": "workspace:*",
     "@logdash/node": "^1.0.0",
     "axios": "catalog:",

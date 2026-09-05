@@ -1,4 +1,6 @@
 <script lang="ts">
+  import LandingSection from './LandingSection.svelte';
+
   type FaqItem = {
     question: string;
     answer: string;
@@ -58,45 +60,50 @@
     {
       question: 'Can I self-host Logdash?',
       answer:
-        "Right now, Logdash is a cloud-based service. This helps us make sure it's always up, running smoothly, and easy for you to use without worrying about server maintenance. We might explore self-hosting options down the road if there's enough demand!",
+        'Not as a one-command install yet. Logdash is MIT and runs locally for development. Production self-hosting is tracked on GitHub, see /docs/self-hosting.',
     },
   ];
 </script>
 
-<section id="faq" class="w-full px-4">
-  <div class="mx-auto max-w-3xl">
-    <div class="text-center">
+<!-- Heading on the left, questions on the right. -->
+<LandingSection id="faq">
+  <div
+    class="grid grid-cols-1 gap-10 px-4 py-16 sm:px-6 lg:grid-cols-5 lg:gap-12 lg:px-10 lg:py-20"
+  >
+    <div class="flex flex-col gap-3 lg:col-span-2">
       <h2
-        class="text-base-content text-4xl font-extrabold tracking-tighter sm:text-5xl"
+        class="text-3xl font-medium tracking-[-0.03em] text-balance sm:text-4xl"
       >
         Frequently asked questions
       </h2>
 
-      <p class="text-base-content/70 mt-3 text-lg leading-relaxed">
+      <p class="text-neutral-400 text-lg text-pretty">
         Have a different question?
         <a
           href="https://discord.gg/naftPW4Hxe"
           target="_blank"
           rel="noreferrer"
-          class="link link-hover text-primary font-medium"
+          class="link link-hover text-base-content font-medium"
         >
           Reach out on Discord
         </a>
       </p>
     </div>
 
-    <div class="mt-12 flex flex-col gap-3">
+    <div class="divide-hairline flex flex-col divide-y lg:col-span-3">
       {#each FAQS as faq (faq.question)}
-        <details class="ld-card-base collapse-arrow collapse rounded-2xl">
-          <summary class="collapse-title text-base font-semibold">
+        <details class="collapse-arrow collapse rounded-none">
+          <summary
+            class="collapse-title px-0 py-5 pr-10 text-base font-medium after:end-1"
+          >
             {faq.question}
           </summary>
 
-          <div class="collapse-content text-base-content/70 text-base">
+          <div class="collapse-content text-neutral-400 px-0 pr-10 text-base">
             {faq.answer}
           </div>
         </details>
       {/each}
     </div>
   </div>
-</section>
+</LandingSection>
