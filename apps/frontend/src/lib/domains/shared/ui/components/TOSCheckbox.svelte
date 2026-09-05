@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
+
   let { termsAccepted = $bindable() } = $props();
 </script>
 
@@ -10,7 +12,7 @@
   />
   <span class="label-text">
     I accept
-    <a href="/terms-of-service" target="_blank" class="link">
+    <a href={resolve('/terms-of-service')} target="_blank" class="link">
       terms of service
     </a>
   </span>

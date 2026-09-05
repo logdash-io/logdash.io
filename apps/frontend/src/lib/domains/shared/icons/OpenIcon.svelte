@@ -2,29 +2,27 @@
   const { class: className = '' } = $props();
 </script>
 
+<!-- Marks a link that leaves the site: a bare top-right arrow, ported from simn.so. -->
 <svg
   class={className}
-  viewBox="0 0 24 24"
+  viewBox="0 0 24 25"
   fill="none"
   xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
 >
   <path
-    d="M12 3C4.5885 3 3 4.5885 3 12C3 19.4115 4.5885 21 12 21C19.4115 21 21 19.4115 21 12"
+    d="M6.33997 18.56L17.66 7.25"
     stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-  />
-  <path
-    d="M20.5 3.5L15 9"
-    stroke="currentColor"
-    stroke-width="2"
+    stroke-width="2.7"
+    stroke-miterlimit="10"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
   <path
-    d="M16 3H20.6717C20.853 3 21 3.14703 21 3.32837V8"
+    d="M9.04004 7.25H17.66V15.87"
     stroke="currentColor"
-    stroke-width="2"
+    stroke-width="2.7"
+    stroke-miterlimit="10"
     stroke-linecap="round"
     stroke-linejoin="round"
   />

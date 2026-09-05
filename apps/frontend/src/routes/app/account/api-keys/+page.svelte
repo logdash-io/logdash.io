@@ -90,7 +90,7 @@
     />
 
     <div class="flex items-center justify-between p-4">
-      <p class="text-base-content/60 text-sm">
+      <p class="text-neutral-400 text-sm">
         {data.apiKeys.length} key{data.apiKeys.length === 1 ? '' : 's'}
       </p>
       <button
@@ -104,7 +104,7 @@
     </div>
 
     {#if data.apiKeys.length === 0}
-      <div class="text-base-content/60 p-4 pt-0 text-sm">
+      <div class="text-neutral-400 p-4 pt-0 text-sm">
         You don't have any personal API keys yet.
       </div>
     {:else}
@@ -113,17 +113,15 @@
           icon={KeyIcon}
           showBorder={index < data.apiKeys.length - 1}
         >
-          {#snippet children()}
-            <p class="font-medium">{key.label}</p>
-            <p class="font-mono text-sm">{key.prefix}…</p>
-            <p class="text-base-content/60 mt-1 text-xs">
-              {scopeSummary(key)}
-            </p>
-            <p class="text-base-content/60 text-xs">
-              {accessSummary(key)} · Last used {formatDate(key.lastUsedAt)} ·
-              Created {formatDate(key.createdAt)}
-            </p>
-          {/snippet}
+          <p class="font-medium">{key.label}</p>
+          <p class="font-mono text-sm">{key.prefix}…</p>
+          <p class="text-neutral-400 mt-1 text-xs">
+            {scopeSummary(key)}
+          </p>
+          <p class="text-neutral-400 text-xs">
+            {accessSummary(key)} · Last used {formatDate(key.lastUsedAt)} · Created
+            {formatDate(key.createdAt)}
+          </p>
           {#snippet action()}
             <button
               type="button"

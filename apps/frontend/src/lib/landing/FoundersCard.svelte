@@ -5,14 +5,22 @@
   interface Props {
     children: Snippet;
     class?: ClassValue;
+    variant?: 'card' | 'flat';
   }
 
-  let { children, class: className = 'max-w-2xl' }: Props = $props();
+  let {
+    children,
+    class: className = 'max-w-2xl',
+    variant = 'card',
+  }: Props = $props();
 </script>
 
 <div
   class={[
-    'ld-card-base bg-neutral text-neutral-content mx-2 rounded-3xl p-8 text-base shadow-xl sm:mx-auto',
+    'text-base',
+    variant === 'card'
+      ? 'ld-card-base bg-neutral text-neutral-content mx-2 rounded-3xl p-8 sm:mx-auto'
+      : 'mx-auto',
     className,
   ]}
 >
@@ -29,7 +37,7 @@
       />
       <div class="text-left">
         <p class="font-medium">Aleksander Blaszkiewicz</p>
-        <p class="text-sm">Co-founder</p>
+        <p class="text-neutral-400 text-sm">Co-founder</p>
       </div>
     </div>
 
@@ -41,7 +49,7 @@
       />
       <div class="text-left">
         <p class="font-medium">Simon Gracki</p>
-        <p class="text-sm">Co-founder</p>
+        <p class="text-neutral-400 text-sm">Co-founder</p>
       </div>
     </div>
   </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { onMount } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
@@ -83,7 +84,7 @@
 {#if mounted}
   <div class="flex w-full gap-1.5 pb-8">
     <div class="flex w-full flex-col gap-1.5 sm:hidden">
-      {#each clustersState.clusters as cluster, i}
+      {#each clustersState.clusters as cluster, i (cluster.id)}
         {@render clusterTile(cluster, i)}
       {/each}
 
@@ -94,9 +95,9 @@
     </div>
 
     <div class="hidden w-full gap-1.5 sm:flex">
-      {#each [0, 1] as column}
+      {#each [0, 1] as column (column)}
         <div class="flex w-full flex-col gap-1.5">
-          {#each projectsPerColumn[column] as cluster, i}
+          {#each projectsPerColumn[column] as cluster, i (cluster.id)}
             {@render clusterTile(cluster, i)}
           {/each}
 
@@ -114,14 +115,13 @@
 {/if}
 
 {#snippet clusterTile(cluster: Cluster, i: number)}
-  {@const firstProjectId = cluster.projects?.[0]?.id}
   {@const services = getClusterServices(cluster)}
   {@const hasServices = services.length > 0}
   <div
     draggable="false"
     role="button"
     onclick={() => {
-      goto(`/app/clusters/${cluster.id}`);
+      goto(resolve('/app/clusters/[cluster_id]', { cluster_id: cluster.id }));
     }}
     class="ld-card-base h-fit w-full cursor-pointer ld-card-rounding p-6"
   >
@@ -144,15 +144,18 @@
         <!-- <ClusterHealthSummary clusterId={cluster.id} {services} /> -->
 
         <div class="flex flex-wrap gap-1.5">
-          {#each cluster.projects as project}
+          {#each cluster.projects as project (project.id)}
             <a
-              href={`/app/clusters/${cluster.id}/${project.id}`}
+              href={resolve('/app/clusters/[cluster_id]/[project_id]', {
+                cluster_id: cluster.id,
+                project_id: project.id,
+              })}
               draggable="false"
               role="button"
               onclick={(e) => {
                 e.stopPropagation();
               }}
-              class="badge badge-sm badge-soft badge-secondary hover:badge-primary hover:text-primary rounded-full transition-all"
+              class="badge badge-sm badge-soft badge-secondary hover:badge-primary hover:text-primary rounded-full"
             >
               {project.name}
             </a>
@@ -161,15 +164,17 @@
       {:else}
         <div class="flex flex-col items-center gap-3 py-4">
           <div class="text-center">
-            <p class="text-base-content/60 text-sm">No services configured</p>
-            <p class="text-base-content/40 text-xs">
-              Add a service to get started
-            </p>
+            <p class="text-neutral-400 text-sm">No services configured</p>
+            <p class="text-neutral-600 text-xs">Add a service to get started</p>
           </div>
           <button
             onclick={(e) => {
               e.stopPropagation();
-              goto(`/app/clusters/${cluster.id}`);
+              goto(
+                resolve('/app/clusters/[cluster_id]', {
+                  cluster_id: cluster.id,
+                }),
+              );
             }}
             class="btn btn-sm btn-ghost gap-1"
           >

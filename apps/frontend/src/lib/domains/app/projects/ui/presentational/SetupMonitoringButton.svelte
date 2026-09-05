@@ -44,7 +44,7 @@
 {#snippet configurator(close: () => void)}
   <div
     class={[
-      'ld-card-base ring-base-100 flex flex-col gap-4 rounded-xl p-6 shadow-xl ring transition-colors',
+      'ld-card-base ring-base-100 flex flex-col gap-4 rounded-xl p-6 shadow-lg ring',
       {
         'focus-within:ring-success/50': isFormValid,
         'focus-within:ring-primary/50': !isFormValid,
@@ -103,7 +103,7 @@
           bind:value={url}
           minlength={MIN_NAME_LENGTH}
           maxlength={MAX_NAME_LENGTH}
-          class="input-sm input-ghost selection:bg-secondary/20 h-12 w-full rounded-lg px-4 text-lg font-semibold outline-0 focus:bg-transparent"
+          class="input-sm input-ghost selection:bg-neutral-700 h-12 w-full rounded-lg px-4 text-lg font-semibold outline-0 focus:bg-transparent"
           placeholder="URL to monitor"
           use:autoFocus={{ delay: 5 }}
         />
@@ -112,7 +112,7 @@
           bind:value={monitorName}
           minlength={MIN_NAME_LENGTH}
           maxlength={MAX_NAME_LENGTH}
-          class="input-sm input-ghost selection:bg-secondary/20 h-12 w-full rounded-lg px-4 text-lg font-semibold outline-0 focus:bg-transparent"
+          class="input-sm input-ghost selection:bg-neutral-700 h-12 w-full rounded-lg px-4 text-lg font-semibold outline-0 focus:bg-transparent"
           placeholder="Monitor name"
           use:autoFocus={{ delay: 5 }}
         />

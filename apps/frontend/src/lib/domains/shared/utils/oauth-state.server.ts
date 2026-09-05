@@ -16,6 +16,7 @@ export type OAuthStatePayload = {
   email_accepted: boolean;
   next_url: string;
   tier?: UserTier;
+  flow?: 'login' | 'claim';
 };
 
 export const save_oauth_state = (

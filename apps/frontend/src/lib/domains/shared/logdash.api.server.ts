@@ -4,7 +4,6 @@ import type { Metric } from '$lib/domains/app/projects/domain/metric';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
 import type { Project } from '$lib/domains/app/projects/domain/project';
 import type { PublicDashboard } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard.js';
-import type { PublicDashboardData } from '@logdash/hyper-ui/features';
 import { bffLogger } from '$lib/domains/shared/bff-logger.server.js';
 import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config';
 import type { User } from '$lib/domains/shared/user/domain/user';
@@ -134,10 +133,7 @@ class LogdashAPI {
       createdAt: string;
     }[]
   > {
-    return this.get(
-      `${LogdashAPI.v0baseUrl}/personal-api-keys`,
-      access_token,
-    );
+    return this.get(`${LogdashAPI.v0baseUrl}/personal-api-keys`, access_token);
   }
 
   create_personal_api_key(

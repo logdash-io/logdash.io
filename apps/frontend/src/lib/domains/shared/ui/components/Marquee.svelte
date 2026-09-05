@@ -42,7 +42,7 @@
   ]}
   style={`--marquee-duration: ${duration}; --marquee-gap: ${gap};`}
 >
-  {#each repeats as _, i}
+  {#each repeats, i (i)}
     <div
       class={[
         'marquee__group flex shrink-0 items-stretch',

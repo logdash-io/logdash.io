@@ -9,6 +9,23 @@
 @theme {
   --container-8xl: 90rem;
   --container-9xl: 100rem;
+  /* Marketing page column: 1280px of content between 40px paddings. */
+  --container-landing: 85rem;
 
   --z-top: 2147483647;
+}
+
+/*
+  Colour transitions minus background-color. Backgrounds snap on hover, focus
+  and selection everywhere (frontend rules); text, borders, fills and strokes
+  may still ease. Same timing hooks as Tailwind's own transition utilities.
+*/
+@utility transition-ink {
+  transition-property:
+    color, border-color, outline-color, text-decoration-color, fill, stroke;
+  transition-timing-function: var(
+    --tw-ease,
+    var(--default-transition-timing-function)
+  );
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
 }

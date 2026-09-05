@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
@@ -61,7 +62,12 @@
       wizardState.scrollToSection(`service-${projectId}`);
       return;
     }
-    goto(`/app/clusters/${page.params.cluster_id}/${projectId}`);
+    goto(
+      resolve('/app/clusters/[cluster_id]/[project_id]', {
+        cluster_id: page.params.cluster_id,
+        project_id: projectId,
+      }),
+    );
   }
 
   function getServiceHealthStatus(projectId: string): boolean | null {
@@ -117,9 +123,13 @@
       });
 
       onCloseForm();
-      await goto(`/app/clusters/${clusterId}/${result.project.id}`, {
-        invalidateAll: true,
-      });
+      await goto(
+        resolve('/app/clusters/[cluster_id]/[project_id]', {
+          cluster_id: clusterId,
+          project_id: result.project.id,
+        }),
+        { invalidateAll: true },
+      );
     } finally {
       isCreating = false;
     }
@@ -135,11 +145,11 @@
 </script>
 
 <div class="flex flex-1 flex-col gap-1">
-  <span class="p-2 text-sm font-medium tracking-wide text-base-content/50">
+  <span class="p-2 text-sm font-medium tracking-wide text-neutral-500">
     Services
   </span>
   <nav class="flex flex-col gap-0.5">
-    {#each currentCluster?.projects || [] as project}
+    {#each currentCluster?.projects || [] as project (project.id)}
       {@const isActive = !isWizardMode && project.id === activeProjectId}
       {@const healthStatus = getServiceHealthStatus(project.id)}
       {@const projectHasMonitor = hasMonitor(project.id)}
@@ -162,14 +172,14 @@
             />
           </Tooltip>
         {:else}
-          <HexagonIcon class="size-4 shrink-0 text-base-content/30" />
+          <HexagonIcon class="size-4 shrink-0 text-neutral-600" />
         {/if}
         <span class="truncate">{project.name || 'New Service'}</span>
       </SidebarMenuItem>
     {/each}
 
     {#if isWizardMode && (currentCluster?.projects || []).length === 0}
-      <span class="px-3 py-2 text-sm italic text-base-content/30">
+      <span class="px-3 py-2 text-sm italic text-neutral-600">
         No services yet
       </span>
     {/if}
@@ -191,10 +201,10 @@
           />
 
           <div class="flex flex-col gap-0.5">
-            {#each featureConfig as { feature, label, icon: Icon }}
+            {#each featureConfig as { feature, label, icon: Icon } (feature)}
               <label
                 class={[
-                  'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs transition-colors hover:bg-base-100/60',
+                  'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
                   { 'text-primary': isFeatureEnabled(feature) },
                 ]}
               >
@@ -229,8 +239,8 @@
         </div>
       {:else}
         <SidebarMenuItem onclick={onOpenForm} isActive={false} disabled={false}>
-          <PlusIcon class="size-4 shrink-0 text-base-content/50" />
-          <span class="truncate text-base-content/50">Add service</span>
+          <PlusIcon class="size-4 shrink-0 text-neutral-500" />
+          <span class="truncate text-neutral-500">Add service</span>
         </SidebarMenuItem>
       {/if}
     {/if}

@@ -5,12 +5,23 @@
   "main": "index.js",
   "scripts": {
     "dev:frontend": "pnpm --filter frontend dev",
-    "build:frontend": "pnpm --filter frontend build"
+    "dev:backend": "pnpm --filter backend start:dev",
+    "dev:status-page": "pnpm --filter status-page dev",
+    "build:frontend": "pnpm --filter frontend build",
+    "build": "pnpm -r --if-present run build",
+    "check": "pnpm -r --if-present run check",
+    "test": "pnpm -r --if-present run test",
+    "test:e2e": "pnpm --filter frontend test:e2e",
+    "format": "pnpm -r --if-present run format"
   },
   "keywords": [],
   "author": "",
-  "license": "BSL-1.0",
+  "license": "MIT",
   "packageManager": "pnpm@10.7.0",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"

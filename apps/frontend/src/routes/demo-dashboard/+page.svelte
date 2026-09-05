@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
@@ -9,7 +10,6 @@
   import Footer from '$lib/landing/Footer.svelte';
   import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
   import { ArrowRightIcon } from 'lucide-svelte';
-  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
 
   type Props = {
     data: {
@@ -56,13 +56,11 @@
   <title>Demo Dashboard | logdash</title>
 </svelte:head>
 
-<!-- <div class="w-full max-w-7xl space-y-4 px-4 pb-4 sm:space-y-8 sm:px-0 sm:pb-8"> -->
-<AnimatedView
-  class="relative mx-auto flex w-full max-w-7xl flex-col px-8 space-y-4"
->
+<!-- <div class="w-full max-w-landing space-y-4 px-4 pb-4 sm:space-y-8 sm:px-0 sm:pb-8"> -->
+<div class="relative mx-auto flex w-full max-w-landing flex-col px-8 space-y-4">
   <DemoDashboardHeader />
 
-  <div class="ld-card relative mx-auto w-full max-w-7xl p-4">
+  <div class="ld-card relative mx-auto w-full max-w-landing p-4">
     <ProjectView
       priorityProjectId={data.projectId}
       priorityClusterId={data.clusterId}
@@ -79,14 +77,15 @@
 
       <FlamingoIcon class="text-primary h-54 w-54 mx-auto mb-6 sm:hidden" />
 
-      <p class="mb-10 text-lg opacity-90">
+      <p class="text-neutral-200 mb-10 text-lg">
         Protect your revenue stream today. Zero commitment, no credit card
         required.
       </p>
       <a
         class="btn btn-primary btn-md sm:btn-lg w-full sm:w-fit"
         data-posthog-id="demo-dashboard-cta"
-        href="/app/auth"
+        href={resolve('/app/quick-setup')}
+        rel="nofollow"
       >
         Start free
         <ArrowRightIcon class="ml-1 size-4 sm:ml-2 sm:size-6" />
@@ -97,4 +96,4 @@
   </div>
 
   <Footer />
-</AnimatedView>
+</div>

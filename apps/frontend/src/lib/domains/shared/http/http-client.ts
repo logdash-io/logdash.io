@@ -7,10 +7,8 @@ import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils';
 import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/domains/shared/utils/cookies.utils';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
 
-export interface HttpRequestOptions extends Omit<
-  AxiosRequestConfig,
-  'url' | 'method'
-> {
+export interface HttpRequestOptions
+  extends Omit<AxiosRequestConfig, 'url' | 'method'> {
   requireAuth?: boolean;
   customToken?: string;
 }
@@ -94,13 +92,10 @@ export class HttpClient {
   }
 
   async get<T>(url: string, options: HttpRequestOptions = {}): Promise<T> {
-    const { requireAuth, customToken, ...axiosOptions } = options;
-    const headers = this.buildHeaders(options);
-
-    const response: AxiosResponse<T> = await this.axiosInstance.get(url, {
-      ...axiosOptions,
-      headers,
-    });
+    const response: AxiosResponse<T> = await this.axiosInstance.get(
+      url,
+      this.toRequestConfig(options),
+    );
     return response.data;
   }
 
@@ -109,16 +104,10 @@ export class HttpClient {
     data?: unknown,
     options: HttpRequestOptions = {},
   ): Promise<T> {
-    const { requireAuth, customToken, ...axiosOptions } = options;
-    const headers = this.buildHeaders(options);
-
     const response: AxiosResponse<T> = await this.axiosInstance.post(
       url,
       data,
-      {
-        ...axiosOptions,
-        headers,
-      },
+      this.toRequestConfig(options),
     );
     return response.data;
   }
@@ -128,24 +117,19 @@ export class HttpClient {
     data?: unknown,
     options: HttpRequestOptions = {},
   ): Promise<T> {
-    const { requireAuth, customToken, ...axiosOptions } = options;
-    const headers = this.buildHeaders(options);
-
-    const response: AxiosResponse<T> = await this.axiosInstance.put(url, data, {
-      ...axiosOptions,
-      headers,
-    });
+    const response: AxiosResponse<T> = await this.axiosInstance.put(
+      url,
+      data,
+      this.toRequestConfig(options),
+    );
     return response.data;
   }
 
   async delete<T>(url: string, options: HttpRequestOptions = {}): Promise<T> {
-    const { requireAuth, customToken, ...axiosOptions } = options;
-    const headers = this.buildHeaders(options);
-
-    const response: AxiosResponse<T> = await this.axiosInstance.delete(url, {
-      ...axiosOptions,
-      headers,
-    });
+    const response: AxiosResponse<T> = await this.axiosInstance.delete(
+      url,
+      this.toRequestConfig(options),
+    );
     return response.data;
   }
 
@@ -154,18 +138,22 @@ export class HttpClient {
     data?: unknown,
     options: HttpRequestOptions = {},
   ): Promise<T> {
-    const { requireAuth, customToken, ...axiosOptions } = options;
-    const headers = this.buildHeaders(options);
-
     const response: AxiosResponse<T> = await this.axiosInstance.patch(
       url,
       data,
-      {
-        ...axiosOptions,
-        headers,
-      },
+      this.toRequestConfig(options),
     );
     return response.data;
+  }
+
+  private toRequestConfig(options: HttpRequestOptions): AxiosRequestConfig {
+    const config: HttpRequestOptions = {
+      ...options,
+      headers: this.buildHeaders(options),
+    };
+    delete config.requireAuth;
+    delete config.customToken;
+    return config;
   }
 }
 

@@ -1,6 +1,7 @@
 <script lang="ts">
-  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
+  import { resolve } from '$app/paths';
   import Footer from '$lib/landing/Footer.svelte';
+  import FrameworksList from '$lib/landing/FrameworksList.svelte';
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
   import { RoutePath } from '$lib/domains/shared/route-path.js';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
@@ -38,7 +39,7 @@
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Cloud',
     description:
-      'Vital signs for your business. Simple counters, gauges, and system health metrics.',
+      'Response time on every HTTP check, plus your own counters and gauges, so a slowdown shows up before it becomes downtime.',
     offers: {
       '@type': 'Offer',
       price: '0',
@@ -48,13 +49,13 @@
 </script>
 
 <SeoMeta
-  title="System Metrics & Health | Logdash"
-  description="Know if your code is slow before your users do. Track counters, gauges, and system health metrics without the complexity of Prometheus."
-  keywords="system metrics, app health, counters, gauges, prometheus alternative, performance monitoring, logdash metrics"
+  title="API response time and metrics | Logdash"
+  description="Watch response time, queue depth and error rate. Logdash charts every number you push, so the slowdown shows up before it becomes downtime."
+  keywords="response time monitoring, api latency alerts, system metrics, counters, gauges, prometheus alternative, logdash metrics"
   {jsonLd}
 />
 
-<AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
+<div class="mx-auto flex w-full max-w-landing flex-col">
   <!-- Centralized Hero Section -->
   <section
     class="mx-auto w-full max-w-4xl px-6 pb-16 pt-16 md:pt-24 text-center"
@@ -67,28 +68,34 @@
       </div>
     </div>
 
-    <h1 class="mb-6 text-4xl font-extrabold tracking-tight md:text-6xl">
-      Vital signs for your business
+    <h1 class="mb-6 text-4xl font-semibold tracking-tight md:text-6xl">
+      Response time and metrics for your API
     </h1>
 
     <p
-      class="text-base-content/70 mx-auto mb-10 max-w-2xl text-xl leading-relaxed"
+      class="text-neutral-400 mx-auto mb-10 max-w-2xl text-xl leading-relaxed text-pretty"
     >
-      Track sign-ups, payments, database latency, job queue depth, and error
-      rates without setting up Prometheus or paying $50 Vercel bill.
+      Every HTTP check records how long your endpoint took, and anything slower
+      than
+      <span class="text-base-content font-mono text-base font-semibold">
+        10s
+      </span>
+      counts as down. Push your own counters and gauges for the numbers a check cannot
+      see: queue depth, database latency, error rate.
     </p>
 
     <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
       <a
-        href={RoutePath.AUTH}
+        href={resolve(RoutePath.QUICK_SETUP)}
+        rel="nofollow"
         class="btn btn-primary w-full sm:w-auto"
         data-posthog-id="feature-metrics-cta"
       >
-        Track system health
+        Start tracking
         <ArrowRightIcon class="ml-1 h-5 w-5" />
       </a>
       <a
-        href="/demo-dashboard"
+        href={resolve('/demo-dashboard')}
         class="btn btn-secondary w-full sm:w-auto"
         data-posthog-id="feature-metrics-demo-cta"
       >
@@ -97,20 +104,22 @@
     </div>
   </section>
 
+  <FrameworksList />
+
   <!-- Deep-Dive Problem Section -->
   <section class="mx-auto w-full max-w-5xl px-6 py-16">
     <div class="ld-card-base rounded-3xl p-8 md:p-12">
-      <h2 class="mb-6 text-3xl font-bold md:text-4xl">
+      <h2 class="mb-6 text-3xl font-semibold md:text-4xl">
         Flying Blind on Infrastructure
       </h2>
       <div class="flex flex-col gap-8 md:flex-row md:gap-12">
         <div class="flex-1">
-          <p class="text-lg leading-relaxed opacity-80">
+          <p class="text-neutral-300 text-lg leading-relaxed">
             It's easy to track signups. It's harder to know if your background
             worker is stuck, or if that new query you wrote is timing out for 5%
             of users.
           </p>
-          <p class="mt-4 text-lg leading-relaxed opacity-80">
+          <p class="text-neutral-300 mt-4 text-lg leading-relaxed">
             When things feel "sluggish", you shouldn't have to guess why. You
             need raw, technical counters and gauges that tell you exactly which
             part of your system is sweating.
@@ -119,17 +128,17 @@
         <div class="flex-1">
           <h3 class="mb-4 text-xl font-semibold">The backend black box</h3>
           <ul class="space-y-4">
-            <li class="flex items-start gap-3 opacity-90">
+            <li class="text-neutral-200 flex items-start gap-3">
               <span class="text-error mt-1">✕</span>
               <span>"Why is the API slow?" becomes a guessing game.</span>
             </li>
-            <li class="flex items-start gap-3 opacity-90">
+            <li class="text-neutral-200 flex items-start gap-3">
               <span class="text-error mt-1">✕</span>
               <span>
                 You don't know if your cron jobs actually finished successfully.
               </span>
             </li>
-            <li class="flex items-start gap-3 opacity-90">
+            <li class="text-neutral-200 flex items-start gap-3">
               <span class="text-error mt-1">✕</span>
               <span>
                 You deploy a change and wait for user complaints to know if it
@@ -144,18 +153,18 @@
 
   <!-- Detailed Value Proposition -->
   <section class="mx-auto w-full max-w-5xl px-6 py-16 text-center">
-    <h2 class="mb-6 text-3xl font-bold md:text-4xl">
-      Engineering Clarity, Instantly
+    <h2 class="mb-6 text-3xl font-semibold md:text-4xl">
+      The number moves first, the outage follows
     </h2>
-    <p class="mx-auto mb-12 max-w-3xl text-xl opacity-80">
-      Simple counters, gauges, and histograms. Measure how long things take and
-      how many things happened. It's the vital signs monitor for your actual
-      code.
+    <p class="text-neutral-300 mx-auto mb-12 max-w-3xl text-xl">
+      Counters and gauges from Node, Python, Ruby, Java, .NET and Go. Measure
+      how long things take and how many things happened, then watch the line
+      bend a day before it takes the service down with it.
     </p>
 
     <!-- Feature Highlights -->
     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-      {#each benefits as benefit}
+      {#each benefits as benefit (benefit.text)}
         <div class="ld-card-base rounded-3xl p-6 text-left">
           <div
             class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
@@ -175,8 +184,8 @@
     </h2>
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
       <a
-        class="ld-card-base rounded-3xl p-8 transition-all hover:-translate-y-1 hover:shadow-lg"
-        href="/features/logging"
+        class="ld-card-base rounded-3xl p-8 transition-ink hover:border-neutral-700"
+        href={resolve('/features/logging')}
         data-posthog-id="feature-metrics-other-logging"
       >
         <div
@@ -184,12 +193,12 @@
         >
           <LogsIcon class="h-6 w-6" />
         </div>
-        <h3 class="mb-2 text-2xl font-bold">Logging</h3>
-        <p class="opacity-80">Unify your logs from every source.</p>
+        <h3 class="mb-2 text-2xl font-semibold">Logging</h3>
+        <p class="text-neutral-300">Find the error behind the alert.</p>
       </a>
       <a
-        class="ld-card-base rounded-3xl p-8 transition-all hover:-translate-y-1 hover:shadow-lg"
-        href="/features/monitoring"
+        class="ld-card-base rounded-3xl p-8 transition-ink hover:border-neutral-700"
+        href={resolve('/features/monitoring')}
         data-posthog-id="feature-metrics-other-monitoring"
       >
         <div
@@ -197,8 +206,8 @@
         >
           <HeartPulseIcon class="h-6 w-6" />
         </div>
-        <h3 class="mb-2 text-2xl font-bold">Monitoring</h3>
-        <p class="opacity-80">Sleep well with simple uptime alerts.</p>
+        <h3 class="mb-2 text-2xl font-semibold">Monitoring</h3>
+        <p class="text-neutral-300">HTTP checks and cron heartbeats.</p>
       </a>
     </div>
   </section>
@@ -206,4 +215,4 @@
   <div class="distance h-16"></div>
 
   <Footer />
-</AnimatedView>
+</div>

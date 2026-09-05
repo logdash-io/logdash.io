@@ -1,27 +1,25 @@
 <script lang="ts">
-  import { Feature } from '$lib/domains/shared/types.js';
+  import { resolve } from '$app/paths';
   import { ArrowRightIcon } from 'lucide-svelte';
   import FakeMonitoringTile from './unconfigured/FakeMonitoringTile.svelte';
 
   type Props = {
-    feature: Feature.MONITORING;
-    basePath: string;
-    delayIn?: number;
+    clusterId: string;
+    projectId: string;
   };
 
-  const { feature, basePath, delayIn = 0 }: Props = $props();
-
-  const featurePath = $derived(`${basePath}/monitoring`);
+  const { clusterId, projectId }: Props = $props();
 </script>
 
 {#snippet configureOverlay()}
   <a
-    href={featurePath}
-    class="z-50 absolute group inset-0 flex items-center justify-center bg-base-300/60 transition-all"
+    href={resolve('/app/clusters/[cluster_id]/[project_id]/monitoring', {
+      cluster_id: clusterId,
+      project_id: projectId,
+    })}
+    class="z-50 absolute group inset-0 flex items-center justify-center bg-base-300/60"
   >
-    <span
-      class="btn btn-secondary gap-2 opacity-80 group-hover:opacity-100 transition-opacity"
-    >
+    <span class="btn btn-secondary gap-2">
       Finish monitoring setup
       <ArrowRightIcon class="h-4 w-4" />
     </span>

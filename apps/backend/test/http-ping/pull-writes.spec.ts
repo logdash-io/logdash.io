@@ -4,6 +4,7 @@ import { URL_STUB } from '../utils/http-monitor-utils';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
 
 describe('Http Ping (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -176,6 +177,68 @@ describe('Http Ping (writes)', () => {
     expect(pingsA.length).toBe(1);
     expect(pingsB.length).toBe(0);
     expect(allPings.length).toBe(1);
+  });
+
+  it('writes nothing when every monitor is claimed', async () => {
+    // given
+    const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous({
+      userTier: UserTier.EarlyBird,
+    });
+    await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+      token,
+      projectId: project.id,
+    });
+
+    // when
+    await schedulerService.tryPingUnclaimedMonitors();
+
+    // then
+    expect(await bootstrap.utils.httpPingUtils.getAllPings()).toHaveLength(0);
+  });
+
+  it('pings unclaimed pull monitors of every project and skips unclaimed push monitors', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous({
+      userTier: UserTier.EarlyBird,
+    });
+    const otherProject = await bootstrap.utils.projectUtils.createDefaultProject({
+      userId: setup.user.id,
+      clusterId: setup.cluster.id,
+      tier: ProjectTier.Free,
+    });
+
+    const unclaimedPullMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+      projectId: setup.project.id,
+      name: 'Unclaimed pull monitor',
+      url: URL_STUB,
+    });
+    const unclaimedPullMonitorInOtherProject =
+      await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        projectId: otherProject.id,
+        name: 'Unclaimed pull monitor in another project',
+        url: URL_STUB,
+      });
+    const unclaimedPushMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+      projectId: setup.project.id,
+      name: 'Unclaimed push monitor',
+      url: URL_STUB,
+      mode: HttpMonitorMode.Push,
+    });
+
+    // when
+    await schedulerService.tryPingUnclaimedMonitors();
+
+    // then
+    const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
+
+    expect(allPings.map((ping) => ping.httpMonitorId).sort()).toEqual(
+      [unclaimedPullMonitor.id, unclaimedPullMonitorInOtherProject.id].sort(),
+    );
+    expect(
+      await bootstrap.utils.httpPingUtils.getMonitorPings({
+        httpMonitorId: unclaimedPushMonitor.id,
+      }),
+    ).toHaveLength(0);
   });
 
   it('pings unclaimed monitors with dedicated method', async () => {

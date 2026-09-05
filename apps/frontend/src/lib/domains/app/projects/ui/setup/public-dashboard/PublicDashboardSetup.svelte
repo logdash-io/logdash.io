@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
@@ -41,7 +42,7 @@
   });
 
   $effect(() => {
-    dashboardMonitors.length;
+    void dashboardMonitors.length;
 
     publicDashboardPrivateState.loadDashboard(dashboard_id).then(() => {
       isLoading = false;
@@ -91,7 +92,7 @@
 
       <h5 class="text-2xl font-semibold">Setup Status Page for your project</h5>
 
-      <p class="text-base-content opacity-60">
+      <p class="text-neutral-400">
         Share status of your services with the world.
       </p>
     </div>
@@ -106,19 +107,24 @@
       >
         {#if monitoringState.monitors.length === 0}
           <div class="flex items-center justify-center py-4">
-            <span class="text-secondary/70 text-center">
+            <span class="text-neutral-400 text-center">
               <p>No HTTP monitors available.</p>
-              <a href="/app/clusters/{clusterId}" class="link link-primary">
+              <a
+                href={resolve('/app/clusters/[cluster_id]', {
+                  cluster_id: clusterId,
+                })}
+                class="link link-primary"
+              >
                 Create a monitor first
               </a>
             </span>
           </div>
         {/if}
 
-        {#each monitoringState.monitors as monitor, index}
+        {#each monitoringState.monitors as monitor, index (monitor.id)}
           <label
             class={[
-              'hover:bg-base-100/50 flex cursor-pointer select-none items-center gap-1 truncate p-2 px-3 transition-all',
+              'hover:bg-neutral-800 flex cursor-pointer select-none items-center gap-1 truncate p-2 px-3',
               { 'border-base-100 border-t': index > 0 },
             ]}
           >
@@ -154,7 +160,7 @@
         </p>
         <input
           bind:value={dashboardName}
-          class="input-sm input-ghost selection:bg-secondary/20 border-secondary/20 focus:border-primary h-full w-full rounded-lg border px-3 py-2 text-lg font-semibold outline-0 focus:bg-transparent"
+          class="input-sm input-ghost selection:bg-neutral-700 border-neutral-700 focus:border-primary h-full w-full rounded-lg border px-3 py-2 text-lg font-semibold outline-0 focus:bg-transparent"
           placeholder={dashboard?.name || 'Status Page'}
           type="text"
           use:autoFocus={{ selectAll: true }}
@@ -173,7 +179,7 @@
     <div class="mt-auto flex h-5 items-center justify-center gap-4 text-sm">
       {#if isLoading}
         <span class="loading loading-spinner loading-xs"></span>
-        <span class="text-secondary/70">Saving changes...</span>
+        <span class="text-neutral-400">Saving changes...</span>
       {:else}
         <CheckIcon class="text-success h-5 w-5" />
 
@@ -192,9 +198,12 @@
         ]}
         data-posthog-id="public-dashboard-setup-back-button"
         onclick={() => {
-          goto(`/app/clusters/${page.params.cluster_id}`, {
-            invalidateAll: true,
-          });
+          goto(
+            resolve('/app/clusters/[cluster_id]', { cluster_id: clusterId }),
+            {
+              invalidateAll: true,
+            },
+          );
         }}
       >
         Go back

@@ -20,7 +20,7 @@ const STATUS_CONFIG: Record<StatusType, StatusConfig> = {
   },
   unknown: {
     text: 'Unknown',
-    color: 'text-gray-400',
+    color: 'text-neutral-400',
   },
 };
 

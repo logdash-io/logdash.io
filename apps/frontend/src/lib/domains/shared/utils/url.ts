@@ -24,7 +24,7 @@ export function isValidUrl(value: string): boolean {
     }
 
     return true;
-  } catch (_) {
+  } catch {
     return false;
   }
 }

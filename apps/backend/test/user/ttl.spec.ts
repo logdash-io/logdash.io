@@ -1,4 +1,4 @@
-import { addHours, subDays } from 'date-fns';
+import { subHours } from 'date-fns';
 import { Types } from 'mongoose';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
@@ -27,7 +27,7 @@ describe('UserTtlService', () => {
     const service = bootstrap.app.get(UserTtlService);
 
     // given
-    const safeRangeDate = addHours(subDays(new Date(), 7), 1);
+    const safeRangeDate = subHours(new Date(), 23);
 
     const userInSafeRange = await bootstrap.models.userModel.create({
       createdAt: safeRangeDate,
@@ -51,7 +51,7 @@ describe('UserTtlService', () => {
     await bootstrap.models.userModel.updateOne(
       { _id: new Types.ObjectId(user.id) },
       {
-        createdAt: subDays(new Date(), 9),
+        createdAt: subHours(new Date(), 25),
       },
       { timestamps: false },
     );

@@ -49,7 +49,7 @@
   );
 
   const FILTER_CHIP_CLASS =
-    'bg-base-300 border-secondary/20 flex items-center gap-1.5 rounded-full border py-1 pr-1 pl-2.5 text-sm';
+    'bg-base-300 border-neutral-700 flex items-center gap-1.5 rounded-full border py-1 pr-1 pl-2.5 text-sm';
 
   function onQuickFilterErrors(): void {
     filtersStore.setLevels(['error']);
@@ -63,7 +63,7 @@
 {#if !hasActiveFilters}
   <div class="flex items-center gap-2">
     <button
-      class="whitespace-nowrap bg-base-300 text-base-content/60 hover:text-base-content border-base-content/30 flex items-center gap-1.5 rounded-full border border-dashed py-1 px-2.5 text-sm transition-colors cursor-pointer"
+      class="whitespace-nowrap bg-base-300 text-neutral-400 hover:text-base-content border-neutral-600 flex items-center gap-1.5 rounded-full border border-dashed py-1 px-2.5 text-sm transition-ink cursor-pointer"
       onclick={onQuickFilterErrors}
     >
       <span
@@ -73,7 +73,7 @@
     </button>
 
     <button
-      class="whitespace-nowrap bg-base-300 text-base-content/60 hover:text-base-content border-base-content/30 flex items-center gap-1.5 rounded-full border border-dashed py-1 px-2.5 text-sm transition-colors cursor-pointer"
+      class="whitespace-nowrap bg-base-300 text-neutral-400 hover:text-base-content border-neutral-600 flex items-center gap-1.5 rounded-full border border-dashed py-1 px-2.5 text-sm transition-ink cursor-pointer"
       onclick={onQuickFilterWarnings}
     >
       <span
@@ -88,7 +88,7 @@
   <div class="flex flex-wrap items-center gap-2">
     {#if hasLevels}
       <div class={FILTER_CHIP_CLASS}>
-        <span class="text-base-content/70">Level</span>
+        <span class="text-neutral-400">Level</span>
         <span class="font-medium">
           {isMultipleLevels ? 'is any of' : 'is'}
         </span>
@@ -109,7 +109,7 @@
 
     {#if hasNamespaces}
       <div class={FILTER_CHIP_CLASS}>
-        <span class="text-base-content/70">Namespace</span>
+        <span class="text-neutral-400">Namespace</span>
         <span class="font-medium">
           {isMultipleNamespaces ? 'is any of' : 'is'}
         </span>
@@ -130,7 +130,7 @@
 
     {#if timeRangeLabel}
       <div class={FILTER_CHIP_CLASS}>
-        <span class="text-base-content/70">Time</span>
+        <span class="text-neutral-400">Time</span>
         <span class="font-medium">is</span>
         <span class="font-medium">{timeRangeLabel}</span>
         {@render clearButton(onClearTimeRange)}
@@ -149,7 +149,7 @@
   <div class="ld-card-base rounded-2xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Level</div>
     <ul class="dropdown-content p-0">
-      {#each LOG_LEVELS as level}
+      {#each LOG_LEVELS as level (level.value)}
         {@const isSelected = filtersStore.hasLevel(level.value)}
         <li>
           <label
@@ -176,7 +176,7 @@
 {#snippet levelChipContent()}
   {#if isMultipleLevels}
     <span class="flex items-center gap-0.5">
-      {#each filtersStore.levels.slice(0, 3) as level, index}
+      {#each filtersStore.levels.slice(0, 3) as level, index (level)}
         {@const levelInfo = LOG_LEVELS_MAP[level]}
         {#if levelInfo}
           <span
@@ -211,7 +211,7 @@
   <div class="ld-card-base rounded-2xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Namespace</div>
     <ul class="dropdown-content p-0">
-      {#each namespacesState.namespaces as nsMetadata}
+      {#each namespacesState.namespaces as nsMetadata (nsMetadata.namespace)}
         {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
         <li>
           <label
@@ -244,7 +244,7 @@
 
 {#snippet clearButton(onClick: (e: MouseEvent) => void)}
   <span
-    class="hover:bg-base-content/10 ml-0.5 rounded-full p-0.5 transition-colors cursor-pointer"
+    class="hover:bg-neutral-800 ml-0.5 rounded-full p-0.5 cursor-pointer"
     role="button"
     tabindex="0"
     onclick={onClick}

@@ -19,19 +19,21 @@
   const formattedMessage = $derived.by(() => {
     if (!log) return { isJson: false, content: '' };
 
-    const trimmed = log.message.trim();
-    try {
-      const parsed = JSON.parse(trimmed);
-      if (typeof parsed === 'object' && parsed !== null) {
-        return {
-          isJson: true,
-          content: JSON.stringify(parsed, null, 2),
-        };
-      }
-    } catch {}
+    const prettyJson = prettyPrintJsonObject(log.message.trim());
+    if (prettyJson === null) return { isJson: false, content: log.message };
 
-    return { isJson: false, content: log.message };
+    return { isJson: true, content: prettyJson };
   });
+
+  function prettyPrintJsonObject(raw: string): string | null {
+    try {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed !== 'object' || parsed === null) return null;
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      return null;
+    }
+  }
 
   const levelColor = $derived(
     LOG_LEVELS_MAP[log?.level as LogLevel]?.color ?? 'bg-[#155dfc]',
@@ -97,7 +99,7 @@
     transition:fly={{ y: 200, duration: 200 }}
   >
     <div
-      class="flex shrink-0 items-center justify-between border-b border-base-content/10 px-5 py-3"
+      class="flex shrink-0 items-center justify-between border-b border-hairline px-5 py-3"
     >
       <div
         class="flex flex-col md:flex-row md:items-center items-start md:gap-3"
@@ -106,13 +108,13 @@
           <div
             class={['size-2 md:size-2.5 rounded-full shrink-0', levelColor]}
           ></div>
-          <span class="font-mono text-xs uppercase opacity-60">
+          <span class="text-neutral-400 font-mono text-xs uppercase">
             {log.level}
           </span>
           {#if log.namespace}
             <button
               class={[
-                'rounded px-1.5 py-0.5 text-xs cursor-pointer transition-all outline-0',
+                'rounded px-1.5 py-0.5 text-xs cursor-pointer outline-0',
                 {
                   'bg-base-300 hover:bg-base-100': !isNamespaceLocked,
                   'bg-primary/20 ring-1 ring-primary': isNamespaceLocked,
@@ -124,7 +126,7 @@
             </button>
           {/if}
         </span>
-        <span class="font-mono text-xs opacity-40">{formattedDate}</span>
+        <span class="text-neutral-500 font-mono text-xs">{formattedDate}</span>
       </div>
 
       <div
@@ -139,7 +141,7 @@
           <ChevronRightIcon class="size-4 rotate-180" />
         </button>
 
-        <span class="px-2 font-mono text-xs opacity-60 hidden md:block">
+        <span class="text-neutral-400 hidden px-2 font-mono text-xs md:block">
           {currentPosition}/{sameTypeCount}
         </span>
 

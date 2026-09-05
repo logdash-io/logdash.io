@@ -102,19 +102,17 @@
 
   <div class="flex flex-col">
     <SettingsCardItem icon={EditIcon}>
-      {#snippet children()}
-        <p class="text-base-content/60 text-sm">Project Name</p>
-        {#if isEditingName}
-          <input
-            bind:value={newName}
-            class="input input-sm mt-1 w-64"
-            placeholder="Enter project name"
-            onkeydown={onKeydown}
-          />
-        {:else}
-          <p class="font-medium">{cluster?.name || 'Unknown'}</p>
-        {/if}
-      {/snippet}
+      <p class="text-neutral-400 text-sm">Project Name</p>
+      {#if isEditingName}
+        <input
+          bind:value={newName}
+          class="input input-sm mt-1 w-64"
+          placeholder="Enter project name"
+          onkeydown={onKeydown}
+        />
+      {:else}
+        <p class="font-medium">{cluster?.name || 'Unknown'}</p>
+      {/if}
 
       {#snippet action()}
         {#if isEditingName}
@@ -139,7 +137,7 @@
         {:else}
           <button
             onclick={onStartRenaming}
-            class="btn btn-ghost btn-sm text-base-content/60"
+            class="btn btn-ghost btn-sm text-neutral-400"
           >
             Rename
             <ChevronRightIcon class="h-4 w-4" />
@@ -149,29 +147,27 @@
     </SettingsCardItem>
 
     <SettingsCardItem icon={PaletteIcon}>
-      {#snippet children()}
-        <p class="text-base-content/60 text-sm">Project Color</p>
-        {#if isEditingColor}
-          <div class="mt-2">
-            <ColorPalette
-              selectedColor={cluster?.color ?? ''}
-              onSelect={onColorSelect}
-            />
-          </div>
-        {:else}
-          <div class="flex items-center gap-2">
-            {#if cluster?.color}
-              <div
-                class="size-3.5 rounded-md"
-                style="background-color: {cluster.color}"
-              ></div>
-              <p class="font-mono text-sm">{cluster.color}</p>
-            {:else}
-              <p class="text-base-content/50 text-sm">No color set</p>
-            {/if}
-          </div>
-        {/if}
-      {/snippet}
+      <p class="text-neutral-400 text-sm">Project Color</p>
+      {#if isEditingColor}
+        <div class="mt-2">
+          <ColorPalette
+            selectedColor={cluster?.color ?? ''}
+            onSelect={onColorSelect}
+          />
+        </div>
+      {:else}
+        <div class="flex items-center gap-2">
+          {#if cluster?.color}
+            <div
+              class="size-3.5 rounded-md"
+              style="background-color: {cluster.color}"
+            ></div>
+            <p class="font-mono text-sm">{cluster.color}</p>
+          {:else}
+            <p class="text-neutral-500 text-sm">No color set</p>
+          {/if}
+        </div>
+      {/if}
 
       {#snippet action()}
         {#if isEditingColor}
@@ -196,7 +192,7 @@
         {:else}
           <button
             onclick={onStartEditingColor}
-            class="btn btn-ghost btn-sm text-base-content/60"
+            class="btn btn-ghost btn-sm text-neutral-400"
           >
             Change
             <ChevronRightIcon class="h-4 w-4" />
@@ -206,15 +202,13 @@
     </SettingsCardItem>
 
     <SettingsCardItem icon={HashIcon} showBorder={false}>
-      {#snippet children()}
-        <p class="text-base-content/60 text-sm">Project ID</p>
-        <p class="font-mono text-sm">{clusterId}</p>
-      {/snippet}
+      <p class="text-neutral-400 text-sm">Project ID</p>
+      <p class="font-mono text-sm">{clusterId}</p>
 
       {#snippet action()}
         <button
           onclick={onCopyProjectId}
-          class="btn btn-ghost btn-sm text-base-content/60"
+          class="btn btn-ghost btn-sm text-neutral-400"
         >
           <CopyIcon class="h-4 w-4" />
         </button>

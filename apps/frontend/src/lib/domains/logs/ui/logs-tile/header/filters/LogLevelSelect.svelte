@@ -39,7 +39,7 @@
     class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
     <ul class="">
-      {#each levelOptions as level}
+      {#each levelOptions as level (level.value)}
         <li
           class="hover:bg-base-100 flex items-center justify-start rounded-lg px-3"
         >

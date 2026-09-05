@@ -2,19 +2,29 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-optical-sizing: auto;
+  font-feature-settings: "cv01", "ss03";
 }
 
 body {
   font-synthesis: none;
-  font-variant-ligatures: none;
+  letter-spacing: -0.01em;
 }
 
 html,
 body {
-  --font-sans: "Kumbh Sans Variable", system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "Geist Mono Variable", "JetBrains Mono", "SF Mono", Monaco,
-    Inconsolata, "Roboto Mono", "Source Code Pro", monospace;
+  --font-sans:
+    "Inter Variable", "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    "Geist Mono Variable", "JetBrains Mono", "SF Mono", Monaco, Inconsolata,
+    "Roboto Mono", "Source Code Pro", monospace;
+
+  /* Focus rings: a soft halo just outside the control's own border. */
+  --focus-ring: 0 0 0 3px
+    color-mix(in oklab, var(--color-primary) 15%, transparent);
+  --focus-ring-error: 0 0 0 3px
+    color-mix(in oklab, var(--color-error) 20%, transparent);
 
   /* general */
   --sdt-bg-main: var(--color-base-200); /** wrap background color */
@@ -85,5 +95,5 @@ body {
     --color-primary
   ); /** date picker current day marker color */
 
-  @apply overflow-hidden scroll-smooth tracking-wide;
+  @apply overflow-hidden scroll-smooth;
 }

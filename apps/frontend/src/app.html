@@ -2,6 +2,14 @@
 <html lang="en" id="root">
   <head>
     <meta charset="utf-8" />
+    <!--
+      Reloads and back/forward land on the saved scroll offset only once the
+      document is parsed. Until then Chromium may paint a partial page at the
+      top, so rendering is blocked until the marker after the script at the
+      end of the body, which restores the offset itself for engines that
+      would wait for `load`.
+    -->
+    <link rel="expect" href="#ld-parsed" blocking="render" />
     <meta property="og:locale" content="en_US" />
     <link
       rel="apple-touch-icon"
@@ -29,5 +37,31 @@
   </head>
   <body data-sveltekit-preload-data="hover">
     <div style="display: contents">%sveltekit.body%</div>
+    <script>
+      (() => {
+        const key = () =>
+          'logdash:scroll:' + location.pathname + location.search;
+        const read = () => {
+          try {
+            return sessionStorage.getItem(key());
+          } catch {
+            return null;
+          }
+        };
+        const write = () => {
+          try {
+            sessionStorage.setItem(key(), String(scrollY));
+          } catch {
+            return;
+          }
+        };
+        const type = performance.getEntriesByType('navigation')[0]?.type;
+        const saved =
+          type === 'reload' || type === 'back_forward' ? read() : null;
+        if (saved !== null) scrollTo(0, Number(saved));
+        addEventListener('pagehide', write);
+      })();
+    </script>
+    <span id="ld-parsed" hidden></span>
   </body>
 </html>

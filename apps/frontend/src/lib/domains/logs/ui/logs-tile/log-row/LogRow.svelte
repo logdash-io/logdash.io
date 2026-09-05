@@ -31,7 +31,7 @@
     'flex h-7 w-full max-w-full cursor-pointer items-center gap-2.5 rounded-md px-4 text-left font-mono text-sm leading-7 outline-0',
     {
       'bg-base-100': isSelected && level !== 'error' && level !== 'warning',
-      'hover:bg-base-100/50':
+      'hover:bg-neutral-800':
         !isSelected && level !== 'error' && level !== 'warning',
       'bg-warning/20 text-warning-content hover:bg-warning/30':
         level === 'warning' && !isSelected,

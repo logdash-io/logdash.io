@@ -8,7 +8,6 @@
     class: className = '',
     parentClass = '',
     delayIn = 0,
-    delayOut = 0,
     header,
   }: {
     children: Snippet;

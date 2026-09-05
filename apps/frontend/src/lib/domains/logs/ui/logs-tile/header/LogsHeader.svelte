@@ -93,7 +93,7 @@
         onclick={() => timeDisplayState.toggle()}
       >
         <ClockIcon class="size-3.5 shrink-0" />
-        <span class="text-xs font-mono opacity-70">
+        <span class="text-neutral-400 font-mono text-xs">
           {timeDisplayState.isRelative ? 'REL' : 'ABS'}
         </span>
       </button>

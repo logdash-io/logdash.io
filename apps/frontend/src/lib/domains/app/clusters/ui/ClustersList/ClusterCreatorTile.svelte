@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { fly } from 'svelte/transition';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
@@ -12,7 +13,7 @@
 
   function onCreateClick(): void {
     if (canAddMore) {
-      goto('/app/clusters/new');
+      goto(resolve('/app/clusters/new'));
     }
   }
 </script>

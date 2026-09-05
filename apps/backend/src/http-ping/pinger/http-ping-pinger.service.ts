@@ -143,13 +143,8 @@ export class HttpPingPingerService {
     const queue: QueueItem[] = [];
     const results: CreateHttpPingDto[] = [];
 
-    // Get all project IDs from all tiers for unclaimed monitors
-    const allTiers = Object.keys(ProjectPlanConfigs) as ProjectTier[];
-    const projectsIds = (await this.projectReadService.readManyByTiers(allTiers)).map((p) => p.id);
-
     // Only fetch unclaimed monitors with 'pull' mode
-    for await (const monitor of this.httpMonitorReadService.readManyUnclaimedByProjectIdsCursorWithMode(
-      projectsIds,
+    for await (const monitor of this.httpMonitorReadService.readManyUnclaimedCursorWithMode(
       HttpMonitorMode.Pull,
     )) {
       if (queue.length >= this.maxConcurrentRequests) {

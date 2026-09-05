@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
 </script>
@@ -11,11 +12,15 @@
       <p>{page.error.message}</p>
     </div>
 
-    <div class="text-secondary/80 flex flex-col gap-2 text-sm">
+    <div class="text-neutral-300 flex flex-col gap-2 text-sm">
       If you think this is a bug, please let us know by reporting it on our
       GitHub repository. We appreciate your help in making LogDash better!
 
-      <a href="/" rel="noopener noreferrer" class="btn btn-sm btn-primary">
+      <a
+        href={resolve('/')}
+        rel="noopener noreferrer"
+        class="btn btn-sm btn-primary"
+      >
         Go back to home
       </a>
 

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { createLogger } from '$lib/domains/shared/logger';
@@ -52,9 +53,7 @@
           .then(() => {
             isPageVisible = newVisibility;
           })
-          .catch((error) => {
-            // toast.error('Error resuming data sync:', error);
-          });
+          .catch(() => {});
       } else {
         clearTimeout(timeout);
         logger.info('Page became hidden. Data sync will be paused.');
@@ -85,7 +84,12 @@
       metricsState.ready &&
       !metricsState.getById(previewedMetricId)
     ) {
-      goto(`/app/clusters/${clusterId}/${projectIdToSync}/metrics`);
+      goto(
+        resolve('/app/clusters/[cluster_id]/[project_id]/metrics', {
+          cluster_id: clusterId,
+          project_id: projectIdToSync,
+        }),
+      );
     }
   });
 

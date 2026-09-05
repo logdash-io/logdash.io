@@ -17,7 +17,7 @@ export const PUT: RequestHandler = async ({ cookies, request, params }) => {
   });
 };
 
-export const DELETE: RequestHandler = async ({ cookies, params, url }) => {
+export const DELETE: RequestHandler = async ({ cookies, params }) => {
   await logdashAPI.delete_project(params.project_id, get_access_token(cookies));
 
   return json({

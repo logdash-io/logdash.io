@@ -1,6 +1,7 @@
 <script lang="ts">
-  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
+  import { resolve } from '$app/paths';
   import Footer from '$lib/landing/Footer.svelte';
+  import FrameworksList from '$lib/landing/FrameworksList.svelte';
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
   import { RoutePath } from '$lib/domains/shared/route-path.js';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
@@ -37,7 +38,8 @@
     name: 'Logdash Logging',
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Cloud',
-    description: 'Unified logging with the fastest search on the planet.',
+    description:
+      'One searchable error stream across every service, so the alert comes with the request that caused it.',
     offers: {
       '@type': 'Offer',
       price: '0',
@@ -47,13 +49,13 @@
 </script>
 
 <SeoMeta
-  title="Unified Logging | Logdash"
-  description="Stop tab-switching to find bugs. Logdash unifies logs from all your sources into one simple, searchable stream."
-  keywords="unified logging, log management, centralized logs, vercel logs, supabase logs, logdash logging"
+  title="Application error logs for every service | Logdash"
+  description="Logdash streams logs from every service into one place, so when an error fires you can read the request that caused it instead of guessing."
+  keywords="error alerts, application error logging, log monitoring, centralized logs, vercel logs, supabase logs, logdash logging"
   {jsonLd}
 />
 
-<AnimatedView class="mx-auto flex w-full max-w-7xl flex-col">
+<div class="mx-auto flex w-full max-w-landing flex-col">
   <!-- Centralized Hero Section -->
   <section
     class="mx-auto w-full max-w-4xl px-6 pb-16 pt-16 md:pt-24 text-center"
@@ -66,28 +68,29 @@
       </div>
     </div>
 
-    <h1 class="mb-6 text-4xl font-extrabold tracking-tight md:text-6xl">
-      Unified logging with the fastest search on the planet
+    <h1 class="mb-6 text-4xl font-semibold tracking-tight md:text-6xl">
+      Application logs for the error behind the alert
     </h1>
 
     <p
-      class="text-base-content/70 mx-auto mb-10 max-w-2xl text-xl leading-relaxed"
+      class="text-neutral-400 mx-auto mb-10 max-w-2xl text-xl leading-relaxed text-pretty"
     >
-      Your logs are scattered everywhere. Vercel, Supabase, Cloudflare... it's
-      tough. No more tab switching to find out what happened.
+      A monitor tells you something is down. Your logs tell you what. Ship them
+      to one stream and the answer is one search away, not four dashboards away.
     </p>
 
     <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
       <a
-        href={RoutePath.AUTH}
+        href={resolve(RoutePath.QUICK_SETUP)}
+        rel="nofollow"
         class="btn btn-primary w-full sm:w-auto"
         data-posthog-id="feature-logging-cta"
       >
-        Unify your logs
+        Start shipping logs
         <ArrowRightIcon class="ml-1 size-4" />
       </a>
       <a
-        href="/demo-dashboard"
+        href={resolve('/demo-dashboard')}
         class="btn btn-secondary w-full sm:w-auto"
         data-posthog-id="feature-logging-demo-cta"
       >
@@ -96,18 +99,22 @@
     </div>
   </section>
 
+  <FrameworksList />
+
   <!-- Deep-Dive Problem Section -->
   <section class="mx-auto w-full max-w-5xl px-6 py-16">
     <div class="ld-card-base rounded-3xl p-8 md:p-12">
-      <h2 class="mb-6 text-3xl font-bold md:text-4xl">The "Alt-Tab" Fatigue</h2>
+      <h2 class="mb-6 text-3xl font-semibold md:text-4xl">
+        The "Alt-Tab" Fatigue
+      </h2>
       <div class="flex flex-col gap-8 md:flex-row md:gap-12">
         <div class="flex-1">
-          <p class="text-lg leading-relaxed opacity-80">
+          <p class="text-neutral-300 text-lg leading-relaxed">
             You know the drill. A user reports a bug. You check Vercel for the
             BFF/Backend logs. Then you switch to Supabase to check the DB logs.
             Then you check your payment provider's dashboard.
           </p>
-          <p class="mt-4 text-lg leading-relaxed opacity-80">
+          <p class="text-neutral-300 mt-4 text-lg leading-relaxed">
             By the time you find the issue, you've lost 20 minutes and your flow
             is gone. Context switching kills your productivity. You need one
             stream for everything.
@@ -116,18 +123,18 @@
         <div class="flex-1">
           <h3 class="mb-4 text-xl font-semibold">The scattered reality</h3>
           <ul class="space-y-4">
-            <li class="flex items-start gap-3 opacity-90">
+            <li class="text-neutral-200 flex items-start gap-3">
               <span class="text-error mt-1">✕</span>
               <span>Logs are scattered across different dashboards.</span>
             </li>
-            <li class="flex items-start gap-3 opacity-90">
+            <li class="text-neutral-200 flex items-start gap-3">
               <span class="text-error mt-1">✕</span>
               <span>
                 You have to mentally correlate timestamps across 3 different
                 tools.
               </span>
             </li>
-            <li class="flex items-start gap-3 opacity-90">
+            <li class="text-neutral-200 flex items-start gap-3">
               <span class="text-error mt-1">✕</span>
               <span>
                 You miss the root cause because it was hidden in a "third party"
@@ -142,18 +149,18 @@
 
   <!-- Detailed Value Proposition -->
   <section class="mx-auto w-full max-w-5xl px-6 py-16 text-center">
-    <h2 class="mb-6 text-3xl font-bold md:text-4xl">
-      One Stream. Complete Clarity.
+    <h2 class="mb-6 text-3xl font-semibold md:text-4xl">
+      One stream, from the alert to the cause
     </h2>
-    <p class="mx-auto mb-12 max-w-3xl text-xl opacity-80">
-      We pipe everything into one searchable feed. Filter by user_id across your
-      entire stack. See the request that caused the crash. It's how debugging
-      should feel.
+    <p class="text-neutral-300 mx-auto mb-12 max-w-3xl text-xl">
+      Everything lands in one searchable feed. Filter by user_id across the
+      whole stack, jump to the minute the check went red, and read the request
+      that caused it. Node, Python, Ruby, Java, .NET and Go.
     </p>
 
     <!-- Feature Highlights -->
     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-      {#each benefits as benefit}
+      {#each benefits as benefit (benefit.text)}
         <div class="ld-card-base rounded-3xl p-6 text-left">
           <div
             class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
@@ -173,8 +180,8 @@
     </h2>
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
       <a
-        class="ld-card-base rounded-3xl p-8 transition-all hover:-translate-y-1 hover:shadow-lg"
-        href="/features/metrics"
+        class="ld-card-base rounded-3xl p-8 transition-ink hover:border-neutral-700"
+        href={resolve('/features/metrics')}
         data-posthog-id="feature-logging-other-metrics"
       >
         <div
@@ -182,12 +189,12 @@
         >
           <ChartSplineIcon class="h-6 w-6" />
         </div>
-        <h3 class="mb-2 text-2xl font-bold">Metrics</h3>
-        <p class="opacity-80">Track system health and performance.</p>
+        <h3 class="mb-2 text-2xl font-semibold">Metrics</h3>
+        <p class="text-neutral-300">Watch the numbers that go bad first.</p>
       </a>
       <a
-        class="ld-card-base rounded-3xl p-8 transition-all hover:-translate-y-1 hover:shadow-lg"
-        href="/features/monitoring"
+        class="ld-card-base rounded-3xl p-8 transition-ink hover:border-neutral-700"
+        href={resolve('/features/monitoring')}
         data-posthog-id="feature-logging-other-monitoring"
       >
         <div
@@ -195,8 +202,8 @@
         >
           <HeartPulseIcon class="h-6 w-6" />
         </div>
-        <h3 class="mb-2 text-2xl font-bold">Monitoring</h3>
-        <p class="opacity-80">Sleep well with simple uptime alerts.</p>
+        <h3 class="mb-2 text-2xl font-semibold">Monitoring</h3>
+        <p class="text-neutral-300">HTTP checks and cron heartbeats.</p>
       </a>
     </div>
   </section>
@@ -204,4 +211,4 @@
   <div class="distance h-16"></div>
 
   <Footer />
-</AnimatedView>
+</div>

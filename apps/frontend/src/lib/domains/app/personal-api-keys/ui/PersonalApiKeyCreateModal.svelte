@@ -110,7 +110,9 @@
   }
 
   function scopeAction(resource: Resource): Action {
-    return scopes.find((entry) => entry.resource === resource)?.action ?? 'none';
+    return (
+      scopes.find((entry) => entry.resource === resource)?.action ?? 'none'
+    );
   }
 
   function toggleCluster(id: string): void {
@@ -288,7 +290,7 @@
       <div class="flex flex-col items-center gap-3 py-6 text-center">
         <div class="text-success text-4xl">✓</div>
         <h2 class="text-lg font-semibold">Approved</h2>
-        <p class="text-base-content/70 text-sm">
+        <p class="text-neutral-400 text-sm">
           Return to your terminal to continue.
         </p>
         <button type="button" class="btn btn-ghost mt-2" onclick={close}>
@@ -299,7 +301,7 @@
       <div class="flex flex-col items-center gap-3 py-6 text-center">
         <div class="text-error text-4xl">✕</div>
         <h2 class="text-lg font-semibold">Request denied</h2>
-        <p class="text-base-content/70 text-sm">
+        <p class="text-neutral-400 text-sm">
           The CLI authorization request was denied.
         </p>
         <button type="button" class="btn btn-ghost mt-2" onclick={close}>
@@ -312,9 +314,7 @@
           <KeyIcon class="text-primary size-5" />
         </div>
         <h2 class="text-lg font-semibold">
-          {mode === 'cli'
-            ? 'Authorize CLI access'
-            : 'Create personal API key'}
+          {mode === 'cli' ? 'Authorize CLI access' : 'Create personal API key'}
         </h2>
       </div>
 
@@ -322,14 +322,14 @@
         <div
           class="border-primary/40 bg-primary/10 flex flex-col gap-2 rounded-lg border p-3 text-sm"
         >
-          <p class="text-base-content/70">
+          <p class="text-neutral-400">
             A CLI on
             <span class="text-base-content font-mono font-semibold">
               {cliRequest.clientIp || 'an unknown address'}
             </span>
             is requesting access to your account.
           </p>
-          <dl class="text-base-content/70 flex flex-col gap-1 text-xs">
+          <dl class="text-neutral-400 flex flex-col gap-1 text-xs">
             <div class="flex justify-between gap-3">
               <dt>Code</dt>
               <dd class="text-base-content font-mono font-semibold">
@@ -349,9 +349,9 @@
               </dd>
             </div>
           </dl>
-          <p class="text-base-content/60 text-xs">
-            If you did not just run <span class="font-mono">ld login</span> on
-            that machine, deny this request.
+          <p class="text-neutral-400 text-xs">
+            If you did not just run <span class="font-mono">ld login</span>
+            on that machine, deny this request.
           </p>
         </div>
       {/if}
@@ -406,7 +406,7 @@
           <div class="flex flex-col gap-2">
             <span class="text-sm font-medium">Access</span>
             {#if mode === 'cli'}
-              <p class="text-base-content/60 -mt-1 text-xs">
+              <p class="text-neutral-400 -mt-1 text-xs">
                 Pick what this key may reach. Nothing is selected by default.
               </p>
             {/if}
@@ -421,7 +421,7 @@
                 class="border-base-100 mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
               >
                 {#if clusters.length === 0}
-                  <p class="text-base-content/60 p-1 text-sm">
+                  <p class="text-neutral-400 p-1 text-sm">
                     No clusters available.
                   </p>
                 {/if}
@@ -442,7 +442,7 @@
                 class="border-base-100 mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
               >
                 {#if projects.length === 0}
-                  <p class="text-base-content/60 p-1 text-sm">
+                  <p class="text-neutral-400 p-1 text-sm">
                     No projects available.
                   </p>
                 {/if}
@@ -455,7 +455,7 @@
                       onchange={() => toggleProject(project.id)}
                     />
                     {project.name}
-                    <span class="text-base-content/50">
+                    <span class="text-neutral-500">
                       ({project.clusterName})
                     </span>
                   </label>
@@ -467,16 +467,12 @@
           {#if mode === 'manage'}
             <div class="flex flex-col gap-1.5">
               <span class="text-sm font-medium">Expiry (optional)</span>
-              <input
-                bind:value={expiresAt}
-                type="date"
-                class="input w-full"
-              />
+              <input bind:value={expiresAt} type="date" class="input w-full" />
             </div>
           {:else}
             <div class="flex flex-col gap-1.5">
               <span class="text-sm font-medium">Expiry</span>
-              <p class="text-base-content/60 text-xs">
+              <p class="text-neutral-400 text-xs">
                 CLI keys always expire after 30 days. You can revoke this one
                 sooner from Account → API keys.
               </p>

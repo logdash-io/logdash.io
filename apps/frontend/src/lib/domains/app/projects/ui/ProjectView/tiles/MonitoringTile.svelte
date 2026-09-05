@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { PingChart } from '@logdash/hyper-ui/features';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings.js';
@@ -58,10 +59,6 @@
     isPaid ? (monitoringState.calculateUptime(monitorId) ?? 0) : 98.5,
   );
 
-  const monitoringTabPath = $derived(
-    `/app/clusters/${clusterId}/${projectId}/monitoring`,
-  );
-
   const formattedPings = $derived(
     pings.map((ping) => ({
       ...ping,
@@ -70,7 +67,7 @@
   );
 
   function onNavigateToMonitoring(): void {
-    goto(monitoringTabPath);
+    goto(resolve(`/app/clusters/${clusterId}/${projectId}/monitoring`));
   }
 
   function onTimeRangeChange(newRange: typeof timeRange): void {
@@ -106,10 +103,7 @@
       `Syncing ping buckets for project monitor: ${projectMonitor.id}`,
     );
 
-    monitoringState.loadPingBuckets(
-      projectMonitor.id,
-      untrack(() => pingsToLoad),
-    );
+    monitoringState.loadPingBuckets(projectMonitor.id);
   });
 
   onMount(() => {
@@ -127,7 +121,7 @@
     class={[
       'flex w-full flex-col items-end justify-center overflow-hidden p-6',
       {
-        'cursor-pointer group hover:bg-base-100/30':
+        'cursor-pointer group hover:bg-neutral-800':
           !expanded && !isOnDemoDashboard,
       },
     ]}
@@ -155,7 +149,7 @@
 
     {#if !isOnDemoDashboard}
       <div
-        class="flex w-full flex-col divide-y divide-base-100/50 border-t border-base-100"
+        class="flex w-full flex-col divide-y divide-hairline border-t border-base-100"
       >
         <NotificationChannelsSection {monitorId} />
         <MonitorSettingsSection

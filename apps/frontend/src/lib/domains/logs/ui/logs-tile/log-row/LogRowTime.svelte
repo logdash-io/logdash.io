@@ -71,11 +71,11 @@
 
   const secondaryTextColor = $derived(
     match(level)
-      .with('info', () => 'text-secondary/60')
+      .with('info', () => 'text-neutral-400')
       .with('warning', () => 'text-warning-content/60')
       .with('error', () => 'text-error-content/60')
       .with('success', () => 'text-success/60')
-      .otherwise(() => 'text-secondary/60'),
+      .otherwise(() => 'text-neutral-400'),
   );
 </script>
 
@@ -91,7 +91,7 @@
 {:else}
   <span class="flex text-sm leading-7 whitespace-nowrap tabular-nums shrink-0">
     <span class={secondaryTextColor}>{absoluteDate}&nbsp;</span>
-    {#each brightTimeNumbers as number, i}
+    {#each brightTimeNumbers as number, i (i)}
       <span>{number}</span>
       {#if i < brightTimeNumbers.length - 1}
         <span class="font-normal">.</span>

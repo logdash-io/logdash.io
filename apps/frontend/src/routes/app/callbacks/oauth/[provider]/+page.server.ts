@@ -1,4 +1,5 @@
 import { dev } from '$app/environment';
+import { claimAnonymousAccount } from '$lib/domains/auth/application/claim-anonymous-account.server';
 import { bffLogger } from '$lib/domains/shared/bff-logger.server';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
 import { isLocal } from '$lib/domains/shared/utils/is-dev.util';
@@ -132,6 +133,19 @@ export const load = async ({
   }
 
   try {
+    if (state.flow === 'claim') {
+      const outcome = await claimAnonymousAccount({
+        cookies,
+        provider: 'google',
+        code,
+        state,
+      });
+
+      if (outcome.kind === 'redirect') {
+        redirect(302, outcome.redirectTo);
+      }
+    }
+
     await runLoginFlow({
       cookies,
       code,

@@ -19,6 +19,7 @@ import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { ClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
 import { ClusterSerializer } from '../../cluster/core/entities/cluster.serializer';
 import { ClusterRole } from '../../cluster/core/enums/cluster-role.enum';
+import { getEnvConfig } from '../../shared/configs/env-configs';
 
 @Controller('users')
 @ApiTags('Users')
@@ -60,7 +61,12 @@ export class UserCoreController {
       accountClaimStatus: AccountClaimStatus.Anonymous,
     });
 
-    const token = await this.jwtService.sign({ id: user.id });
+    const { removeAfterHours } = getEnvConfig().anonymousAccounts;
+
+    const token = await this.jwtService.sign(
+      { id: user.id },
+      { expiresIn: `${removeAfterHours}h` },
+    );
 
     const cluster = await this.clusterWriteService.create({
       name: 'My first cluster',

@@ -31,3 +31,5 @@ export class HttpMonitorEntity {
 export type HttpMonitorDocument = HydratedDocument<HttpMonitorEntity>;
 
 export const HttpMonitorSchema = SchemaFactory.createForClass(HttpMonitorEntity);
+
+HttpMonitorSchema.index({ claimed: 1, createdAt: -1 });
