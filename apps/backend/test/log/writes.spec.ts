@@ -9,7 +9,7 @@ import { LogTtlService } from '../../src/log/ttl/log-ttl.service';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { createTestApp } from '../utils/bootstrap';
 import { removeKeysWhichWouldExpireInNextXSeconds } from '../utils/redis-test-container-server';
-import { sleep } from '../utils/sleep';
+import { waitFor } from '../utils/wait-for';
 import { subDays } from 'date-fns';
 import { ClickHouseClient } from '@clickhouse/client';
 import { LogWriteService } from '../../src/log/write/log-write.service';
@@ -193,10 +193,11 @@ describe('LogCoreController (writes)', () => {
       expect(response.body.success).toEqual(true);
       expect(response.status).toEqual(201);
 
-      await sleep(1_500);
-
       // then
-      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+      const logs = await waitFor(
+        () => bootstrap.utils.logUtils.readLogs(project.id),
+        (read) => read.length >= 3,
+      );
 
       expect(logs).toHaveLength(3);
       expect(logs.find((log) => log.message === 'test message 1')).toBeDefined();
@@ -318,9 +319,10 @@ describe('LogCoreController (writes)', () => {
 
       expect(response.status).toEqual(201);
 
-      await sleep(1_500);
-
-      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+      const logs = await waitFor(
+        () => bootstrap.utils.logUtils.readLogs(project.id),
+        (read) => read.length >= 1,
+      );
 
       expect(logs).toHaveLength(1);
       expect(logs[0].namespace).toEqual('api');
@@ -360,9 +362,10 @@ describe('LogCoreController (writes)', () => {
 
       expect(response.status).toEqual(201);
 
-      await sleep(1_500);
-
-      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+      const logs = await waitFor(
+        () => bootstrap.utils.logUtils.readLogs(project.id),
+        (read) => read.length >= 3,
+      );
 
       expect(logs).toHaveLength(3);
       expect(logs.find((log) => log.namespace === 'api')).toBeDefined();
@@ -387,9 +390,10 @@ describe('LogCoreController (writes)', () => {
 
       expect(response.status).toEqual(201);
 
-      await sleep(1_500);
-
-      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+      const logs = await waitFor(
+        () => bootstrap.utils.logUtils.readLogs(project.id),
+        (read) => read.length >= 1,
+      );
 
       expect(logs).toHaveLength(1);
       expect(logs[0].namespace).toBeUndefined();
