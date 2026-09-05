@@ -169,46 +169,44 @@
 
     if (placement === "left" || placement === "right") {
       if (align === "top") {
-        top = triggerRect.top + window.scrollY;
+        top = triggerRect.top;
       } else if (align === "bottom") {
-        top = triggerRect.bottom - tooltipRect.height + window.scrollY;
+        top = triggerRect.bottom - tooltipRect.height;
       } else {
         top =
           triggerRect.top +
-          (triggerRect.height - tooltipRect.height) / 2 +
-          window.scrollY;
+          (triggerRect.height - tooltipRect.height) / 2;
       }
 
       left =
         placement === "left"
-          ? triggerRect.left - tooltipRect.width - margin + window.scrollX
-          : triggerRect.right + margin + window.scrollX;
+          ? triggerRect.left - tooltipRect.width - margin
+          : triggerRect.right + margin;
     } else {
       top = match(placement)
         .with(
           "top",
-          () => triggerRect.top - tooltipRect.height - margin + window.scrollY
+          () => triggerRect.top - tooltipRect.height - margin
         )
-        .with("bottom", () => triggerRect.bottom + margin + window.scrollY)
+        .with("bottom", () => triggerRect.bottom + margin)
         .exhaustive();
 
       left = match(align)
-        .with("left", () => triggerRect.left + window.scrollX)
+        .with("left", () => triggerRect.left)
         .with(
           "right",
-          () => triggerRect.right - tooltipRect.width + window.scrollX
+          () => triggerRect.right - tooltipRect.width
         )
         .otherwise(
           () =>
             triggerRect.left +
-            (triggerRect.width - tooltipRect.width) / 2 +
-            window.scrollX
+            (triggerRect.width - tooltipRect.width) / 2
         );
     }
 
     // Adjust horizontal position to stay within screen bounds
-    const minLeft = margin + window.scrollX;
-    const maxLeft = viewportWidth - tooltipRect.width - margin + window.scrollX;
+    const minLeft = margin;
+    const maxLeft = viewportWidth - tooltipRect.width - margin;
     if (left < minLeft) {
       left = minLeft;
     } else if (left > maxLeft) {
@@ -216,15 +214,15 @@
     }
 
     // Adjust vertical position to stay within screen bounds
-    const minTop = margin + window.scrollY;
+    const minTop = margin;
     const maxTop =
-      viewportHeight - tooltipRect.height - margin + window.scrollY;
+      viewportHeight - tooltipRect.height - margin;
     if (top < minTop) {
       // If tooltip would go above screen, show it below the trigger instead
-      top = triggerRect.bottom + margin + window.scrollY;
+      top = triggerRect.bottom + margin;
     } else if (top > maxTop) {
       // If tooltip would go below screen, show it above the trigger instead
-      top = triggerRect.top - tooltipRect.height - margin + window.scrollY;
+      top = triggerRect.top - tooltipRect.height - margin;
     }
 
     coords = { top, left };

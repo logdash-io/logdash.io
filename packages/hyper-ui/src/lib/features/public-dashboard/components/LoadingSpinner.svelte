@@ -19,7 +19,7 @@
 <div class="flex h-64 items-center justify-center">
   <div class="flex items-center gap-3">
     <div class={`loading loading-spinner ${sizeClass}`}></div>
-    <span class="text-lg text-gray-600 dark:text-gray-300">
+    <span class="text-lg text-neutral-600 dark:text-neutral-300">
       {message}
     </span>
   </div>

@@ -31,15 +31,60 @@
   }
 
   .code-snippet > .hljs {
-    @apply from-base-300 to-base-200 border-base-200 rounded-xl border bg-gradient-to-br shadow-lg;
+    @apply bg-base-300 border-base-100 rounded-xl border;
   }
 
   .btn {
     @apply whitespace-nowrap shadow-none;
   }
 
+  /*
+   * Backgrounds never ease (frontend rules). daisyUI lists background-color
+   * in these transitions, so each is narrowed to ink, edges and motion until
+   * the components are replaced by our own.
+   */
+  .btn {
+    transition-property: color;
+  }
+
+  .menu :where(li:not(.menu-title) > :not(ul, details, .menu-title, .btn)),
+  .menu :where(li:not(.menu-title) > details > summary:not(.menu-title)) {
+    transition-property: color, box-shadow;
+  }
+
+  .select option {
+    transition-property: color;
+  }
+
+  .select-ghost {
+    transition: none;
+  }
+
+  .checkbox {
+    transition: box-shadow 0.2s;
+  }
+
+  .collapse-title,
+  .collapse > input:is([type="checkbox"], [type="radio"]) {
+    transition: none;
+  }
+
+  .collapse-content {
+    transition-property: content-visibility, visibility, min-height, padding;
+  }
+
+  .collapse:is(details)::details-content {
+    transition-property:
+      content-visibility, visibility, min-height, padding, height;
+  }
+
+  /* Pressed buttons scale down (utils/press.ts), not daisyUI's half-pixel nudge. */
+  .btn:active:not(.btn-active) {
+    translate: none;
+  }
+
   .btn-neutral {
-    @apply border-base-100/70 border;
+    @apply border-hairline border;
   }
 
   .menu {
@@ -47,15 +92,43 @@
   }
 
   .ld-input {
-    @apply input-md input-ghost selection:bg-secondary/20 border-secondary/20 hover:border-secondary/30 focus:border-primary h-full w-full rounded-xl border outline-0 transition-colors duration-250 focus:bg-transparent;
+    @apply input-md input-ghost selection:bg-neutral-700 border-neutral-700 hover:border-neutral-600 focus:border-primary h-full w-full rounded-xl border outline-0 transition-ink duration-250 focus:bg-transparent;
+  }
+
+  .ld-input:focus {
+    box-shadow: var(--focus-ring);
   }
 
   .ld-input-padding {
     @apply px-3 py-1.5;
   }
 
+  /*
+   * Secondary pill, defined by shadow rather than border, after a reference
+   * Simon sent on 2026-09-03: a 1px ring plus two faint drops. Fill and ring
+   * are solid steps of the neutral scale (no translucent greys anywhere, see
+   * the frontend rules): the fill lifts one step off the page and sits flat
+   * on a card, the ring draws the edge, the drops ground it.
+   */
   .btn-subtle {
-    @apply border-secondary/20 hover:border-secondary/30 border;
+    --btn-bg: var(--color-neutral-900);
+    --btn-fg: var(--color-base-content);
+    --btn-border: transparent;
+    --subtle-ring: var(--color-neutral-800);
+    box-shadow:
+      0 0 0 1px var(--subtle-ring),
+      0 1px 1px rgb(0 0 0 / 0.24),
+      0 2px 4px rgb(0 0 0 / 0.24);
+  }
+
+  .btn-subtle:hover {
+    --btn-bg: var(--color-neutral-800);
+    --subtle-ring: var(--color-neutral-700);
+  }
+
+  .btn-subtle:disabled,
+  .btn-subtle[disabled] {
+    box-shadow: 0 0 0 1px var(--color-hairline);
   }
 
   .success-card {
@@ -64,7 +137,7 @@
 
   .success-card,
   .success-card-bg {
-    @apply to-success/15 border border-green-950 bg-gradient-to-tl from-transparent;
+    @apply bg-success/10 border-success/20 border;
   }
 
   .error-card {
@@ -72,7 +145,7 @@
   }
 
   .primary-card {
-    @apply from-primary/5 to-primary/15 border-primary/20 border bg-gradient-to-br;
+    @apply bg-primary/10 border-primary/20 border;
   }
 
   .ld-card-base,
@@ -84,7 +157,7 @@
   .ld-card-base,
   .ld-card,
   .ld-card-border {
-    @apply border-base-100/50 border;
+    @apply border-base-100 border;
   }
 
   .ld-card,
@@ -96,29 +169,12 @@
     @apply px-6 py-6 sm:px-6 sm:py-6;
   }
 
-  .ld-radial-glow {
-    isolation: isolate;
-  }
-
-  .ld-radial-glow::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    right: -12%;
-    bottom: 50%;
-    left: -12%;
-    z-index: 0;
-    pointer-events: none;
-    background: radial-gradient(
-      44% 50% at 50% 50%,
-      oklch(from var(--color-primary) l c h / 0.34) 0%,
-      oklch(from var(--color-warning) l c h / 0.1) 45%,
-      transparent 78%
-    );
+  .ld-page-bg {
+    @apply bg-base-300;
   }
 
   .ld-modal {
-    @apply from-base-200 to-base-300 border-base-100/50 rounded-2xl border bg-gradient-to-br p-8 shadow-lg;
+    @apply bg-base-200 border-base-100 rounded-2xl border p-8;
   }
 
   .status {
@@ -142,10 +198,6 @@
     @apply rounded-lg;
   }
 
-  .navlink-active {
-    @apply after:bg-primary relative after:absolute after:top-full after:left-1/2 after:h-1 after:w-1/5 after:max-w-8 after:min-w-5 after:-translate-x-1/2 after:rounded-full;
-  }
-
   .collapse-open {
     @apply shrink-0;
   }
@@ -153,4 +205,20 @@
   .checkbox.checkbox-xs {
     @apply rounded-sm;
   }
+}
+
+/*
+  Dashed hairline on an element's left edge, 4px on and 6px off: the rhythm
+  of a secondary divider, sparser than Chrome's 1px dashed
+  border. For rules that should read softer than the frame around them.
+*/
+.ld-hairline-dashed-l {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--color-hairline) 0 4px,
+    transparent 4px 10px
+  );
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+  background-position: left top;
 }
