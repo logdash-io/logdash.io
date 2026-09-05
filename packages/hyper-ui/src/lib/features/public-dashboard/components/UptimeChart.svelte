@@ -38,10 +38,9 @@
   const bucketsCount = $derived(displayBuckets.length);
 
   const statusColors = {
-    up: "bg-gradient-to-b from-green-600 via-green-600/80 to-green-600",
-    degraded:
-      "bg-gradient-to-b from-yellow-600 via-yellow-600/80 to-yellow-600",
-    down: "bg-gradient-to-b from-red-700 via-red-700/80 to-red-700",
+    up: "bg-green-600",
+    degraded: "bg-yellow-600",
+    down: "bg-red-700",
     unknown: "bg-base-100",
   };
 
@@ -81,7 +80,7 @@
           <Tooltip content={getTooltipContent(segment)} placement="top">
             <div
               class={[
-                "h-full w-full rounded-full transition-all duration-150 hover:opacity-80",
+                "h-full w-full rounded-full transition-opacity duration-150 hover:opacity-80",
                 colorClass,
               ]}
               style="height: {height}px;"
@@ -93,7 +92,7 @@
   </div>
 
   <div
-    class="text-secondary/60 flex items-center justify-between font-mono text-xs"
+    class="text-neutral-400 flex items-center justify-between font-mono text-xs"
   >
     <span>
       {bucketsCount}

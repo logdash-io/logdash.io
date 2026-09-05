@@ -21,8 +21,8 @@
   const segments = $derived(groupPingsByStatus(pings));
 
   const statusColors = {
-    healthy: "bg-gradient-to-b from-green-600 via-green-600/80 to-green-600",
-    unhealthy: "bg-gradient-to-b from-red-700 via-red-700/80 to-red-700",
+    healthy: "bg-green-600",
+    unhealthy: "bg-red-700",
   };
 
   function getTooltipContent(segment: StatusSegment): string {
@@ -55,7 +55,7 @@
           <Tooltip content={getTooltipContent(segment)} placement="top">
             <div
               class={[
-                "h-full w-full rounded-full transition-all duration-150 hover:opacity-80",
+                "h-full w-full rounded-full transition-opacity duration-150 hover:opacity-80",
                 colorClass,
               ]}
               style="height: {height}px;"

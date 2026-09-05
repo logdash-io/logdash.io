@@ -1,3 +1,20 @@
+@theme {
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f4f4f4;
+  --color-neutral-200: #e2e2e4;
+  --color-neutral-300: #c6c6ca;
+  --color-neutral-400: #9d9da3;
+  --color-neutral-500: #7f7f86;
+  --color-neutral-600: #5c5c62;
+  --color-neutral-700: #414145;
+  --color-neutral-800: #2c2c2e;
+  --color-neutral-900: #1c1c1e;
+  --color-neutral-950: #101012;
+
+  /* Structural hairlines: section dividers, column lines, tile grids. Softer than base-100 so lined layouts stay quiet. */
+  --color-hairline: #222225;
+}
+
 @plugin 'daisyui';
 @plugin 'daisyui/theme' {
   name: "logdash";
@@ -8,10 +25,13 @@
   --depth: 0;
 
   --root-bg: var(--color-neutral-950);
-  --color-primary: var(--color-pink-600);
-  --color-primary-content: var(--color-neutral-100);
+  --color-primary: var(--color-neutral-100);
+  --color-primary-content: var(--color-neutral-950);
   --color-secondary: var(--color-neutral-100);
   --color-secondary-content: var(--color-neutral-950);
+
+  --color-neutral: var(--color-neutral-800);
+  --color-neutral-content: var(--color-neutral-100);
 
   --color-base-300: var(--color-neutral-950);
   --color-base-200: var(--color-neutral-900);

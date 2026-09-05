@@ -15,7 +15,7 @@
     <h3 class="text-secondary mb-2 text-xl font-medium">
       {title}
     </h3>
-    <p class="text-secondary/70 text-base">
+    <p class="text-neutral-400 text-base">
       {description}
     </p>
   </div>
