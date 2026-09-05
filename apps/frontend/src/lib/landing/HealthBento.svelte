@@ -1,7 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { generateDemoData } from '$lib/domains/app/projects/domain/status-page-demo-data';
-  import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
   import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
   import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
   import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
@@ -17,6 +16,7 @@
   import type { ClassValue } from 'svelte/elements';
   import FakeLogs from './FakeLogs.svelte';
   import FakeMetricsSparkline from './FakeMetricsSparkline.svelte';
+  import LandingSection from './LandingSection.svelte';
   import SystemHealth from './SystemHealth.svelte';
 
   type DemoMonitor = PublicDashboardData['httpMonitors'][number];
@@ -25,12 +25,6 @@
     | '/features/monitoring'
     | '/features/logging'
     | '/features/metrics';
-
-  const HIGHLIGHTS = [
-    'Set up in minutes, not a weekend of infrastructure chores.',
-    'Clear signal, less noise. Dashboards that need no handbook.',
-    'Grows with you, from side project to paying customers.',
-  ];
 
   const demoMonitors = generateDemoData().httpMonitors;
 
@@ -54,71 +48,75 @@
   }
 </script>
 
-<section id="health-bento" class="w-full">
-  <header class="mx-auto mb-10 max-w-4xl text-center sm:mb-14">
+<!--
+  The umbrella heading is a band of its own, then every feature
+  is its own section under a full-width hairline. Copy sits on the column with
+  the demo beside it, no surface. Logs and Metrics share the last row, split by
+  a vertical hairline.
+-->
+<LandingSection id="health-bento">
+  <header class="px-4 py-16 text-center sm:px-6 lg:px-10 lg:py-20">
     <h2
-      class="text-4xl font-extrabold tracking-tighter text-balance sm:text-5xl"
+      class="mx-auto max-w-3xl text-3xl font-medium tracking-[-0.03em] text-balance sm:text-4xl"
     >
       Everything you need to know your app is healthy.
     </h2>
   </header>
+</LandingSection>
 
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-    {@render wideTile(
-      MonitoringIcon,
-      'Uptime monitoring',
-      'Checks from 15 s. Alerts on Telegram, Discord or any webhook. Public status pages on your domain.',
-      '/features/monitoring',
-      'Explore monitoring',
-      'health-bento-monitoring-cta',
-      uptimeVisual,
-    )}
+{@render wideRow(
+  MonitoringIcon,
+  'Uptime monitoring',
+  'Checks from 15 s. Alerts on Telegram or any webhook. Public status pages on your domain.',
+  '/features/monitoring',
+  'Explore monitoring',
+  'health-bento-monitoring-cta',
+  uptimeVisual,
+  false,
+)}
 
-    {@render wideTile(
-      PublicDashboardIcon,
-      'Status pages',
-      'Show customers you are up. Uptime history and response times on a page that lives on your own domain.',
-      '/features/monitoring',
-      'Explore status pages',
-      'health-bento-status-pages-cta',
-      statusPageVisual,
-    )}
+{@render wideRow(
+  PublicDashboardIcon,
+  'Status pages',
+  'Show customers you are up. Uptime history and response times on a page that lives on your own domain.',
+  '/features/monitoring',
+  'Explore status pages',
+  'health-bento-status-pages-cta',
+  statusPageVisual,
+  true,
+)}
 
-    {@render compactTile(
-      LogsIcon,
-      'Logs',
-      'Every service in one searchable tail. Filter by level and find the line that broke it.',
-      '/features/logging',
-      'Explore logs',
-      'health-bento-logs-cta',
-      logsVisual,
-    )}
+<LandingSection>
+  <div
+    class="divide-hairline grid grid-cols-1 divide-y px-4 py-12 sm:px-6 md:grid-cols-2 md:divide-x md:divide-y-0 lg:px-10 lg:py-16"
+  >
+    <div class="pb-10 md:pr-10 md:pb-0">
+      {@render compactTile(
+        LogsIcon,
+        'Logs',
+        'Every service in one searchable tail. Filter by level and find the line that broke it.',
+        '/features/logging',
+        'Explore logs',
+        'health-bento-logs-cta',
+        logsVisual,
+      )}
+    </div>
 
-    {@render compactTile(
-      MetricsIcon,
-      'Metrics',
-      'Sign-ups, payments, queue depth. One line of code per metric, no Prometheus to babysit.',
-      '/features/metrics',
-      'Explore metrics',
-      'health-bento-metrics-cta',
-      metricsVisual,
-    )}
+    <div class="pt-10 md:pt-0 md:pl-10">
+      {@render compactTile(
+        MetricsIcon,
+        'Metrics',
+        'Sign-ups, payments, queue depth. One line of code per metric, no Prometheus to babysit.',
+        '/features/metrics',
+        'Explore metrics',
+        'health-bento-metrics-cta',
+        metricsVisual,
+      )}
+    </div>
   </div>
+</LandingSection>
 
-  <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-    {#each HIGHLIGHTS as highlight (highlight)}
-      <div class="ld-card-base flex items-start gap-3 rounded-2xl px-5 py-4">
-        <CheckIcon class="text-success mt-0.5 size-5 shrink-0" />
-
-        <span class="text-base-content/80 text-sm leading-relaxed">
-          {highlight}
-        </span>
-      </div>
-    {/each}
-  </div>
-</section>
-
-{#snippet wideTile(
+{#snippet wideRow(
   Icon: TileIcon,
   title: string,
   body: string,
@@ -126,20 +124,21 @@
   linkLabel: string,
   posthogId: string,
   visual: Snippet,
+  mirrored: boolean,
 )}
-  <div
-    class="ld-card-base overflow-hidden rounded-3xl md:col-span-2 md:grid md:grid-cols-5"
-  >
-    <div class="md:col-span-2 md:flex md:items-center">
-      {@render tileCopy(Icon, title, body, route, linkLabel, posthogId)}
-    </div>
-
+  <LandingSection>
     <div
-      class="border-base-100/50 bg-base-300/50 flex items-center border-t p-4 sm:p-5 md:col-span-3 md:border-t-0 md:border-l"
+      class="grid grid-cols-1 gap-8 px-4 py-12 sm:px-6 md:grid-cols-5 md:gap-10 lg:px-10 lg:py-16"
     >
-      {@render visual()}
+      <div class={['md:col-span-2', { 'md:order-last': mirrored }]}>
+        {@render tileCopy(Icon, title, body, route, linkLabel, posthogId)}
+      </div>
+
+      <div class="flex items-start md:col-span-3">
+        {@render visual()}
+      </div>
     </div>
-  </div>
+  </LandingSection>
 {/snippet}
 
 {#snippet compactTile(
@@ -151,12 +150,10 @@
   posthogId: string,
   visual: Snippet,
 )}
-  <div class="ld-card-base flex flex-col overflow-hidden rounded-3xl">
+  <div class="flex h-full flex-col gap-8">
     {@render tileCopy(Icon, title, body, route, linkLabel, posthogId)}
 
-    <div
-      class="border-base-100/50 bg-base-300/50 flex flex-1 border-t p-4 sm:p-5"
-    >
+    <div class="flex">
       {@render visual()}
     </div>
   </div>
@@ -170,16 +167,16 @@
   linkLabel: string,
   posthogId: string,
 )}
-  <div class="flex flex-col items-start gap-3 p-6 sm:p-8">
-    <Icon class="text-primary size-7" />
+  <div class="flex flex-col items-start gap-3">
+    <Icon class="size-7" />
 
-    <h3 class="text-2xl font-semibold tracking-tight">{title}</h3>
+    <h3 class="text-xl font-medium tracking-tight">{title}</h3>
 
-    <p class="text-base-content/70 leading-relaxed">{body}</p>
+    <p class="text-neutral-400 leading-relaxed">{body}</p>
 
     <a
       href={resolve(route)}
-      class="text-primary hover:text-primary/80 focus-visible:outline-primary/80 mt-1 inline-flex items-center gap-1.5 rounded-full text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-4"
+      class="text-base-content hover:text-neutral-400 focus-visible:outline-neutral-500 mt-1 inline-flex items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4"
       data-posthog-id={posthogId}
     >
       {linkLabel}
@@ -189,16 +186,12 @@
 {/snippet}
 
 {#snippet uptimeVisual()}
-  <div class="ld-card-base flex w-full flex-col gap-4 rounded-2xl p-5 sm:p-6">
+  <div class="flex w-full flex-col gap-5">
     <div class="flex flex-col gap-1">
-      <span
-        class="text-base-content/40 text-[11px] font-semibold tracking-[0.14em] uppercase"
-      >
-        Last 45 checks
-      </span>
+      <span class="text-neutral-600 text-xs">Last 45 checks</span>
 
       <div class="flex items-center justify-between gap-3">
-        <h4 class="text-lg font-semibold">Your services</h4>
+        <h4 class="text-base font-medium">Your services</h4>
 
         <div class="shrink-0">
           <StatusBadge status="up" showText={true} />
@@ -225,7 +218,7 @@
 {/snippet}
 
 {#snippet logsVisual()}
-  <FakeLogs />
+  <FakeLogs padded={false} />
 {/snippet}
 
 {#snippet metricsVisual()}

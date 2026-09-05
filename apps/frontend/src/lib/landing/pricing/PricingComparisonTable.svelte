@@ -28,7 +28,10 @@
   };
 </script>
 
-<div id="detailed-plans-comparison" class="mx-auto max-w-7xl pt-24 md:pt-56">
+<div
+  id="detailed-plans-comparison"
+  class="mx-auto max-w-landing pt-24 md:pt-56"
+>
   <div class="-my-24 pb-24 md:-my-56 md:pb-56">
     <h2 class="mb-8 text-center text-3xl md:mb-16 md:text-5xl">
       {FEATURES_COMPARISON.title}
@@ -43,7 +46,7 @@
           <thead>
             <tr class="border-none">
               <th
-                class="w-1/6 min-w-[140px] text-left font-bold md:w-1/4 md:min-w-[200px]"
+                class="w-1/6 min-w-[140px] text-left font-semibold md:w-1/4 md:min-w-[200px]"
               ></th>
               {#each FEATURES_COMPARISON.plans as plan (plan.tier)}
                 {@const fullPlanConfig = PAYMENT_PLANS.find(
@@ -52,7 +55,7 @@
                 <th
                   style="border-spacing: 0;"
                   class={[
-                    'relative h-24 w-1/4 min-w-[170px] p-0 text-center font-bold md:min-w-[180px]',
+                    'relative h-24 w-1/4 min-w-[170px] p-0 text-center font-semibold md:min-w-[180px]',
                   ]}
                 >
                   {#if plan.tier === UserTier.PRO}
@@ -69,9 +72,9 @@
                     class={[
                       'relative z-10 h-64 p-3 pt-6 text-left md:h-80 md:p-4 md:pt-9',
                       {
-                        'border-secondary/10 border-l border-r border-t border-b-0':
+                        'border-hairline border-l border-r border-t border-b-0':
                           plan.tier === UserTier.BUILDER,
-                        'border-secondary/10 rounded-tl-3xl border border-b-0 border-r-0':
+                        'border-hairline rounded-tl-3xl border border-b-0 border-r-0':
                           plan.tier === UserTier.FREE,
                         'border-primary rounded-tl-2xl rounded-tr-2xl border-l border-r border-t bg-[#160b0f]':
                           plan.tier === UserTier.PRO,
@@ -103,7 +106,7 @@
                         </span>
 
                         <p
-                          class="mt-2 whitespace-pre-wrap text-xs opacity-80 md:mt-4 md:text-sm font-normal"
+                          class="mt-2 whitespace-pre-wrap text-neutral-300 text-xs md:mt-4 md:text-sm font-normal"
                         >
                           {fullPlanConfig.description}
                         </p>
@@ -153,9 +156,9 @@
                   class={[
                     'py-3 text-center md:py-4',
                     {
-                      'border-secondary/10 text-secondary/30 border-l border-r':
+                      'border-hairline text-neutral-600 border-l border-r':
                         plan.tier === UserTier.BUILDER,
-                      'border-secondary/10 text-secondary/30 border-l':
+                      'border-hairline text-neutral-600 border-l':
                         plan.tier === UserTier.FREE,
                       'bg-primary/5 border-primary border-l border-r':
                         plan.tier === UserTier.PRO,
@@ -200,7 +203,7 @@
                   </td>
                   <td
                     class={[
-                      'border-secondary/10 border-l py-3 text-center md:py-4',
+                      'border-hairline border-l py-3 text-center md:py-4',
                       {
                         'rounded-b-2xl border-b': isLastSection && isLast,
                       },
@@ -213,7 +216,7 @@
                         />
                       {:else}
                         <MinusIcon
-                          class="text-secondary/30 mx-auto h-3 w-3 md:h-4 md:w-4"
+                          class="text-neutral-600 mx-auto h-3 w-3 md:h-4 md:w-4"
                         />
                       {/if}
                     {:else}
@@ -226,7 +229,7 @@
                     class={[
                       'py-3 text-center md:py-4',
                       {
-                        'border-secondary/10 border-l border-r': true,
+                        'border-hairline border-l border-r': true,
                         'rounded-b-2xl border-b': isLastSection && isLast,
                       },
                     ]}
@@ -238,7 +241,7 @@
                         />
                       {:else}
                         <MinusIcon
-                          class="text-secondary/30 mx-auto h-3 w-3 md:h-4 md:w-4"
+                          class="text-neutral-600 mx-auto h-3 w-3 md:h-4 md:w-4"
                         />
                       {/if}
                     {:else}
@@ -266,7 +269,7 @@
                         />
                       {:else}
                         <MinusIcon
-                          class="text-secondary/30 mx-auto h-3 w-3 md:h-4 md:w-4"
+                          class="text-neutral-600 mx-auto h-3 w-3 md:h-4 md:w-4"
                         />
                       {/if}
                     {:else}

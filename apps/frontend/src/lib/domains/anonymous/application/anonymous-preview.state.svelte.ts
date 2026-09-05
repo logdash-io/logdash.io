@@ -26,7 +26,7 @@ export type AnonymousPreviewPhase =
   | 'ended'
   | 'error';
 
-export type AnonymousPreviewSource = 'hero' | 'final-cta';
+export type AnonymousPreviewSource = 'hero' | 'final-cta' | 'seo';
 
 export type AnonymousPreviewDemo = {
   monitor: Monitor | null;

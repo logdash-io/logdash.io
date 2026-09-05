@@ -1,5 +1,4 @@
 <script lang="ts">
-  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
   import Footer from '$lib/landing/Footer.svelte';
   import DatadogComparison from '$lib/landing/compare/DatadogComparison.svelte';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
@@ -11,8 +10,8 @@
   keywords="logdash vs datadog, datadog alternative, affordable monitoring, startup observability, datadog pricing"
 />
 
-<AnimatedView class="relative mx-auto flex w-full max-w-7xl flex-col">
+<div class="relative mx-auto flex w-full max-w-landing flex-col">
   <DatadogComparison />
 
   <Footer />
-</AnimatedView>
+</div>

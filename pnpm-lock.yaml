@@ -297,9 +297,9 @@ importers:
       '@fontsource-variable/geist-mono':
         specifier: ^5.2.7
         version: 5.2.7
-      '@fontsource-variable/kumbh-sans':
+      '@fontsource-variable/inter':
         specifier: ^5.2.7
-        version: 5.2.7
+        version: 5.3.0
       '@logdash/hyper-ui':
         specifier: workspace:*
         version: link:../../packages/hyper-ui
@@ -1161,6 +1161,9 @@ packages:
 
   '@fontsource-variable/geist-mono@5.2.7':
     resolution: {integrity: sha512-ZKlZ5sjtalb2TwXKs400mAGDlt/+2ENLNySPx0wTz3bP3mWARCsUW+rpxzZc7e05d2qGch70pItt3K4qttbIYA==}
+
+  '@fontsource-variable/inter@5.3.0':
+    resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
 
   '@fontsource-variable/kumbh-sans@5.2.7':
     resolution: {integrity: sha512-ryUExOjM0qPdWD215y/hWHLtqcyefIIN0tRLnPOC6eYLvP2DYJ1ub0GGSZ6WIg3Hsh0DK6SQKz2dDvAV3cngZg==}
@@ -7454,6 +7457,8 @@ snapshots:
 
   '@fontsource-variable/geist-mono@5.2.7': {}
 
+  '@fontsource-variable/inter@5.3.0': {}
+
   '@fontsource-variable/kumbh-sans@5.2.7': {}
 
   '@grpc/grpc-js@1.13.5':
@@ -9468,7 +9473,7 @@ snapshots:
 
   acorn-walk@8.3.4:
     dependencies:
-      acorn: 8.15.0
+      acorn: 8.16.0
 
   acorn@8.15.0: {}
 
@@ -9595,7 +9600,7 @@ snapshots:
 
   axios@1.19.0:
     dependencies:
-      follow-redirects: 1.16.0(debug@4.4.3)
+      follow-redirects: 1.16.0
       form-data: 4.0.6
       https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
@@ -10821,6 +10826,8 @@ snapshots:
       keyv: 4.5.4
 
   flatted@3.4.2: {}
+
+  follow-redirects@1.16.0: {}
 
   follow-redirects@1.16.0(debug@4.4.3):
     optionalDependencies:
@@ -13212,7 +13219,7 @@ snapshots:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
       '@types/node': 22.15.29
-      acorn: 8.15.0
+      acorn: 8.16.0
       acorn-walk: 8.3.4
       arg: 4.1.3
       create-require: 1.1.1

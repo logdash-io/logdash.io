@@ -1,17 +1,13 @@
 <script lang="ts">
-  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
-  import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
   import FaqSection from '$lib/landing/FAQSection.svelte';
   import FinalCta from '$lib/landing/FinalCta.svelte';
+  import FirstThirtyDays from '$lib/landing/FirstThirtyDays.svelte';
   import Footer from '$lib/landing/Footer.svelte';
-  import FoundersMemo from '$lib/landing/FoundersMemo.svelte';
-  import FrameworksList from '$lib/landing/FrameworksList.svelte';
   import HealthBento from '$lib/landing/HealthBento.svelte';
   import Hero from '$lib/landing/hero/Hero.svelte';
-  import HowItWorks from '$lib/landing/HowItWorks.svelte';
+  import LandingSection from '$lib/landing/LandingSection.svelte';
   import LogdashDifference from '$lib/landing/LogdashDifference.svelte';
-  import PricingCta from '$lib/landing/pricing/PricingCta.svelte';
   import ProblemStatement from '$lib/landing/ProblemStatement.svelte';
   import TestimonialsList from '$lib/landing/TestimonialsList.svelte';
 
@@ -34,56 +30,24 @@
   {jsonLd}
 />
 
-<AnimatedView class="flex w-full flex-col px-4">
-  <ResponsiveSkyBackground />
+<div class="flex w-full flex-col">
+  <Hero />
 
-  <div class="mx-auto flex w-full max-w-7xl flex-col">
-    <Hero />
+  <ProblemStatement />
 
-    <div class="distance h-12 sm:h-20"></div>
+  <HealthBento />
 
-    <FrameworksList />
+  <FirstThirtyDays />
 
-    <div class="distance h-16 sm:h-32"></div>
+  <LogdashDifference />
 
-    <ProblemStatement />
+  <TestimonialsList />
 
-    <div class="distance h-16 sm:h-32"></div>
+  <FaqSection />
 
-    <HealthBento />
+  <FinalCta />
 
-    <div class="distance h-16 sm:h-32"></div>
-
-    <HowItWorks />
-
-    <div class="distance h-16 sm:h-32"></div>
-
-    <LogdashDifference />
-
-    <div class="distance h-16 sm:h-32"></div>
-
-    <TestimonialsList />
-
-    <div class="distance h-16 sm:h-32"></div>
-
-    <PricingCta />
-
-    <div class="distance h-16 sm:h-32"></div>
-
-    <FaqSection />
-
-    <div class="distance h-16 sm:h-32"></div>
-
-    <FoundersMemo />
-
-    <div class="distance h-16 sm:h-32"></div>
-
-    <FinalCta />
-
-    <div class="distance h-16 sm:h-32"></div>
-
+  <LandingSection divider={false}>
     <Footer />
-
-    <div class="distance h-12"></div>
-  </div>
-</AnimatedView>
+  </LandingSection>
+</div>

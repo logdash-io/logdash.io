@@ -83,7 +83,7 @@ test.describe('anonymous landing flow', () => {
 
     await expect(tile).toBeVisible();
     await expect(
-      tile.getByText(/Live: our production API|Your live monitor/),
+      tile.getByText(/Live monitor|Your live monitor/),
     ).toBeVisible();
     await expect(page.getByLabel('Your app URL').first()).toBeVisible();
 

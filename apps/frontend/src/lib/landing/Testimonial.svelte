@@ -10,42 +10,50 @@
     };
     align?: 'left' | 'center';
   };
-  let { quote, person, img, company, align = 'left' }: Props = $props();
+
+  const { quote, person, img, company, align = 'left' }: Props = $props();
 </script>
 
-<div class="flex h-full flex-col gap-4">
-  <blockquote class="text-base-content text-lg italic opacity-90">
-    "{quote}"
+<div class="flex h-full flex-col gap-6">
+  <blockquote
+    class="text-neutral-400 group-hover:text-base-content text-base leading-relaxed text-pretty transition-ink duration-150"
+  >
+    “{quote}”
   </blockquote>
 
   <div
     class={[
-      'mt-auto flex items-center gap-4',
+      'mt-auto flex items-center gap-3',
       {
         'justify-center': align === 'center',
         'justify-start': align === 'left',
       },
     ]}
   >
-    <div class="avatar">
-      <div
-        class="ring-primary ring-offset-base-100 h-12 w-12 rounded-full ring ring-offset-2"
-      >
-        <img class="grayscale-100" src={img} alt={person} />
-      </div>
-    </div>
+    <img
+      class="ring-base-100 size-10 shrink-0 rounded-full object-cover grayscale ring-1"
+      src={img}
+      alt={person}
+      loading="lazy"
+    />
 
-    <div class="flex flex-col">
-      <span class="text-base-content font-semibold">
-        {person}
-      </span>
+    <div class="flex flex-col text-left">
+      <span class="text-sm font-medium">{person}</span>
 
-      <span class="text-secondary/60 text-sm">
+      <span class="text-neutral-500 text-sm">
         {company.who}
         {#if company.name}
           at
-          <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-          <a target="_blank" href={company.url}>{company.name}</a>
+          <!-- eslint-disable svelte/no-navigation-without-resolve -->
+          <a
+            class="hover:text-base-content transition-ink duration-150"
+            target="_blank"
+            rel="noopener"
+            href={company.url}
+          >
+            {company.name}
+          </a>
+          <!-- eslint-enable svelte/no-navigation-without-resolve -->
         {/if}
       </span>
     </div>

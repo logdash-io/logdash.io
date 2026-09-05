@@ -1,19 +1,22 @@
 <script lang="ts">
-  import type { Icon } from 'lucide-svelte';
+  import MagicWandIcon from '$lib/domains/shared/icons/MagicWandIcon.svelte';
   import {
     BellIcon,
     ClockIcon,
     FocusIcon,
+    MegaphoneIcon,
     SearchIcon,
     ShieldCheckIcon,
     TriangleAlertIcon,
     WrenchIcon,
     ZapIcon,
   } from 'lucide-svelte';
-  import type { ComponentType } from 'svelte';
+  import type { Icon } from 'lucide-svelte';
+  import type { Component, ComponentType } from 'svelte';
+  import LandingSection from './LandingSection.svelte';
 
   type FeatureItem = {
-    icon: ComponentType<Icon>;
+    icon: Component<{ class?: string }> | ComponentType<Icon>;
     title: string;
     description: string;
   };
@@ -34,30 +37,35 @@
     features: [
       {
         icon: ZapIcon,
-        title: 'You (5 min setup):',
+        title: 'You (30 seconds):',
         description:
-          "Install the SDK, add a few lines of code, and you're collecting data instantly.",
+          'Paste your URL and uptime checks start right away. No account, nothing to install.',
+      },
+      {
+        icon: MagicWandIcon,
+        title: 'You (a few minutes, optional):',
+        description:
+          'Want logs and metrics too? Paste our prompt into your LLM and it wires them in.',
       },
       {
         icon: FocusIcon,
-        title: 'Us (unified dashboard):',
+        title: 'Us (one dashboard):',
         description:
-          'Logs, metrics, and uptime in one view. No jumping between AWS, Vercel, and other tools.',
+          'Uptime, logs and metrics in one view. No jumping between AWS, Vercel and other tools.',
       },
       {
         icon: BellIcon,
         title: 'Us (watching your back):',
         description:
-          'We check up on your app once per 15 seconds. Get notified on Telegram/Discord only when it matters.',
+          'We check your app every 15 seconds and ping you on Telegram or a webhook only when it matters.',
       },
       {
         icon: ShieldCheckIcon,
         title: 'You (peace of mind):',
-        description:
-          'Focus on shipping features. We watch your back even when you sleep.',
+        description: 'Ship features. We watch your back, even while you sleep.',
       },
     ],
-    resultLabel: '5 min setup',
+    resultLabel: '30 s setup',
     resultSuffix: 'then full clarity',
   };
 
@@ -90,6 +98,12 @@
         description:
           'Manually checking "is the app still up?" every few hours.',
       },
+      {
+        icon: MegaphoneIcon,
+        title: 'You (damage control):',
+        description:
+          'Writing the "we are aware" post by hand while the app is still down.',
+      },
     ],
     resultLabel: 'Hours wasted',
     resultSuffix: 'with burnout risk',
@@ -98,32 +112,38 @@
   const cards = [logdashCard, diyCard];
 </script>
 
-<section id="logdash-difference" class="container mx-auto px-4">
-  <div class="mb-12 text-center">
-    <h2 class="mb-2 text-3xl font-bold md:text-4xl">The Logdash difference</h2>
-    <p class="mx-auto max-w-3xl text-xl opacity-80">
-      Compare doing this yourself vs. having Logdash handle it.
-    </p>
-  </div>
+<LandingSection id="logdash-difference">
+  <div class="flex flex-col gap-12 px-4 py-16 sm:px-6 lg:px-10 lg:py-20">
+    <div class="text-center">
+      <h2 class="text-3xl font-medium tracking-[-0.03em] sm:text-4xl">
+        The Logdash difference
+      </h2>
 
-  <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-    {#each cards as card (card.variant)}
-      {@const isPrimary = card.variant === 'primary'}
-      <div
-        class={[
-          'relative flex flex-col gap-8 overflow-hidden rounded-3xl border p-8',
-          {
-            'ld-card-base text-base-content': isPrimary,
-            'bg-error/15 border-red-950': !isPrimary,
-          },
-        ]}
-      >
-        <div class="mb-6">
-          <h3 class="flex items-center gap-2 text-2xl font-bold">
+      <p class="text-neutral-400 mt-3 text-lg">
+        Compare doing this yourself vs. having Logdash handle it.
+      </p>
+    </div>
+
+    <!--
+      Two columns on the page, split by a hairline. The pills and the result
+      rows carry the contrast; the icons on the do-it-yourself side stay muted
+      so red is reserved for the verdict.
+    -->
+    <div
+      class="divide-hairline grid grid-cols-1 divide-y md:grid-cols-2 md:divide-x md:divide-y-0"
+    >
+      {#each cards as card (card.variant)}
+        {@const isPrimary = card.variant === 'primary'}
+        <div
+          class="flex flex-col gap-8 py-10 first:pt-0 last:pb-0 md:py-0 md:first:pr-10 md:last:pl-10"
+        >
+          <h3
+            class="flex flex-wrap items-center gap-2 text-xl font-medium tracking-tight"
+          >
             {card.headerPrefix}
             <span
               class={[
-                'rounded-lg px-2 py-1 text-lg',
+                'rounded-md px-2 py-0.5 text-base',
                 {
                   'bg-primary text-primary-content': isPrimary,
                   'bg-error text-error-content': !isPrimary,
@@ -133,38 +153,34 @@
               {card.headerLabel}
             </span>
           </h3>
-        </div>
 
-        <ul class="space-y-6">
-          {#each card.features as feature (feature.title)}
-            <li class="flex gap-4">
-              <div class="mt-1 shrink-0">
+          <ul class="flex flex-col gap-5">
+            {#each card.features as feature (feature.title)}
+              <li class="flex gap-4">
                 <feature.icon
-                  class="h-6 w-6 {isPrimary ? 'text-primary' : 'text-error'}"
+                  class="mt-0.5 size-5 shrink-0 {isPrimary
+                    ? 'text-base-content'
+                    : 'text-neutral-600'}"
                 />
-              </div>
-              <div>
-                <span class="font-bold">{feature.title}</span>
-                <span class="opacity-80">{feature.description}</span>
-              </div>
-            </li>
-          {/each}
-        </ul>
 
-        <div
-          class={[
-            'mt-auto border-t pt-6',
-            {
-              'border-base-100/80': isPrimary,
-              'mt-8 border-error/20': !isPrimary,
-            },
-          ]}
-        >
-          <div class="flex flex-wrap items-center gap-3">
-            <span class="text-lg font-bold">Result:</span>
+                <p class="text-neutral-400 leading-relaxed">
+                  <span class="text-base-content font-medium">
+                    {feature.title}
+                  </span>
+                  {feature.description}
+                </p>
+              </li>
+            {/each}
+          </ul>
+
+          <div
+            class="border-hairline mt-auto flex flex-wrap items-center gap-3 border-t pt-6"
+          >
+            <span class="font-medium">Result:</span>
+
             <span
               class={[
-                'rounded-lg px-3 py-1 font-bold',
+                'rounded-md px-2.5 py-0.5 font-medium',
                 {
                   'bg-primary text-primary-content': isPrimary,
                   'bg-error text-error-content': !isPrimary,
@@ -173,10 +189,11 @@
             >
               {card.resultLabel}
             </span>
-            <span class="font-semibold">{card.resultSuffix}</span>
+
+            <span class="text-neutral-400">{card.resultSuffix}</span>
           </div>
         </div>
-      </div>
-    {/each}
+      {/each}
+    </div>
   </div>
-</section>
+</LandingSection>

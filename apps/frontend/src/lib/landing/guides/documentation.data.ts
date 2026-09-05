@@ -1,418 +1,290 @@
-import { LogdashSDKName, UserTier } from '$lib/domains/shared/types';
-import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config';
+import { SDK_LIST } from '$lib/domains/logs/domain/sdk-config';
+import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
+import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
+import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
+import { LogdashSDKName } from '$lib/domains/shared/types';
+import { sdkPath } from '$lib/landing/docs/sdk-doc';
+import { sdkDocs } from '$lib/landing/docs/sdk-docs.data';
+import type { Pathname } from '$app/types';
+import type { Component } from 'svelte';
+import type { TableType } from './plan-limits';
 
-export type Table = {
-  headers: string[];
-  rows: string[][];
-};
+export type DocsPath =
+  | '/guides'
+  | '/guides/logging'
+  | '/guides/metrics'
+  | '/guides/monitoring'
+  | '/guides/sdk-migration'
+  | '/docs'
+  | '/docs/self-hosting'
+  | Extract<Pathname, `/docs/${string}`>;
 
-export type TableType =
-  | 'logsRetention'
-  | 'logsRateLimits'
-  | 'metricsPerService'
-  | 'metricsRetention';
+type IconComponent = Component<{ class?: string }>;
 
-export const tableTitles: Record<TableType, string> = {
-  logsRetention: 'Logs retention',
-  logsRateLimits: 'Rate limit per hour',
-  metricsPerService: 'Metrics per service',
-  metricsRetention: 'Metrics retention',
-};
-
-const PLAN_TIERS = [UserTier.FREE, UserTier.BUILDER, UserTier.PRO] as const;
-
-const PLAN_NAMES: Record<(typeof PLAN_TIERS)[number], string> = {
-  [UserTier.FREE]: 'Hobby',
-  [UserTier.BUILDER]: 'Builder',
-  [UserTier.PRO]: 'Pro',
-};
-
-function formatRetentionHours(hours: number | undefined): string {
-  if (!hours) return '-';
-  if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''}`;
-  const days = Math.floor(hours / 24);
-  return `${days} day${days !== 1 ? 's' : ''}`;
-}
-
-function formatCompactNumber(num: number | undefined): string {
-  if (num === undefined || num === null) return '-';
-  if (num >= 1_000_000) {
-    const millions = num / 1_000_000;
-    return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`;
-  }
-  if (num >= 1_000) {
-    const thousands = num / 1_000;
-    return `${thousands % 1 === 0 ? thousands : thousands.toFixed(0)}k`;
-  }
-  return num.toLocaleString('en-US');
-}
-
-function formatRateLimit(num: number | undefined): string {
-  if (num === undefined || num === null) return '-';
-  return num.toLocaleString('en-US');
-}
-
-function calculateLogsCapacity(
-  retentionHours: number,
-  rateLimitPerHour: number,
-): number {
-  return retentionHours * rateLimitPerHour;
-}
-
-function formatLogsRetention(
-  retentionHours: number | undefined,
-  rateLimitPerHour: number | undefined,
-): string {
-  if (!retentionHours || !rateLimitPerHour) return '-';
-  const logsCapacity = calculateLogsCapacity(retentionHours, rateLimitPerHour);
-  const formattedLogs = formatCompactNumber(logsCapacity);
-  return `${formatRetentionHours(retentionHours)} (${formattedLogs} logs per service)`;
-}
-
-function getProjectPlanConfig(config: ExposedConfig, tier: UserTier) {
-  return config?.projectPlanConfigs?.[tier];
-}
-
-export function buildTablesFromConfig(
-  config: ExposedConfig,
-): Record<TableType, Table> {
-  const availableTiers = PLAN_TIERS.filter(
-    (tier) => getProjectPlanConfig(config, tier) !== undefined,
-  );
-  const headers = availableTiers.map((tier) => PLAN_NAMES[tier]);
-
-  return {
-    logsRetention: {
-      headers,
-      rows: [
-        availableTiers.map((tier) => {
-          const planConfig = getProjectPlanConfig(config, tier);
-          return formatLogsRetention(
-            planConfig?.logs?.retentionHours,
-            planConfig?.logs?.rateLimitPerHour,
-          );
-        }),
-      ],
-    },
-    logsRateLimits: {
-      headers,
-      rows: [
-        availableTiers.map((tier) => {
-          const planConfig = getProjectPlanConfig(config, tier);
-          return formatRateLimit(planConfig?.logs?.rateLimitPerHour);
-        }),
-      ],
-    },
-    metricsPerService: {
-      headers,
-      rows: [
-        availableTiers.map((tier) => {
-          const planConfig = getProjectPlanConfig(config, tier);
-          return String(planConfig?.metrics?.maxMetricsRegisterEntries ?? '-');
-        }),
-      ],
-    },
-    metricsRetention: {
-      headers,
-      rows: [
-        availableTiers.map((tier) => {
-          const planConfig = getProjectPlanConfig(config, tier);
-          const granularities = planConfig?.metrics?.keepGranularitiesForHours;
-          const maxRetention = Math.max(
-            granularities?.minute ?? 0,
-            granularities?.hour ?? 0,
-            granularities?.day ?? 0,
-          );
-          return formatRetentionHours(maxRetention || undefined);
-        }),
-      ],
-    },
-  };
-}
-
-export interface DocSection {
-  id: string;
-  slug?: string;
-  title: string;
-  content: string;
-  tableKeys?: TableType[];
-  tables?: Record<string, Table>;
-}
-
-export interface GettingStartedPage {
-  slug: string;
-  title: string;
-}
-
-export const gettingStartedPages: GettingStartedPage[] = [
-  { slug: '', title: 'Introduction' },
-  { slug: 'logging', title: 'Logging' },
-  { slug: 'metrics', title: 'Metrics' },
-  { slug: 'monitoring', title: 'Monitoring' },
-];
-
-export const docSectionTemplates: Record<string, DocSection[]> = {
-  introduction: [
-    {
-      id: 'introduction',
-      title: 'Introduction',
-      content: `Logdash is a powerful platform for logging, tracking metrics, and monitoring your applications.
-
-Our core philosophy is simplicity - zero configuration and no headaches.
-
-Logdash is built on top of 3 pillars:
-- Logging
-- Metrics
-- Monitoring
-
-Depending on your location, we achieve sub-100ms latency from log transmission to dashboard display.`,
-    },
-  ],
-  logging: [
-    {
-      id: 'logging',
-      title: 'Logging',
-      content: `Track your system events and errors in real-time, even from multiple instances, with structured data that makes debugging and analysis simple.
-
-Your subscription plan determines logs retention and the hourly rate limits for sending logs.`,
-      tableKeys: ['logsRetention', 'logsRateLimits'],
-    },
-  ],
-  metrics: [
-    {
-      id: 'metrics',
-      title: 'Metrics',
-      content: `Track custom metrics directly from your application to monitor key business indicators.
-
-Common examples include user registration numbers, order volumes, file upload statistics, and any custom data points relevant to your business.
-
-Your subscription plan determines the number of metrics per service and retention period.`,
-      tableKeys: ['metricsPerService', 'metricsRetention'],
-    },
-  ],
-  monitoring: [
-    {
-      id: 'monitoring',
-      title: 'Monitoring',
-      content: `Monitor your services with HTTP health checks and get alerted when things go wrong.
-
-Set up uptime monitors to track your endpoints, view historical uptime data, and create public status pages to keep your users informed.
-
-Features include:
-- HTTP health checks with configurable intervals
-- Uptime history and response time tracking
-- Public status pages with custom domains
-- Alerting via Telegram, webhooks, and more`,
-    },
-  ],
-};
-
-export function buildDocSections(
-  config: ExposedConfig,
-  pageSlug: string = 'introduction',
-): DocSection[] {
-  const tables = buildTablesFromConfig(config);
-  const templates =
-    docSectionTemplates[pageSlug] || docSectionTemplates.introduction;
-
-  return templates.map((template) => ({
-    ...template,
-    tables: template.tableKeys
-      ? Object.fromEntries(template.tableKeys.map((key) => [key, tables[key]]))
-      : undefined,
-  }));
-}
-
-export interface SDKGuide {
-  id: string;
-  title: string;
-  sdkId: LogdashSDKName;
-  externalUrl: string;
-}
-
-export const sdkGuides: SDKGuide[] = [
-  {
-    id: 'node-js-getting-started',
-    title: 'Getting Started',
-    sdkId: LogdashSDKName.NODE_JS,
-    externalUrl:
-      'https://github.com/logdash-io/node-sdk?tab=readme-ov-file#logdashnode',
-  },
-  {
-    id: 'node-js-logging',
-    title: 'Logging',
-    sdkId: LogdashSDKName.NODE_JS,
-    externalUrl:
-      'https://github.com/logdash-io/js-sdk?tab=readme-ov-file#logging',
-  },
-  {
-    id: 'node-js-metrics',
-    title: 'Metrics',
-    sdkId: LogdashSDKName.NODE_JS,
-    externalUrl:
-      'https://github.com/logdash-io/js-sdk?tab=readme-ov-file#metrics',
-  },
-  {
-    id: 'python-getting-started',
-    title: 'Getting Started',
-    sdkId: LogdashSDKName.PYTHON,
-    externalUrl:
-      'https://github.com/logdash-io/python-sdk?tab=readme-ov-file#quick-start',
-  },
-  {
-    id: 'python-logging',
-    title: 'Logging',
-    sdkId: LogdashSDKName.PYTHON,
-    externalUrl:
-      'https://github.com/logdash-io/python-sdk?tab=readme-ov-file#logging',
-  },
-  {
-    id: 'python-metrics',
-    title: 'Metrics',
-    sdkId: LogdashSDKName.PYTHON,
-    externalUrl:
-      'https://github.com/logdash-io/python-sdk?tab=readme-ov-file#metrics',
-  },
-  {
-    id: 'go-getting-started',
-    title: 'Getting Started',
-    sdkId: LogdashSDKName.GO,
-    externalUrl:
-      'https://github.com/logdash-io/go-sdk?tab=readme-ov-file#quick-start',
-  },
-  {
-    id: 'go-logging',
-    title: 'Logging',
-    sdkId: LogdashSDKName.GO,
-    externalUrl:
-      'https://github.com/logdash-io/go-sdk?tab=readme-ov-file#logging',
-  },
-  {
-    id: 'go-metrics',
-    title: 'Metrics',
-    sdkId: LogdashSDKName.GO,
-    externalUrl:
-      'https://github.com/logdash-io/go-sdk?tab=readme-ov-file#metrics',
-  },
-  {
-    id: 'dotnet-getting-started',
-    title: 'Getting Started',
-    sdkId: LogdashSDKName.DOTNET,
-    externalUrl:
-      'https://github.com/logdash-io/dotnet-sdk?tab=readme-ov-file#quick-start',
-  },
-  {
-    id: 'dotnet-logging',
-    title: 'Logging',
-    sdkId: LogdashSDKName.DOTNET,
-    externalUrl:
-      'https://github.com/logdash-io/dotnet-sdk?tab=readme-ov-file#logging',
-  },
-  {
-    id: 'dotnet-metrics',
-    title: 'Metrics',
-    sdkId: LogdashSDKName.DOTNET,
-    externalUrl:
-      'https://github.com/logdash-io/dotnet-sdk?tab=readme-ov-file#metrics',
-  },
-  {
-    id: 'java-getting-started',
-    title: 'Getting Started',
-    sdkId: LogdashSDKName.JAVA,
-    externalUrl:
-      'https://github.com/logdash-io/java-sdk?tab=readme-ov-file#quick-start',
-  },
-  {
-    id: 'java-logging',
-    title: 'Logging',
-    sdkId: LogdashSDKName.JAVA,
-    externalUrl:
-      'https://github.com/logdash-io/java-sdk?tab=readme-ov-file#logging',
-  },
-  {
-    id: 'java-metrics',
-    title: 'Metrics',
-    sdkId: LogdashSDKName.JAVA,
-    externalUrl:
-      'https://github.com/logdash-io/java-sdk?tab=readme-ov-file#metrics',
-  },
-  {
-    id: 'rust-getting-started',
-    title: 'Getting Started',
-    sdkId: LogdashSDKName.RUST,
-    externalUrl:
-      'https://github.com/logdash-io/rust-sdk?tab=readme-ov-file#quick-start',
-  },
-  {
-    id: 'rust-logging',
-    title: 'Logging',
-    sdkId: LogdashSDKName.RUST,
-    externalUrl:
-      'https://github.com/logdash-io/rust-sdk?tab=readme-ov-file#logging',
-  },
-  {
-    id: 'rust-metrics',
-    title: 'Metrics',
-    sdkId: LogdashSDKName.RUST,
-    externalUrl:
-      'https://github.com/logdash-io/rust-sdk?tab=readme-ov-file#metrics',
-  },
-  {
-    id: 'ruby-getting-started',
-    title: 'Getting Started',
-    sdkId: LogdashSDKName.RUBY,
-    externalUrl:
-      'https://github.com/logdash-io/ruby-sdk?tab=readme-ov-file#quick-start',
-  },
-  {
-    id: 'ruby-logging',
-    title: 'Logging',
-    sdkId: LogdashSDKName.RUBY,
-    externalUrl:
-      'https://github.com/logdash-io/ruby-sdk?tab=readme-ov-file#logging',
-  },
-  {
-    id: 'ruby-metrics',
-    title: 'Metrics',
-    sdkId: LogdashSDKName.RUBY,
-    externalUrl:
-      'https://github.com/logdash-io/ruby-sdk?tab=readme-ov-file#metrics',
-  },
-];
-
-export interface InternalGuide {
-  id: string;
-  slug: string;
+export type DocCard = {
   title: string;
   description: string;
-  sdkId?: LogdashSDKName;
+  href: DocsPath;
+  icon: IconComponent;
+};
+
+export type DocLink = {
+  title: string;
+  description: string;
+  href: DocsPath;
+};
+
+/** The hljs grammars the docs and SEO families actually use. */
+export type CodeLanguage =
+  | 'bash'
+  | 'javascript'
+  | 'typescript'
+  | 'python'
+  | 'go'
+  | 'csharp'
+  | 'java'
+  | 'ruby'
+  | 'php'
+  | 'rust'
+  | 'elixir'
+  | 'yaml'
+  | 'json';
+
+export type DocFaqItem = { question: string; answer: string };
+
+/** At most three, and the last one always ends in an alert reaching you. */
+export type DocStep = { title: string; text: string };
+
+export type ComparisonWinner = 'logdash' | 'them' | 'tie';
+
+export type DocComparisonRow = {
+  feature: string;
+  logdash: string;
+  them: string;
+  winner: ComparisonWinner;
+};
+
+export type DocBlock =
+  | { type: 'paragraph'; text: string }
+  | { type: 'heading'; text: string }
+  | { type: 'list'; items: string[] }
+  | { type: 'table'; key: TableType }
+  | { type: 'cards'; items: DocCard[] }
+  | { type: 'sdks' }
+  | { type: 'links'; items: DocLink[] }
+  | { type: 'code'; language: CodeLanguage; code: string; title?: string }
+  | { type: 'faq'; items: DocFaqItem[] }
+  | { type: 'steps'; items: DocStep[] }
+  | {
+      type: 'comparison';
+      /** Rendered above the table, e.g. "Logdash vs Uptime Kuma". */
+      title?: string;
+      them: string;
+      rows: DocComparisonRow[];
+    }
+  /** Its own block so an all-green comparison table cannot ship. */
+  | { type: 'pick-them'; them: string; reasons: string[] };
+
+export interface DocPage {
+  path: DocsPath;
+  title: string;
+  description: string;
+  blocks: DocBlock[];
 }
 
-export const internalGuides: InternalGuide[] = [
+export type Sdk = {
+  name: string;
+  id: LogdashSDKName;
+  readmeUrl: string;
+  icon: IconComponent;
+};
+
+const SDK_REPOS: { name: string; id: LogdashSDKName; repo: string }[] = [
+  { name: 'Node.js', id: LogdashSDKName.NODE_JS, repo: 'node-sdk' },
+  { name: 'Python', id: LogdashSDKName.PYTHON, repo: 'python-sdk' },
+  { name: 'Go', id: LogdashSDKName.GO, repo: 'go-sdk' },
+  { name: '.NET', id: LogdashSDKName.DOTNET, repo: 'dotnet-sdk' },
+  { name: 'Java', id: LogdashSDKName.JAVA, repo: 'java-sdk' },
+  { name: 'Rust', id: LogdashSDKName.RUST, repo: 'rust-sdk' },
+  { name: 'Ruby', id: LogdashSDKName.RUBY, repo: 'ruby-sdk' },
+  { name: 'PHP', id: LogdashSDKName.PHP, repo: 'php-sdk' },
+];
+
+export const SDKS: Sdk[] = SDK_REPOS.map(({ name, id, repo }) => ({
+  name,
+  id,
+  readmeUrl: `https://github.com/logdash-io/${repo}#readme`,
+  icon: SDK_LIST.find((sdk) => sdk.name === id)?.icon as IconComponent,
+}));
+
+const featureCards: DocCard[] = [
   {
-    id: 'sdk-migration',
-    slug: 'sdk-migration',
-    title: 'From @logdash/js-sdk',
-    description: 'Migrating from @logdash/js-sdk to @logdash/node',
-    sdkId: LogdashSDKName.NODE_JS,
+    title: 'Logging',
+    description: 'Stream and search logs in real time, from every instance.',
+    href: '/guides/logging',
+    icon: LogsIcon,
+  },
+  {
+    title: 'Metrics',
+    description: 'Track the numbers that matter to your business.',
+    href: '/guides/metrics',
+    icon: MetricsIcon,
+  },
+  {
+    title: 'Monitoring',
+    description: 'Health checks, uptime history and alerts.',
+    href: '/guides/monitoring',
+    icon: MonitoringIcon,
   },
 ];
 
-function getEffectiveSDKId(sdkId: LogdashSDKName): LogdashSDKName {
-  if (sdkId === LogdashSDKName.NEXT_JS || sdkId === LogdashSDKName.SVELTE_KIT) {
-    return LogdashSDKName.NODE_JS;
-  }
-  return sdkId;
-}
+export const guideLinks: DocLink[] = [
+  {
+    title: 'Migrate to @logdash/node',
+    description:
+      'Move off @logdash/js-sdk to the unified package, by hand or with an AI prompt.',
+    href: '/guides/sdk-migration',
+  },
+];
 
-export function getSDKGuides(sdkId: LogdashSDKName): SDKGuide[] {
-  const effectiveId = getEffectiveSDKId(sdkId);
-  return sdkGuides.filter((guide) => guide.sdkId === effectiveId);
-}
+export const docPages: Record<
+  'introduction' | 'logging' | 'metrics' | 'monitoring',
+  DocPage
+> = {
+  introduction: {
+    path: '/guides',
+    title: 'Introduction',
+    description:
+      'Logdash is logging, metrics and uptime monitoring in one place, with nothing to configure.',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'Install an SDK, paste your API key and your first logs appear in the dashboard moments later. Depending on your location, a log reaches the dashboard in under 100 ms.',
+      },
+      { type: 'heading', text: 'Three pillars' },
+      { type: 'cards', items: featureCards },
+      { type: 'heading', text: 'SDKs' },
+      {
+        type: 'paragraph',
+        text: 'Official SDKs for the languages you already use. Each README covers installation, logging and metrics.',
+      },
+      { type: 'sdks' },
+      { type: 'heading', text: 'Guides' },
+      { type: 'links', items: guideLinks },
+    ],
+  },
+  logging: {
+    path: '/guides/logging',
+    title: 'Logging',
+    description:
+      'Track events and errors in real time, from every instance of your app.',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'Send structured logs from your code with a single call and search them the moment they arrive. Several instances of the same service land in one stream, so debugging does not mean hopping between machines.',
+      },
+      { type: 'heading', text: 'Plan limits' },
+      {
+        type: 'paragraph',
+        text: 'Your plan sets how long logs are kept and how many you can send per hour.',
+      },
+      { type: 'table', key: 'logsRetention' },
+      { type: 'table', key: 'logsRateLimits' },
+    ],
+  },
+  metrics: {
+    path: '/guides/metrics',
+    title: 'Metrics',
+    description:
+      'Track the numbers that matter to your business, straight from your application.',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'Set or mutate a metric from your code and watch it on a chart. Typical examples are user registrations, orders and file uploads, or any other data point that matters to you.',
+      },
+      { type: 'heading', text: 'Plan limits' },
+      {
+        type: 'paragraph',
+        text: 'Your plan sets how many metrics each service can register and how long their history is kept.',
+      },
+      { type: 'table', key: 'metricsPerService' },
+      { type: 'table', key: 'metricsRetention' },
+    ],
+  },
+  monitoring: {
+    path: '/guides/monitoring',
+    title: 'Monitoring',
+    description:
+      'HTTP health checks, uptime history and alerts when things go wrong.',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'Point a monitor at an endpoint and Logdash checks it on the interval you choose. Downtime shows up in the uptime history, triggers an alert and can be shared on a public status page.',
+      },
+      { type: 'heading', text: 'What you get' },
+      {
+        type: 'list',
+        items: [
+          'HTTP health checks with configurable intervals',
+          'Uptime history and response time tracking',
+          'Public status pages with custom domains',
+          'Alerts on Telegram and webhooks when a check flips to down',
+        ],
+      },
+    ],
+  },
+};
 
-export function getInternalGuides(sdkId: LogdashSDKName): InternalGuide[] {
-  const effectiveId = getEffectiveSDKId(sdkId);
-  return internalGuides.filter(
-    (guide) => !guide.sdkId || guide.sdkId === effectiveId,
-  );
-}
+export type DocsSidebarItem =
+  | { title: string; href: DocsPath; external: false; icon?: IconComponent }
+  | { title: string; href: string; external: true; icon?: IconComponent };
+
+export type DocsSidebarGroup = {
+  title: string;
+  items: DocsSidebarItem[];
+};
+
+export const docsSidebar: DocsSidebarGroup[] = [
+  {
+    title: 'Get started',
+    items: [
+      { title: 'Introduction', href: '/guides', external: false },
+      { title: 'Logging', href: '/guides/logging', external: false },
+      { title: 'Metrics', href: '/guides/metrics', external: false },
+      { title: 'Monitoring', href: '/guides/monitoring', external: false },
+    ],
+  },
+  {
+    title: 'SDKs',
+    /**
+     * These used to point at the GitHub READMEs. They are our own reference
+     * pages now, so the sidebar keeps the reader on the site and `/docs` is a
+     * real page rather than a redirect.
+     *
+     * No icons: the sidebar is a plain list of titles, and an icon on the
+     * eight SDK rows but not on Overview leaves the column ragged.
+     */
+    items: [
+      { title: 'Overview', href: '/docs', external: false },
+      ...sdkDocs.map((doc) => ({
+        title: doc.name,
+        href: sdkPath(doc),
+        external: false as const,
+      })),
+    ],
+  },
+  {
+    title: 'Guides',
+    items: guideLinks.map((guide) => ({
+      title: guide.title,
+      href: guide.href,
+      external: false,
+    })),
+  },
+  {
+    title: 'More',
+    items: [
+      { title: 'Self-hosting', href: '/docs/self-hosting', external: false },
+    ],
+  },
+];

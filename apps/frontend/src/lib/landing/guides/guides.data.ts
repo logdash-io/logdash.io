@@ -1,22 +1,3 @@
-export interface Guide {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  icon: 'migration' | 'setup' | 'integration';
-}
-
-export const guides: Guide[] = [
-  {
-    id: 'sdk-migration',
-    slug: 'sdk-migration',
-    title: 'Migrating from @logdash/js-sdk to @logdash/node',
-    description:
-      'Learn how to migrate your codebase from the legacy JS SDK to the new unified Node.js package.',
-    icon: 'migration',
-  },
-];
-
 export interface MigrationChange {
   aspect: string;
   oldSdk: string;

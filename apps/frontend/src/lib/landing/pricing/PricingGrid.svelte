@@ -1,7 +1,6 @@
 <script lang="ts">
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { UserTier } from '$lib/domains/shared/types.js';
-  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
   import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
   import { fade } from 'svelte/transition';
@@ -28,43 +27,29 @@
       description: 'Contact us for any questions about our pricing or features',
     },
   };
-
-  const onMouseEnter = (plan: (typeof PAYMENT_PLANS)[number]) => {
-    if (plan.tier === UserTier.PRO) {
-      upgradeState.showBackground();
-    }
-  };
-
-  const onMouseLeave = (plan: (typeof PAYMENT_PLANS)[number]) => {
-    if (plan.tier === UserTier.PRO) {
-      upgradeState.hideBackground();
-    }
-  };
 </script>
 
-<div class="mx-auto mb-8 grid max-w-7xl gap-8 md:grid-cols-3">
+<div class="mx-auto mb-8 grid max-w-landing gap-8 md:grid-cols-3">
   {#each pricingData.plans as plan (plan.tier)}
     <div class="relative flex flex-col">
-      {#if plan.popular}
-        <div
-          class="bg-primary ring-primary flex h-20 w-full items-center justify-center rounded-t-3xl pb-10 -mb-4 text-sm font-semibold ring"
-        >
-          Most popular
-        </div>
-      {:else}
-        <div class="h-16"></div>
-      {/if}
+      <div class="h-10"></div>
 
       <div
         class={[
-          'card ld-card-base relative -mt-6 overflow-visible rounded-3xl p-8 shadow-xl',
+          'card ld-card-base relative overflow-visible rounded-3xl p-8',
           {
-            'ring-primary ring': plan.popular,
+            'border-primary': plan.popular,
           },
         ]}
-        onmouseenter={() => onMouseEnter(plan)}
-        onmouseleave={() => onMouseLeave(plan)}
       >
+        {#if plan.popular}
+          <span
+            class="badge badge-primary absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
+          >
+            Most popular
+          </span>
+        {/if}
+
         <div class={['badge badge-soft badge-lg mb-4', plan.badge.class]}>
           {plan.badge.text}
         </div>
@@ -76,7 +61,7 @@
           <div class="mt-2">
             <span class="text-4xl font-semibold">{plan.price}</span>
 
-            <p class="mt-4 text-sm opacity-75 h-10">
+            <p class="text-neutral-300 mt-4 h-10 text-sm">
               {plan.description}
             </p>
           </div>

@@ -42,7 +42,8 @@ export default ts.config(
   },
   {
     rules: {
-      'no-unused-vars': 'warn',
+      // The base rule reads TypeScript function types as unused parameters; the TS rule knows better.
+      'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
     },
   },

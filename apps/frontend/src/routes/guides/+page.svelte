@@ -1,8 +1,10 @@
 <script lang="ts">
-  import AnimatedView from '$lib/domains/shared/ui/AnimatedView.svelte';
-  import DocumentationContent from '$lib/landing/guides/DocumentationContent.svelte';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
-  import Footer from '$lib/landing/Footer.svelte';
+  import DocArticle from '$lib/landing/guides/DocArticle.svelte';
+  import { docPages } from '$lib/landing/guides/documentation.data';
+  import type { PageData } from './$types';
+
+  const { data }: { data: PageData } = $props();
 </script>
 
 <SeoMeta
@@ -11,9 +13,4 @@
   keywords="logdash guides, migration guide, sdk migration, integration tutorial"
 />
 
-<AnimatedView class="mx-auto w-full">
-  <div class="mx-auto max-w-3xl">
-    <DocumentationContent />
-  </div>
-  <Footer />
-</AnimatedView>
+<DocArticle page={docPages.introduction} tables={data.tables} />

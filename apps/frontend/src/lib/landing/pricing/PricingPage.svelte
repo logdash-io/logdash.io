@@ -6,12 +6,14 @@
   import FoundersCard from '$lib/landing/FoundersCard.svelte';
 </script>
 
-<section class="mx-auto mt-16 flex max-w-3xl flex-col items-center gap-4 px-4 text-center">
-  <h1 class="text-4xl font-bold sm:text-5xl">
+<section
+  class="mx-auto mt-16 flex max-w-3xl flex-col items-center gap-4 px-4 text-center"
+>
+  <h1 class="text-4xl font-medium tracking-[-0.03em] sm:text-5xl">
     Start free. Upgrade when it pays for itself.
   </h1>
 
-  <p class="text-base-content/70 text-lg">
+  <p class="text-neutral-400 text-lg">
     Every plan comes with uptime monitoring, logs, metrics and status pages. No
     credit card to start.
   </p>
@@ -33,27 +35,29 @@
   </a>
 
   <FoundersCard>
-    <p class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-80">
+    <p
+      class="text-neutral-300 mb-2 text-xs font-semibold tracking-wide uppercase"
+    >
       A Note from us
     </p>
-    <p class="mb-6 text-lg font-extrabold">Logdash Inc.</p>
+    <p class="mb-6 text-lg font-semibold">Logdash Inc.</p>
 
-    <p class="mb-4 opacity-90">
+    <p class="text-neutral-200 mb-4">
       Our pricing is designed to let you explore all of the Logdash features and
       capabilities without paying a dime.
     </p>
 
-    <p class="mb-4 opacity-90">
+    <p class="text-neutral-200 mb-4">
       We believe that the best way to help with your success is to give you
       access to everything we have to offer, even before you decide to upgrade.
     </p>
 
-    <p class="mb-4 opacity-90">
+    <p class="text-neutral-200 mb-4">
       Focus on building your awesome projects; your access to all features is
       only limited by fair resource usage on our side.
     </p>
 
-    <p class="mb-6 opacity-90">
+    <p class="text-neutral-200 mb-6">
       We're committed to transparency and fairness as we grow. Thanks for
       joining our journey!
     </p>
