@@ -1,11 +1,13 @@
 <script lang="ts">
+  import type { ClassValue } from 'svelte/elements';
+
   export let width = 40;
   export let height = 40;
   export let x = -1;
   export let y = -1;
   export let strokeDashArray: string = '';
   export let squares: Array<[x: number, y: number]> = [[0, 0]];
-  let className: any = '';
+  let className: ClassValue = '';
   export { className as class };
   let id = crypto.randomUUID().toString().slice(0, 8);
   export let fillColor = 'var(--color-neutral-700)';
@@ -31,7 +33,7 @@
   <rect width="100%" height="100%" stroke-width={0} fill="url(#{id})" />
   {#if squares}
     <svg {x} {y} class="overflow-visible">
-      {#each squares as sq}
+      {#each squares as sq, index (index)}
         <rect
           stroke={fillColor}
           fill="none"

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import {
@@ -54,7 +55,12 @@
       await monitoringState.deleteMonitor(monitorId);
       onDeleted();
       toast.success('Monitor deleted successfully', 5000);
-      goto(`/app/clusters/${clusterId}/${projectId}`);
+      goto(
+        resolve('/app/clusters/[cluster_id]/[project_id]', {
+          cluster_id: clusterId,
+          project_id: projectId,
+        }),
+      );
     } catch {
       toast.error('Failed to delete monitor', 5000);
     }
@@ -67,12 +73,10 @@
   icon={SettingsIcon}
 >
   <SettingsCardItem icon={EditIcon} showBorder={true} onclick={onRenameMonitor}>
-    {#snippet children()}
-      <p class="font-medium">Rename Monitor</p>
-      <p class="text-neutral-400 text-sm">
-        Change the display name of this monitor
-      </p>
-    {/snippet}
+    <p class="font-medium">Rename Monitor</p>
+    <p class="text-neutral-400 text-sm">
+      Change the display name of this monitor
+    </p>
   </SettingsCardItem>
 
   <SettingsCardItem
@@ -81,11 +85,9 @@
     showBorder={false}
     onclick={onDeleteMonitor}
   >
-    {#snippet children()}
-      <p class="font-medium text-error">Delete Monitor</p>
-      <p class="text-neutral-400 text-sm">
-        Permanently delete this monitor and all its data
-      </p>
-    {/snippet}
+    <p class="font-medium text-error">Delete Monitor</p>
+    <p class="text-neutral-400 text-sm">
+      Permanently delete this monitor and all its data
+    </p>
   </SettingsCardItem>
 </SettingsCardExpandable>

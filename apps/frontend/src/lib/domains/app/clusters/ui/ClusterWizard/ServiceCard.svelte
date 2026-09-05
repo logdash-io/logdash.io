@@ -19,7 +19,6 @@
   };
   const {
     service,
-    index,
     expanded,
     canRemove,
     onNameChange,
@@ -117,7 +116,7 @@
       ]}
       in:fly={{ y: -5, duration: 200, easing: cubicOut }}
     >
-      {#each featureConfig as { feature, label, description, icon: Icon }}
+      {#each featureConfig as { feature, label, description, icon: Icon } (feature)}
         <label
           class={[
             'flex items-center gap-3 p-4 px-4.5 cursor-pointer hover:bg-neutral-800',
@@ -149,7 +148,7 @@
     <div class="flex flex-col flex-1 gap-1">
       <span class="font-medium text-lg">{service.name}</span>
       <div class="flex items-center gap-3">
-        {#each enabledFeatures as { label, icon: Icon }}
+        {#each enabledFeatures as { feature, label, icon: Icon } (feature)}
           <div class="flex items-center gap-1.5 text-xs text-neutral-400">
             <Icon class="size-3.5" />
             <span>{label}</span>

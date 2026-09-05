@@ -113,17 +113,15 @@
           icon={KeyIcon}
           showBorder={index < data.apiKeys.length - 1}
         >
-          {#snippet children()}
-            <p class="font-medium">{key.label}</p>
-            <p class="font-mono text-sm">{key.prefix}…</p>
-            <p class="text-neutral-400 mt-1 text-xs">
-              {scopeSummary(key)}
-            </p>
-            <p class="text-neutral-400 text-xs">
-              {accessSummary(key)} · Last used {formatDate(key.lastUsedAt)} · Created
-              {formatDate(key.createdAt)}
-            </p>
-          {/snippet}
+          <p class="font-medium">{key.label}</p>
+          <p class="font-mono text-sm">{key.prefix}…</p>
+          <p class="text-neutral-400 mt-1 text-xs">
+            {scopeSummary(key)}
+          </p>
+          <p class="text-neutral-400 text-xs">
+            {accessSummary(key)} · Last used {formatDate(key.lastUsedAt)} · Created
+            {formatDate(key.createdAt)}
+          </p>
           {#snippet action()}
             <button
               type="button"

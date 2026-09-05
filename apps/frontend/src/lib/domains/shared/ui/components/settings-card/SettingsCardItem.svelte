@@ -1,8 +1,9 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+  import type { Component, Snippet } from 'svelte';
+  import type { ClassValue } from 'svelte/elements';
 
   type Props = {
-    icon?: any;
+    icon?: Component<{ class?: ClassValue }>;
     iconVariant?: 'default' | 'danger';
     children: Snippet;
     action?: Snippet;

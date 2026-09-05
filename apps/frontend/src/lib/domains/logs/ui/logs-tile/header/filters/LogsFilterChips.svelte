@@ -149,7 +149,7 @@
   <div class="ld-card-base rounded-2xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Level</div>
     <ul class="dropdown-content p-0">
-      {#each LOG_LEVELS as level}
+      {#each LOG_LEVELS as level (level.value)}
         {@const isSelected = filtersStore.hasLevel(level.value)}
         <li>
           <label
@@ -176,7 +176,7 @@
 {#snippet levelChipContent()}
   {#if isMultipleLevels}
     <span class="flex items-center gap-0.5">
-      {#each filtersStore.levels.slice(0, 3) as level, index}
+      {#each filtersStore.levels.slice(0, 3) as level, index (level)}
         {@const levelInfo = LOG_LEVELS_MAP[level]}
         {#if levelInfo}
           <span
@@ -211,7 +211,7 @@
   <div class="ld-card-base rounded-2xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Namespace</div>
     <ul class="dropdown-content p-0">
-      {#each namespacesState.namespaces as nsMetadata}
+      {#each namespacesState.namespaces as nsMetadata (nsMetadata.namespace)}
         {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
         <li>
           <label

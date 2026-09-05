@@ -1,7 +1,6 @@
 <script lang="ts">
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import type { PublicDashboard } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard.js';
-  import PublicDashboardIcon from '$lib/domains/shared/icons/PublicDashboardIcon.svelte';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';

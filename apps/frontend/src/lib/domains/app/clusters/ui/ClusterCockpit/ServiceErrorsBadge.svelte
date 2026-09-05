@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
@@ -46,7 +47,12 @@
   function onBadgeClick(e: MouseEvent): void {
     e.stopPropagation();
     filtersStore.setLevels(['error']);
-    goto(`/app/clusters/${clusterId}/${projectId}/logs`);
+    goto(
+      resolve('/app/clusters/[cluster_id]/[project_id]/logs', {
+        cluster_id: clusterId,
+        project_id: projectId,
+      }),
+    );
   }
 
   onMount(() => {

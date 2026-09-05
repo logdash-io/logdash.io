@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
@@ -26,9 +27,14 @@
       return;
     }
 
-    goto(`/app/clusters/${clusterId}/${projectId}/metrics/${metricToPreview}`, {
-      replaceState: true,
-    });
+    goto(
+      resolve('/app/clusters/[cluster_id]/[project_id]/metrics/[metric_id]', {
+        cluster_id: clusterId,
+        project_id: projectId,
+        metric_id: metricToPreview,
+      }),
+      { replaceState: true },
+    );
   });
 </script>
 

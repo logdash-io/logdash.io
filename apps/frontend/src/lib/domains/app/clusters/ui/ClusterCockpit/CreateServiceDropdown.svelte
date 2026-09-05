@@ -6,6 +6,7 @@
   import { Feature } from '$lib/domains/shared/types.js';
   import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { scale } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
 
@@ -69,9 +70,13 @@
       });
 
       onClose();
-      await goto(`/app/clusters/${clusterId}/${result.project.id}`, {
-        invalidateAll: true,
-      });
+      await goto(
+        resolve('/app/clusters/[cluster_id]/[project_id]', {
+          cluster_id: clusterId,
+          project_id: result.project.id,
+        }),
+        { invalidateAll: true },
+      );
     } finally {
       isCreating = false;
     }
@@ -126,7 +131,7 @@
   <div class="flex flex-col gap-1">
     <span class="text-xs text-neutral-400">Features (optional)</span>
     <div class="flex flex-col gap-0.5">
-      {#each featureConfig as { feature, label, icon: Icon }}
+      {#each featureConfig as { feature, label, icon: Icon } (feature)}
         <label
           class={[
             'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',

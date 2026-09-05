@@ -34,7 +34,7 @@
 {#if userInvitationsState.hasPendingInvitations}
   <div class="success-card mb-4 w-full rounded-xl px-2">
     <div class="space-y-0">
-      {#each invitations as invitation, index}
+      {#each invitations as invitation, index (invitation.id)}
         <div
           class={[
             'flex items-center justify-between rounded-lg p-3 pr-1',

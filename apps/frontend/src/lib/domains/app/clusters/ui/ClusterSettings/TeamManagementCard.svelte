@@ -45,13 +45,17 @@
         ClusterRole.WRITE,
       );
       emailInput = '';
-    } catch {}
+    } catch {
+      return;
+    }
   }
 
   async function onDeleteInvite(inviteId: string): Promise<void> {
     try {
       await clusterInvitesState.deleteInvite(inviteId);
-    } catch {}
+    } catch {
+      return;
+    }
   }
 
   function formatDate(dateString: string): string {
@@ -98,7 +102,7 @@
         </div>
 
         <div class="flex flex-col gap-2">
-          {#each capacity.members as member}
+          {#each capacity.members as member (member.email)}
             <div class="flex items-center gap-3 rounded-xl bg-neutral-800 p-3">
               <div class="avatar">
                 <div class="w-8 rounded-full">
@@ -183,7 +187,7 @@
             Pending invitations
           </h3>
           <div class="flex flex-col gap-2">
-            {#each clusterInvitesState.invites as invite}
+            {#each clusterInvitesState.invites as invite (invite.id)}
               <div
                 class="flex items-center justify-between rounded-xl bg-neutral-800 p-3"
               >

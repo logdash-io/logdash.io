@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import StatusPageEmptyState from '$lib/domains/app/projects/ui/setup/status-page/StatusPageEmptyState.svelte';
   import StatusPageCard from '$lib/domains/app/projects/ui/setup/status-page/StatusPageCard.svelte';
@@ -18,7 +19,12 @@
 
   function onDashboardCreated(newDashboard: PublicDashboard): void {
     dashboard = newDashboard;
-    goto(`/app/clusters/${clusterId}/status-pages/${newDashboard.id}`);
+    goto(
+      resolve('/app/clusters/[cluster_id]/status-pages/[status_page_id]', {
+        cluster_id: clusterId,
+        status_page_id: newDashboard.id,
+      }),
+    );
   }
 </script>
 

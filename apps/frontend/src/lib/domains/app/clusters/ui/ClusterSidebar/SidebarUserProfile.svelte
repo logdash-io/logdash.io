@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { proSkyBackgroundState } from '$lib/domains/shared/pro-features/pro-sky-background.state.svelte.js';
   import { logout } from '$lib/domains/auth/application/logout.js';
   import { UserTier } from '$lib/domains/shared/types.js';
@@ -84,7 +85,7 @@
         <a
           class="flex w-full items-center gap-3 rounded-xl"
           onclick={() => {
-            goto('/app/api/user/billing');
+            goto(resolve('/app/api/user/billing'));
           }}
         >
           <OpenIcon class="inline h-4 w-4" />

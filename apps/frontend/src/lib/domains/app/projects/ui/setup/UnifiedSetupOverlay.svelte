@@ -90,7 +90,7 @@
   <ul
     class="dropdown dropdown-center ld-card-base z-20 overflow-visible rounded-xl p-1.5 shadow-sm"
   >
-    {#each SDK_LIST as sdk, index}
+    {#each SDK_LIST as sdk, index (sdk.name)}
       <li
         onclick={(e) => {
           e.stopPropagation();

@@ -58,32 +58,30 @@
       showBorder={true}
       onclick={() => onToggleChannel(channel.id)}
     >
-      {#snippet children()}
-        <div class="flex items-center gap-4">
-          <div
-            class="size-10 rounded-lg bg-base-100 flex items-center justify-center"
-          >
-            <input
-              type="checkbox"
-              class="checkbox checkbox-xs checkbox-secondary"
-              checked={isEnabled}
-              readonly
-            />
-          </div>
-          <div>
-            <p class="font-medium text-sm">{getChannelDisplayName(channel)}</p>
-            <p class="text-neutral-400 text-sm">
-              {getChannelTypeLabel(channel)}
-              {#if channel.target === 'telegram' && channel.options.chatId}
-                · id: {channel.options.chatId}
-              {/if}
-              {#if channel.target === 'webhook' && channel.options.url}
-                · {channel.options.url}
-              {/if}
-            </p>
-          </div>
+      <div class="flex items-center gap-4">
+        <div
+          class="size-10 rounded-lg bg-base-100 flex items-center justify-center"
+        >
+          <input
+            type="checkbox"
+            class="checkbox checkbox-xs checkbox-secondary"
+            checked={isEnabled}
+            readonly
+          />
         </div>
-      {/snippet}
+        <div>
+          <p class="font-medium text-sm">{getChannelDisplayName(channel)}</p>
+          <p class="text-neutral-400 text-sm">
+            {getChannelTypeLabel(channel)}
+            {#if channel.target === 'telegram' && channel.options.chatId}
+              · id: {channel.options.chatId}
+            {/if}
+            {#if channel.target === 'webhook' && channel.options.url}
+              · {channel.options.url}
+            {/if}
+          </p>
+        </div>
+      </div>
       {#snippet action()}
         <button
           onclick={(e) => {
@@ -99,11 +97,9 @@
   {/each}
 
   <SettingsCardItem icon={PlusIcon} showBorder={false} onclick={onAddChannel}>
-    {#snippet children()}
-      <p class="font-medium">Add notification channel</p>
-      <p class="text-neutral-400 text-sm">
-        Connect Telegram or Webhook notifications
-      </p>
-    {/snippet}
+    <p class="font-medium">Add notification channel</p>
+    <p class="text-neutral-400 text-sm">
+      Connect Telegram or Webhook notifications
+    </p>
   </SettingsCardItem>
 </SettingsCardExpandable>

@@ -22,7 +22,7 @@
     projectId: string;
   };
 
-  const { maxDateRangeHours, projectId }: Props = $props();
+  const { maxDateRangeHours }: Props = $props();
 
   let hoveredMenu = $state<'level' | 'time-range' | 'namespace' | null>(null);
 
@@ -31,17 +31,6 @@
   let showCustomDatePicker = $state(false);
   let customStartDate = $state('');
   let customEndDate = $state('');
-
-  const activeFilterCount = $derived.by(() => {
-    let count = 0;
-    if (filtersStore.levels.length > 0) count++;
-    if (filtersStore.namespaces.length > 0) count++;
-    if (filtersStore.startDate && filtersStore.endDate) count++;
-    if (filtersStore.searchString?.trim()) count++;
-    return count;
-  });
-
-  const hasActiveFilters = $derived(activeFilterCount > 0);
 
   const currentTimeRangeLabel = $derived(
     formatTimeRangeLabel(filtersStore.startDate, filtersStore.endDate),
@@ -162,7 +151,7 @@
     onmouseenter={() => (hoveredMenu = 'level')}
   >
     <ul class="dropdown-content p-0">
-      {#each LOG_LEVELS as level}
+      {#each LOG_LEVELS as level (level.value)}
         {@const isSelected = filtersStore.hasLevel(level.value)}
         <li>
           <button
@@ -208,7 +197,7 @@
     onmouseenter={() => (hoveredMenu = 'time-range')}
   >
     <ul class="p-0">
-      {#each TIME_RANGE_PRESETS as range}
+      {#each TIME_RANGE_PRESETS as range (range.value)}
         {@const requiresUpgrade = isTimeRangeExceedingLimit(
           range.hours,
           maxDateRangeHours,
@@ -254,7 +243,7 @@
       {:else if availableNamespaces.length === 0}
         <li class="px-3 py-1.5 text-neutral-400">No namespaces</li>
       {:else}
-        {#each availableNamespaces as nsMetadata}
+        {#each availableNamespaces as nsMetadata (nsMetadata.namespace)}
           {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
           <li>
             <button
@@ -296,7 +285,7 @@
           mode="datetime"
           placeholder="Start date"
           inputClasses="ld-input ld-input-padding w-full text-xs"
-          displayFormat={'yyyy M dd, hh:ii'}
+          displayFormat="yyyy M dd, hh:ii"
         />
       </div>
       <div class="space-y-1">
@@ -306,7 +295,7 @@
           mode="datetime"
           placeholder="End date"
           inputClasses="ld-input ld-input-padding w-full text-xs"
-          displayFormat={'yyyy M dd, hh:ii'}
+          displayFormat="yyyy M dd, hh:ii"
         />
       </div>
     </div>

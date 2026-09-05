@@ -24,7 +24,7 @@
     { 'opacity-20 pointer-events-none': disabled },
   ]}
 >
-  {#each PROJECT_COLORS as color}
+  {#each PROJECT_COLORS as color (color)}
     {@const isSelected = selectedColor === color}
     <button
       type="button"

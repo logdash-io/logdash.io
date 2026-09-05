@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
   import type { Log } from '$lib/domains/logs/domain/log.js';
@@ -119,7 +120,12 @@
   }
 
   function onServiceClick(projectId: string): void {
-    goto(`/app/clusters/${clusterId}/${projectId}`);
+    goto(
+      resolve('/app/clusters/[cluster_id]/[project_id]', {
+        cluster_id: clusterId,
+        project_id: projectId,
+      }),
+    );
   }
 
   onMount(() => {
@@ -136,7 +142,7 @@
         <ActivityIcon class="size-3" />
         <span>Recent incidents</span>
       </div>
-      {#each recentIncidents as incident}
+      {#each recentIncidents as incident (`${incident.projectId}-${incident.time.getTime()}`)}
         <button
           onclick={() => onServiceClick(incident.projectId)}
           class="group flex items-center justify-between rounded-lg bg-error/5 px-2 py-1 text-left hover:bg-error/10"
@@ -158,7 +164,7 @@
         <ScrollTextIcon class="size-3" />
         <span>Recent errors</span>
       </div>
-      {#each recentErrors as error}
+      {#each recentErrors as error (error.log.id)}
         <button
           onclick={() => onServiceClick(error.projectId)}
           class="group flex flex-col gap-0.5 rounded-lg bg-error/5 px-2 py-1 text-left hover:bg-error/10"

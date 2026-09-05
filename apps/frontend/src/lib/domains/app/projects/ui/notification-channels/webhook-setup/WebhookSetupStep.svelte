@@ -85,7 +85,7 @@
     <input
       bind:value={webhookName}
       class="ld-input ld-input-padding"
-      placeholder={'Memorable webhook name'}
+      placeholder="Memorable webhook name"
       type="text"
       use:autoFocus={{ selectAll: true }}
     />
@@ -93,7 +93,7 @@
     <div class="join relative w-full">
       {#snippet methodSelect(close: () => void)}
         <ul class="menu ld-card-base rounded-xl">
-          {#each ALLOWED_METHODS as _method}
+          {#each ALLOWED_METHODS as _method (_method)}
             <li>
               <UpgradeElement
                 enabled={_method !== 'GET' && !canUseAdvancedMethods}
@@ -129,13 +129,13 @@
       <input
         bind:value={webhookUrl}
         class="join-item ld-input py-2 pl-16 pr-3"
-        placeholder={'Webhook URL'}
+        placeholder="Webhook URL"
         type="text"
       />
     </div>
 
     <div class="flex flex-col gap-2">
-      {#each headers as header, index}
+      {#each headers as header, index (index)}
         <div class="flex items-center gap-2">
           <div class="flex-1">
             <input
@@ -145,7 +145,7 @@
                 'ld-input ld-input-padding',
                 { 'input-error': !isValidHeaderName(header.key) },
               ]}
-              placeholder={'Key'}
+              placeholder="Key"
               use:autoFocus={{
                 enabled: index === headers.length - 1,
               }}
@@ -164,7 +164,7 @@
                 'ld-input ld-input-padding',
                 { 'input-error': !isValidHeaderValue(header.value) },
               ]}
-              placeholder={'Value'}
+              placeholder="Value"
             />
             {#if header.value && !isValidHeaderValue(header.value)}
               <div class="text-error mt-1 text-xs">

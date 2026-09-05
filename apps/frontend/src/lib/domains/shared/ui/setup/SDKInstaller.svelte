@@ -142,7 +142,7 @@ implementation 'io.logdash:logdash:0.2.0'`,
     bind:this={sdkPopover}
     class="dropdown dropdown-center ld-card-base z-20 overflow-visible rounded-xl p-1.5 shadow-sm"
   >
-    {#each SDK_LIST as sdk}
+    {#each SDK_LIST as sdk (sdk.name)}
       <div class={['w-full rounded-xl']}>
         <li
           onclick={(e) => {

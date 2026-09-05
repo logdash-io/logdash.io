@@ -27,7 +27,7 @@
     class="dropdown-content text-secondary ld-card-base rounded-box z-1 w-fit whitespace-nowrap p-2 shadow"
   >
     <ul class="">
-      {#each TIME_RANGE_PRESETS as range}
+      {#each TIME_RANGE_PRESETS as range (range.value)}
         {@const requiresUpgrade = isTimeRangeExceedingLimit(
           range.hours,
           maxDateRangeHours,

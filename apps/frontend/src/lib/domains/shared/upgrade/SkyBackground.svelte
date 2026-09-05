@@ -15,7 +15,7 @@
     return { width: 400, height: 300 };
   });
 
-  function generateStars(baseCount, seed, layerOffset = 0, starSize = 1) {
+  function generateStars(baseCount, seed, layerOffset = 0) {
     const actualCount = Math.floor(baseCount * density);
     const stars = [];
 
@@ -110,18 +110,18 @@
   // Make reactive to container size changes
   const stars1 = $derived.by(() => {
     // Include containerSize in dependency
-    containerSize;
-    return generateStars(40, 982451653, 0, 1); // Small stars (1px) - highest density
+    void containerSize;
+    return generateStars(40, 982451653, 0); // Small stars (1px) - highest density
   });
 
   const stars2 = $derived.by(() => {
-    containerSize;
-    return generateStars(Math.floor(40 * 0.5), 2971215073, 29, 2); // Medium stars (2px) - 80% density
+    void containerSize;
+    return generateStars(Math.floor(40 * 0.5), 2971215073, 29); // Medium stars (2px) - 80% density
   });
 
   const stars3 = $derived.by(() => {
-    containerSize;
-    return generateStars(Math.floor(40 * 0.3), 4111820313, 58, 3); // Large stars (3px) - 60% density
+    void containerSize;
+    return generateStars(Math.floor(40 * 0.3), 4111820313, 58); // Large stars (3px) - 60% density
   });
 </script>
 

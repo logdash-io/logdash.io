@@ -1,12 +1,13 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+  import type { Component, Snippet } from 'svelte';
+  import type { ClassValue } from 'svelte/elements';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
   import { slide } from 'svelte/transition';
 
   type Props = {
     title: string;
     description?: string;
-    icon?: any;
+    icon?: Component<{ class?: ClassValue }>;
     children: Snippet;
     defaultExpanded?: boolean;
   };
