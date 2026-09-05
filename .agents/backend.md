@@ -1,9 +1,3 @@
----
-description: 
-globs: 
-alwaysApply: true
----
-
 # General rules
 
 - never use `.then()`. Always use normal promises,
