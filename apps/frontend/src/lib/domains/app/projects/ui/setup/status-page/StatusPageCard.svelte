@@ -97,7 +97,7 @@
       </div>
     {:else}
       <div class="border-t border-base-100 pt-4">
-        <p class="text-sm text-base-content/60">
+        <p class="text-sm text-neutral-400">
           Configure and publish your status page to make it visible to everyone.
         </p>
       </div>

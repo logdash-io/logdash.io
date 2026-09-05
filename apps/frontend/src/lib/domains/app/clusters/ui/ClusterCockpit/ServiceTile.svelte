@@ -19,7 +19,7 @@
 
 <button
   {onclick}
-  class="ld-card-base group flex cursor-pointer flex-col gap-3 ld-card-rounding p-4 transition-all hover:bg-base-100/50"
+  class="ld-card-base group flex cursor-pointer flex-col gap-3 ld-card-rounding p-4 hover:bg-neutral-800"
 >
   <div class="flex items-start justify-between">
     <div class="flex items-center gap-3 min-w-0 flex-1">
@@ -41,7 +41,7 @@
               'text-success': status === 'up',
               'text-error': status === 'down',
               'text-warning': status === 'degraded',
-              'text-base-content/50': status === 'unknown',
+              'text-neutral-500': status === 'unknown',
             },
           ]}
         />
@@ -54,7 +54,7 @@
       </div>
     </div>
     <ChevronRightIcon
-      class="size-4 text-base-content/30 transition-transform group-hover:translate-x-0.5 group-hover:text-base-content"
+      class="size-4 text-neutral-600 transition-transform group-hover:translate-x-0.5 group-hover:text-base-content"
     />
   </div>
 

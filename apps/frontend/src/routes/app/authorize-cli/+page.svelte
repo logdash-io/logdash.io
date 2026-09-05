@@ -65,7 +65,7 @@
       <KeyIcon class="text-primary size-6" />
     </div>
     <h1 class="text-xl font-semibold">Authorize CLI access</h1>
-    <p class="text-base-content/70 text-sm">
+    <p class="text-neutral-400 text-sm">
       Type the code shown in your terminal. We never fill it in for you — if
       someone sent you a link with a code already in it, close this page.
     </p>

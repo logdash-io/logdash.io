@@ -23,7 +23,7 @@
   {#if !isOnDemoDashboard}
     <div
       role="tablist"
-      class={['text-secondary/90 rounded-lg font-mono shadow-none']}
+      class={['text-neutral-200 rounded-lg font-mono shadow-none']}
       onclickcapture={(e) => {
         if (!canSwitchTabs) {
           e.preventDefault();

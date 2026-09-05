@@ -152,7 +152,7 @@ implementation 'io.logdash:logdash:0.2.0'`,
             selectedSDKIndex = SDK_LIST.indexOf(sdk);
             sdkPopover.hidePopover();
           }}
-          class="hover:bg-base-100/70 flex cursor-pointer select-none flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs"
+          class="hover:bg-neutral-800 flex cursor-pointer select-none flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs"
         >
           <sdk.icon class="h-4 w-4 shrink-0" />
           <div class="block">

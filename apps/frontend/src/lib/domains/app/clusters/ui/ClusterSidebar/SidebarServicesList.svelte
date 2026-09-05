@@ -135,7 +135,7 @@
 </script>
 
 <div class="flex flex-1 flex-col gap-1">
-  <span class="p-2 text-sm font-medium tracking-wide text-base-content/50">
+  <span class="p-2 text-sm font-medium tracking-wide text-neutral-500">
     Services
   </span>
   <nav class="flex flex-col gap-0.5">
@@ -162,14 +162,14 @@
             />
           </Tooltip>
         {:else}
-          <HexagonIcon class="size-4 shrink-0 text-base-content/30" />
+          <HexagonIcon class="size-4 shrink-0 text-neutral-600" />
         {/if}
         <span class="truncate">{project.name || 'New Service'}</span>
       </SidebarMenuItem>
     {/each}
 
     {#if isWizardMode && (currentCluster?.projects || []).length === 0}
-      <span class="px-3 py-2 text-sm italic text-base-content/30">
+      <span class="px-3 py-2 text-sm italic text-neutral-600">
         No services yet
       </span>
     {/if}
@@ -194,7 +194,7 @@
             {#each featureConfig as { feature, label, icon: Icon }}
               <label
                 class={[
-                  'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs transition-colors hover:bg-base-100/60',
+                  'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
                   { 'text-primary': isFeatureEnabled(feature) },
                 ]}
               >
@@ -229,8 +229,8 @@
         </div>
       {:else}
         <SidebarMenuItem onclick={onOpenForm} isActive={false} disabled={false}>
-          <PlusIcon class="size-4 shrink-0 text-base-content/50" />
-          <span class="truncate text-base-content/50">Add service</span>
+          <PlusIcon class="size-4 shrink-0 text-neutral-500" />
+          <span class="truncate text-neutral-500">Add service</span>
         </SidebarMenuItem>
       {/if}
     {/if}

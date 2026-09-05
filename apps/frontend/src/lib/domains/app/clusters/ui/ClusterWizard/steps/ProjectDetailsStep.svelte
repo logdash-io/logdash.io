@@ -34,14 +34,14 @@
     id="project-name"
     type="text"
     placeholder="Project Name"
-    class="text-3xl md:text-5xl leading-normal font-medium w-full focus:border-primary border-b-2 border-transparent transition-colors duration-200 outline-0"
+    class="text-3xl md:text-5xl leading-normal font-medium w-full focus:border-primary border-b-2 border-transparent transition-ink duration-200 outline-0"
     value={project.name}
     oninput={onNameChange}
     minlength={3}
     maxlength={20}
   />
 
-  <p class="text-sm text-base-content/80 grid overflow-hidden h-4.5">
+  <p class="text-sm text-neutral-300 grid overflow-hidden h-4.5">
     {#if canProceed}
       <span
         class="col-start-1 row-start-1"

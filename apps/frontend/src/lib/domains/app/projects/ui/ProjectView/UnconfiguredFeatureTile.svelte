@@ -17,11 +17,9 @@
 {#snippet configureOverlay()}
   <a
     href={featurePath}
-    class="z-50 absolute group inset-0 flex items-center justify-center bg-base-300/60 transition-all"
+    class="z-50 absolute group inset-0 flex items-center justify-center bg-base-300/60"
   >
-    <span
-      class="btn btn-secondary gap-2 opacity-80 group-hover:opacity-100 transition-opacity"
-    >
+    <span class="btn btn-secondary gap-2">
       Finish monitoring setup
       <ArrowRightIcon class="h-4 w-4" />
     </span>

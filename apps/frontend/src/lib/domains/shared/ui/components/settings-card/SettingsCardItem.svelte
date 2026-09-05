@@ -28,8 +28,8 @@
   class={[
     'flex items-center justify-between p-4 w-full',
     {
-      'border-b border-base-100/50': showBorder,
-      'cursor-pointer transition-colors hover:bg-base-100/50': isClickable,
+      'border-b border-hairline': showBorder,
+      'cursor-pointer hover:bg-neutral-800': isClickable,
     },
   ]}
   {onclick}
@@ -49,7 +49,7 @@
           class={[
             'size-5',
             {
-              'text-base-content/70': iconVariant === 'default',
+              'text-neutral-400': iconVariant === 'default',
               'text-error': iconVariant === 'danger',
             },
           ]}

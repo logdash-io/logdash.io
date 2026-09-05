@@ -15,7 +15,7 @@
 
   <h3 class="mb-2 text-lg font-semibold">Waiting for the message</h3>
 
-  <p class="mb-6 text-sm opacity-70">
+  <p class="text-neutral-400 mb-6 text-sm">
     We're checking if your passphrase <code class="kbd kbd-sm">
       {passphrase}
     </code>

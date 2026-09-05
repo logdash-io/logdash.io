@@ -40,7 +40,7 @@
 
 <div class="relative w-full">
   <svg
-    class="text-base-content/40 pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+    class="text-neutral-600 pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -60,7 +60,7 @@
   {#if localSearchTerm}
     <button
       type="button"
-      class="hover:bg-base-300 absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 transition-colors"
+      class="hover:bg-base-300 absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1"
       onclick={clearSearch}
     >
       <svg

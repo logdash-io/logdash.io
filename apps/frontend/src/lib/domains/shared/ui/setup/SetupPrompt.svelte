@@ -9,7 +9,7 @@
 
 <div
   role="tablist"
-  class="tabs tabs-box tabs-sm bg-base-100/70 rounded-lg shadow-none"
+  class="tabs tabs-box tabs-sm bg-neutral-800 rounded-lg shadow-none"
 >
   <a role="tab" class="tab btn-secondary tab-active w-1/2 rounded-lg">Manual</a>
   <div class="indicator tab w-1/2">

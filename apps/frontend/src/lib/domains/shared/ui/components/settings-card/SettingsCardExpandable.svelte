@@ -29,26 +29,26 @@
 <div class="overflow-hidden">
   <button
     type="button"
-    class="flex w-full cursor-pointer items-center justify-between p-4 transition-colors hover:bg-base-100/50"
+    class="flex w-full cursor-pointer items-center justify-between p-4 hover:bg-neutral-800"
     onclick={onToggle}
   >
     <div class="flex items-center gap-4">
       {#if Icon}
         <div class="rounded-lg bg-base-100 p-2.5">
-          <Icon class="size-5 text-base-content/70" />
+          <Icon class="size-5 text-neutral-400" />
         </div>
       {/if}
       <div class="text-left">
         <p class="font-medium">{title}</p>
         {#if description}
-          <p class="text-base-content/60 text-sm">{description}</p>
+          <p class="text-neutral-400 text-sm">{description}</p>
         {/if}
       </div>
     </div>
 
     <ChevronDownIcon
       class={[
-        'size-5 text-base-content/60 transition-transform duration-200',
+        'size-5 text-neutral-400 transition-transform duration-200',
         { 'rotate-180': expanded },
       ]}
     />

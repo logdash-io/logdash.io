@@ -178,7 +178,7 @@
     <SettingsCardItem icon={KeyIcon} showBorder={false} onclick={onCopyApiKey}>
       {#snippet children()}
         <p class="font-medium">Service API Key</p>
-        <p class="text-base-content/60 text-sm">
+        <p class="text-neutral-400 text-sm">
           Click to copy the API key to clipboard
         </p>
       {/snippet}
@@ -186,7 +186,7 @@
         {#if projectsState.isLoadingApiKey(projectId)}
           <span class="loading loading-spinner loading-sm"></span>
         {:else}
-          <CopyIcon class="size-5 text-base-content/60" />
+          <CopyIcon class="size-5 text-neutral-400" />
         {/if}
       {/snippet}
     </SettingsCardItem>
@@ -200,7 +200,7 @@
 
     <SettingsCardItem icon={EditIcon} showBorder={true}>
       {#snippet children()}
-        <p class="text-base-content/60 text-sm">Service Name</p>
+        <p class="text-neutral-400 text-sm">Service Name</p>
         {#if isEditingName}
           <input
             bind:value={newName}
@@ -235,7 +235,7 @@
         {:else}
           <button
             onclick={onStartRenaming}
-            class="btn btn-ghost btn-sm text-base-content/60"
+            class="btn btn-ghost btn-sm text-neutral-400"
           >
             Rename
           </button>
@@ -245,13 +245,13 @@
 
     <SettingsCardItem icon={HashIcon} showBorder={false}>
       {#snippet children()}
-        <p class="text-base-content/60 text-sm">Service ID</p>
+        <p class="text-neutral-400 text-sm">Service ID</p>
         <p class="font-mono text-sm">{projectId}</p>
       {/snippet}
       {#snippet action()}
         <button
           onclick={onCopyServiceId}
-          class="btn btn-ghost btn-sm text-base-content/60"
+          class="btn btn-ghost btn-sm text-neutral-400"
         >
           <CopyIcon class="size-4" />
         </button>
@@ -274,7 +274,7 @@
         >
           {#snippet children()}
             <p class="font-medium">{feature.label}</p>
-            <p class="text-base-content/60 text-sm">{feature.description}</p>
+            <p class="text-neutral-400 text-sm">{feature.description}</p>
           {/snippet}
           {#snippet action()}
             <button
@@ -312,7 +312,7 @@
       >
         {#snippet children()}
           <p class="font-medium">Delete Service</p>
-          <p class="text-base-content/60 text-sm">
+          <p class="text-neutral-400 text-sm">
             Permanently delete this service and all its data
           </p>
         {/snippet}

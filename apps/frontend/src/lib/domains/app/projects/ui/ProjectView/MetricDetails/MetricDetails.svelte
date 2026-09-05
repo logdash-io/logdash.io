@@ -110,7 +110,7 @@
 </script>
 
 {#snippet previewedMetricSubtitle()}
-  <p class="mb-4 text-sm text-base-content/50 font-medium">
+  <p class="mb-4 text-sm text-neutral-500 font-medium">
     {metricsState.getById(previewedMetricId)?.name}
   </p>
 {/snippet}

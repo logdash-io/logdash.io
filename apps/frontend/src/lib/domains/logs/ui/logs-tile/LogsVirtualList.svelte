@@ -251,7 +251,7 @@
       <div
         class="flex h-full w-full flex-col items-center justify-center gap-2 py-16"
       >
-        <p class="text-base-content/40 text-sm">
+        <p class="text-neutral-600 text-sm">
           No logs found for the selected filters
         </p>
         <button
@@ -298,7 +298,7 @@
 
     {#if logsState.pageIsLoading || logsState.fetchingLogs}
       <div class="flex h-12 shrink-0 items-center justify-center gap-2">
-        <span class="loading loading-spinner loading-sm opacity-80"></span>
+        <span class="loading loading-spinner loading-sm"></span>
       </div>
     {/if}
   </ScrollArea>

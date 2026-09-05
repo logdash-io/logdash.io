@@ -43,7 +43,7 @@
 <div class="flex w-full flex-col gap-4 p-3">
   <div class="flex items-start flex-col">
     <h1 class="text-xl font-semibold">{cluster?.name || 'Project'}</h1>
-    <p class="text-base-content/60 text-sm">Project overview</p>
+    <p class="text-neutral-400 text-sm">Project overview</p>
   </div>
 
   {#if projects.length === 0}

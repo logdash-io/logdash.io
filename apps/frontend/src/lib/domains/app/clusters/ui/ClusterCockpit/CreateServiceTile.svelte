@@ -23,13 +23,13 @@
   <button
     onclick={onOpenForm}
     class={[
-      'ld-card-base group flex w-full cursor-pointer flex-col items-center justify-center gap-2 ld-card-rounding transition-all hover:bg-base-100/50 h-full md:min-h-auto min-h-[110px]',
+      'ld-card-base group flex w-full cursor-pointer flex-col items-center justify-center gap-2 ld-card-rounding hover:bg-neutral-800 h-full md:min-h-auto min-h-[110px]',
       { 'ring-2 ring-primary/50': isFormOpen },
     ]}
   >
     <div
       class={[
-        'flex h-10 w-10 items-center justify-center rounded-xl transition-colors',
+        'flex h-10 w-10 items-center justify-center rounded-xl',
         {
           'bg-primary/20': isFormOpen,
           'bg-primary/10 group-hover:bg-primary/20': !isFormOpen,

@@ -80,7 +80,7 @@
           ? header
           : emptyHeader}
         parentClass={[
-          'group relative transition-all duration-200',
+          'group relative transition-[padding] duration-200',
           {
             'pt-9':
               previewedMetricId === metric.id && !metricsState.isUsingFakeData,

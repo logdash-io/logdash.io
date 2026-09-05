@@ -76,10 +76,10 @@
 
   .btn-wrapper {
     --bg-background: #bada55;
-    --clr-card: rgba(255, 255, 255, 0.1);
+    --clr-card: var(--color-neutral-800);
     --clr-1: transparent;
     --clr-2: transparent;
-    --clr-3: rgba(255, 255, 255, 0.4);
+    --clr-3: var(--color-neutral-500);
 
     position: relative;
     background-color: var(--clr-card);

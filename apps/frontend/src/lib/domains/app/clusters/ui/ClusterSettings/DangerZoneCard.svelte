@@ -50,7 +50,7 @@
     <SettingsCardItem icon={TrashIcon} iconVariant="danger" showBorder={false}>
       {#snippet children()}
         <p class="font-medium">Delete Project</p>
-        <p class="text-base-content/60 text-sm">
+        <p class="text-neutral-400 text-sm">
           Permanently delete this project and all its services
         </p>
       {/snippet}

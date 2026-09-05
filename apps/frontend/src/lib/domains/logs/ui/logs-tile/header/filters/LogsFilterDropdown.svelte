@@ -147,7 +147,7 @@
 >
   <button
     class={[
-      'fcc rounded-full p-1 px-2 gap-1.5 h-fit bg-base-300 border border-secondary/20 cursor-pointer hover:border-secondary/30',
+      'fcc rounded-full p-1 px-2 gap-1.5 h-fit bg-base-300 border border-neutral-700 cursor-pointer hover:border-neutral-600',
     ]}
     data-posthog-id="logs-filter-dropdown"
   >
@@ -191,7 +191,7 @@
       {#if filtersStore.levels.length > 0}
         <li class="border-base-100 mt-1 border-t pt-1">
           <button
-            class="hover:bg-base-100 text-base-content/60 w-full rounded-lg px-3 py-1.5 text-left text-xs"
+            class="hover:bg-base-100 text-neutral-400 w-full rounded-lg px-3 py-1.5 text-left text-xs"
             onclick={() => filtersStore.setLevels([])}
           >
             Clear all levels
@@ -250,9 +250,9 @@
   >
     <ul class="dropdown-content p-0">
       {#if loadingNamespaces}
-        <li class="px-3 py-1.5 text-base-content/60">Loading...</li>
+        <li class="px-3 py-1.5 text-neutral-400">Loading...</li>
       {:else if availableNamespaces.length === 0}
-        <li class="px-3 py-1.5 text-base-content/60">No namespaces</li>
+        <li class="px-3 py-1.5 text-neutral-400">No namespaces</li>
       {:else}
         {#each availableNamespaces as nsMetadata}
           {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
@@ -290,7 +290,7 @@
     <div class="text-sm font-medium">Custom Range</div>
     <div class="space-y-2">
       <div class="space-y-1">
-        <label class="text-base-content/70 block text-xs">From</label>
+        <label class="text-neutral-400 block text-xs">From</label>
         <SveltyPicker
           bind:value={customStartDate}
           mode="datetime"
@@ -300,7 +300,7 @@
         />
       </div>
       <div class="space-y-1">
-        <label class="text-base-content/70 block text-xs">To</label>
+        <label class="text-neutral-400 block text-xs">To</label>
         <SveltyPicker
           bind:value={customEndDate}
           mode="datetime"
@@ -372,7 +372,7 @@
                 {filtersStore.levels.length || 0}
               </span>
             </span>
-            <ChevronRightIcon class="h-4 w-4 opacity-50" />
+            <ChevronRightIcon class="h-4 w-4 text-neutral-500" />
           </div>
           {#if hoveredMenu === 'level'}
             {@render levelSubmenu(close)}
@@ -391,7 +391,7 @@
             ]}
           >
             <span>Time Range</span>
-            <ChevronRightIcon class="h-4 w-4 opacity-50" />
+            <ChevronRightIcon class="h-4 w-4 text-neutral-500" />
           </div>
           {#if hoveredMenu === 'time-range'}
             {@render timeRangeSubmenu(close)}
@@ -420,7 +420,7 @@
                 {filtersStore.namespaces.length || 0}
               </span>
             </span>
-            <ChevronRightIcon class="h-4 w-4 opacity-50" />
+            <ChevronRightIcon class="h-4 w-4 text-neutral-500" />
           </div>
           {#if hoveredMenu === 'namespace'}
             {@render namespaceSubmenu(close)}

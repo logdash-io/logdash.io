@@ -29,7 +29,7 @@
         class={[
           'h-5 w-5',
           {
-            'text-base-content/70': variant === 'default',
+            'text-neutral-400': variant === 'default',
             'text-error': variant === 'danger',
           },
         ]}
@@ -42,7 +42,7 @@
     </h2>
   </div>
   {#if description}
-    <p class="text-base-content/60 text-sm">
+    <p class="text-neutral-400 text-sm">
       {description}
     </p>
   {/if}

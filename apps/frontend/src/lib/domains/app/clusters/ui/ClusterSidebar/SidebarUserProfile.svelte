@@ -62,7 +62,7 @@
           {userState.tier.replaceAll('-', ' ')}
         </span>
       </div>
-      <ChevronRightIcon class="size-4 text-base-content/50" />
+      <ChevronRightIcon class="size-4 text-neutral-500" />
     </button>
   </Tooltip>
 </div>

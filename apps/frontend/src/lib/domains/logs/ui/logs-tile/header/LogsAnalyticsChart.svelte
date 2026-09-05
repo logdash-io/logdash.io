@@ -5,7 +5,7 @@
   import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analytics-response.js';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
   import { cubicOut } from 'svelte/easing';
-  import { fade, fly } from 'svelte/transition';
+  import { fade } from 'svelte/transition';
 
   type Props = {
     selectedStartDate: string | null;
@@ -20,7 +20,7 @@
   }: Props = $props();
 
   let chartContainer: HTMLElement;
-  let tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
+  let tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, undefined>;
   let isDragging = $state(false);
   let dragStart: Date | null = $state(null);
   let dragEnd: Date | null = $state(null);
@@ -40,11 +40,11 @@
   const LOG_COLORS = [
     '#e7000b',
     '#fe9a00',
-    '#262626',
-    '#262626',
-    '#262626',
-    '#262626',
-    '#262626',
+    '#2c2c2e',
+    '#2c2c2e',
+    '#2c2c2e',
+    '#2c2c2e',
+    '#2c2c2e',
   ];
 
   const analyticsData = $derived(logAnalyticsState.analyticsData);
@@ -109,9 +109,7 @@
     // No grid lines needed without Y axis
 
     // Draw bars
-    const barWidth = (innerWidth / data.buckets.length) * 0.8;
-
-    data.buckets.forEach((bucket, index) => {
+    data.buckets.forEach((bucket) => {
       const bucketStart = new Date(bucket.bucketStart);
       const bucketEnd = new Date(bucket.bucketEnd);
 
@@ -289,7 +287,7 @@
   }
 
   function handleOverlayMouseMove(
-    event: any,
+    event: MouseEvent,
     xScale: d3.ScaleTime<number, number>,
     width: number,
   ) {
@@ -321,7 +319,7 @@
   }
 
   function showTooltip(
-    event: any,
+    event: MouseEvent,
     bucket: LogsAnalyticsResponse['buckets'][0],
   ) {
     const bucketStart = new Date(bucket.bucketStart);
@@ -363,7 +361,7 @@
           `
             : '';
         }).join('')}
-        <div class="mt-2 pt-1 border-t border-gray-600 font-semibold font-mono">
+        <div class="mt-2 pt-1 border-t border-neutral-600 font-semibold font-mono">
           Total: ${bucket.countTotal}
         </div>
       `);
@@ -374,7 +372,7 @@
     currentTooltipBucket = null;
   }
 
-  function moveTooltip(event: any) {
+  function moveTooltip(event: MouseEvent) {
     const tooltipX = Math.min(event.pageX + 10, window.innerWidth - 200);
     const tooltipY = event.pageY - 100;
 
@@ -384,7 +382,7 @@
   function renderEmptyState(container: HTMLElement) {
     d3.select(container)
       .append('div')
-      .attr('class', 'flex items-center justify-center text-gray-400')
+      .attr('class', 'flex items-center justify-center text-neutral-400')
       .style('height', `${CHART_HEIGHT}px`)
       .html('<p>No log data available</p>');
   }
@@ -460,7 +458,7 @@
     {#if isLoading}
       <div
         transition:fade={{ duration: 200, easing: cubicOut }}
-        class="bg-base-200 text-secondary/60 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
+        class="bg-base-200 text-neutral-400 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
         style="height: {CHART_HEIGHT}px"
       >
         <span class="loading loading-spinner loading-xs mr-2"></span>

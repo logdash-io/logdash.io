@@ -96,7 +96,7 @@
           e.stopPropagation();
           onSelectSDK(index, close);
         }}
-        class="hover:bg-base-100/70 flex cursor-pointer select-none flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs"
+        class="hover:bg-neutral-800 flex cursor-pointer select-none flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs"
       >
         <sdk.icon class="h-4 w-4 shrink-0" />
         <div class="block">{sdk.name}</div>
@@ -128,10 +128,10 @@
   <div
     class="flex flex-col items-center gap-2 ld-card-bg p-2 rounded-2xl ld-card-border"
   >
-    <p class="text-sm text-base-content opacity-60">{overlayTitle}</p>
+    <p class="text-neutral-400 text-sm">{overlayTitle}</p>
 
     <button
-      class="btn btn-secondary gap-2 pr-1 opacity-80 group-hover:opacity-100 transition-opacity"
+      class="btn btn-secondary gap-2 pr-1"
       onclick={onCopyPrompt}
       disabled={isLoading}
     >

@@ -114,34 +114,34 @@
         <h1 id="upgrade-modal-title" class="mb-2 text-3xl font-semibold">
           Upgrade your plan
         </h1>
-        <p class="opacity-75">Get the one that fits your needs best</p>
+        <p class="text-neutral-300">Get the one that fits your needs best</p>
       </div>
 
       <div class="grid gap-6 md:grid-cols-3">
-        {#each PAYMENT_PLANS as plan}
+        {#each PAYMENT_PLANS as plan (plan.tier)}
           <div class="relative flex flex-col">
-            {#if plan.popular}
-              <div
-                class="bg-primary ring-primary -mb-1.5 flex h-16 w-full items-center justify-center rounded-t-3xl pb-8 text-sm font-semibold ring"
-              >
-                Most popular
-              </div>
-            {:else}
-              <div class="h-15"></div>
-            {/if}
+            <div class="h-4"></div>
 
             <div
               class={[
-                'card ld-card-bg ring relative -mt-6 flex flex-1 flex-col overflow-visible ld-card-rounding p-6',
+                'card ld-card-bg border relative flex flex-1 flex-col overflow-visible ld-card-rounding p-6',
                 {
-                  'ring-primary': plan.popular,
-                  'ring-success/40': isCurrentPlan(plan.tier),
-                  'ring-base-100': !plan.popular && !isCurrentPlan(plan.tier),
+                  'border-primary': plan.popular,
+                  'border-success/40': isCurrentPlan(plan.tier),
+                  'border-base-100': !plan.popular && !isCurrentPlan(plan.tier),
                 },
               ]}
               onmouseenter={() => onMouseEnter(plan.tier)}
               onmouseleave={() => onMouseLeave(plan.tier)}
             >
+              {#if plan.popular && !isCurrentPlan(plan.tier)}
+                <span
+                  class="badge badge-primary absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
+                >
+                  Most popular
+                </span>
+              {/if}
+
               {#if isCurrentPlan(plan.tier)}
                 <div
                   class="badge badge-success badge-soft absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
@@ -161,7 +161,7 @@
                 <div class="mt-2">
                   <span class="text-3xl font-semibold">{plan.price}</span>
 
-                  <p class="mt-3 h-10 text-sm opacity-75">
+                  <p class="text-neutral-300 mt-3 h-10 text-sm">
                     {plan.description}
                   </p>
                 </div>
@@ -199,7 +199,7 @@
                 </div>
 
                 <ul class="space-y-2 text-sm">
-                  {#each plan.features.slice(0, 6) as feature}
+                  {#each plan.features.slice(0, 6) as feature (feature.name)}
                     <li class="flex items-center gap-2">
                       <CheckIcon class="text-success h-4 w-4 flex-shrink-0" />
                       <span>{feature.name}</span>
@@ -209,7 +209,7 @@
                     {@const remainingFeatures = plan.features.slice(6)}
                     {#snippet tooltipContent()}
                       <ul class="space-y-1.5 p-1 ld-card">
-                        {#each remainingFeatures as feature}
+                        {#each remainingFeatures as feature (feature.name)}
                           <li class="flex items-center gap-2">
                             <CheckIcon
                               class="text-success size-4 flex-shrink-0"
@@ -237,7 +237,7 @@
       </div>
 
       <div class="mt-6 text-center">
-        <p class="text-xs opacity-75">
+        <p class="text-neutral-300 text-xs">
           30-day trial. Full refund if you cancel within 30 days.
         </p>
       </div>

@@ -146,7 +146,7 @@
           stroke-linecap="round"
           class={[
             segment.colorClass,
-            'cursor-pointer transition-all duration-150',
+            'cursor-pointer transition-[opacity,stroke-width] duration-150',
             { 'opacity-80': isHovered },
           ]}
           style="stroke-dasharray: {segment.dashArray}; stroke-dashoffset: {segment.dashOffset};"
@@ -195,7 +195,7 @@
             </div>
             <div class="flex flex-col gap-0.5 pl-4">
               {#each segment.serviceNames as serviceName}
-                <span class="text-xs text-base-content/70">{serviceName}</span>
+                <span class="text-xs text-neutral-400">{serviceName}</span>
               {/each}
             </div>
           </div>

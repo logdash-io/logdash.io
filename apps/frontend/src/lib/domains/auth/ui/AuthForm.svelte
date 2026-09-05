@@ -145,7 +145,7 @@
       <h2 class="card-title mb-2 text-3xl font-bold">
         {heading}
       </h2>
-      <p class="text-base-content/70 mb-6">
+      <p class="text-neutral-400 mb-6">
         {subheading}
       </p>
 
@@ -231,7 +231,7 @@
       {#if mode !== 'claim'}
         <div class="mt-6 text-sm">
           {#if mode === 'signup'}
-            <span class="text-base-content/70">Already have an account?</span>
+            <span class="text-neutral-400">Already have an account?</span>
             <a
               href={resolve('/app/auth')}
               class="text-primary font-medium hover:underline"
@@ -239,7 +239,7 @@
               Sign in
             </a>
           {:else}
-            <span class="text-base-content/70">Don't have an account?</span>
+            <span class="text-neutral-400">Don't have an account?</span>
             <a
               href={resolve('/app/auth?needs_account=true')}
               class="text-primary font-medium hover:underline"
@@ -254,7 +254,7 @@
         <a
           href={resolve('/app/quick-setup')}
           data-posthog-id="auth-continue-anonymous-cta"
-          class="text-base-content/50 hover:text-base-content/80 mt-2 text-sm transition-colors"
+          class="text-neutral-500 hover:text-neutral-300 mt-2 text-sm transition-ink"
         >
           Continue without an account
         </a>

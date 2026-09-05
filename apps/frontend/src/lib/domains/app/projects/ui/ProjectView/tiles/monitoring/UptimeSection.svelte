@@ -40,7 +40,7 @@
 
     <div class="mb-2 flex flex-wrap items-center justify-between gap-6 text-sm">
       <div class="flex items-center gap-2">
-        <span class="text-base-content/80">
+        <span class="text-neutral-300">
           {uptimeLabel} Uptime:
           <span class="font-mono font-medium text-base-content">
             {uptime?.toFixed(2)}%

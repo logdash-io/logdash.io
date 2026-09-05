@@ -77,21 +77,21 @@
     {#if clusterInvitesState.isLoading || !capacity}
       <div class="flex justify-center py-8">
         <span
-          class="loading loading-spinner loading-xs text-base-content/60"
+          class="loading loading-spinner loading-xs text-neutral-400"
         ></span>
       </div>
     {:else}
       {#if capacity}
         <div class="mb-4">
           <div class="flex items-center justify-between text-sm">
-            <span class="text-base-content/60">Team members</span>
+            <span class="text-neutral-400">Team members</span>
             <span class="font-mono text-xs">
               {memberCount}/{capacity.maxMembers}
             </span>
           </div>
           <div class="bg-primary/20 mt-2 h-1 w-full rounded-full">
             <div
-              class="bg-primary h-1 rounded-full transition-all"
+              class="bg-primary h-1 rounded-full transition-[width]"
               style="width: {usagePercent}%"
             ></div>
           </div>
@@ -99,7 +99,7 @@
 
         <div class="flex flex-col gap-2">
           {#each capacity.members as member}
-            <div class="flex items-center gap-3 rounded-xl bg-base-100/50 p-3">
+            <div class="flex items-center gap-3 rounded-xl bg-neutral-800 p-3">
               <div class="avatar">
                 <div class="w-8 rounded-full">
                   <img
@@ -127,7 +127,7 @@
       {/if}
 
       {#if clusterInvitesState.canInviteMore}
-        <div class="mt-4 border-t border-base-100/50 pt-4">
+        <div class="mt-4 border-t border-hairline pt-4">
           <div class="flex gap-3">
             <label
               class={[
@@ -135,7 +135,7 @@
                 { 'input-error': emailError && emailInput.trim() },
               ]}
             >
-              <AtIcon class="size-4 opacity-50" />
+              <AtIcon class="size-4 text-neutral-500" />
               <input
                 type="email"
                 class="grow"
@@ -170,7 +170,7 @@
               <DangerIcon class="size-5" />
               <span class="font-medium">Team limit reached</span>
             </div>
-            <p class="text-base-content/70 mt-2 text-sm">
+            <p class="text-neutral-400 mt-2 text-sm">
               Upgrade your plan to invite more team members
             </p>
           </div>
@@ -179,19 +179,19 @@
 
       {#if clusterInvitesState.invites.length > 0}
         <div class="pt-4">
-          <h3 class="text-base-content/60 mb-2 text-sm font-medium">
+          <h3 class="text-neutral-400 mb-2 text-sm font-medium">
             Pending invitations
           </h3>
           <div class="flex flex-col gap-2">
             {#each clusterInvitesState.invites as invite}
               <div
-                class="flex items-center justify-between rounded-xl bg-base-100/50 p-3"
+                class="flex items-center justify-between rounded-xl bg-neutral-800 p-3"
               >
                 <div class="flex-1">
                   <div class="text-sm font-medium">
                     {invite.invitedUserEmail}
                   </div>
-                  <div class="text-base-content/60 text-xs">
+                  <div class="text-neutral-400 text-xs">
                     Invited {formatDate(invite.createdAt)} • {formatRole(
                       invite.role,
                     )} access

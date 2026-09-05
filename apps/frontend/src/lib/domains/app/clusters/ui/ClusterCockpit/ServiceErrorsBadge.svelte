@@ -58,12 +58,12 @@
 
 {#if loading}
   <div class="size-6 flex items-center justify-center">
-    <div class="loading loading-spinner w-3.5 text-base-content/60"></div>
+    <div class="loading loading-spinner w-3.5 text-neutral-400"></div>
   </div>
 {:else if errorCount > 0}
   <button
     onclick={onBadgeClick}
-    class="flex items-center gap-1.5 rounded-lg bg-error/10 px-2 py-1 transition-colors hover:bg-error/20 cursor-pointer"
+    class="flex items-center gap-1.5 rounded-lg bg-error/10 px-2 py-1 hover:bg-error/20 cursor-pointer"
   >
     <DangerIcon class="size-3 text-error" />
     <span class="text-xs text-error">{errorLabel}</span>

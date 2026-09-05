@@ -99,11 +99,10 @@
   );
 
   const tabClass = (active: boolean) => [
-    'px-4 py-2 text-sm font-medium transition-colors ld-card-rounding',
+    'px-4 py-2 text-sm font-medium ld-card-rounding',
     {
-      'bg-base-100 text-base-content shadow-sm': active,
-      'text-base-content/70 hover:text-base-content hover:bg-base-100/50':
-        !active,
+      'bg-base-100 text-base-content': active,
+      'text-neutral-400 hover:text-base-content hover:bg-neutral-800': !active,
     },
   ];
 </script>
@@ -113,7 +112,8 @@
   class="z-20 flex items-center gap-2 bg-base-300/20 backdrop-blur-sm"
 >
   <nav class="flex items-center gap-1">
-    {#each visibleTabs as tab}
+    {#each visibleTabs as tab (tab.id)}
+      <!-- eslint-disable svelte/no-navigation-without-resolve -- dynamic project route -->
       <a
         href={tab.path}
         class={[
@@ -124,6 +124,7 @@
         <tab.icon class="h-4 w-4" />
         {tab.label}
       </a>
+      <!-- eslint-enable svelte/no-navigation-without-resolve -->
     {/each}
   </nav>
 </ScrollArea>

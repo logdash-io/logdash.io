@@ -170,7 +170,7 @@
       onclick={onPeekClick}
       aria-label={bottomSheetState.isOpen ? 'Close menu' : 'Open menu'}
     >
-      <div class="h-1 w-10 rounded-full bg-base-content/20"></div>
+      <div class="h-1 w-10 rounded-full bg-neutral-700"></div>
       <div
         class={[
           'grid w-full',

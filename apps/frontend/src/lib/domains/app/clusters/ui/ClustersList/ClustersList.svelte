@@ -152,7 +152,7 @@
               onclick={(e) => {
                 e.stopPropagation();
               }}
-              class="badge badge-sm badge-soft badge-secondary hover:badge-primary hover:text-primary rounded-full transition-all"
+              class="badge badge-sm badge-soft badge-secondary hover:badge-primary hover:text-primary rounded-full"
             >
               {project.name}
             </a>
@@ -161,10 +161,8 @@
       {:else}
         <div class="flex flex-col items-center gap-3 py-4">
           <div class="text-center">
-            <p class="text-base-content/60 text-sm">No services configured</p>
-            <p class="text-base-content/40 text-xs">
-              Add a service to get started
-            </p>
+            <p class="text-neutral-400 text-sm">No services configured</p>
+            <p class="text-neutral-600 text-xs">Add a service to get started</p>
           </div>
           <button
             onclick={(e) => {
