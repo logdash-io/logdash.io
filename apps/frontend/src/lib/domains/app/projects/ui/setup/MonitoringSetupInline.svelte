@@ -144,7 +144,7 @@
   <div class="space-y-2">
     <h5 class="text-2xl font-semibold">Setup Monitoring for your service</h5>
 
-    <p class="text-base-content opacity-60">
+    <p class="text-neutral-400">
       Monitor your services uptime and get alerted when they go down.
     </p>
   </div>
@@ -223,7 +223,7 @@
             class="input input-bordered w-full"
             placeholder="https://example.com/health"
           />
-          <p class="text-xs opacity-60">
+          <p class="text-neutral-400 text-xs">
             Checked every 5 minutes on the free plan, every 15 seconds on Pro.
           </p>
         </div>
@@ -241,14 +241,14 @@
             placeholder="My Backend Service"
             use:autoFocus={{ delay: 100 }}
           />
-          <p class="text-xs opacity-60">
+          <p class="text-neutral-400 text-xs">
             Your service will send heartbeat pings to our endpoint.
           </p>
         </div>
 
         {#if isCreatingPushMonitor}
           <div class="border-base-300 border-t pt-4">
-            <div class="flex items-center gap-2 text-sm opacity-60">
+            <div class="text-neutral-400 flex items-center gap-2 text-sm">
               <span class="loading loading-spinner loading-xs"></span>
               Generating endpoint...
             </div>
@@ -258,7 +258,7 @@
             <div class="space-y-3">
               <div class="space-y-1">
                 <p class="text-sm font-medium">Ping endpoint</p>
-                <p class="text-xs opacity-60">
+                <p class="text-neutral-400 text-xs">
                   Send a POST request to this URL from your service:
                 </p>
               </div>

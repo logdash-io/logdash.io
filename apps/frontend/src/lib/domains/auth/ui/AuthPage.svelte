@@ -6,7 +6,7 @@
 
 <div class="flex min-h-screen w-full overflow-hidden">
   <div
-    class="relative flex w-full flex-col bg-base-200/60 p-8 lg:w-2/5 lg:border-r lg:border-base-100"
+    class="relative flex w-full flex-col bg-neutral-900 p-8 lg:w-2/5 lg:border-r lg:border-base-100"
   >
     <div class="absolute left-8 top-8">
       <a href="/" class="flex items-center space-x-2">

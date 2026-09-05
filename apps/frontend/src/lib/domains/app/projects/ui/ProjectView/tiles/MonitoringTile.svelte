@@ -121,7 +121,7 @@
     class={[
       'flex w-full flex-col items-end justify-center overflow-hidden p-6',
       {
-        'cursor-pointer group hover:bg-base-100/30':
+        'cursor-pointer group hover:bg-neutral-800':
           !expanded && !isOnDemoDashboard,
       },
     ]}
@@ -149,7 +149,7 @@
 
     {#if !isOnDemoDashboard}
       <div
-        class="flex w-full flex-col divide-y divide-base-100/50 border-t border-base-100"
+        class="flex w-full flex-col divide-y divide-hairline border-t border-base-100"
       >
         <NotificationChannelsSection {monitorId} />
         <MonitorSettingsSection

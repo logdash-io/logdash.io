@@ -39,7 +39,7 @@
         'h-5 w-5',
         {
           'fill-secondary': canAccess,
-          'fill-secondary/30': !canAccess,
+          'fill-neutral-600': !canAccess,
         },
       ]}
       viewBox="0 0 24 24"

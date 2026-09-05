@@ -32,7 +32,7 @@
 
     {#if showArrow}
       <ChevronRightIcon
-        class="size-4 text-base-content/30 group-hover:text-base-content"
+        class="size-4 text-neutral-600 group-hover:text-base-content"
       />
     {/if}
   </div>

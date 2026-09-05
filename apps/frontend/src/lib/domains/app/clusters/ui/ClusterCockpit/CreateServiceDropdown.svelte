@@ -124,12 +124,12 @@
   />
 
   <div class="flex flex-col gap-1">
-    <span class="text-xs text-base-content/60">Features (optional)</span>
+    <span class="text-xs text-neutral-400">Features (optional)</span>
     <div class="flex flex-col gap-0.5">
       {#each featureConfig as { feature, label, icon: Icon }}
         <label
           class={[
-            'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs transition-colors hover:bg-base-100/60',
+            'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
             { 'text-primary': isFeatureEnabled(feature) },
           ]}
         >

@@ -11,7 +11,7 @@
       <p>{page.error.message}</p>
     </div>
 
-    <div class="text-secondary/80 flex flex-col gap-2 text-sm">
+    <div class="text-neutral-300 flex flex-col gap-2 text-sm">
       If you think this is a bug, please let us know by reporting it on our
       GitHub repository. We appreciate your help in making LogDash better!
 

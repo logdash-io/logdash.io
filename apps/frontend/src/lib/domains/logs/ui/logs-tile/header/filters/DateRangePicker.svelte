@@ -41,7 +41,7 @@
 
 <div class="space-y-3">
   <div class="space-y-1">
-    <label class="text-base-content/70 block text-xs font-medium">From</label>
+    <label class="text-neutral-400 block text-xs font-medium">From</label>
     <SveltyPicker
       bind:value={startDateInput}
       mode="datetime"
@@ -52,7 +52,7 @@
   </div>
 
   <div class="space-y-1">
-    <label class="text-base-content/70 block text-xs font-medium">To</label>
+    <label class="text-neutral-400 block text-xs font-medium">To</label>
     <SveltyPicker
       bind:value={endDateInput}
       mode="datetime"

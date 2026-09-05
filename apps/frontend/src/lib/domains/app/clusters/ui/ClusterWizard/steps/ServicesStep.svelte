@@ -62,7 +62,7 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col px-2">
     <h2 class="text-lg md:text-xl leading-normal font-medium">Add services</h2>
-    <p class="text-sm text-base-content/80">
+    <p class="text-sm text-neutral-300">
       Services are your project building blocks, like a backend, queue worker,
       or BFF.
     </p>

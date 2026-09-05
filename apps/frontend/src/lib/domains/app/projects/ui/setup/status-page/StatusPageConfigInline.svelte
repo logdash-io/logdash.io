@@ -138,7 +138,7 @@
       </h5>
     </div>
 
-    <p class="text-base-content opacity-60 text-sm">
+    <p class="text-neutral-400 text-sm">
       Customize how your status page will look like for your users.
     </p>
 
@@ -185,7 +185,7 @@
           </div>
         {:else if monitoringState.monitors.length === 0}
           <div class="flex flex-col items-center justify-center gap-2 py-6">
-            <span class="text-base-content/60 text-center text-sm">
+            <span class="text-neutral-400 text-center text-sm">
               No HTTP monitors available
             </span>
             <a
@@ -199,7 +199,7 @@
           {#each monitoringState.monitors as monitor, index}
             <label
               class={[
-                'hover:bg-base-100/50 flex cursor-pointer select-none items-center gap-2 p-2 px-3 transition-all',
+                'hover:bg-neutral-800 flex cursor-pointer select-none items-center gap-2 p-2 px-3',
                 { 'border-base-100 border-t': index > 0 },
               ]}
             >
@@ -230,7 +230,7 @@
         placeholder="Status Page"
         type="text"
       />
-      <p class="text-xs text-base-content/60">
+      <p class="text-xs text-neutral-400">
         This name will appear in the header of your status page.
       </p>
     </div>
@@ -264,7 +264,7 @@
             </button>
           </div>
         {:else if canPublish}
-          <p class="text-sm text-base-content/60">
+          <p class="text-sm text-neutral-400">
             Once published, anyone with the link can view your status page.
           </p>
 
@@ -281,7 +281,7 @@
             </button>
           </div>
         {:else}
-          <p class="text-sm text-base-content/60">
+          <p class="text-sm text-neutral-400">
             You've reached the limit of {maxAllowed} published status page{maxAllowed ===
             1
               ? ''

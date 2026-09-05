@@ -71,11 +71,11 @@
 
   const secondaryTextColor = $derived(
     match(level)
-      .with('info', () => 'text-secondary/60')
+      .with('info', () => 'text-neutral-400')
       .with('warning', () => 'text-warning-content/60')
       .with('error', () => 'text-error-content/60')
       .with('success', () => 'text-success/60')
-      .otherwise(() => 'text-secondary/60'),
+      .otherwise(() => 'text-neutral-400'),
   );
 </script>
 

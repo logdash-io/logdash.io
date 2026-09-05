@@ -91,7 +91,7 @@
     Available in Pro plan
   </UpgradeButton>
 {:else}
-  <p class="text-base-content/70 mb-3">
+  <p class="text-neutral-400 mb-3">
     Host your status page on any domain you own.
   </p>
 
@@ -182,11 +182,11 @@
       </div>
       <div class="collapse-content w-full overflow-auto">
         {#if !hasDomain}
-          <p class="text-base-content/50 text-sm">
+          <p class="text-neutral-500 text-sm">
             Add a custom domain first to see DNS configuration instructions.
           </p>
         {:else}
-          <p class="text-base-content/70 mb-4 text-sm">
+          <p class="text-neutral-400 mb-4 text-sm">
             You can configure these in your DNS provider, for example Cloudflare
             or AWS Route 53.
           </p>

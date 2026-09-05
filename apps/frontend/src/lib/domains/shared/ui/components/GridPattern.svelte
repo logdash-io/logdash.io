@@ -8,8 +8,7 @@
   let className: any = '';
   export { className as class };
   let id = crypto.randomUUID().toString().slice(0, 8);
-  export let fillColor = 'rgb(156 163 175 / 0.3)';
-  // : rgb(156 163 175 / 0.3)
+  export let fillColor = 'var(--color-neutral-700)';
   export let strokeWidth = 1;
 </script>
 

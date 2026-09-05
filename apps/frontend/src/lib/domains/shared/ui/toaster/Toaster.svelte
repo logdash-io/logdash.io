@@ -69,7 +69,7 @@
         ></div>
 
         <div class="flex flex-col justify-start gap-0.5 py-0.5">
-          <span class="text-secondary/80 flex-1 whitespace-pre-wrap">
+          <span class="text-neutral-300 flex-1 whitespace-pre-wrap">
             {_toast.message}
           </span>
         </div>

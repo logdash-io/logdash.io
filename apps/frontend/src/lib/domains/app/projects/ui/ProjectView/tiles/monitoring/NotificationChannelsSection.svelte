@@ -72,7 +72,7 @@
           </div>
           <div>
             <p class="font-medium text-sm">{getChannelDisplayName(channel)}</p>
-            <p class="text-base-content/60 text-sm">
+            <p class="text-neutral-400 text-sm">
               {getChannelTypeLabel(channel)}
               {#if channel.target === 'telegram' && channel.options.chatId}
                 · id: {channel.options.chatId}
@@ -101,7 +101,7 @@
   <SettingsCardItem icon={PlusIcon} showBorder={false} onclick={onAddChannel}>
     {#snippet children()}
       <p class="font-medium">Add notification channel</p>
-      <p class="text-base-content/60 text-sm">
+      <p class="text-neutral-400 text-sm">
         Connect Telegram or Webhook notifications
       </p>
     {/snippet}

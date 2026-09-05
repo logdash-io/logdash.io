@@ -44,9 +44,7 @@
   <div
     class="dropdown-content ld-card-base rounded-2xl z-1 w-full whitespace-nowrap p-1 shadow-lg"
   >
-    <p class="px-3 py-2 text-xs text-base-content/50 font-medium">
-      Select project
-    </p>
+    <p class="px-3 py-2 text-xs text-neutral-500 font-medium">Select project</p>
     <ul class="flex flex-col gap-0.5">
       {#each clustersState.clusters as cluster}
         {@const isActive = cluster.id === page.params.cluster_id}
@@ -114,7 +112,7 @@
               'size-4.5 shrink-0',
               {
                 'text-primary': currentCluster,
-                'text-base-content/80': !currentCluster,
+                'text-neutral-300': !currentCluster,
               },
             ]}
           />
@@ -124,7 +122,7 @@
     </span>
     {#if !isWizardMode}
       <ChevronRightIcon
-        class="size-4 shrink-0 text-base-content/50 group-hover:translate-x-0.5 transition-transform group-hover:text-base-content"
+        class="size-4 shrink-0 text-neutral-500 group-hover:translate-x-0.5 transition-transform group-hover:text-base-content"
       />
     {/if}
   </button>

@@ -131,7 +131,7 @@
   {#if recentIncidents.length > 0}
     <div class="flex flex-col gap-1">
       <div
-        class="text-base-content/60 flex items-center gap-1.5 text-xs font-medium"
+        class="text-neutral-400 flex items-center gap-1.5 text-xs font-medium"
       >
         <ActivityIcon class="size-3" />
         <span>Recent incidents</span>
@@ -139,10 +139,10 @@
       {#each recentIncidents as incident}
         <button
           onclick={() => onServiceClick(incident.projectId)}
-          class="group flex items-center justify-between rounded-lg bg-error/5 px-2 py-1 text-left transition-colors hover:bg-error/10"
+          class="group flex items-center justify-between rounded-lg bg-error/5 px-2 py-1 text-left hover:bg-error/10"
         >
           <span class="text-xs text-error">{incident.projectName}</span>
-          <span class="text-base-content/40 text-xs">
+          <span class="text-neutral-600 text-xs">
             {formatTimeAgo(incident.time)}
           </span>
         </button>
@@ -153,7 +153,7 @@
   {#if recentErrors.length > 0}
     <div class="flex flex-col gap-1">
       <div
-        class="text-base-content/60 flex items-center gap-1.5 text-xs font-medium"
+        class="text-neutral-400 flex items-center gap-1.5 text-xs font-medium"
       >
         <ScrollTextIcon class="size-3" />
         <span>Recent errors</span>
@@ -161,15 +161,15 @@
       {#each recentErrors as error}
         <button
           onclick={() => onServiceClick(error.projectId)}
-          class="group flex flex-col gap-0.5 rounded-lg bg-error/5 px-2 py-1 text-left transition-colors hover:bg-error/10"
+          class="group flex flex-col gap-0.5 rounded-lg bg-error/5 px-2 py-1 text-left hover:bg-error/10"
         >
           <div class="flex items-center justify-between">
             <span class="text-xs text-error">{error.projectName}</span>
-            <span class="text-base-content/40 text-xs">
+            <span class="text-neutral-600 text-xs">
               {formatTimeAgo(error.log.createdAt)}
             </span>
           </div>
-          <span class="text-base-content/60 truncate text-xs">
+          <span class="text-neutral-400 truncate text-xs">
             {truncateMessage(error.log.message)}
           </span>
         </button>
@@ -177,10 +177,8 @@
     </div>
   {:else if loadingErrors && servicesWithLogging.length > 0}
     <div class="flex items-center gap-1.5">
-      <span
-        class="loading loading-spinner loading-xs text-base-content/40"
-      ></span>
-      <span class="text-base-content/40 text-xs">Loading errors...</span>
+      <span class="loading loading-spinner loading-xs text-neutral-600"></span>
+      <span class="text-neutral-600 text-xs">Loading errors...</span>
     </div>
   {/if}
 </div>

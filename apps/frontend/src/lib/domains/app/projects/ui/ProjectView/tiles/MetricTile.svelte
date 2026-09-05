@@ -41,9 +41,9 @@
 >
   <Tooltip
     class={[
-      'min-w-0 flex-shrink transition-all duration-200',
+      'min-w-0 flex-shrink transition-ink duration-200',
       {
-        'text-secondary/60 group-hover:text-secondary':
+        'text-neutral-400 group-hover:text-secondary':
           previewedMetricId !== metric.id,
       },
       {

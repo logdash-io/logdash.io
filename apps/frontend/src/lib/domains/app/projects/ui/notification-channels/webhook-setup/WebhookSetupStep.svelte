@@ -75,7 +75,7 @@
 
     <div class="flex flex-col items-start">
       <h3 class="text-xl font-semibold">Configure webhook channel</h3>
-      <p class="text-secondary/70 text-sm">
+      <p class="text-neutral-400 text-sm">
         Add it with a memorable name to your project.
       </p>
     </div>

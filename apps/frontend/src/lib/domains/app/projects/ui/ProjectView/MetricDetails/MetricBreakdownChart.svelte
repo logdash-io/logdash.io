@@ -19,8 +19,7 @@
   const {
     isLoading = false,
     data,
-    title,
-    color = '#e60076',
+    color = '#f4f4f4',
     height = 200,
     format = 'minute',
     timeRange = 'small',
@@ -74,18 +73,20 @@
       currentTimeRange: 'small' | 'large',
     ): string {
       switch (currentFormat) {
-        case 'minute':
+        case 'minute': {
           const minute = parseInt(value.split(':')[1], 10);
           if (currentTimeRange === 'small') {
             return minute % 5 === 0 ? value : '';
           }
           return minute === 0 || minute === 30 ? value : '';
-        case 'hour':
+        }
+        case 'hour': {
           const hour = parseInt(value.split(' ')[1].split(':')[0], 10);
           if (currentTimeRange === 'small') {
             return value;
           }
           return hour === 0 || hour === 12 ? value : '';
+        }
         case 'day':
           return value; // For 'day' format, always show the label if the tick is decided to be present
         default:
@@ -210,7 +211,7 @@
 
   {#if !isLoading && data.length === 0}
     <div
-      class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-gray-500"
+      class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-neutral-500"
     >
       No data available
     </div>
@@ -231,7 +232,7 @@
   .tooltip {
     position: absolute;
     visibility: hidden;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: var(--color-base-300);
     color: white;
     padding: 6px 10px;
     border-radius: 4px;

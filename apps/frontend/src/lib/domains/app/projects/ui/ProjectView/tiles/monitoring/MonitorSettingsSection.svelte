@@ -69,7 +69,7 @@
   <SettingsCardItem icon={EditIcon} showBorder={true} onclick={onRenameMonitor}>
     {#snippet children()}
       <p class="font-medium">Rename Monitor</p>
-      <p class="text-base-content/60 text-sm">
+      <p class="text-neutral-400 text-sm">
         Change the display name of this monitor
       </p>
     {/snippet}
@@ -83,7 +83,7 @@
   >
     {#snippet children()}
       <p class="font-medium text-error">Delete Monitor</p>
-      <p class="text-base-content/60 text-sm">
+      <p class="text-neutral-400 text-sm">
         Permanently delete this monitor and all its data
       </p>
     {/snippet}

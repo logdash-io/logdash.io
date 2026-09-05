@@ -38,7 +38,7 @@
 
       <div
         role="tablist"
-        class={['tabs tabs-box tabs-xs bg-base-100/70 rounded-lg shadow-none']}
+        class={['tabs tabs-box tabs-xs bg-neutral-800 rounded-lg shadow-none']}
         onclickcapture={(e) => {
           if (!canSwitchTabs) {
             e.preventDefault();
