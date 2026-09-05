@@ -11,7 +11,6 @@ import { ensureAnonymousSession } from './create-anonymous-session';
 
 export const startAnonymousMonitoring = async (dto: {
   url: string;
-  // eslint-disable-next-line no-unused-vars
   onStep?: (step: AnonymousStartStep) => void;
 }): Promise<AnonymousPreview> => {
   const url = tryPrependProtocol(dto.url.trim());

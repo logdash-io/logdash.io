@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { userInvitationsState } from '$lib/domains/app/clusters/application/user-invitations.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
@@ -69,7 +70,7 @@
     </div>
 
     <a
-      href="/app/clusters"
+      href={resolve('/app/clusters')}
       class="flex items-center gap-2"
       onclick={(e) => e.stopPropagation()}
     >

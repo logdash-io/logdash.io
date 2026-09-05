@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import {
@@ -29,7 +30,7 @@
       await clustersState.delete(clusterId);
       dismissLoading();
       toast.success('Project deleted successfully', 5000);
-      goto('/app/clusters');
+      goto(resolve('/app/clusters'));
     } catch (error) {
       dismissLoading();
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -48,12 +49,10 @@
 
   <div class="ld-card-bg">
     <SettingsCardItem icon={TrashIcon} iconVariant="danger" showBorder={false}>
-      {#snippet children()}
-        <p class="font-medium">Delete Project</p>
-        <p class="text-neutral-400 text-sm">
-          Permanently delete this project and all its services
-        </p>
-      {/snippet}
+      <p class="font-medium">Delete Project</p>
+      <p class="text-neutral-400 text-sm">
+        Permanently delete this project and all its services
+      </p>
 
       {#snippet action()}
         <button

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import SettingsIcon from '$lib/domains/shared/icons/SettingsIcon.svelte';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
@@ -22,9 +23,6 @@
   const dashboardName = $derived(dashboard?.name ?? 'Status Page');
   const dashboardUrl = $derived(
     publicDashboardManagerState.getDashboardUrl(dashboardId),
-  );
-  const settingsUrl = $derived(
-    `/app/clusters/${clusterId}/status-pages/${dashboardId}`,
   );
 
   onMount(async () => {
@@ -76,7 +74,16 @@
         </div>
       </div>
 
-      <a href={settingsUrl} class="btn btn-secondary btn-sm gap-1">
+      <a
+        href={resolve(
+          '/app/clusters/[cluster_id]/status-pages/[status_page_id]',
+          {
+            cluster_id: clusterId,
+            status_page_id: dashboardId,
+          },
+        )}
+        class="btn btn-secondary btn-sm gap-1"
+      >
         <SettingsIcon class="size-4" />
         Settings
       </a>

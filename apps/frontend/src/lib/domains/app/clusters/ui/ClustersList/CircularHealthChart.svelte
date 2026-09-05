@@ -13,7 +13,7 @@
     status: ServiceStatus;
     count: number;
     colorClass: string;
-    serviceNames: string[];
+    services: ServiceData[];
   };
 
   type Props = {
@@ -21,8 +21,6 @@
     size?: number;
     strokeWidth?: number;
     gapSize?: number;
-    clusterId?: string;
-    onServiceClick?: (serviceId: string) => void;
   };
 
   const {
@@ -30,8 +28,6 @@
     size = 120,
     strokeWidth = 8,
     gapSize = 6,
-    clusterId,
-    onServiceClick,
   }: Props = $props();
 
   let hoveredSegmentIndex = $state<number | null>(null);
@@ -82,13 +78,13 @@
       const lastGroup = groups[groups.length - 1];
       if (lastGroup && lastGroup.status === service.status) {
         lastGroup.count++;
-        lastGroup.serviceNames.push(service.name);
+        lastGroup.services.push(service);
       } else {
         groups.push({
           status: service.status,
           count: 1,
           colorClass: STATUS_COLORS[service.status],
-          serviceNames: [service.name],
+          services: [service],
         });
       }
     }
@@ -134,7 +130,7 @@
     viewBox="0 0 {size} {size}"
   >
     {#if hasServices}
-      {#each segments as segment, i}
+      {#each segments as segment, i (i)}
         {@const isHovered = hoveredSegmentIndex === i}
         {@const currentStrokeWidth = isHovered ? hoverStrokeWidth : strokeWidth}
         <circle
@@ -167,7 +163,7 @@
 
   {#if hasServices}
     <div class="absolute inset-0">
-      {#each segments as segment, i}
+      {#each segments as segment, i (i)}
         {@const segmentAngle = (segment.count / services.length) * 360}
         {@const previousSegmentsCount = segments
           .slice(0, i)
@@ -194,8 +190,8 @@
               </span>
             </div>
             <div class="flex flex-col gap-0.5 pl-4">
-              {#each segment.serviceNames as serviceName}
-                <span class="text-xs text-neutral-400">{serviceName}</span>
+              {#each segment.services as service (service.id)}
+                <span class="text-xs text-neutral-400">{service.name}</span>
               {/each}
             </div>
           </div>

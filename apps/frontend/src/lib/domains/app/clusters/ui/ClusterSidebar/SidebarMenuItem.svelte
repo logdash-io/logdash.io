@@ -30,6 +30,7 @@
 </script>
 
 {#if href}
+  <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href is supplied by the caller -->
   <a {href} class={baseClasses} {target}>
     {@render children()}
   </a>

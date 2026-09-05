@@ -45,10 +45,9 @@ jobs:
         run: node scripts/check-background-transitions.mjs
         working-directory: apps/frontend
 
-      # eslint is deliberately absent. The app routes currently carry ~129
-      # svelte/no-navigation-without-resolve errors, so adding it here would
-      # make this workflow red from the first run. Add the step back once those
-      # are cleared.
+      - name: Lint
+        run: npx eslint . --max-warnings 0
+        working-directory: apps/frontend
 
       - name: Build
         # Prerendering `/` fetches https://api.logdash.io/exposed_config at

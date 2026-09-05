@@ -12,7 +12,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
-    "lint": "prettier --check . && eslint . && node scripts/check-solid-colours.mjs && node scripts/check-background-transitions.mjs",
+    "lint": "prettier --check . && eslint . --max-warnings 0 && node scripts/check-solid-colours.mjs && node scripts/check-background-transitions.mjs",
     "check:colours": "node scripts/check-solid-colours.mjs",
     "check:transitions": "node scripts/check-background-transitions.mjs",
     "test:e2e": "playwright test"

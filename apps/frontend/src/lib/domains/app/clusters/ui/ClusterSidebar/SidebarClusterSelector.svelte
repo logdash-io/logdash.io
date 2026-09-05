@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
@@ -23,9 +24,14 @@
     const cluster = clustersState.get(clusterId);
     const firstProjectId = cluster?.projects?.[0]?.id;
     if (firstProjectId) {
-      goto(`/app/clusters/${clusterId}/${firstProjectId}`);
+      goto(
+        resolve('/app/clusters/[cluster_id]/[project_id]', {
+          cluster_id: clusterId,
+          project_id: firstProjectId,
+        }),
+      );
     } else {
-      goto(`/app/clusters/${clusterId}`);
+      goto(resolve('/app/clusters/[cluster_id]', { cluster_id: clusterId }));
     }
     close();
   }
@@ -36,7 +42,7 @@
 
   function onCreateProject(close: () => void): void {
     close();
-    goto('/app/clusters/new');
+    goto(resolve('/app/clusters/new'));
   }
 </script>
 
@@ -46,7 +52,7 @@
   >
     <p class="px-3 py-2 text-xs text-neutral-500 font-medium">Select project</p>
     <ul class="flex flex-col gap-0.5">
-      {#each clustersState.clusters as cluster}
+      {#each clustersState.clusters as cluster (cluster.id)}
         {@const isActive = cluster.id === page.params.cluster_id}
         <li>
           <button

@@ -20,8 +20,7 @@ export class NotificationChannelsStateManager {
         await NotificationChannelsService.getNotificationChannels(clusterId);
 
       this.state.channels = channels.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
       );
     } catch (error) {
       console.error('Error loading notification channels:', error);

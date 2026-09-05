@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { goto, invalidateAll } from '$app/navigation';
+  import { invalidateAll } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
@@ -22,8 +23,6 @@
     dashboardId: string;
   };
   const { clusterId, dashboardId }: Props = $props();
-
-  const backUrl = $derived(`/app/clusters/${clusterId}/status-pages`);
 
   let dashboardName = $state('');
   let isUpdating = $state(false);
@@ -121,16 +120,17 @@
     navigator.clipboard.writeText(dashboardUrl);
     toast.success('Status page URL copied to clipboard');
   }
-
-  function onOpenStatusPage(): void {
-    window.open(dashboardUrl, '_blank');
-  }
 </script>
 
 <div class="flex w-full max-w-2xl flex-col gap-6 ld-card">
   <div class="flex flex-col space-y-2">
     <div class="flex items-center gap-2">
-      <a href={backUrl} class="btn btn-ghost btn-sm btn-square">
+      <a
+        href={resolve('/app/clusters/[cluster_id]/status-pages', {
+          cluster_id: clusterId,
+        })}
+        class="btn btn-ghost btn-sm btn-square"
+      >
         <ArrowLeftIcon class="size-5" />
       </a>
       <h5 class="text-lg md:text-2xl font-semibold">
@@ -161,6 +161,7 @@
       </div>
 
       {#if isPublished}
+        <!-- eslint-disable svelte/no-navigation-without-resolve -- absolute status page URL from state -->
         <a
           href={dashboardUrl}
           target="_blank"
@@ -169,6 +170,7 @@
           <OpenIcon class="size-3.5" />
           Open
         </a>
+        <!-- eslint-enable svelte/no-navigation-without-resolve -->
       {/if}
     </div>
   </div>
@@ -189,14 +191,16 @@
               No HTTP monitors available
             </span>
             <a
-              href="/app/clusters/{clusterId}"
+              href={resolve('/app/clusters/[cluster_id]', {
+                cluster_id: clusterId,
+              })}
               class="link link-primary text-sm"
             >
               Create a monitor first
             </a>
           </div>
         {:else}
-          {#each monitoringState.monitors as monitor, index}
+          {#each monitoringState.monitors as monitor, index (monitor.id)}
             <label
               class={[
                 'hover:bg-neutral-800 flex cursor-pointer select-none items-center gap-2 p-2 px-3',

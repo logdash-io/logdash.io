@@ -9,7 +9,6 @@ export class CustomDomainsState {
   private _loading = $state<Record<string, boolean>>({});
   private _error = $state<string | null>(null);
   private _pollingTimers = $state<Record<string, number>>({});
-  private _pollingIntervals = new Map<string, NodeJS.Timeout>();
 
   public getCustomDomain(publicDashboardId: string): CustomDomain | null {
     return this._customDomains[publicDashboardId] || null;
@@ -129,12 +128,9 @@ export class CustomDomainsState {
       this._resetPollingTimer(publicDashboardId);
     }, 5000);
 
-    this._pollingIntervals.set(publicDashboardId, timerInterval);
-
     return () => {
       clearInterval(timerInterval);
       clearInterval(pollingInterval);
-      this._pollingIntervals.delete(publicDashboardId);
       this._pollingTimers[publicDashboardId] = 0;
     };
   }

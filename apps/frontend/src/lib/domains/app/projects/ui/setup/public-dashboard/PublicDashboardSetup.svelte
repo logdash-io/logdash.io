@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
@@ -41,7 +42,7 @@
   });
 
   $effect(() => {
-    dashboardMonitors.length;
+    void dashboardMonitors.length;
 
     publicDashboardPrivateState.loadDashboard(dashboard_id).then(() => {
       isLoading = false;
@@ -108,14 +109,19 @@
           <div class="flex items-center justify-center py-4">
             <span class="text-neutral-400 text-center">
               <p>No HTTP monitors available.</p>
-              <a href="/app/clusters/{clusterId}" class="link link-primary">
+              <a
+                href={resolve('/app/clusters/[cluster_id]', {
+                  cluster_id: clusterId,
+                })}
+                class="link link-primary"
+              >
                 Create a monitor first
               </a>
             </span>
           </div>
         {/if}
 
-        {#each monitoringState.monitors as monitor, index}
+        {#each monitoringState.monitors as monitor, index (monitor.id)}
           <label
             class={[
               'hover:bg-neutral-800 flex cursor-pointer select-none items-center gap-1 truncate p-2 px-3',
@@ -192,9 +198,12 @@
         ]}
         data-posthog-id="public-dashboard-setup-back-button"
         onclick={() => {
-          goto(`/app/clusters/${page.params.cluster_id}`, {
-            invalidateAll: true,
-          });
+          goto(
+            resolve('/app/clusters/[cluster_id]', { cluster_id: clusterId }),
+            {
+              invalidateAll: true,
+            },
+          );
         }}
       >
         Go back

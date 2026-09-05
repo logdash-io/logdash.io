@@ -91,7 +91,7 @@
 {:else}
   <span class="flex text-sm leading-7 whitespace-nowrap tabular-nums shrink-0">
     <span class={secondaryTextColor}>{absoluteDate}&nbsp;</span>
-    {#each brightTimeNumbers as number, i}
+    {#each brightTimeNumbers as number, i (i)}
       <span>{number}</span>
       {#if i < brightTimeNumbers.length - 1}
         <span class="font-normal">.</span>

@@ -10,6 +10,7 @@
   import { cubicOut } from 'svelte/easing';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
 
   let containerRef: HTMLDivElement;
 
@@ -48,7 +49,7 @@
       </p>
     </div>
     <button
-      onclick={() => goto('/app/clusters')}
+      onclick={() => goto(resolve('/app/clusters'))}
       class="btn btn-ghost btn-circle btn-sm text-neutral-500 hover:text-base-content"
     >
       <CloseIcon class="size-6" />

@@ -1,11 +1,12 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon } from 'lucide-svelte';
   import { cubicInOut } from 'svelte/easing';
-  import { fade, fly } from 'svelte/transition';
+  import { fly } from 'svelte/transition';
 
   type Props = {
     id: string;
@@ -93,7 +94,16 @@
         class="btn btn-secondary btn-soft btn-xs ml-auto"
         onclick={() => {
           metricsState.setLastPreviewedMetricId(projectId, metric.id);
-          goto(`/app/clusters/${clusterId}/${projectId}/metrics/${metric.id}`);
+          goto(
+            resolve(
+              '/app/clusters/[cluster_id]/[project_id]/metrics/[metric_id]',
+              {
+                cluster_id: clusterId,
+                project_id: projectId,
+                metric_id: metric.id,
+              },
+            ),
+          );
         }}
         data-posthog-id="preview-metric-button"
       >

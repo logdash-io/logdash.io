@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { untrack } from 'svelte';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
@@ -29,7 +30,12 @@
   });
 
   function onServiceSelect(projectId: string): void {
-    goto(`/app/clusters/${clusterId}/${projectId}`);
+    goto(
+      resolve('/app/clusters/[cluster_id]/[project_id]', {
+        cluster_id: clusterId,
+        project_id: projectId,
+      }),
+    );
   }
 
   function getStatus(
@@ -50,7 +56,7 @@
     <EmptyState {clusterId} />
   {:else}
     <div class="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
-      {#each projects as project}
+      {#each projects as project (project.id)}
         <ServiceCard
           projectId={project.id}
           name={project.name}

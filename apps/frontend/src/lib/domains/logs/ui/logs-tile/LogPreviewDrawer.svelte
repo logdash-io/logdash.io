@@ -19,19 +19,21 @@
   const formattedMessage = $derived.by(() => {
     if (!log) return { isJson: false, content: '' };
 
-    const trimmed = log.message.trim();
-    try {
-      const parsed = JSON.parse(trimmed);
-      if (typeof parsed === 'object' && parsed !== null) {
-        return {
-          isJson: true,
-          content: JSON.stringify(parsed, null, 2),
-        };
-      }
-    } catch {}
+    const prettyJson = prettyPrintJsonObject(log.message.trim());
+    if (prettyJson === null) return { isJson: false, content: log.message };
 
-    return { isJson: false, content: log.message };
+    return { isJson: true, content: prettyJson };
   });
+
+  function prettyPrintJsonObject(raw: string): string | null {
+    try {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed !== 'object' || parsed === null) return null;
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      return null;
+    }
+  }
 
   const levelColor = $derived(
     LOG_LEVELS_MAP[log?.level as LogLevel]?.color ?? 'bg-[#155dfc]',

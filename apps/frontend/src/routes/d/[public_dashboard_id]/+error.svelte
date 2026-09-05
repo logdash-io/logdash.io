@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
 </script>
@@ -15,7 +16,11 @@
       If you think this is a bug, please let us know by reporting it on our
       GitHub repository. We appreciate your help in making LogDash better!
 
-      <a href="/" rel="noopener noreferrer" class="btn btn-sm btn-primary">
+      <a
+        href={resolve('/')}
+        rel="noopener noreferrer"
+        class="btn btn-sm btn-primary"
+      >
         Go back to home
       </a>
 

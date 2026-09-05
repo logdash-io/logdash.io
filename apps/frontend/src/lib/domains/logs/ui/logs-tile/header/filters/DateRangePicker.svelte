@@ -47,7 +47,7 @@
       mode="datetime"
       placeholder="Select start date"
       inputClasses="ld-input ld-input-padding w-full text-xs"
-      displayFormat={'yyyy M dd, hh:ii'}
+      displayFormat="yyyy M dd, hh:ii"
     />
   </div>
 
@@ -58,7 +58,7 @@
       mode="datetime"
       placeholder="Select end date"
       inputClasses="ld-input ld-input-padding w-full text-xs"
-      displayFormat={'yyyy M dd, hh:ii'}
+      displayFormat="yyyy M dd, hh:ii"
     />
   </div>
 
