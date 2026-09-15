@@ -122,7 +122,7 @@ class MetricsState {
   }
 
   private _openMetricsStream(project_id: string, tabId: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this._unsubscribe?.();
 
       this.syncConnection = new EventSource(
@@ -152,12 +152,18 @@ class MetricsState {
           logger.debug('Attempting to reconnect in 3 seconds...');
           setTimeout(() => {
             if (this._shouldReconnect) {
-              this._openMetricsStream(project_id, tabId);
+              this._openMetricsStream(project_id, tabId).catch((error) => {
+                logger.error('Failed to reconnect metrics:', error);
+              });
             }
           }, 3000);
         }
 
-        reject(new Error('SSE connection failed'));
+        // A dropped connection is recoverable: the reconnect above owns the
+        // retry, so settle the promise instead of rejecting. Rejecting turned
+        // every transient drop into an unhandled rejection that error tracking
+        // filed as a new issue.
+        resolve();
       };
       const onMessage = (event) => {
         try {

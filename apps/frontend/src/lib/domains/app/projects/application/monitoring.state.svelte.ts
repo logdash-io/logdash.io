@@ -468,7 +468,7 @@ class MonitoringState {
   }
 
   private _openMonitorStream(clusterId: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this._unsubscribe?.();
 
       this.syncConnection = new EventSource(
@@ -499,12 +499,18 @@ class MonitoringState {
           logger.debug('Attempting to reconnect monitors in 3 seconds...');
           setTimeout(() => {
             if (this._shouldReconnect) {
-              this._openMonitorStream(clusterId);
+              this._openMonitorStream(clusterId).catch((error) => {
+                logger.error('Failed to reconnect monitors:', error);
+              });
             }
           }, 3000);
         }
 
-        reject(new Error('Monitor SSE connection failed'));
+        // A dropped connection is recoverable: the reconnect above owns the
+        // retry, so settle the promise instead of rejecting. Rejecting turned
+        // every transient drop into an unhandled rejection that error tracking
+        // filed as a new issue.
+        resolve();
       };
 
       const onMessage = (event) => {
