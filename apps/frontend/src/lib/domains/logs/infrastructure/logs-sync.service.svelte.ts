@@ -47,7 +47,7 @@ export class LogsSyncService {
       throw new Error('Logs sync is not initialized');
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this._unsubscribe?.();
 
       this._syncConnection = new EventSource(
@@ -87,7 +87,7 @@ export class LogsSyncService {
           }, 3000);
         }
 
-        reject(new Error('SSE connection failed'));
+        resolve();
       };
 
       const onMessage = (event: MessageEvent<string>): void => {
