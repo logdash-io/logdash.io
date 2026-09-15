@@ -11,6 +11,7 @@
   import NavigationLoadingBar from '$lib/domains/shared/ui/components/NavigationLoadingBar.svelte';
   import Toaster from '$lib/domains/shared/ui/toaster/Toaster.svelte';
   import { envConfig } from '$lib/domains/shared/utils/env-config';
+  import { dropThirdPartyExceptions } from '$lib/domains/shared/posthog/drop-third-party-exceptions';
   import posthog, { PostHog } from 'posthog-js';
   import { getContext, setContext, type Snippet } from 'svelte';
   import { atomOneDark } from 'svelte-highlight/styles';
@@ -97,6 +98,7 @@
         ui_host: envConfig.posthog.host,
         person_profiles: 'always',
         disable_session_recording: true,
+        before_send: dropThirdPartyExceptions,
         loaded(ph) {
           loadedPosthogInstance = ph;
         },
