@@ -52,7 +52,7 @@ export class LogsSyncService {
   async open(): Promise<void> {
     this._shouldReconnect = true;
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this._unsubscribe?.();
 
       this._syncConnection = new EventSource(
@@ -91,7 +91,11 @@ export class LogsSyncService {
           }, 3000);
         }
 
-        reject(new Error('SSE connection failed'));
+        // A dropped connection is recoverable: the reconnect above owns the
+        // retry, so settle the promise instead of rejecting. Rejecting turned
+        // every transient drop into an unhandled rejection that error tracking
+        // filed as a new issue.
+        resolve();
       };
 
       const onMessage = (event) => {
