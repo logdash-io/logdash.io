@@ -58,7 +58,7 @@ const ALLOW = {
   'header/LogsAnalyticsChart.svelte': ['bg-base-200/50'],
   'logs-tile/LogPreviewDrawer.svelte': ['from-base-300/80', 'via-base-300/80'],
   'tiles/monitoring/UptimeSection.svelte': ['via-base-200/60'],
-  'landing/hero/HeroStage.svelte': [
+  'landing/stage/StageLight.svelte': [
     'color-mix(in srgb, var(--color-base-content) 18%, transparent)',
   ],
 };
