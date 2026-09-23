@@ -9,10 +9,10 @@
     tryPrependProtocol,
   } from '$lib/domains/shared/utils/url';
   import { page } from '$app/state';
-  import { ArrowRightIcon, CircleAlertIcon, GlobeIcon } from 'lucide-svelte';
+  import { ArrowRightIcon, CircleAlertIcon } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { prefersReducedMotion } from 'svelte/motion';
-  import { fly } from 'svelte/transition';
+  import { fly, slide } from 'svelte/transition';
   import { HERO_SHOWCASE_ID, HERO_URL_INPUT_ID } from './hero-anchors';
 
   type Props = {
@@ -129,7 +129,7 @@
   }
 </script>
 
-<form class="flex w-full flex-col gap-2" onsubmit={onSubmit} novalidate>
+<form class="flex w-full flex-col" onsubmit={onSubmit} novalidate>
   <div
     bind:this={composer}
     class={[
@@ -197,27 +197,24 @@
     </button>
   </div>
 
-  <p
-    id={statusId}
-    class={[
-      'flex min-h-4 pl-4 text-xs transition-ink duration-150',
-      isInvalid ? 'text-error' : 'text-neutral-500',
-    ]}
-    aria-live="polite"
-  >
-    {#key validationMessage}
-      <span
-        class="inline-flex items-center gap-1.5"
-        in:fly={{ y: -2, duration: statusSwapMs }}
-      >
-        {#if validationMessage}
-          <CircleAlertIcon class="size-3.5 shrink-0" />
-          {validationMessage}
-        {:else}
-          <GlobeIcon class="size-3.5 shrink-0 text-neutral-500" />
-          Any public URL · checked every 15 s
-        {/if}
-      </span>
-    {/key}
-  </p>
+  <!--
+    The row takes no room until there is something to say, then opens under
+    the composer. The live region itself always exists so screen readers
+    announce the first message too.
+  -->
+  <div id={statusId} class="text-error text-xs" aria-live="polite">
+    {#if validationMessage}
+      <div transition:slide={{ duration: statusSwapMs }}>
+        {#key validationMessage}
+          <span
+            class="flex items-center gap-1.5 pt-2 pl-4"
+            in:fly={{ y: -2, duration: statusSwapMs }}
+          >
+            <CircleAlertIcon class="size-3.5 shrink-0" />
+            {validationMessage}
+          </span>
+        {/key}
+      </div>
+    {/if}
+  </div>
 </form>
