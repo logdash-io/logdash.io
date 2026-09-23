@@ -8,7 +8,9 @@
   import { StatusBadge, StatusHistoryBar } from '@logdash/hyper-ui/features';
   import { ArrowRightIcon } from 'lucide-svelte';
   import {
+    checkIntervalLabel,
     toChartPings,
+    uptimeLabel,
     type ChartPing,
     type MonitorStatus,
   } from './hero-pings';
@@ -41,9 +43,7 @@
 
   const demoPings = $derived(toChartPings(anonymousPreviewState.demo.pings));
   const demoStatus = $derived<MonitorStatus>(getStatusFromPings(demoPings));
-  const demoHost = $derived(
-    anonymousPreviewState.demo.monitor?.name ?? 'logdash.io',
-  );
+  const demoHost = $derived(anonymousPreviewState.demo.monitor?.name ?? '');
   const demoStats = $derived(statsFor(demoPings));
 
   const activeStepIndex = $derived(
@@ -58,8 +58,14 @@
     return [
       { label: 'Response', value: last ? `${last.responseTimeMs} ms` : '--' },
       { label: 'Status', value: last ? `${last.statusCode}` : '--' },
-      { label: 'Checks', value: `${pings.length}` },
+      { label: 'Uptime', value: uptimeLabel(pings) ?? '--' },
     ];
+  }
+
+  function checkingLabel(pings: ChartPing[], suffix = ''): string {
+    const interval = checkIntervalLabel(pings);
+
+    return interval ? `Checking every ${interval}${suffix}` : 'Checking';
   }
 
   async function onOpenDashboard(): Promise<void> {
@@ -141,7 +147,7 @@
 
   {@render historyBar(
     demoPings,
-    'Checking every 15 s',
+    checkingLabel(demoPings),
     demoPings.length ? 'Now' : 'Loading checks',
   )}
 {/snippet}
@@ -153,7 +159,7 @@
 
   {@render historyBar(
     previewPings,
-    'Checking every 15 s during preview',
+    checkingLabel(previewPings, ' during preview'),
     previewPings.length ? 'Now' : 'Waiting for the first check',
   )}
 

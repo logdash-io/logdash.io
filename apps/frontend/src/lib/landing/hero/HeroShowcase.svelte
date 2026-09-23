@@ -15,6 +15,7 @@
   import HeroMetricsColumn from './HeroMetricsColumn.svelte';
   import HeroMonitorTile from './HeroMonitorTile.svelte';
   import HeroSidebar from './HeroSidebar.svelte';
+  import { showcaseClusterName } from './hero-showcase';
 
   type WindowBarStatus = {
     label: string;
@@ -45,7 +46,7 @@
   const host = $derived(
     anonymousPreviewState.preview
       ? previewNameFromUrl(anonymousPreviewState.preview.url)
-      : (anonymousPreviewState.demo.monitor?.name ?? 'logdash.io'),
+      : (anonymousPreviewState.demo.monitor?.name ?? ''),
   );
 
   const status = $derived<WindowBarStatus>(
@@ -112,7 +113,7 @@
 
           <span class="text-neutral-500 min-w-0 truncate text-sm xl:hidden">
             <span class="hidden sm:inline">
-              My first cluster
+              {showcaseClusterName(phase)}
               <span class="text-neutral-700">/</span>
             </span>
             <span class="text-base-content font-medium">{host}</span>

@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
   import FilterIcon from '$lib/domains/shared/icons/FilterIcon.svelte';
-  import FakeLogs from '$lib/landing/FakeLogs.svelte';
+  import LogRow from '$lib/landing/LogRow.svelte';
+  import RollingFeed from '$lib/landing/RollingFeed.svelte';
   import { SearchIcon } from 'lucide-svelte';
+  import { showsVisitorAccount } from './hero-showcase';
 
   type Props = {
     /** Rows in the tail while the panel is as tall as its content. */
@@ -10,11 +13,18 @@
     fit: boolean;
   };
 
-  type Bucket = {
+  type Bar = {
     /** Bar height in px, out of the strip's 32. */
     total: number;
     /** The error share of that height, drawn on top. */
     errors: number;
+  };
+
+  type TailRow = {
+    key: number;
+    at: Date;
+    level: string;
+    message: string;
   };
 
   const { rows, fit }: Props = $props();
@@ -26,46 +36,7 @@
   const ROW_PX = 28;
   const FEED_GAP_PX = 8;
   const MIN_ROWS = 3;
-
-  /** Log volume over the last hour, the analytics strip a logs tile has in the app. */
-  const BUCKETS: Bucket[] = [
-    { total: 11, errors: 0 },
-    { total: 14, errors: 0 },
-    { total: 10, errors: 0 },
-    { total: 18, errors: 2 },
-    { total: 13, errors: 0 },
-    { total: 16, errors: 0 },
-    { total: 21, errors: 0 },
-    { total: 15, errors: 0 },
-    { total: 19, errors: 3 },
-    { total: 24, errors: 5 },
-    { total: 17, errors: 0 },
-    { total: 14, errors: 0 },
-    { total: 18, errors: 0 },
-    { total: 22, errors: 0 },
-    { total: 27, errors: 0 },
-    { total: 22, errors: 2 },
-    { total: 16, errors: 0 },
-    { total: 12, errors: 0 },
-    { total: 15, errors: 0 },
-    { total: 20, errors: 0 },
-    { total: 25, errors: 6 },
-    { total: 30, errors: 10 },
-    { total: 23, errors: 4 },
-    { total: 18, errors: 0 },
-    { total: 14, errors: 0 },
-    { total: 19, errors: 0 },
-    { total: 22, errors: 0 },
-    { total: 26, errors: 0 },
-    { total: 21, errors: 0 },
-    { total: 17, errors: 2 },
-    { total: 14, errors: 0 },
-    { total: 18, errors: 0 },
-    { total: 23, errors: 0 },
-    { total: 28, errors: 0 },
-    { total: 24, errors: 0 },
-    { total: 29, errors: 0 },
-  ];
+  const STRIP_PX = 32;
 
   let listHeight = $state(0);
 
@@ -73,26 +44,68 @@
     Math.max(MIN_ROWS, Math.floor((listHeight + FEED_GAP_PX) / ROW_PX)),
   );
   const visible = $derived(fit && listHeight > 0 ? fitted : rows);
+
+  const visitorAccount = $derived(
+    showsVisitorAccount(anonymousPreviewState.phase),
+  );
+  const logs = $derived(anonymousPreviewState.demo.logs);
+  const volume = $derived(anonymousPreviewState.demo.logVolume);
+
+  /**
+   * RollingFeed keys rows by number. The low 48 bits of a log's ObjectId (its
+   * random part and counter) stay the same across polls and fit a safe integer.
+   */
+  const tail = $derived<TailRow[]>(
+    (logs ?? []).map((log) => ({
+      key: parseInt(log.id.slice(-12), 16),
+      at: new Date(log.createdAt),
+      level: log.level,
+      message: log.message,
+    })),
+  );
+
+  const bars = $derived.by<Bar[]>(() => {
+    if (!volume?.length) {
+      return [];
+    }
+
+    const peak = Math.max(1, ...volume.map((bucket) => bucket.countTotal));
+
+    return volume.map((bucket) => {
+      const total = bucket.countTotal
+        ? Math.max(2, Math.round((bucket.countTotal / peak) * STRIP_PX))
+        : 0;
+
+      return {
+        total,
+        errors: Math.round(
+          (bucket.countByLevel.error / Math.max(1, bucket.countTotal)) * total,
+        ),
+      };
+    });
+  });
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-4 pb-4 lg:pb-0">
-  <div class="hidden h-8 items-end gap-[3px] xl:flex" aria-hidden="true">
-    {#each BUCKETS as bucket, index (index)}
-      <div
-        class="flex min-w-0 flex-1 flex-col justify-end gap-px"
-        style:height="{bucket.total}px"
-      >
-        {#if bucket.errors}
-          <div
-            class="w-full shrink-0 rounded-[1px] bg-[#e7000b]/70"
-            style:height="{bucket.errors}px"
-          ></div>
-        {/if}
+  {#if !visitorAccount}
+    <div class="hidden h-8 items-end gap-[3px] xl:flex" aria-hidden="true">
+      {#each bars as bar, index (index)}
+        <div
+          class="flex min-w-0 flex-1 flex-col justify-end gap-px"
+          style:height="{bar.total}px"
+        >
+          {#if bar.errors}
+            <div
+              class="w-full shrink-0 rounded-[1px] bg-[#e7000b]/70"
+              style:height="{bar.errors}px"
+            ></div>
+          {/if}
 
-        <div class="bg-neutral-700 w-full flex-1 rounded-[1px]"></div>
-      </div>
-    {/each}
-  </div>
+          <div class="bg-neutral-700 w-full flex-1 rounded-[1px]"></div>
+        </div>
+      {/each}
+    </div>
+  {/if}
 
   <div class="flex items-center gap-2" aria-hidden="true">
     <div
@@ -119,6 +132,30 @@
   </div>
 
   <div class="min-h-0 flex-1 overflow-hidden" bind:clientHeight={listHeight}>
-    <FakeLogs padded={false} header={false} {visible} />
+    {#if visitorAccount}
+      <div class="flex flex-col gap-1 py-2">
+        <span class="text-sm">No logs yet</span>
+        <span class="text-neutral-500 text-sm">
+          Your app's logs land here once you add the SDK.
+        </span>
+      </div>
+    {:else if logs}
+      <RollingFeed items={tail} {visible}>
+        {#snippet row(log)}
+          <LogRow
+            prefix="short"
+            date={log.at}
+            level={log.level}
+            message={log.message}
+          />
+        {/snippet}
+      </RollingFeed>
+    {:else}
+      <div class="flex flex-col gap-2" aria-hidden="true">
+        {#each [...Array(visible).keys()] as index (index)}
+          <div class="bg-neutral-800 h-5 animate-pulse rounded"></div>
+        {/each}
+      </div>
+    {/if}
   </div>
 </div>

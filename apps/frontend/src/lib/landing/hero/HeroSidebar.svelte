@@ -12,6 +12,7 @@
   import type { Component } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import { statusFromHttpPings, type MonitorStatus } from './hero-pings';
+  import { showcaseClusterName } from './hero-showcase';
 
   type IconComponent = Component<{ class?: ClassValue }>;
 
@@ -66,15 +67,16 @@
 
     return {
       key: 'demo',
-      name: demo.monitor?.name ?? 'logdash.io',
-      status: demo.pings.length ? statusFromHttpPings(demo.pings) : 'up',
+      name: demo.monitor?.name ?? '',
+      status: demo.pings.length ? statusFromHttpPings(demo.pings) : 'unknown',
       active: false,
-      pending: false,
+      pending: !demo.pings.length,
     };
   });
 
+  /** A visitor's fresh account holds their one service, nothing of ours. */
   const services = $derived(
-    previewRow ? [previewRow, demoRow] : [{ ...demoRow, active: true }],
+    previewRow ? [previewRow] : [{ ...demoRow, active: true }],
   );
 
   function rowClass(active: boolean): ClassValue {
@@ -96,7 +98,9 @@
       >
         <CubeIcon class="size-3.5" />
       </span>
-      <span class="truncate text-sm font-medium">My first cluster</span>
+      <span class="truncate text-sm font-medium">
+        {showcaseClusterName(phase)}
+      </span>
       <ChevronsUpDownIcon class="text-neutral-600 size-3.5 shrink-0" />
     </div>
 

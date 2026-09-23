@@ -22,3 +22,36 @@ export function toChartPings(pings: HttpPing[]): ChartPing[] {
 export function statusFromHttpPings(pings: HttpPing[]): MonitorStatus {
   return getStatusFromPings(toChartPings(pings));
 }
+
+const isHealthy = (ping: ChartPing): boolean =>
+  ping.statusCode >= 200 && ping.statusCode < 400;
+
+/** Share of healthy checks, e.g. "100%" or "96.7%". Null before the first check. */
+export function uptimeLabel(pings: ChartPing[]): string | null {
+  if (!pings.length) {
+    return null;
+  }
+
+  const share = (pings.filter(isHealthy).length / pings.length) * 100;
+
+  return `${Number(share.toFixed(1))}%`;
+}
+
+/** The gap the monitor actually keeps between checks, e.g. "15 s" or "1 min". */
+export function checkIntervalLabel(pings: ChartPing[]): string | null {
+  const gaps = pings
+    .slice(1)
+    .map(
+      (ping, index) =>
+        Date.parse(ping.createdAt) - Date.parse(pings[index].createdAt),
+    )
+    .sort((a, b) => a - b);
+
+  if (!gaps.length) {
+    return null;
+  }
+
+  const seconds = Math.round(gaps[Math.floor(gaps.length / 2)] / 1_000);
+
+  return seconds < 60 ? `${seconds} s` : `${Math.round(seconds / 60)} min`;
+}

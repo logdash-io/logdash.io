@@ -1,7 +1,10 @@
 import { resolve } from '$app/paths';
+import type { SimplifiedMetric } from '$lib/domains/app/projects/domain/metric';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor';
 import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error';
+import type { Log } from '$lib/domains/logs/domain/log';
+import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analytics-response';
 import { createLogger } from '$lib/domains/shared/logger';
 import { posthog } from 'posthog-js';
 import {
@@ -17,7 +20,20 @@ const logger = createLogger('anonymous-preview.state', false);
 
 const PREVIEW_STORAGE_KEY = 'logdash_anonymous_preview_v0';
 const PREVIEW_POLL_INTERVAL_MS = 5_000;
-const DEMO_POLL_INTERVAL_MS = 10_000;
+const DEMO_POLL_INTERVAL_MS = 5_000;
+/** Log volume and metric history move by the minute, so every 12th poll is enough. */
+const DEMO_SLOW_POLL_EVERY = 12;
+/** Volume window: 30 bars of 5 minutes, the most buckets the API returns. */
+const DEMO_VOLUME_WINDOW_MS = 150 * 60_000;
+const DEMO_VOLUME_ROUND_MS = 5 * 60_000;
+/** Metrics the showcase column leads with, when the project has them. */
+const DEMO_METRIC_ORDER = [
+  'logsCreated',
+  'pingsMade',
+  'projectsCreated',
+  'clustersCreated',
+];
+const DEMO_METRICS_SHOWN = 4;
 
 export type AnonymousPreviewPhase =
   | 'idle'
@@ -28,14 +44,25 @@ export type AnonymousPreviewPhase =
 
 export type AnonymousPreviewSource = 'hero' | 'final-cta' | 'seo';
 
+export type DemoMetric = SimplifiedMetric & {
+  /** The last hour, one value per minute, oldest first. */
+  history: number[];
+};
+
 export type AnonymousPreviewDemo = {
   monitor: Monitor | null;
   pings: HttpPing[];
+  /** Newest first. Null until the first read lands. */
+  logs: Log[] | null;
+  logVolume: LogsAnalyticsResponse['buckets'] | null;
+  metrics: DemoMetric[] | null;
+  /** How many metrics the project tracks, of which `metrics` shows a few. */
+  metricsTracked: number;
 };
 
 type DemoTarget = {
   projectId: string;
-  monitorId: string;
+  monitorId: string | null;
 };
 
 type StoredAnonymousPreview = {
@@ -49,7 +76,15 @@ class AnonymousPreviewState {
   private _pings = $state<HttpPing[]>([]);
   private _creatingStep = $state<AnonymousStartStep | null>(null);
   private _error = $state<AnonymousStartError | null>(null);
-  private _demo = $state<AnonymousPreviewDemo>({ monitor: null, pings: [] });
+  private _demo = $state<AnonymousPreviewDemo>({
+    monitor: null,
+    pings: [],
+    logs: null,
+    logVolume: null,
+    metrics: null,
+    metricsTracked: 0,
+  });
+  private _demoPolls = 0;
   private _demoTarget: DemoTarget | null = null;
   private _initialized = false;
   private _previewPollTimer: ReturnType<typeof setInterval> | null = null;
@@ -301,10 +336,11 @@ class AnonymousPreviewState {
       return;
     }
 
+    this._demoPolls = 0;
     void this._refreshDemo();
 
     this._demoPollTimer = setInterval(() => {
-      void this._refreshDemoPings();
+      void this._refreshDemo();
     }, DEMO_POLL_INTERVAL_MS);
   }
 
@@ -318,12 +354,89 @@ class AnonymousPreviewState {
   }
 
   private async _refreshDemo(): Promise<void> {
-    if (this._demoTarget) {
-      await this._refreshDemoPings();
+    if (!this._demoTarget) {
+      await this._loadDemoTarget();
+    }
+
+    const target = this._demoTarget;
+
+    if (!target) {
       return;
     }
 
-    await this._loadDemoTarget();
+    const slow = this._demoPolls % DEMO_SLOW_POLL_EVERY === 0;
+    this._demoPolls += 1;
+
+    await Promise.all([
+      this._refreshDemoPings(),
+      this._refreshDemoLogs(target.projectId),
+      this._refreshDemoMetrics(target.projectId, slow),
+      slow ? this._refreshDemoLogVolume(target.projectId) : undefined,
+    ]);
+  }
+
+  private async _refreshDemoLogs(projectId: string): Promise<void> {
+    try {
+      this._demo.logs = await anonymousSessionService.readDemoLogs(projectId);
+    } catch (error) {
+      logger.debug('Failed to refresh the demo logs', error);
+    }
+  }
+
+  private async _refreshDemoLogVolume(projectId: string): Promise<void> {
+    const end =
+      Math.ceil(Date.now() / DEMO_VOLUME_ROUND_MS) * DEMO_VOLUME_ROUND_MS;
+
+    try {
+      const response = await anonymousSessionService.readDemoLogVolume(
+        projectId,
+        new Date(end - DEMO_VOLUME_WINDOW_MS),
+        new Date(end),
+      );
+
+      this._demo.logVolume = response.buckets;
+    } catch (error) {
+      logger.debug('Failed to refresh the demo log volume', error);
+    }
+  }
+
+  /** Values every poll; the hour behind each one only on slow polls. */
+  private async _refreshDemoMetrics(
+    projectId: string,
+    withHistory: boolean,
+  ): Promise<void> {
+    try {
+      const all = await anonymousSessionService.readDemoMetrics(projectId);
+      const rank = (name: string): number => {
+        const index = DEMO_METRIC_ORDER.indexOf(name);
+        return index === -1 ? DEMO_METRIC_ORDER.length : index;
+      };
+      const shown = [...all]
+        .sort((a, b) => rank(a.name) - rank(b.name))
+        .slice(0, DEMO_METRICS_SHOWN);
+      const previous = new Map(
+        (this._demo.metrics ?? []).map((metric) => [metric.id, metric.history]),
+      );
+
+      const histories = await Promise.all(
+        shown.map((metric) =>
+          withHistory || !previous.has(metric.id)
+            ? anonymousSessionService.readDemoMetricHistory(
+                projectId,
+                metric.metricRegisterEntryId,
+              )
+            : (previous.get(metric.id) ?? []),
+        ),
+      );
+
+      this._demo.metricsTracked = all.length;
+      this._demo.metrics = shown.map((metric, index) => ({
+        ...metric,
+        history: histories[index],
+      }));
+    } catch (error) {
+      logger.debug('Failed to refresh the demo metrics', error);
+    }
   }
 
   private async _loadDemoTarget(): Promise<void> {
@@ -337,15 +450,11 @@ class AnonymousPreviewState {
           (candidate) => candidate.projectId === target.projectId,
         ) ?? null;
 
-      if (!monitor) {
-        this._demo = { monitor: null, pings: [] };
-        return;
-      }
-
-      this._demoTarget = { projectId: target.projectId, monitorId: monitor.id };
-      this._demo = { monitor, pings: [] };
-
-      await this._refreshDemoPings();
+      this._demoTarget = {
+        projectId: target.projectId,
+        monitorId: monitor?.id ?? null,
+      };
+      this._demo.monitor = monitor;
     } catch (error) {
       logger.debug('Failed to load the demo showcase', error);
     }
@@ -354,7 +463,7 @@ class AnonymousPreviewState {
   private async _refreshDemoPings(): Promise<void> {
     const target = this._demoTarget;
 
-    if (!target) {
+    if (!target?.monitorId) {
       return;
     }
 
