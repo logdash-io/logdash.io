@@ -1,10 +1,7 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { closeInMemoryMongoServer } from '../utils/mongo-in-memory-server';
-import {
-  MetricSerialized,
-  SimpleMetric,
-} from '../../src/metric/core/entities/metric.normalized';
+import { MetricSerialized, SimpleMetric } from '../../src/metric/core/entities/metric.normalized';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
 
 describe('Metrics (reads)', () => {
@@ -59,15 +56,11 @@ describe('Metrics (reads)', () => {
       expect(response.status).toEqual(200);
       expect(body).toHaveLength(2);
 
-      const usersCountMetric = body.find(
-        (metric) => metric.name === 'UsersCount',
-      )!;
+      const usersCountMetric = body.find((metric) => metric.name === 'UsersCount')!;
       expect(usersCountMetric).toBeDefined();
       expect(usersCountMetric.value).toEqual(11);
 
-      const activeUsersMetric = body.find(
-        (metric) => metric.name === 'ActiveUsers',
-      )!;
+      const activeUsersMetric = body.find((metric) => metric.name === 'ActiveUsers')!;
       expect(activeUsersMetric).toBeDefined();
       expect(activeUsersMetric.value).toEqual(5);
     });
@@ -82,9 +75,7 @@ describe('Metrics (reads)', () => {
         .set('Authorization', `Bearer ${setupB.token}`);
 
       expect(response.status).toEqual(403);
-      expect(response.body.message).toEqual(
-        'User is not a member of this cluster',
-      );
+      expect(response.body.message).toEqual('User is not a member of this cluster');
     });
   });
 
@@ -111,11 +102,10 @@ describe('Metrics (reads)', () => {
       });
 
       // Get metric register entry id for project A
-      const metricRegisterEntriesA =
-        await bootstrap.models.metricRegisterModel.find({
-          projectId: setupA.project.id,
-          name: 'UsersCount',
-        });
+      const metricRegisterEntriesA = await bootstrap.models.metricRegisterModel.find({
+        projectId: setupA.project.id,
+        name: 'UsersCount',
+      });
       expect(metricRegisterEntriesA.length).toEqual(1);
       const metricRegisterEntryId = metricRegisterEntriesA[0]._id.toString();
 
@@ -134,6 +124,67 @@ describe('Metrics (reads)', () => {
       expect(body[0].metricRegisterEntryId).toEqual(metricRegisterEntryId);
     });
 
+    it('narrows the history to one granularity and its newest entries', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.metricUtils.recordMetric({
+        apiKey: setup.apiKey.value,
+        name: 'UsersCount',
+        operation: MetricOperation.Set,
+        value: 1,
+      });
+
+      const [registerEntry] = await bootstrap.models.metricRegisterModel.find({
+        projectId: setup.project.id,
+      });
+      const metricRegisterEntryId = registerEntry._id.toString();
+
+      await bootstrap.models.metricModel.insertMany(
+        [
+          ['2099-01-01T00:01', 'minute', 11],
+          ['2099-01-01T00:03', 'minute', 13],
+          ['2099-01-01T00:02', 'minute', 12],
+          ['2099-01-01T01', 'hour', 20],
+        ].map(([timeBucket, granularity, value]) => ({
+          metricRegisterEntryId,
+          projectId: setup.project.id,
+          timeBucket,
+          granularity,
+          value,
+        })),
+      );
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/metrics/${metricRegisterEntryId}`)
+        .query({ granularity: 'minute', limit: 2 })
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      const body = response.body as MetricSerialized[];
+
+      // then
+      expect(response.status).toEqual(200);
+      expect(body.map((metric) => [metric.date, metric.value])).toEqual([
+        ['2099-01-01T00:03:00.000Z', 13],
+        ['2099-01-01T00:02:00.000Z', 12],
+      ]);
+    });
+
+    it('rejects an unknown granularity', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${setup.project.id}/metrics/507f1f77bcf86cd799439011`)
+        .query({ granularity: 'week' })
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // then
+      expect(response.status).toEqual(400);
+    });
+
     it('returns 403 when register entry belongs to different project', async () => {
       // given
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -148,11 +199,10 @@ describe('Metrics (reads)', () => {
       });
 
       // Get metric register entry id for project B
-      const metricRegisterEntriesB =
-        await bootstrap.models.metricRegisterModel.find({
-          projectId: setupB.project.id,
-          name: 'UsersCount',
-        });
+      const metricRegisterEntriesB = await bootstrap.models.metricRegisterModel.find({
+        projectId: setupB.project.id,
+        name: 'UsersCount',
+      });
       expect(metricRegisterEntriesB.length).toEqual(1);
       const metricRegisterEntryId = metricRegisterEntriesB[0]._id.toString();
 
@@ -193,11 +243,10 @@ describe('Metrics (reads)', () => {
       });
 
       // Get metric register entry id
-      const metricRegisterEntries =
-        await bootstrap.models.metricRegisterModel.find({
-          projectId: setupA.project.id,
-          name: 'UsersCount',
-        });
+      const metricRegisterEntries = await bootstrap.models.metricRegisterModel.find({
+        projectId: setupA.project.id,
+        name: 'UsersCount',
+      });
       const metricRegisterEntryId = metricRegisterEntries[0]._id.toString();
 
       // when - user from setupB tries to access project from setupA
@@ -207,9 +256,7 @@ describe('Metrics (reads)', () => {
 
       // then
       expect(response.status).toEqual(403);
-      expect(response.body.message).toEqual(
-        'User is not a member of this cluster',
-      );
+      expect(response.body.message).toEqual('User is not a member of this cluster');
     });
   });
 });

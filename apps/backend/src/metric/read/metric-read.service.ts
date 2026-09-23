@@ -24,13 +24,18 @@ export class MetricReadService {
 
   public async readByMetricRegisterEntryId(
     metricRegisterEntryId: string,
+    filters: { granularity?: MetricGranularity; limit?: number } = {},
   ): Promise<MetricNormalized[]> {
-    const metrics = await this.model
-      .find({
-        metricRegisterEntryId: metricRegisterEntryId,
-      })
-      .lean<MetricEntity[]>()
-      .exec();
+    const query = this.model.find({
+      metricRegisterEntryId: metricRegisterEntryId,
+      ...(filters.granularity && { granularity: filters.granularity }),
+    });
+
+    if (filters.limit) {
+      query.sort({ timeBucket: -1 }).limit(filters.limit);
+    }
+
+    const metrics = await query.lean<MetricEntity[]>().exec();
 
     return metrics.map((metric) => MetricSerializer.normalize(metric));
   }

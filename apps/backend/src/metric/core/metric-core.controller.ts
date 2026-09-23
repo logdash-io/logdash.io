@@ -7,6 +7,7 @@ import {
   NotFoundException,
   Param,
   Put,
+  Query,
   Sse,
   UnauthorizedException,
   UseGuards,
@@ -18,6 +19,7 @@ import { MetricReadService } from '../read/metric-read.service';
 import { MetricSerialized, SimpleMetric } from './entities/metric.normalized';
 import { SuccessResponse } from '../../shared/responses/success.response';
 import { RecordMetricBody } from './dto/record-metric.dto';
+import { ReadMetricHistoryQuery } from './dto/read-metric-history.query';
 import { MetricQueueingService } from '../queueing/metric-queueing-service';
 import { MetricSerializer } from './entities/metric.serializer';
 import { ApiKeyReadCachedService } from '../../api-key/read/api-key-read-cached.service';
@@ -107,6 +109,7 @@ export class MetricCoreController {
   public async readBelongingToProject(
     @Param('projectId') projectId: string,
     @Param('metricRegisterEntryId') metricRegisterEntryId: string,
+    @Query() query: ReadMetricHistoryQuery,
   ): Promise<MetricSerialized[]> {
     const metricRegisterEntry =
       await this.metricRegisterReadService.readById(metricRegisterEntryId);
@@ -119,7 +122,10 @@ export class MetricCoreController {
       throw new ForbiddenException('Metric register entry does not belong to this project');
     }
 
-    const metrics = await this.metricReadService.readByMetricRegisterEntryId(metricRegisterEntryId);
+    const metrics = await this.metricReadService.readByMetricRegisterEntryId(
+      metricRegisterEntryId,
+      query,
+    );
 
     return MetricSerializer.serializeMany(metrics, [metricRegisterEntry]);
   }
