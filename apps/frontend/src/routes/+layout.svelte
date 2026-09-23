@@ -99,9 +99,13 @@
     }
   });
 
-  $effect(() => {
+  function syncExposedConfig(): void {
     exposedConfigState.set(data.exposedConfig);
-  });
+  }
+
+  syncExposedConfig();
+
+  $effect(syncExposedConfig);
 </script>
 
 <svelte:head>
