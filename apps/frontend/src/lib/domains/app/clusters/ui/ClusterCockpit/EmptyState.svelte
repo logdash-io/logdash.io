@@ -25,7 +25,7 @@
 >
   <CubeIcon class="size-12 text-base-100" />
   <div class="flex flex-col items-center gap-1">
-    <h3 class="text-lg font-semibold">No services yet</h3>
+    <h3 class="text-lg font-medium">No services yet</h3>
     <p class="text-neutral-400 text-sm">
       Create your first service to get started
     </p>

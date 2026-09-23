@@ -133,7 +133,7 @@
       >
         <ArrowLeftIcon class="size-5" />
       </a>
-      <h5 class="text-lg md:text-2xl font-semibold">
+      <h5 class="text-lg md:text-2xl font-medium">
         Configure your status page
       </h5>
     </div>
@@ -179,7 +179,7 @@
     <div class="space-y-3">
       <label class="label font-medium">1. Select monitors to display</label>
       <div
-        class="border-base-100 w-full max-w-full overflow-hidden rounded-2xl border"
+        class="border-base-100 w-full max-w-full overflow-hidden rounded-xl border"
       >
         {#if !hasInitialized}
           <div class="flex items-center justify-start py-3 px-3.5">
@@ -249,7 +249,7 @@
     <div class="space-y-3">
       <label class="label font-medium">4. Manage visibility</label>
 
-      <div class="border-base-100 flex flex-col gap-4 rounded-2xl border p-4">
+      <div class="border-base-100 flex flex-col gap-4 rounded-xl border p-4">
         {#if isPublished}
           <div class="flex flex-wrap items-center gap-2">
             <button onclick={onCopyUrl} class="btn btn-sm btn-ghost gap-1">

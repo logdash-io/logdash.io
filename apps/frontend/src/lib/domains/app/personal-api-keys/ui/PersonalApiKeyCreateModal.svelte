@@ -258,7 +258,7 @@
           <div class="bg-base-100 rounded-lg p-2.5">
             <KeyIcon class="text-primary size-5" />
           </div>
-          <h2 class="text-lg font-semibold">Personal API key created</h2>
+          <h2 class="text-lg font-medium">Personal API key created</h2>
         </div>
 
         <div
@@ -289,7 +289,7 @@
     {:else if cliResult === 'approved'}
       <div class="flex flex-col items-center gap-3 py-6 text-center">
         <div class="text-success text-4xl">✓</div>
-        <h2 class="text-lg font-semibold">Approved</h2>
+        <h2 class="text-lg font-medium">Approved</h2>
         <p class="text-neutral-400 text-sm">
           Return to your terminal to continue.
         </p>
@@ -300,7 +300,7 @@
     {:else if cliResult === 'denied'}
       <div class="flex flex-col items-center gap-3 py-6 text-center">
         <div class="text-error text-4xl">✕</div>
-        <h2 class="text-lg font-semibold">Request denied</h2>
+        <h2 class="text-lg font-medium">Request denied</h2>
         <p class="text-neutral-400 text-sm">
           The CLI authorization request was denied.
         </p>
@@ -313,7 +313,7 @@
         <div class="bg-base-100 rounded-lg p-2.5">
           <KeyIcon class="text-primary size-5" />
         </div>
-        <h2 class="text-lg font-semibold">
+        <h2 class="text-lg font-medium">
           {mode === 'cli' ? 'Authorize CLI access' : 'Create personal API key'}
         </h2>
       </div>
@@ -324,7 +324,7 @@
         >
           <p class="text-neutral-400">
             A CLI on
-            <span class="text-base-content font-mono font-semibold">
+            <span class="text-base-content font-mono font-medium">
               {cliRequest.clientIp || 'an unknown address'}
             </span>
             is requesting access to your account.
@@ -332,7 +332,7 @@
           <dl class="text-neutral-400 flex flex-col gap-1 text-xs">
             <div class="flex justify-between gap-3">
               <dt>Code</dt>
-              <dd class="text-base-content font-mono font-semibold">
+              <dd class="text-base-content font-mono font-medium">
                 {cliRequest.userCode}
               </dd>
             </div>

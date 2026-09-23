@@ -46,10 +46,12 @@
   }
 </script>
 
-<div class="flex w-full flex-col gap-4 p-3">
+<div class="flex w-full flex-col gap-6">
   <div class="flex items-start flex-col">
-    <h1 class="text-xl font-semibold">{cluster?.name || 'Project'}</h1>
-    <p class="text-neutral-400 text-sm">Project overview</p>
+    <h1 class="text-xl font-medium tracking-[-0.01em]">
+      {cluster?.name || 'Project'}
+    </h1>
+    <p class="text-neutral-500 text-sm">Services in this project</p>
   </div>
 
   {#if projects.length === 0}

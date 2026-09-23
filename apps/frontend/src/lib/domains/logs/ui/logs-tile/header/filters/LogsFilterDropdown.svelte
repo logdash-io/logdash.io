@@ -136,12 +136,12 @@
 >
   <button
     class={[
-      'fcc rounded-full p-1 px-2 gap-1.5 h-fit bg-base-300 border border-neutral-700 cursor-pointer hover:border-neutral-600',
+      'ring-neutral-800 text-neutral-400 hover:text-base-content flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 ring-1 transition-ink ring-inset',
     ]}
     data-posthog-id="logs-filter-dropdown"
   >
     <FilterIcon class="size-3.5" />
-    <span class="hidden md:block text-sm">Filter</span>
+    <span class="hidden text-xs md:block">Filter</span>
   </button>
 </Tooltip>
 
@@ -333,7 +333,7 @@
     tabindex="-1"
   ></div>
   <div
-    class="dropdown-content text-secondary ld-card-base z-1 w-fit rounded-2xl p-0.5 shadow"
+    class="dropdown-content text-secondary ld-card-base z-1 w-fit rounded-xl p-0.5 shadow"
   >
     {#if showCustomDatePicker}
       {@render customDatePickerContent(close)}

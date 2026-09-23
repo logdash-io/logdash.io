@@ -49,7 +49,7 @@
     </div>
 
     <div class="flex flex-col items-start">
-      <h3 class="text-xl font-semibold">Setup Telegram Channel</h3>
+      <h3 class="text-xl font-medium">Setup Telegram Channel</h3>
       <p class="text-neutral-400 text-sm">
         This is the hard part, so we made it easy!
       </p>
@@ -57,7 +57,7 @@
   </div>
 
   <div class="text-secondary mb-6 text-sm">
-    <h4 class="text-lg font-semibold">Step 1</h4>
+    <h4 class="text-lg font-medium">Step 1</h4>
     <p class="text-neutral-400 mb-4 select-none">
       Add the bot
       <code
@@ -70,7 +70,7 @@
       to your Telegram group or chat.
     </p>
 
-    <h4 class="text-lg font-semibold">Step 2</h4>
+    <h4 class="text-lg font-medium">Step 2</h4>
     <p class="text-neutral-400">
       Copy the passphrase below and send it as a message in that chat.
     </p>

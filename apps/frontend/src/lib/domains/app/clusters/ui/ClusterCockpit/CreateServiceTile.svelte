@@ -23,24 +23,12 @@
   <button
     onclick={onOpenForm}
     class={[
-      'ld-card-base group flex w-full cursor-pointer flex-col items-center justify-center gap-2 ld-card-rounding hover:bg-neutral-800 h-full md:min-h-auto min-h-[110px]',
-      { 'ring-2 ring-primary/50': isFormOpen },
+      'text-neutral-400 hover:text-base-content flex h-full min-h-24 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed text-sm transition-ink duration-150',
+      isFormOpen ? 'border-neutral-600' : 'border-neutral-700',
     ]}
   >
-    <div
-      class={[
-        'flex h-10 w-10 items-center justify-center rounded-xl',
-        {
-          'bg-primary/20': isFormOpen,
-          'bg-primary/10 group-hover:bg-primary/20': !isFormOpen,
-        },
-      ]}
-    >
-      <PlusIcon class="size-5 text-primary" />
-    </div>
-    <div class="flex flex-col items-center">
-      <h3 class="font-semibold">Add new service</h3>
-    </div>
+    <PlusIcon class="size-4" />
+    New service
   </button>
 
   {#if isFormOpen}

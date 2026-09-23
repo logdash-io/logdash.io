@@ -126,7 +126,7 @@
   class="absolute group inset-0 z-50 flex items-center justify-center bg-base-300/80 backdrop-blur-[2px]"
 >
   <div
-    class="flex flex-col items-center gap-2 ld-card-bg p-2 rounded-2xl ld-card-border"
+    class="flex flex-col items-center gap-2 ld-card-bg p-2 rounded-xl ld-card-border"
   >
     <p class="text-neutral-400 text-sm">{overlayTitle}</p>
 

@@ -30,26 +30,24 @@
 <div class="overflow-hidden">
   <button
     type="button"
-    class="flex w-full cursor-pointer items-center justify-between p-4 hover:bg-neutral-800"
+    class="flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-3.5 hover:bg-neutral-800"
     onclick={onToggle}
   >
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-3.5">
       {#if Icon}
-        <div class="rounded-lg bg-base-100 p-2.5">
-          <Icon class="size-5 text-neutral-400" />
-        </div>
+        <Icon class="text-neutral-500 size-4 shrink-0" />
       {/if}
-      <div class="text-left">
+      <div class="text-left text-sm">
         <p class="font-medium">{title}</p>
         {#if description}
-          <p class="text-neutral-400 text-sm">{description}</p>
+          <p class="text-neutral-500">{description}</p>
         {/if}
       </div>
     </div>
 
     <ChevronDownIcon
       class={[
-        'size-5 text-neutral-400 transition-transform duration-200',
+        'text-neutral-500 size-4 shrink-0 transition-transform duration-200',
         { 'rotate-180': expanded },
       ]}
     />

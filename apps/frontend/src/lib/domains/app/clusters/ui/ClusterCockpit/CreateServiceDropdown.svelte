@@ -108,11 +108,11 @@
 ></button>
 
 <div
-  class="absolute left-0 right-0 top-full z-50 mt-2 flex flex-col gap-3 rounded-2xl ld-card-border ld-card-bg p-4 shadow-xl min-w-52"
+  class="absolute left-0 right-0 top-full z-50 mt-2 flex flex-col gap-3 rounded-xl ld-card-border ld-card-bg p-4 shadow-xl min-w-52"
   in:scale={{ duration: 150, start: 0.95, easing: cubicOut }}
 >
   <div class="flex items-center justify-between">
-    <h3 class="font-semibold text-sm">New service</h3>
+    <h3 class="font-medium text-sm">New service</h3>
     <button class="btn btn-ghost btn-xs btn-circle" onclick={onClose}>
       <CloseIcon class="size-4" />
     </button>

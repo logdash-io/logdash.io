@@ -49,7 +49,7 @@
   );
 
   const FILTER_CHIP_CLASS =
-    'bg-base-300 border-neutral-700 flex items-center gap-1.5 rounded-full border py-1 pr-1 pl-2.5 text-sm';
+    'ring-neutral-800 flex h-8 items-center gap-1.5 rounded-full pr-1 pl-3 text-xs ring-1 ring-inset';
 
   function onQuickFilterErrors(): void {
     filtersStore.setLevels(['error']);
@@ -63,23 +63,23 @@
 {#if !hasActiveFilters}
   <div class="flex items-center gap-2">
     <button
-      class="whitespace-nowrap bg-base-300 text-neutral-400 hover:text-base-content border-neutral-600 flex items-center gap-1.5 rounded-full border border-dashed py-1 px-2.5 text-sm transition-ink cursor-pointer"
+      class="ring-neutral-800 text-neutral-400 hover:text-base-content flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs whitespace-nowrap ring-1 transition-ink ring-inset"
       onclick={onQuickFilterErrors}
     >
       <span
-        class={['h-2 w-2 rounded-full', LOG_LEVELS_MAP['error'].color]}
+        class={['size-1.5 rounded-full', LOG_LEVELS_MAP['error'].color]}
       ></span>
-      <span>Show only errors</span>
+      <span>Errors</span>
     </button>
 
     <button
-      class="whitespace-nowrap bg-base-300 text-neutral-400 hover:text-base-content border-neutral-600 flex items-center gap-1.5 rounded-full border border-dashed py-1 px-2.5 text-sm transition-ink cursor-pointer"
+      class="ring-neutral-800 text-neutral-400 hover:text-base-content flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs whitespace-nowrap ring-1 transition-ink ring-inset"
       onclick={onQuickFilterWarnings}
     >
       <span
-        class={['h-2 w-2 rounded-full', LOG_LEVELS_MAP['warning'].color]}
+        class={['size-1.5 rounded-full', LOG_LEVELS_MAP['warning'].color]}
       ></span>
-      <span>Show only warnings</span>
+      <span>Warnings</span>
     </button>
   </div>
 {/if}
@@ -146,7 +146,7 @@
     role="button"
     tabindex="-1"
   ></div>
-  <div class="ld-card-base rounded-2xl p-1 shadow-lg">
+  <div class="ld-card-base rounded-xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Level</div>
     <ul class="dropdown-content p-0">
       {#each LOG_LEVELS as level (level.value)}
@@ -208,7 +208,7 @@
     role="button"
     tabindex="-1"
   ></div>
-  <div class="ld-card-base rounded-2xl p-1 shadow-lg">
+  <div class="ld-card-base rounded-xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Namespace</div>
     <ul class="dropdown-content p-0">
       {#each namespacesState.namespaces as nsMetadata (nsMetadata.namespace)}

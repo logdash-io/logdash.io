@@ -27,43 +27,30 @@
   this={isClickable ? 'button' : 'div'}
   type={isClickable ? 'button' : undefined}
   class={[
-    'flex items-center justify-between p-4 w-full',
+    'flex w-full items-center justify-between gap-4 px-5 py-3.5',
     {
-      'border-b border-hairline': showBorder,
+      'border-hairline border-b last:border-b-0': showBorder,
       'cursor-pointer hover:bg-neutral-800': isClickable,
     },
   ]}
   {onclick}
 >
-  <div class="flex items-center gap-4">
+  <div class="flex min-w-0 items-center gap-3.5">
     {#if Icon}
-      <div
+      <Icon
         class={[
-          'rounded-lg p-2.5 aspect-square',
-          {
-            'bg-base-100': iconVariant === 'default',
-            'bg-error/10': iconVariant === 'danger',
-          },
+          'size-4 shrink-0',
+          iconVariant === 'danger' ? 'text-error' : 'text-neutral-500',
         ]}
-      >
-        <Icon
-          class={[
-            'size-5',
-            {
-              'text-neutral-400': iconVariant === 'default',
-              'text-error': iconVariant === 'danger',
-            },
-          ]}
-        />
-      </div>
+      />
     {/if}
-    <div class="text-left">
+    <div class="min-w-0 text-left text-sm">
       {@render children()}
     </div>
   </div>
 
   {#if action}
-    <div class="flex items-center gap-2">
+    <div class="flex shrink-0 items-center gap-2">
       {@render action()}
     </div>
   {/if}

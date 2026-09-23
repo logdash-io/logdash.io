@@ -37,7 +37,7 @@
 
 <div
   class={[
-    'relative flex flex-col items-start justify-between gap-1 text-base font-semibold',
+    'relative flex flex-col items-start justify-between gap-1 text-base font-medium',
   ]}
 >
   <Tooltip
@@ -62,7 +62,7 @@
 
 <div class="flex w-full gap-3 overflow-hidden leading-tight items-end">
   <Tooltip
-    class="mr-auto font-mono text-4xl font-semibold"
+    class="mr-auto font-mono text-4xl font-medium"
     content={metric.value.toString()}
     placement="top"
   >

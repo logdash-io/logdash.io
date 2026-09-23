@@ -157,16 +157,16 @@
   .ld-card-base,
   .ld-card,
   .ld-card-border {
-    @apply border-base-100 border;
+    @apply border-hairline border;
   }
 
   .ld-card,
   .ld-card-rounding {
-    @apply rounded-3xl;
+    @apply rounded-xl;
   }
 
   .ld-card {
-    @apply px-6 py-6 sm:px-6 sm:py-6;
+    @apply p-5;
   }
 
   .ld-page-bg {
@@ -174,7 +174,7 @@
   }
 
   .ld-modal {
-    @apply bg-base-200 border-base-100 rounded-2xl border p-8;
+    @apply bg-base-200 border-base-100 rounded-xl border p-6;
   }
 
   .status {

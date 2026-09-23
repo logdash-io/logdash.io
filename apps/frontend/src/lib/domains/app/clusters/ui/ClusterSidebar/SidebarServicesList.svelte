@@ -144,10 +144,8 @@
   }
 </script>
 
-<div class="flex flex-1 flex-col gap-1">
-  <span class="p-2 text-sm font-medium tracking-wide text-neutral-500">
-    Services
-  </span>
+<div class="flex flex-col">
+  <span class="text-neutral-500 px-2 pb-1 text-xs">Services</span>
   <nav class="flex flex-col gap-0.5">
     {#each currentCluster?.projects || [] as project (project.id)}
       {@const isActive = !isWizardMode && project.id === activeProjectId}
@@ -158,23 +156,27 @@
         {isActive}
         disabled={!clusterId}
       >
+        <HexagonIcon class="size-4 shrink-0" />
+        <span class="truncate">{project.name || 'New Service'}</span>
         {#if projectHasMonitor}
           {#snippet monitorTooltipContent()}
             <MonitorStatus projectId={project.id}>
               {null}
             </MonitorStatus>
           {/snippet}
-          <Tooltip content={monitorTooltipContent} placement="bottom">
-            <HexagonIcon
-              class="size-4 shrink-0 {healthStatus === true
-                ? 'text-success'
-                : 'text-error'}"
-            />
+          <Tooltip
+            class="ml-auto flex"
+            content={monitorTooltipContent}
+            placement="bottom"
+          >
+            <span
+              class={[
+                'size-1.5 shrink-0 rounded-full',
+                healthStatus === true ? 'bg-success' : 'bg-error',
+              ]}
+            ></span>
           </Tooltip>
-        {:else}
-          <HexagonIcon class="size-4 shrink-0 text-neutral-600" />
         {/if}
-        <span class="truncate">{project.name || 'New Service'}</span>
       </SidebarMenuItem>
     {/each}
 
@@ -239,8 +241,8 @@
         </div>
       {:else}
         <SidebarMenuItem onclick={onOpenForm} isActive={false} disabled={false}>
-          <PlusIcon class="size-4 shrink-0 text-neutral-500" />
-          <span class="truncate text-neutral-500">Add service</span>
+          <PlusIcon class="size-4 shrink-0 text-neutral-600" />
+          <span class="truncate text-neutral-500">New service</span>
         </SidebarMenuItem>
       {/if}
     {/if}

@@ -40,7 +40,7 @@
             class="size-10 rounded-full border border-base-100"
           />
           <div>
-            <div class="font-semibold">Bartosz Świtalski</div>
+            <div class="font-medium">Bartosz Świtalski</div>
             <div class="text-neutral-400 text-sm">Co-Founder, Cryptly</div>
           </div>
         </div>

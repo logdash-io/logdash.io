@@ -7,7 +7,7 @@
   import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
+  import { ChevronsUpDownIcon } from 'lucide-svelte';
 
   const isWizardMode = $derived(wizardState.isActive);
 
@@ -48,9 +48,9 @@
 
 {#snippet clusterDropdownMenu(close: () => void)}
   <div
-    class="dropdown-content ld-card-base rounded-2xl z-1 w-full whitespace-nowrap p-1 shadow-lg"
+    class="dropdown-content ld-card-base z-1 w-full rounded-xl p-1 whitespace-nowrap shadow-lg"
   >
-    <p class="px-3 py-2 text-xs text-neutral-500 font-medium">Select project</p>
+    <p class="text-neutral-500 px-2.5 py-2 text-xs">Select project</p>
     <ul class="flex flex-col gap-0.5">
       {#each clustersState.clusters as cluster (cluster.id)}
         {@const isActive = cluster.id === page.params.cluster_id}
@@ -58,25 +58,25 @@
           <button
             onclick={() => onClusterSelect(cluster.id, close)}
             class={[
-              'flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-left text-sm',
+              'flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left text-sm',
               {
-                'bg-base-100': isActive,
-                'hover:bg-base-100': !isActive,
+                'bg-surface-root-selected': isActive,
+                'hover:bg-surface-root-hover': !isActive,
               },
             ]}
           >
             <CubeIcon class="h-4 w-4 shrink-0" />
-            <span class={[{ 'font-semibold': isActive }]}>
+            <span class={[{ 'font-medium': isActive }]}>
               {cluster.name}
             </span>
           </button>
         </li>
       {/each}
     </ul>
-    <div class="border-t border-base-100 mt-1 pt-1">
+    <div class="border-hairline mt-1 border-t pt-1">
       <button
         onclick={() => onCreateProject(close)}
-        class="flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-left text-sm hover:bg-base-100"
+        class="hover:bg-surface-root-hover flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left text-sm"
       >
         <PlusIcon class="h-4 w-4 shrink-0" />
         <span>Create new project</span>
@@ -89,52 +89,39 @@
   <button
     disabled={isDisabled}
     class={[
-      'flex group items-center justify-between gap-1.5 rounded-lg p-1 pr-2 w-full select-none',
+      'group flex h-9 w-full items-center gap-2 rounded-lg px-1.5 select-none',
       {
-        'cursor-pointer hover:bg-base-100': !isDisabled,
-        'cursor-not-allowed opacity-50 pointer-events-none': isDisabled,
+        'hover:bg-surface-root-hover cursor-pointer': !isDisabled,
+        'cursor-not-allowed pointer-events-none': isDisabled,
       },
     ]}
   >
-    <span class="flex items-center gap-2 truncate font-medium">
-      {#if clusterColor}
-        <div
-          class="size-7 rounded-md flex items-center justify-center"
-          style="background-color: {clusterColor}20; border: 1px solid {clusterColor}10"
-        >
-          <CubeIcon class="size-4.5 shrink-0" style="color: {clusterColor}" />
-        </div>
-      {:else}
-        <div
-          class={[
-            'size-7 rounded-md flex items-center justify-center',
-            {
-              'bg-primary/15 border border-primary/5': currentCluster,
-            },
-          ]}
-        >
-          <CubeIcon
-            class={[
-              'size-4.5 shrink-0',
-              {
-                'text-primary': currentCluster,
-                'text-neutral-300': !currentCluster,
-              },
-            ]}
-          />
-        </div>
-      {/if}
-      {clusterName}
-    </span>
+    {#if clusterColor}
+      <span
+        class="flex size-6 shrink-0 items-center justify-center rounded-md"
+        style="background-color: {clusterColor}20; border: 1px solid {clusterColor}10"
+      >
+        <CubeIcon class="size-3.5 shrink-0" style="color: {clusterColor}" />
+      </span>
+    {:else}
+      <span
+        class="border-base-100 bg-base-200 flex size-6 shrink-0 items-center justify-center rounded-md border"
+      >
+        <CubeIcon class="size-3.5 shrink-0" />
+      </span>
+    {/if}
+
+    <span class="truncate text-sm font-medium">{clusterName}</span>
+
     {#if !isWizardMode}
-      <ChevronRightIcon
-        class="size-4 shrink-0 text-neutral-500 group-hover:translate-x-0.5 transition-transform group-hover:text-base-content"
+      <ChevronsUpDownIcon
+        class="text-neutral-600 group-hover:text-neutral-400 ml-auto size-3.5 shrink-0 transition-ink duration-150"
       />
     {/if}
   </button>
 {/snippet}
 
-<div class="mb-1">
+<div>
   {#if isWizardMode}
     <button class="w-full" onclick={onWizardProjectClick}>
       {@render selectorButton()}

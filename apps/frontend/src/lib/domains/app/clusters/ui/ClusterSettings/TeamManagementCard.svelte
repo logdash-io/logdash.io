@@ -2,6 +2,7 @@
   import { clusterInvitesState } from '$lib/domains/app/clusters/application/cluster-invites.state.svelte.js';
   import { ClusterRole } from '$lib/domains/app/clusters/domain/cluster-invite';
   import { validateEmail } from '$lib/domains/shared/utils/validators.js';
+  import { UserRoundIcon } from 'lucide-svelte';
   import {
     SettingsCard,
     SettingsCardHeader,
@@ -103,26 +104,26 @@
 
         <div class="flex flex-col gap-2">
           {#each capacity.members as member (member.email)}
-            <div class="flex items-center gap-3 rounded-xl bg-neutral-800 p-3">
-              <div class="avatar">
-                <div class="w-8 rounded-full">
+            <div
+              class="flex items-center gap-3 rounded-lg bg-neutral-800 px-3 py-2.5"
+            >
+              <span
+                class="bg-neutral-700 flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full"
+              >
+                {#if member.avatarUrl}
                   <img
                     src={member.avatarUrl}
-                    alt={member.email}
-                    class="rounded-full"
+                    alt=""
+                    class="size-full object-cover"
                   />
-                </div>
-              </div>
-              <span class="flex-1 truncate text-sm">{member.email}</span>
-              <span
-                class={[
-                  'badge badge-soft badge-sm',
-                  {
-                    'badge-primary': member.role === ClusterRole.CREATOR,
-                    'badge-secondary': member.role === ClusterRole.WRITE,
-                  },
-                ]}
-              >
+                {:else}
+                  <UserRoundIcon class="text-neutral-400 size-3.5" />
+                {/if}
+              </span>
+              <span class="flex-1 truncate text-sm">
+                {member.email || 'Anonymous'}
+              </span>
+              <span class="text-neutral-400 text-xs capitalize">
                 {member.role}
               </span>
             </div>

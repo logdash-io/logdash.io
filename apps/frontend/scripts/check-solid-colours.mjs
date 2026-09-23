@@ -54,7 +54,6 @@ const ALLOW = {
   'ui/setup/UnifiedSetupOverlay.svelte': ['bg-base-300/80'],
   'ProjectView/UnconfiguredFeatureTile.svelte': ['bg-base-300/60'],
   'ProjectView/ProjectSync.svelte': ['bg-base-300/40'],
-  'clusters/ui/ServiceTabsNav.svelte': ['bg-base-300/20'],
   'header/LogsAnalyticsChart.svelte': ['bg-base-200/50'],
   'logs-tile/LogPreviewDrawer.svelte': ['from-base-300/80', 'via-base-300/80'],
   'tiles/monitoring/UptimeSection.svelte': ['via-base-200/60'],

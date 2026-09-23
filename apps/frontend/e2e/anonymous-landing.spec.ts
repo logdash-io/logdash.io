@@ -161,10 +161,10 @@ test.describe('anonymous landing flow', () => {
       `/app/clusters/${stored!.clusterId}/${stored!.projectId}/monitoring`,
     );
 
-    const claimBanner = page.getByText('Temporary dashboard.');
+    const claimBanner = page.getByText('Temporary dashboard');
 
     await expect(claimBanner).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText(/Expires in \d+h \d+m\./)).toBeVisible();
+    await expect(page.getByText(/^\d+(?:d \d+h|h \d+m) left$/)).toBeVisible();
     await expect(
       page.getByRole('link', { name: 'Claim with GitHub or Google' }),
     ).toBeVisible();
@@ -175,7 +175,10 @@ test.describe('anonymous landing flow', () => {
     });
 
     // Anonymous users cannot upgrade, so the profile menu offers no upgrade.
-    await page.getByRole('button', { name: 'Account' }).first().click();
+    await page
+      .getByRole('button', { name: /Anonymous/ })
+      .first()
+      .click();
     await expect(
       page.getByRole('button', { name: /Upgrade your plan/i }),
     ).toHaveCount(0);

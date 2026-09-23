@@ -21,7 +21,7 @@
     </div>
 
     <div class="flex flex-col items-start">
-      <h3 class="text-xl font-semibold">Telegram Channel Found</h3>
+      <h3 class="text-xl font-medium">Telegram Channel Found</h3>
       <p class="text-neutral-400 text-sm">
         You can now save it to your project.
       </p>
@@ -29,7 +29,7 @@
   </div>
 
   <p
-    class="ld-card-base mx-auto w-fit truncate rounded-xl p-4 px-6 font-mono text-3xl font-semibold uppercase"
+    class="ld-card-base mx-auto w-fit truncate rounded-xl p-4 px-6 font-mono text-3xl font-medium uppercase"
   >
     {chatName}
   </p>

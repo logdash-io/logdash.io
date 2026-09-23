@@ -19,7 +19,7 @@
     </div>
 
     <div class="flex flex-col items-start">
-      <h3 class="text-xl font-semibold">Telegram Setup Failed</h3>
+      <h3 class="text-xl font-medium">Telegram Setup Failed</h3>
       <p class="text-neutral-400 text-sm">
         Please check your connection and try again.
       </p>

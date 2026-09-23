@@ -148,7 +148,7 @@
       .call(
         d3
           .axisBottom(xScale)
-          .ticks(6)
+          .ticks(Math.max(2, Math.min(6, Math.floor(innerWidth / 90))))
           .tickFormat((d: Date) => {
             return d.toLocaleTimeString([], {
               hour: '2-digit',
@@ -349,7 +349,7 @@
       .style('display', 'block')
       .style('left', `${tooltipX}px`)
       .style('top', `${tooltipY}px`).html(`
-        <div class="font-semibold font-mono">${formattedDateRange}</div>
+        <div class="font-medium font-mono">${formattedDateRange}</div>
         ${LOG_TYPES.map((logType) => {
           const count = bucket.countByLevel[logType];
           return count > 0
@@ -361,7 +361,7 @@
           `
             : '';
         }).join('')}
-        <div class="mt-2 pt-1 border-t border-neutral-600 font-semibold font-mono">
+        <div class="mt-2 pt-1 border-t border-neutral-600 font-medium font-mono">
           Total: ${bucket.countTotal}
         </div>
       `);

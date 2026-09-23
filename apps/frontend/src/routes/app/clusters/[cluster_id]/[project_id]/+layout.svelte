@@ -4,7 +4,6 @@
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import ServiceTabsNav from '$lib/domains/app/clusters/ui/ServiceTabsNav.svelte';
   import type { Log } from '$lib/domains/logs/domain/log.js';
   import type { Metric } from '$lib/domains/app/projects/domain/metric.js';
   import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
@@ -57,10 +56,4 @@
   </title>
 </svelte:head>
 
-<div class="flex w-full flex-col gap-4 p-2">
-  <ServiceTabsNav {clusterId} {projectId} />
-
-  <div class="flex-1">
-    {@render children?.()}
-  </div>
-</div>
+{@render children?.()}

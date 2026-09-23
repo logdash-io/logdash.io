@@ -60,7 +60,7 @@
   {#if isChecking}
     <span class="loading loading-spinner loading-lg"></span>
   {:else}
-    <div class="card w-md rounded-2xl">
+    <div class="card w-md rounded-xl">
       <div class="card-body items-center gap-4 p-6 text-center">
         <h2 class="card-title text-3xl font-bold">
           Get a dashboard, instantly

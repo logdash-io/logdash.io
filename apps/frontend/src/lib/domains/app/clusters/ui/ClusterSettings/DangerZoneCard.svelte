@@ -39,7 +39,7 @@
   }
 </script>
 
-<SettingsCard variant="danger">
+<SettingsCard>
   <SettingsCardHeader
     title="Danger Zone"
     description="Irreversible actions that affect your project"

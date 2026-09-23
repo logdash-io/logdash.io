@@ -61,7 +61,7 @@
       </div>
 
       <div class="flex flex-col items-start">
-        <h3 class="text-xl font-semibold">Setup alerting channel</h3>
+        <h3 class="text-xl font-medium">Setup alerting channel</h3>
         <p class="text-neutral-400 text-sm">
           Choose from options below to set up your alerting channel.
         </p>

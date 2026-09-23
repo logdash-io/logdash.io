@@ -139,7 +139,7 @@
       start: 1.1,
       easing: cubicInOut,
     }}
-    class="card w-md rounded-2xl"
+    class="card w-md rounded-xl"
   >
     <div class="card-body items-center p-6 text-center">
       <h2 class="card-title mb-2 text-3xl font-bold">
@@ -169,7 +169,7 @@
 
       <div
         class={[
-          'card-actions w-full items-start justify-start gap-2 rounded-2xl',
+          'card-actions w-full items-start justify-start gap-2 rounded-xl',
           {
             'border-primary/30 bg-base-200 border p-4': requiresConsent,
             'p-2 pt-0': !requiresConsent,

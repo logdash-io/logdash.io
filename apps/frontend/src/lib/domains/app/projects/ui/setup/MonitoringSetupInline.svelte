@@ -142,7 +142,7 @@
 
 <div class="flex w-full max-w-2xl flex-col gap-6 ld-card">
   <div class="space-y-2">
-    <h5 class="text-2xl font-semibold">Setup Monitoring for your service</h5>
+    <h5 class="text-2xl font-medium">Setup Monitoring for your service</h5>
 
     <p class="text-neutral-400">
       Monitor your services uptime and get alerted when they go down.

@@ -26,7 +26,7 @@
 </script>
 
 <div class="mb-4 flex items-center justify-between">
-  <h2 class="text-xl font-semibold">{title}</h2>
+  <h2 class="text-xl font-medium">{title}</h2>
 
   {#if !isOnDemoDashboard}
     <div class="indicator">

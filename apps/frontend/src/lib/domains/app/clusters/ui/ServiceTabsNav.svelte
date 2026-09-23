@@ -9,6 +9,7 @@
   import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
   import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
   import SettingsIcon from '$lib/domains/shared/icons/SettingsIcon.svelte';
+  import type { ClassValue } from 'svelte/elements';
 
   type Props = {
     clusterId: string;
@@ -98,30 +99,22 @@
     }),
   );
 
-  const tabClass = (active: boolean) => [
-    'px-4 py-2 text-sm font-medium ld-card-rounding',
+  const tabClass = (active: boolean): ClassValue => [
+    'flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm',
     {
-      'bg-base-100 text-base-content': active,
-      'text-neutral-400 hover:text-base-content hover:bg-neutral-800': !active,
+      'bg-surface-root-selected text-base-content': active,
+      'text-neutral-400 hover:text-base-content hover:bg-surface-root-hover':
+        !active,
     },
   ];
 </script>
 
-<ScrollArea
-  orientation="x"
-  class="z-20 flex items-center gap-2 bg-base-300/20 backdrop-blur-sm"
->
+<ScrollArea orientation="x" class="flex min-w-0 items-center">
   <nav class="flex items-center gap-1">
     {#each visibleTabs as tab (tab.id)}
       <!-- eslint-disable svelte/no-navigation-without-resolve -- dynamic project route -->
-      <a
-        href={tab.path}
-        class={[
-          ...tabClass(isActive(tab.id, tab.path)),
-          'flex items-center gap-1.5',
-        ]}
-      >
-        <tab.icon class="h-4 w-4" />
+      <a href={tab.path} class={tabClass(isActive(tab.id, tab.path))}>
+        <tab.icon class="size-3.5 shrink-0" />
         {tab.label}
       </a>
       <!-- eslint-enable svelte/no-navigation-without-resolve -->

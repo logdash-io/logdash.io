@@ -20,7 +20,7 @@
 </script>
 
 {#if showWaitingState && !hasMetrics}
-  <div class="text-primary mx-auto flex items-center gap-2 font-semibold">
+  <div class="text-primary mx-auto flex items-center gap-2 font-medium">
     <span class="loading loading-ring loading-xl"></span>
     Waiting for metrics...
   </div>

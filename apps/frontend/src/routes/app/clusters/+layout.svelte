@@ -5,7 +5,6 @@
   import { isDev } from '$lib';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
-  import ClaimBanner from '$lib/domains/app/clusters/ui/ClaimBanner/ClaimBanner.svelte';
   import ClusterShell from '$lib/domains/app/clusters/ui/ClusterShell/ClusterShell.svelte';
   import UpgradeModal from '$lib/domains/shared/upgrade/UpgradeModal.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
@@ -69,10 +68,6 @@
 </script>
 
 <UpgradeModal />
-
-{#if userState.isAnonymous}
-  <ClaimBanner />
-{/if}
 
 <ClusterShell>
   {@render children?.()}

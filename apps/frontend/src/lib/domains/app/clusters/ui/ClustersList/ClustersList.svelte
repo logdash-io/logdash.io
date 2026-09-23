@@ -135,7 +135,7 @@
       class="flex h-full w-full flex-col gap-1"
     >
       <div class="flex w-full items-center justify-between gap-2">
-        <h5 class="text-lg font-semibold">
+        <h5 class="text-lg font-medium">
           {cluster.name}
         </h5>
       </div>

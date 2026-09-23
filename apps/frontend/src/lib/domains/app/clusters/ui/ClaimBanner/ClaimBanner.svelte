@@ -8,6 +8,7 @@
 
   const MINUTE_MS = 60_000;
   const HOUR_MS = 60 * MINUTE_MS;
+  const DAY_MS = 24 * HOUR_MS;
 
   function readRemainingMs(): number | null {
     const token = getCookieValue(ACCESS_TOKEN_COOKIE_NAME, document.cookie);
@@ -22,10 +23,19 @@
 
   let remainingMs = $state<number | null>(null);
 
-  const hoursLeft = $derived(Math.floor((remainingMs ?? 0) / HOUR_MS));
-  const minutesLeft = $derived(
-    Math.floor(((remainingMs ?? 0) % HOUR_MS) / MINUTE_MS),
-  );
+  const timeLeft = $derived(formatTimeLeft(remainingMs ?? 0));
+
+  function formatTimeLeft(ms: number): string {
+    const days = Math.floor(ms / DAY_MS);
+    const hours = Math.floor((ms % DAY_MS) / HOUR_MS);
+    const minutes = Math.floor((ms % HOUR_MS) / MINUTE_MS);
+
+    if (days > 0) {
+      return `${days}d ${hours}h`;
+    }
+
+    return `${hours}h ${minutes}m`;
+  }
 
   onMount(() => {
     remainingMs = readRemainingMs();
@@ -38,15 +48,14 @@
   });
 </script>
 
-<div
-  class="alert alert-warning bg-warning/10 border-warning/30 text-warning mb-2 flex w-full flex-col gap-2 rounded-xl text-sm sm:flex-row sm:items-center sm:justify-between"
->
-  <span>
-    Temporary dashboard.
+<div class="flex shrink-0 items-center gap-3 text-sm">
+  <span class="text-neutral-400 hidden items-center gap-2 md:flex">
+    <span class="bg-warning size-1.5 shrink-0 rounded-full"></span>
+    Temporary dashboard
     {#if remainingMs !== null}
-      Expires in {hoursLeft}h {minutesLeft}m.
+      <span class="text-neutral-600">·</span>
+      <span class="tabular-nums">{timeLeft} left</span>
     {/if}
-    Claim it to keep everything.
   </span>
 
   <a
@@ -54,8 +63,9 @@
       `/app/auth?flow=claim&next_url=${encodeURIComponent(`${page.url.pathname}?claimed=1`)}`,
     )}
     data-posthog-id="claim-banner-claim-cta"
-    class="btn btn-warning btn-sm text-neutral-950 shrink-0"
+    class="btn btn-primary btn-xs h-7 rounded-full px-3"
   >
-    Claim with GitHub or Google
+    <span class="sm:hidden">Claim</span>
+    <span class="hidden sm:inline">Claim with GitHub or Google</span>
   </a>
 </div>

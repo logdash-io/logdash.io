@@ -17,35 +17,24 @@
   }: Props = $props();
 </script>
 
-<div
-  class={[
-    'border-b p-4 px-5',
-    {
-      'border-base-100': variant === 'default',
-      'border-error/20 bg-error/5': variant === 'danger',
-    },
-  ]}
->
+<div class="border-hairline border-b px-5 py-4">
   <div class="flex items-center gap-2">
     {#if Icon}
       <Icon
         class={[
-          'h-5 w-5',
-          {
-            'text-neutral-400': variant === 'default',
-            'text-error': variant === 'danger',
-          },
+          'size-4 shrink-0',
+          variant === 'danger' ? 'text-error' : 'text-neutral-500',
         ]}
       />
     {/if}
     <h2
-      class={['text-lg font-semibold', { 'text-error': variant === 'danger' }]}
+      class={['text-base font-medium', { 'text-error': variant === 'danger' }]}
     >
       {title}
     </h2>
   </div>
   {#if description}
-    <p class="text-neutral-400 text-sm">
+    <p class="text-neutral-500 mt-0.5 text-sm">
       {description}
     </p>
   {/if}

@@ -97,7 +97,7 @@
 
   <div class="border-base-100 bg-base-300 overflow-hidden rounded-lg border">
     <div class="collapse-open collapse rounded-none px-2 py-1">
-      <div class="collapse-title font-semibold">1. Add your custom domain</div>
+      <div class="collapse-title font-medium">1. Add your custom domain</div>
       <div class="collapse-content">
         {#if !hasDomain}
           <div class="flex flex-col gap-2 sm:flex-row">
@@ -172,7 +172,7 @@
       {/if}
       <div
         class={[
-          'collapse-title font-semibold',
+          'collapse-title font-medium',
           {
             'opacity-50': !hasDomain,
           },
@@ -193,7 +193,7 @@
 
           <div class="border-base-100 space-y-3 rounded-xl border p-4">
             <p class="text-sm">
-              To serve your page at <span class="break-all font-semibold">
+              To serve your page at <span class="break-all font-medium">
                 {customDomain.domain}
               </span>
               you must add these DNS records.
@@ -258,7 +258,7 @@
       {/if}
       <div
         class={[
-          'collapse-title font-semibold',
+          'collapse-title font-medium',
           {
             'opacity-50': !hasDomain,
           },

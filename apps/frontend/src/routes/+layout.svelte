@@ -14,7 +14,6 @@
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config.js';
   import { logger } from '$lib/domains/shared/logger/index.js';
-  import FeedbackButton from '$lib/domains/shared/ui/components/FeedbackButton.svelte';
   import NavigationLoadingBar from '$lib/domains/shared/ui/components/NavigationLoadingBar.svelte';
   import Toaster from '$lib/domains/shared/ui/toaster/Toaster.svelte';
   import { envConfig } from '$lib/domains/shared/utils/env-config';
@@ -122,10 +121,6 @@
     >
       {@render children?.()}
     </main>
-
-    {#if !page.url.pathname.includes('/setup') && !page.url.pathname.includes('/configure')}
-      <FeedbackButton hideOnMobile={true} />
-    {/if}
   {:else}
     <!--
       The footer's ending (FooterEnding) is a fixed floor behind the page,

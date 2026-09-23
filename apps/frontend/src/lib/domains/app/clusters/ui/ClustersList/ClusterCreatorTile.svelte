@@ -34,7 +34,7 @@
       onclick={onCreateClick}
       data-posthog-id="create-cluster-button"
     >
-      <h5 class="text-lg font-semibold">Create new project</h5>
+      <h5 class="text-lg font-medium">Create new project</h5>
 
       <div class="badge badge-lg badge-soft badge-primary rounded-full">
         <PlusIcon class="h-4 w-4" />

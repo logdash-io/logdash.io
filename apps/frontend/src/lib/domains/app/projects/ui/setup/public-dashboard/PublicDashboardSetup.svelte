@@ -90,7 +90,7 @@
         {/if}
       </span>
 
-      <h5 class="text-2xl font-semibold">Setup Status Page for your project</h5>
+      <h5 class="text-2xl font-medium">Setup Status Page for your project</h5>
 
       <p class="text-neutral-400">
         Share status of your services with the world.
@@ -98,7 +98,7 @@
     </div>
 
     <div class="collapse-open collapse overflow-visible rounded-none">
-      <div class="px-1 py-4 font-semibold">
+      <div class="px-1 py-4 font-medium">
         <span>1. Select http monitors</span>
       </div>
 
@@ -141,7 +141,7 @@
                 );
               }}
             />
-            <span class="ml-2 truncate text-lg font-semibold">
+            <span class="ml-2 truncate text-lg font-medium">
               {monitor.name || stripProtocol(monitor.url)}
             </span>
           </label>
@@ -150,7 +150,7 @@
     </div>
 
     <div class="collapse-open">
-      <div class="px-1 py-4 font-semibold">
+      <div class="px-1 py-4 font-medium">
         <span>2. Choose name</span>
       </div>
 
@@ -160,7 +160,7 @@
         </p>
         <input
           bind:value={dashboardName}
-          class="input-sm input-ghost selection:bg-neutral-700 border-neutral-700 focus:border-primary h-full w-full rounded-lg border px-3 py-2 text-lg font-semibold outline-0 focus:bg-transparent"
+          class="input-sm input-ghost selection:bg-neutral-700 border-neutral-700 focus:border-primary h-full w-full rounded-lg border px-3 py-2 text-lg font-medium outline-0 focus:bg-transparent"
           placeholder={dashboard?.name || 'Status Page'}
           type="text"
           use:autoFocus={{ selectAll: true }}
@@ -169,7 +169,7 @@
     </div>
 
     <div class="collapse-open">
-      <div class="px-1 py-4 font-semibold">
+      <div class="px-1 py-4 font-medium">
         <span>3. Configure custom domain (optional)</span>
       </div>
 

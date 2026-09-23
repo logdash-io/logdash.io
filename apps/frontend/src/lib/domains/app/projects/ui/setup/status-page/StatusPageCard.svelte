@@ -59,7 +59,7 @@
           />
         </div>
         <div class="flex flex-col">
-          <span class="font-semibold">{dashboardName}</span>
+          <span class="font-medium">{dashboardName}</span>
           <div class="flex items-center gap-2">
             {#if isPublished}
               <span class="badge badge-success badge-soft badge-xs">

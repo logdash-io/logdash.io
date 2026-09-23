@@ -103,7 +103,7 @@
           bind:value={url}
           minlength={MIN_NAME_LENGTH}
           maxlength={MAX_NAME_LENGTH}
-          class="input-sm input-ghost selection:bg-neutral-700 h-12 w-full rounded-lg px-4 text-lg font-semibold outline-0 focus:bg-transparent"
+          class="input-sm input-ghost selection:bg-neutral-700 h-12 w-full rounded-lg px-4 text-lg font-medium outline-0 focus:bg-transparent"
           placeholder="URL to monitor"
           use:autoFocus={{ delay: 5 }}
         />
@@ -112,7 +112,7 @@
           bind:value={monitorName}
           minlength={MIN_NAME_LENGTH}
           maxlength={MAX_NAME_LENGTH}
-          class="input-sm input-ghost selection:bg-neutral-700 h-12 w-full rounded-lg px-4 text-lg font-semibold outline-0 focus:bg-transparent"
+          class="input-sm input-ghost selection:bg-neutral-700 h-12 w-full rounded-lg px-4 text-lg font-medium outline-0 focus:bg-transparent"
           placeholder="Monitor name"
           use:autoFocus={{ delay: 5 }}
         />
