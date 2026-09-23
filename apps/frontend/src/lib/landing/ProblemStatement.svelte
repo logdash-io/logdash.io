@@ -19,10 +19,12 @@
   quiet="Going quiet isn’t."
   description="Every silent minute, your users assume the worst and tell everyone. Get the alert first, and let them know before they ask."
 >
-  <ul class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:gap-8">
+  <ul
+    class="mt-8 flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:gap-8"
+  >
     {#each ASSURANCES as assurance (assurance)}
-      <li class="flex items-center gap-2.5 text-sm">
-        <CheckIcon class="text-neutral-500 size-4 shrink-0" />
+      <li class="flex items-start gap-2.5 text-sm sm:items-center">
+        <CheckIcon class="text-neutral-500 mt-0.5 size-4 shrink-0 sm:mt-0" />
         <span class="text-neutral-300">{assurance}</span>
       </li>
     {/each}
@@ -39,6 +41,10 @@
       <div class="px-5 pt-5">
         <DowntimeFeed />
       </div>
+
+      <div
+        class="to-base-200 pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent"
+      ></div>
     </StagePanel>
   </div>
 </LandingSection>
