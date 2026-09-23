@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, type Snippet } from "svelte";
+  import { onMount, onDestroy, type Snippet, untrack } from "svelte";
   import { fly } from "svelte/transition";
 
   interface Props {
@@ -18,7 +18,7 @@
     children,
   }: Props = $props();
 
-  let timeToNextRefresh = $state(pollingInterval);
+  let timeToNextRefresh = $state(untrack(() => pollingInterval));
   let pollingIntervalId: ReturnType<typeof setInterval> | null = null;
   let countdownIntervalId: ReturnType<typeof setInterval> | null = null;
 

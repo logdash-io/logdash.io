@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import type { Component, Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
@@ -20,7 +21,7 @@
     defaultExpanded = false,
   }: Props = $props();
 
-  let expanded = $state(defaultExpanded);
+  let expanded = $state(untrack(() => defaultExpanded));
 
   function onToggle(): void {
     expanded = !expanded;

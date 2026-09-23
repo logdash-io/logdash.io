@@ -9,12 +9,14 @@
   };
 
   const { date: rawDate, level, message, prefix = 'full' }: Props = $props();
-  const [left, right] = DateTime.fromJSDate(new Date(rawDate))
-    .toLocal()
-    .toISO({ includeOffset: true })
-    .split('T');
+  const [date, time] = $derived.by(() => {
+    const [left, right] = DateTime.fromJSDate(new Date(rawDate))
+      .toLocal()
+      .toISO({ includeOffset: true })
+      .split('T');
 
-  const [date, time] = $derived([left, right.split('.')[0]]);
+    return [left, right.split('.')[0]];
+  });
 </script>
 
 <div class="flex items-start gap-2.5 font-mono text-sm">

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import { ChevronDownIcon, TrendingUpIcon } from "lucide-svelte";
   import StatusBadge from "./StatusBadge.svelte";
   import UptimeChart from "./UptimeChart.svelte";
@@ -59,7 +60,7 @@
   const config = $derived(statusConfig[status]);
   const statusText = $derived(config.text);
   const statusColor = $derived(config.color);
-  let open = $state(defaultExpanded);
+  let open = $state(untrack(() => defaultExpanded));
 </script>
 
 <div class="ld-card-base collapse w-fit min-w-full ld-card-rounding">

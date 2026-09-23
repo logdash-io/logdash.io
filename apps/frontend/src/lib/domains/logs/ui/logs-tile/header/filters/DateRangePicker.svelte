@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import SveltyPicker from 'svelty-picker';
 
@@ -12,8 +13,8 @@
   const { startDate, endDate, maxDateRangeHours, onDateChange }: Props =
     $props();
 
-  let startDateInput = $state(startDate);
-  let endDateInput = $state(endDate);
+  let startDateInput = $state(untrack(() => startDate));
+  let endDateInput = $state(untrack(() => endDate));
 
   const isCustomRangeUpgradeRequired = $derived.by(() => {
     if (!startDateInput || !endDateInput) {

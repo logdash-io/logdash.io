@@ -33,7 +33,7 @@
   }: Props = $props();
 
   let wrapper: HTMLSpanElement;
-  let tooltip: HTMLDivElement | null = null;
+  let tooltip = $state<HTMLDivElement | null>(null);
   let portalContainer: HTMLDivElement | null = null;
 
   let visible = $state(false);

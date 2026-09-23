@@ -15,7 +15,7 @@
   const { data }: Props = $props();
 
   const clusterId = $derived(page.params.cluster_id);
-  let dashboard = $state<PublicDashboard | null>(data.dashboard);
+  let dashboard = $derived<PublicDashboard | null>(data.dashboard);
 
   function onDashboardCreated(newDashboard: PublicDashboard): void {
     dashboard = newDashboard;
