@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { resolve } from '$app/paths';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
@@ -7,9 +6,9 @@
   import { Feature, UserTier } from '$lib/domains/shared/types.js';
   import { onMount, untrack } from 'svelte';
   import DemoDashboardHeader from './DemoDashboardHeader.svelte';
+  import FinalCta from '$lib/landing/FinalCta.svelte';
   import Footer from '$lib/landing/Footer.svelte';
-  import FlamingoIcon from '$lib/domains/shared/icons/FlamingoIcon.svelte';
-  import { ArrowRightIcon } from 'lucide-svelte';
+  import LandingSection from '$lib/landing/LandingSection.svelte';
 
   type Props = {
     data: {
@@ -56,44 +55,25 @@
   <title>Demo Dashboard | logdash</title>
 </svelte:head>
 
-<!-- <div class="w-full max-w-landing space-y-4 px-4 pb-4 sm:space-y-8 sm:px-0 sm:pb-8"> -->
-<div class="relative mx-auto flex w-full max-w-landing flex-col px-8 space-y-4">
+<div class="flex w-full flex-col">
   <DemoDashboardHeader />
 
-  <div class="ld-card relative mx-auto w-full max-w-landing p-4">
-    <ProjectView
-      priorityProjectId={data.projectId}
-      priorityClusterId={data.clusterId}
-    />
-  </div>
-
-  <div
-    class="ld-card text-primary-content mx-2 flex flex-col-reverse items-center justify-between py-24 text-left sm:mx-0 sm:flex-row"
-  >
-    <div>
-      <h2 class="mb-8 text-center text-3xl font-bold sm:text-left sm:text-4xl">
-        Make this dashboard your own
-      </h2>
-
-      <FlamingoIcon class="text-primary h-54 w-54 mx-auto mb-6 sm:hidden" />
-
-      <p class="text-neutral-200 mb-10 text-lg">
-        Protect your revenue stream today. Zero commitment, no credit card
-        required.
-      </p>
-      <a
-        class="btn btn-primary btn-md sm:btn-lg w-full sm:w-fit"
-        data-posthog-id="demo-dashboard-cta"
-        href={resolve('/app/quick-setup')}
-        rel="nofollow"
+  <LandingSection>
+    <div class="px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
+      <div
+        class="ring-hairline bg-base-200 rounded-xl p-2 ring-1 sm:p-4 lg:-mx-4"
       >
-        Start free
-        <ArrowRightIcon class="ml-1 size-4 sm:ml-2 sm:size-6" />
-      </a>
+        <ProjectView
+          priorityProjectId={data.projectId}
+          priorityClusterId={data.clusterId}
+        />
+      </div>
     </div>
+  </LandingSection>
 
-    <FlamingoIcon class="text-primary h-54 w-54 hidden sm:block" />
-  </div>
+  <FinalCta showDemoLink={false} />
 
-  <Footer />
+  <LandingSection divider={false} rails={false}>
+    <Footer />
+  </LandingSection>
 </div>

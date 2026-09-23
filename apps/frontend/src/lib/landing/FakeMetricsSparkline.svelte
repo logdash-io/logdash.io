@@ -1,6 +1,12 @@
 <script lang="ts">
   import { prefersReducedMotion } from 'svelte/motion';
 
+  type Props = {
+    header?: boolean;
+  };
+
+  const { header = true }: Props = $props();
+
   const gradientId = $props.id();
 
   const VISIBLE_SAMPLES = 40;
@@ -75,10 +81,12 @@
 </script>
 
 <div class="flex h-full w-full flex-col gap-5">
-  <div class="flex flex-col gap-0.5">
-    <span class="text-neutral-500 text-xs">Live metric</span>
-    <h3 class="text-base font-medium">CPU usage</h3>
-  </div>
+  {#if header}
+    <div class="flex flex-col gap-0.5">
+      <span class="text-neutral-500 text-xs">Live metric</span>
+      <h3 class="text-base font-medium">CPU usage</h3>
+    </div>
+  {/if}
 
   <div class="flex flex-wrap gap-x-10 gap-y-3 sm:gap-x-14">
     <div class="flex flex-col gap-0.5">

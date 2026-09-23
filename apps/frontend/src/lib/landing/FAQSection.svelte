@@ -68,7 +68,7 @@
 <!-- Heading on the left, questions on the right. -->
 <LandingSection id="faq">
   <div
-    class="grid grid-cols-1 gap-10 px-4 py-16 sm:px-6 lg:grid-cols-5 lg:gap-12 lg:px-10 lg:py-20"
+    class="grid grid-cols-1 gap-10 px-4 py-20 sm:px-6 lg:grid-cols-5 lg:gap-12 lg:px-10 lg:py-28"
   >
     <div class="flex flex-col gap-3 lg:col-span-2">
       <h2

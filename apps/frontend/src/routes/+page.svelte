@@ -2,12 +2,10 @@
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
   import FaqSection from '$lib/landing/FAQSection.svelte';
   import FinalCta from '$lib/landing/FinalCta.svelte';
-  import FirstThirtyDays from '$lib/landing/FirstThirtyDays.svelte';
   import Footer from '$lib/landing/Footer.svelte';
-  import HealthBento from '$lib/landing/HealthBento.svelte';
+  import Features from '$lib/landing/Features.svelte';
   import Hero from '$lib/landing/hero/Hero.svelte';
   import LandingSection from '$lib/landing/LandingSection.svelte';
-  import LogdashDifference from '$lib/landing/LogdashDifference.svelte';
   import ProblemStatement from '$lib/landing/ProblemStatement.svelte';
   import TestimonialsList from '$lib/landing/TestimonialsList.svelte';
 
@@ -35,11 +33,7 @@
 
   <ProblemStatement />
 
-  <HealthBento />
-
-  <FirstThirtyDays />
-
-  <LogdashDifference />
+  <Features />
 
   <TestimonialsList />
 
@@ -47,7 +41,7 @@
 
   <FinalCta />
 
-  <LandingSection divider={false}>
+  <LandingSection divider={false} rails={false}>
     <Footer />
   </LandingSection>
 </div>

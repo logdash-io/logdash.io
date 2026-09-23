@@ -1,41 +1,25 @@
 <script lang="ts">
   import FoundersCard from '$lib/landing/FoundersCard.svelte';
+  import LandingSection from '$lib/landing/LandingSection.svelte';
 </script>
 
-<FoundersCard class="max-w-landing">
-  <p
-    class="text-neutral-300 mb-2 text-xs font-semibold tracking-wide uppercase"
+<LandingSection>
+  <header
+    class="flex flex-col items-start px-4 pt-12 pb-12 sm:px-6 lg:px-10 lg:pt-16"
   >
-    Logdash Live Demo
-  </p>
-  <p class="mb-6 text-lg font-extrabold">Our Production Dashboard</p>
+    <span class="text-neutral-500 text-sm">Live demo</span>
 
-  <p class="mb-4">
-    You're currently viewing a live demonstration of Logdash, powered by our own
-    production data (with any sensitive information anonymized). This is your
-    chance to experience the clarity and power of Logdash firsthand.
-  </p>
+    <h1
+      class="mt-3 text-4xl leading-[1.08] font-medium tracking-[-0.03em] text-balance sm:text-5xl"
+    >
+      Our production dashboard.
+    </h1>
 
-  <p class="mb-2 font-semibold">Here's what you can explore:</p>
-  <ul class="mb-4 list-inside list-disc">
-    <li>
-      <strong>Real-time Log Streams:</strong>
-      See how our logs flow in and how easily you can navigate them.
-    </li>
-    <li>
-      <strong>Live Production Metrics:</strong>
-      Interact with visualizations of our key performance indicators.
-    </li>
-    <li>
-      <strong>Clean & Uncluttered Interface:</strong>
-      Notice the focus on essential information, free from distractions.
-    </li>
-  </ul>
+    <p class="text-neutral-400 mt-4 max-w-2xl text-lg text-pretty">
+      Real logs, metrics and uptime from Logdash itself, with anything sensitive
+      removed. Filter the logs, open a metric, look around.
+    </p>
 
-  <p class="mb-6">
-    This demo showcases how Logdash helps you cut through the noise of
-    traditional observability tools. If you're looking for a streamlined,
-    developer-first solution without the self-hosting headaches, you're in the
-    right place.
-  </p>
-</FoundersCard>
+    <FoundersCard variant="flat" class="mt-8" />
+  </header>
+</LandingSection>

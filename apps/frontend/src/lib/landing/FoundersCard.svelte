@@ -3,7 +3,7 @@
   import type { ClassValue } from 'svelte/elements';
 
   interface Props {
-    children: Snippet;
+    children?: Snippet;
     class?: ClassValue;
     variant?: 'card' | 'flat';
   }
@@ -19,12 +19,12 @@
   class={[
     'text-base',
     variant === 'card'
-      ? 'ld-card-base bg-neutral text-neutral-content mx-2 rounded-3xl p-8 sm:mx-auto'
-      : 'mx-auto',
+      ? 'ld-card-base text-neutral-content mx-2 rounded-xl p-8 sm:mx-auto'
+      : '',
     className,
   ]}
 >
-  {@render children()}
+  {@render children?.()}
 
   <div
     class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-8"

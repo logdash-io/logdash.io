@@ -144,7 +144,7 @@
 
 <LandingSection id="testimonials">
   <div
-    class="flex flex-col gap-8 px-4 py-16 sm:px-6 lg:gap-12 lg:px-10 lg:py-20"
+    class="flex flex-col gap-10 px-4 py-20 sm:px-6 lg:gap-14 lg:px-10 lg:py-28"
   >
     <h2 class="text-neutral-500 text-center text-base font-medium text-balance">
       {#each TRUSTED_BY as part (part.text)}
@@ -159,8 +159,7 @@
     <!--
       One quote at a time, straight on the page. Every quote stays in the DOM,
       stacked in the same grid cell, so the block keeps the height of the
-      longest one and the page never jumps when the deck moves. The controls
-      sit in the bottom right corner from sm, level with the author row.
+      longest one and the page never jumps when the deck moves.
     -->
     <div
       bind:this={root}
@@ -178,7 +177,7 @@
           {@const current = index === active}
           <figure
             class={[
-              'col-start-1 row-start-1 flex flex-col gap-8 transition-[opacity,translate] ease-[cubic-bezier(0.22,1,0.36,1)] sm:pr-44 lg:gap-10',
+              'col-start-1 row-start-1 flex flex-col items-center gap-8 text-center transition-[opacity,translate] ease-[cubic-bezier(0.22,1,0.36,1)] lg:gap-10',
               { 'pointer-events-none opacity-0': !current },
             ]}
             style:translate="{offsetOf(index)}px 0"
@@ -187,13 +186,12 @@
             inert={!current}
           >
             <blockquote
-              class="max-w-3xl text-2xl font-medium tracking-[-0.02em] text-balance sm:text-3xl"
+              class="max-w-3xl text-2xl font-medium tracking-[-0.02em] text-balance sm:text-4xl sm:leading-[1.15]"
             >
               “{review.quote}”
             </blockquote>
 
-            <!-- Anchored to the cell floor so every author row lines up with the arrows. -->
-            <figcaption class="mt-auto flex items-center gap-3">
+            <figcaption class="mt-auto flex items-center gap-3 text-left">
               <img
                 class="ring-base-100 size-10 shrink-0 rounded-full object-cover grayscale ring-1"
                 src={review.img}
@@ -223,9 +221,7 @@
         {/each}
       </div>
 
-      <div
-        class="mt-8 flex items-center gap-3 sm:absolute sm:right-0 sm:bottom-0 sm:mt-0"
-      >
+      <div class="mt-10 flex items-center justify-center gap-3">
         <span
           class="text-neutral-600 mr-1 font-mono text-xs tabular-nums"
           aria-live="polite"
