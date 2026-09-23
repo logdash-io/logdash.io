@@ -1,23 +1,17 @@
 <script lang="ts">
-  import { resolve } from '$app/paths';
   import LogoMark from '$lib/domains/shared/icons/LogoMark.svelte';
+  import { HERO_ID } from '$lib/landing/hero/hero-anchors';
   import HeroUrlForm from '$lib/landing/hero/HeroUrlForm.svelte';
-  import { ArrowRightIcon } from 'lucide-svelte';
+  import { ArrowUpIcon } from 'lucide-svelte';
   import LandingSection from './LandingSection.svelte';
   import StageLight from './stage/StageLight.svelte';
   import StagePanel from './stage/StagePanel.svelte';
-
-  type Props = {
-    showDemoLink?: boolean;
-  };
 
   type Milestone = {
     day: number;
     title: string;
     description: string;
   };
-
-  const { showDemoLink = true }: Props = $props();
 
   const MILESTONES: Milestone[] = [
     {
@@ -62,16 +56,15 @@
         No signup · No credit card · Claim later with GitHub or Google
       </p>
 
-      {#if showDemoLink}
-        <a
-          href={resolve('/demo-dashboard')}
-          class="text-base-content hover:text-neutral-400 focus-visible:outline-neutral-500 mt-10 inline-flex items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 lg:mt-auto"
-          data-posthog-id="final-cta-demo-cta"
-        >
-          Or look around the live demo
-          <ArrowRightIcon class="size-4" />
-        </a>
-      {/if}
+      <!-- The hero up top is the live demo. -->
+      <a
+        href="#{HERO_ID}"
+        class="text-base-content hover:text-neutral-400 focus-visible:outline-neutral-500 mt-10 inline-flex items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 lg:mt-auto"
+        data-posthog-id="final-cta-demo-cta"
+      >
+        Or watch the live demo
+        <ArrowUpIcon class="size-4" />
+      </a>
     </div>
 
     <div

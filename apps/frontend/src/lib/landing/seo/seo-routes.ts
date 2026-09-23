@@ -20,7 +20,7 @@ export const SITE_ORIGIN = 'https://logdash.io';
  * a data file. Everything else derives from the same data the page renders
  * from, so a sitemap entry cannot drift from a route.
  *
- * Deliberately absent: `/demo-dashboard` (302s without a query),
+ * Deliberately absent: `/demo-dashboard` (a redirect to the hero),
  * `/use-cases` (noindex until it has content) and `/vs` (a redirect).
  */
 const staticPaths: string[] = [

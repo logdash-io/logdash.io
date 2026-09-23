@@ -4,7 +4,6 @@ import type { Metric } from '$lib/domains/app/projects/domain/metric';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
 import type { Project } from '$lib/domains/app/projects/domain/project';
 import type { PublicDashboard } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard.js';
-import { bffLogger } from '$lib/domains/shared/bff-logger.server.js';
 import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config';
 import type { User } from '$lib/domains/shared/user/domain/user';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
@@ -323,33 +322,6 @@ class LogdashAPI {
   ): Promise<{ customerPortalUrl: string }> {
     return this.get<{ customerPortalUrl: string }>(
       `${LogdashAPI.v0baseUrl}/payments/stripe/customer_portal`,
-      access_token,
-    );
-  }
-
-  get_demo_project_config(): Promise<{
-    projectId: Project['id'];
-    clusterId: Cluster['id'];
-  }> {
-    return this.get<{
-      projectId: Project['id'];
-      clusterId: Cluster['id'];
-    }>(`${LogdashAPI.v0baseUrl}/demo`, '');
-  }
-
-  send_test_log(
-    project_id: string,
-    client_ip: string,
-    access_token: string,
-  ): Promise<void> {
-    bffLogger.debug(
-      `Sending test log to project ${project_id} from client IP ${client_ip}`,
-    );
-    return this.post<void>(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}/test-log`,
-      {
-        ip: client_ip,
-      },
       access_token,
     );
   }

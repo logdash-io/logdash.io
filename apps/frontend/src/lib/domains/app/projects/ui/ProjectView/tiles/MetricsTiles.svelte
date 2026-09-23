@@ -18,9 +18,6 @@
   const previewedMetricId = $derived(page.params.metric_id);
   const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
-  const isDemoDashboard = $derived(
-    page.url.pathname.includes('/demo-dashboard'),
-  );
   const previewedMetric = $derived(
     previewedMetricId ? metricsState.getById(previewedMetricId) : null,
   );
@@ -43,7 +40,7 @@
 
 <MetricsListener>
   <div class="flex flex-col gap-1.5">
-    {#if metricsState.simplifiedMetrics.length >= currentMetricsLimit && !isDemoDashboard && !metricsState.isUsingFakeData}
+    {#if metricsState.simplifiedMetrics.length >= currentMetricsLimit && !metricsState.isUsingFakeData}
       <span class="text-sm">
         {#if userState.canUpgrade}
           <UpgradeElement
@@ -121,7 +118,7 @@
       <span>Previewing</span>
 
       <div class="flex items-center gap-1">
-        {#if !isDemoDashboard && previewedMetric}
+        {#if previewedMetric}
           <button
             class="btn text-base-content hover:text-error btn-soft btn-xs gap-1"
             onclick={() => {

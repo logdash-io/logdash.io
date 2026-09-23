@@ -22,9 +22,6 @@
   const { projectId, expanded = false }: Props = $props();
 
   const clusterId = $derived(page.params.cluster_id);
-  const isOnDemoDashboard = $derived(
-    page.url.pathname.includes('/demo-dashboard'),
-  );
 
   const projectMonitor = $derived(
     monitoringState.getMonitorByProjectId(projectId),
@@ -121,11 +118,10 @@
     class={[
       'flex w-full flex-col items-end justify-center overflow-hidden p-6',
       {
-        'cursor-pointer group hover:bg-neutral-800':
-          !expanded && !isOnDemoDashboard,
+        'cursor-pointer group hover:bg-neutral-800': !expanded,
       },
     ]}
-    disabled={expanded || isOnDemoDashboard}
+    disabled={expanded}
     onclick={onNavigateToMonitoring}
   >
     <MonitoringHeader name={monitorName} {status} showArrow={!expanded} />
@@ -147,18 +143,16 @@
       {onTimeRangeChange}
     />
 
-    {#if !isOnDemoDashboard}
-      <div
-        class="flex w-full flex-col divide-y divide-hairline border-t border-base-100"
-      >
-        <NotificationChannelsSection {monitorId} />
-        <MonitorSettingsSection
-          {monitorId}
-          {monitorName}
-          {clusterId}
-          {projectId}
-        />
-      </div>
-    {/if}
+    <div
+      class="flex w-full flex-col divide-y divide-hairline border-t border-base-100"
+    >
+      <NotificationChannelsSection {monitorId} />
+      <MonitorSettingsSection
+        {monitorId}
+        {monitorName}
+        {clusterId}
+        {projectId}
+      />
+    </div>
   {/if}
 </div>

@@ -1,7 +1,13 @@
 import type { Pathname } from '$app/types';
 import type { Component } from 'svelte';
 import { comparisons } from '$lib/landing/compare/compare.data';
-import { LINKS, out, to, type NavTarget } from '$lib/landing/nav/nav.data';
+import {
+  LINKS,
+  LIVE_DEMO,
+  out,
+  to,
+  type NavTarget,
+} from '$lib/landing/nav/nav.data';
 import DiscordIcon from '$lib/domains/shared/icons/DiscordIcon.svelte';
 import GitHubIcon from '$lib/domains/shared/icons/GitHubIcon.svelte';
 import XIcon from '$lib/domains/shared/icons/XIcon.svelte';
@@ -32,7 +38,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
       { ...to('/features/monitoring'), title: 'Monitoring' },
       { ...to('/features/logging'), title: 'Logging' },
       { ...to('/features/metrics'), title: 'Metrics' },
-      { ...to('/demo-dashboard'), title: 'Live demo' },
+      { ...LIVE_DEMO, title: 'Live demo' },
       { ...to('/pricing'), title: 'Pricing' },
     ],
   },

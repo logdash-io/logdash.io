@@ -15,7 +15,8 @@
 
   /** Internal paths go through resolve(); mailto: stays in the current tab. */
   function linkAttrs(link: FooterLink): Record<string, string> {
-    if (link.kind === 'internal') return { href: resolve(link.path) };
+    if (link.kind === 'internal')
+      return { href: `${resolve(link.path)}${link.hash ?? ''}` };
     const href = hrefOf(link);
     return href.startsWith('mailto:')
       ? { href }

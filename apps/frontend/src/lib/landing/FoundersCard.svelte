@@ -5,22 +5,15 @@
   interface Props {
     children?: Snippet;
     class?: ClassValue;
-    variant?: 'card' | 'flat';
   }
 
-  let {
-    children,
-    class: className = 'max-w-2xl',
-    variant = 'card',
-  }: Props = $props();
+  let { children, class: className = 'max-w-2xl' }: Props = $props();
 </script>
 
 <div
   class={[
     'text-base',
-    variant === 'card'
-      ? 'ld-card-base text-neutral-content mx-2 rounded-xl p-8 sm:mx-auto'
-      : '',
+    'ld-card-base text-neutral-content mx-2 rounded-xl p-8 sm:mx-auto',
     className,
   ]}
 >

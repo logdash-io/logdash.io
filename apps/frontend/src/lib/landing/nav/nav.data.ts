@@ -1,14 +1,15 @@
 import type { Pathname } from '$app/types';
 import { comparisons } from '$lib/landing/compare/compare.data';
+import { HERO_ID } from '$lib/landing/hero/hero-anchors';
 
 export type NavMenuKey = 'product' | 'resources';
 
 /** Only pages the chrome links to: resolve() needs literal paths, not the whole Pathname union. */
 export type NavPath =
+  | '/'
   | '/features/monitoring'
   | '/features/logging'
   | '/features/metrics'
-  | '/demo-dashboard'
   | '/pricing'
   | '/app/quick-setup'
   | '/docs'
@@ -23,7 +24,7 @@ export type NavPath =
   | Extract<Pathname, `/vs/${string}`>;
 
 export type NavTarget =
-  | { kind: 'internal'; path: NavPath }
+  | { kind: 'internal'; path: NavPath; hash?: `#${string}` }
   | { kind: 'external'; href: string };
 
 export type NavItem =
@@ -56,7 +57,14 @@ export type NavPanel = {
   };
 };
 
-export const to = (path: NavPath): NavTarget => ({ kind: 'internal', path });
+export const to = (path: NavPath, hash?: `#${string}`): NavTarget => ({
+  kind: 'internal',
+  path,
+  hash,
+});
+
+/** The hero on the home page is the live demo. */
+export const LIVE_DEMO = to('/', `#${HERO_ID}`);
 export const out = (href: string): NavTarget => ({ kind: 'external', href });
 
 export const LINKS = {
@@ -74,7 +82,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     kind: 'menu',
     key: 'product',
     name: 'Product',
-    activePrefixes: ['/features', '/demo-dashboard'],
+    activePrefixes: ['/features'],
   },
   {
     kind: 'menu',
@@ -114,9 +122,9 @@ export const NAV_PANELS: Record<NavMenuKey, NavPanel> = {
               'Track counters and gauges for the numbers that matter',
           },
           {
-            ...to('/demo-dashboard'),
+            ...LIVE_DEMO,
             title: 'Live demo',
-            description: 'Click around a real dashboard, no account needed',
+            description: 'Watch our dashboard live, then point it at your URL',
           },
         ],
       },
@@ -194,9 +202,11 @@ export function isMenuActive(
 }
 
 export function hrefOf(target: NavTarget): string {
-  return target.kind === 'internal' ? target.path : target.href;
+  return target.kind === 'internal'
+    ? `${target.path}${target.hash ?? ''}`
+    : target.href;
 }
 
 export function isCurrentTarget(target: NavTarget, pathname: string): boolean {
-  return target.kind === 'internal' && target.path === pathname;
+  return target.kind === 'internal' && !target.hash && target.path === pathname;
 }

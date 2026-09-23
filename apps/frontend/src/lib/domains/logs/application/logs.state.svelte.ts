@@ -1,6 +1,5 @@
 import type { Log } from '$lib/domains/logs/domain/log';
 import { createLogger } from '$lib/domains/shared/logger';
-import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import type { LogsFilters } from '../domain/logs-filters';
 import { filtersStore } from '../infrastructure/filters.store.svelte';
@@ -220,15 +219,6 @@ class LogsState {
   unsync(): void {
     logger.debug('unsyncing logs...');
     logsSyncService.close();
-  }
-
-  async sendTestLog(project_id: string): Promise<void> {
-    await LogsService.sendTestLog(project_id)
-      .then(() => toast.success('Test log sent successfully.'))
-      .catch((error) => {
-        toast.error('Failed to send test log. Please try again later.');
-        logger.error('Failed to send test log:', error);
-      });
   }
 
   private _addLog(log: Log): void {

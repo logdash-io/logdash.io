@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
   import HeroShowcase from './HeroShowcase.svelte';
   import HeroStage from './HeroStage.svelte';
+  import { HERO_ID } from './hero-anchors';
   import HeroUrlForm from './HeroUrlForm.svelte';
 
   onMount(() => {
@@ -24,7 +25,11 @@
   gutter, capped at 1920px. Its light gathers directly behind the frame, so
   the eye lands on the product.
 -->
-<section id="hero" class="w-full pb-12 lg:pb-16">
+<!--
+  The hero is the live demo, so "Live demo" links land on it. The scroll
+  margin clears the sticky nav, which puts it at the very top of the page.
+-->
+<section id={HERO_ID} class="w-full scroll-mt-20 pb-12 lg:pb-16">
   <header
     class="relative mx-auto flex w-full max-w-landing flex-col items-start px-4 pt-12 sm:px-6 lg:px-10 lg:pt-16"
   >

@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { page } from '$app/state';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import PauseCircleIcon from '$lib/domains/shared/icons/PauseCircleIcon.svelte';
   import { ClockIcon } from '@logdash/hyper-ui/icons';
-  import { scale } from 'svelte/transition';
   import LogsAnalyticsChart from './LogsAnalyticsChart.svelte';
   import LogsSearchInput from './LogsSearchInput.svelte';
   import LogsFilterDropdown from './filters/LogsFilterDropdown.svelte';
@@ -20,26 +18,9 @@
 
   const { projectId }: Props = $props();
 
-  const isOnDemoDashboard = $derived(
-    page.url.pathname.includes('/demo-dashboard'),
-  );
-
   const maxRetentionHours = $derived(
     exposedConfigState.logRetentionHours(userState.tier),
   );
-
-  let sendingTestLogCooldown = $state(0);
-
-  function sendTestLog(): void {
-    sendingTestLogCooldown = 5;
-    const interval = setInterval(() => {
-      sendingTestLogCooldown--;
-      if (sendingTestLogCooldown < 1) {
-        clearInterval(interval);
-      }
-    }, 1000);
-    logsState.sendTestLog(projectId);
-  }
 
   function onSearchChange(query: string): void {
     filtersStore.setFilters({ searchString: query });
@@ -64,25 +45,6 @@
 
   <div class="flex items-center justify-between gap-2.5 p-4">
     <LogsSearchInput {onSearchChange} />
-
-    {#if isOnDemoDashboard}
-      <button
-        class="btn btn-secondary btn-sm gap-1.5"
-        data-posthog-id="send-test-log-button"
-        disabled={sendingTestLogCooldown > 0}
-        onclick={sendTestLog}
-      >
-        <span>Send test log</span>
-        {#if sendingTestLogCooldown > 0}
-          <span
-            class="font-mono"
-            in:scale|global={{ start: 0.8, duration: 200 }}
-          >
-            ({sendingTestLogCooldown}s)
-          </span>
-        {/if}
-      </button>
-    {/if}
 
     <Tooltip
       content={timeDisplayState.isRelative ? 'Relative time' : 'Absolute time'}

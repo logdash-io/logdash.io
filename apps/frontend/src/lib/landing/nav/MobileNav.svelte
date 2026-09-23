@@ -66,7 +66,7 @@
                 <li>
                   <a
                     href={entry.kind === 'internal'
-                      ? resolve(entry.path)
+                      ? `${resolve(entry.path)}${entry.hash ?? ''}`
                       : hrefOf(entry)}
                     target={entry.kind === 'external' ? '_blank' : undefined}
                     rel={entry.kind === 'external'

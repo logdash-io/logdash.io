@@ -125,7 +125,7 @@
 
   function anchorAttrs(target: NavTarget): Record<string, string> {
     return target.kind === 'internal'
-      ? { href: resolve(target.path) }
+      ? { href: `${resolve(target.path)}${target.hash ?? ''}` }
       : { href: target.href, target: '_blank', rel: 'noopener noreferrer' };
   }
 

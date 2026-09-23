@@ -16,9 +16,6 @@
   const previewedMetricId = $derived(page.params.metric_id);
   const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
-  const isOnDemoDashboard = $derived(
-    page.url.pathname.includes('/demo-dashboard'),
-  );
 
   const metric = $derived(metricsState.getById(id));
 
@@ -70,45 +67,29 @@
   </Tooltip>
 
   {#if previewedMetricId !== metric.id && !disabled}
-    {#if isOnDemoDashboard}
-      <Tooltip content="Not available in demo" placement="top">
-        <button
-          transition:fly={{
-            duration: 200,
-            easing: cubicInOut,
-            y: 5,
-          }}
-          class="btn btn-secondary btn-soft btn-xs ml-auto opacity-50 cursor-not-allowed"
-          disabled
-        >
-          Preview <ArrowRightIcon class="h-3.5 w-3.5" />
-        </button>
-      </Tooltip>
-    {:else}
-      <button
-        transition:fly={{
-          duration: 200,
-          easing: cubicInOut,
-          y: 5,
-        }}
-        class="btn btn-secondary btn-soft btn-xs ml-auto"
-        onclick={() => {
-          metricsState.setLastPreviewedMetricId(projectId, metric.id);
-          goto(
-            resolve(
-              '/app/clusters/[cluster_id]/[project_id]/metrics/[metric_id]',
-              {
-                cluster_id: clusterId,
-                project_id: projectId,
-                metric_id: metric.id,
-              },
-            ),
-          );
-        }}
-        data-posthog-id="preview-metric-button"
-      >
-        Preview <ArrowRightIcon class="h-3.5 w-3.5" />
-      </button>
-    {/if}
+    <button
+      transition:fly={{
+        duration: 200,
+        easing: cubicInOut,
+        y: 5,
+      }}
+      class="btn btn-secondary btn-soft btn-xs ml-auto"
+      onclick={() => {
+        metricsState.setLastPreviewedMetricId(projectId, metric.id);
+        goto(
+          resolve(
+            '/app/clusters/[cluster_id]/[project_id]/metrics/[metric_id]',
+            {
+              cluster_id: clusterId,
+              project_id: projectId,
+              metric_id: metric.id,
+            },
+          ),
+        );
+      }}
+      data-posthog-id="preview-metric-button"
+    >
+      Preview <ArrowRightIcon class="h-3.5 w-3.5" />
+    </button>
   {/if}
 </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import Footer from '$lib/landing/Footer.svelte';
+  import { HERO_ID } from '$lib/landing/hero/hero-anchors';
   import { FEATURES } from '$lib/domains/shared/constants/features.js';
   import { RoutePath } from '$lib/domains/shared/route-path.js';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
@@ -111,13 +112,15 @@
         Start monitoring
         <ArrowRightIcon class="ml-1 size-4" />
       </a>
+      <!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus the hero hash -->
       <a
-        href={resolve('/demo-dashboard')}
+        href={`${resolve('/')}#${HERO_ID}`}
         class="btn btn-secondary w-full sm:w-auto"
         data-posthog-id="feature-monitoring-demo-cta"
       >
         See the live demo
       </a>
+      <!-- eslint-enable svelte/no-navigation-without-resolve -->
     </div>
   </section>
 
