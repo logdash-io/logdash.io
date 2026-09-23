@@ -34,7 +34,7 @@ When a monitor flips up or down you get a Telegram message or a webhook.
 Then the logs and the metrics you shipped from the same service are already there, on the same page, as the evidence for what actually happened.
 
 - **[Uptime monitoring](https://logdash.io/features/monitoring)** - HTTP checks on a 15 second, 1 minute or 5 minute schedule, storing the status code and the response time of every single check.
-- **[Cron and worker heartbeats](https://logdash.io/guides/monitoring)** - a push monitor is a URL your job hits when it finishes. No hit, no heartbeat, alert.
+- **[Cron and worker heartbeats](https://logdash.io/docs/monitoring)** - a push monitor is a URL your job hits when it finishes. No hit, no heartbeat, alert.
 - **Telegram and webhook alerts** - fired on every up/down transition. Those two are the whole list today. Slack, email and PagerDuty are not built.
 - **[Metrics](https://logdash.io/features/metrics)** - `set` an absolute value or `mutate` a counter from any SDK, then chart it next to your uptime.
 - **[Logs](https://logdash.io/features/logging)** - structured log ingest with levels, search and an error/warning histogram over the tail.
@@ -114,8 +114,8 @@ pnpm --filter backend migrate-up && pnpm --filter backend migrate-clickhouse
 Then run the two apps in separate terminals.
 
 ```bash
-pnpm dev:backend   # API on http://localhost:3000
-pnpm dev:frontend                        # app on http://localhost:5173
+pnpm dev:backend    # API on http://localhost:3000
+pnpm dev:frontend   # app on http://localhost:5173
 ```
 
 The backend reads `apps/backend/.env` at import time and refuses to boot without `OUR_ENV` and a reachable Mongo, Redis and ClickHouse.

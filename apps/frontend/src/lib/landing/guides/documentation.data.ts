@@ -9,15 +9,7 @@ import type { Pathname } from '$app/types';
 import type { Component } from 'svelte';
 import type { TableType } from './plan-limits';
 
-export type DocsPath =
-  | '/guides'
-  | '/guides/logging'
-  | '/guides/metrics'
-  | '/guides/monitoring'
-  | '/guides/sdk-migration'
-  | '/docs'
-  | '/docs/self-hosting'
-  | Extract<Pathname, `/docs/${string}`>;
+export type DocsPath = '/docs' | Extract<Pathname, `/docs/${string}`>;
 
 type IconComponent = Component<{ class?: string }>;
 
@@ -121,19 +113,19 @@ const featureCards: DocCard[] = [
   {
     title: 'Logging',
     description: 'Stream and search logs in real time, from every instance.',
-    href: '/guides/logging',
+    href: '/docs/logging',
     icon: LogsIcon,
   },
   {
     title: 'Metrics',
     description: 'Track the numbers that matter to your business.',
-    href: '/guides/metrics',
+    href: '/docs/metrics',
     icon: MetricsIcon,
   },
   {
     title: 'Monitoring',
     description: 'Health checks, uptime history and alerts.',
-    href: '/guides/monitoring',
+    href: '/docs/monitoring',
     icon: MonitoringIcon,
   },
 ];
@@ -143,7 +135,7 @@ export const guideLinks: DocLink[] = [
     title: 'Migrate to @logdash/node',
     description:
       'Move off @logdash/js-sdk to the unified package, by hand or with an AI prompt.',
-    href: '/guides/sdk-migration',
+    href: '/docs/guides/sdk-migration',
   },
 ];
 
@@ -152,7 +144,7 @@ export const docPages: Record<
   DocPage
 > = {
   introduction: {
-    path: '/guides',
+    path: '/docs',
     title: 'Introduction',
     description:
       'Logdash is logging, metrics and uptime monitoring in one place, with nothing to configure.',
@@ -174,7 +166,7 @@ export const docPages: Record<
     ],
   },
   logging: {
-    path: '/guides/logging',
+    path: '/docs/logging',
     title: 'Logging',
     description:
       'Track events and errors in real time, from every instance of your app.',
@@ -193,7 +185,7 @@ export const docPages: Record<
     ],
   },
   metrics: {
-    path: '/guides/metrics',
+    path: '/docs/metrics',
     title: 'Metrics',
     description:
       'Track the numbers that matter to your business, straight from your application.',
@@ -212,7 +204,7 @@ export const docPages: Record<
     ],
   },
   monitoring: {
-    path: '/guides/monitoring',
+    path: '/docs/monitoring',
     title: 'Monitoring',
     description:
       'HTTP health checks, uptime history and alerts when things go wrong.',
@@ -248,24 +240,23 @@ export const docsSidebar: DocsSidebarGroup[] = [
   {
     title: 'Get started',
     items: [
-      { title: 'Introduction', href: '/guides', external: false },
-      { title: 'Logging', href: '/guides/logging', external: false },
-      { title: 'Metrics', href: '/guides/metrics', external: false },
-      { title: 'Monitoring', href: '/guides/monitoring', external: false },
+      { title: 'Introduction', href: '/docs', external: false },
+      { title: 'Logging', href: '/docs/logging', external: false },
+      { title: 'Metrics', href: '/docs/metrics', external: false },
+      { title: 'Monitoring', href: '/docs/monitoring', external: false },
     ],
   },
   {
     title: 'SDKs',
     /**
      * These used to point at the GitHub READMEs. They are our own reference
-     * pages now, so the sidebar keeps the reader on the site and `/docs` is a
-     * real page rather than a redirect.
+     * pages now, so the sidebar keeps the reader on the site.
      *
      * No icons: the sidebar is a plain list of titles, and an icon on the
      * eight SDK rows but not on Overview leaves the column ragged.
      */
     items: [
-      { title: 'Overview', href: '/docs', external: false },
+      { title: 'Overview', href: '/docs/sdks', external: false },
       ...sdkDocs.map((doc) => ({
         title: doc.name,
         href: sdkPath(doc),

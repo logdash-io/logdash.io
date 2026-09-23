@@ -40,7 +40,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     title: 'Docs',
     links: [
       { ...to('/docs'), title: 'Docs' },
-      { ...to('/guides'), title: 'Guides' },
+      { ...to('/docs/sdks'), title: 'SDKs' },
       { ...to('/docs/self-hosting'), title: 'Self-hosting' },
       { ...to('/alternatives'), title: 'Alternatives' },
       { ...to('/health-check'), title: 'Health checks' },

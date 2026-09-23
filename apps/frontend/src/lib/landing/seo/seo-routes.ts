@@ -1,5 +1,6 @@
 import { comparisons } from '$lib/landing/compare/compare.data';
 import { docPages } from '$lib/landing/guides/documentation.data';
+import { sdkPath } from '$lib/landing/docs/sdk-doc';
 import { sdkDocs } from '$lib/landing/docs/sdk-docs.data';
 import { alternatives } from './families/alternatives.data';
 import { healthCheck } from './families/health-check.data';
@@ -54,11 +55,11 @@ export function sitemapEntries(): SitemapEntry[] {
   const entries: SitemapEntry[] = [
     ...staticPaths.map((path) => ({ path })),
     ...Object.values(docPages).map((page) => ({ path: page.path })),
-    { path: '/guides/sdk-migration' },
-    { path: '/docs' },
+    { path: '/docs/sdks' },
+    { path: '/docs/guides/sdk-migration' },
     { path: '/docs/self-hosting' },
     ...sdkDocs.map((doc) => ({
-      path: `/docs/${doc.slug}`,
+      path: sdkPath(doc),
       lastmod: doc.updatedAt,
     })),
     ...comparisons.map((comparison) => ({ path: `/vs/${comparison.slug}` })),

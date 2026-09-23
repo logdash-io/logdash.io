@@ -8,9 +8,9 @@
 </script>
 
 <SeoMeta
-  title="Monitoring | Logdash Guides"
-  description="Monitor your services with HTTP health checks, uptime tracking, and public status pages with Logdash."
-  keywords="logdash monitoring, uptime monitoring, health checks, status pages"
+  title="Logging | Logdash Docs"
+  description="Learn how to track system events and errors in real-time with Logdash logging. Understand retention policies and rate limits."
+  keywords="logdash logging, log retention, rate limits, real-time logging"
 />
 
-<DocArticle page={docPages.monitoring} tables={data.tables} />
+<DocArticle page={docPages.logging} tables={data.tables} />

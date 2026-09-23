@@ -10,7 +10,7 @@ import type {
 export type SdkSnippet = { language: CodeLanguage; code: string };
 
 export type SdkDoc = {
-  /** URL segment: `/docs/node`. */
+  /** URL segment: `/docs/sdks/node`. */
   slug: string;
   /** Display name: "Node.js". */
   name: string;
@@ -36,7 +36,7 @@ export type SdkDoc = {
 };
 
 export function sdkPath(doc: SdkDoc): DocsPath {
-  return `/docs/${doc.slug}` as DocsPath;
+  return `/docs/sdks/${doc.slug}` as DocsPath;
 }
 
 /**

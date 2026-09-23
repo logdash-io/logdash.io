@@ -154,7 +154,7 @@ test.describe('every sitemap URL is crawlable', () => {
         `${path} is in the sitemap but noindexed`,
       ).not.toMatch(/noindex/);
 
-      if (path.startsWith('/docs/')) {
+      if (path.startsWith('/docs/sdks/')) {
         await expect(
           page.locator('pre code'),
           `${path} is an SDK doc with no code sample`,

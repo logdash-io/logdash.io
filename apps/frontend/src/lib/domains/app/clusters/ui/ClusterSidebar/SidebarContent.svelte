@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import Logo from '$lib/domains/shared/icons/Logo.svelte';
+  import Logotype from '$lib/domains/shared/icons/Logotype.svelte';
   import SidebarClusterNav from './SidebarClusterNav.svelte';
   import SidebarClusterSelector from './SidebarClusterSelector.svelte';
   import SidebarServicesList from './SidebarServicesList.svelte';
@@ -14,12 +14,8 @@
 
 <div class="flex flex-1 flex-col">
   {#if showLogo}
-    <a
-      href={resolve('/app/clusters')}
-      class="flex items-center gap-2 px-3 shrink-0"
-    >
-      <Logo class="h-8 w-8" />
-      <span class="text-xl font-bold">logdash</span>
+    <a href={resolve('/app/clusters')} class="flex px-3 shrink-0">
+      <Logotype class="text-[20px]" />
     </a>
   {/if}
 

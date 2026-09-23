@@ -13,7 +13,7 @@
   description={data.page.description}
   keywords="logdash {data.doc.name} sdk, {data.doc.name} logging, {data.doc
     .name} metrics, {data.doc.name} monitoring"
-  canonical="/docs/{data.doc.slug}"
+  canonical={data.page.path}
 />
 
 <DocArticle page={data.page} />

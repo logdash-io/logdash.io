@@ -12,15 +12,14 @@ export type NavPath =
   | '/pricing'
   | '/app/quick-setup'
   | '/docs'
+  | '/docs/sdks'
   | '/docs/self-hosting'
-  | '/guides'
-  | '/guides/sdk-migration'
+  | '/docs/guides/sdk-migration'
   | '/alternatives'
   | '/health-check'
   | '/terms-of-service'
   | '/privacy-policy'
   | '/cookies-policy'
-  | Extract<Pathname, `/docs/${string}`>
   | Extract<Pathname, `/vs/${string}`>;
 
 export type NavTarget =
@@ -81,13 +80,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     kind: 'menu',
     key: 'resources',
     name: 'Resources',
-    activePrefixes: [
-      '/docs',
-      '/guides',
-      '/alternatives',
-      '/health-check',
-      '/vs',
-    ],
+    activePrefixes: ['/docs', '/alternatives', '/health-check', '/vs'],
   },
   { kind: 'link', path: '/pricing', name: 'Pricing' },
   { kind: 'external', href: LINKS.contact, name: 'Contact' },
@@ -145,15 +138,16 @@ export const NAV_PANELS: Record<NavMenuKey, NavPanel> = {
           {
             ...to('/docs'),
             title: 'Docs',
-            description: 'SDK reference, self-hosting and the raw HTTP API',
-          },
-          {
-            ...to('/guides'),
-            title: 'Guides',
             description: 'Set up logging, metrics and monitoring in minutes',
           },
           {
-            ...to('/guides/sdk-migration'),
+            ...to('/docs/sdks'),
+            title: 'SDKs',
+            description:
+              'Reference for the eight official SDKs and the raw HTTP API',
+          },
+          {
+            ...to('/docs/guides/sdk-migration'),
             title: 'Migration guide',
             description:
               'Move from @logdash/js-sdk to the unified @logdash/node',

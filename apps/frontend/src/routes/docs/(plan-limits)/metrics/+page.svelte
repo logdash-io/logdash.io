@@ -8,9 +8,9 @@
 </script>
 
 <SeoMeta
-  title="Guides | Logdash"
-  description="Step-by-step tutorials and migration guides to help you integrate and get the most out of Logdash."
-  keywords="logdash guides, migration guide, sdk migration, integration tutorial"
+  title="Metrics | Logdash Docs"
+  description="Track custom metrics from your application to monitor key business indicators with Logdash."
+  keywords="logdash metrics, custom metrics, business metrics, metrics tracking"
 />
 
-<DocArticle page={docPages.introduction} tables={data.tables} />
+<DocArticle page={docPages.metrics} tables={data.tables} />

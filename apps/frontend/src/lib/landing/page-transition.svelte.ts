@@ -25,7 +25,7 @@ const PAGE_IN_MS = 250;
  * navigations inside the section. The root view keys on the section, the
  * section's `PageView` keys on the pathname.
  */
-const SECTION_ROOTS = ['/docs', '/guides'];
+const SECTION_ROOTS = ['/docs'];
 
 export function sectionKey(url: URL): string {
   const section = SECTION_ROOTS.find(

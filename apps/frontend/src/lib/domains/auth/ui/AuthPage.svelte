@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import Logo from '$lib/domains/shared/icons/Logo.svelte';
+  import Logotype from '$lib/domains/shared/icons/Logotype.svelte';
   import AuthForm from './AuthForm.svelte';
   import AuthTestimonial from './AuthTestimonial.svelte';
 </script>
@@ -10,9 +10,8 @@
     class="relative flex w-full flex-col bg-neutral-900 p-8 lg:w-2/5 lg:border-r lg:border-base-100"
   >
     <div class="absolute left-8 top-8">
-      <a href={resolve('/')} class="flex items-center space-x-2">
-        <Logo class="size-10" />
-        <span class="text-2xl font-bold">logdash</span>
+      <a href={resolve('/')} class="flex">
+        <Logotype class="text-[24px]" />
       </a>
     </div>
 

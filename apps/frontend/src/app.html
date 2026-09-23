@@ -16,17 +16,16 @@
       sizes="180x180"
       href="%sveltekit.assets%/apple-touch-icon.png"
     />
+    <!--
+      The favicon is the bare light tile, pixel-snapped at 32 px. The ICO
+      covers browsers without SVG favicons; `sizes` keeps Chromium from
+      preferring it.
+    -->
+    <link rel="icon" sizes="32x32" href="%sveltekit.assets%/favicon.ico" />
     <link
       rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="%sveltekit.assets%/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="%sveltekit.assets%/favicon-16x16.png"
+      type="image/svg+xml"
+      href="%sveltekit.assets%/favicon.svg"
     />
     <link rel="manifest" href="%sveltekit.assets%/site.webmanifest" />
     <meta

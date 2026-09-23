@@ -1,5 +1,5 @@
 <script lang="ts">
-  import GuidesLayout from '$lib/landing/guides/GuidesLayout.svelte';
+  import DocsLayout from '$lib/landing/guides/DocsLayout.svelte';
   import type { Snippet } from 'svelte';
 
   type Props = {
@@ -9,12 +9,8 @@
   const { children }: Props = $props();
 </script>
 
-<!--
-  Same shell as /guides, minus the server load: none of the docs pages show
-  plan limits, so there are no tables to fetch and every route here prerenders.
--->
 <div class="w-full">
-  <GuidesLayout>
+  <DocsLayout>
     {@render children()}
-  </GuidesLayout>
+  </DocsLayout>
 </div>

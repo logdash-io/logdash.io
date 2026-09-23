@@ -8,7 +8,7 @@
   import PendingInvitations from '$lib/domains/app/clusters/ui/PendingInvitations.svelte';
   import BottomSheet from '$lib/domains/shared/ui/components/BottomSheet/BottomSheet.svelte';
   import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
-  import Logo from '$lib/domains/shared/icons/Logo.svelte';
+  import LogoMark from '$lib/domains/shared/icons/LogoMark.svelte';
   import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
   import { ScrollArea } from '@logdash/hyper-ui/presentational';
   import type { Snippet } from 'svelte';
@@ -74,7 +74,7 @@
       class="flex items-center gap-2"
       onclick={(e) => e.stopPropagation()}
     >
-      <Logo class="size-8" />
+      <LogoMark class="size-7" />
     </a>
   </div>
 {/snippet}
