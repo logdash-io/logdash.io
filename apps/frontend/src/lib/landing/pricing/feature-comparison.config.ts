@@ -4,7 +4,7 @@ export const FEATURES_COMPARISON = {
   title: 'Compare Plans',
   plans: [
     { name: 'Hobby', price: 'Free', tier: UserTier.FREE },
-    { name: 'Builder', price: '9$/month', tier: UserTier.BUILDER },
+    { name: 'Builder', price: '$9/month', tier: UserTier.BUILDER },
     { name: 'Pro', price: '$15/month', tier: UserTier.PRO },
   ],
   sections: [

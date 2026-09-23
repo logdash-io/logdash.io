@@ -1,4 +1,3 @@
-import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const';
 import { FAQS } from '$lib/landing/data/faq.data';
 import {
   docPages,
@@ -6,6 +5,7 @@ import {
   type DocBlock,
   type DocPage,
 } from '$lib/landing/guides/documentation.data';
+import { FEATURES_COMPARISON } from '$lib/landing/pricing/feature-comparison.config';
 import { match } from 'ts-pattern';
 
 type ChatCompletion = {
@@ -29,9 +29,11 @@ const SYSTEM_PROMPT = [
   `Official SDKs: ${SDKS.map((sdk) => sdk.name).join(', ')}.`,
   '',
   '# Plans',
-  ...PAYMENT_PLANS.map(
-    (plan) =>
-      `${plan.name} (${plan.price}): ${plan.features.map((feature) => feature.name).join('; ')}.`,
+  FEATURES_COMPARISON.plans
+    .map((plan) => `${plan.name}: ${plan.price}`)
+    .join('; '),
+  ...FEATURES_COMPARISON.sections.flatMap((section) =>
+    section.features.map(planFeatureFacts),
   ),
   '',
   '# FAQ',
@@ -70,4 +72,21 @@ function blockFacts(block: DocBlock): string[] {
       items.map((card) => `- ${card.title}: ${card.description}`),
     )
     .otherwise(() => []);
+}
+
+function planFeatureFacts(
+  feature: (typeof FEATURES_COMPARISON.sections)[number]['features'][number],
+): string {
+  const perPlan = FEATURES_COMPARISON.plans.map(
+    (plan) => `${plan.name} ${planValue(feature[plan.tier])}`,
+  );
+
+  return `${feature.name}: ${perPlan.join('; ')}`;
+}
+
+function planValue(value: string | boolean): string {
+  return match(value)
+    .with(true, () => 'yes')
+    .with(false, () => 'no')
+    .otherwise((text) => text);
 }
