@@ -15,8 +15,14 @@ import { METRIC_REGISTER_LOGGER } from '../../shared/logdash/logdash-tokens';
 // happen that customer wants to record 50 new metrics but only 2 will qualify.
 // By "qualify" we mean that metric is within the limit of metrics customer can register
 
+// A project at its limit keeps sending the same metrics on every flush, so the
+// warning would repeat several times a minute. Once an hour per project says it.
+const NOT_QUALIFIED_WARNING_INTERVAL_MS = 60 * 60 * 1000;
+
 @Injectable()
 export class MetricRegisterQualificationService {
+  private readonly lastNotQualifiedWarningAt = new Map<string, number>();
+
   constructor(
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly projectReadCachedService: ProjectReadCachedService,
@@ -67,12 +73,7 @@ export class MetricRegisterQualificationService {
       );
     }
 
-    if (notQualifiedMetrics.length) {
-      this.logger.warn('Some metrics did not qualify during registration', {
-        metrics: notQualifiedMetrics,
-        count: notQualifiedMetrics.length,
-      });
-    }
+    this.warnAboutNotQualifiedMetrics(notQualifiedMetrics);
 
     await this.metricRegisterWriteService.createMany(
       qualifiedMetricsToRegister.map((dto) => ({
@@ -82,6 +83,29 @@ export class MetricRegisterQualificationService {
     );
 
     return [...qualifiedMetricsAlreadyRegistered, ...qualifiedMetricsToRegister];
+  }
+
+  private warnAboutNotQualifiedMetrics(notQualifiedMetrics: QualifyMetricDto[]): void {
+    const now = Date.now();
+
+    const metrics = notQualifiedMetrics.filter(
+      (dto) =>
+        now - (this.lastNotQualifiedWarningAt.get(dto.projectId) ?? 0) >=
+        NOT_QUALIFIED_WARNING_INTERVAL_MS,
+    );
+
+    if (!metrics.length) {
+      return;
+    }
+
+    for (const dto of metrics) {
+      this.lastNotQualifiedWarningAt.set(dto.projectId, now);
+    }
+
+    this.logger.warn('Some metrics did not qualify during registration', {
+      metrics,
+      count: metrics.length,
+    });
   }
 
   private async qualifyMetricsForProject(
