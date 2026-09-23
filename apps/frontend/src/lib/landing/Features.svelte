@@ -182,6 +182,6 @@
 
 {#snippet metricsPanel()}
   <div class="flex h-full p-5">
-    <FakeMetricsSparkline header={false} />
+    <FakeMetricsSparkline />
   </div>
 {/snippet}
