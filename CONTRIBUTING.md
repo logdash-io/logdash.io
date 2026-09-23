@@ -60,6 +60,10 @@ If you want your local backend instead, change that one line to `http://localhos
 Everything else in that file is optional.
 `VITE_GITHUB_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID` only matter if you have OAuth credentials, which brings us to the next part.
 
+The "Ask AI" line at the end of the landing FAQ answers through Workers AI, which only runs on Cloudflare, never locally.
+A plain `pnpm dev:frontend` keeps remote bindings off, so that line shows its error state and nothing else needs a Cloudflare account.
+To try it, run `npx wrangler login` once and start the frontend with `REMOTE_BINDINGS=true pnpm dev:frontend`; the usage is billed to your own Cloudflare account.
+
 ### 5. Run the migrations
 
 ```bash

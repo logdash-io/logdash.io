@@ -6,7 +6,16 @@ declare global {
     // interface Locals {}
     // interface PageData {}
     // interface PageState {}
-    // interface Platform {}
+    interface Platform {
+      env: {
+        AI: {
+          run(model: string, input: Record<string, unknown>): Promise<unknown>;
+        };
+        FAQ_ASK_LIMITER: {
+          limit(options: { key: string }): Promise<{ success: boolean }>;
+        };
+      };
+    }
   }
 }
 
