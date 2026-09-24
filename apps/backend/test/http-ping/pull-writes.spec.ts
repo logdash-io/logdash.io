@@ -6,6 +6,7 @@ import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-ping
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
+import { HttpPingNormalized } from '../../src/http-ping/core/entities/http-ping.interface';
 
 describe('Http Ping (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -314,5 +315,53 @@ describe('Http Ping (writes)', () => {
 
     // Verify the ping was created for the claimed monitor only
     expect(allPings[0].httpMonitorId).toBe(claimedMonitor.id);
+  });
+
+  describe('when the request never gets a response', () => {
+    async function pingOnce(url: string): Promise<HttpPingNormalized> {
+      const { project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        projectId: project.id,
+        url,
+        claimed: true,
+      });
+
+      await schedulerService.pingSingleMonitor(monitor.id);
+
+      const [ping] = await bootstrap.utils.httpPingUtils.getMonitorPings({
+        httpMonitorId: monitor.id,
+      });
+      return ping;
+    }
+
+    it('describes blocked and unresolvable hosts the same way, without the address', async () => {
+      // when
+      const blockedPing = await pingOnce('http://10.1.2.3/');
+      const missingPing = await pingOnce('https://missing.invalid/');
+
+      // then
+      expect(blockedPing).toMatchObject({
+        statusCode: 0,
+        message: 'Hostname does not resolve to a public address',
+      });
+      expect(missingPing.message).toBe(blockedPing.message);
+      expect(blockedPing.message).not.toContain('10.1.2.3');
+    });
+
+    it('names the network failure instead of passing on the raw error', async () => {
+      // given
+      const url = 'https://example.org';
+      nock(url)
+        .get('/')
+        .replyWithError(
+          Object.assign(new Error('connect ECONNREFUSED 10.9.9.9:443'), { code: 'ECONNREFUSED' }),
+        );
+
+      // when
+      const ping = await pingOnce(url);
+
+      // then
+      expect(ping).toMatchObject({ statusCode: 0, message: 'Connection refused' });
+    });
   });
 });

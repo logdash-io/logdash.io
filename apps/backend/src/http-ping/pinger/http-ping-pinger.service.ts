@@ -5,6 +5,7 @@ import { LogdashMetrics } from '../../shared/logdash/aggregate-metrics';
 import { HTTP_PINGS_LOGGER, LOGDASH_METRICS } from '../../shared/logdash/logdash-tokens';
 import { Cron } from '@nestjs/schedule';
 import { safeHttpRequest } from '../../shared/ssrf/safe-http-request';
+import { UnsafeUrlError } from '../../shared/ssrf/safe-url';
 import { HttpMonitorNormalized } from 'src/http-monitor/core/entities/http-monitor.interface';
 import { HttpMonitorMode } from 'src/http-monitor/core/enums/http-monitor-mode.enum';
 import { ProjectTier } from 'src/project/core/enums/project-tier.enum';
@@ -18,6 +19,7 @@ import { HttpPingPingerDataService } from './http-ping-pinger.data-service';
 import { HttpPingCron } from '../core/enums/http-ping-cron.enum';
 import { ProjectPlanConfigs } from '../../shared/configs/project-plan-configs';
 import { errorMessage } from '../../shared/utils/error-message';
+import { isRecord } from '../../shared/utils/is-record';
 
 interface QueueItem {
   monitor: HttpMonitorNormalized;
@@ -25,6 +27,20 @@ interface QueueItem {
 }
 
 export const MAX_CONCURRENT_REQUESTS_TOKEN = 'MAX_CONCURRENT_REQUESTS_TOKEN';
+
+const PING_TIMEOUT_MS = 10_000;
+
+const UNREACHABLE_HOST_MESSAGE = 'Hostname does not resolve to a public address';
+const TIMED_OUT_MESSAGE = `Timed out after ${PING_TIMEOUT_MS / 1000}s`;
+
+const FAILURE_MESSAGES: Record<string, string> = {
+  ENOTFOUND: UNREACHABLE_HOST_MESSAGE,
+  EAI_AGAIN: UNREACHABLE_HOST_MESSAGE,
+  ETIMEDOUT: TIMED_OUT_MESSAGE,
+  ECONNABORTED: TIMED_OUT_MESSAGE,
+  ECONNREFUSED: 'Connection refused',
+  ECONNRESET: 'Connection reset',
+};
 
 @Injectable()
 export class HttpPingPingerService {
@@ -198,7 +214,7 @@ export class HttpPingPingerService {
     return safeHttpRequest({
       url,
       method: 'GET',
-      timeout: 10000,
+      timeout: PING_TIMEOUT_MS,
       validateStatus: () => true,
     });
   }
@@ -209,33 +225,44 @@ export class HttpPingPingerService {
     startTime: number,
     error?: unknown,
   ): CreateHttpPingDto {
-    const message = this.getMessage(response, error);
-    const isError =
-      response !== null &&
-      (response.status >= 400 || response.status < 200 || response.status === 0);
+    const isError = response === null || response.status < 200 || response.status >= 400;
+    const message = response ? this.describeResponse(response) : this.describeFailure(error);
 
     return {
       httpMonitorId: monitor.id,
-      statusCode: response?.status || 0,
+      statusCode: response?.status ?? 0,
       responseTimeMs: this.calculateResponseTime(startTime),
       message: isError ? message.substring(0, 1000) : undefined,
     };
   }
 
-  private getMessage(response: AxiosResponse<unknown> | null, error: unknown): string {
+  private describeResponse(response: AxiosResponse<unknown>): string {
     let jsonStringified: string | null;
     try {
-      jsonStringified = JSON.stringify(response?.data);
+      jsonStringified = JSON.stringify(response.data);
     } catch {
       jsonStringified = null;
     }
 
     return (
-      (typeof response?.data === 'string' ? response.data.substring(0, 1000) : jsonStringified) ||
-      response?.statusText ||
-      (error instanceof Error ? error.message : undefined) ||
+      (typeof response.data === 'string' ? response.data.substring(0, 1000) : jsonStringified) ||
+      response.statusText ||
       'Unknown error'
     );
+  }
+
+  private describeFailure(error: unknown): string {
+    if (error instanceof UnsafeUrlError) {
+      return UNREACHABLE_HOST_MESSAGE;
+    }
+
+    const code = isRecord(error) && typeof error.code === 'string' ? error.code : undefined;
+
+    if (!code) {
+      return 'Request failed';
+    }
+
+    return FAILURE_MESSAGES[code] ?? `Request failed (${code})`;
   }
 
   private calculateResponseTime(startTime: number): number {
