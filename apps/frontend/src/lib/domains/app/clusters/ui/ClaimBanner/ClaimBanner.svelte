@@ -49,7 +49,7 @@
 </script>
 
 <div class="flex shrink-0 items-center gap-3 text-sm">
-  <span class="text-neutral-400 hidden items-center gap-2 md:flex">
+  <span class="text-neutral-400 hidden items-center gap-2 xl:flex">
     <span class="bg-warning size-1.5 shrink-0 rounded-full"></span>
     Temporary dashboard
     {#if remainingMs !== null}
