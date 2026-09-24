@@ -16,7 +16,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "packageManager": "pnpm@10.7.0",
   "engines": {
     "node": ">=22",

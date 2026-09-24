@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-1f883d.svg"></a>
+  <a href="./LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-1f883d.svg"></a>
   <a href="https://github.com/logdash-io/logdash.io/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/logdash-io/logdash.io"></a>
   <a href="https://discord.gg/naftPW4Hxe"><img alt="Discord" src="https://img.shields.io/badge/Discord-join-5865F2?logo=discord&logoColor=white"></a>
   <a href="https://github.com/logdash-io/logdash.io/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/logdash-io/logdash.io"></a>
@@ -128,7 +128,7 @@ You get a monitor and a live dashboard without creating an account, because the 
 
 ### Self-hosting
 
-Everything that runs Logdash is in this repo under the MIT licence, and the whole stack comes up locally for development in a few commands (see below).
+Everything that runs Logdash is in this repo under the AGPL-3.0 licence, and the whole stack comes up locally for development in a few commands (see below).
 Production self-hosting is not there yet, and we would rather say that than sell you a `docker compose up` that falls over in a week.
 There is no packaged deployment, no upgrade path between versions, and the boot path still constructs Stripe and Resend clients, so a real instance wants real keys or a patch.
 Work on a supported self-host deployment is tracked in [the self-hosting issue](https://github.com/logdash-io/logdash.io/issues/251); tell us there or in [Discord](https://discord.gg/naftPW4Hxe) if you need it, because that is what moves it up the list.
@@ -235,7 +235,11 @@ Please do not open a public issue for a vulnerability.
 
 ## License
 
-MIT. See [`LICENSE`](./LICENSE).
+AGPL-3.0. See [`LICENSE`](./LICENSE).
+Copyright (c) 2025 Aleksander Błaszkiewicz and Szymon Grącki.
+You can run, change and self-host Logdash for anything, including commercial use.
+If you run a modified version as a service for others, you have to publish your changes under the same licence.
+`packages/hyper-ui` stays MIT, see [`packages/hyper-ui/LICENSE`](./packages/hyper-ui/LICENSE).
 
 The hosted product at [logdash.io](https://logdash.io) runs this code with billing wired up and plan limits enforced.
 There is no `ee/` directory, no dual licence and no feature in this repo that is gated behind a paid key.
