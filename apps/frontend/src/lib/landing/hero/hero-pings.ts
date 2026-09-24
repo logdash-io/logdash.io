@@ -45,11 +45,13 @@ export function uptimeLabel(pings: ChartPing[]): string | null {
 
 /** The gap the monitor actually keeps between checks, e.g. "15 s" or "1 min". */
 export function checkIntervalLabel(pings: ChartPing[]): string | null {
+  // A new monitor is checked once on creation and then on its schedule, so the
+  // gap after the first check says nothing about the cadence. Leave it out.
   const gaps = pings
-    .slice(1)
+    .slice(2)
     .map(
       (ping, index) =>
-        Date.parse(ping.createdAt) - Date.parse(pings[index].createdAt),
+        Date.parse(ping.createdAt) - Date.parse(pings[index + 1].createdAt),
     )
     .sort((a, b) => a - b);
 
