@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { quintOut } from 'svelte/easing';
   import { prefersReducedMotion } from 'svelte/motion';
-  import { fade, fly } from 'svelte/transition';
   import { match } from 'ts-pattern';
+  import { countTrailing } from './live-feed';
+  import LiveAlertCard from './LiveAlertCard.svelte';
 
   type Sample = { value: number; alerted: boolean };
 
@@ -156,15 +156,6 @@
     return { state: alerted ? 'firing' : 'pending', seconds: overFor, visible };
   }
 
-  function countTrailing(
-    values: number[],
-    predicate: (value: number) => boolean,
-  ): number {
-    const lastMiss = values.findLastIndex((value) => !predicate(value));
-
-    return values.length - 1 - lastMiss;
-  }
-
   function toSeconds(ms: number): string {
     return (ms / 1000).toFixed(3);
   }
@@ -221,26 +212,7 @@
     </div>
 
     {#if alert.visible}
-      <div
-        class="ring-hairline bg-base-300 absolute top-0 right-0 flex w-52 gap-2.5 rounded-lg px-3 py-2 ring-1"
-        role="status"
-        in:fly={{
-          y: -6,
-          duration: prefersReducedMotion.current ? 0 : 500,
-          easing: quintOut,
-        }}
-        out:fade={{ duration: prefersReducedMotion.current ? 0 : 300 }}
-      >
-        <span
-          class={['mt-1.5 size-1.5 shrink-0 rounded-full', card.dot]}
-        ></span>
-        <div class="flex min-w-0 flex-col gap-0.5">
-          <span class="text-sm font-medium tabular-nums">{card.title}</span>
-          <span class="text-neutral-500 text-xs tabular-nums">
-            {card.detail}
-          </span>
-        </div>
-      </div>
+      <LiveAlertCard dot={card.dot} title={card.title} detail={card.detail} />
     {/if}
   </div>
 

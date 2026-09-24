@@ -1,41 +1,11 @@
 <script lang="ts">
-  import { generateDemoData } from '$lib/domains/app/projects/domain/status-page-demo-data';
-  import {
-    getStatusFromPings,
-    MonitorCard,
-    StatusBadge,
-    type PublicDashboardData,
-  } from '@logdash/hyper-ui/features';
-  import { SearchIcon } from 'lucide-svelte';
-  import FakeLogs from './FakeLogs.svelte';
+  import FakeLogSearch from './FakeLogSearch.svelte';
   import FakeMetricsSparkline from './FakeMetricsSparkline.svelte';
+  import FakeStatusPage from './FakeStatusPage.svelte';
+  import FakeUptimeChart from './FakeUptimeChart.svelte';
   import FeatureRow from './FeatureRow.svelte';
   import LandingGap from './LandingGap.svelte';
   import LandingHeading from './LandingHeading.svelte';
-  import SystemHealth from './SystemHealth.svelte';
-
-  type DemoMonitor = PublicDashboardData['httpMonitors'][number];
-
-  const demoMonitors = generateDemoData().httpMonitors;
-
-  function uptimeFromBuckets(monitor: DemoMonitor): number {
-    const buckets = monitor.buckets.filter((bucket) => bucket !== null);
-
-    const successCount = buckets.reduce(
-      (total, bucket) => total + bucket.successCount,
-      0,
-    );
-    const checkCount = buckets.reduce(
-      (total, bucket) => total + bucket.successCount + bucket.failureCount,
-      0,
-    );
-
-    if (!checkCount) {
-      return 0;
-    }
-
-    return (successCount / checkCount) * 100;
-  }
 </script>
 
 <LandingHeading
@@ -87,7 +57,6 @@
     'Logs from every service in one place',
     'Search and filter while they stream in',
   ]}
-  panelHeader={logsHeader}
   panel={logsPanel}
 />
 
@@ -118,16 +87,14 @@
 {/snippet}
 
 {#snippet monitoringHeader()}
-  <span class="font-medium">Your services</span>
-  <span class="text-neutral-500 text-xs">Last 45 checks</span>
-  <span class="ml-auto shrink-0">
-    <StatusBadge status="up" showText={true} />
-  </span>
+  <span class="font-medium">api.acme.com</span>
+  <span class="text-neutral-500 text-xs">Every 15 s</span>
+  {@render liveStatus()}
 {/snippet}
 
 {#snippet monitoringPanel()}
-  <div class="p-5">
-    <SystemHealth />
+  <div class="flex h-full p-5">
+    <FakeUptimeChart />
   </div>
 {/snippet}
 
@@ -137,41 +104,13 @@
 {/snippet}
 
 {#snippet statusPagePanel()}
-  <div class="flex flex-col gap-1.5 p-4">
-    <div class="flex items-center justify-between gap-3 px-1 pt-1 pb-4">
-      <div class="flex flex-col gap-0.5">
-        <span class="text-base font-medium">Acme status</span>
-        <span class="text-neutral-500 text-xs">Updated a few seconds ago</span>
-      </div>
-
-      <span
-        class="text-warning flex shrink-0 items-center gap-2 text-sm font-medium"
-      >
-        <span class="bg-warning size-2 rounded-full"></span>
-        Partial outage
-      </span>
-    </div>
-
-    {#each demoMonitors as monitor (monitor.name)}
-      <MonitorCard
-        {monitor}
-        status={getStatusFromPings(monitor.pings)}
-        uptime={uptimeFromBuckets(monitor)}
-        maxBucketsToShow={60}
-        maxPingsToShow={40}
-      />
-    {/each}
+  <div class="flex h-full p-5">
+    <FakeStatusPage />
   </div>
 {/snippet}
 
-{#snippet logsHeader()}
-  <SearchIcon class="text-neutral-600 size-3.5 shrink-0" />
-  <span class="text-neutral-500">Search logs</span>
-  {@render liveStatus()}
-{/snippet}
-
 {#snippet logsPanel()}
-  <FakeLogs header={false} padded={true} visible={9} />
+  <FakeLogSearch />
 {/snippet}
 
 {#snippet metricsHeader()}
