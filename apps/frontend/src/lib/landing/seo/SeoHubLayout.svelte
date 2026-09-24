@@ -81,8 +81,9 @@
         A hub that answers its own query is the highest-intent page in the
         family, and without this it dead-ends into a link list while every
         leaf page offers a monitor. Same CTA as the page layout, same place.
+        A form is nothing to quote, so snippets and markdown twins skip it.
       -->
-      <section class="mt-12 flex flex-col gap-4">
+      <section data-nosnippet class="mt-12 flex flex-col gap-4">
         <h2 class="text-[15px] font-medium">
           Point it at your own URL and watch it for real.
         </h2>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { markdownPath } from '$lib/landing/seo/markdown-twin';
 
   type JsonLd = Record<string, unknown>;
 
@@ -12,6 +13,8 @@
     canonical?: string;
     robots?: 'noindex' | 'noindex, nofollow';
     jsonLd?: JsonLd | JsonLd[];
+    /** Links the page's markdown twin. Only sitemap pages have one. */
+    markdownTwin?: boolean;
   };
 
   let {
@@ -23,6 +26,7 @@
     canonical,
     robots,
     jsonLd,
+    markdownTwin = !robots,
   }: Props = $props();
 
   const baseUrl = 'https://logdash.io';
@@ -34,6 +38,9 @@
   };
 
   const canonicalUrl = $derived(absolute(canonical ?? page.url.pathname));
+  const markdownUrl = $derived(
+    `${baseUrl}${markdownPath(new URL(canonicalUrl).pathname)}`,
+  );
   const imageUrl = $derived(`${baseUrl}${image}`);
   const logoUrl = `${baseUrl}/logo.png`;
 
@@ -57,6 +64,10 @@
     <meta name="robots" content={robots} />
   {/if}
   <link rel="canonical" href={canonicalUrl} />
+  {#if markdownTwin}
+    <!-- The page as markdown, for LLMs and coding agents. -->
+    <link rel="alternate" type="text/markdown" href={markdownUrl} />
+  {/if}
 
   <!-- Open Graph / Facebook -->
   <meta property="og:logo" content={logoUrl} />

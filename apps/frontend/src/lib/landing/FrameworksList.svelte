@@ -30,14 +30,18 @@
   >
     <p class="text-neutral-500 text-sm">Works with your stack</p>
 
-    <div class="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
+    <!-- The names are in the list itself, not only in tooltips, so screen readers and markdown twins get them. -->
+    <ul class="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
       {#each frameworks as framework (framework.name)}
-        <Tooltip content={framework.name} placement="top">
-          <framework.icon
-            class="size-8 grayscale transition-[filter] duration-150 hover:grayscale-0"
-          />
-        </Tooltip>
+        <li>
+          <Tooltip content={framework.name} placement="top">
+            <framework.icon
+              class="size-8 grayscale transition-[filter] duration-150 hover:grayscale-0"
+            />
+          </Tooltip>
+          <span class="sr-only">{framework.name}</span>
+        </li>
       {/each}
-    </div>
+    </ul>
   </div>
 </LandingSection>

@@ -127,13 +127,15 @@
                     class="bg-hairline absolute top-6 bottom-0 left-3 w-px -translate-x-1/2"
                   ></span>
                 {/if}
+                <!-- The <ol> already numbers the steps for screen readers. -->
                 <span
+                  aria-hidden="true"
                   class="border-hairline bg-base-300 text-neutral-400 relative flex size-6 shrink-0 items-center justify-center rounded-full border text-xs"
                 >
                   {stepIndex + 1}
                 </span>
                 <div class="flex flex-col gap-1">
-                  <span class="text-[15px] font-medium">{step.title}</span>
+                  <strong class="text-[15px] font-medium">{step.title}</strong>
                   <span class="text-neutral-400 text-sm leading-6">
                     {step.text}
                   </span>

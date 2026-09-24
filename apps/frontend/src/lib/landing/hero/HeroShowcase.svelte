@@ -88,8 +88,11 @@
   From lg the frame keeps a 16:9 ratio and its panels share the height the way
   a service page does in the app: sidebar, then the monitor over the log tail,
   with the metrics column beside them.
+
+  The frame is a mock of the app, so snippets and markdown twins skip it.
 -->
 <div
+  data-nosnippet
   class="relative mx-auto w-full max-w-landing px-4 pt-8 pb-8 sm:px-6 lg:px-10 lg:pt-12 lg:pb-14"
 >
   <div class="lg:-mx-4">

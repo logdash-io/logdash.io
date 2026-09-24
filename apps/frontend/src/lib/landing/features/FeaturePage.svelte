@@ -157,7 +157,8 @@
     <ol class="bg-hairline grid grid-cols-1 gap-px lg:grid-cols-3">
       {#each page.steps.items as step, index (step.title)}
         <li class="bg-base-300 px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
-          <span class="text-neutral-600 font-mono text-sm">
+          <!-- The <ol> already numbers the steps for screen readers. -->
+          <span aria-hidden="true" class="text-neutral-600 font-mono text-sm">
             {String(index + 1).padStart(2, '0')}
           </span>
           <h3 class="mt-4 text-lg font-medium tracking-[-0.01em]">

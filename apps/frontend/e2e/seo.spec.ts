@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { markdownPath } from '../src/lib/landing/seo/markdown-twin';
 
 const SITE_ORIGIN = 'https://logdash.io';
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5175';
@@ -147,6 +148,15 @@ test.describe('every sitemap URL is crawlable', () => {
         `${path} description is ${description!.length} chars`,
       ).toBeLessThanOrEqual(DESCRIPTION_MAX);
 
+      expect(
+        await attribute(
+          page,
+          'link[rel=alternate][type="text/markdown"]',
+          'href',
+        ),
+        `${path} does not link its markdown twin`,
+      ).toBe(`${SITE_ORIGIN}${markdownPath(path)}`);
+
       const robots = await attribute(page, 'meta[name=robots]', 'content');
 
       expect(
@@ -160,6 +170,57 @@ test.describe('every sitemap URL is crawlable', () => {
           `${path} is an SDK doc with no code sample`,
         ).not.toHaveCount(0);
       }
+    });
+  });
+});
+
+test.describe('llms.txt and the markdown twins', () => {
+  test('llms.txt links the markdown twin of every sitemap page', async ({
+    request,
+  }) => {
+    const response = await request.get('/llms.txt');
+
+    expect(response.status()).toBe(200);
+
+    const llmsTxt = await response.text();
+
+    expect(llmsTxt).toMatch(/^# Logdash\n\n> \S/);
+
+    for (const path of sitemapPaths) {
+      expect(llmsTxt, `llms.txt does not link ${path}`).toContain(
+        `](${SITE_ORIGIN}${markdownPath(path)}): `,
+      );
+    }
+  });
+
+  test('llms-full.txt carries every twin', async ({ request }) => {
+    const response = await request.get('/llms-full.txt');
+
+    expect(response.status()).toBe(200);
+
+    const llmsFullTxt = await response.text();
+
+    for (const url of sitemapUrls) {
+      expect(llmsFullTxt, `llms-full.txt is missing ${url}`).toContain(
+        `\nurl: ${url}\n`,
+      );
+    }
+  });
+
+  sitemapPaths.forEach((path, index) => {
+    const twin = markdownPath(path);
+
+    test(`${twin} is ${path} as markdown`, async ({ request }) => {
+      const response = await request.get(twin);
+
+      expect(response.status(), `${twin} did not return 200`).toBe(200);
+      expect(response.headers()['content-type']).toContain('text/markdown');
+
+      const markdown = await response.text();
+
+      expect(markdown).toContain(`\nurl: ${sitemapUrls[index]}\n`);
+      expect(markdown, `${twin} has no h1`).toMatch(/^# \S/m);
+      expect(markdown, `${twin} links a relative URL`).not.toMatch(/\]\(\//);
     });
   });
 });

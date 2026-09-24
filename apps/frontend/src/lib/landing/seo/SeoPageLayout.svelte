@@ -97,8 +97,9 @@
     <!--
       The article always ends on the FAQ block's own hairline, so the CTA
       leans on space rather than adding a second rule right under the first.
+      A form is nothing to quote, so snippets and markdown twins skip it.
     -->
-    <section class="mt-12 flex flex-col gap-4">
+    <section data-nosnippet class="mt-12 flex flex-col gap-4">
       <h2 class="text-[15px] font-medium">
         Point it at your own URL and watch it for real.
       </h2>

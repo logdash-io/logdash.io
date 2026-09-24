@@ -1,7 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import MinusIcon from '$lib/domains/shared/icons/MinusIcon.svelte';
-  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import ComparisonMark from './ComparisonMark.svelte';
   import {
     grafanaComparisonData,
     grafanaFeatureComparisonData,
@@ -38,7 +37,7 @@
 
   <section class="flex flex-col gap-8">
     <div class="text-center">
-      <h3 class="text-3xl font-semibold">Who is who and what is what?</h3>
+      <h2 class="text-3xl font-semibold">Who is who and what is what?</h2>
     </div>
 
     <div class="overflow-hidden rounded-xl border border-hairline">
@@ -79,16 +78,10 @@
                   { 'border-b': i < grafanaComparisonData.length - 1 },
                 ]}
               >
-                <div class="flex items-center gap-2">
-                  {#if point.logdashWin === 'both'}
-                    <PlusIcon class="text-success h-5 w-5 shrink-0" />
-                  {:else if point.logdashWin === true}
-                    <MinusIcon class="text-error h-5 w-5 shrink-0" />
-                  {:else if point.logdashWin === false}
-                    <PlusIcon class="text-success h-5 w-5 shrink-0" />
-                  {/if}
-                  {point.competitor}
-                </div>
+                <ComparisonMark
+                  good={point.logdashWin !== true}
+                  text={point.competitor}
+                />
               </td>
               <td
                 class={[
@@ -99,16 +92,10 @@
                   },
                 ]}
               >
-                <div class="flex items-center gap-2">
-                  {#if point.logdashWin === 'both'}
-                    <PlusIcon class="text-success h-5 w-5 shrink-0" />
-                  {:else if point.logdashWin === false}
-                    <MinusIcon class="text-error h-5 w-5 shrink-0" />
-                  {:else if point.logdashWin === true}
-                    <PlusIcon class="text-success h-5 w-5 shrink-0" />
-                  {/if}
-                  {point.logdash}
-                </div>
+                <ComparisonMark
+                  good={point.logdashWin !== false}
+                  text={point.logdash}
+                />
               </td>
             </tr>
           {/each}
@@ -119,12 +106,9 @@
 
   <section class="flex flex-col gap-8">
     <div class="text-center">
-      <h2
-        class="text-neutral-600 mb-2 text-sm font-semibold uppercase tracking-widest"
-      ></h2>
-      <h3 class="text-3xl font-medium tracking-[-0.03em]">
+      <h2 class="text-3xl font-medium tracking-[-0.03em]">
         The "No-Nonsense" Comparison
-      </h3>
+      </h2>
       <p class="text-neutral-400 mx-auto mt-4 max-w-2xl text-lg">
         Grafana gives you infinite flexibility. Logdash gives you instant
         clarity. Choose based on what matters more: customization or speed.
@@ -187,7 +171,7 @@
 
   <section class="flex flex-col gap-8">
     <div class="text-center">
-      <h3 class="text-3xl font-semibold">Feature Comparison Table</h3>
+      <h2 class="text-3xl font-semibold">Feature Comparison Table</h2>
     </div>
 
     <div class="overflow-hidden rounded-xl border border-hairline">
@@ -228,16 +212,10 @@
                   { 'border-b': i < grafanaFeatureComparisonData.length - 1 },
                 ]}
               >
-                <div class="flex items-center gap-2">
-                  {#if point.logdashWin === 'both'}
-                    <PlusIcon class="text-success h-5 w-5 shrink-0" />
-                  {:else if point.logdashWin === true}
-                    <MinusIcon class="text-error h-5 w-5 shrink-0" />
-                  {:else if point.logdashWin === false}
-                    <PlusIcon class="text-success h-5 w-5 shrink-0" />
-                  {/if}
-                  {point.competitor}
-                </div>
+                <ComparisonMark
+                  good={point.logdashWin !== true}
+                  text={point.competitor}
+                />
               </td>
               <td
                 class={[
@@ -248,16 +226,10 @@
                   },
                 ]}
               >
-                <div class="flex items-center gap-2">
-                  {#if point.logdashWin === 'both'}
-                    <PlusIcon class="text-success h-5 w-5 shrink-0" />
-                  {:else if point.logdashWin === false}
-                    <MinusIcon class="text-error h-5 w-5 shrink-0" />
-                  {:else if point.logdashWin === true}
-                    <PlusIcon class="text-success h-5 w-5 shrink-0" />
-                  {/if}
-                  {point.logdash}
-                </div>
+                <ComparisonMark
+                  good={point.logdashWin !== false}
+                  text={point.logdash}
+                />
               </td>
             </tr>
           {/each}
@@ -268,17 +240,14 @@
 
   <section class="flex flex-col gap-8">
     <div class="text-center">
-      <h2
-        class="text-neutral-600 mb-2 text-sm font-semibold uppercase tracking-widest"
-      ></h2>
-      <h3 class="text-3xl font-medium tracking-[-0.03em]">
+      <h2 class="text-3xl font-medium tracking-[-0.03em]">
         The Trade-off: Flexibility vs. Simplicity.
-      </h3>
+      </h2>
     </div>
 
     <div class="grid gap-8 md:grid-cols-2">
       <div class="ld-card bg-neutral-900 p-8">
-        <h4 class="mb-4 text-xl font-semibold">Grafana is like LEGO.</h4>
+        <h3 class="mb-4 text-xl font-semibold">Grafana is like LEGO.</h3>
         <p class="text-neutral-300 text-lg leading-relaxed">
           You can build anything you want, but you need to source the bricks,
           read the instructions, and spend hours assembling the pieces.
@@ -286,12 +255,12 @@
       </div>
 
       <div class="ld-card border-primary/20 bg-primary/5 p-8 border">
-        <h4 class="mb-4 text-xl font-semibold">
+        <h3 class="mb-4 text-xl font-semibold">
           <span class="bg-primary/10 text-primary rounded-lg px-2 py-1">
             Logdash
           </span>
           is like a pre-built model.
-        </h4>
+        </h3>
         <p class="text-neutral-300 text-lg leading-relaxed">
           It comes ready to use. No assembly required. Just open the box and
           start monitoring.
