@@ -35,6 +35,6 @@
       <LegalDocument {definition} />
     </div>
   </div>
-
-  <Footer />
 </div>
+
+<Footer />

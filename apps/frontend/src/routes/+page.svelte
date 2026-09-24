@@ -4,6 +4,7 @@
   import FinalCta from '$lib/landing/FinalCta.svelte';
   import Footer from '$lib/landing/Footer.svelte';
   import Features from '$lib/landing/Features.svelte';
+  import FundedByUsers from '$lib/landing/FundedByUsers.svelte';
   import Hero from '$lib/landing/hero/Hero.svelte';
   import LandingSection from '$lib/landing/LandingSection.svelte';
   import ProblemStatement from '$lib/landing/ProblemStatement.svelte';
@@ -37,11 +38,13 @@
 
   <TestimonialsList />
 
+  <FundedByUsers />
+
   <FaqSection />
 
   <FinalCta />
 
-  <LandingSection divider={false} rails={false}>
-    <Footer />
-  </LandingSection>
+  <LandingSection divider={false} class="h-12 lg:h-16" />
+
+  <Footer />
 </div>

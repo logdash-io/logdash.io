@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import LogoMark from '$lib/domains/shared/icons/LogoMark.svelte';
   import { HERO_ID } from '$lib/landing/hero/hero-anchors';
   import HeroUrlForm from '$lib/landing/hero/HeroUrlForm.svelte';
@@ -56,15 +57,17 @@
         No signup · No credit card · Claim later with GitHub or Google
       </p>
 
-      <!-- The hero up top is the live demo. -->
+      <!-- The hero on the home page is the live demo. -->
+      <!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus the hero hash -->
       <a
-        href="#{HERO_ID}"
+        href={`${resolve('/')}#${HERO_ID}`}
         class="text-base-content hover:text-neutral-400 focus-visible:outline-neutral-500 mt-10 inline-flex items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 lg:mt-auto"
         data-posthog-id="final-cta-demo-cta"
       >
         Or watch the live demo
         <ArrowUpIcon class="size-4" />
       </a>
+      <!-- eslint-enable svelte/no-navigation-without-resolve -->
     </div>
 
     <div

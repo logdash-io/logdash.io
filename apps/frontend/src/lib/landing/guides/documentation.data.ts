@@ -211,13 +211,13 @@ export const docPages: Record<
     blocks: [
       {
         type: 'paragraph',
-        text: 'Point a monitor at an endpoint and Logdash checks it on the interval you choose. Downtime shows up in the uptime history, triggers an alert and can be shared on a public status page.',
+        text: 'Point a monitor at an endpoint and Logdash checks it as often as your plan allows, down to every 15 seconds. Downtime shows up in the uptime history, triggers an alert and can be shared on a public status page.',
       },
       { type: 'heading', text: 'What you get' },
       {
         type: 'list',
         items: [
-          'HTTP health checks with configurable intervals',
+          'HTTP health checks every 5 minutes, 1 minute or 15 seconds, by plan',
           'Uptime history and response time tracking',
           'Public status pages with custom domains',
           'Alerts on Telegram and webhooks when a check flips to down',

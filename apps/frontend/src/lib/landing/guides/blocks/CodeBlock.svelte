@@ -75,32 +75,43 @@
 -->
 <div class="doc-code border-hairline overflow-hidden rounded-xl border">
   {#if title}
-    <div class="border-hairline border-b px-4 py-2">
+    <div
+      class="border-hairline flex h-9 items-center justify-between border-b pr-1 pl-4"
+    >
       <span class="text-neutral-500 text-xs font-medium">{title}</span>
+      {@render copyButton()}
+    </div>
+
+    <Highlight class="font-mono" {code} language={grammars[language]} />
+  {:else}
+    <!--
+      The right padding is a gutter the code never scrolls into, so a long
+      first line clips against empty space instead of sliding under the button.
+    -->
+    <div class="relative pr-12">
+      <Highlight class="font-mono" {code} language={grammars[language]} />
+
+      <div class="absolute top-3 right-3">
+        {@render copyButton()}
+      </div>
     </div>
   {/if}
-
-  <!--
-    The right padding is a gutter the code never scrolls into, so a long
-    first line clips against empty space instead of sliding under the button.
-  -->
-  <div class="relative pr-12">
-    <Highlight class="font-mono" {code} language={grammars[language]} />
-
-    <button
-      type="button"
-      onclick={onCopy}
-      aria-label={copied ? 'Copied' : 'Copy code'}
-      class="text-neutral-600 hover:text-base-content bg-base-300 absolute top-3 right-3 flex size-7 items-center justify-center rounded-md transition-ink duration-150"
-    >
-      {#if copied}
-        <CheckIcon class="size-3.5" />
-      {:else}
-        <CopyIcon class="size-3.5" />
-      {/if}
-    </button>
-  </div>
 </div>
+
+{#snippet copyButton()}
+  <button
+    type="button"
+    onclick={onCopy}
+    aria-label={copied ? 'Copied' : 'Copy code'}
+    class="text-neutral-600 hover:text-base-content bg-base-300 flex size-7 items-center justify-center rounded-md transition-ink duration-150"
+  >
+    {#if copied}
+      <CheckIcon class="size-3.5" />
+    {:else}
+      <CopyIcon class="size-3.5" />
+    {/if}
+  </button>
+{/snippet}
 
 <style>
   /*

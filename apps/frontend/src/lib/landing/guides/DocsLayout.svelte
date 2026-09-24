@@ -114,9 +114,7 @@
   </div>
 </div>
 
-<div class="border-hairline w-full border-t">
-  <Footer />
-</div>
+<Footer />
 
 {#snippet groups()}
   <div class="flex flex-col gap-7">

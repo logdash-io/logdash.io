@@ -12,6 +12,6 @@
 
 <div class="relative mx-auto flex w-full max-w-landing flex-col">
   <GrafanaComparison />
-
-  <Footer />
 </div>
+
+<Footer />

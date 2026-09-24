@@ -2,7 +2,15 @@
   import { FAQS } from './data/faq.data';
   import FaqAsk from './FaqAsk.svelte';
   import FaqItem from './FaqItem.svelte';
+  import type { DocFaqItem } from './guides/documentation.data';
   import LandingSection from './LandingSection.svelte';
+
+  type Props = {
+    faqs?: DocFaqItem[];
+    title?: string;
+  };
+
+  const { faqs = FAQS, title = 'Frequently asked questions' }: Props = $props();
 </script>
 
 <LandingSection id="faq">
@@ -13,7 +21,7 @@
       <h2
         class="text-3xl font-medium tracking-[-0.03em] text-balance sm:text-4xl"
       >
-        Frequently asked questions
+        {title}
       </h2>
 
       <p class="text-neutral-400 text-lg text-pretty">
@@ -30,7 +38,7 @@
     </div>
 
     <div class="divide-hairline flex flex-col divide-y lg:col-span-3">
-      {#each FAQS as faq (faq.question)}
+      {#each faqs as faq (faq.question)}
         <FaqItem question={faq.question}>{faq.answer}</FaqItem>
       {/each}
 

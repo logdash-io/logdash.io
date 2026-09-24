@@ -131,7 +131,5 @@
     </nav>
   </main>
 
-  <div class="border-hairline w-full border-t">
-    <Footer />
-  </div>
+  <Footer />
 </div>

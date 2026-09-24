@@ -1,8 +1,9 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import Logotype from '$lib/domains/shared/icons/Logotype.svelte';
+  import LogoMark from '$lib/domains/shared/icons/LogoMark.svelte';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
   import FooterEnding from '$lib/landing/FooterEnding.svelte';
+  import LandingSection from '$lib/landing/LandingSection.svelte';
   import {
     FOOTER_COLUMNS,
     FOOTER_LEGAL,
@@ -30,16 +31,20 @@
 </script>
 
 <!--
-  How the page ends: the logo alone on the left, four
-  equal columns packed against the right edge of the landing column, then a
-  quiet bottom row with the social icons and the legal links, and finally the
-  wordmark rising out of the page bottom (FooterEnding's runway; the root
-  layout renders its floor).
+  How the page ends: a hatched band across the full width, then the landing
+  column between its rails with the logo mark alone on the left, four equal
+  columns packed against the right edge, and a quiet bottom row with the
+  social icons and the legal links. Last, the wordmark rising out of the page
+  bottom (FooterEnding's runway; the root layout renders its floor), with the
+  rails running on down to the page end.
 -->
 <!-- eslint-disable svelte/no-navigation-without-resolve -- linkAttrs() resolves internal paths -->
 <footer class="w-full">
-  <div
-    class="mx-auto w-full max-w-landing px-4 pt-16 sm:px-6 lg:px-10 lg:pt-20"
+  <div class="border-hairline ld-hatch h-5 border-y lg:h-8"></div>
+
+  <LandingSection
+    divider={false}
+    class="px-4 pt-16 pb-8 sm:px-6 lg:px-10 lg:pt-20 lg:pb-12"
   >
     <div
       class="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4 xl:grid-cols-[minmax(0,1fr)_repeat(4,14.5rem)] xl:gap-x-0"
@@ -48,8 +53,9 @@
         href={resolve('/')}
         class="col-span-2 flex h-7 w-fit items-center sm:col-span-4 xl:col-span-1"
         draggable="false"
+        aria-label="Logdash home"
       >
-        <Logotype class="text-[18px]" />
+        <LogoMark class="size-7" />
       </a>
 
       {#each FOOTER_COLUMNS as column (column.title)}
@@ -80,7 +86,7 @@
     </div>
 
     <div
-      class="mt-20 flex flex-col gap-6 pb-4 sm:flex-row sm:items-center sm:justify-between lg:mt-32"
+      class="mt-20 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between lg:mt-32"
     >
       <ul class="flex items-center gap-5">
         {#each FOOTER_SOCIALS as social (social.href)}
@@ -115,8 +121,17 @@
         {/each}
       </div>
     </div>
-  </div>
+  </LandingSection>
 
-  <FooterEnding part="runway" />
+  <div class="relative">
+    <div
+      class="pointer-events-none absolute inset-0 mx-auto w-full max-w-landing lg:px-10"
+      aria-hidden="true"
+    >
+      <div class="border-hairline h-full lg:border-x"></div>
+    </div>
+
+    <FooterEnding part="runway" />
+  </div>
 </footer>
 <!-- eslint-enable svelte/no-navigation-without-resolve -->

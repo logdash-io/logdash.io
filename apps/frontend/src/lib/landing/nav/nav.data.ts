@@ -103,7 +103,7 @@ export const NAV_PANELS: Record<NavMenuKey, NavPanel> = {
             ...to('/features/monitoring'),
             title: 'Monitoring',
             description:
-              'HTTP checks and cron heartbeats, with alerts that reach you before users notice',
+              'HTTP checks and status pages, with alerts that reach you before users notice',
           },
           {
             ...to('/features/logging'),

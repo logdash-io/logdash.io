@@ -8,12 +8,14 @@
     isValidUrl,
     tryPrependProtocol,
   } from '$lib/domains/shared/utils/url';
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { ArrowRightIcon, CircleAlertIcon } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { prefersReducedMotion } from 'svelte/motion';
   import { fly, slide } from 'svelte/transition';
-  import { HERO_SHOWCASE_ID, HERO_URL_INPUT_ID } from './hero-anchors';
+  import { HERO_ID, HERO_SHOWCASE_ID, HERO_URL_INPUT_ID } from './hero-anchors';
 
   type Props = {
     source: AnonymousPreviewSource;
@@ -80,9 +82,14 @@
     }
 
     validationMessage = null;
-    revealShowcase();
+    const hasShowcase = revealShowcase();
 
     await anonymousPreviewState.submit(tryPrependProtocol(value), source);
+
+    if (!hasShowcase) {
+      // eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() plus the hero hash
+      await goto(`${resolve('/')}#${HERO_ID}`);
+    }
   }
 
   function reject(message: string): void {
@@ -102,12 +109,15 @@
     );
   }
 
-  function revealShowcase(): void {
+  function revealShowcase(): boolean {
     const showcase = document.getElementById(HERO_SHOWCASE_ID);
 
-    if (showcase) {
-      scrollIntoViewCentered(showcase);
+    if (!showcase) {
+      return false;
     }
+
+    scrollIntoViewCentered(showcase);
+    return true;
   }
 
   function onInput(): void {
@@ -133,7 +143,7 @@
   <div
     bind:this={composer}
     class={[
-      'inset-ring-base-100 bg-base-300 flex w-full cursor-text items-center gap-2 rounded-2xl p-2 inset-ring',
+      'inset-ring-base-100 bg-base-300 flex w-full cursor-text items-center gap-2 rounded-full p-2 inset-ring',
       'transition-shadow duration-150',
       'hover:not-focus-within:inset-ring-neutral-700',
       'focus-within:inset-ring-neutral-600 focus-within:shadow-(--focus-ring)',
@@ -148,7 +158,7 @@
       <input
         bind:this={input}
         class={[
-          'peer selection:bg-neutral-700 w-full bg-transparent px-2 outline-none placeholder:text-transparent disabled:opacity-60',
+          'peer selection:bg-neutral-700 w-full bg-transparent pr-2 pl-3 outline-none placeholder:text-transparent disabled:opacity-60',
           compact ? 'h-9 text-base' : 'h-11 text-base sm:text-lg',
         ]}
         id={compact ? undefined : HERO_URL_INPUT_ID}
@@ -170,7 +180,7 @@
       <span
         aria-hidden="true"
         class={[
-          'text-neutral-600 pointer-events-none absolute inset-y-0 left-2 right-2 hidden items-center peer-placeholder-shown:flex',
+          'text-neutral-600 pointer-events-none absolute inset-y-0 left-3 right-2 hidden items-center peer-placeholder-shown:flex',
           compact ? 'text-base' : 'text-base sm:text-lg',
         ]}
       >
@@ -182,7 +192,7 @@
     <button
       type="submit"
       class={[
-        'btn btn-primary btn-sm shrink-0 rounded-lg font-medium',
+        'btn btn-primary btn-sm shrink-0 rounded-full font-medium',
         compact ? 'h-9 px-4' : 'h-11 px-5 text-sm sm:text-base',
       ]}
       data-posthog-id={submitPosthogId}
@@ -207,7 +217,7 @@
       <div transition:slide={{ duration: statusSwapMs }}>
         {#key validationMessage}
           <span
-            class="flex items-center gap-1.5 pt-2 pl-4"
+            class="flex items-center gap-1.5 pt-2 pl-5"
             in:fly={{ y: -2, duration: statusSwapMs }}
           >
             <CircleAlertIcon class="size-3.5 shrink-0" />

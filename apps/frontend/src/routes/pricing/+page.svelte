@@ -14,6 +14,6 @@
   <PricingPage />
 
   <div class="distance h-16 sm:h-32"></div>
-
-  <Footer />
 </div>
+
+<Footer />

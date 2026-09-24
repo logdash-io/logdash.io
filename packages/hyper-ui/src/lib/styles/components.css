@@ -222,3 +222,16 @@
   background-repeat: no-repeat;
   background-position: left top;
 }
+
+/*
+  Diagonal hairlines on an 8px pitch: a band that separates the page from
+  the footer without adding another solid rule.
+*/
+.ld-hatch {
+  background-image: repeating-linear-gradient(
+    225deg,
+    var(--color-hairline) 0 1px,
+    transparent 0 50%
+  );
+  background-size: 8px 8px;
+}

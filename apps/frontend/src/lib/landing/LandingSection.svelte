@@ -9,7 +9,6 @@
     divider?: boolean;
     /** Full-width hairline above the section, for the first one after the hero stage. */
     dividerTop?: boolean;
-    rails?: boolean;
     children?: Snippet;
   };
 
@@ -18,7 +17,6 @@
     class: className,
     divider = true,
     dividerTop = false,
-    rails = true,
     children,
   }: Props = $props();
 </script>
@@ -30,13 +28,9 @@
     { 'border-b': divider, 'border-t': dividerTop },
   ]}
 >
-  <div
-    class={[
-      'border-hairline mx-auto w-full max-w-landing',
-      { 'min-[88rem]:border-x': rails },
-      className,
-    ]}
-  >
-    {@render children?.()}
+  <div class="mx-auto w-full max-w-landing lg:px-10">
+    <div class={['border-hairline w-full lg:border-x', className]}>
+      {@render children?.()}
+    </div>
   </div>
 </section>

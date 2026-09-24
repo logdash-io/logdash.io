@@ -38,7 +38,7 @@ export type AnonymousPreviewPhase =
   | 'ended'
   | 'error';
 
-export type AnonymousPreviewSource = 'hero' | 'final-cta' | 'seo';
+export type AnonymousPreviewSource = 'hero' | 'final-cta' | 'seo' | 'feature';
 
 export type DemoMetric = SimplifiedMetric & {
   /** The last hour, one value per minute, oldest first. */
