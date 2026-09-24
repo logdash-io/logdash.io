@@ -10,7 +10,6 @@
   import type { PostHog } from 'posthog-js';
   import { getContext } from 'svelte';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
-  import { proSkyBackgroundState } from '$lib/domains/shared/pro-features/pro-sky-background.state.svelte.js';
 
   const posthog = getContext<PostHog>('posthog');
 </script>
@@ -35,22 +34,6 @@
           <OpenIcon class="inline h-4 w-4" />
           Billing
         </a>
-      </li>
-    {/if}
-
-    {#if userState.isPro}
-      <li>
-        <label class="flex w-full cursor-pointer items-center gap-3">
-          <input
-            type="checkbox"
-            class="checkbox checkbox-xs checkbox-primary"
-            checked={proSkyBackgroundState.enabled}
-            onchange={() => {
-              proSkyBackgroundState.toggle();
-            }}
-          />
-          <span>Sky Background</span>
-        </label>
       </li>
     {/if}
 

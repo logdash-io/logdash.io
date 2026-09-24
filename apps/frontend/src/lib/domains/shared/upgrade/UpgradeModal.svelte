@@ -67,18 +67,6 @@
 
     userState.upgrade(source, tier);
   };
-
-  const onMouseEnter = (tier: UserTier): void => {
-    if (tier === UserTier.PRO) {
-      upgradeState.showBackground();
-    }
-  };
-
-  const onMouseLeave = (tier: UserTier): void => {
-    if (tier === UserTier.PRO) {
-      upgradeState.hideBackground();
-    }
-  };
 </script>
 
 {#if upgradeState.modalOpen}
@@ -131,8 +119,6 @@
                   'border-base-100': !plan.popular && !isCurrentPlan(plan.tier),
                 },
               ]}
-              onmouseenter={() => onMouseEnter(plan.tier)}
-              onmouseleave={() => onMouseLeave(plan.tier)}
             >
               {#if plan.popular && !isCurrentPlan(plan.tier)}
                 <span

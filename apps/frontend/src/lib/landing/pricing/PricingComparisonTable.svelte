@@ -6,25 +6,12 @@
   import { UserTier } from '$lib/domains/shared/types.js';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { fade } from 'svelte/transition';
-  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
 
   let loggingIn = $state(false);
 
   const handleSelectTier = (tier: UserTier) => {
     loggingIn = true;
     window.location.href = `/app/auth?needs_account=true&tier=${tier}`;
-  };
-
-  const onMouseEnter = (tier: UserTier) => {
-    if (tier === UserTier.PRO) {
-      upgradeState.showBackground();
-    }
-  };
-
-  const onMouseLeave = (tier: UserTier) => {
-    if (tier === UserTier.PRO) {
-      upgradeState.hideBackground();
-    }
   };
 </script>
 
@@ -80,8 +67,6 @@
                           plan.tier === UserTier.PRO,
                       },
                     ]}
-                    onmouseenter={() => onMouseEnter(plan.tier)}
-                    onmouseleave={() => onMouseLeave(plan.tier)}
                   >
                     <div
                       class={[
@@ -164,8 +149,6 @@
                         plan.tier === UserTier.PRO,
                     },
                   ]}
-                  onmouseenter={() => onMouseEnter(plan.tier)}
-                  onmouseleave={() => onMouseLeave(plan.tier)}
                 >
                   <CheckIcon class="text-success mx-auto h-4 w-4" />
                 </td>
@@ -187,16 +170,6 @@
                       'border-none': isLast,
                     },
                   ]}
-                  onmouseenter={() => {
-                    if (feature.name === 'Space background') {
-                      upgradeState.showBackground();
-                    }
-                  }}
-                  onmouseleave={() => {
-                    if (feature.name === 'Space background') {
-                      upgradeState.hideBackground();
-                    }
-                  }}
                 >
                   <td class="py-3 text-sm font-medium md:py-4 md:text-base">
                     {feature.name}
@@ -259,8 +232,6 @@
                         'rounded-b-2xl border-b': isLastSection && isLast,
                       },
                     ]}
-                    onmouseenter={() => onMouseEnter(UserTier.PRO)}
-                    onmouseleave={() => onMouseLeave(UserTier.PRO)}
                   >
                     {#if typeof feature[UserTier.PRO] === 'boolean'}
                       {#if feature[UserTier.PRO]}

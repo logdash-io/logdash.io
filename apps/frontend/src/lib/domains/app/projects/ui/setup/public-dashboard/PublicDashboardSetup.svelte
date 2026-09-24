@@ -7,7 +7,6 @@
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { publicDashboardPrivateState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-private.state.svelte.js';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
-  import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
   import { debounce } from '$lib/domains/shared/utils/debounce.js';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
@@ -59,8 +58,6 @@
 </script>
 
 <div class="bg-base-300 fixed left-0 top-0 z-50 flex h-full w-full">
-  <ResponsiveSkyBackground />
-
   <div class="z-10 mx-auto space-y-8 overflow-hidden">
     {#if isLoading}
       <div

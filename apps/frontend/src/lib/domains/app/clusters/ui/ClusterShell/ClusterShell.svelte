@@ -11,7 +11,6 @@
   import BottomSheet from '$lib/domains/shared/ui/components/BottomSheet/BottomSheet.svelte';
   import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
   import LogoMark from '$lib/domains/shared/icons/LogoMark.svelte';
-  import ResponsiveSkyBackground from '$lib/domains/shared/upgrade/ResponsiveSkyBackground.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { ScrollArea } from '@logdash/hyper-ui/presentational';
   import type { Snippet } from 'svelte';
@@ -70,7 +69,6 @@
     </header>
 
     <ScrollArea class="relative flex min-h-0 w-full flex-1 flex-col">
-      <ResponsiveSkyBackground />
       <div
         class="relative mx-auto flex w-full max-w-5xl flex-col px-4 pt-6 pb-24 sm:px-8 lg:pt-8 lg:pb-12"
       >

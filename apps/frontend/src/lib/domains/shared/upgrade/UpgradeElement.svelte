@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext, onDestroy, type Snippet } from 'svelte';
+  import { getContext, type Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import type { UpgradeSource } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
@@ -24,18 +24,6 @@
 
   const posthog = getContext<PostHog>('posthog');
 
-  const onMouseEnter = (): void => {
-    if (enabled) {
-      upgradeState.showBackground();
-    }
-  };
-
-  const onMouseLeave = (): void => {
-    if (enabled) {
-      upgradeState.hideBackground();
-    }
-  };
-
   const onElementClick = (): void => {
     onClick?.();
     if (enabled) {
@@ -46,10 +34,6 @@
       upgradeState.openModal(source);
     }
   };
-
-  onDestroy(() => {
-    upgradeState.hideBackground();
-  });
 </script>
 
 <div
@@ -61,8 +45,6 @@
     },
   ]}
   onclick={onElementClick}
-  onmouseenter={onMouseEnter}
-  onmouseleave={onMouseLeave}
   role="button"
 >
   {@render children?.()}

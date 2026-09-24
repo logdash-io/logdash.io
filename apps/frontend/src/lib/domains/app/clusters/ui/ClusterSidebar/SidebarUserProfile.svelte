@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { proSkyBackgroundState } from '$lib/domains/shared/pro-features/pro-sky-background.state.svelte.js';
   import { logout } from '$lib/domains/auth/application/logout.js';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
@@ -81,22 +80,6 @@
           <OpenIcon class="inline h-4 w-4" />
           Billing
         </a>
-      </li>
-    {/if}
-
-    {#if userState.isPro}
-      <li>
-        <label class="flex w-full cursor-pointer items-center gap-3 rounded-lg">
-          <input
-            type="checkbox"
-            class="checkbox checkbox-xs checkbox-primary"
-            checked={proSkyBackgroundState.enabled}
-            onchange={() => {
-              proSkyBackgroundState.toggle();
-            }}
-          />
-          <span>Sky Background</span>
-        </label>
       </li>
     {/if}
 

@@ -1,9 +1,8 @@
 <script lang="ts">
-  import SkyBackground from '$lib/domains/shared/upgrade/SkyBackground.svelte';
   import { type UpgradeSource } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
-  import { getContext, onDestroy, type Snippet } from 'svelte';
+  import { getContext, type Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import type { PostHog } from 'posthog-js';
 
@@ -22,14 +21,6 @@
 
   const posthog = getContext<PostHog>('posthog');
 
-  const onMouseEnter = (): void => {
-    upgradeState.showBackground();
-  };
-
-  const onMouseLeave = (): void => {
-    upgradeState.hideBackground();
-  };
-
   const onClick = (): void => {
     onClickProp?.();
     posthog?.capture('upgrade_button_clicked', {
@@ -38,23 +29,13 @@
     });
     upgradeState.openModal(source);
   };
-
-  onDestroy(() => {
-    upgradeState.hideBackground();
-  });
 </script>
 
 <div class={['btn-wrapper z-10 w-full rounded-[13px] p-[1px]', className]}>
   <button
     class="btn btn-neutral relative w-full overflow-hidden"
     onclick={onClick}
-    onmouseenter={onMouseEnter}
-    onmouseleave={onMouseLeave}
   >
-    <div class="absolute h-full w-full overflow-hidden">
-      <SkyBackground comets={false} density={0.1} speed={10} />
-    </div>
-
     <div class="relative z-10 flex w-full items-center justify-between gap-2">
       {#if children}
         {@render children?.()}

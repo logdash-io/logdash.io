@@ -84,7 +84,6 @@ export const PAYMENT_PLANS = [
       { name: 'Team management features' },
       { name: 'Custom branding options' },
       { name: 'Custom status page domain' },
-      { name: 'Space background' },
     ],
     badge: {
       text: 'Save 50%',
