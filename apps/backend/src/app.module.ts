@@ -32,6 +32,7 @@ import { BlogCoreModule } from './blog/core/blog-core.module';
 import { PersonalApiKeyCoreModule } from './personal-api-key/core/personal-api-key-core.module';
 import { OverviewCoreModule } from './overview/core/overview-core.module';
 import { CliAuthModule } from './cli-auth/core/cli-auth.module';
+import { BadgeCoreModule } from './badge/core/badge-core.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { CliAuthModule } from './cli-auth/core/cli-auth.module';
     PersonalApiKeyCoreModule,
     OverviewCoreModule,
     CliAuthModule,
+    BadgeCoreModule,
   ],
 })
 export class AppModule {}

@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { randomBytes } from 'crypto';
 import { HydratedDocument, Types } from 'mongoose';
 import { HttpMonitorMode } from '../enums/http-monitor-mode.enum';
 
@@ -23,6 +24,9 @@ export class HttpMonitorEntity {
 
   @Prop({ required: true, default: false })
   claimed: boolean;
+
+  @Prop({ required: true, default: () => randomBytes(9).toString('base64url') })
+  badgeKey: string;
 
   createdAt: Date;
   updatedAt: Date;

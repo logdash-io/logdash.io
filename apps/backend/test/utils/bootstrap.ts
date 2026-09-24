@@ -36,6 +36,7 @@ import { PublicDashboardCoreModule } from '../../src/public-dashboard/core/publi
 import { BlogPostEntity } from '../../src/blog/core/entities/blog-post.entity';
 import { BlogCoreModule } from '../../src/blog/core/blog-core.module';
 import { CustomDomainCoreModule } from '../../src/custom-domain/core/custom-domain-core.module';
+import { BadgeCoreModule } from '../../src/badge/core/badge-core.module';
 import { CustomDomainEntity } from '../../src/custom-domain/core/entities/custom-domain.entity';
 import { CustomDomainDnsService } from '../../src/custom-domain/dns/custom-domain-dns.service';
 import { CustomDomainDnsServiceMock } from '../../src/custom-domain/dns/custom-domain-dns.service.mock';
@@ -104,6 +105,7 @@ export async function createTestApp() {
       NotificationChannelCoreModule,
       PublicDashboardCoreModule,
       CustomDomainCoreModule,
+      BadgeCoreModule,
       BlogCoreModule,
       StripeModule,
       SubscriptionCoreModule,

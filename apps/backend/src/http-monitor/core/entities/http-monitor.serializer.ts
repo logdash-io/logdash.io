@@ -12,6 +12,7 @@ export class HttpMonitorSerializer {
       url: entity.url,
       notificationChannelsIds: entity.notificationChannelsIds,
       mode: entity.mode,
+      badgeKey: entity.badgeKey,
     };
   }
 
@@ -30,6 +31,7 @@ export class HttpMonitorSerializer {
       url: normalized.url,
       notificationChannelsIds: normalized.notificationChannelsIds,
       mode: normalized.mode,
+      badgeKey: normalized.badgeKey,
       lastStatus: status.status,
       lastStatusCode: +status.statusCode,
     };
