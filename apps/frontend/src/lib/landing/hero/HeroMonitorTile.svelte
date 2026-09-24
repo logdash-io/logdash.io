@@ -5,10 +5,12 @@
     type AnonymousStartStep,
   } from '$lib/domains/anonymous/domain/anonymous-preview';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings';
-  import { StatusBadge, StatusHistoryBar } from '@logdash/hyper-ui/features';
+  import { StatusBadge } from '@logdash/hyper-ui/features';
   import { ArrowRightIcon } from 'lucide-svelte';
+  import ResponseTimePlot from '../ResponseTimePlot.svelte';
   import {
     checkIntervalLabel,
+    responseTimes,
     toChartPings,
     uptimeLabel,
     type ChartPing,
@@ -19,6 +21,9 @@
     label: string;
     value: string;
   };
+
+  const CHART_WIDTH = 240;
+  const CHART_HEIGHT = 56;
 
   const CREATING_STEPS: { key: AnonymousStartStep; label: string }[] = [
     { key: 'account', label: 'Creating your account' },
@@ -60,6 +65,10 @@
       { label: 'Status', value: last ? `${last.statusCode}` : '--' },
       { label: 'Uptime', value: uptimeLabel(pings) ?? '--' },
     ];
+  }
+
+  function maxResponseMs(times: number[]): number {
+    return Math.max(1, ...times);
   }
 
   function checkingLabel(pings: ChartPing[], suffix = ''): string {
@@ -137,7 +146,7 @@
     {/each}
   </ol>
 
-  <div class="bg-neutral-800 h-[18px] w-full animate-pulse rounded-full"></div>
+  <div class="bg-neutral-800 h-14 w-full animate-pulse rounded-lg"></div>
 {/snippet}
 
 {#snippet demoTile()}
@@ -168,12 +177,24 @@
 
 {#snippet historyBar(pings: ChartPing[], left: string, right: string)}
   <div class="flex flex-col gap-2">
-    {#if pings.length}
-      <StatusHistoryBar {pings} height={18} />
+    {#if pings.length > 1}
+      {@const times = responseTimes(pings)}
+
+      <svg
+        class="h-14 w-full"
+        viewBox="0 0 {CHART_WIDTH} {CHART_HEIGHT}"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <ResponseTimePlot
+          responseTimes={times}
+          step={CHART_WIDTH / (times.length - 1)}
+          height={CHART_HEIGHT}
+          maxMs={maxResponseMs(times)}
+        />
+      </svg>
     {:else}
-      <div
-        class="bg-neutral-800 h-[18px] w-full animate-pulse rounded-full"
-      ></div>
+      <div class="bg-neutral-800 h-14 w-full animate-pulse rounded-lg"></div>
     {/if}
 
     {@render tileFooter(left, right)}

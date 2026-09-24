@@ -8,7 +8,6 @@ import {
   type SimplifiedMetric,
 } from '$lib/domains/app/projects/domain/metric';
 import type { Log } from '$lib/domains/logs/domain/log';
-import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analytics-response';
 import { httpClient } from '$lib/domains/shared/http/http-client';
 import type { Feature } from '$lib/domains/shared/types';
 
@@ -134,24 +133,6 @@ export class AnonymousSessionService {
       params: { limit: DEMO_LOGS_LIMIT },
       requireAuth: false,
     });
-  }
-
-  /** Both dates should be rounded so every visitor asks the same question and the API cache answers it. */
-  public readDemoLogVolume(
-    projectId: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<LogsAnalyticsResponse> {
-    return httpClient.get<LogsAnalyticsResponse>(
-      `/projects/${projectId}/logs/analytics/v1`,
-      {
-        params: {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-        },
-        requireAuth: false,
-      },
-    );
   }
 
   public readDemoMetrics(projectId: string): Promise<SimplifiedMetric[]> {

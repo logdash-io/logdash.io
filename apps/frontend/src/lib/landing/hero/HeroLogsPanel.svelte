@@ -13,13 +13,6 @@
     fit: boolean;
   };
 
-  type Bar = {
-    /** Bar height in px, out of the strip's 32. */
-    total: number;
-    /** The error share of that height, drawn on top. */
-    errors: number;
-  };
-
   type TailRow = {
     key: number;
     at: Date;
@@ -36,7 +29,6 @@
   const ROW_PX = 28;
   const FEED_GAP_PX = 8;
   const MIN_ROWS = 3;
-  const STRIP_PX = 32;
 
   let listHeight = $state(0);
 
@@ -49,7 +41,6 @@
     showsVisitorAccount(anonymousPreviewState.phase),
   );
   const logs = $derived(anonymousPreviewState.demo.logs);
-  const volume = $derived(anonymousPreviewState.demo.logVolume);
 
   /**
    * RollingFeed keys rows by number. The low 48 bits of a log's ObjectId (its
@@ -63,50 +54,9 @@
       message: log.message,
     })),
   );
-
-  const bars = $derived.by<Bar[]>(() => {
-    if (!volume?.length) {
-      return [];
-    }
-
-    const peak = Math.max(1, ...volume.map((bucket) => bucket.countTotal));
-
-    return volume.map((bucket) => {
-      const total = bucket.countTotal
-        ? Math.max(2, Math.round((bucket.countTotal / peak) * STRIP_PX))
-        : 0;
-
-      return {
-        total,
-        errors: Math.round(
-          (bucket.countByLevel.error / Math.max(1, bucket.countTotal)) * total,
-        ),
-      };
-    });
-  });
 </script>
 
-<div class="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-4 pb-4 lg:pb-0">
-  {#if !visitorAccount}
-    <div class="hidden h-8 items-end gap-[3px] xl:flex" aria-hidden="true">
-      {#each bars as bar, index (index)}
-        <div
-          class="flex min-w-0 flex-1 flex-col justify-end gap-px"
-          style:height="{bar.total}px"
-        >
-          {#if bar.errors}
-            <div
-              class="w-full shrink-0 rounded-[1px] bg-[#e7000b]/70"
-              style:height="{bar.errors}px"
-            ></div>
-          {/if}
-
-          <div class="bg-neutral-700 w-full flex-1 rounded-[1px]"></div>
-        </div>
-      {/each}
-    </div>
-  {/if}
-
+<div class="flex min-h-0 flex-1 flex-col gap-4 px-4 pt-4 pb-4 lg:pb-0">
   <div class="flex items-center gap-2" aria-hidden="true">
     <div
       class="ring-hairline bg-neutral-950 text-neutral-600 flex h-8 min-w-24 flex-1 items-center gap-2 rounded-lg px-2.5 text-sm ring-1 ring-inset"

@@ -26,6 +26,12 @@ export function statusFromHttpPings(pings: HttpPing[]): MonitorStatus {
 const isHealthy = (ping: ChartPing): boolean =>
   ping.statusCode >= 200 && ping.statusCode < 400;
 
+export function responseTimes(pings: ChartPing[]): number[] {
+  return pings.map((ping) =>
+    isHealthy(ping) ? Math.max(1, ping.responseTimeMs) : 0,
+  );
+}
+
 /** Share of healthy checks, e.g. "100%" or "96.7%". Null before the first check. */
 export function uptimeLabel(pings: ChartPing[]): string | null {
   if (!pings.length) {

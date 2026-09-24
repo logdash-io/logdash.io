@@ -4,7 +4,6 @@ import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor';
 import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error';
 import type { Log } from '$lib/domains/logs/domain/log';
-import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analytics-response';
 import { createLogger } from '$lib/domains/shared/logger';
 import { posthog } from 'posthog-js';
 import {
@@ -21,11 +20,8 @@ const logger = createLogger('anonymous-preview.state', false);
 const PREVIEW_STORAGE_KEY = 'logdash_anonymous_preview_v0';
 const PREVIEW_POLL_INTERVAL_MS = 5_000;
 const DEMO_POLL_INTERVAL_MS = 5_000;
-/** Log volume and metric history move by the minute, so every 12th poll is enough. */
+/** Metric history moves by the minute, so every 12th poll is enough. */
 const DEMO_SLOW_POLL_EVERY = 12;
-/** Volume window: 30 bars of 5 minutes, the most buckets the API returns. */
-const DEMO_VOLUME_WINDOW_MS = 150 * 60_000;
-const DEMO_VOLUME_ROUND_MS = 5 * 60_000;
 /** Metrics the showcase column leads with, when the project has them. */
 const DEMO_METRIC_ORDER = [
   'logsCreated',
@@ -54,7 +50,6 @@ export type AnonymousPreviewDemo = {
   pings: HttpPing[];
   /** Newest first. Null until the first read lands. */
   logs: Log[] | null;
-  logVolume: LogsAnalyticsResponse['buckets'] | null;
   metrics: DemoMetric[] | null;
   /** How many metrics the project tracks, of which `metrics` shows a few. */
   metricsTracked: number;
@@ -80,7 +75,6 @@ class AnonymousPreviewState {
     monitor: null,
     pings: [],
     logs: null,
-    logVolume: null,
     metrics: null,
     metricsTracked: 0,
   });
@@ -371,7 +365,6 @@ class AnonymousPreviewState {
       this._refreshDemoPings(),
       this._refreshDemoLogs(target.projectId),
       this._refreshDemoMetrics(target.projectId, slow),
-      slow ? this._refreshDemoLogVolume(target.projectId) : undefined,
     ]);
   }
 
@@ -380,23 +373,6 @@ class AnonymousPreviewState {
       this._demo.logs = await anonymousSessionService.readDemoLogs(projectId);
     } catch (error) {
       logger.debug('Failed to refresh the demo logs', error);
-    }
-  }
-
-  private async _refreshDemoLogVolume(projectId: string): Promise<void> {
-    const end =
-      Math.ceil(Date.now() / DEMO_VOLUME_ROUND_MS) * DEMO_VOLUME_ROUND_MS;
-
-    try {
-      const response = await anonymousSessionService.readDemoLogVolume(
-        projectId,
-        new Date(end - DEMO_VOLUME_WINDOW_MS),
-        new Date(end),
-      );
-
-      this._demo.logVolume = response.buckets;
-    } catch (error) {
-      logger.debug('Failed to refresh the demo log volume', error);
     }
   }
 

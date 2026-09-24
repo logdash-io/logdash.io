@@ -50,7 +50,7 @@
 
 <!-- The metrics column of a service page: one tile per metric, then the row that adds another. -->
 <div class="flex h-full w-full flex-col" aria-hidden="true">
-  <div class="border-hairline flex h-11 shrink-0 items-center border-b px-4">
+  <div class="border-hairline flex h-12 shrink-0 items-center border-b px-4">
     <span class="text-neutral-500 text-xs">Metrics</span>
     {#if metrics}
       <span class="text-neutral-500 ml-auto text-xs tabular-nums">
