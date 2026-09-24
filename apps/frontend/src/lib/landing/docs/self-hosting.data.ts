@@ -12,7 +12,7 @@ export const selfHostingPage: DocPage = {
   path: '/docs/self-hosting',
   title: 'Self-host Logdash: status and how to run it locally',
   description:
-    'Logdash is MIT licensed and the repository is public. Running it in production on your own infrastructure is not supported yet. Here is what works and what does not.',
+    'Logdash is AGPL-3.0 licensed and the repository is public. Running it in production on your own infrastructure is not supported yet. Here is what works and what does not.',
   blocks: [
     {
       type: 'paragraph',
@@ -82,7 +82,7 @@ pnpm dev:frontend`,
         {
           question: 'Is Logdash actually open source?',
           answer:
-            'Yes. MIT licensed, one public repository, no enterprise edition holding the interesting parts back. The hosted cloud is the paid product; the code is not the thing being sold.',
+            'Yes. AGPL-3.0 licensed, one public repository, no enterprise edition holding the interesting parts back. The hosted cloud is the paid product; the code is not the thing being sold.',
         },
         {
           question: 'What is the plan for self-hosting?',

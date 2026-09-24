@@ -56,6 +56,6 @@ export const FAQS: DocFaqItem[] = [
   {
     question: 'Can I self-host Logdash?',
     answer:
-      'Not as a one-command install yet. Logdash is MIT and runs locally for development. Production self-hosting is tracked on GitHub, see /docs/self-hosting.',
+      'Not as a one-command install yet. Logdash is AGPL-3.0 and runs locally for development. Production self-hosting is tracked on GitHub, see /docs/self-hosting.',
   },
 ];

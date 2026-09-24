@@ -10,7 +10,7 @@
 <SeoMeta
   title="Self-host Logdash | Logdash Docs"
   description={selfHostingPage.description}
-  keywords="self-host logdash, logdash open source, logdash docker, run logdash locally, mit licensed monitoring"
+  keywords="self-host logdash, logdash open source, logdash docker, run logdash locally, agpl licensed monitoring"
   canonical="/docs/self-hosting"
 />
 

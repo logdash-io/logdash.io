@@ -113,7 +113,7 @@ export const alternativesPages: SeoPage[] = [
           },
           {
             feature: 'Source code',
-            logdash: 'MIT licensed, public repository',
+            logdash: 'AGPL-3.0 licensed, public repository',
             them: 'Closed source',
             winner: 'logdash',
           },
@@ -144,12 +144,12 @@ export const alternativesPages: SeoPage[] = [
       {
         question: 'Is there a self hosted UptimeRobot alternative?',
         answer:
-          'Uptime Kuma is the usual answer and it is a good one. Logdash is MIT licensed and runs locally for development, but a one-command production install is not ready yet and is tracked on GitHub, so use the hosted version if you want it working today.',
+          'Uptime Kuma is the usual answer and it is a good one. Logdash is AGPL-3.0 licensed and runs locally for development, but a one-command production install is not ready yet and is tracked on GitHub, so use the hosted version if you want it working today.',
       },
       {
         question: 'Is there an open source alternative to UptimeRobot?',
         answer:
-          'Logdash is MIT licensed and the repository is public. Uptime Kuma and Gatus are the other two names that come up most often, and both self-host today.',
+          'Logdash is AGPL-3.0 licensed and the repository is public. Uptime Kuma and Gatus are the other two names that come up most often, and both self-host today.',
       },
       {
         question: 'What does Reddit recommend instead of UptimeRobot?',
@@ -180,7 +180,7 @@ export const alternativesPages: SeoPage[] = [
       },
       {
         type: 'paragraph',
-        text: 'Logdash is the hosted answer to that, not a drop-in self-hosted replacement, and the distinction matters. Logdash is MIT licensed with a public repository, but production self-hosting is not a one-command install today. It runs locally for development and the rest is tracked on GitHub. If self-hosting is the actual point for you, stay on Kuma. If the point was a monitor that keeps working when your server does not, that is the trade on offer here.',
+        text: 'Logdash is the hosted answer to that, not a drop-in self-hosted replacement, and the distinction matters. Logdash is AGPL-3.0 licensed with a public repository, but production self-hosting is not a one-command install today. It runs locally for development and the rest is tracked on GitHub. If self-hosting is the actual point for you, stay on Kuma. If the point was a monitor that keeps working when your server does not, that is the trade on offer here.',
       },
       { type: 'heading', text: 'The endpoint the hosted check hits' },
       {
@@ -283,7 +283,7 @@ async def health():
       {
         question: 'Is there a self hosted alternative to Uptime Kuma?',
         answer:
-          'Not from Logdash, not for production. The code is MIT and runs locally for development, but a one-command production install is not ready and is tracked on GitHub. Gatus and Healthchecks are the closer self-hosted comparisons.',
+          'Not from Logdash, not for production. The code is AGPL-3.0 and runs locally for development, but a one-command production install is not ready and is tracked on GitHub. Gatus and Healthchecks are the closer self-hosted comparisons.',
       },
       {
         question: 'Can I just run Uptime Kuma in Docker instead?',
@@ -298,7 +298,7 @@ async def health():
       {
         question: 'Is Logdash open source like Uptime Kuma?',
         answer:
-          'Yes, MIT licensed, repository on GitHub. The difference is intent: Kuma is built to be run by you, Logdash is built to be run for you, and only one of those two ships a production install today.',
+          'Yes, AGPL-3.0 licensed, repository on GitHub. The difference is intent: Kuma is built to be run by you, Logdash is built to be run for you, and only one of those two ships a production install today.',
       },
       {
         question: 'What do people on Reddit use instead of Uptime Kuma?',
@@ -409,7 +409,7 @@ async def health():
           },
           {
             feature: 'Source code',
-            logdash: 'MIT licensed, public repository',
+            logdash: 'AGPL-3.0 licensed, public repository',
             them: 'Closed source',
             winner: 'logdash',
           },
@@ -441,7 +441,7 @@ async def health():
       {
         question: 'Is there an open source Pingdom alternative?',
         answer:
-          'Logdash is MIT licensed with the code on GitHub. Uptime Kuma and Gatus are the self-hosted options people usually pair with that question, and both run in production today.',
+          'Logdash is AGPL-3.0 licensed with the code on GitHub. Uptime Kuma and Gatus are the self-hosted options people usually pair with that question, and both run in production today.',
       },
       {
         question: 'Can Logdash replace Pingdom completely?',
@@ -554,7 +554,7 @@ async def health():
           },
           {
             feature: 'Source code',
-            logdash: 'MIT licensed, public repository',
+            logdash: 'AGPL-3.0 licensed, public repository',
             them: 'Closed source',
             winner: 'logdash',
           },
@@ -586,7 +586,7 @@ async def health():
       {
         question: 'Is there an open source Better Stack alternative?',
         answer:
-          'Logdash is MIT licensed with a public repository, though production self-hosting is not ready and is tracked on GitHub. For self-hosting the uptime half today, Uptime Kuma is the usual pick.',
+          'Logdash is AGPL-3.0 licensed with a public repository, though production self-hosting is not ready and is tracked on GitHub. For self-hosting the uptime half today, Uptime Kuma is the usual pick.',
       },
       {
         question: 'Can Logdash replace Better Uptime?',
@@ -700,7 +700,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
           },
           {
             feature: 'Source code',
-            logdash: 'MIT licensed, public repository',
+            logdash: 'AGPL-3.0 licensed, public repository',
             them: 'Closed platform, open source clients',
             winner: 'logdash',
           },
@@ -727,7 +727,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
       {
         question: 'Is there an open source Cronitor alternative?',
         answer:
-          'Logdash is MIT licensed with the code on GitHub. Healthchecks is the other name people give, and it self-hosts in production today, which Logdash does not yet.',
+          'Logdash is AGPL-3.0 licensed with the code on GitHub. Healthchecks is the other name people give, and it self-hosts in production today, which Logdash does not yet.',
       },
       {
         question: 'Is there a free Cronitor alternative?',
@@ -768,7 +768,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
       },
       {
         type: 'paragraph',
-        text: 'The honest part first. Healthchecks.io is open source and the self-hosted build is the same code that runs the hosted service, so you can have it on your own box tonight. Logdash is MIT licensed with the source on GitHub, but self-hosting is not a one-command install today. It runs locally for development, and production self-hosting is open work tracked on GitHub. If self-hosting is why you are reading this, stay where you are.',
+        text: 'The honest part first. Healthchecks.io is open source and the self-hosted build is the same code that runs the hosted service, so you can have it on your own box tonight. Logdash is AGPL-3.0 licensed with the source on GitHub, but self-hosting is not a one-command install today. It runs locally for development, and production self-hosting is open work tracked on GitHub. If self-hosting is why you are reading this, stay where you are.',
       },
       { type: 'heading', text: 'Ping Logdash from the job you already run' },
       {
@@ -842,7 +842,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
           },
           {
             feature: 'Open source',
-            logdash: 'MIT, full source on GitHub',
+            logdash: 'AGPL-3.0, full source on GitHub',
             them: 'Open source, full source on GitHub',
             winner: 'tie',
           },
@@ -869,7 +869,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
       {
         question: 'Is there an open source Healthchecks.io alternative?',
         answer:
-          'Healthchecks.io is itself open source, so you may already have what you are looking for. Logdash is MIT licensed with the full source on GitHub, and adds HTTP uptime checks, logs and metrics next to the heartbeats.',
+          'Healthchecks.io is itself open source, so you may already have what you are looking for. Logdash is AGPL-3.0 licensed with the full source on GitHub, and adds HTTP uptime checks, logs and metrics next to the heartbeats.',
       },
       {
         question: 'Can I self-host Logdash instead?',
@@ -988,7 +988,7 @@ app.get('/health', async (_req, res) => {
           },
           {
             feature: 'Open source',
-            logdash: 'MIT, full source on GitHub',
+            logdash: 'AGPL-3.0, full source on GitHub',
             them: 'Commercial SaaS, the CLI is open source',
             winner: 'logdash',
           },
@@ -1015,7 +1015,7 @@ app.get('/health', async (_req, res) => {
       {
         question: 'Is there an open source Checkly alternative?',
         answer:
-          'Logdash is MIT licensed with the source on GitHub, but it is a different shape: HTTP monitoring, logs and metrics, no browser synthetics. If you want open source Playwright synthetics specifically, you are looking at running Playwright on your own CI, not at Logdash.',
+          'Logdash is AGPL-3.0 licensed with the source on GitHub, but it is a different shape: HTTP monitoring, logs and metrics, no browser synthetics. If you want open source Playwright synthetics specifically, you are looking at running Playwright on your own CI, not at Logdash.',
       },
       {
         question: 'Does Logdash run Playwright tests?',
@@ -1133,7 +1133,7 @@ async def health():
           },
           {
             feature: 'Open source',
-            logdash: 'MIT, full source on GitHub',
+            logdash: 'AGPL-3.0, full source on GitHub',
             them: 'Commercial SaaS',
             winner: 'logdash',
           },
@@ -1160,7 +1160,7 @@ async def health():
       {
         question: 'Is there an open source StatusCake alternative?',
         answer:
-          'Logdash is MIT licensed with the source on GitHub. If what you want is to run the server yourself, Uptime Kuma is the more honest answer today, because Logdash self-hosting is not production ready.',
+          'Logdash is AGPL-3.0 licensed with the source on GitHub. If what you want is to run the server yourself, Uptime Kuma is the more honest answer today, because Logdash self-hosting is not production ready.',
       },
       {
         question: 'Is Logdash actually free?',
@@ -1279,7 +1279,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
           },
           {
             feature: 'Open source',
-            logdash: 'MIT, full source on GitHub',
+            logdash: 'AGPL-3.0, full source on GitHub',
             them: 'Commercial suite',
             winner: 'logdash',
           },
@@ -1311,7 +1311,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
       {
         question: 'Is there an open source Site24x7 alternative?',
         answer:
-          'Logdash is MIT licensed and the source is on GitHub. For a full infrastructure suite you are closer to Zabbix or a Prometheus and Grafana stack, both of which are far more work to run.',
+          'Logdash is AGPL-3.0 licensed and the source is on GitHub. For a full infrastructure suite you are closer to Zabbix or a Prometheus and Grafana stack, both of which are far more work to run.',
       },
       {
         question: 'Does Logdash monitor servers?',
@@ -1347,7 +1347,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
       },
       {
         type: 'paragraph',
-        text: 'What Logdash has that Freshping never did is the rest of the picture. The monitor, the application logs and the custom metrics all live under the same service, so a red check is one click from the log lines written in that minute instead of a second tool and a manual timestamp hunt. It is MIT licensed and the source is on GitHub.',
+        text: 'What Logdash has that Freshping never did is the rest of the picture. The monitor, the application logs and the custom metrics all live under the same service, so a red check is one click from the log lines written in that minute instead of a second tool and a manual timestamp hunt. It is AGPL-3.0 licensed and the source is on GitHub.',
       },
       { type: 'heading', text: 'A health endpoint worth checking' },
       {
@@ -1590,7 +1590,7 @@ func main() {
           },
           {
             feature: 'Source available',
-            logdash: 'MIT on GitHub',
+            logdash: 'AGPL-3.0 on GitHub',
             them: 'Closed source',
             winner: 'logdash',
           },
@@ -1637,7 +1637,7 @@ func main() {
       {
         question: 'Can I self-host Logdash instead?',
         answer:
-          'Not properly yet. The code is MIT and runs locally for development, but a production self-host is not a one command install and is still tracked as open work on GitHub.',
+          'Not properly yet. The code is AGPL-3.0 and runs locally for development, but a production self-host is not a one command install and is still tracked as open work on GitHub.',
       },
     ],
     updatedAt: '2026-09-04',
@@ -1663,7 +1663,7 @@ func main() {
       },
       {
         type: 'paragraph',
-        text: 'Logdash keeps the check and the evidence together. The HTTP monitor, the application logs and the counters you register all sit under one service, so the alert and the stack trace are two seconds apart instead of two tools apart. SDKs exist for Node, Python, Ruby, Java, .NET, Go, Rust and PHP. The whole thing is MIT licensed.',
+        text: 'Logdash keeps the check and the evidence together. The HTTP monitor, the application logs and the counters you register all sit under one service, so the alert and the stack trace are two seconds apart instead of two tools apart. SDKs exist for Node, Python, Ruby, Java, .NET, Go, Rust and PHP. The whole thing is AGPL-3.0 licensed.',
       },
       { type: 'heading', text: 'A health endpoint the monitor can hit' },
       {
@@ -1747,7 +1747,7 @@ async def health(response: Response):
           },
           {
             feature: 'Source available',
-            logdash: 'MIT on GitHub',
+            logdash: 'AGPL-3.0 on GitHub',
             them: 'Not public, but the API is documented',
             winner: 'logdash',
           },
@@ -1815,7 +1815,7 @@ async def health(response: Response):
       },
       {
         type: 'paragraph',
-        text: 'Logdash is worth the swap for that group because the check is not the product. Application logs and custom metrics from the same service sit next to the monitor, so the alert and the reason for the alert are on one screen. Cron jobs get push heartbeats. It is MIT licensed, and the source is on GitHub if you want to read what is actually running.',
+        text: 'Logdash is worth the swap for that group because the check is not the product. Application logs and custom metrics from the same service sit next to the monitor, so the alert and the reason for the alert are on one screen. Cron jobs get push heartbeats. It is AGPL-3.0 licensed, and the source is on GitHub if you want to read what is actually running.',
       },
       { type: 'heading', text: 'A health endpoint the monitor can hit' },
       {
@@ -1900,7 +1900,7 @@ try {
           },
           {
             feature: 'Source available',
-            logdash: 'MIT on GitHub',
+            logdash: 'AGPL-3.0 on GitHub',
             them: 'Closed source',
             winner: 'logdash',
           },
@@ -1947,7 +1947,7 @@ try {
       {
         question: 'Can I self-host it?',
         answer:
-          'Not in production yet. Logdash is MIT licensed and runs locally for development, but a supported self-hosted deployment is still open work tracked on GitHub.',
+          'Not in production yet. Logdash is AGPL-3.0 licensed and runs locally for development, but a supported self-hosted deployment is still open work tracked on GitHub.',
       },
     ],
     updatedAt: '2026-09-04',
@@ -1977,7 +1977,7 @@ try {
       },
       {
         type: 'paragraph',
-        text: 'Be clear about the rest of the gap. Logdash checks HTTP status codes and response time. Certificate expiry, domain expiry, DNS, TCP and ICMP are all things Gatus does and Logdash does not. And while Logdash is MIT licensed with the source on GitHub, self-hosting is not a one-command install today. It runs locally for development, and production self-hosting is tracked as an open issue. If self-hosting is the whole point, Gatus wins and you should stay on it.',
+        text: 'Be clear about the rest of the gap. Logdash checks HTTP status codes and response time. Certificate expiry, domain expiry, DNS, TCP and ICMP are all things Gatus does and Logdash does not. And while Logdash is AGPL-3.0 licensed with the source on GitHub, self-hosting is not a one-command install today. It runs locally for development, and production self-hosting is tracked as an open issue. If self-hosting is the whole point, Gatus wins and you should stay on it.',
       },
       { type: 'heading', text: 'The endpoint both tools check' },
       {
@@ -2058,7 +2058,7 @@ try {
           },
           {
             feature: 'Open source',
-            logdash: 'MIT',
+            logdash: 'AGPL-3.0',
             them: 'Apache 2.0',
             winner: 'tie',
           },
@@ -2090,7 +2090,7 @@ try {
       {
         question: 'Is Logdash open source like Gatus?',
         answer:
-          'Yes, MIT licensed with the source on GitHub. The difference is production self-hosting: Gatus ships a binary you can run today, Logdash runs locally for development and the rest is tracked on GitHub.',
+          'Yes, AGPL-3.0 licensed with the source on GitHub. The difference is production self-hosting: Gatus ships a binary you can run today, Logdash runs locally for development and the rest is tracked on GitHub.',
       },
       {
         question: 'Can I import my gatus.yaml?',
@@ -2130,7 +2130,7 @@ try {
       },
       {
         type: 'paragraph',
-        text: 'Logdash runs the checks itself on the interval you set and keeps the history without committing anything. Two things Upptime has that Logdash does not: it is free at any scale, and it is genuinely yours. Logdash has a free Hobby plan with paid tiers above it, and while it is MIT licensed, production self-hosting is not a one-command install yet. It runs locally for development and the rest is tracked on GitHub.',
+        text: 'Logdash runs the checks itself on the interval you set and keeps the history without committing anything. Two things Upptime has that Logdash does not: it is free at any scale, and it is genuinely yours. Logdash has a free Hobby plan with paid tiers above it, and while it is AGPL-3.0 licensed, production self-hosting is not a one-command install yet. It runs locally for development and the rest is tracked on GitHub.',
       },
       { type: 'heading', text: 'Heartbeat from the Action you already have' },
       {
@@ -2248,7 +2248,7 @@ try {
       {
         question: 'Is Logdash self-hosted like Upptime?',
         answer:
-          'Not in production yet. The code is MIT and runs locally for development, and production self-hosting is tracked on GitHub. Upptime is genuinely yours today and that is a real difference.',
+          'Not in production yet. The code is AGPL-3.0 and runs locally for development, and production self-hosting is tracked on GitHub. Upptime is genuinely yours today and that is a real difference.',
       },
       {
         question: 'What happens to my GitHub issues and status history?',
@@ -2343,7 +2343,7 @@ def health(response: Response):
           },
           {
             feature: 'Open source',
-            logdash: 'MIT, source on GitHub',
+            logdash: 'AGPL-3.0, source on GitHub',
             them: 'Closed source',
             winner: 'logdash',
           },
@@ -2398,7 +2398,7 @@ def health(response: Response):
       {
         question: 'Is there an open source alternative to Instatus?',
         answer:
-          'Logdash is MIT licensed with the source on GitHub. If you want something you can deploy yourself today, Uptime Kuma and Cachet are the usual answers, because Logdash self-hosting is still development-only.',
+          'Logdash is AGPL-3.0 licensed with the source on GitHub. If you want something you can deploy yourself today, Uptime Kuma and Cachet are the usual answers, because Logdash self-hosting is still development-only.',
       },
       {
         question: 'Does Logdash do ping, TCP or DNS checks like Instatus?',
@@ -2500,7 +2500,7 @@ app.listen(3000);`,
           },
           {
             feature: 'Open source',
-            logdash: 'MIT, source on GitHub',
+            logdash: 'AGPL-3.0, source on GitHub',
             them: 'Closed source',
             winner: 'logdash',
           },
@@ -2551,7 +2551,7 @@ app.listen(3000);`,
       {
         question: 'Is there an open source alternative to Statuspage?',
         answer:
-          'Logdash is MIT licensed with the source on GitHub, and it runs the checks as well as the page. Cachet is the other common answer if you need something you can deploy yourself today.',
+          'Logdash is AGPL-3.0 licensed with the source on GitHub, and it runs the checks as well as the page. Cachet is the other common answer if you need something you can deploy yourself today.',
       },
       {
         question: 'Does Statuspage monitor uptime?',
