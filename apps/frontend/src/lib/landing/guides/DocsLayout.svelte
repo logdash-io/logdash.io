@@ -103,7 +103,7 @@
       class="min-w-0 flex-1 px-4 py-10 sm:px-6 lg:px-10 lg:py-14 xl:px-12"
     >
       <!-- Only the article transitions between docs pages; the sidebar stays. -->
-      <PageView keyOf={(url) => url.pathname}>
+      <PageView keyOf={(url: URL) => url.pathname}>
         {@render children()}
       </PageView>
     </main>

@@ -401,7 +401,7 @@ class AnonymousPreviewState {
                 projectId,
                 metric.metricRegisterEntryId,
               )
-            : (previous.get(metric.id) ?? []),
+            : Promise.resolve(previous.get(metric.id) ?? []),
         ),
       );
 

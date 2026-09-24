@@ -91,7 +91,7 @@
       </div>
     {:else if logs}
       <RollingFeed items={tail} {visible}>
-        {#snippet row(log)}
+        {#snippet row(log: TailRow)}
           <LogRow
             prefix="short"
             date={log.at}
