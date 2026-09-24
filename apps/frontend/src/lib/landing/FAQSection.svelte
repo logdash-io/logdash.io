@@ -9,7 +9,7 @@
   <div
     class="grid grid-cols-1 gap-10 px-4 py-20 sm:px-6 lg:grid-cols-5 lg:gap-12 lg:px-10 lg:py-28"
   >
-    <div class="flex flex-col gap-3 lg:col-span-2">
+    <div class="flex flex-col gap-3 select-none lg:col-span-2">
       <h2
         class="text-3xl font-medium tracking-[-0.03em] text-balance sm:text-4xl"
       >

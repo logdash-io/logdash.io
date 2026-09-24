@@ -11,7 +11,7 @@
   const { question, open = false, children }: Props = $props();
 </script>
 
-<details class="collapse rounded-none" {open}>
+<details class="collapse rounded-none select-none" {open}>
   <summary
     class="collapse-title group/question flex items-center justify-between gap-6 px-0 py-5 text-base font-medium"
   >
