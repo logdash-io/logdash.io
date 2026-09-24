@@ -7,7 +7,7 @@ const MOVED_TO_DOCS: Record<string, DocsPath> = {
   logging: '/docs/logging',
   metrics: '/docs/metrics',
   monitoring: '/docs/monitoring',
-  'sdk-migration': '/docs/guides/sdk-migration',
+  'sdk-migration': '/docs/sdks/node',
 };
 
 export const GET: RequestHandler = ({ params }) => {

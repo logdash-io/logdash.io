@@ -56,7 +56,6 @@ export function sitemapEntries(): SitemapEntry[] {
     ...staticPaths.map((path) => ({ path })),
     ...Object.values(docPages).map((page) => ({ path: page.path })),
     { path: '/docs/sdks' },
-    { path: '/docs/guides/sdk-migration' },
     { path: '/docs/self-hosting' },
     ...sdkDocs.map((doc) => ({
       path: sdkPath(doc),

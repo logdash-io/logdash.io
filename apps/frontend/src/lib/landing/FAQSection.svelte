@@ -1,7 +1,6 @@
 <script lang="ts">
   import { FAQS } from './data/faq.data';
-  import FaqAsk from './FaqAsk.svelte';
-  import FaqItem from './FaqItem.svelte';
+  import FaqList from './FaqList.svelte';
   import type { DocFaqItem } from './guides/documentation.data';
   import LandingSection from './LandingSection.svelte';
 
@@ -37,12 +36,6 @@
       </p>
     </div>
 
-    <div class="divide-hairline flex flex-col divide-y lg:col-span-3">
-      {#each faqs as faq (faq.question)}
-        <FaqItem question={faq.question}>{faq.answer}</FaqItem>
-      {/each}
-
-      <FaqAsk />
-    </div>
+    <FaqList {faqs} class="lg:col-span-3" />
   </div>
 </LandingSection>

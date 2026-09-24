@@ -20,12 +20,6 @@ export type DocCard = {
   icon: IconComponent;
 };
 
-export type DocLink = {
-  title: string;
-  description: string;
-  href: DocsPath;
-};
-
 /** The hljs grammars the docs and SEO families actually use. */
 export type CodeLanguage =
   | 'bash'
@@ -63,7 +57,6 @@ export type DocBlock =
   | { type: 'table'; key: TableType }
   | { type: 'cards'; items: DocCard[] }
   | { type: 'sdks' }
-  | { type: 'links'; items: DocLink[] }
   | { type: 'code'; language: CodeLanguage; code: string; title?: string }
   | { type: 'faq'; items: DocFaqItem[] }
   | { type: 'steps'; items: DocStep[] }
@@ -130,15 +123,6 @@ const featureCards: DocCard[] = [
   },
 ];
 
-export const guideLinks: DocLink[] = [
-  {
-    title: 'Migrate to @logdash/node',
-    description:
-      'Move off @logdash/js-sdk to the unified package, by hand or with an AI prompt.',
-    href: '/docs/guides/sdk-migration',
-  },
-];
-
 export const docPages: Record<
   'introduction' | 'logging' | 'metrics' | 'monitoring',
   DocPage
@@ -161,8 +145,6 @@ export const docPages: Record<
         text: 'Official SDKs for the languages you already use. Each README covers installation, logging and metrics.',
       },
       { type: 'sdks' },
-      { type: 'heading', text: 'Guides' },
-      { type: 'links', items: guideLinks },
     ],
   },
   logging: {
@@ -263,14 +245,6 @@ export const docsSidebar: DocsSidebarGroup[] = [
         external: false as const,
       })),
     ],
-  },
-  {
-    title: 'Guides',
-    items: guideLinks.map((guide) => ({
-      title: guide.title,
-      href: guide.href,
-      external: false,
-    })),
   },
   {
     title: 'More',

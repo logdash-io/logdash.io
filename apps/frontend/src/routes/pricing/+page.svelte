@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Footer from '$lib/landing/Footer.svelte';
   import PricingPage from '$lib/landing/pricing/PricingPage.svelte';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
 </script>
@@ -10,10 +9,4 @@
   keywords="logdash pricing, free tier log management, affordable server monitoring, saas monitoring pricing"
 />
 
-<div class="relative mx-auto flex w-full max-w-landing flex-col">
-  <PricingPage />
-
-  <div class="distance h-16 sm:h-32"></div>
-</div>
-
-<Footer />
+<PricingPage />

@@ -1,8 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
-  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
+  import FaqList from '$lib/landing/FaqList.svelte';
   import CodeBlock from './blocks/CodeBlock.svelte';
   import {
     SDKS,
@@ -46,7 +45,6 @@
     'faq',
     'cards',
     'sdks',
-    'links',
   ]);
 
   /**
@@ -118,24 +116,7 @@
             title={block.title}
           />
         {:else if block.type === 'faq'}
-          <!-- Native disclosure, so the answers are still reachable without JS. -->
-          <div class="border-hairline divide-hairline divide-y border-y">
-            {#each block.items as item (item.question)}
-              <details class="group">
-                <summary
-                  class="flex cursor-pointer list-none items-center gap-4 py-4 text-[15px] font-medium"
-                >
-                  <span>{item.question}</span>
-                  <ChevronDownIcon
-                    class="text-neutral-600 ml-auto size-4 shrink-0 transition-transform duration-200 ease-out group-open:rotate-180 motion-reduce:transition-none"
-                  />
-                </summary>
-                <p class="text-neutral-400 pb-4 text-[15px] leading-7">
-                  {item.answer}
-                </p>
-              </details>
-            {/each}
-          </div>
+          <FaqList faqs={block.items} class="border-hairline border-t" />
         {:else if block.type === 'steps'}
           <ol class="flex flex-col">
             {#each block.items as step, stepIndex (step.title)}
@@ -285,31 +266,6 @@
               </a>
             {/each}
           </div>
-        {:else if block.type === 'links'}
-          <div class="border-hairline divide-hairline divide-y border-y">
-            {#each block.items as link (link.href)}
-              <!--
-                No hover fill: the page has no surfaces, so the row answers
-                with text weight and the chevron instead.
-              -->
-              <a
-                href={resolve(link.href)}
-                class="group flex items-center gap-4 py-4"
-              >
-                <div class="flex min-w-0 flex-col gap-0.5">
-                  <span class="text-[15px] font-medium">{link.title}</span>
-                  <span
-                    class="text-neutral-400 group-hover:text-neutral-300 text-sm transition-ink duration-150"
-                  >
-                    {link.description}
-                  </span>
-                </div>
-                <ChevronRightIcon
-                  class="text-neutral-600 group-hover:text-base-content ml-auto size-4 shrink-0 transition-ink duration-150"
-                />
-              </a>
-            {/each}
-          </div>
         {/if}
       </div>
     {/each}
@@ -345,10 +301,3 @@
     </div>
   </div>
 {/snippet}
-
-<style>
-  /* Safari draws its own disclosure triangle even with list-style removed. */
-  summary::-webkit-details-marker {
-    display: none;
-  }
-</style>

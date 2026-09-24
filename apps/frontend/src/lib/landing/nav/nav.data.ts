@@ -15,7 +15,6 @@ export type NavPath =
   | '/docs'
   | '/docs/sdks'
   | '/docs/self-hosting'
-  | '/docs/guides/sdk-migration'
   | '/alternatives'
   | '/health-check'
   | '/terms-of-service'
@@ -153,12 +152,6 @@ export const NAV_PANELS: Record<NavMenuKey, NavPanel> = {
             title: 'SDKs',
             description:
               'Reference for the eight official SDKs and the raw HTTP API',
-          },
-          {
-            ...to('/docs/guides/sdk-migration'),
-            title: 'Migration guide',
-            description:
-              'Move from @logdash/js-sdk to the unified @logdash/node',
           },
         ],
       },

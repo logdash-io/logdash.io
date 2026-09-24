@@ -1,8 +1,12 @@
 import { FAQS } from '$lib/landing/data/faq.data';
+import { toDocPage } from '$lib/landing/docs/sdk-doc';
+import { sdkDocs } from '$lib/landing/docs/sdk-docs.data';
+import { selfHostingPage } from '$lib/landing/docs/self-hosting.data';
 import {
   docPages,
   SDKS,
   type DocBlock,
+  type DocFaqItem,
   type DocPage,
 } from '$lib/landing/guides/documentation.data';
 import { FEATURES_COMPARISON } from '$lib/landing/pricing/feature-comparison.config';
@@ -24,9 +28,10 @@ const SYSTEM_PROMPT = [
   'Write plain text without Markdown, in at most 80 words, in the language of the question.',
   '',
   '# Product',
-  ...Object.values(docPages).flatMap(pageFacts),
+  ...[...Object.values(docPages), selfHostingPage].flatMap(pageFacts),
   '',
   `Official SDKs: ${SDKS.map((sdk) => sdk.name).join(', ')}.`,
+  ...sdkDocs.map(toDocPage).flatMap(pageFacts),
   '',
   '# Plans',
   FEATURES_COMPARISON.plans
@@ -37,7 +42,7 @@ const SYSTEM_PROMPT = [
   ),
   '',
   '# FAQ',
-  ...FAQS.flatMap((faq) => [`Q: ${faq.question}`, `A: ${faq.answer}`]),
+  ...FAQS.flatMap(faqFacts),
 ].join('\n');
 
 export async function askFaqAssistant(
@@ -67,11 +72,18 @@ function pageFacts(page: DocPage): string[] {
 function blockFacts(block: DocBlock): string[] {
   return match(block)
     .with({ type: 'paragraph' }, ({ text }) => [text])
+    .with({ type: 'heading' }, ({ text }) => [`### ${text}`])
+    .with({ type: 'code' }, ({ code }) => [code])
+    .with({ type: 'faq' }, ({ items }) => items.flatMap(faqFacts))
     .with({ type: 'list' }, ({ items }) => items.map((item) => `- ${item}`))
     .with({ type: 'cards' }, ({ items }) =>
       items.map((card) => `- ${card.title}: ${card.description}`),
     )
     .otherwise(() => []);
+}
+
+function faqFacts(faq: DocFaqItem): string[] {
+  return [`Q: ${faq.question}`, `A: ${faq.answer}`];
 }
 
 function planFeatureFacts(
