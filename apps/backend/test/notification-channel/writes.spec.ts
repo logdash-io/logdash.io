@@ -1,3 +1,4 @@
+import * as nock from 'nock';
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
@@ -24,6 +25,7 @@ describe('NotificationChannelCoreController (writes)', () => {
     // drains the response, so the truncate can still be in flight when the test
     // starts writing audit logs. Re-issue it with `command()`, which does wait.
     await bootstrap.clickhouseClient.command({ query: 'TRUNCATE TABLE audit_logs' });
+    bootstrap.utils.telegramUtils.suppressWelcomeMessages();
   });
 
   afterAll(async () => {
@@ -134,6 +136,7 @@ describe('NotificationChannelCoreController (writes)', () => {
 
         const requestBodies: any[] = [];
 
+        nock.cleanAll();
         bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
           botId: getEnvConfig().notificationChannels.telegramUptimeBot.token,
           onMessage: (body) => {

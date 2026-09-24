@@ -141,7 +141,7 @@ export async function createTestApp() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
-  await app.init();
+  await app.listen(0, '127.0.0.1');
 
   const userModel: Model<UserEntity> = module.get(getModelToken(UserEntity.name));
   const projectModel: Model<ProjectEntity> = module.get(getModelToken(ProjectEntity.name));
@@ -221,7 +221,6 @@ export async function createTestApp() {
       clickhouseClient.command({ query: `TRUNCATE TABLE metrics` }),
     ]);
   };
-
 
   const beforeEach = async () => {
     clear();
