@@ -33,16 +33,6 @@
       >
         Log in
       </a>
-
-      <a
-        href={resolve('/app/quick-setup')}
-        draggable="false"
-        rel="nofollow"
-        class="btn btn-primary btn-sm rounded-full px-4 font-medium"
-        data-posthog-id="nav-get-started-cta"
-      >
-        Get started
-      </a>
     </div>
 
     <MobileNav />

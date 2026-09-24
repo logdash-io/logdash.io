@@ -118,18 +118,6 @@
         Log in
       </a>
     </li>
-    <li class="mt-2">
-      <a
-        href={resolve('/app/quick-setup')}
-        draggable="false"
-        rel="nofollow"
-        class="btn btn-primary btn-sm w-full rounded-full font-medium"
-        data-posthog-id="nav-get-started-cta"
-        onclick={closeDropdown}
-      >
-        Get started
-      </a>
-    </li>
   </ul>
   <!-- eslint-enable svelte/no-navigation-without-resolve -->
 </div>
