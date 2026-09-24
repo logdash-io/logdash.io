@@ -4,7 +4,7 @@
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
-  import SegmentedControl from './SegmentedControl.svelte';
+  import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
   import {
     cliAuthErrorMessage,
     type CliAuthRequest,
