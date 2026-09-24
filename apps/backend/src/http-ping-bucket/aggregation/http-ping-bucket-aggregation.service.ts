@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { addHours, subDays, subHours } from 'date-fns';
+import { addHours, startOfDay, startOfHour, subDays, subHours } from 'date-fns';
 import { HttpPingAggregationService } from 'src/http-ping/aggregation/http-ping-aggregation.service';
 import { BucketGranularity } from '../core/types/bucket-granularity.enum';
 import { BucketsPeriod } from '../core/types/bucket-period.enum';
@@ -45,22 +45,22 @@ export class HttpPingBucketAggregationService {
 
     const configs = {
       [BucketsPeriod.Day]: {
-        fromDate: addHours(nowMinusDays(1), 1),
+        fromDate: startOfHour(addHours(nowMinusDays(1), 1)),
         grouping: BucketGranularity.Hour,
         expectedBucketCount: 24,
       },
       [BucketsPeriod.FourDays]: {
-        fromDate: addHours(nowMinusDays(4), 1),
+        fromDate: startOfHour(addHours(nowMinusDays(4), 1)),
         grouping: BucketGranularity.Hour,
         expectedBucketCount: 96,
       },
       [BucketsPeriod.NinetyHours]: {
-        fromDate: addHours(nowMinusHours(90), 1),
+        fromDate: startOfHour(addHours(nowMinusHours(90), 1)),
         grouping: BucketGranularity.Hour,
         expectedBucketCount: 90,
       },
       [BucketsPeriod.NinetyDays]: {
-        fromDate: nowMinusDays(89),
+        fromDate: startOfDay(nowMinusDays(89)),
         grouping: BucketGranularity.Day,
         expectedBucketCount: 90,
       },
