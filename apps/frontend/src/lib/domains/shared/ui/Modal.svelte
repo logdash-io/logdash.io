@@ -25,7 +25,7 @@
 
 {#if isOpen}
   <dialog
-    class="fixed top-0 left-0 z-[999] flex h-full w-full items-center justify-center bg-transparent"
+    class="fixed top-0 left-0 z-[999] flex h-full w-full overflow-y-auto bg-transparent p-4"
     onclose={handleDialogClose}
   >
     <div
@@ -34,13 +34,13 @@
         easing: quadInOut,
         start: 0.95,
       }}
-      class="ld-card z-10 w-xl"
+      class="ld-card relative z-10 m-auto w-xl max-w-full"
     >
       {@render children()}
     </div>
     <div
       transition:fade={{ duration: 200, easing: quadInOut }}
-      class="bg-base-300/60 absolute top-0 left-0 grid h-full w-full self-stretch"
+      class="bg-base-300/60 fixed inset-0"
       role="button"
       onclick={() => {
         handleBackdropClick();
