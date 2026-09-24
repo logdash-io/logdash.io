@@ -68,7 +68,7 @@
     </div>
 
     <div
-      class="border-hairline relative h-[27rem] overflow-hidden border-t lg:h-auto lg:min-h-[30rem] lg:border-t-0"
+      class="border-hairline relative h-[31rem] overflow-hidden sm:h-[27rem] border-t lg:h-auto lg:min-h-[30rem] lg:border-t-0"
     >
       <StageLight preset="top-left" class="absolute inset-0" />
 
@@ -82,14 +82,10 @@
           </span>
         </div>
 
-        <ol class="flex flex-col gap-6 px-6 py-6">
+        <ol class="grid auto-rows-fr gap-6 px-6 py-6">
           {#each MILESTONES as milestone (milestone.day)}
             <li class="flex gap-4">
-              <span
-                class="bg-base-100 text-neutral-300 flex h-6 w-14 shrink-0 items-center justify-center rounded-md font-mono text-xs tabular-nums"
-              >
-                Day {milestone.day}
-              </span>
+              {@render calendarDay(milestone.day)}
 
               <div class="flex flex-col gap-1">
                 <span class="text-sm font-medium">{milestone.title}</span>
@@ -104,3 +100,20 @@
     </div>
   </div>
 </LandingSection>
+
+{#snippet calendarDay(day: number)}
+  <span
+    class="ring-hairline bg-base-100 mt-1 flex w-11 shrink-0 flex-col self-start overflow-hidden rounded-md ring-1"
+  >
+    <span
+      class="bg-neutral-700 text-neutral-300 flex h-3.5 items-center justify-center text-[9px] leading-none font-medium tracking-wider uppercase"
+    >
+      Day
+    </span>
+    <span
+      class="flex h-7 items-center justify-center font-mono text-base font-medium tabular-nums"
+    >
+      {day}
+    </span>
+  </span>
+{/snippet}
