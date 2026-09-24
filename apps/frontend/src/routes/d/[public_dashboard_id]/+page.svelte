@@ -1,25 +1,22 @@
 <script lang="ts">
   import type { PageData } from './$types';
-  import { onMount } from 'svelte';
   import { PublicDashboard } from '@logdash/hyper-ui';
-  import { publicDashboardPublicState } from '@logdash/hyper-ui/features/public-dashboard/states/public-dashboard-public.state.svelte';
+  import { PublicDashboardPublicState } from '@logdash/hyper-ui/features/public-dashboard/states/public-dashboard-public.state.svelte';
 
   const { data }: { data: PageData } = $props();
 
-  onMount(async () => {
-    if (data.dashboardData) {
-      publicDashboardPublicState.setDashboardData(data.dashboardData);
-    } else {
-      await publicDashboardPublicState.loadDashboard(data.dashboardId);
-    }
+  const dashboardState = $derived.by(() => {
+    const state = new PublicDashboardPublicState();
+    state.setDashboardData(data.dashboardData);
+    return state;
   });
 </script>
 
 <div class="mx-auto max-w-xl w-full">
   <PublicDashboard
     enablePolling={true}
-    onRefresh={() => publicDashboardPublicState.loadDashboard(data.dashboardId)}
+    onRefresh={() => dashboardState.loadDashboard(data.dashboardId)}
     pollingInterval={60}
-    state={publicDashboardPublicState}
+    state={dashboardState}
   />
 </div>
