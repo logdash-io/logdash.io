@@ -1,44 +1,123 @@
 <p align="center">
-  <img src=".github/assets/logo.svg" alt="Logdash" width="88" height="88">
+  <a href="https://logdash.io">
+    <img src=".github/assets/logo.svg" alt="Logdash" width="88" height="88">
+  </a>
 </p>
 
 <h1 align="center">Logdash</h1>
 
 <p align="center">
+  <b>Know your app broke. Before your users do.</b>
+  <br>
+  Uptime monitoring, status pages, logs and metrics for builders.
+  <br>
+  Live in 30 seconds, no account needed.
+</p>
+
+<p align="center">
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-1f883d.svg"></a>
-  <a href="https://github.com/logdash-io/logdash.io"><img alt="GitHub stars" src="https://img.shields.io/github/stars/logdash-io/logdash.io"></a>
+  <a href="https://github.com/logdash-io/logdash.io/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/logdash-io/logdash.io"></a>
   <a href="https://discord.gg/naftPW4Hxe"><img alt="Discord" src="https://img.shields.io/badge/Discord-join-5865F2?logo=discord&logoColor=white"></a>
   <a href="https://github.com/logdash-io/logdash.io/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/logdash-io/logdash.io"></a>
   <a href="./CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
 </p>
 
 <p align="center">
-  <a href="https://logdash.io">Website</a> -
-  <a href="https://logdash.io/docs">Docs</a> -
-  <a href="https://discord.gg/naftPW4Hxe">Community</a> -
-  <a href="https://insigh.to/b/logdash">Roadmap</a> -
-  <a href="https://logdash.io/d/685498e1e0ad21003cb3b2fa">Status</a> -
-  <a href="https://github.com/logdash-io/logdash.io/issues/new/choose">Bug reports</a>
+  <a href="https://logdash.io"><b>Try it</b></a> ·
+  <a href="https://logdash.io/docs">Docs</a> ·
+  <a href="https://discord.gg/naftPW4Hxe">Discord</a> ·
+  <a href="https://insigh.to/b/logdash">Roadmap</a> ·
+  <a href="https://logdash.io/d/685498e1e0ad21003cb3b2fa">Status</a> ·
+  <a href="https://github.com/logdash-io/logdash.io/issues/new/choose">Report a bug</a>
 </p>
 
 <p align="center">
-  <img src=".github/assets/dashboard.png" alt="A Logdash service page: uptime monitor, log tail and metrics side by side">
+  <a href="https://logdash.io">
+    <img src=".github/assets/hero.gif" alt="Typing logdash.io into the Logdash homepage and pressing enter turns the page into a live monitor for it: response time, status 200, 100% uptime, checked every 15 seconds" width="100%">
+  </a>
+  <br>
+  <sub>Recorded on the real app with a real URL. The waits between checks are sped up.</sub>
 </p>
 
-## Logdash tells you your service is down before your users do
+## What it does
 
 Logdash watches the thing you shipped and tells you when it stops working.
-HTTP monitors check your endpoints every 15 seconds and record the status code and the response time on every check.
-Push monitors do the same job in reverse: your cron or background worker sends a heartbeat, and when the heartbeat stops arriving Logdash notices, which is the failure mode a normal uptime check can never see.
-When a monitor flips up or down you get a Telegram message or a webhook.
-Then the logs and the metrics you shipped from the same service are already there, on the same page, as the evidence for what actually happened.
+Paste a URL and checks start right away, with the status code and response time of every check kept.
+When a monitor goes down or comes back, you get a Telegram message or a webhook.
+The logs and metrics from the same service are already on the same page, as the evidence for what actually happened.
 
-- **[Uptime monitoring](https://logdash.io/features/monitoring)** - HTTP checks on a 15 second, 1 minute or 5 minute schedule, storing the status code and the response time of every single check.
-- **[Cron and worker heartbeats](https://logdash.io/docs/monitoring)** - a push monitor is a URL your job hits when it finishes. No hit, no heartbeat, alert.
-- **Telegram and webhook alerts** - fired on every up/down transition. Those two are the whole list today. Slack, email and PagerDuty are not built.
-- **[Metrics](https://logdash.io/features/metrics)** - `set` an absolute value or `mutate` a counter from any SDK, then chart it next to your uptime.
-- **[Logs](https://logdash.io/features/logging)** - structured log ingest with levels, search and an error/warning histogram over the tail.
-- **[Public status pages](https://logdash.io/d/685498e1e0ad21003cb3b2fa)** - point a custom domain at one. That link is ours, live in production.
+<table>
+  <tr>
+    <td valign="top" width="50%">
+      <a href="https://logdash.io/features/monitoring"><img src=".github/assets/uptime.gif" alt="An uptime chart: response time climbs, the monitor goes down for a minute, an alert goes to Telegram, and it comes back up" width="100%"></a>
+      <h3>Uptime monitoring</h3>
+      <p>Checks every 15 seconds, 1 minute or 5 minutes, depending on the plan.
+      When something stops answering, you hear about it before your users do.</p>
+    </td>
+    <td valign="top" width="50%">
+      <a href="https://logdash.io/d/685498e1e0ad21003cb3b2fa"><img src=".github/assets/status-page.png" alt="A status page: all systems operational, 90 days of uptime history for an API and an email queue" width="100%"></a>
+      <h3>Status pages</h3>
+      <p>Uptime history your customers can check themselves, on your own domain.
+      <a href="https://logdash.io/d/685498e1e0ad21003cb3b2fa">Ours is live</a>.</p>
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td valign="top" width="50%">
+      <a href="https://logdash.io/features/logging"><img src=".github/assets/logs.gif" alt="A log tail: new lines stream in, a search for checkout narrows it down and the failed checkout opens with its route, status and error" width="100%"></a>
+      <h3>Logs</h3>
+      <p>Every service in one searchable tail.
+      Filter by level and find the line that broke it.</p>
+    </td>
+    <td valign="top" width="50%">
+      <a href="https://logdash.io/features/metrics"><img src=".github/assets/metrics.gif" alt="A CPU usage chart crosses 80%, an alert goes to Telegram after 10 seconds over the line, and it resolves when the CPU drops" width="100%"></a>
+      <h3>Metrics</h3>
+      <p>Sign-ups, payments, queue depth.
+      Track what matters with one line of code, with nothing to host or maintain.</p>
+    </td>
+  </tr>
+</table>
+
+- **Cron and worker heartbeats.** A push monitor is a URL your job calls when it finishes. No call, no heartbeat, alert. A normal uptime check can never see that failure.
+- **Alerts** go to Telegram and webhooks today. Slack, email and PagerDuty are not built yet.
+
+## Uptime badges for your README
+
+Every monitor on a published status page gets a badge.
+The numbers come straight from the status page, so a badge can't round an outage away.
+
+<p>
+  <img alt="Classic badge: uptime 30d, 99.99%" src=".github/assets/badges/classic.svg">
+  &nbsp;
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/badges/status-dark.svg">
+    <img alt="Status badge: Acme API, Operational" src=".github/assets/badges/status-light.svg">
+  </picture>
+</p>
+
+<p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/badges/card-dark.svg">
+    <img alt="Card badge: Acme API, 99.36% uptime over 90 days, one bar per day with one amber and one red day" src=".github/assets/badges/card-light.svg">
+  </picture>
+</p>
+
+| Style     | What it shows                                                | Options                            |
+| --------- | ------------------------------------------------------------ | ---------------------------------- |
+| `classic` | Uptime over a period, sized to sit next to your other badges | `period=24h`, `7d`, `30d` or `90d` |
+| `status`  | The monitor's name and its live state                        | `theme=light` or `dark`            |
+| `card`    | Name, 90-day uptime and one bar per day                      | `theme=light` or `dark`            |
+
+Publish a status page, open **README badges** in its settings, pick a style and copy the snippet.
+A monitor's own settings have the same picker under **README badge**.
+
+```md
+[![API uptime](https://logdash.io/d/<page-id>/badges/<key>.svg)](https://logdash.io/d/<page-id>)
+```
+
+On plans with a custom domain, badges come from your own domain, like `status.acme.com/badges/<key>.svg`, without the Logdash mark.
 
 ## Getting started
 
@@ -72,31 +151,43 @@ Eight SDKs, one API key per project.
 | PHP      | `composer require logdash/php-sdk`            | [logdash-io/php-sdk](https://github.com/logdash-io/php-sdk)       |
 
 The SDKs are convenience wrappers.
-The wire protocol is three HTTP endpoints, and nothing stops you from calling them directly.
+The wire protocol is three HTTP endpoints on `https://api.logdash.io`, and nothing stops you from calling them directly.
 
-| Endpoint                                       | What it does               | Auth                     |
-| ---------------------------------------------- | -------------------------- | ------------------------ |
-| `POST https://api.logdash.io/logs`             | ship one log line          | `project-api-key` header |
-| `PUT https://api.logdash.io/metrics`           | `set` or `mutate` a metric | `project-api-key` header |
-| `POST https://api.logdash.io/ping/<monitorId>` | heartbeat a cron or worker | none, and no body        |
+| Endpoint                 | What it does               | Auth                     |
+| ------------------------ | -------------------------- | ------------------------ |
+| `POST /logs`             | ship one log line          | `project-api-key` header |
+| `PUT /metrics`           | `set` or `mutate` a metric | `project-api-key` header |
+| `POST /ping/<monitorId>` | heartbeat a cron or worker | none, and no body        |
 
 ```bash
 curl -X POST "https://api.logdash.io/logs" \
   -H "project-api-key: <your-project-api-key>" \
   -H "Content-Type: application/json" \
-  -d '{"message": "Application started successfully", "level": "info", "createdAt": "2026-09-04T09:12:33.000Z", "sequenceNumber": 0}'
+  -d '{"message": "Application started successfully", "level": "info",
+       "createdAt": "2026-09-04T09:12:33.000Z", "sequenceNumber": 0}'
 ```
 
 The heartbeat endpoint is deliberately public and takes no body, so a cron job can be one line: `curl -fsS -X POST https://api.logdash.io/ping/<monitorId>`.
 
-## Repository layout
+## How it fits together
 
+```mermaid
+flowchart LR
+  app["Your app, with an SDK"] -- "logs, metrics" --> api
+  jobs["Your cron jobs"] -- heartbeats --> api
+  frontend["apps/frontend<br>dashboard and site"] --> api
+  statuspage["apps/status-page<br>custom domains"] --> api
+  api["apps/backend<br>API and pinger"] --> stores[("MongoDB, ClickHouse, Redis")]
+  api -- "HTTP checks" --> urls["Your URLs"]
+  api -- "up and down" --> alerts["Telegram, webhooks"]
 ```
-apps/frontend      SvelteKit app and marketing site, deployed on Cloudflare Workers
-apps/backend       NestJS API - MongoDB, Redis and ClickHouse
-apps/status-page   Renderer for status pages served on customer custom domains
-packages/hyper-ui  Shared Svelte 5 component library and Tailwind theme
-```
+
+| Path                | What it is                                                         |
+| ------------------- | ------------------------------------------------------------------ |
+| `apps/frontend`     | SvelteKit app and marketing site, deployed on Cloudflare Workers    |
+| `apps/backend`      | NestJS API, with MongoDB, Redis and ClickHouse                      |
+| `apps/status-page`  | Renderer for status pages served on customer custom domains         |
+| `packages/hyper-ui` | Shared Svelte 5 component library and Tailwind theme                |
 
 pnpm workspaces, `apps/*` and `packages/*`, pinned to pnpm 10.7.0 in the root `package.json`.
 
@@ -132,6 +223,10 @@ Pick something up:
 - [feature requests and voting](https://insigh.to/b/logdash)
 
 Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) before you open a PR, and come say hello in [Discord](https://discord.gg/naftPW4Hxe) if you want to talk something through first.
+
+<a href="https://github.com/logdash-io/logdash.io/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=logdash-io/logdash.io" alt="The people who have contributed to Logdash">
+</a>
 
 ## Security
 
