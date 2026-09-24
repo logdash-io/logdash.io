@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { Font, parse } from 'opentype.js';
+import { Font, parse, PathCommand } from 'opentype.js';
 import { VirtualBucket } from '../../http-ping-bucket/core/types/virtual-bucket.type';
 import { BadgeStatus } from '../core/enums/badge-status.enum';
 import { BadgeStyle } from '../core/enums/badge-style.enum';
@@ -13,7 +13,9 @@ interface Palette {
   border: string;
   text: string;
   mutedText: string;
-  track: string;
+  faintText: string;
+  bar: string;
+  emptyBar: string;
   markTile: string;
 }
 
@@ -25,51 +27,51 @@ interface TextStyle {
 
 const regularFont = loadFont('Inter-Regular.ttf');
 const semiBoldFont = loadFont('Inter-SemiBold.ttf');
+const monoFont = loadFont('GeistMono-Regular.ttf');
 
 const MAX_NAME_CHARACTERS = 64;
 const MAX_STATUS_NAME_WIDTH = 220;
 
+// Colours from the app's neutral ramp, as on the landing's status page: healthy days are grey
+// and only incidents get a colour. The light theme mirrors the dark one step for step.
+const STATUS_COLORS: Record<BadgeStatus, string> = {
+  [BadgeStatus.Up]: '#16a34a',
+  [BadgeStatus.Degraded]: '#f59e0b',
+  [BadgeStatus.Down]: '#dc2626',
+  [BadgeStatus.Unknown]: '#7f7f86',
+};
+
 const PALETTES: Record<BadgeTheme, Palette> = {
   [BadgeTheme.Light]: {
-    statuses: {
-      [BadgeStatus.Up]: '#16a34a',
-      [BadgeStatus.Degraded]: '#ca8a04',
-      [BadgeStatus.Down]: '#dc2626',
-      [BadgeStatus.Unknown]: '#a3a3a3',
-    },
+    statuses: STATUS_COLORS,
     background: '#ffffff',
-    border: '#d1d9e0',
-    text: '#1f2328',
-    mutedText: '#59636e',
-    track: '#e5e7eb',
+    border: '#e2e2e4',
+    text: '#2c2c2e',
+    mutedText: '#7f7f86',
+    faintText: '#9d9da3',
+    bar: '#c6c6ca',
+    emptyBar: '#f4f4f4',
     markTile: '#101012',
   },
   [BadgeTheme.Dark]: {
-    statuses: {
-      [BadgeStatus.Up]: '#22c55e',
-      [BadgeStatus.Degraded]: '#eab308',
-      [BadgeStatus.Down]: '#ef4444',
-      [BadgeStatus.Unknown]: '#6e7681',
-    },
-    background: '#151b23',
-    border: '#3d444d',
-    text: '#e6edf3',
-    mutedText: '#9198a1',
-    track: '#262c36',
+    statuses: STATUS_COLORS,
+    background: '#1c1c1e',
+    border: '#2c2c2e',
+    text: '#c6c6ca',
+    mutedText: '#7f7f86',
+    faintText: '#5c5c62',
+    bar: '#414145',
+    emptyBar: '#2c2c2e',
     markTile: '#f2f2f3',
   },
 };
 
 const CLASSIC_COLORS = {
-  label: '#555555',
-  text: '#ffffff',
+  label: '#2c2c2e',
+  value: '#1c1c1e',
+  labelText: '#c6c6ca',
+  valueText: '#f4f4f4',
   markTile: '#f2f2f3',
-  values: {
-    [BadgeStatus.Up]: '#16a34a',
-    [BadgeStatus.Degraded]: '#ca8a04',
-    [BadgeStatus.Down]: '#dc2626',
-    [BadgeStatus.Unknown]: '#9f9f9f',
-  },
 };
 
 const STATUS_LABELS: Record<BadgeStatus, string> = {
@@ -114,45 +116,47 @@ export function renderBadge(dto: RenderBadgeDto): string {
 
 function renderClassic(dto: RenderBadgeDto): string {
   const height = 20;
-  const padding = 6;
+  const padding = 7;
   const markSize = 12;
-  const markGap = 4;
+  const markGap = 5;
+  const dotRadius = 3;
+  const dotGap = 5;
 
   const label = `uptime ${dto.periodLabel}`;
   const value = dto.uptime === null ? 'no data' : formatUptime(dto.uptime);
-  const valueColor = CLASSIC_COLORS.values[getUptimeLevel(dto.uptime)];
 
-  const labelStyle: TextStyle = { font: regularFont, size: 11, fill: CLASSIC_COLORS.text };
-  const valueStyle: TextStyle = { font: semiBoldFont, size: 11, fill: CLASSIC_COLORS.text };
+  const labelStyle: TextStyle = { font: regularFont, size: 11, fill: CLASSIC_COLORS.labelText };
+  const valueStyle: TextStyle = { font: semiBoldFont, size: 11, fill: CLASSIC_COLORS.valueText };
 
   const markInset = (height - markSize) / 2;
   const labelStart = dto.isWhiteLabel ? padding : markInset + markSize + markGap;
   const labelWidth = Math.ceil(labelStart + measureText(label, labelStyle) + padding);
-  const valueWidth = Math.ceil(padding + measureText(value, valueStyle) + padding);
-  const width = labelWidth + valueWidth;
+  const valueStart = labelWidth + padding + dotRadius * 2 + dotGap;
+  const width = Math.ceil(valueStart + measureText(value, valueStyle) + padding);
 
   return wrapSvg(width, height, `${label}: ${value}`, [
-    `<clipPath id="shape"><rect width="${width}" height="${height}" rx="3"/></clipPath>`,
+    `<clipPath id="shape"><rect width="${width}" height="${height}" rx="4"/></clipPath>`,
     '<g clip-path="url(#shape)">',
     `<rect width="${labelWidth}" height="${height}" fill="${CLASSIC_COLORS.label}"/>`,
-    `<rect x="${labelWidth}" width="${valueWidth}" height="${height}" fill="${valueColor}"/>`,
+    `<rect x="${labelWidth}" width="${width - labelWidth}" height="${height}" fill="${CLASSIC_COLORS.value}"/>`,
     '</g>',
     dto.isWhiteLabel ? '' : drawMark(markInset, markInset, markSize, CLASSIC_COLORS.markTile),
     drawText(label, labelStart, 14, labelStyle),
-    drawText(value, labelWidth + padding, 14, valueStyle),
+    `<circle cx="${labelWidth + padding + dotRadius}" cy="${height / 2}" r="${dotRadius}" fill="${STATUS_COLORS[getUptimeLevel(dto.uptime)]}"/>`,
+    drawText(value, valueStart, 14, valueStyle),
   ]);
 }
 
 function renderStatus(dto: RenderBadgeDto): string {
   const palette = PALETTES[dto.theme];
   const height = 20;
-  const textStart = 19;
-  const wordGap = 4;
+  const textStart = 18;
+  const wordGap = 5;
   const markSize = 10;
   const markGap = 6;
   const endPadding = 9;
 
-  const nameStyle: TextStyle = { font: semiBoldFont, size: 11, fill: palette.text };
+  const nameStyle: TextStyle = { font: regularFont, size: 11, fill: palette.text };
   const statusStyle: TextStyle = { font: regularFont, size: 11, fill: palette.mutedText };
 
   const name = truncateText(dto.name, nameStyle, MAX_STATUS_NAME_WIDTH);
@@ -169,7 +173,7 @@ function renderStatus(dto: RenderBadgeDto): string {
   return wrapSvg(width, height, `${dto.name}: ${statusLabel}`, [
     dto.status === BadgeStatus.Unknown ? '' : PULSE_STYLE,
     `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="${(height - 1) / 2}" fill="${palette.background}" stroke="${palette.border}"/>`,
-    drawStatusDot(10, 10, 3.5, dto.status, palette),
+    drawStatusDot(10, 10, 3, dto.status, palette),
     drawText(name, textStart, 14, nameStyle),
     drawText(statusLabel, statusStart, 14, statusStyle),
     dto.isWhiteLabel
@@ -180,30 +184,28 @@ function renderStatus(dto: RenderBadgeDto): string {
 
 function renderCard(dto: RenderBadgeDto): string {
   const palette = PALETTES[dto.theme];
-  const padding = 16;
+  const padding = 20;
   const barStep = 4;
   const barWidth = 3;
-  const barsTop = 38;
-  const barsHeight = 22;
-  const headerBaseline = 25;
-  const footerBaseline = 74;
-  const nameStart = 31;
+  const headerBaseline = 35;
+  const barsTop = 50;
+  const barsHeight = 28;
+  const footerBaseline = 100;
+  const dotRadius = 3;
+  const nameStart = padding + dotRadius * 2 + 8;
   const nameGap = 12;
 
   const width = padding * 2 + dto.dailyBuckets.length * barStep - (barStep - barWidth);
-  const height = 84;
+  const height = 120;
   const contentEnd = width - padding;
 
-  const nameStyle: TextStyle = { font: semiBoldFont, size: 13, fill: palette.text };
-  const uptimeValueStyle: TextStyle = { font: semiBoldFont, size: 13, fill: palette.text };
-  const uptimeSuffixStyle: TextStyle = { font: regularFont, size: 13, fill: palette.mutedText };
-  const footerStyle: TextStyle = { font: regularFont, size: 10, fill: palette.mutedText };
-  const markLabelStyle: TextStyle = { font: semiBoldFont, size: 10, fill: palette.mutedText };
+  const nameStyle: TextStyle = { font: regularFont, size: 14, fill: palette.text };
+  const uptimeStyle: TextStyle = { font: regularFont, size: 14, fill: palette.mutedText };
+  const footerStyle: TextStyle = { font: monoFont, size: 12, fill: palette.faintText };
+  const markLabelStyle: TextStyle = { font: semiBoldFont, size: 11, fill: palette.mutedText };
 
-  const uptimeValue = dto.uptime === null ? '' : formatUptime(dto.uptime);
-  const uptimeSuffix = dto.uptime === null ? 'No data' : ' uptime';
-  const uptimeSuffixWidth = measureText(uptimeSuffix, uptimeSuffixStyle);
-  const uptimeStart = contentEnd - uptimeSuffixWidth - measureText(uptimeValue, uptimeValueStyle);
+  const uptimeLabel = dto.uptime === null ? 'No data' : formatUptime(dto.uptime);
+  const uptimeStart = contentEnd - measureText(uptimeLabel, uptimeStyle);
   const name = truncateText(dto.name, nameStyle, uptimeStart - nameGap - nameStart);
 
   const bars = dto.dailyBuckets.map((bucket, index) => {
@@ -211,7 +213,7 @@ function renderCard(dto: RenderBadgeDto): string {
     return `<rect x="${padding + index * barStep}" y="${barsTop}" width="${barWidth}" height="${barsHeight}" rx="1" fill="${fill}"/>`;
   });
 
-  const uptimeTitle = dto.uptime === null ? 'no data' : `${uptimeValue} uptime`;
+  const uptimeTitle = dto.uptime === null ? 'no data' : `${uptimeLabel} uptime`;
 
   return wrapSvg(
     width,
@@ -219,11 +221,10 @@ function renderCard(dto: RenderBadgeDto): string {
     `${dto.name}: ${STATUS_LABELS[dto.status]}, ${uptimeTitle} over ${dto.dailyBuckets.length} days`,
     [
       dto.status === BadgeStatus.Unknown ? '' : PULSE_STYLE,
-      `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="8" fill="${palette.background}" stroke="${palette.border}"/>`,
-      drawStatusDot(20, 21, 4, dto.status, palette),
+      `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="12" fill="${palette.background}" stroke="${palette.border}"/>`,
+      drawStatusDot(padding + dotRadius, headerBaseline - 5, dotRadius, dto.status, palette),
       drawText(name, nameStart, headerBaseline, nameStyle),
-      drawText(uptimeValue, uptimeStart, headerBaseline, uptimeValueStyle),
-      drawText(uptimeSuffix, contentEnd - uptimeSuffixWidth, headerBaseline, uptimeSuffixStyle),
+      drawText(uptimeLabel, uptimeStart, headerBaseline, uptimeStyle),
       ...bars,
       drawText(`${dto.dailyBuckets.length} days ago`, padding, footerBaseline, footerStyle),
       drawText(
@@ -243,14 +244,14 @@ function drawCardMark(
   style: TextStyle,
   palette: Palette,
 ): string {
-  const markSize = 10;
-  const markGap = 4;
+  const markSize = 12;
+  const markGap = 5;
   const label = 'logdash';
   const totalWidth = markSize + markGap + measureText(label, style);
   const start = center - totalWidth / 2;
 
   return (
-    drawMark(start, baseline - 8.5, markSize, palette.markTile) +
+    drawMark(start, baseline - 10, markSize, palette.markTile) +
     drawText(label, start + markSize + markGap, baseline, style)
   );
 }
@@ -280,9 +281,33 @@ function drawMark(x: number, y: number, size: number, tileColor: string): string
 }
 
 function drawText(text: string, x: number, baseline: number, style: TextStyle): string {
-  const pathData = style.font.getPath(text, x, baseline, style.size).toPathData(1);
+  const pathData = style.font
+    .getPath(text, x, baseline, style.size)
+    .commands.map(toPathCommand)
+    .join('');
 
   return pathData ? `<path fill="${style.fill}" d="${pathData}"/>` : '';
+}
+
+// opentype.js has its own serializer, but it "optimizes" contours: it drops segments within one
+// unit of a contour's start, a whole pixel at badge sizes, and writes NaN for contours that
+// open with a zero-length line, as Geist Mono's do.
+function toPathCommand(command: PathCommand): string {
+  switch (command.type) {
+    case 'M':
+    case 'L':
+      return `${command.type}${round1(command.x)} ${round1(command.y)}`;
+    case 'Q':
+      return `Q${round1(command.x1)} ${round1(command.y1)} ${round1(command.x)} ${round1(command.y)}`;
+    case 'C':
+      return `C${round1(command.x1)} ${round1(command.y1)} ${round1(command.x2)} ${round1(command.y2)} ${round1(command.x)} ${round1(command.y)}`;
+    case 'Z':
+      return 'Z';
+  }
+}
+
+function round1(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 function measureText(text: string, style: TextStyle): number {
@@ -341,13 +366,13 @@ function getBucketColor(bucket: VirtualBucket | null, palette: Palette): string 
   const total = bucket ? bucket.successCount + bucket.failureCount : 0;
 
   if (!bucket || total === 0) {
-    return palette.track;
+    return palette.emptyBar;
   }
 
   const uptime = (bucket.successCount / total) * 100;
 
   if (uptime >= 99.99) {
-    return palette.statuses[BadgeStatus.Up];
+    return palette.bar;
   }
 
   if (uptime >= 50) {
