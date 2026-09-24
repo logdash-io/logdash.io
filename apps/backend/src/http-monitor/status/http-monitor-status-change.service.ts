@@ -3,7 +3,6 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { HttpPingEvent } from '../../http-ping/events/http-ping-event.enum';
 import { HttpPingCreatedEvent } from '../../http-ping/events/definitions/http-ping-created.event';
 import { HttpMonitorStatus } from './enum/http-monitor-status.enum';
-import { RedisService } from '../../shared/redis/redis.service';
 import { NotificationChannelMessagingService } from '../../notification-channel/messaging/notification-channel-messaging.service';
 import { HttpMonitorReadService } from '../read/http-monitor-read.service';
 import { HttpMonitorStatusService } from './http-monitor-status.service';

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { page } from '$app/state';
   import { Feature } from '$lib/domains/shared/types.js';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
@@ -7,8 +6,11 @@
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import LogsTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
   import UnifiedSetupOverlay from '$lib/domains/app/projects/ui/setup/UnifiedSetupOverlay.svelte';
+  import type { PageProps } from './$types';
 
-  const projectId = $derived(page.params.project_id);
+  const { params }: PageProps = $props();
+
+  const projectId = $derived(params.project_id);
 
   const hasLogging = $derived(
     projectsState.hasConfiguredFeature(projectId, Feature.LOGGING) ||
@@ -20,7 +22,6 @@
   <div class="flex w-full flex-1 flex-col gap-4 overflow-hidden">
     <DataTile
       delayIn={0}
-      delayOut={50}
       class={[
         'relative overflow-hidden ld-card-rounding p-0',
         {

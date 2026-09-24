@@ -49,6 +49,6 @@ export class UserReadService {
   public async readAll(): Promise<UserNormalized[]> {
     const users = await this.userModel.find().lean<UserEntity[]>().exec();
 
-    return users.map(UserSerializer.normalize);
+    return users.map((user) => UserSerializer.normalize(user));
   }
 }

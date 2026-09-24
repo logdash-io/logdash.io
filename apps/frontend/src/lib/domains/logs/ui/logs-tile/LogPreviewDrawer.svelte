@@ -27,7 +27,7 @@
 
   function prettyPrintJsonObject(raw: string): string | null {
     try {
-      const parsed = JSON.parse(raw);
+      const parsed: unknown = JSON.parse(raw);
       if (typeof parsed !== 'object' || parsed === null) return null;
       return JSON.stringify(parsed, null, 2);
     } catch {

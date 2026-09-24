@@ -4,7 +4,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const PUT: RequestHandler = async ({ cookies, request, params }) => {
-  const body = await request.json();
+  const body = (await request.json()) as { name?: string };
 
   await logdashAPI.update_project(
     params.project_id,

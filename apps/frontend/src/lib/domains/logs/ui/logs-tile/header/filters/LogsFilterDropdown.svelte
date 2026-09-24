@@ -19,7 +19,6 @@
 
   type Props = {
     maxDateRangeHours: number;
-    projectId: string;
   };
 
   const { maxDateRangeHours }: Props = $props();
@@ -37,8 +36,7 @@
   );
 
   const isCustomRangeUpgradeRequired = $derived(
-    customStartDate &&
-      customEndDate &&
+    Boolean(customStartDate && customEndDate) &&
       isCustomRangeExceedingLimit(
         customStartDate,
         customEndDate,

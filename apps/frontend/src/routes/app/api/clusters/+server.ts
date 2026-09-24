@@ -4,7 +4,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
-  const body = await request.json();
+  const body = (await request.json()) as { name: string };
   const cluster = await logdashAPI.create_cluster(
     body.name,
     get_access_token(cookies),

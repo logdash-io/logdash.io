@@ -9,9 +9,7 @@ import { PersonalApiKeyReadCachedService } from './personal-api-key-read-cached.
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: PersonalApiKeyEntity.name, schema: PersonalApiKeySchema },
-    ]),
+    MongooseModule.forFeature([{ name: PersonalApiKeyEntity.name, schema: PersonalApiKeySchema }]),
   ],
   providers: [PersonalApiKeyReadService, PersonalApiKeyReadCachedService],
   exports: [PersonalApiKeyReadService, PersonalApiKeyReadCachedService],

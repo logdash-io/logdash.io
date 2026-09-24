@@ -110,7 +110,7 @@
 
   function onIntersect({ isIntersecting }: IntersectionObserverEntry): void {
     if (isIntersecting) {
-      loadNextPage();
+      void loadNextPage();
     }
   }
 
@@ -278,7 +278,6 @@
           }}
         >
           <EnhancedLogRow
-            {index}
             date={log.createdAt}
             level={log.level}
             message={log.message}

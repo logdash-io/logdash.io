@@ -1,5 +1,13 @@
 <script lang="ts">
-  const { class: className = '', stroke: strokeClassName = '' } = $props();
+  import type { ClassValue } from 'svelte/elements';
+
+  type Props = {
+    class?: ClassValue;
+    stroke?: ClassValue;
+  };
+
+  const { class: className = '', stroke: strokeClassName = '' }: Props =
+    $props();
 </script>
 
 <svg

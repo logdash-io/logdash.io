@@ -52,18 +52,22 @@
       return;
     }
 
-    await clustersState.update(clusterId, { name: newName });
-    toast.success('Project name updated successfully', 5000);
-    isEditingName = false;
+    try {
+      await clustersState.update(clusterId, { name: newName });
+      toast.success('Project name updated successfully', 5000);
+      isEditingName = false;
+    } catch {
+      toast.error('Failed to update project name', 5000);
+    }
   }
 
-  function onCopyProjectId(): void {
-    navigator.clipboard.writeText(clusterId);
+  async function onCopyProjectId(): Promise<void> {
+    await navigator.clipboard.writeText(clusterId);
     toast.success('Project ID copied to clipboard', 5000);
   }
 
   function onKeydown(e: KeyboardEvent): void {
-    if (e.key === 'Enter') onSaveRename();
+    if (e.key === 'Enter') void onSaveRename();
     if (e.key === 'Escape') onCancelRenaming();
   }
 

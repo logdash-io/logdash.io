@@ -46,7 +46,7 @@ describe('ProjectCoreController (reads)', () => {
     describe('project features', () => {
       it('returns empty features array when project has no features', async () => {
         // given
-        const { token, cluster, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+        const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
         // when
         const response = await request(app.getHttpServer())
@@ -60,8 +60,7 @@ describe('ProjectCoreController (reads)', () => {
 
       it('returns logs feature when project has logs', async () => {
         // given
-        const { token, cluster, project, apiKey } =
-          await bootstrap.utils.generalUtils.setupAnonymous();
+        const { token, cluster, apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();
 
         await bootstrap.utils.logUtils.createLog({
           message: 'Test log',
@@ -186,7 +185,7 @@ describe('ProjectCoreController (reads)', () => {
       expect(projectDetails.rateLimits).toBeDefined();
       expect(projectDetails.rateLimits).toHaveLength(1);
 
-      const rateLimit = projectDetails.rateLimits?.find(
+      const rateLimit = projectDetails.rateLimits!.find(
         (rateLimit) => rateLimit.scope === RateLimitScope.ProjectLogsPerHour,
       )!;
 
@@ -228,7 +227,7 @@ describe('ProjectCoreController (reads)', () => {
       expect(projectDetails.rateLimits).toBeDefined();
       expect(projectDetails.rateLimits).toHaveLength(1);
 
-      const rateLimit = projectDetails.rateLimits?.find(
+      const rateLimit = projectDetails.rateLimits!.find(
         (rateLimit) => rateLimit.scope === RateLimitScope.ProjectLogsPerHour,
       )!;
 

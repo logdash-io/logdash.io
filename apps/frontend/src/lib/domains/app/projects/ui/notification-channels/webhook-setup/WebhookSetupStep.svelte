@@ -2,7 +2,7 @@
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
-  import { UserTier } from '$lib/domains/shared/types.js';
+  import type { WebhookSetupDTO } from '$lib/domains/app/projects/domain/notification-channels/notification-channels.types.js';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
   import LinkIcon from '$lib/domains/shared/icons/LinkIcon.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
@@ -15,15 +15,8 @@
   type Props = {
     clusterName: string;
     monitorName: string;
-    userTier: UserTier;
     onCancel?: () => void;
-    onSubmit: (dto: {
-      withAssignment: boolean;
-      url: string;
-      headers: Record<string, string>;
-      method: string;
-      name: string;
-    }) => void;
+    onSubmit: (dto: WebhookSetupDTO) => void;
   };
 
   const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];

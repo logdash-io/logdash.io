@@ -5,6 +5,8 @@ import { createTestApp } from '../utils/bootstrap';
 import { sleep } from '../utils/sleep';
 import { ClickHouseClient } from '@clickhouse/client';
 import { ClickhouseUtils } from '../../src/clickhouse/clickhouse.utils';
+import { SuccessResponse } from '../../src/shared/responses/success.response';
+import { LogClickhouseRow } from '../../src/log/core/entities/log.clickhouse-entity';
 
 describe('LogCoreController (writes) - Clickhouse', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -40,7 +42,7 @@ describe('LogCoreController (writes) - Clickhouse', () => {
       .set('project-api-key', apiKey.value)
       .send(createLogDto);
 
-    expect(response.body.success).toEqual(true);
+    expect((response.body as SuccessResponse).success).toEqual(true);
 
     await sleep(1000);
 
@@ -50,7 +52,7 @@ describe('LogCoreController (writes) - Clickhouse', () => {
       query: `SELECT * FROM logs`,
     });
 
-    const data = ((await result.json()) as any).data;
+    const { data } = await result.json<LogClickhouseRow>();
 
     const row = data[0];
 

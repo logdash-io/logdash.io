@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { page } from '$app/state';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
   import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error.js';
@@ -17,16 +16,15 @@
   import { untrack } from 'svelte';
 
   type Props = {
+    clusterId: string;
     projectId: string;
   };
-  const { projectId }: Props = $props();
+  const { clusterId, projectId }: Props = $props();
 
   const MIN_NAME_LENGTH = 3;
   const MAX_NAME_LENGTH = 800;
   const MONITOR_LIMIT_MESSAGE =
     'Too many monitors waiting to be set up. Try again in a few minutes.';
-
-  const clusterId = $derived(page.params.cluster_id);
 
   let selectedMode = $state<MonitorMode>(MonitorMode.PULL);
   let url = $state('');
@@ -53,7 +51,7 @@
 
     untrack(() => {
       if (pendingMonitorId || isCreatingPushMonitor) return;
-      createPushMonitor();
+      void createPushMonitor();
     });
   });
 
@@ -129,13 +127,13 @@
     await monitoringState.claimMonitor(createdMonitorId);
   }
 
-  function onCopyEndpoint(): void {
+  async function onCopyEndpoint(): Promise<void> {
     if (!pushEndpoint) {
       toast.error('Monitor not found');
       return;
     }
 
-    navigator.clipboard.writeText(pushEndpoint);
+    await navigator.clipboard.writeText(pushEndpoint);
     toast.success('Endpoint copied to clipboard');
   }
 </script>

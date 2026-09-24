@@ -39,7 +39,7 @@ export class HttpMonitorStatusService {
           return acc;
         }
 
-        const status: HttpMonitorStatusDto = JSON.parse(statusStringified);
+        const status = JSON.parse(statusStringified) as HttpMonitorStatusDto;
 
         acc[id] = {
           status: status.status || HttpMonitorStatus.Unknown,

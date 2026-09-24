@@ -30,6 +30,10 @@ async function runLoginFlow(dto: {
     state: { terms_accepted, email_accepted, next_url },
   } = dto;
 
+  if (!code) {
+    throw new Error('code is required');
+  }
+
   bffLogger.info(`logging in github...`);
 
   const { error, access_token } = await logdashAPI.github_login({
@@ -38,13 +42,14 @@ async function runLoginFlow(dto: {
     email_accepted,
   });
 
-  if (error) {
+  if (error || !access_token) {
     throw new Error(`github login error: ${error}`);
   }
 
   bffLogger.info(`github login success`);
   const expiration = new Date(
-    JSON.parse(atob(access_token.split('.')[1])).exp * 1000,
+    (JSON.parse(atob(access_token.split('.')[1])) as { exp: number }).exp *
+      1000,
   );
 
   save_access_token(cookies, access_token, {
@@ -94,7 +99,7 @@ export const load = async ({
       throw result;
     }
 
-    bffLogger.error(`github oauth callback error ${result}`);
+    bffLogger.error(`github oauth callback error ${String(result)}`);
     redirect(302, FALLBACK_URL);
   }
 };

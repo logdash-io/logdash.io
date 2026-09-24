@@ -3,8 +3,10 @@ import { Types } from 'mongoose';
 import { createTestApp } from '../utils/bootstrap';
 import { AccountClaimStatus } from '../../src/user/core/enum/account-claim-status.enum';
 import * as nock from 'nock';
+import { TokenResponse } from '../../src/shared/responses/token.response';
 import { AuthMethod } from '../../src/user/core/enum/auth-method.enum';
 import { AuditLogUserAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('Auth (google)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -33,13 +35,11 @@ describe('Auth (google)', () => {
       .post('/oauth2/v4/token')
       .reply(200, { access_token: 'some-token' });
 
-    nock('https://www.googleapis.com')
-      .get('/oauth2/v3/userinfo')
-      .reply(200, {
-        email: 'primary@test.com',
-        email_verified: true,
-        picture: 'https://some-avatar.com',
-      });
+    nock('https://www.googleapis.com').get('/oauth2/v3/userinfo').reply(200, {
+      email: 'primary@test.com',
+      email_verified: true,
+      picture: 'https://some-avatar.com',
+    });
 
     await request(bootstrap.app.getHttpServer()).post('/auth/google/claim').send({
       googleCode: 'whatever',
@@ -66,13 +66,11 @@ describe('Auth (google)', () => {
       .post('/oauth2/v4/token')
       .reply(200, { access_token: 'some-token' });
 
-    nock('https://www.googleapis.com')
-      .get('/oauth2/v3/userinfo')
-      .reply(200, {
-        email: 'test@test.com',
-        email_verified: true,
-        picture: 'https://some-avatar.com',
-      });
+    nock('https://www.googleapis.com').get('/oauth2/v3/userinfo').reply(200, {
+      email: 'test@test.com',
+      email_verified: true,
+      picture: 'https://some-avatar.com',
+    });
 
     const existingUser = await bootstrap.utils.generalUtils.setupClaimed({
       email: 'test@test.com',
@@ -86,7 +84,7 @@ describe('Auth (google)', () => {
       });
 
     // then
-    expect(loginResponse.body.token).toBeDefined();
+    expect((loginResponse.body as TokenResponse).token).toBeDefined();
     await bootstrap.utils.auditLogUtils.assertAuditLog({
       userId: existingUser.user.id,
       action: AuditLogUserAction.GoogleLogin,
@@ -99,13 +97,11 @@ describe('Auth (google)', () => {
       .post('/oauth2/v4/token')
       .reply(200, { access_token: 'some-token' });
 
-    nock('https://www.googleapis.com')
-      .get('/oauth2/v3/userinfo')
-      .reply(200, {
-        email: 'primary@test.com',
-        email_verified: true,
-        picture: 'https://some-avatar.com',
-      });
+    nock('https://www.googleapis.com').get('/oauth2/v3/userinfo').reply(200, {
+      email: 'primary@test.com',
+      email_verified: true,
+      picture: 'https://some-avatar.com',
+    });
 
     // when
     const loginResponse = await request(bootstrap.app.getHttpServer())
@@ -117,7 +113,7 @@ describe('Auth (google)', () => {
       });
 
     // then
-    expect(loginResponse.body.token).toBeDefined();
+    expect((loginResponse.body as TokenResponse).token).toBeDefined();
     expect(await bootstrap.models.userModel.findOne()).toMatchObject({
       email: 'primary@test.com',
       accountClaimStatus: AccountClaimStatus.Claimed,
@@ -152,7 +148,7 @@ describe('Auth (google)', () => {
 
     // then
     expect(loginResponse.status).toEqual(401);
-    expect(loginResponse.body.message).toEqual('Google email is not verified');
+    expect((loginResponse.body as ErrorResponse).message).toEqual('Google email is not verified');
   });
 
   it('does not log user in when account was created with another auth method', async () => {
@@ -185,7 +181,7 @@ describe('Auth (google)', () => {
 
     // then
     expect(loginResponse.status).toEqual(401);
-    expect(loginResponse.body.message).toEqual(
+    expect((loginResponse.body as ErrorResponse).message).toEqual(
       'Account was created with a different sign in method',
     );
   });
@@ -196,13 +192,11 @@ describe('Auth (google)', () => {
       .post('/oauth2/v4/token')
       .reply(200, { access_token: 'some-token' });
 
-    nock('https://www.googleapis.com')
-      .get('/oauth2/v3/userinfo')
-      .reply(200, {
-        email: 'primary@test.com',
-        email_verified: true,
-        picture: 'https://some-avatar.com',
-      });
+    nock('https://www.googleapis.com').get('/oauth2/v3/userinfo').reply(200, {
+      email: 'primary@test.com',
+      email_verified: true,
+      picture: 'https://some-avatar.com',
+    });
 
     // when
     const loginResponse = await request(bootstrap.app.getHttpServer())
@@ -214,6 +208,8 @@ describe('Auth (google)', () => {
 
     // then
     expect(loginResponse.status).toEqual(400);
-    expect(loginResponse.body.message).toEqual('Cannot create new account without accepting terms');
+    expect((loginResponse.body as ErrorResponse).message).toEqual(
+      'Cannot create new account without accepting terms',
+    );
   });
 });

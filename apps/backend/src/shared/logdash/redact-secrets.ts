@@ -48,7 +48,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
     return false;
   }
 
-  const prototype = Object.getPrototypeOf(value);
+  const prototype: unknown = Object.getPrototypeOf(value);
 
   return prototype === Object.prototype || prototype === null;
 }
@@ -64,7 +64,7 @@ export function redactSecrets<T>(value: T, depth = 0): T {
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => redactSecrets(item, depth + 1)) as T;
+    return value.map((item: unknown) => redactSecrets(item, depth + 1)) as T;
   }
 
   if (!isPlainObject(value)) {

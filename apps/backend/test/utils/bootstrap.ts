@@ -1,5 +1,6 @@
 import { ClickHouseClient } from '@clickhouse/client';
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { App } from 'supertest/types';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -132,7 +133,7 @@ export async function createTestApp() {
 
   const module: TestingModule = await moduleBuilder.compile();
 
-  const app = module.createNestApplication();
+  const app = module.createNestApplication<INestApplication<App>>();
   // Must mirror src/main.ts, otherwise e2e tests exercise different validation
   // rules than production.
   app.useGlobalPipes(

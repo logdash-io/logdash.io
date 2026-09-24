@@ -2,6 +2,7 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { HttpMonitorStatus } from '../../src/http-monitor/status/enum/http-monitor-status.enum';
 import { HttpMonitorStatusService } from '../../src/http-monitor/status/http-monitor-status.service';
+import { HttpMonitorSerialized } from '../../src/http-monitor/core/entities/http-monitor.interface';
 
 describe('HttpMonitorCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -46,7 +47,7 @@ describe('HttpMonitorCoreController (reads)', () => {
 
     it('denies access for non-cluster member', async () => {
       // given
-      const { token: creatorToken, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { project } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
@@ -75,7 +76,9 @@ describe('HttpMonitorCoreController (reads)', () => {
 
       // then
       expect(responseA.body).toHaveLength(1);
-      expect(responseA.body[0].lastStatus).toBe(HttpMonitorStatus.Unknown);
+      expect((responseA.body as HttpMonitorSerialized[])[0].lastStatus).toBe(
+        HttpMonitorStatus.Unknown,
+      );
 
       // and when
       const statusService = bootstrap.app.get(HttpMonitorStatusService);
@@ -90,9 +93,10 @@ describe('HttpMonitorCoreController (reads)', () => {
         .set('Authorization', `Bearer ${setupA.token}`);
 
       // then
-      expect(responseB.body).toHaveLength(1);
-      expect(responseB.body[0].lastStatus).toBe(HttpMonitorStatus.Up);
-      expect(responseB.body[0].lastStatusCode).toBe(200);
+      const monitorsB = responseB.body as HttpMonitorSerialized[];
+      expect(monitorsB).toHaveLength(1);
+      expect(monitorsB[0].lastStatus).toBe(HttpMonitorStatus.Up);
+      expect(monitorsB[0].lastStatusCode).toBe(200);
     });
   });
 
@@ -124,9 +128,10 @@ describe('HttpMonitorCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       // then
-      expect(response.body).toHaveLength(2);
-      expect(response.body.some((monitor) => monitor.projectId === project.id)).toBe(true);
-      expect(response.body.some((monitor) => monitor.projectId === anotherProject.id)).toBe(true);
+      const monitors = response.body as HttpMonitorSerialized[];
+      expect(monitors).toHaveLength(2);
+      expect(monitors.some((monitor) => monitor.projectId === project.id)).toBe(true);
+      expect(monitors.some((monitor) => monitor.projectId === anotherProject.id)).toBe(true);
     });
 
     it('denies access for non-cluster member', async () => {

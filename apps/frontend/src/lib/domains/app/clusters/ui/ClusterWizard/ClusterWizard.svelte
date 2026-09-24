@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { onMount } from 'svelte';
   import {
     wizardState,
@@ -30,8 +31,12 @@
     wizardState.setScrollHandler(scrollToElement);
   });
 
-  function onSubmit(): void {
-    wizardState.submit();
+  async function onSubmit(): Promise<void> {
+    try {
+      await wizardState.submit();
+    } catch {
+      toast.error('Failed to create project');
+    }
   }
 </script>
 

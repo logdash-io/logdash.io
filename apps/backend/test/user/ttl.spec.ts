@@ -56,14 +56,14 @@ describe('UserTtlService', () => {
       { timestamps: false },
     );
 
-    const log = await bootstrap.utils.logUtils.createLog({
+    await bootstrap.utils.logUtils.createLog({
       apiKey: apiKey.value,
       createdAt: new Date().toISOString(),
       message: 'testLog',
       level: LogLevel.Silly,
     });
 
-    const metric = await bootstrap.utils.metricUtils.recordMetric({
+    await bootstrap.utils.metricUtils.recordMetric({
       apiKey: apiKey.value,
       name: 'testMetric',
       operation: MetricOperation.Change,
@@ -88,7 +88,7 @@ describe('UserTtlService', () => {
       url: 'https://example.com',
     });
 
-    const httpPing = await bootstrap.utils.httpPingUtils.createHttpPing({
+    await bootstrap.utils.httpPingUtils.createHttpPing({
       httpMonitorId: httpMonitor._id.toString(),
     });
 

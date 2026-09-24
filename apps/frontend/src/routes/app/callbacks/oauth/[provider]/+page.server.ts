@@ -12,12 +12,8 @@ import {
   type OAuthStatePayload,
 } from '$lib/domains/shared/utils/oauth-state.server';
 import { safe_redirect_path } from '$lib/domains/shared/utils/safe-redirect.util';
-import {
-  isRedirect,
-  redirect,
-  type Cookies,
-  type ServerLoadEvent,
-} from '@sveltejs/kit';
+import { isRedirect, redirect, type Cookies } from '@sveltejs/kit';
+import type { PageServerLoadEvent } from './$types';
 
 const FALLBACK_URL = '/app/auth?needs_account=true';
 
@@ -45,7 +41,7 @@ async function readErrorMessage(response: Response): Promise<string> {
 
 function saveTokenToCookies(dto: { cookies: Cookies; token: string }): void {
   const expiration = new Date(
-    JSON.parse(atob(dto.token.split('.')[1])).exp * 1000,
+    (JSON.parse(atob(dto.token.split('.')[1])) as { exp: number }).exp * 1000,
   );
 
   save_access_token(dto.cookies, dto.token, {
@@ -112,7 +108,7 @@ export const load = async ({
   url,
   cookies,
   params,
-}: ServerLoadEvent): Promise<void> => {
+}: PageServerLoadEvent): Promise<void> => {
   const allowedProviders =
     isLocal() || dev ? ['google', 'google-alternative'] : ['google'];
 
@@ -156,7 +152,7 @@ export const load = async ({
       throw result;
     }
 
-    bffLogger.error(`google oauth callback error ${result}`);
+    bffLogger.error(`google oauth callback error ${String(result)}`);
     redirect(302, FALLBACK_URL);
   }
 };

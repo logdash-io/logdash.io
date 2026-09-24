@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { logout } from '$lib/domains/auth/application/logout.js';
@@ -12,6 +13,16 @@
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
 
   const posthog = getContext<PostHog>('posthog');
+
+  async function onLogout(): Promise<void> {
+    posthog.reset();
+
+    try {
+      await logout();
+    } catch {
+      toast.error('Failed to log out');
+    }
+  }
 </script>
 
 {#snippet menu()}
@@ -28,7 +39,7 @@
         <a
           class="flex w-full items-center gap-3"
           onclick={() => {
-            goto(resolve('/app/api/user/billing'));
+            void goto(resolve('/app/api/user/billing'));
           }}
         >
           <OpenIcon class="inline h-4 w-4" />
@@ -41,10 +52,7 @@
       <button
         type="button"
         class="flex w-full items-center gap-3"
-        onclick={() => {
-          posthog.reset();
-          logout();
-        }}
+        onclick={onLogout}
       >
         <LogoutIcon class="inline h-4 w-4" />
         Logout

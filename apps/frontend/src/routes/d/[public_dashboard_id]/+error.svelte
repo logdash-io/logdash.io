@@ -9,7 +9,7 @@
     <h1 class="text-xl">Aww snap! Something went wrong on our end.</h1>
 
     <div class="font-mono">
-      <p>{page.error.message}</p>
+      <p>{page.error?.message}</p>
     </div>
 
     <div class="text-neutral-300 flex flex-col gap-2 text-sm">

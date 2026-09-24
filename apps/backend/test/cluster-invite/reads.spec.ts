@@ -4,6 +4,8 @@ import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 import { getClusterPlanConfig } from '../../src/shared/configs/cluster-plan-configs';
 import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
+import { ClusterInviteSerialized } from '../../src/cluster-invite/core/entities/cluster-invite.interface';
+import { ClusterInviteCapacityResponse } from '../../src/cluster-invite/core/dto/cluster-invite-capacity.response';
 
 describe('ClusterInviteCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -45,16 +47,17 @@ describe('ClusterInviteCoreController (reads)', () => {
         .get(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
+      const body = response.body as ClusterInviteSerialized[];
 
       expect(response.body).toHaveLength(2);
-      expect(response.body[0].clusterId).toBe(cluster.id);
-      expect(response.body[0].clusterName).toBe(cluster.name);
-      expect(response.body[0].invitedUserEmail).toBe(invitedUser1.email);
-      expect(response.body[0].invitedUserId).toBeUndefined();
-      expect(response.body[1].clusterId).toBe(cluster.id);
-      expect(response.body[1].clusterName).toBe(cluster.name);
-      expect(response.body[1].invitedUserEmail).toBe(invitedUser2.email);
-      expect(response.body[1].invitedUserId).toBeUndefined();
+      expect(body[0].clusterId).toBe(cluster.id);
+      expect(body[0].clusterName).toBe(cluster.name);
+      expect(body[0].invitedUserEmail).toBe(invitedUser1.email);
+      expect(body[0]).not.toHaveProperty('invitedUserId');
+      expect(body[1].clusterId).toBe(cluster.id);
+      expect(body[1].clusterName).toBe(cluster.name);
+      expect(body[1].invitedUserEmail).toBe(invitedUser2.email);
+      expect(body[1]).not.toHaveProperty('invitedUserId');
     });
 
     it('returns empty array when no invites exist for cluster', async () => {
@@ -69,7 +72,7 @@ describe('ClusterInviteCoreController (reads)', () => {
     });
 
     it('returns 403 when user is not a member of the cluster', async () => {
-      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed();
+      const { cluster } = await bootstrap.utils.generalUtils.setupClaimed();
       const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupClaimed();
 
       const response = await request(bootstrap.app.getHttpServer())
@@ -113,14 +116,15 @@ describe('ClusterInviteCoreController (reads)', () => {
         .get('/users/me/cluster_invites')
         .set('Authorization', `Bearer ${invitedUserToken}`)
         .expect(200);
+      const body = response.body as ClusterInviteSerialized[];
 
       expect(response.body).toHaveLength(2);
-      expect(response.body[0].invitedUserEmail).toBe(invitedUser.email);
-      expect(response.body[0].clusterName).toBe(cluster1.name);
-      expect(response.body[0].invitedUserId).toBeUndefined();
-      expect(response.body[1].invitedUserEmail).toBe(invitedUser.email);
-      expect(response.body[1].clusterName).toBe(cluster2.name);
-      expect(response.body[1].invitedUserId).toBeUndefined();
+      expect(body[0].invitedUserEmail).toBe(invitedUser.email);
+      expect(body[0].clusterName).toBe(cluster1.name);
+      expect(body[0]).not.toHaveProperty('invitedUserId');
+      expect(body[1].invitedUserEmail).toBe(invitedUser.email);
+      expect(body[1].clusterName).toBe(cluster2.name);
+      expect(body[1]).not.toHaveProperty('invitedUserId');
     });
 
     it('returns empty array when user has no invites', async () => {
@@ -146,12 +150,11 @@ describe('ClusterInviteCoreController (reads)', () => {
         .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
+      const body = response.body as ClusterInviteCapacityResponse;
 
-      expect(response.body.maxMembers).toBe(
-        getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers,
-      );
-      expect(response.body.currentUsersCount).toBe(1);
-      expect(response.body.currentInvitesCount).toBe(0);
+      expect(body.maxMembers).toBe(getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers);
+      expect(body.currentUsersCount).toBe(1);
+      expect(body.currentInvitesCount).toBe(0);
     });
 
     it('returns capacity for cluster with members', async () => {
@@ -172,12 +175,11 @@ describe('ClusterInviteCoreController (reads)', () => {
         .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
+      const body = response.body as ClusterInviteCapacityResponse;
 
-      expect(response.body.maxMembers).toBe(
-        getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers,
-      );
-      expect(response.body.currentUsersCount).toBe(2);
-      expect(response.body.currentInvitesCount).toBe(0);
+      expect(body.maxMembers).toBe(getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers);
+      expect(body.currentUsersCount).toBe(2);
+      expect(body.currentInvitesCount).toBe(0);
     });
 
     it('returns capacity for cluster with invites', async () => {
@@ -198,12 +200,11 @@ describe('ClusterInviteCoreController (reads)', () => {
         .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
+      const body = response.body as ClusterInviteCapacityResponse;
 
-      expect(response.body.maxMembers).toBe(
-        getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers,
-      );
-      expect(response.body.currentUsersCount).toBe(1);
-      expect(response.body.currentInvitesCount).toBe(1);
+      expect(body.maxMembers).toBe(getClusterPlanConfig(ClusterTier.EarlyBird).maxClusterMembers);
+      expect(body.currentUsersCount).toBe(1);
+      expect(body.currentInvitesCount).toBe(1);
     });
 
     it('returns members', async () => {
@@ -227,13 +228,14 @@ describe('ClusterInviteCoreController (reads)', () => {
         .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
+      const body = response.body as ClusterInviteCapacityResponse;
 
-      expect(response.body.members).toHaveLength(2);
-      expect(response.body.members[0].email).toBe(user.email);
-      expect(response.body.members[0].role).toBe(ClusterRole.Creator);
-      expect(response.body.members[1].email).toBe(otherSetup.user.email);
-      expect(response.body.members[1].role).toBe(ClusterRole.Write);
-      expect(response.body.currentUsersCount).toBe(2);
+      expect(body.members).toHaveLength(2);
+      expect(body.members[0].email).toBe(user.email);
+      expect(body.members[0].role).toBe(ClusterRole.Creator);
+      expect(body.members[1].email).toBe(otherSetup.user.email);
+      expect(body.members[1].role).toBe(ClusterRole.Write);
+      expect(body.currentUsersCount).toBe(2);
     });
   });
 });

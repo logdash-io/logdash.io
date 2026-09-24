@@ -1,5 +1,5 @@
-export function getUniqueObjects<T>(items: T[], keyBuilder: (T) => string): T[] {
-  const uniqueMap = new Map();
+export function getUniqueObjects<T>(items: T[], keyBuilder: (item: T) => string): T[] {
+  const uniqueMap = new Map<string, T>();
 
   items.forEach((item) => {
     const key = keyBuilder(item);

@@ -7,7 +7,7 @@
   async function onInvitationAccepted(inviteId: string): Promise<void> {
     try {
       await userInvitationsState.acceptInvitation(inviteId);
-      clustersState.load();
+      await clustersState.load();
     } catch (error) {
       console.error('Error accepting invitation:', error);
     }

@@ -15,9 +15,13 @@
   const projectMonitor = $derived(
     monitoringState.getMonitorByProjectId(projectId),
   );
-  const isHealthy = $derived(monitoringState.isHealthy(projectMonitor?.id));
+  const isHealthy = $derived(
+    projectMonitor ? monitoringState.isHealthy(projectMonitor.id) : false,
+  );
   const pings = $derived(
-    monitoringState.monitoringPings(projectMonitor.id).slice(-MAX_PINGS),
+    projectMonitor
+      ? monitoringState.monitoringPings(projectMonitor.id).slice(-MAX_PINGS)
+      : [],
   );
 
   $effect(() => {
@@ -28,7 +32,7 @@
       return;
     }
 
-    monitoringState.loadMonitorPings(projectId, projectMonitor?.id);
+    void monitoringState.loadMonitorPings(projectId, projectMonitor.id);
   });
 </script>
 

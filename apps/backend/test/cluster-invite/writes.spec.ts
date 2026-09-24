@@ -9,6 +9,9 @@ import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enu
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 import { ClusterInviteSerializer } from '../../src/cluster-invite/core/entities/cluster-invite.serializer';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { ClusterInviteSerialized } from '../../src/cluster-invite/core/entities/cluster-invite.interface';
+import { SuccessResponse } from '../../src/shared/responses/success.response';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('ClusterInviteCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -49,11 +52,12 @@ describe('ClusterInviteCoreController (writes)', () => {
         });
 
       expect(response.statusCode).toBe(201);
-      expect(response.body.inviterUserId).toBe(inviter.id);
-      expect(response.body.invitedUserEmail).toBe(invitedUser.email);
-      expect(response.body.clusterId).toBe(cluster.id);
-      expect(response.body.clusterName).toBe(cluster.name);
-      expect(response.body.invitedUserId).toBeUndefined();
+      const body = response.body as ClusterInviteSerialized;
+      expect(body.inviterUserId).toBe(inviter.id);
+      expect(body.invitedUserEmail).toBe(invitedUser.email);
+      expect(body.clusterId).toBe(cluster.id);
+      expect(body.clusterName).toBe(cluster.name);
+      expect(body).not.toHaveProperty('invitedUserId');
 
       const entity = (await bootstrap.models.clusterInviteModel.findOne())!;
 
@@ -73,7 +77,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         userTier: UserTier.Admin,
       });
 
-      const response = await request(bootstrap.app.getHttpServer())
+      await request(bootstrap.app.getHttpServer())
         .post(`/clusters/${cluster.id}/cluster_invites`)
         .set('Authorization', `Bearer ${inviterToken}`)
         .send({
@@ -89,11 +93,12 @@ describe('ClusterInviteCoreController (writes)', () => {
         .get(`/users/me/cluster_invites`)
         .set('Authorization', `Bearer ${nonexistentSetup.token}`);
 
-      expect(response2.body).toHaveLength(1);
-      expect(response2.body[0].invitedUserEmail).toBe('nonexistent@example.com');
-      expect(response2.body[0].clusterId).toBe(cluster.id);
-      expect(response2.body[0].clusterName).toBe(cluster.name);
-      expect(response2.body[0].role).toBe(ClusterRole.Write);
+      const invites = response2.body as ClusterInviteSerialized[];
+      expect(invites).toHaveLength(1);
+      expect(invites[0].invitedUserEmail).toBe('nonexistent@example.com');
+      expect(invites[0].clusterId).toBe(cluster.id);
+      expect(invites[0].clusterName).toBe(cluster.name);
+      expect(invites[0].role).toBe(ClusterRole.Write);
     });
 
     it('throws error when user is already invited to cluster', async () => {
@@ -121,7 +126,9 @@ describe('ClusterInviteCoreController (writes)', () => {
         });
 
       expect(response.statusCode).toBe(400);
-      expect(response.body.message).toBe('User is already invited to this cluster');
+      expect((response.body as ErrorResponse).message).toBe(
+        'User is already invited to this cluster',
+      );
     });
 
     it('creates audit log when invite is created', async () => {
@@ -150,7 +157,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         userId: inviter.id,
         action: AuditLogClusterAction.InvitedUser,
         relatedDomain: RelatedDomain.Cluster,
-        relatedEntityId: response.body.id,
+        relatedEntityId: (response.body as ClusterInviteSerialized).id,
       });
     });
 
@@ -173,7 +180,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         });
 
       expect(response.statusCode).toBe(403);
-      expect(response.body.message).toBe('User does not have the required role');
+      expect((response.body as ErrorResponse).message).toBe('User does not have the required role');
     });
 
     describe('Max capacity', () => {
@@ -203,7 +210,7 @@ describe('ClusterInviteCoreController (writes)', () => {
           });
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toBe('Cluster is at capacity');
+        expect((response.body as ErrorResponse).message).toBe('Cluster is at capacity');
       });
 
       it('throws error when cluster is at max capacity (EARLY BIRD - MEMBERS)', async () => {
@@ -222,13 +229,13 @@ describe('ClusterInviteCoreController (writes)', () => {
           userTier: UserTier.EarlyBird,
         });
 
-        const artificialRole = await bootstrap.utils.projectGroupUtils.addRole({
+        await bootstrap.utils.projectGroupUtils.addRole({
           clusterId: setup.cluster.id,
           userId: otherSetup.user.id,
           role: ClusterRole.Write,
         });
 
-        const artificialRole2 = await bootstrap.utils.projectGroupUtils.addRole({
+        await bootstrap.utils.projectGroupUtils.addRole({
           clusterId: setup.cluster.id,
           userId: otherSetup2.user.id,
           role: ClusterRole.Write,
@@ -243,7 +250,7 @@ describe('ClusterInviteCoreController (writes)', () => {
           });
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toBe('Cluster is at capacity');
+        expect((response.body as ErrorResponse).message).toBe('Cluster is at capacity');
       });
 
       it('throws error when cluster is at max capacity (EARLY BIRD - INVITES)', async () => {
@@ -257,12 +264,12 @@ describe('ClusterInviteCoreController (writes)', () => {
 
         const toInviteSetup = await bootstrap.utils.generalUtils.setupClaimed();
 
-        const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        await bootstrap.utils.clusterInviteUtils.createClusterInvite({
           token: setup.token,
           clusterId: setup.cluster.id,
           invitedUserEmail: invitedSetup.user.email,
         });
-        const invite2 = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        await bootstrap.utils.clusterInviteUtils.createClusterInvite({
           token: setup.token,
           clusterId: setup.cluster.id,
           invitedUserEmail: invitedSetup2.user.email,
@@ -277,7 +284,7 @@ describe('ClusterInviteCoreController (writes)', () => {
           });
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toBe('Cluster is at capacity');
+        expect((response.body as ErrorResponse).message).toBe('Cluster is at capacity');
       });
     });
 
@@ -317,7 +324,9 @@ describe('ClusterInviteCoreController (writes)', () => {
         .put(`/cluster_invites/${invite.id}/accept`)
         .set('Authorization', `Bearer ${unauthorizedToken}`);
 
-      expect(response.body.message).toBe('You can only accept invites sent to you');
+      expect((response.body as ErrorResponse).message).toBe(
+        'You can only accept invites sent to you',
+      );
     });
 
     it('throws error when invite does not exist', async () => {
@@ -331,7 +340,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         .put(`/cluster_invites/${nonExistentInviteId}/accept`)
         .set('Authorization', `Bearer ${token}`);
 
-      expect(response.body.message).toBe('Invite not found');
+      expect((response.body as ErrorResponse).message).toBe('Invite not found');
     });
 
     it('accepts invite successfully', async () => {
@@ -353,7 +362,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         .set('Authorization', `Bearer ${invitedUserToken}`)
         .expect(200);
 
-      expect(response.body.success).toBe(true);
+      expect((response.body as SuccessResponse).success).toBe(true);
 
       await bootstrap.utils.auditLogUtils.assertAuditLog({
         userId: invitedUser.id,
@@ -399,7 +408,9 @@ describe('ClusterInviteCoreController (writes)', () => {
         .set('Authorization', `Bearer ${invitedUserToken}`);
 
       expect(response.statusCode).toBe(400);
-      expect(response.body.message).toBe('You are a member of too many clusters');
+      expect((response.body as ErrorResponse).message).toBe(
+        'You are a member of too many clusters',
+      );
     });
   });
 
@@ -410,8 +421,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         userTier: UserTier.Admin,
       });
 
-      const { token: invitedUserToken, user: invitedUser } =
-        await bootstrap.utils.generalUtils.setupClaimed();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed();
 
       const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
         token: inviterToken,
@@ -434,8 +444,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         email: 'admin@example.com',
         userTier: UserTier.Admin,
       });
-      const { token: invitedUserToken, user: invitedUser } =
-        await bootstrap.utils.generalUtils.setupClaimed();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed();
 
       const otherSetup = await bootstrap.utils.generalUtils.setupClaimed();
 
@@ -450,7 +459,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         .set('Authorization', `Bearer ${otherSetup.token}`);
 
       expect(response.statusCode).toBe(403);
-      expect(response.body.message).toBe('User is not a member of this cluster');
+      expect((response.body as ErrorResponse).message).toBe('User is not a member of this cluster');
     });
 
     it('allows invited user to delete (decline) invite', async () => {

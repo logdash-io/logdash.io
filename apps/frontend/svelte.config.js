@@ -17,6 +17,12 @@ const config = {
       relative: false,
       base: process.env.NODE_ENV === 'production' ? '' : '',
     },
+    typescript: {
+      config: (config) => ({
+        ...config,
+        include: [...config.include, '../*.ts', '../e2e/**/*.ts'],
+      }),
+    },
   },
   compilerOptions: {
     warningFilter: (warning) =>

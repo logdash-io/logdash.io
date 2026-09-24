@@ -38,7 +38,7 @@ export class ResendService {
       return;
     }
 
-    const { data, error } = await this.resend.contacts.create({
+    const { error } = await this.resend.contacts.create({
       email: dto.email,
       unsubscribed: false,
       audienceId: '59130b80-b5df-4b37-83f2-fbb838ee98dd',

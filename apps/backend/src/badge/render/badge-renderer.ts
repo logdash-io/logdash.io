@@ -307,7 +307,10 @@ function truncateText(text: string, style: TextStyle, maxWidth: number): string 
 }
 
 function sanitizeName(name: string): string {
-  const printableName = name.replace(/[\u0000-\u001f\u007f]/g, '').trim();
+  const printableName = Array.from(name)
+    .filter((character) => character.charCodeAt(0) > 0x1f && character.charCodeAt(0) !== 0x7f)
+    .join('')
+    .trim();
 
   return Array.from(printableName).slice(0, MAX_NAME_CHARACTERS).join('');
 }

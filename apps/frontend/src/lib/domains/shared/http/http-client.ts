@@ -1,4 +1,5 @@
 import axios, {
+  isAxiosError,
   type AxiosInstance,
   type AxiosRequestConfig,
   type AxiosResponse,
@@ -32,11 +33,11 @@ export class HttpClient {
     // Response interceptor to handle auth errors
     this.axiosInstance.interceptors.response.use(
       (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
+      (error: unknown) => {
+        if (isAxiosError(error) && error.response?.status === 401) {
           this.triggerUnauthorized();
         }
-        return Promise.reject(error);
+        throw error;
       },
     );
   }

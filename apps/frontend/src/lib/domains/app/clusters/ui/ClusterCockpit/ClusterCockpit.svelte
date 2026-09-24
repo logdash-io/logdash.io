@@ -22,7 +22,7 @@
 
   $effect(() => {
     monitoringState.set(initialMonitors);
-    untrack(() => monitoringState.sync(clusterId));
+    void untrack(() => monitoringState.sync(clusterId));
 
     return () => {
       monitoringState.unsync();
@@ -30,7 +30,7 @@
   });
 
   function onServiceSelect(projectId: string): void {
-    goto(
+    void goto(
       resolve('/app/clusters/[cluster_id]/[project_id]', {
         cluster_id: clusterId,
         project_id: projectId,

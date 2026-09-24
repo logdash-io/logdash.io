@@ -120,7 +120,7 @@
   }
 
   function onServiceClick(projectId: string): void {
-    goto(
+    void goto(
       resolve('/app/clusters/[cluster_id]/[project_id]', {
         cluster_id: clusterId,
         project_id: projectId,
@@ -129,7 +129,7 @@
   }
 
   onMount(() => {
-    loadRecentErrors();
+    void loadRecentErrors();
   });
 </script>
 

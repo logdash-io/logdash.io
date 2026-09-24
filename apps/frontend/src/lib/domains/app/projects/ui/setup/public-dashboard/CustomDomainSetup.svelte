@@ -25,7 +25,7 @@
 
   $effect(() => {
     if (canSetup) {
-      customDomainsState.loadCustomDomain(dashboardId);
+      void customDomainsState.loadCustomDomain(dashboardId);
     }
   });
 
@@ -99,7 +99,7 @@
     <div class="collapse-open collapse rounded-none px-2 py-1">
       <div class="collapse-title font-medium">1. Add your custom domain</div>
       <div class="collapse-content">
-        {#if !hasDomain}
+        {#if !customDomain}
           <div class="flex flex-col gap-2 sm:flex-row">
             <input
               bind:value={domainInput}
@@ -110,7 +110,7 @@
               onkeydown={(e) => {
                 if (e.key === 'Enter' && !isLoading && domainInput.trim()) {
                   e.preventDefault();
-                  saveDomain();
+                  void saveDomain();
                 }
               }}
             />
@@ -181,7 +181,7 @@
         2. Configure DNS records
       </div>
       <div class="collapse-content w-full overflow-auto">
-        {#if !hasDomain}
+        {#if !customDomain}
           <p class="text-neutral-500 text-sm">
             Add a custom domain first to see DNS configuration instructions.
           </p>

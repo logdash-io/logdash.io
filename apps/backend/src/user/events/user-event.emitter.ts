@@ -7,7 +7,7 @@ import { UserTierChangedEvent } from './definitions/user-tier-changed.event';
 export class UserEventEmitter {
   public constructor(private readonly eventEmitter: EventEmitter) {}
 
-  public async emitUserTierChanged(payload: UserTierChangedEvent): Promise<void> {
-    await this.eventEmitter.emit(UserEvents.UserTierChanged, payload);
+  public emitUserTierChanged(payload: UserTierChangedEvent): void {
+    this.eventEmitter.emit(UserEvents.UserTierChanged, payload);
   }
 }

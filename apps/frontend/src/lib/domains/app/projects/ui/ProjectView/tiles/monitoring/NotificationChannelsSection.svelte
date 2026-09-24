@@ -14,6 +14,7 @@
   import BellIcon from '$lib/domains/shared/icons/BellIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 
   type Props = {
     monitorId: string;
@@ -35,8 +36,12 @@
     await notificationChannelsState.deleteChannel(channel.id);
   }
 
-  function onToggleChannel(channelId: string): void {
-    monitoringState.toggleNotificationChannel(monitorId, channelId);
+  async function onToggleChannel(channelId: string): Promise<void> {
+    try {
+      await monitoringState.toggleNotificationChannel(monitorId, channelId);
+    } catch {
+      toast.error('Failed to update notification channel');
+    }
   }
 
   function onAddChannel(): void {
@@ -56,7 +61,7 @@
     )}
     <SettingsCardItem
       showBorder={true}
-      onclick={() => onToggleChannel(channel.id)}
+      onclick={() => void onToggleChannel(channel.id)}
     >
       <div class="flex items-center gap-4">
         <div
@@ -86,7 +91,7 @@
         <button
           onclick={(e) => {
             e.stopPropagation();
-            onDeleteChannel(channel);
+            void onDeleteChannel(channel);
           }}
           class="btn btn-ghost border-0 btn-sm text-error bg-error/10 btn-square"
         >

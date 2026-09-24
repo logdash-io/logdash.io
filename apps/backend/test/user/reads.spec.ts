@@ -1,6 +1,6 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
-import { closeInMemoryMongoServer } from '../utils/mongo-in-memory-server';
+import { UserSerialized } from '../../src/user/core/entities/user.interface';
 
 describe('UserCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -29,7 +29,7 @@ describe('UserCoreController (reads)', () => {
       .set('authorization', `Bearer ${token}`);
 
     // then
-    expect(response.body.email).toEqual('test@test.com');
+    expect((response.body as UserSerialized).email).toEqual('test@test.com');
   });
 
   it('returns exception if not logged in', async () => {

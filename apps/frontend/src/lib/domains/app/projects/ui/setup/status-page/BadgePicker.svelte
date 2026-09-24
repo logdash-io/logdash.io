@@ -38,7 +38,9 @@
     monitors.find((candidate) => candidate.id === selectedMonitorId) ??
       monitors[0],
   );
-  const monitorName = $derived(monitor.name || stripProtocol(monitor.url));
+  const monitorName = $derived(
+    monitor.name || stripProtocol(monitor.url ?? ''),
+  );
   const isThemed = $derived(hasThemes(style));
   const isHtmlSnippet = $derived(isThemed && matchTheme);
   const snippet = $derived(
@@ -71,7 +73,7 @@
       <select class="select select-sm w-full" bind:value={selectedMonitorId}>
         {#each monitors as option (option.id)}
           <option value={option.id}>
-            {option.name || stripProtocol(option.url)}
+            {option.name || stripProtocol(option.url ?? '')}
           </option>
         {/each}
       </select>
@@ -82,7 +84,7 @@
     <SegmentedControl
       options={BADGE_STYLES}
       value={style}
-      onChange={(value) => (style = value)}
+      onChange={(value: BadgeStyle) => (style = value)}
       size="xs"
     />
 
@@ -90,7 +92,7 @@
       <SegmentedControl
         options={BADGE_PERIODS}
         value={period}
-        onChange={(value) => (period = value)}
+        onChange={(value: BadgePeriod) => (period = value)}
         size="xs"
       />
     {/if}

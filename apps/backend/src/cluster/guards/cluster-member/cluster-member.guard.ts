@@ -20,6 +20,7 @@ import { CustomDomainReadModule } from '../../../custom-domain/read/custom-domai
 import { AccessRestriction } from '../../../personal-api-key/core/types/access-restriction.type';
 import { UserReadService } from '../../../user/read/user-read.service';
 import { UserReadModule } from '../../../user/read/user-read.module';
+import { AuthenticatedRequest } from '../../../auth/core/types/authenticated-request.type';
 
 const CLUSTER_ID_PARAM_NAME = 'clusterId';
 const PROJECT_ID_PARAM_NAME = 'projectId';
@@ -54,18 +55,18 @@ export class ClusterMemberGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  public async canActivate(context: ExecutionContext): Promise<boolean> {
     const allowedRoles =
       this.reflector.getAllAndOverride<ClusterRole[]>(REQUIRE_ROLE_KEY, [
         context.getHandler(),
         context.getClass(),
       ]) ?? Object.values(ClusterRole);
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     const userId = request.user?.id;
-    const access: AccessRestriction | undefined = request.user?.access;
-    const viaPersonalKey: boolean | undefined = request.user?.viaPersonalKey;
+    const access = request.user?.access;
+    const viaPersonalKey = request.user?.viaPersonalKey;
 
     const clusterIdFromParams = request.params[CLUSTER_ID_PARAM_NAME];
     const projectIdFromParams = request.params[PROJECT_ID_PARAM_NAME];

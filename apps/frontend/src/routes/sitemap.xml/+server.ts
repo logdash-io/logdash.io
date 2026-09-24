@@ -14,7 +14,7 @@ import type { RequestHandler } from './$types';
  */
 export const prerender = true;
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = () => {
   return new Response(renderSitemap(sitemapEntries()), {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',

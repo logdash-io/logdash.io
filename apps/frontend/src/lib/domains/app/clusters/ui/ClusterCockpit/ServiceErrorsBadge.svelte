@@ -46,8 +46,13 @@
 
   function onBadgeClick(e: MouseEvent): void {
     e.stopPropagation();
+
+    if (!clusterId) {
+      return;
+    }
+
     filtersStore.setLevels(['error']);
-    goto(
+    void goto(
       resolve('/app/clusters/[cluster_id]/[project_id]/logs', {
         cluster_id: clusterId,
         project_id: projectId,
@@ -56,8 +61,10 @@
   }
 
   onMount(() => {
-    fetchErrorCount();
-    const interval = setInterval(fetchErrorCount, POLL_INTERVAL_MS);
+    void fetchErrorCount();
+    const interval = setInterval(() => {
+      void fetchErrorCount();
+    }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   });
 </script>

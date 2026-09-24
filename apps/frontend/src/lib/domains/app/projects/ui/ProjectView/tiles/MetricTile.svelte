@@ -3,21 +3,20 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
+  import type { SimplifiedMetric } from '$lib/domains/app/projects/domain/metric.js';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon } from 'lucide-svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
 
   type Props = {
-    id: string;
+    metric: SimplifiedMetric;
     disabled?: boolean;
   };
-  const { id, disabled = false }: Props = $props();
+  const { metric, disabled = false }: Props = $props();
   const previewedMetricId = $derived(page.params.metric_id);
   const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
-
-  const metric = $derived(metricsState.getById(id));
 
   const formatNumber = (value: number) => {
     const precision = 1;
@@ -30,6 +29,21 @@
       ? value.toString()
       : value.toFixed(precision);
   };
+
+  function onPreview(): void {
+    if (!clusterId || !projectId) {
+      return;
+    }
+
+    metricsState.setLastPreviewedMetricId(projectId, metric.id);
+    void goto(
+      resolve('/app/clusters/[cluster_id]/[project_id]/metrics/[metric_id]', {
+        cluster_id: clusterId,
+        project_id: projectId,
+        metric_id: metric.id,
+      }),
+    );
+  }
 </script>
 
 <div
@@ -74,19 +88,7 @@
         y: 5,
       }}
       class="btn btn-secondary btn-soft btn-xs ml-auto"
-      onclick={() => {
-        metricsState.setLastPreviewedMetricId(projectId, metric.id);
-        goto(
-          resolve(
-            '/app/clusters/[cluster_id]/[project_id]/metrics/[metric_id]',
-            {
-              cluster_id: clusterId,
-              project_id: projectId,
-              metric_id: metric.id,
-            },
-          ),
-        );
-      }}
+      onclick={onPreview}
       data-posthog-id="preview-metric-button"
     >
       Preview <ArrowRightIcon class="h-3.5 w-3.5" />

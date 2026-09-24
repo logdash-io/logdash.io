@@ -5,7 +5,6 @@ import { HttpPingBucketAggregationService } from '../aggregation/http-ping-bucke
 import { GetBucketsQuery } from './dto/get_buckets.query';
 import { PeriodsGranularity } from './types/bucket-period.enum';
 import { BucketsResponse } from './types/buckets.response';
-import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { ProjectReadService } from '../../project/read/project-read.service';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';

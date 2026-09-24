@@ -1,6 +1,6 @@
 import { createTestApp } from '../utils/bootstrap';
 import { MetricGranularity } from '../../src/metric-shared/enums/metric-granularity.enum';
-import { advanceBy, advanceTo, clear } from 'jest-date-mock';
+import { advanceBy, advanceTo } from 'jest-date-mock';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
 import { MetricTtlService } from '../../src/metric/ttl/metric-ttl.service';
 import { subDays, subHours } from 'date-fns';
@@ -81,14 +81,14 @@ describe('Metrics (writes)', () => {
 
   it('records metrics with dynamic granularity (CHANGE)', async () => {
     // given
-    const { apiKey, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const { apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();
 
     advanceTo(new Date('2021-01-01T12:00:00Z'));
 
     // when
     const service: MetricQueueingService = bootstrap.app.get(MetricQueueingService);
 
-    await service.queueMetrics([
+    service.queueMetrics([
       {
         name: 'users',
         value: 100,
@@ -117,7 +117,7 @@ describe('Metrics (writes)', () => {
 
     await service.processQueue();
 
-    await service.queueMetric({
+    service.queueMetric({
       name: 'users',
       value: 1,
       projectId: apiKey.projectId,
@@ -164,8 +164,6 @@ describe('Metrics (writes)', () => {
     );
 
     // and when
-    const promisesB: Promise<void>[] = [];
-
     for (
       let i = 0;
       i < getProjectPlanConfig(project.tier).metrics.maxMetricsRegisterEntries + 2; // try to register 2 additional
@@ -203,9 +201,9 @@ describe('Metrics (writes)', () => {
 
     expect(
       new Set(
-        (
-          await bootstrap.models.metricRegisterModel.find({ projectId: apiKey.projectId })
-        ).map((entry) => entry.name),
+        (await bootstrap.models.metricRegisterModel.find({ projectId: apiKey.projectId })).map(
+          (entry) => entry.name,
+        ),
       ).size,
     ).toEqual(getProjectPlanConfig(project.tier).metrics.maxMetricsRegisterEntries);
 

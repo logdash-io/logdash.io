@@ -68,7 +68,7 @@
     </p>
   </div>
 
-  {#each services as service, index (service.id)}
+  {#each services as service (service.id)}
     <div
       class=""
       id="wizard-service-{service.id}"
@@ -76,12 +76,12 @@
     >
       <ServiceCard
         {service}
-        {index}
         expanded={activeExpandedId === service.id}
         canRemove={canRemoveServices}
-        onNameChange={(name) => onServiceNameChange(service.id, name)}
+        onNameChange={(name: string) => onServiceNameChange(service.id, name)}
         onRemove={() => onRemoveService(service.id)}
-        onToggleFeature={(feature) => onToggleFeature(service.id, feature)}
+        onToggleFeature={(feature: Feature) =>
+          onToggleFeature(service.id, feature)}
       />
     </div>
   {/each}

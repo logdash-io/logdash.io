@@ -12,16 +12,14 @@
 
   type Props = {
     children: Snippet;
-    priorityProjectId?: string;
-    priorityClusterId?: string;
   };
-  const { children, priorityProjectId, priorityClusterId }: Props = $props();
+  const { children }: Props = $props();
 
   const logger = createLogger('ProjectView');
   const previewedMetricId = $derived(page.params.metric_id);
-  const clusterId = $derived(priorityClusterId ?? page.params.cluster_id);
+  const clusterId = $derived(page.params.cluster_id);
   const projectIdToSync = $derived.by(() => {
-    const id = priorityProjectId ?? page.params.project_id;
+    const id = page.params.project_id;
 
     if (!id) {
       logger.error('Synchronization failed due to missing projectId');
@@ -42,18 +40,7 @@
     if (isPageVisible !== newVisibility) {
       if (newVisibility) {
         logger.info('Page became visible. Data sync will resume.');
-        Promise.all([
-          logsState.resumeSync(),
-          metricsState.resumeSync(projectIdToSync, tabId),
-          previewedMetricId
-            ? metricsState.previewMetric(projectIdToSync, previewedMetricId)
-            : Promise.resolve(),
-          monitoringState.reloadAllPingBuckets(),
-        ])
-          .then(() => {
-            isPageVisible = newVisibility;
-          })
-          .catch(() => {});
+        void resumeSync();
       } else {
         clearTimeout(timeout);
         logger.info('Page became hidden. Data sync will be paused.');
@@ -63,6 +50,26 @@
       }
     }
   };
+
+  async function resumeSync(): Promise<void> {
+    const projectId = projectIdToSync;
+
+    try {
+      await Promise.all([
+        logsState.resumeSync(),
+        projectId
+          ? metricsState.resumeSync(projectId, tabId)
+          : Promise.resolve(),
+        projectId && previewedMetricId
+          ? metricsState.previewMetric(projectId, previewedMetricId)
+          : Promise.resolve(),
+        monitoringState.reloadAllPingBuckets(),
+      ]);
+      isPageVisible = true;
+    } catch (error) {
+      logger.error('Failed to resume data sync', error);
+    }
+  }
 
   $effect(() => {
     if (typeof document === 'undefined') {
@@ -82,9 +89,11 @@
     if (
       previewedMetricId &&
       metricsState.ready &&
-      !metricsState.getById(previewedMetricId)
+      !metricsState.getById(previewedMetricId) &&
+      clusterId &&
+      projectIdToSync
     ) {
-      goto(
+      void goto(
         resolve('/app/clusters/[cluster_id]/[project_id]/metrics', {
           cluster_id: clusterId,
           project_id: projectIdToSync,
@@ -107,7 +116,7 @@
     logger.info(
       `Syncing data for project ${projectIdToSync} on tab ${tabId}. Page is visible.`,
     );
-    untrack(() => metricsState.sync(projectIdToSync, tabId));
+    void untrack(() => metricsState.sync(projectIdToSync, tabId));
 
     return () => {
       logger.info(

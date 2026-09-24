@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
@@ -62,9 +63,13 @@
       wizardState.scrollToSection(`service-${projectId}`);
       return;
     }
-    goto(
+    if (!clusterId) {
+      return;
+    }
+
+    void goto(
       resolve('/app/clusters/[cluster_id]/[project_id]', {
-        cluster_id: page.params.cluster_id,
+        cluster_id: clusterId,
         project_id: projectId,
       }),
     );
@@ -130,6 +135,8 @@
         }),
         { invalidateAll: true },
       );
+    } catch {
+      toast.error('Failed to create service');
     } finally {
       isCreating = false;
     }
@@ -137,7 +144,7 @@
 
   function onKeyDown(e: KeyboardEvent): void {
     if (e.key === 'Enter' && canCreate) {
-      onCreateService();
+      void onCreateService();
     } else if (e.key === 'Escape') {
       onCloseForm();
     }

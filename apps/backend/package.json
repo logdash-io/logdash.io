@@ -12,7 +12,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint src test",
+    "check": "tsc --noEmit",
     "test": "NODE_OPTIONS=--max-old-space-size=4096 jest --runInBand --forceExit",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -51,6 +52,8 @@
     "stripe": "^20.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@jest/globals": "^29.7.0",
     "@nestjs/cli": "^11.0.21",
     "@nestjs/testing": "^11.1.19",
     "@testcontainers/clickhouse": "^11.14.0",
@@ -62,7 +65,10 @@
     "@types/supertest": "^6.0.3",
     "clickhouse-migrations": "^1.1.1",
     "dotenv-cli": "^8.0.0",
-    "globals": "^15.14.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^15.15.0",
     "jest": "^29.7.0",
     "jest-date-mock": "^1.0.10",
     "mongodb": "^7.0.0",
@@ -76,7 +82,8 @@
     "ts-loader": "^9.5.7",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.1"
   },
   "overrides": {
     "@babel/core": "7.29.6",

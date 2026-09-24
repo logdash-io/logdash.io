@@ -72,7 +72,7 @@ export class GithubAuthLoginService {
 
       this.logger.log(`Created new user`, { email, userId: user.id });
 
-      await this.emitter.emitUserRegisteredEvent({
+      this.emitter.emitUserRegisteredEvent({
         authMethod: AuthMethod.Github,
         email,
         userId: user.id,
@@ -81,7 +81,7 @@ export class GithubAuthLoginService {
 
       this.metrics.mutateMetric('loginGithub', 1);
 
-      this.auditLog.create({
+      void this.auditLog.create({
         userId: user.id,
         actor: Actor.User,
         action: AuditLogUserAction.GithubLogin,
@@ -103,7 +103,7 @@ export class GithubAuthLoginService {
 
     this.metrics.mutateMetric('loginGithub', 1);
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: user.id,
       actor: Actor.User,
       action: AuditLogUserAction.GithubLogin,

@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { PublicDashboardSerialized } from '../../src/public-dashboard/core/entities/public-dashboard.interface';
@@ -5,7 +6,7 @@ import { PublicDashboardSerializer } from '../../src/public-dashboard/core/entit
 import { UpdatePublicDashboardBody } from '../../src/public-dashboard/core/dto/update-public-dashboard.body';
 
 export class PublicDashboardUtils {
-  constructor(private readonly app: INestApplication<any>) {}
+  constructor(private readonly app: INestApplication<App>) {}
 
   public async createPublicDashboard(params: {
     clusterId: string;
@@ -26,7 +27,7 @@ export class PublicDashboardUtils {
         isPublic: params.isPublic === undefined ? true : params.isPublic,
       });
 
-    return PublicDashboardSerializer.serialize(response.body);
+    return PublicDashboardSerializer.serialize(response.body as PublicDashboardSerialized);
   }
 
   public async updatePublicDashboard(

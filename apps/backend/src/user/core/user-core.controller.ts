@@ -7,7 +7,6 @@ import { UserSerializer } from './entities/user.serializer';
 import { UpdatePublicUserBody } from './dto/update-public-user.body';
 import { UserWriteService } from '../write/user-write.service';
 import { AccountClaimStatus } from './enum/account-claim-status.enum';
-import { TokenResponse } from '../../shared/responses/token.response';
 import { CustomJwtService } from '../../auth/custom-jwt/custom-jwt.service';
 import { Public } from '../../auth/core/decorators/is-public';
 import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
@@ -35,7 +34,7 @@ export class UserCoreController {
   @Get('me')
   @RequireScope(Resource.Account, Action.Read)
   @ApiResponse({ type: UserSerialized })
-  public async readCurrentUser(@CurrentUserId() userId): Promise<UserSerialized> {
+  public async readCurrentUser(@CurrentUserId() userId: string): Promise<UserSerialized> {
     const user = await this.userReadService.readByIdOrThrow(userId);
 
     return UserSerializer.serialize(user);
@@ -44,8 +43,8 @@ export class UserCoreController {
   @Put('me')
   @ApiResponse({ type: UserSerialized })
   public async updateCurrentUser(
-    @CurrentUserId() userId,
     @Body() dto: UpdatePublicUserBody,
+    @CurrentUserId() userId: string,
   ): Promise<UserSerialized> {
     const user = await this.userReadService.readByIdOrThrow(userId);
 

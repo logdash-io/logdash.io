@@ -21,7 +21,7 @@ export class AccessRestrictionValidator {
   kind: AccessRestrictionKind;
 
   @ApiPropertyOptional({ type: [String] })
-  @ValidateIf((restriction) => restriction.kind !== 'all')
+  @ValidateIf((restriction: AccessRestrictionValidator) => restriction.kind !== 'all')
   @IsArray()
   @ArrayMaxSize(100)
   @IsMongoId({ each: true })

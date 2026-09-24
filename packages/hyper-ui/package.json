@@ -49,6 +49,7 @@
   "devDependencies": {
     "@sveltejs/kit": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
+    "@types/luxon": "^3.6.2",
     "daisyui": "catalog:",
     "svelte": "catalog:",
     "svelte-check": "catalog:",

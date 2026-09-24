@@ -45,14 +45,7 @@ export class NewMetricQueueingService {
     } else if (result === AddToSetResult.SetEmptyProjectLocked) {
       await this.metricRegisterRedisService.syncProjectFromMongo(dto.projectId);
       await this.metricRegisterRedisService.unlockProject(dto.projectId);
-      try {
-        await this.metricRegisterWriteService.createMany([
-          {
-            name: dto.name,
-            projectId: dto.projectId,
-          },
-        ]);
-      } catch {}
+      await this.createRegisterEntryIgnoringErrors(dto);
       await this.metricRegisterRedisService.tryAddToCreatedSet(
         dto.projectId,
         dto.name,
@@ -62,6 +55,19 @@ export class NewMetricQueueingService {
       await this.metricBufferService.addToBuffer(dto);
     } else if (result === AddToSetResult.OverLimit) {
       throw new Error('You cannot add more metrics');
+    }
+  }
+
+  private async createRegisterEntryIgnoringErrors(dto: RecordMetricDto): Promise<void> {
+    try {
+      await this.metricRegisterWriteService.createMany([
+        {
+          name: dto.name,
+          projectId: dto.projectId,
+        },
+      ]);
+    } catch {
+      return;
     }
   }
 

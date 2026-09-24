@@ -15,7 +15,7 @@ export class CustomJwtService {
       return await this.jwtService.verifyAsync<JwtPayloadDto>(token, {
         algorithms: ['HS256'],
       });
-    } catch (e) {
+    } catch {
       return null;
     }
   }

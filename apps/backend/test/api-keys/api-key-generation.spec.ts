@@ -1,4 +1,3 @@
-import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 
 describe('Api keys (generation)', () => {

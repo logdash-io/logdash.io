@@ -38,11 +38,10 @@ export class OverviewReadService {
   }): Promise<OverviewResponse> {
     const { projects, since } = dto;
     const projectIds = projects.map((p) => p.id);
-    const nameById = new Map(projects.map((p) => [p.id, p.name]));
 
     const [errors, monitors, dataFlow] = await Promise.all([
       this.buildErrors(projects, since),
-      this.buildMonitors(projectIds, nameById),
+      this.buildMonitors(projectIds),
       this.buildDataFlow(projects),
     ]);
 
@@ -77,10 +76,7 @@ export class OverviewReadService {
     return counts.sort((a, b) => b.errorCount - a.errorCount);
   }
 
-  private async buildMonitors(
-    projectIds: string[],
-    nameById: Map<string, string>,
-  ): Promise<MonitorStatusEntry[]> {
+  private async buildMonitors(projectIds: string[]): Promise<MonitorStatusEntry[]> {
     if (projectIds.length === 0) {
       return [];
     }

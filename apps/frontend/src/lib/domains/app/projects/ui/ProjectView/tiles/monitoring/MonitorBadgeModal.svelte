@@ -33,7 +33,7 @@
   $effect(() => {
     if (!isOpen) return;
 
-    loadDashboards();
+    void loadDashboards();
   });
 
   async function loadDashboards(): Promise<void> {
@@ -47,8 +47,8 @@
     <div class="flex flex-col gap-1">
       <h3 class="text-lg font-medium">README badge</h3>
       <p class="text-sm text-neutral-400">
-        Show the uptime of {monitor.name || stripProtocol(monitor.url)} in a README
-        or on your website.
+        Show the uptime of {monitor.name || stripProtocol(monitor.url ?? '')} in
+        a README or on your website.
       </p>
     </div>
 

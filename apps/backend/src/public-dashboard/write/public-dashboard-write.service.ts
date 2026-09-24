@@ -53,6 +53,10 @@ export class PublicDashboardWriteService {
 
     const entity = await this.publicDashboardModel.findByIdAndUpdate(dto.id, dto, { new: true });
 
+    if (!entity) {
+      throw new Error(`Public dashboard with id ${dto.id} not found for update`);
+    }
+
     return PublicDashboardSerializer.normalize(entity);
   }
 

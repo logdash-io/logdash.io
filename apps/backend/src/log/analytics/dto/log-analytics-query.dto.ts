@@ -21,12 +21,12 @@ export enum LogAnalyticsBucket {
 export class LogAnalyticsQuery {
   @ApiProperty()
   @IsDate()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }: { value: string | number | Date }) => new Date(value))
   public startDate: Date;
 
   @ApiProperty()
   @IsDate()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }: { value: string | number | Date }) => new Date(value))
   public endDate: Date;
 
   @ApiProperty({
@@ -36,7 +36,7 @@ export class LogAnalyticsQuery {
   })
   @IsOptional()
   @IsNumber()
-  @Transform(({ value }) => (value ? parseFloat(value) : 0))
+  @Transform(({ value }: { value: string | number }) => (value ? parseFloat(String(value)) : 0))
   public utcOffsetHours?: number = 0;
 
   @ApiPropertyOptional({
@@ -47,7 +47,9 @@ export class LogAnalyticsQuery {
   @IsOptional()
   @IsArray()
   @IsEnum(LogLevel, { each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
+  @Transform(({ value }: { value: unknown }): unknown[] =>
+    Array.isArray(value) ? value : [value].filter(Boolean),
+  )
   public levels?: LogLevel[];
 
   @ApiPropertyOptional({
@@ -57,7 +59,9 @@ export class LogAnalyticsQuery {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
+  @Transform(({ value }: { value: unknown }): unknown[] =>
+    Array.isArray(value) ? value : [value].filter(Boolean),
+  )
   public namespaces?: string[];
 
   @ApiPropertyOptional({

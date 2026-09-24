@@ -53,7 +53,7 @@ describe('BadgeCoreController (reads)', () => {
   }
 
   function readTitle(response: request.Response): string {
-    return response.body.match(/<title>(.*)<\/title>/)[1];
+    return (response.body as string).match(/<title>(.*)<\/title>/)![1];
   }
 
   describe('GET /public_dashboards/:publicDashboardId/badges/:badgeKey.svg', () => {
@@ -255,7 +255,7 @@ describe('BadgeCoreController (reads)', () => {
       // then
       expect(response.status).toBe(200);
       expect(readTitle(response)).toBe('Acme API: Operational, 99.00% uptime over 90 days');
-      expect(response.body.match(/rx="1"/g)).toHaveLength(90);
+      expect((response.body as string).match(/rx="1"/g)).toHaveLength(90);
     });
 
     it('shows the logdash mark on free plans', async () => {

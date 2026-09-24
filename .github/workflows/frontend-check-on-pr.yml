@@ -33,6 +33,9 @@ jobs:
       - name: Type check
         run: pnpm --filter frontend check
 
+      - name: Type check hyper-ui
+        run: pnpm --filter @logdash/hyper-ui check
+
       - name: Format check
         run: npx prettier --check .
         working-directory: apps/frontend

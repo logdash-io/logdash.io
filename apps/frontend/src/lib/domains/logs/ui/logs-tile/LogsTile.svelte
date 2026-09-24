@@ -57,7 +57,7 @@
   $effect(() => {
     if (!projectId) return;
 
-    namespacesState.init(projectId);
+    void namespacesState.init(projectId);
 
     return () => {
       namespacesState.reset();

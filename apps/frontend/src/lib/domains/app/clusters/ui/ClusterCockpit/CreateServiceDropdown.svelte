@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
   import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
   import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
@@ -77,6 +78,8 @@
         }),
         { invalidateAll: true },
       );
+    } catch {
+      toast.error('Failed to create service');
     } finally {
       isCreating = false;
     }
@@ -84,7 +87,7 @@
 
   function onKeyDown(e: KeyboardEvent): void {
     if (e.key === 'Enter' && canCreate) {
-      onCreateService();
+      void onCreateService();
     } else if (e.key === 'Escape') {
       onClose();
     }

@@ -112,7 +112,7 @@ export class ProjectCoreController {
   @Post('clusters/:clusterId/projects')
   @ApiResponse({ type: CreateProjectResponse })
   public async create(
-    @CurrentUserId() userId,
+    @CurrentUserId() userId: string,
     @Body() dto: CreateProjectBody,
     @Param('clusterId') clusterId: string,
   ): Promise<CreateProjectResponse> {

@@ -15,6 +15,9 @@
 
   const previewedMetricId = $derived(page.params.metric_id);
   const projectId = $derived(page.params.project_id);
+  const previewedMetric = $derived(
+    previewedMetricId ? metricsState.getById(previewedMetricId) : undefined,
+  );
 
   let minuteDataTimeRange: string = $state(
     ChartOptions[ChartType.MINUTE].SMALL,
@@ -42,6 +45,14 @@
         minuteData: metricsState.getFakeChartData(MetricGranularity.MINUTE),
         hourData: metricsState.getFakeChartData(MetricGranularity.HOUR),
         dayData: metricsState.getFakeChartData(MetricGranularity.DAY),
+      };
+    }
+
+    if (!previewedMetricId) {
+      return {
+        minuteData: [],
+        hourData: [],
+        dayData: [],
       };
     }
 
@@ -110,7 +121,7 @@
 
 {#snippet previewedMetricSubtitle()}
   <p class="mb-4 text-sm text-neutral-500 font-medium">
-    {metricsState.getById(previewedMetricId)?.name}
+    {previewedMetric?.name}
   </p>
 {/snippet}
 
@@ -119,7 +130,7 @@
     canSwitchTabs={isPaid}
     currentRange={minuteDataTimeRange}
     largeOption={ChartOptions[ChartType.MINUTE].LARGE}
-    onRangeChange={(range) => (minuteDataTimeRange = range)}
+    onRangeChange={(range: string) => (minuteDataTimeRange = range)}
     smallOption={ChartOptions[ChartType.MINUTE].SMALL}
     title={ChartTitles[ChartType.MINUTE]}
   />
@@ -140,7 +151,7 @@
     canSwitchTabs={isPaid}
     currentRange={hourDataTimeRange}
     largeOption={ChartOptions[ChartType.HOUR].LARGE}
-    onRangeChange={(range) => (hourDataTimeRange = range)}
+    onRangeChange={(range: string) => (hourDataTimeRange = range)}
     smallOption={ChartOptions[ChartType.HOUR].SMALL}
     title={ChartTitles[ChartType.HOUR]}
   />
@@ -162,7 +173,7 @@
     canSwitchTabs={isPaid}
     currentRange={dayDataTimeRange}
     largeOption={ChartOptions[ChartType.DAY].LARGE}
-    onRangeChange={(range) => (dayDataTimeRange = range)}
+    onRangeChange={(range: string) => (dayDataTimeRange = range)}
     smallOption={ChartOptions[ChartType.DAY].SMALL}
     title={ChartTitles[ChartType.DAY]}
   />

@@ -43,7 +43,7 @@
 
   $effect(() => {
     if (isClustersRoot) {
-      invalidateAll();
+      void invalidateAll();
     }
   });
 

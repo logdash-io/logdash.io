@@ -5,6 +5,17 @@ import { Action } from '../../src/personal-api-key/core/enums/action.enum';
 import { Resource } from '../../src/personal-api-key/core/enums/resource.enum';
 import { Types } from 'mongoose';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
+import {
+  CliAuthApproveResult,
+  CliAuthPollResult,
+  CliAuthStartResult,
+} from '../../src/cli-auth/core/cli-auth.service';
+import { CliAuthRequestDetails } from '../../src/cli-auth/core/cli-auth.types';
+import { CreatePersonalApiKeyResponse } from '../../src/personal-api-key/core/dto/create-personal-api-key.response';
+import { WhoamiResponse } from '../../src/personal-api-key/core/dto/whoami.response';
+import { PersonalApiKeySerialized } from '../../src/personal-api-key/core/entities/personal-api-key.interface';
+
+type ApprovedPollResult = Extract<CliAuthPollResult, { status: 'approved' }>;
 
 const USER_CODE_REGEX = /^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/;
 
@@ -33,13 +44,7 @@ describe('CLI authorization (device-authorization flow)', () => {
       .set('User-Agent', userAgent)
       .send();
     expect(response.status).toBe(201);
-    return response.body as {
-      deviceCode: string;
-      userCode: string;
-      verificationUri: string;
-      expiresIn: number;
-      interval: number;
-    };
+    return response.body as CliAuthStartResult;
   };
 
   const poll = async (deviceCode: string) =>
@@ -52,10 +57,7 @@ describe('CLI authorization (device-authorization flow)', () => {
       .send({ userCode });
 
   // `access` is mandatory now: the consent screen must make reach an explicit choice.
-  const approve = async (
-    token: string,
-    body: Record<string, unknown>,
-  ) =>
+  const approve = async (token: string, body: Record<string, unknown>) =>
     request(server())
       .post('/auth/cli/approve')
       .set('Authorization', `Bearer ${token}`)
@@ -110,7 +112,7 @@ describe('CLI authorization (device-authorization flow)', () => {
       const response = await poll(deviceCode);
 
       expect(response.status).toBe(200);
-      expect(response.body.status).toBe('pending');
+      expect((response.body as CliAuthPollResult).status).toBe('pending');
       expect(response.body).not.toHaveProperty('value');
     });
   });
@@ -119,9 +121,7 @@ describe('CLI authorization (device-authorization flow)', () => {
     it('rejects approve WITHOUT a session token (401)', async () => {
       const { userCode } = await start();
 
-      const response = await request(server())
-        .post('/auth/cli/approve')
-        .send({ userCode });
+      const response = await request(server()).post('/auth/cli/approve').send({ userCode });
 
       expect(response.status).toBe(401);
     });
@@ -139,7 +139,7 @@ describe('CLI authorization (device-authorization flow)', () => {
           scopes: [{ resource: Resource.Account, action: Action.Write }],
           access: { kind: 'all' },
         });
-      const personalKey = createResponse.body.value;
+      const personalKey = (createResponse.body as CreatePersonalApiKeyResponse).value;
 
       const response = await request(server())
         .post('/auth/cli/approve')
@@ -159,8 +159,9 @@ describe('CLI authorization (device-authorization flow)', () => {
       const approveResponse = await approve(token, { userCode });
 
       expect(approveResponse.status).toBe(200);
-      expect(approveResponse.body.status).toBe('approved');
-      expect(approveResponse.body.prefix).toMatch(/^ldp_/);
+      const approveBody = approveResponse.body as CliAuthApproveResult;
+      expect(approveBody.status).toBe('approved');
+      expect(approveBody.prefix).toMatch(/^ldp_/);
       // the browser NEVER receives the full value
       expect(approveResponse.body).not.toHaveProperty('value');
 
@@ -169,28 +170,29 @@ describe('CLI authorization (device-authorization flow)', () => {
         .get('/personal-api-keys')
         .set('Authorization', `Bearer ${token}`);
       expect(listResponse.body).toHaveLength(1);
-      expect(listResponse.body[0].prefix).toBe(approveResponse.body.prefix);
+      expect((listResponse.body as PersonalApiKeySerialized[])[0].prefix).toBe(approveBody.prefix);
 
       // poll(deviceCode) returns the value once
       const pollResponse = await poll(deviceCode);
       expect(pollResponse.status).toBe(200);
-      expect(pollResponse.body.status).toBe('approved');
-      expect(typeof pollResponse.body.value).toBe('string');
-      expect(pollResponse.body.value.startsWith('ldp_')).toBe(true);
+      const pollBody = pollResponse.body as ApprovedPollResult;
+      expect(pollBody.status).toBe('approved');
+      expect(typeof pollBody.value).toBe('string');
+      expect(pollBody.value.startsWith('ldp_')).toBe(true);
 
-      const deliveredValue = pollResponse.body.value;
+      const deliveredValue = pollBody.value;
 
       // the delivered value actually works against whoami, as that user
       const whoamiResponse = await request(server())
         .get('/personal-api-keys/whoami')
         .set('Authorization', `Bearer ${deliveredValue}`);
       expect(whoamiResponse.status).toBe(200);
-      expect(whoamiResponse.body.userId).toBe(user.id);
+      expect((whoamiResponse.body as WhoamiResponse).userId).toBe(user.id);
 
       // SECOND poll after delivery -> expired/not-found (value never twice)
       const secondPoll = await poll(deviceCode);
       expect(secondPoll.status).toBe(200);
-      expect(secondPoll.body.status).toBe('expired');
+      expect((secondPoll.body as CliAuthPollResult).status).toBe('expired');
       expect(secondPoll.body).not.toHaveProperty('value');
     });
   });
@@ -208,7 +210,7 @@ describe('CLI authorization (device-authorization flow)', () => {
       for (const attempt of attempts) {
         const response = await poll(attempt);
         expect(response.status).toBe(200);
-        expect(response.body.status).toBe('expired');
+        expect((response.body as CliAuthPollResult).status).toBe('expired');
         expect(response.body).not.toHaveProperty('value');
       }
 
@@ -229,8 +231,9 @@ describe('CLI authorization (device-authorization flow)', () => {
 
       // the genuine deviceCode still works once
       const response = await poll(deviceCode);
-      expect(response.body.status).toBe('approved');
-      expect(typeof response.body.value).toBe('string');
+      const body = response.body as ApprovedPollResult;
+      expect(body.status).toBe('approved');
+      expect(typeof body.value).toBe('string');
     });
   });
 
@@ -242,7 +245,7 @@ describe('CLI authorization (device-authorization flow)', () => {
 
       const response = await poll(deviceCode);
       expect(response.status).toBe(200);
-      expect(response.body.status).toBe('expired');
+      expect((response.body as CliAuthPollResult).status).toBe('expired');
     });
 
     it('approve on an expired userCode -> 404', async () => {
@@ -276,11 +279,11 @@ describe('CLI authorization (device-authorization flow)', () => {
         .send({ userCode });
 
       expect(denyResponse.status).toBe(200);
-      expect(denyResponse.body.status).toBe('denied');
+      expect((denyResponse.body as { status: 'denied' }).status).toBe('denied');
 
       const pollResponse = await poll(deviceCode);
       expect(pollResponse.status).toBe(200);
-      expect(pollResponse.body.status).toBe('denied');
+      expect((pollResponse.body as CliAuthPollResult).status).toBe('denied');
       expect(pollResponse.body).not.toHaveProperty('value');
 
       // no key was minted
@@ -298,18 +301,17 @@ describe('CLI authorization (device-authorization flow)', () => {
 
       await approve(token, { userCode, access: { kind: 'all' } });
 
-      const value = (await poll(deviceCode)).body.value;
+      const value = ((await poll(deviceCode)).body as ApprovedPollResult).value;
 
       const whoami = await request(server())
         .get('/personal-api-keys/whoami')
         .set('Authorization', `Bearer ${value}`);
 
       expect(whoami.status).toBe(200);
-      expect(whoami.body.access).toEqual({ kind: 'all' });
+      const whoamiBody = whoami.body as WhoamiResponse;
+      expect(whoamiBody.access).toEqual({ kind: 'all' });
 
-      const resources = (whoami.body.scopes as Array<{ resource: string; action: string }>).map(
-        (s) => s.resource,
-      );
+      const resources = whoamiBody.scopes.map((s) => s.resource);
       // CLI_DEFAULT: logs/metrics/monitors/projects/clusters at read
       expect(resources).toEqual(
         expect.arrayContaining([
@@ -320,7 +322,7 @@ describe('CLI authorization (device-authorization flow)', () => {
           Resource.Clusters,
         ]),
       );
-      for (const scope of whoami.body.scopes) {
+      for (const scope of whoamiBody.scopes) {
         expect(scope.action).toBe(Action.Read);
       }
       // CLI default is read-only: account is NOT present
@@ -350,14 +352,15 @@ describe('CLI authorization (device-authorization flow)', () => {
         access: { kind: 'projects', ids: [owner.project.id] },
       });
 
-      const value = (await poll(deviceCode)).body.value;
+      const value = ((await poll(deviceCode)).body as ApprovedPollResult).value;
 
       // whoami reflects the custom scopes/access
       const whoami = await request(server())
         .get('/personal-api-keys/whoami')
         .set('Authorization', `Bearer ${value}`);
-      expect(whoami.body.access).toEqual({ kind: 'projects', ids: [owner.project.id] });
-      expect(whoami.body.scopes).toEqual([{ resource: Resource.Projects, action: Action.Read }]);
+      const whoamiBody = whoami.body as WhoamiResponse;
+      expect(whoamiBody.access).toEqual({ kind: 'projects', ids: [owner.project.id] });
+      expect(whoamiBody.scopes).toEqual([{ resource: Resource.Projects, action: Action.Read }]);
 
       // enforcement: can read P1, cannot read P2 despite real membership
       const p1 = await request(server())
@@ -377,11 +380,11 @@ describe('CLI authorization (device-authorization flow)', () => {
       const { deviceCode } = await start();
 
       const first = await poll(deviceCode);
-      expect(first.body.status).toBe('pending');
+      expect((first.body as CliAuthPollResult).status).toBe('pending');
 
       // immediate second poll -> throttled
       const second = await poll(deviceCode);
-      expect(second.body.status).toBe('slow_down');
+      expect((second.body as CliAuthPollResult).status).toBe('slow_down');
     });
   });
 
@@ -393,11 +396,12 @@ describe('CLI authorization (device-authorization flow)', () => {
       const response = await lookup(token, userCode);
 
       expect(response.status).toBe(200);
-      expect(response.body.userCode).toBe(userCode);
-      expect(response.body.clientUserAgent).toBe('ld/9.9.9 (some-box)');
-      expect(typeof response.body.clientIp).toBe('string');
-      expect(response.body.clientIp.length).toBeGreaterThan(0);
-      expect(typeof response.body.requestedAt).toBe('string');
+      const body = response.body as CliAuthRequestDetails;
+      expect(body.userCode).toBe(userCode);
+      expect(body.clientUserAgent).toBe('ld/9.9.9 (some-box)');
+      expect(typeof body.clientIp).toBe('string');
+      expect(body.clientIp.length).toBeGreaterThan(0);
+      expect(typeof body.requestedAt).toBe('string');
       // the lookup NEVER hands back anything the CLI polls with
       expect(response.body).not.toHaveProperty('deviceCode');
       expect(response.body).not.toHaveProperty('value');
@@ -414,9 +418,7 @@ describe('CLI authorization (device-authorization flow)', () => {
     it('rejects lookup WITHOUT a session token (401)', async () => {
       const { userCode } = await start();
 
-      const response = await request(server())
-        .post('/auth/cli/lookup')
-        .send({ userCode });
+      const response = await request(server()).post('/auth/cli/lookup').send({ userCode });
 
       expect(response.status).toBe(401);
     });
@@ -472,10 +474,13 @@ describe('CLI authorization (device-authorization flow)', () => {
     it.each([
       ['unknown kind', { kind: 'everything' }],
       ['clusters with no ids', { kind: 'clusters' }],
-      ['ids as a bare string (would degrade to a substring match)', {
-        kind: 'clusters',
-        ids: 'someSubstring',
-      }],
+      [
+        'ids as a bare string (would degrade to a substring match)',
+        {
+          kind: 'clusters',
+          ids: 'someSubstring',
+        },
+      ],
       ['ids that are not object ids', { kind: 'projects', ids: ['not-an-id'] }],
     ])('rejects a malformed access restriction: %s', async (_label, access) => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -506,15 +511,16 @@ describe('CLI authorization (device-authorization flow)', () => {
 
       const approveResponse = await approve(token, { userCode });
       expect(approveResponse.status).toBe(200);
-      expect(typeof approveResponse.body.expiresAt).toBe('string');
+      expect(typeof (approveResponse.body as CliAuthApproveResult).expiresAt).toBe('string');
 
       const listResponse = await request(server())
         .get('/personal-api-keys')
         .set('Authorization', `Bearer ${token}`);
 
-      expect(listResponse.body).toHaveLength(1);
-      expect(listResponse.body[0].expiresAt).toBeTruthy();
-      expect(new Date(listResponse.body[0].expiresAt).getTime()).toBeGreaterThan(Date.now());
+      const keys = listResponse.body as PersonalApiKeySerialized[];
+      expect(keys).toHaveLength(1);
+      expect(keys[0].expiresAt).toBeTruthy();
+      expect(new Date(keys[0].expiresAt!).getTime()).toBeGreaterThan(Date.now());
     });
   });
 });

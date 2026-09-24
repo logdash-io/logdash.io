@@ -1,7 +1,8 @@
+import { CustomDomainEntity } from './custom-domain.entity';
 import { CustomDomainNormalized, CustomDomainSerialized } from './custom-domain.interface';
 
 export class CustomDomainSerializer {
-  public static normalize(entity: any): CustomDomainNormalized {
+  public static normalize(entity: CustomDomainEntity): CustomDomainNormalized {
     return {
       id: entity._id.toString(),
       domain: entity.domain,

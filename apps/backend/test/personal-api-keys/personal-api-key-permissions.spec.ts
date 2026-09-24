@@ -7,6 +7,9 @@ import { AccessRestriction } from '../../src/personal-api-key/core/types/access-
 import { ScopeEntry } from '../../src/personal-api-key/core/types/scope-entry.type';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 import { RedisService } from '../../src/shared/redis/redis.service';
+import { CreatePersonalApiKeyResponse } from '../../src/personal-api-key/core/dto/create-personal-api-key.response';
+import { WhoamiResponse } from '../../src/personal-api-key/core/dto/whoami.response';
+import { HttpMonitorSerialized } from '../../src/http-monitor/core/entities/http-monitor.interface';
 
 describe('Personal API keys (scope + access enforcement)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -40,9 +43,10 @@ describe('Personal API keys (scope + access enforcement)', () => {
       .send({ label: 'test key', scopes, access, expiresAt });
 
     expect(response.status).toBe(201);
-    expect(typeof response.body.value).toBe('string');
+    const body = response.body as CreatePersonalApiKeyResponse;
+    expect(typeof body.value).toBe('string');
 
-    return response.body.value;
+    return body.value;
   };
 
   // make `userId` a member of `clusterId` (genuine live membership)
@@ -60,11 +64,9 @@ describe('Personal API keys (scope + access enforcement)', () => {
     it('allows a read-scoped key on a GET endpoint', async () => {
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const key = await createKey(
-        token,
-        [{ resource: Resource.Projects, action: Action.Read }],
-        { kind: 'all' },
-      );
+      const key = await createKey(token, [{ resource: Resource.Projects, action: Action.Read }], {
+        kind: 'all',
+      });
 
       const response = await request(server())
         .get(`/projects/${project.id}`)
@@ -76,11 +78,9 @@ describe('Personal API keys (scope + access enforcement)', () => {
     it('write scope implies read (write key can read)', async () => {
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const key = await createKey(
-        token,
-        [{ resource: Resource.Projects, action: Action.Write }],
-        { kind: 'all' },
-      );
+      const key = await createKey(token, [{ resource: Resource.Projects, action: Action.Write }], {
+        kind: 'all',
+      });
 
       const response = await request(server())
         .get(`/projects/${project.id}`)
@@ -93,11 +93,9 @@ describe('Personal API keys (scope + access enforcement)', () => {
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // key has logs:read but the endpoint requires projects:read
-      const key = await createKey(
-        token,
-        [{ resource: Resource.Logs, action: Action.Read }],
-        { kind: 'all' },
-      );
+      const key = await createKey(token, [{ resource: Resource.Logs, action: Action.Read }], {
+        kind: 'all',
+      });
 
       const response = await request(server())
         .get(`/projects/${project.id}`)
@@ -121,11 +119,9 @@ describe('Personal API keys (scope + access enforcement)', () => {
     it('enforces the correct resource per endpoint (logs:read works on logs, not metrics)', async () => {
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const key = await createKey(
-        token,
-        [{ resource: Resource.Logs, action: Action.Read }],
-        { kind: 'all' },
-      );
+      const key = await createKey(token, [{ resource: Resource.Logs, action: Action.Read }], {
+        kind: 'all',
+      });
 
       const logsResponse = await request(server())
         .get(`/projects/${project.id}/logs/v2`)
@@ -144,11 +140,9 @@ describe('Personal API keys (scope + access enforcement)', () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // even an all-access key cannot manage keys — the endpoint is unannotated
-      const key = await createKey(
-        token,
-        [{ resource: Resource.Account, action: Action.Write }],
-        { kind: 'all' },
-      );
+      const key = await createKey(token, [{ resource: Resource.Account, action: Action.Write }], {
+        kind: 'all',
+      });
 
       const response = await request(server())
         .get('/personal-api-keys')
@@ -160,11 +154,9 @@ describe('Personal API keys (scope + access enforcement)', () => {
     it('returns 403 for a personal key creating another key (credential-mints-credential is closed)', async () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const key = await createKey(
-        token,
-        [{ resource: Resource.Account, action: Action.Write }],
-        { kind: 'all' },
-      );
+      const key = await createKey(token, [{ resource: Resource.Account, action: Action.Write }], {
+        kind: 'all',
+      });
 
       const response = await request(server())
         .post('/personal-api-keys')
@@ -329,8 +321,7 @@ describe('Personal API keys (scope + access enforcement)', () => {
           access: { kind: 'all' },
         });
 
-      const keyId = createResponse.body.id;
-      const value = createResponse.body.value;
+      const { id: keyId, value } = createResponse.body as CreatePersonalApiKeyResponse;
 
       // works before revocation
       const before = await request(server())
@@ -372,9 +363,10 @@ describe('Personal API keys (scope + access enforcement)', () => {
         .set('Authorization', `Bearer ${key}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.userId).toBe(user.id);
-      expect(response.body.scopes).toEqual([]);
-      expect(response.body.access).toEqual({ kind: 'projects', ids: [] });
+      const body = response.body as WhoamiResponse;
+      expect(body.userId).toBe(user.id);
+      expect(body.scopes).toEqual([]);
+      expect(body.access).toEqual({ kind: 'projects', ids: [] });
     });
 
     it('returns 401 for whoami with a revoked key', async () => {
@@ -385,8 +377,7 @@ describe('Personal API keys (scope + access enforcement)', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ label: 'k', scopes: [], access: { kind: 'all' } });
 
-      const keyId = createResponse.body.id;
-      const value = createResponse.body.value;
+      const { id: keyId, value } = createResponse.body as CreatePersonalApiKeyResponse;
 
       await request(server())
         .delete(`/personal-api-keys/${keyId}`)
@@ -428,7 +419,7 @@ describe('Personal API keys (scope + access enforcement)', () => {
         .post(`/projects/${project.id}/http_monitors`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'mon', url: 'https://example.com', mode: 'pull' });
-      const monitorId = monitorResponse.body.id;
+      const monitorId = (monitorResponse.body as HttpMonitorSerialized).id;
 
       const cases: Array<{ path: string; min?: number }> = [
         { path: `/clusters/${cluster.id}/projects` },

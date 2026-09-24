@@ -4,7 +4,6 @@
   import LogRowTime from './LogRowTime.svelte';
 
   type Props = {
-    index: number;
     date: Date;
     level: LogLevel;
     message: string;

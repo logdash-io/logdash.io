@@ -5,7 +5,6 @@ import { LogIngestionService } from '../ingestion/log-creation.service';
 import { QueueLogDto } from './dto/queue-log.dto';
 import { Types } from 'mongoose';
 import { QueueLogResult } from './dto/queue-log.result';
-import { getOurEnv, OurEnv } from '../../shared/types/our-env.enum';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { LOGS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
@@ -29,7 +28,7 @@ export class LogQueueingService {
   }
 
   @Cron(CronExpression.EVERY_SECOND)
-  public async processQueue(): Promise<void> {
+  public processQueue(): void {
     if (this.queuedDtos.length === 0) {
       return;
     }

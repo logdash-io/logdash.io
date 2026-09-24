@@ -1,4 +1,3 @@
-import { HttpMonitorStatus } from '../../status/enum/http-monitor-status.enum';
 import { HttpMonitorEntity } from './http-monitor.entity';
 import { HttpMonitorNormalized, HttpMonitorSerialized } from './http-monitor.interface';
 import { HttpMonitorStatusDto } from '../../status/http-monitor-status.service';

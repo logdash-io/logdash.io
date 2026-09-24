@@ -123,11 +123,15 @@ class LogsState {
 
     if (this.shouldFiltersBlockSync) {
       if (!skipFetch) {
-        this.fetchLogs();
+        this.fetchLogs().catch((error: unknown) => {
+          logger.error('failed to fetch logs:', error);
+        });
       }
       this.pauseSync();
     } else {
-      this.resumeSync();
+      this.resumeSync().catch((error: unknown) => {
+        logger.error('failed to resume logs sync:', error);
+      });
     }
   }
 
@@ -192,6 +196,8 @@ class LogsState {
     this._loadingPage = true;
     try {
       await this.fetchLogs({ lastId: lastLog.id });
+    } catch (error) {
+      logger.error('failed to load the next logs page:', error);
     } finally {
       this._loadingPage = false;
     }
@@ -227,10 +233,16 @@ class LogsState {
   }
 
   private async fetchLogs(pagination?: { lastId: string }): Promise<void> {
+    const projectId = this._projectId;
+
+    if (!projectId) {
+      return;
+    }
+
     this._fetchingLogs = true;
 
     try {
-      const logs = await LogsService.getProjectLogs(this._projectId, {
+      const logs = await LogsService.getProjectLogs(projectId, {
         ...filtersStore.filters,
         ...(pagination && { lastId: pagination.lastId, direction: 'before' }),
       });

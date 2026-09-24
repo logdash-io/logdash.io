@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { page } from '$app/state';
   import { PingChart } from '@logdash/hyper-ui/features';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
@@ -19,13 +18,12 @@
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
 
   type Props = {
+    clusterId: string;
     projectId: string;
     expanded?: boolean;
   };
 
-  const { projectId, expanded = false }: Props = $props();
-
-  const clusterId = $derived(page.params.cluster_id);
+  const { clusterId, projectId, expanded = false }: Props = $props();
 
   const projectMonitor = $derived(
     monitoringState.getMonitorByProjectId(projectId),
@@ -70,7 +68,7 @@
   );
 
   function onNavigateToMonitoring(): void {
-    goto(resolve(`/app/clusters/${clusterId}/${projectId}/monitoring`));
+    void goto(resolve(`/app/clusters/${clusterId}/${projectId}/monitoring`));
   }
 
   function onTimeRangeChange(newRange: typeof timeRange): void {
@@ -88,7 +86,7 @@
     );
 
     untrack(() => {
-      monitoringState.loadMonitorPings(
+      void monitoringState.loadMonitorPings(
         projectId,
         projectMonitor.id,
         untrack(() => pingsToLoad),
@@ -106,12 +104,12 @@
       `Syncing ping buckets for project monitor: ${projectMonitor.id}`,
     );
 
-    monitoringState.loadPingBuckets(projectMonitor.id);
+    void monitoringState.loadPingBuckets(projectMonitor.id);
   });
 
   onMount(() => {
     if (expanded) {
-      notificationChannelsState.loadChannels(clusterId);
+      void notificationChannelsState.loadChannels(clusterId);
     }
   });
 </script>

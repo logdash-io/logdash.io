@@ -1,8 +1,8 @@
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
-import { closeInMemoryMongoServer } from '../utils/mongo-in-memory-server';
 import { MetricSerialized, SimpleMetric } from '../../src/metric/core/entities/metric.normalized';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('Metrics (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -75,7 +75,9 @@ describe('Metrics (reads)', () => {
         .set('Authorization', `Bearer ${setupB.token}`);
 
       expect(response.status).toEqual(403);
-      expect(response.body.message).toEqual('User is not a member of this cluster');
+      expect((response.body as ErrorResponse).message).toEqual(
+        'User is not a member of this cluster',
+      );
     });
   });
 
@@ -256,7 +258,9 @@ describe('Metrics (reads)', () => {
 
       // then
       expect(response.status).toEqual(403);
-      expect(response.body.message).toEqual('User is not a member of this cluster');
+      expect((response.body as ErrorResponse).message).toEqual(
+        'User is not a member of this cluster',
+      );
     });
   });
 });

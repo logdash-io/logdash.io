@@ -20,7 +20,7 @@ runs:
         cd apps/backend
 
         # Find all test files
-        TEST_FILES=($(find test -name "*.spec.ts" -type f | sort))
+        TEST_FILES=($(find test src -name "*.spec.ts" -type f | sort))
 
         # Group into batches
         BATCH_SIZE=${{ inputs.batch-size }}

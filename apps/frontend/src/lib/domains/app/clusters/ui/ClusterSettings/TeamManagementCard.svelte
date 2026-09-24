@@ -31,7 +31,7 @@
   );
 
   $effect(() => {
-    clusterInvitesState.loadInvitesAndCapacity(clusterId);
+    void clusterInvitesState.loadInvitesAndCapacity(clusterId);
     const cleanup = clusterInvitesState.startInvitesPolling(clusterId);
     return () => cleanup();
   });
@@ -148,7 +148,7 @@
                 bind:value={emailInput}
                 disabled={clusterInvitesState.isCreating}
                 onkeydown={(e) => {
-                  if (e.key === 'Enter') onInviteUser();
+                  if (e.key === 'Enter') void onInviteUser();
                 }}
               />
             </label>

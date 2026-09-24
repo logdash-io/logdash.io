@@ -14,6 +14,8 @@
   import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
   import TelegramAlertingSetup from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/TelegramAlertingSetup.svelte';
   import WebhookSetupStep from '$lib/domains/app/projects/ui/notification-channels/webhook-setup/WebhookSetupStep.svelte';
+  import type { WebhookSetupDTO } from '$lib/domains/app/projects/domain/notification-channels/notification-channels.types.js';
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 
   type Props = {
     clusterId: string;
@@ -46,8 +48,52 @@
   ]);
   let selectedChannel: string | null = $state(null);
 
+  const monitorName = $derived.by(() => {
+    const monitorId = notificationChannelSetupState.state.monitorId;
+
+    if (!monitorId) {
+      return '';
+    }
+
+    return monitoringState.getMonitorById(monitorId)?.name || '';
+  });
+
   function closeModal() {
     notificationChannelSetupState.close();
+  }
+
+  async function onWebhookSubmit(dto: WebhookSetupDTO): Promise<void> {
+    const createdChannelId = await notificationChannelsState.createChannel(
+      clusterId,
+      {
+        type: 'webhook',
+        name: dto.name,
+        options: {
+          url: dto.url,
+          headers: dto.headers,
+          method: dto.method,
+        },
+      },
+    );
+    const monitorId = notificationChannelSetupState.state.monitorId;
+
+    if (dto.withAssignment && monitorId && createdChannelId) {
+      void assignChannelToMonitor(monitorId, createdChannelId);
+    }
+    notificationChannelSetupState.close();
+    selectedChannel = null;
+    void notificationChannelsState.loadChannels(clusterId);
+  }
+
+  async function assignChannelToMonitor(
+    monitorId: string,
+    channelId: string,
+  ): Promise<void> {
+    try {
+      await monitoringState.addNotificationChannel(monitorId, channelId);
+    } catch {
+      toast.error('Failed to add notification channel to monitor');
+    }
   }
 </script>
 
@@ -140,39 +186,8 @@
   {#if selectedChannel === 'webhook'}
     <WebhookSetupStep
       clusterName={clustersState.clusterName(clusterId)}
-      monitorName={monitoringState.getMonitorById(
-        notificationChannelSetupState.state.monitorId,
-      )?.name || ''}
-      {userTier}
-      onSubmit={(dto: {
-        withAssignment: boolean;
-        url: string;
-        name: string;
-        headers: Record<string, string>;
-        method: string;
-      }) => {
-        notificationChannelsState
-          .createChannel(clusterId, {
-            type: 'webhook',
-            name: dto.name,
-            options: {
-              url: dto.url,
-              headers: dto.headers,
-              method: dto.method,
-            },
-          })
-          .then((createdChannelId: string) => {
-            if (dto.withAssignment) {
-              monitoringState.addNotificationChannel(
-                notificationChannelSetupState.state.monitorId,
-                createdChannelId,
-              );
-            }
-            notificationChannelSetupState.close();
-            selectedChannel = null;
-            notificationChannelsState.loadChannels(clusterId);
-          });
-      }}
+      {monitorName}
+      onSubmit={onWebhookSubmit}
       onCancel={() => {
         selectedChannel = null;
       }}

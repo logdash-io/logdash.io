@@ -95,9 +95,8 @@
           },
         ]}
         delayIn={0}
-        delayOut={50}
       >
-        <MetricTile id={metric.id} disabled={metricsState.isUsingFakeData} />
+        <MetricTile {metric} disabled={metricsState.isUsingFakeData} />
       </DataTile>
     {/each}
   </div>
@@ -123,12 +122,13 @@
             class="btn text-base-content hover:text-error btn-soft btn-xs gap-1"
             onclick={() => {
               if (
+                projectId &&
                 confirm(
                   `Are you sure you want to delete ${previewedMetric.name} metric?`,
                 )
               ) {
-                metricsState.delete(projectId, previewedMetricId);
-                goto(
+                metricsState.delete(projectId, previewedMetric.id);
+                void goto(
                   resolve(`/app/clusters/${clusterId}/${projectId}/metrics`),
                 );
               }

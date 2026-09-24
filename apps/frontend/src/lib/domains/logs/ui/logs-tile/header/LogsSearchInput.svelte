@@ -19,7 +19,7 @@
       clearTimeout(debounceTimer);
     }
 
-    debounceTimer = setTimeout(async () => {
+    debounceTimer = setTimeout(() => {
       const query = localSearchTerm.trim();
 
       onSearchChange?.(query);

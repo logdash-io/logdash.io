@@ -12,7 +12,7 @@ import { toast } from '../../ui/toaster/toast.state.svelte.js';
 class UserState {
   private _user = $state<User>();
 
-  get user(): User {
+  get user(): User | undefined {
     return this._user;
   }
 
@@ -20,7 +20,7 @@ class UserState {
     return this._user?.tier || UserTier.FREE;
   }
 
-  get id(): User['id'] {
+  get id(): User['id'] | undefined {
     return this._user?.id;
   }
 
@@ -107,7 +107,9 @@ class UserState {
       UsersService.changePaidPlan(to)
         .then(() => {
           toast.success('Your plan has been upgraded!');
-          this.set({ ...this._user, tier: to });
+          if (this._user) {
+            this.set({ ...this._user, tier: to });
+          }
         })
         .catch((error) => {
           toast.error('Failed to upgrade your plan');

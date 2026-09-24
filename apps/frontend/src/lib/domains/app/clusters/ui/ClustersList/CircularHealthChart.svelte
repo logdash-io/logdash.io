@@ -1,16 +1,15 @@
 <script lang="ts">
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-
-  export type ServiceStatus = 'healthy' | 'unhealthy' | 'degraded' | 'unknown';
+  import type { ServiceHealthStatus } from '$lib/domains/app/clusters/domain/service-health-status.js';
 
   type ServiceData = {
     id: string;
     name: string;
-    status: ServiceStatus;
+    status: ServiceHealthStatus;
   };
 
   type StatusGroup = {
-    status: ServiceStatus;
+    status: ServiceHealthStatus;
     count: number;
     colorClass: string;
     services: ServiceData[];
@@ -32,21 +31,21 @@
 
   let hoveredSegmentIndex = $state<number | null>(null);
 
-  const STATUS_COLORS: Record<ServiceStatus, string> = {
+  const STATUS_COLORS: Record<ServiceHealthStatus, string> = {
     healthy: 'stroke-success',
     unhealthy: 'stroke-error',
     degraded: 'stroke-warning',
     unknown: 'stroke-base-300',
   };
 
-  const STATUS_BG_COLORS: Record<ServiceStatus, string> = {
+  const STATUS_BG_COLORS: Record<ServiceHealthStatus, string> = {
     healthy: 'bg-success',
     unhealthy: 'bg-error',
     degraded: 'bg-warning',
     unknown: 'bg-base-300',
   };
 
-  const STATUS_LABELS: Record<ServiceStatus, string> = {
+  const STATUS_LABELS: Record<ServiceHealthStatus, string> = {
     healthy: 'Healthy',
     unhealthy: 'Unhealthy',
     degraded: 'Degraded',

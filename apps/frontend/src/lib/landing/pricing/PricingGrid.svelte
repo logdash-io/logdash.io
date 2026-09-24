@@ -69,7 +69,7 @@
           <div class="card-actions my-4 justify-center">
             <button
               onclick={() => handleGithubLogin(plan.tier)}
-              disabled={loggingIn || plan['disabled']}
+              disabled={loggingIn}
               class={`btn btn-lg w-full rounded-full font-medium ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}
             >
               {#if loggingIn}

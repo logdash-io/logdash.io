@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ClickHouseClient } from '@clickhouse/client';
-import { LogAnalyticsBucket, LogAnalyticsQuery } from './dto/log-analytics-query.dto';
+import { LogAnalyticsQuery } from './dto/log-analytics-query.dto';
 import { LogAnalyticsBucketData, LogAnalyticsResponse } from './dto/log-analytics-response.dto';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 import { LogAnalyticsBucketSelectionService } from './log-analytics-bucket-selection.service';
@@ -117,7 +117,7 @@ export class LogAnalyticsService {
       ORDER BY bucket_start ASC
     `;
 
-    const queryParams: Record<string, any> = {
+    const queryParams: Record<string, unknown> = {
       projectId,
       startDate: ClickhouseUtils.jsDateToClickhouseDate(alignedStartDate),
       endDate: ClickhouseUtils.jsDateToClickhouseDate(alignedEndDate),
@@ -143,9 +143,24 @@ export class LogAnalyticsService {
       query_params: queryParams,
     });
 
-    const data = ((await result.json()) as any).data;
+    const { data } =
+      await result.json<
+        Record<
+          | 'bucket_start'
+          | 'bucket_end'
+          | 'info_count'
+          | 'warning_count'
+          | 'error_count'
+          | 'http_count'
+          | 'verbose_count'
+          | 'debug_count'
+          | 'silly_count'
+          | 'total_count',
+          string
+        >
+      >();
 
-    const buckets: LogAnalyticsBucketData[] = data.map((row: any) => ({
+    const buckets: LogAnalyticsBucketData[] = data.map((row) => ({
       bucketStart: ClickhouseUtils.clickhouseDateToJsDate(row.bucket_start).toISOString(),
       bucketEnd: ClickhouseUtils.clickhouseDateToJsDate(row.bucket_end).toISOString(),
       countByLevel: {

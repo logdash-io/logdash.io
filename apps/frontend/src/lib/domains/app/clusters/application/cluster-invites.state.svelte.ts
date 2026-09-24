@@ -52,7 +52,7 @@ class ClusterInvitesState {
 
   startInvitesPolling(clusterId: string): () => void {
     const interval = setInterval(() => {
-      this.loadInvitesAndCapacity(clusterId, true);
+      void this.loadInvitesAndCapacity(clusterId, true);
     }, 5000);
 
     return () => clearInterval(interval);

@@ -1,8 +1,11 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import * as nock from 'nock';
 
+export type TelegramSendMessageBody = { chat_id: string; text: string };
+
 export class TelegramUtils {
-  constructor(private readonly app: INestApplication<any>) {}
+  constructor(private readonly app: INestApplication<App>) {}
 
   /**
    * Creating a telegram channel fires a welcome message at the real telegram
@@ -14,7 +17,7 @@ export class TelegramUtils {
     nock('https://api.telegram.org')
       .post(
         /\/bot.+\/sendMessage/,
-        (body) =>
+        (body: Partial<TelegramSendMessageBody> | undefined) =>
           typeof body?.text === 'string' && body.text.includes('Setup was completed successfully'),
       )
       .query(true)
@@ -24,13 +27,16 @@ export class TelegramUtils {
 
   public setUpTelegramSendMessageListener(dto: {
     botId: string;
-    onMessage: (message: any) => void;
-  }) {
+    onMessage: (message: TelegramSendMessageBody) => void;
+  }): void {
     nock('https://api.telegram.org')
-      .post(`/bot${dto.botId}/sendMessage?parse_mode=MarkdownV2`, (body) => {
-        dto.onMessage(body);
-        return true;
-      })
+      .post(
+        `/bot${dto.botId}/sendMessage?parse_mode=MarkdownV2`,
+        (body: TelegramSendMessageBody) => {
+          dto.onMessage(body);
+          return true;
+        },
+      )
       .reply(200, {
         ok: true,
         result: {

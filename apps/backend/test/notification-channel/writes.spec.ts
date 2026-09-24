@@ -8,6 +8,9 @@ import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { NotificationChannelSerialized } from '../../src/notification-channel/core/entities/notification-channel.interface';
+import { TelegramSendMessageBody } from '../utils/telegram-utils';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('NotificationChannelCoreController (writes)', () => {
   // this suite creates up to 100 channels in a single test, so wiping mongo +
@@ -121,7 +124,9 @@ describe('NotificationChannelCoreController (writes)', () => {
 
         // then
         expect(response.status).toBe(400);
-        expect(response.body.message).toEqual('Channel with this chatId already exists');
+        expect((response.body as ErrorResponse).message).toEqual(
+          'Channel with this chatId already exists',
+        );
       });
 
       it('sends welcome message to telegram channel', async () => {
@@ -134,7 +139,7 @@ describe('NotificationChannelCoreController (writes)', () => {
           options: { chatId: 'valid-chat-id' },
         };
 
-        const requestBodies: any[] = [];
+        const requestBodies: TelegramSendMessageBody[] = [];
 
         nock.cleanAll();
         bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
@@ -227,7 +232,7 @@ I'll notify you about the status of your services`,
         expect(response.status).toBe(400);
         // the webhook url is now also length capped, parsed as a url and run
         // through the ssrf guard, so a missing url trips every constraint
-        expect(response.body.message).toEqual([
+        expect((response.body as ErrorResponse).message).toEqual([
           'options.url must be an http(s) url that does not point at a private, loopback or metadata address',
           'options.url must be a URL address',
           'options.url must be shorter than or equal to 1024 characters',
@@ -306,7 +311,7 @@ I'll notify you about the status of your services`,
 
             // then
             expect(response.status).toBe(400);
-            expect(response.body.message).toBe(
+            expect((response.body as ErrorResponse).message).toBe(
               'Free tier users can only use GET method for webhooks. Upgrade to use other HTTP methods.',
             );
           },
@@ -334,7 +339,7 @@ I'll notify you about the status of your services`,
 
           // then
           expect(response.status).toBe(400);
-          expect(response.body.message).toBe(
+          expect((response.body as ErrorResponse).message).toBe(
             'Free tier users cannot use custom headers for webhooks. Upgrade to use custom headers.',
           );
         });
@@ -461,7 +466,7 @@ I'll notify you about the status of your services`,
         userId: user.id,
         action: AuditLogEntityAction.Create,
         relatedDomain: RelatedDomain.NotificationChannel,
-        relatedEntityId: response.body.id,
+        relatedEntityId: (response.body as NotificationChannelSerialized).id,
       });
     });
 
@@ -545,10 +550,10 @@ I'll notify you about the status of your services`,
       // then
       if (shouldSucceed) {
         expect(response.status).toBe(201);
-        expect(response.body.target).toBe(channelType);
+        expect((response.body as NotificationChannelSerialized).target).toBe(channelType);
       } else {
         expect(response.status).toBe(400);
-        expect(response.body.message).toBe(
+        expect((response.body as ErrorResponse).message).toBe(
           `${channelType} notification channels are not available for your current tier`,
         );
       }
@@ -559,7 +564,7 @@ I'll notify you about the status of your services`,
       const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       await Promise.all(
-        Array.from({ length: 100 }).map((_, i) =>
+        Array.from({ length: 100 }).map(() =>
           bootstrap.models.notificationChannelModel.create({
             clusterId: cluster.id,
           }),
@@ -578,14 +583,16 @@ I'll notify you about the status of your services`,
 
       // then
       expect(response.status).toBe(400);
-      expect(response.body.message).toEqual('Cannot create more than 100 notification channels');
+      expect((response.body as ErrorResponse).message).toEqual(
+        'Cannot create more than 100 notification channels',
+      );
     }, 10_000);
   });
 
   describe('PUT /notification_channels/:id', () => {
     it('updates notification channel options', async () => {
       // given
-      const { cluster, user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // Create a notification channel first
       const channel =
@@ -630,7 +637,7 @@ I'll notify you about the status of your services`,
           },
         });
 
-      const channelId = createResponse.body.id;
+      const channelId = (createResponse.body as NotificationChannelSerialized).id;
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -657,7 +664,7 @@ I'll notify you about the status of your services`,
   describe('DELETE /notification_channels/:id', () => {
     it('deletes notification channel', async () => {
       // given
-      const { cluster, user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // Create a notification channel first
       const createResponse = await request(bootstrap.app.getHttpServer())
@@ -672,7 +679,7 @@ I'll notify you about the status of your services`,
           },
         });
 
-      const channelId = createResponse.body.id;
+      const channelId = (createResponse.body as NotificationChannelSerialized).id;
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -702,7 +709,7 @@ I'll notify you about the status of your services`,
           },
         });
 
-      const channelId = createResponse.body.id;
+      const channelId = (createResponse.body as NotificationChannelSerialized).id;
 
       // when
       const response = await request(bootstrap.app.getHttpServer())

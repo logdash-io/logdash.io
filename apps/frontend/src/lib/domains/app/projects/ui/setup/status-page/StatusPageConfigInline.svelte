@@ -31,7 +31,7 @@
   let hasInitialized = $state(false);
 
   const debouncedNameUpdate = debounce((name: string) => {
-    publicDashboardManagerState.update(dashboardId, { name });
+    void publicDashboardManagerState.update(dashboardId, { name });
   }, 250);
 
   const dashboard = $derived(
@@ -59,7 +59,7 @@
   );
 
   onMount(async () => {
-    await monitoringState.load(clusterId);
+    monitoringState.load(clusterId);
     await publicDashboardManagerState.loadPublicDashboards(clusterId);
     hasInitialized = true;
 
@@ -125,8 +125,8 @@
     }
   }
 
-  function onCopyUrl(): void {
-    navigator.clipboard.writeText(dashboardUrl);
+  async function onCopyUrl(): Promise<void> {
+    await navigator.clipboard.writeText(dashboardUrl);
     toast.success('Status page URL copied to clipboard');
   }
 </script>
@@ -224,7 +224,7 @@
                 onchange={() => onToggleMonitor(monitor.id)}
               />
               <span class="truncate font-medium">
-                {monitor.name || stripProtocol(monitor.url)}
+                {monitor.name || stripProtocol(monitor.url ?? '')}
               </span>
             </label>
           {/each}

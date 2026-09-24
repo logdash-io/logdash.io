@@ -1,8 +1,9 @@
 <script lang="ts">
+  import type { ClassValue } from 'svelte/elements';
   import { logoInk } from './logo-ink';
 
   type Props = {
-    class?: string;
+    class?: ClassValue;
   };
 
   const { class: className = '' }: Props = $props();

@@ -3,9 +3,10 @@ import { Types } from 'mongoose';
 import { createTestApp } from '../utils/bootstrap';
 import { AccountClaimStatus } from '../../src/user/core/enum/account-claim-status.enum';
 import * as nock from 'nock';
+import { TokenResponse } from '../../src/shared/responses/token.response';
 import { AuthMethod } from '../../src/user/core/enum/auth-method.enum';
 import { AuditLogUserAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
-import { sleep } from '../utils/sleep';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('Auth (anonymous)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -108,7 +109,7 @@ describe('Auth (anonymous)', () => {
       });
 
     // then
-    expect(loginResponse.body.token).toBeDefined();
+    expect((loginResponse.body as TokenResponse).token).toBeDefined();
     await bootstrap.utils.auditLogUtils.assertAuditLog({
       userId: existingUser.user.id,
       action: AuditLogUserAction.GithubLogin,
@@ -150,7 +151,7 @@ describe('Auth (anonymous)', () => {
       });
 
     // then
-    expect(loginResponse.body.token).toBeDefined();
+    expect((loginResponse.body as TokenResponse).token).toBeDefined();
     expect(await bootstrap.models.userModel.findOne()).toMatchObject({
       email: 'primary@test.com',
       accountClaimStatus: AccountClaimStatus.Claimed,
@@ -190,7 +191,9 @@ describe('Auth (anonymous)', () => {
 
     // then
     expect(loginResponse.status).toEqual(401);
-    expect(loginResponse.body.message).toEqual('Github primary email is not verified');
+    expect((loginResponse.body as ErrorResponse).message).toEqual(
+      'Github primary email is not verified',
+    );
   });
 
   it('does not log user in when account was created with another auth method', async () => {
@@ -228,7 +231,7 @@ describe('Auth (anonymous)', () => {
 
     // then
     expect(loginResponse.status).toEqual(401);
-    expect(loginResponse.body.message).toEqual(
+    expect((loginResponse.body as ErrorResponse).message).toEqual(
       'Account was created with a different sign in method',
     );
   });
@@ -250,7 +253,7 @@ describe('Auth (anonymous)', () => {
 
     // then
     expect(loginResponse.status).toEqual(401);
-    expect(loginResponse.body.message).toEqual(
+    expect((loginResponse.body as ErrorResponse).message).toEqual(
       'Github code exchange failed: bad_verification_code',
     );
   });
@@ -289,6 +292,8 @@ describe('Auth (anonymous)', () => {
 
     // then
     expect(loginResponse.status).toEqual(400);
-    expect(loginResponse.body.message).toEqual('Cannot create new account without accepting terms');
+    expect((loginResponse.body as ErrorResponse).message).toEqual(
+      'Cannot create new account without accepting terms',
+    );
   });
 });

@@ -8,7 +8,7 @@
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
   import ClusterCreatorTile from '$lib/domains/app/clusters/ui/ClustersList/ClusterCreatorTile.svelte';
-  import { type ServiceStatus } from '$lib/domains/app/clusters/ui/ClustersList/CircularHealthChart.svelte';
+  import type { ServiceHealthStatus } from '$lib/domains/app/clusters/domain/service-health-status.js';
   import { type Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
   import { Feature } from '$lib/domains/shared/types.js';
   import type { MonitorStatus } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
@@ -35,7 +35,7 @@
 
   function mapMonitorStatusToServiceStatus(
     status: MonitorStatus | undefined,
-  ): ServiceStatus {
+  ): ServiceHealthStatus {
     switch (status) {
       case 'up':
         return 'healthy';
@@ -50,7 +50,7 @@
   function getClusterServices(cluster: Cluster): {
     id: string;
     name: string;
-    status: ServiceStatus;
+    status: ServiceHealthStatus;
     features: Feature[];
   }[] {
     return (cluster.projects || []).map((project) => {
@@ -70,7 +70,7 @@
   }
 
   const projectsPerColumn = $derived.by(() => {
-    const projectsPerColumn = [[], []];
+    const projectsPerColumn: Cluster[][] = [[], []];
 
     clustersState.clusters.forEach((project, i) => {
       const column = i % CLUSTERS_COLUMNS;
@@ -121,7 +121,9 @@
     draggable="false"
     role="button"
     onclick={() => {
-      goto(resolve('/app/clusters/[cluster_id]', { cluster_id: cluster.id }));
+      void goto(
+        resolve('/app/clusters/[cluster_id]', { cluster_id: cluster.id }),
+      );
     }}
     class="ld-card-base h-fit w-full cursor-pointer ld-card-rounding p-6"
   >
@@ -170,7 +172,7 @@
           <button
             onclick={(e) => {
               e.stopPropagation();
-              goto(
+              void goto(
                 resolve('/app/clusters/[cluster_id]', {
                   cluster_id: cluster.id,
                 }),

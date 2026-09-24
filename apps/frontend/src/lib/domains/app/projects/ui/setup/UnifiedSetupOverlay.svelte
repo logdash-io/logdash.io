@@ -72,7 +72,7 @@
       needsLogging,
       needsMetrics,
     );
-    navigator.clipboard.writeText(setupPrompt);
+    await navigator.clipboard.writeText(setupPrompt);
     copied = true;
     toast.success(
       'Setup prompt copied! Paste it into your favorite AI assistant.',

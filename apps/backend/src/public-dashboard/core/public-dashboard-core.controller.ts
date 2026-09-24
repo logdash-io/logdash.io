@@ -102,17 +102,14 @@ export class PublicDashboardCoreController {
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Delete('/public_dashboards/:publicDashboardId')
-  public async delete(
-    @Param('publicDashboardId') publicDashboardId: string,
-    @CurrentUserId() userId: string,
-  ): Promise<void> {
+  public async delete(@Param('publicDashboardId') publicDashboardId: string): Promise<void> {
     const dashboard = await this.publicDashboardReadService.readById(publicDashboardId);
 
     if (!dashboard) {
       throw new NotFoundException('Public dashboard not found');
     }
 
-    await this.publicDashboardRemovalService.deletePublicDashboardById(publicDashboardId, userId);
+    await this.publicDashboardRemovalService.deletePublicDashboardById(publicDashboardId);
   }
 
   @UseGuards(ClusterMemberGuard)

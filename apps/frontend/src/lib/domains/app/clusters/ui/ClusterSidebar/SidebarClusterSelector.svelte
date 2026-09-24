@@ -24,14 +24,16 @@
     const cluster = clustersState.get(clusterId);
     const firstProjectId = cluster?.projects?.[0]?.id;
     if (firstProjectId) {
-      goto(
+      void goto(
         resolve('/app/clusters/[cluster_id]/[project_id]', {
           cluster_id: clusterId,
           project_id: firstProjectId,
         }),
       );
     } else {
-      goto(resolve('/app/clusters/[cluster_id]', { cluster_id: clusterId }));
+      void goto(
+        resolve('/app/clusters/[cluster_id]', { cluster_id: clusterId }),
+      );
     }
     close();
   }
@@ -42,7 +44,7 @@
 
   function onCreateProject(close: () => void): void {
     close();
-    goto(resolve('/app/clusters/new'));
+    void goto(resolve('/app/clusters/new'));
   }
 </script>
 

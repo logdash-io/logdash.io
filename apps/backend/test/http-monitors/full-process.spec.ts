@@ -1,8 +1,8 @@
 import * as nock from 'nock';
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
-import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
 import { sleep } from '../utils/sleep';
+import { TelegramSendMessageBody } from '../utils/telegram-utils';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 
@@ -46,8 +46,8 @@ describe('Http monitor full process', () => {
       url: 'https://chess.com',
     });
 
-    let telegramPostedDtos: any[] = [];
-    await bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
+    const telegramPostedDtos: TelegramSendMessageBody[] = [];
+    bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
       botId: (channel.options as TelegramOptions).botToken!,
       onMessage: (dto) => {
         telegramPostedDtos.push(dto);

@@ -1,17 +1,10 @@
 <script lang="ts">
-  import { page } from '$app/state';
   import ClusterCockpit from '$lib/domains/app/clusters/ui/ClusterCockpit/ClusterCockpit.svelte';
-  import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor';
+  import type { PageProps } from './$types';
 
-  type Props = {
-    data: {
-      initialMonitors: Monitor[];
-    };
-  };
+  const { data, params }: PageProps = $props();
 
-  const { data }: Props = $props();
-
-  const clusterId = $derived(page.params.cluster_id);
+  const clusterId = $derived(params.cluster_id);
 </script>
 
 <ClusterCockpit {clusterId} initialMonitors={data.initialMonitors} />

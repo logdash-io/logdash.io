@@ -35,10 +35,7 @@
               <th
                 class="w-1/6 min-w-[140px] text-left font-semibold md:w-1/4 md:min-w-[200px]"
               ></th>
-              {#each FEATURES_COMPARISON.plans as plan (plan.tier)}
-                {@const fullPlanConfig = PAYMENT_PLANS.find(
-                  (p) => p.tier === plan.tier,
-                )}
+              {#each PAYMENT_PLANS as plan (plan.tier)}
                 <th
                   style="border-spacing: 0;"
                   class={[
@@ -71,37 +68,37 @@
                     <div
                       class={[
                         'badge badge-soft mb-3 ml-1 text-xs md:mb-4 md:ml-2',
-                        fullPlanConfig.badge.class,
+                        plan.badge.class,
                       ]}
                     >
-                      {fullPlanConfig.badge.text}
+                      {plan.badge.text}
                     </div>
 
                     <div class="card-body p-0 px-2 md:px-4">
                       <h2
                         class="card-title text-base-content text-lg font-normal md:text-2xl"
                       >
-                        {fullPlanConfig.name}
+                        {plan.name}
                       </h2>
                       <div class="mt-2">
                         <span
                           class="text-base-content text-2xl font-semibold md:text-4xl"
                         >
-                          {fullPlanConfig.price}
+                          {plan.price}
                         </span>
 
                         <p
                           class="mt-2 whitespace-pre-wrap text-neutral-300 text-xs md:mt-4 md:text-sm font-normal"
                         >
-                          {fullPlanConfig.description}
+                          {plan.description}
                         </p>
                       </div>
 
                       <div class="card-actions my-3 justify-center md:my-4">
                         <button
-                          onclick={() => handleSelectTier(fullPlanConfig.tier)}
-                          disabled={loggingIn || fullPlanConfig['disabled']}
-                          class={`btn btn-sm md:btn-md w-full rounded-full text-xs font-medium md:text-sm ${fullPlanConfig.popular ? 'btn-primary' : 'btn-secondary'}`}
+                          onclick={() => handleSelectTier(plan.tier)}
+                          disabled={loggingIn}
+                          class={`btn btn-sm md:btn-md w-full rounded-full text-xs font-medium md:text-sm ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}
                         >
                           {#if loggingIn}
                             <div
@@ -114,7 +111,7 @@
                             </div>
                           {/if}
 
-                          {fullPlanConfig.buttonText}
+                          {plan.buttonText}
                         </button>
                       </div>
                     </div>

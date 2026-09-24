@@ -77,5 +77,13 @@ P.S. I’d love to know — what made you decide to give Logdash a try?`;
         'X-Entity-Ref-ID': `user-${Date.now()}`,
       },
     });
+
+    if (error) {
+      this.logger.error(`Failed to send email`, {
+        errorMessage: error.message,
+        error,
+        to,
+      });
+    }
   }
 }

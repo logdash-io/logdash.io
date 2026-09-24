@@ -52,7 +52,7 @@
   }
 
   onMount(() => {
-    redirectIfSessionExists();
+    void redirectIfSessionExists();
   });
 </script>
 

@@ -35,7 +35,7 @@
       await navigator.clipboard.writeText('@logdash_uptime_bot');
       toast.success('Bot name copied to clipboard!');
     } catch (err) {
-      toast.error(`Failed to copy bot name: ${err}`);
+      toast.error(`Failed to copy bot name: ${String(err)}`);
     }
   }
 </script>

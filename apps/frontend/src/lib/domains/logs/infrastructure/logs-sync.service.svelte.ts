@@ -2,7 +2,7 @@ import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils.j
 import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/domains/shared/utils/cookies.utils.js';
 import { envConfig } from '$lib/domains/shared/utils/env-config.js';
 import { createLogger } from '$lib/domains/shared/logger';
-import { EventSource } from 'eventsource';
+import { EventSource, type ErrorEvent } from 'eventsource';
 import type { Log } from '../domain/log';
 
 const logger = createLogger('logs-sync.service', true);
@@ -11,12 +11,7 @@ export class LogsSyncService {
   private _syncConnection: EventSource | null = $state(null);
   private _shouldReconnect = true;
   private _unsubscribe: (() => void) | null = null;
-  private _config: {
-    projectId: string;
-    onOpen?: () => void;
-    onError?: () => void;
-    onMessage?: (log: Log) => void;
-  };
+  private _config: LogsSyncConfig | null = null;
   private _newLogHandlers: ((log: Log) => void)[] = [];
 
   get paused(): boolean {
@@ -33,12 +28,7 @@ export class LogsSyncService {
     };
   }
 
-  init(config: {
-    projectId: string;
-    onOpen?: () => void;
-    onError?: () => void;
-    onMessage?: (log: Log) => void;
-  }): void {
+  init(config: LogsSyncConfig): void {
     this._config = config;
   }
 
@@ -52,11 +42,17 @@ export class LogsSyncService {
   async open(): Promise<void> {
     this._shouldReconnect = true;
 
+    const config = this._config;
+
+    if (!config) {
+      throw new Error('Logs sync is not initialized');
+    }
+
     return new Promise((resolve, reject) => {
       this._unsubscribe?.();
 
       this._syncConnection = new EventSource(
-        `${envConfig.apiBaseUrl}/projects/${this._config.projectId}/logs/sse`,
+        `${envConfig.apiBaseUrl}/projects/${config.projectId}/logs/sse`,
         {
           fetch: (input, init) =>
             fetch(input, {
@@ -69,15 +65,15 @@ export class LogsSyncService {
         },
       );
 
-      const onOpen = (event) => {
+      const onOpen = (event: Event): void => {
         logger.debug('SSE connection opened', event);
-        this._config.onOpen?.();
+        this._config?.onOpen?.();
         resolve();
       };
 
-      const onError = (event) => {
+      const onError = (event: ErrorEvent): void => {
         logger.error('SSE connection error:', event);
-        this._config.onError?.();
+        this._config?.onError?.();
         this._unsubscribe?.();
 
         if (this._shouldReconnect) {
@@ -94,11 +90,11 @@ export class LogsSyncService {
         reject(new Error('SSE connection failed'));
       };
 
-      const onMessage = (event) => {
+      const onMessage = (event: MessageEvent<string>): void => {
         try {
           logger.info('new SSE message:', event);
           const log = JSON.parse(event.data) as Log;
-          this._config.onMessage?.(log);
+          this._config?.onMessage?.(log);
           this._newLogHandlers.forEach((handler) => handler(log));
           logger.debug('processed log:', log);
         } catch (e) {
@@ -156,3 +152,10 @@ export class LogsSyncService {
 }
 
 export const logsSyncService = new LogsSyncService();
+
+type LogsSyncConfig = {
+  projectId: string;
+  onOpen?: () => void;
+  onError?: () => void;
+  onMessage?: (log: Log) => void;
+};

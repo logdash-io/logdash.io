@@ -2,7 +2,7 @@ import type { NotificationChannelsState } from '$lib/domains/app/projects/domain
 import type { CreateNotificationChannelDTO } from '$lib/domains/app/projects/domain/telegram/telegram.types';
 import { NotificationChannelsService } from '$lib/domains/app/projects/infrastructure/notification-channels/notification-channels.service';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-import { AxiosError } from 'axios';
+import { isAxiosError } from 'axios';
 
 export class NotificationChannelsStateManager {
   state = $state<NotificationChannelsState>({
@@ -54,7 +54,7 @@ export class NotificationChannelsStateManager {
   async createChannel(
     clusterId: string,
     channel: CreateNotificationChannelDTO,
-  ): Promise<string> {
+  ): Promise<string | undefined> {
     this.state.isLoading = true;
     this.state.error = null;
 
@@ -74,7 +74,7 @@ export class NotificationChannelsStateManager {
       // todo: make error handling generic
       toast.error(
         `${
-          error instanceof AxiosError
+          isAxiosError<{ message?: string }>(error)
             ? error.response?.data?.message
             : 'Failed to create notification channel'
         }`,

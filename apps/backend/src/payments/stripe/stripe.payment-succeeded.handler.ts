@@ -19,7 +19,7 @@ export class StripePaymentSucceededHandler {
     private readonly stripeEventEmitter: StripeEventEmitter,
   ) {}
 
-  private async mapPriceIdToTier(priceId: string): Promise<UserTier> {
+  private mapPriceIdToTier(priceId: string): UserTier {
     switch (priceId) {
       case getEnvConfig().stripe.earlyBirdPriceId:
         return UserTier.EarlyBird;
@@ -54,7 +54,7 @@ export class StripePaymentSucceededHandler {
       return;
     }
 
-    const tier = await this.mapPriceIdToTier(priceId);
+    const tier = this.mapPriceIdToTier(priceId);
 
     if (!email) {
       this.logger.error(`Invoice payment succeeded but no customer email found`, {
@@ -110,7 +110,7 @@ export class StripePaymentSucceededHandler {
     });
 
     try {
-      await this.stripeEventEmitter.emitPaymentSucceeded({
+      this.stripeEventEmitter.emitPaymentSucceeded({
         email,
         tier,
       });

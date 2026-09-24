@@ -35,7 +35,8 @@
     void page.url.pathname;
     if (!container) return;
     let cancelled = false;
-    tick().then(() => {
+    const readHeadings = async (): Promise<void> => {
+      await tick();
       if (cancelled) return;
       entries = [...container.querySelectorAll<HTMLElement>('h2[id]')].map(
         (element) => ({
@@ -45,7 +46,8 @@
         }),
       );
       untrack(update);
-    });
+    };
+    void readHeadings();
     return () => {
       cancelled = true;
     };

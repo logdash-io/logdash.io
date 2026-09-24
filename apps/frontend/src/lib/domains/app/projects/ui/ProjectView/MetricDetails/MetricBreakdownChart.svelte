@@ -10,7 +10,6 @@
   type Props = {
     data: DataPoint[];
     isLoading?: boolean;
-    title?: string;
     color?: string;
     height?: number;
     format?: Format;
@@ -64,7 +63,8 @@
       .domain([0, d3.max(data, (d) => d.y) || 0])
       .range([innerHeight, 0]);
     // Function to get the center of each band for line positioning
-    const xCenter = (d) => xScale(String(d.x))! + xScale.bandwidth() / 2;
+    const xCenter = (d: DataPoint): number =>
+      xScale(String(d.x))! + xScale.bandwidth() / 2;
 
     // Helper function to determine tick label display
     function getTickLabelForDisplay(
@@ -168,7 +168,7 @@
               .style('top', `${mouseY - 20}px`)
               .style('position', 'absolute')
               .html(
-                `<strong>Date:</strong> ${d.x}<br><strong>Value:</strong> ${d.y}`,
+                `<strong>Date:</strong> ${String(d.x)}<br><strong>Value:</strong> ${d.y}`,
               );
           } else {
             d3.select(tooltip).style('visibility', 'hidden');

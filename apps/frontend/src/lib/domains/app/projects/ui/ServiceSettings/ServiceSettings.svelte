@@ -51,12 +51,12 @@
 
   async function onCopyApiKey(): Promise<void> {
     const key = await projectsState.getApiKey(projectId);
-    navigator.clipboard.writeText(key);
+    await navigator.clipboard.writeText(key);
     toast.success('API key copied to clipboard', 5000);
   }
 
-  function onCopyServiceId(): void {
-    navigator.clipboard.writeText(projectId);
+  async function onCopyServiceId(): Promise<void> {
+    await navigator.clipboard.writeText(projectId);
     toast.success('Service ID copied to clipboard', 5000);
   }
 
@@ -80,9 +80,13 @@
       return;
     }
 
-    await projectsState.updateProject(projectId, newName);
-    toast.success('Service name updated successfully', 5000);
-    isEditingName = false;
+    try {
+      await projectsState.updateProject(projectId, newName);
+      toast.success('Service name updated successfully', 5000);
+      isEditingName = false;
+    } catch {
+      toast.error('Failed to update service name', 5000);
+    }
   }
 
   async function onDeleteService(): Promise<void> {
@@ -96,13 +100,13 @@
 
     await projectsState.deleteProject(projectId);
     await clustersState.load();
-    goto(resolve('/app/clusters/[cluster_id]', { cluster_id: clusterId }));
+    void goto(resolve('/app/clusters/[cluster_id]', { cluster_id: clusterId }));
     toast.success('Service deleted successfully', 5000);
   }
 
   function onKeyDown(e: KeyboardEvent): void {
     if (e.key === 'Enter') {
-      onSaveRename();
+      void onSaveRename();
     }
 
     if (e.key === 'Escape') {
@@ -171,7 +175,7 @@
     addingFeature = feature;
     await projectsState.addFeature(projectId, feature);
     addingFeature = null;
-    goto(resolve(route, { cluster_id: clusterId, project_id: projectId }));
+    void goto(resolve(route, { cluster_id: clusterId, project_id: projectId }));
   }
 </script>
 

@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { logAnalyticsState } from '$lib/domains/logs/application/log-analytics.state.svelte.js';
   import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analytics-response.js';
+  import type { LogLevel } from '$lib/domains/logs/domain/log-level.js';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
   import { cubicOut } from 'svelte/easing';
   import { fade } from 'svelte/transition';
@@ -20,7 +21,7 @@
   }: Props = $props();
 
   let chartContainer: HTMLElement;
-  let tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, undefined>;
+  let tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined>;
   let isDragging = $state(false);
   let dragStart: Date | null = $state(null);
   let dragEnd: Date | null = $state(null);
@@ -28,7 +29,7 @@
 
   const CHART_HEIGHT = 70;
   const MARGIN = { top: 5, right: 10, bottom: 25, left: 5 };
-  const LOG_TYPES = [
+  const LOG_TYPES: LogLevel[] = [
     'error',
     'warning',
     'info',
@@ -147,7 +148,7 @@
       .attr('transform', `translate(0,${innerHeight})`)
       .call(
         d3
-          .axisBottom(xScale)
+          .axisBottom<Date>(xScale)
           .ticks(Math.max(2, Math.min(6, Math.floor(innerWidth / 90))))
           .tickFormat((d: Date) => {
             return d.toLocaleTimeString([], {
@@ -274,7 +275,7 @@
 
     overlay
       .call(dragBehavior)
-      .on('mousemove', (event) => {
+      .on('mousemove', (event: MouseEvent) => {
         if (!isDragging) {
           handleOverlayMouseMove(event, xScale, width);
         }
@@ -402,7 +403,7 @@
 
   onMount(() => {
     tooltip = d3
-      .select('body')
+      .select(document.body)
       .append('div')
       .attr('class', 'chart-tooltip ld-card-base rounded-xl')
       .style('display', 'none')

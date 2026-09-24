@@ -18,9 +18,17 @@
   // lives outside the /app/clusters layout, so load them on the client.
   $effect(() => {
     if (!clustersState.ready) {
-      clustersState.load();
+      void loadClusters();
     }
   });
+
+  async function loadClusters(): Promise<void> {
+    try {
+      await clustersState.load();
+    } catch (cause) {
+      console.error(cause);
+    }
+  }
 
   async function onLookup(event: SubmitEvent): Promise<void> {
     event.preventDefault();
@@ -44,7 +52,7 @@
         return;
       }
 
-      request = await response.json();
+      request = (await response.json()) as CliAuthRequest;
     } catch (cause) {
       error = cliAuthErrorMessage(0);
       console.error(cause);

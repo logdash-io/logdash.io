@@ -30,7 +30,7 @@
       await clustersState.delete(clusterId);
       dismissLoading();
       toast.success('Project deleted successfully', 5000);
-      goto(resolve('/app/clusters'));
+      void goto(resolve('/app/clusters'));
     } catch (error) {
       dismissLoading();
       const message = error instanceof Error ? error.message : 'Unknown error';

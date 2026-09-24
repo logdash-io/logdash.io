@@ -16,20 +16,20 @@ export class CustomDomainDnsServiceMock {
     this.callCounts.set(config.domain, 0);
   }
 
-  public async checkCnameRecord(domain: string): Promise<string | null> {
+  public checkCnameRecord(domain: string): Promise<string | null> {
     const config = this.mockConfigs.get(domain);
     if (!config) {
-      return null;
+      return Promise.resolve(null);
     }
 
     const currentCallCount = this.callCounts.get(domain) || 0;
     this.callCounts.set(domain, currentCallCount + 1);
 
     if (currentCallCount < config.failCount) {
-      return null;
+      return Promise.resolve(null);
     }
 
-    return config.targetCname;
+    return Promise.resolve(config.targetCname);
   }
 
   public getCallCount(domain: string): number {

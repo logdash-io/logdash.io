@@ -37,7 +37,7 @@ class MonitoringState {
   private _timeRange = $state<PingBucketPeriod>('90d');
   private syncConnection: EventSource | null = null;
   private _shouldReconnect = true;
-  private _unsubscribe: () => void | null = null;
+  private _unsubscribe: (() => void) | null = null;
   private _loadingPage = $state(false);
   private _pingsAbortControllers = new Map<string, AbortController>();
 
@@ -56,7 +56,7 @@ class MonitoringState {
   setTimeRange(period: PingBucketPeriod): void {
     this._timeRange = period;
     this._saveTimeRangePreference(period);
-    this.reloadAllPingBuckets();
+    void this.reloadAllPingBuckets();
   }
 
   private _loadTimeRangePreference(): PingBucketPeriod {
@@ -182,7 +182,7 @@ class MonitoringState {
     }
   }
 
-  getMonitorByProjectId(projectId: string): Monitor {
+  getMonitorByProjectId(projectId: string): Monitor | undefined {
     return this.monitors.find((monitor) => monitor.projectId === projectId);
   }
 
@@ -229,7 +229,7 @@ class MonitoringState {
   load(clusterId: string): void {
     logger.debug('loading monitors...');
     this._loadingPage = true;
-    this._fetchMonitors(clusterId);
+    void this._fetchMonitors(clusterId);
   }
 
   loadMonitorPings(
@@ -268,7 +268,6 @@ class MonitoringState {
       this._pingBuckets[monitorId] = response.buckets.reverse();
     } catch (error) {
       logger.error('Failed to load ping buckets:', error);
-      throw new Error('Failed to load ping buckets');
     }
   }
 
@@ -517,12 +516,12 @@ class MonitoringState {
         },
       );
 
-      const onOpen = (event) => {
+      const onOpen = (event: Event): void => {
         logger.debug('monitor SSE opened', event);
         resolve();
       };
 
-      const onError = (event) => {
+      const onError = (event: Event): void => {
         logger.error('Monitor SSE connection error:', event);
 
         this._unsubscribe?.();
@@ -531,7 +530,7 @@ class MonitoringState {
           logger.debug('Attempting to reconnect monitors in 3 seconds...');
           setTimeout(() => {
             if (this._shouldReconnect) {
-              this._openMonitorStream(clusterId);
+              void this._openMonitorStream(clusterId);
             }
           }, 3000);
         }
@@ -539,10 +538,10 @@ class MonitoringState {
         reject(new Error('Monitor SSE connection failed'));
       };
 
-      const onMessage = (event) => {
+      const onMessage = (event: MessageEvent<string>): void => {
         try {
           logger.info('new monitor SSE message:', event);
-          const pingData: HttpPingCreatedEvent = JSON.parse(event.data);
+          const pingData = JSON.parse(event.data) as HttpPingCreatedEvent;
 
           if (!this._monitorPings[pingData.httpMonitorId]) {
             this._monitorPings[pingData.httpMonitorId] = [];
@@ -593,10 +592,7 @@ class MonitoringState {
       const data = await monitoringService.getMonitors(clusterId);
       const newMonitors = arrayToObject<Monitor>(data, 'id');
 
-      for (const [id, monitor] of Object.entries(newMonitors) as [
-        string,
-        Monitor,
-      ][]) {
+      for (const [id, monitor] of Object.entries(newMonitors)) {
         if (!this._monitors[id]) {
           this._monitors[id] = monitor;
         }
@@ -652,7 +648,7 @@ class MonitoringState {
       if (error instanceof Error && error.name === 'CanceledError') {
         return;
       }
-      throw error;
+      logger.error('Failed to load monitor pings:', error);
     } finally {
       if (this._pingsAbortControllers.get(monitorId) === controller) {
         this._pingsAbortControllers.delete(monitorId);

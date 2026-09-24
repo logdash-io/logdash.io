@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { LogNormalized } from '../core/entities/log.interface';
+import { LogClickhouseNormalized } from '../core/entities/log.interface';
 import { LogSerializer } from '../core/entities/log.serializer';
 import { LogReadDirection } from '../core/enums/log-read-direction.enum';
 import { ClickHouseClient } from '@clickhouse/client';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 import { LogLevel } from '../core/enums/log-level.enum';
 import { NamespaceMetadata } from './dto/namespace-metadata.dto';
+import { LogClickhouseRow } from '../core/entities/log.clickhouse-entity';
 
 @Injectable()
 export class LogReadService {
@@ -17,7 +18,7 @@ export class LogReadService {
       query_params: { projectId },
     });
 
-    const data = ((await result.json()) as any).data;
+    const { data } = await result.json();
 
     return data.length > 0;
   }
@@ -33,9 +34,9 @@ export class LogReadService {
     projectId: string;
     searchString?: string;
     namespaces?: string[];
-  }): Promise<LogNormalized[]> {
+  }): Promise<LogClickhouseNormalized[]> {
     let query: string;
-    let queryParams: Record<string, any>;
+    let queryParams: Record<string, unknown>;
 
     const effectiveLevels = dto.levels?.length ? dto.levels : dto.level ? [dto.level] : null;
 
@@ -149,9 +150,9 @@ export class LogReadService {
       query,
       query_params: queryParams,
     });
-    const data = ((await result.json()) as any).data;
+    const { data } = await result.json<LogClickhouseRow>();
 
-    return data.map((row: any) => LogSerializer.normalizeClickhouse(row));
+    return data.map((row) => LogSerializer.normalizeClickhouse(row));
   }
 
   public async countByLevelsSince(dto: {
@@ -174,7 +175,7 @@ export class LogReadService {
       },
     });
 
-    const data = ((await result.json()) as any).data;
+    const { data } = await result.json<{ count: string }>();
 
     return data.length > 0 ? Number(data[0].count) : 0;
   }
@@ -189,7 +190,7 @@ export class LogReadService {
       query_params: { projectId },
     });
 
-    const data = ((await result.json()) as any).data;
+    const { data } = await result.json<{ last_log_at: string | null }>();
 
     if (data.length === 0 || !data[0].last_log_at) {
       return null;
@@ -217,9 +218,9 @@ export class LogReadService {
       query_params: { projectId },
     });
 
-    const data = ((await result.json()) as any).data;
+    const { data } = await result.json<{ namespace: string; last_log_date: string }>();
 
-    return data.map((row: any) => ({
+    return data.map((row) => ({
       namespace: row.namespace,
       lastLogDate: ClickhouseUtils.clickhouseDateToJsDate(row.last_log_date).toISOString(),
     }));

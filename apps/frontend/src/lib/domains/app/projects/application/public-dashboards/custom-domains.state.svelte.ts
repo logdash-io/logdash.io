@@ -3,6 +3,7 @@ import type {
   CreateCustomDomainDTO,
 } from '$lib/domains/app/projects/domain/public-dashboards/custom-domain';
 import { customDomainsService } from '$lib/domains/app/projects/infrastructure/custom-domains.service';
+import { isAxiosError } from 'axios';
 
 export class CustomDomainsState {
   private _customDomains = $state<Record<string, CustomDomain | null>>({});
@@ -67,7 +68,7 @@ export class CustomDomainsState {
       );
       this._customDomains[publicDashboardId] = customDomain;
     } catch (error) {
-      this._setError(error.response.data.message[0]);
+      this._setError(this._readCreateErrorMessage(error));
       console.error('Failed to create custom domain:', error);
       throw error;
     } finally {
@@ -99,6 +100,20 @@ export class CustomDomainsState {
     }
   }
 
+  private _readCreateErrorMessage(error: unknown): string {
+    if (!isAxiosError<{ message?: string | string[] }>(error)) {
+      return 'Failed to create custom domain';
+    }
+
+    const message = error.response?.data?.message;
+
+    if (Array.isArray(message)) {
+      return message[0];
+    }
+
+    return message ?? 'Failed to create custom domain';
+  }
+
   private _clearError(): void {
     this._error = null;
   }
@@ -127,9 +142,8 @@ export class CustomDomainsState {
       );
     }, 1000);
 
-    const pollingInterval = setInterval(async () => {
-      await this.loadCustomDomain(publicDashboardId);
-      this._resetPollingTimer(publicDashboardId);
+    const pollingInterval = setInterval(() => {
+      void this.manualCheck(publicDashboardId);
     }, 5000);
 
     return () => {

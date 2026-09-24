@@ -1,3 +1,4 @@
+import { expect } from '@jest/globals';
 import * as nock from 'nock';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';

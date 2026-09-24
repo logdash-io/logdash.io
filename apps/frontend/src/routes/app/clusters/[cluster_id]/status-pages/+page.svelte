@@ -1,25 +1,19 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { page } from '$app/state';
   import StatusPageEmptyState from '$lib/domains/app/projects/ui/setup/status-page/StatusPageEmptyState.svelte';
   import StatusPageCard from '$lib/domains/app/projects/ui/setup/status-page/StatusPageCard.svelte';
   import type { PublicDashboard } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard';
+  import type { PageProps } from './$types';
 
-  type Props = {
-    data: {
-      dashboard: PublicDashboard | null;
-      clusterId: string;
-    };
-  };
-  const { data }: Props = $props();
+  const { data, params }: PageProps = $props();
 
-  const clusterId = $derived(page.params.cluster_id);
+  const clusterId = $derived(params.cluster_id);
   let dashboard = $derived<PublicDashboard | null>(data.dashboard);
 
   function onDashboardCreated(newDashboard: PublicDashboard): void {
     dashboard = newDashboard;
-    goto(
+    void goto(
       resolve('/app/clusters/[cluster_id]/status-pages/[status_page_id]', {
         cluster_id: clusterId,
         status_page_id: newDashboard.id,

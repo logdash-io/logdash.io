@@ -11,6 +11,7 @@ import {
   UnauthorizedException,
   UseGuards,
   UseInterceptors,
+  MessageEvent,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
@@ -39,7 +40,7 @@ import { CreateLogBody } from './dto/create-log.body';
 import { CreateLogsBatchBody } from './dto/create-logs-batch.body';
 import { ReadLogsQuery } from './dto/read-newer-than.query';
 import { StreamProjectLogsQuery } from './dto/stream-project-logs.query';
-import { LogNormalized, LogSerialized } from './entities/log.interface';
+import { LogClickhouseSerialized } from './entities/log.interface';
 import { LogSerializer } from './entities/log.serializer';
 import { LogReadDirection } from './enums/log-read-direction.enum';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
@@ -73,15 +74,16 @@ export class LogCoreController {
   public async streamProjectLogs(
     @Query() dto: StreamProjectLogsQuery,
     @Param('projectId') projectId: string,
-  ): Promise<Observable<any>> {
+  ): Promise<Observable<MessageEvent>> {
     const eventStream$ = fromEvent(this.eventEmitter, LogEvents.LogCreatedEvent).pipe(
-      filter((data: LogCreatedEvent) => {
+      map((data) => data as LogCreatedEvent),
+      filter((data) => {
         return data.projectId === projectId;
       }),
       map((data) => ({ data })),
     );
 
-    let historicalLogs$: Observable<{ data: LogSerialized }> = from([]);
+    let historicalLogs$: Observable<{ data: LogClickhouseSerialized }> = from([]);
 
     if (dto.lastId) {
       const historicalLogs = await this.logReadService.readMany({
@@ -92,13 +94,13 @@ export class LogCoreController {
       });
 
       historicalLogs$ = from(historicalLogs).pipe(
-        map((log) => ({ data: LogSerializer.serialize(log) })),
+        map((log) => ({ data: LogSerializer.serializeClickhouse(log) })),
       );
     }
 
     const combinedStream$ = concat(historicalLogs$, eventStream$);
 
-    return new Observable((observer) => {
+    return new Observable<MessageEvent>((observer) => {
       const subscription = combinedStream$.subscribe(observer);
 
       return () => {
@@ -185,11 +187,11 @@ export class LogCoreController {
   @RequireScope(Resource.Logs, Action.Read)
   @ApiBearerAuth()
   @Get('projects/:projectId/logs/v2')
-  @ApiResponse({ type: LogSerialized, isArray: true })
+  @ApiResponse({ type: LogClickhouseSerialized, isArray: true })
   public async readLogsV2(
     @Param('projectId') projectId: string,
     @Query() dto: ReadLogsQuery,
-  ): Promise<LogSerialized[]> {
+  ): Promise<LogClickhouseSerialized[]> {
     if ((dto.lastId && !dto.direction) || (!dto.lastId && dto.direction)) {
       throw new BadRequestException('If using pagination, provide both lastId and direction');
     }
@@ -219,7 +221,7 @@ export class LogCoreController {
       namespaces: dto.namespaces,
     });
 
-    return logs.map((log) => LogSerializer.serialize(log));
+    return logs.map((log) => LogSerializer.serializeClickhouse(log));
   }
 
   @DemoEndpoint()

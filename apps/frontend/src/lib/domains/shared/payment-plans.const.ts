@@ -93,6 +93,5 @@ export const PAYMENT_PLANS = [
     guarantee: 'No commitment required',
     tier: UserTier.PRO,
     popular: true,
-    disabled: false,
   },
 ] as const;

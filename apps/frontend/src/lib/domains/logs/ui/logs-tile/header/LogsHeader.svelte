@@ -13,7 +13,7 @@
   import { timeDisplayState } from '$lib/domains/logs/infrastructure/time-display.state.svelte.js';
 
   type Props = {
-    projectId: string;
+    projectId?: string;
   };
 
   const { projectId }: Props = $props();
@@ -81,7 +81,7 @@
   </div>
 
   <div class="flex flex-wrap gap-2 p-4 pt-0">
-    <LogsFilterDropdown maxDateRangeHours={maxRetentionHours} {projectId} />
+    <LogsFilterDropdown maxDateRangeHours={maxRetentionHours} />
     <LogsFilterChips />
   </div>
 </div>

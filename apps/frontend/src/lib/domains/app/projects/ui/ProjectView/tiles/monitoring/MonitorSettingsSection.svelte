@@ -55,7 +55,7 @@
       await monitoringState.deleteMonitor(monitorId);
       onDeleted();
       toast.success('Monitor deleted successfully', 5000);
-      goto(
+      void goto(
         resolve('/app/clusters/[cluster_id]/[project_id]', {
           cluster_id: clusterId,
           project_id: projectId,

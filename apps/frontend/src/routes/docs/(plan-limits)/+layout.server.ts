@@ -1,18 +1,16 @@
-import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config.js';
 import {
   buildTablesFromConfig,
   type Table,
   type TableType,
 } from '$lib/landing/guides/plan-limits';
+import type { LayoutServerLoad } from './$types';
 
-export const load = async ({
+export const load: LayoutServerLoad = async ({
   parent,
 }): Promise<{
   tables: Record<TableType, Table>;
 }> => {
-  const { exposedConfig } = (await parent()) as {
-    exposedConfig: ExposedConfig;
-  };
+  const { exposedConfig } = await parent();
 
   return { tables: buildTablesFromConfig(exposedConfig) };
 };

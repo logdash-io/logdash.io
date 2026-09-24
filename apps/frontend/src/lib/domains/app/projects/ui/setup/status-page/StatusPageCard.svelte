@@ -30,8 +30,8 @@
     hasInitialized = true;
   });
 
-  function onCopyUrl(): void {
-    navigator.clipboard.writeText(dashboardUrl);
+  async function onCopyUrl(): Promise<void> {
+    await navigator.clipboard.writeText(dashboardUrl);
     toast.success('Status page URL copied to clipboard');
   }
 

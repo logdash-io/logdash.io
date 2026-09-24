@@ -201,7 +201,7 @@
           throw new Error('Failed to create key');
         }
 
-        const data: CreatedPersonalApiKey = await response.json();
+        const data = (await response.json()) as CreatedPersonalApiKey;
         createdValue = data.value;
         onCreated?.();
       }
@@ -241,11 +241,11 @@
     }
   }
 
-  function onCopyValue(): void {
+  async function onCopyValue(): Promise<void> {
     if (!createdValue) {
       return;
     }
-    navigator.clipboard.writeText(createdValue);
+    await navigator.clipboard.writeText(createdValue);
     toast.success('API key copied to clipboard', 5000);
   }
 </script>
@@ -395,7 +395,7 @@
                     size="xs"
                     options={actionOptions}
                     value={scopeAction(resourceOption.resource)}
-                    onChange={(action) =>
+                    onChange={(action: Action) =>
                       setScope(resourceOption.resource, action)}
                   />
                 </div>
@@ -413,7 +413,8 @@
             <SegmentedControl
               options={accessOptions}
               value={accessKind}
-              onChange={(kind) => (accessKind = kind)}
+              onChange={(kind: AccessRestriction['kind']) =>
+                (accessKind = kind)}
             />
 
             {#if accessKind === 'clusters'}

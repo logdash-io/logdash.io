@@ -129,7 +129,7 @@ export class GithubAuthClaimService {
     emailAccepted?: boolean;
     termsAccepted?: boolean;
     tokenPayload: JwtPayloadDto;
-    avatar: string;
+    avatar?: string;
   }): Promise<TokenResponse> {
     this.logger.log('New user just joined', { email: dto.email });
 
@@ -142,7 +142,7 @@ export class GithubAuthClaimService {
       throw new BadRequestException('Cannot create new account without accepting terms');
     }
 
-    await this.emitter.emitUserRegisteredEvent({
+    this.emitter.emitUserRegisteredEvent({
       userId: dto.userId,
       email: dto.email,
       authMethod: AuthMethod.Github,

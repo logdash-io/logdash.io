@@ -10,12 +10,9 @@
 
   const { date: rawDate, level, message, prefix = 'full' }: Props = $props();
   const [date, time] = $derived.by(() => {
-    const [left, right] = DateTime.fromJSDate(new Date(rawDate))
-      .toLocal()
-      .toISO({ includeOffset: true })
-      .split('T');
+    const local = DateTime.fromJSDate(new Date(rawDate)).toLocal();
 
-    return [left, right.split('.')[0]];
+    return [local.toFormat('yyyy-MM-dd'), local.toFormat('HH:mm:ss')];
   });
 </script>
 

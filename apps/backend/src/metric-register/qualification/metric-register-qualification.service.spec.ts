@@ -1,28 +1,45 @@
+import { Test } from '@nestjs/testing';
 import { advanceBy, clear } from 'jest-date-mock';
 import { ProjectTier } from '../../project/core/enums/project-tier.enum';
 import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
-import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
+import { METRIC_REGISTER_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { MetricRegisterReadService } from '../read/metric-register-read.service';
 import { MetricRegisterWriteService } from '../write/metric-register-write.service';
+import { QualifyMetricDto } from './dto/qualify-metric.dto';
 import { MetricRegisterQualificationService } from './metric-register-qualification.service';
 
+type WarnArgs = [message: string, context: { metrics: QualifyMetricDto[]; count: number }];
+
 describe('MetricRegisterQualificationService', () => {
-  const overLimit = (projectId: string) =>
+  const overLimit = (projectId: string): QualifyMetricDto[] =>
     ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((metricName) => ({ projectId, metricName }));
 
-  let warn: jest.Mock;
+  let warn: jest.Mock<void, WarnArgs>;
   let service: MetricRegisterQualificationService;
 
-  beforeEach(() => {
-    warn = jest.fn();
-    service = new MetricRegisterQualificationService(
-      { readRegisteredMetricNames: async () => [] } as unknown as MetricRegisterReadService,
-      {
-        readProject: async () => ({ tier: ProjectTier.Free }),
-      } as unknown as ProjectReadCachedService,
-      { createMany: async () => undefined } as unknown as MetricRegisterWriteService,
-      { warn } as unknown as LogdashLogger,
-    );
+  beforeEach(async () => {
+    warn = jest.fn<void, WarnArgs>();
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        MetricRegisterQualificationService,
+        {
+          provide: MetricRegisterReadService,
+          useValue: { readRegisteredMetricNames: () => Promise.resolve([]) },
+        },
+        {
+          provide: ProjectReadCachedService,
+          useValue: { readProject: () => Promise.resolve({ tier: ProjectTier.Free }) },
+        },
+        {
+          provide: MetricRegisterWriteService,
+          useValue: { createMany: () => Promise.resolve() },
+        },
+        { provide: METRIC_REGISTER_LOGGER, useValue: { warn } },
+      ],
+    }).compile();
+
+    service = moduleRef.get(MetricRegisterQualificationService);
   });
 
   afterEach(() => {

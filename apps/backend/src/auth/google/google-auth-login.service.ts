@@ -70,7 +70,7 @@ export class GoogleAuthLoginService {
 
       this.logger.log(`Created new user`, { email, userId: user.id });
 
-      await this.emitter.emitUserRegisteredEvent({
+      this.emitter.emitUserRegisteredEvent({
         authMethod: AuthMethod.Google,
         email,
         userId: user.id,
@@ -79,7 +79,7 @@ export class GoogleAuthLoginService {
 
       this.metrics.mutateMetric('loginGoogle', 1);
 
-      this.auditLog.create({
+      void this.auditLog.create({
         userId: user.id,
         actor: Actor.User,
         action: AuditLogUserAction.GoogleLogin,
@@ -101,7 +101,7 @@ export class GoogleAuthLoginService {
 
     this.metrics.mutateMetric('loginGoogle', 1);
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: user.id,
       actor: Actor.User,
       action: AuditLogUserAction.GoogleLogin,

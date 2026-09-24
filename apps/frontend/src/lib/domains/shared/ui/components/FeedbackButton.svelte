@@ -7,7 +7,7 @@
   let open = $state(false);
   let rating = $state(5);
   // svelte-ignore non_reactive_update
-  let textarea: HTMLTextAreaElement | null = null;
+  let textarea: HTMLTextAreaElement | undefined;
   const posthog = getContext<PostHog>('posthog');
 
   const captureFeedback = () => {
@@ -20,7 +20,7 @@
 
   $effect(() => {
     if (open) {
-      textarea.focus();
+      textarea?.focus();
     }
   });
 </script>

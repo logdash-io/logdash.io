@@ -118,7 +118,7 @@ const runClaim = async (dto: {
       return failedClaim(cookies, 'project-limit');
     }
 
-    bffLogger.error(`${provider} claim failed ${error}`);
+    bffLogger.error(`${provider} claim failed ${String(error)}`);
 
     return failedClaim(cookies, 'claim-failed');
   }

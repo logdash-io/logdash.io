@@ -2,7 +2,8 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
-import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
+import { PublicDashboardSerialized } from '../../src/public-dashboard/core/entities/public-dashboard.interface';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('PublicDashboardCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -42,7 +43,7 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       // then
       const createdDashboard = await bootstrap.models.publicDashboardModel.findById(
-        response.body.id,
+        (response.body as PublicDashboardSerialized).id,
       );
 
       expect(createdDashboard?.httpMonitorsIds).toContain(httpMonitor.id);
@@ -101,7 +102,7 @@ describe('PublicDashboardCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
+      expect((response.body as ErrorResponse).message).toBe(
         'You have reached the maximum number of public dashboards allowed for your plan',
       );
     });
@@ -159,7 +160,7 @@ describe('PublicDashboardCoreController (writes)', () => {
       });
 
       // when
-      const response = await request(bootstrap.app.getHttpServer())
+      await request(bootstrap.app.getHttpServer())
         .post(`/public_dashboards/${publicDashboard.id}/monitors/${httpMonitor.id}`)
         .set('Authorization', `Bearer ${token}`);
 
@@ -248,7 +249,7 @@ describe('PublicDashboardCoreController (writes)', () => {
       );
 
       // when
-      const response = await request(bootstrap.app.getHttpServer())
+      await request(bootstrap.app.getHttpServer())
         .delete(`/public_dashboards/${publicDashboard.id}/monitors/${httpMonitor.id}`)
         .set('Authorization', `Bearer ${token}`);
 
@@ -298,7 +299,7 @@ describe('PublicDashboardCoreController (writes)', () => {
       });
 
       // when
-      const response = await request(bootstrap.app.getHttpServer())
+      await request(bootstrap.app.getHttpServer())
         .put(`/public_dashboards/${publicDashboard.id}`)
         .set('Authorization', `Bearer ${setup.token}`)
         .send({

@@ -32,7 +32,7 @@ export class HttpPingReadService {
       },
     });
 
-    const data = ((await result.json()) as any).data as HttpPingEntity[];
+    const { data } = await result.json<HttpPingEntity>();
 
     return HttpPingSerializer.normalizeMany(data);
   }
@@ -74,7 +74,7 @@ export class HttpPingReadService {
       },
     });
 
-    const data = ((await result.json()) as any).data as HttpPingEntity[];
+    const { data } = await result.json<HttpPingEntity>();
 
     return data.reduce(
       (acc, ping) => {

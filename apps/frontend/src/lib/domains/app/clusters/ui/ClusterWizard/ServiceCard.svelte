@@ -10,7 +10,6 @@
 
   type Props = {
     service: WizardService;
-    index: number;
     expanded: boolean;
     canRemove: boolean;
     onNameChange: (name: string) => void;

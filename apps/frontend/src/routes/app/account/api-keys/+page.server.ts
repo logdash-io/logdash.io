@@ -9,7 +9,7 @@ export const load = async (
   const accessToken = get_access_token(event.cookies);
 
   if (!accessToken) {
-    throw redirect(302, '/app/auth');
+    redirect(302, '/app/auth');
   }
 
   const apiKeys = (await logdashAPI.get_personal_api_keys(

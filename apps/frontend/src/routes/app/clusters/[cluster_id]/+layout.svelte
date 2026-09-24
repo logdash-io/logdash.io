@@ -21,7 +21,7 @@
 
   $effect(() => {
     if (isSettingUp) {
-      invalidate(`/app/clusters/${page.params.cluster_id}`);
+      void invalidate(`/app/clusters/${page.params.cluster_id}`);
     }
   });
 </script>

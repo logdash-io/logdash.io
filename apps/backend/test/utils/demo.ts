@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -15,7 +16,7 @@ export class DemoUtils {
   private readonly projectModel: Model<ProjectEntity>;
   private readonly logModel: Model<LogEntity>;
 
-  constructor(private readonly app: INestApplication<any>) {
+  constructor(private readonly app: INestApplication<App>) {
     this.userModel = this.app.get(getModelToken(UserEntity.name));
     this.projectModel = this.app.get(getModelToken(ProjectEntity.name));
     this.logModel = this.app.get(getModelToken(LogEntity.name));
@@ -30,7 +31,7 @@ export class DemoUtils {
       tier: ProjectTier.Pro,
     });
 
-    const log = await this.logModel.create({
+    await this.logModel.create({
       message: 'Hello',
       projectId: project._id.toString(),
       index: 0,

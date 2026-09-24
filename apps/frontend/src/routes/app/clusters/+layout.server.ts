@@ -19,7 +19,7 @@ export const load = async (
   const onboardingTier = get_onboarding_tier(event.cookies);
   const user = await resolve_data_preloader(UserDataPreloader)(event);
 
-  if ([UserTier.BUILDER, UserTier.PRO].includes(onboardingTier)) {
+  if (onboardingTier === UserTier.BUILDER || onboardingTier === UserTier.PRO) {
     const link = await logdashAPI.stripe_checkout(
       get_access_token(event.cookies),
       onboardingTier,

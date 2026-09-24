@@ -58,6 +58,10 @@ export class CustomDomainWriteService {
       new: true,
     });
 
+    if (!entity) {
+      throw new Error(`Custom domain with id ${dto.id} not found for update`);
+    }
+
     return CustomDomainSerializer.normalize(entity);
   }
 

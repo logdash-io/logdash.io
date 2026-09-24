@@ -12,7 +12,9 @@
   const { clusterId }: Props = $props();
 
   const isCreator = $derived(
-    clustersState.isUserClusterCreator(userState.id, clusterId),
+    userState.id
+      ? clustersState.isUserClusterCreator(userState.id, clusterId)
+      : false,
   );
 </script>
 

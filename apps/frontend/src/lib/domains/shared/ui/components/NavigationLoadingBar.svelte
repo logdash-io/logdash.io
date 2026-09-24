@@ -7,33 +7,33 @@
   let isNavigating = $state(false);
   const progress = new Tween(0, { duration: 400, easing: circOut });
 
-  async function startProgress() {
-    progress.set(0, { duration: 0 });
+  async function startProgress(): Promise<void> {
+    void progress.set(0, { duration: 0 });
     isNavigating = true;
     await progress.set(95, {
       duration: 2050,
     });
   }
 
-  async function completeProgress() {
+  async function completeProgress(): Promise<void> {
     const duration = 250;
     setTimeout(() => {
       isNavigating = false;
     }, duration - 50);
 
     await progress.set(100, { duration });
-    progress.set(0, { duration: 0 });
+    void progress.set(0, { duration: 0 });
   }
 
   beforeNavigate(({ from, to }) => {
     if (from?.url.pathname === to?.url.pathname) {
       return;
     }
-    startProgress();
+    void startProgress();
   });
 
   afterNavigate(() => {
-    completeProgress();
+    void completeProgress();
   });
 </script>
 

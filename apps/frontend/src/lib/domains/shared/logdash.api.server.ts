@@ -30,7 +30,10 @@ class LogdashAPI {
     };
   }
 
-  create_cluster(name: string, access_token: string): Promise<Cluster> {
+  create_cluster(
+    name: string,
+    access_token: string | undefined,
+  ): Promise<Cluster> {
     return this.post<Cluster>(
       `${LogdashAPI.v0baseUrl}/users/me/clusters`,
       { name },
@@ -41,7 +44,7 @@ class LogdashAPI {
   update_cluster(
     cluster_id: string,
     update: Partial<{ name: string }>,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<Cluster> {
     return this.put<Cluster>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}`,
@@ -50,7 +53,10 @@ class LogdashAPI {
     );
   }
 
-  delete_cluster(cluster_id: string, access_token: string): Promise<void> {
+  delete_cluster(
+    cluster_id: string,
+    access_token: string | undefined,
+  ): Promise<void> {
     return this.performFetch<void>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}`,
       {
@@ -66,7 +72,7 @@ class LogdashAPI {
   create_project(
     name: string,
     cluster_id: string,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<{ project: Project; apiKey: string }> {
     return this.post<{ project: Project; apiKey: string }>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/projects`,
@@ -78,7 +84,7 @@ class LogdashAPI {
   update_project(
     project_id: string,
     update: Partial<{ name: string }>,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<Project> {
     return this.put<Project>(
       `${LogdashAPI.v0baseUrl}/projects/${project_id}`,
@@ -87,7 +93,10 @@ class LogdashAPI {
     );
   }
 
-  delete_project(project_id: string, access_token: string): Promise<void> {
+  delete_project(
+    project_id: string,
+    access_token: string | undefined,
+  ): Promise<void> {
     return this.performFetch<void>(
       `${LogdashAPI.v0baseUrl}/projects/${project_id}`,
       {
@@ -117,10 +126,10 @@ class LogdashAPI {
       },
     )
       .then((data) => ({ access_token: data.token }))
-      .catch((error) => ({ error }));
+      .catch((error: unknown) => ({ error: String(error) }));
   }
 
-  get_personal_api_keys(access_token: string): Promise<
+  get_personal_api_keys(access_token: string | undefined): Promise<
     {
       id: string;
       prefix: string;
@@ -136,7 +145,7 @@ class LogdashAPI {
   }
 
   create_personal_api_key(
-    access_token: string,
+    access_token: string | undefined,
     body: {
       label: string;
       scopes: { resource: string; action: string }[];
@@ -160,7 +169,10 @@ class LogdashAPI {
     );
   }
 
-  revoke_personal_api_key(access_token: string, id: string): Promise<void> {
+  revoke_personal_api_key(
+    access_token: string | undefined,
+    id: string,
+  ): Promise<void> {
     return this.performFetch<void>(
       `${LogdashAPI.v0baseUrl}/personal-api-keys/${id}`,
       {
@@ -174,7 +186,7 @@ class LogdashAPI {
   }
 
   approve_cli_auth(
-    access_token: string,
+    access_token: string | undefined,
     body: {
       userCode: string;
       scopes?: { resource: string; action: string }[];
@@ -189,7 +201,7 @@ class LogdashAPI {
   }
 
   deny_cli_auth(
-    access_token: string,
+    access_token: string | undefined,
     body: { userCode: string },
   ): Promise<{ status: 'denied' }> {
     return this.post(
@@ -200,7 +212,7 @@ class LogdashAPI {
   }
 
   get_project_api_keys(
-    access_token: string,
+    access_token: string | undefined,
     project_id: string,
   ): Promise<string[]> {
     return this.get<
@@ -220,7 +232,7 @@ class LogdashAPI {
    */
   get_project_logs(
     project_id: string,
-    access_token: string,
+    access_token: string | undefined,
     limit: number = 50,
     before?: string,
   ): Promise<Log[]> {
@@ -239,7 +251,7 @@ class LogdashAPI {
   delete_metric(
     project_id: string,
     metric_id: string,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<void> {
     return this.performFetch<void>(
       `${LogdashAPI.v0baseUrl}/projects/${project_id}/metric-register/${metric_id}`,
@@ -253,13 +265,13 @@ class LogdashAPI {
     );
   }
 
-  async get_me(access_token: string): Promise<User> {
+  async get_me(access_token: string | undefined): Promise<User> {
     return this.get<User>(`${LogdashAPI.v0baseUrl}/users/me`, access_token);
   }
 
   get_cluster_projects(
     cluster_id: string,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<Project[]> {
     return this.get<Project[]>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/projects`,
@@ -272,14 +284,16 @@ class LogdashAPI {
    * @param access_token
    * @returns
    */
-  get_user_clusters(access_token: string): Promise<Cluster[]> {
+  get_user_clusters(access_token: string | undefined): Promise<Cluster[]> {
     return this.get<Cluster[]>(
       `${LogdashAPI.v0baseUrl}/users/me/clusters`,
       access_token,
     );
   }
 
-  get_telegram_invite_link(access_token: string): Promise<{ url: string }> {
+  get_telegram_invite_link(
+    access_token: string | undefined,
+  ): Promise<{ url: string }> {
     return this.get<{ url: string }>(
       `${LogdashAPI.v0baseUrl}/support/telegram/invite-link`,
       access_token,
@@ -288,7 +302,7 @@ class LogdashAPI {
 
   get_project_metrics(
     project_id: string,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<Metric[]> {
     return this.get<Metric[]>(
       `${LogdashAPI.v0baseUrl}/projects/${project_id}/metrics`,
@@ -299,7 +313,7 @@ class LogdashAPI {
   get_metric_details(
     project_id: string,
     metric_id: string,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<Metric> {
     return this.get<Metric>(
       `${LogdashAPI.v0baseUrl}/projects/${project_id}/metrics/${metric_id}`,
@@ -308,7 +322,7 @@ class LogdashAPI {
   }
 
   stripe_checkout(
-    access_token: string,
+    access_token: string | undefined,
     tier: UserTier,
   ): Promise<{ checkoutUrl: string }> {
     return this.get<{ checkoutUrl: string }>(
@@ -318,7 +332,7 @@ class LogdashAPI {
   }
 
   stripe_billing_portal(
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<{ customerPortalUrl: string }> {
     return this.get<{ customerPortalUrl: string }>(
       `${LogdashAPI.v0baseUrl}/payments/stripe/customer_portal`,
@@ -337,7 +351,10 @@ class LogdashAPI {
     );
   }
 
-  get_monitors(cluster_id: string, access_token: string): Promise<Monitor[]> {
+  get_monitors(
+    cluster_id: string,
+    access_token: string | undefined,
+  ): Promise<Monitor[]> {
     return this.get<Monitor[]>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/http_monitors`,
       access_token,
@@ -346,7 +363,7 @@ class LogdashAPI {
 
   create_public_dashboard(
     cluster_id: string,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<PublicDashboard> {
     return this.post<PublicDashboard>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/public_dashboards`,
@@ -361,7 +378,7 @@ class LogdashAPI {
   update_public_dashboard(
     dashboard_id: string,
     update: Partial<{ name: string; isPublic: boolean }>,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<PublicDashboard> {
     return this.put<PublicDashboard>(
       `${LogdashAPI.v0baseUrl}/public_dashboards/${dashboard_id}`,
@@ -372,7 +389,7 @@ class LogdashAPI {
 
   get_public_dashboards(
     cluster_id: string,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<PublicDashboard[]> {
     return this.get<PublicDashboard[]>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/public_dashboards`,
@@ -383,7 +400,7 @@ class LogdashAPI {
   add_http_monitor_to_public_dashboard(
     dashboard_id: string,
     monitor_id: string,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<PublicDashboard> {
     return this.post<PublicDashboard>(
       `${LogdashAPI.v0baseUrl}/public_dashboards/${dashboard_id}/monitors/${monitor_id}`,
@@ -395,7 +412,7 @@ class LogdashAPI {
   remove_http_monitor_from_public_dashboard(
     dashboard_id: string,
     monitor_id: string,
-    access_token: string,
+    access_token: string | undefined,
   ): Promise<PublicDashboard> {
     return this.performFetch<PublicDashboard>(
       `${LogdashAPI.v0baseUrl}/public_dashboards/${dashboard_id}/monitors/${monitor_id}`,
@@ -435,7 +452,7 @@ class LogdashAPI {
     }
 
     if (!response.ok) {
-      const p = await response.json();
+      const p: unknown = await response.json();
       throw new Error(
         `HTTP error ${response.status}: ${response.statusText}${
           response.body ? ` {${JSON.stringify(p)}}` : ''
@@ -444,13 +461,13 @@ class LogdashAPI {
     }
 
     if (response.headers.get('content-type')?.includes('application/json')) {
-      return response.json();
+      return (await response.json()) as T;
     }
 
     return response.text() as unknown as T;
   }
 
-  private get<T>(url: string, access_token: string): Promise<T> {
+  private get<T>(url: string, access_token: string | undefined): Promise<T> {
     return this.performFetch<T>(
       url,
       {

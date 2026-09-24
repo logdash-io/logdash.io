@@ -1,7 +1,11 @@
 import { Global, Module } from '@nestjs/common';
 import { createClient, ClickHouseClient } from '@clickhouse/client';
-import { ClickHouseContainer } from '@testcontainers/clickhouse';
+import { ClickHouseContainer, StartedClickHouseContainer } from '@testcontainers/clickhouse';
 import * as path from 'path';
+
+declare global {
+  var clickhouseContainer: StartedClickHouseContainer;
+}
 
 export const createClickHouseTestContainer = async (): Promise<void> => {
   const migrationsPath = path.resolve(__dirname, '../../clickhouse-migrations');
@@ -62,6 +66,6 @@ export const rootClickHouseTestModule = () => {
   return ClickHouseTestModule;
 };
 
-export const closeClickHouseTestContainer = async () => {
-  global.clickhouseContainer.stop();
+export const closeClickHouseTestContainer = async (): Promise<void> => {
+  await global.clickhouseContainer.stop();
 };

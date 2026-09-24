@@ -11,6 +11,10 @@ import { HttpMonitorStatusService } from '../../src/http-monitor/status/http-mon
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
 import { MetricRegisterEntryType } from '../../src/metric-register/core/entities/metric-register-entry.entity';
 import { RedisService } from '../../src/shared/redis/redis.service';
+import { CreatePersonalApiKeyResponse } from '../../src/personal-api-key/core/dto/create-personal-api-key.response';
+import { CreateProjectResponse } from '../../src/project/core/dto/create-project.response';
+import { ClusterSerialized } from '../../src/cluster/core/entities/cluster.interface';
+import { OverviewResponse } from '../../src/overview/core/dto/overview.response';
 
 describe('Overview (aggregation verdict)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -44,7 +48,7 @@ describe('Overview (aggregation verdict)', () => {
       .send({ label: 'cli key', scopes, access });
 
     expect(response.status).toBe(201);
-    return response.body.value;
+    return (response.body as CreatePersonalApiKeyResponse).value;
   };
 
   // seed N error logs directly into ClickHouse for a project (avoids ingest sleep)
@@ -127,19 +131,20 @@ describe('Overview (aggregation verdict)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
+      const body = response.body as OverviewResponse;
 
-      expect(response.body.errors).toHaveLength(1);
-      expect(response.body.errors[0].projectId).toBe(project.id);
-      expect(response.body.errors[0].errorCount).toBe(3);
+      expect(body.errors).toHaveLength(1);
+      expect(body.errors[0].projectId).toBe(project.id);
+      expect(body.errors[0].errorCount).toBe(3);
 
-      expect(response.body.monitors).toHaveLength(1);
-      expect(response.body.monitors[0].status).toBe(HttpMonitorStatus.Down);
-      expect(response.body.monitorsDown).toBe(1);
+      expect(body.monitors).toHaveLength(1);
+      expect(body.monitors[0].status).toBe(HttpMonitorStatus.Down);
+      expect(body.monitorsDown).toBe(1);
 
-      expect(response.body.dataFlow).toHaveLength(1);
-      expect(response.body.dataFlow[0].projectId).toBe(project.id);
-      expect(response.body.dataFlow[0].lastLogReceivedAt).not.toBeNull();
-      expect(response.body.dataFlow[0].lastMetricReceivedAt).not.toBeNull();
+      expect(body.dataFlow).toHaveLength(1);
+      expect(body.dataFlow[0].projectId).toBe(project.id);
+      expect(body.dataFlow[0].lastLogReceivedAt).not.toBeNull();
+      expect(body.dataFlow[0].lastMetricReceivedAt).not.toBeNull();
     });
 
     it('reports null data flow when no logs/metrics were ever received', async () => {
@@ -150,9 +155,10 @@ describe('Overview (aggregation verdict)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.dataFlow[0].lastLogReceivedAt).toBeNull();
-      expect(response.body.dataFlow[0].lastMetricReceivedAt).toBeNull();
-      expect(response.body.errors[0].errorCount).toBe(0);
+      const body = response.body as OverviewResponse;
+      expect(body.dataFlow[0].lastLogReceivedAt).toBeNull();
+      expect(body.dataFlow[0].lastMetricReceivedAt).toBeNull();
+      expect(body.errors[0].errorCount).toBe(0);
     });
 
     it('rejects a malformed since value with 400', async () => {
@@ -175,7 +181,7 @@ describe('Overview (aggregation verdict)', () => {
         .post(`/clusters/${cluster.id}/projects`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'second' });
-      const secondProjectId = secondProjectResponse.body.project.id;
+      const secondProjectId = (secondProjectResponse.body as CreateProjectResponse).project.id;
 
       await seedErrorLogs(project.id, 2);
       await seedErrorLogs(secondProjectId, 5);
@@ -185,11 +191,12 @@ describe('Overview (aggregation verdict)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.errors).toHaveLength(2);
+      const body = response.body as OverviewResponse;
+      expect(body.errors).toHaveLength(2);
       // worst first
-      expect(response.body.errors[0].projectId).toBe(secondProjectId);
-      expect(response.body.errors[0].errorCount).toBe(5);
-      expect(response.body.errors[1].errorCount).toBe(2);
+      expect(body.errors[0].projectId).toBe(secondProjectId);
+      expect(body.errors[0].errorCount).toBe(5);
+      expect(body.errors[1].errorCount).toBe(2);
     });
   });
 
@@ -202,13 +209,13 @@ describe('Overview (aggregation verdict)', () => {
         .post('/users/me/clusters')
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'cluster 2' });
-      const secondClusterId = secondClusterResponse.body.id;
+      const secondClusterId = (secondClusterResponse.body as ClusterSerialized).id;
 
       const secondProjectResponse = await request(server())
         .post(`/clusters/${secondClusterId}/projects`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'p2' });
-      const secondProjectId = secondProjectResponse.body.project.id;
+      const secondProjectId = (secondProjectResponse.body as CreateProjectResponse).project.id;
 
       await seedErrorLogs(project.id, 1);
       await seedErrorLogs(secondProjectId, 1);
@@ -218,7 +225,7 @@ describe('Overview (aggregation verdict)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
-      const projectIds = response.body.errors.map((e: any) => e.projectId).sort();
+      const projectIds = (response.body as OverviewResponse).errors.map((e) => e.projectId).sort();
       expect(projectIds).toEqual([project.id, secondProjectId].sort());
     });
 
@@ -230,16 +237,15 @@ describe('Overview (aggregation verdict)', () => {
         .post(`/clusters/${cluster.id}/projects`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'p2' });
-      const p2Id = secondProjectResponse.body.project.id;
+      const p2Id = (secondProjectResponse.body as CreateProjectResponse).project.id;
 
       await seedErrorLogs(project.id, 4);
       await seedErrorLogs(p2Id, 9);
 
-      const key = await createKey(
-        token,
-        [{ resource: Resource.Clusters, action: Action.Read }],
-        { kind: 'projects', ids: [project.id] },
-      );
+      const key = await createKey(token, [{ resource: Resource.Clusters, action: Action.Read }], {
+        kind: 'projects',
+        ids: [project.id],
+      });
       await redisService.flushAll();
 
       const response = await request(server())
@@ -248,11 +254,12 @@ describe('Overview (aggregation verdict)', () => {
 
       expect(response.status).toBe(200);
 
-      const projectIds = response.body.errors.map((e: any) => e.projectId);
+      const body = response.body as OverviewResponse;
+      const projectIds = body.errors.map((e) => e.projectId);
       expect(projectIds).toEqual([project.id]);
       expect(projectIds).not.toContain(p2Id);
 
-      const dataFlowIds = response.body.dataFlow.map((d: any) => d.projectId);
+      const dataFlowIds = body.dataFlow.map((d) => d.projectId);
       expect(dataFlowIds).toEqual([project.id]);
     });
 
@@ -263,19 +270,18 @@ describe('Overview (aggregation verdict)', () => {
         .post('/users/me/clusters')
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'cluster 2' });
-      const secondClusterId = secondClusterResponse.body.id;
+      const secondClusterId = (secondClusterResponse.body as ClusterSerialized).id;
 
       const secondProjectResponse = await request(server())
         .post(`/clusters/${secondClusterId}/projects`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'p2' });
-      const p2Id = secondProjectResponse.body.project.id;
+      const p2Id = (secondProjectResponse.body as CreateProjectResponse).project.id;
 
-      const key = await createKey(
-        token,
-        [{ resource: Resource.Clusters, action: Action.Read }],
-        { kind: 'clusters', ids: [cluster.id] },
-      );
+      const key = await createKey(token, [{ resource: Resource.Clusters, action: Action.Read }], {
+        kind: 'clusters',
+        ids: [cluster.id],
+      });
       await redisService.flushAll();
 
       const response = await request(server())
@@ -283,7 +289,7 @@ describe('Overview (aggregation verdict)', () => {
         .set('Authorization', `Bearer ${key}`);
 
       expect(response.status).toBe(200);
-      const projectIds = response.body.dataFlow.map((d: any) => d.projectId);
+      const projectIds = (response.body as OverviewResponse).dataFlow.map((d) => d.projectId);
       expect(projectIds).toEqual([project.id]);
       expect(projectIds).not.toContain(p2Id);
     });
@@ -296,18 +302,16 @@ describe('Overview (aggregation verdict)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
-      const projectIds = response.body.dataFlow.map((d: any) => d.projectId);
+      const projectIds = (response.body as OverviewResponse).dataFlow.map((d) => d.projectId);
       expect(projectIds).toContain(project.id);
     });
 
     it('returns 403 for a personal key without the clusters:read scope', async () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const key = await createKey(
-        token,
-        [{ resource: Resource.Logs, action: Action.Read }],
-        { kind: 'all' },
-      );
+      const key = await createKey(token, [{ resource: Resource.Logs, action: Action.Read }], {
+        kind: 'all',
+      });
       await redisService.flushAll();
 
       const response = await request(server())

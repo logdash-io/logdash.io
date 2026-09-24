@@ -24,7 +24,7 @@ export class MetricRegisterWriteService {
     const entries = await this.model.insertMany(dtos, { ordered: false });
 
     entries.forEach((entry) => {
-      this.auditLog.create({
+      void this.auditLog.create({
         userId: actorUserId,
         action: AuditLogEntityAction.Create,
         actor: actorUserId ? Actor.User : Actor.System,

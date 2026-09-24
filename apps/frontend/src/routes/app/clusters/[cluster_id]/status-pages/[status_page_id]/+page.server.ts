@@ -1,11 +1,11 @@
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({
+export const load: PageServerLoad = ({
   params,
-}): Promise<{
+}): {
   clusterId: string;
   statusPageId: string;
-}> => {
+} => {
   const clusterId = params.cluster_id;
   const statusPageId = params.status_page_id;
 

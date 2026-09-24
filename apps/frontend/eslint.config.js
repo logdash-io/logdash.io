@@ -5,12 +5,13 @@ import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript-eslint';
+import svelteConfig from './svelte.config.js';
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
 export default ts.config(
   includeIgnoreFile(gitignorePath),
   js.configs.recommended,
-  ...ts.configs.recommended,
+  ...ts.configs.recommendedTypeChecked,
   ...svelte.configs['flat/recommended'],
   prettier,
   ...svelte.configs['flat/prettier'],
@@ -20,6 +21,11 @@ export default ts.config(
         ...globals.browser,
         ...globals.node,
       },
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+        extraFileExtensions: ['.svelte'],
+      },
     },
   },
   {
@@ -28,6 +34,7 @@ export default ts.config(
     languageOptions: {
       parserOptions: {
         parser: ts.parser,
+        svelteConfig,
       },
     },
   },
@@ -37,8 +44,13 @@ export default ts.config(
       parser: svelte.parser,
       parserOptions: {
         parser: ts.parser,
+        svelteConfig,
       },
     },
+  },
+  {
+    files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
+    extends: [ts.configs.disableTypeChecked],
   },
   {
     rules: {

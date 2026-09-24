@@ -13,7 +13,7 @@
 
   function onCreateClick(): void {
     if (canAddMore) {
-      goto(resolve('/app/clusters/new'));
+      void goto(resolve('/app/clusters/new'));
     }
   }
 </script>

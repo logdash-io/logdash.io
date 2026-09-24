@@ -3,34 +3,35 @@
   import type { ClassValue } from 'svelte/elements';
   import { fly } from 'svelte/transition';
 
+  type Props = {
+    children: Snippet;
+    class?: ClassValue;
+    parentClass?: ClassValue;
+    header?: () => ReturnType<Snippet>;
+    delayIn?: number;
+  };
+
   const {
     children,
     class: className = '',
     parentClass = '',
     delayIn = 0,
     header,
-  }: {
-    children: Snippet;
-    class?: ClassValue;
-    parentClass?: ClassValue;
-    header?: () => ReturnType<Snippet>;
-    delayIn?: number;
-    delayOut?: number;
-  } = $props();
+  }: Props = $props();
 
-  const flattenCls = (cls: ClassValue): string => {
-    return Array.isArray(cls) ? cls.join(' ') : String(cls);
-  };
+  const cls = $derived([
+    'flex h-fit w-full flex-col gap-2 relative',
+    className,
+    hasPaddingClass(className) ? 'ld-card-base' : 'ld-card',
+  ]);
 
-  const cls = $derived.by(() => {
-    return [
-      'flex h-fit w-full flex-col gap-2 relative',
-      ...(Array.isArray(className) ? className : [className]),
-      ...(flattenCls(className).includes('p-')
-        ? ['ld-card-base']
-        : ['ld-card']),
-    ];
-  });
+  function hasPaddingClass(value: ClassValue): boolean {
+    if (Array.isArray(value)) {
+      return value.some(hasPaddingClass);
+    }
+
+    return typeof value === 'string' && value.includes('p-');
+  }
 </script>
 
 <div class={parentClass}>

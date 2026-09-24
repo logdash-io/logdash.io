@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { MetricRegisterReadService } from '../read/metric-register-read.service';
 import { QualifyMetricDto } from './dto/qualify-metric.dto';
 import { groupBy } from '../../shared/utils/group-by';

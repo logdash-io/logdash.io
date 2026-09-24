@@ -8,6 +8,7 @@ import { AccountClaimStatus } from '../../src/user/core/enum/account-claim-statu
 import { AuthMethod } from '../../src/user/core/enum/auth-method.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('Auth (anonymous)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -88,7 +89,9 @@ describe('Auth (anonymous)', () => {
 
     // then
     expect(response.status).toEqual(400);
-    expect(response.body.message).toEqual('Cannot create new account without accepting terms');
+    expect((response.body as ErrorResponse).message).toEqual(
+      'Cannot create new account without accepting terms',
+    );
 
     const userAfterClaim = (await bootstrap.models.userModel.findById(
       new Types.ObjectId(user.id),
@@ -107,7 +110,7 @@ describe('Auth (anonymous)', () => {
     // when
     mockGithubUser('a@a.pl');
 
-    const response = await request(bootstrap.app.getHttpServer()).post('/auth/github/claim').send({
+    await request(bootstrap.app.getHttpServer()).post('/auth/github/claim').send({
       githubCode: 'whatever',
       accessToken: token,
     });
@@ -144,7 +147,7 @@ describe('Auth (anonymous)', () => {
 
     // then
     expect(response.status).toEqual(409);
-    expect(response.body.message).toEqual('User has reached the project limit');
+    expect((response.body as ErrorResponse).message).toEqual('User has reached the project limit');
 
     const temporaryUserAfterClaim = await bootstrap.models.userModel.findById(
       new Types.ObjectId(anonymous.user.id),

@@ -1,5 +1,6 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
-import { NotificationChannelNormalized } from '../../src/notification-channel/core/entities/notification-channel.interface';
+import { NotificationChannelSerialized } from '../../src/notification-channel/core/entities/notification-channel.interface';
 import { NotificationChannelType } from '../../src/notification-channel/core/enums/notification-target.enum';
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
 import { WebhookOptions } from '../../src/notification-channel/core/types/webhook-options.type';
@@ -7,14 +8,14 @@ import * as request from 'supertest';
 import { CreateNotificationChannelBody } from '../../src/notification-channel/core/dto/create-notification-channel.body';
 
 export class NotificationChannelUtils {
-  constructor(private readonly app: INestApplication<any>) {}
+  constructor(private readonly app: INestApplication<App>) {}
 
   public async createTelegramNotificationChannel(dto: {
     clusterId: string;
     token: string;
     options?: Partial<TelegramOptions>;
     name?: string;
-  }): Promise<NotificationChannelNormalized> {
+  }): Promise<NotificationChannelSerialized> {
     const options = dto.options || {};
 
     // Deliberately no botToken default: `botToken` now has to look like a real
@@ -37,7 +38,7 @@ export class NotificationChannelUtils {
       .set('Authorization', `Bearer ${dto.token}`)
       .send(body);
 
-    return response.body;
+    return response.body as NotificationChannelSerialized;
   }
 
   public async createWebhookNotificationChannel(dto: {
@@ -45,7 +46,7 @@ export class NotificationChannelUtils {
     token: string;
     options: WebhookOptions;
     name?: string;
-  }): Promise<NotificationChannelNormalized> {
+  }): Promise<NotificationChannelSerialized> {
     const body: CreateNotificationChannelBody = {
       type: NotificationChannelType.Webhook,
       name: dto.name || 'Test Webhook Channel',
@@ -57,6 +58,6 @@ export class NotificationChannelUtils {
       .set('Authorization', `Bearer ${dto.token}`)
       .send(body);
 
-    return response.body;
+    return response.body as NotificationChannelSerialized;
   }
 }

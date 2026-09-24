@@ -14,6 +14,12 @@ export class ProjectsListDataPreloader
     cookies,
     params,
   }: ServerLoadEvent): Promise<{ projects: Project[] }> {
+    if (!params.cluster_id) {
+      return {
+        projects: [],
+      };
+    }
+
     const projects =
       (await logdashAPI.get_cluster_projects(
         params.cluster_id,

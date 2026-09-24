@@ -7,11 +7,11 @@ import { redirect, type ServerLoadEvent } from '@sveltejs/kit';
  * into a rubber stamp, which is exactly what a phishing link exploits. The user
  * types the code they can see in their own terminal (ADR-0003 invariant #3).
  */
-export const load = async (event: ServerLoadEvent): Promise<void> => {
+export const load = (event: ServerLoadEvent): void => {
   const accessToken = get_access_token(event.cookies);
 
   if (!accessToken) {
-    throw redirect(
+    redirect(
       302,
       `/app/auth?redirect=${encodeURIComponent('/app/authorize-cli')}`,
     );

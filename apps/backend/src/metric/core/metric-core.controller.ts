@@ -12,6 +12,7 @@ import {
   UnauthorizedException,
   UseGuards,
   UseInterceptors,
+  MessageEvent,
 } from '@nestjs/common';
 import { Public } from '../../auth/core/decorators/is-public';
 import { ApiBearerAuth, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
@@ -63,7 +64,7 @@ export class MetricCoreController {
       throw new UnauthorizedException('Invalid API key');
     }
 
-    await this.metricQueueingService.queueMetric({
+    this.metricQueueingService.queueMetric({
       ...dto,
       projectId,
     });
@@ -79,18 +80,16 @@ export class MetricCoreController {
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Sse('projects/:projectId/metrics/sse')
-  public async streamProjectMetrics(
-    @Param('projectId') projectId: string,
-  ): Promise<Observable<any>> {
+  public streamProjectMetrics(@Param('projectId') projectId: string): Observable<MessageEvent> {
     const eventStream$ = fromEvent(this.eventEmitter, MetricEvents.MetricCreatedEvent).pipe(
+      map((data) => data as MetricCreatedEvent),
       filter(
-        (data: MetricCreatedEvent) =>
-          data.projectId === projectId && data.granularity !== MetricGranularity.AllTime,
+        (data) => data.projectId === projectId && data.granularity !== MetricGranularity.AllTime,
       ),
-      map((data: MetricCreatedEvent) => ({ data })),
+      map((data) => ({ data })),
     );
 
-    return new Observable((observer) => {
+    return new Observable<MessageEvent>((observer) => {
       const subscription = eventStream$.subscribe(observer);
 
       return () => {
