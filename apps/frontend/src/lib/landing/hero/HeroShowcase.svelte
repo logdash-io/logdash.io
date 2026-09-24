@@ -15,7 +15,7 @@
   import HeroMetricsColumn from './HeroMetricsColumn.svelte';
   import HeroMonitorTile from './HeroMonitorTile.svelte';
   import HeroSidebar from './HeroSidebar.svelte';
-  import { showcaseClusterName } from './hero-showcase';
+  import { showcaseClusterName, showsVisitorAccount } from './hero-showcase';
 
   type WindowBarStatus = {
     label: string;
@@ -43,11 +43,19 @@
 
   const phase = $derived(anonymousPreviewState.phase);
 
-  const host = $derived(
-    anonymousPreviewState.preview
-      ? previewNameFromUrl(anonymousPreviewState.preview.url)
-      : (anonymousPreviewState.demo.monitor?.name ?? ''),
-  );
+  const host = $derived.by(() => {
+    const preview = anonymousPreviewState.preview;
+
+    if (preview) {
+      return previewNameFromUrl(preview.url);
+    }
+
+    // The visitor's account is on screen before their monitor exists, so name
+    // the service the way the sidebar does rather than falling back to ours.
+    return showsVisitorAccount(phase)
+      ? 'Setting up'
+      : (anonymousPreviewState.demo.monitor?.name ?? '');
+  });
 
   const status = $derived<WindowBarStatus>(
     match(phase)
