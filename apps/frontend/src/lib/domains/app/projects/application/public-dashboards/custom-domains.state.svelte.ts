@@ -14,6 +14,10 @@ export class CustomDomainsState {
     return this._customDomains[publicDashboardId] || null;
   }
 
+  public hasLoaded(publicDashboardId: string): boolean {
+    return publicDashboardId in this._customDomains;
+  }
+
   public isLoading(publicDashboardId: string): boolean {
     return this._loading[publicDashboardId] || false;
   }

@@ -11,6 +11,7 @@
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import CustomDomainSetup from '../public-dashboard/CustomDomainSetup.svelte';
+  import BadgePicker from './BadgePicker.svelte';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
@@ -47,6 +48,14 @@
 
   const dashboardUrl = $derived(
     publicDashboardManagerState.getDashboardUrl(dashboardId),
+  );
+  const statusPageUrl = $derived(
+    publicDashboardManagerState.getStatusPageUrl(dashboardId),
+  );
+  const badgeMonitors = $derived(
+    monitoringState.monitors.filter((monitor) =>
+      dashboardMonitors.includes(monitor.id),
+    ),
   );
 
   onMount(async () => {
@@ -298,5 +307,22 @@
         {/if}
       </div>
     </div>
+
+    {#if isPublished}
+      <div class="space-y-3">
+        <label class="label font-medium">5. README badges</label>
+        <p class="text-sm text-neutral-400">
+          Show your uptime in a README or on your website.
+        </p>
+
+        {#if badgeMonitors.length === 0}
+          <p class="text-sm text-neutral-500">
+            Select monitors above to get their badges.
+          </p>
+        {:else}
+          <BadgePicker {dashboardId} {statusPageUrl} monitors={badgeMonitors} />
+        {/if}
+      </div>
+    {/if}
   </div>
 </div>

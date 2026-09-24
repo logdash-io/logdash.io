@@ -13,6 +13,10 @@
   import UptimeSection from './monitoring/UptimeSection.svelte';
   import NotificationChannelsSection from './monitoring/NotificationChannelsSection.svelte';
   import MonitorSettingsSection from './monitoring/MonitorSettingsSection.svelte';
+  import MonitorBadgeModal from './monitoring/MonitorBadgeModal.svelte';
+  import { SettingsCardItem } from '$lib/domains/shared/ui/components/settings-card/index.js';
+  import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
+  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
 
   type Props = {
     projectId: string;
@@ -28,6 +32,8 @@
   );
   const monitorId = $derived(projectMonitor?.id || '');
   const monitorName = $derived(projectMonitor?.name || '');
+
+  let isBadgeModalOpen = $state(false);
 
   const MAX_PINGS = 190;
   const PING_WIDTH_PX = 8;
@@ -147,6 +153,20 @@
       class="flex w-full flex-col divide-y divide-hairline border-t border-base-100"
     >
       <NotificationChannelsSection {monitorId} />
+      <SettingsCardItem
+        icon={ShieldCheckIcon}
+        showBorder={false}
+        onclick={() => (isBadgeModalOpen = true)}
+      >
+        <p class="font-medium">README Badge</p>
+        <p class="text-neutral-500">
+          Show this monitor's uptime in your README
+        </p>
+
+        {#snippet action()}
+          <ChevronRightIcon class="text-neutral-500 size-4 shrink-0" />
+        {/snippet}
+      </SettingsCardItem>
       <MonitorSettingsSection
         {monitorId}
         {monitorName}
@@ -156,3 +176,12 @@
     </div>
   {/if}
 </div>
+
+{#if projectMonitor}
+  <MonitorBadgeModal
+    isOpen={isBadgeModalOpen}
+    onClose={() => (isBadgeModalOpen = false)}
+    {clusterId}
+    monitor={projectMonitor}
+  />
+{/if}
