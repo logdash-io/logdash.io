@@ -3,6 +3,7 @@
   import FilterIcon from '$lib/domains/shared/icons/FilterIcon.svelte';
   import LogRow from '$lib/landing/LogRow.svelte';
   import RollingFeed from '$lib/landing/RollingFeed.svelte';
+  import { Spinner } from '@logdash/hyper-ui/presentational';
   import { SearchIcon } from 'lucide-svelte';
   import { showcaseSwap, showsVisitorAccount } from './hero-showcase';
 
@@ -109,7 +110,7 @@
         class="text-neutral-500 flex h-5 items-center gap-2 text-sm"
         role="status"
       >
-        <span class="loading loading-spinner size-3.5 shrink-0"></span>
+        <Spinner class="size-3.5 shrink-0" aria-hidden="true" />
         Loading logs
       </div>
     {/if}

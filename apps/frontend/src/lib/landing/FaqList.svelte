@@ -24,7 +24,7 @@
   {#each text.split('`') as part, index (index)}
     {#if index % 2}
       <code
-        class="bg-base-200 text-neutral-300 rounded px-1 py-0.5 font-mono text-[0.875em]"
+        class="bg-surface-elevated text-neutral-300 rounded px-1 py-0.5 font-mono text-[0.875em]"
       >
         {part}
       </code>

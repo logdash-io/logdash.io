@@ -10,10 +10,19 @@
     tryPrependProtocol,
   } from '$lib/domains/shared/utils/url.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import {
+    Button,
+    Input,
+    Label,
+    Spinner,
+    Tab,
+    Tabs,
+    Tooltip,
+  } from '@logdash/hyper-ui/presentational';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import { untrack } from 'svelte';
+  import { fromAction } from 'svelte/attachments';
 
   type Props = {
     clusterId: string;
@@ -148,77 +157,63 @@
   </div>
 
   <div class="space-y-4">
-    <div class="tabs tabs-boxed tabs-sm w-fit">
-      <button
-        class={[
-          'tab px-4',
-          { 'tab-active bg-base-100': selectedMode === MonitorMode.PULL },
-        ]}
+    <Tabs size="sm" class="w-fit">
+      <Tab
+        class="px-4"
+        active={selectedMode === MonitorMode.PULL}
         onclick={() => (selectedMode = MonitorMode.PULL)}
-        type="button"
       >
         Pull (we ping you)
-      </button>
+      </Tab>
       {#if canUsePush}
-        <button
-          class={[
-            'tab px-4',
-            { 'tab-active bg-base-100': selectedMode === MonitorMode.PUSH },
-          ]}
+        <Tab
+          class="px-4"
+          active={selectedMode === MonitorMode.PUSH}
           onclick={() => (selectedMode = MonitorMode.PUSH)}
-          type="button"
         >
           Push (you ping us)
-        </button>
+        </Tab>
       {:else}
         <Tooltip
           content="Upgrade to Pro to use Push monitors"
           placement="bottom"
         >
-          <button
-            class={[
-              'tab px-4',
-              {
-                'tab-active bg-base-100': selectedMode === MonitorMode.PUSH,
-                'opacity-60 cursor-not-allowed': true,
-              },
-            ]}
+          <Tab
+            class="text-fg-faint pointer-events-auto cursor-not-allowed px-4 opacity-100"
+            active={selectedMode === MonitorMode.PUSH}
             disabled={true}
-            type="button"
           >
             Push (Heartbeat)
-          </button>
+          </Tab>
         </Tooltip>
       {/if}
-    </div>
+    </Tabs>
 
     <div class="space-y-4">
       {#if selectedMode === MonitorMode.PULL}
         <div class="space-y-2">
-          <label class="label font-medium" for="monitor-name-pull">
+          <Label class="font-medium" for="monitor-name-pull">
             Monitor name
-          </label>
-          <input
+          </Label>
+          <Input
             id="monitor-name-pull"
             bind:value={monitorName}
             minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
-            class="input input-bordered w-full"
+            class="w-full"
             placeholder="My API Service"
-            use:autoFocus={{ delay: 100 }}
+            {@attach fromAction(autoFocus, () => ({ delay: 100 }))}
           />
         </div>
 
         <div class="space-y-2">
-          <label class="label font-medium" for="monitor-url">
-            URL to monitor
-          </label>
-          <input
+          <Label class="font-medium" for="monitor-url">URL to monitor</Label>
+          <Input
             id="monitor-url"
             bind:value={url}
             minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
-            class="input input-bordered w-full"
+            class="w-full"
             placeholder="https://example.com/health"
           />
           <p class="text-neutral-400 text-xs">
@@ -227,17 +222,17 @@
         </div>
       {:else}
         <div class="space-y-2">
-          <label class="label font-medium" for="monitor-name-push">
+          <Label class="font-medium" for="monitor-name-push">
             Monitor name
-          </label>
-          <input
+          </Label>
+          <Input
             id="monitor-name-push"
             bind:value={monitorName}
             minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
-            class="input input-bordered w-full"
+            class="w-full"
             placeholder="My Backend Service"
-            use:autoFocus={{ delay: 100 }}
+            {@attach fromAction(autoFocus, () => ({ delay: 100 }))}
           />
           <p class="text-neutral-400 text-xs">
             Your service will send heartbeat pings to our endpoint.
@@ -245,14 +240,14 @@
         </div>
 
         {#if isCreatingPushMonitor}
-          <div class="border-base-300 border-t pt-4">
+          <div class="border-surface-root border-t pt-4">
             <div class="text-neutral-400 flex items-center gap-2 text-sm">
-              <span class="loading loading-spinner loading-xs"></span>
+              <Spinner size="xs" aria-hidden="true" />
               Generating endpoint...
             </div>
           </div>
         {:else if pushEndpoint}
-          <div class="border-base-300 border-t pt-4">
+          <div class="border-surface-root border-t pt-4">
             <div class="space-y-3">
               <div class="space-y-1">
                 <p class="text-sm font-medium">Ping endpoint</p>
@@ -262,17 +257,20 @@
               </div>
               <div class="flex items-center gap-2">
                 <code
-                  class="bg-base-200 flex-1 truncate rounded px-3 py-2 font-mono text-sm"
+                  class="bg-surface-well flex-1 truncate rounded-xl px-3 py-2 font-mono text-sm"
                 >
                   {pushEndpoint}
                 </code>
                 <Tooltip content="Copy endpoint" placement="top">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    shape="square"
+                    aria-label="Copy endpoint"
                     onclick={onCopyEndpoint}
-                    class="btn btn-square btn-sm btn-ghost"
                   >
                     <CopyIcon class="h-4 w-4" />
-                  </button>
+                  </Button>
                 </Tooltip>
               </div>
             </div>
@@ -281,17 +279,17 @@
       {/if}
     </div>
 
-    <button
-      class="btn btn-primary"
+    <Button
+      variant="primary"
       disabled={!isFormValid || isSubmitting}
       onclick={onFinishSetup}
     >
       {#if isSubmitting}
-        <span class="loading loading-spinner loading-sm"></span>
+        <Spinner size="sm" aria-hidden="true" />
       {:else}
         <CheckIcon class="h-4 w-4" />
       {/if}
       Finish Setup
-    </button>
+    </Button>
   </div>
 </div>

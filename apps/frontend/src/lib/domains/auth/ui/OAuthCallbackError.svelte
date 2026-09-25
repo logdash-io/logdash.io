@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { reportOAuthPopupFailure } from '$lib/domains/auth/application/start-oauth-popup';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import { onMount } from 'svelte';
 
   onMount(() => {
@@ -14,8 +15,13 @@
     <p class="text-neutral-400 text-center">
       We are sorry, something went wrong on our end. Please try again later.
     </p>
-    <a href={resolve('/')} class="btn btn-primary btn-sm mx-auto w-fit">
+    <Button
+      href={resolve('/')}
+      variant="primary"
+      size="sm"
+      class="mx-auto w-fit"
+    >
       Main page
-    </a>
+    </Button>
   </div>
 </div>

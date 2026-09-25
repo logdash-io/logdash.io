@@ -3,10 +3,11 @@
   import Logotype from '$lib/domains/shared/icons/Logotype.svelte';
   import MobileNav from '$lib/landing/nav/MobileNav.svelte';
   import NavMenu from '$lib/landing/nav/NavMenu.svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
 </script>
 
 <nav
-  class="border-hairline bg-base-300 sticky top-0 z-50 w-full shrink-0 border-b"
+  class="border-hairline bg-surface-root sticky top-0 z-50 w-full shrink-0 border-b"
 >
   <!-- `relative` anchors the desktop menu panel to this bar. -->
   <div
@@ -25,14 +26,16 @@
     ></div>
 
     <div class="hidden items-center gap-2 lg:flex">
-      <a
+      <Button
         href={resolve('/app/auth')}
         draggable="false"
-        class="btn btn-subtle btn-sm rounded-full px-4 font-medium"
+        variant="subtle"
+        size="sm"
+        class="px-4 font-medium"
         data-posthog-id="nav-login-cta"
       >
         Log in
-      </a>
+      </Button>
     </div>
 
     <MobileNav />

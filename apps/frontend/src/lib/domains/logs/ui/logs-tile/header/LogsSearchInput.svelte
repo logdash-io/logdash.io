@@ -60,7 +60,7 @@
   {#if localSearchTerm}
     <button
       type="button"
-      class="hover:bg-base-300 absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1"
+      class="hover:bg-surface-root absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1"
       onclick={clearSearch}
     >
       <svg

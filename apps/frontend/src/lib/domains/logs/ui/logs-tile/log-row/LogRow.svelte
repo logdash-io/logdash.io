@@ -28,7 +28,7 @@
   type="button"
   class={[
     'flex h-7 w-full max-w-full cursor-pointer items-center gap-2.5 rounded-md px-4 text-left font-mono text-sm leading-7 outline-0',
-    isSelected ? 'bg-base-100' : 'hover:bg-neutral-800',
+    isSelected ? 'bg-surface-100' : 'hover:bg-neutral-800',
   ]}
   {onclick}
 >
@@ -38,7 +38,7 @@
     <span class="flex shrink-0 items-center gap-2">
       {#if namespace}
         <span
-          class="shrink-0 rounded-sm bg-base-300 px-[5px] py-[3px] text-xs leading-none"
+          class="shrink-0 rounded-sm bg-surface-root px-[5px] py-[3px] text-xs leading-none"
         >
           {namespace}
         </span>

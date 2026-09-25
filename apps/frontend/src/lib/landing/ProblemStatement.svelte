@@ -43,7 +43,7 @@
       </div>
 
       <div
-        class="to-base-200 pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent"
+        class="to-surface-elevated pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent"
       ></div>
     </StagePanel>
   </div>

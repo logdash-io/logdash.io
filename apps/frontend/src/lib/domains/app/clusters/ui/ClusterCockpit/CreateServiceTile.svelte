@@ -23,7 +23,7 @@
   <button
     onclick={onOpenForm}
     class={[
-      'text-neutral-400 hover:text-base-content flex h-full min-h-24 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed text-sm transition-ink duration-150',
+      'text-neutral-400 hover:text-fg-default flex h-full min-h-24 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed text-sm transition-ink duration-150',
       isFormOpen ? 'border-neutral-600' : 'border-neutral-700',
     ]}
   >

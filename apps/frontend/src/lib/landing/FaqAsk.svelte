@@ -43,7 +43,7 @@
               href="https://discord.gg/naftPW4Hxe"
               target="_blank"
               rel="noreferrer"
-              class="link link-hover text-base-content"
+              class="text-fg-default hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               ask us on Discord.
             </a>
@@ -69,7 +69,7 @@
 
   <button
     type="submit"
-    class="text-neutral-600 enabled:text-base-content enabled:hover:bg-surface-root-hover transition-ink -mr-1 grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg outline-none focus-visible:shadow-(--focus-ring) disabled:cursor-default"
+    class="text-neutral-600 enabled:text-fg-default enabled:hover:bg-surface-hover transition-ink -mr-1 grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg outline-none focus-visible:shadow-(--focus-ring) disabled:cursor-default"
     aria-label="Send question"
     data-posthog-id="faq-ask-submit"
     disabled={!canSend}

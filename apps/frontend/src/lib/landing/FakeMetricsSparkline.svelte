@@ -244,12 +244,12 @@
           <linearGradient id="{id}-fill" x1="0" y1="0" x2="0" y2="1">
             <stop
               offset="0%"
-              stop-color="var(--color-primary)"
+              stop-color="var(--color-brand)"
               stop-opacity="0.28"
             />
             <stop
               offset="100%"
-              stop-color="var(--color-primary)"
+              stop-color="var(--color-brand)"
               stop-opacity="0"
             />
           </linearGradient>
@@ -296,7 +296,7 @@
         <g bind:this={plot} transform="translate({-STEP} 0)">
           <g clip-path="url(#{id}-under)">
             <polygon points={areaPoints} fill="url(#{id}-fill)" />
-            {@render line('var(--color-primary)')}
+            {@render line('var(--color-brand)')}
           </g>
 
           <g clip-path="url(#{id}-over)">
@@ -307,7 +307,7 @@
           {#each markers as marker (marker)}
             <path
               d={marker}
-              stroke="var(--color-base-200)"
+              stroke="var(--color-surface-elevated)"
               stroke-width="12"
               stroke-linecap="round"
               vector-effect="non-scaling-stroke"

@@ -13,6 +13,7 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
+  import { Button, Spinner } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon, CircleAlertIcon } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { prefersReducedMotion } from 'svelte/motion';
@@ -155,7 +156,7 @@
   <div
     bind:this={composer}
     class={[
-      'inset-ring-base-100 bg-base-300 flex w-full cursor-text items-center gap-2 rounded-full p-2 inset-ring',
+      'inset-ring-border-default bg-surface-root flex w-full cursor-text items-center gap-2 rounded-full p-2 inset-ring',
       'transition-shadow duration-150',
       'hover:not-focus-within:inset-ring-neutral-700',
       'focus-within:inset-ring-neutral-600 focus-within:shadow-(--focus-ring)',
@@ -201,10 +202,12 @@
       </span>
     </div>
 
-    <button
+    <Button
       type="submit"
+      variant="primary"
+      size="sm"
       class={[
-        'btn btn-primary btn-sm shrink-0 rounded-full font-medium',
+        'shrink-0 font-medium',
         compact ? 'h-9 px-4' : 'h-11 px-5 text-sm sm:text-base',
       ]}
       data-posthog-id={submitPosthogId}
@@ -212,11 +215,11 @@
     >
       Start monitoring
       {#if isCreating}
-        <span class="loading loading-spinner loading-xs"></span>
+        <Spinner size="xs" aria-hidden="true" />
       {:else}
         <ArrowRightIcon class="size-4" />
       {/if}
-    </button>
+    </Button>
   </div>
 
   <!--

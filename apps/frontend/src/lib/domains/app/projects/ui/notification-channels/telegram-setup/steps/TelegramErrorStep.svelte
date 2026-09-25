@@ -1,5 +1,6 @@
 <script lang="ts">
   import { DangerIcon } from '@logdash/hyper-ui/icons';
+  import { Button } from '@logdash/hyper-ui/presentational';
 
   interface Props {
     errorMessage: string;
@@ -31,11 +32,9 @@
   </span>
 
   <div class="flex gap-3">
-    <button type="button" class="btn btn-secondary flex-1" onclick={onCancel}>
-      Cancel
-    </button>
-    <button type="button" class="btn btn-primary flex-1" onclick={onRetry}>
+    <Button variant="primary" class="flex-1" onclick={onCancel}>Cancel</Button>
+    <Button variant="primary" class="flex-1" onclick={onRetry}>
       Try Again
-    </button>
+    </Button>
   </div>
 </div>

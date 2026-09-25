@@ -21,7 +21,7 @@
         <li>
           <a
             href={resolve('/')}
-            class="hover:text-base-content transition-ink duration-150"
+            class="hover:text-fg-default transition-ink duration-150"
           >
             Home
           </a>

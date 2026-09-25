@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Spinner } from '@logdash/hyper-ui/presentational';
   import * as d3 from 'd3';
   import { onMount } from 'svelte';
 
@@ -204,9 +205,10 @@
 
 <div class="chart-wrapper relative">
   {#if isLoading}
-    <div
-      class="text-primary loading loading-sm absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-    ></div>
+    <Spinner
+      size="sm"
+      class="text-brand absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+    />
   {/if}
 
   {#if !isLoading && data.length === 0}
@@ -217,7 +219,7 @@
     </div>
   {/if}
   <div class="chart-container w-full" bind:this={chartContainer}></div>
-  <div class="tooltip" bind:this={tooltip}></div>
+  <div class="point-tooltip" bind:this={tooltip}></div>
 </div>
 
 <style>
@@ -229,10 +231,10 @@
     height: auto;
     min-height: 200px;
   }
-  .tooltip {
+  .point-tooltip {
     position: absolute;
     visibility: hidden;
-    background-color: var(--color-base-300);
+    background-color: var(--color-surface-root);
     color: white;
     padding: 6px 10px;
     border-radius: 4px;

@@ -102,9 +102,8 @@
   const tabClass = (active: boolean): ClassValue => [
     'flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm',
     {
-      'bg-surface-root-selected text-base-content': active,
-      'text-neutral-400 hover:text-base-content hover:bg-surface-root-hover':
-        !active,
+      'bg-surface-100 text-fg-default': active,
+      'text-neutral-400 hover:text-fg-default hover:bg-surface-hover': !active,
     },
   ];
 </script>

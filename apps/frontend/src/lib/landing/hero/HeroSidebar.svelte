@@ -7,6 +7,7 @@
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import PublicDashboardIcon from '$lib/domains/shared/icons/PublicDashboardIcon.svelte';
   import SettingsIcon from '$lib/domains/shared/icons/SettingsIcon.svelte';
+  import { Spinner } from '@logdash/hyper-ui/presentational';
   import { ChevronsUpDownIcon, SearchIcon, UserRoundIcon } from 'lucide-svelte';
   import type { Component } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
@@ -72,19 +73,19 @@
   function rowClass(active: boolean): ClassValue {
     return [
       'flex h-8 items-center gap-2 rounded-lg px-2 text-sm',
-      active ? 'bg-base-100 text-base-content' : 'text-neutral-400',
+      active ? 'bg-surface-100 text-fg-default' : 'text-neutral-400',
     ];
   }
 </script>
 
 <aside
-  class="border-hairline bg-base-300 hidden w-64 shrink-0 flex-col border-r xl:flex"
+  class="border-hairline bg-surface-root hidden w-64 shrink-0 flex-col border-r xl:flex"
   aria-hidden="true"
 >
   <div class="flex items-center gap-1 px-4 pt-3">
     <div class="flex min-w-0 flex-1 items-center gap-2 py-1 pr-2 pl-1">
       <span
-        class="border-base-100 bg-base-200 flex size-6 shrink-0 items-center justify-center rounded-md border"
+        class="border-border-default bg-surface-elevated flex size-6 shrink-0 items-center justify-center rounded-md border"
       >
         <CubeIcon class="size-3.5" />
       </span>
@@ -108,7 +109,7 @@
 
   <div class="px-4 pt-3">
     <div
-      class="border-base-100 bg-base-200 text-neutral-500 flex h-8 items-center gap-2 rounded-lg border px-2.5 text-sm"
+      class="border-border-default bg-surface-elevated text-neutral-500 flex h-8 items-center gap-2 rounded-lg border px-2.5 text-sm"
     >
       <SearchIcon class="size-3.5 shrink-0 text-neutral-600" />
       <span class="flex-1">Search</span>
@@ -129,9 +130,7 @@
       <HexagonIcon class="size-4 shrink-0" />
       <TypewriterText text={service.name} />
       {#if service.pending}
-        <span
-          class="loading loading-spinner text-neutral-500 ml-auto size-3 shrink-0"
-        ></span>
+        <Spinner class="text-neutral-500 ml-auto size-3 shrink-0" />
       {:else}
         <span
           class={[
@@ -153,7 +152,7 @@
   <div class="mt-auto px-4 py-3">
     <div class="flex items-center gap-2.5 px-1 py-1">
       <span
-        class="bg-base-100 flex size-7 shrink-0 items-center justify-center rounded-full"
+        class="bg-surface-100 flex size-7 shrink-0 items-center justify-center rounded-full"
       >
         <UserRoundIcon class="text-neutral-400 size-3.5" />
       </span>

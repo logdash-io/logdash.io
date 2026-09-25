@@ -3,10 +3,11 @@
   import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
   import MinusIcon from '$lib/domains/shared/icons/MinusIcon.svelte';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import { FEATURES_COMPARISON } from './feature-comparison.config.js';
 
   const LABEL_CELL =
-    'bg-base-300 px-4 text-left max-md:sticky max-md:left-0 max-md:z-10 max-md:shadow-[inset_-1px_0_0_var(--color-hairline)] sm:px-6 lg:px-10';
+    'bg-surface-root px-4 text-left max-md:sticky max-md:left-0 max-md:z-10 max-md:shadow-[inset_-1px_0_0_var(--color-hairline)] sm:px-6 lg:px-10';
 </script>
 
 <div class="relative overflow-x-auto">
@@ -32,17 +33,15 @@
             <span class="text-neutral-400 mt-1 block tabular-nums">
               {plan.price}
             </span>
-            <!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus the tier query -->
-            <a
+            <Button
               href={`${resolve('/app/auth')}?tier=${plan.tier}`}
-              class={[
-                'btn btn-sm mt-5 w-full rounded-full font-medium',
-                plan.popular ? 'btn-primary' : 'btn-subtle',
-              ]}
+              variant={plan.popular ? 'primary' : 'subtle'}
+              size="sm"
+              block
+              class="mt-5 font-medium"
             >
               {plan.buttonText}
-            </a>
-            <!-- eslint-enable svelte/no-navigation-without-resolve -->
+            </Button>
           </th>
         {/each}
       </tr>
@@ -74,7 +73,7 @@
               {@const value = feature[plan.tier]}
               <td class="border-hairline border-l px-4 py-3 lg:px-6">
                 {#if value === true}
-                  <CheckIcon class="text-base-content size-4" />
+                  <CheckIcon class="text-fg-default size-4" />
                   <span class="sr-only">Included</span>
                 {:else if value === false}
                   <MinusIcon class="text-neutral-700 size-4" />

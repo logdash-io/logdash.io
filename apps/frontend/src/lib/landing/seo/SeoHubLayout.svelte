@@ -123,7 +123,7 @@
                 </span>
               </span>
               <ChevronRightIcon
-                class="text-neutral-600 group-hover:text-base-content ml-auto size-4 shrink-0 transition-ink duration-150"
+                class="text-neutral-600 group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
               />
             </a>
           {/each}

@@ -148,7 +148,7 @@
     />
 
     <div
-      class="flex w-full flex-col divide-y divide-hairline border-t border-base-100"
+      class="flex w-full flex-col divide-y divide-hairline border-t border-border-default"
     >
       <NotificationChannelsSection {monitorId} />
       <SettingsCardItem

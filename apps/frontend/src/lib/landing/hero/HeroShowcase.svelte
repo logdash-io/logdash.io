@@ -5,7 +5,7 @@
   import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
   import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
   import SettingsIcon from '$lib/domains/shared/icons/SettingsIcon.svelte';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { Spinner, Tooltip } from '@logdash/hyper-ui/presentational';
   import { Maximize2Icon, Minimize2Icon } from 'lucide-svelte';
   import { flushSync, type Component } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
@@ -62,7 +62,7 @@
   const HIDDEN_SCALE = 0.96;
   const FADE_SPAN = 0.6;
   const WINDOW_BUTTON_CLASS =
-    'text-neutral-400 hover:text-base-content hover:bg-base-100 focus-visible:outline-neutral-500 -mr-1.5 flex size-7 shrink-0 items-center justify-center rounded-md transition-ink duration-150 focus-visible:outline-2';
+    'text-neutral-400 hover:text-fg-default hover:bg-surface-100 focus-visible:outline-neutral-500 -mr-1.5 flex size-7 shrink-0 items-center justify-center rounded-md transition-ink duration-150 focus-visible:outline-2';
   const FULL_FRAME: FrameStyle = {
     inset: '0px',
     borderRadius: '0px',
@@ -423,7 +423,7 @@
       aria-label="Your dashboard"
       tabindex="-1"
       class={[
-        'ring-hairline bg-base-200 text-base-content flex h-auto max-h-none max-w-none shadow-[0_32px_64px_-24px_rgba(0,0,0,0.7)] ring-1 outline-none backdrop:right-auto backdrop:w-screen backdrop:bg-base-300',
+        'ring-hairline bg-surface-elevated text-fg-default flex h-auto max-h-none max-w-none shadow-[0_32px_64px_-24px_rgba(0,0,0,0.7)] ring-1 outline-none backdrop:right-auto backdrop:w-screen backdrop:bg-surface-root',
         full
           ? 'fixed inset-0 mr-[calc(100%-100vw)] w-auto rounded-none overscroll-contain'
           : 'relative w-full rounded-xl lg:aspect-video',
@@ -444,7 +444,7 @@
                 class={[
                   'flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-sm',
                   tab.active
-                    ? 'bg-base-100 text-base-content'
+                    ? 'bg-surface-100 text-fg-default'
                     : 'text-neutral-500',
                 ]}
               >
@@ -459,7 +459,7 @@
               {showcaseClusterName(phase)}
               <span class="text-neutral-700">/</span>
             </span>
-            <TypewriterText text={host} class="text-base-content font-medium" />
+            <TypewriterText text={host} class="text-fg-default font-medium" />
           </span>
 
           <span
@@ -468,7 +468,7 @@
             {#if status.dotClass}
               <span class={['size-1.5 rounded-full', status.dotClass]}></span>
             {:else}
-              <span class="loading loading-spinner size-3"></span>
+              <Spinner class="size-3" aria-hidden="true" />
             {/if}
             {status.label}
           </span>
@@ -505,7 +505,7 @@
         </div>
 
         <div class="bg-hairline flex min-h-0 flex-1 gap-px">
-          <div class="bg-base-200 flex min-h-0 min-w-0 flex-1 flex-col">
+          <div class="bg-surface-elevated flex min-h-0 min-w-0 flex-1 flex-col">
             <div class="border-hairline shrink-0 border-b">
               <HeroMonitorTile />
             </div>
@@ -513,7 +513,7 @@
             <HeroLogsPanel rows={LOG_ROWS} fit={full || largeFrame.current} />
           </div>
 
-          <div class="bg-base-200 hidden w-64 shrink-0 lg:flex xl:w-72">
+          <div class="bg-surface-elevated hidden w-64 shrink-0 lg:flex xl:w-72">
             <HeroMetricsColumn />
           </div>
         </div>
@@ -528,7 +528,7 @@
 
 {#snippet backHint()}
   <span
-    class="bg-base-100 flex items-center gap-2 rounded-lg py-1 pr-1.5 pl-3 text-sm whitespace-nowrap text-white shadow"
+    class="bg-surface-100 flex items-center gap-2 rounded-lg py-1 pr-1.5 pl-3 text-sm whitespace-nowrap text-white shadow"
   >
     Back to site
     <kbd

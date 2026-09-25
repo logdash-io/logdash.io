@@ -4,6 +4,12 @@
   import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
   import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
+  import {
+    Button,
+    Checkbox,
+    Input,
+    Spinner,
+  } from '@logdash/hyper-ui/presentational';
   import { Feature } from '$lib/domains/shared/types.js';
   import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
   import { goto } from '$app/navigation';
@@ -116,16 +122,17 @@
 >
   <div class="flex items-center justify-between">
     <h3 class="font-medium text-sm">New service</h3>
-    <button class="btn btn-ghost btn-xs btn-circle" onclick={onClose}>
+    <Button variant="ghost" size="xs" shape="circle" onclick={onClose}>
       <CloseIcon class="size-4" />
-    </button>
+    </Button>
   </div>
 
-  <input
+  <Input
     id={inputId}
     type="text"
     placeholder="Service name"
-    class="input input-sm input-bordered w-full"
+    size="sm"
+    class="w-full"
     bind:value={serviceName}
     onkeydown={onKeyDown}
     maxlength={64}
@@ -138,12 +145,12 @@
         <label
           class={[
             'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
-            { 'text-primary': isFeatureEnabled(feature) },
+            { 'text-brand': isFeatureEnabled(feature) },
           ]}
         >
-          <input
-            type="checkbox"
-            class="checkbox checkbox-primary checkbox-xs"
+          <Checkbox
+            size="xs"
+            variant="primary"
             checked={isFeatureEnabled(feature)}
             onchange={() => onToggleFeature(feature)}
           />
@@ -155,18 +162,20 @@
   </div>
 
   <div class="flex items-center gap-1.5">
-    <button
-      class="btn btn-primary btn-sm flex-1"
+    <Button
+      variant="primary"
+      size="sm"
+      class="flex-1"
       onclick={onCreateService}
       disabled={!canCreate}
     >
       {#if isCreating}
-        <span class="loading loading-spinner loading-xs"></span>
+        <Spinner size="xs" aria-hidden="true" />
         Creating...
       {:else}
         Create
       {/if}
-    </button>
-    <button class="btn btn-ghost btn-sm" onclick={onClose}>Cancel</button>
+    </Button>
+    <Button variant="ghost" size="sm" onclick={onClose}>Cancel</Button>
   </div>
 </div>

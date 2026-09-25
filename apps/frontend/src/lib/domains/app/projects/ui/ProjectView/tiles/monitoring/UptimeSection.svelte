@@ -27,7 +27,7 @@
     {#if !isPaid}
       <div class="absolute inset-0 z-10 -mt-6 flex items-center justify-center">
         <div
-          class="text-primary flex h-full w-full items-center justify-center bg-gradient-to-b from-transparent via-base-200/60 to-transparent backdrop-blur-[2px] px-4 py-2"
+          class="text-brand flex h-full w-full items-center justify-center bg-gradient-to-b from-transparent via-surface-elevated/60 to-transparent backdrop-blur-[2px] px-4 py-2"
         >
           <div class="w-fit">
             <UpgradeButton source="monitor-historical-uptime">
@@ -42,7 +42,7 @@
       <div class="flex items-center gap-2">
         <span class="text-neutral-300">
           {uptimeLabel} Uptime:
-          <span class="font-mono font-medium text-base-content">
+          <span class="font-mono font-medium text-fg-default">
             {uptime?.toFixed(2)}%
           </span>
         </span>

@@ -30,7 +30,7 @@
       href={data.doc.sourceRef.url}
       target="_blank"
       rel="noopener noreferrer"
-      class="text-neutral-400 hover:text-base-content underline underline-offset-2 transition-ink duration-150"
+      class="text-neutral-400 hover:text-fg-default underline underline-offset-2 transition-ink duration-150"
     >
       <!-- eslint-enable svelte/no-navigation-without-resolve -->
       {data.doc.repo} README at {shortSha}

@@ -70,7 +70,7 @@
               <li>
                 <a
                   {...linkAttrs(link)}
-                  class="text-neutral-300 hover:text-base-content flex h-7 w-fit items-center gap-1.5 text-sm transition-ink duration-150"
+                  class="text-neutral-300 hover:text-fg-default flex h-7 w-fit items-center gap-1.5 text-sm transition-ink duration-150"
                   draggable="false"
                 >
                   {link.title}
@@ -97,7 +97,7 @@
               target="_blank"
               rel="noopener noreferrer"
               aria-label={social.label}
-              class="text-neutral-500 hover:text-base-content flex size-6 items-center justify-center transition-ink duration-150"
+              class="text-neutral-500 hover:text-fg-default flex size-6 items-center justify-center transition-ink duration-150"
               draggable="false"
             >
               <Icon class="size-4" />
@@ -113,7 +113,7 @@
         {#each FOOTER_LEGAL as link (link.title)}
           <a
             {...linkAttrs(link)}
-            class="hover:text-base-content transition-ink duration-150"
+            class="hover:text-fg-default transition-ink duration-150"
             draggable="false"
           >
             {link.title}

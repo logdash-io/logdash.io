@@ -168,13 +168,13 @@
 
     <span class="flex min-w-0 items-center">
       {#if query}
-        <span class="text-base-content">{query}</span>
+        <span class="text-fg-default">{query}</span>
       {:else if !searching}
         <span class="text-neutral-500">Search logs</span>
       {/if}
 
       {#if searching}
-        <span class="bg-base-content ml-px h-4 w-px animate-pulse"></span>
+        <span class="bg-surface-inverse ml-px h-4 w-px animate-pulse"></span>
       {/if}
     </span>
 
@@ -220,7 +220,7 @@
             >
               {@render columnSpacers()}
               <div
-                class="ring-hairline bg-base-300 flex min-w-0 flex-1 flex-col gap-1 rounded-md px-3 py-2.5 font-mono text-xs ring-1"
+                class="ring-hairline bg-surface-root flex min-w-0 flex-1 flex-col gap-1 rounded-md px-3 py-2.5 font-mono text-xs ring-1"
               >
                 {#each FAILURE_DETAIL as [key, value] (key)}
                   <div class="flex gap-3">
@@ -241,7 +241,7 @@
   <div
     class={[
       'flex items-center gap-3 rounded-md px-2 py-0.5 font-mono text-[13px]',
-      { 'bg-base-100': row.key === openedKey },
+      { 'bg-surface-100': row.key === openedKey },
     ]}
   >
     <span class="text-neutral-600 w-16 shrink-0 tabular-nums max-sm:hidden">
@@ -272,7 +272,7 @@
   {:else}
     <span class="flex min-w-0 whitespace-pre">
       <span class="shrink-0">{message.slice(0, start)}</span>
-      <mark class="bg-neutral-700 text-base-content shrink-0 rounded-[2px]">
+      <mark class="bg-neutral-700 text-fg-default shrink-0 rounded-[2px]">
         {message.slice(start, start + filter.length)}
       </mark>
       <span class="min-w-0 overflow-hidden text-ellipsis">

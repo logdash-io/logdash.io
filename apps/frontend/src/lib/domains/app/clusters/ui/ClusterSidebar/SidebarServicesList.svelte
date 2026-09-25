@@ -14,7 +14,12 @@
   import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
   import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
   import { Feature } from '$lib/domains/shared/types.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import {
+    Button,
+    Checkbox,
+    Input,
+    Tooltip,
+  } from '@logdash/hyper-ui/presentational';
   import { fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import SidebarMenuItem from './SidebarMenuItem.svelte';
@@ -199,11 +204,12 @@
           class="flex flex-col gap-2 p-2 mt-1 ld-card-bg ld-card-border rounded-lg"
           in:fly={{ y: -5, duration: 200, easing: cubicOut }}
         >
-          <input
+          <Input
             id="new-service-name-input"
             type="text"
             placeholder="Service name"
-            class="input input-sm input-bordered w-full"
+            size="sm"
+            class="w-full"
             bind:value={serviceName}
             onkeydown={onKeyDown}
             maxlength={64}
@@ -214,12 +220,12 @@
               <label
                 class={[
                   'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
-                  { 'text-primary': isFeatureEnabled(feature) },
+                  { 'text-brand': isFeatureEnabled(feature) },
                 ]}
               >
-                <input
-                  type="checkbox"
-                  class="checkbox checkbox-primary checkbox-xs"
+                <Checkbox
+                  size="xs"
+                  variant="primary"
                   checked={isFeatureEnabled(feature)}
                   onchange={() => onToggleFeature(feature)}
                 />
@@ -230,20 +236,19 @@
           </div>
 
           <div class="flex items-center gap-1.5 mt-1">
-            <button
-              class="btn btn-primary btn-xs flex-1"
+            <Button
+              variant="primary"
+              size="xs"
+              class="flex-1"
               onclick={onCreateService}
-              disabled={!canCreate || isCreating}
+              disabled={!canCreate}
+              loading={isCreating}
             >
-              {#if isCreating}
-                <span class="loading loading-spinner loading-xs"></span>
-              {:else}
-                Create
-              {/if}
-            </button>
-            <button class="btn btn-ghost btn-xs" onclick={onCloseForm}>
+              Create
+            </Button>
+            <Button variant="ghost" size="xs" onclick={onCloseForm}>
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       {:else}

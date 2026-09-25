@@ -6,7 +6,7 @@
   import LogsSearchInput from './LogsSearchInput.svelte';
   import LogsFilterDropdown from './filters/LogsFilterDropdown.svelte';
   import LogsFilterChips from './filters/LogsFilterChips.svelte';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { Button, Spinner, Tooltip } from '@logdash/hyper-ui/presentational';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
@@ -50,15 +50,17 @@
       content={timeDisplayState.isRelative ? 'Relative time' : 'Absolute time'}
       placement="top"
     >
-      <button
-        class="btn btn-ghost btn-xs gap-1 px-1.5"
+      <Button
+        variant="ghost"
+        size="xs"
+        class="gap-1 px-1.5"
         onclick={() => timeDisplayState.toggle()}
       >
         <ClockIcon class="size-3.5 shrink-0" />
         <span class="text-neutral-400 font-mono text-xs">
           {timeDisplayState.isRelative ? 'REL' : 'ABS'}
         </span>
-      </button>
+      </Button>
     </Tooltip>
 
     <Tooltip
@@ -69,11 +71,11 @@
         {#if logsState.shouldFiltersBlockSync}
           <PauseCircleIcon
             class="size-4 shrink-0 sm:h-5 sm:w-5"
-            stroke="stroke-warning-content"
+            stroke="stroke-warning"
           />
         {:else}
           <div class="flex items-center gap-2">
-            <span class="loading loading-ring loading-sm"></span>
+            <Spinner variant="ring" size="sm" aria-label="Sync active" />
           </div>
         {/if}
       </div>

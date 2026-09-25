@@ -7,6 +7,7 @@
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { ArrowRightIcon } from 'lucide-svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import StatusPageDemo from './StatusPageDemo.svelte';
 
   type Props = {
@@ -52,7 +53,7 @@
     <StatusPageDemo />
 
     <div
-      class="absolute h-4/5 bottom-11 w-full bg-gradient-to-b from-transparent to-base-300"
+      class="absolute h-4/5 bottom-11 w-full bg-gradient-to-b from-transparent to-surface-root"
     ></div>
   </div>
 
@@ -67,18 +68,16 @@
 
     <div class="flex flex-col gap-3">
       {#if canCreate}
-        <button
+        <Button
+          variant="primary"
+          class="gap-2"
+          loading={isCreating}
           onclick={onCreate}
-          disabled={isCreating}
-          class="btn btn-primary gap-2"
           data-posthog-id="create-status-page-button"
         >
-          {#if isCreating}
-            <span class="loading loading-spinner loading-xs"></span>
-          {/if}
           Create your status page
           <ArrowRightIcon class="size-4" />
-        </button>
+        </Button>
       {:else}
         <UpgradeButton source="status-page-limit">
           Upgrade to create more status pages

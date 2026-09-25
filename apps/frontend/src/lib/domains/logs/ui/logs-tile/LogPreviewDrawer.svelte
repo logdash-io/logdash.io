@@ -3,6 +3,7 @@
   import { LOG_LEVELS_MAP } from '../../domain/log-level-metadata.js';
   import type { LogLevel } from '../../domain/log-level.js';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import { DateTime } from 'luxon';
   import { fly, fade } from 'svelte/transition';
@@ -88,14 +89,14 @@
 
 {#if logPreviewState.isOpen && log}
   <button
-    class="absolute inset-0 z-10 bg-gradient-to-t from-base-300/80 via-95% via-base-300/80 to-base-200"
+    class="absolute inset-0 z-10 bg-gradient-to-t from-surface-root/80 via-95% via-surface-root/80 to-surface-elevated"
     onclick={onBackdropClick}
     transition:fade={{ duration: 150 }}
     aria-label="Close preview"
   ></button>
 
   <div
-    class="absolute inset-x-0 bottom-0 z-20 flex max-h-[60%] flex-col rounded-t-3xl border-t border-base-100 bg-base-200"
+    class="absolute inset-x-0 bottom-0 z-20 flex max-h-[60%] flex-col rounded-t-3xl border-t border-border-default bg-surface-elevated"
     transition:fly={{ y: 200, duration: 200 }}
   >
     <div
@@ -116,8 +117,8 @@
               class={[
                 'rounded px-1.5 py-0.5 text-xs cursor-pointer outline-0',
                 {
-                  'bg-base-300 hover:bg-base-100': !isNamespaceLocked,
-                  'bg-primary/20 ring-1 ring-primary': isNamespaceLocked,
+                  'bg-surface-root hover:bg-surface-100': !isNamespaceLocked,
+                  'bg-surface-150 ring-1 ring-brand': isNamespaceLocked,
                 },
               ]}
               onclick={onNamespaceClick}
@@ -130,46 +131,52 @@
       </div>
 
       <div
-        class="flex items-center gap-0.5 rounded-lg bg-base-300 p-0.5 mr-auto ml-2 border border-base-100"
+        class="flex items-center gap-0.5 rounded-lg bg-surface-root p-0.5 mr-auto ml-2 border border-border-default"
       >
-        <button
-          class="btn btn-ghost btn-xs btn-circle"
+        <Button
+          variant="ghost"
+          size="xs"
+          shape="circle"
           onclick={onPrev}
           disabled={!logPreviewState.hasPrevSameType}
           aria-label="Previous {levelLabel}"
         >
           <ChevronRightIcon class="size-4 rotate-180" />
-        </button>
+        </Button>
 
         <span class="text-neutral-400 hidden px-2 font-mono text-xs md:block">
           {currentPosition}/{sameTypeCount}
         </span>
 
-        <button
-          class="btn btn-ghost btn-xs btn-circle"
+        <Button
+          variant="ghost"
+          size="xs"
+          shape="circle"
           onclick={onNext}
           disabled={!logPreviewState.hasNextSameType}
           aria-label="Next {levelLabel}"
         >
           <ChevronRightIcon class="size-4" />
-        </button>
+        </Button>
       </div>
 
       <div class="flex items-center gap-1">
-        <button
-          class="btn btn-ghost btn-xs btn-circle"
+        <Button
+          variant="ghost"
+          size="xs"
+          shape="circle"
           onclick={onClose}
           aria-label="Close"
         >
           <CloseIcon class="size-5" />
-        </button>
+        </Button>
       </div>
     </div>
 
     <div class="flex-1 overflow-y-auto p-5">
       {#if formattedMessage.isJson}
         <pre
-          class="overflow-x-auto rounded-lg bg-base-300 p-4 font-mono text-xs">{formattedMessage.content}</pre>
+          class="overflow-x-auto rounded-lg bg-surface-root p-4 font-mono text-xs">{formattedMessage.content}</pre>
       {:else}
         <p class="whitespace-pre-wrap break-words font-mono text-sm">
           {formattedMessage.content}

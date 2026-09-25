@@ -213,7 +213,7 @@
         {#each rows as mention (mention.key)}
           <div class="border-hairline flex gap-3 border-b py-3.5">
             <img
-              class="bg-base-100 size-8 shrink-0 rounded-full object-cover grayscale"
+              class="bg-surface-100 size-8 shrink-0 rounded-full object-cover grayscale"
               src={mention.avatar}
               alt=""
               width="32"

@@ -13,6 +13,7 @@
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
+  import { Button, Input, Spinner } from '@logdash/hyper-ui/presentational';
   import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
   import HashIcon from '$lib/domains/shared/icons/HashIcon.svelte';
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
@@ -193,7 +194,7 @@
       </p>
       {#snippet action()}
         {#if projectsState.isLoadingApiKey(projectId)}
-          <span class="loading loading-spinner loading-sm"></span>
+          <Spinner size="sm" />
         {:else}
           <CopyIcon class="size-5 text-neutral-400" />
         {/if}
@@ -210,9 +211,10 @@
     <SettingsCardItem icon={EditIcon} showBorder={true}>
       <p class="text-neutral-400 text-sm">Service Name</p>
       {#if isEditingName}
-        <input
+        <Input
           bind:value={newName}
-          class="input input-sm mt-1 w-64"
+          size="sm"
+          class="mt-1 w-64"
           placeholder="Enter service name"
           onkeydown={onKeyDown}
         />
@@ -221,31 +223,31 @@
       {/if}
       {#snippet action()}
         {#if isEditingName}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onclick={onCancelRenaming}
-            class="btn btn-ghost btn-sm"
             disabled={projectsState.isUpdatingProject(projectId)}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             onclick={onSaveRename}
-            class="btn btn-primary btn-sm"
-            disabled={projectsState.isUpdatingProject(projectId)}
+            loading={projectsState.isUpdatingProject(projectId)}
           >
-            {#if projectsState.isUpdatingProject(projectId)}
-              <span class="loading loading-spinner loading-xs"></span>
-            {:else}
-              Save
-            {/if}
-          </button>
+            Save
+          </Button>
         {:else}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            class="text-neutral-400"
             onclick={onStartRenaming}
-            class="btn btn-ghost btn-sm text-neutral-400"
           >
             Rename
-          </button>
+          </Button>
         {/if}
       {/snippet}
     </SettingsCardItem>
@@ -254,12 +256,15 @@
       <p class="text-neutral-400 text-sm">Service ID</p>
       <p class="font-mono text-sm">{projectId}</p>
       {#snippet action()}
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
+          class="text-neutral-400"
+          aria-label="Copy service ID"
           onclick={onCopyServiceId}
-          class="btn btn-ghost btn-sm text-neutral-400"
         >
           <CopyIcon class="size-4" />
-        </button>
+        </Button>
       {/snippet}
     </SettingsCardItem>
   </SettingsCard>
@@ -280,19 +285,17 @@
           <p class="font-medium">{feature.label}</p>
           <p class="text-neutral-400 text-sm">{feature.description}</p>
           {#snippet action()}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onclick={() => onAddFeature(feature.id, feature.route)}
               disabled={addingFeature !== null}
-              class="btn btn-primary btn-outline btn-sm"
+              loading={addingFeature === feature.id}
               data-posthog-id="add-feature-settings-button"
             >
-              {#if addingFeature === feature.id}
-                <span class="loading loading-spinner loading-xs"></span>
-              {:else}
-                <PlusIcon class="size-4" />
-                Add
-              {/if}
-            </button>
+              <PlusIcon class="size-4" />
+              Add
+            </Button>
           {/snippet}
         </SettingsCardItem>
       {/each}
@@ -318,17 +321,14 @@
           Permanently delete this service and all its data
         </p>
         {#snippet action()}
-          <button
+          <Button
+            variant="danger-ghost"
+            size="sm"
             onclick={onDeleteService}
-            disabled={projectsState.isDeletingProject(projectId)}
-            class="btn btn-error btn-outline btn-sm"
+            loading={projectsState.isDeletingProject(projectId)}
           >
-            {#if projectsState.isDeletingProject(projectId)}
-              <span class="loading loading-spinner loading-xs"></span>
-            {:else}
-              Delete
-            {/if}
-          </button>
+            Delete
+          </Button>
         {/snippet}
       </SettingsCardItem>
     </div>

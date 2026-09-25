@@ -2,6 +2,13 @@
   import { resolve } from '$app/paths';
   import { cubicInOut } from 'svelte/easing';
   import { scale } from 'svelte/transition';
+  import {
+    Button,
+    Card,
+    CardActions,
+    CardBody,
+    CardTitle,
+  } from '@logdash/hyper-ui/presentational';
 </script>
 
 <div
@@ -15,20 +22,20 @@
     start: 1.1,
     easing: cubicInOut,
   }}
-  class="bg-base-300 flex min-h-screen w-full items-center justify-center"
+  class="bg-surface-root flex min-h-screen w-full items-center justify-center"
 >
-  <div class="card ld-card-base w-96 rounded-xl">
-    <div class="card-body items-center gap-4 p-6 text-center">
-      <h2 class="card-title text-3xl font-bold">Success 🎉</h2>
+  <Card class="ld-card-base w-96">
+    <CardBody class="items-center gap-4 p-6 text-center">
+      <CardTitle class="text-3xl font-bold">Success 🎉</CardTitle>
       <p class="text-neutral-400">
         Thank you for your trust in our service. We'll be in touch shortly.
       </p>
 
-      <div class="card-actions w-full justify-center gap-2 rounded-xl">
-        <a href={resolve('/app/clusters')} class="btn btn-sm btn-primary">
+      <CardActions class="w-full justify-center gap-2 rounded-xl">
+        <Button href={resolve('/app/clusters')} variant="primary" size="sm">
           Continue
-        </a>
-      </div>
-    </div>
-  </div>
+        </Button>
+      </CardActions>
+    </CardBody>
+  </Card>
 </div>

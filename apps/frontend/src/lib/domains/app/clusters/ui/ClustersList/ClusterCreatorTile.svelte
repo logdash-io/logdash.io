@@ -4,6 +4,7 @@
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { fly } from 'svelte/transition';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
+  import { Badge } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     canAddMore: boolean;
@@ -36,9 +37,9 @@
     >
       <h5 class="text-lg font-medium">Create new project</h5>
 
-      <div class="badge badge-lg badge-soft badge-primary rounded-full">
+      <Badge size="lg">
         <PlusIcon class="h-4 w-4" />
-      </div>
+      </Badge>
     </button>
   {:else}
     <div class="flex w-full items-center justify-between gap-2 px-8">

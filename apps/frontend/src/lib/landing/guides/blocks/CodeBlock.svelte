@@ -103,7 +103,7 @@
     type="button"
     onclick={onCopy}
     aria-label={copied ? 'Copied' : 'Copy code'}
-    class="text-neutral-600 hover:text-base-content bg-base-300 flex size-7 items-center justify-center rounded-md transition-ink duration-150"
+    class="text-neutral-600 hover:text-fg-default bg-surface-root flex size-7 items-center justify-center rounded-md transition-ink duration-150"
   >
     {#if copied}
       <CheckIcon class="size-3.5" />

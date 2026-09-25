@@ -6,6 +6,7 @@
   import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
   import { DangerIcon, CheckIcon } from '@logdash/hyper-ui/icons';
+  import { Spinner } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     projectId: string;
@@ -71,7 +72,7 @@
 
 {#if loading}
   <div class="size-6 flex items-center justify-center">
-    <div class="loading loading-spinner w-3.5 text-neutral-400"></div>
+    <Spinner class="size-3.5 text-neutral-400" />
   </div>
 {:else if errorCount > 0}
   <button

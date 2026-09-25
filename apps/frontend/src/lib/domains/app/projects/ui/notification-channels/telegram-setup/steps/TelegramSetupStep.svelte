@@ -4,6 +4,7 @@
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import { browser } from '$app/environment';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import { Button, Input, Kbd, Label } from '@logdash/hyper-ui/presentational';
 
   interface Props {
     passphrase: string;
@@ -43,7 +44,7 @@
 <div class="space-y-6">
   <div class="flex items-center justify-start gap-4">
     <div
-      class="bg-base-300 border-base-100 text-primary-content flex h-14 w-14 items-center justify-center rounded-full border"
+      class="bg-surface-root border-border-default text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
     >
       <SendIcon class="h-6 w-6" />
     </div>
@@ -56,17 +57,18 @@
     </div>
   </div>
 
-  <div class="text-secondary mb-6 text-sm">
+  <div class="text-fg-default mb-6 text-sm">
     <h4 class="text-lg font-medium">Step 1</h4>
     <p class="text-neutral-400 mb-4 select-none">
       Add the bot
-      <code
-        class="kbd kbd-sm hover:bg-base-200 cursor-pointer"
+      <button
+        type="button"
+        class="cursor-pointer"
         onclick={copyBotName}
         title="Click to copy bot name"
       >
-        @logdash_uptime_bot
-      </code>
+        <Kbd size="sm">@logdash_uptime_bot</Kbd>
+      </button>
       to your Telegram group or chat.
     </p>
 
@@ -76,21 +78,23 @@
     </p>
   </div>
 
-  <div class="form-control mb-6">
-    <label class="label">
-      <span class="label-text font-medium">Passphrase</span>
-    </label>
+  <div class="mb-6">
+    <Label for="telegram-passphrase">
+      <span class="font-medium">Passphrase</span>
+    </Label>
     <div class="relative">
-      <input
+      <Input
+        id="telegram-passphrase"
         type="text"
         value={passphrase}
         readonly
-        class="input input-bordered focus:border-primary/60 w-full flex-1 focus:outline-0"
+        class="w-full flex-1"
       />
 
-      <button
-        type="button"
-        class="btn btn-transparent absolute right-0 z-10"
+      <Button
+        variant="transparent"
+        class="absolute right-0 z-10"
+        aria-label="Copy passphrase"
         onclick={copyToClipboard}
       >
         {#if copied}
@@ -98,20 +102,14 @@
         {:else}
           <CopyIcon class="h-4 w-4" />
         {/if}
-      </button>
+      </Button>
     </div>
   </div>
 
   <div class="flex gap-3">
-    <button
-      type="button"
-      class="btn btn-secondary btn-soft flex-1"
-      onclick={onCancel}
-    >
-      Back
-    </button>
-    <button type="button" class="btn btn-primary flex-1" onclick={onNext}>
+    <Button variant="soft" class="flex-1" onclick={onCancel}>Back</Button>
+    <Button variant="primary" class="flex-1" onclick={onNext}>
       Message sent!
-    </button>
+    </Button>
   </div>
 </div>

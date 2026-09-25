@@ -90,7 +90,7 @@
         {@const Icon = icon}
         <a
           href={resolve('/docs/sdks/[sdk]', { sdk: doc.slug })}
-          class="bg-base-300 hover:bg-base-200 group flex items-center gap-3 px-4 py-3.5"
+          class="bg-surface-root hover:bg-surface-elevated group flex items-center gap-3 px-4 py-3.5"
         >
           {#if Icon}
             <Icon class="size-4 shrink-0" />
@@ -102,7 +102,7 @@
             </span>
           </span>
           <ChevronRightIcon
-            class="text-neutral-600 group-hover:text-base-content ml-auto size-4 shrink-0 transition-ink duration-150"
+            class="text-neutral-600 group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
           />
         </a>
       {/each}
@@ -152,7 +152,7 @@
             <span class="text-neutral-400 text-sm">{link.description}</span>
           </div>
           <ChevronRightIcon
-            class="text-neutral-600 group-hover:text-base-content ml-auto size-4 shrink-0 transition-ink duration-150"
+            class="text-neutral-600 group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
           />
         </a>
       {/each}

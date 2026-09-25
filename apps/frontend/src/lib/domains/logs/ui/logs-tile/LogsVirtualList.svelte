@@ -6,7 +6,11 @@
   import { filtersStore } from '../../infrastructure/filters.store.svelte.js';
   import EnhancedLogRow from './log-row/LogRow.svelte';
   import LogPreviewDrawer from './LogPreviewDrawer.svelte';
-  import { ScrollArea } from '@logdash/hyper-ui/presentational';
+  import {
+    Button,
+    ScrollArea,
+    Spinner,
+  } from '@logdash/hyper-ui/presentational';
   import { fade } from 'svelte/transition';
 
   type Props = {
@@ -238,7 +242,7 @@
 >
   {#if scrolledFromTop}
     <div
-      class="pointer-events-none absolute top-0 left-0 z-10 -mt-1 h-12 w-full bg-gradient-to-b from-base-200 to-transparent"
+      class="pointer-events-none absolute top-0 left-0 z-10 -mt-1 h-12 w-full bg-gradient-to-b from-surface-elevated to-transparent"
     ></div>
   {/if}
 
@@ -254,14 +258,15 @@
         <p class="text-neutral-600 text-sm">
           No logs found for the selected filters
         </p>
-        <button
-          class="btn btn-sm btn-secondary"
+        <Button
+          variant="primary"
+          size="sm"
           onclick={() => {
             filtersStore.reset();
           }}
         >
           Reset filters
-        </button>
+        </Button>
       </div>
     {/if}
 
@@ -297,13 +302,13 @@
 
     {#if logsState.pageIsLoading || logsState.fetchingLogs}
       <div class="flex h-12 shrink-0 items-center justify-center gap-2">
-        <span class="loading loading-spinner loading-sm"></span>
+        <Spinner size="sm" />
       </div>
     {/if}
   </ScrollArea>
 
   <div
-    class="pointer-events-none absolute bottom-0 left-0 z-10 h-4 w-full bg-gradient-to-b from-transparent to-base-200"
+    class="pointer-events-none absolute bottom-0 left-0 z-10 h-4 w-full bg-gradient-to-b from-transparent to-surface-elevated"
   ></div>
 
   <LogPreviewDrawer />

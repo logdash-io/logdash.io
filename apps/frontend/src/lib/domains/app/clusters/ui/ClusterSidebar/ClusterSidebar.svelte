@@ -3,7 +3,7 @@
 </script>
 
 <aside
-  class="border-hairline bg-base-300 hidden h-full w-64 shrink-0 flex-col border-r lg:flex"
+  class="border-hairline bg-surface-root hidden h-full w-64 shrink-0 flex-col border-r lg:flex"
 >
   <SidebarContent />
 </aside>

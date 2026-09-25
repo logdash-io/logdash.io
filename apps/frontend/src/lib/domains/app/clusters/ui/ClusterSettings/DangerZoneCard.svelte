@@ -10,6 +10,7 @@
   } from '$lib/domains/shared/ui/components/settings-card';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
+  import { Button } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     clusterId: string;
@@ -55,17 +56,14 @@
       </p>
 
       {#snippet action()}
-        <button
+        <Button
+          variant="danger-ghost"
+          size="sm"
           onclick={onDeleteProject}
-          disabled={clustersState.isDeleting}
-          class="btn btn-error btn-outline btn-sm"
+          loading={clustersState.isDeleting}
         >
-          {#if clustersState.isDeleting}
-            <span class="loading loading-spinner loading-xs"></span>
-          {:else}
-            Delete
-          {/if}
-        </button>
+          Delete
+        </Button>
       {/snippet}
     </SettingsCardItem>
   </div>

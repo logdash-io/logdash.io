@@ -4,6 +4,7 @@
   import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils';
   import { ACCESS_TOKEN_COOKIE_NAME } from '$lib/domains/shared/utils/cookies.utils';
   import { decodeJwtPayload } from '$lib/domains/shared/utils/jwt.utils';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import { onMount } from 'svelte';
 
   const MINUTE_MS = 60_000;
@@ -58,14 +59,16 @@
     {/if}
   </span>
 
-  <a
+  <Button
     href={resolve(
       `/app/auth?flow=claim&next_url=${encodeURIComponent(`${page.url.pathname}?claimed=1`)}`,
     )}
     data-posthog-id="claim-banner-claim-cta"
-    class="btn btn-primary btn-xs h-7 rounded-full px-3"
+    variant="primary"
+    size="xs"
+    class="h-7 px-3"
   >
     <span class="sm:hidden">Claim</span>
     <span class="hidden sm:inline">Claim with GitHub or Google</span>
-  </a>
+  </Button>
 </div>

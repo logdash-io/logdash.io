@@ -1,5 +1,6 @@
 <script lang="ts">
   import LightbulbIcon from '$lib/domains/shared/icons/LightbulbIcon.svelte';
+  import { Button, Rating } from '@logdash/hyper-ui/presentational';
   import type { PostHog } from 'posthog-js';
   import { getContext } from 'svelte';
 
@@ -33,8 +34,8 @@
     class={[
       'flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-sm',
       open
-        ? 'bg-surface-root-selected text-base-content'
-        : 'text-neutral-400 hover:bg-surface-root-hover hover:text-base-content',
+        ? 'bg-surface-100 text-fg-default'
+        : 'text-neutral-400 hover:bg-surface-hover hover:text-fg-default',
     ]}
     data-posthog-id="share-feedback-button"
   >
@@ -50,67 +51,30 @@
         bind:this={textarea}
         class="h-full w-full resize-none rounded-xl border-none p-4 text-base outline-0"
         placeholder="What can we do to make your life easier with Logdash?"
-        autofocus
         bind:value={message}
       ></textarea>
 
       <div class="flex items-center justify-end gap-2 p-2">
-        <div class="rating rating-sm mx-auto gap-0.5">
-          <input
-            type="radio"
-            name="rating-2"
-            class="mask mask-star-2 bg-primary"
-            aria-label="1 star"
-            onclick={() => (rating = 1)}
-            checked={rating === 1}
-          />
-          <input
-            type="radio"
-            name="rating-2"
-            class="mask mask-star-2 bg-primary"
-            aria-label="2 star"
-            onclick={() => (rating = 2)}
-            checked={rating === 2}
-          />
-          <input
-            type="radio"
-            name="rating-2"
-            class="mask mask-star-2 bg-primary"
-            aria-label="3 star"
-            onclick={() => (rating = 3)}
-            checked={rating === 3}
-          />
-          <input
-            type="radio"
-            name="rating-2"
-            class="mask mask-star-2 bg-primary"
-            aria-label="4 star"
-            onclick={() => (rating = 4)}
-            checked={rating === 4}
-          />
-          <input
-            type="radio"
-            name="rating-2"
-            class="mask mask-star-2 bg-primary"
-            aria-label="5 star"
-            onclick={() => (rating = 5)}
-            checked={rating === 5}
-          />
-        </div>
+        <Rating
+          bind:value={rating}
+          class="mx-auto gap-0.5"
+          aria-label="Rating"
+        />
 
-        <button class="btn btn-sm btn-secondary" onclick={() => (open = false)}>
+        <Button size="sm" variant="primary" onclick={() => (open = false)}>
           Cancel
-        </button>
+        </Button>
 
-        <button
+        <Button
+          size="sm"
+          variant="primary"
           onclick={() => {
             captureFeedback();
             open = false;
           }}
-          class="btn btn-sm btn-primary"
         >
           Send
-        </button>
+        </Button>
       </div>
     </div>
   {/if}

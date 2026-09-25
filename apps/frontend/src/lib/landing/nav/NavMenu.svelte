@@ -177,8 +177,8 @@
     return [
       ITEM_CLASS,
       current || open
-        ? 'text-base-content'
-        : 'text-neutral-400 hover:text-base-content',
+        ? 'text-fg-default'
+        : 'text-neutral-400 hover:text-fg-default',
       { 'bg-neutral-900': open },
     ] as string[];
   }
@@ -228,7 +228,7 @@
             class={[
               '-mr-1 size-3.5 transition-transform duration-200 ease-out',
               active === item.key
-                ? 'rotate-180 text-base-content'
+                ? 'rotate-180 text-fg-default'
                 : 'text-neutral-600',
             ]}
           />
@@ -273,7 +273,7 @@
   >
     <div
       class={[
-        'nav-panel border-hairline bg-base-300 rounded-[14px] border',
+        'nav-panel border-hairline bg-surface-root rounded-[14px] border',
         { moving },
       ]}
       style:width={size ? `${size.width}px` : undefined}
@@ -334,9 +334,9 @@
             {...anchorAttrs(link)}
             draggable="false"
             class={[
-              'hover:bg-neutral-800 hover:text-base-content rounded-md px-3.5 py-2.5 text-[15px] leading-5',
+              'hover:bg-neutral-800 hover:text-fg-default rounded-md px-3.5 py-2.5 text-[15px] leading-5',
               isCurrentTarget(link, page.url.pathname)
-                ? 'text-base-content'
+                ? 'text-fg-default'
                 : 'text-neutral-300',
             ]}
             onclick={close}
@@ -357,7 +357,7 @@
         <a
           {...anchorAttrs(menu.footer.cta)}
           draggable="false"
-          class="text-neutral-500 hover:text-base-content group flex items-center gap-1.5 transition-ink duration-150"
+          class="text-neutral-500 hover:text-fg-default group flex items-center gap-1.5 transition-ink duration-150"
           onclick={close}
         >
           {menu.footer.cta.label}

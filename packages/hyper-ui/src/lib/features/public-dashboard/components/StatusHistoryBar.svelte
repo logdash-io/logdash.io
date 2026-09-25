@@ -41,7 +41,7 @@
   >
     {#if segments.length === 0}
       <div
-        class="w-full flex-shrink-0 rounded-sm dark:bg-base-100"
+        class="w-full flex-shrink-0 rounded-sm bg-surface-100"
         style="height: {height}px;"
         title="No pings available"
       ></div>

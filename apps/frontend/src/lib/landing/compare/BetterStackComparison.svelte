@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import ComparisonMark from './ComparisonMark.svelte';
   import {
     betterStackComparisonData,
@@ -24,14 +25,15 @@
     <div
       class="mt-4 flex flex-col items-center justify-center gap-4 sm:flex-row"
     >
-      <a
+      <Button
         href={resolve('/app/quick-setup')}
         rel="nofollow"
-        class="btn btn-primary w-full sm:w-auto"
+        variant="primary"
+        class="w-full sm:w-auto"
       >
         Start free
         <ArrowRightIcon class="size-4" />
-      </a>
+      </Button>
     </div>
   </header>
 
@@ -137,12 +139,10 @@
         </div>
 
         <div
-          class="bg-primary/5 p-6 sm:p-8 flex flex-col justify-between rounded-2xl"
+          class="bg-neutral-800 p-6 sm:p-8 flex flex-col justify-between rounded-2xl"
         >
           <div class="flex flex-col">
-            <div
-              class="text-primary mb-2 font-semibold uppercase tracking-wide"
-            >
+            <div class="text-brand mb-2 font-semibold uppercase tracking-wide">
               The "Logdash" Path
               <br />
               (Unified Platform)
@@ -156,7 +156,7 @@
               </li>
             </ol>
           </div>
-          <div class="border-primary/40 mt-6 border-l-2 pl-4">
+          <div class="border-neutral-500 mt-6 border-l-2 pl-4">
             <div class="text-sm font-semibold">Result:</div>
             <div class="text-lg font-semibold">
               Everything in one place, one price, one login.
@@ -262,9 +262,9 @@
         </p>
       </div>
 
-      <div class="ld-card border-primary/20 bg-primary/5 p-8 border">
+      <div class="ld-card border-neutral-700 p-8 border">
         <h3 class="mb-4 text-xl font-semibold">
-          <span class="bg-primary/10 text-primary rounded-lg px-2 py-1">
+          <span class="bg-neutral-800 text-brand rounded-lg px-2 py-1">
             Logdash
           </span>
           is like a unified workspace.
@@ -291,17 +291,18 @@
       Better Stack offers you best-of-breed products. Logdash offers you a
       unified experience. Try both and see which philosophy fits your workflow.
       <br />
-      <span class="text-base-content font-medium">
+      <span class="text-fg-default font-medium">
         See how unified monitoring feels.
       </span>
     </p>
-    <a
+    <Button
       href={resolve('/app/quick-setup')}
       rel="nofollow"
-      class="btn btn-primary gap-2"
+      variant="primary"
+      class="gap-2"
     >
       Start free
       <ArrowRightIcon class="size-4" />
-    </a>
+    </Button>
   </section>
 </div>

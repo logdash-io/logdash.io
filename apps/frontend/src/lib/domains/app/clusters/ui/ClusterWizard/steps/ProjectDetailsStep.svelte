@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import { fly } from 'svelte/transition';
   import ColorPalette from '../ColorPalette.svelte';
 
@@ -34,7 +35,7 @@
     id="project-name"
     type="text"
     placeholder="Project Name"
-    class="text-3xl md:text-5xl leading-normal font-medium w-full focus:border-primary border-b-2 border-transparent transition-ink duration-200 outline-0"
+    class="text-3xl md:text-5xl leading-normal font-medium w-full focus:border-brand border-b-2 border-transparent transition-ink duration-200 outline-0"
     value={project.name}
     oninput={onNameChange}
     minlength={3}
@@ -69,13 +70,9 @@
 
   {#if step === 1}
     <div class="flex justify-end">
-      <button
-        class="btn btn-primary"
-        onclick={onNextStep}
-        disabled={!canProceed}
-      >
+      <Button variant="primary" onclick={onNextStep} disabled={!canProceed}>
         Next step
-      </button>
+      </Button>
     </div>
   {/if}
 </div>

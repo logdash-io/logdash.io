@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
+  import { Button, Select, Spinner } from '@logdash/hyper-ui/presentational';
   import Modal from '$lib/domains/shared/ui/Modal.svelte';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
@@ -53,34 +54,35 @@
     </div>
 
     {#if !hasLoaded}
-      <span class="loading loading-spinner loading-sm"></span>
+      <Spinner size="sm" />
     {:else if !dashboard}
-      <div class="border-base-100 flex flex-col gap-3 rounded-xl border p-4">
+      <div
+        class="border-border-default flex flex-col gap-3 rounded-xl border p-4"
+      >
         <p class="text-sm text-neutral-300">
           Badges show the data of a published status page and link back to it.
           Add this monitor to a status page and publish it to get its badge.
         </p>
-        <a
+        <Button
           href={resolve('/app/clusters/[cluster_id]/status-pages', {
             cluster_id: clusterId,
           })}
-          class="btn btn-primary btn-sm self-start"
+          variant="primary"
+          size="sm"
+          class="self-start"
         >
           Go to status pages
-        </a>
+        </Button>
       </div>
     {:else}
       {#if publishedDashboards.length > 1}
         <label class="flex flex-col gap-1.5 text-sm">
           <span class="text-neutral-400">Status page</span>
-          <select
-            class="select select-sm w-full"
-            bind:value={selectedDashboardId}
-          >
+          <Select size="sm" class="w-full" bind:value={selectedDashboardId}>
             {#each publishedDashboards as option (option.id)}
               <option value={option.id}>{option.name}</option>
             {/each}
-          </select>
+          </Select>
         </label>
       {/if}
 

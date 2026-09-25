@@ -4,6 +4,7 @@
   import StatusBadge from "./StatusBadge.svelte";
   import UptimeChart from "./UptimeChart.svelte";
   import PingChart from "./PingChart.svelte";
+  import Collapse from "../../../presentational/Collapse.svelte";
 
   interface Monitor {
     name: string;
@@ -61,17 +62,25 @@
   const statusText = $derived(config.text);
   const statusColor = $derived(config.color);
   let open = $state(untrack(() => defaultExpanded));
+
+  function onChartClick(event: MouseEvent): void {
+    event.preventDefault();
+  }
 </script>
 
-<div class="ld-card-base collapse w-fit min-w-full ld-card-rounding">
-  <input bind:checked={open} class="p-0" type="checkbox" />
-  <div class="collapse-title flex flex-col items-center p-6">
+<Collapse
+  bind:open
+  class="ld-card-base ld-card-rounding w-fit min-w-full"
+  titleClass="flex flex-col items-center p-6"
+  contentClass="hidden p-0 text-sm sm:block"
+>
+  {#snippet title()}
     <div class="flex w-full items-center justify-between">
       <div class="flex items-center gap-3">
         <StatusBadge {status} />
 
         <div>
-          <h4 class="text-secondary text-lg font-medium">
+          <h4 class="text-fg-default text-lg font-medium">
             {monitor.name}
           </h4>
         </div>
@@ -90,30 +99,32 @@
       </div>
     </div>
 
-    <div class="z-10 cursor-default sm:mt-2 w-full">
+    <div
+      class="cursor-default sm:mt-2 w-full"
+      role="presentation"
+      onclick={onChartClick}
+    >
       <PingChart
         class="hidden sm:block"
         {maxPingsToShow}
         pings={monitor.pings}
       />
     </div>
-  </div>
+  {/snippet}
 
-  <div class="collapse-content hidden p-0 text-sm sm:block">
-    <div class="px-6 sm:pb-2">
-      <div class="flex flex-wrap gap-6 text-sm">
-        <div class="mb-1 flex items-center gap-2">
-          <TrendingUpIcon class="text-success h-4 w-4" />
-          <span class="text-neutral-300">
-            90-day Uptime:
-            <span class="font-mono font-medium text-base-content">
-              {uptime.toFixed(2)}%
-            </span>
+  <div class="px-6 sm:pb-2">
+    <div class="flex flex-wrap gap-6 text-sm">
+      <div class="mb-1 flex items-center gap-2">
+        <TrendingUpIcon class="text-success h-4 w-4" />
+        <span class="text-neutral-300">
+          90-day Uptime:
+          <span class="font-mono font-medium text-fg-default">
+            {uptime.toFixed(2)}%
           </span>
-        </div>
+        </span>
       </div>
-
-      <UptimeChart buckets={monitor.buckets || []} {maxBucketsToShow} />
     </div>
+
+    <UptimeChart buckets={monitor.buckets || []} {maxBucketsToShow} />
   </div>
-</div>
+</Collapse>

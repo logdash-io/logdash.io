@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { acceptConsents } from '$lib/domains/onboarding/application/save-onboarding';
+  import { Button, Checkbox } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     oncomplete: () => void;
@@ -44,9 +45,9 @@
 
   <div class="mt-6 flex flex-col gap-3.5">
     <label class="flex cursor-pointer items-start gap-3 text-sm">
-      <input
-        type="checkbox"
-        class="checkbox checkbox-primary checkbox-sm border-neutral-600 checked:border-primary"
+      <Checkbox
+        variant="primary"
+        class="border-neutral-600 checked:border-brand"
         required
         bind:checked={termsAccepted}
       />
@@ -73,9 +74,9 @@
     </label>
 
     <label class="flex cursor-pointer items-start gap-3 text-sm">
-      <input
-        type="checkbox"
-        class="checkbox checkbox-primary checkbox-sm border-neutral-600 checked:border-primary"
+      <Checkbox
+        variant="primary"
+        class="border-neutral-600 checked:border-brand"
         bind:checked={marketingConsent}
       />
       <span class="text-neutral-300">
@@ -84,16 +85,16 @@
     </label>
   </div>
 
-  <button
+  <Button
     type="submit"
-    class="btn btn-primary mt-7 w-full gap-2"
-    disabled={!termsAccepted || saving}
+    variant="primary"
+    block
+    class="mt-7"
+    disabled={!termsAccepted}
+    loading={saving}
   >
-    {#if saving}
-      <span class="loading loading-spinner size-4"></span>
-    {/if}
     Continue
-  </button>
+  </Button>
 
   {#if failed}
     <p class="text-error mt-3 text-sm" role="alert">

@@ -1,6 +1,14 @@
 <script lang="ts">
+  import { fromAction } from 'svelte/attachments';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import {
+    Badge,
+    Button,
+    Checkbox,
+    Input,
+    Menu,
+    Tooltip,
+  } from '@logdash/hyper-ui/presentational';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import type { WebhookSetupDTO } from '$lib/domains/app/projects/domain/notification-channels/notification-channels.types.js';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
@@ -75,53 +83,30 @@
   </div>
 
   <div class="space-y-2 text-base">
-    <input
+    <Input
       bind:value={webhookName}
-      class="ld-input ld-input-padding"
+      variant="outline"
       placeholder="Memorable webhook name"
       type="text"
-      use:autoFocus={{ selectAll: true }}
+      {@attach fromAction(autoFocus, () => ({ selectAll: true }))}
     />
 
-    <div class="join relative w-full">
-      {#snippet methodSelect(close: () => void)}
-        <ul class="menu ld-card-base rounded-xl">
-          {#each ALLOWED_METHODS as _method (_method)}
-            <li>
-              <UpgradeElement
-                enabled={_method !== 'GET' && !canUseAdvancedMethods}
-                source="webhook-method-restriction"
-                class="w-full"
-                onclick={() => {
-                  if (_method === 'GET' || canUseAdvancedMethods) {
-                    method = _method;
-                    close();
-                  }
-                }}
-              >
-                <span>{_method}</span>
-                {#if _method !== 'GET' && !canUseAdvancedMethods}
-                  <span
-                    class="badge badge-primary badge-xs badge-soft uppercase"
-                  >
-                    Upgrade
-                  </span>
-                {/if}
-              </UpgradeElement>
-            </li>
-          {/each}
-        </ul>
-      {/snippet}
-
-      <Tooltip content={methodSelect} placement="bottom" trigger="click">
-        <button class="btn btn-transparent btn-sm absolute left-0 top-0.5">
-          {method}
-        </button>
+    <div class="relative flex w-full">
+      <Tooltip
+        content={methodSelect}
+        placement="bottom"
+        align="left"
+        trigger="click"
+        interactive
+        class="absolute left-0 top-0.5 z-10"
+      >
+        <Button variant="transparent" size="sm">{method}</Button>
       </Tooltip>
 
-      <input
+      <Input
         bind:value={webhookUrl}
-        class="join-item ld-input py-2 pl-16 pr-3"
+        variant="outline"
+        class="py-2 pl-16 pr-3"
         placeholder="Webhook URL"
         type="text"
       />
@@ -129,50 +114,48 @@
 
     <div class="flex flex-col gap-2">
       {#each headers as header, index (index)}
-        <div class="flex items-center gap-2">
+        <div class="flex items-start gap-2">
           <div class="flex-1">
-            <input
+            <Input
               type="text"
               bind:value={header.key}
-              class={[
-                'ld-input ld-input-padding',
-                { 'input-error': !isValidHeaderName(header.key) },
-              ]}
+              variant="outline"
+              error={!isValidHeaderName(header.key)}
               placeholder="Key"
-              use:autoFocus={{
+              {@attach fromAction(autoFocus, () => ({
                 enabled: index === headers.length - 1,
-              }}
+              }))}
             />
             {#if header.key && !isValidHeaderName(header.key)}
-              <div class="text-error mt-1 text-xs">
+              <div class="text-error mt-1 text-left text-xs">
                 Header name can only contain letters, numbers, and hyphens
               </div>
             {/if}
           </div>
           <div class="flex-1">
-            <input
+            <Input
               type="text"
               bind:value={header.value}
-              class={[
-                'ld-input ld-input-padding',
-                { 'input-error': !isValidHeaderValue(header.value) },
-              ]}
+              variant="outline"
+              error={!isValidHeaderValue(header.value)}
               placeholder="Value"
             />
             {#if header.value && !isValidHeaderValue(header.value)}
-              <div class="text-error mt-1 text-xs">
+              <div class="text-error mt-1 text-left text-xs">
                 Header value contains invalid characters
               </div>
             {/if}
           </div>
-          <button
-            class="btn btn-ghost btn-sm"
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label="Remove header"
             onclick={() => {
               headers.splice(index, 1);
             }}
           >
             <CloseIcon class="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       {/each}
 
@@ -181,8 +164,10 @@
         source="webhook-headers-restriction"
         class="w-full"
       >
-        <button
-          class="btn btn-neutral btn-md flex w-full items-center justify-center gap-2"
+        <Button
+          variant="neutral"
+          block
+          class="gap-2"
           onclick={() => {
             if (canUseCustomHeaders) {
               headers.push({
@@ -194,19 +179,18 @@
         >
           <span>Add header</span>
           {#if !canUseCustomHeaders}
-            <span class="badge badge-primary badge-sm">Builder plan</span>
+            <Badge variant="inverse" size="sm">Builder plan</Badge>
           {/if}
-        </button>
+        </Button>
       </UpgradeElement>
     </div>
   </div>
 
   <div class="flex select-none items-center justify-start gap-2">
-    <input
-      type="checkbox"
+    <Checkbox
       id="assign-service-monitor"
+      variant="primary"
       bind:checked={assignToServiceMonitor}
-      class="checkbox checkbox-primary checkbox-sm"
     />
     <label for="assign-service-monitor" class="cursor-pointer text-sm">
       Assign to {monitorName} service monitor
@@ -214,16 +198,10 @@
   </div>
 
   <div class="flex gap-3">
-    <button
-      type="button"
-      class="btn btn-secondary btn-soft flex-1"
-      onclick={onCancel}
-    >
-      Back
-    </button>
-    <button
-      type="button"
-      class="btn btn-primary flex-1"
+    <Button variant="soft" class="flex-1" onclick={onCancel}>Back</Button>
+    <Button
+      variant="primary"
+      class="flex-1"
       disabled={!canSubmit()}
       onclick={() =>
         onSubmit({
@@ -243,6 +221,31 @@
         })}
     >
       Save channel to {clusterName} project
-    </button>
+    </Button>
   </div>
 </div>
+
+{#snippet methodSelect(close: () => void)}
+  <Menu class="ld-card-base rounded-xl">
+    {#each ALLOWED_METHODS as _method (_method)}
+      <li>
+        <UpgradeElement
+          enabled={_method !== 'GET' && !canUseAdvancedMethods}
+          source="webhook-method-restriction"
+          class="w-full"
+          onclick={() => {
+            close();
+            if (_method === 'GET' || canUseAdvancedMethods) {
+              method = _method;
+            }
+          }}
+        >
+          <span>{_method}</span>
+          {#if _method !== 'GET' && !canUseAdvancedMethods}
+            <Badge size="xs" class="uppercase">Upgrade</Badge>
+          {/if}
+        </UpgradeElement>
+      </li>
+    {/each}
+  </Menu>
+{/snippet}

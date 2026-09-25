@@ -35,14 +35,14 @@
     healthy: 'stroke-success',
     unhealthy: 'stroke-error',
     degraded: 'stroke-warning',
-    unknown: 'stroke-base-300',
+    unknown: 'stroke-surface-root',
   };
 
   const STATUS_BG_COLORS: Record<ServiceHealthStatus, string> = {
     healthy: 'bg-success',
     unhealthy: 'bg-error',
     degraded: 'bg-warning',
-    unknown: 'bg-base-300',
+    unknown: 'bg-surface-root',
   };
 
   const STATUS_LABELS: Record<ServiceHealthStatus, string> = {
@@ -155,7 +155,7 @@
         fill="none"
         stroke-width={strokeWidth}
         stroke-dasharray="4 4"
-        class="stroke-base-300"
+        class="stroke-surface-root"
       />
     {/if}
   </svg>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
+  import { Button, Dropdown, Menu } from '@logdash/hyper-ui/presentational';
   import {
     NAV_ITEMS,
     NAV_PANELS,
@@ -11,14 +12,8 @@
     type NavTarget,
   } from './nav.data';
 
-  /** daisyUI keeps the dropdown open while its trigger has focus. */
-  function closeDropdown(): void {
-    const focused = document.activeElement;
-    if (focused instanceof HTMLElement) focused.blur();
-  }
-
   function linkClass(current: boolean): string {
-    return current ? 'text-base-content' : 'text-neutral-400';
+    return current ? 'text-fg-default' : 'text-neutral-400';
   }
 
   function menuEntries(key: NavMenuKey): (NavTarget & { title: string })[] {
@@ -27,33 +22,35 @@
   }
 </script>
 
-<div class="dropdown dropdown-end ml-auto lg:hidden">
-  <div
-    tabindex="0"
-    role="button"
-    class="btn btn-transparent btn-square btn-sm"
-    aria-label="Open menu"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
+<Dropdown align="end">
+  {#snippet trigger(attrs)}
+    <Button
+      {...attrs}
+      variant="transparent"
+      shape="square"
+      size="sm"
+      class="ml-auto lg:hidden"
+      aria-label="Open menu"
     >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M4 6h16M4 12h16M4 18h16"
-      />
-    </svg>
-  </div>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    </Button>
+  {/snippet}
   <!-- Internal hrefs go through resolve() in hrefOf(); external ones open in a new tab. -->
   <!-- eslint-disable svelte/no-navigation-without-resolve -->
-  <ul
-    class="menu dropdown-content menu-sm rounded-box ld-card-base z-[1] mt-3 w-60 p-4 shadow-lg"
-  >
+  <Menu size="sm" class="ld-card-base mt-3 w-60 rounded-xl shadow-lg">
     {#each NAV_ITEMS as item (item.name)}
       {#if item.kind === 'menu'}
         <li>
@@ -74,7 +71,6 @@
                       : undefined}
                     draggable="false"
                     class={linkClass(isCurrentTarget(entry, page.url.pathname))}
-                    onclick={closeDropdown}
                   >
                     {entry.title}
                   </a>
@@ -89,35 +85,31 @@
             href={resolve(item.path)}
             draggable="false"
             class={linkClass(page.url.pathname === item.path)}
-            onclick={closeDropdown}
           >
             {item.name}
           </a>
         </li>
       {:else}
         <li>
-          <a
-            href={item.href}
-            draggable="false"
-            class={linkClass(false)}
-            onclick={closeDropdown}
-          >
+          <a href={item.href} draggable="false" class={linkClass(false)}>
             {item.name}
           </a>
         </li>
       {/if}
     {/each}
     <li class="mt-3">
-      <a
+      <Button
         href={resolve('/app/auth')}
         draggable="false"
-        class="btn btn-subtle btn-sm w-full rounded-full font-medium"
+        variant="subtle"
+        size="sm"
+        block
+        class="font-medium"
         data-posthog-id="nav-login-cta"
-        onclick={closeDropdown}
       >
         Log in
-      </a>
+      </Button>
     </li>
-  </ul>
+  </Menu>
   <!-- eslint-enable svelte/no-navigation-without-resolve -->
-</div>
+</Dropdown>

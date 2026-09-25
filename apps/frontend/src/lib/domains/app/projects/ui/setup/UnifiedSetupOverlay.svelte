@@ -6,7 +6,7 @@
   import { sdkSelectionState } from '$lib/domains/app/projects/application/sdk-selection.state.svelte.js';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { Button, Spinner, Tooltip } from '@logdash/hyper-ui/presentational';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
@@ -88,18 +88,21 @@
 
 {#snippet sdkMenu(close: () => void)}
   <ul
-    class="dropdown dropdown-center ld-card-base z-20 overflow-visible rounded-xl p-1.5 shadow-sm"
+    class="ld-card-base relative z-20 overflow-visible rounded-xl p-1.5 shadow-sm"
   >
     {#each SDK_LIST as sdk, index (sdk.name)}
-      <li
-        onclick={(e) => {
-          e.stopPropagation();
-          onSelectSDK(index, close);
-        }}
-        class="hover:bg-neutral-800 flex cursor-pointer select-none flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs"
-      >
-        <sdk.icon class="h-4 w-4 shrink-0" />
-        <div class="block">{sdk.name}</div>
+      <li>
+        <button
+          type="button"
+          onclick={(e) => {
+            e.stopPropagation();
+            onSelectSDK(index, close);
+          }}
+          class="hover:bg-neutral-800 flex w-full cursor-pointer select-none flex-row items-center justify-start gap-2 rounded-md p-1.5 text-xs"
+        >
+          <sdk.icon class="h-4 w-4 shrink-0" />
+          <span class="block">{sdk.name}</span>
+        </button>
       </li>
     {/each}
   </ul>
@@ -123,24 +126,29 @@
 {/snippet}
 
 <div
-  class="absolute group inset-0 z-50 flex items-center justify-center bg-base-300/80 backdrop-blur-[2px]"
+  class="absolute group inset-0 z-50 flex items-center justify-center bg-surface-root/80 backdrop-blur-[2px]"
 >
   <div
     class="flex flex-col items-center gap-2 ld-card-bg p-2 rounded-xl ld-card-border"
   >
     <p class="text-neutral-400 text-sm">{overlayTitle}</p>
 
-    <button
-      class="btn btn-secondary gap-2 pr-1"
-      onclick={onCopyPrompt}
-      disabled={isLoading}
+    <div
+      class="bg-surface-inverse hover:bg-surface-inverse-hover flex items-center rounded-full border-x border-transparent pr-1"
     >
-      {#if isLoading}
-        <span class="loading loading-spinner loading-xs"></span>
-      {:else}
-        {@render copyIcon()}
-      {/if}
-      Copy prompt
+      <Button
+        variant="transparent"
+        class="text-surface-root gap-2 pr-2"
+        onclick={onCopyPrompt}
+        disabled={isLoading}
+      >
+        {#if isLoading}
+          <Spinner size="xs" aria-hidden="true" />
+        {:else}
+          {@render copyIcon()}
+        {/if}
+        Copy prompt
+      </Button>
 
       <Tooltip
         content={sdkMenu}
@@ -148,15 +156,16 @@
         placement="bottom"
         trigger="click"
       >
-        <button
-          class="btn btn-sm bg-base-100"
+        <Button
+          size="sm"
+          class="bg-surface-100 border-transparent"
           data-posthog-id="sdk-selection-button"
         >
           <selectedSDK.icon class="h-4 w-4 shrink-0" />
           {selectedSDK.name}
           <ChevronDownIcon class="h-4 w-4 shrink-0" />
-        </button>
+        </Button>
       </Tooltip>
-    </button>
+    </div>
   </div>
 </div>

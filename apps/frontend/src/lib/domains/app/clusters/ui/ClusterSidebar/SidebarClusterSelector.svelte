@@ -50,7 +50,7 @@
 
 {#snippet clusterDropdownMenu(close: () => void)}
   <div
-    class="dropdown-content ld-card-base z-1 w-full rounded-xl p-1 whitespace-nowrap shadow-lg"
+    class="ld-card-base z-1 w-full rounded-xl p-1 whitespace-nowrap shadow-lg"
   >
     <p class="text-neutral-500 px-2.5 py-2 text-xs">Select project</p>
     <ul class="flex flex-col gap-0.5">
@@ -62,8 +62,8 @@
             class={[
               'flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left text-sm',
               {
-                'bg-surface-root-selected': isActive,
-                'hover:bg-surface-root-hover': !isActive,
+                'bg-surface-100': isActive,
+                'hover:bg-surface-hover': !isActive,
               },
             ]}
           >
@@ -78,7 +78,7 @@
     <div class="border-hairline mt-1 border-t pt-1">
       <button
         onclick={() => onCreateProject(close)}
-        class="hover:bg-surface-root-hover flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left text-sm"
+        class="hover:bg-surface-hover flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left text-sm"
       >
         <PlusIcon class="h-4 w-4 shrink-0" />
         <span>Create new project</span>
@@ -93,7 +93,7 @@
     class={[
       'group flex h-9 w-full items-center gap-2 rounded-lg px-1.5 select-none',
       {
-        'hover:bg-surface-root-hover cursor-pointer': !isDisabled,
+        'hover:bg-surface-hover cursor-pointer': !isDisabled,
         'cursor-not-allowed pointer-events-none': isDisabled,
       },
     ]}
@@ -107,7 +107,7 @@
       </span>
     {:else}
       <span
-        class="border-base-100 bg-base-200 flex size-6 shrink-0 items-center justify-center rounded-md border"
+        class="border-border-default bg-surface-elevated flex size-6 shrink-0 items-center justify-center rounded-md border"
       >
         <CubeIcon class="size-3.5 shrink-0" />
       </span>

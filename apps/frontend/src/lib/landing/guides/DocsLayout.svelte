@@ -42,8 +42,8 @@
     return [
       'flex min-h-8 items-center gap-2.5 rounded-lg px-2.5 text-sm leading-5 transition-ink duration-150',
       current
-        ? 'bg-surface-root-selected text-base-content'
-        : 'text-neutral-400 hover:bg-surface-root-hover hover:text-base-content',
+        ? 'bg-surface-100 text-fg-default'
+        : 'text-neutral-400 hover:bg-surface-hover hover:text-fg-default',
     ];
   }
 </script>

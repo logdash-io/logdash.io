@@ -8,7 +8,7 @@
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
   import { namespacesState } from '$lib/domains/logs/infrastructure/namespaces.state.svelte';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { Checkbox, Tooltip } from '@logdash/hyper-ui/presentational';
 
   function onLevelToggle(level: LogLevel): void {
     filtersStore.toggleLevel(level);
@@ -63,7 +63,7 @@
 {#if !hasActiveFilters}
   <div class="flex items-center gap-2">
     <button
-      class="ring-neutral-800 text-neutral-400 hover:text-base-content flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs whitespace-nowrap ring-1 transition-ink ring-inset"
+      class="ring-neutral-800 text-neutral-400 hover:text-fg-default flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs whitespace-nowrap ring-1 transition-ink ring-inset"
       onclick={onQuickFilterErrors}
     >
       <span
@@ -73,7 +73,7 @@
     </button>
 
     <button
-      class="ring-neutral-800 text-neutral-400 hover:text-base-content flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs whitespace-nowrap ring-1 transition-ink ring-inset"
+      class="ring-neutral-800 text-neutral-400 hover:text-fg-default flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs whitespace-nowrap ring-1 transition-ink ring-inset"
       onclick={onQuickFilterWarnings}
     >
       <span
@@ -148,19 +148,18 @@
   ></div>
   <div class="ld-card-base rounded-xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Level</div>
-    <ul class="dropdown-content p-0">
+    <ul class="p-0">
       {#each LOG_LEVELS as level (level.value)}
         {@const isSelected = filtersStore.hasLevel(level.value)}
         <li>
           <label
             class={[
-              'hover:bg-base-100 flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5',
-              { 'bg-base-100': isSelected },
+              'hover:bg-surface-100 flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5',
+              { 'bg-surface-100': isSelected },
             ]}
           >
-            <input
-              type="checkbox"
-              class="checkbox checkbox-xs"
+            <Checkbox
+              size="xs"
               checked={isSelected}
               onchange={() => onLevelToggle(level.value)}
             />
@@ -181,7 +180,7 @@
         {#if levelInfo}
           <span
             class={[
-              'h-2 w-2 rounded-full ring ring-base-300',
+              'h-2 w-2 rounded-full ring ring-surface-root',
               {
                 '-ml-0.5': index > 0,
               },
@@ -210,19 +209,18 @@
   ></div>
   <div class="ld-card-base rounded-xl p-1 shadow-lg">
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Namespace</div>
-    <ul class="dropdown-content p-0">
+    <ul class="p-0">
       {#each namespacesState.namespaces as nsMetadata (nsMetadata.namespace)}
         {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
         <li>
           <label
             class={[
-              'hover:bg-base-100 flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5',
-              { 'bg-base-100': isSelected },
+              'hover:bg-surface-100 flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5',
+              { 'bg-surface-100': isSelected },
             ]}
           >
-            <input
-              type="checkbox"
-              class="checkbox checkbox-xs"
+            <Checkbox
+              size="xs"
               checked={isSelected}
               onchange={() => onNamespaceToggle(nsMetadata.namespace)}
             />
@@ -243,12 +241,12 @@
 {/snippet}
 
 {#snippet clearButton(onClick: (e: MouseEvent) => void)}
-  <span
+  <button
+    type="button"
     class="hover:bg-neutral-800 ml-0.5 rounded-full p-0.5 cursor-pointer"
-    role="button"
-    tabindex="0"
+    aria-label="Clear filter"
     onclick={onClick}
   >
     <CloseIcon class="size-3.5" />
-  </span>
+  </button>
 {/snippet}

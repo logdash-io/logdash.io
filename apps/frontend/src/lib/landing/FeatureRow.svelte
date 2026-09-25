@@ -53,7 +53,7 @@
 
       <a
         href={resolve(href)}
-        class="text-base-content hover:text-neutral-400 focus-visible:outline-neutral-500 mt-5 inline-flex w-fit items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4"
+        class="text-fg-default hover:text-neutral-400 focus-visible:outline-neutral-500 mt-5 inline-flex w-fit items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4"
         data-posthog-id={posthogId}
       >
         {linkLabel}

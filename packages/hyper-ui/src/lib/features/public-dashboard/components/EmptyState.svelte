@@ -12,7 +12,7 @@
 
 <div class="ld-card md:w-xl mb-4 flex w-full items-center justify-center">
   <div class="text-center">
-    <h3 class="text-secondary mb-2 text-xl font-medium">
+    <h3 class="text-fg-default mb-2 text-xl font-medium">
       {title}
     </h3>
     <p class="text-neutral-400 text-base">

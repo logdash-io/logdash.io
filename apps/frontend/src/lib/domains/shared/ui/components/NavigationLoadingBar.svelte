@@ -42,6 +42,6 @@
     transition:fade={{ duration: 150 }}
     class="fixed top-0 left-0 z-50 h-0.5 w-full"
   >
-    <div class="bg-primary h-full" style="width: {progress.current}%"></div>
+    <div class="bg-brand h-full" style="width: {progress.current}%"></div>
   </div>
 {/if}

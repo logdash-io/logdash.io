@@ -4,6 +4,7 @@
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import type { Snippet } from 'svelte';
   import { PingChart } from '@logdash/hyper-ui/features';
+  import { Badge, Spinner, StatusDot } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     projectId: string;
@@ -18,6 +19,7 @@
   const isHealthy = $derived(
     projectMonitor ? monitoringState.isHealthy(projectMonitor.id) : false,
   );
+  const healthVariant = $derived(isHealthy ? 'success' : 'error');
   const pings = $derived(
     projectMonitor
       ? monitoringState.monitoringPings(projectMonitor.id).slice(-MAX_PINGS)
@@ -44,29 +46,13 @@
           {projectMonitor?.name}
         </h5>
 
-        <div
-          class={[
-            'badge badge-soft',
-            {
-              'badge-success': isHealthy,
-              'badge-error': !isHealthy,
-            },
-          ]}
-        >
-          <span
-            class={[
-              'status',
-              {
-                'status-success': isHealthy,
-                'status-error': !isHealthy,
-              },
-            ]}
-          ></span>
+        <Badge variant={healthVariant}>
+          <StatusDot variant={healthVariant} />
           {isHealthy ? 'up' : 'down'}
-        </div>
+        </Badge>
       </div>
 
-      <span class="loading loading-ring loading-sm duration-1000"></span>
+      <Spinner variant="ring" size="sm" aria-hidden="true" />
     </div>
 
     <div class="flex w-full flex-col">

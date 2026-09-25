@@ -69,8 +69,8 @@
 
 <defs>
   <linearGradient id="{id}-fill" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="var(--color-primary)" stop-opacity="0.28" />
-    <stop offset="100%" stop-color="var(--color-primary)" stop-opacity="0" />
+    <stop offset="0%" stop-color="var(--color-brand)" stop-opacity="0.28" />
+    <stop offset="100%" stop-color="var(--color-brand)" stop-opacity="0" />
   </linearGradient>
 
   <linearGradient id="{id}-down-fill" x1="0" y1="0" x2="0" y2="1">
@@ -83,7 +83,7 @@
 <path
   d={linePath}
   fill="none"
-  stroke="var(--color-primary)"
+  stroke="var(--color-brand)"
   stroke-width="2"
   stroke-linecap="round"
   stroke-linejoin="round"

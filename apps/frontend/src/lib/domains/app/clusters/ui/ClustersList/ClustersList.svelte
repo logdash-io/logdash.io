@@ -12,6 +12,7 @@
   import { type Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
   import { Feature } from '$lib/domains/shared/types.js';
   import type { MonitorStatus } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
+  import { Badge, Button } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     canCreate: boolean;
@@ -143,8 +144,6 @@
       </div>
 
       {#if hasServices}
-        <!-- <ClusterHealthSummary clusterId={cluster.id} {services} /> -->
-
         <div class="flex flex-wrap gap-1.5">
           {#each cluster.projects as project (project.id)}
             <a
@@ -157,9 +156,9 @@
               onclick={(e) => {
                 e.stopPropagation();
               }}
-              class="badge badge-sm badge-soft badge-secondary hover:badge-primary hover:text-primary rounded-full"
+              class="flex"
             >
-              {project.name}
+              <Badge size="sm">{project.name}</Badge>
             </a>
           {/each}
         </div>
@@ -169,8 +168,11 @@
             <p class="text-neutral-400 text-sm">No services configured</p>
             <p class="text-neutral-600 text-xs">Add a service to get started</p>
           </div>
-          <button
-            onclick={(e) => {
+          <Button
+            variant="ghost"
+            size="sm"
+            class="gap-1"
+            onclick={(e: MouseEvent) => {
               e.stopPropagation();
               void goto(
                 resolve('/app/clusters/[cluster_id]', {
@@ -178,11 +180,10 @@
                 }),
               );
             }}
-            class="btn btn-sm btn-ghost gap-1"
           >
             <PlusIcon class="size-4" />
             Add service
-          </button>
+          </Button>
         </div>
       {/if}
     </div>

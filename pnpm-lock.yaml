@@ -21,9 +21,6 @@ catalogs:
     axios:
       specifier: ^1.18.0
       version: 1.19.0
-    daisyui:
-      specifier: 5.5.14
-      version: 5.5.14
     eslint:
       specifier: ^9.39.2
       version: 9.39.2
@@ -406,9 +403,6 @@ importers:
       '@types/luxon':
         specifier: ^3.6.2
         version: 3.6.2
-      daisyui:
-        specifier: 'catalog:'
-        version: 5.5.14
       eslint:
         specifier: 'catalog:'
         version: 9.39.2(jiti@2.4.2)
@@ -564,9 +558,6 @@ importers:
       '@types/luxon':
         specifier: ^3.6.2
         version: 3.7.1
-      daisyui:
-        specifier: 'catalog:'
-        version: 5.5.14
       svelte:
         specifier: 'catalog:'
         version: 5.55.10(@typescript-eslint/types@8.70.1)
@@ -3863,9 +3854,6 @@ packages:
   d3@7.9.0:
     resolution: {integrity: sha512-e1U46jVP+w7Iut8Jt8ri1YsPOvFpg46k+K8TpCb0P+zjCkjkPnV7WzfDJzMHy1LnA+wj5pLT1wjO901gLXeEhA==}
     engines: {node: '>=12'}
-
-  daisyui@5.5.14:
-    resolution: {integrity: sha512-L47rvw7I7hK68TA97VB8Ee0woHew+/ohR6Lx6Ah/krfISOqcG4My7poNpX5Mo5/ytMxiR40fEaz6njzDi7cuSg==}
 
   date-fns@4.1.0:
     resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
@@ -10561,8 +10549,6 @@ snapshots:
       d3-timer: 3.0.1
       d3-transition: 3.0.1(d3-selection@3.0.0)
       d3-zoom: 3.0.0
-
-  daisyui@5.5.14: {}
 
   date-fns@4.1.0: {}
 

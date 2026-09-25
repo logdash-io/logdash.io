@@ -56,7 +56,7 @@
     >
       {#each TRUSTED_BY as part (part.text)}
         {#if part.strong}
-          <span class="text-base-content">{part.text}</span>
+          <span class="text-fg-default">{part.text}</span>
         {:else}
           {part.text}
         {/if}

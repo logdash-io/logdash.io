@@ -17,7 +17,7 @@
   <div class="flex -space-x-2">
     {#each FOUNDERS as founder (founder.name)}
       <img
-        class="ring-base-300 size-9 rounded-full object-cover grayscale ring-2"
+        class="ring-surface-root size-9 rounded-full object-cover grayscale ring-2"
         src={founder.img}
         alt={founder.name}
         loading="lazy"

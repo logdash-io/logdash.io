@@ -40,7 +40,7 @@
     </div>
     <div
       transition:fade={{ duration: 200, easing: quadInOut }}
-      class="bg-base-300/60 fixed inset-0"
+      class="bg-surface-root/60 fixed inset-0"
       role="button"
       onclick={() => {
         handleBackdropClick();

@@ -4,7 +4,7 @@
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import type { SimplifiedMetric } from '$lib/domains/app/projects/domain/metric.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { Button, Tooltip } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon } from 'lucide-svelte';
   import { cubicInOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
@@ -55,11 +55,11 @@
     class={[
       'min-w-0 flex-shrink transition-ink duration-200',
       {
-        'text-neutral-400 group-hover:text-secondary':
+        'text-neutral-400 group-hover:text-fg-default':
           previewedMetricId !== metric.id,
       },
       {
-        'text-secondary': previewedMetricId === metric.id,
+        'text-fg-default': previewedMetricId === metric.id,
       },
     ]}
     content={metric.name}
@@ -81,17 +81,22 @@
   </Tooltip>
 
   {#if previewedMetricId !== metric.id && !disabled}
-    <button
+    <div
+      class="ml-auto flex"
       transition:fly={{
         duration: 200,
         easing: cubicInOut,
         y: 5,
       }}
-      class="btn btn-secondary btn-soft btn-xs ml-auto"
-      onclick={onPreview}
-      data-posthog-id="preview-metric-button"
     >
-      Preview <ArrowRightIcon class="h-3.5 w-3.5" />
-    </button>
+      <Button
+        variant="soft"
+        size="xs"
+        onclick={onPreview}
+        data-posthog-id="preview-metric-button"
+      >
+        Preview <ArrowRightIcon class="h-3.5 w-3.5" />
+      </Button>
+    </div>
   {/if}
 </div>

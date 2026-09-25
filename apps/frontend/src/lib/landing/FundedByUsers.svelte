@@ -1,6 +1,7 @@
 <script lang="ts">
   import DiscordIcon from '$lib/domains/shared/icons/DiscordIcon.svelte';
   import GitHubIcon from '$lib/domains/shared/icons/GitHubIcon.svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import FoundersByline from './FoundersByline.svelte';
   import LandingHeading from './LandingHeading.svelte';
   import { LINKS } from './nav/nav.data';
@@ -29,20 +30,20 @@
 >
   <FoundersByline class="mt-10" />
 
-  <!-- eslint-disable svelte/no-navigation-without-resolve -->
   <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
     {#each COMMUNITY as link (link.href)}
-      <a
+      <Button
         href={link.href}
         target="_blank"
         rel="noopener noreferrer"
-        class="btn btn-subtle btn-sm gap-2 rounded-full px-4 font-medium"
+        variant="subtle"
+        size="sm"
+        class="gap-2 px-4 font-medium"
         data-posthog-id={link.posthogId}
       >
         <link.icon class="size-4" />
         {link.label}
-      </a>
+      </Button>
     {/each}
   </div>
-  <!-- eslint-enable svelte/no-navigation-without-resolve -->
 </LandingHeading>

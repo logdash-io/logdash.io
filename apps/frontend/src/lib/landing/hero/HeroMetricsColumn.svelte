@@ -1,6 +1,7 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import { Spinner } from '@logdash/hyper-ui/presentational';
   import { showcaseSwap, showsVisitorAccount } from './hero-showcase';
 
   const SPARK_WIDTH = 200;
@@ -105,7 +106,7 @@
       <div
         class="text-neutral-500 flex h-11 shrink-0 items-center gap-2 px-4 text-sm"
       >
-        <span class="loading loading-spinner size-3.5 shrink-0"></span>
+        <Spinner class="size-3.5 shrink-0" aria-hidden="true" />
         Loading metrics
       </div>
     {/if}

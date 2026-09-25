@@ -2,5 +2,5 @@
    Set on every element because scrollbar-width does not inherit. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-base-100) transparent;
+  scrollbar-color: var(--color-border-default) transparent;
 }

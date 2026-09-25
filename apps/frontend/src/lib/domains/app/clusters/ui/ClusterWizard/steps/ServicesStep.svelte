@@ -4,6 +4,7 @@
   import { Feature } from '$lib/domains/shared/types.js';
   import ServiceCard from '../ServiceCard.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import { Divider } from '@logdash/hyper-ui/presentational';
   import { fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
 
@@ -70,7 +71,6 @@
 
   {#each services as service (service.id)}
     <div
-      class=""
       id="wizard-service-{service.id}"
       in:fly={{ y: -10, duration: 200, easing: cubicOut }}
     >
@@ -88,12 +88,15 @@
 
   {#if canAddService}
     <button
-      class="divider w-full gap-1 cursor-pointer divider-base-100 hover:divider-primary/20 hover:text-primary"
+      type="button"
+      class="block w-full cursor-pointer hover:text-brand"
       onclick={onAddService}
       in:fly={{ y: -5, duration: 200, easing: cubicOut }}
     >
-      <PlusIcon class="size-4 -mr-2 shrink-0" />
-      Add another service
+      <Divider class="gap-1">
+        <PlusIcon class="size-4 -mr-2 shrink-0" />
+        Add another service
+      </Divider>
     </button>
   {/if}
 </div>

@@ -13,7 +13,7 @@
 </script>
 
 <div
-  class="ring-hairline bg-base-300 absolute top-0 right-0 flex w-52 gap-2.5 rounded-lg px-3 py-2 ring-1"
+  class="ring-hairline bg-surface-root absolute top-0 right-0 flex w-52 gap-2.5 rounded-lg px-3 py-2 ring-1"
   role="status"
   in:fly={{
     y: -6,

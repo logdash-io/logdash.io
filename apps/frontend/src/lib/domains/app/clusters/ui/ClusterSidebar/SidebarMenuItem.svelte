@@ -22,8 +22,8 @@
   const baseClasses = $derived([
     'flex h-8 w-full items-center gap-2 rounded-lg px-2 text-sm',
     {
-      'bg-surface-root-selected text-base-content': isActive,
-      'text-neutral-400 hover:bg-surface-root-hover hover:text-base-content cursor-pointer':
+      'bg-surface-100 text-fg-default': isActive,
+      'text-neutral-400 hover:bg-surface-hover hover:text-fg-default cursor-pointer':
         !isActive && !disabled,
       'text-neutral-600 cursor-not-allowed pointer-events-none': disabled,
     },

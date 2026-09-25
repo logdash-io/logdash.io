@@ -12,6 +12,7 @@
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import HashIcon from '$lib/domains/shared/icons/HashIcon.svelte';
   import PaletteIcon from '$lib/domains/shared/icons/PaletteIcon.svelte';
+  import { Button, Input } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     clusterId: string;
@@ -108,9 +109,10 @@
     <SettingsCardItem icon={EditIcon}>
       <p class="text-neutral-400 text-sm">Project Name</p>
       {#if isEditingName}
-        <input
+        <Input
           bind:value={newName}
-          class="input input-sm mt-1 w-64"
+          size="sm"
+          class="mt-1 w-64"
           placeholder="Enter project name"
           onkeydown={onKeydown}
         />
@@ -120,32 +122,32 @@
 
       {#snippet action()}
         {#if isEditingName}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onclick={onCancelRenaming}
-            class="btn btn-ghost btn-sm"
             disabled={clustersState.isUpdating}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             onclick={onSaveRename}
-            class="btn btn-primary btn-sm"
-            disabled={clustersState.isUpdating}
+            loading={clustersState.isUpdating}
           >
-            {#if clustersState.isUpdating}
-              <span class="loading loading-spinner loading-xs"></span>
-            {:else}
-              Save
-            {/if}
-          </button>
+            Save
+          </Button>
         {:else}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            class="text-neutral-400"
             onclick={onStartRenaming}
-            class="btn btn-ghost btn-sm text-neutral-400"
           >
             Rename
             <ChevronRightIcon class="h-4 w-4" />
-          </button>
+          </Button>
         {/if}
       {/snippet}
     </SettingsCardItem>
@@ -175,32 +177,32 @@
 
       {#snippet action()}
         {#if isEditingColor}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onclick={onCancelEditingColor}
-            class="btn btn-ghost btn-sm"
             disabled={clustersState.isUpdating}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             onclick={onSaveColor}
-            class="btn btn-primary btn-sm"
-            disabled={clustersState.isUpdating}
+            loading={clustersState.isUpdating}
           >
-            {#if clustersState.isUpdating}
-              <span class="loading loading-spinner loading-xs"></span>
-            {:else}
-              Save
-            {/if}
-          </button>
+            Save
+          </Button>
         {:else}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            class="text-neutral-400"
             onclick={onStartEditingColor}
-            class="btn btn-ghost btn-sm text-neutral-400"
           >
             Change
             <ChevronRightIcon class="h-4 w-4" />
-          </button>
+          </Button>
         {/if}
       {/snippet}
     </SettingsCardItem>
@@ -210,12 +212,14 @@
       <p class="font-mono text-sm">{clusterId}</p>
 
       {#snippet action()}
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
+          class="text-neutral-400"
           onclick={onCopyProjectId}
-          class="btn btn-ghost btn-sm text-neutral-400"
         >
           <CopyIcon class="h-4 w-4" />
-        </button>
+        </Button>
       {/snippet}
     </SettingsCardItem>
   </div>

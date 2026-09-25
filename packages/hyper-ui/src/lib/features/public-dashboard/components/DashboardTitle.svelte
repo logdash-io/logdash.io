@@ -70,12 +70,12 @@
 </script>
 
 <div class="mb-8 flex flex-col items-start justify-start px-1 text-left">
-  <h1 class="text-secondary text-2xl font-semibold">
+  <h1 class="text-fg-default text-2xl font-semibold">
     {@render children?.()}
   </h1>
   {#if enablePolling}
     <div
-      class="grid overflow-hidden text-left text-xs text-neutral-600 dark:text-neutral-500"
+      class="grid overflow-hidden text-left text-xs text-neutral-500"
     >
       {#if loading}
         <span

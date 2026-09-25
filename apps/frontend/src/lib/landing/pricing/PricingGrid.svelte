@@ -2,6 +2,7 @@
   import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { UserTier } from '$lib/domains/shared/types.js';
+  import { Button, Spinner } from '@logdash/hyper-ui/presentational';
   import { runGithubLogin } from './run-github-login.js';
 
   let loggingIn = $state(false);
@@ -20,7 +21,9 @@
 
 <ul class="bg-hairline grid grid-cols-1 gap-px lg:grid-cols-3">
   {#each PAYMENT_PLANS as plan (plan.tier)}
-    <li class="bg-base-300 flex flex-col px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
+    <li
+      class="bg-surface-root flex flex-col px-4 py-10 sm:px-6 lg:px-10 lg:py-12"
+    >
       <div class="flex flex-wrap items-center gap-2">
         <h2 class="mr-auto text-lg font-medium tracking-[-0.01em]">
           {plan.name}
@@ -28,7 +31,7 @@
 
         {#if plan.popular}
           <span
-            class="bg-base-content text-base-300 rounded-full px-2.5 py-0.5 text-xs font-medium"
+            class="bg-surface-inverse text-surface-root rounded-full px-2.5 py-0.5 text-xs font-medium"
           >
             Most popular
           </span>
@@ -51,19 +54,18 @@
         {plan.description}
       </p>
 
-      <button
-        onclick={() => onSelectPlan(plan.tier)}
+      <Button
+        variant={plan.popular ? 'primary' : 'subtle'}
+        block
+        class="mt-8 h-11 font-medium"
         disabled={loggingIn}
-        class={[
-          'btn mt-8 h-11 w-full rounded-full font-medium',
-          plan.popular ? 'btn-primary' : 'btn-subtle',
-        ]}
+        onclick={() => onSelectPlan(plan.tier)}
       >
         {plan.buttonText}
         {#if loggingIn}
-          <span class="loading loading-spinner loading-xs"></span>
+          <Spinner size="xs" aria-hidden="true" />
         {/if}
-      </button>
+      </Button>
 
       <p class="text-neutral-500 mt-3 text-center text-sm">
         {plan.guarantee}

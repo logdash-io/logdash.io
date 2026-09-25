@@ -12,6 +12,14 @@
   import GoogleIcon from '$lib/domains/shared/icons/GoogleIcon.svelte';
   import GitHubIcon from '$lib/domains/shared/icons/GitHubIcon.svelte';
   import type { UserTier } from '$lib/domains/shared/types.js';
+  import {
+    Alert,
+    Button,
+    Card,
+    CardBody,
+    CardTitle,
+    Spinner,
+  } from '@logdash/hyper-ui/presentational';
 
   type AuthMode = 'claim' | 'login';
 
@@ -131,88 +139,88 @@
     start: 1.1,
     easing: cubicInOut,
   }}
-  class="card w-md rounded-xl"
+  class="w-md"
 >
-  <div class="card-body items-center p-6 text-center">
-    <h2 class="card-title mb-2 text-3xl font-bold">
-      {heading}
-    </h2>
-    <p class="text-neutral-400 mb-6 text-balance">
-      {subheading}
-    </p>
+  <Card>
+    <CardBody class="items-center p-6 text-center">
+      <CardTitle class="mb-2 text-3xl font-bold">
+        {heading}
+      </CardTitle>
+      <p class="text-neutral-400 mb-6 text-balance">
+        {subheading}
+      </p>
 
-    {#if isExpired}
-      <div
-        class="alert alert-warning bg-warning/10 border-warning/30 mb-6 rounded-xl text-left text-sm"
-        role="status"
-      >
-        Your temporary dashboard expired. Start a new one or sign in.
+      {#if isExpired}
+        <Alert variant="warning" class="mb-6" role="status">
+          Your temporary dashboard expired. Start a new one or sign in.
+        </Alert>
+      {/if}
+
+      {#if errorMessage}
+        <Alert variant="error" class="mb-6" role="alert">
+          {errorMessage}
+        </Alert>
+      {/if}
+
+      <div class="flex w-full flex-col gap-2">
+        <Button
+          variant="primary"
+          block
+          class="gap-2"
+          disabled={isButtonDisabled}
+          data-posthog-id={githubButtonId}
+          onclick={() => onLogin('github')}
+        >
+          {#if loggingInProvider === 'github'}
+            <div
+              in:fade={{ duration: 150 }}
+              class="flex size-6 items-center justify-center"
+            >
+              <Spinner class="size-4" />
+            </div>
+          {:else}
+            <GitHubIcon class="size-6" />
+          {/if}
+          {actionLabel} with GitHub
+        </Button>
+
+        <Button
+          variant="primary"
+          block
+          class="gap-2"
+          disabled={isButtonDisabled}
+          data-posthog-id={googleButtonId}
+          onclick={() => onLogin('google')}
+        >
+          {#if loggingInProvider === 'google'}
+            <div
+              in:fade={{ duration: 150 }}
+              class="flex size-6 items-center justify-center"
+            >
+              <Spinner class="size-4" />
+            </div>
+          {:else}
+            <GoogleIcon
+              class={['size-6', { 'opacity-50 grayscale': isButtonDisabled }]}
+            />
+          {/if}
+          {actionLabel} with Google
+        </Button>
       </div>
-    {/if}
 
-    {#if errorMessage}
-      <div
-        class="alert alert-error bg-error/10 border-error/30 mb-6 rounded-xl text-left text-sm"
-        role="alert"
-      >
-        {errorMessage}
-      </div>
-    {/if}
+      {#if loginError}
+        <p class="text-error mt-4 text-sm">{loginError}</p>
+      {/if}
 
-    <div class="flex w-full flex-col gap-2">
-      <button
-        disabled={isButtonDisabled}
-        class="btn btn-secondary w-full gap-2"
-        data-posthog-id={githubButtonId}
-        onclick={() => onLogin('github')}
-      >
-        {#if loggingInProvider === 'github'}
-          <div
-            in:fade={{ duration: 150 }}
-            class="flex size-6 items-center justify-center"
-          >
-            <span class="loading loading-spinner size-4"></span>
-          </div>
-        {:else}
-          <GitHubIcon class="size-6" />
-        {/if}
-        {actionLabel} with GitHub
-      </button>
-
-      <button
-        disabled={isButtonDisabled}
-        class="btn btn-secondary w-full gap-2"
-        data-posthog-id={googleButtonId}
-        onclick={() => onLogin('google')}
-      >
-        {#if loggingInProvider === 'google'}
-          <div
-            in:fade={{ duration: 150 }}
-            class="flex size-6 items-center justify-center"
-          >
-            <span class="loading loading-spinner size-4"></span>
-          </div>
-        {:else}
-          <GoogleIcon
-            class={['size-6', { 'opacity-50 grayscale': isButtonDisabled }]}
-          />
-        {/if}
-        {actionLabel} with Google
-      </button>
-    </div>
-
-    {#if loginError}
-      <p class="text-error mt-4 text-sm">{loginError}</p>
-    {/if}
-
-    {#if mode === 'login'}
-      <a
-        href={resolve('/app/quick-setup')}
-        data-posthog-id="auth-continue-anonymous-cta"
-        class="text-neutral-500 hover:text-neutral-300 mt-6 text-sm transition-ink"
-      >
-        Continue without an account
-      </a>
-    {/if}
-  </div>
+      {#if mode === 'login'}
+        <a
+          href={resolve('/app/quick-setup')}
+          data-posthog-id="auth-continue-anonymous-cta"
+          class="text-neutral-500 hover:text-neutral-300 mt-6 text-sm transition-ink"
+        >
+          Continue without an account
+        </a>
+      {/if}
+    </CardBody>
+  </Card>
 </div>

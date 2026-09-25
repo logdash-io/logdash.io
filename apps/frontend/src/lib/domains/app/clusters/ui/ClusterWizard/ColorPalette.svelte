@@ -31,7 +31,8 @@
       class={[
         'flex size-3.5 items-center justify-center rounded-xl transition-[scale,box-shadow] duration-200 cursor-pointer',
         {
-          'ring-2 ring-offset-2 ring-offset-base-300': isSelected && !disabled,
+          'ring-2 ring-offset-2 ring-offset-surface-root':
+            isSelected && !disabled,
           'hover:scale-110': !isSelected && !disabled,
         },
       ]}
@@ -47,7 +48,8 @@
     class={[
       'relative flex size-3.5 cursor-pointer items-center justify-center rounded-xl transition-[scale,box-shadow] duration-200',
       {
-        'ring-2 ring-offset-2 ring-offset-base-300': isCustomColor && !disabled,
+        'ring-2 ring-offset-2 ring-offset-surface-root':
+          isCustomColor && !disabled,
         'hover:scale-110': !disabled,
       },
     ]}

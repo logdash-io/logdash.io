@@ -61,7 +61,7 @@
         <li>
           <a
             href={resolve('/')}
-            class="hover:text-base-content transition-ink duration-150"
+            class="hover:text-fg-default transition-ink duration-150"
           >
             Home
           </a>
@@ -93,7 +93,7 @@
       <!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus the hero hash -->
       <a
         href={`${resolve('/')}#${HERO_ID}`}
-        class="text-neutral-400 hover:text-base-content transition-ink duration-150"
+        class="text-neutral-400 hover:text-fg-default transition-ink duration-150"
         data-posthog-id={`feature-${page.slug}-demo-cta`}
       >
         See the live demo
@@ -136,7 +136,7 @@
       class="bg-hairline grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-3"
     >
       {#each page.capabilities as capability (capability.title)}
-        <li class="bg-base-300 px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
+        <li class="bg-surface-root px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
           <h3 class="text-lg font-medium tracking-[-0.01em]">
             {capability.title}
           </h3>
@@ -156,7 +156,7 @@
   <LandingSection>
     <ol class="bg-hairline grid grid-cols-1 gap-px lg:grid-cols-3">
       {#each page.steps.items as step, index (step.title)}
-        <li class="bg-base-300 px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
+        <li class="bg-surface-root px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
           <!-- The <ol> already numbers the steps for screen readers. -->
           <span aria-hidden="true" class="text-neutral-600 font-mono text-sm">
             {String(index + 1).padStart(2, '0')}
@@ -188,7 +188,7 @@
 
           <a
             href={resolve('/docs/sdks')}
-            class="text-base-content hover:text-neutral-400 mt-5 inline-flex w-fit items-center gap-1.5 text-sm font-medium transition-ink duration-150"
+            class="text-fg-default hover:text-neutral-400 mt-5 inline-flex w-fit items-center gap-1.5 text-sm font-medium transition-ink duration-150"
             data-posthog-id={`feature-${page.slug}-sdk-docs`}
           >
             Browse all SDKs
@@ -201,7 +201,7 @@
         >
           <StageLight preset="bottom-left" class="absolute inset-0" />
 
-          <div class="bg-base-200 relative">
+          <div class="bg-surface-elevated relative">
             <CodeBlock
               code={page.sdk.code}
               language={page.sdk.language}
@@ -244,7 +244,7 @@
                 </span>
               </span>
               <ChevronRightIcon
-                class="text-neutral-600 group-hover:text-base-content ml-auto size-4 shrink-0 transition-ink duration-150"
+                class="text-neutral-600 group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
               />
             </a>
           </li>

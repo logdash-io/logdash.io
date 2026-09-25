@@ -11,6 +11,7 @@
   import AtIcon from '$lib/domains/shared/icons/AtIcon.svelte';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import { Button, Input, Spinner } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     clusterId: string;
@@ -81,9 +82,7 @@
   <div class="p-4">
     {#if clusterInvitesState.isLoading || !capacity}
       <div class="flex justify-center py-8">
-        <span
-          class="loading loading-spinner loading-xs text-neutral-400"
-        ></span>
+        <Spinner size="xs" class="text-neutral-400" />
       </div>
     {:else}
       {#if capacity}
@@ -94,9 +93,9 @@
               {memberCount}/{capacity.maxMembers}
             </span>
           </div>
-          <div class="bg-primary/20 mt-2 h-1 w-full rounded-full">
+          <div class="bg-neutral-700 mt-2 h-1 w-full rounded-full">
             <div
-              class="bg-primary h-1 rounded-full transition-[width]"
+              class="bg-brand h-1 rounded-full transition-[width]"
               style="width: {usagePercent}%"
             ></div>
           </div>
@@ -134,35 +133,29 @@
       {#if clusterInvitesState.canInviteMore}
         <div class="mt-4 border-t border-hairline pt-4">
           <div class="flex gap-3">
-            <label
-              class={[
-                'input outline-primary focus-within:border-primary flex-1 ring-0 focus-within:ring-0 focus-within:outline-0',
-                { 'input-error': emailError && emailInput.trim() },
-              ]}
+            <Input
+              type="email"
+              class="flex-1"
+              placeholder="New member email address"
+              error={!!emailError && !!emailInput.trim()}
+              bind:value={emailInput}
+              disabled={clusterInvitesState.isCreating}
+              onkeydown={(e: KeyboardEvent) => {
+                if (e.key === 'Enter') void onInviteUser();
+              }}
             >
-              <AtIcon class="size-4 text-neutral-500" />
-              <input
-                type="email"
-                class="grow"
-                placeholder="New member email address"
-                bind:value={emailInput}
-                disabled={clusterInvitesState.isCreating}
-                onkeydown={(e) => {
-                  if (e.key === 'Enter') void onInviteUser();
-                }}
-              />
-            </label>
-            <button
-              class="btn btn-primary"
+              {#snippet leading()}
+                <AtIcon class="size-4 text-neutral-500" />
+              {/snippet}
+            </Input>
+            <Button
+              variant="primary"
               onclick={onInviteUser}
-              disabled={!isEmailValid || clusterInvitesState.isCreating}
+              disabled={!isEmailValid}
+              loading={clusterInvitesState.isCreating}
             >
-              {#if clusterInvitesState.isCreating}
-                <span class="loading loading-spinner loading-xs"></span>
-              {:else}
-                Invite
-              {/if}
-            </button>
+              Invite
+            </Button>
           </div>
           {#if emailError && emailInput.trim()}
             <div class="text-error mt-1 text-sm">{emailError}</div>
@@ -171,7 +164,7 @@
       {:else if capacity}
         <UpgradeElement source="cluster-invite-limit" class="mt-4">
           <div class="primary-card rounded-xl p-4">
-            <div class="text-primary flex items-center gap-2">
+            <div class="text-brand flex items-center gap-2">
               <DangerIcon class="size-5" />
               <span class="font-medium">Team limit reached</span>
             </div>
@@ -202,17 +195,16 @@
                     )} access
                   </div>
                 </div>
-                <button
-                  class="btn btn-square btn-ghost btn-sm text-error hover:bg-error/10"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  shape="square"
+                  class="text-error hover:bg-error/10"
                   onclick={() => onDeleteInvite(invite.id)}
-                  disabled={clusterInvitesState.isDeleting}
+                  loading={clusterInvitesState.isDeleting}
                 >
-                  {#if clusterInvitesState.isDeleting}
-                    <span class="loading loading-spinner loading-xs"></span>
-                  {:else}
-                    <TrashIcon class="h-4 w-4" />
-                  {/if}
-                </button>
+                  <TrashIcon class="h-4 w-4" />
+                </Button>
               </div>
             {/each}
           </div>

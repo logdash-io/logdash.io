@@ -5,6 +5,7 @@
   import OnboardingFlow from '$lib/domains/onboarding/ui/OnboardingFlow.svelte';
   import GitHubIcon from '$lib/domains/shared/icons/GitHubIcon.svelte';
   import GoogleIcon from '$lib/domains/shared/icons/GoogleIcon.svelte';
+  import { Button, Spinner } from '@logdash/hyper-ui/presentational';
   import { cubicOut, quintOut } from 'svelte/easing';
   import { prefersReducedMotion } from 'svelte/motion';
   import { fade, type TransitionConfig } from 'svelte/transition';
@@ -213,14 +214,14 @@
 {#if visible}
   <div class="fixed inset-0 z-10 flex overflow-y-auto overscroll-contain p-4">
     <div
-      class="bg-base-300/70 fixed inset-0"
+      class="bg-surface-root/70 fixed inset-0"
       aria-hidden="true"
       in:fade={{ duration: SCRIM_IN_MS, easing: cubicOut }}
       out:fade={{ duration: SCRIM_OUT_MS, easing: cubicOut }}
     ></div>
 
     <div
-      class="bg-base-200 relative m-auto w-full max-w-md overflow-hidden rounded-2xl shadow-[0_12px_24px_-16px_rgba(0,0,0,0.6)] ring-1 ring-neutral-800 outline-none transition-[height] duration-320 ease-[cubic-bezier(0.25,1,0.5,1)] motion-reduce:transition-none"
+      class="bg-surface-elevated relative m-auto w-full max-w-md overflow-hidden rounded-2xl shadow-[0_12px_24px_-16px_rgba(0,0,0,0.6)] ring-1 ring-neutral-800 outline-none transition-[height] duration-320 ease-[cubic-bezier(0.25,1,0.5,1)] motion-reduce:transition-none"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -292,25 +293,27 @@
     {/if}
 
     <div class="flex flex-col gap-2">
-      <button
-        type="button"
-        class="btn btn-primary w-full gap-2 rounded-full font-medium"
+      <Button
+        variant="primary"
+        block
+        class="gap-2 font-medium"
         data-posthog-id="hero-claim-github-cta"
         onclick={() => onContinue('github')}
       >
         <GitHubIcon class="size-4" />
         Continue with GitHub
-      </button>
+      </Button>
 
-      <button
-        type="button"
-        class="btn btn-subtle w-full gap-2 rounded-full font-medium"
+      <Button
+        variant="subtle"
+        block
+        class="gap-2 font-medium"
         data-posthog-id="hero-claim-google-cta"
         onclick={() => onContinue('google')}
       >
         <GoogleIcon class="size-4" />
         Continue with Google
-      </button>
+      </Button>
 
       <button
         type="button"
@@ -329,7 +332,7 @@
 
 {#snippet waiting(provider: OAuthProvider)}
   <div class="flex flex-col items-center gap-5 px-6 py-8 text-center">
-    <span class="loading loading-spinner text-neutral-400 size-5"></span>
+    <Spinner size="sm" class="text-neutral-400" aria-hidden="true" />
 
     <div class="flex flex-col gap-1.5">
       <h2 class="text-base font-medium text-balance">
@@ -341,7 +344,7 @@
     <div class="flex items-center gap-4">
       <button
         type="button"
-        class={[LINK_CLASS, 'text-neutral-300 hover:text-base-content']}
+        class={[LINK_CLASS, 'text-neutral-300 hover:text-fg-default']}
         onclick={onReopenWindow}
       >
         Open the window again
@@ -362,7 +365,7 @@
     class="flex flex-col items-center gap-5 px-6 py-8 text-center"
     role="status"
   >
-    <span class="loading loading-spinner text-neutral-400 size-5"></span>
+    <Spinner size="sm" class="text-neutral-400" aria-hidden="true" />
     <h2 class="text-base font-medium">{label}</h2>
   </div>
 {/snippet}

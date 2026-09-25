@@ -32,7 +32,7 @@
     column: 'logdash' | 'them',
   ): string {
     if (winner === 'tie') return 'text-neutral-300';
-    return winner === column ? 'text-base-content' : 'text-neutral-500';
+    return winner === column ? 'text-fg-default' : 'text-neutral-500';
   }
 
   /** Blocks that read as objects rather than as prose, and want more air. */
@@ -130,7 +130,7 @@
                 <!-- The <ol> already numbers the steps for screen readers. -->
                 <span
                   aria-hidden="true"
-                  class="border-hairline bg-base-300 text-neutral-400 relative flex size-6 shrink-0 items-center justify-center rounded-full border text-xs"
+                  class="border-hairline bg-surface-root text-neutral-400 relative flex size-6 shrink-0 items-center justify-center rounded-full border text-xs"
                 >
                   {stepIndex + 1}
                 </span>
@@ -226,13 +226,13 @@
               {@const Icon = card.icon}
               <a
                 href={resolve(card.href)}
-                class="bg-base-300 hover:bg-base-200 group flex flex-col gap-4 p-5"
+                class="bg-surface-root hover:bg-surface-elevated group flex flex-col gap-4 p-5"
               >
                 <div
-                  class="border-base-100 bg-base-300 flex size-9 items-center justify-center rounded-lg border"
+                  class="border-border-default bg-surface-root flex size-9 items-center justify-center rounded-lg border"
                 >
                   <Icon
-                    class="text-neutral-400 group-hover:text-base-content size-[18px] transition-ink duration-150"
+                    class="text-neutral-400 group-hover:text-fg-default size-[18px] transition-ink duration-150"
                   />
                 </div>
                 <div class="flex flex-col gap-1">
@@ -255,11 +255,11 @@
                 href={sdk.readmeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="bg-base-300 hover:bg-base-200 group flex items-center gap-2.5 px-4 py-3 text-sm"
+                class="bg-surface-root hover:bg-surface-elevated group flex items-center gap-2.5 px-4 py-3 text-sm"
               >
                 <!-- eslint-enable svelte/no-navigation-without-resolve -->
                 <Icon class="size-4 shrink-0" />
-                <span class="text-neutral-300 group-hover:text-base-content">
+                <span class="text-neutral-300 group-hover:text-fg-default">
                   {sdk.name}
                 </span>
                 <OpenIcon

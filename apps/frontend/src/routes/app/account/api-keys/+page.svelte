@@ -11,6 +11,7 @@
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -93,14 +94,14 @@
       <p class="text-neutral-400 text-sm">
         {data.apiKeys.length} key{data.apiKeys.length === 1 ? '' : 's'}
       </p>
-      <button
-        type="button"
-        class="btn btn-primary btn-sm"
+      <Button
+        variant="primary"
+        size="sm"
         onclick={() => (createModalOpen = true)}
       >
         <PlusIcon class="size-4" />
         Create personal API key
-      </button>
+      </Button>
     </div>
 
     {#if data.apiKeys.length === 0}
@@ -123,19 +124,15 @@
             {formatDate(key.createdAt)}
           </p>
           {#snippet action()}
-            <button
-              type="button"
-              class="btn btn-error btn-outline btn-sm"
-              disabled={revokingId === key.id}
+            <Button
+              variant="danger-ghost"
+              size="sm"
+              loading={revokingId === key.id}
               onclick={() => onRevoke(key)}
             >
-              {#if revokingId === key.id}
-                <span class="loading loading-spinner loading-xs"></span>
-              {:else}
-                <TrashIcon class="size-4" />
-                Revoke
-              {/if}
-            </button>
+              <TrashIcon class="size-4" />
+              Revoke
+            </Button>
           {/snippet}
         </SettingsCardItem>
       {/each}

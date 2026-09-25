@@ -3,6 +3,7 @@
   import type { AnonymousStartStep } from '$lib/domains/anonymous/domain/anonymous-preview';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings';
   import { StatusBadge } from '@logdash/hyper-ui/features';
+  import { Button, Spinner } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon } from 'lucide-svelte';
   import { cubicOut } from 'svelte/easing';
   import { fade } from 'svelte/transition';
@@ -137,9 +138,7 @@
           </span>
         {:else if index === activeStepIndex}
           <span class="flex size-5 shrink-0 items-center justify-center">
-            <span
-              class="loading loading-spinner loading-xs text-primary"
-            ></span>
+            <Spinner size="xs" class="text-brand" aria-hidden="true" />
           </span>
         {:else}
           <span
@@ -150,7 +149,7 @@
         <span
           class={[
             'text-sm transition-ink duration-200',
-            index <= activeStepIndex ? 'text-base-content' : 'text-neutral-500',
+            index <= activeStepIndex ? 'text-fg-default' : 'text-neutral-500',
           ]}
         >
           {step.label}
@@ -231,14 +230,15 @@
   </p>
 
   <div>
-    <button
-      type="button"
-      class="btn btn-primary btn-sm rounded-full px-5 font-medium"
+    <Button
+      variant="primary"
+      size="sm"
+      class="px-5 font-medium"
       data-posthog-id="hero-preview-restart-cta"
       onclick={onRetry}
     >
       Start over
-    </button>
+    </Button>
   </div>
 {/snippet}
 
@@ -250,61 +250,65 @@
   </p>
 
   <div>
-    <button
-      type="button"
-      class="btn btn-primary btn-sm rounded-full px-5 font-medium"
+    <Button
+      variant="primary"
+      size="sm"
+      class="px-5 font-medium"
       data-posthog-id="hero-preview-retry-cta"
       onclick={onRetry}
     >
       Try again
-    </button>
+    </Button>
   </div>
 {/snippet}
 
 {#snippet previewActions()}
   <div class="flex flex-wrap items-center gap-2">
     {#if claimable}
-      <button
-        type="button"
-        class="btn btn-primary btn-sm rounded-full px-5 font-medium"
+      <Button
+        variant="primary"
+        size="sm"
+        class="px-5 font-medium"
         data-posthog-id="hero-setup-alerts-cta"
         disabled={isOpening}
         onclick={onSetUpAlerts}
       >
         Set up alerts
-      </button>
+      </Button>
 
-      {@render openDashboardButton('btn-subtle')}
+      {@render openDashboardButton('subtle')}
     {:else}
-      {@render openDashboardButton('btn-primary')}
+      {@render openDashboardButton('primary')}
 
-      <button
-        type="button"
-        class="btn btn-subtle btn-sm rounded-full px-4 font-medium"
+      <Button
+        variant="subtle"
+        size="sm"
+        class="px-4 font-medium"
         data-posthog-id="hero-setup-alerts-cta"
         disabled={isOpening}
         onclick={onOpenDashboard}
       >
         Set up alerts
-      </button>
+      </Button>
     {/if}
   </div>
 {/snippet}
 
-{#snippet openDashboardButton(variant: string)}
-  <button
-    type="button"
-    class={['btn btn-sm rounded-full px-5 font-medium', variant]}
+{#snippet openDashboardButton(variant: 'primary' | 'subtle')}
+  <Button
+    {variant}
+    size="sm"
+    class="px-5 font-medium"
     data-posthog-id="hero-open-dashboard-cta"
     disabled={isOpening}
     onclick={onOpenDashboard}
   >
     {#if isOpening}
-      <span class="loading loading-spinner size-3.5"></span>
+      <Spinner class="size-3.5" aria-hidden="true" />
     {/if}
     Open your dashboard
     <ArrowRightIcon class="size-4" />
-  </button>
+  </Button>
 {/snippet}
 
 {#snippet tileHeader(eyebrow: string, title: string, status: MonitorStatus)}

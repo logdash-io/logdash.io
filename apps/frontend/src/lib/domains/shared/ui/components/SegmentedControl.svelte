@@ -1,4 +1,6 @@
 <script lang="ts" generics="T extends string">
+  import { Button } from '@logdash/hyper-ui/presentational';
+
   type Option = {
     value: T;
     label: string;
@@ -15,19 +17,15 @@
   let { options, value, onChange, size = 'sm' }: Props = $props();
 </script>
 
-<div class="join">
+<div class="inline-flex">
   {#each options as option (option.value)}
-    <button
-      type="button"
-      class={[
-        'join-item btn',
-        size === 'xs' ? 'btn-xs' : 'btn-sm',
-        value === option.value ? 'btn-primary' : 'btn-ghost',
-      ]}
+    <Button
+      {size}
+      variant={value === option.value ? 'primary' : 'ghost'}
       aria-pressed={value === option.value}
       onclick={() => onChange(option.value)}
     >
       {option.label}
-    </button>
+    </Button>
   {/each}
 </div>

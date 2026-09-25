@@ -19,7 +19,7 @@
     <StatusBadge {status} />
 
     <div>
-      <h4 class="text-secondary text-lg font-medium">
+      <h4 class="text-fg-default text-lg font-medium">
         {name}
       </h4>
     </div>
@@ -32,7 +32,7 @@
 
     {#if showArrow}
       <ChevronRightIcon
-        class="size-4 text-neutral-600 group-hover:text-base-content"
+        class="size-4 text-neutral-600 group-hover:text-fg-default"
       />
     {/if}
   </div>

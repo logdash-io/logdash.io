@@ -82,8 +82,8 @@
             class={[
               'flex min-h-8 items-center rounded-lg px-2.5 text-sm leading-5 transition-ink duration-150',
               activeId === entry.id
-                ? 'text-base-content'
-                : 'text-neutral-400 hover:text-base-content',
+                ? 'text-fg-default'
+                : 'text-neutral-400 hover:text-fg-default',
             ]}
             aria-current={activeId === entry.id ? 'location' : undefined}
           >

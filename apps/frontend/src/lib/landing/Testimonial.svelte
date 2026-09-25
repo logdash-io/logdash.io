@@ -16,7 +16,7 @@
 
 <div class="flex h-full flex-col gap-6">
   <blockquote
-    class="text-neutral-400 group-hover:text-base-content text-base leading-relaxed text-pretty transition-ink duration-150"
+    class="text-neutral-400 group-hover:text-fg-default text-base leading-relaxed text-pretty transition-ink duration-150"
   >
     “{quote}”
   </blockquote>
@@ -31,7 +31,7 @@
     ]}
   >
     <img
-      class="ring-base-100 size-10 shrink-0 rounded-full object-cover grayscale ring-1"
+      class="ring-border-default size-10 shrink-0 rounded-full object-cover grayscale ring-1"
       src={img}
       alt={person}
       loading="lazy"
@@ -46,7 +46,7 @@
           at
           <!-- eslint-disable svelte/no-navigation-without-resolve -->
           <a
-            class="hover:text-base-content transition-ink duration-150"
+            class="hover:text-fg-default transition-ink duration-150"
             target="_blank"
             rel="noopener"
             href={company.url}

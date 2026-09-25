@@ -5,6 +5,7 @@
   import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analytics-response.js';
   import type { LogLevel } from '$lib/domains/logs/domain/log-level.js';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
+  import { Spinner } from '@logdash/hyper-ui/presentational';
   import { cubicOut } from 'svelte/easing';
   import { fade } from 'svelte/transition';
 
@@ -409,7 +410,7 @@
       .style('display', 'none')
       .style('position', 'absolute')
       .style('padding', '10px')
-      .style('color', 'var(--color-base-content)')
+      .style('color', 'var(--color-fg-default)')
       .style('pointer-events', 'none')
       .style('z-index', '99999')
       .style('max-width', '300px')
@@ -459,15 +460,15 @@
     {#if isLoading}
       <div
         transition:fade={{ duration: 200, easing: cubicOut }}
-        class="bg-base-200 text-neutral-400 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
+        class="bg-surface-elevated text-neutral-400 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
         style="height: {CHART_HEIGHT}px"
       >
-        <span class="loading loading-spinner loading-xs mr-2"></span>
+        <Spinner size="xs" class="mr-2" aria-hidden="true" />
         Loading analytics data...
       </div>
     {:else if error}
       <div
-        class="bg-base-200/50 text-error-content absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
+        class="bg-surface-elevated/50 text-fg-default absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
         style="height: {CHART_HEIGHT}px"
       >
         <span class="mr-2">

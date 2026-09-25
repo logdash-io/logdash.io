@@ -1,5 +1,6 @@
 <script lang="ts">
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
+  import { Badge, Tab, Tabs } from '@logdash/hyper-ui/presentational';
 
   interface Props {
     title: string;
@@ -18,55 +19,44 @@
     canSwitchTabs,
     onRangeChange,
   }: Props = $props();
+
+  function onTabsClickCapture(event: MouseEvent): void {
+    if (canSwitchTabs) return;
+    event.preventDefault();
+    event.stopPropagation();
+    upgradeState.openModal();
+  }
 </script>
 
 <div class="mb-4 flex items-center justify-between">
   <h2 class="text-xl font-medium">{title}</h2>
 
-  <div class="indicator">
+  <div class="relative inline-flex w-max">
     {#if !canSwitchTabs}
-      <span class="indicator-item badge badge-soft badge-primary badge-xs">
+      <Badge
+        size="xs"
+        class="absolute top-0 right-0 z-1 translate-x-1/2 -translate-y-1/2 whitespace-nowrap"
+      >
         PRO
-      </span>
+      </Badge>
     {/if}
 
-    <div
-      role="tablist"
-      class={['tabs tabs-box tabs-xs bg-neutral-800 rounded-lg shadow-none']}
-      onclickcapture={(e) => {
-        if (!canSwitchTabs) {
-          e.preventDefault();
-          e.stopPropagation();
-          upgradeState.openModal();
-          return;
-        }
-      }}
-    >
-      <button
-        role="tab"
-        class={[
-          'tab w-20 rounded-lg',
-          {
-            'tab-active btn-secondary': currentRange === smallOption,
-          },
-        ]}
+    <Tabs size="xs" boxed onclickcapture={onTabsClickCapture}>
+      <Tab
+        class="w-20"
+        active={currentRange === smallOption}
         onclick={() => onRangeChange(smallOption)}
       >
         {smallOption}
-      </button>
+      </Tab>
 
-      <button
-        role="tab"
-        class={[
-          'tab w-20 rounded-lg',
-          {
-            'tab-active btn-secondary': currentRange === largeOption,
-          },
-        ]}
+      <Tab
+        class="w-20"
+        active={currentRange === largeOption}
         onclick={() => onRangeChange(largeOption)}
       >
         {largeOption}
-      </button>
-    </div>
+      </Tab>
+    </Tabs>
   </div>
 </div>

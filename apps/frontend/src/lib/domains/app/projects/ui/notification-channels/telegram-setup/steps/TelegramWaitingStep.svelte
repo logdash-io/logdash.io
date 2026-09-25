@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { Button, Kbd, Spinner } from '@logdash/hyper-ui/presentational';
+
   type Props = {
     passphrase: string;
     onCancel: () => void;
@@ -9,25 +11,19 @@
 </script>
 
 <div class="text-center">
-  <div class="avatar placeholder mb-4">
-    <span class="loading loading-infinity loading-xl"></span>
-  </div>
+  <Spinner variant="infinity" size="xl" class="mb-4" />
 
   <h3 class="mb-2 text-lg font-medium">Waiting for the message</h3>
 
   <p class="text-neutral-400 mb-6 text-sm">
-    We're checking if your passphrase <code class="kbd kbd-sm">
+    We're checking if your passphrase <Kbd size="sm">
       {passphrase}
-    </code>
+    </Kbd>
     arrived... Hold tight!
   </p>
 
   <div class="flex gap-3">
-    <button type="button" class="btn btn-neutral flex-1" onclick={onCancel}>
-      Cancel
-    </button>
-    <button type="button" class="btn btn-secondary flex-1" onclick={onBack}>
-      Back
-    </button>
+    <Button variant="neutral" class="flex-1" onclick={onCancel}>Cancel</Button>
+    <Button variant="primary" class="flex-1" onclick={onBack}>Back</Button>
   </div>
 </div>

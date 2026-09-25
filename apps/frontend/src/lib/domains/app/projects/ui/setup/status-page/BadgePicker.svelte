@@ -4,6 +4,7 @@
   import { untrack } from 'svelte';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
+  import { Button, Checkbox, Select } from '@logdash/hyper-ui/presentational';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
   import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
@@ -42,6 +43,7 @@
     monitor.name || stripProtocol(monitor.url ?? ''),
   );
   const isThemed = $derived(hasThemes(style));
+  const isCardStyle = $derived(style === 'card');
   const isHtmlSnippet = $derived(isThemed && matchTheme);
   const snippet = $derived(
     getBadgeSnippet({
@@ -66,17 +68,17 @@
   }
 </script>
 
-<div class="border-base-100 flex flex-col gap-4 rounded-xl border p-4">
+<div class="border-border-default flex flex-col gap-4 rounded-xl border p-4">
   {#if monitors.length > 1}
     <label class="flex flex-col gap-1.5 text-sm">
       <span class="text-neutral-400">Monitor</span>
-      <select class="select select-sm w-full" bind:value={selectedMonitorId}>
+      <Select size="sm" class="w-full" bind:value={selectedMonitorId}>
         {#each monitors as option (option.id)}
           <option value={option.id}>
             {option.name || stripProtocol(option.url ?? '')}
           </option>
         {/each}
-      </select>
+      </Select>
     </label>
   {/if}
 
@@ -102,7 +104,7 @@
     class={[
       'grid gap-2',
       {
-        'sm:grid-cols-2': style !== 'card',
+        'sm:grid-cols-2': !isCardStyle,
       },
     ]}
   >
@@ -128,11 +130,7 @@
 
   {#if isThemed}
     <label class="flex cursor-pointer items-center gap-2 text-sm">
-      <input
-        type="checkbox"
-        class="checkbox checkbox-xs checkbox-primary"
-        bind:checked={matchTheme}
-      />
+      <Checkbox size="xs" variant="primary" bind:checked={matchTheme} />
       Switch to the dark version when the reader uses dark mode
     </label>
   {/if}
@@ -146,19 +144,20 @@
       class="ld-card-base relative w-full overflow-hidden rounded-xl text-sm"
     >
       <Highlight
-        class="code-snippet selection:bg-base-100 break-all whitespace-pre-wrap [&>code]:pr-12!"
+        class="code-snippet selection:bg-surface-100 break-all whitespace-pre-wrap [&>code]:pr-12!"
         code={snippet}
         language={isHtmlSnippet ? xml : markdown}
       />
 
-      <button
-        type="button"
-        class="btn btn-sm btn-square bg-base-100 absolute right-2 top-2 border-transparent"
+      <Button
+        size="sm"
+        shape="square"
+        class="bg-surface-100 absolute right-2 top-2 border-transparent"
         aria-label="Copy badge snippet"
         onclick={onCopySnippet}
       >
         <CopyIcon class="h-4 w-4" />
-      </button>
+      </Button>
     </div>
   </div>
 </div>

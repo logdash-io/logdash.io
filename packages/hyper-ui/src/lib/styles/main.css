@@ -1,12 +1,41 @@
 @import "./tailwind.css";
+@import "./tokens/primitives.css";
+@import "./tokens/semantic.css";
 @import "./base.css";
-@import "./themes.css";
 @import "./components.css";
 @import "./scrollbar.css";
 @import "./animations.css";
 @import "./third-party.css";
 
 @theme {
+  --color-surface-root: var(--surface-root);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-100: var(--surface-100);
+  --color-surface-150: var(--surface-150);
+  --color-surface-well: var(--surface-well);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-inverse: var(--surface-inverse);
+  --color-surface-inverse-hover: var(--surface-inverse-hover);
+
+  --color-fg-default: var(--fg-default);
+  --color-fg-secondary: var(--fg-secondary);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-hairline: var(--hairline);
+
+  --color-brand: var(--brand);
+
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-error-bg-hover: var(--error-bg-hover);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+
   --container-8xl: 90rem;
   --container-9xl: 100rem;
   /* Marketing page column: 1280px of content between 40px paddings. */

@@ -7,6 +7,14 @@
   import { createLogger } from '$lib/domains/shared/logger';
   import { onMount } from 'svelte';
   import { posthog } from 'posthog-js';
+  import {
+    Alert,
+    Button,
+    Card,
+    CardBody,
+    CardTitle,
+    Spinner,
+  } from '@logdash/hyper-ui/presentational';
 
   const logger = createLogger('quick-setup', false);
 
@@ -58,39 +66,34 @@
 
 <div class="flex flex-1 items-center justify-center p-6">
   {#if isChecking}
-    <span class="loading loading-spinner loading-lg"></span>
+    <Spinner size="lg" />
   {:else}
-    <div class="card w-md rounded-xl">
-      <div class="card-body items-center gap-4 p-6 text-center">
-        <h2 class="card-title text-3xl font-bold">
+    <Card class="w-md">
+      <CardBody class="items-center gap-4 p-6 text-center">
+        <CardTitle class="text-3xl font-bold">
           Get a dashboard, instantly
-        </h2>
+        </CardTitle>
 
         <p class="text-neutral-400">
           No signup. Just a live dashboard to try logs, metrics and monitoring.
         </p>
 
         {#if errorMessage}
-          <div
-            class="alert alert-error bg-error/10 border-error/30 rounded-xl text-left text-sm"
-            role="alert"
-          >
+          <Alert variant="error" role="alert">
             {errorMessage}
-          </div>
+          </Alert>
         {/if}
 
-        <button
-          class="btn btn-primary w-full"
+        <Button
+          variant="primary"
+          block
           data-posthog-id="quick-setup-create-dashboard-cta"
-          disabled={isCreating}
+          loading={isCreating}
           onclick={onCreateDashboard}
         >
-          {#if isCreating}
-            <span class="loading loading-spinner loading-sm"></span>
-          {/if}
           Create your dashboard
-        </button>
-      </div>
-    </div>
+        </Button>
+      </CardBody>
+    </Card>
   {/if}
 </div>

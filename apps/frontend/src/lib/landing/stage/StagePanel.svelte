@@ -15,7 +15,7 @@
 <div
   data-nosnippet
   class={[
-    'ring-hairline bg-base-200 absolute flex flex-col overflow-hidden shadow-[0_32px_64px_-24px_rgba(0,0,0,0.7)] ring-1',
+    'ring-hairline bg-surface-elevated absolute flex flex-col overflow-hidden shadow-[0_32px_64px_-24px_rgba(0,0,0,0.7)] ring-1',
     className,
   ]}
 >

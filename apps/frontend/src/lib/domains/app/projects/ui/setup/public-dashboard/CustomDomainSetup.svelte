@@ -4,6 +4,14 @@
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { CheckIcon, CloseIcon, DangerIcon } from '@logdash/hyper-ui/icons';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
+  import {
+    Alert,
+    Button,
+    Collapse,
+    Input,
+    Spinner,
+    Swap,
+  } from '@logdash/hyper-ui/presentational';
   import Highlight from 'svelte-highlight';
   import { bash } from 'svelte-highlight/languages';
 
@@ -41,7 +49,7 @@
     };
   });
 
-  const saveDomain = async (): Promise<void> => {
+  const onSaveDomain = async (): Promise<void> => {
     if (!domainInput.trim()) return;
 
     await customDomainsState.createCustomDomain(dashboardId, {
@@ -50,7 +58,14 @@
     domainInput = '';
   };
 
-  const handleDeleteDomain = async (): Promise<void> => {
+  const onDomainKeydown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Enter' || isLoading || !domainInput.trim()) return;
+
+    event.preventDefault();
+    void onSaveDomain();
+  };
+
+  const onDeleteDomain = async (): Promise<void> => {
     if (!customDomain) return;
 
     const confirmed = confirm(
@@ -61,11 +76,11 @@
     await customDomainsState.deleteCustomDomain(dashboardId);
   };
 
-  const handleManualCheck = async (): Promise<void> => {
+  const onManualCheck = async (): Promise<void> => {
     await customDomainsState.manualCheck(dashboardId);
   };
 
-  const copyDnsRecord = async (): Promise<void> => {
+  const onCopyDnsRecord = async (): Promise<void> => {
     if (!customDomain) return;
 
     const dnsRecord = `CNAME ${customDomain.domain} statuspage.logdash.io`;
@@ -95,217 +110,183 @@
     Host your status page on any domain you own.
   </p>
 
-  <div class="border-base-100 bg-base-300 overflow-hidden rounded-lg border">
-    <div class="collapse-open collapse rounded-none px-2 py-1">
-      <div class="collapse-title font-medium">1. Add your custom domain</div>
-      <div class="collapse-content">
-        {#if !customDomain}
-          <div class="flex flex-col gap-2 sm:flex-row">
-            <input
-              bind:value={domainInput}
-              class="input ld-input ld-input-padding min-w-0 flex-1"
-              placeholder="status.example.com"
-              type="text"
-              disabled={isLoading}
-              onkeydown={(e) => {
-                if (e.key === 'Enter' && !isLoading && domainInput.trim()) {
-                  e.preventDefault();
-                  void saveDomain();
-                }
-              }}
-            />
-            <button
-              class="btn btn-primary btn-sm shrink-0"
-              onclick={saveDomain}
-              disabled={isLoading || !domainInput.trim()}
-            >
-              {#if isLoading}
-                <span class="loading loading-spinner w-3"></span>
-              {/if}
-              Save
-            </button>
-          </div>
-        {:else}
-          <div class="flex flex-col gap-2 sm:flex-row">
-            <input
-              value={customDomain.domain}
-              class="input ld-input ld-input-padding min-w-0 flex-1 break-all"
-              readonly
-              disabled
-            />
-            <button
-              class="btn btn-error btn-outline btn-sm shrink-0"
-              onclick={handleDeleteDomain}
-              disabled={isLoading}
-            >
-              {#if isLoading}
-                <span class="loading loading-spinner w-3"></span>
-              {/if}
-              Delete
-            </button>
-          </div>
-        {/if}
+  <div
+    class="border-border-default bg-surface-root overflow-hidden rounded-lg border"
+  >
+    <Collapse
+      locked
+      open
+      class="rounded-none px-2 py-1"
+      titleClass="font-medium"
+    >
+      {#snippet title()}1. Add your custom domain{/snippet}
+      {#if !customDomain}
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <Input
+            variant="outline"
+            bind:value={domainInput}
+            class="min-w-0 flex-1"
+            placeholder="status.example.com"
+            type="text"
+            disabled={isLoading}
+            onkeydown={onDomainKeydown}
+          />
+          <Button
+            variant="primary"
+            size="sm"
+            class="shrink-0"
+            loading={isLoading}
+            disabled={!domainInput.trim()}
+            onclick={onSaveDomain}
+          >
+            Save
+          </Button>
+        </div>
+      {:else}
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <Input
+            variant="outline"
+            value={customDomain.domain}
+            class="min-w-0 flex-1 break-all"
+            readonly
+            disabled
+          />
+          <Button
+            variant="danger-ghost"
+            size="sm"
+            class="shrink-0"
+            loading={isLoading}
+            onclick={onDeleteDomain}
+          >
+            Delete
+          </Button>
+        </div>
+      {/if}
 
-        {#if error}
-          <div class="alert error-card mt-4">
-            <CloseIcon class="h-4 w-4 shrink-0" />
-            <span class="break-words">{error}</span>
-          </div>
-        {/if}
-      </div>
-    </div>
+      {#if error}
+        <Alert variant="error" class="text-error mt-4">
+          <CloseIcon class="h-4 w-4 shrink-0" />
+          <span class="break-words">{error}</span>
+        </Alert>
+      {/if}
+    </Collapse>
 
     <div class="px-6">
-      <hr class="border-base-100" />
+      <hr class="border-border-default" />
     </div>
 
-    <div
-      class={[
-        'collapse px-2 py-1',
-        {
-          'collapse-open': hasDomain,
-        },
-      ]}
+    <Collapse
+      locked
+      open={hasDomain}
+      class="px-2 py-1"
+      titleClass={['font-medium', { 'opacity-50': !hasDomain }]}
+      contentClass="w-full overflow-auto"
     >
-      {#if hasDomain}
-        <input type="checkbox" />
-      {/if}
-      <div
-        class={[
-          'collapse-title font-medium',
-          {
-            'opacity-50': !hasDomain,
-          },
-        ]}
-      >
-        2. Configure DNS records
-      </div>
-      <div class="collapse-content w-full overflow-auto">
-        {#if !customDomain}
-          <p class="text-neutral-500 text-sm">
-            Add a custom domain first to see DNS configuration instructions.
-          </p>
-        {:else}
-          <p class="text-neutral-400 mb-4 text-sm">
-            You can configure these in your DNS provider, for example Cloudflare
-            or AWS Route 53.
+      {#snippet title()}2. Configure DNS records{/snippet}
+      {#if !customDomain}
+        <p class="text-neutral-500 text-sm">
+          Add a custom domain first to see DNS configuration instructions.
+        </p>
+      {:else}
+        <p class="text-neutral-400 mb-4 text-sm">
+          You can configure these in your DNS provider, for example Cloudflare
+          or AWS Route 53.
+        </p>
+
+        <div class="border-border-default space-y-3 rounded-xl border p-4">
+          <p class="text-sm">
+            To serve your page at <span class="break-all font-medium">
+              {customDomain.domain}
+            </span>
+            you must add these DNS records.
           </p>
 
-          <div class="border-base-100 space-y-3 rounded-xl border p-4">
-            <p class="text-sm">
-              To serve your page at <span class="break-all font-medium">
-                {customDomain.domain}
-              </span>
-              you must add these DNS records.
-            </p>
+          <Alert variant="warning" class="rounded-lg">
+            <DangerIcon class="size-4 shrink-0" />
+            <span class="text-sm">
+              If you're using Cloudflare, be careful to create these records in
+              'DNS-only' mode, not proxy mode.
+            </span>
+          </Alert>
 
-            <div
-              class="alert alert-warning bg-warning/10 border-warning/30 rounded-lg"
-            >
-              <DangerIcon class="size-4 shrink-0" />
-              <span class="text-sm">
-                If you're using Cloudflare, be careful to create these records
-                in 'DNS-only' mode, not proxy mode.
-              </span>
-            </div>
+          <div
+            class="ld-card-base w-full overflow-x-auto overflow-y-hidden rounded-xl text-sm"
+          >
+            <div class="relative">
+              <Highlight
+                class="code-snippet selection:bg-surface-100"
+                code={`CNAME ${customDomain.domain} statuspage.logdash.io`}
+                language={bash}
+              />
 
-            <div
-              class="ld-card-base w-full overflow-x-auto overflow-y-hidden rounded-xl text-sm"
-            >
-              <div class="relative">
-                <Highlight
-                  class="code-snippet selection:bg-base-100"
-                  code={`CNAME ${customDomain.domain} statuspage.logdash.io`}
-                  language={bash}
-                />
-
-                <label
-                  class="btn btn-sm btn-square bg-base-100 swap swap-rotate absolute right-2 top-2 border-transparent"
-                  for="copy-dns-record"
-                  onclick={copyDnsRecord}
-                >
-                  <input
-                    bind:checked={copied}
-                    id="copy-dns-record"
-                    type="checkbox"
-                  />
-
-                  <CheckIcon class="swap-on text-success h-4 w-4" />
-
-                  <CopyIcon class="swap-off h-4 w-4" />
-                </label>
-              </div>
-            </div>
-          </div>
-        {/if}
-      </div>
-    </div>
-
-    <div class="px-6">
-      <hr class="border-base-100" />
-    </div>
-
-    <div
-      class={[
-        'collapse px-2 py-1',
-        {
-          'collapse-open': hasDomain,
-        },
-      ]}
-    >
-      {#if hasDomain}
-        <input type="checkbox" />
-      {/if}
-      <div
-        class={[
-          'collapse-title font-medium',
-          {
-            'opacity-50': !hasDomain,
-          },
-        ]}
-      >
-        3. Verify your configuration
-      </div>
-      <div class="collapse-content">
-        <div class="flex items-center justify-between gap-3 text-sm">
-          <div class="flex items-center gap-3">
-            {#if customDomain?.status === 'verifying'}
-              <div class="text-warning flex items-center gap-3">
-                <span class="loading loading-spinner w-3"></span>
-                <div>
-                  <div class="text-warning">Domain is pending verification</div>
-                </div>
-              </div>
-            {:else if customDomain?.status === 'verified'}
-              <div class="text-success flex items-center gap-2">
-                <CheckIcon class="h-4 w-4 shrink-0" />
-                <span>Domain is verified</span>
-              </div>
-            {:else}
-              <div class="text-error flex items-center gap-2">
-                <CloseIcon class="h-4 w-4 shrink-0" />
-                <span>Domain verification failed</span>
-              </div>
-            {/if}
-          </div>
-
-          {#if customDomain?.status === 'verifying'}
-            <div class="flex items-center gap-2">
-              <button
-                class="btn btn-secondary btn-sm"
-                disabled={isLoading}
-                onclick={handleManualCheck}
+              <Button
+                size="sm"
+                shape="square"
+                class="bg-surface-100 absolute right-2 top-2 border-transparent"
+                aria-label="Copy DNS record"
+                onclick={onCopyDnsRecord}
               >
-                {#if isLoading}
-                  <span class="loading loading-spinner w-3"></span>
-                {/if}
+                <Swap active={copied}>
+                  {#snippet on()}
+                    <CheckIcon class="text-success h-4 w-4" />
+                  {/snippet}
+                  {#snippet off()}
+                    <CopyIcon class="h-4 w-4" />
+                  {/snippet}
+                </Swap>
+              </Button>
+            </div>
+          </div>
+        </div>
+      {/if}
+    </Collapse>
 
-                Check
-              </button>
+    <div class="px-6">
+      <hr class="border-border-default" />
+    </div>
+
+    <Collapse
+      locked
+      open={hasDomain}
+      class="px-2 py-1"
+      titleClass={['font-medium', { 'opacity-50': !hasDomain }]}
+    >
+      {#snippet title()}3. Verify your configuration{/snippet}
+      <div class="flex items-center justify-between gap-3 text-sm">
+        <div class="flex items-center gap-3">
+          {#if customDomain?.status === 'verifying'}
+            <div class="text-warning flex items-center gap-3">
+              <Spinner class="w-3" aria-hidden="true" />
+              <div>
+                <div class="text-warning">Domain is pending verification</div>
+              </div>
+            </div>
+          {:else if customDomain?.status === 'verified'}
+            <div class="text-success flex items-center gap-2">
+              <CheckIcon class="h-4 w-4 shrink-0" />
+              <span>Domain is verified</span>
+            </div>
+          {:else}
+            <div class="text-error flex items-center gap-2">
+              <CloseIcon class="h-4 w-4 shrink-0" />
+              <span>Domain verification failed</span>
             </div>
           {/if}
         </div>
+
+        {#if customDomain?.status === 'verifying'}
+          <div class="flex items-center gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              loading={isLoading}
+              onclick={onManualCheck}
+            >
+              Check
+            </Button>
+          </div>
+        {/if}
       </div>
-    </div>
+    </Collapse>
   </div>
 {/if}

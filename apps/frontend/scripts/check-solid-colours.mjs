@@ -3,7 +3,7 @@
 // The design system only uses solid steps of the neutral scale (see
 // .agents/frontend.md). Translucent greys compound where strokes
 // overlap and go muddy over lit backgrounds, so this script rejects:
-//   - tailwind alpha modifiers on greys: text-base-content/60, bg-white/5 ...
+//   - tailwind alpha modifiers on greys: text-fg-default/60, bg-white/5 ...
 //   - opacity-60 to opacity-95 in a plain class attribute (tinting text or icons)
 //   - rgb()/rgba()/color-mix(..., transparent) greys in CSS, shadows excepted
 // Translucency that is see-through by design (scrims, glass, fade masks, stage
@@ -18,7 +18,7 @@ const ROOTS = [
   path.resolve(here, '../../../packages/hyper-ui/src'),
 ];
 
-const GREY = String.raw`(?:base-content|secondary|base-100|base-200|base-300|neutral(?:-\d+)?|white|black|hairline)`;
+const GREY = String.raw`(?:surface-(?:root|elevated|100|150|well|hover|inverse(?:-hover)?)|fg-(?:default|secondary|muted|faint)|border-(?:subtle|default|strong)|brand|neutral(?:-\d+)?|white|black|hairline)`;
 const UTILITY = String.raw`(?:text|bg|border(?:-[trblxyse])?|fill|stroke|ring|inset-ring|divide|outline|from|to|via|decoration|accent|caret)`;
 const CHECKS = [
   {
@@ -42,24 +42,27 @@ const CHECKS = [
   {
     // Shadows are excepted: a blurred drop can only be translucent.
     name: 'translucent grey in CSS',
-    re: /(?:rgba?\(\s*(?:255[\s,]+255[\s,]+255|0[\s,]+0[\s,]+0|(\d+)[\s,]+\1[\s,]+\1)\s*[,/]\s*0?\.\d+\s*\)|color-mix\([^)]*var\(--color-(?:base-content|base-\d+|neutral(?:-\d+)?|secondary)\)[^)]*\btransparent\b[^)]*\))/g,
+    re: /(?:rgba?\(\s*(?:255[\s,]+255[\s,]+255|0[\s,]+0[\s,]+0|(\d+)[\s,]+\1[\s,]+\1)\s*[,/]\s*0?\.\d+\s*\)|color-mix\([^)]*var\(--(?:color-)?(?:surface-[\w-]+|fg-[\w-]+|border-(?:subtle|default|strong)|hairline|neutral(?:-\d+)?)\)[^)]*\btransparent\b[^)]*\))/g,
     skipDeclaration: /shadow/,
   },
 ];
 
 /** file path substring -> tokens that may stay translucent there */
 const ALLOW = {
-  'domains/shared/ui/Modal.svelte': ['bg-base-300/60'],
+  'domains/shared/ui/Modal.svelte': ['bg-surface-root/60'],
   'domains/shared/upgrade/UpgradeModal.svelte': ['bg-black/60'],
-  'ui/setup/UnifiedSetupOverlay.svelte': ['bg-base-300/80'],
-  'ProjectView/UnconfiguredFeatureTile.svelte': ['bg-base-300/60'],
-  'ProjectView/ProjectSync.svelte': ['bg-base-300/40'],
-  'header/LogsAnalyticsChart.svelte': ['bg-base-200/50'],
-  'logs-tile/LogPreviewDrawer.svelte': ['from-base-300/80', 'via-base-300/80'],
-  'tiles/monitoring/UptimeSection.svelte': ['via-base-200/60'],
-  'landing/hero/HeroClaimCard.svelte': ['bg-base-300/70'],
+  'ui/setup/UnifiedSetupOverlay.svelte': ['bg-surface-root/80'],
+  'ProjectView/UnconfiguredFeatureTile.svelte': ['bg-surface-root/60'],
+  'ProjectView/ProjectSync.svelte': ['bg-surface-root/40'],
+  'header/LogsAnalyticsChart.svelte': ['bg-surface-elevated/50'],
+  'logs-tile/LogPreviewDrawer.svelte': [
+    'from-surface-root/80',
+    'via-surface-root/80',
+  ],
+  'tiles/monitoring/UptimeSection.svelte': ['via-surface-elevated/60'],
+  'landing/hero/HeroClaimCard.svelte': ['bg-surface-root/70'],
   'landing/stage/StageLight.svelte': [
-    'color-mix(in srgb, var(--color-base-content) 18%, transparent)',
+    'color-mix(in srgb, var(--color-fg-default) 18%, transparent)',
   ],
 };
 

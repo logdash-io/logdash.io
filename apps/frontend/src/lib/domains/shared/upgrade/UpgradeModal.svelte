@@ -3,7 +3,16 @@
   import { UserTier } from '$lib/domains/shared/types.js';
   import { CheckIcon, CloseIcon } from '@logdash/hyper-ui/icons';
   import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import {
+    Badge,
+    Button,
+    Card,
+    CardActions,
+    CardBody,
+    CardTitle,
+    Spinner,
+    Tooltip,
+  } from '@logdash/hyper-ui/presentational';
   import { fade, scale } from 'svelte/transition';
   import { cubicInOut } from 'svelte/easing';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
@@ -90,13 +99,16 @@
         start: 0.95,
       }}
     >
-      <button
-        class="btn btn-circle btn-ghost btn-sm absolute top-4 right-4 z-10"
+      <Button
+        variant="ghost"
+        size="sm"
+        shape="circle"
+        class="absolute top-4 right-4 z-10"
         onclick={() => upgradeState.hideModal()}
         aria-label="Close modal"
       >
         <CloseIcon class="h-4 w-4" />
-      </button>
+      </Button>
 
       <div class="mb-8 text-center">
         <h1 id="upgrade-modal-title" class="mb-2 text-3xl font-semibold">
@@ -110,40 +122,43 @@
           <div class="relative flex flex-col">
             <div class="h-4"></div>
 
-            <div
+            <Card
               class={[
-                'card ld-card-bg border relative flex flex-1 flex-col overflow-visible ld-card-rounding p-6',
+                'ld-card-bg border flex-1 overflow-visible ld-card-rounding p-6',
                 {
-                  'border-primary': plan.popular,
+                  'border-brand': plan.popular,
                   'border-success/40': isCurrentPlan(plan.tier),
-                  'border-base-100': !plan.popular && !isCurrentPlan(plan.tier),
+                  'border-border-default':
+                    !plan.popular && !isCurrentPlan(plan.tier),
                 },
               ]}
             >
               {#if plan.popular && !isCurrentPlan(plan.tier)}
-                <span
-                  class="badge badge-primary absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
+                <Badge
+                  variant="inverse"
+                  class="absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
                 >
                   Most popular
-                </span>
+                </Badge>
               {/if}
 
               {#if isCurrentPlan(plan.tier)}
-                <div
-                  class="badge badge-success badge-soft absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
+                <Badge
+                  variant="success"
+                  class="absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
                 >
                   Current Plan
-                </div>
+                </Badge>
               {/if}
 
-              <div class={['badge badge-soft mb-3', plan.badge.class]}>
+              <Badge class="mb-3">
                 {plan.badge.text}
-              </div>
+              </Badge>
 
-              <div class="card-body flex-1 p-0">
-                <h2 class="card-title text-xl font-normal">
+              <CardBody class="flex-1 p-0">
+                <CardTitle class="text-xl font-normal">
                   {plan.name}
-                </h2>
+                </CardTitle>
                 <div class="mt-2">
                   <span class="text-3xl font-semibold">{plan.price}</span>
 
@@ -152,32 +167,26 @@
                   </p>
                 </div>
 
-                <div class="card-actions my-4 justify-center">
-                  <button
+                <CardActions class="my-4 justify-center">
+                  <Button
+                    variant="primary"
+                    block
+                    class="font-medium"
                     onclick={() => onSelectPlan(plan.tier)}
                     disabled={isButtonDisabled(plan)}
-                    class={[
-                      'btn w-full rounded-full font-medium',
-                      {
-                        'btn-primary': plan.popular && canUpgradeTo(plan.tier),
-                        'btn-secondary':
-                          !plan.popular && canUpgradeTo(plan.tier),
-                        'btn-disabled': isButtonDisabled(plan),
-                      },
-                    ]}
                   >
                     {#if upgrading && canUpgradeTo(plan.tier)}
                       <div
                         in:fade={{ duration: 150 }}
                         class="flex h-5 w-5 items-center justify-center"
                       >
-                        <span class="loading loading-spinner h-4 w-4"></span>
+                        <Spinner class="h-4 w-4" />
                       </div>
                     {/if}
 
                     {getButtonText(plan)}
-                  </button>
-                </div>
+                  </Button>
+                </CardActions>
 
                 <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
                   <ShieldCheckIcon class="text-success h-5 w-5" />
@@ -208,7 +217,7 @@
                     <li>
                       <Tooltip content={tooltipContent} placement="top">
                         <span
-                          class="text-primary cursor-help text-xs underline decoration-dotted"
+                          class="text-brand cursor-help text-xs underline decoration-dotted"
                         >
                           +{remainingFeatures.length} more features
                         </span>
@@ -216,8 +225,8 @@
                     </li>
                   {/if}
                 </ul>
-              </div>
-            </div>
+              </CardBody>
+            </Card>
           </div>
         {/each}
       </div>

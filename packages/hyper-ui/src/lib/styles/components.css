@@ -1,98 +1,18 @@
 #root {
   * {
-    @apply outline-primary/80;
-  }
-
-  .btn:not(.btn-circle):not(.rounded-full) {
-    @apply rounded-xl;
-  }
-
-  .btn-transparent {
-    @apply border-0 bg-transparent shadow-none;
+    @apply outline-neutral-300;
   }
 
   .fcc {
     @apply flex items-center justify-center;
   }
 
-  .btn-error {
-    --btn-color: oklch(from var(--color-error) l c h / 0.15);
-    --btn-fg: var(--color-error);
-    border: none;
-  }
-
-  .btn-error:hover {
-    --btn-color: oklch(from var(--color-error) l c h / 0.25);
-  }
-
-  .btn-error:disabled {
-    --btn-color: oklch(from var(--color-error) l c h / 0.15);
-    --btn-fg: oklch(from var(--color-error-content) l c h / 0.25);
-  }
-
   .code-snippet > .hljs {
-    @apply bg-base-300 border-base-100 rounded-xl border;
-  }
-
-  .btn {
-    @apply whitespace-nowrap shadow-none;
-  }
-
-  /*
-   * Backgrounds never ease (frontend rules). daisyUI lists background-color
-   * in these transitions, so each is narrowed to ink, edges and motion until
-   * the components are replaced by our own.
-   */
-  .btn {
-    transition-property: color;
-  }
-
-  .menu :where(li:not(.menu-title) > :not(ul, details, .menu-title, .btn)),
-  .menu :where(li:not(.menu-title) > details > summary:not(.menu-title)) {
-    transition-property: color, box-shadow;
-  }
-
-  .select option {
-    transition-property: color;
-  }
-
-  .select-ghost {
-    transition: none;
-  }
-
-  .checkbox {
-    transition: box-shadow 0.2s;
-  }
-
-  .collapse-title,
-  .collapse > input:is([type="checkbox"], [type="radio"]) {
-    transition: none;
-  }
-
-  .collapse-content {
-    transition-property: content-visibility, visibility, min-height, padding;
-  }
-
-  .collapse:is(details)::details-content {
-    transition-property:
-      content-visibility, visibility, min-height, padding, height;
-  }
-
-  /* Pressed buttons scale down (utils/press.ts), not daisyUI's half-pixel nudge. */
-  .btn:active:not(.btn-active) {
-    translate: none;
-  }
-
-  .btn-neutral {
-    @apply border-hairline border;
-  }
-
-  .menu {
-    @apply p-1.5;
+    @apply bg-surface-root border-border-default rounded-xl border;
   }
 
   .ld-input {
-    @apply input-md input-ghost selection:bg-neutral-700 border-neutral-700 hover:border-neutral-600 focus:border-primary h-full w-full rounded-xl border outline-0 transition-ink duration-250 focus:bg-transparent;
+    @apply selection:bg-neutral-700 border-neutral-700 hover:border-neutral-600 focus:border-brand h-full w-full rounded-xl border bg-transparent text-sm outline-0 transition-ink duration-250;
   }
 
   .ld-input:focus {
@@ -101,34 +21,6 @@
 
   .ld-input-padding {
     @apply px-3 py-1.5;
-  }
-
-  /*
-   * Secondary pill, defined by shadow rather than border: a 1px ring plus
-   * two faint drops. Fill and ring are solid steps of the neutral scale (no
-   * translucent greys anywhere, see
-   * the frontend rules): the fill lifts one step off the page and sits flat
-   * on a card, the ring draws the edge, the drops ground it.
-   */
-  .btn-subtle {
-    --btn-bg: var(--color-neutral-900);
-    --btn-fg: var(--color-base-content);
-    --btn-border: transparent;
-    --subtle-ring: var(--color-neutral-800);
-    box-shadow:
-      0 0 0 1px var(--subtle-ring),
-      0 1px 1px rgb(0 0 0 / 0.24),
-      0 2px 4px rgb(0 0 0 / 0.24);
-  }
-
-  .btn-subtle:hover {
-    --btn-bg: var(--color-neutral-800);
-    --subtle-ring: var(--color-neutral-700);
-  }
-
-  .btn-subtle:disabled,
-  .btn-subtle[disabled] {
-    box-shadow: 0 0 0 1px var(--color-hairline);
   }
 
   .success-card {
@@ -145,13 +37,13 @@
   }
 
   .primary-card {
-    @apply bg-primary/10 border-primary/20 border;
+    @apply bg-neutral-800 border-neutral-700 border;
   }
 
   .ld-card-base,
   .ld-card-bg,
   .ld-card {
-    @apply bg-base-200;
+    @apply bg-surface-elevated;
   }
 
   .ld-card-base,
@@ -170,40 +62,11 @@
   }
 
   .ld-page-bg {
-    @apply bg-base-300;
+    @apply bg-surface-root;
   }
 
   .ld-modal {
-    @apply bg-base-200 border-base-100 rounded-xl border p-6;
-  }
-
-  .status {
-    @apply shadow-none;
-    background-image: none;
-  }
-
-  .badge {
-    @apply rounded-full;
-  }
-
-  .distance {
-    @apply w-full shrink-0;
-  }
-
-  .tabs {
-    @apply rounded-xl;
-  }
-
-  .tab {
-    @apply rounded-lg;
-  }
-
-  .collapse-open {
-    @apply shrink-0;
-  }
-
-  .checkbox.checkbox-xs {
-    @apply rounded-sm;
+    @apply bg-surface-elevated border-border-default rounded-xl border p-6;
   }
 }
 

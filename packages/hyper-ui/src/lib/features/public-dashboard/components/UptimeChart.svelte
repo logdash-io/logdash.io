@@ -41,7 +41,7 @@
     up: "bg-green-600",
     degraded: "bg-yellow-600",
     down: "bg-red-700",
-    unknown: "bg-base-100",
+    unknown: "bg-surface-100",
   };
 
   function getTooltipContent(segment: BucketSegment): string {
@@ -66,7 +66,7 @@
   >
     {#if segments.length === 0}
       <div
-        class="w-full flex-shrink-0 rounded-full dark:bg-base-100"
+        class="w-full flex-shrink-0 rounded-full bg-surface-100"
         style="height: {height}px;"
         title="No data available"
       ></div>

@@ -16,6 +16,7 @@
   import WebhookSetupStep from '$lib/domains/app/projects/ui/notification-channels/webhook-setup/WebhookSetupStep.svelte';
   import type { WebhookSetupDTO } from '$lib/domains/app/projects/domain/notification-channels/notification-channels.types.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import { Badge, Button } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     clusterId: string;
@@ -101,7 +102,7 @@
   <div class="space-y-6">
     <div class="flex items-center justify-start gap-4">
       <div
-        class="bg-base-300 border-base-100 text-primary-content flex h-14 w-14 items-center justify-center rounded-full border"
+        class="bg-surface-root border-border-default text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
       >
         <BellIcon class="h-6 w-6" />
       </div>
@@ -132,7 +133,7 @@
               channel.onclick?.();
             }}
           >
-            <channel.icon class="text-secondary ml-2 inline h-4 w-4" />
+            <channel.icon class="text-fg-default ml-2 inline h-4 w-4" />
             <span>{channel.name}</span>
 
             {#if !allowedNotificationChannels.includes(channel.id)}
@@ -146,11 +147,9 @@
                   : 'Upgrade Tier'}
               {/snippet}
 
-              <div
-                class="badge badge-primary badge-soft badge-sm ml-auto capitalize"
-              >
+              <Badge size="sm" class="ml-auto capitalize">
                 {@render upgradeText()}
-              </div>
+              </Badge>
             {/if}
           </div>
         </UpgradeElement>
@@ -158,13 +157,7 @@
     </div>
 
     <div class="flex gap-3">
-      <button
-        type="button"
-        class="btn btn-secondary btn-soft flex-1"
-        onclick={closeModal}
-      >
-        Cancel
-      </button>
+      <Button variant="soft" class="flex-1" onclick={closeModal}>Cancel</Button>
     </div>
   </div>
 {/snippet}

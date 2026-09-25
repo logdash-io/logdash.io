@@ -61,7 +61,7 @@
       <!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus the hero hash -->
       <a
         href={`${resolve('/')}#${HERO_ID}`}
-        class="text-base-content hover:text-neutral-400 focus-visible:outline-neutral-500 mt-10 inline-flex items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 lg:mt-auto"
+        class="text-fg-default hover:text-neutral-400 focus-visible:outline-neutral-500 mt-10 inline-flex items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 lg:mt-auto"
         data-posthog-id="final-cta-demo-cta"
       >
         Or watch the live demo
@@ -106,7 +106,7 @@
 
 {#snippet calendarDay(day: number)}
   <span
-    class="ring-hairline bg-base-100 mt-1 flex w-11 shrink-0 flex-col self-start overflow-hidden rounded-md ring-1"
+    class="ring-hairline bg-surface-100 mt-1 flex w-11 shrink-0 flex-col self-start overflow-hidden rounded-md ring-1"
   >
     <span
       class="bg-neutral-700 text-neutral-300 flex h-3.5 items-center justify-center text-[9px] leading-none font-medium tracking-wider uppercase"

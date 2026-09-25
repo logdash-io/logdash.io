@@ -1,5 +1,6 @@
 <script lang="ts">
   import { CheckIcon } from '@logdash/hyper-ui/icons';
+  import { Button, Checkbox } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     chatName: string;
@@ -35,22 +36,21 @@
   </p>
 
   <div class="flex items-center justify-start gap-2">
-    <input
-      type="checkbox"
+    <Checkbox
       id="assign-service-monitor"
+      variant="primary"
       bind:checked={assignToServiceMonitor}
-      class="checkbox checkbox-primary checkbox-sm"
     />
     <label for="assign-service-monitor" class="cursor-pointer text-sm">
       Assign to {monitorName} service monitor
     </label>
   </div>
 
-  <button
-    type="button"
-    class="btn btn-primary w-full"
+  <Button
+    variant="primary"
+    block
     onclick={() => onSubmit(assignToServiceMonitor)}
   >
     Save channel to {clusterName} project
-  </button>
+  </Button>
 </div>

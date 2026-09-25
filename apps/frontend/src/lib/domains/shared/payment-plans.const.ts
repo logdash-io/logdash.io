@@ -22,7 +22,6 @@ export const PAYMENT_PLANS = [
     ],
     badge: {
       text: 'No credit card required',
-      class: 'badge-secondary',
     },
     buttonText: 'Select Hobby',
     guarantee: 'No commitment required',
@@ -55,7 +54,6 @@ export const PAYMENT_PLANS = [
     ],
     badge: {
       text: 'Save 10%',
-      class: 'badge-primary',
     },
     buttonText: 'Start free trial',
     guarantee: 'No commitment required',
@@ -87,7 +85,6 @@ export const PAYMENT_PLANS = [
     ],
     badge: {
       text: 'Save 50%',
-      class: 'badge-primary',
     },
     buttonText: 'Start free trial',
     guarantee: 'No commitment required',

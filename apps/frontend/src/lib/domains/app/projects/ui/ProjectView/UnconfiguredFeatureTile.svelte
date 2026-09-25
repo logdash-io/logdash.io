@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon } from 'lucide-svelte';
   import FakeMonitoringTile from './unconfigured/FakeMonitoringTile.svelte';
 
@@ -17,12 +18,12 @@
       cluster_id: clusterId,
       project_id: projectId,
     })}
-    class="z-50 absolute group inset-0 flex items-center justify-center bg-base-300/60"
+    class="z-50 absolute group inset-0 flex items-center justify-center bg-surface-root/60"
   >
-    <span class="btn btn-secondary gap-2">
+    <Button as="span" variant="primary" class="gap-2">
       Finish monitoring setup
       <ArrowRightIcon class="h-4 w-4" />
-    </span>
+    </Button>
   </a>
 {/snippet}
 

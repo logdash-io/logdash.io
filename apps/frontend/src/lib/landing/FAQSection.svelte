@@ -29,7 +29,7 @@
           href="https://discord.gg/naftPW4Hxe"
           target="_blank"
           rel="noreferrer"
-          class="link link-hover text-base-content font-medium"
+          class="text-fg-default font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           Reach out on Discord
         </a>

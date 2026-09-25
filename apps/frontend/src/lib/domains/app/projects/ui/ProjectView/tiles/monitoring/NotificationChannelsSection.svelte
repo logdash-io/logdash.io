@@ -15,6 +15,7 @@
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import { Button, Checkbox } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     monitorId: string;
@@ -65,14 +66,9 @@
     >
       <div class="flex items-center gap-4">
         <div
-          class="size-10 rounded-lg bg-base-100 flex items-center justify-center"
+          class="size-10 rounded-lg bg-surface-100 flex items-center justify-center"
         >
-          <input
-            type="checkbox"
-            class="checkbox checkbox-xs checkbox-secondary"
-            checked={isEnabled}
-            readonly
-          />
+          <Checkbox size="xs" variant="primary" checked={isEnabled} readonly />
         </div>
         <div>
           <p class="font-medium text-sm">{getChannelDisplayName(channel)}</p>
@@ -88,15 +84,18 @@
         </div>
       </div>
       {#snippet action()}
-        <button
-          onclick={(e) => {
+        <Button
+          variant="danger"
+          size="sm"
+          shape="square"
+          aria-label="Delete notification channel"
+          onclick={(e: MouseEvent) => {
             e.stopPropagation();
             void onDeleteChannel(channel);
           }}
-          class="btn btn-ghost border-0 btn-sm text-error bg-error/10 btn-square"
         >
           <TrashIcon class="size-4" />
-        </button>
+        </Button>
       {/snippet}
     </SettingsCardItem>
   {/each}

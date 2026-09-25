@@ -6,6 +6,12 @@
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
   import {
+    Button,
+    Checkbox,
+    Input,
+    Select,
+  } from '@logdash/hyper-ui/presentational';
+  import {
     cliAuthErrorMessage,
     type CliAuthRequest,
   } from '../domain/cli-auth.js';
@@ -255,8 +261,8 @@
     {#if createdValue}
       <div class="flex flex-col gap-4">
         <div class="flex items-center gap-3">
-          <div class="bg-base-100 rounded-lg p-2.5">
-            <KeyIcon class="text-primary size-5" />
+          <div class="bg-surface-100 rounded-lg p-2.5">
+            <KeyIcon class="text-brand size-5" />
           </div>
           <h2 class="text-lg font-medium">Personal API key created</h2>
         </div>
@@ -270,20 +276,18 @@
 
         <div class="flex items-center gap-2">
           <code
-            class="bg-base-100 border-base-100 flex-1 overflow-x-auto rounded-lg border p-3 font-mono text-sm"
+            class="bg-surface-100 border-border-default flex-1 overflow-x-auto rounded-lg border p-3 font-mono text-sm"
           >
             {createdValue}
           </code>
-          <button type="button" class="btn btn-primary" onclick={onCopyValue}>
+          <Button variant="primary" onclick={onCopyValue}>
             <CopyIcon class="size-4" />
             Copy
-          </button>
+          </Button>
         </div>
 
         <div class="flex justify-end">
-          <button type="button" class="btn btn-ghost" onclick={close}>
-            Done
-          </button>
+          <Button variant="ghost" onclick={close}>Done</Button>
         </div>
       </div>
     {:else if cliResult === 'approved'}
@@ -293,9 +297,7 @@
         <p class="text-neutral-400 text-sm">
           Return to your terminal to continue.
         </p>
-        <button type="button" class="btn btn-ghost mt-2" onclick={close}>
-          Close
-        </button>
+        <Button variant="ghost" class="mt-2" onclick={close}>Close</Button>
       </div>
     {:else if cliResult === 'denied'}
       <div class="flex flex-col items-center gap-3 py-6 text-center">
@@ -304,14 +306,12 @@
         <p class="text-neutral-400 text-sm">
           The CLI authorization request was denied.
         </p>
-        <button type="button" class="btn btn-ghost mt-2" onclick={close}>
-          Close
-        </button>
+        <Button variant="ghost" class="mt-2" onclick={close}>Close</Button>
       </div>
     {:else}
       <div class="flex items-center gap-3">
-        <div class="bg-base-100 rounded-lg p-2.5">
-          <KeyIcon class="text-primary size-5" />
+        <div class="bg-surface-100 rounded-lg p-2.5">
+          <KeyIcon class="text-brand size-5" />
         </div>
         <h2 class="text-lg font-medium">
           {mode === 'cli' ? 'Authorize CLI access' : 'Create personal API key'}
@@ -320,11 +320,11 @@
 
       {#if mode === 'cli' && cliRequest}
         <div
-          class="border-primary/40 bg-primary/10 flex flex-col gap-2 rounded-lg border p-3 text-sm"
+          class="border-neutral-500 bg-surface-100 flex flex-col gap-2 rounded-lg border p-3 text-sm"
         >
           <p class="text-neutral-400">
             A CLI on
-            <span class="text-base-content font-mono font-medium">
+            <span class="text-fg-default font-mono font-medium">
               {cliRequest.clientIp || 'an unknown address'}
             </span>
             is requesting access to your account.
@@ -332,19 +332,19 @@
           <dl class="text-neutral-400 flex flex-col gap-1 text-xs">
             <div class="flex justify-between gap-3">
               <dt>Code</dt>
-              <dd class="text-base-content font-mono font-medium">
+              <dd class="text-fg-default font-mono font-medium">
                 {cliRequest.userCode}
               </dd>
             </div>
             <div class="flex justify-between gap-3">
               <dt>Client (self-reported)</dt>
-              <dd class="text-base-content truncate font-mono">
+              <dd class="text-fg-default truncate font-mono">
                 {cliRequest.clientUserAgent || 'not reported'}
               </dd>
             </div>
             <div class="flex justify-between gap-3">
               <dt>Requested</dt>
-              <dd class="text-base-content">
+              <dd class="text-fg-default">
                 {formatTimestamp(cliRequest.requestedAt)}
               </dd>
             </div>
@@ -361,9 +361,9 @@
           {#if mode === 'manage'}
             <div class="flex flex-col gap-1.5">
               <span class="text-sm font-medium">Label</span>
-              <input
+              <Input
                 bind:value={label}
-                class="input w-full"
+                class="w-full"
                 placeholder="e.g. My laptop CLI"
               />
             </div>
@@ -371,18 +371,16 @@
 
           <div class="flex flex-col gap-1.5">
             <span class="text-sm font-medium">Preset</span>
-            <select
-              class="select w-full"
-              value={preset}
-              onchange={(event) =>
-                applyPreset(event.currentTarget.value as PresetId)}
+            <Select
+              class="w-full"
+              bind:value={() => preset, (next) => applyPreset(next as PresetId)}
             >
               {#each PRESETS as presetOption (presetOption.id)}
                 <option value={presetOption.id}>
                   {presetOption.label} — {presetOption.description}
                 </option>
               {/each}
-            </select>
+            </Select>
           </div>
 
           <div class="flex flex-col gap-2">
@@ -419,7 +417,7 @@
 
             {#if accessKind === 'clusters'}
               <div
-                class="border-base-100 mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
+                class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
               >
                 {#if clusters.length === 0}
                   <p class="text-neutral-400 p-1 text-sm">
@@ -428,9 +426,7 @@
                 {/if}
                 {#each clusters as cluster (cluster.id)}
                   <label class="flex items-center gap-2 p-1 text-sm">
-                    <input
-                      type="checkbox"
-                      class="checkbox checkbox-sm"
+                    <Checkbox
                       checked={selectedClusterIds.includes(cluster.id)}
                       onchange={() => toggleCluster(cluster.id)}
                     />
@@ -440,7 +436,7 @@
               </div>
             {:else if accessKind === 'projects'}
               <div
-                class="border-base-100 mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
+                class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
               >
                 {#if projects.length === 0}
                   <p class="text-neutral-400 p-1 text-sm">
@@ -449,9 +445,7 @@
                 {/if}
                 {#each projects as project (project.id)}
                   <label class="flex items-center gap-2 p-1 text-sm">
-                    <input
-                      type="checkbox"
-                      class="checkbox checkbox-sm"
+                    <Checkbox
                       checked={selectedProjectIds.includes(project.id)}
                       onchange={() => toggleProject(project.id)}
                     />
@@ -468,7 +462,7 @@
           {#if mode === 'manage'}
             <div class="flex flex-col gap-1.5">
               <span class="text-sm font-medium">Expiry (optional)</span>
-              <input bind:value={expiresAt} type="date" class="input w-full" />
+              <Input bind:value={expiresAt} type="date" class="w-full" />
             </div>
           {:else}
             <div class="flex flex-col gap-1.5">
@@ -484,33 +478,20 @@
 
       <div class="flex justify-end gap-2">
         {#if mode === 'cli'}
-          <button
-            type="button"
-            class="btn btn-error btn-outline"
-            disabled={submitting}
-            onclick={onDeny}
-          >
+          <Button variant="danger-ghost" disabled={submitting} onclick={onDeny}>
             Deny
-          </button>
+          </Button>
         {:else}
-          <button type="button" class="btn btn-ghost" onclick={close}>
-            Cancel
-          </button>
+          <Button variant="ghost" onclick={close}>Cancel</Button>
         {/if}
-        <button
-          type="button"
-          class="btn btn-primary"
-          disabled={submitting || (mode === 'cli' && accessKind === null)}
+        <Button
+          variant="primary"
+          disabled={mode === 'cli' && accessKind === null}
+          loading={submitting}
           onclick={onSubmit}
         >
-          {#if submitting}
-            <span class="loading loading-spinner loading-xs"></span>
-          {:else if mode === 'cli'}
-            Approve
-          {:else}
-            Create key
-          {/if}
-        </button>
+          {mode === 'cli' ? 'Approve' : 'Create key'}
+        </Button>
       </div>
     {/if}
   </div>

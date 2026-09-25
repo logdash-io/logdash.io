@@ -42,7 +42,7 @@
   });
 </script>
 
-<div class="bg-base-300 flex h-dvh w-full flex-col lg:flex-row">
+<div class="bg-surface-root flex h-dvh w-full flex-col lg:flex-row">
   <ClusterSidebar />
 
   <div class="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -95,9 +95,9 @@
         </div>
       {:else}
         <div
-          class="size-6 rounded-md flex items-center justify-center bg-primary/15 border border-primary/5"
+          class="size-6 rounded-md flex items-center justify-center bg-neutral-800 border border-neutral-900"
         >
-          <CubeIcon class="size-4 shrink-0 text-primary" />
+          <CubeIcon class="size-4 shrink-0 text-brand" />
         </div>
       {/if}
       <span class="text-lg font-medium truncate max-w-52">{clusterName}</span>

@@ -1,12 +1,11 @@
 <script lang="ts">
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { logout } from '$lib/domains/auth/application/logout.js';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { Menu, Tooltip } from '@logdash/hyper-ui/presentational';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
   import LogoutIcon from '$lib/domains/shared/icons/LogoutIcon.svelte';
   import { UserRoundIcon } from 'lucide-svelte';
@@ -47,10 +46,10 @@
   closeOnOutsideTooltipClick={true}
 >
   <button
-    class="hover:bg-surface-root-hover flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left"
+    class="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left"
   >
     <span
-      class="bg-base-100 flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full"
+      class="bg-surface-100 flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full"
     >
       {#if userState.avatar}
         <img class="size-full object-cover" src={userState.avatar} alt="" />
@@ -69,7 +68,7 @@
 </Tooltip>
 
 {#snippet userProfileMenu(close: () => void)}
-  <ul class="menu dropdown-content ld-card-base z-1 w-56 rounded-xl p-1.5">
+  <Menu class="ld-card-base z-1 w-56 rounded-xl">
     {#if userState.canUpgrade}
       <UpgradeButton
         class="mb-1"
@@ -83,10 +82,8 @@
     {#if userState.hasBilling}
       <li>
         <a
+          href={resolve('/app/api/user/billing')}
           class="flex w-full items-center gap-3 rounded-lg"
-          onclick={() => {
-            void goto(resolve('/app/api/user/billing'));
-          }}
         >
           <OpenIcon class="inline h-4 w-4" />
           Billing
@@ -104,5 +101,5 @@
         Logout
       </button>
     </li>
-  </ul>
+  </Menu>
 {/snippet}

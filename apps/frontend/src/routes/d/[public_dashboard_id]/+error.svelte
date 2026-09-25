@@ -2,6 +2,7 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
 </script>
 
 <div class="p-8 sm:p-32">
@@ -16,22 +17,24 @@
       If you think this is a bug, please let us know by reporting it on our
       GitHub repository. We appreciate your help in making LogDash better!
 
-      <a
+      <Button
         href={resolve('/')}
         rel="noopener noreferrer"
-        class="btn btn-sm btn-primary"
+        variant="primary"
+        size="sm"
       >
         Go back to home
-      </a>
+      </Button>
 
-      <a
+      <Button
         href="https://github.com/logdash-io/logdash.io/issues"
         target="_blank"
         rel="noopener noreferrer"
-        class="btn btn-sm btn-secondary"
+        variant="primary"
+        size="sm"
       >
         Report bug <OpenIcon class="inline h-4 w-4" />
-      </a>
+      </Button>
     </div>
   </div>
 </div>

@@ -2,6 +2,7 @@
   import { type UpgradeSource } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import { getContext, type Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import type { PostHog } from 'posthog-js';
@@ -31,11 +32,8 @@
   };
 </script>
 
-<div class={['btn-wrapper z-10 w-full rounded-[13px] p-[1px]', className]}>
-  <button
-    class="btn btn-neutral relative w-full overflow-hidden"
-    onclick={onClick}
-  >
+<div class={['btn-wrapper z-10 w-full rounded-full p-[1px]', className]}>
+  <Button variant="neutral" block class="overflow-hidden" onclick={onClick}>
     <div class="relative z-10 flex w-full items-center justify-between gap-2">
       {#if children}
         {@render children?.()}
@@ -45,7 +43,7 @@
 
       <RocketIcon class="inline h-4 w-4" />
     </div>
-  </button>
+  </Button>
 </div>
 
 <style>
@@ -66,7 +64,7 @@
     background-color: var(--clr-card);
 
     &:hover {
-      --clr-3: var(--color-primary);
+      --clr-3: var(--color-brand);
     }
   }
 

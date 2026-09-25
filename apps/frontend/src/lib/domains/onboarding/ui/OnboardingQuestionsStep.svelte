@@ -2,6 +2,7 @@
   import { saveOnboardingAnswers } from '$lib/domains/onboarding/application/save-onboarding';
   import { parseOnboardingAnswersDto } from '$lib/domains/onboarding/domain/onboarding-dtos';
   import { ONBOARDING_QUESTIONS } from '$lib/domains/onboarding/domain/onboarding-questions';
+  import { Button, Select } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     submitLabel?: string;
@@ -55,10 +56,10 @@
     {#each ONBOARDING_QUESTIONS as question (question.key)}
       <label class="flex flex-col gap-1.5">
         <span class="text-sm font-medium">{question.label}</span>
-        <select
+        <Select
           bind:value={answers[question.key]}
           class={[
-            'select w-full border-neutral-700 bg-base-200 transition-ink hover:border-neutral-600 focus:outline-none focus-visible:border-primary',
+            'w-full border-neutral-700 bg-surface-elevated transition-ink hover:border-neutral-600 focus:border-brand',
             {
               'text-neutral-500': !answers[question.key],
             },
@@ -66,28 +67,25 @@
         >
           <option value="" class="text-neutral-500">Choose one</option>
           {#each question.options as option (option.value)}
-            <option value={option.value} class="text-base-content">
+            <option value={option.value} class="text-fg-default">
               {option.label}
             </option>
           {/each}
-        </select>
+        </Select>
       </label>
     {/each}
   </div>
 
-  <button
+  <Button
     type="submit"
-    class={[
-      'btn mt-7 w-full gap-2',
-      answeredAll ? 'btn-primary' : 'btn-subtle',
-    ]}
-    disabled={!dto || saving}
+    variant={answeredAll ? 'primary' : 'subtle'}
+    block
+    class="mt-7"
+    disabled={!dto}
+    loading={saving}
   >
-    {#if saving}
-      <span class="loading loading-spinner size-4"></span>
-    {/if}
     {submitLabel}
-  </button>
+  </Button>
 
   {#if failed}
     <p class="text-error mt-3 text-sm" role="alert">
@@ -95,9 +93,3 @@
     </p>
   {/if}
 </form>
-
-<style>
-  select:focus-visible {
-    box-shadow: var(--focus-ring);
-  }
-</style>

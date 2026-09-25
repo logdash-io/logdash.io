@@ -4,6 +4,7 @@
   import { page } from '$app/state';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { createLogger } from '$lib/domains/shared/logger';
+  import { Spinner } from '@logdash/hyper-ui/presentational';
   import { getContext, untrack, type Snippet } from 'svelte';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { cubicInOut } from 'svelte/easing';
@@ -132,16 +133,16 @@
     <div
       in:fade={{ duration: 200, easing: cubicInOut }}
       out:fade={{ delay: 300, duration: 200, easing: cubicInOut }}
-      class="bg-base-300/40 absolute top-0 left-0 z-20 h-full w-full backdrop-blur-xs"
+      class="bg-surface-root/40 absolute top-0 left-0 z-20 h-full w-full backdrop-blur-xs"
     ></div>
 
     <div
-      class="bg-secondary text-secondary-content fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-2 shadow-lg md:bottom-8"
+      class="bg-surface-inverse text-surface-root fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-2 shadow-lg md:bottom-8"
       in:fly={{ duration: 200, easing: cubicInOut, y: 50 }}
       out:fly={{ delay: 300, duration: 200, easing: cubicInOut, y: 50 }}
     >
       <div class="flex items-center gap-2 text-sm font-medium">
-        <div class="loading loading-spinner loading-xs"></div>
+        <Spinner size="xs" aria-hidden="true" />
         <span>Updating...</span>
       </div>
     </div>
