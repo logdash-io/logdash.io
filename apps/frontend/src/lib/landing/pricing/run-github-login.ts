@@ -6,8 +6,6 @@ export const runGithubLogin = (tier: UserTier): Promise<void> => {
   // stripe checkout redirect once the user lands in /app/clusters
   return startOAuthLogin({
     provider: 'github',
-    terms_accepted: false,
-    email_accepted: false,
     tier,
     next_url: '/app/clusters',
   });

@@ -7,16 +7,14 @@ const OAUTH_STATE_MAX_AGE = 60 * 10;
 /**
  * Everything the oauth callback needs to finish a login. It lives in a
  * short-lived, httpOnly cookie instead of the `state` query param so that the
- * provider round trip cannot be tampered with (login CSRF, forged consent
- * flags, open redirects).
+ * provider round trip cannot be tampered with (login CSRF, open redirects).
  */
 export type OAuthStatePayload = {
   state: string;
-  terms_accepted: boolean;
-  email_accepted: boolean;
   next_url: string;
   tier?: UserTier;
   flow?: 'login' | 'claim';
+  popup?: boolean;
 };
 
 export const save_oauth_state = (

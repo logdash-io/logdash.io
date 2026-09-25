@@ -6,11 +6,10 @@ import {
   save_access_token,
 } from '$lib/domains/shared/utils/cookies.utils';
 import { tokenMaxAge } from '$lib/domains/shared/utils/jwt.utils';
+import { is_same_site_request } from '$lib/domains/shared/utils/same-site-request.util';
 import { json, type Cookies } from '@sveltejs/kit';
 import { match } from 'ts-pattern';
 import type { RequestHandler } from './$types';
-
-const SAME_SITE_FETCH_SITES = ['same-origin', 'none'];
 
 export const GET: RequestHandler = async ({ cookies }) => {
   const token = get_access_token(cookies);
@@ -35,9 +34,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 };
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
-  const fetchSite = request.headers.get('sec-fetch-site') ?? '';
-
-  if (!SAME_SITE_FETCH_SITES.includes(fetchSite)) {
+  if (!is_same_site_request(request)) {
     return sessionJson(
       { error: 'Cross site requests are not allowed' },
       { status: 403 },

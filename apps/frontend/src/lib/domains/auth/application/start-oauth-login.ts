@@ -1,4 +1,5 @@
 import type { OAuthProvider } from '$lib/domains/auth/domain/oauth-provider';
+import { requestOAuthUrl } from '$lib/domains/auth/infrastructure/request-oauth-url';
 import type { UserTier } from '$lib/domains/shared/types.js';
 
 /**
@@ -7,25 +8,9 @@ import type { UserTier } from '$lib/domains/shared/types.js';
  */
 export const startOAuthLogin = async (dto: {
   provider: OAuthProvider;
-  terms_accepted: boolean;
-  email_accepted: boolean;
-  tier?: UserTier | null;
   next_url?: string;
   flow?: 'login' | 'claim';
+  tier?: UserTier;
 }): Promise<void> => {
-  const response = await fetch('/app/api/auth/oauth-start', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(dto),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Could not start ${dto.provider} login`);
-  }
-
-  const { url } = (await response.json()) as { url: string };
-
-  window.location.href = url;
+  window.location.href = await requestOAuthUrl(dto);
 };

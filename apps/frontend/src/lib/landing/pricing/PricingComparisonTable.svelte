@@ -34,7 +34,7 @@
             </span>
             <!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus the tier query -->
             <a
-              href={`${resolve('/app/auth')}?needs_account=true&tier=${plan.tier}`}
+              href={`${resolve('/app/auth')}?tier=${plan.tier}`}
               class={[
                 'btn btn-sm mt-5 w-full rounded-full font-medium',
                 plan.popular ? 'btn-primary' : 'btn-subtle',

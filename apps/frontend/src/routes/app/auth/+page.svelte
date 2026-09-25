@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AuthForm from '$lib/domains/auth/ui/AuthForm.svelte';
   import AuthPage from '$lib/domains/auth/ui/AuthPage.svelte';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
 </script>
@@ -10,4 +11,6 @@
   markdownTwin={false}
 />
 
-<AuthPage />
+<AuthPage>
+  <AuthForm />
+</AuthPage>

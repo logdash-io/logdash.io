@@ -9,4 +9,6 @@ export type User = {
   email?: string;
   authMethod?: string;
   accountClaimStatus?: AccountClaimStatus;
+  termsAcceptedAt: string | null;
+  onboardingCompletedAt: string | null;
 };

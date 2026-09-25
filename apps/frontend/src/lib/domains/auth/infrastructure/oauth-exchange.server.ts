@@ -2,46 +2,48 @@ import type { OAuthProvider } from '$lib/domains/auth/domain/oauth-provider';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
 import { match } from 'ts-pattern';
 
-export type ClaimAccountDto = {
-  code: string;
-  accessToken: string;
-  termsAccepted: boolean;
-  emailAccepted: boolean;
-};
-
-export class ClaimAccountError extends Error {
+export class OAuthExchangeError extends Error {
   public readonly status: number;
 
   public constructor(status: number, message: string) {
     super(message);
-    this.name = 'ClaimAccountError';
+    this.name = 'OAuthExchangeError';
     this.status = status;
   }
 }
 
+export const loginWithOAuth = async (
+  provider: OAuthProvider,
+  code: string,
+): Promise<{ token: string }> =>
+  exchangeCode(`/auth/${provider}/login`, {
+    [providerCodeField(provider)]: code,
+  });
+
 export const claimAccount = async (
   provider: OAuthProvider,
-  dto: ClaimAccountDto,
+  dto: { code: string; accessToken: string },
+): Promise<{ token: string }> =>
+  exchangeCode(`/auth/${provider}/claim`, {
+    [providerCodeField(provider)]: dto.code,
+    accessToken: dto.accessToken,
+  });
+
+const exchangeCode = async (
+  path: string,
+  body: Record<string, string>,
 ): Promise<{ token: string }> => {
-  const response = await fetch(
-    `${envConfig.apiBaseUrl}/auth/${provider}/claim`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        [providerCodeField(provider)]: dto.code,
-        accessToken: dto.accessToken,
-        termsAccepted: dto.termsAccepted,
-        emailAccepted: dto.emailAccepted,
-      }),
+  const response = await fetch(`${envConfig.apiBaseUrl}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
     },
-  );
+    body: JSON.stringify(body),
+  });
 
   if (!response.ok) {
-    throw new ClaimAccountError(
+    throw new OAuthExchangeError(
       response.status,
       await readErrorMessage(response),
     );
@@ -52,9 +54,9 @@ export const claimAccount = async (
   };
 
   if (!token) {
-    throw new ClaimAccountError(
+    throw new OAuthExchangeError(
       response.status,
-      'Claim response did not contain a token',
+      `${path} response did not contain a token`,
     );
   }
 

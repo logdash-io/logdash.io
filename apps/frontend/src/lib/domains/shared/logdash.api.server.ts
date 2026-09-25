@@ -109,26 +109,6 @@ class LogdashAPI {
     );
   }
 
-  github_login(dto: {
-    code: string;
-    terms_accepted: boolean;
-    email_accepted: boolean;
-  }): Promise<{
-    access_token?: string;
-    error?: string;
-  }> {
-    return this.post<{ token: string }>(
-      `${LogdashAPI.v0baseUrl}/auth/github/login`,
-      {
-        githubCode: dto.code,
-        termsAccepted: dto.terms_accepted,
-        emailAccepted: dto.email_accepted,
-      },
-    )
-      .then((data) => ({ access_token: data.token }))
-      .catch((error: unknown) => ({ error: String(error) }));
-  }
-
   get_personal_api_keys(access_token: string | undefined): Promise<
     {
       id: string;

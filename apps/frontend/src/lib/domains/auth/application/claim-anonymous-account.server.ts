@@ -1,8 +1,9 @@
+import type { OAuthFailureReason } from '$lib/domains/auth/domain/oauth-popup-message';
 import type { OAuthProvider } from '$lib/domains/auth/domain/oauth-provider';
 import {
-  ClaimAccountError,
+  OAuthExchangeError,
   claimAccount,
-} from '$lib/domains/auth/infrastructure/oauth-claim.server';
+} from '$lib/domains/auth/infrastructure/oauth-exchange.server';
 import { readSessionUser } from '$lib/domains/auth/infrastructure/read-session-user.server';
 import { bffLogger } from '$lib/domains/shared/bff-logger.server';
 import {
@@ -17,10 +18,14 @@ import type { Cookies } from '@sveltejs/kit';
 
 const CLAIMED_URL = '/app/clusters?claimed=1';
 
-type ClaimErrorCode = 'project-limit' | 'unavailable' | 'claim-failed';
+type ClaimFailureReason = Extract<
+  OAuthFailureReason,
+  'project-limit' | 'unavailable' | 'claim-failed'
+>;
 
 export type OAuthClaimOutcome =
-  | { kind: 'redirect'; redirectTo: string }
+  | { kind: 'claimed'; token: string; nextUrl: string }
+  | { kind: 'failed'; reason: ClaimFailureReason }
   | { kind: 'login' };
 
 export const claimAnonymousAccount = async (dto: {
@@ -86,12 +91,7 @@ const runClaim = async (dto: {
   const { cookies, provider, code, accessToken, state } = dto;
 
   try {
-    const { token } = await claimAccount(provider, {
-      code,
-      accessToken,
-      termsAccepted: state.terms_accepted,
-      emailAccepted: state.email_accepted,
-    });
+    const { token } = await claimAccount(provider, { code, accessToken });
 
     const maxAge = tokenMaxAge(token);
 
@@ -106,11 +106,12 @@ const runClaim = async (dto: {
     bffLogger.info(`${provider} claim success`);
 
     return {
-      kind: 'redirect',
-      redirectTo: safe_redirect_path(state.next_url, CLAIMED_URL),
+      kind: 'claimed',
+      token,
+      nextUrl: safe_redirect_path(state.next_url, CLAIMED_URL),
     };
   } catch (error) {
-    if (error instanceof ClaimAccountError && error.status === 409) {
+    if (error instanceof OAuthExchangeError && error.status === 409) {
       bffLogger.error(
         `${provider} claim rejected, target account is at its project limit`,
       );
@@ -126,9 +127,9 @@ const runClaim = async (dto: {
 
 const failedClaim = (
   cookies: Cookies,
-  code: ClaimErrorCode,
+  reason: ClaimFailureReason,
 ): OAuthClaimOutcome => {
   clear_onboarding_tier(cookies);
 
-  return { kind: 'redirect', redirectTo: `/app/auth?flow=claim&error=${code}` };
+  return { kind: 'failed', reason };
 };
