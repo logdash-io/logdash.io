@@ -1,22 +1,27 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
-const trim = ({ value }: { value: unknown }): unknown =>
-  typeof value === 'string' ? value.trim() : value;
+const trimToUndefined = ({ value }: { value: unknown }): unknown => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  return value.trim() || undefined;
+};
 
 export class CompleteOnboardingBody {
-  @ApiProperty({ maxLength: 64 })
-  @Transform(trim)
+  @ApiPropertyOptional({ maxLength: 64 })
+  @Transform(trimToUndefined)
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(64)
-  role: string;
+  role?: string;
 
-  @ApiProperty({ maxLength: 64 })
-  @Transform(trim)
+  @ApiPropertyOptional({ maxLength: 64 })
+  @Transform(trimToUndefined)
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(64)
-  source: string;
+  source?: string;
 }

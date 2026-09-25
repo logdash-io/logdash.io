@@ -162,12 +162,28 @@ describe('UserCoreController (writes)', () => {
       });
     });
 
-    it('rejects blank answers', async () => {
+    it('completes onboarding with the questions skipped', async () => {
       // given
       const { token, user } = await bootstrap.utils.generalUtils.setupClaimed();
 
       // when
-      const response = await putOnboarding(token, { role: '   ', source: 'search' });
+      const response = await putOnboarding(token, { role: '   ' });
+
+      // then
+      const body = response.body as UserSerialized;
+      expect(response.status).toEqual(200);
+      expect(body.onboardingCompletedAt).toEqual(expect.any(String));
+
+      const { onboarding } = await readUserEntity(user.id);
+      expect(onboarding).toEqual({ completedAt: new Date(body.onboardingCompletedAt!) });
+    });
+
+    it('rejects answers longer than 64 characters', async () => {
+      // given
+      const { token, user } = await bootstrap.utils.generalUtils.setupClaimed();
+
+      // when
+      const response = await putOnboarding(token, { role: 'x'.repeat(65) });
 
       // then
       expect(response.status).toEqual(400);

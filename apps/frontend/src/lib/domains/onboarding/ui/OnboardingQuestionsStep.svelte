@@ -15,6 +15,7 @@
   let failed = $state(false);
 
   const dto = $derived(parseOnboardingAnswersDto(answers));
+  const answeredAll = $derived(Boolean(dto?.role && dto.source));
 
   async function onSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
@@ -55,7 +56,6 @@
       <label class="flex flex-col gap-1.5">
         <span class="text-sm font-medium">{question.label}</span>
         <select
-          required
           bind:value={answers[question.key]}
           class={[
             'select w-full border-neutral-700 bg-base-200 transition-ink hover:border-neutral-600 focus:outline-none focus-visible:border-primary',
@@ -64,7 +64,7 @@
             },
           ]}
         >
-          <option value="" disabled class="text-neutral-500">Choose one</option>
+          <option value="" class="text-neutral-500">Choose one</option>
           {#each question.options as option (option.value)}
             <option value={option.value} class="text-base-content">
               {option.label}
@@ -77,7 +77,10 @@
 
   <button
     type="submit"
-    class="btn btn-primary mt-7 w-full gap-2"
+    class={[
+      'btn mt-7 w-full gap-2',
+      answeredAll ? 'btn-primary' : 'btn-subtle',
+    ]}
     disabled={!dto || saving}
   >
     {#if saving}

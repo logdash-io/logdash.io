@@ -11,8 +11,8 @@ export type AcceptConsentsDto = {
 };
 
 export type OnboardingAnswersDto = {
-  role: OnboardingRole;
-  source: OnboardingSource;
+  role?: OnboardingRole;
+  source?: OnboardingSource;
 };
 
 export const parseAcceptConsentsDto = (
@@ -34,12 +34,21 @@ export const parseOnboardingAnswersDto = (
   const roleOption = ROLE_OPTIONS.find((option) => option.value === role);
   const sourceOption = SOURCE_OPTIONS.find((option) => option.value === source);
 
-  if (!roleOption || !sourceOption) {
+  if (
+    (isAnswered(role) && !roleOption) ||
+    (isAnswered(source) && !sourceOption)
+  ) {
     return null;
   }
 
-  return { role: roleOption.value, source: sourceOption.value };
+  return {
+    ...(roleOption && { role: roleOption.value }),
+    ...(sourceOption && { source: sourceOption.value }),
+  };
 };
+
+const isAnswered = (value: unknown): boolean =>
+  value !== undefined && value !== null && value !== '';
 
 const asRecord = (value: unknown): Record<string, unknown> =>
   typeof value === 'object' && value !== null

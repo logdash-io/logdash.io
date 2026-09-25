@@ -86,7 +86,11 @@ export class UserCoreController {
 
     const updatedUser = await this.userWriteService.update({
       id: userId,
-      onboarding: { role: dto.role, source: dto.source, completedAt: new Date() },
+      onboarding: {
+        ...(dto.role && { role: dto.role }),
+        ...(dto.source && { source: dto.source }),
+        completedAt: new Date(),
+      },
     });
 
     return UserSerializer.serialize(updatedUser);
