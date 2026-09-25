@@ -68,6 +68,7 @@ type StoredAnonymousPreview = {
 class AnonymousPreviewState {
   private _phase = $state<AnonymousPreviewPhase>('idle');
   private _preview = $state<AnonymousPreview | null>(null);
+  private _submittedUrl = $state<string | null>(null);
   private _pings = $state<HttpPing[]>([]);
   private _creatingStep = $state<AnonymousStartStep | null>(null);
   private _error = $state<AnonymousStartError | null>(null);
@@ -90,6 +91,18 @@ class AnonymousPreviewState {
 
   public get preview(): AnonymousPreview | null {
     return this._preview;
+  }
+
+  public get previewHost(): string | null {
+    if (this._preview) {
+      return previewNameFromUrl(this._preview.url);
+    }
+
+    if (this._submittedUrl) {
+      return previewNameFromUrl(this._submittedUrl);
+    }
+
+    return null;
   }
 
   public get pings(): HttpPing[] {
@@ -122,7 +135,9 @@ class AnonymousPreviewState {
       return;
     }
 
-    this._startDemoPolling();
+    if (this._phase === 'idle') {
+      this._startDemoPolling();
+    }
   }
 
   public destroy(): void {
@@ -145,6 +160,7 @@ class AnonymousPreviewState {
     this._clearStoredPreview();
 
     this._preview = null;
+    this._submittedUrl = url;
     this._pings = [];
     this._error = null;
     this._creatingStep = 'account';
@@ -180,10 +196,47 @@ class AnonymousPreviewState {
   }
 
   public async openDashboard(): Promise<void> {
+    const claimed = await this._claimForHandoff();
+
+    if (!claimed) {
+      return;
+    }
+
+    posthog.capture('anonymous_dashboard_opened');
+
+    window.location.assign(
+      resolve(
+        `/app/clusters/${claimed.clusterId}/${claimed.projectId}/monitoring`,
+      ),
+    );
+  }
+
+  public async claimDashboard(): Promise<void> {
+    const claimed = await this._claimForHandoff();
+
+    if (!claimed) {
+      return;
+    }
+
+    posthog.capture('anonymous_dashboard_claim_opened');
+
+    const nextUrl = `/app/clusters/${claimed.clusterId}/${claimed.projectId}/monitoring?claimed=1`;
+
+    window.location.assign(
+      resolve(`/app/auth?flow=claim&next_url=${encodeURIComponent(nextUrl)}`),
+    );
+  }
+
+  public retry(): void {
+    this._resetToIdle();
+    this._startDemoPolling();
+  }
+
+  private async _claimForHandoff(): Promise<AnonymousPreview | null> {
     const preview = this._preview;
 
     if (!preview) {
-      return;
+      return null;
     }
 
     let claimed: AnonymousPreview;
@@ -197,25 +250,14 @@ class AnonymousPreviewState {
       this._error = AnonymousStartError.fromClaim(error);
       this._phase = 'error';
 
-      return;
+      return null;
     }
-
-    posthog.capture('anonymous_dashboard_opened');
 
     this._stopPreviewPolling();
     this._stopDemoPolling();
     this._clearStoredPreview();
 
-    window.location.assign(
-      resolve(
-        `/app/clusters/${claimed.clusterId}/${claimed.projectId}/monitoring`,
-      ),
-    );
-  }
-
-  public retry(): void {
-    this._resetToIdle();
-    this._startDemoPolling();
+    return claimed;
   }
 
   private async _claimPreviewMonitor(
@@ -256,6 +298,7 @@ class AnonymousPreviewState {
     this._clearStoredPreview();
 
     this._preview = null;
+    this._submittedUrl = null;
     this._pings = [];
     this._creatingStep = null;
     this._error = null;

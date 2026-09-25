@@ -54,11 +54,39 @@ function heroTile(page: Page) {
   return page.locator('#hero-showcase').first();
 }
 
+function fullScreenFrame(page: Page) {
+  return page.locator('#hero-showcase:modal');
+}
+
+async function expectFullScreen(page: Page, host: string): Promise<void> {
+  const frame = fullScreenFrame(page);
+  const sidebar = frame.locator('aside[aria-hidden="true"]');
+
+  await expect(frame).toBeVisible({ timeout: 30_000 });
+  await expect
+    .poll(() => frame.boundingBox())
+    .toEqual({ x: 0, y: 0, ...page.viewportSize()! });
+  await expect(page).toHaveTitle(`${host} · Logdash`);
+  await expect(
+    frame.getByRole('heading', { name: host, exact: true }),
+  ).toBeVisible();
+  await expect(sidebar).toBeVisible();
+  await expect(sidebar).toContainText('My first cluster');
+  await expect(sidebar).toContainText(host);
+  await expect(
+    frame.getByRole('heading', { name: `Keep ${host} monitored` }),
+  ).toBeVisible();
+  await expect(
+    frame.getByRole('button', { name: 'Claim it free' }),
+  ).toBeVisible();
+}
+
 test.describe('anonymous landing flow', () => {
   test.describe.configure({ mode: 'serial' });
 
   let context: BrowserContext;
   let page: Page;
+  let landingTitle = '';
   const consoleErrors: string[] = [];
 
   test.beforeAll(async ({ browser }) => {
@@ -93,7 +121,10 @@ test.describe('anonymous landing flow', () => {
     expect(consoleErrors, consoleErrors.join('\n')).toEqual([]);
   });
 
-  test('check 2: submitting a URL starts a live preview and sets the app-scoped token', async () => {
+  test('check 2: submitting a URL opens a full-screen live preview and sets the app-scoped token', async () => {
+    await page.goto('/');
+    landingTitle = await page.title();
+
     await startMonitoring(page, 'https://example.com');
 
     const tile = heroTile(page);
@@ -101,9 +132,7 @@ test.describe('anonymous landing flow', () => {
     await expect(tile.getByText('Your live monitor')).toBeVisible({
       timeout: 30_000,
     });
-    await expect(
-      tile.getByRole('heading', { name: 'example.com' }),
-    ).toBeVisible();
+    await expectFullScreen(page, 'example.com');
     await expect(tile.getByText('Operational', { exact: true })).toBeVisible({
       timeout: 30_000,
     });
@@ -125,7 +154,20 @@ test.describe('anonymous landing flow', () => {
     expect(stored?.url).toBe('https://example.com');
   });
 
-  test('check 3: reloading the landing restores the preview from sessionStorage', async () => {
+  test('check 2b: Esc returns to the site and Open full screen brings the dashboard back', async () => {
+    await page.keyboard.press('Escape');
+
+    await expect(fullScreenFrame(page)).toHaveCount(0);
+    await expect(page).toHaveTitle(landingTitle);
+
+    await heroTile(page)
+      .getByRole('button', { name: 'Open full screen' })
+      .click();
+
+    await expectFullScreen(page, 'example.com');
+  });
+
+  test('check 3: reloading the landing restores the full-screen preview from sessionStorage', async () => {
     const before = await readStoredPreview(page);
 
     await page.reload();
@@ -135,9 +177,7 @@ test.describe('anonymous landing flow', () => {
     await expect(tile.getByText('Your live monitor')).toBeVisible({
       timeout: 30_000,
     });
-    await expect(
-      tile.getByRole('heading', { name: 'example.com' }),
-    ).toBeVisible();
+    await expectFullScreen(page, 'example.com');
 
     const after = await readStoredPreview(page);
 
@@ -196,7 +236,7 @@ test.describe('anonymous landing flow', () => {
       timeout: 30_000,
     });
     await expect(
-      tile.getByRole('heading', { name: 'example.org' }),
+      tile.getByRole('heading', { name: 'example.org', exact: true }),
     ).toBeVisible();
 
     const userIdAfter = userIdFromToken(await readAccessToken(context));
@@ -215,6 +255,43 @@ test.describe('anonymous landing flow', () => {
     await page.waitForURL(/\/app\/clusters/, { timeout: 30_000 });
 
     expect(page.url()).toContain('/app/clusters');
+  });
+
+  test('check 11: the claim nudge hands the preview to the claim page', async () => {
+    await page.goto('/');
+
+    const stored = await readStoredPreview(page);
+
+    expect(stored?.url).toBe('https://example.org');
+
+    await expectFullScreen(page, 'example.org');
+
+    await fullScreenFrame(page)
+      .getByRole('button', { name: 'Claim it free' })
+      .click();
+
+    await expect(page).toHaveURL(/\/app\/auth\?flow=claim&next_url=/, {
+      timeout: 30_000,
+    });
+
+    expect(new URL(page.url()).searchParams.get('next_url')).toBe(
+      `/app/clusters/${stored!.clusterId}/${stored!.projectId}/monitoring?claimed=1`,
+    );
+    await expect(
+      page.getByRole('heading', { name: 'Keep your dashboard' }),
+    ).toBeVisible();
+    expect(await readStoredPreview(page)).toBeNull();
+  });
+
+  test('check 14: submitting from a feature page opens the full-screen preview on home', async () => {
+    await page.goto('/features/monitoring');
+    await startMonitoring(page, 'https://example.net');
+
+    await expect(page).toHaveURL((url) => url.pathname === '/');
+    await expectFullScreen(page, 'example.net');
+    await expect
+      .poll(async () => (await readStoredPreview(page))?.url)
+      .toBe('https://example.net');
   });
 });
 

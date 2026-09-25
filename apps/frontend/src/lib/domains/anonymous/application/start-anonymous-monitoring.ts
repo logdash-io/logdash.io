@@ -18,7 +18,7 @@ export const startAnonymousMonitoring = async (dto: {
 
   try {
     dto.onStep?.('account');
-    const { token, clusterId } = await ensureAnonymousSession();
+    const { token, clusterId, anonymous } = await ensureAnonymousSession();
 
     dto.onStep?.('project');
     const { projectId } = await anonymousSessionService.createProject(
@@ -42,6 +42,7 @@ export const startAnonymousMonitoring = async (dto: {
       monitorId: monitor.id,
       url,
       createdAt: Date.now(),
+      anonymous,
     };
   } catch (error) {
     throw AnonymousStartError.from(error);

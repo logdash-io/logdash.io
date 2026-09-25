@@ -10,6 +10,7 @@ const ALL_FEATURES = [Feature.LOGGING, Feature.METRICS, Feature.MONITORING];
 export type AnonymousSession = {
   token: string;
   clusterId: string;
+  anonymous: boolean;
 };
 
 export type AnonymousSessionProject = {
@@ -49,12 +50,16 @@ export const ensureAnonymousSession = async (): Promise<AnonymousSession> => {
       throw new Error('The signed in user has no cluster');
     }
 
-    return { token: session.token, clusterId };
+    return {
+      token: session.token,
+      clusterId,
+      anonymous: session.user.accountClaimStatus === 'anonymous',
+    };
   }
 
   const anonymousUser = await anonymousSessionService.createAnonymousUser();
 
   await sessionService.installSession(anonymousUser.token);
 
-  return anonymousUser;
+  return { ...anonymousUser, anonymous: true };
 };

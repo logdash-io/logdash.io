@@ -1,6 +1,5 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
-  import { previewNameFromUrl } from '$lib/domains/anonymous/domain/anonymous-preview';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
   import HexagonIcon from '$lib/domains/shared/icons/HexagonIcon.svelte';
@@ -11,16 +10,18 @@
   import { ChevronsUpDownIcon, SearchIcon, UserRoundIcon } from 'lucide-svelte';
   import type { Component } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
+  import { cubicOut } from 'svelte/easing';
+  import { prefersReducedMotion } from 'svelte/motion';
+  import { blur } from 'svelte/transition';
   import { statusFromHttpPings, type MonitorStatus } from './hero-pings';
   import { showcaseClusterName } from './hero-showcase';
+  import TypewriterText from './TypewriterText.svelte';
 
   type IconComponent = Component<{ class?: ClassValue }>;
 
   type ServiceRow = {
-    key: 'preview' | 'demo';
     name: string;
     status: MonitorStatus;
-    active: boolean;
     pending: boolean;
   };
 
@@ -31,53 +32,42 @@
     unknown: 'bg-neutral-600',
   };
 
-  const phase = $derived(anonymousPreviewState.phase);
+  const CLUSTER_SWAP_MS = 240;
+  const CLUSTER_SWAP_BLUR_PX = 4;
 
-  const previewRow = $derived.by<ServiceRow | null>(() => {
+  const phase = $derived(anonymousPreviewState.phase);
+  const clusterName = $derived(showcaseClusterName(phase));
+
+  const service = $derived.by<ServiceRow>(() => {
+    const host = anonymousPreviewState.previewHost;
+
     if (phase === 'creating') {
-      return {
-        key: 'preview',
-        name: 'Setting up',
-        status: 'unknown',
-        active: true,
-        pending: true,
-      };
+      return { name: host ?? 'Setting up', status: 'unknown', pending: true };
     }
 
-    const preview = anonymousPreviewState.preview;
-
-    if (phase === 'idle' || !preview) {
-      return null;
+    if (phase === 'idle' || !anonymousPreviewState.preview || !host) {
+      return demoRow();
     }
 
     return {
-      key: 'preview',
-      name: previewNameFromUrl(preview.url),
+      name: host,
       status:
         phase === 'previewing'
           ? statusFromHttpPings(anonymousPreviewState.pings)
           : 'unknown',
-      active: true,
       pending: false,
     };
   });
 
-  const demoRow = $derived.by<ServiceRow>(() => {
+  function demoRow(): ServiceRow {
     const demo = anonymousPreviewState.demo;
 
     return {
-      key: 'demo',
       name: demo.monitor?.name ?? '',
       status: demo.pings.length ? statusFromHttpPings(demo.pings) : 'unknown',
-      active: false,
       pending: !demo.pings.length,
     };
-  });
-
-  /** A visitor's fresh account holds their one service, nothing of ours. */
-  const services = $derived(
-    previewRow ? [previewRow] : [{ ...demoRow, active: true }],
-  );
+  }
 
   function rowClass(active: boolean): ClassValue {
     return [
@@ -98,9 +88,18 @@
       >
         <CubeIcon class="size-3.5" />
       </span>
-      <span class="truncate text-sm font-medium">
-        {showcaseClusterName(phase)}
-      </span>
+      {#key clusterName}
+        <span
+          class="truncate text-sm font-medium"
+          in:blur={{
+            duration: CLUSTER_SWAP_MS,
+            easing: cubicOut,
+            amount: prefersReducedMotion.current ? 0 : CLUSTER_SWAP_BLUR_PX,
+          }}
+        >
+          {clusterName}
+        </span>
+      {/key}
       <ChevronsUpDownIcon class="text-neutral-600 size-3.5 shrink-0" />
     </div>
 
@@ -126,21 +125,17 @@
   <div class="flex flex-col gap-0.5 px-4 pt-5">
     <span class="text-neutral-500 px-2 pb-1 text-xs">Services</span>
 
-    {#each services as service (service.key)}
-      <div class={rowClass(service.active)}>
-        <HexagonIcon
-          class={['size-4 shrink-0', { 'text-neutral-400': !service.active }]}
-        />
-        <span class="truncate">{service.name}</span>
-        <span
-          class={[
-            'ml-auto size-1.5 shrink-0 rounded-full',
-            STATUS_DOT[service.status],
-            { 'animate-pulse': service.pending },
-          ]}
-        ></span>
-      </div>
-    {/each}
+    <div class={rowClass(true)}>
+      <HexagonIcon class="size-4 shrink-0" />
+      <TypewriterText text={service.name} />
+      <span
+        class={[
+          'ml-auto size-1.5 shrink-0 rounded-full',
+          STATUS_DOT[service.status],
+          { 'animate-pulse': service.pending },
+        ]}
+      ></span>
+    </div>
 
     <div
       class="text-neutral-500 flex h-8 items-center gap-2 rounded-lg px-2 text-sm"

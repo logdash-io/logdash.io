@@ -4,7 +4,7 @@
   import LogRow from '$lib/landing/LogRow.svelte';
   import RollingFeed from '$lib/landing/RollingFeed.svelte';
   import { SearchIcon } from 'lucide-svelte';
-  import { showsVisitorAccount } from './hero-showcase';
+  import { showcaseSwap, showsVisitorAccount } from './hero-showcase';
 
   type Props = {
     /** Rows in the tail while the panel is as tall as its content. */
@@ -29,6 +29,7 @@
   const ROW_PX = 28;
   const FEED_GAP_PX = 8;
   const MIN_ROWS = 3;
+  const EMPTY_SWAP_DELAY_MS = 100;
 
   let listHeight = $state(0);
 
@@ -83,7 +84,10 @@
 
   <div class="min-h-0 flex-1 overflow-hidden" bind:clientHeight={listHeight}>
     {#if visitorAccount}
-      <div class="flex flex-col gap-1 py-2">
+      <div
+        class="flex flex-col gap-1 py-2"
+        in:showcaseSwap={{ delay: EMPTY_SWAP_DELAY_MS }}
+      >
         <span class="text-sm">No logs yet</span>
         <span class="text-neutral-500 text-sm">
           Your app's logs land here once you add the SDK.

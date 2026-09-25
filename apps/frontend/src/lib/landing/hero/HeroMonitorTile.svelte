@@ -1,9 +1,6 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
-  import {
-    previewNameFromUrl,
-    type AnonymousStartStep,
-  } from '$lib/domains/anonymous/domain/anonymous-preview';
+  import type { AnonymousStartStep } from '$lib/domains/anonymous/domain/anonymous-preview';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings';
   import { StatusBadge } from '@logdash/hyper-ui/features';
   import { ArrowRightIcon } from 'lucide-svelte';
@@ -16,6 +13,8 @@
     type ChartPing,
     type MonitorStatus,
   } from './hero-pings';
+  import { showcaseSwap } from './hero-showcase';
+  import { heroTakeover } from './hero-takeover.svelte';
 
   type TileStat = {
     label: string;
@@ -39,12 +38,11 @@
   const previewStatus = $derived<MonitorStatus>(
     getStatusFromPings(previewPings),
   );
-  const previewHost = $derived(
-    anonymousPreviewState.preview
-      ? previewNameFromUrl(anonymousPreviewState.preview.url)
-      : 'your app',
-  );
+  const previewHost = $derived(anonymousPreviewState.previewHost ?? 'your app');
   const previewStats = $derived(statsFor(previewPings));
+  const claimNudged = $derived(
+    heroTakeover.expanded && anonymousPreviewState.preview?.anonymous !== false,
+  );
 
   const demoPings = $derived(toChartPings(anonymousPreviewState.demo.pings));
   const demoStatus = $derived<MonitorStatus>(getStatusFromPings(demoPings));
@@ -96,22 +94,26 @@
   }
 </script>
 
-<div class="flex w-full flex-col gap-4 px-4 py-4">
-  {#if phase === 'idle'}
-    {@render demoTile()}
-  {:else if phase === 'creating'}
-    {@render creatingTile()}
-  {:else if phase === 'previewing'}
-    {@render previewingTile()}
-  {:else if phase === 'ended'}
-    {@render endedTile()}
-  {:else if phase === 'error'}
-    {@render errorTile()}
-  {/if}
+<div class="w-full px-4 py-4">
+  {#key phase}
+    <div class="flex flex-col gap-4" in:showcaseSwap>
+      {#if phase === 'idle'}
+        {@render demoTile()}
+      {:else if phase === 'creating'}
+        {@render creatingTile()}
+      {:else if phase === 'previewing'}
+        {@render previewingTile()}
+      {:else if phase === 'ended'}
+        {@render endedTile()}
+      {:else if phase === 'error'}
+        {@render errorTile()}
+      {/if}
+    </div>
+  {/key}
 </div>
 
 {#snippet creatingTile()}
-  {@render tileHeader('Setting up', 'Building your dashboard', 'unknown')}
+  {@render tileHeader('Setting up', previewHost, 'unknown')}
 
   <ol class="flex flex-col gap-3">
     {#each CREATING_STEPS as step, index (step.key)}
@@ -234,7 +236,10 @@
   <div class="flex flex-wrap items-center gap-2">
     <button
       type="button"
-      class="btn btn-primary btn-sm rounded-full px-5 font-medium"
+      class={[
+        'btn btn-sm rounded-full px-5 font-medium',
+        claimNudged ? 'btn-subtle' : 'btn-primary',
+      ]}
       data-posthog-id="hero-open-dashboard-cta"
       disabled={isOpening}
       onclick={onOpenDashboard}

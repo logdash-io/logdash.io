@@ -1,12 +1,13 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
-  import { showsVisitorAccount } from './hero-showcase';
+  import { showcaseSwap, showsVisitorAccount } from './hero-showcase';
 
   const SPARK_WIDTH = 200;
   const SPARK_HEIGHT = 36;
   const SPARK_PAD = 2;
   const SKELETON_TILES = 4;
+  const EMPTY_SWAP_DELAY_MS = 150;
 
   const integer = new Intl.NumberFormat('en-US');
   const decimal = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
@@ -61,7 +62,10 @@
 
   <div class="divide-hairline flex min-h-0 flex-col divide-y overflow-hidden">
     {#if visitorAccount}
-      <div class="flex shrink-0 flex-col gap-1 px-4 py-4">
+      <div
+        class="flex shrink-0 flex-col gap-1 px-4 py-4"
+        in:showcaseSwap={{ delay: EMPTY_SWAP_DELAY_MS }}
+      >
         <span class="text-sm">No metrics yet</span>
         <span class="text-neutral-500 text-sm">
           Counters you send from your app show up here.

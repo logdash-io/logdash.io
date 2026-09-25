@@ -10,6 +10,7 @@ export type AnonymousPreview = {
   monitorId: string;
   url: string;
   createdAt: number;
+  anonymous: boolean;
 };
 
 export type AnonymousStartStep = 'account' | 'project' | 'check';

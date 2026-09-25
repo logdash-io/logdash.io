@@ -1,9 +1,11 @@
+<script lang="ts" module>
+  import type { AnonymousPreviewSource } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
+
+  let errorSource = $state<AnonymousPreviewSource | null>(null);
+</script>
+
 <script lang="ts">
-  import {
-    anonymousPreviewState,
-    type AnonymousPreviewSource,
-  } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
-  import { scrollIntoViewCentered } from '$lib/domains/shared/utils/scroll';
+  import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
   import {
     isValidUrl,
     tryPrependProtocol,
@@ -15,7 +17,8 @@
   import { onMount } from 'svelte';
   import { prefersReducedMotion } from 'svelte/motion';
   import { fly, slide } from 'svelte/transition';
-  import { HERO_ID, HERO_SHOWCASE_ID, HERO_URL_INPUT_ID } from './hero-anchors';
+  import { HERO_SHOWCASE_ID, HERO_URL_INPUT_ID } from './hero-anchors';
+  import { heroTakeover } from './hero-takeover.svelte';
 
   type Props = {
     source: AnonymousPreviewSource;
@@ -60,6 +63,14 @@
 
   const isCreating = $derived(anonymousPreviewState.phase === 'creating');
   const isInvalid = $derived(validationMessage !== null);
+  const submitError = $derived(
+    errorSource === source &&
+      anonymousPreviewState.phase === 'error' &&
+      !anonymousPreviewState.preview
+      ? (anonymousPreviewState.error?.message ?? null)
+      : null,
+  );
+  const message = $derived(validationMessage ?? submitError);
   const statusId = $derived(`${source}-url-status`);
   const submitPosthogId = $derived(`${source}-monitor-url-submit-cta`);
   const statusSwapMs = $derived(
@@ -82,14 +93,22 @@
     }
 
     validationMessage = null;
-    const hasShowcase = revealShowcase();
+    const hasShowcase = document.getElementById(HERO_SHOWCASE_ID) !== null;
+    errorSource = hasShowcase ? source : 'hero';
+    heroTakeover.expand(
+      hasShowcase ? (composer?.getBoundingClientRect() ?? null) : null,
+    );
 
-    await anonymousPreviewState.submit(tryPrependProtocol(value), source);
+    const submitting = anonymousPreviewState.submit(
+      tryPrependProtocol(value),
+      source,
+    );
 
     if (!hasShowcase) {
-      // eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve() plus the hero hash
-      await goto(`${resolve('/')}#${HERO_ID}`);
+      await goto(resolve('/'));
     }
+
+    await submitting;
   }
 
   function reject(message: string): void {
@@ -109,20 +128,13 @@
     );
   }
 
-  function revealShowcase(): boolean {
-    const showcase = document.getElementById(HERO_SHOWCASE_ID);
-
-    if (!showcase) {
-      return false;
-    }
-
-    scrollIntoViewCentered(showcase);
-    return true;
-  }
-
   function onInput(): void {
     if (validationMessage) {
       validationMessage = null;
+    }
+
+    if (errorSource === source) {
+      errorSource = null;
     }
   }
 
@@ -213,15 +225,15 @@
     announce the first message too.
   -->
   <div id={statusId} class="text-error text-xs" aria-live="polite">
-    {#if validationMessage}
+    {#if message}
       <div transition:slide={{ duration: statusSwapMs }}>
-        {#key validationMessage}
+        {#key message}
           <span
             class="flex items-center gap-1.5 pt-2 pl-5"
             in:fly={{ y: -2, duration: statusSwapMs }}
           >
             <CircleAlertIcon class="size-3.5 shrink-0" />
-            {validationMessage}
+            {message}
           </span>
         {/key}
       </div>
