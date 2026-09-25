@@ -12,6 +12,7 @@ export class HttpMonitorSerializer {
       notificationChannelsIds: entity.notificationChannelsIds,
       mode: entity.mode,
       badgeKey: entity.badgeKey,
+      claimed: entity.claimed,
     };
   }
 

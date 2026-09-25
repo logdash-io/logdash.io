@@ -7,6 +7,10 @@ import { TokenResponse } from '../../src/shared/responses/token.response';
 import { AuthMethod } from '../../src/user/core/enum/auth-method.enum';
 import { AuditLogUserAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { ErrorResponse } from '../utils/error-response';
+import { UserSerialized } from '../../src/user/core/entities/user.interface';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AuthEvents } from '../../src/auth/events/auth-events.enum';
+import { UserRegisteredEvent } from '../../src/auth/events/definitions/user-registered.event';
 
 describe('Auth (anonymous)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -116,7 +120,7 @@ describe('Auth (anonymous)', () => {
     });
   });
 
-  it('creates new user if not exists (and accepted terms)', async () => {
+  it('creates new user with consents given up front by an older client', async () => {
     // given
     nock('https://github.com')
       .post('/login/oauth/access_token')
@@ -159,6 +163,14 @@ describe('Auth (anonymous)', () => {
       avatarUrl: 'https://some-avatar.com',
       marketingConsent: true,
     });
+
+    const me = await request(bootstrap.app.getHttpServer())
+      .get('/users/me')
+      .set('Authorization', `Bearer ${(loginResponse.body as TokenResponse).token}`);
+
+    const user = me.body as UserSerialized;
+    expect(user.termsAcceptedAt).toEqual(expect.any(String));
+    expect(user.onboardingCompletedAt).toEqual(user.termsAcceptedAt);
   });
 
   it('does not log user in when github primary email is not verified', async () => {
@@ -258,7 +270,7 @@ describe('Auth (anonymous)', () => {
     );
   });
 
-  it('throws error when user does not exists and did not accept terms', async () => {
+  it('creates new user without consents so they are asked after sign in', async () => {
     // given
     nock('https://github.com')
       .post('/login/oauth/access_token')
@@ -282,18 +294,38 @@ describe('Auth (anonymous)', () => {
       .get('/user')
       .reply(200, { avatar_url: 'https://some-avatar.com' });
 
+    const registeredEvents: UserRegisteredEvent[] = [];
+    const eventEmitter = bootstrap.app.get(EventEmitter2);
+    const listener = (event: UserRegisteredEvent): void => {
+      registeredEvents.push(event);
+    };
+    eventEmitter.on(AuthEvents.UserRegistered, listener);
+
     // when
     const loginResponse = await request(bootstrap.app.getHttpServer())
       .post('/auth/github/login')
       .send({
         githubCode: 'whatever',
-        termsAccepted: false,
       });
 
+    eventEmitter.off(AuthEvents.UserRegistered, listener);
+
     // then
-    expect(loginResponse.status).toEqual(400);
-    expect((loginResponse.body as ErrorResponse).message).toEqual(
-      'Cannot create new account without accepting terms',
-    );
+    expect(loginResponse.status).toEqual(201);
+
+    const me = await request(bootstrap.app.getHttpServer())
+      .get('/users/me')
+      .set('Authorization', `Bearer ${(loginResponse.body as TokenResponse).token}`);
+
+    expect(me.body).toMatchObject({
+      email: 'primary@test.com',
+      accountClaimStatus: AccountClaimStatus.Claimed,
+      termsAcceptedAt: null,
+      onboardingCompletedAt: null,
+    });
+    expect((await bootstrap.models.userModel.findOne())?.marketingConsent).toEqual(false);
+    expect(registeredEvents).toEqual([
+      expect.objectContaining({ email: 'primary@test.com', emailAccepted: false }),
+    ]);
   });
 });

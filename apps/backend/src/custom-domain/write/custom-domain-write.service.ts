@@ -55,7 +55,7 @@ export class CustomDomainWriteService {
     }
 
     const entity = await this.customDomainModel.findByIdAndUpdate(dto.id, updateQuery, {
-      new: true,
+      returnDocument: 'after',
     });
 
     if (!entity) {
@@ -94,7 +94,7 @@ export class CustomDomainWriteService {
         attemptCount: { $lt: maxAttempts },
       },
       { $inc: { attemptCount: 1 } },
-      { new: true },
+      { returnDocument: 'after' },
     );
 
     if (!updated) {

@@ -217,7 +217,12 @@ export class HttpMonitorCoreController {
   @UseGuards(ClusterMemberGuard)
   @Post('/http_monitors/:httpMonitorId/claim')
   async claim(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
-    const projectId = (await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId)).projectId;
+    const { projectId, claimed } = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
+
+    if (claimed) {
+      return;
+    }
+
     const hasCapacity = await this.httpMonitorLimitService.hasClaimedCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(

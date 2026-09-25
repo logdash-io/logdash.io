@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CustomJwtService } from '../custom-jwt/custom-jwt.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import { UserWriteService } from '../../user/write/user-write.service';
@@ -54,18 +54,17 @@ export class GoogleAuthLoginService {
       throw new UnauthorizedException('Account was created with a different sign in method');
     }
 
-    if (!user && !dto.termsAccepted) {
-      this.logger.warn('Cannot create new account without accepting terms');
-      throw new BadRequestException('Cannot create new account without accepting terms');
-    }
-
     if (user === null) {
+      const termsAcceptedAt = dto.termsAccepted ? new Date() : undefined;
+
       const user = await this.userWriteService.create({
         accountClaimStatus: AccountClaimStatus.Claimed,
         authMethod: AuthMethod.Google,
         email,
         avatarUrl: avatar,
         marketingConsent: dto.emailAccepted || false,
+        termsAcceptedAt,
+        onboarding: termsAcceptedAt ? { completedAt: termsAcceptedAt } : undefined,
       });
 
       this.logger.log(`Created new user`, { email, userId: user.id });

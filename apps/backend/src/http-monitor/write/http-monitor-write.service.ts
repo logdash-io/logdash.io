@@ -108,7 +108,7 @@ export class HttpMonitorWriteService {
     }
 
     const entity = await this.httpMonitorModel.findByIdAndUpdate(httpMonitorId, updateQuery, {
-      new: true,
+      returnDocument: 'after',
     });
 
     if (!entity) {

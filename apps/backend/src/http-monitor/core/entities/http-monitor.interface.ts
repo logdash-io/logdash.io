@@ -10,6 +10,7 @@ export class HttpMonitorNormalized {
   notificationChannelsIds: string[];
   mode: HttpMonitorMode;
   badgeKey: string;
+  claimed: boolean;
 }
 
 export class HttpMonitorSerialized {

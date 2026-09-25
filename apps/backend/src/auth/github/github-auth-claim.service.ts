@@ -137,10 +137,7 @@ export class GithubAuthClaimService {
       throw new BadRequestException('User already claimed');
     }
 
-    if (!dto.termsAccepted) {
-      this.logger.warn('Cannot create new account without accepting terms');
-      throw new BadRequestException('Cannot create new account without accepting terms');
-    }
+    const termsAcceptedAt = dto.termsAccepted ? new Date() : undefined;
 
     this.emitter.emitUserRegisteredEvent({
       userId: dto.userId,
@@ -156,6 +153,8 @@ export class GithubAuthClaimService {
       email: dto.email,
       avatarUrl: dto.avatar,
       marketingConsent: dto.emailAccepted || false,
+      termsAcceptedAt,
+      onboarding: termsAcceptedAt ? { completedAt: termsAcceptedAt } : undefined,
     });
 
     return {

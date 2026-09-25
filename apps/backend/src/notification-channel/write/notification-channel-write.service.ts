@@ -57,7 +57,7 @@ export class NotificationChannelWriteService {
     const notificationChannel = await this.notificationChannelModel.findOneAndUpdate(
       { _id: new Types.ObjectId(dto.id) },
       updateQuery,
-      { new: true },
+      { returnDocument: 'after' },
     );
 
     if (!notificationChannel) {

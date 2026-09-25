@@ -73,9 +73,11 @@ describe('Auth (anonymous)', () => {
     expect(user.email).toEqual('primary@test.com');
     expect(user.avatarUrl).toEqual('https://some-avatar.com');
     expect(user.marketingConsent).toEqual(true);
+    expect(user.termsAcceptedAt).toBeInstanceOf(Date);
+    expect(user.onboarding?.completedAt).toEqual(user.termsAcceptedAt);
   });
 
-  it('does not claim account into a new account when terms were not accepted', async () => {
+  it('claims account into a new account without consents given up front', async () => {
     // given
     const { user, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
@@ -88,17 +90,17 @@ describe('Auth (anonymous)', () => {
     });
 
     // then
-    expect(response.status).toEqual(400);
-    expect((response.body as ErrorResponse).message).toEqual(
-      'Cannot create new account without accepting terms',
-    );
+    expect(response.status).toEqual(201);
 
     const userAfterClaim = (await bootstrap.models.userModel.findById(
       new Types.ObjectId(user.id),
     ))!;
 
-    expect(userAfterClaim.accountClaimStatus).toEqual(AccountClaimStatus.Anonymous);
-    expect(userAfterClaim.email).toBeUndefined();
+    expect(userAfterClaim.accountClaimStatus).toEqual(AccountClaimStatus.Claimed);
+    expect(userAfterClaim.email).toEqual('primary@test.com');
+    expect(userAfterClaim.marketingConsent).toEqual(false);
+    expect(userAfterClaim.termsAcceptedAt).toBeUndefined();
+    expect(userAfterClaim.onboarding).toBeUndefined();
   });
 
   it('does not remove account if user claims while being logged in', async () => {
