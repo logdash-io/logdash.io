@@ -34,6 +34,7 @@ export const startAnonymousMonitoring = async (dto: {
       { name, url },
       token,
     );
+    await anonymousSessionService.claimMonitor(monitor.id, token);
 
     return {
       token,

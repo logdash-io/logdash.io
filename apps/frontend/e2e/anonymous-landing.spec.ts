@@ -1,8 +1,21 @@
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import {
+  expect,
+  test,
+  type BrowserContext,
+  type Locator,
+  type Page,
+} from '@playwright/test';
 
 const ACCESS_TOKEN_COOKIE = 'logdash_access_token_v0';
 const PREVIEW_STORAGE_KEY = 'logdash_anonymous_preview_v0';
 const MONITORING_PATH = /\/app\/clusters\/[^/]+\/[^/]+\/monitoring/;
+const CLAIMED_USER = {
+  id: '000000000000000000000001',
+  tier: 'free',
+  accountClaimStatus: 'claimed',
+  termsAcceptedAt: null,
+  onboardingCompletedAt: null,
+};
 
 type StoredPreview = {
   clusterId: string;
@@ -73,11 +86,30 @@ async function expectFullScreen(page: Page, host: string): Promise<void> {
   await expect(sidebar).toBeVisible();
   await expect(sidebar).toContainText('My first cluster');
   await expect(sidebar).toContainText(host);
+}
+
+function claimCard(page: Page): Locator {
+  return fullScreenFrame(page).getByRole('dialog', {
+    name: /^Keep watching /,
+  });
+}
+
+async function expectClaimCard(page: Page, host: string): Promise<void> {
+  const card = claimCard(page);
+
+  await expect(card).toBeVisible({ timeout: 30_000 });
   await expect(
-    frame.getByRole('heading', { name: `Keep ${host} monitored` }),
+    card.getByRole('heading', { name: `Keep watching ${host}` }),
   ).toBeVisible();
   await expect(
-    frame.getByRole('button', { name: 'Claim it free' }),
+    card.getByText(new RegExp(`^${host} is up · \\d+ ms$`)),
+  ).toBeVisible();
+  await expect(card).toBeFocused();
+  await expect(
+    card.getByRole('button', { name: 'Continue with GitHub' }),
+  ).toBeVisible();
+  await expect(
+    card.getByRole('button', { name: 'Continue with Google' }),
   ).toBeVisible();
 }
 
@@ -133,6 +165,7 @@ test.describe('anonymous landing flow', () => {
       timeout: 30_000,
     });
     await expectFullScreen(page, 'example.com');
+    await expectClaimCard(page, 'example.com');
     await expect(tile.getByText('Operational', { exact: true })).toBeVisible({
       timeout: 30_000,
     });
@@ -154,7 +187,12 @@ test.describe('anonymous landing flow', () => {
     expect(stored?.url).toBe('https://example.com');
   });
 
-  test('check 2b: Esc returns to the site and Open full screen brings the dashboard back', async () => {
+  test('check 2b: Esc closes the claim card, then returns to the site, and Open full screen brings the dashboard back', async () => {
+    await page.keyboard.press('Escape');
+
+    await expect(claimCard(page)).toHaveCount(0);
+    await expect(fullScreenFrame(page)).toBeVisible();
+
     await page.keyboard.press('Escape');
 
     await expect(fullScreenFrame(page)).toHaveCount(0);
@@ -178,6 +216,7 @@ test.describe('anonymous landing flow', () => {
       timeout: 30_000,
     });
     await expectFullScreen(page, 'example.com');
+    await expectClaimCard(page, 'example.com');
 
     const after = await readStoredPreview(page);
 
@@ -189,6 +228,9 @@ test.describe('anonymous landing flow', () => {
     const stored = await readStoredPreview(page);
 
     expect(stored, 'no preview to open').toBeTruthy();
+
+    await claimCard(page).getByRole('button', { name: 'Not now' }).click();
+    await expect(claimCard(page)).toHaveCount(0);
 
     await page
       .getByRole('button', { name: 'Open your dashboard' })
@@ -257,7 +299,7 @@ test.describe('anonymous landing flow', () => {
     expect(page.url()).toContain('/app/clusters');
   });
 
-  test('check 11: the claim nudge hands the preview to the claim page', async () => {
+  test('check 11: the claim card signs in and onboards inside the dashboard, then opens it', async () => {
     await page.goto('/');
 
     const stored = await readStoredPreview(page);
@@ -265,21 +307,49 @@ test.describe('anonymous landing flow', () => {
     expect(stored?.url).toBe('https://example.org');
 
     await expectFullScreen(page, 'example.org');
+    await expectClaimCard(page, 'example.org');
 
-    await fullScreenFrame(page)
-      .getByRole('button', { name: 'Claim it free' })
-      .click();
-
-    await expect(page).toHaveURL(/\/app\/auth\?flow=claim&next_url=/, {
-      timeout: 30_000,
-    });
-
-    expect(new URL(page.url()).searchParams.get('next_url')).toBe(
-      `/app/clusters/${stored!.clusterId}/${stored!.projectId}/monitoring?claimed=1`,
+    await page.route('**/app/api/auth/oauth-start', (route) =>
+      route.fulfill({ json: { url: '/app/auth/popup?status=ok' } }),
     );
-    await expect(
-      page.getByRole('heading', { name: 'Keep your dashboard' }),
-    ).toBeVisible();
+    await page.route('**/app/api/auth/session', (route) =>
+      route.fulfill({ json: { user: CLAIMED_USER, token: 'claimed' } }),
+    );
+    await page.route('**/app/api/onboarding/**', (route) =>
+      route.fulfill({
+        json: {
+          ...CLAIMED_USER,
+          termsAcceptedAt: new Date().toISOString(),
+          onboardingCompletedAt: new Date().toISOString(),
+        },
+      }),
+    );
+
+    const card = claimCard(page);
+    const popup = page.waitForEvent('popup');
+
+    await card.getByRole('button', { name: 'Continue with GitHub' }).click();
+    await (await popup).waitForEvent('close');
+
+    await expect(page).toHaveURL('/');
+    await expect(card.getByText('One last thing')).toBeVisible();
+
+    await card.getByLabel(/I agree to the/).check();
+    await card.getByRole('button', { name: 'Continue', exact: true }).click();
+    await expect(card.getByText('Welcome to Logdash')).toBeVisible();
+
+    for (const select of await card.getByRole('combobox').all()) {
+      await select.selectOption({ index: 1 });
+    }
+
+    await card.getByRole('button', { name: 'Take me to my dashboard' }).click();
+
+    await page.waitForURL(MONITORING_PATH, { timeout: 30_000 });
+    await page.unrouteAll({ behavior: 'ignoreErrors' });
+
+    expect(page.url()).toContain(
+      `/app/clusters/${stored!.clusterId}/${stored!.projectId}/monitoring`,
+    );
     expect(await readStoredPreview(page)).toBeNull();
   });
 

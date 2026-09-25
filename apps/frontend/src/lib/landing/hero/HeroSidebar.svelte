@@ -128,13 +128,18 @@
     <div class={rowClass(true)}>
       <HexagonIcon class="size-4 shrink-0" />
       <TypewriterText text={service.name} />
-      <span
-        class={[
-          'ml-auto size-1.5 shrink-0 rounded-full',
-          STATUS_DOT[service.status],
-          { 'animate-pulse': service.pending },
-        ]}
-      ></span>
+      {#if service.pending}
+        <span
+          class="loading loading-spinner text-neutral-500 ml-auto size-3 shrink-0"
+        ></span>
+      {:else}
+        <span
+          class={[
+            'ml-auto size-1.5 shrink-0 rounded-full',
+            STATUS_DOT[service.status],
+          ]}
+        ></span>
+      {/if}
     </div>
 
     <div

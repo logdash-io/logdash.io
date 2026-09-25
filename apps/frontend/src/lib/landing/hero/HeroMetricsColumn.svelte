@@ -6,7 +6,6 @@
   const SPARK_WIDTH = 200;
   const SPARK_HEIGHT = 36;
   const SPARK_PAD = 2;
-  const SKELETON_TILES = 4;
   const EMPTY_SWAP_DELAY_MS = 150;
 
   const integer = new Intl.NumberFormat('en-US');
@@ -103,20 +102,21 @@
         </div>
       {/each}
     {:else}
-      {#each [...Array(SKELETON_TILES).keys()] as index (index)}
-        <div class="flex shrink-0 flex-col gap-2 px-4 py-4">
-          <div class="bg-neutral-800 h-3 w-24 animate-pulse rounded"></div>
-          <div class="bg-neutral-800 h-7 w-32 animate-pulse rounded"></div>
-          <div class="bg-neutral-800 h-9 w-full animate-pulse rounded"></div>
-        </div>
-      {/each}
+      <div
+        class="text-neutral-500 flex h-11 shrink-0 items-center gap-2 px-4 text-sm"
+      >
+        <span class="loading loading-spinner size-3.5 shrink-0"></span>
+        Loading metrics
+      </div>
     {/if}
 
-    <div
-      class="text-neutral-500 flex h-11 shrink-0 items-center gap-2 px-4 text-sm"
-    >
-      <PlusIcon class="size-4 shrink-0 text-neutral-600" />
-      <span>New metric</span>
-    </div>
+    {#if visitorAccount || metrics}
+      <div
+        class="text-neutral-500 flex h-11 shrink-0 items-center gap-2 px-4 text-sm"
+      >
+        <PlusIcon class="size-4 shrink-0 text-neutral-600" />
+        <span>New metric</span>
+      </div>
+    {/if}
   </div>
 </div>

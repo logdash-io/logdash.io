@@ -105,10 +105,12 @@
         {/snippet}
       </RollingFeed>
     {:else}
-      <div class="flex flex-col gap-2" aria-hidden="true">
-        {#each [...Array(visible).keys()] as index (index)}
-          <div class="bg-neutral-800 h-5 animate-pulse rounded"></div>
-        {/each}
+      <div
+        class="text-neutral-500 flex h-5 items-center gap-2 text-sm"
+        role="status"
+      >
+        <span class="loading loading-spinner size-3.5 shrink-0"></span>
+        Loading logs
       </div>
     {/if}
   </div>

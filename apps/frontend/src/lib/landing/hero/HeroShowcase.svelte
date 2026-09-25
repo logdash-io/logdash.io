@@ -13,18 +13,19 @@
   import { MediaQuery } from 'svelte/reactivity';
   import { match } from 'ts-pattern';
   import { HERO_SHOWCASE_ID } from './hero-anchors';
-  import HeroClaimNudge from './HeroClaimNudge.svelte';
+  import HeroClaimCard from './HeroClaimCard.svelte';
   import HeroLogsPanel from './HeroLogsPanel.svelte';
   import HeroMetricsColumn from './HeroMetricsColumn.svelte';
   import HeroMonitorTile from './HeroMonitorTile.svelte';
   import HeroSidebar from './HeroSidebar.svelte';
+  import { heroClaim } from './hero-claim.svelte';
   import { showcaseClusterName } from './hero-showcase';
   import { heroTakeover } from './hero-takeover.svelte';
   import TypewriterText from './TypewriterText.svelte';
 
   type WindowBarStatus = {
     label: string;
-    dotClass: string;
+    dotClass: string | null;
   };
 
   type ServiceTab = {
@@ -79,6 +80,7 @@
 
   const phase = $derived(anonymousPreviewState.phase);
   const expanded = $derived(heroTakeover.expanded);
+  const claimShown = $derived(expanded && settled && heroClaim.visible);
 
   const host = $derived.by(() => {
     const demoHost = anonymousPreviewState.demo.monitor?.name ?? '';
@@ -92,14 +94,14 @@
     match(phase)
       .with('creating', () => ({
         label: 'Starting',
-        dotClass: 'bg-warning animate-pulse',
+        dotClass: null,
       }))
       .with('previewing', 'idle', () => ({
         label: 'Live',
         dotClass: 'bg-success',
       }))
       .with('ended', () => ({
-        label: 'Ended',
+        label: 'Expired',
         dotClass: 'bg-neutral-600',
       }))
       .with('error', () => ({
@@ -359,6 +361,12 @@
 
   function onCancel(event: Event): void {
     event.preventDefault();
+
+    if (claimShown) {
+      heroClaim.hide();
+      return;
+    }
+
     heroTakeover.minimize();
     keepToggleFocus();
   }
@@ -426,7 +434,7 @@
     >
       <HeroSidebar />
 
-      <div class="flex min-w-0 flex-1 flex-col">
+      <div class="flex min-w-0 flex-1 flex-col" inert={claimShown}>
         <div
           class="border-hairline flex h-11 shrink-0 items-center gap-3 border-b px-4"
         >
@@ -457,7 +465,11 @@
           <span
             class="text-neutral-400 ml-auto flex shrink-0 items-center gap-1.5 text-xs"
           >
-            <span class={['size-1.5 rounded-full', status.dotClass]}></span>
+            {#if status.dotClass}
+              <span class={['size-1.5 rounded-full', status.dotClass]}></span>
+            {:else}
+              <span class="loading loading-spinner size-3"></span>
+            {/if}
             {status.label}
           </span>
 
@@ -507,8 +519,8 @@
         </div>
       </div>
 
-      {#if full && expanded}
-        <HeroClaimNudge />
+      {#if full && expanded && settled}
+        <HeroClaimCard />
       {/if}
     </dialog>
   </div>

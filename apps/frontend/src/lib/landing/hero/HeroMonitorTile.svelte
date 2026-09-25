@@ -4,7 +4,11 @@
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings';
   import { StatusBadge } from '@logdash/hyper-ui/features';
   import { ArrowRightIcon } from 'lucide-svelte';
+  import { cubicOut } from 'svelte/easing';
+  import { fade } from 'svelte/transition';
   import ResponseTimePlot from '../ResponseTimePlot.svelte';
+  import HeroCheckTrace from './HeroCheckTrace.svelte';
+  import { heroClaim } from './hero-claim.svelte';
   import {
     checkIntervalLabel,
     responseTimes,
@@ -23,6 +27,7 @@
 
   const CHART_WIDTH = 240;
   const CHART_HEIGHT = 56;
+  const CHART_SWAP_MS = 240;
 
   const CREATING_STEPS: { key: AnonymousStartStep; label: string }[] = [
     { key: 'account', label: 'Creating your account' },
@@ -40,9 +45,7 @@
   );
   const previewHost = $derived(anonymousPreviewState.previewHost ?? 'your app');
   const previewStats = $derived(statsFor(previewPings));
-  const claimNudged = $derived(
-    heroTakeover.expanded && anonymousPreviewState.preview?.anonymous !== false,
-  );
+  const claimable = $derived(heroClaim.eligible);
 
   const demoPings = $derived(toChartPings(anonymousPreviewState.demo.pings));
   const demoStatus = $derived<MonitorStatus>(getStatusFromPings(demoPings));
@@ -69,10 +72,10 @@
     return Math.max(1, ...times);
   }
 
-  function checkingLabel(pings: ChartPing[], suffix = ''): string {
+  function checkingLabel(pings: ChartPing[]): string {
     const interval = checkIntervalLabel(pings);
 
-    return interval ? `Checking every ${interval}${suffix}` : 'Checking';
+    return interval ? `Checking every ${interval}` : 'Checking';
   }
 
   async function onOpenDashboard(): Promise<void> {
@@ -87,6 +90,14 @@
     } finally {
       isOpening = false;
     }
+  }
+
+  function onSetUpAlerts(): void {
+    if (!heroTakeover.expanded) {
+      heroTakeover.expand(null);
+    }
+
+    heroClaim.show('alerts');
   }
 
   function onRetry(): void {
@@ -148,7 +159,7 @@
     {/each}
   </ol>
 
-  <div class="bg-neutral-800 h-14 w-full animate-pulse rounded-lg"></div>
+  <HeroCheckTrace width={CHART_WIDTH} height={CHART_HEIGHT} />
 {/snippet}
 
 {#snippet demoTile()}
@@ -170,7 +181,7 @@
 
   {@render historyBar(
     previewPings,
-    checkingLabel(previewPings, ' during preview'),
+    checkingLabel(previewPings),
     previewPings.length ? 'Now' : 'Waiting for the first check',
   )}
 
@@ -179,38 +190,56 @@
 
 {#snippet historyBar(pings: ChartPing[], left: string, right: string)}
   <div class="flex flex-col gap-2">
-    {#if pings.length > 1}
-      {@const times = responseTimes(pings)}
+    <div class="grid">
+      {#if pings.length > 1}
+        {@const times = responseTimes(pings)}
 
-      <svg
-        class="h-14 w-full"
-        viewBox="0 0 {CHART_WIDTH} {CHART_HEIGHT}"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <ResponseTimePlot
-          responseTimes={times}
-          step={CHART_WIDTH / (times.length - 1)}
-          height={CHART_HEIGHT}
-          maxMs={maxResponseMs(times)}
-        />
-      </svg>
-    {:else}
-      <div class="bg-neutral-800 h-14 w-full animate-pulse rounded-lg"></div>
-    {/if}
+        <svg
+          class="h-14 w-full [grid-area:1/1]"
+          viewBox="0 0 {CHART_WIDTH} {CHART_HEIGHT}"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+          in:fade={{ duration: CHART_SWAP_MS, easing: cubicOut }}
+        >
+          <ResponseTimePlot
+            responseTimes={times}
+            step={CHART_WIDTH / (times.length - 1)}
+            height={CHART_HEIGHT}
+            maxMs={maxResponseMs(times)}
+          />
+        </svg>
+      {:else}
+        <div
+          class="[grid-area:1/1]"
+          out:fade={{ duration: CHART_SWAP_MS, easing: cubicOut }}
+        >
+          <HeroCheckTrace width={CHART_WIDTH} height={CHART_HEIGHT} />
+        </div>
+      {/if}
+    </div>
 
     {@render tileFooter(left, right)}
   </div>
 {/snippet}
 
 {#snippet endedTile()}
-  {@render tileHeader('Preview ended', previewHost, 'unknown')}
+  {@render tileHeader('Preview expired', previewHost, 'unknown')}
 
   <p class="text-neutral-400 text-sm leading-relaxed">
-    Preview ended. Open your dashboard to keep monitoring {previewHost}.
+    This preview is no longer available. Start a new one to keep an eye on
+    {previewHost}.
   </p>
 
-  {@render previewActions()}
+  <div>
+    <button
+      type="button"
+      class="btn btn-primary btn-sm rounded-full px-5 font-medium"
+      data-posthog-id="hero-preview-restart-cta"
+      onclick={onRetry}
+    >
+      Start over
+    </button>
+  </div>
 {/snippet}
 
 {#snippet errorTile()}
@@ -234,33 +263,48 @@
 
 {#snippet previewActions()}
   <div class="flex flex-wrap items-center gap-2">
-    <button
-      type="button"
-      class={[
-        'btn btn-sm rounded-full px-5 font-medium',
-        claimNudged ? 'btn-subtle' : 'btn-primary',
-      ]}
-      data-posthog-id="hero-open-dashboard-cta"
-      disabled={isOpening}
-      onclick={onOpenDashboard}
-    >
-      {#if isOpening}
-        <span class="loading loading-spinner loading-xs"></span>
-      {/if}
-      Open your dashboard
-      <ArrowRightIcon class="size-4" />
-    </button>
+    {#if claimable}
+      <button
+        type="button"
+        class="btn btn-primary btn-sm rounded-full px-5 font-medium"
+        data-posthog-id="hero-setup-alerts-cta"
+        disabled={isOpening}
+        onclick={onSetUpAlerts}
+      >
+        Set up alerts
+      </button>
 
-    <button
-      type="button"
-      class="btn btn-subtle btn-sm rounded-full px-4 font-medium"
-      data-posthog-id="hero-setup-alerts-cta"
-      disabled={isOpening}
-      onclick={onOpenDashboard}
-    >
-      Set up alerts
-    </button>
+      {@render openDashboardButton('btn-subtle')}
+    {:else}
+      {@render openDashboardButton('btn-primary')}
+
+      <button
+        type="button"
+        class="btn btn-subtle btn-sm rounded-full px-4 font-medium"
+        data-posthog-id="hero-setup-alerts-cta"
+        disabled={isOpening}
+        onclick={onOpenDashboard}
+      >
+        Set up alerts
+      </button>
+    {/if}
   </div>
+{/snippet}
+
+{#snippet openDashboardButton(variant: string)}
+  <button
+    type="button"
+    class={['btn btn-sm rounded-full px-5 font-medium', variant]}
+    data-posthog-id="hero-open-dashboard-cta"
+    disabled={isOpening}
+    onclick={onOpenDashboard}
+  >
+    {#if isOpening}
+      <span class="loading loading-spinner size-3.5"></span>
+    {/if}
+    Open your dashboard
+    <ArrowRightIcon class="size-4" />
+  </button>
 {/snippet}
 
 {#snippet tileHeader(eyebrow: string, title: string, status: MonitorStatus)}
@@ -268,7 +312,7 @@
     <span class="text-neutral-500 truncate text-xs">{eyebrow}</span>
 
     <div class="flex items-center justify-between gap-3">
-      <h3 class="min-w-0 truncate text-base font-medium">{title}</h3>
+      <h3 class="min-h-6 min-w-0 truncate text-base font-medium">{title}</h3>
 
       <div class="shrink-0">
         <StatusBadge {status} showText={true} />

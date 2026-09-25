@@ -211,20 +211,18 @@ class AnonymousPreviewState {
     );
   }
 
-  public async claimDashboard(): Promise<void> {
-    const claimed = await this._claimForHandoff();
-
-    if (!claimed) {
+  public adoptSessionToken(token: string): void {
+    if (!this._preview) {
       return;
     }
 
-    posthog.capture('anonymous_dashboard_claim_opened');
+    this._preview = { ...this._preview, token };
+  }
 
-    const nextUrl = `/app/clusters/${claimed.clusterId}/${claimed.projectId}/monitoring?claimed=1`;
-
-    window.location.assign(
-      resolve(`/app/auth?flow=claim&next_url=${encodeURIComponent(nextUrl)}`),
-    );
+  public handOffPreview(): void {
+    this._stopPreviewPolling();
+    this._stopDemoPolling();
+    this._clearStoredPreview();
   }
 
   public retry(): void {
@@ -253,9 +251,7 @@ class AnonymousPreviewState {
       return null;
     }
 
-    this._stopPreviewPolling();
-    this._stopDemoPolling();
-    this._clearStoredPreview();
+    this.handOffPreview();
 
     return claimed;
   }
