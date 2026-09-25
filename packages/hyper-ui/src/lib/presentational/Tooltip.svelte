@@ -51,7 +51,9 @@
     portalContainer.style.top = "0";
     portalContainer.style.left = "0";
     portalContainer.style.zIndex = "1000";
-    document.body.appendChild(portalContainer);
+    (wrapper.closest("dialog[open]") ?? document.body).appendChild(
+      portalContainer
+    );
 
     debug("created new portalContainer");
 
@@ -316,7 +318,7 @@
       class={[
         "absolute",
         {
-          "bg-base-100 rounded-lg px-3 py-1 text-sm text-white shadow":
+          "bg-base-100 rounded-lg px-3 py-1 text-sm whitespace-nowrap text-white shadow":
             !isSnippet,
         },
       ]}
