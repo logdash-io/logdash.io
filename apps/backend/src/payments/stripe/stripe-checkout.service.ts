@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { STRIPE_LOGGER } from '../../shared/logdash/logdash-tokens';
 import Stripe from 'stripe';
@@ -29,18 +29,11 @@ export class StripeCheckoutService {
 
     const user = await this.userReadService.readByIdOrThrow(dto.userId);
 
-    if (!user) {
-      this.logger.error(`User not found while trying to initiate stripe checkout.`, {
-        userId: dto.userId,
-      });
-      throw new Error(`User not found while trying to initiate stripe checkout`);
-    }
-
     if (user.accountClaimStatus !== AccountClaimStatus.Claimed) {
-      this.logger.error(`User account not claimed while trying to initiate stripe checkout`, {
+      this.logger.warn(`User account not claimed while trying to initiate stripe checkout`, {
         userId: dto.userId,
       });
-      throw new Error(`User account not claimed while trying to initiate stripe checkout`);
+      throw new ForbiddenException('Claim your account before subscribing');
     }
 
     let checkoutSession: Stripe.Checkout.Session;
@@ -79,7 +72,7 @@ export class StripeCheckoutService {
         userId: dto.userId,
       });
 
-      throw new Error(`Failed to process payment for user: ${user.email}`);
+      throw new Error('Stripe checkout session has no URL');
     }
 
     this.logger.log(`Checkout URL generated successfully`, {

@@ -36,7 +36,10 @@ import { NotificationChannelReadService } from '../../notification-channel/read/
 import { Public } from '../../auth/core/decorators/is-public';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 import { HttpMonitorMode } from './enums/http-monitor-mode.enum';
-import { ThrottleMonitorCreation } from '../../shared/throttling/rate-limit.decorator';
+import {
+  ThrottleMonitorCreation,
+  ThrottlePushPing,
+} from '../../shared/throttling/rate-limit.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -192,6 +195,7 @@ export class HttpMonitorCoreController {
   }
 
   @Public()
+  @ThrottlePushPing()
   @Post('/ping/:httpMonitorId')
   async recordPing(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
     await this.httpPingPushService.record(httpMonitorId);

@@ -5,6 +5,9 @@ import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { StripeSubscriptionDeletedHandler } from '../../src/payments/stripe/stripe.subscription-deleted.handler';
 import { waitFor } from '../utils/wait-for';
+import * as request from 'supertest';
+import { ErrorResponse } from '../utils/error-response';
+import { ChangePaidPlanBody } from '../../src/payments/stripe/dto/upgrade-subscription.body';
 
 describe('StripeController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -206,6 +209,119 @@ describe('StripeController (writes)', () => {
       expect(
         Math.abs(new Date(subscription.endsAt!).getTime() - new Date().getTime()),
       ).toBeLessThan(10_000);
+    });
+  });
+
+  describe('GET /payments/stripe/checkout', () => {
+    it('refuses an account that is not claimed', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/payments/stripe/checkout?tier=${UserTier.Pro}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(403);
+      expect((response.body as ErrorResponse).message).toBe(
+        'Claim your account before subscribing',
+      );
+    });
+  });
+
+  describe('POST /payments/stripe/change_paid_plan', () => {
+    const changePaidPlan = (token: string, body: ChangePaidPlanBody) =>
+      request(bootstrap.app.getHttpServer())
+        .post('/payments/stripe/change_paid_plan')
+        .set('Authorization', `Bearer ${token}`)
+        .send(body);
+
+    it('refuses the plan the user is already on', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
+
+      // when
+      const response = await changePaidPlan(token, { tier: UserTier.Pro });
+
+      // then
+      expect(response.status).toBe(409);
+      expect((response.body as ErrorResponse).message).toBe('You are already on this plan');
+    });
+
+    it('sends a free user to checkout', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Free,
+      });
+
+      // when
+      const response = await changePaidPlan(token, { tier: UserTier.Pro });
+
+      // then
+      expect(response.status).toBe(400);
+      expect((response.body as ErrorResponse).message).toBe(
+        'Subscribe through checkout to start a paid plan',
+      );
+    });
+
+    it('refuses a paid user without a Stripe customer', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
+
+      // when
+      const response = await changePaidPlan(token, { tier: UserTier.Builder });
+
+      // then
+      expect(response.status).toBe(409);
+      expect((response.body as ErrorResponse).message).toBe(
+        'You have no active subscription to change',
+      );
+    });
+
+    it('refuses a Stripe customer without an active subscription', async () => {
+      // given
+      const { token, user } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Pro,
+      });
+      await bootstrap.models.userModel.updateOne(
+        { _id: user.id },
+        { stripeCustomerId: 'mock-customer-id' },
+      );
+      jest
+        .spyOn(bootstrap.app.get(Stripe).subscriptions, 'list')
+        .mockResolvedValueOnce({ data: [] } as unknown as Stripe.Response<
+          Stripe.ApiList<Stripe.Subscription>
+        >);
+
+      // when
+      const response = await changePaidPlan(token, { tier: UserTier.Builder });
+
+      // then
+      expect(response.status).toBe(409);
+      expect((response.body as ErrorResponse).message).toBe(
+        'You have no active subscription to change',
+      );
+    });
+  });
+
+  describe('GET /payments/stripe/customer_portal', () => {
+    it('refuses a user without a Stripe customer', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupClaimed();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get('/payments/stripe/customer_portal')
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(404);
+      expect((response.body as ErrorResponse).message).toBe('You have no billing account yet');
     });
   });
 });

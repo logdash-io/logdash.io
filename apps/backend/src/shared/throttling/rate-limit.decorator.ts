@@ -11,6 +11,7 @@ export const AccountCreationRateLimit = { limit: 10, ttl: seconds(60) };
 export const CliPollingRateLimit = { limit: 30, ttl: seconds(60) };
 export const OauthExchangeRateLimit = { limit: 300, ttl: seconds(60) };
 export const MonitorCreationRateLimit = { limit: 20, ttl: seconds(60) };
+export const PushPingRateLimit = { limit: 300, ttl: seconds(60) };
 
 function rateLimit(options: { limit: number; ttl: number }) {
   return applyDecorators(UseGuards(ThrottlerGuard), Throttle({ default: options }));
@@ -55,4 +56,14 @@ export function ThrottleOauthExchange() {
  */
 export function ThrottleMonitorCreation() {
   return rateLimit(MonitorCreationRateLimit);
+}
+
+/**
+ * 300 requests per minute per IP. For the public push monitor ping, called by
+ * customers' cron jobs. A push monitor pings about once a minute, so this fits
+ * around 300 monitors behind one NAT address while stopping a single machine
+ * from flooding the route with made up ids.
+ */
+export function ThrottlePushPing() {
+  return rateLimit(PushPingRateLimit);
 }

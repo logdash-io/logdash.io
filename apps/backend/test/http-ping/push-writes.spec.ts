@@ -6,6 +6,8 @@ import { RedisService } from '../../src/shared/redis/redis.service';
 import { HttpMonitorNormalized } from '../../src/http-monitor/core/entities/http-monitor.interface';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import * as request from 'supertest';
+import { Types } from 'mongoose';
+import { PushPingRateLimit } from '../../src/shared/throttling/rate-limit.decorator';
 
 describe('Http Ping Push (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -209,5 +211,67 @@ describe('Http Ping Push (writes)', () => {
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
     expect(allPings.length).toBe(0);
+  });
+
+  describe('POST /ping/:httpMonitorId', () => {
+    const ping = (httpMonitorId: string) =>
+      request(bootstrap.app.getHttpServer()).post(`/ping/${httpMonitorId}`);
+
+    it('stores nothing for an unknown monitor', async () => {
+      // given
+      const httpMonitorId = new Types.ObjectId().toString();
+
+      // when
+      const response = await ping(httpMonitorId);
+
+      // then
+      expect(response.status).toBe(404);
+      expect(
+        await bootstrap.app.get(RedisService).get(`http-ping-push:${httpMonitorId}`),
+      ).toBeNull();
+    });
+
+    it('stores nothing for a pull monitor', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        projectId: setup.project.id,
+        mode: HttpMonitorMode.Pull,
+      });
+
+      // when
+      const response = await ping(monitor.id);
+
+      // then
+      expect(response.status).toBe(404);
+      expect(await bootstrap.app.get(RedisService).get(`http-ping-push:${monitor.id}`)).toBeNull();
+    });
+
+    it('rejects a malformed id', async () => {
+      // when
+      const response = await ping('x'.repeat(1000));
+
+      // then
+      expect(response.status).toBe(400);
+    });
+
+    it('refuses pings over the per-address budget', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        projectId: setup.project.id,
+        mode: HttpMonitorMode.Push,
+      });
+
+      // when
+      const statuses: number[] = [];
+      for (let i = 0; i <= PushPingRateLimit.limit; i++) {
+        statuses.push((await ping(monitor.id)).status);
+      }
+
+      // then
+      expect(statuses.slice(0, -1).every((status) => status === 201)).toBe(true);
+      expect(statuses.at(-1)).toBe(429);
+    });
   });
 });

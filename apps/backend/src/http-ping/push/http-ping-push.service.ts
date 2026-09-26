@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { HTTP_PINGS_LOGGER } from '../../shared/logdash/logdash-tokens';
@@ -39,6 +39,13 @@ export class HttpPingPushService {
 
     if (existingRecord) {
       return;
+    }
+
+    // The route is public, so only a real push monitor may create a key. A
+    // malformed id fails here too, as a 400 from CastErrorFilter.
+    const monitor = await this.httpMonitorReadService.readById(httpMonitorId);
+    if (monitor?.mode !== HttpMonitorMode.Push) {
+      throw new NotFoundException('Push monitor not found');
     }
 
     await this.redisService.set(key, Date.now().toString(), PUSH_RECORD_TTL_SECONDS);
