@@ -108,13 +108,9 @@ describe('LogCoreController (writes)', () => {
 
     advanceBy(30 * 60 * 1_000); // 30 minutes
 
-    for (let i = 0; i < 9999; i++) {
-      try {
-        await logRateLimitService.requireWithinLimit(apiKey.projectId);
-      } catch {
-        continue;
-      }
-    }
+    await expect(logRateLimitService.requireWithinLimit(apiKey.projectId, 9_999)).rejects.toThrow(
+      'Rate limit exceeded',
+    );
 
     const response = await request(bootstrap.app.getHttpServer())
       .post('/logs')
@@ -264,13 +260,7 @@ describe('LogCoreController (writes)', () => {
       const logRateLimitService = bootstrap.app.get(LogRateLimitService);
 
       // when - fill up most of the rate limit
-      for (let i = 0; i < 9995; i++) {
-        try {
-          await logRateLimitService.requireWithinLimit(apiKey.projectId);
-        } catch {
-          continue;
-        }
-      }
+      await logRateLimitService.requireWithinLimit(apiKey.projectId, 9_995);
 
       // Create a batch that would exceed the rate limit
       const batchDto: CreateLogsBatchBody = {

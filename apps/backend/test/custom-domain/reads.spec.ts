@@ -3,19 +3,12 @@ import { createTestApp } from '../utils/bootstrap';
 import { CustomDomainSerialized } from '../../src/custom-domain/core/entities/custom-domain.interface';
 import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
-import { SchedulerRegistry } from '@nestjs/schedule';
 
 describe('CustomDomainCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
-    // The domain verification cron runs every 5 seconds. Left running it races
-    // with the explicit verification these tests drive, and silently bumps
-    // attemptCount/dns call counts.
-    for (const job of bootstrap.app.get(SchedulerRegistry).getCronJobs().values()) {
-      await job.stop();
-    }
   });
 
   beforeEach(async () => {

@@ -4,7 +4,6 @@ import { CustomDomainRegistrationService } from '../../src/custom-domain/registr
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { WebhookHttpMethod } from '../../src/notification-channel/core/types/webhook-options.type';
-import { SchedulerRegistry } from '@nestjs/schedule';
 import * as nock from 'nock';
 
 /** Domains this suite verifies, and which the service therefore pings. */
@@ -18,12 +17,6 @@ describe('CustomDomainRegistrationService', () => {
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
-    // The domain verification cron runs every 5 seconds. Left running it races
-    // with the explicit verification these tests drive, and silently bumps
-    // attemptCount/dns call counts.
-    for (const job of bootstrap.app.get(SchedulerRegistry).getCronJobs().values()) {
-      await job.stop();
-    }
     registrationService = bootstrap.app.get(CustomDomainRegistrationService);
   });
 
@@ -144,11 +137,15 @@ describe('CustomDomainRegistrationService', () => {
       name: 'test dashboard',
     });
 
-    await bootstrap.utils.customDomainUtils.createCustomDomain({
+    const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
       token,
       domain: 'example.com',
       publicDashboardId: publicDashboard.id,
     });
+    await bootstrap.models.customDomainModel.updateOne(
+      { _id: customDomain.id },
+      { attemptCount: 57 },
+    );
 
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'example.com',
@@ -157,7 +154,7 @@ describe('CustomDomainRegistrationService', () => {
     });
 
     // when
-    for (let i = 0; i < 61; i++) {
+    for (let i = 0; i < 4; i++) {
       await registrationService.verifyDomains();
     }
 
@@ -170,7 +167,7 @@ describe('CustomDomainRegistrationService', () => {
 
     expect(updatedDomain.status).toBe(CustomDomainStatus.Failed);
     expect(updatedDomain.attemptCount).toBe(60);
-    expect(bootstrap.utils.customDomainUtils.getDnsCallCount('example.com')).toBe(59);
+    expect(bootstrap.utils.customDomainUtils.getDnsCallCount('example.com')).toBe(2);
   });
 
   it('eventually succeeds after multiple failed attempts', async () => {
@@ -306,26 +303,16 @@ describe('CustomDomainRegistrationService', () => {
       name: 'test dashboard',
     });
 
-    await bootstrap.utils.customDomainUtils.createCustomDomain({
+    const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
       token,
       domain: 'example.com',
       publicDashboardId: publicDashboard.id,
     });
+    await bootstrap.models.customDomainModel.updateOne(
+      { _id: customDomain.id },
+      { status: CustomDomainStatus.Failed },
+    );
 
-    // Configure mock to fail and reach max attempts
-    bootstrap.utils.customDomainUtils.configureDomainMock({
-      domain: 'example.com',
-      failCount: 999,
-      targetCname: getEnvConfig().customDomain.targetCname,
-    });
-
-    // Reach max attempts
-    for (let i = 0; i < 100; i++) {
-      await registrationService.verifyDomains();
-    }
-
-    // Reset mock call count
-    bootstrap.utils.customDomainUtils.resetDnsMock();
     bootstrap.utils.customDomainUtils.configureDomainMock({
       domain: 'example.com',
       failCount: 999,

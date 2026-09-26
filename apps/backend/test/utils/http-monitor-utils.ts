@@ -39,6 +39,13 @@ export class HttpMonitorUtils {
       .post(`/projects/${dto.projectId}/http_monitors`)
       .set('Authorization', `Bearer ${dto.token}`)
       .send(body);
+
+    if (response.status !== 201) {
+      throw new Error(
+        `Creating http monitor failed with ${response.status}: ${JSON.stringify(response.body)}`,
+      );
+    }
+
     const httpMonitor = response.body as HttpMonitorSerialized;
 
     // claim

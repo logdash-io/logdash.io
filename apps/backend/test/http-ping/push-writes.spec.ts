@@ -181,10 +181,10 @@ describe('Http Ping Push (writes)', () => {
       projectId: setup.project.id,
       mode: HttpMonitorMode.Push,
     });
-    const pullMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
-      token: setup.token,
+    const pullMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
       projectId: setup.project.id,
       mode: HttpMonitorMode.Pull,
+      claimed: true,
     });
 
     // when

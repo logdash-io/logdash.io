@@ -15,7 +15,7 @@ describe('Http Ping (writes)', () => {
   beforeAll(async () => {
     bootstrap = await createTestApp();
     schedulerService = bootstrap.app.get(HttpPingPingerService);
-    nock(URL_STUB).persist().get('/').delay(10).reply(200, 'ok');
+    nock(URL_STUB).persist().get('/').reply(200, 'ok');
   });
 
   beforeEach(async () => {

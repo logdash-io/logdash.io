@@ -352,9 +352,9 @@ describe('BadgeCoreController (reads)', () => {
       // given
       const setup = await setupBadge();
 
-      const otherMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
-        token: setup.token,
+      const otherMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
         projectId: setup.project.id,
+        claimed: true,
       });
 
       // when

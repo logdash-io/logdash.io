@@ -205,9 +205,9 @@ describe('Http Ping Bucket(reads)', () => {
         token,
         projectId: project.id,
       });
-      const otherMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
-        token,
+      const otherMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
         projectId: project.id,
+        claimed: true,
       });
 
       const now = new Date();
