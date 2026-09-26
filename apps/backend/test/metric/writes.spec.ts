@@ -7,6 +7,9 @@ import { subDays, subHours } from 'date-fns';
 import { MetricBucketingService } from '../../src/metric-shared/bucketing/metric-bucketing.service';
 import { MetricQueueingService } from '../../src/metric/queueing/metric-queueing-service';
 import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-configs';
+import * as request from 'supertest';
+import { ErrorResponse } from '../utils/error-response';
+import { RecordMetricBody } from '../../src/metric/core/dto/record-metric.dto';
 
 describe('Metrics (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -227,6 +230,37 @@ describe('Metrics (writes)', () => {
       expect(allTimeMetricsForName.some((metric) => metric.value === 2)).toBeTruthy();
     }
   }, 20_000);
+
+  it('rejects a new metric over the limit with 409', async () => {
+    // given
+    const { apiKey, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const limit = getProjectPlanConfig(project.tier).metrics.maxMetricsRegisterEntries;
+    for (let i = 0; i < limit; i++) {
+      await bootstrap.utils.metricUtils.recordMetric({
+        name: `Users${i}`,
+        value: 1,
+        apiKey: apiKey.value,
+        operation: MetricOperation.Set,
+      });
+    }
+    const body: RecordMetricBody = {
+      name: 'OneTooMany',
+      value: 1,
+      operation: MetricOperation.Set,
+    };
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer())
+      .put('/metrics')
+      .set('project-api-key', apiKey.value)
+      .send(body);
+
+    // then
+    expect(response.status).toBe(409);
+    expect((response.body as ErrorResponse).message).toBe(
+      'You have reached the maximum number of metrics for this project',
+    );
+  });
 
   it('removes minute metrics older than 1 hour', async () => {
     const service = bootstrap.app.get(MetricTtlService);

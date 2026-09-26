@@ -58,7 +58,7 @@ export class MetricRegisterWriteService {
     actorUserId?: string,
   ): Promise<string | null> {
     const entry = await this.model.findOne({
-      _id: new Types.ObjectId(dto.id),
+      _id: dto.id,
       projectId: dto.projectId,
     });
 

@@ -317,6 +317,21 @@ describe('HttpMonitorCoreController (writes)', () => {
       expect(response.status).toBe(403);
     });
 
+    it('rejects a malformed monitor id', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put('/http_monitors/undefined')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'Updated Monitor' });
+
+      // then
+      expect(response.status).toBe(400);
+      expect((response.body as ErrorResponse).message).toBe('Invalid id');
+    });
+
     it('creates audit log when monitor is updated', async () => {
       // given
       const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();

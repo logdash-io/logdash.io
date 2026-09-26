@@ -68,6 +68,19 @@ describe('Metric Register (writes)', () => {
     expect(response.status).toEqual(404);
   });
 
+  it('rejects a malformed metric register entry id', async () => {
+    // given
+    const { apiKey, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer())
+      .delete(`/projects/${apiKey.projectId}/metric-register/not-an-id`)
+      .set('Authorization', `Bearer ${token}`);
+
+    // then
+    expect(response.status).toEqual(400);
+  });
+
   it('creates audit log when metric register entry is deleted', async () => {
     // given
     const { apiKey, token, user } = await bootstrap.utils.generalUtils.setupAnonymous();

@@ -76,6 +76,7 @@ import { SubscriptionCoreModule } from '../../src/subscription/core/subscription
 import { AuditLogUtils } from './audit-log-utils';
 import { AuditLogCreationModule } from '../../src/audit-log/creation/audit-log-creation.module';
 import { UserUtils } from './user.utils';
+import { CastErrorFilter } from '../../src/shared/filters/cast-error.filter';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/pinger/http-ping-pinger.service';
 import { ALL_LOGGER_TOKENS, LOGDASH_METRICS } from '../../src/shared/logdash/logdash-tokens';
 
@@ -144,6 +145,7 @@ export async function createTestApp() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+  app.useGlobalFilters(new CastErrorFilter(app.getHttpAdapter()));
   await app.listen(0, '127.0.0.1');
 
   // Crons would flush queues and delete data behind the specs' backs, so none

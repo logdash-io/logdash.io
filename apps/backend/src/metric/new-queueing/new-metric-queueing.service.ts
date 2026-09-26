@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import {
   AddToSetResult,
   MetricRegisterRedisService,
@@ -54,7 +54,9 @@ export class NewMetricQueueingService {
       );
       await this.metricBufferService.addToBuffer(dto);
     } else if (result === AddToSetResult.OverLimit) {
-      throw new Error('You cannot add more metrics');
+      throw new ConflictException(
+        'You have reached the maximum number of metrics for this project',
+      );
     }
   }
 
