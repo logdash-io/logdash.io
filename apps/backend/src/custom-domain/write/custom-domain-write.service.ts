@@ -55,8 +55,12 @@ export class CustomDomainWriteService {
     }
 
     const entity = await this.customDomainModel.findByIdAndUpdate(dto.id, updateQuery, {
-      new: true,
+      returnDocument: 'after',
     });
+
+    if (!entity) {
+      throw new Error(`Custom domain with id ${dto.id} not found for update`);
+    }
 
     return CustomDomainSerializer.normalize(entity);
   }
@@ -90,7 +94,7 @@ export class CustomDomainWriteService {
         attemptCount: { $lt: maxAttempts },
       },
       { $inc: { attemptCount: 1 } },
-      { new: true },
+      { returnDocument: 'after' },
     );
 
     if (!updated) {

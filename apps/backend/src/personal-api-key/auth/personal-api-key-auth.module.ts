@@ -10,9 +10,7 @@ import { PersonalApiKeyAuthService } from './personal-api-key-auth.service';
 @Module({
   imports: [
     PersonalApiKeyReadModule,
-    MongooseModule.forFeature([
-      { name: PersonalApiKeyEntity.name, schema: PersonalApiKeySchema },
-    ]),
+    MongooseModule.forFeature([{ name: PersonalApiKeyEntity.name, schema: PersonalApiKeySchema }]),
   ],
   providers: [PersonalApiKeyAuthService],
   exports: [PersonalApiKeyAuthService],

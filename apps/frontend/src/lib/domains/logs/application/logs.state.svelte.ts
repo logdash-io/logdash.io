@@ -1,6 +1,5 @@
 import type { Log } from '$lib/domains/logs/domain/log';
 import { createLogger } from '$lib/domains/shared/logger';
-import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import type { LogsFilters } from '../domain/logs-filters';
 import { filtersStore } from '../infrastructure/filters.store.svelte';
@@ -124,11 +123,15 @@ class LogsState {
 
     if (this.shouldFiltersBlockSync) {
       if (!skipFetch) {
-        this.fetchLogs();
+        this.fetchLogs().catch((error: unknown) => {
+          logger.error('failed to fetch logs:', error);
+        });
       }
       this.pauseSync();
     } else {
-      this.resumeSync();
+      this.resumeSync().catch((error: unknown) => {
+        logger.error('failed to resume logs sync:', error);
+      });
     }
   }
 
@@ -193,6 +196,8 @@ class LogsState {
     this._loadingPage = true;
     try {
       await this.fetchLogs({ lastId: lastLog.id });
+    } catch (error) {
+      logger.error('failed to load the next logs page:', error);
     } finally {
       this._loadingPage = false;
     }
@@ -222,25 +227,22 @@ class LogsState {
     logsSyncService.close();
   }
 
-  async sendTestLog(project_id: string): Promise<void> {
-    await LogsService.sendTestLog(project_id)
-      .then(() => toast.success('Test log sent successfully.'))
-      .catch((error) => {
-        toast.error('Failed to send test log. Please try again later.');
-        logger.error('Failed to send test log:', error);
-      });
-  }
-
   private _addLog(log: Log): void {
     const updated = { ...this._logs, [log.id]: log };
     this._logs = trimLogsObject(updated);
   }
 
   private async fetchLogs(pagination?: { lastId: string }): Promise<void> {
+    const projectId = this._projectId;
+
+    if (!projectId) {
+      return;
+    }
+
     this._fetchingLogs = true;
 
     try {
-      const logs = await LogsService.getProjectLogs(this._projectId, {
+      const logs = await LogsService.getProjectLogs(projectId, {
         ...filtersStore.filters,
         ...(pagination && { lastId: pagination.lastId, direction: 'before' }),
       });

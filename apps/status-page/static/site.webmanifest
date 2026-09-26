@@ -13,7 +13,7 @@
 			"type": "image/png"
 		}
 	],
-	"name": "",
-	"short_name": "",
+	"name": "logdash",
+	"short_name": "logdash",
 	"theme_color": "#ffffff"
 }

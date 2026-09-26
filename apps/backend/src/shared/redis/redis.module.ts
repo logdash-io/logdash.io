@@ -1,6 +1,6 @@
 import { DynamicModule, Global, Module, Provider, OnApplicationShutdown } from '@nestjs/common';
 import { RedisService } from './redis.service';
-import { createClient } from '@redis/client';
+import { createClient, RedisClientOptions, RedisClientType } from '@redis/client';
 import { REDIS_CLIENT, REDIS_OPTIONS } from './redis.constants';
 import { ModuleRef } from '@nestjs/core';
 
@@ -16,13 +16,15 @@ export interface RedisModuleOptions {
 export class RedisModule implements OnApplicationShutdown {
   constructor(private readonly moduleRef: ModuleRef) {}
 
-  async onApplicationShutdown(): Promise<void> {
+  public async onApplicationShutdown(): Promise<void> {
     try {
-      const client = this.moduleRef.get<any>(REDIS_CLIENT);
+      const client = this.moduleRef.get<RedisClientType>(REDIS_CLIENT);
       if (client && client.isOpen) {
         await client.quit();
       }
-    } catch (error) {}
+    } catch {
+      return;
+    }
   }
 
   public static forRoot(options: RedisModuleOptions): DynamicModule {
@@ -34,13 +36,14 @@ export class RedisModule implements OnApplicationShutdown {
     const redisClientProvider: Provider = {
       provide: REDIS_CLIENT,
       useFactory: async () => {
-        const clientConfig: any = {
+        const clientConfig: RedisClientOptions = {
           database: options.database ?? 0,
         };
 
         if (options.socketPath) {
           clientConfig.socket = {
             path: options.socketPath,
+            tls: false,
           };
         } else if (options.url) {
           clientConfig.url = options.url;

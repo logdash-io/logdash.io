@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 
 import * as request from 'supertest';
@@ -5,7 +6,7 @@ import { RecordMetricBody } from '../../src/metric/core/dto/record-metric.dto';
 import { sleep } from './sleep';
 
 export class MetricUtils {
-  constructor(private readonly app: INestApplication<any>) {}
+  constructor(private readonly app: INestApplication<App>) {}
 
   public async recordMetric(
     dto: RecordMetricBody & { apiKey: string; withoutSleep?: boolean },
@@ -19,7 +20,7 @@ export class MetricUtils {
       operation: dto.operation,
     };
 
-    const response = await request(this.app.getHttpServer())
+    await request(this.app.getHttpServer())
       .put('/metrics')
       .set('project-api-key', dto.apiKey)
       .send(body);
@@ -27,7 +28,5 @@ export class MetricUtils {
     if (!dto.withoutSleep) {
       await sleep(1500);
     }
-
-    return response.body;
   }
 }

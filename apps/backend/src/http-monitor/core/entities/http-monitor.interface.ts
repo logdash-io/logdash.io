@@ -9,6 +9,8 @@ export class HttpMonitorNormalized {
   url?: string;
   notificationChannelsIds: string[];
   mode: HttpMonitorMode;
+  badgeKey: string;
+  claimed: boolean;
 }
 
 export class HttpMonitorSerialized {
@@ -29,6 +31,9 @@ export class HttpMonitorSerialized {
 
   @ApiProperty({ enum: HttpMonitorMode })
   mode: HttpMonitorMode;
+
+  @ApiProperty()
+  badgeKey: string;
 
   @ApiProperty({ enum: HttpMonitorStatus })
   lastStatus: HttpMonitorStatus;

@@ -3,6 +3,8 @@ import { createTestApp } from '../utils/bootstrap';
 import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { CustomDomainSerialized } from '../../src/custom-domain/core/entities/custom-domain.interface';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('CustomDomainCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -12,10 +14,9 @@ describe('CustomDomainCoreController (writes)', () => {
     // The domain verification cron runs every 5 seconds. Left running it races
     // with the explicit verification these tests drive, and silently bumps
     // attemptCount/dns call counts.
-    bootstrap.app
-      .get(SchedulerRegistry)
-      .getCronJobs()
-      .forEach((job) => job.stop());
+    for (const job of bootstrap.app.get(SchedulerRegistry).getCronJobs().values()) {
+      await job.stop();
+    }
   });
 
   beforeEach(async () => {
@@ -197,7 +198,9 @@ describe('CustomDomainCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(403);
-      expect(response.body.message).toBe('Custom domains are not supported for this cluster tier');
+      expect((response.body as ErrorResponse).message).toBe(
+        'Custom domains are not supported for this cluster tier',
+      );
     });
   });
 
@@ -266,7 +269,7 @@ describe('CustomDomainCoreController (writes)', () => {
         name: 'test dashboard 2',
       });
 
-      const customDomain1 = await bootstrap.utils.customDomainUtils.createCustomDomain({
+      await bootstrap.utils.customDomainUtils.createCustomDomain({
         token,
         domain: 'existing-domain.com',
         publicDashboardId: publicDashboard1.id,
@@ -288,7 +291,7 @@ describe('CustomDomainCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(409);
-      expect(response.body.message).toBe('Domain already exists');
+      expect((response.body as ErrorResponse).message).toBe('Domain already exists');
     });
 
     it('allows updating to the same domain', async () => {
@@ -319,7 +322,7 @@ describe('CustomDomainCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.domain).toBe('same-domain.com');
+      expect((response.body as CustomDomainSerialized).domain).toBe('same-domain.com');
     });
 
     it('throws 403 when user is not a member of the cluster', async () => {

@@ -11,6 +11,7 @@
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -90,21 +91,21 @@
     />
 
     <div class="flex items-center justify-between p-4">
-      <p class="text-base-content/60 text-sm">
+      <p class="text-neutral-400 text-sm">
         {data.apiKeys.length} key{data.apiKeys.length === 1 ? '' : 's'}
       </p>
-      <button
-        type="button"
-        class="btn btn-primary btn-sm"
+      <Button
+        variant="primary"
+        size="sm"
         onclick={() => (createModalOpen = true)}
       >
         <PlusIcon class="size-4" />
         Create personal API key
-      </button>
+      </Button>
     </div>
 
     {#if data.apiKeys.length === 0}
-      <div class="text-base-content/60 p-4 pt-0 text-sm">
+      <div class="text-neutral-400 p-4 pt-0 text-sm">
         You don't have any personal API keys yet.
       </div>
     {:else}
@@ -113,31 +114,25 @@
           icon={KeyIcon}
           showBorder={index < data.apiKeys.length - 1}
         >
-          {#snippet children()}
-            <p class="font-medium">{key.label}</p>
-            <p class="font-mono text-sm">{key.prefix}…</p>
-            <p class="text-base-content/60 mt-1 text-xs">
-              {scopeSummary(key)}
-            </p>
-            <p class="text-base-content/60 text-xs">
-              {accessSummary(key)} · Last used {formatDate(key.lastUsedAt)} ·
-              Created {formatDate(key.createdAt)}
-            </p>
-          {/snippet}
+          <p class="font-medium">{key.label}</p>
+          <p class="font-mono text-sm">{key.prefix}…</p>
+          <p class="text-neutral-400 mt-1 text-xs">
+            {scopeSummary(key)}
+          </p>
+          <p class="text-neutral-400 text-xs">
+            {accessSummary(key)} · Last used {formatDate(key.lastUsedAt)} · Created
+            {formatDate(key.createdAt)}
+          </p>
           {#snippet action()}
-            <button
-              type="button"
-              class="btn btn-error btn-outline btn-sm"
-              disabled={revokingId === key.id}
+            <Button
+              variant="danger-ghost"
+              size="sm"
+              loading={revokingId === key.id}
               onclick={() => onRevoke(key)}
             >
-              {#if revokingId === key.id}
-                <span class="loading loading-spinner loading-xs"></span>
-              {:else}
-                <TrashIcon class="size-4" />
-                Revoke
-              {/if}
-            </button>
+              <TrashIcon class="size-4" />
+              Revoke
+            </Button>
           {/snippet}
         </SettingsCardItem>
       {/each}

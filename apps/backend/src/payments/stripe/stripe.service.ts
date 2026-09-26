@@ -87,7 +87,7 @@ export class StripeService {
     }
 
     try {
-      await this.stripeEventsEmitter.emitPaymentSucceeded({
+      this.stripeEventsEmitter.emitPaymentSucceeded({
         email: user.email,
         tier,
       });

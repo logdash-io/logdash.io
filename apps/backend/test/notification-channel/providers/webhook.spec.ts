@@ -1,3 +1,4 @@
+import * as nock from 'nock';
 import { createTestApp } from '../../utils/bootstrap';
 import { NotificationChannelMessagingService } from '../../../src/notification-channel/messaging/notification-channel-messaging.service';
 import { sleep } from '../../utils/sleep';
@@ -41,11 +42,11 @@ describe('Webhook notification channel', () => {
           },
         });
 
-      const requestBodies: any[] = [];
+      const requestBodies: nock.Body[] = [];
 
       bootstrap.utils.webhookUtils.setUpWebhookListener({
         webhookUrl,
-        onMessage: (body, headers) => {
+        onMessage: (body) => {
           requestBodies.push(body);
         },
       });
@@ -88,7 +89,7 @@ describe('Webhook notification channel', () => {
           },
         });
 
-      const requestBodies: any[] = [];
+      const requestBodies: nock.Body[] = [];
 
       bootstrap.utils.webhookUtils.setUpWebhookListener({
         webhookUrl,
@@ -98,7 +99,7 @@ describe('Webhook notification channel', () => {
       });
 
       const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
-      messagingService.sendHttpMonitorAlertMessage({
+      await messagingService.sendHttpMonitorAlertMessage({
         httpMonitorId: 'some-http-monitor-id',
         notificationChannelsIds: [channel.id],
         newStatus: HttpMonitorStatus.Up,
@@ -141,8 +142,8 @@ describe('Webhook notification channel', () => {
           },
         });
 
-      const requestBodies: any[] = [];
-      const requestHeaders: any[] = [];
+      const requestBodies: nock.Body[] = [];
+      const requestHeaders: Record<string, string>[] = [];
 
       bootstrap.utils.webhookUtils.setUpWebhookListener({
         webhookUrl,
@@ -153,7 +154,7 @@ describe('Webhook notification channel', () => {
       });
 
       const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
-      messagingService.sendHttpMonitorAlertMessage({
+      await messagingService.sendHttpMonitorAlertMessage({
         httpMonitorId: 'some-http-monitor-id',
         notificationChannelsIds: [channel.id],
         newStatus: HttpMonitorStatus.Down,
@@ -215,8 +216,8 @@ describe('Webhook notification channel', () => {
               },
             });
 
-          const requestBodies: any[] = [];
-          const requestHeaders: any[] = [];
+          const requestBodies: nock.Body[] = [];
+          const requestHeaders: Record<string, string>[] = [];
 
           bootstrap.utils.webhookUtils.setUpWebhookListenerWithMethod({
             webhookUrl,

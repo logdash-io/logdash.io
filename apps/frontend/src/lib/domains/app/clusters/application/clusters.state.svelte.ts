@@ -8,7 +8,7 @@ import { ClustersService } from '$lib/domains/app/clusters/infrastructure/cluste
 class ClustersState {
   private _initialized = $state(false);
   private syncConnection: Source | null = null;
-  private _requestStatus = $state<'deleting' | 'updating'>(null);
+  private _requestStatus = $state<'deleting' | 'updating' | null>(null);
 
   private _clusters = $state<Record<Cluster['id'], Cluster>>({});
 
@@ -50,7 +50,11 @@ class ClustersState {
     return this.get(clusterId)?.creatorId === userId;
   }
 
-  get(id: string): Cluster | undefined {
+  get(id: string | undefined): Cluster | undefined {
+    if (!id) {
+      return undefined;
+    }
+
     return this._clusters[id];
   }
 
@@ -73,19 +77,18 @@ class ClustersState {
     this._initialized = true;
   }
 
-  create(name: string): Promise<Cluster['id']> {
-    return fetch(`/app/api/clusters`, {
+  async create(name: string): Promise<Cluster['id']> {
+    const response = await fetch(`/app/api/clusters`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ name }),
-    })
-      .then((response) => response.json())
-      .then((cluster) => {
-        this._clusters[cluster.id] = cluster;
-        return cluster.id;
-      });
+    });
+    const cluster = (await response.json()) as Cluster;
+
+    this._clusters[cluster.id] = cluster;
+    return cluster.id;
   }
 
   async update(id: string, update: Partial<Cluster>): Promise<void> {
@@ -135,7 +138,7 @@ class ClustersState {
       });
       delete this._clusters[id];
     } catch (error) {
-      toast.error(`Failed to delete cluster: ${error}`);
+      toast.error(`Failed to delete cluster: ${String(error)}`);
     } finally {
       this._requestStatus = null;
     }

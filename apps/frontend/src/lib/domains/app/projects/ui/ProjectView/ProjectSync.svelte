@@ -1,8 +1,10 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { createLogger } from '$lib/domains/shared/logger';
+  import { Spinner } from '@logdash/hyper-ui/presentational';
   import { getContext, untrack, type Snippet } from 'svelte';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { cubicInOut } from 'svelte/easing';
@@ -11,16 +13,14 @@
 
   type Props = {
     children: Snippet;
-    priorityProjectId?: string;
-    priorityClusterId?: string;
   };
-  const { children, priorityProjectId, priorityClusterId }: Props = $props();
+  const { children }: Props = $props();
 
   const logger = createLogger('ProjectView');
   const previewedMetricId = $derived(page.params.metric_id);
-  const clusterId = $derived(priorityClusterId ?? page.params.cluster_id);
+  const clusterId = $derived(page.params.cluster_id);
   const projectIdToSync = $derived.by(() => {
-    const id = priorityProjectId ?? page.params.project_id;
+    const id = page.params.project_id;
 
     if (!id) {
       logger.error('Synchronization failed due to missing projectId');
@@ -41,20 +41,7 @@
     if (isPageVisible !== newVisibility) {
       if (newVisibility) {
         logger.info('Page became visible. Data sync will resume.');
-        Promise.all([
-          logsState.resumeSync(),
-          metricsState.resumeSync(projectIdToSync, tabId),
-          previewedMetricId
-            ? metricsState.previewMetric(projectIdToSync, previewedMetricId)
-            : Promise.resolve(),
-          monitoringState.reloadAllPingBuckets(),
-        ])
-          .then(() => {
-            isPageVisible = newVisibility;
-          })
-          .catch((error) => {
-            // toast.error('Error resuming data sync:', error);
-          });
+        void resumeSync();
       } else {
         clearTimeout(timeout);
         logger.info('Page became hidden. Data sync will be paused.');
@@ -64,6 +51,26 @@
       }
     }
   };
+
+  async function resumeSync(): Promise<void> {
+    const projectId = projectIdToSync;
+
+    try {
+      await Promise.all([
+        logsState.resumeSync(),
+        projectId
+          ? metricsState.resumeSync(projectId, tabId)
+          : Promise.resolve(),
+        projectId && previewedMetricId
+          ? metricsState.previewMetric(projectId, previewedMetricId)
+          : Promise.resolve(),
+        monitoringState.reloadAllPingBuckets(),
+      ]);
+      isPageVisible = true;
+    } catch (error) {
+      logger.error('Failed to resume data sync', error);
+    }
+  }
 
   $effect(() => {
     if (typeof document === 'undefined') {
@@ -83,9 +90,16 @@
     if (
       previewedMetricId &&
       metricsState.ready &&
-      !metricsState.getById(previewedMetricId)
+      !metricsState.getById(previewedMetricId) &&
+      clusterId &&
+      projectIdToSync
     ) {
-      goto(`/app/clusters/${clusterId}/${projectIdToSync}/metrics`);
+      void goto(
+        resolve('/app/clusters/[cluster_id]/[project_id]/metrics', {
+          cluster_id: clusterId,
+          project_id: projectIdToSync,
+        }),
+      );
     }
   });
 
@@ -103,7 +117,7 @@
     logger.info(
       `Syncing data for project ${projectIdToSync} on tab ${tabId}. Page is visible.`,
     );
-    untrack(() => metricsState.sync(projectIdToSync, tabId));
+    void untrack(() => metricsState.sync(projectIdToSync, tabId));
 
     return () => {
       logger.info(
@@ -119,16 +133,16 @@
     <div
       in:fade={{ duration: 200, easing: cubicInOut }}
       out:fade={{ delay: 300, duration: 200, easing: cubicInOut }}
-      class="bg-base-300/40 absolute top-0 left-0 z-20 h-full w-full backdrop-blur-xs"
+      class="bg-surface-root/40 absolute top-0 left-0 z-20 h-full w-full backdrop-blur-xs"
     ></div>
 
     <div
-      class="bg-secondary text-secondary-content fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-2 shadow-lg md:bottom-8"
+      class="bg-surface-inverse text-surface-root fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-2 shadow-lg md:bottom-8"
       in:fly={{ duration: 200, easing: cubicInOut, y: 50 }}
       out:fly={{ delay: 300, duration: 200, easing: cubicInOut, y: 50 }}
     >
       <div class="flex items-center gap-2 text-sm font-medium">
-        <div class="loading loading-spinner loading-xs"></div>
+        <Spinner size="xs" aria-hidden="true" />
         <span>Updating...</span>
       </div>
     </div>

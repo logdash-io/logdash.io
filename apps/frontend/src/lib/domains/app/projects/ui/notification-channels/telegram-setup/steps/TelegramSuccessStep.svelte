@@ -1,5 +1,6 @@
 <script lang="ts">
   import { CheckIcon } from '@logdash/hyper-ui/icons';
+  import { Button, Checkbox } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     chatName: string;
@@ -21,36 +22,35 @@
     </div>
 
     <div class="flex flex-col items-start">
-      <h3 class="text-xl font-semibold">Telegram Channel Found</h3>
-      <p class="text-secondary/70 text-sm">
+      <h3 class="text-xl font-medium">Telegram Channel Found</h3>
+      <p class="text-neutral-400 text-sm">
         You can now save it to your project.
       </p>
     </div>
   </div>
 
   <p
-    class="ld-card-base mx-auto w-fit truncate rounded-xl p-4 px-6 font-mono text-3xl font-semibold uppercase"
+    class="ld-card-base mx-auto w-fit truncate rounded-xl p-4 px-6 font-mono text-3xl font-medium uppercase"
   >
     {chatName}
   </p>
 
   <div class="flex items-center justify-start gap-2">
-    <input
-      type="checkbox"
+    <Checkbox
       id="assign-service-monitor"
+      variant="primary"
       bind:checked={assignToServiceMonitor}
-      class="checkbox checkbox-primary checkbox-sm"
     />
     <label for="assign-service-monitor" class="cursor-pointer text-sm">
       Assign to {monitorName} service monitor
     </label>
   </div>
 
-  <button
-    type="button"
-    class="btn btn-primary w-full"
+  <Button
+    variant="primary"
+    block
     onclick={() => onSubmit(assignToServiceMonitor)}
   >
     Save channel to {clusterName} project
-  </button>
+  </Button>
 </div>

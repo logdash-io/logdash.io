@@ -12,6 +12,7 @@
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import HashIcon from '$lib/domains/shared/icons/HashIcon.svelte';
   import PaletteIcon from '$lib/domains/shared/icons/PaletteIcon.svelte';
+  import { Button, Input } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     clusterId: string;
@@ -52,18 +53,22 @@
       return;
     }
 
-    await clustersState.update(clusterId, { name: newName });
-    toast.success('Project name updated successfully', 5000);
-    isEditingName = false;
+    try {
+      await clustersState.update(clusterId, { name: newName });
+      toast.success('Project name updated successfully', 5000);
+      isEditingName = false;
+    } catch {
+      toast.error('Failed to update project name', 5000);
+    }
   }
 
-  function onCopyProjectId(): void {
-    navigator.clipboard.writeText(clusterId);
+  async function onCopyProjectId(): Promise<void> {
+    await navigator.clipboard.writeText(clusterId);
     toast.success('Project ID copied to clipboard', 5000);
   }
 
   function onKeydown(e: KeyboardEvent): void {
-    if (e.key === 'Enter') onSaveRename();
+    if (e.key === 'Enter') void onSaveRename();
     if (e.key === 'Escape') onCancelRenaming();
   }
 
@@ -102,122 +107,119 @@
 
   <div class="flex flex-col">
     <SettingsCardItem icon={EditIcon}>
-      {#snippet children()}
-        <p class="text-base-content/60 text-sm">Project Name</p>
-        {#if isEditingName}
-          <input
-            bind:value={newName}
-            class="input input-sm mt-1 w-64"
-            placeholder="Enter project name"
-            onkeydown={onKeydown}
-          />
-        {:else}
-          <p class="font-medium">{cluster?.name || 'Unknown'}</p>
-        {/if}
-      {/snippet}
+      <p class="text-neutral-400 text-sm">Project Name</p>
+      {#if isEditingName}
+        <Input
+          bind:value={newName}
+          size="sm"
+          class="mt-1 w-64"
+          placeholder="Enter project name"
+          onkeydown={onKeydown}
+        />
+      {:else}
+        <p class="font-medium">{cluster?.name || 'Unknown'}</p>
+      {/if}
 
       {#snippet action()}
         {#if isEditingName}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onclick={onCancelRenaming}
-            class="btn btn-ghost btn-sm"
             disabled={clustersState.isUpdating}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             onclick={onSaveRename}
-            class="btn btn-primary btn-sm"
-            disabled={clustersState.isUpdating}
+            loading={clustersState.isUpdating}
           >
-            {#if clustersState.isUpdating}
-              <span class="loading loading-spinner loading-xs"></span>
-            {:else}
-              Save
-            {/if}
-          </button>
+            Save
+          </Button>
         {:else}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            class="text-neutral-400"
             onclick={onStartRenaming}
-            class="btn btn-ghost btn-sm text-base-content/60"
           >
             Rename
             <ChevronRightIcon class="h-4 w-4" />
-          </button>
+          </Button>
         {/if}
       {/snippet}
     </SettingsCardItem>
 
     <SettingsCardItem icon={PaletteIcon}>
-      {#snippet children()}
-        <p class="text-base-content/60 text-sm">Project Color</p>
-        {#if isEditingColor}
-          <div class="mt-2">
-            <ColorPalette
-              selectedColor={cluster?.color ?? ''}
-              onSelect={onColorSelect}
-            />
-          </div>
-        {:else}
-          <div class="flex items-center gap-2">
-            {#if cluster?.color}
-              <div
-                class="size-3.5 rounded-md"
-                style="background-color: {cluster.color}"
-              ></div>
-              <p class="font-mono text-sm">{cluster.color}</p>
-            {:else}
-              <p class="text-base-content/50 text-sm">No color set</p>
-            {/if}
-          </div>
-        {/if}
-      {/snippet}
+      <p class="text-neutral-400 text-sm">Project Color</p>
+      {#if isEditingColor}
+        <div class="mt-2">
+          <ColorPalette
+            selectedColor={cluster?.color ?? ''}
+            onSelect={onColorSelect}
+          />
+        </div>
+      {:else}
+        <div class="flex items-center gap-2">
+          {#if cluster?.color}
+            <div
+              class="size-3.5 rounded-md"
+              style="background-color: {cluster.color}"
+            ></div>
+            <p class="font-mono text-sm">{cluster.color}</p>
+          {:else}
+            <p class="text-neutral-500 text-sm">No color set</p>
+          {/if}
+        </div>
+      {/if}
 
       {#snippet action()}
         {#if isEditingColor}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onclick={onCancelEditingColor}
-            class="btn btn-ghost btn-sm"
             disabled={clustersState.isUpdating}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             onclick={onSaveColor}
-            class="btn btn-primary btn-sm"
-            disabled={clustersState.isUpdating}
+            loading={clustersState.isUpdating}
           >
-            {#if clustersState.isUpdating}
-              <span class="loading loading-spinner loading-xs"></span>
-            {:else}
-              Save
-            {/if}
-          </button>
+            Save
+          </Button>
         {:else}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            class="text-neutral-400"
             onclick={onStartEditingColor}
-            class="btn btn-ghost btn-sm text-base-content/60"
           >
             Change
             <ChevronRightIcon class="h-4 w-4" />
-          </button>
+          </Button>
         {/if}
       {/snippet}
     </SettingsCardItem>
 
     <SettingsCardItem icon={HashIcon} showBorder={false}>
-      {#snippet children()}
-        <p class="text-base-content/60 text-sm">Project ID</p>
-        <p class="font-mono text-sm">{clusterId}</p>
-      {/snippet}
+      <p class="text-neutral-400 text-sm">Project ID</p>
+      <p class="font-mono text-sm">{clusterId}</p>
 
       {#snippet action()}
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
+          class="text-neutral-400"
           onclick={onCopyProjectId}
-          class="btn btn-ghost btn-sm text-base-content/60"
         >
           <CopyIcon class="h-4 w-4" />
-        </button>
+        </Button>
       {/snippet}
     </SettingsCardItem>
   </div>

@@ -9,6 +9,7 @@ import {
 } from 'src/http-ping/aggregation/http-ping-aggregation.service';
 import { CreateHttpPingBucketDto } from '../write/dto/create-http-ping-bucket.dto';
 import { HttpPingBucketWriteService } from '../write/http-ping-bucket-write.service';
+import { errorMessage } from '../../shared/utils/error-message';
 
 @Injectable()
 export class HttpPingBucketIngestionService {
@@ -23,7 +24,7 @@ export class HttpPingBucketIngestionService {
     try {
       await this.aggregatePingsIntoBuckets();
     } catch (error) {
-      this.logger.error('Error creating HTTP ping buckets:', { errorMessage: error.message });
+      this.logger.error('Error creating HTTP ping buckets:', { errorMessage: errorMessage(error) });
     }
   }
 

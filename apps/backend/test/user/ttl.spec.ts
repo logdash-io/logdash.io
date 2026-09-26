@@ -1,4 +1,4 @@
-import { addHours, subDays } from 'date-fns';
+import { subHours } from 'date-fns';
 import { Types } from 'mongoose';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
@@ -27,7 +27,7 @@ describe('UserTtlService', () => {
     const service = bootstrap.app.get(UserTtlService);
 
     // given
-    const safeRangeDate = addHours(subDays(new Date(), 7), 1);
+    const safeRangeDate = subHours(new Date(), 23);
 
     const userInSafeRange = await bootstrap.models.userModel.create({
       createdAt: safeRangeDate,
@@ -51,19 +51,19 @@ describe('UserTtlService', () => {
     await bootstrap.models.userModel.updateOne(
       { _id: new Types.ObjectId(user.id) },
       {
-        createdAt: subDays(new Date(), 9),
+        createdAt: subHours(new Date(), 25),
       },
       { timestamps: false },
     );
 
-    const log = await bootstrap.utils.logUtils.createLog({
+    await bootstrap.utils.logUtils.createLog({
       apiKey: apiKey.value,
       createdAt: new Date().toISOString(),
       message: 'testLog',
       level: LogLevel.Silly,
     });
 
-    const metric = await bootstrap.utils.metricUtils.recordMetric({
+    await bootstrap.utils.metricUtils.recordMetric({
       apiKey: apiKey.value,
       name: 'testMetric',
       operation: MetricOperation.Change,
@@ -88,7 +88,7 @@ describe('UserTtlService', () => {
       url: 'https://example.com',
     });
 
-    const httpPing = await bootstrap.utils.httpPingUtils.createHttpPing({
+    await bootstrap.utils.httpPingUtils.createHttpPing({
       httpMonitorId: httpMonitor._id.toString(),
     });
 

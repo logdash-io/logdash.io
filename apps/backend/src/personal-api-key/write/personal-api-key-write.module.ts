@@ -8,9 +8,7 @@ import { PersonalApiKeyWriteService } from './personal-api-key-write.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: PersonalApiKeyEntity.name, schema: PersonalApiKeySchema },
-    ]),
+    MongooseModule.forFeature([{ name: PersonalApiKeyEntity.name, schema: PersonalApiKeySchema }]),
   ],
   providers: [PersonalApiKeyWriteService],
   exports: [PersonalApiKeyWriteService],

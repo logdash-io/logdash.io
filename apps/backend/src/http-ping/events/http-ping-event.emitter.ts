@@ -7,7 +7,7 @@ import { HttpPingEvent } from './http-ping-event.enum';
 export class HttpPingEventEmitter {
   public constructor(private readonly eventEmitter: EventEmitter) {}
 
-  public async emitHttpPingCreatedEvent(payload: HttpPingCreatedEvent): Promise<void> {
+  public emitHttpPingCreatedEvent(payload: HttpPingCreatedEvent): void {
     this.eventEmitter.emit(HttpPingEvent.HttpPingCreatedEvent, payload);
   }
 }

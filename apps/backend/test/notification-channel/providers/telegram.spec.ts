@@ -2,6 +2,7 @@ import { createTestApp } from '../../utils/bootstrap';
 import { NotificationChannelMessagingService } from '../../../src/notification-channel/messaging/notification-channel-messaging.service';
 import { TelegramOptions } from '../../../src/notification-channel/core/types/telegram-options.type';
 import { sleep } from '../../utils/sleep';
+import { TelegramSendMessageBody } from '../../utils/telegram-utils';
 import { HttpMonitorStatus } from '../../../src/http-monitor/status/enum/http-monitor-status.enum';
 
 describe('Telegram notification channel', () => {
@@ -35,7 +36,7 @@ describe('Telegram notification channel', () => {
           },
         });
 
-      const requestBodies: any[] = [];
+      const requestBodies: TelegramSendMessageBody[] = [];
 
       bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
         botId: (channel.options as TelegramOptions).botToken!,
@@ -46,7 +47,7 @@ describe('Telegram notification channel', () => {
 
       // when
       const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
-      messagingService.sendHttpMonitorAlertMessage({
+      await messagingService.sendHttpMonitorAlertMessage({
         httpMonitorId: 'some-http-monitor-id',
         notificationChannelsIds: [channel.id],
         newStatus: HttpMonitorStatus.Down,
@@ -86,7 +87,7 @@ ${codeBlock}`,
           },
         });
 
-      const requestBodies: any[] = [];
+      const requestBodies: TelegramSendMessageBody[] = [];
 
       bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
         botId: (channel.options as TelegramOptions).botToken!,
@@ -97,7 +98,7 @@ ${codeBlock}`,
 
       // when
       const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
-      messagingService.sendHttpMonitorAlertMessage({
+      await messagingService.sendHttpMonitorAlertMessage({
         httpMonitorId: 'some-http-monitor-id',
         notificationChannelsIds: [channel.id],
         newStatus: HttpMonitorStatus.Up,

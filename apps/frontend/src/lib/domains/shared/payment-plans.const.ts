@@ -22,7 +22,6 @@ export const PAYMENT_PLANS = [
     ],
     badge: {
       text: 'No credit card required',
-      class: 'badge-secondary',
     },
     buttonText: 'Select Hobby',
     guarantee: 'No commitment required',
@@ -42,7 +41,7 @@ export const PAYMENT_PLANS = [
       { name: 'Max 5 status pages' },
       { name: 'Max 10 metrics per service' },
       { name: 'Max 2 collaborators per project' },
-      { name: 'Monitoring channels (Telegram & Advanced Webhooks & Email)' },
+      { name: 'Monitoring channels (Telegram & Advanced Webhooks)' },
       { name: '7 days logs retention (4.2M logs per service)' },
       { name: '7 days metrics retention' },
       { name: 'Comprehensive insights with extended data granularity' },
@@ -55,7 +54,6 @@ export const PAYMENT_PLANS = [
     ],
     badge: {
       text: 'Save 10%',
-      class: 'badge-primary',
     },
     buttonText: 'Start free trial',
     guarantee: 'No commitment required',
@@ -76,9 +74,7 @@ export const PAYMENT_PLANS = [
       { name: 'Max 30 metrics per service' },
       { name: 'Max 3 collaborators per project' },
       { name: 'Historical uptime charts' },
-      {
-        name: 'Monitoring channels (Telegram & Advanced Webhooks & Email & SMS)',
-      },
+      { name: 'Monitoring channels (Telegram & Advanced Webhooks)' },
       { name: '30 days logs retention (37M logs per service)' },
       { name: '30 days metrics retention' },
       { name: '99.9% uptime SLA' },
@@ -86,16 +82,13 @@ export const PAYMENT_PLANS = [
       { name: 'Team management features' },
       { name: 'Custom branding options' },
       { name: 'Custom status page domain' },
-      { name: 'Space background' },
     ],
     badge: {
       text: 'Save 50%',
-      class: 'badge-primary',
     },
     buttonText: 'Start free trial',
     guarantee: 'No commitment required',
     tier: UserTier.PRO,
     popular: true,
-    disabled: false,
   },
 ] as const;

@@ -154,7 +154,7 @@ export const EnvConfigs: EnvConfigs = {
       logCreationDurationWarnThreshold: 500,
     },
     anonymousAccounts: {
-      removeAfterHours: 24 * 7, // 7 days
+      removeAfterHours: 24,
     },
     pings: {
       maxConcurrentRequests: 100,
@@ -266,7 +266,7 @@ export const EnvConfigs: EnvConfigs = {
       logCreationDurationWarnThreshold: 100,
     },
     anonymousAccounts: {
-      removeAfterHours: 24 * 7, // 7 days
+      removeAfterHours: 24,
     },
     pings: {
       maxConcurrentRequests: 10,

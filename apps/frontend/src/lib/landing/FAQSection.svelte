@@ -1,90 +1,41 @@
 <script lang="ts">
-  type FaqItem = {
-    question: string;
-    answer: string;
+  import { FAQS } from './data/faq.data';
+  import FaqList from './FaqList.svelte';
+  import type { DocFaqItem } from './guides/documentation.data';
+  import LandingSection from './LandingSection.svelte';
+
+  type Props = {
+    faqs?: DocFaqItem[];
+    title?: string;
   };
 
-  const faqs: FaqItem[] = [
-    {
-      question: 'What is Logdash?',
-      answer:
-        "Think of Logdash as your go-to buddy for keeping an eye on your apps. It's a modern platform that helps you see what's happening in real-time, super easily.",
-    },
-    {
-      question: 'How to integrate?',
-      answer:
-        "Not tough at all! We've got straightforward guides and tools for most setups. You'll likely be up and running faster than you can make a coffee.",
-    },
-    {
-      question: 'What is your refund policy?',
-      answer:
-        'We offer a no-questions-asked full refund within 30 days of your subscription.',
-    },
-    {
-      question: 'Free plan or trial?',
-      answer:
-        "Yep! We've got a free plan that's great for smaller projects, and you can take the premium features for a spin with our trial. No strings attached.",
-    },
-    {
-      question: 'What kind of support?',
-      answer:
-        "We've got your back. There's plenty of info in our docs, a community forum to chat with other users, and if you're on a paid plan, we can come onboard to help you out.",
-    },
-    {
-      question: 'Can Logdash scale?',
-      answer:
-        'For sure! Logdash is built to grow with you. It can handle tons of log data, no sweat, whether your app is tiny or massive.',
-    },
-    {
-      question: 'How is pricing set?',
-      answer:
-        "It's mainly about how much data you send, how long you want to keep it, and which features you're using. Pop over to our pricing page - it lays everything out clearly.",
-    },
-    {
-      question: 'What is "zero config"?',
-      answer:
-        'It means you can get started really quickly without a lot of complicated setup. We try to make things as plug-and-play as possible so you can focus on your app, not on configuring your infrastructure.',
-    },
-    {
-      question: 'Can I self-host Logdash?',
-      answer:
-        "Right now, Logdash is a cloud-based service. This helps us make sure it's always up, running smoothly, and easy for you to use without worrying about server maintenance. We might explore self-hosting options down the road if there's enough demand!",
-    },
-  ];
+  const { faqs = FAQS, title = 'Frequently asked questions' }: Props = $props();
 </script>
 
-<section id="faq" class="">
-  <div class="mx-auto max-w-4xl px-8 sm:px-6 lg:px-8">
-    <div class="text-center">
+<LandingSection id="faq">
+  <div
+    class="grid grid-cols-1 gap-10 px-4 py-20 sm:px-6 lg:grid-cols-5 lg:gap-12 lg:px-10 lg:py-28"
+  >
+    <div class="flex flex-col gap-3 select-none lg:col-span-2">
       <h2
-        class="text-base-content text-3xl font-extrabold tracking-tight sm:text-4xl"
+        class="text-3xl font-medium tracking-[-0.03em] text-balance sm:text-4xl"
       >
-        Frequently Asked Questions
+        {title}
       </h2>
-      <p class="text-base-content/70 mt-2 text-lg leading-relaxed">
-        Have a different question? <a
+
+      <p class="text-neutral-400 text-lg text-pretty">
+        Have a different question?
+        <a
           href="https://discord.gg/naftPW4Hxe"
           target="_blank"
-          class="link link-hover text-primary font-medium"
+          rel="noreferrer"
+          class="text-fg-default font-medium hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           Reach out on Discord
         </a>
       </p>
     </div>
 
-    <div class="mt-12">
-      <dl class="gap-x-8 md:columns-2">
-        {#each faqs as faq (faq.question)}
-          <div class="mb-10 break-inside-avoid lg:mb-12">
-            <dt class="text-base-content text-lg font-semibold leading-7">
-              {faq.question}
-            </dt>
-            <dd class="text-base-content/70 mt-2 text-base">
-              {faq.answer}
-            </dd>
-          </div>
-        {/each}
-      </dl>
-    </div>
+    <FaqList {faqs} class="lg:col-span-3" />
   </div>
-</section>
+</LandingSection>

@@ -33,7 +33,7 @@ export class NotificationChannelWriteService {
       updatedAt: new Date(),
     });
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: actorUserId,
       actor: Actor.User,
       action: AuditLogEntityAction.Create,
@@ -57,14 +57,14 @@ export class NotificationChannelWriteService {
     const notificationChannel = await this.notificationChannelModel.findOneAndUpdate(
       { _id: new Types.ObjectId(dto.id) },
       updateQuery,
-      { new: true },
+      { returnDocument: 'after' },
     );
 
     if (!notificationChannel) {
       throw new Error(`Notification channel with id ${dto.id} not found for update`);
     }
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: actorUserId,
       actor: Actor.User,
       action: AuditLogEntityAction.Update,

@@ -30,7 +30,7 @@ describe('ClusterCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       // then
-      const clusterSerialized: ClusterSerialized = response.body[0];
+      const clusterSerialized = (response.body as ClusterSerialized[])[0];
 
       expect(clusterSerialized.creatorId).toEqual(user.id);
       expect(clusterSerialized.projects?.[0].id).toEqual(project.id);
@@ -53,7 +53,7 @@ describe('ClusterCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       // then
-      const clusterSerialized: ClusterSerialized = response.body[0];
+      const clusterSerialized = (response.body as ClusterSerialized[])[0];
 
       expect(clusterSerialized.publicDashboards?.[0].id).toEqual(publicDashboard.id);
       expect(clusterSerialized.publicDashboards?.[0].name).toEqual(publicDashboard.name);
@@ -81,7 +81,7 @@ describe('ClusterCoreController (reads)', () => {
         .set('Authorization', `Bearer ${otherSetup.token}`);
 
       // then
-      const clusterSerialized: ClusterSerialized = response.body[0];
+      const clusterSerialized = (response.body as ClusterSerialized[])[0];
 
       expect(clusterSerialized.id).toEqual(setup.cluster.id);
       expect(clusterSerialized.projects?.[0].id).toEqual(setup.project.id);

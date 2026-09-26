@@ -33,7 +33,6 @@
     "ui",
     "components",
     "svelte",
-    "daisyui",
     "tailwind",
     "logdash"
   ],
@@ -49,7 +48,7 @@
   "devDependencies": {
     "@sveltejs/kit": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
-    "daisyui": "catalog:",
+    "@types/luxon": "^3.6.2",
     "svelte": "catalog:",
     "svelte-check": "catalog:",
     "tailwindcss": "catalog:",
@@ -59,7 +58,6 @@
   "peerDependencies": {
     "@sveltejs/kit": "*",
     "@sveltejs/vite-plugin-svelte": "*",
-    "daisyui": "*",
     "svelte": "*",
     "svelte-check": "*",
     "tailwindcss": "*",

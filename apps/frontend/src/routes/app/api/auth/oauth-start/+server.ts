@@ -9,15 +9,17 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 const SUPPORTED_PROVIDERS = ['github', 'google'] as const;
+const SUPPORTED_FLOWS = ['login', 'claim'] as const;
 
 type SupportedProvider = (typeof SUPPORTED_PROVIDERS)[number];
+type SupportedFlow = (typeof SUPPORTED_FLOWS)[number];
 
 type OAuthStartBody = {
   provider?: string;
-  terms_accepted?: boolean;
-  email_accepted?: boolean;
   tier?: string;
   next_url?: string;
+  flow?: string;
+  popup?: boolean;
 };
 
 const google_redirect_uri = (origin: string): string =>
@@ -37,12 +39,14 @@ export const POST: RequestHandler = async ({ request, cookies, url }) => {
 
   save_oauth_state(cookies, {
     state,
-    terms_accepted: body.terms_accepted === true,
-    email_accepted: body.email_accepted === true,
     next_url: safe_redirect_path(body.next_url, '/app/clusters'),
+    flow: SUPPORTED_FLOWS.includes(body.flow as SupportedFlow)
+      ? (body.flow as SupportedFlow)
+      : 'login',
     ...(Object.values(UserTier).includes(body.tier as UserTier) && {
       tier: body.tier as UserTier,
     }),
+    ...(body.popup === true && { popup: true }),
   });
 
   return json({

@@ -1,9 +1,10 @@
 import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config.js';
 import { logdashAPI } from '$lib/domains/shared/logdash.api.server.js';
+import type { LayoutServerLoadEvent } from './$types';
 
 export const load = async ({
   url,
-}): Promise<{
+}: LayoutServerLoadEvent): Promise<{
   exposedConfig: ExposedConfig;
   origin: string;
 }> => {

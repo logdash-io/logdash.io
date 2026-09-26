@@ -1,5 +1,6 @@
 import { ClickHouseClient } from '@clickhouse/client';
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { App } from 'supertest/types';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -36,6 +37,7 @@ import { PublicDashboardCoreModule } from '../../src/public-dashboard/core/publi
 import { BlogPostEntity } from '../../src/blog/core/entities/blog-post.entity';
 import { BlogCoreModule } from '../../src/blog/core/blog-core.module';
 import { CustomDomainCoreModule } from '../../src/custom-domain/core/custom-domain-core.module';
+import { BadgeCoreModule } from '../../src/badge/core/badge-core.module';
 import { CustomDomainEntity } from '../../src/custom-domain/core/entities/custom-domain.entity';
 import { CustomDomainDnsService } from '../../src/custom-domain/dns/custom-domain-dns.service';
 import { CustomDomainDnsServiceMock } from '../../src/custom-domain/dns/custom-domain-dns.service.mock';
@@ -104,6 +106,7 @@ export async function createTestApp() {
       NotificationChannelCoreModule,
       PublicDashboardCoreModule,
       CustomDomainCoreModule,
+      BadgeCoreModule,
       BlogCoreModule,
       StripeModule,
       SubscriptionCoreModule,
@@ -130,7 +133,7 @@ export async function createTestApp() {
 
   const module: TestingModule = await moduleBuilder.compile();
 
-  const app = module.createNestApplication();
+  const app = module.createNestApplication<INestApplication<App>>();
   // Must mirror src/main.ts, otherwise e2e tests exercise different validation
   // rules than production.
   app.useGlobalPipes(
@@ -141,7 +144,7 @@ export async function createTestApp() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
-  await app.init();
+  await app.listen(0, '127.0.0.1');
 
   const userModel: Model<UserEntity> = module.get(getModelToken(UserEntity.name));
   const projectModel: Model<ProjectEntity> = module.get(getModelToken(ProjectEntity.name));
@@ -221,7 +224,6 @@ export async function createTestApp() {
       clickhouseClient.command({ query: `TRUNCATE TABLE metrics` }),
     ]);
   };
-
 
   const beforeEach = async () => {
     clear();

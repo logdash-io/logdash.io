@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 
 import * as request from 'supertest';
@@ -5,12 +6,13 @@ import { CreateLogBody } from '../../src/log/core/dto/create-log.body';
 import { sleep } from './sleep';
 import { ClickHouseClient } from '@clickhouse/client';
 import { LogSerializer } from '../../src/log/core/entities/log.serializer';
-import { LogNormalized } from '../../src/log/core/entities/log.interface';
+import { LogClickhouseNormalized } from '../../src/log/core/entities/log.interface';
+import { LogClickhouseRow } from '../../src/log/core/entities/log.clickhouse-entity';
 
 export class LogUtils {
   private readonly clickhouseClient: ClickHouseClient;
 
-  constructor(private readonly app: INestApplication<any>) {
+  constructor(private readonly app: INestApplication<App>) {
     this.clickhouseClient = app.get(ClickHouseClient);
   }
 
@@ -28,7 +30,7 @@ export class LogUtils {
       namespace: dto.namespace,
     };
 
-    const response = await request(this.app.getHttpServer())
+    await request(this.app.getHttpServer())
       .post('/logs')
       .set('project-api-key', dto.apiKey)
       .send(body);
@@ -36,17 +38,15 @@ export class LogUtils {
     if (dto.withoutSleep === undefined || dto.withoutSleep === false) {
       await sleep(1000);
     }
-
-    return response.body;
   }
 
-  public async readLogs(projectId: string): Promise<LogNormalized[]> {
+  public async readLogs(projectId: string): Promise<LogClickhouseNormalized[]> {
     const result = await this.clickhouseClient.query({
       query: `SELECT * FROM logs WHERE project_id = '${projectId}'`,
     });
 
-    const data = ((await result.json()) as any).data;
+    const { data } = await result.json<LogClickhouseRow>();
 
-    return data.map((row: any) => LogSerializer.normalizeClickhouse(row));
+    return data.map((row) => LogSerializer.normalizeClickhouse(row));
   }
 }

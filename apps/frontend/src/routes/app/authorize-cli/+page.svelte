@@ -8,6 +8,7 @@
   } from '$lib/domains/app/personal-api-keys/domain/cli-auth.js';
   import PersonalApiKeyCreateModal from '$lib/domains/app/personal-api-keys/ui/PersonalApiKeyCreateModal.svelte';
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
+  import { Button, Input } from '@logdash/hyper-ui/presentational';
 
   let userCode = $state('');
   let checking = $state(false);
@@ -18,9 +19,17 @@
   // lives outside the /app/clusters layout, so load them on the client.
   $effect(() => {
     if (!clustersState.ready) {
-      clustersState.load();
+      void loadClusters();
     }
   });
+
+  async function loadClusters(): Promise<void> {
+    try {
+      await clustersState.load();
+    } catch (cause) {
+      console.error(cause);
+    }
+  }
 
   async function onLookup(event: SubmitEvent): Promise<void> {
     event.preventDefault();
@@ -44,7 +53,7 @@
         return;
       }
 
-      request = await response.json();
+      request = (await response.json()) as CliAuthRequest;
     } catch (cause) {
       error = cliAuthErrorMessage(0);
       console.error(cause);
@@ -61,24 +70,24 @@
 
 <div class="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
   <div class="flex w-full max-w-md flex-col items-center gap-3 text-center">
-    <div class="bg-base-100 rounded-lg p-3">
-      <KeyIcon class="text-primary size-6" />
+    <div class="bg-surface-100 rounded-lg p-3">
+      <KeyIcon class="text-brand size-6" />
     </div>
-    <h1 class="text-xl font-semibold">Authorize CLI access</h1>
-    <p class="text-base-content/70 text-sm">
+    <h1 class="text-xl font-medium">Authorize CLI access</h1>
+    <p class="text-neutral-400 text-sm">
       Type the code shown in your terminal. We never fill it in for you — if
       someone sent you a link with a code already in it, close this page.
     </p>
 
     <form class="mt-2 flex w-full flex-col gap-3" onsubmit={onLookup}>
-      <input
+      <Input
         bind:value={userCode}
-        class="input w-full text-center font-mono text-lg tracking-widest uppercase"
+        class="w-full text-center font-mono text-lg tracking-widest uppercase"
         placeholder="XXXX-XXXX"
         autocomplete="off"
         autocapitalize="characters"
         spellcheck="false"
-        maxlength="16"
+        maxlength={16}
         aria-label="Code from your terminal"
       />
 
@@ -86,17 +95,15 @@
         <p class="text-error text-sm">{error}</p>
       {/if}
 
-      <button
+      <Button
         type="submit"
-        class="btn btn-primary w-full"
-        disabled={checking || userCode.trim() === ''}
+        variant="primary"
+        block
+        disabled={userCode.trim() === ''}
+        loading={checking}
       >
-        {#if checking}
-          <span class="loading loading-spinner loading-xs"></span>
-        {:else}
-          Continue
-        {/if}
-      </button>
+        Continue
+      </Button>
     </form>
   </div>
 

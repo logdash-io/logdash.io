@@ -4,7 +4,13 @@
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
-  import SegmentedControl from './SegmentedControl.svelte';
+  import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
+  import {
+    Button,
+    Checkbox,
+    Input,
+    Select,
+  } from '@logdash/hyper-ui/presentational';
   import {
     cliAuthErrorMessage,
     type CliAuthRequest,
@@ -110,7 +116,9 @@
   }
 
   function scopeAction(resource: Resource): Action {
-    return scopes.find((entry) => entry.resource === resource)?.action ?? 'none';
+    return (
+      scopes.find((entry) => entry.resource === resource)?.action ?? 'none'
+    );
   }
 
   function toggleCluster(id: string): void {
@@ -199,7 +207,7 @@
           throw new Error('Failed to create key');
         }
 
-        const data: CreatedPersonalApiKey = await response.json();
+        const data = (await response.json()) as CreatedPersonalApiKey;
         createdValue = data.value;
         onCreated?.();
       }
@@ -239,11 +247,11 @@
     }
   }
 
-  function onCopyValue(): void {
+  async function onCopyValue(): Promise<void> {
     if (!createdValue) {
       return;
     }
-    navigator.clipboard.writeText(createdValue);
+    await navigator.clipboard.writeText(createdValue);
     toast.success('API key copied to clipboard', 5000);
   }
 </script>
@@ -253,10 +261,10 @@
     {#if createdValue}
       <div class="flex flex-col gap-4">
         <div class="flex items-center gap-3">
-          <div class="bg-base-100 rounded-lg p-2.5">
-            <KeyIcon class="text-primary size-5" />
+          <div class="bg-surface-100 rounded-lg p-2.5">
+            <KeyIcon class="text-brand size-5" />
           </div>
-          <h2 class="text-lg font-semibold">Personal API key created</h2>
+          <h2 class="text-lg font-medium">Personal API key created</h2>
         </div>
 
         <div
@@ -268,90 +276,82 @@
 
         <div class="flex items-center gap-2">
           <code
-            class="bg-base-100 border-base-100 flex-1 overflow-x-auto rounded-lg border p-3 font-mono text-sm"
+            class="bg-surface-100 border-border-default flex-1 overflow-x-auto rounded-lg border p-3 font-mono text-sm"
           >
             {createdValue}
           </code>
-          <button type="button" class="btn btn-primary" onclick={onCopyValue}>
+          <Button variant="primary" onclick={onCopyValue}>
             <CopyIcon class="size-4" />
             Copy
-          </button>
+          </Button>
         </div>
 
         <div class="flex justify-end">
-          <button type="button" class="btn btn-ghost" onclick={close}>
-            Done
-          </button>
+          <Button variant="ghost" onclick={close}>Done</Button>
         </div>
       </div>
     {:else if cliResult === 'approved'}
       <div class="flex flex-col items-center gap-3 py-6 text-center">
         <div class="text-success text-4xl">✓</div>
-        <h2 class="text-lg font-semibold">Approved</h2>
-        <p class="text-base-content/70 text-sm">
+        <h2 class="text-lg font-medium">Approved</h2>
+        <p class="text-neutral-400 text-sm">
           Return to your terminal to continue.
         </p>
-        <button type="button" class="btn btn-ghost mt-2" onclick={close}>
-          Close
-        </button>
+        <Button variant="ghost" class="mt-2" onclick={close}>Close</Button>
       </div>
     {:else if cliResult === 'denied'}
       <div class="flex flex-col items-center gap-3 py-6 text-center">
         <div class="text-error text-4xl">✕</div>
-        <h2 class="text-lg font-semibold">Request denied</h2>
-        <p class="text-base-content/70 text-sm">
+        <h2 class="text-lg font-medium">Request denied</h2>
+        <p class="text-neutral-400 text-sm">
           The CLI authorization request was denied.
         </p>
-        <button type="button" class="btn btn-ghost mt-2" onclick={close}>
-          Close
-        </button>
+        <Button variant="ghost" class="mt-2" onclick={close}>Close</Button>
       </div>
     {:else}
       <div class="flex items-center gap-3">
-        <div class="bg-base-100 rounded-lg p-2.5">
-          <KeyIcon class="text-primary size-5" />
+        <div class="bg-surface-100 rounded-lg p-2.5">
+          <KeyIcon class="text-brand size-5" />
         </div>
-        <h2 class="text-lg font-semibold">
-          {mode === 'cli'
-            ? 'Authorize CLI access'
-            : 'Create personal API key'}
+        <h2 class="text-lg font-medium">
+          {mode === 'cli' ? 'Authorize CLI access' : 'Create personal API key'}
         </h2>
       </div>
 
       {#if mode === 'cli' && cliRequest}
         <div
-          class="border-primary/40 bg-primary/10 flex flex-col gap-2 rounded-lg border p-3 text-sm"
+          class="border-neutral-500 bg-surface-100 flex flex-col gap-2 rounded-lg border p-3 text-sm"
         >
-          <p class="text-base-content/70">
+          <p class="text-neutral-400">
             A CLI on
-            <span class="text-base-content font-mono font-semibold">
+            <span class="text-fg-default font-mono font-medium">
               {cliRequest.clientIp || 'an unknown address'}
             </span>
             is requesting access to your account.
           </p>
-          <dl class="text-base-content/70 flex flex-col gap-1 text-xs">
+          <dl class="text-neutral-400 flex flex-col gap-1 text-xs">
             <div class="flex justify-between gap-3">
               <dt>Code</dt>
-              <dd class="text-base-content font-mono font-semibold">
+              <dd class="text-fg-default font-mono font-medium">
                 {cliRequest.userCode}
               </dd>
             </div>
             <div class="flex justify-between gap-3">
               <dt>Client (self-reported)</dt>
-              <dd class="text-base-content truncate font-mono">
+              <dd class="text-fg-default truncate font-mono">
                 {cliRequest.clientUserAgent || 'not reported'}
               </dd>
             </div>
             <div class="flex justify-between gap-3">
               <dt>Requested</dt>
-              <dd class="text-base-content">
+              <dd class="text-fg-default">
                 {formatTimestamp(cliRequest.requestedAt)}
               </dd>
             </div>
           </dl>
-          <p class="text-base-content/60 text-xs">
-            If you did not just run <span class="font-mono">ld login</span> on
-            that machine, deny this request.
+          <p class="text-neutral-400 text-xs">
+            If you did not just run <span class="font-mono">ld login</span>
+            on that machine, deny this request.
           </p>
         </div>
       {/if}
@@ -361,9 +361,9 @@
           {#if mode === 'manage'}
             <div class="flex flex-col gap-1.5">
               <span class="text-sm font-medium">Label</span>
-              <input
+              <Input
                 bind:value={label}
-                class="input w-full"
+                class="w-full"
                 placeholder="e.g. My laptop CLI"
               />
             </div>
@@ -371,18 +371,16 @@
 
           <div class="flex flex-col gap-1.5">
             <span class="text-sm font-medium">Preset</span>
-            <select
-              class="select w-full"
-              value={preset}
-              onchange={(event) =>
-                applyPreset(event.currentTarget.value as PresetId)}
+            <Select
+              class="w-full"
+              bind:value={() => preset, (next) => applyPreset(next as PresetId)}
             >
               {#each PRESETS as presetOption (presetOption.id)}
                 <option value={presetOption.id}>
                   {presetOption.label} — {presetOption.description}
                 </option>
               {/each}
-            </select>
+            </Select>
           </div>
 
           <div class="flex flex-col gap-2">
@@ -395,7 +393,7 @@
                     size="xs"
                     options={actionOptions}
                     value={scopeAction(resourceOption.resource)}
-                    onChange={(action) =>
+                    onChange={(action: Action) =>
                       setScope(resourceOption.resource, action)}
                   />
                 </div>
@@ -406,30 +404,29 @@
           <div class="flex flex-col gap-2">
             <span class="text-sm font-medium">Access</span>
             {#if mode === 'cli'}
-              <p class="text-base-content/60 -mt-1 text-xs">
+              <p class="text-neutral-400 -mt-1 text-xs">
                 Pick what this key may reach. Nothing is selected by default.
               </p>
             {/if}
             <SegmentedControl
               options={accessOptions}
               value={accessKind}
-              onChange={(kind) => (accessKind = kind)}
+              onChange={(kind: AccessRestriction['kind']) =>
+                (accessKind = kind)}
             />
 
             {#if accessKind === 'clusters'}
               <div
-                class="border-base-100 mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
+                class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
               >
                 {#if clusters.length === 0}
-                  <p class="text-base-content/60 p-1 text-sm">
+                  <p class="text-neutral-400 p-1 text-sm">
                     No clusters available.
                   </p>
                 {/if}
                 {#each clusters as cluster (cluster.id)}
                   <label class="flex items-center gap-2 p-1 text-sm">
-                    <input
-                      type="checkbox"
-                      class="checkbox checkbox-sm"
+                    <Checkbox
                       checked={selectedClusterIds.includes(cluster.id)}
                       onchange={() => toggleCluster(cluster.id)}
                     />
@@ -439,23 +436,21 @@
               </div>
             {:else if accessKind === 'projects'}
               <div
-                class="border-base-100 mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
+                class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
               >
                 {#if projects.length === 0}
-                  <p class="text-base-content/60 p-1 text-sm">
+                  <p class="text-neutral-400 p-1 text-sm">
                     No projects available.
                   </p>
                 {/if}
                 {#each projects as project (project.id)}
                   <label class="flex items-center gap-2 p-1 text-sm">
-                    <input
-                      type="checkbox"
-                      class="checkbox checkbox-sm"
+                    <Checkbox
                       checked={selectedProjectIds.includes(project.id)}
                       onchange={() => toggleProject(project.id)}
                     />
                     {project.name}
-                    <span class="text-base-content/50">
+                    <span class="text-neutral-500">
                       ({project.clusterName})
                     </span>
                   </label>
@@ -467,16 +462,12 @@
           {#if mode === 'manage'}
             <div class="flex flex-col gap-1.5">
               <span class="text-sm font-medium">Expiry (optional)</span>
-              <input
-                bind:value={expiresAt}
-                type="date"
-                class="input w-full"
-              />
+              <Input bind:value={expiresAt} type="date" class="w-full" />
             </div>
           {:else}
             <div class="flex flex-col gap-1.5">
               <span class="text-sm font-medium">Expiry</span>
-              <p class="text-base-content/60 text-xs">
+              <p class="text-neutral-400 text-xs">
                 CLI keys always expire after 30 days. You can revoke this one
                 sooner from Account → API keys.
               </p>
@@ -487,33 +478,20 @@
 
       <div class="flex justify-end gap-2">
         {#if mode === 'cli'}
-          <button
-            type="button"
-            class="btn btn-error btn-outline"
-            disabled={submitting}
-            onclick={onDeny}
-          >
+          <Button variant="danger-ghost" disabled={submitting} onclick={onDeny}>
             Deny
-          </button>
+          </Button>
         {:else}
-          <button type="button" class="btn btn-ghost" onclick={close}>
-            Cancel
-          </button>
+          <Button variant="ghost" onclick={close}>Cancel</Button>
         {/if}
-        <button
-          type="button"
-          class="btn btn-primary"
-          disabled={submitting || (mode === 'cli' && accessKind === null)}
+        <Button
+          variant="primary"
+          disabled={mode === 'cli' && accessKind === null}
+          loading={submitting}
           onclick={onSubmit}
         >
-          {#if submitting}
-            <span class="loading loading-spinner loading-xs"></span>
-          {:else if mode === 'cli'}
-            Approve
-          {:else}
-            Create key
-          {/if}
-        </button>
+          {mode === 'cli' ? 'Approve' : 'Create key'}
+        </Button>
       </div>
     {/if}
   </div>

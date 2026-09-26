@@ -5,45 +5,51 @@
 </script>
 
 <div style="word-break: break-all; white-space: normal;">
-  {#each definition as section, index}
+  {#each definition as section, index (index)}
     <h5 class="mt-2 mb-5 text-center md:mt-6">
       §{index + 1}
       <br />
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
       <span>{@html section.title}</span>
     </h5>
 
     {#if section.paragraphs}
-      {#each section.paragraphs as paragraph}
+      {#each section.paragraphs as paragraph, paragraphIndex (paragraphIndex)}
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
         <p class="mb-3">{@html paragraph}</p>
       {/each}
     {:else}
       <div class="w-full overflow-hidden pl-0">
         <div class="flex flex-col">
-          {#each section.list as listItem, listItemIndex}
+          {#each section.list as listItem, listItemIndex (listItemIndex)}
             <div class="mb-3">
               <span class="mb-1 block">
                 {listItemIndex + 1}.&nbsp;
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
                 <span>{@html listItem.title || ''}</span>
               </span>
               <div class="flex flex-col pl-4">
-                {#each listItem.list as item, itemIndex}
+                {#each listItem.list as item, itemIndex (itemIndex)}
                   {#if typeof item === 'string'}
                     <div class="mb-1">
                       {listItemIndex + 1}.{itemIndex + 1}.&nbsp;
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
                       <span>{@html item}</span>
                     </div>
                   {:else}
                     <div class="mb-1">
                       <span class="mb-1 block">
                         {listItemIndex + 1}.{itemIndex + 1}.&nbsp;
+                        <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
                         <span>{@html item.title}</span>
                       </span>
                       <div class="flex flex-col pl-4">
-                        {#each item.list as subItem, subItemIndex}
+                        {#each item.list as subItem, subItemIndex (subItemIndex)}
                           <div class="mb-1">
                             {listItemIndex + 1}.{itemIndex + 1}.{subItemIndex +
                               1}.&nbsp;
                             <span>
+                              <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
                               {@html subItem}
                             </span>
                           </div>

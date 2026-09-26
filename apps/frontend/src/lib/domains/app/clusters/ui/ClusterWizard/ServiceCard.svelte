@@ -7,10 +7,10 @@
   import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
   import { fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
+  import { Button, Checkbox } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     service: WizardService;
-    index: number;
     expanded: boolean;
     canRemove: boolean;
     onNameChange: (name: string) => void;
@@ -19,7 +19,6 @@
   };
   const {
     service,
-    index,
     expanded,
     canRemove,
     onNameChange,
@@ -71,24 +70,26 @@
         id="service-input-{service.id}"
         type="text"
         placeholder="Service name"
-        class="text-4xl leading-normal font-medium w-full focus:border-primary border-b-2 border-transparent transition-colors duration-200 outline-0"
+        class="text-4xl leading-normal font-medium w-full focus:border-brand border-b-2 border-transparent transition-ink duration-200 outline-0"
         value={service.name}
         oninput={onInputChange}
         maxlength={64}
       />
 
       {#if canRemove}
-        <button
-          type="button"
-          class="btn btn-ghost btn-sm btn-square text-base-content/30 hover:text-error"
+        <Button
+          variant="ghost"
+          size="sm"
+          shape="square"
+          class="text-neutral-600 hover:text-error"
           onclick={onRemove}
         >
           <TrashIcon class="size-4" />
-        </button>
+        </Button>
       {/if}
     </div>
 
-    <p class="text-sm text-base-content/80 grid overflow-hidden h-4.5">
+    <p class="text-sm text-neutral-300 grid overflow-hidden h-4.5">
       {#if hasName}
         <span
           class="col-start-1 row-start-1"
@@ -110,31 +111,29 @@
 
     <div
       class={[
-        'flex flex-col divide-y divide-base-200 transition-opacity duration-300 ld-card-rounding overflow-hidden ld-card-border',
+        'flex flex-col divide-y divide-surface-elevated transition-opacity duration-300 ld-card-rounding overflow-hidden ld-card-border',
         {
           'opacity-30 pointer-events-none': !hasName,
         },
       ]}
       in:fly={{ y: -5, duration: 200, easing: cubicOut }}
     >
-      {#each featureConfig as { feature, label, description, icon: Icon }}
+      {#each featureConfig as { feature, label, description, icon: Icon } (feature)}
         <label
           class={[
-            'flex items-center gap-3 p-4 px-4.5 cursor-pointer transition-colors duration-200 hover:bg-base-100/60',
-            { 'text-primary': isFeatureEnabled(feature) },
-            { '': !isFeatureEnabled(feature) },
+            'flex items-center gap-3 p-4 px-4.5 cursor-pointer hover:bg-neutral-800',
+            { 'text-brand': isFeatureEnabled(feature) },
           ]}
         >
           <Icon class="size-6 shrink-0" />
 
           <div class="flex flex-col flex-1 select-none">
             <span class="font-medium text-sm">{label}</span>
-            <span class="text-xs text-base-content/60">{description}</span>
+            <span class="text-xs text-neutral-400">{description}</span>
           </div>
 
-          <input
-            type="checkbox"
-            class="checkbox checkbox-primary checkbox-sm"
+          <Checkbox
+            variant="primary"
             checked={isFeatureEnabled(feature)}
             onchange={() => onToggleFeature(feature)}
           />
@@ -149,8 +148,8 @@
     <div class="flex flex-col flex-1 gap-1">
       <span class="font-medium text-lg">{service.name}</span>
       <div class="flex items-center gap-3">
-        {#each enabledFeatures as { label, icon: Icon }}
-          <div class="flex items-center gap-1.5 text-xs text-base-content/60">
+        {#each enabledFeatures as { feature, label, icon: Icon } (feature)}
+          <div class="flex items-center gap-1.5 text-xs text-neutral-400">
             <Icon class="size-3.5" />
             <span>{label}</span>
           </div>
@@ -159,13 +158,15 @@
     </div>
 
     {#if canRemove}
-      <button
-        type="button"
-        class="btn btn-ghost btn-sm btn-square text-base-content/30 hover:text-error"
+      <Button
+        variant="ghost"
+        size="sm"
+        shape="square"
+        class="text-neutral-600 hover:text-error"
         onclick={onRemove}
       >
         <TrashIcon class="size-4" />
-      </button>
+      </Button>
     {/if}
   </div>
 {/if}

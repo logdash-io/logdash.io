@@ -27,3 +27,6 @@ dist
 
 # Agent tooling artifacts
 .playwright-mcp/
+
+# Agent scratch space (Conductor workspaces)
+.context/

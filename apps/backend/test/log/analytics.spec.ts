@@ -4,6 +4,7 @@ import { CreateLogDto } from '../../src/log/write/dto/create-log.dto';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { LogWriteService } from '../../src/log/write/log-write.service';
+import { LogAnalyticsResponse } from '../../src/log/analytics/dto/log-analytics-response.dto';
 import { subHours, addMinutes, subMinutes, addHours, addSeconds } from 'date-fns';
 
 describe('LogCoreController (analytics)', () => {
@@ -25,7 +26,7 @@ describe('LogCoreController (analytics)', () => {
     it('returns bucketed analytics with auto-selected buckets', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = subMinutes(baseTime, 5);
@@ -73,30 +74,29 @@ describe('LogCoreController (analytics)', () => {
           endDate: endTime.toISOString(),
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       // then
       expect(response.status).toEqual(200);
-      expect(response.body.bucketSizeMinutes).toEqual(1);
-      expect(response.body.totalLogs).toEqual(4);
-      expect(response.body.buckets.length).toBeGreaterThan(0);
+      expect(body.bucketSizeMinutes).toEqual(1);
+      expect(body.totalLogs).toEqual(4);
+      expect(body.buckets.length).toBeGreaterThan(0);
 
       // verify that buckets are properly aligned
-      const firstBucket = response.body.buckets[0];
+      const firstBucket = body.buckets[0];
       expect(
         new Date(firstBucket.bucketEnd).getTime() - new Date(firstBucket.bucketStart).getTime(),
       ).toEqual(60000); // 1 minute
 
       // verify total logs match
-      const totalLogsFromBuckets = response.body.buckets.reduce(
-        (sum, bucket) => sum + bucket.countTotal,
-        0,
-      );
+      const totalLogsFromBuckets = body.buckets.reduce((sum, bucket) => sum + bucket.countTotal, 0);
       expect(totalLogsFromBuckets).toEqual(4);
     });
 
     it('aligns buckets correctly for unaligned time ranges', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = addMinutes(baseTime, 2);
@@ -130,29 +130,28 @@ describe('LogCoreController (analytics)', () => {
           endDate: addSeconds(endTime, 1).toISOString(),
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       // then - should auto-select 1-minute buckets and align to boundaries
       expect(response.status).toEqual(200);
-      expect(response.body.bucketSizeMinutes).toEqual(1);
-      expect(response.body.buckets.length).toEqual(6);
+      expect(body.bucketSizeMinutes).toEqual(1);
+      expect(body.buckets.length).toEqual(6);
 
       // verify alignment - first bucket should start at an aligned boundary
-      const firstBucket = response.body.buckets[0];
+      const firstBucket = body.buckets[0];
       const firstBucketStart = new Date(firstBucket.bucketStart);
       expect(firstBucketStart.getUTCSeconds()).toEqual(0);
       expect(firstBucketStart.getUTCMilliseconds()).toEqual(0);
 
       // verify we captured both logs
-      const totalLogsFromBuckets = response.body.buckets.reduce(
-        (sum, bucket) => sum + bucket.countTotal,
-        0,
-      );
+      const totalLogsFromBuckets = body.buckets.reduce((sum, bucket) => sum + bucket.countTotal, 0);
       expect(totalLogsFromBuckets).toEqual(2);
     });
 
     it('auto-selects appropriate bucket sizes for different time ranges', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -186,23 +185,22 @@ describe('LogCoreController (analytics)', () => {
           endDate: endTime.toISOString(),
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       // then - 1 hour (60 minutes) should select 5-minute buckets for ~13 buckets
       expect(response.status).toEqual(200);
-      expect(response.body.bucketSizeMinutes).toEqual(5);
-      expect(response.body.buckets.length).toEqual(13);
+      expect(body.bucketSizeMinutes).toEqual(5);
+      expect(body.buckets.length).toEqual(13);
 
       // Verify logs are captured
-      const totalLogsFromBuckets = response.body.buckets.reduce(
-        (sum, bucket) => sum + bucket.countTotal,
-        0,
-      );
+      const totalLogsFromBuckets = body.buckets.reduce((sum, bucket) => sum + bucket.countTotal, 0);
       expect(totalLogsFromBuckets).toEqual(2);
     });
 
     it('groups logs by all available levels', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -271,13 +269,15 @@ describe('LogCoreController (analytics)', () => {
           endDate: endTime.toISOString(),
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       // then
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(7);
-      expect(response.body.bucketSizeMinutes).toEqual(1); // 15 minutes should select 1-minute buckets
+      expect(body.totalLogs).toEqual(7);
+      expect(body.bucketSizeMinutes).toEqual(1); // 15 minutes should select 1-minute buckets
 
       // Verify all log levels are properly counted across buckets
-      const totalCounts = response.body.buckets.reduce(
+      const totalCounts = body.buckets.reduce(
         (totals, bucket) => ({
           [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
           [LogLevel.Warning]: totals[LogLevel.Warning] + bucket.countByLevel[LogLevel.Warning],
@@ -313,7 +313,7 @@ describe('LogCoreController (analytics)', () => {
     it('auto-selects larger buckets for longer time ranges', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 20);
       const startTime = baseTime;
@@ -347,11 +347,13 @@ describe('LogCoreController (analytics)', () => {
           endDate: endTime.toISOString(),
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       // then - 16 hours should select hour-based buckets to stay under 30 buckets
       expect(response.status).toEqual(200);
-      expect(response.body.bucketSizeMinutes).toEqual(60); // 1-hour buckets
-      expect(response.body.buckets.length).toEqual(17);
-      expect(response.body.totalLogs).toEqual(2);
+      expect(body.bucketSizeMinutes).toEqual(60); // 1-hour buckets
+      expect(body.buckets.length).toEqual(17);
+      expect(body.totalLogs).toEqual(2);
     });
 
     it('returns empty results when no logs exist', async () => {
@@ -371,10 +373,12 @@ describe('LogCoreController (analytics)', () => {
           endDate: endTime.toISOString(),
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       // then
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(0);
-      expect(response.body.buckets).toHaveLength(13); // 13 * 5 minute buckets
+      expect(body.totalLogs).toEqual(0);
+      expect(body.buckets).toHaveLength(13); // 13 * 5 minute buckets
     });
 
     it('throws 403 when user is not a member of cluster', async () => {
@@ -402,7 +406,7 @@ describe('LogCoreController (analytics)', () => {
     it('respects retention cutoff for free tier projects', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const now = new Date();
       const twentyFiveHoursAgo = subHours(now, 25);
@@ -444,12 +448,14 @@ describe('LogCoreController (analytics)', () => {
           endDate: now.toISOString(),
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       // then - should only include logs within 24h retention period
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(2);
+      expect(body.totalLogs).toEqual(2);
 
       // verify only logs from within retention period are included
-      const totalCounts = response.body.buckets.reduce(
+      const totalCounts = body.buckets.reduce(
         (totals, bucket) => ({
           [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
           [LogLevel.Warning]: totals[LogLevel.Warning] + bucket.countByLevel[LogLevel.Warning],
@@ -473,7 +479,7 @@ describe('LogCoreController (analytics)', () => {
     it('filters analytics by multiple levels', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -522,11 +528,13 @@ describe('LogCoreController (analytics)', () => {
           levels: [LogLevel.Error, LogLevel.Warning],
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       // then
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(2);
+      expect(body.totalLogs).toEqual(2);
 
-      const totalCounts = response.body.buckets.reduce(
+      const totalCounts = body.buckets.reduce(
         (totals, bucket) => ({
           [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
           [LogLevel.Warning]: totals[LogLevel.Warning] + bucket.countByLevel[LogLevel.Warning],
@@ -553,7 +561,7 @@ describe('LogCoreController (analytics)', () => {
     it('returns all levels when no levels filter provided', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -587,15 +595,17 @@ describe('LogCoreController (analytics)', () => {
           endDate: endTime.toISOString(),
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       // then - all logs returned
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(2);
+      expect(body.totalLogs).toEqual(2);
     });
 
     it('filters analytics by single level in levels array', async () => {
       // given
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -630,11 +640,13 @@ describe('LogCoreController (analytics)', () => {
           levels: [LogLevel.Error],
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       // then
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(1);
+      expect(body.totalLogs).toEqual(1);
 
-      const totalCounts = response.body.buckets.reduce(
+      const totalCounts = body.buckets.reduce(
         (totals, bucket) => ({
           [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
           [LogLevel.Error]: totals[LogLevel.Error] + bucket.countByLevel[LogLevel.Error],
@@ -654,7 +666,7 @@ describe('LogCoreController (analytics)', () => {
 
     it('filters analytics by single namespace', async () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -698,13 +710,15 @@ describe('LogCoreController (analytics)', () => {
           namespaces: ['api'],
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(1);
+      expect(body.totalLogs).toEqual(1);
     });
 
     it('filters analytics by multiple namespaces', async () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -748,13 +762,15 @@ describe('LogCoreController (analytics)', () => {
           namespaces: ['api', 'worker'],
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(2);
+      expect(body.totalLogs).toEqual(2);
     });
 
     it('combines namespace and level filters', async () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -799,10 +815,12 @@ describe('LogCoreController (analytics)', () => {
           levels: [LogLevel.Error],
         });
 
-      expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(1);
+      const body = response.body as LogAnalyticsResponse;
 
-      const totalCounts = response.body.buckets.reduce(
+      expect(response.status).toEqual(200);
+      expect(body.totalLogs).toEqual(1);
+
+      const totalCounts = body.buckets.reduce(
         (totals, bucket) => ({
           [LogLevel.Info]: totals[LogLevel.Info] + bucket.countByLevel[LogLevel.Info],
           [LogLevel.Error]: totals[LogLevel.Error] + bucket.countByLevel[LogLevel.Error],
@@ -822,7 +840,7 @@ describe('LogCoreController (analytics)', () => {
 
     it('returns all logs when no namespace filter provided', async () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -856,13 +874,15 @@ describe('LogCoreController (analytics)', () => {
           endDate: endTime.toISOString(),
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(2);
+      expect(body.totalLogs).toEqual(2);
     });
 
     it('filters analytics by single word search string', async () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -903,13 +923,15 @@ describe('LogCoreController (analytics)', () => {
           searchString: 'logged',
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(2);
+      expect(body.totalLogs).toEqual(2);
     });
 
     it('filters analytics by multiple words search string', async () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -950,13 +972,15 @@ describe('LogCoreController (analytics)', () => {
           searchString: 'User logged',
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(2);
+      expect(body.totalLogs).toEqual(2);
     });
 
     it('filters analytics case-insensitively by search string', async () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -997,13 +1021,15 @@ describe('LogCoreController (analytics)', () => {
           searchString: 'user',
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(2);
+      expect(body.totalLogs).toEqual(2);
     });
 
     it('combines search string with level and namespace filters', async () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -1057,13 +1083,15 @@ describe('LogCoreController (analytics)', () => {
           namespaces: ['auth'],
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(1);
+      expect(body.totalLogs).toEqual(1);
     });
 
     it('returns all logs when no search string filter provided', async () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const logWriteService = await bootstrap.app.get(LogWriteService);
+      const logWriteService = bootstrap.app.get(LogWriteService);
 
       const baseTime = subHours(new Date(), 12);
       const startTime = baseTime;
@@ -1096,8 +1124,10 @@ describe('LogCoreController (analytics)', () => {
           endDate: endTime.toISOString(),
         });
 
+      const body = response.body as LogAnalyticsResponse;
+
       expect(response.status).toEqual(200);
-      expect(response.body.totalLogs).toEqual(2);
+      expect(body.totalLogs).toEqual(2);
     });
   });
 });

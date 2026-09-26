@@ -9,10 +9,11 @@ import { LogTtlService } from '../../src/log/ttl/log-ttl.service';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { createTestApp } from '../utils/bootstrap';
 import { removeKeysWhichWouldExpireInNextXSeconds } from '../utils/redis-test-container-server';
-import { sleep } from '../utils/sleep';
+import { waitFor } from '../utils/wait-for';
 import { subDays } from 'date-fns';
 import { ClickHouseClient } from '@clickhouse/client';
 import { LogWriteService } from '../../src/log/write/log-write.service';
+import { SuccessResponse } from '../../src/shared/responses/success.response';
 
 describe('LogCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -31,8 +32,8 @@ describe('LogCoreController (writes)', () => {
 
   it('removes old partitions', async () => {
     // given
-    const logWriteService = await bootstrap.app.get(LogWriteService);
-    const ttlService = await bootstrap.app.get(LogTtlService);
+    const logWriteService = bootstrap.app.get(LogWriteService);
+    const ttlService = bootstrap.app.get(LogTtlService);
 
     // 33 days ago
     await logWriteService.create({
@@ -74,7 +75,7 @@ describe('LogCoreController (writes)', () => {
       query: `SELECT count() FROM logs`,
     });
 
-    const countBefore = ((await dataBefore.json()) as any).data[0]['count()'];
+    const countBefore = (await dataBefore.json<{ 'count()': string }>()).data[0]['count()'];
 
     await ttlService.removeOldLogs();
 
@@ -82,13 +83,13 @@ describe('LogCoreController (writes)', () => {
       query: `SELECT count() FROM logs`,
     });
 
-    const countAfter = ((await dataAfter.json()) as any).data[0]['count()'];
+    const countAfter = (await dataAfter.json<{ 'count()': string }>()).data[0]['count()'];
 
     expect(Number(countAfter)).toEqual(Number(countBefore) - 1);
   });
 
   it('applies rate limit', async () => {
-    const redisService = await bootstrap.app.get(RedisService);
+    const redisService = bootstrap.app.get(RedisService);
 
     // given
     const { apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -100,7 +101,7 @@ describe('LogCoreController (writes)', () => {
       level: LogLevel.Info,
     };
 
-    const logRateLimitService = await bootstrap.app.get(LogRateLimitService);
+    const logRateLimitService = bootstrap.app.get(LogRateLimitService);
 
     // when
     await logRateLimitService.requireWithinLimit(apiKey.projectId); // add 1 log
@@ -110,7 +111,9 @@ describe('LogCoreController (writes)', () => {
     for (let i = 0; i < 9999; i++) {
       try {
         await logRateLimitService.requireWithinLimit(apiKey.projectId);
-      } catch {}
+      } catch {
+        continue;
+      }
     }
 
     const response = await request(bootstrap.app.getHttpServer())
@@ -190,13 +193,14 @@ describe('LogCoreController (writes)', () => {
         .set('project-api-key', apiKey.value)
         .send(batchDto);
 
-      expect(response.body.success).toEqual(true);
+      expect((response.body as SuccessResponse).success).toEqual(true);
       expect(response.status).toEqual(201);
 
-      await sleep(1_500);
-
       // then
-      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+      const logs = await waitFor(
+        () => bootstrap.utils.logUtils.readLogs(project.id),
+        (read) => read.length >= 3,
+      );
 
       expect(logs).toHaveLength(3);
       expect(logs.find((log) => log.message === 'test message 1')).toBeDefined();
@@ -253,19 +257,21 @@ describe('LogCoreController (writes)', () => {
     });
 
     it('applies rate limit for batch logs', async () => {
-      const redisService = await bootstrap.app.get(RedisService);
+      const redisService = bootstrap.app.get(RedisService);
 
       // given
       const { apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();
       const date = new Date();
 
-      const logRateLimitService = await bootstrap.app.get(LogRateLimitService);
+      const logRateLimitService = bootstrap.app.get(LogRateLimitService);
 
       // when - fill up most of the rate limit
       for (let i = 0; i < 9995; i++) {
         try {
           await logRateLimitService.requireWithinLimit(apiKey.projectId);
-        } catch {}
+        } catch {
+          continue;
+        }
       }
 
       // Create a batch that would exceed the rate limit
@@ -318,9 +324,10 @@ describe('LogCoreController (writes)', () => {
 
       expect(response.status).toEqual(201);
 
-      await sleep(1_500);
-
-      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+      const logs = await waitFor(
+        () => bootstrap.utils.logUtils.readLogs(project.id),
+        (read) => read.length >= 1,
+      );
 
       expect(logs).toHaveLength(1);
       expect(logs[0].namespace).toEqual('api');
@@ -360,9 +367,10 @@ describe('LogCoreController (writes)', () => {
 
       expect(response.status).toEqual(201);
 
-      await sleep(1_500);
-
-      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+      const logs = await waitFor(
+        () => bootstrap.utils.logUtils.readLogs(project.id),
+        (read) => read.length >= 3,
+      );
 
       expect(logs).toHaveLength(3);
       expect(logs.find((log) => log.namespace === 'api')).toBeDefined();
@@ -387,9 +395,10 @@ describe('LogCoreController (writes)', () => {
 
       expect(response.status).toEqual(201);
 
-      await sleep(1_500);
-
-      const logs = await bootstrap.utils.logUtils.readLogs(project.id);
+      const logs = await waitFor(
+        () => bootstrap.utils.logUtils.readLogs(project.id),
+        (read) => read.length >= 1,
+      );
 
       expect(logs).toHaveLength(1);
       expect(logs[0].namespace).toBeUndefined();

@@ -10,6 +10,7 @@ import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { CUSTOM_DNS_LOGGER } from '../../shared/logdash/logdash-tokens';
+import { errorMessage } from '../../shared/utils/error-message';
 
 const MAX_ATTEMPTS = 60;
 
@@ -30,7 +31,13 @@ export class CustomDomainRegistrationService {
     for (const domain of domainsToVerify) {
       try {
         await this.verifyDomain(domain.id, domain.domain, domain.attemptCount);
-      } catch (error) {}
+      } catch (error) {
+        this.logger.error('Verifying domain failed', {
+          domainId: domain.id,
+          domain: domain.domain,
+          error: errorMessage(error),
+        });
+      }
     }
   }
 
@@ -110,7 +117,7 @@ export class CustomDomainRegistrationService {
     } catch (error) {
       this.logger.error('Pinging domain failed', {
         domain,
-        error: error.message,
+        error: errorMessage(error),
       });
     }
   }

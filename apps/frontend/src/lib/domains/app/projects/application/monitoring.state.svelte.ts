@@ -11,6 +11,7 @@ import type {
 } from '$lib/domains/app/projects/domain/monitoring/http-ping.js';
 import { httpClient } from '$lib/domains/shared/http/http-client.js';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 import {
   monitoringService,
   type CreateMonitorDto,
@@ -36,7 +37,7 @@ class MonitoringState {
   private _timeRange = $state<PingBucketPeriod>('90d');
   private syncConnection: EventSource | null = null;
   private _shouldReconnect = true;
-  private _unsubscribe: () => void | null = null;
+  private _unsubscribe: (() => void) | null = null;
   private _loadingPage = $state(false);
   private _pingsAbortControllers = new Map<string, AbortController>();
 
@@ -55,7 +56,7 @@ class MonitoringState {
   setTimeRange(period: PingBucketPeriod): void {
     this._timeRange = period;
     this._saveTimeRangePreference(period);
-    this.reloadAllPingBuckets();
+    void this.reloadAllPingBuckets();
   }
 
   private _loadTimeRangePreference(): PingBucketPeriod {
@@ -181,7 +182,7 @@ class MonitoringState {
     }
   }
 
-  getMonitorByProjectId(projectId: string): Monitor {
+  getMonitorByProjectId(projectId: string): Monitor | undefined {
     return this.monitors.find((monitor) => monitor.projectId === projectId);
   }
 
@@ -228,7 +229,7 @@ class MonitoringState {
   load(clusterId: string): void {
     logger.debug('loading monitors...');
     this._loadingPage = true;
-    this._fetchMonitors(clusterId);
+    void this._fetchMonitors(clusterId);
   }
 
   loadMonitorPings(
@@ -251,25 +252,29 @@ class MonitoringState {
     return buckets;
   }
 
-  async loadPingBuckets(monitorId: string, limit: number = 60): Promise<void> {
+  async loadPingBuckets(monitorId: string): Promise<void> {
+    // Historical uptime is a paid feature; asking for it on a free plan only
+    // earns a 403 behind the upgrade overlay.
+    if (!userState.isPaid) {
+      return;
+    }
+
     this._timeRange = this._loadTimeRangePreference();
     try {
       const response = await monitoringService.getPingBuckets(
         monitorId,
         this._timeRange,
       );
-      // Backend returns newest-first, chart expects oldest-first (left = old, right = now)
       this._pingBuckets[monitorId] = response.buckets.reverse();
     } catch (error) {
       logger.error('Failed to load ping buckets:', error);
-      throw new Error('Failed to load ping buckets');
     }
   }
 
   async reloadAllPingBuckets(): Promise<void> {
     const monitorIds = Object.keys(this._monitors);
     const promises = monitorIds.map((monitorId) =>
-      this.loadPingBuckets(monitorId, 60),
+      this.loadPingBuckets(monitorId),
     );
 
     await Promise.allSettled(promises);
@@ -435,16 +440,42 @@ class MonitoringState {
   }
 
   async claimMonitor(httpMonitorId: string): Promise<Monitor> {
-    const claimedMonitor = await monitoringService.claimMonitor(httpMonitorId);
+    await monitoringService.claimMonitor(httpMonitorId);
 
-    this._monitors[claimedMonitor.id] = claimedMonitor;
-    delete this._unclaimedMonitors[claimedMonitor.id];
+    const claimedMonitor = await this._readClaimedMonitor(httpMonitorId);
 
-    if (!this._monitorPings[claimedMonitor.id]) {
-      this._monitorPings[claimedMonitor.id] = [];
+    this._monitors[httpMonitorId] = claimedMonitor;
+    delete this._unclaimedMonitors[httpMonitorId];
+
+    if (!this._monitorPings[httpMonitorId]) {
+      this._monitorPings[httpMonitorId] = [];
     }
 
     return claimedMonitor;
+  }
+
+  private async _readClaimedMonitor(httpMonitorId: string): Promise<Monitor> {
+    const cachedMonitor =
+      this._unclaimedMonitors[httpMonitorId] ?? this._monitors[httpMonitorId];
+    const projectId = cachedMonitor?.projectId;
+
+    if (!projectId) {
+      return cachedMonitor;
+    }
+
+    try {
+      const projectMonitors =
+        await monitoringService.getMonitorsByProject(projectId);
+
+      return (
+        projectMonitors.find((monitor) => monitor.id === httpMonitorId) ??
+        cachedMonitor
+      );
+    } catch (error) {
+      logger.error('Failed to read the claimed monitor:', error);
+
+      return cachedMonitor;
+    }
   }
 
   async updateMonitor(
@@ -485,12 +516,12 @@ class MonitoringState {
         },
       );
 
-      const onOpen = (event) => {
+      const onOpen = (event: Event): void => {
         logger.debug('monitor SSE opened', event);
         resolve();
       };
 
-      const onError = (event) => {
+      const onError = (event: Event): void => {
         logger.error('Monitor SSE connection error:', event);
 
         this._unsubscribe?.();
@@ -499,7 +530,7 @@ class MonitoringState {
           logger.debug('Attempting to reconnect monitors in 3 seconds...');
           setTimeout(() => {
             if (this._shouldReconnect) {
-              this._openMonitorStream(clusterId);
+              void this._openMonitorStream(clusterId);
             }
           }, 3000);
         }
@@ -507,10 +538,10 @@ class MonitoringState {
         reject(new Error('Monitor SSE connection failed'));
       };
 
-      const onMessage = (event) => {
+      const onMessage = (event: MessageEvent<string>): void => {
         try {
           logger.info('new monitor SSE message:', event);
-          const pingData: HttpPingCreatedEvent = JSON.parse(event.data);
+          const pingData = JSON.parse(event.data) as HttpPingCreatedEvent;
 
           if (!this._monitorPings[pingData.httpMonitorId]) {
             this._monitorPings[pingData.httpMonitorId] = [];
@@ -521,7 +552,6 @@ class MonitoringState {
             createdAt: new Date(pingData.createdAt),
           });
 
-          // Update status for both claimed and unclaimed monitors
           if (this._monitors[pingData.httpMonitorId]) {
             this._monitors[pingData.httpMonitorId].lastStatusCode =
               pingData.statusCode;
@@ -562,10 +592,7 @@ class MonitoringState {
       const data = await monitoringService.getMonitors(clusterId);
       const newMonitors = arrayToObject<Monitor>(data, 'id');
 
-      for (const [id, monitor] of Object.entries(newMonitors) as [
-        string,
-        Monitor,
-      ][]) {
+      for (const [id, monitor] of Object.entries(newMonitors)) {
         if (!this._monitors[id]) {
           this._monitors[id] = monitor;
         }
@@ -621,7 +648,7 @@ class MonitoringState {
       if (error instanceof Error && error.name === 'CanceledError') {
         return;
       }
-      throw error;
+      logger.error('Failed to load monitor pings:', error);
     } finally {
       if (this._pingsAbortControllers.get(monitorId) === controller) {
         this._pingsAbortControllers.delete(monitorId);

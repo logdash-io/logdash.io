@@ -6,7 +6,7 @@ import {
 
 export interface GraphReadyPoint {
   x: string;
-  y: number;
+  y: number | null;
 }
 
 export function formatDateWithGranularity(
@@ -36,7 +36,7 @@ export function tryEnrichRawPointsWithMetrics(
   const firstKnownDate = metrics[0]?.date || null;
 
   // here we try to match data from API to the prepared buckets
-  const enrichedPoints = rawPoints.map((point) => {
+  const enrichedPoints = rawPoints.map((point): MetricDataPoint => {
     const metric = metrics.find((metric) => metric.date === point.date);
     return {
       ...point,
@@ -147,7 +147,7 @@ export function convertRawPointsToGraphReadyPoints(
 ): GraphReadyPoint[] {
   return rawPoints.map((point) => ({
     x: getDateToDisplayOnGraph(point.date, granularity),
-    y: point.value,
+    y: point.value ?? null,
   }));
 }
 

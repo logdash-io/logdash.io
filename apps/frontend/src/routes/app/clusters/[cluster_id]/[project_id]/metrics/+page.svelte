@@ -1,15 +1,18 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { page } from '$app/state';
+  import { resolve } from '$app/paths';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
   import MetricDetails from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricDetails.svelte';
   import UnifiedSetupOverlay from '$lib/domains/app/projects/ui/setup/UnifiedSetupOverlay.svelte';
+  import type { PageProps } from './$types';
 
-  const clusterId = $derived(page.params.cluster_id);
-  const projectId = $derived(page.params.project_id);
+  const { params }: PageProps = $props();
+
+  const clusterId = $derived(params.cluster_id);
+  const projectId = $derived(params.project_id);
 
   $effect(() => {
     if (!metricsState.ready || metricsState.isUsingFakeData) {
@@ -26,9 +29,14 @@
       return;
     }
 
-    goto(`/app/clusters/${clusterId}/${projectId}/metrics/${metricToPreview}`, {
-      replaceState: true,
-    });
+    void goto(
+      resolve('/app/clusters/[cluster_id]/[project_id]/metrics/[metric_id]', {
+        cluster_id: clusterId,
+        project_id: projectId,
+        metric_id: metricToPreview,
+      }),
+      { replaceState: true },
+    );
   });
 </script>
 

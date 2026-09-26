@@ -44,7 +44,7 @@ export class StripeController {
   ): Promise<void> {
     this.logger.log(`Received stripe webhook event`);
 
-    const event = await this.stripeEventsHandler.decryptEvent(req.rawBody, stripeSignature);
+    const event = this.stripeEventsHandler.decryptEvent(req.rawBody, stripeSignature);
 
     if (!event) {
       this.logger.error(`Failed to decrypt stripe webhook event`);

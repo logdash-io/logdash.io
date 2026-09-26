@@ -1,10 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
   import { DangerIcon, CheckIcon } from '@logdash/hyper-ui/icons';
+  import { Spinner } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     projectId: string;
@@ -45,25 +47,37 @@
 
   function onBadgeClick(e: MouseEvent): void {
     e.stopPropagation();
+
+    if (!clusterId) {
+      return;
+    }
+
     filtersStore.setLevels(['error']);
-    goto(`/app/clusters/${clusterId}/${projectId}/logs`);
+    void goto(
+      resolve('/app/clusters/[cluster_id]/[project_id]/logs', {
+        cluster_id: clusterId,
+        project_id: projectId,
+      }),
+    );
   }
 
   onMount(() => {
-    fetchErrorCount();
-    const interval = setInterval(fetchErrorCount, POLL_INTERVAL_MS);
+    void fetchErrorCount();
+    const interval = setInterval(() => {
+      void fetchErrorCount();
+    }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   });
 </script>
 
 {#if loading}
   <div class="size-6 flex items-center justify-center">
-    <div class="loading loading-spinner w-3.5 text-base-content/60"></div>
+    <Spinner class="size-3.5 text-neutral-400" />
   </div>
 {:else if errorCount > 0}
   <button
     onclick={onBadgeClick}
-    class="flex items-center gap-1.5 rounded-lg bg-error/10 px-2 py-1 transition-colors hover:bg-error/20 cursor-pointer"
+    class="flex items-center gap-1.5 rounded-lg bg-error/10 px-2 py-1 hover:bg-error/20 cursor-pointer"
   >
     <DangerIcon class="size-3 text-error" />
     <span class="text-xs text-error">{errorLabel}</span>

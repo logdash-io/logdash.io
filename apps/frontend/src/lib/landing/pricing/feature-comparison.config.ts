@@ -4,9 +4,9 @@ export const FEATURES_COMPARISON = {
   title: 'Compare Plans',
   plans: [
     { name: 'Hobby', price: 'Free', tier: UserTier.FREE },
-    { name: 'Builder', price: '9$/month', tier: UserTier.BUILDER },
+    { name: 'Builder', price: '$9/month', tier: UserTier.BUILDER },
     { name: 'Pro', price: '$15/month', tier: UserTier.PRO },
-  ],
+  ] as const,
   sections: [
     {
       name: 'Projects',
@@ -193,12 +193,6 @@ export const FEATURES_COMPARISON = {
       icon: '⚡',
       features: [
         {
-          name: 'Space background',
-          [UserTier.FREE]: false,
-          [UserTier.BUILDER]: false,
-          [UserTier.PRO]: true,
-        },
-        {
           name: 'Multiple Collaborators',
           [UserTier.FREE]: '1 extra user per project',
           [UserTier.BUILDER]: '2 extra users per project',
@@ -221,12 +215,6 @@ export const FEATURES_COMPARISON = {
           [UserTier.FREE]: false,
           [UserTier.BUILDER]: false,
           [UserTier.PRO]: 'Coming soon',
-        },
-        {
-          name: 'Custom status page domain',
-          [UserTier.FREE]: false,
-          [UserTier.BUILDER]: false,
-          [UserTier.PRO]: true,
         },
       ],
     },

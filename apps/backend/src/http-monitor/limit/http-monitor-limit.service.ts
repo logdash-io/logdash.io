@@ -3,6 +3,8 @@ import { HttpMonitorReadService } from '../read/http-monitor-read.service';
 import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 
+const MAX_UNCLAIMED_MONITORS_PER_PROJECT = 3;
+
 @Injectable()
 export class HttpMonitorLimitService {
   constructor(
@@ -14,10 +16,14 @@ export class HttpMonitorLimitService {
     const notClaimedMonitorsCount =
       await this.httpMonitorReadService.countNotClaimedByProjectId(projectId);
 
-    if (notClaimedMonitorsCount > 100) {
+    if (notClaimedMonitorsCount + 1 > MAX_UNCLAIMED_MONITORS_PER_PROJECT) {
       return false;
     }
 
+    return this.hasClaimedCapacity(projectId);
+  }
+
+  public async hasClaimedCapacity(projectId: string): Promise<boolean> {
     const claimedMonitorsCount =
       await this.httpMonitorReadService.countClaimedByProjectId(projectId);
     const project = await this.projectReadCachedService.readProject(projectId);

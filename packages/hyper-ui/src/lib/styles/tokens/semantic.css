@@ -1,0 +1,35 @@
+:root {
+  --surface-root: var(--color-neutral-950);
+  --surface-elevated: var(--color-neutral-900);
+  --surface-100: var(--color-neutral-800);
+  --surface-150: var(--color-neutral-700);
+  --surface-well: var(--color-neutral-950);
+  --surface-hover: var(--color-neutral-900);
+  --surface-inverse: var(--color-neutral-100);
+  --surface-inverse-hover: var(--color-neutral-200);
+
+  --fg-default: var(--color-neutral-100);
+  --fg-secondary: var(--color-neutral-400);
+  --fg-muted: var(--color-neutral-500);
+  --fg-faint: var(--color-neutral-600);
+
+  --border-subtle: var(--color-hairline-dark);
+  --border-default: var(--color-neutral-800);
+  --border-strong: var(--color-neutral-700);
+  --hairline: var(--border-subtle);
+
+  --brand: var(--color-neutral-100);
+
+  --error: var(--color-red-600);
+  --error-bg: oklch(from var(--error) l c h / 0.15);
+  --error-bg-hover: oklch(from var(--error) l c h / 0.25);
+  --success: var(--color-green-600);
+  --warning: var(--color-amber-500);
+  --info: var(--color-blue-600);
+
+  --focus-ring: 0 0 0 3px color-mix(in oklab, var(--brand) 15%, transparent);
+  --focus-ring-error: 0 0 0 3px
+    color-mix(in oklab, var(--error) 20%, transparent);
+
+  color-scheme: dark;
+}

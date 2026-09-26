@@ -12,7 +12,7 @@ export class TelegramSetupService {
   constructor(private readonly redisService: RedisService) {}
 
   public async getChatInfoForPassphrase(passphrase: string): Promise<TelegramChatInfo | null> {
-    const redisKey = await this.getRedisKeyForPassphrase(passphrase);
+    const redisKey = this.getRedisKeyForPassphrase(passphrase);
 
     const chatInfo = await this.redisService.get(redisKey);
 
@@ -20,7 +20,7 @@ export class TelegramSetupService {
       return null;
     }
 
-    return JSON.parse(chatInfo);
+    return JSON.parse(chatInfo) as TelegramChatInfo;
   }
 
   public async webhookUpdate(update: TelegramUpdateDto, secret: string): Promise<void> {
@@ -37,15 +37,15 @@ export class TelegramSetupService {
 
     const chatInfo: TelegramChatInfo = {
       id: update.message.chat.id.toString(),
-      name: await this.getChatNameFromUpdate(update),
+      name: this.getChatNameFromUpdate(update),
     };
 
-    const redisKey = await this.getRedisKeyForPassphrase(update.message.text);
+    const redisKey = this.getRedisKeyForPassphrase(update.message.text);
 
     await this.redisService.set(redisKey, JSON.stringify(chatInfo), PASSPHRASE_BIND_TTL_SECONDS);
   }
 
-  private async getChatNameFromUpdate(update: TelegramUpdateDto): Promise<string> {
+  private getChatNameFromUpdate(update: TelegramUpdateDto): string {
     if (update.message?.chat.title) {
       return update.message.chat.title;
     }
@@ -65,7 +65,7 @@ export class TelegramSetupService {
     return '';
   }
 
-  private async getRedisKeyForPassphrase(passphrase: string): Promise<string> {
+  private getRedisKeyForPassphrase(passphrase: string): string {
     return `notification-channel-setup:telegram:${passphrase}`;
   }
 }

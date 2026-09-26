@@ -7,6 +7,7 @@ import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.se
 import { LogIndexingService } from '../indexing/log-indexing.service';
 import { CreateLogDto } from '../write/dto/create-log.dto';
 import { LogWriteService } from '../write/log-write.service';
+import { errorMessage } from '../../shared/utils/error-message';
 @Injectable()
 export class LogIngestionService {
   constructor(
@@ -18,14 +19,21 @@ export class LogIngestionService {
   ) {}
 
   public async createLogs(dtos: CreateLogDto[]): Promise<void> {
-    const enrichedCreateDtos = await this.logIndexingService.enrichWithIndexes(dtos);
+    let enrichedCreateDtos: CreateLogDto[];
+
+    try {
+      enrichedCreateDtos = await this.logIndexingService.enrichWithIndexes(dtos);
+    } catch (error) {
+      this.logger.error('Error indexing logs', { errorMessage: errorMessage(error) });
+      return;
+    }
 
     const currentTime = Date.now();
 
     try {
       await this.logWriteClickhouseService.createMany(enrichedCreateDtos);
     } catch (error) {
-      this.logger.error('Error creating logs', { errorMessage: error.message });
+      this.logger.error('Error creating logs', { errorMessage: errorMessage(error) });
     }
 
     const durationInMs = Date.now() - currentTime;

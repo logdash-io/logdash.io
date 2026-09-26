@@ -1,9 +1,12 @@
+import { expect } from '@jest/globals';
 import * as nock from 'nock';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
+import { HttpPingNormalized } from '../../src/http-ping/core/entities/http-ping.interface';
 
 describe('Http Ping (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -178,6 +181,68 @@ describe('Http Ping (writes)', () => {
     expect(allPings.length).toBe(1);
   });
 
+  it('writes nothing when every monitor is claimed', async () => {
+    // given
+    const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous({
+      userTier: UserTier.EarlyBird,
+    });
+    await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+      token,
+      projectId: project.id,
+    });
+
+    // when
+    await schedulerService.tryPingUnclaimedMonitors();
+
+    // then
+    expect(await bootstrap.utils.httpPingUtils.getAllPings()).toHaveLength(0);
+  });
+
+  it('pings unclaimed pull monitors of every project and skips unclaimed push monitors', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous({
+      userTier: UserTier.EarlyBird,
+    });
+    const otherProject = await bootstrap.utils.projectUtils.createDefaultProject({
+      userId: setup.user.id,
+      clusterId: setup.cluster.id,
+      tier: ProjectTier.Free,
+    });
+
+    const unclaimedPullMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+      projectId: setup.project.id,
+      name: 'Unclaimed pull monitor',
+      url: URL_STUB,
+    });
+    const unclaimedPullMonitorInOtherProject =
+      await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        projectId: otherProject.id,
+        name: 'Unclaimed pull monitor in another project',
+        url: URL_STUB,
+      });
+    const unclaimedPushMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+      projectId: setup.project.id,
+      name: 'Unclaimed push monitor',
+      url: URL_STUB,
+      mode: HttpMonitorMode.Push,
+    });
+
+    // when
+    await schedulerService.tryPingUnclaimedMonitors();
+
+    // then
+    const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
+
+    expect(allPings.map((ping) => ping.httpMonitorId).sort()).toEqual(
+      [unclaimedPullMonitor.id, unclaimedPullMonitorInOtherProject.id].sort(),
+    );
+    expect(
+      await bootstrap.utils.httpPingUtils.getMonitorPings({
+        httpMonitorId: unclaimedPushMonitor.id,
+      }),
+    ).toHaveLength(0);
+  });
+
   it('pings unclaimed monitors with dedicated method', async () => {
     // given
     const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous({
@@ -250,5 +315,53 @@ describe('Http Ping (writes)', () => {
 
     // Verify the ping was created for the claimed monitor only
     expect(allPings[0].httpMonitorId).toBe(claimedMonitor.id);
+  });
+
+  describe('when the request never gets a response', () => {
+    async function pingOnce(url: string): Promise<HttpPingNormalized> {
+      const { project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const monitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        projectId: project.id,
+        url,
+        claimed: true,
+      });
+
+      await schedulerService.pingSingleMonitor(monitor.id);
+
+      const [ping] = await bootstrap.utils.httpPingUtils.getMonitorPings({
+        httpMonitorId: monitor.id,
+      });
+      return ping;
+    }
+
+    it('describes blocked and unresolvable hosts the same way, without the address', async () => {
+      // when
+      const blockedPing = await pingOnce('http://10.1.2.3/');
+      const missingPing = await pingOnce('https://missing.invalid/');
+
+      // then
+      expect(blockedPing).toMatchObject({
+        statusCode: 0,
+        message: 'Hostname does not resolve to a public address',
+      });
+      expect(missingPing.message).toBe(blockedPing.message);
+      expect(blockedPing.message).not.toContain('10.1.2.3');
+    });
+
+    it('names the network failure instead of passing on the raw error', async () => {
+      // given
+      const url = 'https://example.org';
+      nock(url)
+        .get('/')
+        .replyWithError(
+          Object.assign(new Error('connect ECONNREFUSED 10.9.9.9:443'), { code: 'ECONNREFUSED' }),
+        );
+
+      // when
+      const ping = await pingOnce(url);
+
+      // then
+      expect(ping).toMatchObject({ statusCode: 0, message: 'Connection refused' });
+    });
   });
 });

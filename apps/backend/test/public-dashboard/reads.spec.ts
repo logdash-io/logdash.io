@@ -4,6 +4,10 @@ import { PublicDashboardSerialized } from '../../src/public-dashboard/core/entit
 import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
+interface MessageResponse {
+  message: string;
+}
+
 describe('PublicDashboardCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
 
@@ -39,7 +43,7 @@ describe('PublicDashboardCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       // then
-      const dashboards: PublicDashboardSerialized[] = response.body;
+      const dashboards = response.body as PublicDashboardSerialized[];
       expect(dashboards).toHaveLength(1);
 
       expect(dashboards[0].clusterId).toBe(cluster.id);
@@ -112,7 +116,7 @@ describe('PublicDashboardCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       // then
-      const dashboards: PublicDashboardSerialized[] = response.body;
+      const dashboards = response.body as PublicDashboardSerialized[];
       expect(dashboards).toHaveLength(1);
 
       expect(dashboards[0].customDomain).toBeDefined();
@@ -142,7 +146,7 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      const dashboard: PublicDashboardSerialized = response.body;
+      const dashboard = response.body as PublicDashboardSerialized;
 
       expect(dashboard.id).toBe(publicDashboard.id);
       expect(dashboard.clusterId).toBe(cluster.id);
@@ -200,7 +204,7 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      const dashboard: PublicDashboardSerialized = response.body;
+      const dashboard = response.body as PublicDashboardSerialized;
 
       expect(dashboard.customDomain).toBeDefined();
       expect(dashboard.customDomain?.domain).toEqual('piety.papieza.com');
@@ -227,7 +231,7 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      const dashboard: PublicDashboardSerialized = response.body;
+      const dashboard = response.body as PublicDashboardSerialized;
 
       expect(dashboard.customDomain).toBeUndefined();
     });
@@ -262,7 +266,7 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.message).toBe('OK');
+      expect((response.body as MessageResponse).message).toBe('OK');
     });
 
     it('returns 403 when domain is not verified', async () => {
@@ -289,7 +293,7 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       // then
       expect(response.status).toBe(403);
-      expect(response.body.message).toBe('Domain not verified');
+      expect((response.body as MessageResponse).message).toBe('Domain not verified');
     });
 
     it('returns 403 when domain does not exist', async () => {
@@ -300,7 +304,7 @@ describe('PublicDashboardCoreController (reads)', () => {
 
       // then
       expect(response.status).toBe(403);
-      expect(response.body.message).toBe('Domain not verified');
+      expect((response.body as MessageResponse).message).toBe('Domain not verified');
     });
   });
 });

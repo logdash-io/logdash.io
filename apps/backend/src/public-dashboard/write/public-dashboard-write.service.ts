@@ -51,7 +51,13 @@ export class PublicDashboardWriteService {
       updateQuery.isPublic = dto.isPublic;
     }
 
-    const entity = await this.publicDashboardModel.findByIdAndUpdate(dto.id, dto, { new: true });
+    const entity = await this.publicDashboardModel.findByIdAndUpdate(dto.id, dto, {
+      returnDocument: 'after',
+    });
+
+    if (!entity) {
+      throw new Error(`Public dashboard with id ${dto.id} not found for update`);
+    }
 
     return PublicDashboardSerializer.normalize(entity);
   }

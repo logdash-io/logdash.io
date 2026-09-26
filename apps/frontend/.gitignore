@@ -24,3 +24,8 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 package-lock.json
+
+# playwright
+test-results/
+playwright-report/
+e2e/_*

@@ -1,14 +1,15 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import * as nock from 'nock';
 import { WebhookHttpMethod } from '../../src/notification-channel/core/types/webhook-options.type';
 
 export class WebhookUtils {
-  constructor(private readonly app: INestApplication<any>) {}
+  constructor(private readonly app: INestApplication<App>) {}
 
   public setUpWebhookListener(dto: {
     webhookUrl: string;
-    onMessage: (body: any, headers?: any) => void;
-  }) {
+    onMessage: (body: nock.Body, headers: Record<string, string>) => void;
+  }): void {
     const url = new URL(dto.webhookUrl);
 
     nock(`${url.protocol}//${url.host}`)
@@ -24,8 +25,8 @@ export class WebhookUtils {
   public setUpWebhookListenerWithMethod(dto: {
     webhookUrl: string;
     method: WebhookHttpMethod;
-    onMessage: (body: any, headers?: any) => void;
-  }) {
+    onMessage: (body: nock.Body, headers: Record<string, string>) => void;
+  }): void {
     const url = new URL(dto.webhookUrl);
 
     switch (dto.method) {
@@ -93,7 +94,7 @@ export class WebhookUtils {
           .persist();
         break;
       default:
-        throw new Error(`Unsupported HTTP method: ${dto.method}`);
+        throw new Error(`Unsupported HTTP method: ${String(dto.method)}`);
     }
   }
 }

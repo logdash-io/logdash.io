@@ -1,5 +1,11 @@
 <script lang="ts">
-  const { class: className } = $props();
+  import type { ClassValue } from 'svelte/elements';
+
+  type Props = {
+    class?: ClassValue;
+  };
+
+  const { class: className }: Props = $props();
 </script>
 
 <svg class={className} viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">

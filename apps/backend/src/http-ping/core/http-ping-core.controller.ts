@@ -7,6 +7,7 @@ import {
   Sse,
   UseGuards,
   UseInterceptors,
+  MessageEvent,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -63,15 +64,14 @@ export class HttpPingCoreController {
   @DemoEndpoint()
   @ApiBearerAuth()
   @Sse('clusters/:clusterId/http_pings/sse')
-  public async streamHttpMonitorPings(
-    @Param('clusterId') clusterId: string,
-  ): Promise<Observable<any>> {
+  public streamHttpMonitorPings(@Param('clusterId') clusterId: string): Observable<MessageEvent> {
     const eventStream$ = fromEvent(this.eventEmitter, HttpPingEvent.HttpPingCreatedEvent).pipe(
-      filter((data: HttpPingCreatedEvent) => data.clusterId === clusterId),
-      map((data: HttpPingCreatedEvent) => ({ data })),
+      map((data) => data as HttpPingCreatedEvent),
+      filter((data) => data.clusterId === clusterId),
+      map((data) => ({ data })),
     );
 
-    return new Observable((observer) => {
+    return new Observable<MessageEvent>((observer) => {
       const subscription = eventStream$.subscribe(observer);
 
       return () => {

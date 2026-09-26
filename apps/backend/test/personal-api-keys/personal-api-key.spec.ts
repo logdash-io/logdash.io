@@ -3,6 +3,9 @@ import { Types } from 'mongoose';
 import { createTestApp } from '../utils/bootstrap';
 import { Action } from '../../src/personal-api-key/core/enums/action.enum';
 import { Resource } from '../../src/personal-api-key/core/enums/resource.enum';
+import { CreatePersonalApiKeyResponse } from '../../src/personal-api-key/core/dto/create-personal-api-key.response';
+import { WhoamiResponse } from '../../src/personal-api-key/core/dto/whoami.response';
+import { PersonalApiKeySerialized } from '../../src/personal-api-key/core/entities/personal-api-key.interface';
 
 describe('Personal API keys (CRUD under JWT)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -39,16 +42,17 @@ describe('Personal API keys (CRUD under JWT)', () => {
         .send(createBody());
 
       expect(createResponse.status).toBe(201);
-      expect(typeof createResponse.body.value).toBe('string');
-      expect(createResponse.body.value.startsWith('ldp_')).toBe(true);
-      expect(createResponse.body.prefix).toBe(createResponse.body.value.slice(0, 12));
-      expect(createResponse.body.prefix.startsWith('ldp_')).toBe(true);
-      expect(createResponse.body.id).toBeDefined();
-      expect(createResponse.body.label).toBe('My CLI key');
-      expect(createResponse.body.scopes).toHaveLength(2);
+      const created = createResponse.body as CreatePersonalApiKeyResponse;
+      expect(typeof created.value).toBe('string');
+      expect(created.value.startsWith('ldp_')).toBe(true);
+      expect(created.prefix).toBe(created.value.slice(0, 12));
+      expect(created.prefix.startsWith('ldp_')).toBe(true);
+      expect(created.id).toBeDefined();
+      expect(created.label).toBe('My CLI key');
+      expect(created.scopes).toHaveLength(2);
 
-      const keyId = createResponse.body.id;
-      const prefix = createResponse.body.prefix;
+      const keyId = created.id;
+      const prefix = created.prefix;
 
       // list
       const listResponse = await request(bootstrap.app.getHttpServer())
@@ -56,9 +60,10 @@ describe('Personal API keys (CRUD under JWT)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(listResponse.status).toBe(200);
-      expect(listResponse.body).toHaveLength(1);
-      expect(listResponse.body[0].id).toBe(keyId);
-      expect(listResponse.body[0].prefix).toBe(prefix);
+      const keys = listResponse.body as PersonalApiKeySerialized[];
+      expect(keys).toHaveLength(1);
+      expect(keys[0].id).toBe(keyId);
+      expect(keys[0].prefix).toBe(prefix);
 
       // whoami (JWT) returns identity
       const whoamiResponse = await request(bootstrap.app.getHttpServer())
@@ -66,11 +71,12 @@ describe('Personal API keys (CRUD under JWT)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(whoamiResponse.status).toBe(200);
-      expect(whoamiResponse.body.userId).toBeDefined();
-      expect(whoamiResponse.body.access).toEqual({ kind: 'all' });
+      const whoami = whoamiResponse.body as WhoamiResponse;
+      expect(whoami.userId).toBeDefined();
+      expect(whoami.access).toEqual({ kind: 'all' });
       // JWT is implicitly all-access
-      expect(Array.isArray(whoamiResponse.body.scopes)).toBe(true);
-      expect(whoamiResponse.body.scopes.length).toBeGreaterThan(0);
+      expect(Array.isArray(whoami.scopes)).toBe(true);
+      expect(whoami.scopes.length).toBeGreaterThan(0);
 
       // revoke
       const deleteResponse = await request(bootstrap.app.getHttpServer())
@@ -97,7 +103,7 @@ describe('Personal API keys (CRUD under JWT)', () => {
         .get('/personal-api-keys')
         .set('Authorization', `Bearer ${token}`);
 
-      for (const key of listResponse.body) {
+      for (const key of listResponse.body as PersonalApiKeySerialized[]) {
         expect(key).not.toHaveProperty('value');
         expect(key).not.toHaveProperty('hash');
       }
@@ -113,7 +119,7 @@ describe('Personal API keys (CRUD under JWT)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(whoamiResponse.status).toBe(200);
-      expect(whoamiResponse.body.userId).toBe(user.id);
+      expect((whoamiResponse.body as WhoamiResponse).userId).toBe(user.id);
     });
   });
 
@@ -127,7 +133,7 @@ describe('Personal API keys (CRUD under JWT)', () => {
         .set('Authorization', `Bearer ${owner.token}`)
         .send(createBody());
 
-      const keyId = createResponse.body.id;
+      const keyId = (createResponse.body as CreatePersonalApiKeyResponse).id;
 
       const deleteResponse = await request(bootstrap.app.getHttpServer())
         .delete(`/personal-api-keys/${keyId}`)
@@ -140,8 +146,9 @@ describe('Personal API keys (CRUD under JWT)', () => {
         .get('/personal-api-keys')
         .set('Authorization', `Bearer ${owner.token}`);
 
-      expect(ownerList.body).toHaveLength(1);
-      expect(ownerList.body[0].id).toBe(keyId);
+      const ownerKeys = ownerList.body as PersonalApiKeySerialized[];
+      expect(ownerKeys).toHaveLength(1);
+      expect(ownerKeys[0].id).toBe(keyId);
     });
 
     it('returns 404 when revoking a non-existent key', async () => {
@@ -164,7 +171,7 @@ describe('Personal API keys (CRUD under JWT)', () => {
         .set('Authorization', `Bearer ${token}`)
         .send(createBody());
 
-      const keyId = createResponse.body.id;
+      const keyId = (createResponse.body as CreatePersonalApiKeyResponse).id;
 
       await request(bootstrap.app.getHttpServer())
         .delete(`/personal-api-keys/${keyId}`)

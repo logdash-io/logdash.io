@@ -74,6 +74,7 @@ export class GithubAuthClaimService {
         email,
         emailAccepted: dto.emailAccepted,
         existingTempUserById,
+        termsAccepted: dto.termsAccepted,
         tokenPayload,
         userId,
       });
@@ -126,8 +127,9 @@ export class GithubAuthClaimService {
     userId: string;
     existingTempUserById: UserNormalized;
     emailAccepted?: boolean;
+    termsAccepted?: boolean;
     tokenPayload: JwtPayloadDto;
-    avatar: string;
+    avatar?: string;
   }): Promise<TokenResponse> {
     this.logger.log('New user just joined', { email: dto.email });
 
@@ -135,7 +137,9 @@ export class GithubAuthClaimService {
       throw new BadRequestException('User already claimed');
     }
 
-    await this.emitter.emitUserRegisteredEvent({
+    const termsAcceptedAt = dto.termsAccepted ? new Date() : undefined;
+
+    this.emitter.emitUserRegisteredEvent({
       userId: dto.userId,
       email: dto.email,
       authMethod: AuthMethod.Github,
@@ -149,6 +153,8 @@ export class GithubAuthClaimService {
       email: dto.email,
       avatarUrl: dto.avatar,
       marketingConsent: dto.emailAccepted || false,
+      termsAcceptedAt,
+      onboarding: termsAcceptedAt ? { completedAt: termsAcceptedAt } : undefined,
     });
 
     return {

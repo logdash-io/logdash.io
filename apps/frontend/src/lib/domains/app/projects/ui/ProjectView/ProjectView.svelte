@@ -16,16 +16,13 @@
   import { monitoringState } from '../../application/monitoring.state.svelte.js';
 
   type Props = {
-    priorityProjectId?: string;
-    priorityClusterId?: string;
+    clusterId: string;
+    projectId: string;
   };
 
-  const { priorityProjectId, priorityClusterId }: Props = $props();
+  const { clusterId, projectId }: Props = $props();
 
   const previewedMetricId = $derived(page.params.metric_id);
-  const clusterId = $derived(priorityClusterId ?? page.params.cluster_id);
-  const projectId = $derived(priorityProjectId ?? page.params.project_id);
-  const basePath = $derived(`/app/clusters/${clusterId}/${projectId}`);
 
   const selectedLogging = $derived(
     projectsState.hasFeature(projectId, Feature.LOGGING),
@@ -41,10 +38,6 @@
     projectsState.hasConfiguredFeature(projectId, Feature.LOGGING) ||
       logsState.logs.length > 0,
   );
-  const hasMetrics = $derived(
-    projectsState.hasConfiguredFeature(projectId, Feature.METRICS) ||
-      metricsState.simplifiedMetrics.length > 0,
-  );
   const hasMonitoring = $derived(
     Boolean(monitoringState.getMonitorByProjectId(projectId)),
   );
@@ -58,27 +51,22 @@
   });
 </script>
 
-<ProjectSync {priorityProjectId} {priorityClusterId}>
+<ProjectSync>
   <NotificationChannelSetupModal {clusterId} />
 
   {#if (selectedLogging || selectedMonitoring) && (!previewedMetricId || isMobile) && metricsState.ready}
     <div class="flex w-full flex-1 flex-col gap-1.5 overflow-hidden">
       {#if selectedMonitoring}
         {#if hasMonitoring}
-          <MonitoringTile {projectId} />
+          <MonitoringTile {clusterId} {projectId} />
         {:else}
-          <UnconfiguredFeatureTile
-            feature={Feature.MONITORING}
-            {basePath}
-            delayIn={0}
-          />
+          <UnconfiguredFeatureTile {clusterId} {projectId} />
         {/if}
       {/if}
 
       {#if selectedLogging && projectsState.ready}
         <DataTile
           delayIn={0}
-          delayOut={50}
           class={[
             'relative overflow-hidden ld-card-rounding p-0',
             {
@@ -86,7 +74,7 @@
             },
           ]}
         >
-          <LogsTile {priorityProjectId} />
+          <LogsTile />
           {#if !hasLogging}
             <UnifiedSetupOverlay {projectId} />
           {/if}

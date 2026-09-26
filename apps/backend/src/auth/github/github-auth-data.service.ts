@@ -1,11 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { getOurEnv, OurEnv } from '../../shared/types/our-env.enum';
+import { isRecord } from '../../shared/utils/is-record';
 
 @Injectable()
 export class GithubAuthDataService {
   public async getAccessToken(code: string): Promise<string> {
-    const { clientId, clientSecret } = await this.getGithubClientCredentials();
+    const { clientId, clientSecret } = this.getGithubClientCredentials();
 
     const response = await fetch(`https://github.com/login/oauth/access_token`, {
       method: 'POST',
@@ -48,13 +49,13 @@ export class GithubAuthDataService {
       throw new UnauthorizedException('Could not read emails from github');
     }
 
-    const emails = await response.json();
+    const emails: unknown = await response.json();
 
-    const primaryEmail = Array.isArray(emails)
-      ? emails.find((email: any) => email.primary)
+    const primaryEmail: unknown = Array.isArray(emails)
+      ? emails.find((email: unknown) => isRecord(email) && email.primary)
       : undefined;
 
-    if (!primaryEmail?.email) {
+    if (!isRecord(primaryEmail) || !primaryEmail.email || typeof primaryEmail.email !== 'string') {
       throw new UnauthorizedException('Email not found in github response');
     }
 
@@ -65,22 +66,22 @@ export class GithubAuthDataService {
     return primaryEmail.email;
   }
 
-  public async getGithubAvatar(accessToken: string): Promise<string> {
+  public async getGithubAvatar(accessToken: string): Promise<string | undefined> {
     const response = await fetch(`https://api.github.com/user`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
 
-    const user = await response.json();
+    const user: unknown = await response.json();
 
-    return user.avatar_url;
+    return isRecord(user) && typeof user.avatar_url === 'string' ? user.avatar_url : undefined;
   }
 
-  private async getGithubClientCredentials(): Promise<{
+  private getGithubClientCredentials(): {
     clientId: string;
     clientSecret: string;
-  }> {
+  } {
     // alternative credentials point at the local dev oauth app, never usable in production
     if (getOurEnv() === OurEnv.Local) {
       return {

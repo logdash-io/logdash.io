@@ -1,6 +1,10 @@
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
 import { ClustersListDataPreloader } from '$lib/domains/app/clusters/infrastructure/data-preloaders/clusters-list.data-preloader';
 import { resolve_data_preloader } from '$lib/domains/shared/data-preloader/resolve-data-preloader';
+import {
+  needsOnboarding,
+  onboardingUrl,
+} from '$lib/domains/onboarding/application/needs-onboarding';
 import { logdashAPI } from '$lib/domains/shared/logdash.api.server.js';
 import { UserTier } from '$lib/domains/shared/types.js';
 import { UserDataPreloader } from '$lib/domains/shared/user/infrastructure/data-preloaders/user.data-preloader';
@@ -19,7 +23,14 @@ export const load = async (
   const onboardingTier = get_onboarding_tier(event.cookies);
   const user = await resolve_data_preloader(UserDataPreloader)(event);
 
-  if ([UserTier.BUILDER, UserTier.PRO].includes(onboardingTier)) {
+  if (needsOnboarding(user.user)) {
+    redirect(
+      302,
+      onboardingUrl(event.untrack(() => event.url.pathname + event.url.search)),
+    );
+  }
+
+  if (onboardingTier === UserTier.BUILDER || onboardingTier === UserTier.PRO) {
     const link = await logdashAPI.stripe_checkout(
       get_access_token(event.cookies),
       onboardingTier,

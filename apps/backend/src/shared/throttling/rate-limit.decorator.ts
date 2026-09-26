@@ -10,6 +10,7 @@ import { seconds, Throttle, ThrottlerGuard } from '@nestjs/throttler';
 export const AccountCreationRateLimit = { limit: 10, ttl: seconds(60) };
 export const CliPollingRateLimit = { limit: 30, ttl: seconds(60) };
 export const OauthExchangeRateLimit = { limit: 300, ttl: seconds(60) };
+export const MonitorCreationRateLimit = { limit: 20, ttl: seconds(60) };
 
 function rateLimit(options: { limit: number; ttl: number }) {
   return applyDecorators(UseGuards(ThrottlerGuard), Throttle({ default: options }));
@@ -44,4 +45,14 @@ export function ThrottleCliPolling() {
  */
 export function ThrottleOauthExchange() {
   return rateLimit(OauthExchangeRateLimit);
+}
+
+/**
+ * 20 requests per minute per IP. For monitor creation, which the landing page
+ * calls straight from the browser, so the client address is the real one and a
+ * per-IP budget is a per-visitor budget. Sized well above what a person can do
+ * by hand and well below what a script needs to be worth writing.
+ */
+export function ThrottleMonitorCreation() {
+  return rateLimit(MonitorCreationRateLimit);
 }

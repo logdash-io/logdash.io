@@ -212,7 +212,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
       // then
       expect(firstResponse.status).toBe(200);
-      expect(firstResponse.body.httpMonitors).toHaveLength(2);
+      expect((firstResponse.body as PublicDashboardDataResponse).httpMonitors).toHaveLength(2);
 
       // and when
       await request(bootstrap.app.getHttpServer())
@@ -226,7 +226,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
       // then
       expect(secondResponse.status).toBe(200);
-      expect(secondResponse.body.httpMonitors).toHaveLength(1);
+      expect((secondResponse.body as PublicDashboardDataResponse).httpMonitors).toHaveLength(1);
     });
 
     it('invalidates cache if user adds monitor to dashboard', async () => {
@@ -240,7 +240,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
       // then
       expect(firstResponse.status).toBe(200);
-      expect(firstResponse.body.httpMonitors).toHaveLength(2);
+      expect((firstResponse.body as PublicDashboardDataResponse).httpMonitors).toHaveLength(2);
 
       const project = await bootstrap.utils.projectUtils.createDefaultProject({
         userId: setup.user.id,
@@ -258,7 +258,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
       });
 
       // and when
-      const response = await request(bootstrap.app.getHttpServer())
+      await request(bootstrap.app.getHttpServer())
         .post(`/public_dashboards/${setup.publicDashboard.id}/monitors/${monitor.id}`)
         .set('Authorization', `Bearer ${setup.token}`);
 
@@ -269,7 +269,7 @@ describe('PublicDashboardCoreController (public data read)', () => {
 
       // then
       expect(secondResponse.status).toBe(200);
-      expect(secondResponse.body.httpMonitors).toHaveLength(3);
+      expect((secondResponse.body as PublicDashboardDataResponse).httpMonitors).toHaveLength(3);
     });
 
     it('reads public data by custom domain', async () => {

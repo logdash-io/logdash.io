@@ -4,9 +4,15 @@ import { createTestApp } from '../utils/bootstrap';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { sleep } from '../utils/sleep';
 import { ClickHouseClient } from '@clickhouse/client';
-import { LogClickhouseNormalized } from '../../src/log/core/entities/log.interface';
+import {
+  LogClickhouseNormalized,
+  LogClickhouseSerialized,
+} from '../../src/log/core/entities/log.interface';
+import { LogClickhouseRow } from '../../src/log/core/entities/log.clickhouse-entity';
+import { NamespaceMetadata } from '../../src/log/read/dto/namespace-metadata.dto';
 import { LogSerializer } from '../../src/log/core/entities/log.serializer';
 import { addMinutes, subMinutes, subHours, addHours } from 'date-fns';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('LogCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -85,9 +91,9 @@ describe('LogCoreController (reads)', () => {
         `,
       });
 
-      const logsData = (await orderedLogsResult.json()) as any;
+      const logsData = await orderedLogsResult.json<LogClickhouseRow>();
 
-      const logs: LogClickhouseNormalized[] = logsData.data.map((log: any) =>
+      const logs: LogClickhouseNormalized[] = logsData.data.map((log) =>
         LogSerializer.normalizeClickhouse(log),
       );
 
@@ -109,10 +115,10 @@ describe('LogCoreController (reads)', () => {
         .get(`/projects/${setup.project.id}/logs/v2?direction=after&lastId=${fourth.id}&limit=1`)
         .set('Authorization', `Bearer ${setup.token}`);
 
-      expect(responseSecond.body[0].id).toEqual(second.id);
-      expect(responseFourth.body[0].id).toEqual(fourth.id);
-      expect(responseFirst.body[0].id).toEqual(first.id);
-      expect(responseFifth.body[0].id).toEqual(fifth.id);
+      expect((responseSecond.body as LogClickhouseSerialized[])[0].id).toEqual(second.id);
+      expect((responseFourth.body as LogClickhouseSerialized[])[0].id).toEqual(fourth.id);
+      expect((responseFirst.body as LogClickhouseSerialized[])[0].id).toEqual(first.id);
+      expect((responseFifth.body as LogClickhouseSerialized[])[0].id).toEqual(fifth.id);
     });
 
     it('returns 403 if user does not belong to cluster', async () => {
@@ -137,12 +143,12 @@ describe('LogCoreController (reads)', () => {
 
       const redisService = bootstrap.app.get(RedisService);
 
-      const client = await redisService.getClient();
+      const client = redisService.getClient();
       const keys = await client.keys('demo-dashboard-path:*');
       const key = keys[0];
 
       const cachedResponseRaw = (await redisService.get(key))!;
-      const cachedResponse = JSON.parse(cachedResponseRaw);
+      const cachedResponse: unknown = JSON.parse(cachedResponseRaw);
 
       expect(response.status).toEqual(200);
       expect(cachedResponse).toEqual(response.body);
@@ -198,11 +204,13 @@ describe('LogCoreController (reads)', () => {
         .get(`/projects/${setup.project.id}/logs/v2?startDate=${startDate.toISOString()}`)
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(2);
-      expect(response.body.some((log) => log.message === 'After start date')).toBe(true);
-      expect(response.body.some((log) => log.message === 'Much after start date')).toBe(true);
-      expect(response.body.some((log) => log.message === 'Before start date')).toBe(false);
+      expect(body).toHaveLength(2);
+      expect(body.some((log) => log.message === 'After start date')).toBe(true);
+      expect(body.some((log) => log.message === 'Much after start date')).toBe(true);
+      expect(body.some((log) => log.message === 'Before start date')).toBe(false);
     });
 
     it('reads logs with only endDate provided', async () => {
@@ -232,9 +240,11 @@ describe('LogCoreController (reads)', () => {
         .get(`/projects/${setup.project.id}/logs/v2?endDate=${endDate.toISOString()}`)
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].message).toEqual('Before end date');
+      expect(body).toHaveLength(1);
+      expect(body[0].message).toEqual('Before end date');
     });
 
     it('reads logs with both startDate and endDate provided', async () => {
@@ -275,9 +285,11 @@ describe('LogCoreController (reads)', () => {
         )
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].message).toEqual('In range');
+      expect(body).toHaveLength(1);
+      expect(body[0].message).toEqual('In range');
     });
 
     it('reads logs with date range and level filter', async () => {
@@ -318,10 +330,12 @@ describe('LogCoreController (reads)', () => {
         )
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].message).toEqual('Error log in range');
-      expect(response.body[0].level).toEqual(LogLevel.Error);
+      expect(body).toHaveLength(1);
+      expect(body[0].message).toEqual('Error log in range');
+      expect(body[0].level).toEqual(LogLevel.Error);
     });
 
     it('returns empty array when no logs match date range', async () => {
@@ -369,10 +383,10 @@ describe('LogCoreController (reads)', () => {
         )
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as ErrorResponse;
+
       expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual(
-        'If using pagination, provide both lastId and direction',
-      );
+      expect(body.message).toEqual('If using pagination, provide both lastId and direction');
     });
 
     it('throws error when combining direction with date range', async () => {
@@ -386,10 +400,10 @@ describe('LogCoreController (reads)', () => {
         )
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as ErrorResponse;
+
       expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual(
-        'If using pagination, provide both lastId and direction',
-      );
+      expect(body.message).toEqual('If using pagination, provide both lastId and direction');
     });
 
     it('respects limit parameter with date range', async () => {
@@ -479,9 +493,9 @@ describe('LogCoreController (reads)', () => {
         `,
       });
 
-      const logsData = (await orderedLogsResult.json()) as any;
+      const logsData = await orderedLogsResult.json<LogClickhouseRow>();
 
-      const logs: LogClickhouseNormalized[] = logsData.data.map((log: any) =>
+      const logs: LogClickhouseNormalized[] = logsData.data.map((log) =>
         LogSerializer.normalizeClickhouse(log),
       );
 
@@ -494,13 +508,15 @@ describe('LogCoreController (reads)', () => {
         )
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body.some((log) => log.message === 'Log in date range')).toBe(true);
-      expect(response.body.some((log) => log.message === 'Another log in date range')).toBe(true);
-      expect(response.body.some((log) => log.message === 'Log before date range')).toBe(false);
-      expect(response.body.some((log) => log.message === 'Log after date range')).toBe(false);
-      expect(response.body.some((log) => log.message === 'Reference log')).toBe(false);
-      expect(response.body).toHaveLength(2);
+      expect(body.some((log) => log.message === 'Log in date range')).toBe(true);
+      expect(body.some((log) => log.message === 'Another log in date range')).toBe(true);
+      expect(body.some((log) => log.message === 'Log before date range')).toBe(false);
+      expect(body.some((log) => log.message === 'Log after date range')).toBe(false);
+      expect(body.some((log) => log.message === 'Reference log')).toBe(false);
+      expect(body).toHaveLength(2);
     });
 
     it('respects retention cutoff for free tier projects', async () => {
@@ -541,11 +557,13 @@ describe('LogCoreController (reads)', () => {
         .get(`/projects/${setup.project.id}/logs/v2?startDate=${twentyFiveHoursAgo.toISOString()}`)
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(2);
-      expect(response.body.some((log) => log.message === 'Log from 25 hours ago')).toBe(false);
-      expect(response.body.some((log) => log.message === 'Log from 23 hours ago')).toBe(true);
-      expect(response.body.some((log) => log.message === 'Log from 1 hour ago')).toBe(true);
+      expect(body).toHaveLength(2);
+      expect(body.some((log) => log.message === 'Log from 25 hours ago')).toBe(false);
+      expect(body.some((log) => log.message === 'Log from 23 hours ago')).toBe(true);
+      expect(body.some((log) => log.message === 'Log from 1 hour ago')).toBe(true);
     });
   });
 
@@ -584,9 +602,11 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/v2?searchString=alice`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('alice loves bob');
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('alice loves bob');
       });
 
       it('searches logs with multiple words (AND logic)', async () => {
@@ -622,9 +642,11 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/v2?searchString=alice bob`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('alice loves bob');
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('alice loves bob');
       });
 
       it('search is case insensitive', async () => {
@@ -644,9 +666,11 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/v2?searchString=alice bob`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('ALICE LOVES BOB');
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('ALICE LOVES BOB');
       });
 
       it('returns empty array when no logs match search', async () => {
@@ -737,9 +761,11 @@ describe('LogCoreController (reads)', () => {
           )
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('alice in range');
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('alice in range');
       });
 
       it('combines search with level filter', async () => {
@@ -775,10 +801,12 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/v2?searchString=alice&level=${LogLevel.Error}`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('alice error log');
-        expect(response.body[0].level).toEqual(LogLevel.Error);
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('alice error log');
+        expect(body[0].level).toEqual(LogLevel.Error);
       });
     });
   });
@@ -828,11 +856,13 @@ describe('LogCoreController (reads)', () => {
           )
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(
-          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
-        ).toBe(true);
+        expect(body).toHaveLength(2);
+        expect(body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level))).toBe(
+          true,
+        );
       });
 
       it('filters logs by single level in levels array', async () => {
@@ -860,9 +890,11 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/v2?levels=${LogLevel.Error}`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].level).toEqual(LogLevel.Error);
+        expect(body).toHaveLength(1);
+        expect(body[0].level).toEqual(LogLevel.Error);
       });
 
       it('levels takes precedence over level when both provided', async () => {
@@ -900,12 +932,14 @@ describe('LogCoreController (reads)', () => {
           )
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(
-          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
-        ).toBe(true);
-        expect(response.body.some((log) => log.level === LogLevel.Info)).toBe(false);
+        expect(body).toHaveLength(2);
+        expect(body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level))).toBe(
+          true,
+        );
+        expect(body.some((log) => log.level === LogLevel.Info)).toBe(false);
       });
 
       it('combines multiple levels with search filter', async () => {
@@ -951,12 +985,14 @@ describe('LogCoreController (reads)', () => {
           )
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(response.body.every((log) => log.message.includes('alice'))).toBe(true);
-        expect(
-          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
-        ).toBe(true);
+        expect(body).toHaveLength(2);
+        expect(body.every((log) => log.message.includes('alice'))).toBe(true);
+        expect(body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level))).toBe(
+          true,
+        );
       });
 
       it('combines multiple levels with date range filter', async () => {
@@ -1005,11 +1041,13 @@ describe('LogCoreController (reads)', () => {
           )
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(
-          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
-        ).toBe(true);
+        expect(body).toHaveLength(2);
+        expect(body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level))).toBe(
+          true,
+        );
       });
     });
   });
@@ -1052,9 +1090,11 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/v2?namespaces=api`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].namespace).toEqual('api');
+        expect(body).toHaveLength(1);
+        expect(body[0].namespace).toEqual('api');
       });
 
       it('filters logs by multiple namespaces', async () => {
@@ -1093,9 +1133,13 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/v2?namespaces=api&namespaces=worker`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(response.body.every((log) => ['api', 'worker'].includes(log.namespace))).toBe(true);
+        expect(body).toHaveLength(2);
+        expect(body.every((log) => log.namespace === 'api' || log.namespace === 'worker')).toBe(
+          true,
+        );
       });
 
       it('returns logs with namespace in response', async () => {
@@ -1116,9 +1160,11 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/v2`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].namespace).toEqual('my-namespace');
+        expect(body).toHaveLength(1);
+        expect(body[0].namespace).toEqual('my-namespace');
       });
 
       it('combines namespace filter with level filter', async () => {
@@ -1157,10 +1203,12 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/v2?namespaces=api&levels=${LogLevel.Error}`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].namespace).toEqual('api');
-        expect(response.body[0].level).toEqual(LogLevel.Error);
+        expect(body).toHaveLength(1);
+        expect(body[0].namespace).toEqual('api');
+        expect(body[0].level).toEqual(LogLevel.Error);
       });
 
       it('combines namespace filter with search filter', async () => {
@@ -1199,10 +1247,12 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/v2?namespaces=api&searchString=alice`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('alice api log');
-        expect(response.body[0].namespace).toEqual('api');
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('alice api log');
+        expect(body[0].namespace).toEqual('api');
       });
 
       it('returns all logs when namespace not provided', async () => {
@@ -1284,12 +1334,14 @@ describe('LogCoreController (reads)', () => {
           .get(`/projects/${setup.project.id}/logs/namespaces`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as NamespaceMetadata[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(response.body[0].namespace).toEqual('api');
-        expect(response.body[1].namespace).toEqual('worker');
-        expect(response.body[0].lastLogDate).toBeDefined();
-        expect(response.body[1].lastLogDate).toBeDefined();
+        expect(body).toHaveLength(2);
+        expect(body[0].namespace).toEqual('api');
+        expect(body[1].namespace).toEqual('worker');
+        expect(body[0].lastLogDate).toBeDefined();
+        expect(body[1].lastLogDate).toBeDefined();
       });
 
       it('returns empty array when no logs have namespaces', async () => {

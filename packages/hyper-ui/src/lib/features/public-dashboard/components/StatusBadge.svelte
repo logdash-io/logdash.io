@@ -26,9 +26,9 @@
       textColor: "text-yellow-600",
     },
     unknown: {
-      color: "bg-gray-400",
+      color: "bg-neutral-400",
       text: "Unknown",
-      textColor: "text-gray-600",
+      textColor: "text-neutral-600",
     },
   };
 

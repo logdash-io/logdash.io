@@ -25,7 +25,7 @@ class LogAnalyticsState {
   }
 
   sync(project_id: string): () => void {
-    this._fetchAnalytics(project_id);
+    void this._fetchAnalytics(project_id);
 
     const UPDATE_MS_SAFETY_BUFFER = 10;
     const now = new Date();
@@ -34,38 +34,40 @@ class LogAnalyticsState {
       (now.getSeconds() * 1000 + now.getMilliseconds()) +
       UPDATE_MS_SAFETY_BUFFER;
 
-    let interval: ReturnType<typeof setInterval> | null = null;
+    let interval: ReturnType<typeof setInterval> | undefined;
 
     logger.debug('scheduling update in ', msToNextMinute, 'ms');
     const timeout = setTimeout(() => {
       logger.debug('executing scheduler - fetching analytics');
-      this._fetchAnalytics(project_id, { silent: true });
+      void this._fetchAnalytics(project_id, { silent: true });
 
       logger.debug('setting up interval');
       interval = setInterval(() => {
-        this._fetchAnalytics(project_id, { silent: true });
+        void this._fetchAnalytics(project_id, { silent: true });
       }, 60000);
     }, msToNextMinute);
 
     const cleanupLogListener = logsSyncService.onLog((log: Log) => {
-      if (!this._matchesActiveFilters(log)) {
+      const analyticsData = this._analyticsData;
+
+      if (!analyticsData || !this._matchesActiveFilters(log)) {
         return;
       }
 
       logger.debug(
         'ANALYTICS: New log received:',
         log,
-        $state.snapshot({ ...this._analyticsData.buckets }),
+        $state.snapshot({ ...analyticsData.buckets }),
       );
-      this._analyticsData.totalLogs++;
-      this._analyticsData.buckets[this._analyticsData.buckets.length - 1]
-        .countTotal++;
-      this._analyticsData.buckets[this._analyticsData.buckets.length - 1]
-        .countByLevel[log.level]++;
+      analyticsData.totalLogs++;
+      analyticsData.buckets[analyticsData.buckets.length - 1].countTotal++;
+      analyticsData.buckets[analyticsData.buckets.length - 1].countByLevel[
+        log.level
+      ]++;
 
       logger.debug(
         'ANALYTICS: Updated buckets:',
-        $state.snapshot({ ...this._analyticsData.buckets }),
+        $state.snapshot({ ...analyticsData.buckets }),
       );
     });
 
@@ -78,7 +80,7 @@ class LogAnalyticsState {
   }
 
   refresh(projectId: string): void {
-    this._fetchAnalytics(projectId);
+    void this._fetchAnalytics(projectId);
   }
 
   async fetchAnalytics(projectId: string): Promise<void> {

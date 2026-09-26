@@ -1,25 +1,22 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import type { SimplifiedMetric } from '$lib/domains/app/projects/domain/metric.js';
+  import { Button, Tooltip } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon } from 'lucide-svelte';
   import { cubicInOut } from 'svelte/easing';
-  import { fade, fly } from 'svelte/transition';
+  import { fly } from 'svelte/transition';
 
   type Props = {
-    id: string;
+    metric: SimplifiedMetric;
     disabled?: boolean;
   };
-  const { id, disabled = false }: Props = $props();
+  const { metric, disabled = false }: Props = $props();
   const previewedMetricId = $derived(page.params.metric_id);
   const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
-  const isOnDemoDashboard = $derived(
-    page.url.pathname.includes('/demo-dashboard'),
-  );
-
-  const metric = $derived(metricsState.getById(id));
 
   const formatNumber = (value: number) => {
     const precision = 1;
@@ -32,22 +29,37 @@
       ? value.toString()
       : value.toFixed(precision);
   };
+
+  function onPreview(): void {
+    if (!clusterId || !projectId) {
+      return;
+    }
+
+    metricsState.setLastPreviewedMetricId(projectId, metric.id);
+    void goto(
+      resolve('/app/clusters/[cluster_id]/[project_id]/metrics/[metric_id]', {
+        cluster_id: clusterId,
+        project_id: projectId,
+        metric_id: metric.id,
+      }),
+    );
+  }
 </script>
 
 <div
   class={[
-    'relative flex flex-col items-start justify-between gap-1 text-base font-semibold',
+    'relative flex flex-col items-start justify-between gap-1 text-base font-medium',
   ]}
 >
   <Tooltip
     class={[
-      'min-w-0 flex-shrink transition-all duration-200',
+      'min-w-0 flex-shrink transition-ink duration-200',
       {
-        'text-secondary/60 group-hover:text-secondary':
+        'text-neutral-400 group-hover:text-fg-default':
           previewedMetricId !== metric.id,
       },
       {
-        'text-secondary': previewedMetricId === metric.id,
+        'text-fg-default': previewedMetricId === metric.id,
       },
     ]}
     content={metric.name}
@@ -61,7 +73,7 @@
 
 <div class="flex w-full gap-3 overflow-hidden leading-tight items-end">
   <Tooltip
-    class="mr-auto font-mono text-4xl font-semibold"
+    class="mr-auto font-mono text-4xl font-medium"
     content={metric.value.toString()}
     placement="top"
   >
@@ -69,36 +81,22 @@
   </Tooltip>
 
   {#if previewedMetricId !== metric.id && !disabled}
-    {#if isOnDemoDashboard}
-      <Tooltip content="Not available in demo" placement="top">
-        <button
-          transition:fly={{
-            duration: 200,
-            easing: cubicInOut,
-            y: 5,
-          }}
-          class="btn btn-secondary btn-soft btn-xs ml-auto opacity-50 cursor-not-allowed"
-          disabled
-        >
-          Preview <ArrowRightIcon class="h-3.5 w-3.5" />
-        </button>
-      </Tooltip>
-    {:else}
-      <button
-        transition:fly={{
-          duration: 200,
-          easing: cubicInOut,
-          y: 5,
-        }}
-        class="btn btn-secondary btn-soft btn-xs ml-auto"
-        onclick={() => {
-          metricsState.setLastPreviewedMetricId(projectId, metric.id);
-          goto(`/app/clusters/${clusterId}/${projectId}/metrics/${metric.id}`);
-        }}
+    <div
+      class="ml-auto flex"
+      transition:fly={{
+        duration: 200,
+        easing: cubicInOut,
+        y: 5,
+      }}
+    >
+      <Button
+        variant="soft"
+        size="xs"
+        onclick={onPreview}
         data-posthog-id="preview-metric-button"
       >
         Preview <ArrowRightIcon class="h-3.5 w-3.5" />
-      </button>
-    {/if}
+      </Button>
+    </div>
   {/if}
 </div>

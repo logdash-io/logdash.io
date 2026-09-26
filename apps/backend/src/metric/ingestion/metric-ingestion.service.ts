@@ -16,7 +16,6 @@ import { MetricOperation } from '../core/enums/metric-operation.enum';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { METRICS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
-import { getEnvConfig } from '../../shared/configs/env-configs';
 import { MetricRegisterWriteService } from '../../metric-register/write/metric-register-write.service';
 export class BucketedMetricDto extends EnrichedRecordMetricDto {
   timeBucket: string;

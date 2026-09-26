@@ -2,7 +2,7 @@
   import type { ClassValue } from 'svelte/elements';
 
   type Props = {
-    class: ClassValue;
+    class?: ClassValue;
   };
   const { class: className = '' }: Props = $props();
 </script>

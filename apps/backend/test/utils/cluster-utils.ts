@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
@@ -10,7 +11,7 @@ import { CreateClusterBody } from '../../src/cluster/core/dto/create-cluster.bod
 export class ClusterUtils {
   private readonly clusterModel: Model<ClusterEntity>;
 
-  constructor(private readonly app: INestApplication<any>) {
+  constructor(private readonly app: INestApplication<App>) {
     this.clusterModel = app.get(getModelToken(ClusterEntity.name));
   }
 
@@ -31,7 +32,7 @@ export class ClusterUtils {
       .set('Authorization', `Bearer ${dto.token}`)
       .send(body);
 
-    return response.body;
+    return response.body as ClusterSerialized;
   }
 
   public async addRole(dto: {

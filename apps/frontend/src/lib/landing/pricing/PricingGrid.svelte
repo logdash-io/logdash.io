@@ -1,16 +1,13 @@
 <script lang="ts">
+  import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { UserTier } from '$lib/domains/shared/types.js';
-  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
-  import { CheckIcon } from '@logdash/hyper-ui/icons';
-  import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
-  import { fade } from 'svelte/transition';
+  import { Button, Spinner } from '@logdash/hyper-ui/presentational';
   import { runGithubLogin } from './run-github-login.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
 
   let loggingIn = $state(false);
 
-  const handleGithubLogin = async (tier: UserTier) => {
+  const onSelectPlan = async (tier: UserTier): Promise<void> => {
     loggingIn = true;
 
     try {
@@ -20,123 +17,74 @@
       console.error(error);
     }
   };
-
-  const pricingData = {
-    plans: PAYMENT_PLANS,
-    footer: {
-      title: "Questions? We're here to help",
-      description: 'Contact us for any questions about our pricing or features',
-    },
-  };
-
-  const onMouseEnter = (plan: (typeof PAYMENT_PLANS)[number]) => {
-    if (plan.tier === UserTier.PRO) {
-      upgradeState.showBackground();
-    }
-  };
-
-  const onMouseLeave = (plan: (typeof PAYMENT_PLANS)[number]) => {
-    if (plan.tier === UserTier.PRO) {
-      upgradeState.hideBackground();
-    }
-  };
 </script>
 
-<div class="mx-auto mb-8 grid max-w-7xl gap-8 md:grid-cols-3">
-  {#each pricingData.plans as plan (plan.tier)}
-    <div class="relative flex flex-col">
-      {#if plan.popular}
-        <div
-          class="bg-primary ring-primary flex h-20 w-full items-center justify-center rounded-t-3xl pb-10 -mb-4 text-sm font-semibold ring"
+<ul class="bg-hairline grid grid-cols-1 gap-px lg:grid-cols-3">
+  {#each PAYMENT_PLANS as plan (plan.tier)}
+    <li
+      class="bg-surface-root flex flex-col px-4 py-10 sm:px-6 lg:px-10 lg:py-12"
+    >
+      <div class="flex flex-wrap items-center gap-2">
+        <h2 class="mr-auto text-lg font-medium tracking-[-0.01em]">
+          {plan.name}
+        </h2>
+
+        {#if plan.popular}
+          <span
+            class="bg-surface-inverse text-surface-root rounded-full px-2.5 py-0.5 text-xs font-medium"
+          >
+            Most popular
+          </span>
+        {/if}
+
+        <span
+          class="ring-hairline text-neutral-400 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
         >
-          Most popular
-        </div>
-      {:else}
-        <div class="h-16"></div>
-      {/if}
-
-      <div
-        class={[
-          'card ld-card-base relative -mt-6 overflow-visible rounded-3xl p-8 shadow-xl',
-          {
-            'ring-primary ring': plan.popular,
-          },
-        ]}
-        onmouseenter={() => onMouseEnter(plan)}
-        onmouseleave={() => onMouseLeave(plan)}
-      >
-        <div class={['badge badge-soft badge-lg mb-4', plan.badge.class]}>
           {plan.badge.text}
-        </div>
-
-        <div class="card-body p-0">
-          <h2 class="card-title text-2xl font-normal">
-            {plan.name}
-          </h2>
-          <div class="mt-2">
-            <span class="text-4xl font-semibold">{plan.price}</span>
-
-            <p class="mt-4 text-sm opacity-75 h-10">
-              {plan.description}
-            </p>
-          </div>
-
-          <div class="card-actions my-4 justify-center">
-            <button
-              onclick={() => handleGithubLogin(plan.tier)}
-              disabled={loggingIn || plan['disabled']}
-              class={`btn btn-lg w-full rounded-full font-medium ${plan.popular ? 'btn-primary' : 'btn-secondary'}`}
-            >
-              {#if loggingIn}
-                <div
-                  in:fade={{ duration: 150 }}
-                  class="flex h-6 w-6 items-center justify-center"
-                >
-                  <span class="loading loading-spinner h-4 w-4"></span>
-                </div>
-              {/if}
-
-              {plan.buttonText}
-            </button>
-          </div>
-
-          <div class="mb-4 flex items-center gap-2 text-base font-semibold">
-            <ShieldCheckIcon class="text-success h-6 w-6" />
-            {plan.guarantee}
-          </div>
-
-          <ul class="mb-8 space-y-3 text-base">
-            {#each plan.features as feature (feature.name)}
-              <li class="flex items-center gap-3">
-                <CheckIcon class="text-success h-5 w-5 flex-shrink-0" />
-
-                <span>
-                  {feature.name}
-                </span>
-              </li>
-            {/each}
-          </ul>
-        </div>
+        </span>
       </div>
-    </div>
+
+      <p
+        class="mt-6 text-4xl font-medium tracking-[-0.03em] tabular-nums sm:text-[40px]"
+      >
+        {plan.price}
+      </p>
+
+      <p class="text-neutral-400 mt-3 leading-relaxed text-pretty lg:min-h-13">
+        {plan.description}
+      </p>
+
+      <Button
+        variant={plan.popular ? 'primary' : 'subtle'}
+        block
+        class="mt-8 h-11 font-medium"
+        disabled={loggingIn}
+        onclick={() => onSelectPlan(plan.tier)}
+      >
+        {plan.buttonText}
+        {#if loggingIn}
+          <Spinner size="xs" aria-hidden="true" />
+        {/if}
+      </Button>
+
+      <p class="text-neutral-500 mt-3 text-center text-sm">
+        {plan.guarantee}
+      </p>
+
+      <ul
+        class="border-hairline mt-8 flex flex-col gap-3 border-t pt-8 text-sm"
+      >
+        {#each plan.features as feature (feature.name)}
+          {#if feature.name.endsWith(':')}
+            <li class="text-neutral-500 font-medium">{feature.name}</li>
+          {:else}
+            <li class="flex items-start gap-3">
+              <CheckIcon class="text-neutral-500 mt-0.5 size-4 shrink-0" />
+              <span class="text-neutral-300">{feature.name}</span>
+            </li>
+          {/if}
+        {/each}
+      </ul>
+    </li>
   {/each}
-</div>
-
-<div class="mx-auto max-w-5xl mt-8">
-  {#snippet content()}
-    <div class="flex flex-col gap-3 p-2 max-w-sm ld-card">
-      {#each pricingData.plans as plan (plan.tier)}
-        <div>
-          <span class="text-primary font-medium">{plan.name}:</span>
-          <span class="text-base-content">{plan.tldr}</span>
-        </div>
-      {/each}
-    </div>
-  {/snippet}
-
-  <div class="flex items-center justify-center text-sm">
-    <Tooltip interactive={true} {content} placement="top">
-      <span class="text-primary cursor-help underline font-medium">tldr</span>
-    </Tooltip>
-  </div>
-</div>
+</ul>

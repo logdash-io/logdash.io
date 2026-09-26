@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { onMount } from 'svelte';
   import { cubicInOut } from 'svelte/easing';
@@ -7,10 +8,11 @@
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
   import ClusterCreatorTile from '$lib/domains/app/clusters/ui/ClustersList/ClusterCreatorTile.svelte';
-  import { type ServiceStatus } from '$lib/domains/app/clusters/ui/ClustersList/CircularHealthChart.svelte';
+  import type { ServiceHealthStatus } from '$lib/domains/app/clusters/domain/service-health-status.js';
   import { type Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
   import { Feature } from '$lib/domains/shared/types.js';
   import type { MonitorStatus } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
+  import { Badge, Button } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     canCreate: boolean;
@@ -34,7 +36,7 @@
 
   function mapMonitorStatusToServiceStatus(
     status: MonitorStatus | undefined,
-  ): ServiceStatus {
+  ): ServiceHealthStatus {
     switch (status) {
       case 'up':
         return 'healthy';
@@ -49,7 +51,7 @@
   function getClusterServices(cluster: Cluster): {
     id: string;
     name: string;
-    status: ServiceStatus;
+    status: ServiceHealthStatus;
     features: Feature[];
   }[] {
     return (cluster.projects || []).map((project) => {
@@ -69,7 +71,7 @@
   }
 
   const projectsPerColumn = $derived.by(() => {
-    const projectsPerColumn = [[], []];
+    const projectsPerColumn: Cluster[][] = [[], []];
 
     clustersState.clusters.forEach((project, i) => {
       const column = i % CLUSTERS_COLUMNS;
@@ -83,7 +85,7 @@
 {#if mounted}
   <div class="flex w-full gap-1.5 pb-8">
     <div class="flex w-full flex-col gap-1.5 sm:hidden">
-      {#each clustersState.clusters as cluster, i}
+      {#each clustersState.clusters as cluster, i (cluster.id)}
         {@render clusterTile(cluster, i)}
       {/each}
 
@@ -94,9 +96,9 @@
     </div>
 
     <div class="hidden w-full gap-1.5 sm:flex">
-      {#each [0, 1] as column}
+      {#each [0, 1] as column (column)}
         <div class="flex w-full flex-col gap-1.5">
-          {#each projectsPerColumn[column] as cluster, i}
+          {#each projectsPerColumn[column] as cluster, i (cluster.id)}
             {@render clusterTile(cluster, i)}
           {/each}
 
@@ -114,14 +116,15 @@
 {/if}
 
 {#snippet clusterTile(cluster: Cluster, i: number)}
-  {@const firstProjectId = cluster.projects?.[0]?.id}
   {@const services = getClusterServices(cluster)}
   {@const hasServices = services.length > 0}
   <div
     draggable="false"
     role="button"
     onclick={() => {
-      goto(`/app/clusters/${cluster.id}`);
+      void goto(
+        resolve('/app/clusters/[cluster_id]', { cluster_id: cluster.id }),
+      );
     }}
     class="ld-card-base h-fit w-full cursor-pointer ld-card-rounding p-6"
   >
@@ -135,47 +138,52 @@
       class="flex h-full w-full flex-col gap-1"
     >
       <div class="flex w-full items-center justify-between gap-2">
-        <h5 class="text-lg font-semibold">
+        <h5 class="text-lg font-medium">
           {cluster.name}
         </h5>
       </div>
 
       {#if hasServices}
-        <!-- <ClusterHealthSummary clusterId={cluster.id} {services} /> -->
-
         <div class="flex flex-wrap gap-1.5">
-          {#each cluster.projects as project}
+          {#each cluster.projects as project (project.id)}
             <a
-              href={`/app/clusters/${cluster.id}/${project.id}`}
+              href={resolve('/app/clusters/[cluster_id]/[project_id]', {
+                cluster_id: cluster.id,
+                project_id: project.id,
+              })}
               draggable="false"
               role="button"
               onclick={(e) => {
                 e.stopPropagation();
               }}
-              class="badge badge-sm badge-soft badge-secondary hover:badge-primary hover:text-primary rounded-full transition-all"
+              class="flex"
             >
-              {project.name}
+              <Badge size="sm">{project.name}</Badge>
             </a>
           {/each}
         </div>
       {:else}
         <div class="flex flex-col items-center gap-3 py-4">
           <div class="text-center">
-            <p class="text-base-content/60 text-sm">No services configured</p>
-            <p class="text-base-content/40 text-xs">
-              Add a service to get started
-            </p>
+            <p class="text-neutral-400 text-sm">No services configured</p>
+            <p class="text-neutral-600 text-xs">Add a service to get started</p>
           </div>
-          <button
-            onclick={(e) => {
+          <Button
+            variant="ghost"
+            size="sm"
+            class="gap-1"
+            onclick={(e: MouseEvent) => {
               e.stopPropagation();
-              goto(`/app/clusters/${cluster.id}`);
+              void goto(
+                resolve('/app/clusters/[cluster_id]', {
+                  cluster_id: cluster.id,
+                }),
+              );
             }}
-            class="btn btn-sm btn-ghost gap-1"
           >
             <PlusIcon class="size-4" />
             Add service
-          </button>
+          </Button>
         </div>
       {/if}
     </div>

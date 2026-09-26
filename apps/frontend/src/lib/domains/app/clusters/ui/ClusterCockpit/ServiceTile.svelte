@@ -14,47 +14,32 @@
 
   const { projectId, name, status, onclick }: Props = $props();
 
+  const STATUS_DOT: Record<ServiceStatus, string> = {
+    up: 'bg-success',
+    down: 'bg-error',
+    degraded: 'bg-warning',
+    unknown: 'bg-neutral-600',
+  };
+
   const statusConfig = $derived(getStatusConfig(status));
 </script>
 
 <button
   {onclick}
-  class="ld-card-base group flex cursor-pointer flex-col gap-3 ld-card-rounding p-4 transition-all hover:bg-base-100/50"
+  class="ld-card-base group flex cursor-pointer flex-col gap-4 rounded-xl p-4 text-left hover:bg-neutral-800"
 >
-  <div class="flex items-start justify-between">
-    <div class="flex items-center gap-3 min-w-0 flex-1">
-      <div
-        class={[
-          'flex h-10 w-10 items-center justify-center rounded-xl',
-          {
-            'bg-success/10': status === 'up',
-            'bg-error/10': status === 'down',
-            'bg-warning/10': status === 'degraded',
-            'bg-base-100': status === 'unknown',
-          },
-        ]}
-      >
-        <HexagonIcon
-          class={[
-            'size-5',
-            {
-              'text-success': status === 'up',
-              'text-error': status === 'down',
-              'text-warning': status === 'degraded',
-              'text-base-content/50': status === 'unknown',
-            },
-          ]}
-        />
-      </div>
-      <div class="flex flex-col items-start min-w-0 flex-1">
-        <h3 class="font-semibold truncate max-w-full">{name}</h3>
-        <span class={['text-xs', statusConfig.color]}>
-          {statusConfig.text}
-        </span>
-      </div>
-    </div>
+  <div class="flex items-center gap-3">
+    <HexagonIcon class="text-neutral-400 size-4 shrink-0" />
+
+    <h3 class="min-w-0 flex-1 truncate text-sm font-medium">{name}</h3>
+
+    <span class="flex shrink-0 items-center gap-1.5 text-xs">
+      <span class={['size-1.5 rounded-full', STATUS_DOT[status]]}></span>
+      <span class="text-neutral-400">{statusConfig.text}</span>
+    </span>
+
     <ChevronRightIcon
-      class="size-4 text-base-content/30 transition-transform group-hover:translate-x-0.5 group-hover:text-base-content"
+      class="text-neutral-600 group-hover:text-neutral-400 size-3.5 shrink-0 transition-ink duration-150"
     />
   </div>
 

@@ -1,8 +1,5 @@
 import { PersonalApiKeyEntity } from './personal-api-key.entity';
-import {
-  PersonalApiKeyNormalized,
-  PersonalApiKeySerialized,
-} from './personal-api-key.interface';
+import { PersonalApiKeyNormalized, PersonalApiKeySerialized } from './personal-api-key.interface';
 
 export class PersonalApiKeySerializer {
   public static normalize(entity: PersonalApiKeyEntity): PersonalApiKeyNormalized {

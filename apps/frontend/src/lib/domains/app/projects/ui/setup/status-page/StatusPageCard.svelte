@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import SettingsIcon from '$lib/domains/shared/icons/SettingsIcon.svelte';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
@@ -6,6 +7,7 @@
   import PublicDashboardIcon from '$lib/domains/shared/icons/PublicDashboardIcon.svelte';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { onMount } from 'svelte';
+  import { Badge, Button, Spinner } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     clusterId: string;
@@ -23,17 +25,14 @@
   const dashboardUrl = $derived(
     publicDashboardManagerState.getDashboardUrl(dashboardId),
   );
-  const settingsUrl = $derived(
-    `/app/clusters/${clusterId}/status-pages/${dashboardId}`,
-  );
 
   onMount(async () => {
     await publicDashboardManagerState.loadPublicDashboards(clusterId);
     hasInitialized = true;
   });
 
-  function onCopyUrl(): void {
-    navigator.clipboard.writeText(dashboardUrl);
+  async function onCopyUrl(): Promise<void> {
+    await navigator.clipboard.writeText(dashboardUrl);
     toast.success('Status page URL copied to clipboard');
   }
 
@@ -44,7 +43,7 @@
 
 {#if !hasInitialized}
   <div class="flex w-full max-w-2xl items-center justify-center py-12">
-    <span class="loading loading-spinner loading-md"></span>
+    <Spinner />
   </div>
 {:else}
   <div class="ld-card flex w-full max-w-2xl flex-col gap-4">
@@ -53,7 +52,7 @@
         <div
           class={[
             'flex size-10 items-center justify-center rounded-lg',
-            { 'bg-success/10': isPublished, 'bg-base-100': !isPublished },
+            { 'bg-success/10': isPublished, 'bg-surface-100': !isPublished },
           ]}
         >
           <PublicDashboardIcon
@@ -61,43 +60,55 @@
           />
         </div>
         <div class="flex flex-col">
-          <span class="font-semibold">{dashboardName}</span>
+          <span class="font-medium">{dashboardName}</span>
           <div class="flex items-center gap-2">
             {#if isPublished}
-              <span class="badge badge-success badge-soft badge-xs">
-                Published
-              </span>
+              <Badge variant="success" size="xs">Published</Badge>
             {:else}
-              <span class="badge badge-secondary badge-soft badge-xs">
-                Draft
-              </span>
+              <Badge size="xs">Draft</Badge>
             {/if}
           </div>
         </div>
       </div>
 
-      <a href={settingsUrl} class="btn btn-secondary btn-sm gap-1">
+      <Button
+        href={resolve(
+          '/app/clusters/[cluster_id]/status-pages/[status_page_id]',
+          {
+            cluster_id: clusterId,
+            status_page_id: dashboardId,
+          },
+        )}
+        variant="primary"
+        size="sm"
+        class="gap-1"
+      >
         <SettingsIcon class="size-4" />
         Settings
-      </a>
+      </Button>
     </div>
 
     {#if isPublished}
       <div
-        class="flex flex-wrap items-center gap-2 border-t border-base-100 pt-4"
+        class="flex flex-wrap items-center gap-2 border-t border-border-default pt-4"
       >
-        <button onclick={onOpenStatusPage} class="btn btn-xs btn-primary gap-1">
+        <Button
+          variant="primary"
+          size="xs"
+          class="gap-1"
+          onclick={onOpenStatusPage}
+        >
           <OpenIcon class="size-4" />
           View live
-        </button>
-        <button onclick={onCopyUrl} class="btn btn-xs btn-ghost gap-1">
+        </Button>
+        <Button variant="ghost" size="xs" class="gap-1" onclick={onCopyUrl}>
           <CopyIcon class="size-4" />
           Copy URL
-        </button>
+        </Button>
       </div>
     {:else}
-      <div class="border-t border-base-100 pt-4">
-        <p class="text-sm text-base-content/60">
+      <div class="border-t border-border-default pt-4">
+        <p class="text-sm text-neutral-400">
           Configure and publish your status page to make it visible to everyone.
         </p>
       </div>

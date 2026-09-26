@@ -5,6 +5,7 @@ import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { addDays, addHours } from 'date-fns';
 import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 import { sleep } from '../utils/sleep';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('SubscriptionCoreController', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -66,7 +67,7 @@ describe('SubscriptionCoreController', () => {
         });
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('Invalid admin key');
+      expect((response.body as ErrorResponse).message).toBe('Invalid admin key');
     });
 
     it('returns 400 when user already has active subscription', async () => {
@@ -84,7 +85,7 @@ describe('SubscriptionCoreController', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('User already has active subscription');
+      expect((response.body as ErrorResponse).message).toBe('User already has active subscription');
     });
 
     it('returns 400 with invalid tier', async () => {
@@ -149,7 +150,7 @@ describe('SubscriptionCoreController', () => {
         });
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('Invalid admin key');
+      expect((response.body as ErrorResponse).message).toBe('Invalid admin key');
     });
 
     it('returns 400 when user has no active subscription', async () => {
@@ -165,7 +166,9 @@ describe('SubscriptionCoreController', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('User does not have active subscription');
+      expect((response.body as ErrorResponse).message).toBe(
+        'User does not have active subscription',
+      );
     });
 
     it('returns 400 when trying to extend early bird subscription', async () => {
@@ -182,7 +185,9 @@ describe('SubscriptionCoreController', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Cannot change expiration date of paid subscription');
+      expect((response.body as ErrorResponse).message).toBe(
+        'Cannot change expiration date of paid subscription',
+      );
     });
   });
 
@@ -225,7 +230,7 @@ describe('SubscriptionCoreController', () => {
         .set('super-secret-admin-key', 'invalid-key');
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe('Invalid admin key');
+      expect((response.body as ErrorResponse).message).toBe('Invalid admin key');
     });
 
     it('returns 400 when user has no active subscription', async () => {
@@ -238,7 +243,9 @@ describe('SubscriptionCoreController', () => {
         .set('super-secret-admin-key', adminKey);
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('User does not have active subscription');
+      expect((response.body as ErrorResponse).message).toBe(
+        'User does not have active subscription',
+      );
     });
 
     it('returns 400 when trying to end early bird subscription', async () => {
@@ -252,7 +259,7 @@ describe('SubscriptionCoreController', () => {
         .set('super-secret-admin-key', adminKey);
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('Cannot end early bird subscription');
+      expect((response.body as ErrorResponse).message).toBe('Cannot end early bird subscription');
     });
   });
 });

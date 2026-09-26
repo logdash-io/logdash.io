@@ -1,9 +1,9 @@
+import { expect } from '@jest/globals';
 import * as nock from 'nock';
 import { firstValueFrom, take, toArray } from 'rxjs';
 import { HttpPingCoreController } from '../../src/http-ping/core/http-ping-core.controller';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
-import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 
@@ -40,13 +40,13 @@ describe('Http Ping (SSE)', () => {
       });
 
       const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitorB = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+      await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setupB.token,
         projectId: setupB.project.id,
       });
 
       // when
-      const stream = await controller.streamHttpMonitorPings(setupA.cluster.id);
+      const stream = controller.streamHttpMonitorPings(setupA.cluster.id);
       const resultsPromise = firstValueFrom(stream.pipe(take(1)));
 
       await pingerService.tryPingMonitors([ProjectTier.Free]);
@@ -73,13 +73,13 @@ describe('Http Ping (SSE)', () => {
       });
 
       const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
-      const monitorB = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+      await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
         token: setupB.token,
         projectId: setupB.project.id,
       });
 
       // when
-      const stream = await controller.streamHttpMonitorPings(setupA.cluster.id);
+      const stream = controller.streamHttpMonitorPings(setupA.cluster.id);
       const resultsPromise = firstValueFrom(stream.pipe(take(2), toArray()));
 
       nock(URL_STUB).get('/').times(2).delay(10).reply(200);

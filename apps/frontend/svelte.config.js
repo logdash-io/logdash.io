@@ -8,10 +8,20 @@ const config = {
   preprocess: vitePreprocess(),
 
   kit: {
-    adapter: adapter(),
+    adapter: adapter({
+      platformProxy: {
+        remoteBindings: process.env.REMOTE_BINDINGS === 'true',
+      },
+    }),
     paths: {
       relative: false,
       base: process.env.NODE_ENV === 'production' ? '' : '',
+    },
+    typescript: {
+      config: (config) => ({
+        ...config,
+        include: [...config.include, '../*.ts', '../e2e/**/*.ts'],
+      }),
     },
   },
   compilerOptions: {

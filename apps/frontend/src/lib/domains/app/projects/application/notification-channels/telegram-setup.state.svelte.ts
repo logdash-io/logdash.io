@@ -15,7 +15,7 @@ export class TelegramSetupState {
 
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
 
-  startSetup(monitorId: string): void {
+  startSetup(monitorId: string | null): void {
     this.state.isOpen = true;
     this.state.currentStep = 'setup';
     this.state.passphrase = PassphraseGenerator.generate();
@@ -53,7 +53,7 @@ export class TelegramSetupState {
   private startPolling(): void {
     if (this.pollingInterval) return;
 
-    const poll = async () => {
+    const poll = async (): Promise<void> => {
       try {
         const response = await TelegramService.getChatInfo(
           this.state.passphrase,
@@ -70,8 +70,10 @@ export class TelegramSetupState {
       }
     };
 
-    this.pollingInterval = setInterval(poll, 2000);
-    poll();
+    this.pollingInterval = setInterval(() => {
+      void poll();
+    }, 2000);
+    void poll();
   }
 
   private stopPolling(): void {

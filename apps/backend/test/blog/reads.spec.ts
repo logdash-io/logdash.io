@@ -4,6 +4,7 @@ import {
   BlogPostSerialized,
   BlogPostListItem,
 } from '../../src/blog/core/entities/blog-post.interface';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('BlogCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -23,7 +24,7 @@ describe('BlogCoreController (reads)', () => {
   describe('GET /blog_posts', () => {
     it('reads all blog posts with titles and createdAt', async () => {
       // given
-      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      await bootstrap.utils.generalUtils.setupAnonymous();
 
       await bootstrap.models.blogPostModel.create({
         title: 'First Blog Post',
@@ -39,7 +40,7 @@ describe('BlogCoreController (reads)', () => {
       const response = await request(bootstrap.app.getHttpServer()).get('/blog_posts');
 
       // then
-      const blogPosts: BlogPostListItem[] = response.body;
+      const blogPosts = response.body as BlogPostListItem[];
       expect(blogPosts).toHaveLength(2);
 
       expect(blogPosts[0].title).toBe('Second Blog Post');
@@ -56,7 +57,7 @@ describe('BlogCoreController (reads)', () => {
       const response = await request(bootstrap.app.getHttpServer()).get('/blog_posts');
 
       // then
-      const blogPosts: BlogPostListItem[] = response.body;
+      const blogPosts = response.body as BlogPostListItem[];
       expect(blogPosts).toHaveLength(0);
     });
   });
@@ -64,7 +65,7 @@ describe('BlogCoreController (reads)', () => {
   describe('GET /blog_posts/:blogPostId', () => {
     it('reads specific blog post with all details', async () => {
       // given
-      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      await bootstrap.utils.generalUtils.setupAnonymous();
 
       const blogPost = await bootstrap.models.blogPostModel.create({
         title: 'Test Blog Post',
@@ -73,11 +74,11 @@ describe('BlogCoreController (reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer()).get(
-        `/blog_posts/${blogPost._id}`,
+        `/blog_posts/${blogPost._id.toString()}`,
       );
 
       // then
-      const result: BlogPostSerialized = response.body;
+      const result = response.body as BlogPostSerialized;
       expect(result.id).toBe(blogPost._id.toString());
       expect(result.title).toBe('Test Blog Post');
       expect(result.body).toBe('This is the complete content of the blog post.');
@@ -96,7 +97,7 @@ describe('BlogCoreController (reads)', () => {
 
       // then
       expect(response.status).toBe(404);
-      expect(response.body.message).toBe('Blog post not found');
+      expect((response.body as ErrorResponse).message).toBe('Blog post not found');
     });
   });
 });

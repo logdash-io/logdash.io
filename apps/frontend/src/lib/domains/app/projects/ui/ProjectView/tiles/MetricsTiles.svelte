@@ -1,11 +1,13 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import MetricsListener from '$lib/domains/app/projects/ui/presentational/MetricsListener.svelte';
   import MetricTile from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricTile.svelte';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
   import { UserTier } from '$lib/domains/shared/types.js';
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
@@ -17,9 +19,6 @@
   const previewedMetricId = $derived(page.params.metric_id);
   const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
-  const isDemoDashboard = $derived(
-    page.url.pathname.includes('/demo-dashboard'),
-  );
   const previewedMetric = $derived(
     previewedMetricId ? metricsState.getById(previewedMetricId) : null,
   );
@@ -42,32 +41,44 @@
 
 <MetricsListener>
   <div class="flex flex-col gap-1.5">
-    {#if metricsState.simplifiedMetrics.length >= currentMetricsLimit && !isDemoDashboard && !metricsState.isUsingFakeData}
+    {#if metricsState.simplifiedMetrics.length >= currentMetricsLimit && !metricsState.isUsingFakeData}
       <span class="text-sm">
         {#if userState.canUpgrade}
           <UpgradeElement
             source="metrics-limit"
-            class="bg-primary/20 text-primary flex w-full items-center gap-1 rounded-full px-3 py-1.5"
+            class="bg-surface-150 text-brand flex w-full items-center gap-1 rounded-full px-3 py-1.5"
           >
-            <RocketIcon class="text-primary size-3.5 shrink-0 mr-1" />
+            <RocketIcon class="text-brand size-3.5 shrink-0 mr-1" />
             Add
             <strong>{metricsLimitPlanDifference}x</strong>
             more metrics to this project.
           </UpgradeElement>
+        {:else if userState.isAnonymous}
+          <a
+            class="underline"
+            href={resolve(
+              `/app/auth?flow=claim&next_url=${encodeURIComponent(`${page.url.pathname}?claimed=1`)}`,
+            )}
+            data-posthog-id="metrics-tiles-claim-cta"
+          >
+            Claim your dashboard to unlock more metrics
+          </a>
         {:else}
-          <a class="underline" href="mailto:logdash.contact@gmail.com">Contact us</a>
+          <a class="underline" href="mailto:logdash.contact@gmail.com">
+            Contact us
+          </a>
           to add more metrics to this project.
         {/if}
       </span>
     {/if}
 
-    {#each metricsState.displayMetrics as metric}
+    {#each metricsState.displayMetrics as metric (metric.id)}
       <DataTile
         header={previewedMetricId === metric.id && !metricsState.isUsingFakeData
           ? header
           : emptyHeader}
         parentClass={[
-          'group relative transition-all duration-200',
+          'group relative transition-[padding] duration-200',
           {
             'pt-9':
               previewedMetricId === metric.id && !metricsState.isUsingFakeData,
@@ -78,16 +89,15 @@
         class={[
           'z-10 ring',
           {
-            'ring-primary':
+            'ring-brand':
               metric.id === previewedMetricId && !metricsState.isUsingFakeData,
             'ring-transparent':
               metric.id !== previewedMetricId || metricsState.isUsingFakeData,
           },
         ]}
         delayIn={0}
-        delayOut={50}
       >
-        <MetricTile id={metric.id} disabled={metricsState.isUsingFakeData} />
+        <MetricTile {metric} disabled={metricsState.isUsingFakeData} />
       </DataTile>
     {/each}
   </div>
@@ -95,7 +105,7 @@
 
 {#snippet header()}
   <div
-    class="bg-primary ring-primary absolute top-0 left-0 z-0 flex h-16 w-full items-start justify-between rounded-t-2xl text-sm leading-6 ring"
+    class="bg-brand ring-brand absolute top-0 left-0 z-0 flex h-16 w-full items-start justify-between rounded-t-2xl text-sm leading-6 ring"
   >
     <div
       transition:fly={{
@@ -108,24 +118,29 @@
       <span>Previewing</span>
 
       <div class="flex items-center gap-1">
-        {#if !isDemoDashboard && previewedMetric}
-          <button
-            class="btn text-base-content hover:text-error btn-soft btn-xs gap-1"
+        {#if previewedMetric}
+          <Button
+            variant="soft"
+            size="xs"
+            class="text-fg-default hover:text-error gap-1"
             onclick={() => {
               if (
+                projectId &&
                 confirm(
                   `Are you sure you want to delete ${previewedMetric.name} metric?`,
                 )
               ) {
-                metricsState.delete(projectId, previewedMetricId);
-                goto(`/app/clusters/${clusterId}/${projectId}/metrics`);
+                metricsState.delete(projectId, previewedMetric.id);
+                void goto(
+                  resolve(`/app/clusters/${clusterId}/${projectId}/metrics`),
+                );
               }
             }}
             data-posthog-id="delete-metric-button"
           >
             <CloseIcon class="size-3.5" />
             Delete
-          </button>
+          </Button>
         {/if}
       </div>
     </div>

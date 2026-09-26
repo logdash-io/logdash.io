@@ -3,9 +3,11 @@
   import { onMount } from 'svelte';
   import { logAnalyticsState } from '$lib/domains/logs/application/log-analytics.state.svelte.js';
   import type { LogsAnalyticsResponse } from '$lib/domains/logs/domain/logs-analytics-response.js';
+  import type { LogLevel } from '$lib/domains/logs/domain/log-level.js';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
+  import { Spinner } from '@logdash/hyper-ui/presentational';
   import { cubicOut } from 'svelte/easing';
-  import { fade, fly } from 'svelte/transition';
+  import { fade } from 'svelte/transition';
 
   type Props = {
     selectedStartDate: string | null;
@@ -20,7 +22,7 @@
   }: Props = $props();
 
   let chartContainer: HTMLElement;
-  let tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
+  let tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined>;
   let isDragging = $state(false);
   let dragStart: Date | null = $state(null);
   let dragEnd: Date | null = $state(null);
@@ -28,7 +30,7 @@
 
   const CHART_HEIGHT = 70;
   const MARGIN = { top: 5, right: 10, bottom: 25, left: 5 };
-  const LOG_TYPES = [
+  const LOG_TYPES: LogLevel[] = [
     'error',
     'warning',
     'info',
@@ -40,11 +42,11 @@
   const LOG_COLORS = [
     '#e7000b',
     '#fe9a00',
-    '#262626',
-    '#262626',
-    '#262626',
-    '#262626',
-    '#262626',
+    '#2c2c2e',
+    '#2c2c2e',
+    '#2c2c2e',
+    '#2c2c2e',
+    '#2c2c2e',
   ];
 
   const analyticsData = $derived(logAnalyticsState.analyticsData);
@@ -109,9 +111,7 @@
     // No grid lines needed without Y axis
 
     // Draw bars
-    const barWidth = (innerWidth / data.buckets.length) * 0.8;
-
-    data.buckets.forEach((bucket, index) => {
+    data.buckets.forEach((bucket) => {
       const bucketStart = new Date(bucket.bucketStart);
       const bucketEnd = new Date(bucket.bucketEnd);
 
@@ -149,8 +149,8 @@
       .attr('transform', `translate(0,${innerHeight})`)
       .call(
         d3
-          .axisBottom(xScale)
-          .ticks(6)
+          .axisBottom<Date>(xScale)
+          .ticks(Math.max(2, Math.min(6, Math.floor(innerWidth / 90))))
           .tickFormat((d: Date) => {
             return d.toLocaleTimeString([], {
               hour: '2-digit',
@@ -276,7 +276,7 @@
 
     overlay
       .call(dragBehavior)
-      .on('mousemove', (event) => {
+      .on('mousemove', (event: MouseEvent) => {
         if (!isDragging) {
           handleOverlayMouseMove(event, xScale, width);
         }
@@ -289,7 +289,7 @@
   }
 
   function handleOverlayMouseMove(
-    event: any,
+    event: MouseEvent,
     xScale: d3.ScaleTime<number, number>,
     width: number,
   ) {
@@ -321,7 +321,7 @@
   }
 
   function showTooltip(
-    event: any,
+    event: MouseEvent,
     bucket: LogsAnalyticsResponse['buckets'][0],
   ) {
     const bucketStart = new Date(bucket.bucketStart);
@@ -351,7 +351,7 @@
       .style('display', 'block')
       .style('left', `${tooltipX}px`)
       .style('top', `${tooltipY}px`).html(`
-        <div class="font-semibold font-mono">${formattedDateRange}</div>
+        <div class="font-medium font-mono">${formattedDateRange}</div>
         ${LOG_TYPES.map((logType) => {
           const count = bucket.countByLevel[logType];
           return count > 0
@@ -363,7 +363,7 @@
           `
             : '';
         }).join('')}
-        <div class="mt-2 pt-1 border-t border-gray-600 font-semibold font-mono">
+        <div class="mt-2 pt-1 border-t border-neutral-600 font-medium font-mono">
           Total: ${bucket.countTotal}
         </div>
       `);
@@ -374,7 +374,7 @@
     currentTooltipBucket = null;
   }
 
-  function moveTooltip(event: any) {
+  function moveTooltip(event: MouseEvent) {
     const tooltipX = Math.min(event.pageX + 10, window.innerWidth - 200);
     const tooltipY = event.pageY - 100;
 
@@ -384,7 +384,7 @@
   function renderEmptyState(container: HTMLElement) {
     d3.select(container)
       .append('div')
-      .attr('class', 'flex items-center justify-center text-gray-400')
+      .attr('class', 'flex items-center justify-center text-neutral-400')
       .style('height', `${CHART_HEIGHT}px`)
       .html('<p>No log data available</p>');
   }
@@ -404,13 +404,13 @@
 
   onMount(() => {
     tooltip = d3
-      .select('body')
+      .select(document.body)
       .append('div')
       .attr('class', 'chart-tooltip ld-card-base rounded-xl')
       .style('display', 'none')
       .style('position', 'absolute')
       .style('padding', '10px')
-      .style('color', 'var(--color-base-content)')
+      .style('color', 'var(--color-fg-default)')
       .style('pointer-events', 'none')
       .style('z-index', '99999')
       .style('max-width', '300px')
@@ -460,15 +460,15 @@
     {#if isLoading}
       <div
         transition:fade={{ duration: 200, easing: cubicOut }}
-        class="bg-base-200 text-secondary/60 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
+        class="bg-surface-elevated text-neutral-400 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
         style="height: {CHART_HEIGHT}px"
       >
-        <span class="loading loading-spinner loading-xs mr-2"></span>
+        <Spinner size="xs" class="mr-2" aria-hidden="true" />
         Loading analytics data...
       </div>
     {:else if error}
       <div
-        class="bg-base-200/50 text-error-content absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
+        class="bg-surface-elevated/50 text-fg-default absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
         style="height: {CHART_HEIGHT}px"
       >
         <span class="mr-2">

@@ -33,7 +33,7 @@ export class MetricBufferDataService {
   }
 
   public async storeSetMetric(projectId: string, metricName: string, value: number): Promise<void> {
-    const key = await this.getMetricBufferValueKey(projectId, metricName, MetricOperation.Set);
+    const key = this.getMetricBufferValueKey(projectId, metricName, MetricOperation.Set);
     await this.redisService.set(key, value.toString());
   }
 
@@ -42,7 +42,7 @@ export class MetricBufferDataService {
     metricName: string,
     value: number,
   ): Promise<void> {
-    const key = await this.getMetricBufferValueKey(projectId, metricName, MetricOperation.Change);
+    const key = this.getMetricBufferValueKey(projectId, metricName, MetricOperation.Change);
     await this.redisService.incrementBy(key, value);
   }
 

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types, UpdateQuery } from 'mongoose';
+import { Model, UpdateQuery } from 'mongoose';
 import { CreateHttpMonitorBody } from '../core/dto/create-http-monitor.body';
 import { HttpMonitorEntity } from '../core/entities/http-monitor.entity';
 import { HttpMonitorNormalized } from '../core/entities/http-monitor.interface';
@@ -37,7 +37,7 @@ export class HttpMonitorWriteService {
       claimed: false,
     });
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: actorUserId,
       action: AuditLogEntityAction.Create,
       actor: actorUserId ? Actor.User : Actor.System,
@@ -47,17 +47,17 @@ export class HttpMonitorWriteService {
 
     if (dto.notificationChannelsIds) {
       dto.notificationChannelsIds.forEach((notificationChannelId) => {
-        this.auditLog.create({
+        void this.auditLog.create({
           userId: actorUserId,
           relatedDomain: RelatedDomain.NotificationChannel,
           actor: Actor.User,
           action: AuditLogNotificationChannelAction.AddedToMonitor,
           relatedEntityId: notificationChannelId,
-          description: `Added to monitor ${entity._id}`,
+          description: `Added to monitor ${entity._id.toString()}`,
         });
       });
 
-      this.auditLog.create({
+      void this.auditLog.create({
         userId: actorUserId,
         relatedDomain: RelatedDomain.HttpMonitor,
         actor: Actor.User,
@@ -74,7 +74,7 @@ export class HttpMonitorWriteService {
     const monitors = await this.httpMonitorModel.find({ projectId });
 
     monitors.forEach((monitor) => {
-      this.auditLog.create({
+      void this.auditLog.create({
         userId: actorUserId,
         actor: actorUserId ? Actor.User : Actor.System,
         action: AuditLogEntityAction.Delete,
@@ -108,14 +108,14 @@ export class HttpMonitorWriteService {
     }
 
     const entity = await this.httpMonitorModel.findByIdAndUpdate(httpMonitorId, updateQuery, {
-      new: true,
+      returnDocument: 'after',
     });
 
     if (!entity) {
       throw new NotFoundException('Http monitor not found');
     }
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: actorUserId,
       action: AuditLogEntityAction.Update,
       actor: actorUserId ? Actor.User : Actor.System,
@@ -143,7 +143,7 @@ export class HttpMonitorWriteService {
     notificationChannelId: string,
     actorUserId: string,
   ): Promise<void> {
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: actorUserId,
       relatedDomain: RelatedDomain.HttpMonitor,
       actor: Actor.User,
@@ -152,7 +152,7 @@ export class HttpMonitorWriteService {
       description: `Added notification channel ${notificationChannelId} to monitor`,
     });
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: actorUserId,
       relatedDomain: RelatedDomain.NotificationChannel,
       actor: Actor.User,
@@ -171,7 +171,7 @@ export class HttpMonitorWriteService {
     notificationChannelId: string,
     actorUserId: string,
   ): Promise<void> {
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: actorUserId,
       relatedDomain: RelatedDomain.HttpMonitor,
       actor: Actor.User,
@@ -180,7 +180,7 @@ export class HttpMonitorWriteService {
       description: `Removed notification channel ${notificationChannelId} from monitor`,
     });
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: actorUserId,
       relatedDomain: RelatedDomain.NotificationChannel,
       actor: Actor.User,

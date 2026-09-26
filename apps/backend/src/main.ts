@@ -12,7 +12,7 @@ import { swaggerDarkModeCSS } from './swagger/swagger-dark-mode.js';
 // Documented batch maximum is 100 logs x 4096 chars, plus JSON overhead.
 const BODY_SIZE_LIMIT = '2mb';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
 
   app.enableShutdownHooks();
@@ -89,7 +89,11 @@ async function bootstrap() {
   await app.init();
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+
+bootstrap().catch((error: unknown) => {
+  console.error(error);
+  process.exit(1);
+});
 
 process.on('uncaughtException', (error) => {
   console.error(error);

@@ -20,18 +20,19 @@
 
 <div
   class={[
-    'flex flex-wrap items-center gap-3 transition-all duration-200',
+    'flex flex-wrap items-center gap-3 transition-opacity duration-200',
     { 'opacity-20 pointer-events-none': disabled },
   ]}
 >
-  {#each PROJECT_COLORS as color}
+  {#each PROJECT_COLORS as color (color)}
     {@const isSelected = selectedColor === color}
     <button
       type="button"
       class={[
-        'flex size-3.5 items-center justify-center rounded-xl transition-all duration-200 cursor-pointer',
+        'flex size-3.5 items-center justify-center rounded-xl transition-[scale,box-shadow] duration-200 cursor-pointer',
         {
-          'ring-2 ring-offset-2 ring-offset-base-300': isSelected && !disabled,
+          'ring-2 ring-offset-2 ring-offset-surface-root':
+            isSelected && !disabled,
           'hover:scale-110': !isSelected && !disabled,
         },
       ]}
@@ -45,9 +46,10 @@
 
   <label
     class={[
-      'relative flex size-3.5 cursor-pointer items-center justify-center rounded-xl transition-all duration-200',
+      'relative flex size-3.5 cursor-pointer items-center justify-center rounded-xl transition-[scale,box-shadow] duration-200',
       {
-        'ring-2 ring-offset-2 ring-offset-base-300': isCustomColor && !disabled,
+        'ring-2 ring-offset-2 ring-offset-surface-root':
+          isCustomColor && !disabled,
         'hover:scale-110': !disabled,
       },
     ]}

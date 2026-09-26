@@ -30,7 +30,7 @@ describe('Audit logs (writes)', () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
     // when
-    auditLog.create({
+    await auditLog.create({
       relatedDomain: RelatedDomain.Project,
       relatedEntityId: setup.project.id,
     });
@@ -48,7 +48,7 @@ describe('Audit logs (writes)', () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
     // when
-    auditLog.create({
+    await auditLog.create({
       relatedDomain: RelatedDomain.Cluster,
       relatedEntityId: setup.cluster.id,
     });
@@ -65,7 +65,7 @@ describe('Audit logs (writes)', () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-    const metric = await bootstrap.utils.metricUtils.recordMetric({
+    await bootstrap.utils.metricUtils.recordMetric({
       apiKey: setup.apiKey.value,
       name: 'test',
       operation: MetricOperation.Set,
@@ -77,7 +77,7 @@ describe('Audit logs (writes)', () => {
     });
 
     // when
-    auditLog.create({
+    await auditLog.create({
       relatedDomain: RelatedDomain.Metric,
       relatedEntityId: metricRegisterEntry?.id,
     });
@@ -96,15 +96,13 @@ describe('Audit logs (writes)', () => {
 
     // when
     await Promise.all(
-      Array.from({ length: 1000 }).map(async () => {
-        try {
-          await auditLog.create({
-            userId: setup.user.id,
-            relatedDomain: RelatedDomain.Project,
-            relatedEntityId: setup.project.id,
-          });
-        } catch {}
-      }),
+      Array.from({ length: 1000 }).map(() =>
+        auditLog.create({
+          userId: setup.user.id,
+          relatedDomain: RelatedDomain.Project,
+          relatedEntityId: setup.project.id,
+        }),
+      ),
     );
 
     // then

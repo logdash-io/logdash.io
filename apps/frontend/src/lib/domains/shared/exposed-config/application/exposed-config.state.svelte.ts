@@ -71,8 +71,7 @@ class ExposedConfigState {
       return [];
     }
 
-    return (tierConfig.notificationChannels.allowedTypes ??
-      []) as NotificationChannelType[];
+    return tierConfig.notificationChannels.allowedTypes ?? [];
   }
 
   firstTierWithNotificationChannel(

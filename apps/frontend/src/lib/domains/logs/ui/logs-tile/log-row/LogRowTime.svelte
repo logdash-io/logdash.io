@@ -1,14 +1,12 @@
 <script lang="ts">
   import { DateTime } from 'luxon';
-  import { match } from 'ts-pattern';
   import { timeDisplayState } from '$lib/domains/logs/infrastructure/time-display.state.svelte.js';
 
   type Props = {
     date: Date;
-    level: string;
   };
 
-  let { date: rawDate, level }: Props = $props();
+  let { date: rawDate }: Props = $props();
 
   function formatTimeAgo(date: Date): string {
     const now = Date.now();
@@ -69,14 +67,7 @@
   const brightTimeNumbers = $derived(timeParts.slice(0, -1));
   const darkTimeNumber = $derived(timeParts[timeParts.length - 1]);
 
-  const secondaryTextColor = $derived(
-    match(level)
-      .with('info', () => 'text-secondary/60')
-      .with('warning', () => 'text-warning-content/60')
-      .with('error', () => 'text-error-content/60')
-      .with('success', () => 'text-success/60')
-      .otherwise(() => 'text-secondary/60'),
-  );
+  const secondaryTextColor = 'text-neutral-500';
 </script>
 
 {#if timeDisplayState.isRelative}
@@ -91,7 +82,7 @@
 {:else}
   <span class="flex text-sm leading-7 whitespace-nowrap tabular-nums shrink-0">
     <span class={secondaryTextColor}>{absoluteDate}&nbsp;</span>
-    {#each brightTimeNumbers as number, i}
+    {#each brightTimeNumbers as number, i (i)}
       <span>{number}</span>
       {#if i < brightTimeNumbers.length - 1}
         <span class="font-normal">.</span>

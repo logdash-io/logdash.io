@@ -20,7 +20,7 @@ export class ProjectReadCachedService {
     const projectJson = await this.redisService.get(cacheKey);
 
     if (projectJson === 'null') {
-      throw Error('Project not found. You have to wait 10 seconds before trying again');
+      return null;
     }
 
     if (projectJson !== null) {

@@ -2,9 +2,6 @@ import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
-import { addDays, addHours } from 'date-fns';
-import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
-import { sleep } from '../utils/sleep';
 
 describe('SubscriptionCoreController', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -25,22 +22,22 @@ describe('SubscriptionCoreController', () => {
   describe('POST /admin/user/:userId/sync_subscription', () => {
     it('changes free users to early users', async () => {
       // given
-      const setupFree = await bootstrap.utils.generalUtils.setupClaimed({
+      await bootstrap.utils.generalUtils.setupClaimed({
         email: 'free@test.com',
         userTier: UserTier.Free,
       });
 
-      const setupEarlyBird = await bootstrap.utils.generalUtils.setupClaimed({
+      await bootstrap.utils.generalUtils.setupClaimed({
         email: 'earlyBird@test.com',
         userTier: UserTier.EarlyBird,
       });
 
-      const setupContributor = await bootstrap.utils.generalUtils.setupClaimed({
+      await bootstrap.utils.generalUtils.setupClaimed({
         email: 'contributor@test.com',
         userTier: UserTier.Contributor,
       });
 
-      const setupPro = await bootstrap.utils.generalUtils.setupClaimed({
+      await bootstrap.utils.generalUtils.setupClaimed({
         email: 'pro@test.com',
         userTier: UserTier.Pro,
       });

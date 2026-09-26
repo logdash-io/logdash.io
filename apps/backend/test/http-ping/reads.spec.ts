@@ -1,6 +1,8 @@
+import { expect } from '@jest/globals';
 import { Types } from 'mongoose';
 import * as request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
+import { HttpPingSerialized } from '../../src/http-ping/core/entities/http-ping.interface';
 
 describe('Http Ping (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -25,7 +27,9 @@ describe('Http Ping (reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${setupA.project.id}/monitors/${new Types.ObjectId()}/http_pings`)
+        .get(
+          `/projects/${setupA.project.id}/monitors/${new Types.ObjectId().toString()}/http_pings`,
+        )
         .set('Authorization', `Bearer ${setupB.token}`);
 
       // then
@@ -37,7 +41,7 @@ describe('Http Ping (reads)', () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/projects/${setup.project.id}/monitors/${new Types.ObjectId()}/http_pings`)
+        .get(`/projects/${setup.project.id}/monitors/${new Types.ObjectId().toString()}/http_pings`)
         .set('Authorization', `Bearer ${setup.token}`);
 
       // then
@@ -62,8 +66,9 @@ describe('Http Ping (reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.length).toBe(10);
-      expect(response.body[0]).toMatchObject({
+      const pings = response.body as HttpPingSerialized[];
+      expect(pings.length).toBe(10);
+      expect(pings[0]).toMatchObject({
         statusCode: 200,
         responseTimeMs: expect.any(Number),
         message: 'Default HTTP ping',
@@ -89,7 +94,7 @@ describe('Http Ping (reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.length).toBe(5);
+      expect((response.body as HttpPingSerialized[]).length).toBe(5);
     });
   });
 });

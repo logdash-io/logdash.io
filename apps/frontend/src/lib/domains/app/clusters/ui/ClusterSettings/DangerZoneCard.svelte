@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import {
@@ -9,6 +10,7 @@
   } from '$lib/domains/shared/ui/components/settings-card';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
+  import { Button } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     clusterId: string;
@@ -29,7 +31,7 @@
       await clustersState.delete(clusterId);
       dismissLoading();
       toast.success('Project deleted successfully', 5000);
-      goto('/app/clusters');
+      void goto(resolve('/app/clusters'));
     } catch (error) {
       dismissLoading();
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -38,7 +40,7 @@
   }
 </script>
 
-<SettingsCard variant="danger">
+<SettingsCard>
   <SettingsCardHeader
     title="Danger Zone"
     description="Irreversible actions that affect your project"
@@ -48,25 +50,20 @@
 
   <div class="ld-card-bg">
     <SettingsCardItem icon={TrashIcon} iconVariant="danger" showBorder={false}>
-      {#snippet children()}
-        <p class="font-medium">Delete Project</p>
-        <p class="text-base-content/60 text-sm">
-          Permanently delete this project and all its services
-        </p>
-      {/snippet}
+      <p class="font-medium">Delete Project</p>
+      <p class="text-neutral-400 text-sm">
+        Permanently delete this project and all its services
+      </p>
 
       {#snippet action()}
-        <button
+        <Button
+          variant="danger-ghost"
+          size="sm"
           onclick={onDeleteProject}
-          disabled={clustersState.isDeleting}
-          class="btn btn-error btn-outline btn-sm"
+          loading={clustersState.isDeleting}
         >
-          {#if clustersState.isDeleting}
-            <span class="loading loading-spinner loading-xs"></span>
-          {:else}
-            Delete
-          {/if}
-        </button>
+          Delete
+        </Button>
       {/snippet}
     </SettingsCardItem>
   </div>

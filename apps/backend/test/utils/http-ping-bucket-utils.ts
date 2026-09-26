@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { ClickHouseClient } from '@clickhouse/client';
 import { INestApplication } from '@nestjs/common';
 import { Types } from 'mongoose';
@@ -8,7 +9,7 @@ import { HttpPingBucketSerializer } from '../../src/http-ping-bucket/core/entiti
 export class HttpPingBucketUtils {
   private clickhouseClient: ClickHouseClient;
 
-  constructor(private readonly app: INestApplication<any>) {
+  constructor(private readonly app: INestApplication<App>) {
     this.clickhouseClient = app.get(ClickHouseClient);
   }
 
@@ -47,9 +48,7 @@ export class HttpPingBucketUtils {
       },
       format: 'JSONEachRow',
     });
-    return HttpPingBucketSerializer.normalizeMany(
-      (await response.json()) as any as HttpPingBucketEntity[],
-    );
+    return HttpPingBucketSerializer.normalizeMany(await response.json<HttpPingBucketEntity>());
   }
 
   public async getAllBuckets(): Promise<HttpPingBucketNormalized[]> {
@@ -58,8 +57,6 @@ export class HttpPingBucketUtils {
       format: 'JSONEachRow',
     });
 
-    return HttpPingBucketSerializer.normalizeMany(
-      (await response.json()) as any as HttpPingBucketEntity[],
-    );
+    return HttpPingBucketSerializer.normalizeMany(await response.json<HttpPingBucketEntity>());
   }
 }

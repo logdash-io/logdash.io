@@ -13,10 +13,9 @@ describe('CustomDomainCoreController (reads)', () => {
     // The domain verification cron runs every 5 seconds. Left running it races
     // with the explicit verification these tests drive, and silently bumps
     // attemptCount/dns call counts.
-    bootstrap.app
-      .get(SchedulerRegistry)
-      .getCronJobs()
-      .forEach((job) => job.stop());
+    for (const job of bootstrap.app.get(SchedulerRegistry).getCronJobs().values()) {
+      await job.stop();
+    }
   });
 
   beforeEach(async () => {
@@ -52,7 +51,7 @@ describe('CustomDomainCoreController (reads)', () => {
         .set('Authorization', `Bearer ${token}`);
 
       // then
-      const result: CustomDomainSerialized = response.body;
+      const result = response.body as CustomDomainSerialized;
       expect(response.status).toBe(200);
       expect(result.id).toBe(customDomain.id);
       expect(result.domain).toBe('example.com');

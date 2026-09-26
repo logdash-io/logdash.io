@@ -9,6 +9,8 @@ import {
 } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
+import { ClusterSerialized } from '../../src/cluster/core/entities/cluster.interface';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('ClusterCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -31,7 +33,7 @@ describe('ClusterCoreController (writes)', () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
-      const response = await request(bootstrap.app.getHttpServer())
+      await request(bootstrap.app.getHttpServer())
         .post(`/users/me/clusters`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'my cluster' });
@@ -68,7 +70,9 @@ describe('ClusterCoreController (writes)', () => {
         .expect(400);
 
       // then
-      expect(response.body.message).toBe('Cannot create more clusters. Maximum limit reached.');
+      expect((response.body as ErrorResponse).message).toBe(
+        'Cannot create more clusters. Maximum limit reached.',
+      );
 
       // Verify no new cluster was created
       const clusterCount = await bootstrap.models.clusterModel.countDocuments({
@@ -93,7 +97,7 @@ describe('ClusterCoreController (writes)', () => {
         userId: user.id,
         action: AuditLogEntityAction.Create,
         relatedDomain: RelatedDomain.Cluster,
-        relatedEntityId: response.body.id,
+        relatedEntityId: (response.body as ClusterSerialized).id,
       });
     });
 
@@ -108,15 +112,16 @@ describe('ClusterCoreController (writes)', () => {
         .send({ name: 'some name' });
 
       // then
-      expect(response.body.roles).toEqual({ [user.id]: ClusterRole.Creator });
+      expect((response.body as ClusterSerialized).roles).toEqual({
+        [user.id]: ClusterRole.Creator,
+      });
     });
   });
 
   describe('PUT /clusters/:clusterId', () => {
     it('updates cluster name', async () => {
       // given
-      const { token, user, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const userId = user.id;
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
@@ -126,7 +131,7 @@ describe('ClusterCoreController (writes)', () => {
         .expect(200);
 
       // then
-      expect(response.body.name).toBe('Updated Cluster Name');
+      expect((response.body as ClusterSerialized).name).toBe('Updated Cluster Name');
 
       const updatedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
       expect(updatedCluster?.name).toBe('Updated Cluster Name');
@@ -137,7 +142,7 @@ describe('ClusterCoreController (writes)', () => {
       const { token, user, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
-      const response = await request(bootstrap.app.getHttpServer())
+      await request(bootstrap.app.getHttpServer())
         .put(`/clusters/${cluster.id}`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'Updated Cluster Name' });
@@ -154,8 +159,7 @@ describe('ClusterCoreController (writes)', () => {
     it('throws error when user is not a member of the cluster', async () => {
       // given
       const { user: creator } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const { token: nonMemberToken, user: nonMember } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: nonMemberToken } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // Create a cluster with creator only
       const cluster = await bootstrap.models.clusterModel.create({
@@ -190,7 +194,7 @@ describe('ClusterCoreController (writes)', () => {
         projectId: project.id,
         token,
       });
-      const publicDashboard = await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+      await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
         clusterId: cluster.id,
         httpMonitorsIds: [monitor.id],
         token,
@@ -237,7 +241,7 @@ describe('ClusterCoreController (writes)', () => {
       const { token, user, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
-      const response = await request(bootstrap.app.getHttpServer())
+      await request(bootstrap.app.getHttpServer())
         .delete(`/clusters/${cluster.id}`)
         .set('Authorization', `Bearer ${token}`);
 
@@ -252,9 +256,8 @@ describe('ClusterCoreController (writes)', () => {
 
     it('throws 403 error when user is not a member of the cluster', async () => {
       // given
-      const { user: creator, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const { token: nonMemberToken, user: nonMember } =
-        await bootstrap.utils.generalUtils.setupAnonymous();
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: nonMemberToken } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when & then
       const response = await request(bootstrap.app.getHttpServer())
@@ -264,12 +267,12 @@ describe('ClusterCoreController (writes)', () => {
 
       // then
       expect(response.statusCode).toBe(403);
-      expect(response.body.message).toBe('User is not a member of this cluster');
+      expect((response.body as ErrorResponse).message).toBe('User is not a member of this cluster');
     });
 
     it('throws 403 error when user is member of the cluster but does not have the required role', async () => {
       // given
-      const { user: creator, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { token: nonMemberToken, user: nonMember } =
         await bootstrap.utils.generalUtils.setupAnonymous();
 
@@ -286,7 +289,7 @@ describe('ClusterCoreController (writes)', () => {
 
       // then
       expect(response.statusCode).toBe(403);
-      expect(response.body.message).toBe('User does not have the required role');
+      expect((response.body as ErrorResponse).message).toBe('User does not have the required role');
     });
   });
 
@@ -303,7 +306,7 @@ describe('ClusterCoreController (writes)', () => {
       });
 
       // when
-      const response = await request(bootstrap.app.getHttpServer())
+      await request(bootstrap.app.getHttpServer())
         .delete(`/clusters/${cluster.id}/roles/${otherSetup.user.id}`)
         .set('Authorization', `Bearer ${token}`);
 
@@ -337,7 +340,7 @@ describe('ClusterCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
+      expect((response.body as ErrorResponse).message).toBe(
         'Cannot delete role. User is the creator of this cluster.',
       );
     });
@@ -360,7 +363,7 @@ describe('ClusterCoreController (writes)', () => {
 
       // then
       expect(response.statusCode).toBe(403);
-      expect(response.body.message).toBe('User does not have the required role');
+      expect((response.body as ErrorResponse).message).toBe('User does not have the required role');
     });
   });
 });

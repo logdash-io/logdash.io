@@ -1,23 +1,50 @@
-<script>
-  import LogdashBlindFlamingo from '$lib/domains/shared/icons/LogdashBlindFlamingo.svelte';
+<script lang="ts">
+  import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
+  import DowntimeFeed from './DowntimeFeed.svelte';
+  import LandingHeading from './LandingHeading.svelte';
+  import LandingSection from './LandingSection.svelte';
+  import StageLight from './stage/StageLight.svelte';
+  import StagePanel from './stage/StagePanel.svelte';
+
+  const ASSURANCES = [
+    'Alerted within 15 seconds on Telegram or a webhook',
+    'A public status page that answers before they ask',
+  ];
 </script>
 
-<section id="problem-statement" class="">
-  <div class="container mx-auto rounded-xl bg-gradient-to-b p-8">
-    <LogdashBlindFlamingo class="mx-auto mb-8 h-64 w-auto" />
+<LandingHeading
+  id="problem-statement"
+  dividerTop
+  title="Stuff breaks. That’s expected."
+  quiet="Going quiet isn’t."
+  description="Every silent minute, your users assume the worst and tell everyone. Get the alert first, and let them know before they ask."
+>
+  <ul
+    class="mt-8 flex flex-col items-start gap-3 text-left sm:flex-row sm:items-center sm:gap-8"
+  >
+    {#each ASSURANCES as assurance (assurance)}
+      <li class="flex items-start gap-2.5 text-sm sm:items-center">
+        <CheckIcon class="text-neutral-500 mt-0.5 size-4 shrink-0 sm:mt-0" />
+        <span class="text-neutral-300">{assurance}</span>
+      </li>
+    {/each}
+  </ul>
+</LandingHeading>
 
-    <h2
-      class="text-secondary mb-4 text-center text-3xl font-extrabold md:text-4xl"
+<LandingSection>
+  <div class="relative h-[28rem] overflow-hidden sm:h-[32rem]">
+    <StageLight preset="bottom" class="absolute inset-0" />
+
+    <StagePanel
+      class="inset-x-4 top-10 bottom-0 mx-auto max-w-2xl rounded-t-xl sm:top-14"
     >
-      Stuff breaks. That’s expected.
-      <br />
-      <span class="text-primary">Being blind isn’t.</span>
-    </h2>
+      <div class="px-5 pt-5">
+        <DowntimeFeed />
+      </div>
 
-    <p class="mx-auto max-w-3xl text-center text-xl opacity-80">
-      When wearing many hats shipping tomorrow's unicorns, you can’t afford to
-      lose clients because of bugs that get in your way. Problems are
-      inevitable, but chaos doesn’t have to be.
-    </p>
+      <div
+        class="to-surface-elevated pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent"
+      ></div>
+    </StagePanel>
   </div>
-</section>
+</LandingSection>

@@ -4,6 +4,7 @@
   import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import type { Snippet } from 'svelte';
   import { PingChart } from '@logdash/hyper-ui/features';
+  import { Badge, Spinner, StatusDot } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     projectId: string;
@@ -15,9 +16,14 @@
   const projectMonitor = $derived(
     monitoringState.getMonitorByProjectId(projectId),
   );
-  const isHealthy = $derived(monitoringState.isHealthy(projectMonitor?.id));
+  const isHealthy = $derived(
+    projectMonitor ? monitoringState.isHealthy(projectMonitor.id) : false,
+  );
+  const healthVariant = $derived(isHealthy ? 'success' : 'error');
   const pings = $derived(
-    monitoringState.monitoringPings(projectMonitor.id).slice(-MAX_PINGS),
+    projectMonitor
+      ? monitoringState.monitoringPings(projectMonitor.id).slice(-MAX_PINGS)
+      : [],
   );
 
   $effect(() => {
@@ -28,7 +34,7 @@
       return;
     }
 
-    monitoringState.loadMonitorPings(projectId, projectMonitor?.id);
+    void monitoringState.loadMonitorPings(projectId, projectMonitor.id);
   });
 </script>
 
@@ -36,33 +42,17 @@
   <div class="flex w-full flex-col gap-2">
     <div class="flex w-full gap-2">
       <div class="flex w-full items-center gap-2">
-        <h5 class="max-w-80 truncate text-2xl font-semibold">
+        <h5 class="max-w-80 truncate text-2xl font-medium">
           {projectMonitor?.name}
         </h5>
 
-        <div
-          class={[
-            'badge badge-soft',
-            {
-              'badge-success': isHealthy,
-              'badge-error': !isHealthy,
-            },
-          ]}
-        >
-          <span
-            class={[
-              'status',
-              {
-                'status-success': isHealthy,
-                'status-error': !isHealthy,
-              },
-            ]}
-          ></span>
+        <Badge variant={healthVariant}>
+          <StatusDot variant={healthVariant} />
           {isHealthy ? 'up' : 'down'}
-        </div>
+        </Badge>
       </div>
 
-      <span class="loading loading-ring loading-sm duration-1000"></span>
+      <Spinner variant="ring" size="sm" aria-hidden="true" />
     </div>
 
     <div class="flex w-full flex-col">

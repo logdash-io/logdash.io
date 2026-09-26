@@ -21,10 +21,9 @@ describe('CustomDomainRegistrationService', () => {
     // The domain verification cron runs every 5 seconds. Left running it races
     // with the explicit verification these tests drive, and silently bumps
     // attemptCount/dns call counts.
-    bootstrap.app
-      .get(SchedulerRegistry)
-      .getCronJobs()
-      .forEach((job) => job.stop());
+    for (const job of bootstrap.app.get(SchedulerRegistry).getCronJobs().values()) {
+      await job.stop();
+    }
     registrationService = bootstrap.app.get(CustomDomainRegistrationService);
   });
 
@@ -56,7 +55,7 @@ describe('CustomDomainRegistrationService', () => {
       name: 'test dashboard',
     });
 
-    const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+    await bootstrap.utils.customDomainUtils.createCustomDomain({
       token,
       domain: 'example.com',
       publicDashboardId: publicDashboard.id,
@@ -68,9 +67,9 @@ describe('CustomDomainRegistrationService', () => {
       targetCname: getEnvConfig().customDomain.targetCname,
     });
 
-    const messages: any[] = [];
+    const messages: nock.Body[] = [];
 
-    await bootstrap.utils.webhookUtils.setUpWebhookListenerWithMethod({
+    bootstrap.utils.webhookUtils.setUpWebhookListenerWithMethod({
       webhookUrl: 'https://example.com',
       method: WebhookHttpMethod.GET,
       onMessage: (message) => {
@@ -106,7 +105,7 @@ describe('CustomDomainRegistrationService', () => {
       name: 'test dashboard',
     });
 
-    const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+    await bootstrap.utils.customDomainUtils.createCustomDomain({
       token,
       domain: 'example.com',
       publicDashboardId: publicDashboard.id,
@@ -145,7 +144,7 @@ describe('CustomDomainRegistrationService', () => {
       name: 'test dashboard',
     });
 
-    const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+    await bootstrap.utils.customDomainUtils.createCustomDomain({
       token,
       domain: 'example.com',
       publicDashboardId: publicDashboard.id,
@@ -186,7 +185,7 @@ describe('CustomDomainRegistrationService', () => {
       name: 'test dashboard',
     });
 
-    const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+    await bootstrap.utils.customDomainUtils.createCustomDomain({
       token,
       domain: 'example.com',
       publicDashboardId: publicDashboard.id,
@@ -227,7 +226,7 @@ describe('CustomDomainRegistrationService', () => {
       name: 'test dashboard',
     });
 
-    const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+    await bootstrap.utils.customDomainUtils.createCustomDomain({
       token,
       domain: 'example.com',
       publicDashboardId: publicDashboard.id,
@@ -265,7 +264,7 @@ describe('CustomDomainRegistrationService', () => {
       name: 'test dashboard',
     });
 
-    const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+    await bootstrap.utils.customDomainUtils.createCustomDomain({
       token,
       domain: 'example.com',
       publicDashboardId: publicDashboard.id,
@@ -307,7 +306,7 @@ describe('CustomDomainRegistrationService', () => {
       name: 'test dashboard',
     });
 
-    const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+    await bootstrap.utils.customDomainUtils.createCustomDomain({
       token,
       domain: 'example.com',
       publicDashboardId: publicDashboard.id,

@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { ClickHouseClient } from '@clickhouse/client';
 import { INestApplication } from '@nestjs/common';
 import { AuditLogNormalized } from '../../src/audit-log/core/entities/audit-log.interface';
@@ -7,7 +8,7 @@ import { sleep } from './sleep';
 export class AuditLogUtils {
   private clickhouseClient: ClickHouseClient;
 
-  constructor(private readonly app: INestApplication<any>) {
+  constructor(private readonly app: INestApplication<App>) {
     this.clickhouseClient = app.get(ClickHouseClient);
   }
 
@@ -49,7 +50,7 @@ export class AuditLogUtils {
         format: 'JSONEachRow',
       });
 
-      auditLogs = (await response.json()) as any as AuditLogEntity[];
+      auditLogs = await response.json<AuditLogEntity>();
 
       const matchingAuditLog = auditLogs.find((auditLog) => this.matchAuditLog(auditLog, dto));
 
@@ -74,7 +75,7 @@ export class AuditLogUtils {
       format: 'JSONEachRow',
     });
 
-    const result = (await response.json()) as any;
+    const result = await response.json<{ 'COUNT()': string }>();
 
     return Number(result[0]['COUNT()']);
   }

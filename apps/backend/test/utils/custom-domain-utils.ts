@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { CustomDomainSerialized } from '../../src/custom-domain/core/entities/custom-domain.interface';
@@ -8,7 +9,7 @@ import { CustomDomainDnsService } from '../../src/custom-domain/dns/custom-domai
 export class CustomDomainUtils {
   private dnsServiceMock: CustomDomainDnsServiceMock;
 
-  constructor(private readonly app: INestApplication) {
+  constructor(private readonly app: INestApplication<App>) {
     this.dnsServiceMock = app.get(CustomDomainDnsService);
   }
 
@@ -26,7 +27,7 @@ export class CustomDomainUtils {
       .set('Authorization', `Bearer ${dto.token}`)
       .send(body);
 
-    return response.body;
+    return response.body as CustomDomainSerialized;
   }
 
   public async getCustomDomainByPublicDashboardId(dto: {
@@ -37,7 +38,7 @@ export class CustomDomainUtils {
       .get(`/public_dashboards/${dto.publicDashboardId}/custom_domain`)
       .set('Authorization', `Bearer ${dto.token}`);
 
-    return response.body;
+    return response.body as CustomDomainSerialized;
   }
 
   public async deleteCustomDomain(dto: { token: string; customDomainId: string }): Promise<void> {

@@ -47,6 +47,12 @@ export const get_access_token = (cookies: Cookies): string | undefined => {
   return cookies.get(ACCESS_TOKEN_COOKIE_NAME);
 };
 
+export const clear_access_token = (cookies: Cookies): void => {
+  cookies.delete(ACCESS_TOKEN_COOKIE_NAME, {
+    path: ACCESS_TOKEN_COOKIE_PATH,
+  });
+};
+
 export const save_onboarding_tier = (
   cookies: Cookies,
   tier: UserTier,

@@ -20,16 +20,18 @@
   }: Props = $props();
 
   const baseClasses = $derived([
-    'flex w-full text-sm items-center gap-2 rounded-lg p-2 px-2.5',
+    'flex h-8 w-full items-center gap-2 rounded-lg px-2 text-sm',
     {
-      'bg-base-100 text-base-content': isActive,
-      'hover:bg-base-100/80 cursor-pointer': !isActive && !disabled,
-      'opacity-50 cursor-not-allowed pointer-events-none': disabled,
+      'bg-surface-100 text-fg-default': isActive,
+      'text-neutral-400 hover:bg-surface-hover hover:text-fg-default cursor-pointer':
+        !isActive && !disabled,
+      'text-neutral-600 cursor-not-allowed pointer-events-none': disabled,
     },
   ]);
 </script>
 
 {#if href}
+  <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href is supplied by the caller -->
   <a {href} class={baseClasses} {target}>
     {@render children()}
   </a>

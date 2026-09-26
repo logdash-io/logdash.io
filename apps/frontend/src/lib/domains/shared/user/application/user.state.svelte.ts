@@ -5,7 +5,6 @@ import {
   startTierUpgrade,
   type UpgradeSource,
 } from '../../upgrade/start-tier-upgrade.util.js';
-import { posthog } from 'posthog-js';
 import { UsersService } from '../infrastructure/users.service.js';
 import { match } from 'ts-pattern';
 import { toast } from '../../ui/toaster/toast.state.svelte.js';
@@ -13,7 +12,7 @@ import { toast } from '../../ui/toaster/toast.state.svelte.js';
 class UserState {
   private _user = $state<User>();
 
-  get user(): User {
+  get user(): User | undefined {
     return this._user;
   }
 
@@ -21,7 +20,7 @@ class UserState {
     return this._user?.tier || UserTier.FREE;
   }
 
-  get id(): User['id'] {
+  get id(): User['id'] | undefined {
     return this._user?.id;
   }
 
@@ -59,13 +58,18 @@ class UserState {
     );
   }
 
+  get isAnonymous(): boolean {
+    return this._user?.accountClaimStatus === 'anonymous';
+  }
+
   get canUpgrade(): boolean {
     return (
-      this.tier === UserTier.FREE ||
-      this.tier === UserTier.CONTRIBUTOR ||
-      this.tier === UserTier.EARLY_USER ||
-      this.tier === UserTier.EARLY_BIRD ||
-      this.tier === UserTier.BUILDER
+      (this.tier === UserTier.FREE ||
+        this.tier === UserTier.CONTRIBUTOR ||
+        this.tier === UserTier.EARLY_USER ||
+        this.tier === UserTier.EARLY_BIRD ||
+        this.tier === UserTier.BUILDER) &&
+      !this.isAnonymous
     );
   }
 
@@ -103,7 +107,9 @@ class UserState {
       UsersService.changePaidPlan(to)
         .then(() => {
           toast.success('Your plan has been upgraded!');
-          this.set({ ...this._user, tier: to });
+          if (this._user) {
+            this.set({ ...this._user, tier: to });
+          }
         })
         .catch((error) => {
           toast.error('Failed to upgrade your plan');

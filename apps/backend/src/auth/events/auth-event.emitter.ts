@@ -8,11 +8,11 @@ import { AuthEvents } from './auth-events.enum';
 export class AuthEventEmitter {
   public constructor(private readonly eventEmitter: EventEmitter) {}
 
-  public async emitUserLoggedInEvent(payload: UserLoggedInEvent): Promise<void> {
-    await this.eventEmitter.emit(AuthEvents.UserLoggedInEvent, payload);
+  public emitUserLoggedInEvent(payload: UserLoggedInEvent): void {
+    this.eventEmitter.emit(AuthEvents.UserLoggedInEvent, payload);
   }
 
-  public async emitUserRegisteredEvent(payload: UserRegisteredEvent): Promise<void> {
-    await this.eventEmitter.emit(AuthEvents.UserRegistered, payload);
+  public emitUserRegisteredEvent(payload: UserRegisteredEvent): void {
+    this.eventEmitter.emit(AuthEvents.UserRegistered, payload);
   }
 }
