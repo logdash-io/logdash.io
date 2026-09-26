@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { MetricSerialized, SimpleMetric } from '../../src/metric/core/entities/metric.normalized';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';

@@ -144,11 +144,14 @@ The e2e suite exercises the anonymous landing flow end to end, so it needs a bac
 ```bash
 pnpm --filter frontend check   # svelte-check
 pnpm --filter frontend lint    # prettier --check + eslint
+pnpm --filter backend check    # tsc
+pnpm --filter backend lint     # oxlint with type-aware rules + prettier --check
 pnpm --filter backend format   # prettier --write over src and test
 ```
 
-The backend has an `eslint.config.mjs` and a `lint` script, but `eslint` is not among its dependencies, so `pnpm --filter backend lint` does not currently run.
-Use `format` until that is fixed.
+The backend lints with oxlint (`apps/backend/.oxlintrc.json`), which runs the typescript-eslint rules, including the type-aware ones, in about a second.
+Its type-aware rules use TypeScript 7, so the backend tsconfig has to stay valid for TypeScript 7: no `baseUrl`, `paths` starting with `./`, and `esModuleInterop` on.
+With `esModuleInterop`, import CommonJS modules that export a function with a default import: `import request from 'supertest'`, not `import * as request`.
 
 ## Conventions
 

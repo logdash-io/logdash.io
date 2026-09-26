@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { PublicDashboardSerialized } from '../../src/public-dashboard/core/entities/public-dashboard.interface';
 import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';

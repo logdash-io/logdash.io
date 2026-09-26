@@ -1,5 +1,5 @@
 import { advanceBy, advanceTo } from 'jest-date-mock';
-import * as nock from 'nock';
+import nock from 'nock';
 import { HttpPingBucketIngestionService } from '../../src/http-ping-bucket/ingestion/http-ping-bucket-ingestion.service';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';

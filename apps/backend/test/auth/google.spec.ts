@@ -1,8 +1,8 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { Types } from 'mongoose';
 import { createTestApp } from '../utils/bootstrap';
 import { AccountClaimStatus } from '../../src/user/core/enum/account-claim-status.enum';
-import * as nock from 'nock';
+import nock from 'nock';
 import { TokenResponse } from '../../src/shared/responses/token.response';
 import { AuthMethod } from '../../src/user/core/enum/auth-method.enum';
 import { AuditLogUserAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';

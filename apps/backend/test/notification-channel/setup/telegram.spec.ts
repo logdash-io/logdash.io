@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../../utils/bootstrap';
 import { getEnvConfig } from '../../../src/shared/configs/env-configs';
 import { TelegramUpdateDto } from '../../../src/notification-channel/setup/telegram/dto/telegram-update.dto';

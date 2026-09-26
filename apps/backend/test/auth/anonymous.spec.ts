@@ -1,7 +1,7 @@
 import { advanceBy } from 'jest-date-mock';
 import { Types } from 'mongoose';
-import * as nock from 'nock';
-import * as request from 'supertest';
+import nock from 'nock';
+import request from 'supertest';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { getUserPlanConfig } from '../../src/shared/configs/user-plan-configs';
 import { AccountClaimStatus } from '../../src/user/core/enum/account-claim-status.enum';

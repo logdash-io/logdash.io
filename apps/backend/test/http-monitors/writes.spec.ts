@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-configs';
 import { CreateHttpMonitorBody } from '../../src/http-monitor/core/dto/create-http-monitor.body';
@@ -12,7 +12,7 @@ import {
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
 import { HttpMonitorSerialized } from '../../src/http-monitor/core/entities/http-monitor.interface';
-import * as nock from 'nock';
+import nock from 'nock';
 import { ErrorResponse } from '../utils/error-response';
 
 describe('HttpMonitorCoreController (writes)', () => {

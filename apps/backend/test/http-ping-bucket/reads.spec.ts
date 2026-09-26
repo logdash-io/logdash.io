@@ -1,7 +1,7 @@
 import { subDays, subHours } from 'date-fns';
 import { advanceTo } from 'jest-date-mock';
 import { Types } from 'mongoose';
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { BucketsResponse } from '../../src/http-ping-bucket/core/types/buckets.response';

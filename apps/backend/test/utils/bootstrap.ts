@@ -7,7 +7,7 @@ import { ScheduleModule, SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { clear } from 'jest-date-mock';
 import { Model } from 'mongoose';
-import * as nock from 'nock';
+import nock from 'nock';
 import { ThrottlerStorage } from '@nestjs/throttler';
 import { ThrottlerStorageService } from '@nestjs/throttler/dist/throttler.service';
 import { ThrottlingModule } from '../../src/shared/throttling/throttling.module';

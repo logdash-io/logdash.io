@@ -1,6 +1,6 @@
 import { advanceBy } from 'jest-date-mock';
 import { Types } from 'mongoose';
-import * as request from 'supertest';
+import request from 'supertest';
 import { CreateLogBody } from '../../src/log/core/dto/create-log.body';
 import { CreateLogsBatchBody } from '../../src/log/core/dto/create-logs-batch.body';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';

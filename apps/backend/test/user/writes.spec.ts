@@ -2,7 +2,7 @@ import { JwtService } from '@nestjs/jwt';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { advanceBy } from 'jest-date-mock';
 import { Types } from 'mongoose';
-import * as request from 'supertest';
+import request from 'supertest';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { createTestApp } from '../utils/bootstrap';
 import { CreateAnonymousUserResponse } from '../../src/user/core/dto/create-anonymous-user.response';

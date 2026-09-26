@@ -7,7 +7,7 @@ import { subDays, subHours } from 'date-fns';
 import { MetricBucketingService } from '../../src/metric-shared/bucketing/metric-bucketing.service';
 import { MetricQueueingService } from '../../src/metric/queueing/metric-queueing-service';
 import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-configs';
-import * as request from 'supertest';
+import request from 'supertest';
 import { ErrorResponse } from '../utils/error-response';
 import { RecordMetricBody } from '../../src/metric/core/dto/record-metric.dto';
 

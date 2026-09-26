@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';

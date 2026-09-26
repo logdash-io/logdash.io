@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { ClusterSerialized } from '../../src/cluster/core/entities/cluster.interface';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';

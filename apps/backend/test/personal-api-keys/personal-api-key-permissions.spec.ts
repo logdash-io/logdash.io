@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { Types } from 'mongoose';
 import { createTestApp } from '../utils/bootstrap';
 import { Action } from '../../src/personal-api-key/core/enums/action.enum';

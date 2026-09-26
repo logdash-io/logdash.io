@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import * as request from 'supertest';
+import request from 'supertest';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';

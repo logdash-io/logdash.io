@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { UserSerialized } from '../../src/user/core/entities/user.interface';

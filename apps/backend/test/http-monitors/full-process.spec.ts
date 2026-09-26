@@ -1,4 +1,4 @@
-import * as nock from 'nock';
+import nock from 'nock';
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
 import { createTestApp } from '../utils/bootstrap';
 import { waitFor } from '../utils/wait-for';

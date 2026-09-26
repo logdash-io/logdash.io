@@ -1,6 +1,6 @@
 import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { CustomDomainSerialized } from '../../src/custom-domain/core/entities/custom-domain.interface';
 import { CreateCustomDomainBody } from '../../src/custom-domain/core/dto/create-custom-domain.body';
 import { CustomDomainDnsServiceMock } from '../../src/custom-domain/dns/custom-domain-dns.service.mock';

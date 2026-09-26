@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';

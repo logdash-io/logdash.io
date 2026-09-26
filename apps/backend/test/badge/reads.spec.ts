@@ -1,6 +1,6 @@
 import { setHours, startOfHour, subDays, subHours, subMinutes } from 'date-fns';
 import { advanceTo } from 'jest-date-mock';
-import * as request from 'supertest';
+import request from 'supertest';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
 

@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { HttpMonitorStatus } from '../../src/http-monitor/status/enum/http-monitor-status.enum';
 import { HttpMonitorStatusService } from '../../src/http-monitor/status/http-monitor-status.service';

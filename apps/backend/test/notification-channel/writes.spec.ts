@@ -1,5 +1,5 @@
-import * as nock from 'nock';
-import * as request from 'supertest';
+import nock from 'nock';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
 import { WebhookOptions } from '../../src/notification-channel/core/types/webhook-options.type';

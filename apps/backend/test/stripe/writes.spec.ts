@@ -5,7 +5,7 @@ import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { StripeSubscriptionDeletedHandler } from '../../src/payments/stripe/stripe.subscription-deleted.handler';
 import { waitFor } from '../utils/wait-for';
-import * as request from 'supertest';
+import request from 'supertest';
 import { ErrorResponse } from '../utils/error-response';
 import { ChangePaidPlanBody } from '../../src/payments/stripe/dto/upgrade-subscription.body';
 

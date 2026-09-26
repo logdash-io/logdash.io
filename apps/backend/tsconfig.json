@@ -5,14 +5,14 @@
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
     "paths": {
-      "src/*": ["src/*"]
+      "src/*": ["./src/*"]
     },
+    "types": ["node", "jest"],
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,

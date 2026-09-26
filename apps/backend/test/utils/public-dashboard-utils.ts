@@ -1,6 +1,6 @@
 import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { PublicDashboardSerialized } from '../../src/public-dashboard/core/entities/public-dashboard.interface';
 import { PublicDashboardSerializer } from '../../src/public-dashboard/core/entities/public-dashboard.serializer';
 import { UpdatePublicDashboardBody } from '../../src/public-dashboard/core/dto/update-public-dashboard.body';

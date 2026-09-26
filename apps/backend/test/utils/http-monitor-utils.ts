@@ -2,7 +2,7 @@ import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import * as request from 'supertest';
+import request from 'supertest';
 import { CreateHttpMonitorBody } from '../../src/http-monitor/core/dto/create-http-monitor.body';
 import { HttpMonitorEntity } from '../../src/http-monitor/core/entities/http-monitor.entity';
 import {

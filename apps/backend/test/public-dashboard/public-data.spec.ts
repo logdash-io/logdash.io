@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { PublicDashboardDataResponse } from '../../src/public-dashboard/core/dto/public-dashboard-data.response';

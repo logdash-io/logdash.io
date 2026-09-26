@@ -1,4 +1,4 @@
-import * as nock from 'nock';
+import nock from 'nock';
 import { createTestApp } from '../../utils/bootstrap';
 import { NotificationChannelMessagingService } from '../../../src/notification-channel/messaging/notification-channel-messaging.service';
 import { HttpMonitorStatus } from '../../../src/http-monitor/status/enum/http-monitor-status.enum';

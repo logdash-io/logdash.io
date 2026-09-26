@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { CreateLogBody } from '../../src/log/core/dto/create-log.body';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { createTestApp } from '../utils/bootstrap';

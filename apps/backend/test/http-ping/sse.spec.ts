@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import * as nock from 'nock';
+import nock from 'nock';
 import { firstValueFrom, take, toArray } from 'rxjs';
 import { HttpPingCoreController } from '../../src/http-ping/core/http-ping-core.controller';
 import { createTestApp } from '../utils/bootstrap';

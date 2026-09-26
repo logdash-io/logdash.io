@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { CustomDomainSerialized } from '../../src/custom-domain/core/entities/custom-domain.interface';
 import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';

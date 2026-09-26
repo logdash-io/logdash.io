@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import * as nock from 'nock';
+import nock from 'nock';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';

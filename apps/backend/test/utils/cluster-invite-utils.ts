@@ -1,6 +1,6 @@
 import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 import { ClusterInviteSerialized } from '../../src/cluster-invite/core/entities/cluster-invite.interface';
 import { CreateClusterInviteBody } from '../../src/cluster-invite/core/dto/create-invite.body';

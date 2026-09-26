@@ -1,6 +1,6 @@
 import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
-import * as nock from 'nock';
+import nock from 'nock';
 import { WebhookHttpMethod } from '../../src/notification-channel/core/types/webhook-options.type';
 
 export class WebhookUtils {

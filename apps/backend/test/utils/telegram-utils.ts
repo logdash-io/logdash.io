@@ -1,6 +1,6 @@
 import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
-import * as nock from 'nock';
+import nock from 'nock';
 
 export type TelegramSendMessageBody = { chat_id: string; text: string };
 

@@ -4,7 +4,7 @@ import { CustomDomainRegistrationService } from '../../src/custom-domain/registr
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { WebhookHttpMethod } from '../../src/notification-channel/core/types/webhook-options.type';
-import * as nock from 'nock';
+import nock from 'nock';
 
 /** Domains this suite verifies, and which the service therefore pings. */
 const PINGED_HOSTS = ['example.com', 'domain1.com', 'domain2.com'];

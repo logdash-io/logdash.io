@@ -1,7 +1,7 @@
 import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 
-import * as request from 'supertest';
+import request from 'supertest';
 import { CreateLogBody } from '../../src/log/core/dto/create-log.body';
 import { LogQueueingService } from '../../src/log/queueing/log-queueing.service';
 import { ClickHouseClient } from '@clickhouse/client';

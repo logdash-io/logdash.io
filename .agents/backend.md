@@ -4,6 +4,8 @@
 - do not put comments in the code,
 - always use private/public when defining class methods,
 - always provide return types for methods,
+- import CommonJS modules that export a function with a default import (`import request from 'supertest'`, `import nock from 'nock'`), never `import * as`. `esModuleInterop` is on and a namespace import cannot be called,
+- lint with `pnpm --filter backend lint` (oxlint with type-aware rules, then `prettier --check`),
 - always add tests
 
 # Naming rules

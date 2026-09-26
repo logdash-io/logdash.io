@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { Action } from '../../src/personal-api-key/core/enums/action.enum';

@@ -1,4 +1,4 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';

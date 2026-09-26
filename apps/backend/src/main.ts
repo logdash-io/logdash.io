@@ -4,7 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { getEnvConfig } from './shared/configs/env-configs';
-import * as basicAuth from 'express-basic-auth';
+import basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
 import { NextFunction, Request, Response } from 'express';
 import { swaggerDarkModeCSS } from './swagger/swagger-dark-mode.js';

@@ -1,7 +1,7 @@
 import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 
-import * as request from 'supertest';
+import request from 'supertest';
 import { RecordMetricBody } from '../../src/metric/core/dto/record-metric.dto';
 import { MetricQueueingService } from '../../src/metric/queueing/metric-queueing-service';
 

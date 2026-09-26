@@ -5,7 +5,7 @@ import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { HttpMonitorNormalized } from '../../src/http-monitor/core/entities/http-monitor.interface';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
-import * as request from 'supertest';
+import request from 'supertest';
 import { Types } from 'mongoose';
 import { PushPingRateLimit } from '../../src/shared/throttling/rate-limit.decorator';
 

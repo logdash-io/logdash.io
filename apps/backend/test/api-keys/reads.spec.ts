@@ -1,5 +1,5 @@
 import { createTestApp } from '../utils/bootstrap';
-import * as request from 'supertest';
+import request from 'supertest';
 
 describe('Api keys (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;

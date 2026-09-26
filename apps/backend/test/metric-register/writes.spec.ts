@@ -1,6 +1,6 @@
 import { createTestApp } from '../utils/bootstrap';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 

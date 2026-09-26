@@ -1,6 +1,6 @@
 import { expect } from '@jest/globals';
 import { Types } from 'mongoose';
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { HttpPingSerialized } from '../../src/http-ping/core/entities/http-ping.interface';
 

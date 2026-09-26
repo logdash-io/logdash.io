@@ -2,7 +2,7 @@ import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import { ClusterSerialized } from '../../src/cluster/core/entities/cluster.interface';
 import { ProjectSerialized } from '../../src/project/core/entities/project.interface';
-import * as request from 'supertest';
+import request from 'supertest';
 import { CreateProjectBody } from '../../src/project/core/dto/create-project.body';
 import { UserSerialized } from '../../src/user/core/entities/user.interface';
 import { CreateProjectResponse } from '../../src/project/core/dto/create-project.response';

@@ -4,7 +4,7 @@ import { NotificationChannelSerialized } from '../../src/notification-channel/co
 import { NotificationChannelType } from '../../src/notification-channel/core/enums/notification-target.enum';
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
 import { WebhookOptions } from '../../src/notification-channel/core/types/webhook-options.type';
-import * as request from 'supertest';
+import request from 'supertest';
 import { CreateNotificationChannelBody } from '../../src/notification-channel/core/dto/create-notification-channel.body';
 
 export class NotificationChannelUtils {
