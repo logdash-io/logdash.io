@@ -6,6 +6,7 @@ Area rules live in `.agents/`, as plain Markdown that belongs to no particular t
 - `.agents/frontend.md` applies under `apps/frontend` and `packages/hyper-ui`.
 - `.agents/backend.md` applies under `apps/backend`.
 - `.agents/commands/` holds reusable prompts.
+- `.agents/skills/` holds task recipes in the Agent Skills format, one folder per skill. `.claude/skills` links to it.
 
 Read the file for the area you are touching before changing code there.
 
