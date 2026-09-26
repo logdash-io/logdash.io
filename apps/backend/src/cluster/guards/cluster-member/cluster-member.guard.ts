@@ -21,6 +21,7 @@ import { AccessRestriction } from '../../../personal-api-key/core/types/access-r
 import { UserReadService } from '../../../user/read/user-read.service';
 import { UserReadModule } from '../../../user/read/user-read.module';
 import { AuthenticatedRequest } from '../../../auth/core/types/authenticated-request.type';
+import { DEMO_ENDPOINT_KEY } from '../../../demo/decorators/demo-endpoint.decorator';
 
 const CLUSTER_ID_PARAM_NAME = 'clusterId';
 const PROJECT_ID_PARAM_NAME = 'projectId';
@@ -76,9 +77,12 @@ export class ClusterMemberGuard implements CanActivate {
     const clusterInviteIdFromParams = request.params[CLUSTER_INVITE_ID_PARAM_NAME];
     const customDomainIdFromParams = request.params[CUSTOM_DOMAIN_ID_PARAM_NAME];
 
+    const isDemoEndpoint = this.reflector.get<boolean>(DEMO_ENDPOINT_KEY, context.getHandler());
+
     if (
-      projectIdFromParams === getEnvConfig().demo.projectId ||
-      clusterIdFromParams === getEnvConfig().demo.clusterId
+      isDemoEndpoint &&
+      (projectIdFromParams === getEnvConfig().demo.projectId ||
+        clusterIdFromParams === getEnvConfig().demo.clusterId)
     ) {
       return true;
     }
