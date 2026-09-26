@@ -28,8 +28,6 @@ export type FooterSocial = {
 /**
  * The footer and the nav point at the same places, so both read their URLs
  * from LINKS and the same NavPath union rather than hand-writing hrefs twice.
- * Four columns: the legal links live in
- * the bottom row instead of taking a column of their own.
  */
 export const FOOTER_COLUMNS: readonly FooterColumn[] = [
   {
@@ -69,12 +67,14 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
       { ...out(LINKS.contact), title: 'Contact' },
     ],
   },
-];
-
-export const FOOTER_LEGAL: readonly FooterLink[] = [
-  { ...to('/terms-of-service'), title: 'Terms of use' },
-  { ...to('/privacy-policy'), title: 'Privacy policy' },
-  { ...to('/cookies-policy'), title: 'Cookies policy' },
+  {
+    title: 'Legal',
+    links: [
+      { ...to('/terms-of-service'), title: 'Terms of use' },
+      { ...to('/privacy-policy'), title: 'Privacy policy' },
+      { ...to('/cookies-policy'), title: 'Cookies policy' },
+    ],
+  },
 ];
 
 export const FOOTER_SOCIALS: readonly FooterSocial[] = [
