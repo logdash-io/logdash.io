@@ -16,7 +16,7 @@ import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.payment-succeeded.handler';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import Stripe from 'stripe';
-import { sleep } from './sleep';
+import { waitFor } from './wait-for';
 import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
 import { ProjectEntity } from '../../src/project/core/entities/project.entity';
 
@@ -146,8 +146,6 @@ export class GeneralUtils {
 
     const user = userResponse.body as UserSerialized;
 
-    await sleep(100);
-
     return {
       ...anonymousResult,
       user,
@@ -179,6 +177,12 @@ export class GeneralUtils {
     } as unknown as Stripe.InvoicePaymentSucceededEvent;
 
     await handler.handle(event);
+
+    // The trial flag is set by a listener of the payment event, after handle() returns.
+    await waitFor(
+      () => this.userModel.findOne({ email: userEmail }).lean(),
+      (user) => user?.paymentsMetadata?.trialUsed === true,
+    );
   }
 
   private getRandomEmail(): string {

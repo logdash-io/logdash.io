@@ -1,7 +1,6 @@
 import * as nock from 'nock';
 import { createTestApp } from '../../utils/bootstrap';
 import { NotificationChannelMessagingService } from '../../../src/notification-channel/messaging/notification-channel-messaging.service';
-import { sleep } from '../../utils/sleep';
 import { HttpMonitorStatus } from '../../../src/http-monitor/status/enum/http-monitor-status.enum';
 import { WebhookHttpMethod } from '../../../src/notification-channel/core/types/webhook-options.type';
 import { UserTier } from '../../../src/user/core/enum/user-tier.enum';
@@ -107,8 +106,6 @@ describe('Webhook notification channel', () => {
         url: 'https://google.com',
       });
 
-      await sleep(500);
-
       expect(requestBodies.length).toBe(1);
       expect(requestBodies[0]).toEqual({
         httpMonitorId: 'some-http-monitor-id',
@@ -163,8 +160,6 @@ describe('Webhook notification channel', () => {
         errorMessage: 'connection timeout',
         statusCode: '503',
       });
-
-      await sleep(500);
 
       expect(requestBodies.length).toBe(1);
       expect(requestBodies[0]).toEqual({

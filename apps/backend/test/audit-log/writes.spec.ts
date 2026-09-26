@@ -2,7 +2,6 @@ import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enu
 import { AuditLog } from '../../src/audit-log/creation/audit-log-creation.service';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
 import { createTestApp } from '../utils/bootstrap';
-import { sleep } from '../utils/sleep';
 
 describe('Audit logs (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -106,7 +105,6 @@ describe('Audit logs (writes)', () => {
     );
 
     // then
-    await sleep(1000);
     const count = await bootstrap.utils.auditLogUtils.countUserAuditLogs(setup.user.id);
 
     expect(count).toBe(600);

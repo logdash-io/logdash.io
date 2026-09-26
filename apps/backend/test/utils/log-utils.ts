@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 
 import * as request from 'supertest';
 import { CreateLogBody } from '../../src/log/core/dto/create-log.body';
-import { sleep } from './sleep';
+import { LogQueueingService } from '../../src/log/queueing/log-queueing.service';
 import { ClickHouseClient } from '@clickhouse/client';
 import { LogSerializer } from '../../src/log/core/entities/log.serializer';
 import { LogClickhouseNormalized } from '../../src/log/core/entities/log.interface';
@@ -16,12 +16,10 @@ export class LogUtils {
     this.clickhouseClient = app.get(ClickHouseClient);
   }
 
-  public async createLog(
-    dto: CreateLogBody & { apiKey: string; withoutSleep?: boolean },
-  ): Promise<void> {
-    // The API body only carries the log itself - `apiKey` travels in a header
-    // and `withoutSleep` is test-only. Sending them would be rejected by the
-    // global ValidationPipe (`forbidNonWhitelisted`).
+  public async createLog(dto: CreateLogBody & { apiKey: string }): Promise<void> {
+    // The API body only carries the log itself - `apiKey` travels in a header.
+    // Sending it would be rejected by the global ValidationPipe
+    // (`forbidNonWhitelisted`).
     const body: CreateLogBody = {
       createdAt: dto.createdAt,
       message: dto.message,
@@ -35,9 +33,7 @@ export class LogUtils {
       .set('project-api-key', dto.apiKey)
       .send(body);
 
-    if (dto.withoutSleep === undefined || dto.withoutSleep === false) {
-      await sleep(1000);
-    }
+    await this.app.get(LogQueueingService).processQueue();
   }
 
   public async readLogs(projectId: string): Promise<LogClickhouseNormalized[]> {

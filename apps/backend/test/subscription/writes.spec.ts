@@ -4,7 +4,7 @@ import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { addDays, addHours } from 'date-fns';
 import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
-import { sleep } from '../utils/sleep';
+import { waitFor } from '../utils/wait-for';
 import { ErrorResponse } from '../utils/error-response';
 
 describe('SubscriptionCoreController', () => {
@@ -37,7 +37,10 @@ describe('SubscriptionCoreController', () => {
           endsAt: '2024-12-31T23:59:59.000Z',
         });
 
-      await sleep(200);
+      await waitFor(
+        () => bootstrap.models.clusterModel.findOne({ creatorId: user.id }).lean(),
+        (cluster) => cluster?.tier === ClusterTier.Contributor,
+      );
 
       expect(response.status).toBe(201);
 

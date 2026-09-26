@@ -3,7 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { App } from 'supertest/types';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/mongoose';
-import { ScheduleModule } from '@nestjs/schedule';
+import { ScheduleModule, SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { clear } from 'jest-date-mock';
 import { Model } from 'mongoose';
@@ -146,6 +146,12 @@ export async function createTestApp() {
   );
   await app.listen(0, '127.0.0.1');
 
+  // Crons would flush queues and delete data behind the specs' backs, so none
+  // run on their own. Specs call the service method a cron would call.
+  for (const job of module.get(SchedulerRegistry).getCronJobs().values()) {
+    void job.stop();
+  }
+
   const userModel: Model<UserEntity> = module.get(getModelToken(UserEntity.name));
   const projectModel: Model<ProjectEntity> = module.get(getModelToken(ProjectEntity.name));
   const metricModel: Model<MetricEntity> = module.get(getModelToken(MetricEntity.name));
@@ -235,6 +241,9 @@ export async function createTestApp() {
     await app.close();
     await closeInMemoryMongoServer();
     clear();
+    // Every spec file loads its own nock, which patches the http module the
+    // whole worker shares. Left in place, the patches stack up across files.
+    nock.restore();
   };
 
   return {

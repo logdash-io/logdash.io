@@ -1,7 +1,6 @@
 import { createTestApp } from '../../utils/bootstrap';
 import { NotificationChannelMessagingService } from '../../../src/notification-channel/messaging/notification-channel-messaging.service';
 import { TelegramOptions } from '../../../src/notification-channel/core/types/telegram-options.type';
-import { sleep } from '../../utils/sleep';
 import { TelegramSendMessageBody } from '../../utils/telegram-utils';
 import { HttpMonitorStatus } from '../../../src/http-monitor/status/enum/http-monitor-status.enum';
 
@@ -57,8 +56,6 @@ describe('Telegram notification channel', () => {
         statusCode: '404',
       });
 
-      await sleep(500);
-
       const codeBlock = '```';
 
       // then
@@ -105,8 +102,6 @@ ${codeBlock}`,
         name: 'test',
         url: 'https://google.com',
       });
-
-      await sleep(500);
 
       // then
       expect(requestBodies.length).toBe(1);

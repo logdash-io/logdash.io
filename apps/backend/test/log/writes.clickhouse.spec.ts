@@ -2,7 +2,7 @@ import * as request from 'supertest';
 import { CreateLogBody } from '../../src/log/core/dto/create-log.body';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { createTestApp } from '../utils/bootstrap';
-import { sleep } from '../utils/sleep';
+import { LogQueueingService } from '../../src/log/queueing/log-queueing.service';
 import { ClickHouseClient } from '@clickhouse/client';
 import { ClickhouseUtils } from '../../src/clickhouse/clickhouse.utils';
 import { SuccessResponse } from '../../src/shared/responses/success.response';
@@ -44,7 +44,7 @@ describe('LogCoreController (writes) - Clickhouse', () => {
 
     expect((response.body as SuccessResponse).success).toEqual(true);
 
-    await sleep(1000);
+    await bootstrap.app.get(LogQueueingService).processQueue();
 
     const clickhouseClient = bootstrap.app.get(ClickHouseClient);
 

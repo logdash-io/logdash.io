@@ -5,7 +5,7 @@ import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { LogWriteService } from '../../src/log/write/log-write.service';
 import { LogAnalyticsResponse } from '../../src/log/analytics/dto/log-analytics-response.dto';
-import { subHours, addMinutes, subMinutes, addHours, addSeconds } from 'date-fns';
+import { subHours, addMinutes, subMinutes, addHours, addSeconds, startOfMinute } from 'date-fns';
 
 describe('LogCoreController (analytics)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -98,7 +98,7 @@ describe('LogCoreController (analytics)', () => {
       const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
       const logWriteService = bootstrap.app.get(LogWriteService);
 
-      const baseTime = subHours(new Date(), 12);
+      const baseTime = startOfMinute(subHours(new Date(), 12));
       const startTime = addMinutes(baseTime, 2);
       const endTime = addMinutes(baseTime, 7);
 

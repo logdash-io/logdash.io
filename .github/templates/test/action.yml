@@ -30,10 +30,9 @@ runs:
         REGEX_PATTERN=$(echo "$TEST_FILES" | sed 's/ /|/g' | sed 's/\./\\./g' | sed 's/^/(/; s/$/)/')
 
         echo "Jest pattern: $REGEX_PATTERN"
-        npx jest --testPathPattern="$REGEX_PATTERN" --runInBand --forceExit
+        npx jest --testPathPattern="$REGEX_PATTERN"
       shell: bash
       env:
-        NODE_OPTIONS: "--max-old-space-size=4096"
         OUR_ENV: "local"
         AUTH_JWT_SECRET: "test"
         PERSONAL_API_KEY_HMAC_SECRET: "test"

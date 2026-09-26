@@ -28,13 +28,15 @@ export class LogQueueingService {
   }
 
   @Cron(CronExpression.EVERY_SECOND)
-  public processQueue(): void {
+  public async processQueue(): Promise<void> {
     if (this.queuedDtos.length === 0) {
       return;
     }
 
-    void this.logCreationService.createLogs(structuredClone(this.queuedDtos));
+    const dtos = this.queuedDtos;
     this.queuedDtos = [];
+
+    await this.logCreationService.createLogs(dtos);
   }
 
   // @Cron(CronExpression.EVERY_10_SECONDS)

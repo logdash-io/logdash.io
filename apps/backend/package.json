@@ -14,11 +14,10 @@
     "start:prod": "node dist/main",
     "lint": "eslint src test",
     "check": "tsc --noEmit",
-    "test": "NODE_OPTIONS=--max-old-space-size=4096 jest --runInBand --forceExit",
+    "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
     "stripe": "stripe listen --forward-to localhost:3000/payments/stripe/webhook",
     "migrate-up": "npx migrate-mongo up",
     "migrate-clickhouse": "dotenv -e .env -- clickhouse-migrations migrate"
@@ -145,6 +144,9 @@
       "^@logdash/node$": "<rootDir>/test/__mocks__/@logdash/node.ts",
       "^src/(.*)$": "<rootDir>/src/$1"
     },
-    "testTimeout": 30000
+    "testTimeout": 30000,
+    "maxWorkers": 1,
+    "workerIdleMemoryLimit": "1GB",
+    "forceExit": true
   }
 }

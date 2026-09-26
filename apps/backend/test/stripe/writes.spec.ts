@@ -4,7 +4,7 @@ import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.payment-succeeded.handler';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { StripeSubscriptionDeletedHandler } from '../../src/payments/stripe/stripe.subscription-deleted.handler';
-import { sleep } from '../utils/sleep';
+import { waitFor } from '../utils/wait-for';
 
 describe('StripeController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -55,7 +55,10 @@ describe('StripeController (writes)', () => {
 
       await subscriptionSucceededHandler.handle(event);
 
-      await sleep(500);
+      await waitFor(
+        () => bootstrap.models.userModel.findById(user.id).lean(),
+        (found) => found?.paymentsMetadata?.trialUsed === true,
+      );
 
       // then
       const userAfterUpdate = await bootstrap.models.userModel.findById(user.id);
@@ -102,7 +105,10 @@ describe('StripeController (writes)', () => {
 
       await subscriptionSucceededHandler.handle(event);
 
-      await sleep(500);
+      await waitFor(
+        () => bootstrap.models.userModel.findById(user.id).lean(),
+        (found) => found?.paymentsMetadata?.trialUsed === true,
+      );
 
       const userAfterUpdate = await bootstrap.models.userModel.findById(user.id);
       const subscription = (await bootstrap.models.subscriptionModel.findOne())!;
@@ -148,7 +154,10 @@ describe('StripeController (writes)', () => {
 
       await subscriptionSucceededHandler.handle(event);
 
-      await sleep(500);
+      await waitFor(
+        () => bootstrap.models.userModel.findById(user.id).lean(),
+        (found) => found?.paymentsMetadata?.trialUsed === true,
+      );
 
       const userAfterUpdate = await bootstrap.models.userModel.findById(user.id);
       const subscription = (await bootstrap.models.subscriptionModel.findOne())!;

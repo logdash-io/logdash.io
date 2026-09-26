@@ -1,22 +1,14 @@
 import { RedisClientType } from '@redis/client';
-import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
-
-declare global {
-  var redisContainer: StartedRedisContainer;
-}
+import { RedisContainer } from '@testcontainers/redis';
 
 export const createRedisTestContainer = async (): Promise<void> => {
   const redisContainer = await new RedisContainer('redis:latest').withReuse().start();
 
-  global.redisContainer = redisContainer;
+  process.env.TEST_REDIS_URL = redisContainer.getConnectionUrl();
 };
 
 export const getRedisTestContainerUrl = (): string => {
-  return global.redisContainer.getConnectionUrl();
-};
-
-export const closeRedisTestContainer = async (): Promise<void> => {
-  await global.redisContainer.stop();
+  return process.env.TEST_REDIS_URL!;
 };
 
 export async function removeKeysWhichWouldExpireInNextXSeconds(

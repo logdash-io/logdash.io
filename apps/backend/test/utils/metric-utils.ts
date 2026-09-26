@@ -3,17 +3,15 @@ import { INestApplication } from '@nestjs/common';
 
 import * as request from 'supertest';
 import { RecordMetricBody } from '../../src/metric/core/dto/record-metric.dto';
-import { sleep } from './sleep';
+import { MetricQueueingService } from '../../src/metric/queueing/metric-queueing-service';
 
 export class MetricUtils {
   constructor(private readonly app: INestApplication<App>) {}
 
-  public async recordMetric(
-    dto: RecordMetricBody & { apiKey: string; withoutSleep?: boolean },
-  ): Promise<void> {
-    // The API body only carries the metric itself - `apiKey` travels in a header
-    // and `withoutSleep` is test-only. Sending them would be rejected by the
-    // global ValidationPipe (`forbidNonWhitelisted`).
+  public async recordMetric(dto: RecordMetricBody & { apiKey: string }): Promise<void> {
+    // The API body only carries the metric itself - `apiKey` travels in a header.
+    // Sending it would be rejected by the global ValidationPipe
+    // (`forbidNonWhitelisted`).
     const body: RecordMetricBody = {
       name: dto.name,
       value: dto.value,
@@ -25,8 +23,6 @@ export class MetricUtils {
       .set('project-api-key', dto.apiKey)
       .send(body);
 
-    if (!dto.withoutSleep) {
-      await sleep(1500);
-    }
+    await this.app.get(MetricQueueingService).processQueue();
   }
 }
