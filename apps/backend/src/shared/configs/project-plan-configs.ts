@@ -18,7 +18,6 @@ export interface ProjectPlanConfig {
   httpMonitors: {
     maxNumberOfMonitors: number;
     pingFrequency: HttpPingCron;
-    canDisplayBuckets: boolean;
     canCreatePushMonitors: boolean;
   };
 }
@@ -56,7 +55,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.Every5Minutes,
-      canDisplayBuckets: false,
       canCreatePushMonitors: false,
     },
   },
@@ -76,7 +74,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.Every5Minutes,
-      canDisplayBuckets: false,
       canCreatePushMonitors: false,
     },
   },
@@ -98,7 +95,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.Every5Minutes,
-      canDisplayBuckets: true,
       canCreatePushMonitors: false,
     },
   },
@@ -118,7 +114,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.EveryMinute,
-      canDisplayBuckets: true,
       canCreatePushMonitors: false,
     },
   },
@@ -138,7 +133,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.Every15Seconds,
-      canDisplayBuckets: true,
       canCreatePushMonitors: true,
     },
   },
@@ -161,7 +155,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 1,
       pingFrequency: HttpPingCron.Every5Minutes,
-      canDisplayBuckets: true,
       canCreatePushMonitors: false,
     },
   },
@@ -181,7 +174,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
     httpMonitors: {
       maxNumberOfMonitors: 100,
       pingFrequency: HttpPingCron.EveryMinute,
-      canDisplayBuckets: true,
       canCreatePushMonitors: true,
     },
   },

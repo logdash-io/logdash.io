@@ -36,6 +36,10 @@ import { NotificationChannelReadService } from '../../notification-channel/read/
 import { Public } from '../../auth/core/decorators/is-public';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 import { HttpMonitorMode } from './enums/http-monitor-mode.enum';
+import {
+  ThrottleMonitorCreation,
+  ThrottlePushPing,
+} from '../../shared/throttling/rate-limit.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -54,6 +58,7 @@ export class HttpMonitorCoreController {
   ) {}
 
   @UseGuards(ClusterMemberGuard)
+  @ThrottleMonitorCreation()
   @Post('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized })
   async create(
@@ -190,6 +195,7 @@ export class HttpMonitorCoreController {
   }
 
   @Public()
+  @ThrottlePushPing()
   @Post('/ping/:httpMonitorId')
   async recordPing(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
     await this.httpPingPushService.record(httpMonitorId);
@@ -215,8 +221,13 @@ export class HttpMonitorCoreController {
   @UseGuards(ClusterMemberGuard)
   @Post('/http_monitors/:httpMonitorId/claim')
   async claim(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
-    const projectId = (await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId)).projectId;
-    const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
+    const { projectId, claimed } = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
+
+    if (claimed) {
+      return;
+    }
+
+    const hasCapacity = await this.httpMonitorLimitService.hasClaimedCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(
         'You have reached the maximum number of monitors for this project',

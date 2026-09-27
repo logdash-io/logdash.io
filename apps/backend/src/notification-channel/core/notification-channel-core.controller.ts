@@ -73,7 +73,7 @@ export class NotificationChannelCoreController {
       userTier,
     );
 
-    const enrichedOptions = await this.notificationChannelOptionsEnrichmentService.enrichOptions(
+    const enrichedOptions = this.notificationChannelOptionsEnrichmentService.enrichOptions(
       dto.options,
       dto.type,
     );
@@ -145,6 +145,6 @@ export class NotificationChannelCoreController {
   ): Promise<NotificationChannelSerialized[]> {
     const channels = await this.notificationChannelReadService.readByClusterId(clusterId);
 
-    return channels.map(NotificationChannelSerializer.serialize);
+    return channels.map((channel) => NotificationChannelSerializer.serialize(channel));
   }
 }

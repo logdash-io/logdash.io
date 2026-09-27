@@ -1,5 +1,6 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { Request } from 'express';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { DEMO_ENDPOINT_KEY } from '../decorators/demo-endpoint.decorator';
@@ -10,21 +11,22 @@ const CACHE_TTL_S = 1;
 
 @Injectable()
 export class DemoCacheInterceptor implements NestInterceptor {
-  private cache = new Map<string, any>();
-
   constructor(
     private reflector: Reflector,
     private redisService: RedisService,
   ) {}
 
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+  public async intercept(
+    context: ExecutionContext,
+    next: CallHandler<unknown>,
+  ): Promise<Observable<unknown>> {
     const isDemoCacheEnabled = this.reflector.get<boolean>(DEMO_ENDPOINT_KEY, context.getHandler());
 
     if (!isDemoCacheEnabled) {
       return next.handle();
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const projectId = request.params.projectId;
 
     if (projectId !== getEnvConfig().demo.projectId) {
@@ -40,24 +42,31 @@ export class DemoCacheInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap((response) => {
-        this.redisService.set(cacheKey, JSON.stringify(response), CACHE_TTL_S);
+        void this.cacheResponse(cacheKey, response);
       }),
     );
   }
 
-  private generateCacheKey(request: any): string {
-    // Generate a unique key based on the request path and query parameters
+  private generateCacheKey(request: Request): string {
     const { path, query } = request;
     return `demo-dashboard-path:${path}:${JSON.stringify(query)}`;
   }
 
-  private async tryGetCachedResponse(cacheKey: string): Promise<unknown | null> {
+  private async tryGetCachedResponse(cacheKey: string): Promise<unknown> {
     try {
       const cachedResponseRaw = await this.redisService.get(cacheKey);
-      const cachedResponse = cachedResponseRaw ? JSON.parse(cachedResponseRaw) : null;
+      const cachedResponse: unknown = cachedResponseRaw ? JSON.parse(cachedResponseRaw) : null;
       return cachedResponse;
-    } catch (error) {
+    } catch {
       return null;
+    }
+  }
+
+  private async cacheResponse(cacheKey: string, response: unknown): Promise<void> {
+    try {
+      await this.redisService.set(cacheKey, JSON.stringify(response), CACHE_TTL_S);
+    } catch (error) {
+      console.error(error);
     }
   }
 }

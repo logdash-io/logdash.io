@@ -1,9 +1,10 @@
 import { subDays, subHours } from 'date-fns';
 import { advanceTo } from 'jest-date-mock';
 import { Types } from 'mongoose';
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { BucketsResponse } from '../../src/http-ping-bucket/core/types/buckets.response';
 
 describe('Http Ping Bucket(reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -30,14 +31,14 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/monitors/${new Types.ObjectId()}/http_ping_buckets`)
+        .get(`/monitors/${new Types.ObjectId().toString()}/http_ping_buckets`)
         .set('Authorization', `Bearer ${setup.token}`);
 
       // then
       expect(response.status).toBe(403);
     });
 
-    it('forbids access for free tier', async () => {
+    it('allows access for free tier', async () => {
       // given
       const setup = await bootstrap.utils.generalUtils.setupClaimed({
         userTier: UserTier.Free,
@@ -50,12 +51,12 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/monitors/${monitor.id}/http_ping_buckets?period=24h`)
+        .get(`/monitors/${monitor.id}/http_ping_buckets?period=90d`)
         .set('Authorization', `Bearer ${setup.token}`);
 
       // then
-      expect(response.status).toBe(403);
-      expect(response.body.message).toBe('Buckets are not allowed for this project');
+      expect(response.status).toBe(200);
+      expect((response.body as BucketsResponse).buckets).toHaveLength(90);
     });
 
     it('is not found for non existent monitor', async () => {
@@ -66,7 +67,7 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/monitors/${new Types.ObjectId()}/http_ping_buckets`)
+        .get(`/monitors/${new Types.ObjectId().toString()}/http_ping_buckets`)
         .set('Authorization', `Bearer ${setup.token}`);
 
       // then
@@ -138,9 +139,10 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.buckets).toHaveLength(24);
+      const body = response.body as BucketsResponse;
+      expect(body.buckets).toHaveLength(24);
 
-      const expectedOneHourAgoBucket = response.body.buckets[1];
+      const expectedOneHourAgoBucket = body.buckets[1];
       expect(expectedOneHourAgoBucket).toMatchObject({
         successCount: oneHourAgoBucket.successCount,
         failureCount: oneHourAgoBucket.failureCount,
@@ -148,7 +150,7 @@ describe('Http Ping Bucket(reads)', () => {
         timestamp: oneHourAgo.toISOString(),
       });
 
-      const expectedTwoHoursAgoBucket = response.body.buckets[2];
+      const expectedTwoHoursAgoBucket = body.buckets[2];
       expect(expectedTwoHoursAgoBucket).toMatchObject({
         successCount: twoHoursAgoBucket.successCount,
         failureCount: twoHoursAgoBucket.failureCount,
@@ -156,7 +158,7 @@ describe('Http Ping Bucket(reads)', () => {
         timestamp: twoHoursAgo.toISOString(),
       });
 
-      const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
+      const nullBuckets = body.buckets.filter((bucket) => bucket === null);
       expect(nullBuckets).toHaveLength(22);
     });
 
@@ -181,8 +183,9 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.buckets).toHaveLength(24);
-      expect(response.body.buckets[0]).toMatchObject({
+      const body = response.body as BucketsResponse;
+      expect(body.buckets).toHaveLength(24);
+      expect(body.buckets[0]).toMatchObject({
         successCount: 1,
         failureCount: 1,
         averageLatencyMs: 150,
@@ -199,9 +202,9 @@ describe('Http Ping Bucket(reads)', () => {
         token,
         projectId: project.id,
       });
-      const otherMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
-        token,
+      const otherMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
         projectId: project.id,
+        claimed: true,
       });
 
       const now = new Date();
@@ -232,20 +235,21 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.buckets).toHaveLength(24);
-      expect(response.body.buckets[0]).toMatchObject({
+      const body = response.body as BucketsResponse;
+      expect(body.buckets).toHaveLength(24);
+      expect(body.buckets[0]).toMatchObject({
         successCount: 1,
         failureCount: 0,
         averageLatencyMs: 100,
         timestamp: now.toISOString(),
       });
-      expect(response.body.buckets[2]).toMatchObject({
+      expect(body.buckets[2]).toMatchObject({
         successCount: 1,
         failureCount: 2,
         averageLatencyMs: 100,
         timestamp: twoHoursAgo.toISOString(),
       });
-      const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
+      const nullBuckets = body.buckets.filter((bucket) => bucket === null);
       expect(nullBuckets).toHaveLength(22);
     });
 
@@ -287,9 +291,10 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.buckets).toHaveLength(96);
+      const body = response.body as BucketsResponse;
+      expect(body.buckets).toHaveLength(96);
 
-      const expectedThreeDaysAgoBucket = response.body.buckets[3 * 24];
+      const expectedThreeDaysAgoBucket = body.buckets[3 * 24];
       expect(expectedThreeDaysAgoBucket).toMatchObject({
         successCount: threeDaysAgoBucket.successCount,
         failureCount: threeDaysAgoBucket.failureCount,
@@ -297,7 +302,7 @@ describe('Http Ping Bucket(reads)', () => {
         timestamp: threeDaysAgo.toISOString(),
       });
 
-      const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
+      const nullBuckets = body.buckets.filter((bucket) => bucket === null);
       expect(nullBuckets).toHaveLength(95);
     });
 
@@ -340,9 +345,10 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.buckets).toHaveLength(90);
+      const body = response.body as BucketsResponse;
+      expect(body.buckets).toHaveLength(90);
 
-      const expectedThirtyDaysAgoBucket = response.body.buckets[30];
+      const expectedThirtyDaysAgoBucket = body.buckets[30];
       const expectedTimestamp = new Date(thirtyDaysAgo.getTime());
       expectedTimestamp.setUTCHours(0, 0, 0, 0);
       expect(expectedThirtyDaysAgoBucket).toMatchObject({
@@ -352,7 +358,7 @@ describe('Http Ping Bucket(reads)', () => {
         timestamp: expectedTimestamp.toISOString(),
       });
 
-      const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
+      const nullBuckets = body.buckets.filter((bucket) => bucket === null);
       expect(nullBuckets).toHaveLength(89);
     });
 
@@ -389,15 +395,16 @@ describe('Http Ping Bucket(reads)', () => {
 
       // then
       expect(response.status).toBe(200);
-      expect(response.body.buckets).toHaveLength(90);
-      expect(response.body.buckets[0]).toMatchObject({
+      const body = response.body as BucketsResponse;
+      expect(body.buckets).toHaveLength(90);
+      expect(body.buckets[0]).toMatchObject({
         successCount: 1,
         failureCount: 1,
         averageLatencyMs: 150,
         timestamp: today.toISOString(),
       });
 
-      const expectedTenDaysAgoBucket = response.body.buckets[10];
+      const expectedTenDaysAgoBucket = body.buckets[10];
       expect(expectedTenDaysAgoBucket).toMatchObject({
         successCount: 1,
         failureCount: 2,
@@ -405,7 +412,7 @@ describe('Http Ping Bucket(reads)', () => {
         timestamp: tenDaysAgo.toISOString(),
       });
 
-      const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
+      const nullBuckets = body.buckets.filter((bucket) => bucket === null);
       expect(nullBuckets).toHaveLength(88);
     });
   });
@@ -440,15 +447,16 @@ describe('Http Ping Bucket(reads)', () => {
 
     // then
     expect(response.status).toBe(200);
-    expect(response.body.buckets).toHaveLength(90);
-    expect(response.body.buckets[0]).toMatchObject({
+    const body = response.body as BucketsResponse;
+    expect(body.buckets).toHaveLength(90);
+    expect(body.buckets[0]).toMatchObject({
       successCount: 2,
       failureCount: 3,
       averageLatencyMs: 240,
       timestamp: today.toISOString(),
     });
 
-    const nullBuckets = response.body.buckets.filter((bucket) => bucket === null);
+    const nullBuckets = body.buckets.filter((bucket) => bucket === null);
     expect(nullBuckets).toHaveLength(89);
   });
 

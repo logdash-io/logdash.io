@@ -15,13 +15,14 @@ export class StripeEventsHandler {
     private readonly stripeSubscriptionDeletedHandler: StripeSubscriptionDeletedHandler,
   ) {}
 
-  public async decryptEvent(body: any, signature: string): Promise<Stripe.Event | undefined> {
+  public decryptEvent(body: Buffer | undefined, signature: string): Stripe.Event | undefined {
+    if (!body) {
+      this.logger.error('Error while getting stripe event', { error: 'Missing raw body' });
+      return undefined;
+    }
+
     try {
-      return await this.stripe.webhooks.constructEvent(
-        body,
-        signature,
-        getEnvConfig().stripe.signature,
-      );
+      return this.stripe.webhooks.constructEvent(body, signature, getEnvConfig().stripe.signature);
     } catch (error) {
       this.logger.error('Error while getting stripe event', { error });
     }

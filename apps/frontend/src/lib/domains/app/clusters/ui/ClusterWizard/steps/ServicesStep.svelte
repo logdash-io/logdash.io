@@ -4,6 +4,7 @@
   import { Feature } from '$lib/domains/shared/types.js';
   import ServiceCard from '../ServiceCard.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import { Divider } from '@logdash/hyper-ui/presentational';
   import { fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
 
@@ -62,38 +63,40 @@
 <div class="flex flex-col gap-6">
   <div class="flex flex-col px-2">
     <h2 class="text-lg md:text-xl leading-normal font-medium">Add services</h2>
-    <p class="text-sm text-base-content/80">
+    <p class="text-sm text-neutral-300">
       Services are your project building blocks, like a backend, queue worker,
       or BFF.
     </p>
   </div>
 
-  {#each services as service, index (service.id)}
+  {#each services as service (service.id)}
     <div
-      class=""
       id="wizard-service-{service.id}"
       in:fly={{ y: -10, duration: 200, easing: cubicOut }}
     >
       <ServiceCard
         {service}
-        {index}
         expanded={activeExpandedId === service.id}
         canRemove={canRemoveServices}
-        onNameChange={(name) => onServiceNameChange(service.id, name)}
+        onNameChange={(name: string) => onServiceNameChange(service.id, name)}
         onRemove={() => onRemoveService(service.id)}
-        onToggleFeature={(feature) => onToggleFeature(service.id, feature)}
+        onToggleFeature={(feature: Feature) =>
+          onToggleFeature(service.id, feature)}
       />
     </div>
   {/each}
 
   {#if canAddService}
     <button
-      class="divider w-full gap-1 cursor-pointer divider-base-100 hover:divider-primary/20 hover:text-primary"
+      type="button"
+      class="block w-full cursor-pointer hover:text-brand"
       onclick={onAddService}
       in:fly={{ y: -5, duration: 200, easing: cubicOut }}
     >
-      <PlusIcon class="size-4 -mr-2 shrink-0" />
-      Add another service
+      <Divider class="gap-1">
+        <PlusIcon class="size-4 -mr-2 shrink-0" />
+        Add another service
+      </Divider>
     </button>
   {/if}
 </div>

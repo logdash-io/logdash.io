@@ -53,7 +53,7 @@ export class StripeSubscriptionDeletedHandler {
     });
 
     try {
-      await this.stripeEventEmitter.emitSubscriptionDeleted({
+      this.stripeEventEmitter.emitSubscriptionDeleted({
         email: user.email,
       });
     } catch (error) {

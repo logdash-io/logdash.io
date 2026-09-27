@@ -42,8 +42,4 @@ export class LogsService {
       `/projects/${project_id}/logs/namespaces`,
     );
   }
-
-  static async sendTestLog(project_id: string): Promise<void> {
-    return httpClient.post(`/projects/${project_id}/test-log`);
-  }
 }

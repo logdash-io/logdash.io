@@ -1,83 +1,126 @@
-<script>
-  import { resolve } from '$app/paths';
-  import { FEATURES } from '$lib/domains/shared/constants/features.js';
-  import { RoutePath } from '$lib/domains/shared/route-path.js';
-  import { ArrowRightIcon, TimerIcon } from 'lucide-svelte';
+<script lang="ts">
+  import FakeLogSearch from './FakeLogSearch.svelte';
+  import FakeMetricsSparkline from './FakeMetricsSparkline.svelte';
+  import FakeStatusPage from './FakeStatusPage.svelte';
+  import FakeUptimeChart from './FakeUptimeChart.svelte';
+  import FeatureRow from './FeatureRow.svelte';
+  import LandingGap from './LandingGap.svelte';
+  import LandingHeading from './LandingHeading.svelte';
 </script>
 
-<div class="container mx-auto max-w-7xl px-4 gap-8">
-  <header class="mb-16 text-center">
-    <h2 class="mb-4 text-4xl font-bold tracking-tight">
-      Overwhelmingly simple.
-    </h2>
+<LandingHeading
+  id="features"
+  title="Everything you need to know your app is healthy."
+  description="Uptime, status pages, logs and metrics in one dashboard. Start with a URL and add the rest when you need it."
+/>
 
-    <p class="text-base-content/70 mx-auto max-w-3xl text-xl">
-      We do the heavy lifting so you can focus on your business. Improve
-      reliability and understand your SaaS with one simple tool.
-    </p>
-  </header>
+<FeatureRow
+  title="Uptime monitoring"
+  body="Paste a URL and checks start right away. When something stops answering, you hear about it before your users do."
+  href="/features/monitoring"
+  linkLabel="Explore monitoring"
+  posthogId="features-monitoring-cta"
+  checks={[
+    'Checks as often as every 15 seconds',
+    'Alerts on Telegram or any webhook',
+  ]}
+  panelHeader={monitoringHeader}
+  panel={monitoringPanel}
+/>
 
-  <section
-    class="mb-16 max-w-5xl mx-auto grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+<LandingGap />
+
+<FeatureRow
+  mirrored
+  title="Status pages"
+  body="Show customers you are up. Uptime history and response times on a page that lives on your own domain."
+  href="/features/monitoring"
+  linkLabel="Explore status pages"
+  posthogId="features-status-pages-cta"
+  checks={[
+    'Uptime history your customers can check themselves',
+    'Served from your own domain',
+  ]}
+  panelHeader={statusPageHeader}
+  panel={statusPagePanel}
+/>
+
+<LandingGap />
+
+<FeatureRow
+  title="Logs"
+  body="Every service in one searchable tail. Filter by level and find the line that broke it."
+  href="/features/logging"
+  linkLabel="Explore logs"
+  posthogId="features-logs-cta"
+  checks={[
+    'Logs from every service in one place',
+    'Search and filter while they stream in',
+  ]}
+  panel={logsPanel}
+/>
+
+<LandingGap />
+
+<FeatureRow
+  mirrored
+  title="Metrics"
+  body="Sign-ups, payments, queue depth. Track what matters with one line of code, with nothing to host or maintain."
+  href="/features/metrics"
+  linkLabel="Explore metrics"
+  posthogId="features-metrics-cta"
+  checks={[
+    'One line of code per metric',
+    'Live charts next to your logs and uptime',
+  ]}
+  panelHeader={metricsHeader}
+  panel={metricsPanel}
+/>
+
+{#snippet liveStatus()}
+  <span
+    class="text-neutral-400 ml-auto flex shrink-0 items-center gap-1.5 text-xs"
   >
-    {#each FEATURES as feature (feature.id)}
-      <div class="ld-card-base group overflow-hidden rounded-3xl p-2">
-        <div class="w-full p-6">
-          <div class="mb-6 text-5xl">
-            <feature.icon class="text-primary h-10 w-10" />
-          </div>
-          <h3 class="card-title mb-4 text-2xl">
-            {feature.title}
-          </h3>
-          <p class="text-base-content/70">
-            {feature.description}
-          </p>
-        </div>
+    <span class="bg-success size-1.5 rounded-full"></span>
+    Live
+  </span>
+{/snippet}
 
-        <div class="p-6">
-          <ul class="list-disc space-y-2 pl-5">
-            {#each feature.benefits as benefit, i (i)}
-              <li class="text-base-content/80">
-                {benefit}
-              </li>
-            {/each}
-          </ul>
+{#snippet monitoringHeader()}
+  <span class="font-medium">api.acme.com</span>
+  <span class="text-neutral-500 text-xs">Every 15 s</span>
+  {@render liveStatus()}
+{/snippet}
 
-          {#if feature.available}
-            <a
-              href={resolve(`/features/${feature.slug}`)}
-              class="btn btn-md hover:btn-primary btn-secondary mt-6 w-full"
-              data-posthog-id={`features-${feature.id}-learn-more-cta`}
-            >
-              Learn more
-              <span class="sr-only">about {feature.title}</span>
-              <ArrowRightIcon class="size-4" />
-            </a>
-          {:else}
-            <button class="btn btn-md btn-secondary mt-6 w-full" disabled>
-              Coming soon
-              <TimerIcon class="size-4" />
-            </button>
-          {/if}
-        </div>
-      </div>
-    {/each}
-  </section>
+{#snippet monitoringPanel()}
+  <div class="flex h-full p-5">
+    <FakeUptimeChart />
+  </div>
+{/snippet}
 
-  <section class="text-center">
-    <h2 class="mb-1 text-3xl font-bold">
-      Join founders sleeping soundly tonight.
-    </h2>
-    <p class="text-base-content/70 mb-4">
-      No credit card required. Create your account and get your first signals in
-      minutes.
-    </p>
-    <a
-      class="btn btn-primary"
-      data-posthog-id="features-open-dashboard-cta"
-      href={resolve(RoutePath.AUTH)}
-    >
-      Start free
-    </a>
-  </section>
-</div>
+{#snippet statusPageHeader()}
+  <span class="text-neutral-500">status.acme.com</span>
+  {@render liveStatus()}
+{/snippet}
+
+{#snippet statusPagePanel()}
+  <div class="flex h-full p-5">
+    <FakeStatusPage />
+  </div>
+{/snippet}
+
+{#snippet logsPanel()}
+  <FakeLogSearch />
+{/snippet}
+
+{#snippet metricsHeader()}
+  <span class="font-medium">CPU usage</span>
+  <span class="text-neutral-500 text-xs">Last 60 s</span>
+  {@render liveStatus()}
+{/snippet}
+
+{#snippet metricsPanel()}
+  <div class="flex h-full p-5">
+    <FakeMetricsSparkline />
+  </div>
+{/snippet}

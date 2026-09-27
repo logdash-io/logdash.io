@@ -41,7 +41,7 @@
   });
 
   $effect(() => {
-    projectId;
+    void projectId;
     untrack(() => {
       if (userId && projectId) {
         filtersStore.initPersistence(userId, projectId);
@@ -57,7 +57,7 @@
   $effect(() => {
     if (!projectId) return;
 
-    namespacesState.init(projectId);
+    void namespacesState.init(projectId);
 
     return () => {
       namespacesState.reset();
@@ -65,7 +65,7 @@
   });
 
   $effect(() => {
-    filtersStore.filters;
+    void filtersStore.filters;
     if (!projectId) {
       return;
     }

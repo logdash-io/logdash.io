@@ -1,4 +1,3 @@
-import { HttpMonitorStatus } from '../../status/enum/http-monitor-status.enum';
 import { HttpMonitorEntity } from './http-monitor.entity';
 import { HttpMonitorNormalized, HttpMonitorSerialized } from './http-monitor.interface';
 import { HttpMonitorStatusDto } from '../../status/http-monitor-status.service';
@@ -12,6 +11,8 @@ export class HttpMonitorSerializer {
       url: entity.url,
       notificationChannelsIds: entity.notificationChannelsIds,
       mode: entity.mode,
+      badgeKey: entity.badgeKey,
+      claimed: entity.claimed,
     };
   }
 
@@ -30,6 +31,7 @@ export class HttpMonitorSerializer {
       url: normalized.url,
       notificationChannelsIds: normalized.notificationChannelsIds,
       mode: normalized.mode,
+      badgeKey: normalized.badgeKey,
       lastStatus: status.status,
       lastStatusCode: +status.statusCode,
     };

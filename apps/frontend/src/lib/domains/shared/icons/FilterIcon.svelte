@@ -1,6 +1,8 @@
 <script lang="ts">
+  import type { ClassValue } from 'svelte/elements';
+
   type Props = {
-    class?: string;
+    class?: ClassValue;
   };
 
   const { class: className = '' }: Props = $props();

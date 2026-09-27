@@ -1,5 +1,5 @@
 import { createTestApp } from '../utils/bootstrap';
-import * as request from 'supertest';
+import request from 'supertest';
 
 describe('Api keys (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -18,8 +18,7 @@ describe('Api keys (reads)', () => {
 
   it('returns project api keys for user who is a member of cluster', async () => {
     // given
-    const { project, token } =
-      await bootstrap.utils.generalUtils.setupAnonymous();
+    const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
     // when
     const response = await request(bootstrap.app.getHttpServer())

@@ -1,10 +1,12 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import { ClusterSerialized } from '../../src/cluster/core/entities/cluster.interface';
 import { ProjectSerialized } from '../../src/project/core/entities/project.interface';
-import * as request from 'supertest';
+import request from 'supertest';
 import { CreateProjectBody } from '../../src/project/core/dto/create-project.body';
 import { UserSerialized } from '../../src/user/core/entities/user.interface';
 import { CreateProjectResponse } from '../../src/project/core/dto/create-project.response';
+import { CreateAnonymousUserResponse } from '../../src/user/core/dto/create-anonymous-user.response';
 import { getModelToken } from '@nestjs/mongoose';
 import { UserEntity } from '../../src/user/core/entities/user.entity';
 import { Model, Types } from 'mongoose';
@@ -14,7 +16,7 @@ import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { StripePaymentSucceededHandler } from '../../src/payments/stripe/stripe.payment-succeeded.handler';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import Stripe from 'stripe';
-import { sleep } from './sleep';
+import { waitFor } from './wait-for';
 import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
 import { ProjectEntity } from '../../src/project/core/entities/project.entity';
 
@@ -23,7 +25,7 @@ export class GeneralUtils {
   private readonly clusterModel: Model<ClusterEntity>;
   private readonly projectModel: Model<ProjectEntity>;
 
-  constructor(private readonly app: INestApplication<any>) {
+  constructor(private readonly app: INestApplication<App>) {
     this.userModel = this.app.get(getModelToken(UserEntity.name));
     this.clusterModel = this.app.get(getModelToken(ClusterEntity.name));
     this.projectModel = this.app.get(getModelToken(ProjectEntity.name));
@@ -47,8 +49,7 @@ export class GeneralUtils {
       );
     }
 
-    const token: string = userResponse.body.token;
-    const user: UserSerialized = userResponse.body.user;
+    const { token, user } = userResponse.body as CreateAnonymousUserResponse;
 
     if (dto?.userTier) {
       await this.userModel.updateOne(
@@ -66,7 +67,7 @@ export class GeneralUtils {
       .get('/users/me/clusters')
       .set('Authorization', `Bearer ${token}`);
 
-    const cluster: ClusterSerialized = clusterResponse.body[0];
+    const [cluster] = clusterResponse.body as ClusterSerialized[];
 
     // project
     const createProjectBody: CreateProjectBody = {
@@ -85,7 +86,7 @@ export class GeneralUtils {
       .get(`/projects/${project.id}/api_keys`)
       .set('Authorization', `Bearer ${token}`);
 
-    const apiKey: ApiKeySerialized = apiKeysResponse.body[0];
+    const [apiKey] = apiKeysResponse.body as ApiKeySerialized[];
 
     return {
       token,
@@ -143,9 +144,7 @@ export class GeneralUtils {
       .get('/users/me')
       .set('Authorization', `Bearer ${anonymousResult.token}`);
 
-    const user = userResponse.body;
-
-    await sleep(100);
+    const user = userResponse.body as UserSerialized;
 
     return {
       ...anonymousResult,
@@ -178,6 +177,12 @@ export class GeneralUtils {
     } as unknown as Stripe.InvoicePaymentSucceededEvent;
 
     await handler.handle(event);
+
+    // The trial flag is set by a listener of the payment event, after handle() returns.
+    await waitFor(
+      () => this.userModel.findOne({ email: userEmail }).lean(),
+      (user) => user?.paymentsMetadata?.trialUsed === true,
+    );
   }
 
   private getRandomEmail(): string {

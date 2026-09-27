@@ -44,7 +44,7 @@ export class ProjectWriteService {
       userId: dto.userId,
     });
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: dto.userId,
       actor: Actor.User,
       action: AuditLogEntityAction.Create,
@@ -101,7 +101,7 @@ export class ProjectWriteService {
     const projects = await this.model.find({ creatorId });
 
     projects.forEach((project) => {
-      this.auditLog.create({
+      void this.auditLog.create({
         userId: project.creatorId,
         actor: Actor.System,
         action: AuditLogEntityAction.Update,

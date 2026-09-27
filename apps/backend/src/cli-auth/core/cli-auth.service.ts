@@ -4,11 +4,7 @@ import { PersonalApiKeyWriteService } from '../../personal-api-key/write/persona
 import { CLI_DEFAULT } from '../../personal-api-key/core/scope-presets';
 import { CliAuthStoreService } from './cli-auth-store.service';
 import { hashDeviceCode } from './cli-auth.hashing';
-import {
-  generateDeviceCode,
-  generateUserCode,
-  normalizeUserCode,
-} from './cli-auth.token';
+import { generateDeviceCode, generateUserCode, normalizeUserCode } from './cli-auth.token';
 import {
   CLI_AUTH_KEY_TTL_DAYS,
   CLI_AUTH_POLL_INTERVAL_SECONDS,
@@ -86,10 +82,7 @@ export class CliAuthService {
    * asked, so the consent screen can show something a phished victim would not
    * recognise. Never exposes the deviceCode or any other secret.
    */
-  public async lookup(input: {
-    userId: string;
-    userCode: string;
-  }): Promise<CliAuthRequestDetails> {
+  public async lookup(input: { userId: string; userCode: string }): Promise<CliAuthRequestDetails> {
     const record = await this.resolvePendingRecord(input.userId, input.userCode);
 
     return {

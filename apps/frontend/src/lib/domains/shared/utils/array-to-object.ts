@@ -1,5 +1,2 @@
-export const arrayToObject = <T>(array: T[], key: keyof T) =>
-  array.reduce((obj, item) => {
-    obj[item[key as string]] = item;
-    return obj;
-  }, {});
+export const arrayToObject = <T>(array: T[], key: keyof T): Record<string, T> =>
+  Object.fromEntries(array.map((item) => [String(item[key]), item]));

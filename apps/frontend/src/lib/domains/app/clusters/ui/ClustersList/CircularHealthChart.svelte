@@ -1,19 +1,18 @@
 <script lang="ts">
   import { Tooltip } from '@logdash/hyper-ui/presentational';
-
-  export type ServiceStatus = 'healthy' | 'unhealthy' | 'degraded' | 'unknown';
+  import type { ServiceHealthStatus } from '$lib/domains/app/clusters/domain/service-health-status.js';
 
   type ServiceData = {
     id: string;
     name: string;
-    status: ServiceStatus;
+    status: ServiceHealthStatus;
   };
 
   type StatusGroup = {
-    status: ServiceStatus;
+    status: ServiceHealthStatus;
     count: number;
     colorClass: string;
-    serviceNames: string[];
+    services: ServiceData[];
   };
 
   type Props = {
@@ -21,8 +20,6 @@
     size?: number;
     strokeWidth?: number;
     gapSize?: number;
-    clusterId?: string;
-    onServiceClick?: (serviceId: string) => void;
   };
 
   const {
@@ -30,27 +27,25 @@
     size = 120,
     strokeWidth = 8,
     gapSize = 6,
-    clusterId,
-    onServiceClick,
   }: Props = $props();
 
   let hoveredSegmentIndex = $state<number | null>(null);
 
-  const STATUS_COLORS: Record<ServiceStatus, string> = {
+  const STATUS_COLORS: Record<ServiceHealthStatus, string> = {
     healthy: 'stroke-success',
     unhealthy: 'stroke-error',
     degraded: 'stroke-warning',
-    unknown: 'stroke-base-300',
+    unknown: 'stroke-surface-root',
   };
 
-  const STATUS_BG_COLORS: Record<ServiceStatus, string> = {
+  const STATUS_BG_COLORS: Record<ServiceHealthStatus, string> = {
     healthy: 'bg-success',
     unhealthy: 'bg-error',
     degraded: 'bg-warning',
-    unknown: 'bg-base-300',
+    unknown: 'bg-surface-root',
   };
 
-  const STATUS_LABELS: Record<ServiceStatus, string> = {
+  const STATUS_LABELS: Record<ServiceHealthStatus, string> = {
     healthy: 'Healthy',
     unhealthy: 'Unhealthy',
     degraded: 'Degraded',
@@ -82,13 +77,13 @@
       const lastGroup = groups[groups.length - 1];
       if (lastGroup && lastGroup.status === service.status) {
         lastGroup.count++;
-        lastGroup.serviceNames.push(service.name);
+        lastGroup.services.push(service);
       } else {
         groups.push({
           status: service.status,
           count: 1,
           colorClass: STATUS_COLORS[service.status],
-          serviceNames: [service.name],
+          services: [service],
         });
       }
     }
@@ -134,7 +129,7 @@
     viewBox="0 0 {size} {size}"
   >
     {#if hasServices}
-      {#each segments as segment, i}
+      {#each segments as segment, i (i)}
         {@const isHovered = hoveredSegmentIndex === i}
         {@const currentStrokeWidth = isHovered ? hoverStrokeWidth : strokeWidth}
         <circle
@@ -146,7 +141,7 @@
           stroke-linecap="round"
           class={[
             segment.colorClass,
-            'cursor-pointer transition-all duration-150',
+            'cursor-pointer transition-[opacity,stroke-width] duration-150',
             { 'opacity-80': isHovered },
           ]}
           style="stroke-dasharray: {segment.dashArray}; stroke-dashoffset: {segment.dashOffset};"
@@ -160,14 +155,14 @@
         fill="none"
         stroke-width={strokeWidth}
         stroke-dasharray="4 4"
-        class="stroke-base-300"
+        class="stroke-surface-root"
       />
     {/if}
   </svg>
 
   {#if hasServices}
     <div class="absolute inset-0">
-      {#each segments as segment, i}
+      {#each segments as segment, i (i)}
         {@const segmentAngle = (segment.count / services.length) * 360}
         {@const previousSegmentsCount = segments
           .slice(0, i)
@@ -194,8 +189,8 @@
               </span>
             </div>
             <div class="flex flex-col gap-0.5 pl-4">
-              {#each segment.serviceNames as serviceName}
-                <span class="text-xs text-base-content/70">{serviceName}</span>
+              {#each segment.services as service (service.id)}
+                <span class="text-xs text-neutral-400">{service.name}</span>
               {/each}
             </div>
           </div>

@@ -17,6 +17,7 @@ import { ScopeEntry } from '../../../personal-api-key/core/types/scope-entry.typ
 import { REQUIRE_SCOPE_KEY } from '../decorators/require-scope.decorator';
 import { ALLOW_ANY_PERSONAL_KEY_KEY } from '../decorators/allow-any-personal-key.decorator';
 import { PERSONAL_API_KEY_PREFIX } from '../../../personal-api-key/core/personal-api-key.token';
+import { AuthenticatedRequest } from '../types/authenticated-request.type';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -27,7 +28,7 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -56,7 +57,7 @@ export class AuthGuard implements CanActivate {
       }
 
       // Demo users are JWT-like; missing viaPersonalKey ⇒ all-access.
-      request['user'] = payload;
+      request.user = payload;
 
       return true;
     }
@@ -74,7 +75,7 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException();
       }
 
-      request['user'] = {
+      request.user = {
         id: authed.userId,
         scopes: authed.scopes,
         access: authed.access,
@@ -90,7 +91,7 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    request['user'] = {
+    request.user = {
       id: payload.id,
       scopes: ALL_ACCESS,
       access: { kind: 'all' },
@@ -100,7 +101,7 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private enforceScope(context: ExecutionContext, request: any): boolean {
+  private enforceScope(context: ExecutionContext, request: AuthenticatedRequest): boolean {
     const allowAnyPersonalKey = this.reflector.getAllAndOverride<boolean>(
       ALLOW_ANY_PERSONAL_KEY_KEY,
       [context.getHandler(), context.getClass()],
@@ -110,17 +111,17 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    const required = this.reflector.getAllAndOverride<{ resource: string; action: Action }>(
-      REQUIRE_SCOPE_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const required = this.reflector.getAllAndOverride<ScopeEntry | undefined>(REQUIRE_SCOPE_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     // Fail-closed: a personal key hitting an endpoint with no @RequireScope is denied.
     if (!required) {
       throw new ForbiddenException('This endpoint is not available to personal API keys');
     }
 
-    const scopes: ScopeEntry[] = request.user.scopes ?? [];
+    const scopes: ScopeEntry[] = request.user?.scopes ?? [];
     const action = scopes.find((s) => s.resource === required.resource)?.action ?? Action.None;
 
     const ok =
@@ -133,17 +134,18 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = (request.headers as any).authorization?.split(' ') ?? [];
+  private extractTokenFromHeader(request: AuthenticatedRequest): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }
 
-  private isRelatedToDemoProject(request: any): boolean {
+  private isRelatedToDemoProject(request: AuthenticatedRequest): boolean {
     const projectId = request.params.projectId;
 
     return projectId === getEnvConfig().demo.projectId;
   }
-  private isRelatedToDemoCluster(request: any): boolean {
+
+  private isRelatedToDemoCluster(request: AuthenticatedRequest): boolean {
     const clusterId = request.params.clusterId;
 
     return clusterId === getEnvConfig().demo.clusterId;

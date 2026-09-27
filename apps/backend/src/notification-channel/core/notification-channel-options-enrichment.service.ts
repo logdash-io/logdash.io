@@ -8,10 +8,10 @@ import { getEnvConfig } from '../../shared/configs/env-configs';
 export class NotificationChannelOptionsEnrichmentService {
   constructor() {}
 
-  public async enrichOptions(
+  public enrichOptions(
     options: NotificationChannelOptions,
     target: NotificationChannelType,
-  ): Promise<NotificationChannelOptions> {
+  ): NotificationChannelOptions {
     const optionsDeepCopy = structuredClone(options);
 
     if (target === NotificationChannelType.Telegram) {
@@ -21,7 +21,7 @@ export class NotificationChannelOptionsEnrichmentService {
     return optionsDeepCopy;
   }
 
-  private async enrichTelegramOptions(options: TelegramOptions): Promise<TelegramOptions> {
+  private enrichTelegramOptions(options: TelegramOptions): TelegramOptions {
     if (!options.botToken) {
       options.botToken = getEnvConfig().notificationChannels.telegramUptimeBot.token;
     }

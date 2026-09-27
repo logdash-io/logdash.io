@@ -1,6 +1,6 @@
 import { createTestApp } from '../utils/bootstrap';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
 
@@ -66,6 +66,19 @@ describe('Metric Register (writes)', () => {
 
     // then
     expect(response.status).toEqual(404);
+  });
+
+  it('rejects a malformed metric register entry id', async () => {
+    // given
+    const { apiKey, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer())
+      .delete(`/projects/${apiKey.projectId}/metric-register/not-an-id`)
+      .set('Authorization', `Bearer ${token}`);
+
+    // then
+    expect(response.status).toEqual(400);
   });
 
   it('creates audit log when metric register entry is deleted', async () => {

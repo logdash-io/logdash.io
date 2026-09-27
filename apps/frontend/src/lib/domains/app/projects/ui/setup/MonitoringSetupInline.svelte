@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { page } from '$app/state';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
+  import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error.js';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { envConfig } from '$lib/domains/shared/utils/env-config';
@@ -10,20 +10,30 @@
     tryPrependProtocol,
   } from '$lib/domains/shared/utils/url.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import {
+    Button,
+    Input,
+    Label,
+    Spinner,
+    Tab,
+    Tabs,
+    Tooltip,
+  } from '@logdash/hyper-ui/presentational';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import { untrack } from 'svelte';
+  import { fromAction } from 'svelte/attachments';
 
   type Props = {
+    clusterId: string;
     projectId: string;
   };
-  const { projectId }: Props = $props();
+  const { clusterId, projectId }: Props = $props();
 
   const MIN_NAME_LENGTH = 3;
   const MAX_NAME_LENGTH = 800;
-
-  const clusterId = $derived(page.params.cluster_id);
+  const MONITOR_LIMIT_MESSAGE =
+    'Too many monitors waiting to be set up. Try again in a few minutes.';
 
   let selectedMode = $state<MonitorMode>(MonitorMode.PULL);
   let url = $state('');
@@ -50,7 +60,7 @@
 
     untrack(() => {
       if (pendingMonitorId || isCreatingPushMonitor) return;
-      createPushMonitor();
+      void createPushMonitor();
     });
   });
 
@@ -64,8 +74,12 @@
         url: undefined,
       });
       pendingMonitorId = createdMonitorId;
-    } catch {
-      toast.error('Failed to create monitor');
+    } catch (error) {
+      toast.error(
+        readHttpErrorStatus(error) === 409
+          ? MONITOR_LIMIT_MESSAGE
+          : 'Failed to create monitor',
+      );
     } finally {
       isCreatingPushMonitor = false;
     }
@@ -77,161 +91,186 @@
     isSubmitting = true;
 
     try {
-      const finalUrl =
-        selectedMode === MonitorMode.PULL ? tryPrependProtocol(url) : undefined;
+      if (selectedMode === MonitorMode.PUSH) {
+        await finishPushSetup();
+      } else {
+        await finishPullSetup();
+      }
 
-      const createdMonitorId = await monitoringState.createMonitor(projectId, {
-        projectId,
-        name: monitorName,
-        mode: selectedMode,
-        url: finalUrl,
-      });
-
-      await monitoringState.claimMonitor(createdMonitorId);
       await monitoringState.sync(clusterId);
-    } catch {
-      toast.error('Failed to setup monitoring');
+    } catch (error) {
+      toast.error(
+        readHttpErrorStatus(error) === 409
+          ? MONITOR_LIMIT_MESSAGE
+          : 'Failed to setup monitoring',
+      );
       isSubmitting = false;
     }
   }
 
-  function onCopyEndpoint(): void {
+  async function finishPushSetup(): Promise<void> {
+    if (!pendingMonitorId) {
+      throw new Error('Push monitor is not ready yet');
+    }
+
+    const pendingMonitor =
+      monitoringState.getUnclaimedMonitor(pendingMonitorId);
+
+    if (pendingMonitor && pendingMonitor.name !== monitorName) {
+      await monitoringState.updateMonitor(pendingMonitorId, {
+        name: monitorName,
+      });
+    }
+
+    await monitoringState.claimMonitor(pendingMonitorId);
+  }
+
+  async function finishPullSetup(): Promise<void> {
+    const createdMonitorId = await monitoringState.createMonitor(projectId, {
+      projectId,
+      name: monitorName,
+      mode: MonitorMode.PULL,
+      url: tryPrependProtocol(url),
+    });
+
+    await monitoringState.claimMonitor(createdMonitorId);
+  }
+
+  async function onCopyEndpoint(): Promise<void> {
     if (!pushEndpoint) {
       toast.error('Monitor not found');
       return;
     }
 
-    navigator.clipboard.writeText(pushEndpoint);
+    await navigator.clipboard.writeText(pushEndpoint);
     toast.success('Endpoint copied to clipboard');
   }
 </script>
 
 <div class="flex w-full max-w-2xl flex-col gap-6 ld-card">
   <div class="space-y-2">
-    <h5 class="text-2xl font-semibold">Setup Monitoring for your service</h5>
+    <h5 class="text-2xl font-medium">Setup Monitoring for your service</h5>
 
-    <p class="text-base-content opacity-60">
+    <p class="text-neutral-400">
       Monitor your services uptime and get alerted when they go down.
     </p>
   </div>
 
   <div class="space-y-4">
-    <div class="tabs tabs-boxed tabs-sm w-fit">
-      <button
-        class={[
-          'tab px-4',
-          { 'tab-active bg-base-100': selectedMode === MonitorMode.PULL },
-        ]}
+    <Tabs size="sm" class="w-fit">
+      <Tab
+        class="px-4"
+        active={selectedMode === MonitorMode.PULL}
         onclick={() => (selectedMode = MonitorMode.PULL)}
-        type="button"
       >
         Pull (we ping you)
-      </button>
+      </Tab>
       {#if canUsePush}
-        <button
-          class={[
-            'tab px-4',
-            { 'tab-active bg-base-100': selectedMode === MonitorMode.PUSH },
-          ]}
+        <Tab
+          class="px-4"
+          active={selectedMode === MonitorMode.PUSH}
           onclick={() => (selectedMode = MonitorMode.PUSH)}
-          type="button"
         >
           Push (you ping us)
-        </button>
+        </Tab>
       {:else}
         <Tooltip
           content="Upgrade to Pro to use Push monitors"
           placement="bottom"
         >
-          <button
-            class={[
-              'tab px-4',
-              {
-                'tab-active bg-base-100': selectedMode === MonitorMode.PUSH,
-                'opacity-60 cursor-not-allowed': true,
-              },
-            ]}
+          <Tab
+            class="text-fg-faint pointer-events-auto cursor-not-allowed px-4 opacity-100"
+            active={selectedMode === MonitorMode.PUSH}
             disabled={true}
-            type="button"
           >
             Push (Heartbeat)
-          </button>
+          </Tab>
         </Tooltip>
       {/if}
-    </div>
+    </Tabs>
 
     <div class="space-y-4">
       {#if selectedMode === MonitorMode.PULL}
         <div class="space-y-2">
-          <label class="label font-medium">Monitor name</label>
-          <input
+          <Label class="font-medium" for="monitor-name-pull">
+            Monitor name
+          </Label>
+          <Input
+            id="monitor-name-pull"
             bind:value={monitorName}
             minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
-            class="input input-bordered w-full"
+            class="w-full"
             placeholder="My API Service"
-            use:autoFocus={{ delay: 100 }}
+            {@attach fromAction(autoFocus, () => ({ delay: 100 }))}
           />
         </div>
 
         <div class="space-y-2">
-          <label class="label font-medium">URL to monitor</label>
-          <input
+          <Label class="font-medium" for="monitor-url">URL to monitor</Label>
+          <Input
+            id="monitor-url"
             bind:value={url}
             minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
-            class="input input-bordered w-full"
+            class="w-full"
             placeholder="https://example.com/health"
           />
-          <p class="text-xs opacity-60">
-            We'll ping this URL every 15 seconds to check if it's healthy.
+          <p class="text-neutral-400 text-xs">
+            Checked every 5 minutes on the free plan, every 15 seconds on Pro.
           </p>
         </div>
       {:else}
         <div class="space-y-2">
-          <label class="label font-medium">Monitor name</label>
-          <input
+          <Label class="font-medium" for="monitor-name-push">
+            Monitor name
+          </Label>
+          <Input
+            id="monitor-name-push"
             bind:value={monitorName}
             minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
-            class="input input-bordered w-full"
+            class="w-full"
             placeholder="My Backend Service"
-            use:autoFocus={{ delay: 100 }}
+            {@attach fromAction(autoFocus, () => ({ delay: 100 }))}
           />
-          <p class="text-xs opacity-60">
+          <p class="text-neutral-400 text-xs">
             Your service will send heartbeat pings to our endpoint.
           </p>
         </div>
 
         {#if isCreatingPushMonitor}
-          <div class="border-base-300 border-t pt-4">
-            <div class="flex items-center gap-2 text-sm opacity-60">
-              <span class="loading loading-spinner loading-xs"></span>
+          <div class="border-surface-root border-t pt-4">
+            <div class="text-neutral-400 flex items-center gap-2 text-sm">
+              <Spinner size="xs" aria-hidden="true" />
               Generating endpoint...
             </div>
           </div>
         {:else if pushEndpoint}
-          <div class="border-base-300 border-t pt-4">
+          <div class="border-surface-root border-t pt-4">
             <div class="space-y-3">
               <div class="space-y-1">
                 <p class="text-sm font-medium">Ping endpoint</p>
-                <p class="text-xs opacity-60">
+                <p class="text-neutral-400 text-xs">
                   Send a POST request to this URL from your service:
                 </p>
               </div>
               <div class="flex items-center gap-2">
                 <code
-                  class="bg-base-200 flex-1 truncate rounded px-3 py-2 font-mono text-sm"
+                  class="bg-surface-well flex-1 truncate rounded-xl px-3 py-2 font-mono text-sm"
                 >
                   {pushEndpoint}
                 </code>
                 <Tooltip content="Copy endpoint" placement="top">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    shape="square"
+                    aria-label="Copy endpoint"
                     onclick={onCopyEndpoint}
-                    class="btn btn-square btn-sm btn-ghost"
                   >
                     <CopyIcon class="h-4 w-4" />
-                  </button>
+                  </Button>
                 </Tooltip>
               </div>
             </div>
@@ -240,17 +279,17 @@
       {/if}
     </div>
 
-    <button
-      class="btn btn-primary"
+    <Button
+      variant="primary"
       disabled={!isFormValid || isSubmitting}
       onclick={onFinishSetup}
     >
       {#if isSubmitting}
-        <span class="loading loading-spinner loading-sm"></span>
+        <Spinner size="sm" aria-hidden="true" />
       {:else}
         <CheckIcon class="h-4 w-4" />
       {/if}
       Finish Setup
-    </button>
+    </Button>
   </div>
 </div>

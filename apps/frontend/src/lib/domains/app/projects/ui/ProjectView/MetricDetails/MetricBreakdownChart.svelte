@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Spinner } from '@logdash/hyper-ui/presentational';
   import * as d3 from 'd3';
   import { onMount } from 'svelte';
 
@@ -10,7 +11,6 @@
   type Props = {
     data: DataPoint[];
     isLoading?: boolean;
-    title?: string;
     color?: string;
     height?: number;
     format?: Format;
@@ -19,8 +19,7 @@
   const {
     isLoading = false,
     data,
-    title,
-    color = '#e60076',
+    color = '#f4f4f4',
     height = 200,
     format = 'minute',
     timeRange = 'small',
@@ -65,7 +64,8 @@
       .domain([0, d3.max(data, (d) => d.y) || 0])
       .range([innerHeight, 0]);
     // Function to get the center of each band for line positioning
-    const xCenter = (d) => xScale(String(d.x))! + xScale.bandwidth() / 2;
+    const xCenter = (d: DataPoint): number =>
+      xScale(String(d.x))! + xScale.bandwidth() / 2;
 
     // Helper function to determine tick label display
     function getTickLabelForDisplay(
@@ -74,18 +74,20 @@
       currentTimeRange: 'small' | 'large',
     ): string {
       switch (currentFormat) {
-        case 'minute':
+        case 'minute': {
           const minute = parseInt(value.split(':')[1], 10);
           if (currentTimeRange === 'small') {
             return minute % 5 === 0 ? value : '';
           }
           return minute === 0 || minute === 30 ? value : '';
-        case 'hour':
+        }
+        case 'hour': {
           const hour = parseInt(value.split(' ')[1].split(':')[0], 10);
           if (currentTimeRange === 'small') {
             return value;
           }
           return hour === 0 || hour === 12 ? value : '';
+        }
         case 'day':
           return value; // For 'day' format, always show the label if the tick is decided to be present
         default:
@@ -167,7 +169,7 @@
               .style('top', `${mouseY - 20}px`)
               .style('position', 'absolute')
               .html(
-                `<strong>Date:</strong> ${d.x}<br><strong>Value:</strong> ${d.y}`,
+                `<strong>Date:</strong> ${String(d.x)}<br><strong>Value:</strong> ${d.y}`,
               );
           } else {
             d3.select(tooltip).style('visibility', 'hidden');
@@ -203,20 +205,21 @@
 
 <div class="chart-wrapper relative">
   {#if isLoading}
-    <div
-      class="text-primary loading loading-sm absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-    ></div>
+    <Spinner
+      size="sm"
+      class="text-brand absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+    />
   {/if}
 
   {#if !isLoading && data.length === 0}
     <div
-      class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-gray-500"
+      class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-neutral-500"
     >
       No data available
     </div>
   {/if}
   <div class="chart-container w-full" bind:this={chartContainer}></div>
-  <div class="tooltip" bind:this={tooltip}></div>
+  <div class="point-tooltip" bind:this={tooltip}></div>
 </div>
 
 <style>
@@ -228,10 +231,10 @@
     height: auto;
     min-height: 200px;
   }
-  .tooltip {
+  .point-tooltip {
     position: absolute;
     visibility: hidden;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: var(--color-surface-root);
     color: white;
     padding: 6px 10px;
     border-radius: 4px;

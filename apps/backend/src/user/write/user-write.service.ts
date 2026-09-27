@@ -22,6 +22,8 @@ export class UserWriteService {
       tier: UserTier.Free,
       avatarUrl: dto.avatarUrl,
       marketingConsent: dto.marketingConsent,
+      termsAcceptedAt: dto.termsAcceptedAt,
+      onboarding: dto.onboarding,
     });
 
     return UserSerializer.normalize(user);
@@ -54,14 +56,22 @@ export class UserWriteService {
       updateQuery.avatarUrl = dto.avatarUrl;
     }
 
-    if (dto.marketingConsent) {
+    if (dto.marketingConsent !== undefined) {
       updateQuery.marketingConsent = dto.marketingConsent;
+    }
+
+    if (dto.termsAcceptedAt) {
+      updateQuery.termsAcceptedAt = dto.termsAcceptedAt;
+    }
+
+    if (dto.onboarding) {
+      updateQuery.onboarding = dto.onboarding;
     }
 
     const user = await this.userModel.findOneAndUpdate(
       { _id: new Types.ObjectId(dto.id) },
       updateQuery,
-      { new: true },
+      { returnDocument: 'after' },
     );
 
     if (!user) {

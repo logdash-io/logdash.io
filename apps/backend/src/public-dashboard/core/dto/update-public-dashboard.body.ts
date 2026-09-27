@@ -1,5 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
+import { NoImplicitConversion } from '../../../shared/utils/no-implicit-conversion.decorator';
 
 export class UpdatePublicDashboardBody {
   @ApiPropertyOptional()
@@ -10,6 +11,7 @@ export class UpdatePublicDashboardBody {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @NoImplicitConversion()
   @IsBoolean()
   isPublic?: boolean;
 }

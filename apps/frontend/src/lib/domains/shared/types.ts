@@ -1,4 +1,5 @@
 import type { Component } from 'svelte';
+import type { ClassValue } from 'svelte/elements';
 
 export enum UserTier {
   FREE = 'free',
@@ -31,5 +32,5 @@ export enum LogdashSDKName {
 
 export type LogdashSDK = {
   name: LogdashSDKName;
-  icon: Component;
+  icon: Component<{ class?: ClassValue }>;
 };

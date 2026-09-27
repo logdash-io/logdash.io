@@ -1,7 +1,6 @@
 import { ClickhouseUtils } from '../../../clickhouse/clickhouse.utils';
 import { CreateLogDto } from '../../write/dto/create-log.dto';
 import { LogLevel } from '../enums/log-level.enum';
-import { LogNormalized } from './log.interface';
 
 export const ourLogLevelToClickhouseLogLevel: Record<LogLevel, number> = {
   [LogLevel.Info]: 1,
@@ -40,3 +39,8 @@ export class LogClickhouseEntity {
     };
   }
 }
+
+export type LogClickhouseRow = Omit<LogClickhouseEntity, 'level' | 'namespace'> & {
+  level: LogLevel;
+  namespace: string | null;
+};

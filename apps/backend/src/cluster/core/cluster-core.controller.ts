@@ -99,7 +99,7 @@ export class ClusterCoreController {
       clusters.map((cluster) => cluster.id),
     );
 
-    const featuresMap = await this.clusterFeaturesService.getClusterFeaturesMany(
+    const featuresMap = this.clusterFeaturesService.getClusterFeaturesMany(
       clusters.map((cluster) => cluster.id),
     );
 
@@ -156,7 +156,7 @@ export class ClusterCoreController {
       clusterId,
     ]);
 
-    const featuresMap = await this.clusterFeaturesService.getClusterFeaturesMany([clusterId]);
+    const featuresMap = this.clusterFeaturesService.getClusterFeaturesMany([clusterId]);
 
     return ClusterSerializer.serialize(updatedCluster, {
       projects: projectsGroupedByCluster[clusterId],

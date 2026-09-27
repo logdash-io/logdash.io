@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, type Snippet } from "svelte";
+  import { onMount, onDestroy, type Snippet, untrack } from "svelte";
   import { fly } from "svelte/transition";
 
   interface Props {
@@ -18,7 +18,7 @@
     children,
   }: Props = $props();
 
-  let timeToNextRefresh = $state(pollingInterval);
+  let timeToNextRefresh = $state(untrack(() => pollingInterval));
   let pollingIntervalId: ReturnType<typeof setInterval> | null = null;
   let countdownIntervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -70,12 +70,12 @@
 </script>
 
 <div class="mb-8 flex flex-col items-start justify-start px-1 text-left">
-  <h1 class="text-secondary text-2xl font-semibold">
+  <h1 class="text-fg-default text-2xl font-semibold">
     {@render children?.()}
   </h1>
   {#if enablePolling}
     <div
-      class="grid overflow-hidden text-left text-xs text-neutral-600 dark:text-neutral-500"
+      class="grid overflow-hidden text-left text-xs text-neutral-500"
     >
       {#if loading}
         <span

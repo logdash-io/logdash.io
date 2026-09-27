@@ -10,6 +10,7 @@ import { ClusterReadCachedService } from '../../cluster/read/cluster-read-cached
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { CustomDomainReadService } from '../../custom-domain/read/custom-domain-read.service';
 import { PublicDashboardReadService } from '../../public-dashboard/read/public-dashboard-read.service';
+import { errorMessage } from '../../shared/utils/error-message';
 
 const MAX_AUDIT_LOGS_PER_USER_PER_MINUTE = 60 * 10;
 
@@ -37,7 +38,7 @@ export class AuditLog {
       return await this.createIfWithinRateLimit(enrichedDto);
     } catch (error) {
       this.logger.error('Error creating audit log', {
-        error: error.message,
+        error: errorMessage(error),
         dto,
       });
     }

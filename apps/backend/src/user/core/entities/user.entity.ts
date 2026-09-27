@@ -8,6 +8,12 @@ export interface PaymentsMetadata {
   trialUsed?: boolean;
 }
 
+export interface UserOnboarding {
+  role?: string;
+  source?: string;
+  completedAt?: Date;
+}
+
 @Schema({ collection: 'users', timestamps: true })
 export class UserEntity {
   _id: Types.ObjectId;
@@ -38,6 +44,12 @@ export class UserEntity {
 
   @Prop()
   marketingConsent: boolean;
+
+  @Prop({ type: Date })
+  termsAcceptedAt?: Date;
+
+  @Prop({ type: Object })
+  onboarding?: UserOnboarding;
 
   @Prop()
   createdAt: Date;

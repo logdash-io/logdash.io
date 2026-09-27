@@ -1,9 +1,10 @@
 import { RateLimit } from '../../../shared/responses/rate-limit.response';
 import { ProjectFeature } from '../enums/project-feature.enum';
+import { ProjectEntity } from './project.entity';
 import { ProjectNormalized, ProjectSerialized } from './project.interface';
 
 export class ProjectSerializer {
-  public static normalize(entity): ProjectNormalized {
+  public static normalize(entity: ProjectEntity): ProjectNormalized {
     return {
       id: entity._id.toString(),
       name: entity.name,
@@ -15,7 +16,7 @@ export class ProjectSerializer {
     };
   }
 
-  public static normalizeMany(entities: any[]): ProjectNormalized[] {
+  public static normalizeMany(entities: ProjectEntity[]): ProjectNormalized[] {
     return entities.map((entity) => this.normalize(entity));
   }
 

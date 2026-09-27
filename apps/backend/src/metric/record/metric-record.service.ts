@@ -6,6 +6,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { METRICS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
+import { errorMessage } from '../../shared/utils/error-message';
 
 @Injectable()
 export class MetricRecordService {
@@ -22,7 +23,7 @@ export class MetricRecordService {
       await this.recordMetrics();
     } catch (error) {
       this.logger.error('Error recording clickhouse metrics', {
-        error: error.message,
+        error: errorMessage(error),
       });
     }
   }

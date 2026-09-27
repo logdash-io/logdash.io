@@ -4,15 +4,16 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { getEnvConfig } from './shared/configs/env-configs';
-import * as basicAuth from 'express-basic-auth';
+import basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
 import { NextFunction, Request, Response } from 'express';
 import { swaggerDarkModeCSS } from './swagger/swagger-dark-mode.js';
+import { CastErrorFilter } from './shared/filters/cast-error.filter';
 
 // Documented batch maximum is 100 logs x 4096 chars, plus JSON overhead.
 const BODY_SIZE_LIMIT = '2mb';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
 
   app.enableShutdownHooks();
@@ -85,11 +86,16 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+  app.useGlobalFilters(new CastErrorFilter(app.getHttpAdapter()));
 
   await app.init();
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+
+bootstrap().catch((error: unknown) => {
+  console.error(error);
+  process.exit(1);
+});
 
 process.on('uncaughtException', (error) => {
   console.error(error);

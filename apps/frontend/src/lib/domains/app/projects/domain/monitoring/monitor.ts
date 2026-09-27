@@ -11,4 +11,5 @@ export type Monitor = {
   lastStatusCode: number;
   lastStatus: MonitorStatus;
   mode: MonitorMode;
+  badgeKey: string;
 };

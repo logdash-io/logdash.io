@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CustomJwtService } from '../custom-jwt/custom-jwt.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import { UserWriteService } from '../../user/write/user-write.service';
@@ -54,12 +54,9 @@ export class GithubAuthLoginService {
       throw new UnauthorizedException('Account was created with a different sign in method');
     }
 
-    if (!user && !dto.termsAccepted) {
-      this.logger.warn('Cannot create new account without accepting terms');
-      throw new BadRequestException('Cannot create new account without accepting terms');
-    }
-
     if (user === null) {
+      const termsAcceptedAt = dto.termsAccepted ? new Date() : undefined;
+
       const avatarUrl = await this.authGithubDataService.getGithubAvatar(accessToken);
 
       const user = await this.userWriteService.create({
@@ -68,11 +65,13 @@ export class GithubAuthLoginService {
         email,
         avatarUrl,
         marketingConsent: dto.emailAccepted || false,
+        termsAcceptedAt,
+        onboarding: termsAcceptedAt ? { completedAt: termsAcceptedAt } : undefined,
       });
 
       this.logger.log(`Created new user`, { email, userId: user.id });
 
-      await this.emitter.emitUserRegisteredEvent({
+      this.emitter.emitUserRegisteredEvent({
         authMethod: AuthMethod.Github,
         email,
         userId: user.id,
@@ -81,7 +80,7 @@ export class GithubAuthLoginService {
 
       this.metrics.mutateMetric('loginGithub', 1);
 
-      this.auditLog.create({
+      void this.auditLog.create({
         userId: user.id,
         actor: Actor.User,
         action: AuditLogUserAction.GithubLogin,
@@ -103,7 +102,7 @@ export class GithubAuthLoginService {
 
     this.metrics.mutateMetric('loginGithub', 1);
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: user.id,
       actor: Actor.User,
       action: AuditLogUserAction.GithubLogin,

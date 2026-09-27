@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  Param,
-  Post,
-  Req,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 import { AuditLogEntityAction } from '../../audit-log/core/enums/audit-log-actions.enum';
@@ -23,8 +14,7 @@ import { WhoamiResponse } from './dto/whoami.response';
 import { PersonalApiKeySerialized } from './entities/personal-api-key.interface';
 import { PersonalApiKeySerializer } from './entities/personal-api-key.serializer';
 import { ALL_ACCESS } from './scope-presets';
-import { AccessRestriction } from './types/access-restriction.type';
-import { ScopeEntry } from './types/scope-entry.type';
+import { AuthenticatedRequest } from '../../auth/core/types/authenticated-request.type';
 
 @Controller('personal-api-keys')
 @ApiTags('Personal API keys')
@@ -72,9 +62,7 @@ export class PersonalApiKeyCoreController {
 
   @Get()
   @ApiResponse({ type: PersonalApiKeySerialized, isArray: true })
-  public async list(
-    @CurrentUserId() userId: string,
-  ): Promise<PersonalApiKeySerialized[]> {
+  public async list(@CurrentUserId() userId: string): Promise<PersonalApiKeySerialized[]> {
     const keys = await this.personalApiKeyReadService.readByUserId(userId);
 
     return keys.map((key) => PersonalApiKeySerializer.serialize(key));
@@ -82,10 +70,7 @@ export class PersonalApiKeyCoreController {
 
   @Delete(':id')
   @HttpCode(204)
-  public async revoke(
-    @CurrentUserId() userId: string,
-    @Param('id') id: string,
-  ): Promise<void> {
+  public async revoke(@CurrentUserId() userId: string, @Param('id') id: string): Promise<void> {
     await this.personalApiKeyWriteService.revoke({ id, userId });
 
     await this.auditLog.create({
@@ -100,10 +85,10 @@ export class PersonalApiKeyCoreController {
   @Get('whoami')
   @AllowAnyPersonalKey()
   @ApiResponse({ type: WhoamiResponse })
-  public async whoami(
+  public whoami(
     @CurrentUserId() userId: string,
-    @Req() request: { user?: { id: string; scopes?: ScopeEntry[]; access?: AccessRestriction } },
-  ): Promise<WhoamiResponse> {
+    @Req() request: AuthenticatedRequest,
+  ): WhoamiResponse {
     const user = request.user;
 
     return {

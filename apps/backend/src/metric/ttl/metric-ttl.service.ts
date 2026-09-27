@@ -28,7 +28,7 @@ export class MetricTtlService {
       const dtos: RemoveMetricsDto[] = [];
 
       for (const project of batch) {
-        const projectDtos = await this.getRemovalDtosForOneProject({
+        const projectDtos = this.getRemovalDtosForOneProject({
           projectId: project.id,
           tier: project.tier,
         });
@@ -44,10 +44,10 @@ export class MetricTtlService {
     this.logger.log(`Removed old metrics`, { durationMs });
   }
 
-  private async getRemovalDtosForOneProject(params: {
+  private getRemovalDtosForOneProject(params: {
     projectId: string;
     tier: ProjectTier;
-  }): Promise<RemoveMetricsDto[]> {
+  }): RemoveMetricsDto[] {
     const minuteMetricsHours = getProjectPlanConfig(params.tier).metrics.keepGranularitiesForHours[
       MetricGranularity.Minute
     ];

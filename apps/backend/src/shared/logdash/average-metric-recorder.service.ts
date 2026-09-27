@@ -14,7 +14,7 @@ export class AverageRecorder {
 
   constructor(@Inject(LOGDASH_METRICS) private readonly metrics: LogdashMetrics) {}
 
-  public async record(metric: string, value: number): Promise<void> {
+  public record(metric: string, value: number): void {
     if (!this.recordedMetrics[metric]) {
       this.recordedMetrics[metric] = { sum: 0, count: 0 };
     }
@@ -24,7 +24,7 @@ export class AverageRecorder {
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
-  private async dispatch(): Promise<void> {
+  private dispatch(): void {
     const metrics = Object.entries(this.recordedMetrics).map(([metric, { sum, count }]) => {
       return {
         metric,

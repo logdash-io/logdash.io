@@ -5,7 +5,6 @@ import { LogIngestionService } from '../ingestion/log-creation.service';
 import { QueueLogDto } from './dto/queue-log.dto';
 import { Types } from 'mongoose';
 import { QueueLogResult } from './dto/queue-log.result';
-import { getOurEnv, OurEnv } from '../../shared/types/our-env.enum';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { LOGS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
@@ -34,8 +33,10 @@ export class LogQueueingService {
       return;
     }
 
-    void this.logCreationService.createLogs(structuredClone(this.queuedDtos));
+    const dtos = this.queuedDtos;
     this.queuedDtos = [];
+
+    await this.logCreationService.createLogs(dtos);
   }
 
   // @Cron(CronExpression.EVERY_10_SECONDS)

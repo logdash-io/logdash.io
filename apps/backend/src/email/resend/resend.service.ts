@@ -11,6 +11,8 @@ import {
   StripeEvents,
   StripePaymentSucceededEvent,
 } from '../../payments/stripe/stripe-event.emitter';
+import { UserEvents } from '../../user/events/user-events.enum';
+import { MarketingConsentGivenEvent } from '../../user/events/definitions/marketing-consent-given.event';
 
 @Injectable()
 export class ResendService {
@@ -38,25 +40,17 @@ export class ResendService {
       return;
     }
 
-    const { data, error } = await this.resend.contacts.create({
-      email: dto.email,
-      unsubscribed: false,
-      audienceId: '59130b80-b5df-4b37-83f2-fbb838ee98dd',
-    });
+    await this.addToNewsletterAudience(dto.userId, dto.email);
+  }
 
-    if (error) {
-      this.logger.error(`Failed to update resend audience with user`, {
-        email: dto.email,
-        userId: dto.userId,
-        error: error.message,
-      });
+  @OnEvent(UserEvents.MarketingConsentGiven)
+  public async handleMarketingConsentGivenEvent(dto: MarketingConsentGivenEvent): Promise<void> {
+    if (!getEnvConfig().resend.enabled) {
+      this.logger.log('Skipping resend audience update...');
       return;
     }
 
-    this.logger.log(`Resend audience updated with user`, {
-      email: dto.email,
-      userId: dto.userId,
-    });
+    await this.addToNewsletterAudience(dto.userId, dto.email);
   }
 
   @OnEvent(StripeEvents.PaymentSucceeded)
@@ -66,5 +60,24 @@ export class ResendService {
     }
 
     await this.resendTemplatedEmailsService.sendPaidPlanWelcomeEmail(dto.email);
+  }
+
+  private async addToNewsletterAudience(userId: string, email: string): Promise<void> {
+    const { error } = await this.resend.contacts.create({
+      email,
+      unsubscribed: false,
+      audienceId: '59130b80-b5df-4b37-83f2-fbb838ee98dd',
+    });
+
+    if (error) {
+      this.logger.error(`Failed to update resend audience with user`, {
+        email,
+        userId,
+        error: error.message,
+      });
+      return;
+    }
+
+    this.logger.log(`Resend audience updated with user`, { email, userId });
   }
 }

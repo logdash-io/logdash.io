@@ -5,6 +5,7 @@ import { HttpMonitorReadService } from '../read/http-monitor-read.service';
 import { HttpMonitorRemovalService } from '../removal/http-monitor-removal.service';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { HTTP_MONITORS_LOGGER } from '../../shared/logdash/logdash-tokens';
+import { errorMessage } from '../../shared/utils/error-message';
 
 @Injectable()
 export class HttpMonitorTtlService {
@@ -37,7 +38,7 @@ export class HttpMonitorTtlService {
       } catch (error) {
         this.logger.error('Failed to delete unclaimed monitor', {
           httpMonitorId: monitor.id,
-          error: error.message,
+          error: errorMessage(error),
         });
       }
     }

@@ -4,7 +4,6 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { LOGS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { subDays } from 'date-fns';
-require('dotenv').config();
 
 @Injectable()
 export class LogTtlService {

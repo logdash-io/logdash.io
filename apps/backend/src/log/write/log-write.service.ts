@@ -20,9 +20,9 @@ export class LogWriteService {
   public async createMany(dtos: CreateLogDto[]): Promise<void> {
     if (dtos.length === 0) return;
 
-    const logs = dtos.map(LogClickhouseEntity.fromCreateDto);
+    const logs = dtos.map((dto) => LogClickhouseEntity.fromCreateDto(dto));
 
-    const result = await this.clickhouse.insert({
+    await this.clickhouse.insert({
       table: 'logs',
       values: logs,
       format: 'JSONEachRow',

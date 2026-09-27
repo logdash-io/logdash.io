@@ -1,6 +1,16 @@
 <script lang="ts">
-  import TrustProof from './Testimonial.svelte';
-  import Marquee from '$lib/domains/shared/ui/components/Marquee.svelte';
+  import LandingSection from './LandingSection.svelte';
+  import Testimonial from './Testimonial.svelte';
+
+  const TRUSTED_BY = [
+    { text: 'Trusted by ', strong: false },
+    { text: 'founders', strong: true },
+    { text: ', ', strong: false },
+    { text: 'solo devs', strong: true },
+    { text: ', and ', strong: false },
+    { text: 'small teams', strong: true },
+    { text: ' shipping without interruptions.', strong: false },
+  ];
 
   const REVIEWS = [
     {
@@ -39,55 +49,28 @@
   ];
 </script>
 
-<section class="container mx-auto px-4">
-  <div class="mb-12 text-center">
-    <h2 class="mb-2 text-3xl font-bold md:text-4xl">
-      But don't just take our word for it
-    </h2>
-    <p class="mx-auto max-w-3xl text-xl opacity-80">
-      Real words from founders and solo devs already shipping without critical
-      service interruptions.
-    </p>
-  </div>
-
-  <div class="relative flex flex-col gap-6">
-    <Marquee pauseOnHover={true} duration="45s" gap="1.5rem" className="w-full">
-      {#each REVIEWS as review (review.person)}
-        <div class="card ld-card w-[340px] shrink-0 p-6 sm:w-[420px]">
-          <TrustProof
-            quote={review.quote}
-            person={review.person}
-            company={review.company}
-            img={review.img}
-          />
-        </div>
+<LandingSection id="testimonials">
+  <div class="flex flex-col pb-8 lg:pb-12">
+    <h2
+      class="text-neutral-500 px-4 pt-8 pb-6 text-center text-base font-medium text-balance sm:px-6 lg:pt-12 lg:pb-8"
+    >
+      {#each TRUSTED_BY as part (part.text)}
+        {#if part.strong}
+          <span class="text-fg-default">{part.text}</span>
+        {:else}
+          {part.text}
+        {/if}
       {/each}
-    </Marquee>
+    </h2>
 
-    <Marquee
-      pauseOnHover={true}
-      duration="45s"
-      gap="1.5rem"
-      reverse={true}
-      className="w-full"
+    <div
+      class="border-hairline divide-hairline grid grid-cols-1 divide-y border-y lg:grid-cols-3 lg:divide-x lg:divide-y-0"
     >
       {#each REVIEWS as review (review.person)}
-        <div class="card ld-card w-[340px] shrink-0 p-6 sm:w-[420px]">
-          <TrustProof
-            quote={review.quote}
-            person={review.person}
-            company={review.company}
-            img={review.img}
-          />
-        </div>
+        <figure class="group px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+          <Testimonial {...review} />
+        </figure>
       {/each}
-    </Marquee>
-
-    <div
-      class="from-base-300 pointer-events-none absolute inset-y-0 -left-1 w-1/4 bg-gradient-to-r"
-    ></div>
-    <div
-      class="from-base-300 pointer-events-none absolute inset-y-0 -right-1 w-1/4 bg-gradient-to-l"
-    ></div>
+    </div>
   </div>
-</section>
+</LandingSection>

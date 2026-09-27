@@ -9,6 +9,7 @@ import { TelegramOptions } from '../../core/types/telegram-options.type';
 import { LogdashLogger } from '../../../shared/logdash/aggregate-logger';
 import { NOTIFICATIONS_LOGGER } from '../../../shared/logdash/logdash-tokens';
 import { HttpMonitorStatus } from '../../../http-monitor/status/enum/http-monitor-status.enum';
+import { errorMessage } from '../../../shared/utils/error-message';
 
 @Injectable()
 export class TelegramNotificationChannelProvider implements NotificationChannelProvider {
@@ -32,11 +33,11 @@ export class TelegramNotificationChannelProvider implements NotificationChannelP
     await this.sendMessageToTelegramApi({
       botToken: options.botToken!,
       chatId: options.chatId,
-      message: this.createWelcomeMessage(dto),
+      message: this.createWelcomeMessage(),
     });
   }
 
-  private createWelcomeMessage(dto: SendWelcomeMessageSpecificProviderDto): string {
+  private createWelcomeMessage(): string {
     return `👋 Hi\\! I'm \`logdash-uptime-bot\`
 Setup was completed successfully
 
@@ -101,7 +102,7 @@ ${codeBlock}`;
     botToken: string;
     chatId: string;
     message: string;
-  }) {
+  }): Promise<void> {
     const url = `https://api.telegram.org/bot${this.encodeBotToken(dto.botToken)}/sendMessage?parse_mode=MarkdownV2`;
 
     try {
@@ -111,7 +112,9 @@ ${codeBlock}`;
       });
     } catch (error) {
       this.logger.error('Failed to send message to Telegram', {
-        error: error.response?.data || error.message,
+        error: axios.isAxiosError<unknown>(error)
+          ? error.response?.data || error.message
+          : errorMessage(error),
       });
     }
   }

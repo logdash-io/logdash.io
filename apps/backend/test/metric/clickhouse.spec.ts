@@ -44,7 +44,7 @@ describe('Metrics (clickhouse)', () => {
       format: 'JSONEachRow',
     });
 
-    const metrics = (await queryResult.json()) as MetricClickhouseEntity[];
+    const metrics = await queryResult.json<MetricClickhouseEntity>();
 
     expect(metrics.length).toBe(1);
     expect(metrics[0].value).toBe(15);
@@ -87,7 +87,7 @@ describe('Metrics (clickhouse)', () => {
       format: 'JSONEachRow',
     });
 
-    const metrics = (await queryResult.json()) as MetricClickhouseEntity[];
+    const metrics = await queryResult.json<MetricClickhouseEntity>();
 
     expect(metrics.length).toBe(2);
     expect(metrics[0].value).toBe(15);

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { onMount } from 'svelte';
   import {
     wizardState,
@@ -9,7 +10,9 @@
   import { fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
+  import { Button, Spinner } from '@logdash/hyper-ui/presentational';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
 
   let containerRef: HTMLDivElement;
 
@@ -29,8 +32,12 @@
     wizardState.setScrollHandler(scrollToElement);
   });
 
-  function onSubmit(): void {
-    wizardState.submit();
+  async function onSubmit(): Promise<void> {
+    try {
+      await wizardState.submit();
+    } catch {
+      toast.error('Failed to create project');
+    }
   }
 </script>
 
@@ -40,19 +47,22 @@
 >
   <div class="flex items-center gap-2 w-full justify-between px-2">
     <div class="flex flex-col gap-1">
-      <h1 class="text-lg md:text-xl font-medium text-base-content">
+      <h1 class="text-lg md:text-xl font-medium text-fg-default">
         Create a new project
       </h1>
-      <p class="text-sm text-base-content/80">
+      <p class="text-sm text-neutral-300">
         You can always change the settings later.
       </p>
     </div>
-    <button
-      onclick={() => goto('/app/clusters')}
-      class="btn btn-ghost btn-circle btn-sm text-base-content/50 hover:text-base-content"
+    <Button
+      variant="ghost"
+      size="sm"
+      shape="circle"
+      class="text-neutral-500 hover:text-fg-default"
+      onclick={() => goto(resolve('/app/clusters'))}
     >
       <CloseIcon class="size-6" />
-    </button>
+    </Button>
   </div>
 
   <div class="flex flex-col gap-6">
@@ -79,18 +89,18 @@
         class="flex justify-end"
         in:fly={{ y: 5, duration: 250, delay: 100, easing: cubicOut }}
       >
-        <button
-          class="btn btn-primary"
+        <Button
+          variant="primary"
           onclick={onSubmit}
           disabled={!isValid || isSubmitting}
         >
           {#if isSubmitting}
-            <span class="loading loading-spinner loading-sm"></span>
+            <Spinner size="sm" aria-hidden="true" />
             Creating...
           {:else}
             Create Project
           {/if}
-        </button>
+        </Button>
       </div>
     {/if}
   </div>

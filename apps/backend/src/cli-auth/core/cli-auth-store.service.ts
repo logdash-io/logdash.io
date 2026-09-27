@@ -52,9 +52,7 @@ export class CliAuthStoreService {
     );
   }
 
-  public async getByDeviceCodeHash(
-    deviceCodeHash: string,
-  ): Promise<CliAuthPendingRecord | null> {
+  public async getByDeviceCodeHash(deviceCodeHash: string): Promise<CliAuthPendingRecord | null> {
     const raw = await this.redis.get(this.recordKey(deviceCodeHash));
 
     if (!raw) {
@@ -85,11 +83,7 @@ export class CliAuthStoreService {
       return;
     }
 
-    await this.redis.set(
-      this.recordKey(record.deviceCodeHash),
-      JSON.stringify(record),
-      remaining,
-    );
+    await this.redis.set(this.recordKey(record.deviceCodeHash), JSON.stringify(record), remaining);
     await this.redis.set(this.userCodeKey(record.userCode), record.deviceCodeHash, remaining);
   }
 

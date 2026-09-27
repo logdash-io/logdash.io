@@ -1,4 +1,4 @@
-import { LookupOptions } from 'node:dns';
+import { LookupFunction } from 'node:net';
 import { Agent as HttpAgent } from 'node:http';
 import { Agent as HttpsAgent } from 'node:https';
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
@@ -65,27 +65,22 @@ function downgradesToGet(status: number, method: string): boolean {
  * agent so the socket goes to one of those addresses while the `Host` header and
  * TLS SNI keep the original hostname.
  */
-function pinnedLookup(addresses: VettedAddress[]) {
-  return (_hostname: string, options: unknown, callback?: (...args: unknown[]) => void): void => {
-    const done = (typeof options === 'function' ? options : callback) as (
-      ...args: unknown[]
-    ) => void;
-    const requested =
-      typeof options === 'object' && options !== null ? (options as LookupOptions) : {};
+function pinnedLookup(addresses: VettedAddress[]): LookupFunction {
+  return (_hostname, options, callback) => {
     const candidates =
-      requested.family === 4 || requested.family === 6
-        ? addresses.filter((entry) => entry.family === requested.family)
+      options.family === 4 || options.family === 6
+        ? addresses.filter((entry) => entry.family === options.family)
         : addresses;
 
     if (candidates.length === 0) {
-      done(new Error(`No vetted address for the requested family ${requested.family}`));
+      callback(new Error(`No vetted address for the requested family ${options.family}`), '');
       return;
     }
 
-    if (requested.all) {
-      done(null, candidates);
+    if (options.all) {
+      callback(null, candidates);
     } else {
-      done(null, candidates[0].address, candidates[0].family);
+      callback(null, candidates[0].address, candidates[0].family);
     }
   };
 }
@@ -106,7 +101,7 @@ export async function safeHttpRequest(
   let currentUrl = config.url;
   let method = (config.method ?? 'GET').toString().toUpperCase();
   let headers = config.headers;
-  let data = config.data;
+  let data: unknown = config.data;
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const remainingMs = deadline - Date.now();

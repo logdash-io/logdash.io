@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { ClickHouseClient } from '@clickhouse/client';
 import { INestApplication } from '@nestjs/common';
 import { Types } from 'mongoose';
@@ -8,7 +9,7 @@ import { HttpPingSerializer } from '../../src/http-ping/core/entities/http-ping.
 export class HttpPingUtils {
   private clickhouseClient: ClickHouseClient;
 
-  constructor(private readonly app: INestApplication<any>) {
+  constructor(private readonly app: INestApplication<App>) {
     this.clickhouseClient = app.get(ClickHouseClient);
   }
 
@@ -45,7 +46,7 @@ export class HttpPingUtils {
       },
       format: 'JSONEachRow',
     });
-    return HttpPingSerializer.normalizeMany((await response.json()) as any as HttpPingEntity[]);
+    return HttpPingSerializer.normalizeMany(await response.json<HttpPingEntity>());
   }
 
   public async getAllPings(): Promise<HttpPingNormalized[]> {
@@ -54,6 +55,6 @@ export class HttpPingUtils {
       format: 'JSONEachRow',
     });
 
-    return HttpPingSerializer.normalizeMany((await response.json()) as any as HttpPingEntity[]);
+    return HttpPingSerializer.normalizeMany(await response.json<HttpPingEntity>());
   }
 }

@@ -33,7 +33,7 @@ export class SubscriptionReadService {
       .lean<SubscriptionEntity[]>()
       .exec();
 
-    return subscriptions.map(SubscriptionSerializer.normalize);
+    return subscriptions.map((subscription) => SubscriptionSerializer.normalize(subscription));
   }
 
   public async readById(id: string): Promise<SubscriptionNormalized | null> {

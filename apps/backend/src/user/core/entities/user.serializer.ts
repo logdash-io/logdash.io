@@ -13,6 +13,9 @@ export class UserSerializer {
       stripeCustomerId: entity.stripeCustomerId,
       avatarUrl: entity.avatarUrl,
       paymentsMetadata: entity.paymentsMetadata,
+      marketingConsent: entity.marketingConsent,
+      termsAcceptedAt: entity.termsAcceptedAt,
+      onboarding: entity.onboarding,
     };
   }
 
@@ -25,6 +28,8 @@ export class UserSerializer {
       tier: normalized.tier,
       avatarUrl: normalized.avatarUrl,
       paymentsMetadata: normalized.paymentsMetadata,
+      termsAcceptedAt: normalized.termsAcceptedAt?.toISOString() ?? null,
+      onboardingCompletedAt: normalized.onboarding?.completedAt?.toISOString() ?? null,
     };
   }
 }

@@ -1,5 +1,7 @@
 <script lang="ts">
-  import Logo from '$lib/domains/shared/icons/Logo.svelte';
+  import { resolve } from '$app/paths';
+  import Logotype from '$lib/domains/shared/icons/Logotype.svelte';
+  import FeedbackButton from '$lib/domains/shared/ui/components/FeedbackButton.svelte';
   import SidebarClusterNav from './SidebarClusterNav.svelte';
   import SidebarClusterSelector from './SidebarClusterSelector.svelte';
   import SidebarServicesList from './SidebarServicesList.svelte';
@@ -11,23 +13,27 @@
   const { showLogo = true }: Props = $props();
 </script>
 
-<div class="flex flex-1 flex-col">
+<div class="flex min-h-0 flex-1 flex-col">
   {#if showLogo}
-    <a href="/app/clusters" class="flex items-center gap-2 px-3 shrink-0">
-      <Logo class="h-8 w-8" />
-      <span class="text-xl font-bold">logdash</span>
+    <a
+      href={resolve('/app/clusters')}
+      class="flex h-14 shrink-0 items-center px-5"
+    >
+      <Logotype class="text-[17px]" />
     </a>
   {/if}
 
-  <div class="flex flex-col gap-1 flex-1 p-2">
+  <div class="flex flex-1 flex-col gap-4 px-3 pt-1">
     <SidebarClusterSelector />
 
-    <div class="">
-      <SidebarClusterNav />
+    <SidebarClusterNav />
 
-      <SidebarServicesList />
-    </div>
+    <SidebarServicesList />
   </div>
 
-  <SidebarUserProfile />
+  <div class="flex flex-col gap-1 px-3 pt-4 pb-3">
+    <FeedbackButton />
+
+    <SidebarUserProfile />
+  </div>
 </div>

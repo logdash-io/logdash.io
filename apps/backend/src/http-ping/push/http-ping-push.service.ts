@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { HTTP_PINGS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { RedisService } from '../../shared/redis/redis.service';
@@ -13,6 +13,7 @@ import { HttpPingCron } from '../core/enums/http-ping-cron.enum';
 import { ProjectTier } from 'src/project/core/enums/project-tier.enum';
 import { ProjectReadService } from 'src/project/read/project-read.service';
 import { ProjectPlanConfigs } from '../../shared/configs/project-plan-configs';
+import { errorMessage } from '../../shared/utils/error-message';
 
 const PUSH_RECORD_TTL_SECONDS = 300; // 5 minutes
 
@@ -38,6 +39,13 @@ export class HttpPingPushService {
 
     if (existingRecord) {
       return;
+    }
+
+    // The route is public, so only a real push monitor may create a key. A
+    // malformed id fails here too, as a 400 from CastErrorFilter.
+    const monitor = await this.httpMonitorReadService.readById(httpMonitorId);
+    if (monitor?.mode !== HttpMonitorMode.Push) {
+      throw new NotFoundException('Push monitor not found');
     }
 
     await this.redisService.set(key, Date.now().toString(), PUSH_RECORD_TTL_SECONDS);
@@ -74,16 +82,16 @@ export class HttpPingPushService {
   }
 
   private getTiersWithFrequency(frequency: HttpPingCron): ProjectTier[] {
-    return Object.entries(ProjectPlanConfigs)
-      .filter(([_, value]) => value.httpMonitors.pingFrequency === frequency)
-      .map(([key]) => key as keyof typeof ProjectPlanConfigs);
+    return Object.values(ProjectTier).filter(
+      (tier) => ProjectPlanConfigs[tier].httpMonitors.pingFrequency === frequency,
+    );
   }
 
   public async tryCheckPushMonitors(projectTiers: ProjectTier[]): Promise<void> {
     try {
       await this.checkPushMonitors(projectTiers);
     } catch (error) {
-      this.logger.error('Error processing push monitors:', { errorMessage: error.message });
+      this.logger.error('Error processing push monitors:', { errorMessage: errorMessage(error) });
     }
   }
 
@@ -143,7 +151,7 @@ export class HttpPingPushService {
     );
 
     for (const ping of savedPings) {
-      await this.httpPingEventEmitter.emitHttpPingCreatedEvent({
+      this.httpPingEventEmitter.emitHttpPingCreatedEvent({
         ...ping,
         clusterId: clusterIds[ping.httpMonitorId],
       });

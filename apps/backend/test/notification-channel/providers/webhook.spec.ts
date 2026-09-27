@@ -1,6 +1,6 @@
+import nock from 'nock';
 import { createTestApp } from '../../utils/bootstrap';
 import { NotificationChannelMessagingService } from '../../../src/notification-channel/messaging/notification-channel-messaging.service';
-import { sleep } from '../../utils/sleep';
 import { HttpMonitorStatus } from '../../../src/http-monitor/status/enum/http-monitor-status.enum';
 import { WebhookHttpMethod } from '../../../src/notification-channel/core/types/webhook-options.type';
 import { UserTier } from '../../../src/user/core/enum/user-tier.enum';
@@ -41,11 +41,11 @@ describe('Webhook notification channel', () => {
           },
         });
 
-      const requestBodies: any[] = [];
+      const requestBodies: nock.Body[] = [];
 
       bootstrap.utils.webhookUtils.setUpWebhookListener({
         webhookUrl,
-        onMessage: (body, headers) => {
+        onMessage: (body) => {
           requestBodies.push(body);
         },
       });
@@ -88,7 +88,7 @@ describe('Webhook notification channel', () => {
           },
         });
 
-      const requestBodies: any[] = [];
+      const requestBodies: nock.Body[] = [];
 
       bootstrap.utils.webhookUtils.setUpWebhookListener({
         webhookUrl,
@@ -98,15 +98,13 @@ describe('Webhook notification channel', () => {
       });
 
       const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
-      messagingService.sendHttpMonitorAlertMessage({
+      await messagingService.sendHttpMonitorAlertMessage({
         httpMonitorId: 'some-http-monitor-id',
         notificationChannelsIds: [channel.id],
         newStatus: HttpMonitorStatus.Up,
         name: 'test',
         url: 'https://google.com',
       });
-
-      await sleep(500);
 
       expect(requestBodies.length).toBe(1);
       expect(requestBodies[0]).toEqual({
@@ -141,8 +139,8 @@ describe('Webhook notification channel', () => {
           },
         });
 
-      const requestBodies: any[] = [];
-      const requestHeaders: any[] = [];
+      const requestBodies: nock.Body[] = [];
+      const requestHeaders: Record<string, string>[] = [];
 
       bootstrap.utils.webhookUtils.setUpWebhookListener({
         webhookUrl,
@@ -153,7 +151,7 @@ describe('Webhook notification channel', () => {
       });
 
       const messagingService = bootstrap.app.get(NotificationChannelMessagingService);
-      messagingService.sendHttpMonitorAlertMessage({
+      await messagingService.sendHttpMonitorAlertMessage({
         httpMonitorId: 'some-http-monitor-id',
         notificationChannelsIds: [channel.id],
         newStatus: HttpMonitorStatus.Down,
@@ -162,8 +160,6 @@ describe('Webhook notification channel', () => {
         errorMessage: 'connection timeout',
         statusCode: '503',
       });
-
-      await sleep(500);
 
       expect(requestBodies.length).toBe(1);
       expect(requestBodies[0]).toEqual({
@@ -215,8 +211,8 @@ describe('Webhook notification channel', () => {
               },
             });
 
-          const requestBodies: any[] = [];
-          const requestHeaders: any[] = [];
+          const requestBodies: nock.Body[] = [];
+          const requestHeaders: Record<string, string>[] = [];
 
           bootstrap.utils.webhookUtils.setUpWebhookListenerWithMethod({
             webhookUrl,

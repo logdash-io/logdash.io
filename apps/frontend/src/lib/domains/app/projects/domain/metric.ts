@@ -23,5 +23,5 @@ export type Metric = {
 
 export type MetricDataPoint = {
   date: string;
-  value: number;
+  value?: number | null;
 };

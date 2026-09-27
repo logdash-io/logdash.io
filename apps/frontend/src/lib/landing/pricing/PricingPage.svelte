@@ -1,54 +1,76 @@
 <script lang="ts">
-  import { ArrowDownIcon } from 'lucide-svelte';
+  import { resolve } from '$app/paths';
+  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
+  import FaqSection from '$lib/landing/FAQSection.svelte';
+  import FinalCta from '$lib/landing/FinalCta.svelte';
+  import Footer from '$lib/landing/Footer.svelte';
+  import LandingHeading from '$lib/landing/LandingHeading.svelte';
+  import LandingSection from '$lib/landing/LandingSection.svelte';
+  import TestimonialsList from '$lib/landing/TestimonialsList.svelte';
   import PricingComparisonTable from './PricingComparisonTable.svelte';
   import PricingGrid from './PricingGrid.svelte';
-  import PricingTrustProof from './PricingTrustProof.svelte';
-  import FoundersCard from '$lib/landing/FoundersCard.svelte';
+  import PricingNote from './PricingNote.svelte';
 </script>
 
-<section class="my-16 px-4">
-  <PricingTrustProof />
-</section>
-
-<section class="px-4">
-  <PricingGrid />
-
-  <a
-    href="#detailed-plans-comparison"
-    class="btn btn-primary text-base-content btn-outline mx-auto my-12 flex w-fit items-center gap-2 rounded-full font-normal"
+<div class="flex w-full flex-col">
+  <header
+    class="mx-auto flex w-full max-w-landing flex-col items-start px-4 pt-12 pb-12 sm:px-6 lg:px-10 lg:pt-16 lg:pb-16"
   >
-    Compare plans
-    <ArrowDownIcon class="size-4" />
-  </a>
+    <nav aria-label="Breadcrumb">
+      <ol class="text-neutral-500 flex items-center gap-2 text-sm">
+        <li>
+          <a
+            href={resolve('/')}
+            class="hover:text-fg-default transition-ink duration-150"
+          >
+            Home
+          </a>
+        </li>
+        <li aria-hidden="true">
+          <ChevronRightIcon class="text-neutral-600 size-3.5" />
+        </li>
+        <li aria-current="page" class="text-neutral-300">Pricing</li>
+      </ol>
+    </nav>
 
-  <FoundersCard>
-    <p class="mb-2 text-xs font-semibold uppercase tracking-wide opacity-80">
-      A Note from us
+    <h1
+      class="mt-6 max-w-5xl text-[32px] leading-[1.04] font-medium tracking-[-0.03em] text-balance sm:text-[40px] lg:text-[56px]"
+    >
+      Start free.
+      <span class="text-neutral-600 block">
+        Upgrade when it pays for itself.
+      </span>
+    </h1>
+
+    <p class="text-neutral-400 mt-6 max-w-2xl text-lg text-pretty sm:text-xl">
+      Every plan comes with uptime monitoring, logs, metrics and status pages.
+      No credit card to start.
     </p>
-    <p class="mb-6 text-lg font-extrabold">Logdash Inc.</p>
+  </header>
 
-    <p class="mb-4 opacity-90">
-      Our pricing is designed to let you explore all of the Logdash features and
-      capabilities without paying a dime.
-    </p>
+  <LandingSection dividerTop>
+    <PricingGrid />
+  </LandingSection>
 
-    <p class="mb-4 opacity-90">
-      We believe that the best way to help with your success is to give you
-      access to everything we have to offer, even before you decide to upgrade.
-    </p>
+  <LandingHeading
+    id="detailed-plans-comparison"
+    title="Compare plans"
+    description="Every limit, side by side."
+  />
 
-    <p class="mb-4 opacity-90">
-      Focus on building your awesome projects; your access to all features is
-      only limited by fair resource usage on our side.
-    </p>
+  <LandingSection>
+    <PricingComparisonTable />
+  </LandingSection>
 
-    <p class="mb-6 opacity-90">
-      We're committed to transparency and fairness as we grow. Thanks for
-      joining our journey!
-    </p>
-  </FoundersCard>
+  <TestimonialsList />
 
-  <div class="distance h-8 md:h-16"></div>
+  <PricingNote />
 
-  <PricingComparisonTable />
-</section>
+  <FaqSection />
+
+  <FinalCta />
+
+  <LandingSection divider={false} class="h-12 lg:h-16" />
+
+  <Footer />
+</div>

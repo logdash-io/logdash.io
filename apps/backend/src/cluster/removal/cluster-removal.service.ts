@@ -38,9 +38,6 @@ export class ClusterRemovalService {
 
     await this.projectRemovalService.deleteProjectsByClusterId(clusterId, actorUserId);
 
-    await this.publicDashboardRemovalService.deletePublicDashboardsByClusterId(
-      clusterId,
-      actorUserId,
-    );
+    await this.publicDashboardRemovalService.deletePublicDashboardsByClusterId(clusterId);
   }
 }

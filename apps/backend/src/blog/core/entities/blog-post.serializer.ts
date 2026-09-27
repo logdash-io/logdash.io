@@ -1,7 +1,8 @@
+import { BlogPostEntity } from './blog-post.entity';
 import { BlogPostNormalized, BlogPostSerialized, BlogPostListItem } from './blog-post.interface';
 
 export class BlogPostSerializer {
-  public static normalize(entity: any): BlogPostNormalized {
+  public static normalize(entity: BlogPostEntity): BlogPostNormalized {
     return {
       id: entity._id.toString(),
       title: entity.title,

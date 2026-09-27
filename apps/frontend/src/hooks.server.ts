@@ -25,14 +25,15 @@ export const handle: Handle = async ({ event, resolve }) => {
     headers.delete('cookie');
     headers.delete('authorization');
 
-    // Proxy the request to the external host
-    const response = await fetch(url.toString(), {
+    const init: RequestInit & { duplex: 'half' } = {
       method: event.request.method,
       headers,
       body: event.request.body,
-      // duplex isn't supported by sveltekit fetch, but we need it here
       duplex: 'half',
-    } as unknown);
+    };
+
+    // Proxy the request to the external host
+    const response = await fetch(url.toString(), init);
 
     // and it must not be able to set cookies on our origin either
     const responseHeaders = new Headers(response.headers);

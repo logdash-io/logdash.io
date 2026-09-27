@@ -43,7 +43,7 @@ export class LogAnalyticsBucketSelectionService {
 
   private findSmallestSuitableBucketSize(minimumBucketSize: number): LogAnalyticsBucket {
     for (const bucketSize of this.AVAILABLE_BUCKET_SIZES) {
-      if (bucketSize >= minimumBucketSize) {
+      if (Number(bucketSize) >= minimumBucketSize) {
         return bucketSize;
       }
     }

@@ -1,10 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { STRIPE_LOGGER } from '../../shared/logdash/logdash-tokens';
 import Stripe from 'stripe';
 import { UserReadService } from '../../user/read/user-read.service';
 import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.enum';
-import { UserTier } from '../../user/core/enum/user-tier.enum';
+import { paidTiers, UserTier } from '../../user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { mapTierToPriceId } from './stripe-mapper';
 
@@ -29,18 +29,21 @@ export class StripeCheckoutService {
 
     const user = await this.userReadService.readByIdOrThrow(dto.userId);
 
-    if (!user) {
-      this.logger.error(`User not found while trying to initiate stripe checkout.`, {
+    if (user.accountClaimStatus !== AccountClaimStatus.Claimed) {
+      this.logger.warn(`User account not claimed while trying to initiate stripe checkout`, {
         userId: dto.userId,
       });
-      throw new Error(`User not found while trying to initiate stripe checkout`);
+      throw new ForbiddenException('Claim your account before subscribing');
     }
 
-    if (user.accountClaimStatus !== AccountClaimStatus.Claimed) {
-      this.logger.error(`User account not claimed while trying to initiate stripe checkout`, {
+    // a second checkout would open a second subscription; paid plans change
+    // through change_paid_plan instead
+    if (paidTiers.includes(user.tier)) {
+      this.logger.warn(`User already on a paid plan while trying to initiate stripe checkout`, {
         userId: dto.userId,
+        tier: user.tier,
       });
-      throw new Error(`User account not claimed while trying to initiate stripe checkout`);
+      throw new ConflictException('You already have a paid plan, change it instead');
     }
 
     let checkoutSession: Stripe.Checkout.Session;
@@ -79,7 +82,7 @@ export class StripeCheckoutService {
         userId: dto.userId,
       });
 
-      throw new Error(`Failed to process payment for user: ${user.email}`);
+      throw new Error('Stripe checkout session has no URL');
     }
 
     this.logger.log(`Checkout URL generated successfully`, {

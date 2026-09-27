@@ -4,8 +4,8 @@ export type LogsQueryFilters = {
   lastId: string;
   direction: 'before' | 'after';
   limit: number;
-  startDate: string;
-  endDate: string;
+  startDate: string | null;
+  endDate: string | null;
   levels: LogLevel[];
   searchString: string;
   namespaces: string[];

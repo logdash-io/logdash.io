@@ -19,5 +19,3 @@ export class PublicDashboardPublicState extends PublicDashboardState {
     }
   }
 }
-
-export const publicDashboardPublicState = new PublicDashboardPublicState();

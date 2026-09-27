@@ -1,11 +1,9 @@
-import {
-  CustomDomainNormalized,
-  CustomDomainSerialized,
-} from '../../../custom-domain/core/entities/custom-domain.interface';
+import { CustomDomainSerialized } from '../../../custom-domain/core/entities/custom-domain.interface';
+import { PublicDashboardEntity } from './public-dashboard.entity';
 import { PublicDashboardNormalized, PublicDashboardSerialized } from './public-dashboard.interface';
 
 export class PublicDashboardSerializer {
-  public static normalize(entity: any): PublicDashboardNormalized {
+  public static normalize(entity: PublicDashboardEntity): PublicDashboardNormalized {
     return {
       id: entity._id.toString(),
       clusterId: entity.clusterId,

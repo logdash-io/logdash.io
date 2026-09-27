@@ -1,8 +1,10 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { fly } from 'svelte/transition';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
+  import { Badge } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     canAddMore: boolean;
@@ -12,7 +14,7 @@
 
   function onCreateClick(): void {
     if (canAddMore) {
-      goto('/app/clusters/new');
+      void goto(resolve('/app/clusters/new'));
     }
   }
 </script>
@@ -33,11 +35,11 @@
       onclick={onCreateClick}
       data-posthog-id="create-cluster-button"
     >
-      <h5 class="text-lg font-semibold">Create new project</h5>
+      <h5 class="text-lg font-medium">Create new project</h5>
 
-      <div class="badge badge-lg badge-soft badge-primary rounded-full">
+      <Badge size="lg">
         <PlusIcon class="h-4 w-4" />
-      </div>
+      </Badge>
     </button>
   {:else}
     <div class="flex w-full items-center justify-between gap-2 px-8">

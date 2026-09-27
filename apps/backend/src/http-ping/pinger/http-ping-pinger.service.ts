@@ -1,9 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { AxiosResponse } from 'axios';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { LogdashMetrics } from '../../shared/logdash/aggregate-metrics';
 import { HTTP_PINGS_LOGGER, LOGDASH_METRICS } from '../../shared/logdash/logdash-tokens';
 import { Cron } from '@nestjs/schedule';
 import { safeHttpRequest } from '../../shared/ssrf/safe-http-request';
+import { UnsafeUrlError } from '../../shared/ssrf/safe-url';
 import { HttpMonitorNormalized } from 'src/http-monitor/core/entities/http-monitor.interface';
 import { HttpMonitorMode } from 'src/http-monitor/core/enums/http-monitor-mode.enum';
 import { ProjectTier } from 'src/project/core/enums/project-tier.enum';
@@ -16,6 +18,8 @@ import { HttpPingWriteService } from '../write/http-ping-write.service';
 import { HttpPingPingerDataService } from './http-ping-pinger.data-service';
 import { HttpPingCron } from '../core/enums/http-ping-cron.enum';
 import { ProjectPlanConfigs } from '../../shared/configs/project-plan-configs';
+import { errorMessage } from '../../shared/utils/error-message';
+import { isRecord } from '../../shared/utils/is-record';
 
 interface QueueItem {
   monitor: HttpMonitorNormalized;
@@ -23,6 +27,20 @@ interface QueueItem {
 }
 
 export const MAX_CONCURRENT_REQUESTS_TOKEN = 'MAX_CONCURRENT_REQUESTS_TOKEN';
+
+const PING_TIMEOUT_MS = 10_000;
+
+const UNREACHABLE_HOST_MESSAGE = 'Hostname does not resolve to a public address';
+const TIMED_OUT_MESSAGE = `Timed out after ${PING_TIMEOUT_MS / 1000}s`;
+
+const FAILURE_MESSAGES: Record<string, string> = {
+  ENOTFOUND: UNREACHABLE_HOST_MESSAGE,
+  EAI_AGAIN: UNREACHABLE_HOST_MESSAGE,
+  ETIMEDOUT: TIMED_OUT_MESSAGE,
+  ECONNABORTED: TIMED_OUT_MESSAGE,
+  ECONNREFUSED: 'Connection refused',
+  ECONNRESET: 'Connection reset',
+};
 
 @Injectable()
 export class HttpPingPingerService {
@@ -79,16 +97,16 @@ export class HttpPingPingerService {
   }
 
   private getTiersWithFrequency(frequency: HttpPingCron): ProjectTier[] {
-    return Object.entries(ProjectPlanConfigs)
-      .filter(([_, value]) => value.httpMonitors.pingFrequency === frequency)
-      .map(([key]) => key as keyof typeof ProjectPlanConfigs);
+    return Object.values(ProjectTier).filter(
+      (tier) => ProjectPlanConfigs[tier].httpMonitors.pingFrequency === frequency,
+    );
   }
 
   public async tryPingMonitors(projectTiers: ProjectTier[]): Promise<void> {
     try {
       await this.pingClaimedMonitors(projectTiers);
     } catch (error) {
-      this.logger.error('Error processing HTTP pings:', { errorMessage: error.message });
+      this.logger.error('Error processing HTTP pings:', { errorMessage: errorMessage(error) });
     }
   }
 
@@ -96,7 +114,9 @@ export class HttpPingPingerService {
     try {
       await this.pingUnclaimedMonitors();
     } catch (error) {
-      this.logger.error('Error processing unclaimed HTTP pings:', { errorMessage: error.message });
+      this.logger.error('Error processing unclaimed HTTP pings:', {
+        errorMessage: errorMessage(error),
+      });
     }
   }
 
@@ -134,7 +154,7 @@ export class HttpPingPingerService {
     await this.saveCompletedPings(results);
 
     const totalDuration = Date.now() - startTime;
-    await this.averageRecorder.record('httpPingsDurationMs', totalDuration);
+    this.averageRecorder.record('httpPingsDurationMs', totalDuration);
     this.metrics.mutateMetric('pingsMade', results.length);
   }
 
@@ -143,13 +163,8 @@ export class HttpPingPingerService {
     const queue: QueueItem[] = [];
     const results: CreateHttpPingDto[] = [];
 
-    // Get all project IDs from all tiers for unclaimed monitors
-    const allTiers = Object.keys(ProjectPlanConfigs) as ProjectTier[];
-    const projectsIds = (await this.projectReadService.readManyByTiers(allTiers)).map((p) => p.id);
-
     // Only fetch unclaimed monitors with 'pull' mode
-    for await (const monitor of this.httpMonitorReadService.readManyUnclaimedByProjectIdsCursorWithMode(
-      projectsIds,
+    for await (const monitor of this.httpMonitorReadService.readManyUnclaimedCursorWithMode(
       HttpMonitorMode.Pull,
     )) {
       if (queue.length >= this.maxConcurrentRequests) {
@@ -172,7 +187,7 @@ export class HttpPingPingerService {
     await this.saveCompletedPings(results);
 
     const totalDuration = Date.now() - startTime;
-    await this.averageRecorder.record('unclaimedHttpPingsDurationMs', totalDuration);
+    this.averageRecorder.record('unclaimedHttpPingsDurationMs', totalDuration);
     this.metrics.mutateMetric('unclaimedPingsMade', results.length);
   }
 
@@ -193,48 +208,61 @@ export class HttpPingPingerService {
     }
   }
 
-  private async makeHttpRequest(url: string) {
+  private async makeHttpRequest(url: string): Promise<AxiosResponse<unknown>> {
     // the url is re-validated here, and on every redirect hop, because dns
     // answers can change between monitor creation and the actual ping
     return safeHttpRequest({
       url,
       method: 'GET',
-      timeout: 10000,
+      timeout: PING_TIMEOUT_MS,
       validateStatus: () => true,
     });
   }
 
   private createPingResult(
     monitor: HttpMonitorNormalized,
-    response: any,
+    response: AxiosResponse<unknown> | null,
     startTime: number,
-    error?: any,
+    error?: unknown,
   ): CreateHttpPingDto {
-    const message = this.getMessage(response, error);
-    const isError = response?.status >= 400 || response?.status < 200 || response?.status === 0;
+    const isError = response === null || response.status < 200 || response.status >= 400;
+    const message = response ? this.describeResponse(response) : this.describeFailure(error);
 
     return {
       httpMonitorId: monitor.id,
-      statusCode: response?.status || 0,
+      statusCode: response?.status ?? 0,
       responseTimeMs: this.calculateResponseTime(startTime),
       message: isError ? message.substring(0, 1000) : undefined,
     };
   }
 
-  private getMessage(response: any, error: any): string {
-    let jsonStringified;
+  private describeResponse(response: AxiosResponse<unknown>): string {
+    let jsonStringified: string | null;
     try {
-      jsonStringified = JSON.stringify(response?.data);
+      jsonStringified = JSON.stringify(response.data);
     } catch {
       jsonStringified = null;
     }
 
     return (
-      (typeof response?.data === 'string' ? response.data.substring(0, 1000) : jsonStringified) ||
-      response?.statusText ||
-      error?.message ||
+      (typeof response.data === 'string' ? response.data.substring(0, 1000) : jsonStringified) ||
+      response.statusText ||
       'Unknown error'
     );
+  }
+
+  private describeFailure(error: unknown): string {
+    if (error instanceof UnsafeUrlError) {
+      return UNREACHABLE_HOST_MESSAGE;
+    }
+
+    const code = isRecord(error) && typeof error.code === 'string' ? error.code : undefined;
+
+    if (!code) {
+      return 'Request failed';
+    }
+
+    return FAILURE_MESSAGES[code] ?? `Request failed (${code})`;
   }
 
   private calculateResponseTime(startTime: number): number {
@@ -251,7 +279,7 @@ export class HttpPingPingerService {
     );
 
     for (const ping of savedPings) {
-      await this.httpPingEventEmitter.emitHttpPingCreatedEvent({
+      this.httpPingEventEmitter.emitHttpPingCreatedEvent({
         ...ping,
         clusterId: clusterIds[ping.httpMonitorId],
       });

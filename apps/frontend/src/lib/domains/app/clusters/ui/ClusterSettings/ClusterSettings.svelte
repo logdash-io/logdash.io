@@ -12,11 +12,13 @@
   const { clusterId }: Props = $props();
 
   const isCreator = $derived(
-    clustersState.isUserClusterCreator(userState.id, clusterId),
+    userState.id
+      ? clustersState.isUserClusterCreator(userState.id, clusterId)
+      : false,
   );
 </script>
 
-<div class="flex w-full justify-center">
+<div class="flex w-full">
   <div class="flex w-full max-w-2xl flex-col gap-6">
     {#if isCreator}
       <TeamManagementCard {clusterId} />

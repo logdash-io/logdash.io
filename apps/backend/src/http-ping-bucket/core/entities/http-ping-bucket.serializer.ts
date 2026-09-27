@@ -15,7 +15,7 @@ export class HttpPingBucketSerializer {
   }
 
   public static normalizeMany(entities: HttpPingBucketEntity[]): HttpPingBucketNormalized[] {
-    return entities.map(this.normalize);
+    return entities.map((entity) => this.normalize(entity));
   }
 
   public static serialize(normalized: HttpPingBucketNormalized): HttpPingBucketSerialized {
@@ -28,6 +28,6 @@ export class HttpPingBucketSerializer {
   }
 
   public static serializeMany(normalized: HttpPingBucketNormalized[]): HttpPingBucketSerialized[] {
-    return normalized.map(this.serialize);
+    return normalized.map((item) => this.serialize(item));
   }
 }

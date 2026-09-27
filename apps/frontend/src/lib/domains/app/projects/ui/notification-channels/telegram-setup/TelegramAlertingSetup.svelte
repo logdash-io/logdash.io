@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
@@ -14,6 +15,16 @@
   };
 
   const { clusterId, onCancel }: Props = $props();
+
+  const monitorName = $derived.by(() => {
+    const monitorId = telegramSetupState.state.monitorId;
+
+    if (!monitorId) {
+      return '';
+    }
+
+    return monitoringState.getMonitorById(monitorId)?.name || '';
+  });
 
   function closeModal() {
     onCancel?.();
@@ -32,25 +43,37 @@
     telegramSetupState.retry();
   }
 
-  function onChannelSetupSubmit(shouldAssignToServiceMonitor: boolean) {
-    notificationChannelsState
-      .createChannel(clusterId, {
+  async function onChannelSetupSubmit(
+    shouldAssignToServiceMonitor: boolean,
+  ): Promise<void> {
+    const createdChannelId = await notificationChannelsState.createChannel(
+      clusterId,
+      {
         type: 'telegram',
         name: telegramSetupState.state.chatName,
         options: {
           chatId: telegramSetupState.state.chatId,
         },
-      })
-      .then((createdChannelId: string) => {
-        if (shouldAssignToServiceMonitor) {
-          monitoringState.addNotificationChannel(
-            telegramSetupState.state.monitorId,
-            createdChannelId,
-          );
-        }
-        telegramSetupState.close();
-        notificationChannelsState.loadChannels(clusterId);
-      });
+      },
+    );
+    const monitorId = telegramSetupState.state.monitorId;
+
+    if (shouldAssignToServiceMonitor && monitorId && createdChannelId) {
+      void assignChannelToMonitor(monitorId, createdChannelId);
+    }
+    telegramSetupState.close();
+    void notificationChannelsState.loadChannels(clusterId);
+  }
+
+  async function assignChannelToMonitor(
+    monitorId: string,
+    channelId: string,
+  ): Promise<void> {
+    try {
+      await monitoringState.addNotificationChannel(monitorId, channelId);
+    } catch {
+      toast.error('Failed to add notification channel to monitor');
+    }
   }
 </script>
 
@@ -72,9 +95,7 @@
     clusterName={clustersState.clusterName(clusterId)}
     chatName={telegramSetupState.state.chatName}
     onSubmit={onChannelSetupSubmit}
-    monitorName={monitoringState.getMonitorById(
-      telegramSetupState.state.monitorId,
-    )?.name || ''}
+    {monitorName}
   />
 {:else if telegramSetupState.state.currentStep === 'error'}
   <TelegramErrorStep

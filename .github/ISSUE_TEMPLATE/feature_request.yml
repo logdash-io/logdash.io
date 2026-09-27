@@ -1,0 +1,25 @@
+name: Feature request
+description: Something Logdash should do and does not.
+title: '[feature] '
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is the problem?
+      description: Describe the situation you are in, not the feature. The feature is easier to design once the problem is clear.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like Logdash to do?
+      description: Skip this if you are not sure yet.
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: What do you do today instead?
+      description: A workaround, another tool, or nothing.

@@ -1,13 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
+import axios from 'axios';
 import { safeHttpRequest } from '../../../shared/ssrf/safe-http-request';
 import {
   NotificationChannelProvider,
   SendHttpMonitorAlertMessageSpecificProviderDto,
-  SendWelcomeMessageSpecificProviderDto,
 } from '../notification-channel-provider';
 import { LogdashLogger } from '../../../shared/logdash/aggregate-logger';
 import { NOTIFICATIONS_LOGGER } from '../../../shared/logdash/logdash-tokens';
 import { WebhookHttpMethod, WebhookOptions } from '../../core/types/webhook-options.type';
+import { isRecord } from '../../../shared/utils/is-record';
 
 const METHODS_WITH_BODY: WebhookHttpMethod[] = [
   WebhookHttpMethod.POST,
@@ -61,9 +62,11 @@ function responseSize(data: unknown): number | undefined {
  * remote response body is never logged; it is attacker controlled and can
  * reflect whatever was sent to it.
  */
-function describeError(error: any, rawUrl: string): string {
+function describeError(error: unknown, rawUrl: string): string {
   const message =
-    typeof error?.message === 'string' ? error.message : 'unknown webhook delivery error';
+    isRecord(error) && typeof error.message === 'string'
+      ? error.message
+      : 'unknown webhook delivery error';
 
   return message.split(rawUrl).join(redactUrl(rawUrl)).slice(0, MAX_LOGGED_ERROR_LENGTH);
 }
@@ -94,16 +97,16 @@ export class WebhookNotificationChannelProvider implements NotificationChannelPr
     });
   }
 
-  public async sendWelcomeMessage(dto: SendWelcomeMessageSpecificProviderDto): Promise<void> {
-    return;
+  public sendWelcomeMessage(): Promise<void> {
+    return Promise.resolve();
   }
 
   private async sendMessageToWebhook(dto: {
     url: string;
     method: WebhookHttpMethod;
     headers?: Record<string, string>;
-    bodyToSend: any;
-  }) {
+    bodyToSend: unknown;
+  }): Promise<void> {
     try {
       if (!Object.values(WebhookHttpMethod).includes(dto.method)) {
         throw new Error(`Unsupported HTTP method: ${dto.method}`);
@@ -122,8 +125,8 @@ export class WebhookNotificationChannelProvider implements NotificationChannelPr
         origin: redactUrl(dto.url),
         method: dto.method,
         headerNames: headerNames(dto.headers),
-        statusCode: error.response?.status,
-        responseSize: responseSize(error.response?.data),
+        statusCode: axios.isAxiosError(error) ? error.response?.status : undefined,
+        responseSize: axios.isAxiosError(error) ? responseSize(error.response?.data) : undefined,
         error: describeError(error, dto.url),
       });
     }

@@ -6,7 +6,7 @@ import {
 } from '$lib/domains/shared/utils/cookies.utils';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ cookies }) => {
+export const POST: RequestHandler = ({ cookies }) => {
   cookies.delete(PROJECT_ID_COOKIE_NAME, {
     path: '/',
   });

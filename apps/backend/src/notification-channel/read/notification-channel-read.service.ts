@@ -31,7 +31,7 @@ export class NotificationChannelReadService {
       .lean<NotificationChannelEntity[]>()
       .exec();
 
-    return notificationChannels.map(NotificationChannelSerializer.normalize);
+    return notificationChannels.map((channel) => NotificationChannelSerializer.normalize(channel));
   }
 
   public async readByClusterId(clusterId: string): Promise<NotificationChannelNormalized[]> {
@@ -40,7 +40,7 @@ export class NotificationChannelReadService {
       .lean<NotificationChannelEntity[]>()
       .exec();
 
-    return notificationChannels.map(NotificationChannelSerializer.normalize);
+    return notificationChannels.map((channel) => NotificationChannelSerializer.normalize(channel));
   }
 
   public async countByClusterId(clusterId: string): Promise<number> {

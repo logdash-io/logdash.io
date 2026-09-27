@@ -4,14 +4,14 @@ import { Namespace } from '$lib/domains/shared/logger/namespace';
 export const prettyLog = (
   level: LogLevel,
   namespace: Namespace,
-  message: string,
+  message: unknown,
   ...args: unknown[]
-) => {
+): void => {
   const color = logColors[level];
   const logLevel = logLevelNames[level];
 
   const headline = [
-    `%c${namespace}%c %c${logLevel}`,
+    `%c${namespace.toString()}%c %c${logLevel}`,
     styleBadge('white', namespace.color),
     '',
     styleBadge(color, 'white'),

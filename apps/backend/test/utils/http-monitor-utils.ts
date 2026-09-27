@@ -1,7 +1,8 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import * as request from 'supertest';
+import request from 'supertest';
 import { CreateHttpMonitorBody } from '../../src/http-monitor/core/dto/create-http-monitor.body';
 import { HttpMonitorEntity } from '../../src/http-monitor/core/entities/http-monitor.entity';
 import {
@@ -15,7 +16,7 @@ export const URL_STUB = 'https://example.com';
 export class HttpMonitorUtils {
   private httpMonitorModel: Model<HttpMonitorEntity>;
 
-  constructor(private readonly app: INestApplication<any>) {
+  constructor(private readonly app: INestApplication<App>) {
     this.httpMonitorModel = this.app.get(getModelToken(HttpMonitorEntity.name));
   }
 
@@ -39,12 +40,20 @@ export class HttpMonitorUtils {
       .set('Authorization', `Bearer ${dto.token}`)
       .send(body);
 
+    if (response.status !== 201) {
+      throw new Error(
+        `Creating http monitor failed with ${response.status}: ${JSON.stringify(response.body)}`,
+      );
+    }
+
+    const httpMonitor = response.body as HttpMonitorSerialized;
+
     // claim
     await request(this.app.getHttpServer())
-      .post(`/http_monitors/${response.body.id}/claim`)
+      .post(`/http_monitors/${httpMonitor.id}/claim`)
       .set('Authorization', `Bearer ${dto.token}`);
 
-    return response.body;
+    return httpMonitor;
   }
 
   public async storeHttpMonitor(
@@ -83,6 +92,6 @@ export class HttpMonitorUtils {
       .get(`/http_monitors/${httpMonitorId}`)
       .set('Authorization', `Bearer ${token}`);
 
-    return response.body;
+    return response.body as HttpMonitorSerialized;
   }
 }

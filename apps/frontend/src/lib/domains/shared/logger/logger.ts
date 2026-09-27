@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LogLevel } from '$lib/domains/shared/logger/log-level';
 import { Namespace } from '$lib/domains/shared/logger/namespace';
 import { prettyLog } from '$lib/domains/shared/logger/pretty-log';
@@ -16,23 +15,23 @@ export class Logger {
     this._logLevel = logLevel;
   }
 
-  error(message: any, ...args: unknown[]): void {
+  error(message: unknown, ...args: unknown[]): void {
     this._log(LogLevel.ERROR, message, ...args);
   }
 
-  info(message: any, ...args: unknown[]): void {
+  info(message: unknown, ...args: unknown[]): void {
     this._log(LogLevel.INFO, message, ...args);
   }
 
-  debug(message: any, ...args: unknown[]): void {
+  debug(message: unknown, ...args: unknown[]): void {
     this._log(LogLevel.DEBUG, message, ...args);
   }
 
-  warn(message: any, ...args: unknown[]): void {
+  warn(message: unknown, ...args: unknown[]): void {
     this._log(LogLevel.WARN, message, ...args);
   }
 
-  private _log(level: LogLevel, message: string, ...args: unknown[]): void {
+  private _log(level: LogLevel, message: unknown, ...args: unknown[]): void {
     const loggerEnabled =
       typeof localStorage !== 'undefined'
         ? localStorage.getItem('logger_enabled')

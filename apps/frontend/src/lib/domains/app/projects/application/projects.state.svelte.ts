@@ -60,57 +60,55 @@ class ProjectsState {
     return this._projects[projectId]?.features?.includes(feature) ?? false;
   }
 
-  getApiKey(projectId: string): Promise<string> {
+  async getApiKey(projectId: string): Promise<string> {
     if (this._apiKeys[projectId]) {
-      return Promise.resolve(this._apiKeys[projectId]);
+      return this._apiKeys[projectId];
     }
 
     this._loadingApiKey[projectId] = true;
-    return fetch(`/app/api/projects/${projectId}/api-key`, {
+    const response = await fetch(`/app/api/projects/${projectId}/api-key`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-    })
-      .then((response) => response.json())
-      .then(({ data }) => {
-        delete this._loadingApiKey[projectId];
-        this._apiKeys[projectId] = data;
-        return data;
-      });
+    });
+    const { data } = (await response.json()) as { data: string };
+
+    delete this._loadingApiKey[projectId];
+    this._apiKeys[projectId] = data;
+    return data;
   }
 
-  createProject(clusterId: string, name: string): Promise<Project['id']> {
-    return fetch(`/app/api/projects?cluster_id=${clusterId}`, {
+  async createProject(clusterId: string, name: string): Promise<Project['id']> {
+    const response = await fetch(`/app/api/projects?cluster_id=${clusterId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ name }),
-    })
-      .then((response) => response.json())
-      .then((project) => {
-        this._projects[project.id] = { ...project, features: [] };
-        return project.id;
-      });
+    });
+    const project = (await response.json()) as Project;
+
+    this._projects[project.id] = { ...project, features: [] };
+    return project.id;
   }
 
-  updateProject(projectId: string, name: string): Promise<void> {
+  async updateProject(projectId: string, name: string): Promise<void> {
     if (this._updatingProject[projectId]) {
-      return Promise.resolve();
+      return;
     }
     this._updatingProject[projectId] = true;
 
-    return fetch(`/app/api/projects/${projectId}`, {
+    await fetch(`/app/api/projects/${projectId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ name }),
-    }).then(() => {
-      this._projects[projectId].name = name;
-      delete this._updatingProject[projectId];
     });
+
+    this._projects[projectId].name = name;
+    delete this._updatingProject[projectId];
   }
 
   async deleteProject(projectId: string): Promise<void> {

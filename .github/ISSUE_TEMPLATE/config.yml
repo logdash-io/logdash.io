@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord
+    url: https://discord.gg/naftPW4Hxe
+    about: Questions, setup help, and anything faster to answer in a conversation.
+  - name: Roadmap and feature voting
+    url: https://insigh.to/b/logdash
+    about: See what is planned and vote on it before opening a new request.
+  - name: Report a security vulnerability
+    url: https://github.com/logdash-io/logdash.io/blob/main/SECURITY.md
+    about: Email logdash.contact@gmail.com instead of opening a public issue.

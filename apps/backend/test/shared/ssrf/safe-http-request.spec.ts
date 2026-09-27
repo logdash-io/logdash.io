@@ -4,7 +4,9 @@ import { assertPublicUrl } from '../../../src/shared/ssrf/safe-url';
 import { safeHttpRequest } from '../../../src/shared/ssrf/safe-http-request';
 
 jest.mock('../../../src/shared/ssrf/safe-url', () => ({
-  ...jest.requireActual('../../../src/shared/ssrf/safe-url'),
+  ...jest.requireActual<typeof import('../../../src/shared/ssrf/safe-url')>(
+    '../../../src/shared/ssrf/safe-url',
+  ),
   assertPublicUrl: jest.fn(),
 }));
 
@@ -23,7 +25,7 @@ async function startServer(handler: Handler): Promise<TestServer> {
 
   const server = createServer((req, res) => {
     const chunks: Buffer[] = [];
-    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
     req.on('end', () => {
       requests.push({
         url: req.url!,
@@ -50,10 +52,12 @@ describe('safeHttpRequest', () => {
    * address rather than to a second, unvetted resolution of the hostname.
    */
   function pinToLoopback(): void {
-    assertPublicUrlMock.mockImplementation(async (rawUrl: string) => ({
-      url: new URL(rawUrl),
-      addresses: [{ address: '127.0.0.1', family: 4 as const }],
-    }));
+    assertPublicUrlMock.mockImplementation((rawUrl: string) =>
+      Promise.resolve({
+        url: new URL(rawUrl),
+        addresses: [{ address: '127.0.0.1', family: 4 as const }],
+      }),
+    );
   }
 
   async function serve(handler: Handler): Promise<TestServer> {
@@ -164,7 +168,7 @@ describe('safeHttpRequest', () => {
       safeHttpRequest({
         url: `http://origin.invalid:${origin.port}/big`,
         maxContentLength: Number.MAX_SAFE_INTEGER,
-      } as any),
+      }),
     ).rejects.toThrow(/maxContentLength/);
   });
 

@@ -1,0 +1,69 @@
+name: Bug report
+description: Something in Logdash does not work the way it should.
+title: '[bug] '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Found a security problem instead? Do not file it here - email logdash.contact@gmail.com. See [SECURITY.md](https://github.com/logdash-io/logdash.io/blob/main/SECURITY.md).
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where did you hit this?
+      options:
+        - Cloud (logdash.io)
+        - Self-hosted
+        - SDK
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw. Paste the error message if there was one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps if you can. If it only happens sometimes, say how often.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+
+  - type: input
+    id: sdk
+    attributes:
+      label: SDK and version
+      description: Only if an SDK is involved.
+      placeholder: '@logdash/js-sdk 1.4.2'
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and OS
+      description: Only if the bug is in the dashboard.
+      placeholder: Chrome 141, macOS 15.2
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or console output
+      description: Console errors, failed requests, or backend logs. This block is formatted automatically, no backticks needed.
+      render: shell

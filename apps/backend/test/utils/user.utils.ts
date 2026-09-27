@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 
 import { getModelToken } from '@nestjs/mongoose';
@@ -12,7 +13,7 @@ import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 export class UserUtils {
   private userModel: Model<UserEntity>;
 
-  constructor(private readonly app: INestApplication<any>) {
+  constructor(private readonly app: INestApplication<App>) {
     this.userModel = this.app.get(getModelToken(UserEntity.name));
   }
 

@@ -24,13 +24,13 @@ export class ReadLogsQuery {
   limit?: number;
 
   @ApiPropertyOptional()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }: { value: string | number | Date }) => new Date(value))
   @IsDate()
   @IsOptional()
   startDate?: Date;
 
   @ApiPropertyOptional()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }: { value: string | number | Date }) => new Date(value))
   @IsDate()
   @IsOptional()
   endDate?: Date;
@@ -49,7 +49,9 @@ export class ReadLogsQuery {
   @IsOptional()
   @IsArray()
   @IsEnum(LogLevel, { each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
+  @Transform(({ value }: { value: unknown }): unknown[] =>
+    Array.isArray(value) ? value : [value].filter(Boolean),
+  )
   levels?: LogLevel[];
 
   @ApiPropertyOptional({
@@ -67,6 +69,8 @@ export class ReadLogsQuery {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value].filter(Boolean)))
+  @Transform(({ value }: { value: unknown }): unknown[] =>
+    Array.isArray(value) ? value : [value].filter(Boolean),
+  )
   namespaces?: string[];
 }

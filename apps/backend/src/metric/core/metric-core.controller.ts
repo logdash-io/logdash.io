@@ -7,10 +7,12 @@ import {
   NotFoundException,
   Param,
   Put,
+  Query,
   Sse,
   UnauthorizedException,
   UseGuards,
   UseInterceptors,
+  MessageEvent,
 } from '@nestjs/common';
 import { Public } from '../../auth/core/decorators/is-public';
 import { ApiBearerAuth, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
@@ -18,6 +20,7 @@ import { MetricReadService } from '../read/metric-read.service';
 import { MetricSerialized, SimpleMetric } from './entities/metric.normalized';
 import { SuccessResponse } from '../../shared/responses/success.response';
 import { RecordMetricBody } from './dto/record-metric.dto';
+import { ReadMetricHistoryQuery } from './dto/read-metric-history.query';
 import { MetricQueueingService } from '../queueing/metric-queueing-service';
 import { MetricSerializer } from './entities/metric.serializer';
 import { ApiKeyReadCachedService } from '../../api-key/read/api-key-read-cached.service';
@@ -61,7 +64,7 @@ export class MetricCoreController {
       throw new UnauthorizedException('Invalid API key');
     }
 
-    await this.metricQueueingService.queueMetric({
+    this.metricQueueingService.queueMetric({
       ...dto,
       projectId,
     });
@@ -77,18 +80,16 @@ export class MetricCoreController {
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Sse('projects/:projectId/metrics/sse')
-  public async streamProjectMetrics(
-    @Param('projectId') projectId: string,
-  ): Promise<Observable<any>> {
+  public streamProjectMetrics(@Param('projectId') projectId: string): Observable<MessageEvent> {
     const eventStream$ = fromEvent(this.eventEmitter, MetricEvents.MetricCreatedEvent).pipe(
+      map((data) => data as MetricCreatedEvent),
       filter(
-        (data: MetricCreatedEvent) =>
-          data.projectId === projectId && data.granularity !== MetricGranularity.AllTime,
+        (data) => data.projectId === projectId && data.granularity !== MetricGranularity.AllTime,
       ),
-      map((data: MetricCreatedEvent) => ({ data })),
+      map((data) => ({ data })),
     );
 
-    return new Observable((observer) => {
+    return new Observable<MessageEvent>((observer) => {
       const subscription = eventStream$.subscribe(observer);
 
       return () => {
@@ -107,6 +108,7 @@ export class MetricCoreController {
   public async readBelongingToProject(
     @Param('projectId') projectId: string,
     @Param('metricRegisterEntryId') metricRegisterEntryId: string,
+    @Query() query: ReadMetricHistoryQuery,
   ): Promise<MetricSerialized[]> {
     const metricRegisterEntry =
       await this.metricRegisterReadService.readById(metricRegisterEntryId);
@@ -119,7 +121,10 @@ export class MetricCoreController {
       throw new ForbiddenException('Metric register entry does not belong to this project');
     }
 
-    const metrics = await this.metricReadService.readByMetricRegisterEntryId(metricRegisterEntryId);
+    const metrics = await this.metricReadService.readByMetricRegisterEntryId(
+      metricRegisterEntryId,
+      query,
+    );
 
     return MetricSerializer.serializeMany(metrics, [metricRegisterEntry]);
   }

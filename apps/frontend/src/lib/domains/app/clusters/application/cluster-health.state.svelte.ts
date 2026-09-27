@@ -40,10 +40,10 @@ class ClusterHealthState {
         continue;
       }
 
-      this.loadHealthData(clusterId);
+      void this.loadHealthData(clusterId);
 
       const interval = setInterval(() => {
-        this.loadHealthData(clusterId, true);
+        void this.loadHealthData(clusterId, true);
       }, POLLING_INTERVAL_MS);
 
       this._pollingIntervals.set(clusterId, interval);

@@ -5,6 +5,7 @@ import { MetricRegisterReadService } from '../../metric-register/read/metric-reg
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { PROJECTS_LOGGER } from '../../shared/logdash/logdash-tokens';
+import { errorMessage } from '../../shared/utils/error-message';
 
 @Injectable()
 export class ProjectFeaturesService {
@@ -26,7 +27,7 @@ export class ProjectFeaturesService {
     } catch (error) {
       this.logger.error('Error checking if project has logs', {
         projectId,
-        error: error.message,
+        error: errorMessage(error),
       });
     }
 
@@ -38,7 +39,7 @@ export class ProjectFeaturesService {
     } catch (error) {
       this.logger.error('Error checking if project has metrics', {
         projectId,
-        error: error.message,
+        error: errorMessage(error),
       });
     }
 
@@ -50,7 +51,7 @@ export class ProjectFeaturesService {
     } catch (error) {
       this.logger.error('Error checking if project has http monitors', {
         projectId,
-        error: error.message,
+        error: errorMessage(error),
       });
     }
 

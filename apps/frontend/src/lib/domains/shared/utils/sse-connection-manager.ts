@@ -44,7 +44,7 @@ export function createConnectionManager(endpointName: string) {
         connections?.forEach((conn) => {
           try {
             conn.lock.set(false); // Signal previous connections to close
-          } catch (err) {
+          } catch {
             // Handle potential errors if connection already closed
           }
         });
@@ -102,7 +102,7 @@ export function createConnectionManager(endpointName: string) {
         for (const conn of connections) {
           try {
             conn.lock.set(false);
-          } catch (err) {
+          } catch {
             // Ignore errors for already closed connections
           }
         }

@@ -2,7 +2,7 @@
   Powered by <a
     target="_blank"
     href="https://logdash.io?ref=statuspage"
-    class="text-primary font-medium"
+    class="text-brand font-medium"
   >
     Logdash
   </a>

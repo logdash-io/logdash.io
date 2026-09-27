@@ -16,7 +16,7 @@ export enum ClusterTier {
   Admin = 'admin',
 }
 
-export function clusterTierFromUserTier(userTier: string): ClusterTier {
+export function clusterTierFromUserTier(userTier: UserTier): ClusterTier {
   const map: Record<UserTier, ClusterTier> = {
     [UserTier.Free]: ClusterTier.Free,
     [UserTier.EarlyUser]: ClusterTier.EarlyUser,

@@ -1,0 +1,81 @@
+# Local development datastores for logdash.
+#
+# This file runs ONLY the three databases the backend talks to. It does not run
+# the backend, the frontend or the status page - those run on the host with
+# pnpm so you keep hot reload. Bring the stores up first, then `pnpm dev:backend`.
+#
+#   docker compose -f docker-compose.dev.yml up -d --wait
+#
+# The credentials below are deliberately trivial and are duplicated in
+# apps/backend/.env.example. Nothing here is meant to leave a laptop.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  clickhouse:
+    # Must be 25 or newer: clickhouse-migrations/3_optimize_logs_table.sql ends
+    # in `OPTIMIZE TABLE ... FORCE`, which 24.x rejects as a syntax error.
+    # Pinned to a minor because ClickHouse stopped publishing bare major tags
+    # after 24, so `:25` and `:26` do not exist.
+    image: clickhouse/clickhouse-server:26.7
+    restart: unless-stopped
+    environment:
+      # Must match CLICKHOUSE_* and CH_MIGRATIONS_* in apps/backend/.env.example.
+      CLICKHOUSE_USER: logdash
+      CLICKHOUSE_PASSWORD: logdash
+      CLICKHOUSE_DB: logdash
+    ports:
+      - '8123:8123'
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    # ClickHouse wants a large fd limit and complains in the log on every start
+    # until it gets one. Docker's default of 1024 is far below what it asks for.
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:8123/ping',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  mongo-data:
+  redis-data:
+  clickhouse-data:

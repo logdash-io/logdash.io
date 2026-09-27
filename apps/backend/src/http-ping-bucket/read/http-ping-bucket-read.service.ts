@@ -53,9 +53,9 @@ export class HttpPingBucketReadService {
       },
     });
 
-    const resultData = ((await result.json()) as any).data;
+    const { data } = await result.json<Omit<VirtualBucket, 'timestamp'> & { timestamp: string }>();
 
-    return resultData.map((rawBucket) => ({
+    return data.map((rawBucket) => ({
       timestamp: ClickhouseUtils.clickhouseDateToJsDate(rawBucket.timestamp),
       averageLatencyMs: Number(rawBucket.averageLatencyMs),
       failureCount: Number(rawBucket.failureCount),

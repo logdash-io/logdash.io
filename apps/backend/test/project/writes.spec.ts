@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import * as request from 'supertest';
+import request from 'supertest';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
@@ -7,6 +7,8 @@ import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
 import { AuditLogEntityAction } from '../../src/audit-log/core/enums/audit-log-actions.enum';
 import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enum';
+import { CreateProjectResponse } from '../../src/project/core/dto/create-project.response';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('ProjectCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -47,6 +49,23 @@ describe('ProjectCoreController (writes)', () => {
         relatedEntityId: project.id,
       });
     });
+
+    it('does not let a non-member rename the demo project', async () => {
+      // given
+      const { project } = await bootstrap.utils.demoUtils.setupDemoProject();
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/projects/${project.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'renamed by a stranger' });
+
+      // then
+      const demoProject = await bootstrap.models.projectModel.findById(project.id);
+      expect(response.status).toBe(403);
+      expect(demoProject!.name).toBe(project.name);
+    });
   });
 
   describe('POST /clusters/:clusterId/projects', () => {
@@ -62,7 +81,7 @@ describe('ProjectCoreController (writes)', () => {
 
       // then
       const projects = await bootstrap.models.projectModel.find({
-        _id: new Types.ObjectId(response.body.project.id),
+        _id: new Types.ObjectId((response.body as CreateProjectResponse).project.id),
       });
 
       const apiKeys = await bootstrap.models.apiKeyModel.find({
@@ -80,7 +99,7 @@ describe('ProjectCoreController (writes)', () => {
 
     it('creates new project for early bird user', async () => {
       // given
-      const { user, cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'a@a.pl',
         userTier: UserTier.EarlyBird,
       });
@@ -93,7 +112,7 @@ describe('ProjectCoreController (writes)', () => {
 
       // then
       const projects = await bootstrap.models.projectModel.find({
-        _id: new Types.ObjectId(response.body.project.id),
+        _id: new Types.ObjectId((response.body as CreateProjectResponse).project.id),
       });
 
       expect(projects[0].name).toBe('some name');
@@ -171,7 +190,7 @@ describe('ProjectCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(403);
-      expect(response.body.message).toBe('User is not a member of this cluster');
+      expect((response.body as ErrorResponse).message).toBe('User is not a member of this cluster');
     });
 
     it('creates audit log when project is created', async () => {
@@ -189,7 +208,7 @@ describe('ProjectCoreController (writes)', () => {
         userId: user.id,
         action: AuditLogEntityAction.Create,
         relatedDomain: RelatedDomain.Project,
-        relatedEntityId: response.body.project.id,
+        relatedEntityId: (response.body as CreateProjectResponse).project.id,
       });
     });
   });
@@ -197,16 +216,16 @@ describe('ProjectCoreController (writes)', () => {
   describe('DELETE /projects/:projectId', () => {
     it('deletes project and all related data', async () => {
       // given
-      const { user, project, apiKey, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { project, apiKey, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const log = await bootstrap.utils.logUtils.createLog({
+      await bootstrap.utils.logUtils.createLog({
         apiKey: apiKey.value,
         createdAt: new Date().toISOString(),
         message: 'testLog',
         level: LogLevel.Silly,
       });
 
-      const metric = await bootstrap.utils.metricUtils.recordMetric({
+      await bootstrap.utils.metricUtils.recordMetric({
         apiKey: apiKey.value,
         name: 'testMetric',
         operation: MetricOperation.Change,
@@ -218,11 +237,11 @@ describe('ProjectCoreController (writes)', () => {
         token: token,
       });
 
-      const ping = await bootstrap.utils.httpPingUtils.createHttpPing({
+      await bootstrap.utils.httpPingUtils.createHttpPing({
         httpMonitorId: monitor.id,
       });
 
-      const httpPingBucket = await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket({
+      await bootstrap.utils.httpPingBucketUtils.createHttpPingBucket({
         httpMonitorId: monitor.id,
       });
 
@@ -314,7 +333,22 @@ describe('ProjectCoreController (writes)', () => {
 
       // then
       expect(response.status).toBe(403);
-      expect(response.body.message).toBe('User is not a member of this cluster');
+      expect((response.body as ErrorResponse).message).toBe('User is not a member of this cluster');
+    });
+
+    it('does not let a non-member delete the demo project', async () => {
+      // given
+      const { project } = await bootstrap.utils.demoUtils.setupDemoProject();
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/projects/${project.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toBe(403);
+      expect(await bootstrap.models.projectModel.exists({ _id: project.id })).not.toBeNull();
     });
 
     it('returns 401 when unauthorized', async () => {
@@ -335,7 +369,7 @@ describe('ProjectCoreController (writes)', () => {
       const { user, project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // when
-      const response = await request(bootstrap.app.getHttpServer())
+      await request(bootstrap.app.getHttpServer())
         .delete(`/projects/${project.id}`)
         .set('Authorization', `Bearer ${token}`);
 

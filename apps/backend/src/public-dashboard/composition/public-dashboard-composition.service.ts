@@ -11,6 +11,7 @@ import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
 import { RedisService } from '../../shared/redis/redis.service';
 import { HttpPingBucketAggregationService } from '../../http-ping-bucket/aggregation/http-ping-bucket-aggregation.service';
+import { HttpMonitorNormalized } from '../../http-monitor/core/entities/http-monitor.interface';
 
 const PUBLIC_CACHE_TTL_SECONDS = 60; // 1 minute
 const PRIVATE_CACHE_TTL_SECONDS = 1; // 1 second
@@ -150,7 +151,7 @@ export class PublicDashboardCompositionService {
   }
 
   private async getBucketsForMonitors(
-    monitors: any[],
+    monitors: HttpMonitorNormalized[],
     period: BucketsPeriod,
   ): Promise<{ monitorId: string; buckets: (VirtualBucket | null)[] }[]> {
     return Promise.all(

@@ -1,9 +1,12 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from '../../utils/bootstrap';
 import { getEnvConfig } from '../../../src/shared/configs/env-configs';
 import { TelegramUpdateDto } from '../../../src/notification-channel/setup/telegram/dto/telegram-update.dto';
 import { TelegramTestMessageBody } from '../../../src/notification-channel/setup/telegram/dto/telegram-test-message.body';
-import { sleep } from '../../utils/sleep';
+import { removeKeysWhichWouldExpireInNextXSeconds } from '../../utils/redis-test-container-server';
+import { RedisService } from '../../../src/shared/redis/redis.service';
+import { TelegramSendMessageBody } from '../../utils/telegram-utils';
+import { ErrorResponse } from '../../utils/error-response';
 
 describe('TelegramSetupController', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -295,7 +298,7 @@ describe('TelegramSetupController', () => {
         message: 'This is a test message from the notification system',
       };
 
-      const requestBodies: any[] = [];
+      const requestBodies: TelegramSendMessageBody[] = [];
 
       bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
         botId: getEnvConfig().notificationChannels.telegramUptimeBot.token,
@@ -343,7 +346,7 @@ describe('TelegramSetupController', () => {
         .send(testMessageBody);
 
       expect(secondResponse.status).toBe(429);
-      expect(secondResponse.body.message).toContain('Rate limit exceeded');
+      expect((secondResponse.body as ErrorResponse).message).toContain('Rate limit exceeded');
     });
 
     it('allows test messages after rate limit expires', async () => {
@@ -354,7 +357,7 @@ describe('TelegramSetupController', () => {
         message: 'This is a test message',
       };
 
-      const requestBodies: any[] = [];
+      const requestBodies: TelegramSendMessageBody[] = [];
 
       bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
         botId: getEnvConfig().notificationChannels.telegramUptimeBot.token,
@@ -370,7 +373,10 @@ describe('TelegramSetupController', () => {
 
       expect(firstResponse.status).toBe(201);
 
-      await sleep(3_100);
+      await removeKeysWhichWouldExpireInNextXSeconds(
+        bootstrap.app.get(RedisService).getClient(),
+        3,
+      );
 
       const secondResponse = await request(bootstrap.app.getHttpServer())
         .post('/notification_channel_setup/telegram/send_test_message')

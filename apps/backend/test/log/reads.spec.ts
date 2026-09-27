@@ -1,12 +1,18 @@
-import * as request from 'supertest';
+import request from 'supertest';
 import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { createTestApp } from '../utils/bootstrap';
 import { RedisService } from '../../src/shared/redis/redis.service';
-import { sleep } from '../utils/sleep';
+import { waitFor } from '../utils/wait-for';
 import { ClickHouseClient } from '@clickhouse/client';
-import { LogClickhouseNormalized } from '../../src/log/core/entities/log.interface';
+import {
+  LogClickhouseNormalized,
+  LogClickhouseSerialized,
+} from '../../src/log/core/entities/log.interface';
+import { LogClickhouseRow } from '../../src/log/core/entities/log.clickhouse-entity';
+import { NamespaceMetadata } from '../../src/log/read/dto/namespace-metadata.dto';
 import { LogSerializer } from '../../src/log/core/entities/log.serializer';
 import { addMinutes, subMinutes, subHours, addHours } from 'date-fns';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('LogCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -35,7 +41,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: subMinutes(createdAt, 1).toISOString(),
         message: 'Test message',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -43,7 +48,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: createdAt.toISOString(),
         message: 'Test message',
         level: LogLevel.Info,
-        withoutSleep: true,
         sequenceNumber: 2,
       });
 
@@ -52,7 +56,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: createdAt.toISOString(),
         message: 'Test message',
         level: LogLevel.Info,
-        withoutSleep: true,
         sequenceNumber: 3,
       });
 
@@ -61,7 +64,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: createdAt.toISOString(),
         message: 'Test message',
         level: LogLevel.Info,
-        withoutSleep: true,
         sequenceNumber: 4,
       });
 
@@ -70,10 +72,7 @@ describe('LogCoreController (reads)', () => {
         createdAt: addMinutes(createdAt, 1).toISOString(),
         message: 'Test message',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
-
-      await sleep(1_500);
 
       const clickhouseClient = bootstrap.app.get(ClickHouseClient);
 
@@ -85,9 +84,9 @@ describe('LogCoreController (reads)', () => {
         `,
       });
 
-      const logsData = (await orderedLogsResult.json()) as any;
+      const logsData = await orderedLogsResult.json<LogClickhouseRow>();
 
-      const logs: LogClickhouseNormalized[] = logsData.data.map((log: any) =>
+      const logs: LogClickhouseNormalized[] = logsData.data.map((log) =>
         LogSerializer.normalizeClickhouse(log),
       );
 
@@ -109,10 +108,10 @@ describe('LogCoreController (reads)', () => {
         .get(`/projects/${setup.project.id}/logs/v2?direction=after&lastId=${fourth.id}&limit=1`)
         .set('Authorization', `Bearer ${setup.token}`);
 
-      expect(responseSecond.body[0].id).toEqual(second.id);
-      expect(responseFourth.body[0].id).toEqual(fourth.id);
-      expect(responseFirst.body[0].id).toEqual(first.id);
-      expect(responseFifth.body[0].id).toEqual(fifth.id);
+      expect((responseSecond.body as LogClickhouseSerialized[])[0].id).toEqual(second.id);
+      expect((responseFourth.body as LogClickhouseSerialized[])[0].id).toEqual(fourth.id);
+      expect((responseFirst.body as LogClickhouseSerialized[])[0].id).toEqual(first.id);
+      expect((responseFifth.body as LogClickhouseSerialized[])[0].id).toEqual(fifth.id);
     });
 
     it('returns 403 if user does not belong to cluster', async () => {
@@ -133,16 +132,16 @@ describe('LogCoreController (reads)', () => {
         `/projects/${project.id}/logs/v2`,
       );
 
-      await sleep(100);
-
       const redisService = bootstrap.app.get(RedisService);
 
-      const client = await redisService.getClient();
-      const keys = await client.keys('demo-dashboard-path:*');
-      const key = keys[0];
+      const client = redisService.getClient();
+      const [key] = await waitFor(
+        () => client.keys('demo-dashboard-path:*'),
+        (keys) => keys.length > 0,
+      );
 
       const cachedResponseRaw = (await redisService.get(key))!;
-      const cachedResponse = JSON.parse(cachedResponseRaw);
+      const cachedResponse: unknown = JSON.parse(cachedResponseRaw);
 
       expect(response.status).toEqual(200);
       expect(cachedResponse).toEqual(response.body);
@@ -173,7 +172,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: subHours(baseDate, 1).toISOString(),
         message: 'Before start date',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -181,7 +179,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: baseDate.toISOString(),
         message: 'After start date',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -189,20 +186,19 @@ describe('LogCoreController (reads)', () => {
         createdAt: addHours(baseDate, 1).toISOString(),
         message: 'Much after start date',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
-
-      await sleep(1_500);
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/projects/${setup.project.id}/logs/v2?startDate=${startDate.toISOString()}`)
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(2);
-      expect(response.body.some((log) => log.message === 'After start date')).toBe(true);
-      expect(response.body.some((log) => log.message === 'Much after start date')).toBe(true);
-      expect(response.body.some((log) => log.message === 'Before start date')).toBe(false);
+      expect(body).toHaveLength(2);
+      expect(body.some((log) => log.message === 'After start date')).toBe(true);
+      expect(body.some((log) => log.message === 'Much after start date')).toBe(true);
+      expect(body.some((log) => log.message === 'Before start date')).toBe(false);
     });
 
     it('reads logs with only endDate provided', async () => {
@@ -215,7 +211,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: subHours(new Date(), 12).toISOString(),
         message: 'Before end date',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -223,18 +218,17 @@ describe('LogCoreController (reads)', () => {
         createdAt: subHours(new Date(), 10).toISOString(),
         message: 'After end date',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
-
-      await sleep(1_500);
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/projects/${setup.project.id}/logs/v2?endDate=${endDate.toISOString()}`)
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].message).toEqual('Before end date');
+      expect(body).toHaveLength(1);
+      expect(body[0].message).toEqual('Before end date');
     });
 
     it('reads logs with both startDate and endDate provided', async () => {
@@ -248,7 +242,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: subHours(new Date(), 13).toISOString(),
         message: 'Before range',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -256,7 +249,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: subHours(new Date(), 11.5).toISOString(),
         message: 'In range',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -264,10 +256,7 @@ describe('LogCoreController (reads)', () => {
         createdAt: subHours(new Date(), 10).toISOString(),
         message: 'After range',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
-
-      await sleep(1_500);
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(
@@ -275,9 +264,11 @@ describe('LogCoreController (reads)', () => {
         )
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].message).toEqual('In range');
+      expect(body).toHaveLength(1);
+      expect(body[0].message).toEqual('In range');
     });
 
     it('reads logs with date range and level filter', async () => {
@@ -291,7 +282,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: subHours(new Date(), 11.5).toISOString(),
         message: 'Info log in range',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -299,7 +289,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: subMinutes(subHours(new Date(), 11.5), 10).toISOString(),
         message: 'Error log in range',
         level: LogLevel.Error,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -307,10 +296,7 @@ describe('LogCoreController (reads)', () => {
         createdAt: subMinutes(subHours(new Date(), 11.5), 20).toISOString(),
         message: 'Warning log in range',
         level: LogLevel.Warning,
-        withoutSleep: true,
       });
-
-      await sleep(1_500);
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(
@@ -318,10 +304,12 @@ describe('LogCoreController (reads)', () => {
         )
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(1);
-      expect(response.body[0].message).toEqual('Error log in range');
-      expect(response.body[0].level).toEqual(LogLevel.Error);
+      expect(body).toHaveLength(1);
+      expect(body[0].message).toEqual('Error log in range');
+      expect(body[0].level).toEqual(LogLevel.Error);
     });
 
     it('returns empty array when no logs match date range', async () => {
@@ -335,7 +323,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: subHours(new Date(), 13).toISOString(),
         message: 'Before range',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -343,10 +330,7 @@ describe('LogCoreController (reads)', () => {
         createdAt: subHours(new Date(), 10).toISOString(),
         message: 'After range',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
-
-      await sleep(1_500);
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(
@@ -369,10 +353,10 @@ describe('LogCoreController (reads)', () => {
         )
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as ErrorResponse;
+
       expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual(
-        'If using pagination, provide both lastId and direction',
-      );
+      expect(body.message).toEqual('If using pagination, provide both lastId and direction');
     });
 
     it('throws error when combining direction with date range', async () => {
@@ -386,10 +370,10 @@ describe('LogCoreController (reads)', () => {
         )
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as ErrorResponse;
+
       expect(response.status).toEqual(400);
-      expect(response.body.message).toEqual(
-        'If using pagination, provide both lastId and direction',
-      );
+      expect(body.message).toEqual('If using pagination, provide both lastId and direction');
     });
 
     it('respects limit parameter with date range', async () => {
@@ -404,11 +388,8 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 11.5), i * 2).toISOString(),
           message: `Log ${i}`,
           level: LogLevel.Info,
-          withoutSleep: true,
         });
       }
-
-      await sleep(1_500);
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(
@@ -432,7 +413,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: baseDate.toISOString(),
         message: 'Reference log',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -440,7 +420,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: subMinutes(startDate, 2).toISOString(),
         message: 'Log before date range',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -448,7 +427,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: addMinutes(baseDate, 10).toISOString(),
         message: 'Log in date range',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -456,7 +434,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: addMinutes(baseDate, 20).toISOString(),
         message: 'Another log in date range',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -464,10 +441,7 @@ describe('LogCoreController (reads)', () => {
         createdAt: addMinutes(baseDate, 30).toISOString(),
         message: 'Log after date range',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
-
-      await sleep(1_500);
 
       const clickhouseClient = bootstrap.app.get(ClickHouseClient);
 
@@ -479,9 +453,9 @@ describe('LogCoreController (reads)', () => {
         `,
       });
 
-      const logsData = (await orderedLogsResult.json()) as any;
+      const logsData = await orderedLogsResult.json<LogClickhouseRow>();
 
-      const logs: LogClickhouseNormalized[] = logsData.data.map((log: any) =>
+      const logs: LogClickhouseNormalized[] = logsData.data.map((log) =>
         LogSerializer.normalizeClickhouse(log),
       );
 
@@ -494,13 +468,15 @@ describe('LogCoreController (reads)', () => {
         )
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body.some((log) => log.message === 'Log in date range')).toBe(true);
-      expect(response.body.some((log) => log.message === 'Another log in date range')).toBe(true);
-      expect(response.body.some((log) => log.message === 'Log before date range')).toBe(false);
-      expect(response.body.some((log) => log.message === 'Log after date range')).toBe(false);
-      expect(response.body.some((log) => log.message === 'Reference log')).toBe(false);
-      expect(response.body).toHaveLength(2);
+      expect(body.some((log) => log.message === 'Log in date range')).toBe(true);
+      expect(body.some((log) => log.message === 'Another log in date range')).toBe(true);
+      expect(body.some((log) => log.message === 'Log before date range')).toBe(false);
+      expect(body.some((log) => log.message === 'Log after date range')).toBe(false);
+      expect(body.some((log) => log.message === 'Reference log')).toBe(false);
+      expect(body).toHaveLength(2);
     });
 
     it('respects retention cutoff for free tier projects', async () => {
@@ -516,7 +492,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: twentyFiveHoursAgo.toISOString(),
         message: 'Log from 25 hours ago',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -524,7 +499,6 @@ describe('LogCoreController (reads)', () => {
         createdAt: twentyThreeHoursAgo.toISOString(),
         message: 'Log from 23 hours ago',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
 
       await bootstrap.utils.logUtils.createLog({
@@ -532,20 +506,19 @@ describe('LogCoreController (reads)', () => {
         createdAt: oneHourAgo.toISOString(),
         message: 'Log from 1 hour ago',
         level: LogLevel.Info,
-        withoutSleep: true,
       });
-
-      await sleep(1_500);
 
       const response = await request(bootstrap.app.getHttpServer())
         .get(`/projects/${setup.project.id}/logs/v2?startDate=${twentyFiveHoursAgo.toISOString()}`)
         .set('Authorization', `Bearer ${setup.token}`);
 
+      const body = response.body as LogClickhouseSerialized[];
+
       expect(response.status).toEqual(200);
-      expect(response.body).toHaveLength(2);
-      expect(response.body.some((log) => log.message === 'Log from 25 hours ago')).toBe(false);
-      expect(response.body.some((log) => log.message === 'Log from 23 hours ago')).toBe(true);
-      expect(response.body.some((log) => log.message === 'Log from 1 hour ago')).toBe(true);
+      expect(body).toHaveLength(2);
+      expect(body.some((log) => log.message === 'Log from 25 hours ago')).toBe(false);
+      expect(body.some((log) => log.message === 'Log from 23 hours ago')).toBe(true);
+      expect(body.some((log) => log.message === 'Log from 1 hour ago')).toBe(true);
     });
   });
 
@@ -559,7 +532,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice loves bob',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -567,7 +539,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'bob has cat',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -575,18 +546,17 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
           message: 'charlie has dog',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?searchString=alice`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('alice loves bob');
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('alice loves bob');
       });
 
       it('searches logs with multiple words (AND logic)', async () => {
@@ -597,7 +567,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice loves bob',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -605,7 +574,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'bob has cat',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -613,18 +581,17 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
           message: 'alice has apples',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?searchString=alice bob`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('alice loves bob');
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('alice loves bob');
       });
 
       it('search is case insensitive', async () => {
@@ -635,18 +602,17 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'ALICE LOVES BOB',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?searchString=alice bob`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('ALICE LOVES BOB');
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('ALICE LOVES BOB');
       });
 
       it('returns empty array when no logs match search', async () => {
@@ -657,10 +623,7 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice loves bob',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?searchString=nonexistent`)
@@ -678,7 +641,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice loves bob',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -686,10 +648,7 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'alice has error',
           level: LogLevel.Error,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?searchString=alice&limit=1`)
@@ -710,7 +669,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 13).toISOString(),
           message: 'alice before range',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -718,7 +676,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 11.5).toISOString(),
           message: 'alice in range',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -726,10 +683,7 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 11.5), 10).toISOString(),
           message: 'bob in range',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(
@@ -737,9 +691,11 @@ describe('LogCoreController (reads)', () => {
           )
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('alice in range');
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('alice in range');
       });
 
       it('combines search with level filter', async () => {
@@ -750,7 +706,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice info log',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -758,7 +713,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'alice error log',
           level: LogLevel.Error,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -766,19 +720,18 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
           message: 'bob error log',
           level: LogLevel.Error,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?searchString=alice&level=${LogLevel.Error}`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('alice error log');
-        expect(response.body[0].level).toEqual(LogLevel.Error);
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('alice error log');
+        expect(body[0].level).toEqual(LogLevel.Error);
       });
     });
   });
@@ -793,7 +746,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'info log',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -801,7 +753,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'error log',
           level: LogLevel.Error,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -809,7 +760,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
           message: 'warning log',
           level: LogLevel.Warning,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -817,10 +767,7 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 3).toISOString(),
           message: 'debug log',
           level: LogLevel.Debug,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(
@@ -828,11 +775,13 @@ describe('LogCoreController (reads)', () => {
           )
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(
-          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
-        ).toBe(true);
+        expect(body).toHaveLength(2);
+        expect(body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level))).toBe(
+          true,
+        );
       });
 
       it('filters logs by single level in levels array', async () => {
@@ -843,7 +792,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'info log',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -851,18 +799,17 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'error log',
           level: LogLevel.Error,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?levels=${LogLevel.Error}`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].level).toEqual(LogLevel.Error);
+        expect(body).toHaveLength(1);
+        expect(body[0].level).toEqual(LogLevel.Error);
       });
 
       it('levels takes precedence over level when both provided', async () => {
@@ -873,7 +820,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'info log',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -881,7 +827,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'error log',
           level: LogLevel.Error,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -889,10 +834,7 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
           message: 'warning log',
           level: LogLevel.Warning,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(
@@ -900,12 +842,14 @@ describe('LogCoreController (reads)', () => {
           )
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(
-          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
-        ).toBe(true);
-        expect(response.body.some((log) => log.level === LogLevel.Info)).toBe(false);
+        expect(body).toHaveLength(2);
+        expect(body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level))).toBe(
+          true,
+        );
+        expect(body.some((log) => log.level === LogLevel.Info)).toBe(false);
       });
 
       it('combines multiple levels with search filter', async () => {
@@ -916,7 +860,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'alice info log',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -924,7 +867,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 1).toISOString(),
           message: 'alice error log',
           level: LogLevel.Error,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -932,7 +874,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
           message: 'bob error log',
           level: LogLevel.Error,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -940,10 +881,7 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 3).toISOString(),
           message: 'alice warning log',
           level: LogLevel.Warning,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(
@@ -951,12 +889,14 @@ describe('LogCoreController (reads)', () => {
           )
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(response.body.every((log) => log.message.includes('alice'))).toBe(true);
-        expect(
-          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
-        ).toBe(true);
+        expect(body).toHaveLength(2);
+        expect(body.every((log) => log.message.includes('alice'))).toBe(true);
+        expect(body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level))).toBe(
+          true,
+        );
       });
 
       it('combines multiple levels with date range filter', async () => {
@@ -970,7 +910,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 11.5).toISOString(),
           message: 'error log in range',
           level: LogLevel.Error,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -978,7 +917,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 11.5), 10).toISOString(),
           message: 'warning log in range',
           level: LogLevel.Warning,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -986,7 +924,6 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 11.5), 20).toISOString(),
           message: 'info log in range',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -994,10 +931,7 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 13).toISOString(),
           message: 'error log outside range',
           level: LogLevel.Error,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(
@@ -1005,11 +939,13 @@ describe('LogCoreController (reads)', () => {
           )
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(
-          response.body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level)),
-        ).toBe(true);
+        expect(body).toHaveLength(2);
+        expect(body.every((log) => [LogLevel.Error, LogLevel.Warning].includes(log.level))).toBe(
+          true,
+        );
       });
     });
   });
@@ -1025,7 +961,6 @@ describe('LogCoreController (reads)', () => {
           message: 'api log',
           level: LogLevel.Info,
           namespace: 'api',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1034,7 +969,6 @@ describe('LogCoreController (reads)', () => {
           message: 'worker log',
           level: LogLevel.Info,
           namespace: 'worker',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1043,18 +977,17 @@ describe('LogCoreController (reads)', () => {
           message: 'cron log',
           level: LogLevel.Info,
           namespace: 'cron',
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?namespaces=api`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].namespace).toEqual('api');
+        expect(body).toHaveLength(1);
+        expect(body[0].namespace).toEqual('api');
       });
 
       it('filters logs by multiple namespaces', async () => {
@@ -1066,7 +999,6 @@ describe('LogCoreController (reads)', () => {
           message: 'api log',
           level: LogLevel.Info,
           namespace: 'api',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1075,7 +1007,6 @@ describe('LogCoreController (reads)', () => {
           message: 'worker log',
           level: LogLevel.Info,
           namespace: 'worker',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1084,18 +1015,19 @@ describe('LogCoreController (reads)', () => {
           message: 'cron log',
           level: LogLevel.Info,
           namespace: 'cron',
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?namespaces=api&namespaces=worker`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(response.body.every((log) => ['api', 'worker'].includes(log.namespace))).toBe(true);
+        expect(body).toHaveLength(2);
+        expect(body.every((log) => log.namespace === 'api' || log.namespace === 'worker')).toBe(
+          true,
+        );
       });
 
       it('returns logs with namespace in response', async () => {
@@ -1107,18 +1039,17 @@ describe('LogCoreController (reads)', () => {
           message: 'api log',
           level: LogLevel.Info,
           namespace: 'my-namespace',
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].namespace).toEqual('my-namespace');
+        expect(body).toHaveLength(1);
+        expect(body[0].namespace).toEqual('my-namespace');
       });
 
       it('combines namespace filter with level filter', async () => {
@@ -1130,7 +1061,6 @@ describe('LogCoreController (reads)', () => {
           message: 'api info log',
           level: LogLevel.Info,
           namespace: 'api',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1139,7 +1069,6 @@ describe('LogCoreController (reads)', () => {
           message: 'api error log',
           level: LogLevel.Error,
           namespace: 'api',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1148,19 +1077,18 @@ describe('LogCoreController (reads)', () => {
           message: 'worker error log',
           level: LogLevel.Error,
           namespace: 'worker',
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?namespaces=api&levels=${LogLevel.Error}`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].namespace).toEqual('api');
-        expect(response.body[0].level).toEqual(LogLevel.Error);
+        expect(body).toHaveLength(1);
+        expect(body[0].namespace).toEqual('api');
+        expect(body[0].level).toEqual(LogLevel.Error);
       });
 
       it('combines namespace filter with search filter', async () => {
@@ -1172,7 +1100,6 @@ describe('LogCoreController (reads)', () => {
           message: 'alice api log',
           level: LogLevel.Info,
           namespace: 'api',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1181,7 +1108,6 @@ describe('LogCoreController (reads)', () => {
           message: 'bob api log',
           level: LogLevel.Info,
           namespace: 'api',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1190,19 +1116,18 @@ describe('LogCoreController (reads)', () => {
           message: 'alice worker log',
           level: LogLevel.Info,
           namespace: 'worker',
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2?namespaces=api&searchString=alice`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as LogClickhouseSerialized[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].message).toEqual('alice api log');
-        expect(response.body[0].namespace).toEqual('api');
+        expect(body).toHaveLength(1);
+        expect(body[0].message).toEqual('alice api log');
+        expect(body[0].namespace).toEqual('api');
       });
 
       it('returns all logs when namespace not provided', async () => {
@@ -1214,7 +1139,6 @@ describe('LogCoreController (reads)', () => {
           message: 'api log',
           level: LogLevel.Info,
           namespace: 'api',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1223,7 +1147,6 @@ describe('LogCoreController (reads)', () => {
           message: 'worker log',
           level: LogLevel.Info,
           namespace: 'worker',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1231,10 +1154,7 @@ describe('LogCoreController (reads)', () => {
           createdAt: subMinutes(subHours(new Date(), 12), 2).toISOString(),
           message: 'no namespace log',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/v2`)
@@ -1257,7 +1177,6 @@ describe('LogCoreController (reads)', () => {
           message: 'old api log',
           level: LogLevel.Info,
           namespace: 'api',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1266,7 +1185,6 @@ describe('LogCoreController (reads)', () => {
           message: 'worker log',
           level: LogLevel.Info,
           namespace: 'worker',
-          withoutSleep: true,
         });
 
         await bootstrap.utils.logUtils.createLog({
@@ -1275,21 +1193,20 @@ describe('LogCoreController (reads)', () => {
           message: 'newer api log',
           level: LogLevel.Info,
           namespace: 'api',
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/namespaces`)
           .set('Authorization', `Bearer ${setup.token}`);
 
+        const body = response.body as NamespaceMetadata[];
+
         expect(response.status).toEqual(200);
-        expect(response.body).toHaveLength(2);
-        expect(response.body[0].namespace).toEqual('api');
-        expect(response.body[1].namespace).toEqual('worker');
-        expect(response.body[0].lastLogDate).toBeDefined();
-        expect(response.body[1].lastLogDate).toBeDefined();
+        expect(body).toHaveLength(2);
+        expect(body[0].namespace).toEqual('api');
+        expect(body[1].namespace).toEqual('worker');
+        expect(body[0].lastLogDate).toBeDefined();
+        expect(body[1].lastLogDate).toBeDefined();
       });
 
       it('returns empty array when no logs have namespaces', async () => {
@@ -1300,10 +1217,7 @@ describe('LogCoreController (reads)', () => {
           createdAt: subHours(new Date(), 12).toISOString(),
           message: 'log without namespace',
           level: LogLevel.Info,
-          withoutSleep: true,
         });
-
-        await sleep(1_500);
 
         const response = await request(bootstrap.app.getHttpServer())
           .get(`/projects/${setup.project.id}/logs/namespaces`)

@@ -1,10 +1,15 @@
 import { publicDashboardsService } from '$lib/domains/app/projects/infrastructure/public-dashboards.service';
+import { customDomainsState } from '$lib/domains/app/projects/application/public-dashboards/custom-domains.state.svelte.js';
 import type { PublicDashboard } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard';
 
 export class PublicDashboardManagerState {
   private _dashboards = $state<Record<PublicDashboard['id'], PublicDashboard>>(
     {},
   );
+
+  get dashboards(): PublicDashboard[] {
+    return Object.values(this._dashboards);
+  }
 
   getDashboard(dashboardId: string): PublicDashboard | undefined {
     return this._dashboards[dashboardId];
@@ -36,7 +41,7 @@ export class PublicDashboardManagerState {
         dashboardId,
         dto,
       );
-      this._dashboards[data.id] = data;
+      this._dashboards[data.id] = { ...this._dashboards[data.id], ...data };
     } catch (error) {
       console.error('Failed to update public dashboard:', error);
       throw error;
@@ -114,6 +119,18 @@ export class PublicDashboardManagerState {
   getDashboardUrl(dashboardId: string): string {
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     return `${baseUrl}/d/${dashboardId}`;
+  }
+
+  getStatusPageUrl(dashboardId: string): string {
+    const customDomain = customDomainsState.hasLoaded(dashboardId)
+      ? customDomainsState.getCustomDomain(dashboardId)
+      : this._dashboards[dashboardId]?.customDomain;
+
+    if (customDomain?.status === 'verified') {
+      return `https://${customDomain.domain}`;
+    }
+
+    return this.getDashboardUrl(dashboardId);
   }
 }
 

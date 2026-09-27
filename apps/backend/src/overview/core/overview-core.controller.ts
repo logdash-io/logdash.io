@@ -1,12 +1,12 @@
 import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
 import { Resource } from '../../personal-api-key/core/enums/resource.enum';
 import { Action } from '../../personal-api-key/core/enums/action.enum';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { AccessRestriction } from '../../personal-api-key/core/types/access-restriction.type';
+import { AuthenticatedRequest } from '../../auth/core/types/authenticated-request.type';
 import { ProjectReadService } from '../../project/read/project-read.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ProjectNormalized } from '../../project/core/entities/project.interface';
@@ -71,11 +71,11 @@ export class OverviewCoreController {
   public async accountOverview(
     @CurrentUserId() userId: string,
     @Query() query: OverviewQuery,
-    @Req() request: Request,
+    @Req() request: AuthenticatedRequest,
   ): Promise<OverviewResponse> {
     const since = parseSince(query.since ?? DEFAULT_SINCE);
 
-    const access: AccessRestriction | undefined = (request as any).user?.access;
+    const access = request.user?.access;
 
     const projects = await this.resolveReachableProjects(userId, access);
 

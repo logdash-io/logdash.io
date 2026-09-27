@@ -1,12 +1,13 @@
 import { ClickHouseClient } from '@clickhouse/client';
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { App } from 'supertest/types';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/mongoose';
-import { ScheduleModule } from '@nestjs/schedule';
+import { ScheduleModule, SchedulerRegistry } from '@nestjs/schedule';
 import { Test, TestingModule } from '@nestjs/testing';
 import { clear } from 'jest-date-mock';
 import { Model } from 'mongoose';
-import * as nock from 'nock';
+import nock from 'nock';
 import { ThrottlerStorage } from '@nestjs/throttler';
 import { ThrottlerStorageService } from '@nestjs/throttler/dist/throttler.service';
 import { ThrottlingModule } from '../../src/shared/throttling/throttling.module';
@@ -36,6 +37,7 @@ import { PublicDashboardCoreModule } from '../../src/public-dashboard/core/publi
 import { BlogPostEntity } from '../../src/blog/core/entities/blog-post.entity';
 import { BlogCoreModule } from '../../src/blog/core/blog-core.module';
 import { CustomDomainCoreModule } from '../../src/custom-domain/core/custom-domain-core.module';
+import { BadgeCoreModule } from '../../src/badge/core/badge-core.module';
 import { CustomDomainEntity } from '../../src/custom-domain/core/entities/custom-domain.entity';
 import { CustomDomainDnsService } from '../../src/custom-domain/dns/custom-domain-dns.service';
 import { CustomDomainDnsServiceMock } from '../../src/custom-domain/dns/custom-domain-dns.service.mock';
@@ -74,6 +76,7 @@ import { SubscriptionCoreModule } from '../../src/subscription/core/subscription
 import { AuditLogUtils } from './audit-log-utils';
 import { AuditLogCreationModule } from '../../src/audit-log/creation/audit-log-creation.module';
 import { UserUtils } from './user.utils';
+import { CastErrorFilter } from '../../src/shared/filters/cast-error.filter';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/pinger/http-ping-pinger.service';
 import { ALL_LOGGER_TOKENS, LOGDASH_METRICS } from '../../src/shared/logdash/logdash-tokens';
 
@@ -104,6 +107,7 @@ export async function createTestApp() {
       NotificationChannelCoreModule,
       PublicDashboardCoreModule,
       CustomDomainCoreModule,
+      BadgeCoreModule,
       BlogCoreModule,
       StripeModule,
       SubscriptionCoreModule,
@@ -130,7 +134,7 @@ export async function createTestApp() {
 
   const module: TestingModule = await moduleBuilder.compile();
 
-  const app = module.createNestApplication();
+  const app = module.createNestApplication<INestApplication<App>>();
   // Must mirror src/main.ts, otherwise e2e tests exercise different validation
   // rules than production.
   app.useGlobalPipes(
@@ -141,7 +145,14 @@ export async function createTestApp() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
-  await app.init();
+  app.useGlobalFilters(new CastErrorFilter(app.getHttpAdapter()));
+  await app.listen(0, '127.0.0.1');
+
+  // Crons would flush queues and delete data behind the specs' backs, so none
+  // run on their own. Specs call the service method a cron would call.
+  for (const job of module.get(SchedulerRegistry).getCronJobs().values()) {
+    void job.stop();
+  }
 
   const userModel: Model<UserEntity> = module.get(getModelToken(UserEntity.name));
   const projectModel: Model<ProjectEntity> = module.get(getModelToken(ProjectEntity.name));
@@ -222,7 +233,6 @@ export async function createTestApp() {
     ]);
   };
 
-
   const beforeEach = async () => {
     clear();
     await clearDatabase();
@@ -233,6 +243,9 @@ export async function createTestApp() {
     await app.close();
     await closeInMemoryMongoServer();
     clear();
+    // Every spec file loads its own nock, which patches the http module the
+    // whole worker shares. Left in place, the patches stack up across files.
+    nock.restore();
   };
 
   return {

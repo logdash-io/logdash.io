@@ -27,7 +27,7 @@ export class SubscriptionWriteService {
 
   public async updateOne(dto: UpdateSubscriptionDto): Promise<SubscriptionNormalized | null> {
     const subscription = await this.subscriptionModel
-      .findByIdAndUpdate(dto.id, dto, { new: true })
+      .findByIdAndUpdate(dto.id, dto, { returnDocument: 'after' })
       .exec();
 
     return subscription ? SubscriptionSerializer.normalize(subscription) : null;

@@ -1,4 +1,3 @@
-import { normalize } from 'path';
 import { MetricRegisterEntryNormalized } from '../../../metric-register/core/entities/metric-register-entry.normalized';
 import { parseFlexibleDate } from '../../../shared/utils/parse-flexible-date';
 import { MetricEntity } from './metric.entity';

@@ -21,9 +21,9 @@ export class UpdateNotificationChannelBody {
   @IsOptional()
   // only discriminable when the body states the type; the authoritative check
   // runs in NotificationChannelOptionsValidationService against the stored type
-  @ValidateIf((body) => body.type !== undefined)
+  @ValidateIf((body: UpdateNotificationChannelBody) => body.type !== undefined)
   @ValidateNested()
-  @Transform(({ obj, value }) => {
+  @Transform(({ obj, value }: { obj: { type?: unknown }; value: unknown }) => {
     if (obj.type === NotificationChannelType.Telegram) {
       return Object.assign(new TelegramOptionsValidator(), value);
     }

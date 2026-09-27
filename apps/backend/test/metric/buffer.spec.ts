@@ -41,19 +41,19 @@ describe('Metrics buffer', () => {
     it(`lets ${tier} user add ${limit} metrics`, async () => {
       const uniqueMetricsNumberToTry = 500;
       const setup = await bootstrap.utils.generalUtils.setupClaimed({
-        userTier: tier as UserTier,
+        userTier: tier,
         email: 'test@test.com',
       });
 
       for (let i = 0; i < uniqueMetricsNumberToTry; i++) {
-        try {
-          await queueingService.queueMetric({
+        await queueingService
+          .queueMetric({
             projectId: setup.project.id,
             name: `metric-${i}`,
             operation: MetricOperation.Set,
             value: 2137,
-          });
-        } catch {}
+          })
+          .catch(() => undefined);
       }
 
       await buffferService.flushBuffer();

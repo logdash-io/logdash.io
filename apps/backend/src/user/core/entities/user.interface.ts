@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AuthMethod } from '../enum/auth-method.enum';
 import { AccountClaimStatus } from '../enum/account-claim-status.enum';
 import { UserTier } from '../enum/user-tier.enum';
-import { PaymentsMetadata } from './user.entity';
+import { PaymentsMetadata, UserOnboarding } from './user.entity';
 
 export class PaymentsMetadataSerialized {
   @ApiPropertyOptional()
@@ -19,6 +19,9 @@ export class UserNormalized {
   stripeCustomerId?: string;
   avatarUrl?: string;
   paymentsMetadata?: PaymentsMetadata;
+  marketingConsent?: boolean;
+  termsAcceptedAt?: Date;
+  onboarding?: UserOnboarding;
 }
 
 export class UserSerialized {
@@ -42,4 +45,10 @@ export class UserSerialized {
 
   @ApiPropertyOptional({ type: PaymentsMetadataSerialized })
   paymentsMetadata?: PaymentsMetadataSerialized;
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  termsAcceptedAt: string | null;
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  onboardingCompletedAt: string | null;
 }

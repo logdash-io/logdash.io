@@ -1,7 +1,9 @@
 import { Global, Module } from '@nestjs/common';
 import { createClient, ClickHouseClient } from '@clickhouse/client';
-import { ClickHouseContainer } from '@testcontainers/clickhouse';
+import { ClickHouseContainer, StartedClickHouseContainer } from '@testcontainers/clickhouse';
 import * as path from 'path';
+
+type ClickHouseClientOptions = ReturnType<StartedClickHouseContainer['getClientOptions']>;
 
 export const createClickHouseTestContainer = async (): Promise<void> => {
   const migrationsPath = path.resolve(__dirname, '../../clickhouse-migrations');
@@ -26,7 +28,9 @@ export const createClickHouseTestContainer = async (): Promise<void> => {
     .withReuse()
     .start();
 
-  global.clickhouseContainer = clickhouseContainer;
+  // Global setup runs in the parent process and specs run in a worker, so the
+  // connection details travel through the environment the worker inherits.
+  process.env.TEST_CLICKHOUSE_OPTIONS = JSON.stringify(clickhouseContainer.getClientOptions());
 };
 
 export const rootClickHouseTestModule = () => {
@@ -36,7 +40,9 @@ export const rootClickHouseTestModule = () => {
       {
         provide: ClickHouseClient,
         useFactory: async (): Promise<ClickHouseClient> => {
-          const options = global.clickhouseContainer.getClientOptions();
+          const options = JSON.parse(
+            process.env.TEST_CLICKHOUSE_OPTIONS!,
+          ) as ClickHouseClientOptions;
 
           const client = createClient({
             url: options.url,
@@ -60,8 +66,4 @@ export const rootClickHouseTestModule = () => {
   class ClickHouseTestModule {}
 
   return ClickHouseTestModule;
-};
-
-export const closeClickHouseTestContainer = async () => {
-  global.clickhouseContainer.stop();
 };

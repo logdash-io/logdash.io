@@ -13,7 +13,7 @@ export const LOG_LEVELS: LogLevelMetadata[] = [
   { value: 'http', label: 'HTTP', color: 'bg-[#00a6a6]' },
   { value: 'verbose', label: 'Verbose', color: 'bg-[#00a600]' },
   { value: 'debug', label: 'Debug', color: 'bg-[#00a600]' },
-  { value: 'silly', label: 'Silly', color: 'bg-[#505050]' },
+  { value: 'silly', label: 'Silly', color: 'bg-neutral-600' },
 ];
 
 export const LOG_LEVELS_MAP: Record<LogLevel, LogLevelMetadata> =

@@ -42,7 +42,7 @@ export const openOAuthPopup = (
           popup.close();
           resolve(popup.location.pathname);
         }
-      } catch (error) {
+      } catch {
         // noop
       }
     }, 1000);

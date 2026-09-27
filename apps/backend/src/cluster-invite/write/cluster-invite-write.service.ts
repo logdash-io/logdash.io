@@ -6,11 +6,7 @@ import { CreateClusterInviteDto } from './dto/create-invite.dto';
 import { ClusterInviteNormalized } from '../core/entities/cluster-invite.interface';
 import { ClusterInviteSerializer } from '../core/entities/cluster-invite.serializer';
 import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
-import {
-  AuditLogClusterAction,
-  AuditLogEntityAction,
-  AuditLogUserAction,
-} from '../../audit-log/core/enums/audit-log-actions.enum';
+import { AuditLogClusterAction } from '../../audit-log/core/enums/audit-log-actions.enum';
 import { Actor } from '../../audit-log/core/enums/actor.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 
@@ -30,7 +26,7 @@ export class ClusterInviteWriteService {
       role: dto.role,
     });
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: dto.inviterUserId,
       action: AuditLogClusterAction.InvitedUser,
       actor: Actor.User,

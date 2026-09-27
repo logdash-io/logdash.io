@@ -38,7 +38,7 @@ export class ClusterWriteService {
 
     this.metrics.mutateMetric('clustersCreated', 1);
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: dto.creatorId,
       action: AuditLogEntityAction.Create,
       actor: Actor.User,
@@ -52,7 +52,7 @@ export class ClusterWriteService {
   public async update(dto: UpdateClusterDto, actorUserId?: string): Promise<void> {
     const updateQuery = this.constructUpdateQuery(dto);
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: actorUserId,
       action: AuditLogEntityAction.Update,
       actor: actorUserId ? Actor.User : Actor.System,
@@ -89,7 +89,7 @@ export class ClusterWriteService {
     const clusters = await this.model.find({ creatorId });
 
     clusters.forEach((cluster) => {
-      this.auditLog.create({
+      void this.auditLog.create({
         userId: creatorId,
         actor: Actor.System,
         action: AuditLogEntityAction.Update,
@@ -115,7 +115,7 @@ export class ClusterWriteService {
   }
 
   public async deleteRole(clusterId: string, userId: string, actorUserId?: string): Promise<void> {
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: actorUserId,
       actor: actorUserId ? Actor.User : Actor.System,
       action: AuditLogClusterAction.RevokedRole,
@@ -124,7 +124,7 @@ export class ClusterWriteService {
       description: `Revoked role from user ${userId}`,
     });
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: userId,
       actor: Actor.User,
       action: AuditLogUserAction.RevokedRoleFromCluster,
@@ -145,7 +145,7 @@ export class ClusterWriteService {
       { $set: { [`roles.${userId}`]: role } },
     );
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: userId,
       actor: Actor.User,
       action: AuditLogUserAction.AcceptedInviteToCluster,
@@ -154,7 +154,7 @@ export class ClusterWriteService {
       description: `Accepted invite to cluster ${clusterId} with role ${role}`,
     });
 
-    this.auditLog.create({
+    void this.auditLog.create({
       userId: userId,
       actor: Actor.System,
       action: AuditLogClusterAction.AcceptedInvite,

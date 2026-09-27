@@ -1,5 +1,6 @@
 <script lang="ts">
   import { CheckIcon, CloseIcon } from '@logdash/hyper-ui/icons';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { userInvitationsState } from '$lib/domains/app/clusters/application/user-invitations.state.svelte.js';
   import { ClusterRole } from '$lib/domains/app/clusters/domain/cluster-invite.js';
@@ -7,7 +8,7 @@
   async function onInvitationAccepted(inviteId: string): Promise<void> {
     try {
       await userInvitationsState.acceptInvitation(inviteId);
-      clustersState.load();
+      await clustersState.load();
     } catch (error) {
       console.error('Error accepting invitation:', error);
     }
@@ -34,7 +35,7 @@
 {#if userInvitationsState.hasPendingInvitations}
   <div class="success-card mb-4 w-full rounded-xl px-2">
     <div class="space-y-0">
-      {#each invitations as invitation, index}
+      {#each invitations as invitation, index (invitation.id)}
         <div
           class={[
             'flex items-center justify-between rounded-lg p-3 pr-1',
@@ -54,33 +55,27 @@
           </div>
 
           <div class="flex gap-2">
-            <button
-              class="btn btn-soft btn-success btn-xs"
+            <Button
+              variant="success-soft"
+              size="xs"
               onclick={() => onInvitationAccepted(invitation.id)}
-              disabled={userInvitationsState.isAccepting ||
-                userInvitationsState.isDeclining}
+              disabled={userInvitationsState.isDeclining}
+              loading={userInvitationsState.isAccepting}
             >
-              {#if userInvitationsState.isAccepting}
-                <span class="loading loading-spinner loading-xs"></span>
-              {:else}
-                <CheckIcon class="h-4 w-4" />
-                Accept
-              {/if}
-            </button>
+              <CheckIcon class="h-4 w-4" />
+              Accept
+            </Button>
 
-            <button
-              class="btn btn-error btn-xs btn-soft"
+            <Button
+              variant="danger-soft"
+              size="xs"
               onclick={() => onInvitationDeclined(invitation.id)}
-              disabled={userInvitationsState.isAccepting ||
-                userInvitationsState.isDeclining}
+              disabled={userInvitationsState.isAccepting}
+              loading={userInvitationsState.isDeclining}
             >
-              {#if userInvitationsState.isDeclining}
-                <span class="loading loading-spinner loading-xs"></span>
-              {:else}
-                <CloseIcon class="h-4 w-4" />
-                Decline
-              {/if}
-            </button>
+              <CloseIcon class="h-4 w-4" />
+              Decline
+            </Button>
           </div>
         </div>
       {/each}

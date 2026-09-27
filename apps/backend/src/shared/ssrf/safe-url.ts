@@ -103,6 +103,8 @@ export function isSafeUrlSyntax(rawUrl: string): boolean {
   return parseSafeUrl(rawUrl) !== null;
 }
 
+export class UnsafeUrlError extends Error {}
+
 export interface VettedAddress {
   address: string;
   family: 4 | 6;
@@ -136,7 +138,7 @@ export async function assertPublicUrl(rawUrl: string): Promise<VettedUrl> {
   const url = parseSafeUrl(rawUrl);
 
   if (!url) {
-    throw new Error(`Blocked request to unsafe url: ${rawUrl}`);
+    throw new UnsafeUrlError(`Blocked request to unsafe url: ${rawUrl}`);
   }
 
   const hostname = normalizeHostname(url.hostname);
@@ -149,12 +151,14 @@ export async function assertPublicUrl(rawUrl: string): Promise<VettedUrl> {
   const resolved = await lookup(hostname, { all: true, verbatim: true });
 
   if (resolved.length === 0) {
-    throw new Error(`Blocked request to ${hostname}: hostname did not resolve`);
+    throw new UnsafeUrlError(`Blocked request to ${hostname}: hostname did not resolve`);
   }
 
   for (const { address } of resolved) {
     if (isBlockedIp(address)) {
-      throw new Error(`Blocked request to ${hostname}: resolves to private address ${address}`);
+      throw new UnsafeUrlError(
+        `Blocked request to ${hostname}: resolves to private address ${address}`,
+      );
     }
   }
 

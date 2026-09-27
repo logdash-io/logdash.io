@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 as EventEmitter } from '@nestjs/event-emitter';
-import { UserTierChangedEvent } from '../../user/events/definitions/user-tier-changed.event';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
 
 export enum StripeEvents {
@@ -21,11 +20,11 @@ export interface StripeSubscriptionDeletedEvent {
 export class StripeEventEmitter {
   public constructor(private readonly eventEmitter: EventEmitter) {}
 
-  public async emitPaymentSucceeded(payload: StripePaymentSucceededEvent): Promise<void> {
-    await this.eventEmitter.emit(StripeEvents.PaymentSucceeded, payload);
+  public emitPaymentSucceeded(payload: StripePaymentSucceededEvent): void {
+    this.eventEmitter.emit(StripeEvents.PaymentSucceeded, payload);
   }
 
-  public async emitSubscriptionDeleted(payload: StripeSubscriptionDeletedEvent): Promise<void> {
-    await this.eventEmitter.emit(StripeEvents.SubscriptionDeleted, payload);
+  public emitSubscriptionDeleted(payload: StripeSubscriptionDeletedEvent): void {
+    this.eventEmitter.emit(StripeEvents.SubscriptionDeleted, payload);
   }
 }

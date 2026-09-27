@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { ProjectTier } from '../enums/project-tier.enum';
+import { ProjectFeature } from '../enums/project-feature.enum';
 
 export class LogValues {
   @Prop()
@@ -34,7 +35,7 @@ export class ProjectEntity {
   tier: ProjectTier;
 
   @Prop({ type: [String], default: [] })
-  selectedFeatures: string[];
+  selectedFeatures: ProjectFeature[];
 }
 
 export type ProjectDocument = HydratedDocument<ProjectEntity>;

@@ -1,6 +1,7 @@
 import { ClickHouseClient } from '@clickhouse/client';
 import { Injectable } from '@nestjs/common';
 import { ClickhouseUtils } from 'src/clickhouse/clickhouse.utils';
+import { HttpPingBucketEntity } from '../../http-ping-bucket/core/entities/http-ping-bucket.entity';
 
 export interface PingsAggregation {
   http_monitor_id: string;
@@ -41,9 +42,9 @@ export class HttpPingAggregationService {
       },
     });
 
-    const resultData = ((await aggregationResult.json()) as any).data;
+    const { data } = await aggregationResult.json<Omit<HttpPingBucketEntity, 'id'>>();
 
-    return resultData.map((rawBucket) => ({
+    return data.map((rawBucket) => ({
       http_monitor_id: rawBucket.http_monitor_id,
       hour_timestamp: ClickhouseUtils.clickhouseDateToJsDate(rawBucket.hour_timestamp),
       success_count: Number(rawBucket.success_count),
@@ -76,9 +77,9 @@ export class HttpPingAggregationService {
       },
     });
 
-    const resultData = ((await aggregationResult.json()) as any).data;
+    const { data } = await aggregationResult.json<Omit<HttpPingBucketEntity, 'id'>>();
 
-    return resultData.map((rawBucket) => ({
+    return data.map((rawBucket) => ({
       http_monitor_id: rawBucket.http_monitor_id,
       hour_timestamp: ClickhouseUtils.clickhouseDateToJsDate(rawBucket.hour_timestamp),
       success_count: Number(rawBucket.success_count),

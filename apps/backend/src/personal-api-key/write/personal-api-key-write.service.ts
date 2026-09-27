@@ -51,8 +51,6 @@ export class PersonalApiKeyWriteService {
       throw new ForbiddenException('You do not own this personal API key');
     }
 
-    await this.personalApiKeyModel
-      .updateOne({ _id: key._id }, { revokedAt: new Date() })
-      .exec();
+    await this.personalApiKeyModel.updateOne({ _id: key._id }, { revokedAt: new Date() }).exec();
   }
 }

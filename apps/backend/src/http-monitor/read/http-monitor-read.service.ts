@@ -100,12 +100,11 @@ export class HttpMonitorReadService {
     }
   }
 
-  public async *readManyUnclaimedByProjectIdsCursorWithMode(
-    projectIds: string[],
+  public async *readManyUnclaimedCursorWithMode(
     mode: string,
   ): AsyncGenerator<HttpMonitorNormalized> {
     const cursor = this.httpMonitorModel
-      .find({ projectId: { $in: projectIds }, mode: mode as HttpMonitorMode, claimed: false })
+      .find({ claimed: false, mode: mode as HttpMonitorMode })
       .sort({ createdAt: -1 })
       .cursor();
 

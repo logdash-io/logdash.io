@@ -2,10 +2,14 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { dev } from '$app/environment';
 import { envConfig } from '@logdash/hyper-ui';
+import type { PublicDashboardData } from '@logdash/hyper-ui/types';
 
 // Server-compatible version of PublicDashboardService
 class ServerPublicDashboardService {
-	static async getPublicData(dashboardIdOrUrl: string, period: '24h' | '7d' | '90d' = '90d') {
+	static async getPublicData(
+		dashboardIdOrUrl: string,
+		period: '24h' | '7d' | '90d' = '90d'
+	): Promise<PublicDashboardData> {
 		const response = await fetch(
 			`${envConfig.apiBaseUrl}/public_dashboards/${encodeURIComponent(
 				dashboardIdOrUrl
@@ -16,7 +20,7 @@ class ServerPublicDashboardService {
 			throw new Error(`Failed to fetch dashboard data: ${response.status}`);
 		}
 
-		return response.json();
+		return (await response.json()) as PublicDashboardData;
 	}
 }
 

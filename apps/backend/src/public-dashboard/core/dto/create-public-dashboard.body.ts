@@ -7,6 +7,7 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
+import { NoImplicitConversion } from '../../../shared/utils/no-implicit-conversion.decorator';
 
 export class CreatePublicDashboardBody {
   @ApiPropertyOptional({ isArray: true })
@@ -21,6 +22,7 @@ export class CreatePublicDashboardBody {
   name: string;
 
   @ApiProperty()
+  @NoImplicitConversion()
   @IsBoolean()
   isPublic: boolean;
 }

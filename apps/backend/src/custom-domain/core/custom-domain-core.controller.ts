@@ -8,7 +8,6 @@ import {
   NotFoundException,
   UseGuards,
   Body,
-  BadRequestException,
   ConflictException,
   Query,
   ForbiddenException,

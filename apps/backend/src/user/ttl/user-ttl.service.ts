@@ -7,6 +7,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ClusterRemovalService } from '../../cluster/removal/cluster-removal.service';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { USERS_LOGGER } from '../../shared/logdash/logdash-tokens';
+import { errorMessage } from '../../shared/utils/error-message';
 
 @Injectable()
 export class UserTtlService {
@@ -29,7 +30,7 @@ export class UserTtlService {
       } catch (e) {
         this.logger.error(`Failed to delete user`, {
           userId,
-          error: e.message,
+          error: errorMessage(e),
         });
       }
     }

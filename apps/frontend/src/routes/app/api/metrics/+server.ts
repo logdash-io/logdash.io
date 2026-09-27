@@ -15,8 +15,8 @@ export const DELETE: RequestHandler = async ({ cookies, url }) => {
   }
 
   await logdashAPI.delete_metric(
-    url.searchParams.get('project_id'),
-    url.searchParams.get('metric_id'),
+    projectId,
+    metricId,
     get_access_token(cookies),
   );
 

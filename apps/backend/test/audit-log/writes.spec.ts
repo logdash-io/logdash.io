@@ -2,7 +2,6 @@ import { RelatedDomain } from '../../src/audit-log/core/enums/related-domain.enu
 import { AuditLog } from '../../src/audit-log/creation/audit-log-creation.service';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
 import { createTestApp } from '../utils/bootstrap';
-import { sleep } from '../utils/sleep';
 
 describe('Audit logs (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -30,7 +29,7 @@ describe('Audit logs (writes)', () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
     // when
-    auditLog.create({
+    await auditLog.create({
       relatedDomain: RelatedDomain.Project,
       relatedEntityId: setup.project.id,
     });
@@ -48,7 +47,7 @@ describe('Audit logs (writes)', () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
     // when
-    auditLog.create({
+    await auditLog.create({
       relatedDomain: RelatedDomain.Cluster,
       relatedEntityId: setup.cluster.id,
     });
@@ -65,7 +64,7 @@ describe('Audit logs (writes)', () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
 
-    const metric = await bootstrap.utils.metricUtils.recordMetric({
+    await bootstrap.utils.metricUtils.recordMetric({
       apiKey: setup.apiKey.value,
       name: 'test',
       operation: MetricOperation.Set,
@@ -77,7 +76,7 @@ describe('Audit logs (writes)', () => {
     });
 
     // when
-    auditLog.create({
+    await auditLog.create({
       relatedDomain: RelatedDomain.Metric,
       relatedEntityId: metricRegisterEntry?.id,
     });
@@ -96,19 +95,16 @@ describe('Audit logs (writes)', () => {
 
     // when
     await Promise.all(
-      Array.from({ length: 1000 }).map(async () => {
-        try {
-          await auditLog.create({
-            userId: setup.user.id,
-            relatedDomain: RelatedDomain.Project,
-            relatedEntityId: setup.project.id,
-          });
-        } catch {}
-      }),
+      Array.from({ length: 1000 }).map(() =>
+        auditLog.create({
+          userId: setup.user.id,
+          relatedDomain: RelatedDomain.Project,
+          relatedEntityId: setup.project.id,
+        }),
+      ),
     );
 
     // then
-    await sleep(1000);
     const count = await bootstrap.utils.auditLogUtils.countUserAuditLogs(setup.user.id);
 
     expect(count).toBe(600);

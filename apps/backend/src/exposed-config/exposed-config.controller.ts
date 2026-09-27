@@ -19,7 +19,11 @@ export class DemoConfigResponnse {
 export class ExposedConfigController {
   @Get('/exposed_config')
   @Public()
-  public async getExposedConfig() {
+  public getExposedConfig(): {
+    projectPlanConfigs: ProjectPlanConfigs;
+    clusterPlanConfigs: ClusterPlanConfigs;
+    userPlanConfigs: UserPlanConfigs;
+  } {
     return {
       projectPlanConfigs: ProjectPlanConfigs,
       clusterPlanConfigs: ClusterPlanConfigs,
@@ -30,7 +34,7 @@ export class ExposedConfigController {
   @Get('/demo')
   @ApiResponse({ type: DemoConfigResponnse })
   @Public()
-  public async demo(): Promise<DemoConfigResponnse> {
+  public demo(): DemoConfigResponnse {
     const config = getEnvConfig().demo;
 
     return {

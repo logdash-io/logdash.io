@@ -14,17 +14,17 @@
   let { status }: Props = $props();
 
   const statusColors = {
-    up: "from-green-600 via-green-600/80 to-green-600",
-    healthy: "from-green-600 via-green-600/80 to-green-600",
-    degraded: "from-yellow-600 via-yellow-600/80 to-yellow-600",
-    down: "from-red-700 via-red-700/80 to-red-700",
-    unhealthy: "from-red-700 via-red-700/80 to-red-700",
-    unknown: "from-neutral-700 via-neutral-700/80 to-neutral-700",
+    up: "bg-green-600",
+    healthy: "bg-green-600",
+    degraded: "bg-yellow-600",
+    down: "bg-red-700",
+    unhealthy: "bg-red-700",
+    unknown: "bg-neutral-700",
   };
 
   const colorClass = $derived(statusColors[status] || statusColors.unknown);
 </script>
 
 <div class={`h-6 mb-1 w-2 flex-shrink-0 pl-0.5 hover:h-8 hover:mb-0`}>
-  <div class={`rounded-xs h-full bg-gradient-to-b ${colorClass}`}></div>
+  <div class={`rounded-xs h-full ${colorClass}`}></div>
 </div>

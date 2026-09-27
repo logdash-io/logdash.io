@@ -7,8 +7,34 @@ on:
     paths:
       - 'apps/backend/**'
       - '.github/workflows/**'
+      - '.github/templates/**'
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: apps/backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: apps/backend
+
+      - name: Type check
+        run: npm run check
+        working-directory: apps/backend
+
+      - name: Lint
+        run: npm run lint
+        working-directory: apps/backend
+
   find-tests:
     runs-on: ubuntu-latest
     outputs:

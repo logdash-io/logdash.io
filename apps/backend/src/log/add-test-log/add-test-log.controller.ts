@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, UseGuards, Ip } from '@nestjs/common';
+import { Controller, Param, Post, UseGuards, Ip } from '@nestjs/common';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { LogQueueingService } from '../queueing/log-queueing.service';
 import { LogLevel } from '../core/enums/log-level.enum';

@@ -14,6 +14,8 @@
   import BellIcon from '$lib/domains/shared/icons/BellIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import { Button, Checkbox } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     monitorId: string;
@@ -35,8 +37,12 @@
     await notificationChannelsState.deleteChannel(channel.id);
   }
 
-  function onToggleChannel(channelId: string): void {
-    monitoringState.toggleNotificationChannel(monitorId, channelId);
+  async function onToggleChannel(channelId: string): Promise<void> {
+    try {
+      await monitoringState.toggleNotificationChannel(monitorId, channelId);
+    } catch {
+      toast.error('Failed to update notification channel');
+    }
   }
 
   function onAddChannel(): void {
@@ -56,54 +62,48 @@
     )}
     <SettingsCardItem
       showBorder={true}
-      onclick={() => onToggleChannel(channel.id)}
+      onclick={() => void onToggleChannel(channel.id)}
     >
-      {#snippet children()}
-        <div class="flex items-center gap-4">
-          <div
-            class="size-10 rounded-lg bg-base-100 flex items-center justify-center"
-          >
-            <input
-              type="checkbox"
-              class="checkbox checkbox-xs checkbox-secondary"
-              checked={isEnabled}
-              readonly
-            />
-          </div>
-          <div>
-            <p class="font-medium text-sm">{getChannelDisplayName(channel)}</p>
-            <p class="text-base-content/60 text-sm">
-              {getChannelTypeLabel(channel)}
-              {#if channel.target === 'telegram' && channel.options.chatId}
-                · id: {channel.options.chatId}
-              {/if}
-              {#if channel.target === 'webhook' && channel.options.url}
-                · {channel.options.url}
-              {/if}
-            </p>
-          </div>
+      <div class="flex items-center gap-4">
+        <div
+          class="size-10 rounded-lg bg-surface-100 flex items-center justify-center"
+        >
+          <Checkbox size="xs" variant="primary" checked={isEnabled} readonly />
         </div>
-      {/snippet}
+        <div>
+          <p class="font-medium text-sm">{getChannelDisplayName(channel)}</p>
+          <p class="text-neutral-400 text-sm">
+            {getChannelTypeLabel(channel)}
+            {#if channel.target === 'telegram' && channel.options.chatId}
+              · id: {channel.options.chatId}
+            {/if}
+            {#if channel.target === 'webhook' && channel.options.url}
+              · {channel.options.url}
+            {/if}
+          </p>
+        </div>
+      </div>
       {#snippet action()}
-        <button
-          onclick={(e) => {
+        <Button
+          variant="danger"
+          size="sm"
+          shape="square"
+          aria-label="Delete notification channel"
+          onclick={(e: MouseEvent) => {
             e.stopPropagation();
-            onDeleteChannel(channel);
+            void onDeleteChannel(channel);
           }}
-          class="btn btn-ghost border-0 btn-sm text-error bg-error/10 btn-square"
         >
           <TrashIcon class="size-4" />
-        </button>
+        </Button>
       {/snippet}
     </SettingsCardItem>
   {/each}
 
   <SettingsCardItem icon={PlusIcon} showBorder={false} onclick={onAddChannel}>
-    {#snippet children()}
-      <p class="font-medium">Add notification channel</p>
-      <p class="text-base-content/60 text-sm">
-        Connect Telegram or Webhook notifications
-      </p>
-    {/snippet}
+    <p class="font-medium">Add notification channel</p>
+    <p class="text-neutral-400 text-sm">
+      Connect Telegram or Webhook notifications
+    </p>
   </SettingsCardItem>
 </SettingsCardExpandable>

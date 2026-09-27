@@ -13,10 +13,7 @@ export class PersonalApiKeyReadService {
   ) {}
 
   public async readById(id: string): Promise<PersonalApiKeyNormalized | null> {
-    const key = await this.personalApiKeyModel
-      .findById(id)
-      .lean<PersonalApiKeyEntity>()
-      .exec();
+    const key = await this.personalApiKeyModel.findById(id).lean<PersonalApiKeyEntity>().exec();
 
     if (!key) {
       return null;

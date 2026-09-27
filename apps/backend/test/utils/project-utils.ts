@@ -1,3 +1,4 @@
+import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 
 import { ProjectNormalized } from '../../src/project/core/entities/project.interface';
@@ -12,13 +13,9 @@ export class ProjectUtils {
   private projectModel: Model<ProjectEntity>;
   private apiKeyModel: Model<ApiKeyEntity>;
 
-  constructor(private readonly app: INestApplication<any>) {
+  constructor(private readonly app: INestApplication<App>) {
     this.projectModel = this.app.get(getModelToken(ProjectEntity.name));
     this.apiKeyModel = this.app.get(getModelToken(ApiKeyEntity.name));
-  }
-
-  public async getProject(): Promise<ProjectNormalized> {
-    return ProjectSerializer.normalize(await this.projectModel.findOne());
   }
 
   public async createDefaultProject(params?: {

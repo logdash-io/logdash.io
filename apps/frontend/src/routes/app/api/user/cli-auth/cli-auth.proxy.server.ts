@@ -9,19 +9,19 @@ import { json } from '@sveltejs/kit';
  */
 export async function proxyCliAuth(
   path: 'lookup' | 'approve' | 'deny',
-  accessToken: string,
+  accessToken: string | undefined,
   body: unknown,
 ): Promise<Response> {
   const response = await fetch(`${envConfig.apiBaseUrl}/auth/cli/${path}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     body: JSON.stringify(body),
   });
 
-  const payload = await response.json().catch(() => ({}));
+  const payload: unknown = await response.json().catch(() => ({}));
 
   return json(payload, { status: response.status });
 }

@@ -62,6 +62,6 @@ export class NotificationChannelMessagingService {
       notificationChannel: target,
     });
 
-    throw new Error(`No provider found for notification target: ${target}`);
+    throw new Error(`No provider found for notification target: ${String(target)}`);
   }
 }

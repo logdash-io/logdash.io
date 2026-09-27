@@ -39,6 +39,10 @@ export class MonitoringService {
     return httpClient.get<Monitor[]>(`/clusters/${clusterId}/http_monitors`);
   }
 
+  getMonitorsByProject(projectId: string): Promise<Monitor[]> {
+    return httpClient.get<Monitor[]>(`/projects/${projectId}/http_monitors`);
+  }
+
   getMonitorPings(dto: {
     projectId: string;
     monitorId: string;
@@ -64,11 +68,8 @@ export class MonitoringService {
     });
   }
 
-  claimMonitor(httpMonitorId: string): Promise<Monitor> {
-    return httpClient.post<Monitor>(
-      `/http_monitors/${httpMonitorId}/claim`,
-      {},
-    );
+  claimMonitor(httpMonitorId: string): Promise<void> {
+    return httpClient.post<void>(`/http_monitors/${httpMonitorId}/claim`, {});
   }
 
   updateMonitor(monitorId: string, dto: UpdateMonitorDto): Promise<Monitor> {

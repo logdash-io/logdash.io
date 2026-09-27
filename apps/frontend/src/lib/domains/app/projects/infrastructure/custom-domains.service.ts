@@ -22,7 +22,7 @@ export class CustomDomainsService {
       return await httpClient.get<CustomDomain>(
         `/public_dashboards/${publicDashboardId}/custom_domain`,
       );
-    } catch (error) {
+    } catch {
       // If no custom domain exists, return null
       return null;
     }

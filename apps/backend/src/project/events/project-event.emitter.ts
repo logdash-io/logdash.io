@@ -7,7 +7,7 @@ import { ProjectEvents } from './project-events.enum';
 export class ProjectEventEmitter {
   public constructor(private readonly eventEmitter: EventEmitter) {}
 
-  public async emitUserAddedToProjectEvent(payload: UserAddedToProjectEvent): Promise<void> {
-    await this.eventEmitter.emit(ProjectEvents.UserAddedToProject, payload);
+  public emitUserAddedToProjectEvent(payload: UserAddedToProjectEvent): void {
+    this.eventEmitter.emit(ProjectEvents.UserAddedToProject, payload);
   }
 }

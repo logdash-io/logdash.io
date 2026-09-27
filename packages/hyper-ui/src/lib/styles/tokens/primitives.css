@@ -1,0 +1,17 @@
+@theme {
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f4f4f4;
+  --color-neutral-200: #e2e2e4;
+  --color-neutral-300: #c6c6ca;
+  --color-neutral-400: #9d9da3;
+  --color-neutral-500: #7f7f86;
+  --color-neutral-600: #5c5c62;
+  --color-neutral-700: #414145;
+  --color-neutral-800: #2c2c2e;
+  --color-neutral-900: #1c1c1e;
+  --color-neutral-950: #101012;
+}
+
+:root {
+  --color-hairline-dark: #222225;
+}

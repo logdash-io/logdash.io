@@ -1,6 +1,5 @@
 import { ClickhouseUtils } from '../../../clickhouse/clickhouse.utils';
-import { LogLevel } from '../enums/log-level.enum';
-import { LogClickhouseEntity } from './log.clickhouse-entity';
+import { LogClickhouseRow } from './log.clickhouse-entity';
 import { LogEntity } from './log.entity';
 import {
   LogClickhouseNormalized,
@@ -21,12 +20,12 @@ export class LogSerializer {
     };
   }
 
-  public static normalizeClickhouse(entity: LogClickhouseEntity): LogClickhouseNormalized {
+  public static normalizeClickhouse(entity: LogClickhouseRow): LogClickhouseNormalized {
     return {
       id: entity.id,
       createdAt: ClickhouseUtils.clickhouseDateToJsDate(entity.created_at),
       message: entity.message,
-      level: entity.level as unknown as LogLevel,
+      level: entity.level,
       projectId: entity.project_id,
       sequenceNumber: entity.sequence_number,
       namespace: entity.namespace ?? undefined,

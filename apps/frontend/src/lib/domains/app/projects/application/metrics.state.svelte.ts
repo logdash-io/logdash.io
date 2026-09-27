@@ -27,14 +27,14 @@ class MetricsState {
   private _metrics = $state<
     Record<
       Metric['metricRegisterEntryId'],
-      Record<MetricGranularity, Record<Metric['date'], Metric>>
+      Partial<Record<MetricGranularity, Record<Metric['date'], Metric>>>
     >
   >({});
   private _initialized = $state(false);
   private syncConnection: EventSource | null = null;
   private _shouldReconnect = true;
   private _metricDetailsLoading = $state(false);
-  private _unsubscribe: () => void | null = null;
+  private _unsubscribe: (() => void) | null = null;
 
   get simplifiedMetrics(): SimplifiedMetric[] {
     return Object.values(this._simplifiedMetrics);
@@ -84,7 +84,7 @@ class MetricsState {
   }
 
   previewMetric(project_id: string, metric_id: string): void {
-    this.fetchMetricDetails(project_id, metric_id);
+    void this.fetchMetricDetails(project_id, metric_id);
   }
 
   getLastPreviewedMetricId(projectId: string): string | null {
@@ -115,10 +115,8 @@ class MetricsState {
 
     logger.debug(`syncing metrics for project ${project_id}...`);
 
-    await Promise.all([
-      this.fetchMetrics(project_id),
-      this._openMetricsStream(project_id, tabId),
-    ]);
+    void this.fetchMetrics(project_id);
+    await this._openMetricsStream(project_id, tabId);
   }
 
   private _openMetricsStream(project_id: string, tabId: string): Promise<void> {
@@ -139,11 +137,11 @@ class MetricsState {
         },
       );
 
-      const onOpen = (event) => {
+      const onOpen = (event: Event): void => {
         logger.debug('o', event);
         resolve();
       };
-      const onError = (event) => {
+      const onError = (event: Event): void => {
         logger.error('SSE connection error:', event);
 
         this._unsubscribe?.();
@@ -152,37 +150,31 @@ class MetricsState {
           logger.debug('Attempting to reconnect in 3 seconds...');
           setTimeout(() => {
             if (this._shouldReconnect) {
-              this._openMetricsStream(project_id, tabId);
+              void this._openMetricsStream(project_id, tabId);
             }
           }, 3000);
         }
 
         reject(new Error('SSE connection failed'));
       };
-      const onMessage = (event) => {
+      const onMessage = (event: MessageEvent<string>): void => {
         try {
           logger.debug('SSE message:', event);
-          const metric: Metric = JSON.parse(event.data);
+          const metric = JSON.parse(event.data) as Metric;
           const metricId = metric.metricRegisterEntryId;
 
-          this._metrics[metricId] = (this._metrics[metricId] as never) || {};
+          this._metrics[metricId] = this._metrics[metricId] || {};
+          const metricsByDate = this._metrics[metricId][metric.granularity];
 
-          if (!this._metrics[metricId]) {
-            this._metrics[metricId][metric.granularity][metric.date] = metric;
-            logger.debug(
-              `added metric ${metric.name} with the value ${metric.value}`,
-            );
-          } else if (!this._metrics[metricId][metric.granularity]) {
+          if (!metricsByDate) {
             this._metrics[metricId][metric.granularity] = {
               [metric.date]: metric,
             };
             logger.debug(
               `added metric ${metric.name} with the value ${metric.value}`,
             );
-          } else if (
-            !this._metrics[metricId][metric.granularity][metric.date]
-          ) {
-            this._metrics[metricId][metric.granularity][metric.date] = metric;
+          } else if (!metricsByDate[metric.date]) {
+            metricsByDate[metric.date] = metric;
             logger.debug(
               `added metric ${metric.name} with the value ${metric.value}`,
             );
@@ -243,7 +235,7 @@ class MetricsState {
     await this.sync(project_id, tabId);
   }
 
-  async pauseSync(): Promise<void> {
+  pauseSync(): void {
     this._shouldReconnect = false;
     logger.debug('pausing metrics...');
     this._unsubscribe?.();
@@ -290,23 +282,22 @@ class MetricsState {
       });
   }
 
-  private fetchMetrics(project_id: string): void {
+  private async fetchMetrics(project_id: string): Promise<void> {
     const url = `/app/api/projects/${project_id}/metrics`;
 
-    fetch(url)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(async ({ data }) => {
-        this._simplifiedMetrics = arrayToObject(data, 'id');
-        this._initialized = true;
-      })
-      .catch((error) => {
-        console.error('Error fetching metrics:', error);
-      });
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const { data } = (await response.json()) as { data: SimplifiedMetric[] };
+      this._simplifiedMetrics = arrayToObject(data, 'id');
+      this._initialized = true;
+    } catch (error) {
+      console.error('Error fetching metrics:', error);
+    }
   }
 
   private async fetchMetricDetails(
@@ -316,29 +307,34 @@ class MetricsState {
     this._metricDetailsLoading = true;
     const url = `/app/api/projects/${project_id}/metrics/details?metric_id=${metric_id}`;
 
-    await fetch(url)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(({ data }: { data: Metric[] }) => {
-        data.forEach((metric) => {
-          const metricId = metric.metricRegisterEntryId;
-          this._metrics[metricId] = (this._metrics[metricId] as never) || {};
-          this._metrics[metricId][metric.granularity] =
-            this._metrics[metricId][metric.granularity] || {};
+    try {
+      const response = await fetch(url);
 
-          this._metrics[metricId][metric.granularity][metric.date] = metric;
-        });
-      })
-      .catch((error) => {
-        console.error('Error fetching metrics:', error);
-      })
-      .finally(() => {
-        this._metricDetailsLoading = false;
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const { data } = (await response.json()) as { data: Metric[] };
+
+      data.forEach((metric) => {
+        const metricId = metric.metricRegisterEntryId;
+        this._metrics[metricId] = this._metrics[metricId] || {};
+        const metricsByDate = this._metrics[metricId][metric.granularity];
+
+        if (!metricsByDate) {
+          this._metrics[metricId][metric.granularity] = {
+            [metric.date]: metric,
+          };
+          return;
+        }
+
+        metricsByDate[metric.date] = metric;
       });
+    } catch (error) {
+      console.error('Error fetching metrics:', error);
+    } finally {
+      this._metricDetailsLoading = false;
+    }
   }
 }
 

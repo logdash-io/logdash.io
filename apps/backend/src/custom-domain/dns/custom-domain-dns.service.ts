@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { resolveCname } from 'dns/promises';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { CUSTOM_DNS_LOGGER } from '../../shared/logdash/logdash-tokens';
+import { errorMessage } from '../../shared/utils/error-message';
 
 @Injectable()
 export class CustomDomainDnsService {
@@ -21,7 +22,7 @@ export class CustomDomainDnsService {
     } catch (error) {
       this.logger.error('Error resolving CNAME record', {
         domain,
-        error: error.message,
+        error: errorMessage(error),
       });
       return null;
     }

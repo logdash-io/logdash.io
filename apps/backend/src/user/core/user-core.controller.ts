@@ -1,13 +1,12 @@
-import { Body, Controller, Get, Post, Put } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Post, Put } from '@nestjs/common';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { UserReadService } from '../read/user-read.service';
-import { UserSerialized } from './entities/user.interface';
+import { UserNormalized, UserSerialized } from './entities/user.interface';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserSerializer } from './entities/user.serializer';
 import { UpdatePublicUserBody } from './dto/update-public-user.body';
 import { UserWriteService } from '../write/user-write.service';
 import { AccountClaimStatus } from './enum/account-claim-status.enum';
-import { TokenResponse } from '../../shared/responses/token.response';
 import { CustomJwtService } from '../../auth/custom-jwt/custom-jwt.service';
 import { Public } from '../../auth/core/decorators/is-public';
 import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
@@ -19,6 +18,10 @@ import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { ClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
 import { ClusterSerializer } from '../../cluster/core/entities/cluster.serializer';
 import { ClusterRole } from '../../cluster/core/enums/cluster-role.enum';
+import { getEnvConfig } from '../../shared/configs/env-configs';
+import { UpdateConsentsBody } from './dto/update-consents.body';
+import { CompleteOnboardingBody } from './dto/complete-onboarding.body';
+import { UserEventEmitter } from '../events/user-event.emitter';
 
 @Controller('users')
 @ApiTags('Users')
@@ -29,12 +32,13 @@ export class UserCoreController {
     private readonly userWriteService: UserWriteService,
     private readonly jwtService: CustomJwtService,
     private readonly clusterWriteService: ClusterWriteService,
+    private readonly userEventEmitter: UserEventEmitter,
   ) {}
 
   @Get('me')
   @RequireScope(Resource.Account, Action.Read)
   @ApiResponse({ type: UserSerialized })
-  public async readCurrentUser(@CurrentUserId() userId): Promise<UserSerialized> {
+  public async readCurrentUser(@CurrentUserId() userId: string): Promise<UserSerialized> {
     const user = await this.userReadService.readByIdOrThrow(userId);
 
     return UserSerializer.serialize(user);
@@ -43,12 +47,53 @@ export class UserCoreController {
   @Put('me')
   @ApiResponse({ type: UserSerialized })
   public async updateCurrentUser(
-    @CurrentUserId() userId,
     @Body() dto: UpdatePublicUserBody,
+    @CurrentUserId() userId: string,
   ): Promise<UserSerialized> {
     const user = await this.userReadService.readByIdOrThrow(userId);
 
     return UserSerializer.serialize(user);
+  }
+
+  @Put('me/consents')
+  @ApiResponse({ type: UserSerialized })
+  public async updateConsents(
+    @Body() dto: UpdateConsentsBody,
+    @CurrentUserId() userId: string,
+  ): Promise<UserSerialized> {
+    const user = await this.readClaimedUserOrThrow(userId);
+
+    const updatedUser = await this.userWriteService.update({
+      id: userId,
+      termsAcceptedAt: user.termsAcceptedAt ?? new Date(),
+      marketingConsent: dto.marketingConsent,
+    });
+
+    if (dto.marketingConsent && !user.marketingConsent) {
+      this.userEventEmitter.emitMarketingConsentGiven({ userId, email: user.email });
+    }
+
+    return UserSerializer.serialize(updatedUser);
+  }
+
+  @Put('me/onboarding')
+  @ApiResponse({ type: UserSerialized })
+  public async completeOnboarding(
+    @Body() dto: CompleteOnboardingBody,
+    @CurrentUserId() userId: string,
+  ): Promise<UserSerialized> {
+    await this.readClaimedUserOrThrow(userId);
+
+    const updatedUser = await this.userWriteService.update({
+      id: userId,
+      onboarding: {
+        ...(dto.role && { role: dto.role }),
+        ...(dto.source && { source: dto.source }),
+        completedAt: new Date(),
+      },
+    });
+
+    return UserSerializer.serialize(updatedUser);
   }
 
   @Public()
@@ -60,7 +105,12 @@ export class UserCoreController {
       accountClaimStatus: AccountClaimStatus.Anonymous,
     });
 
-    const token = await this.jwtService.sign({ id: user.id });
+    const { removeAfterHours } = getEnvConfig().anonymousAccounts;
+
+    const token = await this.jwtService.sign(
+      { id: user.id },
+      { expiresIn: `${removeAfterHours}h` },
+    );
 
     const cluster = await this.clusterWriteService.create({
       name: 'My first cluster',
@@ -76,5 +126,15 @@ export class UserCoreController {
       cluster: ClusterSerializer.serialize(cluster),
       token,
     };
+  }
+
+  private async readClaimedUserOrThrow(userId: string): Promise<UserNormalized> {
+    const user = await this.userReadService.readByIdOrThrow(userId);
+
+    if (user.accountClaimStatus !== AccountClaimStatus.Claimed) {
+      throw new ForbiddenException('Anonymous users cannot do this');
+    }
+
+    return user;
   }
 }

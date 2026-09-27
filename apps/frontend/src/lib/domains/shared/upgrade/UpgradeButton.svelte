@@ -1,9 +1,9 @@
 <script lang="ts">
-  import SkyBackground from '$lib/domains/shared/upgrade/SkyBackground.svelte';
   import { type UpgradeSource } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
-  import { getContext, onDestroy, type Snippet } from 'svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
+  import { getContext, type Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import type { PostHog } from 'posthog-js';
 
@@ -22,14 +22,6 @@
 
   const posthog = getContext<PostHog>('posthog');
 
-  const onMouseEnter = (): void => {
-    upgradeState.showBackground();
-  };
-
-  const onMouseLeave = (): void => {
-    upgradeState.hideBackground();
-  };
-
   const onClick = (): void => {
     onClickProp?.();
     posthog?.capture('upgrade_button_clicked', {
@@ -38,23 +30,10 @@
     });
     upgradeState.openModal(source);
   };
-
-  onDestroy(() => {
-    upgradeState.hideBackground();
-  });
 </script>
 
-<div class={['btn-wrapper z-10 w-full rounded-[13px] p-[1px]', className]}>
-  <button
-    class="btn btn-neutral relative w-full overflow-hidden"
-    onclick={onClick}
-    onmouseenter={onMouseEnter}
-    onmouseleave={onMouseLeave}
-  >
-    <div class="absolute h-full w-full overflow-hidden">
-      <SkyBackground comets={false} density={0.1} speed={10} />
-    </div>
-
+<div class={['btn-wrapper z-10 w-full rounded-full p-[1px]', className]}>
+  <Button variant="neutral" block class="overflow-hidden" onclick={onClick}>
     <div class="relative z-10 flex w-full items-center justify-between gap-2">
       {#if children}
         {@render children?.()}
@@ -64,7 +43,7 @@
 
       <RocketIcon class="inline h-4 w-4" />
     </div>
-  </button>
+  </Button>
 </div>
 
 <style>
@@ -76,16 +55,16 @@
 
   .btn-wrapper {
     --bg-background: #bada55;
-    --clr-card: rgba(255, 255, 255, 0.1);
+    --clr-card: var(--color-neutral-800);
     --clr-1: transparent;
     --clr-2: transparent;
-    --clr-3: rgba(255, 255, 255, 0.4);
+    --clr-3: var(--color-neutral-500);
 
     position: relative;
     background-color: var(--clr-card);
 
     &:hover {
-      --clr-3: var(--color-primary);
+      --clr-3: var(--color-brand);
     }
   }
 
