@@ -1,4 +1,5 @@
 import { resolve } from '$app/paths';
+import { page } from '$app/state';
 import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
 import {
   sessionService,
@@ -14,6 +15,11 @@ import type { OAuthFailureReason } from '$lib/domains/auth/domain/oauth-popup-me
 import type { OAuthProvider } from '$lib/domains/auth/domain/oauth-provider';
 import { needsOnboarding } from '$lib/domains/onboarding/application/needs-onboarding';
 import { createLogger } from '$lib/domains/shared/logger';
+import {
+  PAYMENT_PLANS,
+  trialTier,
+} from '$lib/domains/shared/payment-plans.const';
+import type { UserTier } from '$lib/domains/shared/types';
 import type { User } from '$lib/domains/shared/user/domain/user';
 import { posthog } from 'posthog-js';
 import { match } from 'ts-pattern';
@@ -59,6 +65,16 @@ class HeroClaimState {
     return this._error;
   }
 
+  public get trialTier(): UserTier | undefined {
+    return trialTier(page.url.searchParams.get('tier'));
+  }
+
+  public get trialName(): string | undefined {
+    const tier = this.trialTier;
+
+    return PAYMENT_PLANS.find((plan) => plan.tier === tier)?.name;
+  }
+
   public get closable(): boolean {
     return this._step.kind !== 'busy';
   }
@@ -99,7 +115,11 @@ class HeroClaimState {
       return;
     }
 
-    const handle = startOAuthPopup({ provider, flow: 'claim' });
+    const handle = startOAuthPopup({
+      provider,
+      flow: 'claim',
+      tier: this.trialTier,
+    });
 
     this._handle = handle;
     this._error = null;
@@ -217,6 +237,7 @@ class HeroClaimState {
       await startOAuthLogin({
         provider,
         flow: 'claim',
+        tier: this.trialTier,
         next_url: `/app/clusters/${preview.clusterId}/${preview.projectId}/monitoring?claimed=1`,
       });
       anonymousPreviewState.handOffPreview();

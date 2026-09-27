@@ -65,8 +65,18 @@
     return preview.projectId;
   });
 
+  const pings = $derived(toChartPings(anonymousPreviewState.pings));
+  const status = $derived(getStatusFromPings(pings));
+  const alertMoment = $derived(
+    status === 'down' ? 'it is back up' : 'it goes down',
+  );
+  const claimLine = $derived(
+    heroClaim.trialName
+      ? `Claim this dashboard, then start your ${heroClaim.trialName} trial.`
+      : 'Claim this dashboard with a free account.',
+  );
+
   const live = $derived.by<LiveStatus>(() => {
-    const pings = toChartPings(anonymousPreviewState.pings);
     const last = pings.at(-1);
 
     if (!last) {
@@ -76,10 +86,12 @@
       };
     }
 
-    return match(getStatusFromPings(pings))
+    return match(status)
       .with('down', () => ({
         dotClass: 'bg-error',
-        text: `${host} is down · ${last.statusCode}`,
+        text: last.statusCode
+          ? `${host} is down · ${last.statusCode}`
+          : `${host} is not answering`,
       }))
       .with('degraded', () => ({
         dotClass: 'bg-warning',
@@ -281,8 +293,7 @@
       </h2>
 
       <p class="text-neutral-400 text-sm leading-relaxed text-pretty">
-        Claim this dashboard with a free account. We keep checking it and tell
-        you the moment it goes down.
+        {claimLine} We keep checking it and tell you the moment {alertMoment}.
       </p>
     </div>
 

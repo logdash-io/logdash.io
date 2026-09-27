@@ -7,6 +7,7 @@ import {
   type OAuthPopupMessage,
 } from '$lib/domains/auth/domain/oauth-popup-message';
 import { requestOAuthUrl } from '$lib/domains/auth/infrastructure/request-oauth-url';
+import type { UserTier } from '$lib/domains/shared/types';
 
 export type OAuthPopupOutcome =
   | { kind: 'signed-in' }
@@ -28,6 +29,7 @@ const POPUP_HEIGHT = 680;
 export function startOAuthPopup(dto: {
   provider: OAuthProvider;
   flow: 'login' | 'claim';
+  tier?: UserTier;
   prepare?: () => Promise<void>;
 }): OAuthPopupHandle {
   const popup = window.open('', POPUP_NAME, popupFeatures());
@@ -78,6 +80,7 @@ export function startOAuthPopup(dto: {
       const url = await requestOAuthUrl({
         provider: dto.provider,
         flow: dto.flow,
+        tier: dto.tier,
         popup: true,
       });
 

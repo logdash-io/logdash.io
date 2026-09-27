@@ -1,6 +1,6 @@
 import type { Pathname } from '$app/types';
 import { comparisons } from '$lib/landing/compare/compare.data';
-import { HERO_ID } from '$lib/landing/hero/hero-anchors';
+import { HERO_ID, HERO_URL_INPUT_ID } from '$lib/landing/hero/hero-anchors';
 
 export type NavMenuKey = 'product' | 'resources';
 
@@ -11,7 +11,6 @@ export type NavPath =
   | '/features/logging'
   | '/features/metrics'
   | '/pricing'
-  | '/app/quick-setup'
   | '/docs'
   | '/docs/sdks'
   | '/docs/self-hosting'
@@ -135,7 +134,7 @@ export const NAV_PANELS: Record<NavMenuKey, NavPanel> = {
     footer: {
       badge: 'New',
       text: 'Monitor any URL without an account',
-      cta: { ...to('/app/quick-setup'), label: 'Start monitoring' },
+      cta: { ...to('/', `#${HERO_URL_INPUT_ID}`), label: 'Start monitoring' },
     },
   },
   resources: {

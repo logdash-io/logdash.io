@@ -5,6 +5,7 @@ export type ChartPing = {
   createdAt: string;
   statusCode: number;
   responseTimeMs: number;
+  message?: string;
 };
 
 export type MonitorStatus = ReturnType<typeof getStatusFromPings>;
@@ -15,6 +16,7 @@ export function toChartPings(pings: HttpPing[]): ChartPing[] {
       createdAt: new Date(ping.createdAt).toISOString(),
       statusCode: ping.statusCode,
       responseTimeMs: ping.responseTimeMs,
+      message: ping.message,
     }))
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
@@ -30,6 +32,35 @@ export function responseTimes(pings: ChartPing[]): number[] {
   return pings.map((ping) =>
     isHealthy(ping) ? Math.max(1, ping.responseTimeMs) : 0,
   );
+}
+
+export function noResponseReason(ping: ChartPing | undefined): string | null {
+  if (!ping || ping.statusCode) {
+    return null;
+  }
+
+  return ping.message ?? 'No response';
+}
+
+export function lastCheckLabel(pings: ChartPing[], now: number): string | null {
+  const last = pings.at(-1);
+
+  if (!last) {
+    return null;
+  }
+
+  const seconds = Math.max(
+    0,
+    Math.floor((now - Date.parse(last.createdAt)) / 1_000),
+  );
+
+  if (seconds < 5) {
+    return 'Just now';
+  }
+
+  return seconds < 60
+    ? `${seconds} s ago`
+    : `${Math.floor(seconds / 60)} min ago`;
 }
 
 /** Share of healthy checks, e.g. "100%" or "96.7%". Null before the first check. */

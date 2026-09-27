@@ -1,22 +1,8 @@
 <script lang="ts">
   import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
-  import { UserTier } from '$lib/domains/shared/types.js';
-  import { Button, Spinner } from '@logdash/hyper-ui/presentational';
-  import { runGithubLogin } from './run-github-login.js';
-
-  let loggingIn = $state(false);
-
-  const onSelectPlan = async (tier: UserTier): Promise<void> => {
-    loggingIn = true;
-
-    try {
-      await runGithubLogin(tier);
-    } catch (error) {
-      loggingIn = false;
-      console.error(error);
-    }
-  };
+  import { Button } from '@logdash/hyper-ui/presentational';
+  import { planHref } from './plan-href';
 </script>
 
 <ul class="bg-hairline grid grid-cols-1 gap-px lg:grid-cols-3">
@@ -58,13 +44,9 @@
         variant={plan.popular ? 'primary' : 'subtle'}
         block
         class="mt-8 h-11 font-medium"
-        disabled={loggingIn}
-        onclick={() => onSelectPlan(plan.tier)}
+        href={planHref(plan.tier)}
       >
         {plan.buttonText}
-        {#if loggingIn}
-          <Spinner size="xs" aria-hidden="true" />
-        {/if}
       </Button>
 
       <p class="text-neutral-500 mt-3 text-center text-sm">

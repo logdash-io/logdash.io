@@ -29,15 +29,15 @@
   const { source, compact = false }: Props = $props();
 
   /**
-   * The full question needs ~183px and the field only offers ~149px next to
-   * the button on a 390px screen, so the narrow phrasing takes over there
+   * The full question needs ~183px and the field only offers ~115px next to
+   * the button on a 360px screen, so a short example address takes over there
    * rather than letting the placeholder clip mid-word. Both lines sit in the
    * markup and a breakpoint shows one, over a transparent native placeholder
    * that keeps `:placeholder-shown` working, so the server and the client
    * render the same text and nothing swaps after hydration.
    */
-  const PLACEHOLDER = 'What’s your website url?';
-  const PLACEHOLDER_NARROW = 'Your website url?';
+  const PLACEHOLDER = 'What’s your website URL?';
+  const PLACEHOLDER_NARROW = 'yourapp.com';
 
   const SHAKE_DURATION_MS = 450;
   const SHAKE_OFFSETS_PX = [0, -5, 4, -2, 0];
@@ -59,6 +59,10 @@
 
     if (submitted && !url) {
       url = submitted;
+    }
+
+    if (!compact && page.url.hash === `#${HERO_URL_INPUT_ID}`) {
+      input?.focus({ preventScroll: true });
     }
   });
 
@@ -171,7 +175,7 @@
       <input
         bind:this={input}
         class={[
-          'peer selection:bg-neutral-700 w-full bg-transparent pr-2 pl-3 outline-none placeholder:text-transparent disabled:opacity-60',
+          'peer selection:bg-neutral-700 w-full scroll-mt-[100vh] bg-transparent pr-2 pl-3 outline-none placeholder:text-transparent disabled:opacity-60',
           compact ? 'h-9 text-base' : 'h-11 text-base sm:text-lg',
         ]}
         id={compact ? undefined : HERO_URL_INPUT_ID}

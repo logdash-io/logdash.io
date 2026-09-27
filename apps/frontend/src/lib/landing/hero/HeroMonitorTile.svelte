@@ -12,6 +12,8 @@
   import { heroClaim } from './hero-claim.svelte';
   import {
     checkIntervalLabel,
+    lastCheckLabel,
+    noResponseReason,
     responseTimes,
     toChartPings,
     uptimeLabel,
@@ -29,6 +31,7 @@
   const CHART_WIDTH = 240;
   const CHART_HEIGHT = 56;
   const CHART_SWAP_MS = 240;
+  const CLOCK_TICK_MS = 1_000;
 
   const CREATING_STEPS: { key: AnonymousStartStep; label: string }[] = [
     { key: 'account', label: 'Creating your account' },
@@ -37,6 +40,7 @@
   ];
 
   let isOpening = $state(false);
+  let now = $state(Date.now());
 
   const phase = $derived(anonymousPreviewState.phase);
 
@@ -46,6 +50,7 @@
   );
   const previewHost = $derived(anonymousPreviewState.previewHost ?? 'your app');
   const previewStats = $derived(statsFor(previewPings));
+  const previewFailure = $derived(noResponseReason(previewPings.at(-1)));
   const claimable = $derived(heroClaim.eligible);
 
   const demoPings = $derived(toChartPings(anonymousPreviewState.demo.pings));
@@ -59,12 +64,24 @@
     ),
   );
 
+  $effect(() => {
+    const timer = setInterval(() => {
+      now = Date.now();
+    }, CLOCK_TICK_MS);
+
+    return () => clearInterval(timer);
+  });
+
   function statsFor(pings: ChartPing[]): TileStat[] {
-    const last = pings.at(-1) ?? null;
+    const last = pings.at(-1);
+    const answered = last?.statusCode ? last : null;
 
     return [
-      { label: 'Response', value: last ? `${last.responseTimeMs} ms` : '--' },
-      { label: 'Status', value: last ? `${last.statusCode}` : '--' },
+      {
+        label: 'Response',
+        value: answered ? `${answered.responseTimeMs} ms` : '--',
+      },
+      { label: 'Status', value: answered ? `${answered.statusCode}` : '--' },
       { label: 'Uptime', value: uptimeLabel(pings) ?? '--' },
     ];
   }
@@ -169,19 +186,25 @@
   {@render historyBar(
     demoPings,
     checkingLabel(demoPings),
-    demoPings.length ? 'Now' : 'Loading checks',
+    lastCheckLabel(demoPings, now) ?? 'Loading checks',
   )}
 {/snippet}
 
 {#snippet previewingTile()}
   {@render tileHeader('Your live monitor', previewHost, previewStatus)}
 
+  {#if previewFailure}
+    <p class="text-error -mt-2 text-sm text-pretty" role="status">
+      {previewFailure}
+    </p>
+  {/if}
+
   {@render tileStats(previewStats)}
 
   {@render historyBar(
     previewPings,
     checkingLabel(previewPings),
-    previewPings.length ? 'Now' : 'Waiting for the first check',
+    lastCheckLabel(previewPings, now) ?? 'Waiting for the first check',
   )}
 
   {@render previewActions()}

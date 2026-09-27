@@ -291,14 +291,6 @@ test.describe('anonymous landing flow', () => {
     expect(stored?.clusterId).toBeTruthy();
   });
 
-  test('check 9a: quick setup with a session redirects to the clusters list', async () => {
-    await page.goto('/app/quick-setup');
-
-    await page.waitForURL(/\/app\/clusters/, { timeout: 30_000 });
-
-    expect(page.url()).toContain('/app/clusters');
-  });
-
   test('check 11: the claim card signs in and onboards inside the dashboard, then opens it', async () => {
     await page.goto('/');
 
@@ -365,27 +357,7 @@ test.describe('anonymous landing flow', () => {
   });
 });
 
-test.describe('quick setup and expiry without a session', () => {
-  test.describe.configure({ mode: 'serial' });
-
-  test('check 9b: quick setup without a session creates a fresh dashboard', async ({
-    page,
-  }) => {
-    await page.goto('/app/quick-setup');
-
-    const createButton = page.getByRole('button', {
-      name: 'Create your dashboard',
-    });
-
-    await expect(createButton).toBeVisible({ timeout: 30_000 });
-
-    await createButton.click();
-
-    await page.waitForURL(/\/app\/clusters\/[^/]+\/[^/]+/, { timeout: 30_000 });
-
-    expect(page.url()).toMatch(/\/app\/clusters\/[^/]+\/[^/]+/);
-  });
-
+test.describe('expiry without a session', () => {
   test('check 10: an expired token redirects to the auth page', async ({
     page,
     context,
@@ -420,5 +392,124 @@ test.describe('quick setup and expiry without a session', () => {
         'Your temporary dashboard expired. Start a new one or sign in.',
       ),
     ).toBeVisible();
+  });
+});
+
+test.describe('first check and the way in', () => {
+  test('check 6: an address that does not resolve says why it is down', async ({
+    page,
+  }) => {
+    const host = 'logdash-e2e.invalid';
+
+    await page.goto('/');
+    await startMonitoring(page, `https://${host}`);
+    await expectFullScreen(page, host);
+
+    const tile = heroTile(page);
+    const card = claimCard(page);
+
+    await expect(
+      tile.getByText('Hostname does not resolve to a public address'),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(card.getByText(`${host} is not answering`)).toBeVisible();
+    await expect(card).toContainText('tell you the moment it is back up.');
+  });
+
+  test('check 7: Start monitoring in the nav puts the cursor in the hero field', async ({
+    page,
+  }) => {
+    const field = page.locator('#hero-url-input');
+
+    await page.goto('/pricing');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('button', { name: 'Product' }).click();
+    await page.getByRole('link', { name: 'Start monitoring' }).click();
+
+    await expect(page).toHaveURL('/#hero-url-input');
+    await expect(field).toBeFocused();
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.evaluate(() => window.scrollTo(0, 2_000));
+    await page.getByRole('button', { name: 'Product' }).click();
+    await page.getByRole('link', { name: 'Start monitoring' }).click();
+
+    await expect(field).toBeFocused();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  });
+
+  test('check 8: every way in lands on the same URL field', async ({
+    page,
+  }) => {
+    const field = page.locator('#hero-url-input');
+
+    await page.goto('/app/quick-setup');
+    await expect(page).toHaveURL('/#hero-url-input');
+    await expect(field).toBeFocused();
+
+    await page.goto('/vs/uptime-robot');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('link', { name: 'Start free' }).first().click();
+    await expect(page).toHaveURL('/#hero-url-input');
+    await expect(field).toBeFocused();
+
+    await page.goto('/pricing');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('link', { name: 'Select Hobby' }).first().click();
+    await expect(page).toHaveURL('/#hero-url-input');
+    await expect(field).toBeFocused();
+
+    await page.goto('/app/auth');
+    await page
+      .getByRole('link', { name: 'New here? Start with your website URL' })
+      .click();
+    await expect(page).toHaveURL('/#hero-url-input');
+    await expect(field).toBeFocused();
+  });
+
+  test('check 9: a trial from pricing runs the same flow and carries the plan into the claim', async ({
+    page,
+  }) => {
+    await page.goto('/pricing');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('link', { name: 'Start free trial' }).last().click();
+
+    const trialHint = page.getByText(
+      'Your Pro trial starts when you claim the dashboard.',
+    );
+
+    await expect(page).toHaveURL('/?tier=pro#hero-url-input');
+    await expect(trialHint).toBeVisible();
+
+    await page.locator('nav a[href="/"]').first().click();
+    await expect(page).toHaveURL('/');
+    await expect(trialHint).toBeHidden();
+
+    await page.goBack();
+    await expect(trialHint).toBeVisible();
+
+    await startMonitoring(page, 'https://example.com');
+
+    const card = claimCard(page);
+
+    await expect(card).toContainText('then start your Pro trial.', {
+      timeout: 30_000,
+    });
+
+    await page.route('**/app/api/auth/oauth-start', (route) =>
+      route.fulfill({
+        json: { url: '/app/auth/popup?status=error&reason=login-failed' },
+      }),
+    );
+
+    const oauthStart = page.waitForRequest('**/app/api/auth/oauth-start');
+
+    await card.getByRole('button', { name: 'Continue with GitHub' }).click();
+
+    expect((await oauthStart).postDataJSON()).toMatchObject({
+      provider: 'github',
+      flow: 'claim',
+      tier: 'pro',
+    });
   });
 });

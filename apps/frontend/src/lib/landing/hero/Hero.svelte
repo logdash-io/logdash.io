@@ -6,8 +6,14 @@
   import HeroStage from './HeroStage.svelte';
   import { HERO_ID } from './hero-anchors';
   import HeroUrlForm from './HeroUrlForm.svelte';
+  import { heroClaim } from './hero-claim.svelte';
+
+  // `/` is prerendered, so the `?tier` query is only readable once mounted
+  let mounted = $state(false);
+  const trialName = $derived(mounted ? heroClaim.trialName : undefined);
 
   onMount(() => {
+    mounted = true;
     anonymousPreviewState.init();
 
     return () => {
@@ -57,6 +63,13 @@
 
     <div class="mt-8 w-full max-w-xl">
       <HeroUrlForm source="hero" />
+
+      {#if trialName}
+        <p class="text-neutral-400 mt-3 pl-5 text-sm text-pretty">
+          Add your website first. Your {trialName} trial starts when you claim the
+          dashboard.
+        </p>
+      {/if}
     </div>
   </header>
 

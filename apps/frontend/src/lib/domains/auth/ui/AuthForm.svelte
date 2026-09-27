@@ -12,6 +12,7 @@
   import GoogleIcon from '$lib/domains/shared/icons/GoogleIcon.svelte';
   import GitHubIcon from '$lib/domains/shared/icons/GitHubIcon.svelte';
   import type { UserTier } from '$lib/domains/shared/types.js';
+  import { HERO_URL_INPUT_ID } from '$lib/landing/hero/hero-anchors';
   import {
     Alert,
     Button,
@@ -59,7 +60,7 @@
   const heading = $derived(
     match(mode)
       .with('claim', () => 'Keep your dashboard')
-      .with('login', () => 'Welcome to Logdash')
+      .with('login', () => 'Welcome back')
       .exhaustive(),
   );
   const subheading = $derived(
@@ -69,11 +70,7 @@
         () =>
           'Claim it with GitHub or Google. Your monitors, logs and metrics stay.',
       )
-      .with(
-        'login',
-        () =>
-          'Continue with GitHub or Google. New here? We set up your account.',
-      )
+      .with('login', () => 'Sign in with GitHub or Google.')
       .exhaustive(),
   );
   const actionLabel = $derived(
@@ -213,13 +210,15 @@
       {/if}
 
       {#if mode === 'login'}
+        <!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus the hero hash -->
         <a
-          href={resolve('/app/quick-setup')}
+          href={`${resolve('/')}#${HERO_URL_INPUT_ID}`}
           data-posthog-id="auth-continue-anonymous-cta"
           class="text-neutral-500 hover:text-neutral-300 mt-6 text-sm transition-ink"
         >
-          Continue without an account
+          New here? Start with your website URL
         </a>
+        <!-- eslint-enable svelte/no-navigation-without-resolve -->
       {/if}
     </CardBody>
   </Card>

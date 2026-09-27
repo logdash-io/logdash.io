@@ -5,9 +5,9 @@ import { prefersReducedMotion } from '$lib/domains/shared/utils/scroll';
 
 /**
  * Same-page anchor links (`href="#id"`, or `/path#id` while on `/path`) inside
- * `node` scroll to their target smoothly and push the hash onto the history,
- * in place of the browser's instant jump. `scroll-margin` on the target still
- * applies.
+ * `node` scroll to their target smoothly, focus it when it can take focus, and
+ * push the hash onto the history, in place of the browser's instant jump.
+ * `scroll-margin` on the target still applies.
  */
 export const smoothAnchors: Action<HTMLElement> = (node) => {
   function onClick(event: MouseEvent): void {
@@ -26,6 +26,7 @@ export const smoothAnchors: Action<HTMLElement> = (node) => {
     target.scrollIntoView({
       behavior: prefersReducedMotion() ? 'instant' : 'smooth',
     });
+    target.focus({ preventScroll: true });
     // eslint-disable-next-line svelte/no-navigation-without-resolve -- same-page anchor
     pushState(anchor.hash, page.state);
   }

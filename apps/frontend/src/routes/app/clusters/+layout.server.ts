@@ -5,7 +5,7 @@ import {
   needsOnboarding,
   onboardingUrl,
 } from '$lib/domains/onboarding/application/needs-onboarding';
-import { logdashAPI } from '$lib/domains/shared/logdash.api.server.js';
+import { checkoutUrl } from '$lib/domains/shared/upgrade/checkout-url.server';
 import { UserTier } from '$lib/domains/shared/types.js';
 import { UserDataPreloader } from '$lib/domains/shared/user/infrastructure/data-preloaders/user.data-preloader';
 import {
@@ -31,13 +31,18 @@ export const load = async (
   }
 
   if (onboardingTier === UserTier.BUILDER || onboardingTier === UserTier.PRO) {
-    const link = await logdashAPI.stripe_checkout(
+    // cleared first: a checkout that fails must not fail every dashboard load
+    // for as long as the cookie lives
+    clear_onboarding_tier(event.cookies);
+
+    const url = await checkoutUrl(
       get_access_token(event.cookies),
       onboardingTier,
     );
-    clear_onboarding_tier(event.cookies);
 
-    return redirect(302, link.checkoutUrl);
+    if (url) {
+      redirect(302, url);
+    }
   }
 
   return {

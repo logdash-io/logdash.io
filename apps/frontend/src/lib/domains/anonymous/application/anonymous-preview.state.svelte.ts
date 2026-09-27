@@ -19,6 +19,7 @@ const logger = createLogger('anonymous-preview.state', false);
 
 const PREVIEW_STORAGE_KEY = 'logdash_anonymous_preview_v0';
 const PREVIEW_POLL_INTERVAL_MS = 5_000;
+const FIRST_CHECK_POLL_INTERVAL_MS = 1_000;
 const DEMO_POLL_INTERVAL_MS = 5_000;
 /** Metric history moves by the minute, so every 12th poll is enough. */
 const DEMO_SLOW_POLL_EVERY = 12;
@@ -83,6 +84,9 @@ class AnonymousPreviewState {
   private _demoTarget: DemoTarget | null = null;
   private _initialized = false;
   private _previewPollTimer: ReturnType<typeof setInterval> | null = null;
+  /** Polls can overlap at the fast rate, so an older answer must not win. */
+  private _pingsRequested = 0;
+  private _pingsApplied = 0;
   private _demoPollTimer: ReturnType<typeof setInterval> | null = null;
 
   public get phase(): AnonymousPreviewPhase {
@@ -309,10 +313,20 @@ class AnonymousPreviewState {
     }
 
     void this._refreshPings();
+    this._schedulePreviewPolls();
+  }
 
-    this._previewPollTimer = setInterval(() => {
-      void this._refreshPings();
-    }, PREVIEW_POLL_INTERVAL_MS);
+  private _schedulePreviewPolls(): void {
+    this._stopPreviewPolling();
+
+    this._previewPollTimer = setInterval(
+      () => {
+        void this._refreshPings();
+      },
+      this._pings.length
+        ? PREVIEW_POLL_INTERVAL_MS
+        : FIRST_CHECK_POLL_INTERVAL_MS,
+    );
   }
 
   private _stopPreviewPolling(): void {
@@ -331,6 +345,8 @@ class AnonymousPreviewState {
       return;
     }
 
+    const request = ++this._pingsRequested;
+
     try {
       const pings = await anonymousSessionService.readPings(
         preview.projectId,
@@ -338,11 +354,19 @@ class AnonymousPreviewState {
         preview.token,
       );
 
-      if (!this._isLivePreview(preview)) {
+      if (!this._isLivePreview(preview) || request < this._pingsApplied) {
         return;
       }
 
+      this._pingsApplied = request;
+
+      const isFirstCheck = !this._pings.length && pings.length > 0;
+
       this._pings = pings;
+
+      if (isFirstCheck && this._previewPollTimer) {
+        this._schedulePreviewPolls();
+      }
     } catch (error) {
       logger.debug('Failed to read the preview pings', error);
 

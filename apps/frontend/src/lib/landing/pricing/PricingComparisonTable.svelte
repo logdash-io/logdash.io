@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { resolve } from '$app/paths';
   import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
   import MinusIcon from '$lib/domains/shared/icons/MinusIcon.svelte';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { Button } from '@logdash/hyper-ui/presentational';
   import { FEATURES_COMPARISON } from './feature-comparison.config.js';
+  import { planHref } from './plan-href';
 
   const LABEL_CELL =
     'bg-surface-root px-4 text-left max-md:sticky max-md:left-0 max-md:z-10 max-md:shadow-[inset_-1px_0_0_var(--color-hairline)] sm:px-6 lg:px-10';
@@ -34,7 +34,7 @@
               {plan.price}
             </span>
             <Button
-              href={`${resolve('/app/auth')}?tier=${plan.tier}`}
+              href={planHref(plan.tier)}
               variant={plan.popular ? 'primary' : 'subtle'}
               size="sm"
               block

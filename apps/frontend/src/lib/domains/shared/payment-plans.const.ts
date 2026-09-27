@@ -92,3 +92,8 @@ export const PAYMENT_PLANS = [
     popular: true,
   },
 ] as const;
+
+export const trialTier = (
+  value: string | null,
+): UserTier.BUILDER | UserTier.PRO | undefined =>
+  value === UserTier.BUILDER || value === UserTier.PRO ? value : undefined;

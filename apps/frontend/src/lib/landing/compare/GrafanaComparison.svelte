@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { Button } from '@logdash/hyper-ui/presentational';
+  import { HERO_URL_INPUT_ID } from '$lib/landing/hero/hero-anchors';
   import ComparisonMark from './ComparisonMark.svelte';
   import {
     grafanaComparisonData,
@@ -26,8 +27,7 @@
       class="mt-4 flex flex-col items-center justify-center gap-4 sm:flex-row"
     >
       <Button
-        href={resolve('/app/quick-setup')}
-        rel="nofollow"
+        href={`${resolve('/')}#${HERO_URL_INPUT_ID}`}
         variant="primary"
         class="w-full sm:w-auto"
       >
@@ -288,8 +288,7 @@
       </span>
     </p>
     <Button
-      href={resolve('/app/quick-setup')}
-      rel="nofollow"
+      href={`${resolve('/')}#${HERO_URL_INPUT_ID}`}
       variant="primary"
       class="gap-2"
     >
