@@ -1,10 +1,10 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { STRIPE_LOGGER } from '../../shared/logdash/logdash-tokens';
 import Stripe from 'stripe';
 import { UserReadService } from '../../user/read/user-read.service';
 import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.enum';
-import { UserTier } from '../../user/core/enum/user-tier.enum';
+import { paidTiers, UserTier } from '../../user/core/enum/user-tier.enum';
 import { getEnvConfig } from '../../shared/configs/env-configs';
 import { mapTierToPriceId } from './stripe-mapper';
 
@@ -34,6 +34,16 @@ export class StripeCheckoutService {
         userId: dto.userId,
       });
       throw new ForbiddenException('Claim your account before subscribing');
+    }
+
+    // a second checkout would open a second subscription; paid plans change
+    // through change_paid_plan instead
+    if (paidTiers.includes(user.tier)) {
+      this.logger.warn(`User already on a paid plan while trying to initiate stripe checkout`, {
+        userId: dto.userId,
+        tier: user.tier,
+      });
+      throw new ConflictException('You already have a paid plan, change it instead');
     }
 
     let checkoutSession: Stripe.Checkout.Session;

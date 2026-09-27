@@ -228,6 +228,25 @@ describe('StripeController (writes)', () => {
         'Claim your account before subscribing',
       );
     });
+
+    it.each([UserTier.EarlyBird, UserTier.Builder, UserTier.Pro])(
+      'refuses a second subscription for a %s user',
+      async (userTier) => {
+        // given
+        const { token } = await bootstrap.utils.generalUtils.setupClaimed({ userTier });
+
+        // when
+        const response = await request(bootstrap.app.getHttpServer())
+          .get(`/payments/stripe/checkout?tier=${UserTier.Pro}`)
+          .set('Authorization', `Bearer ${token}`);
+
+        // then
+        expect(response.status).toBe(409);
+        expect((response.body as ErrorResponse).message).toBe(
+          'You already have a paid plan, change it instead',
+        );
+      },
+    );
   });
 
   describe('POST /payments/stripe/change_paid_plan', () => {
