@@ -1,14 +1,12 @@
 <script lang="ts">
-  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import type { PingBucketPeriod } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 
   interface Props {
     currentRange: PingBucketPeriod;
-    canSwitchTabs: boolean;
     onRangeChange: (range: PingBucketPeriod) => void;
   }
 
-  let { currentRange, canSwitchTabs, onRangeChange }: Props = $props();
+  let { currentRange, onRangeChange }: Props = $props();
 
   const hourlyOption: PingBucketPeriod = '90h';
   const dailyOption: PingBucketPeriod = '90d';
@@ -18,14 +16,6 @@
   <div
     role="tablist"
     class={['text-neutral-200 rounded-lg font-mono shadow-none']}
-    onclickcapture={(e) => {
-      if (!canSwitchTabs) {
-        e.preventDefault();
-        e.stopPropagation();
-        upgradeState.openModal();
-        return;
-      }
-    }}
   >
     <button
       role="tab"

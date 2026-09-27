@@ -1,6 +1,5 @@
 <script lang="ts">
   import { UptimeChart } from '@logdash/hyper-ui/features';
-  import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { MonitoringTimeRangeSelector } from '../../../presentational/monitoring/index.js';
   import type {
     PingBucket,
@@ -8,49 +7,32 @@
   } from '$lib/domains/app/projects/domain/monitoring/ping-bucket.js';
 
   type Props = {
-    uptime: number;
+    uptime: number | null;
     timeRange: PingBucketPeriod;
     pingBuckets: (PingBucket | null)[];
-    isPaid: boolean;
     onTimeRangeChange: (range: PingBucketPeriod) => void;
   };
 
-  const { uptime, timeRange, pingBuckets, isPaid, onTimeRangeChange }: Props =
-    $props();
+  const { uptime, timeRange, pingBuckets, onTimeRangeChange }: Props = $props();
 
   const uptimeLabel = $derived(timeRange === '90h' ? '90-hour' : '90-day');
   const timeLabel = $derived(timeRange === '90h' ? 'hours ago' : 'days ago');
 </script>
 
 <div class="w-full p-0 text-sm">
-  <div class="relative w-full px-6 pb-6">
-    {#if !isPaid}
-      <div class="absolute inset-0 z-10 -mt-6 flex items-center justify-center">
-        <div
-          class="text-brand flex h-full w-full items-center justify-center bg-gradient-to-b from-transparent via-surface-elevated/60 to-transparent backdrop-blur-[2px] px-4 py-2"
-        >
-          <div class="w-fit">
-            <UpgradeButton source="monitor-historical-uptime">
-              Unlock historical uptime with Pro plan
-            </UpgradeButton>
-          </div>
-        </div>
-      </div>
-    {/if}
-
+  <div class="w-full px-6 pb-6">
     <div class="mb-2 flex flex-wrap items-center justify-between gap-6 text-sm">
       <div class="flex items-center gap-2">
         <span class="text-neutral-300">
           {uptimeLabel} Uptime:
           <span class="font-mono font-medium text-fg-default">
-            {uptime?.toFixed(2)}%
+            {uptime === null ? '--' : `${uptime.toFixed(2)}%`}
           </span>
         </span>
       </div>
 
       <MonitoringTimeRangeSelector
         currentRange={timeRange}
-        canSwitchTabs={isPaid}
         onRangeChange={onTimeRangeChange}
       />
     </div>

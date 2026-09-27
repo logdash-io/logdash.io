@@ -11,7 +11,6 @@ import type {
 } from '$lib/domains/app/projects/domain/monitoring/http-ping.js';
 import { httpClient } from '$lib/domains/shared/http/http-client.js';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 import {
   monitoringService,
   type CreateMonitorDto,
@@ -244,21 +243,7 @@ class MonitoringState {
     return this._pingBuckets[monitorId] || [];
   }
 
-  getMockedPingBuckets(): (PingBucket | null)[] {
-    const buckets: (PingBucket | null)[] = [];
-    for (let i = 0; i < 200; i++) {
-      buckets.push(null);
-    }
-    return buckets;
-  }
-
   async loadPingBuckets(monitorId: string): Promise<void> {
-    // Historical uptime is a paid feature; asking for it on a free plan only
-    // earns a 403 behind the upgrade overlay.
-    if (!userState.isPaid) {
-      return;
-    }
-
     this._timeRange = this._loadTimeRangePreference();
     try {
       const response = await monitoringService.getPingBuckets(
@@ -280,19 +265,10 @@ class MonitoringState {
     await Promise.allSettled(promises);
   }
 
-  calculateUptime(monitorId: string): number {
-    const buckets = this.getPingBuckets(monitorId);
-    if (!buckets.length) {
-      return 0;
-    }
-
-    const validBuckets = buckets.filter(
+  calculateUptime(monitorId: string): number | null {
+    const validBuckets = this.getPingBuckets(monitorId).filter(
       (bucket): bucket is PingBucket => bucket !== null,
     );
-
-    if (!validBuckets.length) {
-      return 0;
-    }
 
     const totalSuccess = validBuckets.reduce(
       (sum, bucket) => sum + bucket.successCount,
@@ -305,7 +281,7 @@ class MonitoringState {
     const totalPings = totalSuccess + totalFailure;
 
     if (totalPings === 0) {
-      return 0;
+      return null;
     }
 
     return (totalSuccess / totalPings) * 100;

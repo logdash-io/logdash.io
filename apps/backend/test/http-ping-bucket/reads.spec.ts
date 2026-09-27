@@ -5,7 +5,6 @@ import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { BucketsResponse } from '../../src/http-ping-bucket/core/types/buckets.response';
-import { ErrorResponse } from '../utils/error-response';
 
 describe('Http Ping Bucket(reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -39,7 +38,7 @@ describe('Http Ping Bucket(reads)', () => {
       expect(response.status).toBe(403);
     });
 
-    it('forbids access for free tier', async () => {
+    it('allows access for free tier', async () => {
       // given
       const setup = await bootstrap.utils.generalUtils.setupClaimed({
         userTier: UserTier.Free,
@@ -52,14 +51,12 @@ describe('Http Ping Bucket(reads)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .get(`/monitors/${monitor.id}/http_ping_buckets?period=24h`)
+        .get(`/monitors/${monitor.id}/http_ping_buckets?period=90d`)
         .set('Authorization', `Bearer ${setup.token}`);
 
       // then
-      expect(response.status).toBe(403);
-      expect((response.body as ErrorResponse).message).toBe(
-        'Buckets are not allowed for this project',
-      );
+      expect(response.status).toBe(200);
+      expect((response.body as BucketsResponse).buckets).toHaveLength(90);
     });
 
     it('is not found for non existent monitor', async () => {

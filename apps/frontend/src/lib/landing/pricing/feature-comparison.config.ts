@@ -92,7 +92,7 @@ export const FEATURES_COMPARISON = {
         },
         {
           name: 'Historical uptime charts',
-          [UserTier.FREE]: false,
+          [UserTier.FREE]: true,
           [UserTier.BUILDER]: true,
           [UserTier.PRO]: true,
         },

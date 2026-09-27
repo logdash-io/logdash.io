@@ -5,7 +5,6 @@
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
-  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { logger } from '$lib/domains/shared/logger';
   import { onMount, untrack } from 'svelte';
   import MonitoringHeader from './monitoring/MonitoringHeader.svelte';
@@ -47,18 +46,9 @@
   });
 
   const status = $derived(getStatusFromPings(pings));
-  const isPaid = $derived(userState.isPaid);
   const timeRange = $derived(monitoringState.timeRange);
-
-  const pingBuckets = $derived(
-    isPaid
-      ? (monitoringState.getPingBuckets(monitorId) ?? [])
-      : monitoringState.getMockedPingBuckets(),
-  );
-
-  const uptime = $derived(
-    isPaid ? (monitoringState.calculateUptime(monitorId) ?? 0) : 98.5,
-  );
+  const pingBuckets = $derived(monitoringState.getPingBuckets(monitorId));
+  const uptime = $derived(monitoringState.calculateUptime(monitorId));
 
   const formattedPings = $derived(
     pings.map((ping) => ({
@@ -95,7 +85,7 @@
   });
 
   $effect(() => {
-    if (!projectMonitor || !projectId || !isPaid) {
+    if (!projectMonitor || !projectId) {
       logger.warn('Skipping ping buckets sync.');
       return;
     }
@@ -139,13 +129,7 @@
   </button>
 
   {#if expanded}
-    <UptimeSection
-      {uptime}
-      {timeRange}
-      {pingBuckets}
-      {isPaid}
-      {onTimeRangeChange}
-    />
+    <UptimeSection {uptime} {timeRange} {pingBuckets} {onTimeRangeChange} />
 
     <div
       class="flex w-full flex-col divide-y divide-hairline border-t border-border-default"

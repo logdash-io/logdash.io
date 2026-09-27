@@ -17,7 +17,6 @@ export type UpgradeSource =
   | 'cluster-invite-limit'
   | 'logs-filter-dropdown'
   | 'logs-date-range'
-  | 'monitor-historical-uptime'
   | 'custom-statuspage-domain'
   | 'unknown';
 
