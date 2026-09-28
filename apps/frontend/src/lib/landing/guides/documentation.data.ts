@@ -260,7 +260,7 @@ npm run dev`,
       { type: 'heading', text: 'Add the component' },
       {
         type: 'paragraph',
-        text: 'The component is one file that becomes part of your code: an overall status banner, a row per monitor with its uptime, and 90 days of history bars with a tooltip. It is styled with Tailwind and the shadcn/ui CSS variables, such as `bg-background`, `text-muted-foreground` and `border`, so it takes on your theme. Its only dependency is `@logdash/status`.',
+        text: 'The component is one file that becomes part of your code: an overall status banner, a row per monitor with its uptime, and 90 days of history bars with a tooltip. It is styled with Tailwind and the shadcn/ui CSS variables, such as `text-foreground`, `text-muted-foreground` and `border-border`, so it takes on your theme. Its only dependency is `@logdash/status`.',
       },
       {
         type: 'code',

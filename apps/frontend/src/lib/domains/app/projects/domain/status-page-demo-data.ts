@@ -45,7 +45,8 @@ const DEMO_MONITORS: DemoMonitor[] = [
 export function generateDemoStatusPage(): StatusPage {
   const now = Math.floor(Date.now() / MINUTE_MS) * MINUTE_MS;
   const today = Math.floor(now / DAY_MS) * DAY_MS;
-  const checksToday = (now - today) / MINUTE_MS;
+  // A fixed half day, so the prerendered page and the browser render the same numbers.
+  const checksToday = CHECKS_PER_DAY / 2;
   const monitors = DEMO_MONITORS.map((monitor, index) =>
     createMonitor(monitor, createRandom(index + 1), now, today, checksToday),
   );

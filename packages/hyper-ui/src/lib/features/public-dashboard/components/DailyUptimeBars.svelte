@@ -157,17 +157,17 @@
     >
       <span class="text-sm font-medium">
         {formatUtcDate(shownBucket.timestamp)}
-        <span class="text-neutral-500 font-mono text-xs font-normal">UTC</span>
+        <span class="text-neutral-400 font-mono text-xs font-normal">UTC</span>
       </span>
       {#if uptime === null}
-        <span class="text-neutral-500 text-xs">No checks this day</span>
+        <span class="text-neutral-400 text-xs">No checks this day</span>
       {:else}
         <span class="text-neutral-300 flex items-center gap-2 text-xs tabular-nums">
           <span class={["size-1.5 shrink-0 rounded-full", dotColors[status]]}
           ></span>
           {formatUptime(uptime)} uptime
         </span>
-        <span class="text-neutral-500 text-xs tabular-nums">
+        <span class="text-neutral-400 text-xs tabular-nums">
           {details(shownBucket, " · ")}
         </span>
       {/if}
@@ -176,7 +176,7 @@
 </div>
 
 <div
-  class="text-neutral-600 mt-2 flex items-center justify-between font-mono text-xs"
+  class="text-neutral-500 mt-2 flex items-center justify-between font-mono text-xs"
 >
   <span>{buckets.length} days ago</span>
   <span>Today</span>

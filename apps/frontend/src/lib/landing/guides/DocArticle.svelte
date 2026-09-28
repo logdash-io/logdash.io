@@ -75,7 +75,9 @@
 -->
 <article class="flex w-full max-w-2xl flex-col">
   <header class="flex flex-col gap-3">
-    <h1 class="text-4xl font-medium tracking-[-0.03em]">{page.title}</h1>
+    <h1 class="text-4xl font-medium tracking-[-0.03em] text-balance">
+      {page.title}
+    </h1>
     <p class="text-neutral-400 text-lg leading-7">{page.description}</p>
   </header>
 

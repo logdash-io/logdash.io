@@ -36,7 +36,7 @@ export default async function Page() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:py-20">
-      <h1 className="sr-only">{data.name} status</h1>
+      <h1 className="sr-only">{data.name}</h1>
       <StatusPage
         statusPageId={statusPageId}
         baseUrl={baseUrl}
