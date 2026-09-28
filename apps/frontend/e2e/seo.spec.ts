@@ -221,6 +221,15 @@ test.describe('llms.txt and the markdown twins', () => {
       expect(markdown).toContain(`\nurl: ${sitemapUrls[index]}\n`);
       expect(markdown, `${twin} has no h1`).toMatch(/^# \S/m);
       expect(markdown, `${twin} links a relative URL`).not.toMatch(/\]\(\//);
+
+      const openingFences = (markdown.match(/^```.*$/gm) ?? []).filter(
+        (_, fence) => fence % 2 === 0,
+      );
+
+      expect(
+        openingFences,
+        `${twin} opens a code fence without a language`,
+      ).not.toContain('```');
     });
   });
 });
