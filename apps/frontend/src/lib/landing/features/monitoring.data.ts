@@ -6,9 +6,9 @@ export const monitoringPage: FeaturePageData = {
   meta: {
     title: 'Uptime monitoring with Telegram downtime alerts | Logdash',
     description:
-      'Uptime monitoring for your site and API. Checks as often as every 15 seconds, Telegram and webhook alerts, and a public status page. Start free, no signup.',
+      'Uptime monitoring for your site and API. Checks as often as every 15 seconds, Telegram and webhook alerts, and status pages with a public API. Start free.',
     keywords:
-      'uptime monitoring, website downtime alerts, telegram uptime alerts, webhook alerts, status page, custom domain status page, free uptime monitor, heartbeat monitoring',
+      'uptime monitoring, website downtime alerts, telegram uptime alerts, webhook alerts, status page, custom domain status page, status page api, headless status page, react status page, svelte status page, free uptime monitor, heartbeat monitoring',
   },
   h1: 'Uptime monitoring for SaaS founders.',
   h1Quiet: 'Your users shouldn’t be the alert.',
@@ -39,7 +39,7 @@ export const monitoringPage: FeaturePageData = {
     },
     {
       title: 'Public status pages',
-      body: 'A public page with live status and uptime history, so customers check it before they email you. On Pro it runs on your own domain.',
+      body: 'Live status and 90 days of uptime history on every plan, so customers check it before they email you. Use your own domain on Pro, or build the page yourself on the public API.',
     },
     {
       title: 'Response time history',
@@ -64,6 +64,16 @@ export const monitoringPage: FeaturePageData = {
         body: 'Add @logdash_uptime_bot to a chat and send it the passphrase, or paste a webhook URL. The next failed check sends the alert.',
       },
     ],
+  },
+  statusPages: {
+    title: 'Your status page, your brand.',
+    quiet: 'Or build one from scratch.',
+    description:
+      'Every status page has a public API. Add our React or Svelte component to your site and it takes on your colours, fonts and corners. Pick a theme to see it change.',
+    install: {
+      title: 'Add it with one command',
+      body: 'The command copies the component into your project, so the code is yours to change. It runs on @logdash/status, a typed client with React and Svelte hooks. Or deploy the Next.js starter as a site of its own.',
+    },
   },
   faq: [
     {
@@ -94,7 +104,17 @@ export const monitoringPage: FeaturePageData = {
     {
       question: 'Can my status page use my own domain?',
       answer:
-        'Yes, on the Pro plan. Add a CNAME record from a subdomain such as status.yourapp.com to statuspage.logdash.io and the status page is served there. Other plans publish it on a logdash.io link.',
+        'Yes, on the Pro plan. Add a CNAME record from a subdomain such as status.yourapp.com to statuspage.logdash.io and the status page is served there. Other plans publish it on a logdash.io link. A page you build on the status page API can live on any domain, on any plan.',
+    },
+    {
+      question: 'How much uptime history does the status page show?',
+      answer:
+        '90 days on every plan. Each monitor shows its uptime over the last 24 hours, 7, 30 and 90 days, and one bar per day with that day’s uptime, number of checks and average response time. Days are in UTC.',
+    },
+    {
+      question: 'Can I build my own status page?',
+      answer:
+        'Yes. Every public status page is also a JSON API, free and with no API key. Use @logdash/status for typed React and Svelte hooks, add our status page component with one command, or deploy the Next.js starter. The status page docs cover all three.',
     },
     {
       question: 'Do I need an account to start monitoring?',
@@ -112,6 +132,12 @@ export const monitoringPage: FeaturePageData = {
       title: 'Monitoring docs',
       description: 'How checks, uptime history, status pages and alerts work.',
       href: '/docs/monitoring',
+    },
+    {
+      title: 'Status page docs',
+      description:
+        'The status page API, the React and Svelte components and the Next.js starter.',
+      href: '/docs/status-pages',
     },
     {
       title: 'Health check endpoint guides',

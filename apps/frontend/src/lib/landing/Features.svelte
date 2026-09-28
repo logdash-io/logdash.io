@@ -35,6 +35,7 @@
   title="Status pages"
   body="Show customers you are up. Uptime history and response times on a page that lives on your own domain."
   href="/features/monitoring"
+  hash="status-pages"
   linkLabel="Explore status pages"
   posthogId="features-status-pages-cta"
   checks={[

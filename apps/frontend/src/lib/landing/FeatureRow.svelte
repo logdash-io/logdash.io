@@ -16,6 +16,7 @@
     title: string;
     body: string;
     href: FeatureRoute;
+    hash?: string;
     linkLabel: string;
     posthogId: string;
     checks: string[];
@@ -28,6 +29,7 @@
     title,
     body,
     href,
+    hash,
     linkLabel,
     posthogId,
     checks,
@@ -51,14 +53,16 @@
         {body}
       </p>
 
+      <!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus an optional section hash -->
       <a
-        href={resolve(href)}
+        href={hash ? `${resolve(href)}#${hash}` : resolve(href)}
         class="text-fg-default hover:text-neutral-400 focus-visible:outline-neutral-500 mt-5 inline-flex w-fit items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4"
         data-posthog-id={posthogId}
       >
         {linkLabel}
         <ArrowRightIcon class="size-4" />
       </a>
+      <!-- eslint-enable svelte/no-navigation-without-resolve -->
 
       <ul
         class="border-hairline mt-10 flex flex-col gap-3 border-t pt-6 lg:mt-auto"

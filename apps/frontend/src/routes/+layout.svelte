@@ -22,7 +22,7 @@
   import { atomOneDark } from 'svelte-highlight/styles';
   import '@fontsource-variable/inter/opsz.css';
   import '@fontsource-variable/geist-mono';
-  import '@logdash/hyper-ui/styles';
+  import '../app.css';
   import { installPressFeedback } from '@logdash/hyper-ui/utils/press';
 
   type Props = {
