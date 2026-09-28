@@ -105,10 +105,14 @@ jobs:
           name: status-package
           path: ${{ runner.temp }}/status
 
+      # setup-node v5 turns on caching for the root packageManager (pnpm),
+      # which this job does not install. The starter uses npm and has no
+      # lockfile to cache against.
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: 22.x
+          package-manager-cache: false
 
       # Installs @logdash/status from the tarball, the way a customer gets it
       # from npm. No lockfile is committed until the first npm release.
