@@ -5,7 +5,6 @@
 @import "./components.css";
 @import "./scrollbar.css";
 @import "./animations.css";
-@import "./third-party.css";
 
 @theme {
   --color-surface-root: var(--surface-root);
