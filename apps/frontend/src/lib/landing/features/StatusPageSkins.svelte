@@ -45,7 +45,7 @@
         foreground: '#f4f4f4',
         muted: '#1c1c1e',
         'muted-foreground': '#7f7f86',
-        popover: '#1c1c1e',
+        popover: '#161618',
         'popover-foreground': '#f4f4f4',
         border: '#222225',
         ring: '#9d9da3',
@@ -75,11 +75,11 @@
         background: '#f6f2ea',
         foreground: '#1f1a14',
         muted: '#ebe4d6',
-        'muted-foreground': '#7d7263',
+        'muted-foreground': '#6e6457',
         popover: '#fffcf6',
         'popover-foreground': '#1f1a14',
         border: '#e0d7c6',
-        ring: '#7d7263',
+        ring: '#6e6457',
       },
       radius: '0.125rem',
       font: SERIF,
@@ -91,11 +91,11 @@
         background: '#0c0f0c',
         foreground: '#d3e0cf',
         muted: '#161b16',
-        'muted-foreground': '#72816f',
+        'muted-foreground': '#7a8a77',
         popover: '#121712',
         'popover-foreground': '#d3e0cf',
         border: '#1f271f',
-        ring: '#72816f',
+        ring: '#7a8a77',
       },
       radius: '0rem',
       font: 'var(--font-mono)',
@@ -107,8 +107,8 @@
         foreground: '#ffffff',
         muted: '#3446e0',
         'muted-foreground': '#c5ccff',
-        popover: '#ffffff',
-        'popover-foreground': '#10194d',
+        popover: '#1a28a8',
+        'popover-foreground': '#ffffff',
         border: '#4556e6',
         ring: '#ffffff',
       },
@@ -165,7 +165,7 @@
       End: radios.length - 1,
     }[event.key];
 
-    if (target === undefined) return;
+    if (from === -1 || target === undefined) return;
 
     event.preventDefault();
     const next = (target + radios.length) % radios.length;

@@ -21,11 +21,12 @@
   }: Props = $props();
 </script>
 
+<!-- scroll-mt-16: an anchored section lands just under the 64px sticky nav, not beneath it. -->
 <section
   {id}
   class={[
     'border-hairline w-full',
-    { 'border-b': divider, 'border-t': dividerTop },
+    { 'border-b': divider, 'border-t': dividerTop, 'scroll-mt-16': id },
   ]}
 >
   <div class="mx-auto w-full max-w-landing lg:px-10">
