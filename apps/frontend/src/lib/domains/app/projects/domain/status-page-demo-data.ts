@@ -21,7 +21,7 @@ const DEMO_MONITORS: DemoMonitor[] = [
     name: 'API',
     latencyMs: 124,
     addedDaysAgo: DAYS,
-    failuresByDaysAgo: { 23: 262, 71: 4 },
+    failuresByDaysAgo: { 25: 262, 71: 4 },
     failedPingsAgo: [],
   },
   {

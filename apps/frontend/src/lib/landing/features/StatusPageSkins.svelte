@@ -1,120 +1,85 @@
 <script lang="ts">
+  import { replaceState } from '$app/navigation';
   import { resolve } from '$app/paths';
+  import { page } from '$app/state';
   import { generateDemoStatusPage } from '$lib/domains/app/projects/domain/status-page-demo-data';
+  import ChevronLeftIcon from '$lib/domains/shared/icons/ChevronLeftIcon.svelte';
+  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import CodeBlock from '$lib/landing/guides/blocks/CodeBlock.svelte';
   import LandingHeading from '$lib/landing/LandingHeading.svelte';
   import LandingSection from '$lib/landing/LandingSection.svelte';
   import StageLight from '$lib/landing/stage/StageLight.svelte';
-  import { statusPageView } from '@logdash/status/registry/svelte';
+  import type { Monitor } from '@logdash/status';
   import { ArrowRightIcon } from 'lucide-svelte';
-  import { tick } from 'svelte';
-  import { prefersReducedMotion } from 'svelte/motion';
+  import { onMount, type Component } from 'svelte';
   import type { FeaturePageData } from './feature-page';
+  import ArcadeSkin from './skins/ArcadeSkin.svelte';
+  import BananasSkin from './skins/BananasSkin.svelte';
+  import Desktop95Skin from './skins/Desktop95Skin.svelte';
+  import LensPage from './skins/LensPage.svelte';
+  import ReceiptSkin from './skins/ReceiptSkin.svelte';
+  import {
+    setLensHover,
+    type LensHover,
+    type SkinProps,
+  } from './skins/skin-data';
+  import StonksSkin from './skins/StonksSkin.svelte';
 
   type Props = {
     copy: NonNullable<FeaturePageData['statusPages']>;
   };
 
-  type Skin = {
+  type Lens = {
+    id: string;
     name: string;
-    colors: {
-      background: string;
-      foreground: string;
-      muted: string;
-      'muted-foreground': string;
-      popover: string;
-      'popover-foreground': string;
-      border: string;
-      ring: string;
-    };
-    radius: string;
-    font: string;
-    mono?: string;
+    tagline: string;
+    accent: string;
+    ink: string;
+    component: Component<SkinProps>;
   };
 
   const { copy }: Props = $props();
 
-  const SERIF =
-    "'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif";
-
-  const SKINS: Skin[] = [
+  const LENSES: Lens[] = [
     {
-      name: 'Logdash',
-      colors: {
-        background: '#101012',
-        foreground: '#f4f4f4',
-        muted: '#1c1c1e',
-        'muted-foreground': '#7f7f86',
-        popover: '#161618',
-        'popover-foreground': '#f4f4f4',
-        border: '#222225',
-        ring: '#9d9da3',
-      },
-      radius: '0.75rem',
-      font: 'var(--font-sans)',
+      id: 'bananas',
+      name: 'Bananas',
+      tagline: 'Uptime, measured in potassium.',
+      accent: '#ffe45c',
+      ink: '#3d2800',
+      component: BananasSkin,
     },
     {
-      name: 'Minimal',
-      colors: {
-        background: '#ffffff',
-        foreground: '#0a0a0b',
-        muted: '#f4f4f5',
-        'muted-foreground': '#71717a',
-        popover: '#ffffff',
-        'popover-foreground': '#0a0a0b',
-        border: '#e4e4e7',
-        ring: '#a1a1aa',
-      },
-      radius: '0.5rem',
-      font: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-      mono: "ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
+      id: 'receipt',
+      name: 'Receipt',
+      tagline: 'Itemised uptime. Keep it for your records.',
+      accent: '#d4162c',
+      ink: '#ffffff',
+      component: ReceiptSkin,
     },
     {
-      name: 'Editorial',
-      colors: {
-        background: '#f6f2ea',
-        foreground: '#1f1a14',
-        muted: '#ebe4d6',
-        'muted-foreground': '#6e6457',
-        popover: '#fffcf6',
-        'popover-foreground': '#1f1a14',
-        border: '#e0d7c6',
-        ring: '#6e6457',
-      },
-      radius: '0.125rem',
-      font: SERIF,
-      mono: SERIF,
+      id: '95',
+      name: '95',
+      tagline: 'It is now safe to turn off your pager.',
+      accent: '#008080',
+      ink: '#ffffff',
+      component: Desktop95Skin,
     },
     {
-      name: 'Terminal',
-      colors: {
-        background: '#0c0f0c',
-        foreground: '#d3e0cf',
-        muted: '#161b16',
-        'muted-foreground': '#7a8a77',
-        popover: '#121712',
-        'popover-foreground': '#d3e0cf',
-        border: '#1f271f',
-        ring: '#7a8a77',
-      },
-      radius: '0rem',
-      font: 'var(--font-mono)',
+      id: 'arcade',
+      name: 'Arcade',
+      tagline: 'Every failed check costs a heart.',
+      accent: '#ff2e4d',
+      ink: '#140e3c',
+      component: ArcadeSkin,
     },
     {
-      name: 'Bold',
-      colors: {
-        background: '#2436d9',
-        foreground: '#ffffff',
-        muted: '#3446e0',
-        'muted-foreground': '#c5ccff',
-        popover: '#1a28a8',
-        'popover-foreground': '#ffffff',
-        border: '#4556e6',
-        ring: '#ffffff',
-      },
-      radius: '1rem',
-      font: "'Avenir Next', Avenir, 'Segoe UI', 'Helvetica Neue', sans-serif",
-      mono: "'Avenir Next', Avenir, 'Segoe UI', 'Helvetica Neue', sans-serif",
+      id: 'stonks',
+      name: 'Stonks',
+      tagline: 'Uptime only goes up. Not financial advice.',
+      accent: '#00d26a',
+      ink: '#000000',
+      component: StonksSkin,
     },
   ];
 
@@ -129,59 +94,85 @@
     },
   ];
 
-  const demo = generateDemoStatusPage();
+  const SWIPE_DISTANCE = 40;
 
-  let selected = $state(0);
+  const generated = generateDemoStatusPage();
+  const demo = {
+    ...generated,
+    monitors: [...generated.monitors].sort(byUptime),
+  };
 
-  const skin = $derived(SKINS[selected]);
+  const hover = $state<LensHover>({ monitor: null, day: null });
 
-  function onSelect(index: number): void {
-    if (index === selected) return;
+  setLensHover(hover);
 
-    if (prefersReducedMotion.current || !document.startViewTransition) {
-      selected = index;
-      return;
-    }
+  let step = $state(0);
+  let animated = $state(false);
+  let swipeFrom: number | null = null;
 
-    document.startViewTransition(async () => {
-      selected = index;
-      await tick();
-    });
-  }
+  const active = $derived(lensAt(step));
+  const lens = $derived(LENSES[active]);
 
-  function onSkinKeydown(
-    event: KeyboardEvent & { currentTarget: HTMLElement },
-  ): void {
-    const radios = Array.from(
-      event.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]'),
+  onMount(() => {
+    const id = page.url.searchParams.get('skin');
+    const index = LENSES.findIndex((option) => option.id === id);
+
+    if (index > 0) step = index;
+
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        animated = true;
+      }),
     );
-    const from = radios.indexOf(event.target as HTMLElement);
-    const target = {
-      ArrowRight: from + 1,
-      ArrowDown: from + 1,
-      ArrowLeft: from - 1,
-      ArrowUp: from - 1,
-      Home: 0,
-      End: radios.length - 1,
-    }[event.key];
+  });
 
-    if (from === -1 || target === undefined) return;
-
-    event.preventDefault();
-    const next = (target + radios.length) % radios.length;
-    radios[next].focus();
-    onSelect(next);
+  function onPrevious(): void {
+    go(step - 1);
   }
 
-  function skinStyle({ colors, radius, font, mono }: Skin): string {
-    return [
-      ...Object.entries(colors).map(([name, value]) => `--${name}: ${value}`),
-      `--radius: ${radius}`,
-      '--radius-sm: max(0px, calc(var(--radius) - 4px))',
-      '--radius-md: max(0px, calc(var(--radius) - 2px))',
-      `font-family: ${font}`,
-      mono ? `--font-mono: ${mono}` : '',
-    ].join('; ');
+  function onNext(): void {
+    go(step + 1);
+  }
+
+  function onDot(index: number): void {
+    const half = Math.floor(LENSES.length / 2);
+
+    go(step + lensAt(index - active + half) - half);
+  }
+
+  function onPointerDown(event: PointerEvent): void {
+    swipeFrom = event.clientX;
+  }
+
+  function onPointerUp(event: PointerEvent): void {
+    if (swipeFrom === null) return;
+
+    const distance = event.clientX - swipeFrom;
+    swipeFrom = null;
+
+    if (Math.abs(distance) < SWIPE_DISTANCE) return;
+
+    go(step + (distance < 0 ? 1 : -1));
+  }
+
+  function onPointerCancel(): void {
+    swipeFrom = null;
+  }
+
+  function go(target: number): void {
+    if (target === step) return;
+
+    step = target;
+    // eslint-disable-next-line svelte/no-navigation-without-resolve
+    replaceState(`?skin=${LENSES[lensAt(step)].id}#status-pages`, page.state);
+  }
+
+  function lensAt(position: number): number {
+    return ((position % LENSES.length) + LENSES.length) % LENSES.length;
+  }
+
+  function byUptime(a: Monitor, b: Monitor): number {
+    return (a.uptime['90d'] ?? 100) - (b.uptime['90d'] ?? 100);
   }
 </script>
 
@@ -195,53 +186,94 @@
 <LandingSection>
   <div
     data-nosnippet
-    class="relative overflow-hidden px-4 pt-10 sm:px-6 sm:pt-14 lg:px-10"
+    class="@container relative overflow-hidden px-4 pt-16 pb-8 sm:px-6 sm:pt-20 sm:pb-10 lg:px-10"
   >
     <StageLight preset="bottom" class="absolute inset-0" />
 
-    <div class="relative mx-auto flex max-w-3xl flex-col items-center gap-6">
+    <div
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Status page lenses"
+      class="lens-wrap relative mx-auto"
+    >
       <div
-        role="radiogroup"
-        aria-label="Status page theme"
-        tabindex="-1"
-        class="ring-hairline bg-surface-root flex w-full rounded-full p-1 ring-1 sm:inline-flex sm:w-auto"
-        onkeydown={onSkinKeydown}
+        class={['lens-stage relative touch-pan-y select-none', { animated }]}
+        style:--pos={step}
+        style:--count={LENSES.length}
+        onpointerdown={onPointerDown}
+        onpointerup={onPointerUp}
+        onpointercancel={onPointerCancel}
       >
-        {#each SKINS as option, index (option.name)}
-          <button
-            type="button"
-            role="radio"
-            aria-checked={index === selected}
-            tabindex={index === selected ? 0 : -1}
-            class={[
-              'flex h-8 flex-auto items-center justify-center rounded-full px-2 text-[13px] font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-0 sm:flex-none sm:px-3.5 sm:text-sm',
-              index === selected
-                ? 'bg-neutral-800 text-fg-default'
-                : 'text-neutral-400 hover:text-fg-default',
-            ]}
-            onclick={() => onSelect(index)}
+        <div
+          class="page-card ring-hairline absolute overflow-hidden rounded-xl shadow-[0_24px_48px_-16px_rgba(0,0,0,0.7)] ring-1"
+        >
+          <LensPage page={demo} />
+
+          {#each LENSES as option, index (option.id)}
+            <div
+              aria-hidden="true"
+              inert
+              class="lens-layer absolute inset-0"
+              style:--i={index}
+            >
+              <option.component page={demo} />
+            </div>
+          {/each}
+        </div>
+
+        {#each LENSES as option, index (option.id)}
+          <div
+            aria-hidden="true"
+            class="lens-frame absolute"
+            style:--i={index}
+            style:--accent={option.accent}
+            style:--ink={option.ink}
           >
-            {option.name}
-          </button>
+            <span
+              class="lens-tab absolute flex h-7 items-center gap-2 px-2.5 text-xs whitespace-nowrap"
+            >
+              <span class="font-semibold">{option.name}</span>
+              <span class="max-sm:hidden">{option.tagline}</span>
+            </span>
+          </div>
         {/each}
       </div>
 
-      <div
-        class="ring-hairline bg-surface-elevated w-full overflow-hidden rounded-t-xl shadow-[0_32px_64px_-24px_rgba(0,0,0,0.7)] ring-1"
-      >
-        <div
-          class="border-hairline text-neutral-500 flex h-11 items-center border-b px-4 text-sm"
-        >
-          status.acme.com
+      <p aria-live="polite" class="sr-only">
+        {lens.name} lens. {lens.tagline}
+      </p>
+
+      <div class="mt-8 flex items-center justify-center gap-4">
+        {@render arrow(
+          'Previous lens',
+          onPrevious,
+          ChevronLeftIcon,
+          'arrow-previous',
+        )}
+
+        <div class="flex">
+          {#each LENSES as option, index (option.id)}
+            <button
+              type="button"
+              aria-label="Show the {option.name} lens"
+              aria-current={index === active}
+              class="group flex h-8 items-center px-1.5 focus-visible:outline-2 focus-visible:outline-offset-0"
+              onclick={() => onDot(index)}
+            >
+              <span
+                class={[
+                  'h-2 rounded-full transition-[width] duration-300',
+                  index === active
+                    ? 'w-6'
+                    : 'bg-neutral-700 group-hover:bg-neutral-500 w-2',
+                ]}
+                style:background={index === active ? option.accent : undefined}
+              ></span>
+            </button>
+          {/each}
         </div>
 
-        <div
-          class="skin bg-background text-foreground px-5 pt-8 pb-4 sm:px-10 sm:pt-10 sm:pb-6"
-          style={skinStyle(skin)}
-        >
-          <!-- eslint-disable-next-line @typescript-eslint/no-unsafe-call -- snippets exported from a .svelte module are typed by svelte-check only -->
-          {@render statusPageView(demo)}
-        </div>
+        {@render arrow('Next lens', onNext, ChevronRightIcon, 'arrow-next')}
       </div>
     </div>
   </div>
@@ -290,12 +322,119 @@
   </div>
 </LandingSection>
 
+{#snippet arrow(
+  label: string,
+  onclick: () => void,
+  Icon: typeof ChevronLeftIcon,
+  position: string,
+)}
+  <button
+    type="button"
+    aria-label={label}
+    class={[
+      'arrow bg-surface-inverse text-surface-root hover:bg-surface-inverse-hover flex size-12 shrink-0 items-center justify-center rounded-full shadow-[0_8px_24px_-6px_rgba(0,0,0,0.6)] transition-[scale] duration-100 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-90 lg:size-14',
+      position,
+    ]}
+    {onclick}
+  >
+    <Icon class="size-5 lg:size-6" />
+  </button>
+{/snippet}
+
 <style>
-  .skin {
-    view-transition-name: status-skin;
+  @property --pos {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
   }
 
-  :global(::view-transition-group(status-skin)) {
-    animation-duration: 220ms;
+  .lens-wrap {
+    --pad: 1rem;
+    --exit: 3rem;
+    --page-h: 35rem;
+  }
+
+  @media (width >= 40rem) {
+    .lens-wrap {
+      --pad: 2rem;
+      --page-h: 30rem;
+    }
+  }
+
+  @media (width >= 64rem) {
+    .lens-wrap {
+      --pad: 2.5rem;
+      width: min(55rem, 100% - 11rem);
+    }
+
+    .arrow {
+      position: absolute;
+      top: calc(var(--pad) + var(--page-h) / 2);
+      translate: 0 -50%;
+    }
+
+    .arrow-previous {
+      right: calc(100% + 1.75rem);
+    }
+
+    .arrow-next {
+      left: calc(100% + 1.75rem);
+    }
+  }
+
+  .lens-stage {
+    height: calc(var(--page-h) + 2 * var(--pad));
+  }
+
+  .lens-stage.animated {
+    transition: --pos 520ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lens-stage.animated {
+      transition: none;
+    }
+  }
+
+  .page-card {
+    inset: var(--pad);
+  }
+
+  .lens-layer,
+  .lens-frame {
+    --offset: calc(
+      mod(var(--i) - var(--pos) + var(--count) / 2, var(--count)) -
+        var(--count) / 2
+    );
+  }
+
+  .lens-layer {
+    --x: calc(
+      var(--offset) * (50cqw + 50% + var(--pad) + var(--exit)) - var(--pad)
+    );
+    clip-path: inset(
+      calc(-1 * var(--pad)) calc(-1 * var(--x) - 2 * var(--pad))
+        calc(-1 * var(--pad)) var(--x)
+    );
+  }
+
+  .lens-frame {
+    top: 0;
+    bottom: 0;
+    left: calc(var(--offset) * (50cqw + 50% + var(--exit)));
+    width: 100%;
+    pointer-events: none;
+    box-shadow:
+      0 0 0 1px #000,
+      0 0 0 5px var(--accent),
+      0 0 0 6px #000;
+  }
+
+  .lens-tab {
+    bottom: calc(100% + 6px);
+    left: -6px;
+    background: var(--accent);
+    color: var(--ink);
+    box-shadow: 0 0 0 1px #000;
   }
 </style>

@@ -67,9 +67,9 @@ export const monitoringPage: FeaturePageData = {
   },
   statusPages: {
     title: 'Your status page, your brand.',
-    quiet: 'Or build one from scratch.',
+    quiet: 'Even if your brand is bananas.',
     description:
-      'Every status page has a public API. Add our React or Svelte component to your site and it takes on your colours, fonts and corners. Pick a theme to see it change.',
+      'Every status page has a public API, so yours can look like anything. Swap the lens and the data underneath stays put. Start from our React or Svelte component, or from a blank file.',
     install: {
       title: 'Add it with one command',
       body: 'The command copies the component into your project, so the code is yours to change. It runs on @logdash/status, a typed client with React and Svelte hooks. Or deploy the Next.js starter as a site of its own.',
