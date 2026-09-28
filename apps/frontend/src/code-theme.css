@@ -1,0 +1,62 @@
+/*
+  Syntax colours for highlight.js on the dark neutral surfaces. Hues sit at
+  the 400 step so every token clears AA on both surface-root and
+  surface-elevated. Geist Mono has no italic, so comments are dimmed only.
+*/
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+}
+
+.hljs {
+  color: var(--color-neutral-200);
+}
+
+.hljs-keyword,
+.hljs-literal,
+.hljs-name,
+.hljs-doctag,
+.hljs-bullet,
+.hljs-deletion {
+  color: #f87272;
+}
+
+.hljs-title,
+.hljs-section {
+  color: #e853ff;
+}
+
+.hljs-attr,
+.hljs-link,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: #61a6fa;
+}
+
+.hljs-type,
+.hljs-built_in,
+.hljs-title.class_,
+.hljs-number,
+.hljs-symbol,
+.hljs-selector-tag {
+  color: #fb923c;
+}
+
+.hljs-string,
+.hljs-meta,
+.hljs-attribute {
+  color: #ddc1b1;
+}
+
+.hljs-subst,
+.hljs-regexp,
+.hljs-template-variable,
+.hljs-addition {
+  color: #49de80;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--color-neutral-400);
+}
