@@ -12,6 +12,7 @@
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import CustomDomainSetup from '../public-dashboard/CustomDomainSetup.svelte';
   import BadgePicker from './BadgePicker.svelte';
+  import BuildYourOwn from './BuildYourOwn.svelte';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
@@ -322,6 +323,16 @@
         {:else}
           <BadgePicker {dashboardId} {statusPageUrl} monitors={badgeMonitors} />
         {/if}
+      </div>
+
+      <div class="space-y-3">
+        <Label class="font-medium">6. Build your own</Label>
+        <p class="text-sm text-neutral-400">
+          Build a status page in your own design with the public status page
+          API, or start from the Next.js starter.
+        </p>
+
+        <BuildYourOwn {dashboardId} />
       </div>
     {/if}
   </div>

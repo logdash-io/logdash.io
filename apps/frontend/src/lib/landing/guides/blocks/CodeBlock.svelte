@@ -15,6 +15,7 @@
     rust,
     typescript,
     type LanguageType,
+    xml,
     yaml,
   } from 'svelte-highlight/languages';
   import type { CodeLanguage } from '../documentation.data';
@@ -28,7 +29,7 @@
   const { code, language, title }: Props = $props();
 
   /**
-   * Grammars are named one by one so highlight.js ships thirteen languages
+   * Grammars are named one by one so highlight.js ships fourteen languages
    * rather than the whole two hundred the barrel export can reach.
    */
   const grammars: Record<CodeLanguage, LanguageType<string>> = {
@@ -45,6 +46,7 @@
     rust,
     yaml,
     json,
+    svelte: { name: 'svelte', register: xml.register },
   };
 
   let copied = $state(false);

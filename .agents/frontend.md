@@ -88,3 +88,18 @@ Scoped component CSS reads the variables directly: `background-color: var(--surf
 
 Text drawn on an inverse fill uses `text-surface-root` (was `primary-content` and `secondary-content`).
 `rounded-box` and `rounded-field` are `rounded-xl`.
+
+### `packages/status` and `templates/status-page-next`
+
+These ship to customers.
+`@logdash/status` is published to npm, the registry components in `packages/status/registry` are copied into customers' apps, and the starter is cloned as a customer's own project.
+The rules above are for this app and mostly do not apply there; the general rules in `AGENTS.md` do.
+
+- No hyper-ui, daisyUI, `$lib` icons, `ts-pattern` or any other dependency. `packages/status/src` has no runtime dependencies, and the registry components depend on `@logdash/status` only.
+- Style the components with Tailwind and the shadcn/ui CSS variables (`bg-background`, `text-muted-foreground`, `border`), not the hyper-ui colour tokens, so they take on the customer's theme. Only the status colours are fixed: green, amber and red.
+- One file per framework in `packages/status/registry`, with no imports between files, so the shadcn CLIs copy them without rewriting paths.
+- Format dates in UTC and render relative times after mount, so the server and the browser render the same markup.
+- JSDoc on exported functions is welcome: it is what customers read in their editor.
+- `packages/status/src/api.generated.ts` and `apps/frontend/static/r` are generated. Change the backend DTOs or the registry sources and regenerate, as `CONTRIBUTING.md` describes.
+- `templates/status-page-next/components/status-page.tsx` stays byte-identical to `packages/status/registry/react/status-page.tsx`.
+- The starter stays outside the pnpm workspace, and has no lockfile until the first npm release of `@logdash/status`.

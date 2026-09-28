@@ -83,7 +83,9 @@
     {#each page.blocks as block, index (index)}
       <div class={blockSpacing(page.blocks, index)}>
         {#if block.type === 'paragraph'}
-          <p class="text-neutral-400 text-[15px] leading-7">{block.text}</p>
+          <p class="text-neutral-400 text-[15px] leading-7">
+            {@render inline(block.text)}
+          </p>
         {:else if block.type === 'heading'}
           <h2
             id={anchor(block.text)}
@@ -101,7 +103,7 @@
                   aria-hidden="true"
                   class="bg-neutral-600 mt-[13px] size-1 shrink-0 rounded-full"
                 ></span>
-                <span>{item}</span>
+                <span>{@render inline(item)}</span>
               </li>
             {/each}
           </ul>
@@ -273,6 +275,20 @@
     {/each}
   </div>
 </article>
+
+{#snippet inline(text: string)}
+  {#each text.split('`') as part, index (index)}
+    {#if index % 2}
+      <code
+        class="bg-surface-elevated text-neutral-300 rounded px-1 py-0.5 font-mono text-[0.875em]"
+      >
+        {part}
+      </code>
+    {:else}
+      {part}
+    {/if}
+  {/each}
+{/snippet}
 
 {#snippet limitsTable(key: TableType, table: Table)}
   <div class="flex flex-col gap-3">

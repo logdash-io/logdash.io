@@ -182,12 +182,14 @@ flowchart LR
   api -- "up and down" --> alerts["Telegram, webhooks"]
 ```
 
-| Path                | What it is                                                         |
-| ------------------- | ------------------------------------------------------------------ |
-| `apps/frontend`     | SvelteKit app and marketing site, deployed on Cloudflare Workers    |
-| `apps/backend`      | NestJS API, with MongoDB, Redis and ClickHouse                      |
-| `apps/status-page`  | Renderer for status pages served on customer custom domains         |
-| `packages/hyper-ui` | Shared Svelte 5 component library and Tailwind theme                |
+| Path                         | What it is                                                                |
+| ---------------------------- | ------------------------------------------------------------------------- |
+| `apps/frontend`              | SvelteKit app and marketing site, deployed on Cloudflare Workers          |
+| `apps/backend`               | NestJS API, with MongoDB, Redis and ClickHouse                            |
+| `apps/status-page`           | Renderer for status pages served on customer custom domains               |
+| `packages/hyper-ui`          | Shared Svelte 5 component library and Tailwind theme                      |
+| `packages/status`            | `@logdash/status` on npm: status page client, React and Svelte bindings   |
+| `templates/status-page-next` | Next.js starter for a self-hosted status page, outside the pnpm workspace |
 
 pnpm workspaces, `apps/*` and `packages/*`, pinned to pnpm 10.7.0 in the root `package.json`.
 
@@ -239,7 +241,7 @@ AGPL-3.0. See [`LICENSE`](./LICENSE).
 Copyright (c) 2025 Aleksander Błaszkiewicz and Szymon Grącki.
 You can run, change and self-host Logdash for anything, including commercial use.
 If you run a modified version as a service for others, you have to publish your changes under the same licence.
-`packages/hyper-ui` stays MIT, see [`packages/hyper-ui/LICENSE`](./packages/hyper-ui/LICENSE).
+`packages/hyper-ui`, `packages/status` and `templates/status-page-next` are MIT, see the `LICENSE` file in each.
 
 The hosted product at [logdash.io](https://logdash.io) runs this code with billing wired up and plan limits enforced.
 There is no `ee/` directory, no dual licence and no feature in this repo that is gated behind a paid key.
