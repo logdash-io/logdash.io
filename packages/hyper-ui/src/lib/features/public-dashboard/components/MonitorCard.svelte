@@ -1,130 +1,98 @@
 <script lang="ts">
-  import { untrack } from "svelte";
-  import { ChevronDownIcon, TrendingUpIcon } from "lucide-svelte";
-  import StatusBadge from "./StatusBadge.svelte";
-  import UptimeChart from "./UptimeChart.svelte";
-  import PingChart from "./PingChart.svelte";
-  import Collapse from "../../../presentational/Collapse.svelte";
-
-  interface Monitor {
-    name: string;
-    pings: Array<{
-      createdAt: string;
-      statusCode: number;
-      responseTimeMs: number;
-    }>;
-    buckets?: Array<{
-      timestamp: string;
-      successCount: number;
-      failureCount: number;
-      averageLatencyMs: number;
-    } | null>;
-  }
+  import type { Monitor } from "@logdash/status";
+  import { formatUptime } from "../utils/format-status-page";
+  import { isHealthyStatus } from "../utils/group-pings-by-status";
+  import DailyUptimeBars from "./DailyUptimeBars.svelte";
+  import ResponseTimeChart from "./ResponseTimeChart.svelte";
 
   interface Props {
     monitor: Monitor;
-    status: "up" | "down" | "degraded" | "unknown";
-    uptime: number;
-    maxBucketsToShow?: number;
-    maxPingsToShow?: number;
-    defaultExpanded?: boolean;
   }
 
-  let {
-    monitor,
-    status,
-    uptime,
-    maxBucketsToShow = 90,
-    maxPingsToShow = 90,
-    defaultExpanded = false,
-  }: Props = $props();
+  let { monitor }: Props = $props();
 
-  const statusConfig = {
-    up: {
-      text: "Operational",
-      color: "text-green-600",
-    },
-    down: {
-      text: "Down",
-      color: "text-red-600",
-    },
-    degraded: {
-      text: "Degraded",
-      color: "text-yellow-600",
-    },
-    unknown: {
-      text: "Unknown",
-      color: "text-neutral-600",
-    },
+  const UPTIME_WINDOWS = [
+    { key: "24h", label: "24 h uptime" },
+    { key: "7d", label: "7 d uptime" },
+    { key: "30d", label: "30 d uptime" },
+    { key: "90d", label: "90 d uptime" },
+  ] as const;
+
+  const statuses: Record<Monitor["status"], { label: string; dot: string }> = {
+    up: { label: "Operational", dot: "bg-success" },
+    degraded: { label: "Degraded", dot: "bg-warning" },
+    down: { label: "Down", dot: "bg-error" },
+    unknown: { label: "Unknown", dot: "bg-neutral-600" },
   };
 
-  const config = $derived(statusConfig[status]);
-  const statusText = $derived(config.text);
-  const statusColor = $derived(config.color);
-  let open = $state(untrack(() => defaultExpanded));
-
-  function onChartClick(event: MouseEvent): void {
-    event.preventDefault();
-  }
+  const status = $derived(statuses[monitor.status]);
+  const healthyPings = $derived(
+    monitor.pings.filter((ping) => isHealthyStatus(ping.statusCode))
+  );
+  const averageMs = $derived(
+    healthyPings.length
+      ? healthyPings.reduce((sum, ping) => sum + ping.responseTimeMs, 0) /
+          healthyPings.length
+      : null
+  );
+  const latestPing = $derived(monitor.pings[monitor.pings.length - 1]);
 </script>
 
-<Collapse
-  bind:open
-  class="ld-card-base ld-card-rounding w-fit min-w-full"
-  titleClass="flex flex-col items-center p-6"
-  contentClass="hidden p-0 text-sm sm:block"
->
-  {#snippet title()}
-    <div class="flex w-full items-center justify-between">
-      <div class="flex items-center gap-3">
-        <StatusBadge {status} />
+<div class="flex items-start justify-between gap-4">
+  <h2 class="min-w-0 text-lg font-medium tracking-[-0.01em] break-words">
+    {monitor.name}
+  </h2>
+  <span
+    class="text-neutral-400 flex h-7 shrink-0 items-center gap-2 text-sm"
+  >
+    <span class={["size-1.5 rounded-full", status.dot]}></span>
+    {status.label}
+  </span>
+</div>
 
-        <div>
-          <h4 class="text-fg-default text-lg font-medium">
-            {monitor.name}
-          </h4>
-        </div>
-      </div>
+<dl class="mt-6 grid grid-cols-4 gap-x-3">
+  {#each UPTIME_WINDOWS as window (window.key)}
+    {@render stat(
+      window.label,
+      formatUptime(monitor.uptime[window.key]),
+      monitor.uptime[window.key] === null
+    )}
+  {/each}
+</dl>
 
-      <div class="flex items-center gap-2 text-right">
-        <div class={`text-sm font-medium ${statusColor}`}>
-          {statusText}
-        </div>
+<div class="mt-5">
+  <DailyUptimeBars buckets={monitor.history.daily} label={monitor.name} />
+</div>
 
-        <ChevronDownIcon
-          class={`hidden h-5 w-5 text-neutral-500 transition-transform duration-200 group-hover:rotate-180 sm:block ${
-            open ? "rotate-180" : ""
-          }`}
-        />
-      </div>
-    </div>
+<dl class="mt-10 grid grid-cols-2 gap-x-3 @md:grid-cols-4">
+  {@render stat(
+    "Avg response",
+    averageMs === null ? "No data" : `${Math.round(averageMs)} ms`,
+    averageMs === null
+  )}
+  {#if !latestPing}
+    {@render stat("Latest check", "No data", true)}
+  {:else if isHealthyStatus(latestPing.statusCode)}
+    {@render stat("Latest check", `${latestPing.responseTimeMs} ms`)}
+  {:else}
+    {@render stat("Latest check", "Failed", false, "text-error")}
+  {/if}
+</dl>
 
-    <div
-      class="cursor-default sm:mt-2 w-full"
-      role="presentation"
-      onclick={onChartClick}
+<div class="mt-5">
+  <ResponseTimeChart pings={monitor.pings} label={monitor.name} />
+</div>
+
+{#snippet stat(label: string, value: string, empty = false, tone = "")}
+  <div class="flex min-w-0 flex-col gap-1">
+    <dt class="text-neutral-500 truncate text-xs">{label}</dt>
+    <dd
+      class={[
+        "truncate text-base font-medium tabular-nums @xl:text-lg",
+        tone || (empty ? "text-neutral-500" : "text-fg-default"),
+      ]}
     >
-      <PingChart
-        class="hidden sm:block"
-        {maxPingsToShow}
-        pings={monitor.pings}
-      />
-    </div>
-  {/snippet}
-
-  <div class="px-6 sm:pb-2">
-    <div class="flex flex-wrap gap-6 text-sm">
-      <div class="mb-1 flex items-center gap-2">
-        <TrendingUpIcon class="text-success h-4 w-4" />
-        <span class="text-neutral-300">
-          90-day Uptime:
-          <span class="font-mono font-medium text-fg-default">
-            {uptime.toFixed(2)}%
-          </span>
-        </span>
-      </div>
-    </div>
-
-    <UptimeChart buckets={monitor.buckets || []} {maxBucketsToShow} />
+      {value}
+    </dd>
   </div>
-</Collapse>
+{/snippet}

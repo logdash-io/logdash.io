@@ -2,7 +2,7 @@ export interface Bucket {
   timestamp: string;
   successCount: number;
   failureCount: number;
-  averageLatencyMs: number;
+  averageLatencyMs: number | null;
 }
 
 export type BucketStatus = "up" | "degraded" | "down" | "unknown";
@@ -18,17 +18,18 @@ export interface BucketSegment {
   totalFailure: number;
 }
 
-function getUptimeFromBucket(bucket: Bucket | null): number {
-  if (!bucket) return 100;
-  const total = bucket.successCount + bucket.failureCount;
-  if (total === 0) return 100;
+type BucketCounts = Pick<Bucket, "successCount" | "failureCount">;
+
+export function getUptimeFromBucket(bucket: BucketCounts | null): number | null {
+  const total = bucket ? bucket.successCount + bucket.failureCount : 0;
+  if (!bucket || total === 0) return null;
   return (bucket.successCount / total) * 100;
 }
 
-function getBucketStatus(bucket: Bucket | null): BucketStatus {
-  if (!bucket) return "unknown";
+export function getBucketStatus(bucket: BucketCounts | null): BucketStatus {
   const uptime = getUptimeFromBucket(bucket);
-  if (uptime >= 99.99) return "up";
+  if (uptime === null) return "unknown";
+  if (uptime >= 99.9) return "up";
   if (uptime >= 50) return "degraded";
   return "down";
 }
@@ -56,7 +57,7 @@ export const groupBucketsByStatus = (
         bucketCount: 1,
         startTime: bucketDate,
         endTime: bucketDate,
-        avgUptime: getUptimeFromBucket(bucket),
+        avgUptime: getUptimeFromBucket(bucket) ?? 100,
         totalSuccess: bucket?.successCount ?? 0,
         totalFailure: bucket?.failureCount ?? 0,
       };
@@ -88,11 +89,12 @@ export const formatBucketTimeRange = (
 ): string => {
   if (!start && !end) return "No data";
 
-  const formatDate = (date: Date) => {
-    const month = date.toLocaleString("en", { month: "short" });
-    const day = date.getDate();
-    return `${month} ${day}`;
-  };
+  const formatDate = (date: Date) =>
+    date.toLocaleString("en", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
 
   if (!start || !end || start.getTime() === end.getTime()) {
     return formatDate(start || end!);

@@ -1,19 +1,25 @@
-import { PublicDashboardService } from '@logdash/hyper-ui/features/public-dashboard/services/index';
+import { envConfig } from '$lib/domains/shared/utils/env-config';
+import { fetchStatusPage, StatusPageError } from '@logdash/status';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
   try {
-    const dashboardData = await PublicDashboardService.getPublicData(
-      params.public_dashboard_id,
-    );
+    const page = await fetchStatusPage(params.public_dashboard_id, {
+      baseUrl: envConfig.apiBaseUrl,
+    });
 
-    return {
-      dashboardId: params.public_dashboard_id,
-      dashboardData,
-    };
+    return { statusPageId: params.public_dashboard_id, page };
   } catch (err) {
-    console.error('Failed to load public dashboard:', err);
-    error(404, 'Dashboard not found');
+    if (err instanceof StatusPageError && err.status === 404) {
+      error(404, 'Status page not found');
+    }
+
+    if (err instanceof StatusPageError && err.status === 403) {
+      error(403, 'This status page is private');
+    }
+
+    console.error('Failed to load status page:', err);
+    error(503, 'Status page is temporarily unavailable');
   }
 };

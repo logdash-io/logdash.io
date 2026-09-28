@@ -1,2 +1,9 @@
-@import 'tailwindcss';
-@plugin '@tailwindcss/typography';
+@import '@logdash/hyper-ui/styles';
+
+html {
+	overflow: hidden auto;
+}
+
+body {
+	overflow: visible;
+}

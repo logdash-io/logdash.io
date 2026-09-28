@@ -8,6 +8,7 @@ on:
     paths:
       - "apps/status-page/**"
       - "packages/hyper-ui/**"
+      - "packages/status/**"
       - ".github/workflows/**"
 
 jobs:

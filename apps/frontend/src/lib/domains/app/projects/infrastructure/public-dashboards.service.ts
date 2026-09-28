@@ -1,6 +1,5 @@
 import { httpClient } from '$lib/domains/shared/http/http-client';
 import type { PublicDashboard } from '../domain/public-dashboards/public-dashboard';
-import type { PublicDashboardData } from '@logdash/hyper-ui/features';
 
 export class PublicDashboardsService {
   getPublicDashboards(clusterId: string): Promise<PublicDashboard[]> {
@@ -18,20 +17,6 @@ export class PublicDashboardsService {
       {
         name,
         isPublic: false,
-      },
-    );
-  }
-
-  getPublicDashboardData(
-    dashboardId: string,
-    period: '24h' | '7d' | '90d' = '90d',
-  ): Promise<PublicDashboardData> {
-    return httpClient.get<PublicDashboardData>(
-      `/public_dashboards/${dashboardId}/data`,
-      {
-        params: {
-          period,
-        },
       },
     );
   }

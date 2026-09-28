@@ -12,4 +12,8 @@ export default defineConfig({
     ...devices['Desktop Chrome'],
     trace: 'retain-on-failure',
   },
+  projects: [
+    { name: 'e2e' },
+    { name: 'unit', testDir: './src', testMatch: /\.test\.ts$/ },
+  ],
 });

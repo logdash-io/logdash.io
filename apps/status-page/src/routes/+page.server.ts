@@ -1,44 +1,30 @@
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
 import { dev } from '$app/environment';
 import { envConfig } from '@logdash/hyper-ui';
-import type { PublicDashboardData } from '@logdash/hyper-ui/types';
-
-// Server-compatible version of PublicDashboardService
-class ServerPublicDashboardService {
-	static async getPublicData(
-		dashboardIdOrUrl: string,
-		period: '24h' | '7d' | '90d' = '90d'
-	): Promise<PublicDashboardData> {
-		const response = await fetch(
-			`${envConfig.apiBaseUrl}/public_dashboards/${encodeURIComponent(
-				dashboardIdOrUrl
-			)}/public_data?period=${period}`
-		);
-
-		if (!response.ok) {
-			throw new Error(`Failed to fetch dashboard data: ${response.status}`);
-		}
-
-		return (await response.json()) as PublicDashboardData;
-	}
-}
+import { fetchStatusPage, StatusPageError } from '@logdash/status';
+import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url }) => {
-	const customDomainHref = dev ? url.searchParams.get('custom-domain') : url.host;
-	if (!customDomainHref) {
-		error(404, 'Custom domain not found');
+	const statusPageId = dev ? url.searchParams.get('custom-domain') : url.host;
+
+	if (!statusPageId) {
+		error(404, 'Status page not found');
 	}
 
 	try {
-		const dashboardData = await ServerPublicDashboardService.getPublicData(customDomainHref);
+		const page = await fetchStatusPage(statusPageId, { baseUrl: envConfig.apiBaseUrl });
 
-		return {
-			dashboardId: customDomainHref,
-			dashboardData
-		};
+		return { statusPageId, page };
 	} catch (err) {
-		console.error('Failed to load public dashboard:', err);
-		error(404, 'Dashboard not found');
+		if (err instanceof StatusPageError && err.status === 404) {
+			error(404, 'Status page not found');
+		}
+
+		if (err instanceof StatusPageError && err.status === 403) {
+			error(403, 'This status page is private');
+		}
+
+		console.error('Failed to load status page:', err);
+		error(503, 'Status page is temporarily unavailable');
 	}
 };

@@ -1,22 +1,41 @@
 <script lang="ts">
-  import type { PageData } from './$types';
-  import { PublicDashboard } from '@logdash/hyper-ui';
-  import { PublicDashboardPublicState } from '@logdash/hyper-ui/features/public-dashboard/states/public-dashboard-public.state.svelte';
+  import { envConfig } from '$lib/domains/shared/utils/env-config';
+  import { PublicDashboard } from '@logdash/hyper-ui/features';
+  import { statusPage } from '@logdash/status/svelte';
+  import type { PageProps } from './$types';
 
-  const { data }: { data: PageData } = $props();
+  const { data }: PageProps = $props();
 
-  const dashboardState = $derived.by(() => {
-    const state = new PublicDashboardPublicState();
-    state.setDashboardData(data.dashboardData);
-    return state;
-  });
+  const status = $derived(
+    statusPage(data.statusPageId, {
+      baseUrl: envConfig.apiBaseUrl,
+      initialData: data.page,
+    }),
+  );
+  const page = $derived(status.data ?? data.page);
 </script>
 
-<div class="mx-auto max-w-xl w-full">
-  <PublicDashboard
-    enablePolling={true}
-    onRefresh={() => dashboardState.loadDashboard(data.dashboardId)}
-    pollingInterval={60}
-    state={dashboardState}
+<svelte:head>
+  <title>{page.name}</title>
+  <meta
+    name="description"
+    content="Current status and 90-day uptime of {page.name}"
   />
-</div>
+</svelte:head>
+
+<PublicDashboard
+  class="ld-status-page min-h-dvh"
+  {page}
+  lastUpdated={status.lastUpdated}
+  isRefreshing={status.isLoading}
+/>
+
+<style>
+  :global(html:has(.ld-status-page)) {
+    overflow: hidden auto;
+  }
+
+  :global(html:has(.ld-status-page) body) {
+    overflow: visible;
+  }
+</style>

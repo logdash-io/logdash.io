@@ -1,12 +1,11 @@
 # @logdash/hyper-ui
 
-LogDash's design system components and utilities built for Svelte 5 with DaisyUI and Tailwind CSS.
+LogDash's design system components and utilities built for Svelte 5 and Tailwind CSS.
 
 ## Installation
 
-```bash
-pnpm add @logdash/hyper-ui
-```
+Private workspace package, not published to npm.
+Apps in this repository depend on it with `"@logdash/hyper-ui": "workspace:*"` and consume it as source.
 
 ## Usage
 

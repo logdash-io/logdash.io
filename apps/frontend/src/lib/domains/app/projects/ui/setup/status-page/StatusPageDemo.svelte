@@ -1,30 +1,10 @@
 <script lang="ts">
-  import { generateDemoData } from '$lib/domains/app/projects/domain/status-page-demo-data';
-  import {
-    PublicDashboard as PublicDashboardComponent,
-    PublicDashboardState,
-  } from '@logdash/hyper-ui/features';
+  import { generateDemoStatusPage } from '$lib/domains/app/projects/domain/status-page-demo-data';
+  import { PublicDashboard } from '@logdash/hyper-ui/features';
 
-  class DemoStatusPageState extends PublicDashboardState {
-    constructor() {
-      super();
-      this.setDashboardData(generateDemoData());
-    }
-
-    public async loadDashboard(): Promise<void> {}
-  }
-
-  const demoState = new DemoStatusPageState();
+  const page = generateDemoStatusPage();
 </script>
 
-<div class="w-full">
-  <PublicDashboardComponent
-    state={demoState}
-    enablePolling={false}
-    maxBucketsToShow={90}
-    maxPingsToShow={60}
-    withBranding={false}
-    withHeader={true}
-    expanded={false}
-  />
+<div class="h-104 w-full overflow-hidden mask-b-from-40% mask-b-to-85%" inert>
+  <PublicDashboard {page} withBranding={false} />
 </div>
