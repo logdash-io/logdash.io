@@ -9,6 +9,7 @@ import { HttpPingPingerModule } from '../../http-ping/pinger/http-ping-pinger.mo
 import { HttpPingPushModule } from '../../http-ping/push/http-ping-push.module';
 import { HttpMonitorRemovalModule } from '../removal/http-monitor-removal.module';
 import { HttpMonitorTtlModule } from '../ttl/http-monitor-ttl.module';
+import { HttpMonitorWatchlistModule } from '../watchlist/http-monitor-watchlist.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { HttpMonitorTtlModule } from '../ttl/http-monitor-ttl.module';
     HttpPingPushModule,
     HttpMonitorRemovalModule,
     HttpMonitorTtlModule,
+    HttpMonitorWatchlistModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [HttpMonitorCoreController],

@@ -118,6 +118,9 @@ interface EnvConfig {
   customDomain: {
     targetCname: string;
   };
+  watchlist: {
+    projectId?: string;
+  };
 }
 
 interface EnvConfigs {
@@ -237,6 +240,9 @@ export const EnvConfigs: EnvConfigs = {
     customDomain: {
       targetCname: 'statuspage.logdash.io',
     },
+    watchlist: {
+      projectId: process.env.WATCHLIST_PROJECT_ID,
+    },
   },
   [OurEnv.Local]: {
     app: {
@@ -348,6 +354,9 @@ export const EnvConfigs: EnvConfigs = {
     },
     customDomain: {
       targetCname: 'statuspage.logdash.io',
+    },
+    watchlist: {
+      projectId: process.env.WATCHLIST_PROJECT_ID,
     },
   },
 };

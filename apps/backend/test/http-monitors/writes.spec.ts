@@ -277,10 +277,17 @@ describe('HttpMonitorCoreController (writes)', () => {
         token,
       });
 
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: project.clusterId,
+          token,
+          options: { botToken: '123456:valid-bot-token' },
+        });
+
       const dto: UpdateHttpMonitorBody = {
         name: 'Updated Monitor',
         url: 'https://updated-url.com',
-        notificationChannelsIds: [new Types.ObjectId().toString()],
+        notificationChannelsIds: [notificationChannel.id],
       };
 
       // when
@@ -295,6 +302,74 @@ describe('HttpMonitorCoreController (writes)', () => {
       expect(entity).toMatchObject({
         ...dto,
       });
+    });
+
+    it('throws error when added notification channels do not belong to the same cluster', async () => {
+      // given
+      const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+        projectId: setupA.project.id,
+        token: setupA.token,
+      });
+
+      const foreignChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: setupB.cluster.id,
+          token: setupB.token,
+          options: { botToken: '123456:valid-bot-token' },
+        });
+
+      const dto: UpdateHttpMonitorBody = { notificationChannelsIds: [foreignChannel.id] };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/http_monitors/${httpMonitor.id}`)
+        .set('Authorization', `Bearer ${setupA.token}`)
+        .send(dto);
+
+      // then
+      expect(response.status).toBe(400);
+      expect((response.body as ErrorResponse).message).toBe(
+        'Notification channels must belong to the same cluster',
+      );
+      expect(await bootstrap.models.httpMonitorModel.findById(httpMonitor.id).lean()).toMatchObject(
+        { notificationChannelsIds: [] },
+      );
+    });
+
+    it('keeps channel ids the monitor already holds even if the channel no longer exists', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const deletedChannelId = new Types.ObjectId().toString();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        projectId: project.id,
+        claimed: true,
+        notificationChannelsIds: [deletedChannelId],
+      });
+
+      const notificationChannel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: project.clusterId,
+          token,
+          options: { botToken: '123456:valid-bot-token' },
+        });
+
+      const dto: UpdateHttpMonitorBody = {
+        notificationChannelsIds: [deletedChannelId, notificationChannel.id],
+      };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/http_monitors/${httpMonitor.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(dto);
+
+      // then
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject(dto);
     });
 
     it('denies access for non-cluster member', async () => {
@@ -344,7 +419,6 @@ describe('HttpMonitorCoreController (writes)', () => {
       const dto: UpdateHttpMonitorBody = {
         name: 'Updated Monitor',
         url: 'https://updated-url.com',
-        notificationChannelsIds: [new Types.ObjectId().toString()],
       };
 
       // when

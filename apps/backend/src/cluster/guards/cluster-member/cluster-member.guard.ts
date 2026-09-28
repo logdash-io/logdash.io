@@ -125,9 +125,9 @@ export class ClusterMemberGuard implements CanActivate {
       });
     }
 
-    if (notificationChannelIdFromParams) {
-      return this.checkForNotificationChannelId({
-        notificationChannelId: notificationChannelIdFromParams,
+    if (httpMonitorIdFromParams) {
+      return this.checkForHttpMonitorId({
+        httpMonitorId: httpMonitorIdFromParams,
         userId,
         allowedRoles,
         access,
@@ -135,9 +135,9 @@ export class ClusterMemberGuard implements CanActivate {
       });
     }
 
-    if (httpMonitorIdFromParams) {
-      return this.checkForHttpMonitorId({
-        httpMonitorId: httpMonitorIdFromParams,
+    if (notificationChannelIdFromParams) {
+      return this.checkForNotificationChannelId({
+        notificationChannelId: notificationChannelIdFromParams,
         userId,
         allowedRoles,
         access,
