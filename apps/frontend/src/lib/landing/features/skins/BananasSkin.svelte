@@ -1,6 +1,12 @@
 <script lang="ts">
+  import { prefersReducedMotion, Spring } from 'svelte/motion';
   import LensPage from './LensPage.svelte';
-  import type { DayStatus, LensLabels, SkinProps } from './skin-data';
+  import {
+    getLensHover,
+    type DayStatus,
+    type LensLabels,
+    type SkinProps,
+  } from './skin-data';
 
   type Shape = {
     viewBox: string;
@@ -23,6 +29,29 @@
   };
 
   const { page }: SkinProps = $props();
+
+  const TILT_PER_PX = 0.12;
+  const MAX_TILT = 8;
+
+  const hover = getLensHover();
+  // The sticker trails the cursor and leans back by how far it lags.
+  const trail = new Spring(0, { stiffness: 0.1, damping: 0.6 });
+  const tilt = Spring.of(
+    () =>
+      hover.day === null
+        ? 0
+        : Math.max(
+            -MAX_TILT,
+            Math.min(MAX_TILT, (trail.current - trail.target) * TILT_PER_PX),
+          ),
+    { stiffness: 0.08, damping: 0.45 },
+  );
+
+  function onPointerMove(event: PointerEvent): void {
+    void trail.set(event.clientX, {
+      instant: hover.day === null || prefersReducedMotion.current,
+    });
+  }
 
   const LABELS: LensLabels = {
     page: {
@@ -162,7 +191,9 @@
   }
 </script>
 
-<div class="bananas h-full" style={STYLE}>
+<svelte:window onpointermove={onPointerMove} />
+
+<div class="bananas h-full" style={STYLE} style:--tilt="{tilt.current}deg">
   <LensPage {page} labels={LABELS} />
 </div>
 
@@ -348,7 +379,7 @@
     box-shadow:
       0 3px 0 #3d2800,
       0 12px 20px -8px rgba(61, 40, 0, 0.5);
-    rotate: -2deg;
+    rotate: calc(-2deg + var(--tilt));
     transform-origin: var(--at-wide) 100%;
   }
 

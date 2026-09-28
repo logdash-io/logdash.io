@@ -5,6 +5,8 @@
   import { generateDemoStatusPage } from '$lib/domains/app/projects/domain/status-page-demo-data';
   import ChevronLeftIcon from '$lib/domains/shared/icons/ChevronLeftIcon.svelte';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
+  import ReactIcon from '$lib/domains/shared/icons/ReactIcon.svelte';
+  import SvelteKitIcon from '$lib/domains/shared/icons/SvelteKitIcon.svelte';
   import CodeBlock from '$lib/landing/guides/blocks/CodeBlock.svelte';
   import LandingHeading from '$lib/landing/LandingHeading.svelte';
   import LandingSection from '$lib/landing/LandingSection.svelte';
@@ -86,10 +88,12 @@
   const INSTALL = [
     {
       title: 'React',
+      icon: ReactIcon,
       code: 'npx shadcn add https://logdash.io/r/react/status-page.json',
     },
     {
       title: 'Svelte',
+      icon: SvelteKitIcon,
       code: 'npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json',
     },
   ];
@@ -194,12 +198,12 @@
       role="region"
       aria-roledescription="carousel"
       aria-label="Status page lenses"
-      class="lens-wrap relative mx-auto"
+      class={['lens-wrap relative mx-auto', { animated }]}
+      style:--pos={step}
+      style:--count={LENSES.length}
     >
       <div
-        class={['lens-stage relative touch-pan-y select-none', { animated }]}
-        style:--pos={step}
-        style:--count={LENSES.length}
+        class="lens-stage relative touch-pan-y select-none"
         onpointerdown={onPointerDown}
         onpointerup={onPointerUp}
         onpointercancel={onPointerCancel}
@@ -261,13 +265,9 @@
               onclick={() => onDot(index)}
             >
               <span
-                class={[
-                  'h-2 rounded-full transition-[width] duration-300',
-                  index === active
-                    ? 'w-6'
-                    : 'bg-neutral-700 group-hover:bg-neutral-500 w-2',
-                ]}
-                style:background={index === active ? option.accent : undefined}
+                class="dot h-2 rounded-full [--rest:var(--color-neutral-700)] group-hover:[--rest:var(--color-neutral-500)]"
+                style:--i={index}
+                style:--accent={option.accent}
               ></span>
             </button>
           {/each}
@@ -303,17 +303,16 @@
     </div>
 
     <div
-      class="border-hairline relative overflow-hidden border-t px-4 py-10 sm:px-6 lg:px-10 lg:py-12 xl:col-span-7 xl:border-t-0"
+      class="border-hairline border-t px-4 py-10 sm:px-6 lg:px-10 lg:py-12 xl:col-span-7 xl:border-t-0"
     >
-      <StageLight preset="bottom-left" class="absolute inset-0" />
-
-      <div class="relative flex flex-col gap-4">
+      <div class="flex flex-col gap-4">
         {#each INSTALL as command (command.title)}
           <div class="bg-surface-elevated rounded-xl">
             <CodeBlock
               code={command.code}
               language="bash"
               title={command.title}
+              icon={command.icon}
             />
           </div>
         {/each}
@@ -386,12 +385,12 @@
     height: calc(var(--page-h) + 2 * var(--pad));
   }
 
-  .lens-stage.animated {
+  .lens-wrap.animated {
     transition: --pos 520ms cubic-bezier(0.32, 0.72, 0, 1);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .lens-stage.animated {
+    .lens-wrap.animated {
       transition: none;
     }
   }
@@ -401,7 +400,8 @@
   }
 
   .lens-layer,
-  .lens-frame {
+  .lens-frame,
+  .dot {
     --offset: calc(
       mod(var(--i) - var(--pos) + var(--count) / 2, var(--count)) -
         var(--count) / 2
@@ -428,6 +428,17 @@
       0 0 0 1px #000,
       0 0 0 5px var(--accent),
       0 0 0 6px #000;
+  }
+
+  /* The pill stretches between dots in step with the sliding lens. */
+  .dot {
+    --near: max(0, 1 - max(var(--offset), -1 * var(--offset)));
+    width: calc(0.5rem + 1rem * var(--near));
+    background: color-mix(
+      in oklab,
+      var(--accent) calc(var(--near) * 100%),
+      var(--rest)
+    );
   }
 
   .lens-tab {
