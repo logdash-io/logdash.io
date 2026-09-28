@@ -1,4 +1,10 @@
 <script lang="ts">
+  import artur from './avatars/artur_w.webp';
+  import bartosz from './avatars/bsw.webp';
+  import jerzy from './avatars/bialyjurek.webp';
+  import maciej from './avatars/maciej_a.webp';
+  import yaroslaw from './avatars/yaroslaw.webp';
+
   const TRUSTED_BY = [
     { text: 'Trusted by founders at ', strong: false },
     { text: 'Cryptly', strong: true },
@@ -9,27 +15,26 @@
   ];
 
   const avatars = [
-    { src: '/images/testimonials/artur_w.webp', alt: 'Artur' },
-    { src: '/images/testimonials/bialyjurek.webp', alt: 'Jerzy' },
-    { src: '/images/testimonials/maciej_a.webp', alt: 'Maciej' },
-    { src: '/images/testimonials/bsw.webp', alt: 'Bartosz' },
-    { src: '/images/testimonials/yaroslaw.png', alt: 'Yaroslaw' },
+    { src: artur, alt: 'Artur' },
+    { src: jerzy, alt: 'Jerzy' },
+    { src: maciej, alt: 'Maciej' },
+    { src: bartosz, alt: 'Bartosz' },
+    { src: yaroslaw, alt: 'Yaroslaw' },
   ];
 
   const MOBILE_AVATARS = 3;
 </script>
 
 <div class="flex items-center gap-3">
-  <div class="flex -space-x-1.5">
+  <div class="flex shrink-0">
     {#each avatars as avatar, i (avatar.src)}
       <img
         class={[
-          'ring-surface-root bg-surface-elevated size-6 rounded-full object-cover grayscale ring-2',
+          'ring-surface-root bg-surface-elevated size-6 rounded-full object-cover grayscale ring-2 not-first:-ml-1.5',
           i >= MOBILE_AVATARS ? 'hidden sm:block' : 'block',
         ]}
         src={avatar.src}
         alt={avatar.alt}
-        loading="lazy"
       />
     {/each}
   </div>

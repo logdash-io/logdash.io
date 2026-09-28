@@ -50,6 +50,7 @@
   // browser's and SvelteKit's job. Page transitions live in
   // $lib/landing/page-transition.svelte.ts.
   onNavigate((navigation) => {
+    pageTransition.markNavigated();
     if (navigation.type === 'popstate') return;
     const from = navigation.from?.url;
     const to = navigation.to?.url;
