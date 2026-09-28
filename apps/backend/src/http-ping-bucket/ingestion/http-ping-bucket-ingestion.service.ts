@@ -30,7 +30,7 @@ export class HttpPingBucketIngestionService {
 
   private async aggregatePingsIntoBuckets(): Promise<void> {
     const now = new Date();
-    now.setMinutes(0, 0, 0);
+    now.setUTCMinutes(0, 0, 0);
     const previousHourStart = subHours(now, 1);
     const previousHourEnd = now;
 

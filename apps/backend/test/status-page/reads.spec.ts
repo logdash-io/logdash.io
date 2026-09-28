@@ -192,6 +192,43 @@ describe('StatusPageCoreController (reads)', () => {
       });
     });
 
+    it('splits the days at UTC midnight', async () => {
+      // given
+      advanceTo(new Date('2025-05-10T00:10:00.000Z'));
+      const setup = await setupStatusPage();
+      const [monitor] = setup.monitors;
+
+      await createBucket({
+        httpMonitorId: monitor.id,
+        timestamp: new Date('2025-05-09T23:00:00.000Z'),
+        successCount: 5,
+        failureCount: 1,
+      });
+      await bootstrap.utils.httpPingUtils.createHttpPing({
+        httpMonitorId: monitor.id,
+        createdAt: new Date('2025-05-10T00:05:00.000Z'),
+      });
+
+      // when
+      const response = await readStatusPage(setup.publicDashboard.id);
+
+      // then
+      const statusPage = response.body as StatusPageDto;
+      const { daily } = statusPage.monitors[0].history;
+
+      expect(daily[88]).toMatchObject({
+        timestamp: '2025-05-09T00:00:00.000Z',
+        successCount: 5,
+        failureCount: 1,
+      });
+      expect(daily[89]).toMatchObject({
+        timestamp: '2025-05-10T00:00:00.000Z',
+        successCount: 1,
+        failureCount: 0,
+      });
+      expect(statusPage.monitors[0].uptime['24h']).toBe((6 / 7) * 100);
+    });
+
     it('returns the last 100 pings oldest first', async () => {
       // given
       const setup = await setupStatusPage();
@@ -559,6 +596,33 @@ describe('StatusPageCoreController (reads)', () => {
 
       // then
       expect(response.status).toBe(403);
+    });
+
+    it('stops resolving a cached status page by its custom domain once the domain is removed', async () => {
+      // given
+      const setup = await setupStatusPage();
+
+      const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+        domain: 'status.acme.com',
+        publicDashboardId: setup.publicDashboard.id,
+        token: setup.token,
+      });
+
+      await bootstrap.models.customDomainModel.findByIdAndUpdate(customDomain.id, {
+        status: CustomDomainStatus.Verified,
+      });
+
+      await readStatusPage('status.acme.com');
+      await bootstrap.utils.customDomainUtils.deleteCustomDomain({
+        token: setup.token,
+        customDomainId: customDomain.id,
+      });
+
+      // when
+      const response = await readStatusPage('status.acme.com');
+
+      // then
+      expect(response.status).toBe(404);
     });
 
     it('invalidates the cache when the status page is updated', async () => {

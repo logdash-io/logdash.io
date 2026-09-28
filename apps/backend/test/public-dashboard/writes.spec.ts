@@ -68,10 +68,35 @@ describe('PublicDashboardCoreController (writes)', () => {
         .set('Authorization', `Bearer ${setupA.token}`)
         .send({
           httpMonitorsIds: [httpMonitor.id],
+          name: 'stolen monitors',
+          isPublic: true,
         });
 
       // then
       expect(response.status).toEqual(400);
+      expect((response.body as ErrorResponse).message).toBe(
+        'Some monitors do not belong to the same cluster',
+      );
+      expect(await bootstrap.models.publicDashboardModel.countDocuments()).toBe(0);
+    });
+
+    it('does not create public dashboard with a monitor id that does not exist', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/public_dashboards`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          httpMonitorsIds: [new Types.ObjectId().toString()],
+          name: 'future monitor',
+          isPublic: true,
+        });
+
+      // then
+      expect(response.status).toEqual(400);
+      expect(await bootstrap.models.publicDashboardModel.countDocuments()).toBe(0);
     });
 
     it('does not allow free user to create second public dashboard', async () => {

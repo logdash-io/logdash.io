@@ -1,10 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { addHours, startOfDay, startOfHour, subDays, subHours } from 'date-fns';
+import { addHours } from 'date-fns';
 import { HttpPingAggregationService } from 'src/http-ping/aggregation/http-ping-aggregation.service';
 import { BucketGranularity } from '../core/types/bucket-granularity.enum';
 import { BucketsPeriod } from '../core/types/bucket-period.enum';
 import { VirtualBucket } from '../core/types/virtual-bucket.type';
 import { HttpPingBucketReadService } from '../read/http-ping-bucket-read.service';
+
+// Buckets are UTC hours and UTC days whatever the time zone of the host.
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+const startOfUtcHour = (date: Date): Date =>
+  new Date(Math.floor(date.getTime() / HOUR_MS) * HOUR_MS);
+const startOfUtcDay = (date: Date): Date => new Date(Math.floor(date.getTime() / DAY_MS) * DAY_MS);
 
 @Injectable()
 export class HttpPingBucketAggregationService {
@@ -35,32 +43,29 @@ export class HttpPingBucketAggregationService {
   }
 
   private getPeriodConfig(period: BucketsPeriod) {
-    const nowMinusDays = (days: number) => {
-      return subDays(new Date(), days);
-    };
-
-    const nowMinusHours = (hours: number) => {
-      return subHours(new Date(), hours);
-    };
+    // Plain milliseconds: date-fns subDays keeps the local wall time, so it is 23 or 25 hours
+    // across a daylight saving change of the host.
+    const nowMinusDays = (days: number) => new Date(Date.now() - days * DAY_MS);
+    const nowMinusHours = (hours: number) => new Date(Date.now() - hours * HOUR_MS);
 
     const configs = {
       [BucketsPeriod.Day]: {
-        fromDate: startOfHour(addHours(nowMinusDays(1), 1)),
+        fromDate: startOfUtcHour(addHours(nowMinusDays(1), 1)),
         grouping: BucketGranularity.Hour,
         expectedBucketCount: 24,
       },
       [BucketsPeriod.FourDays]: {
-        fromDate: startOfHour(addHours(nowMinusDays(4), 1)),
+        fromDate: startOfUtcHour(addHours(nowMinusDays(4), 1)),
         grouping: BucketGranularity.Hour,
         expectedBucketCount: 96,
       },
       [BucketsPeriod.NinetyHours]: {
-        fromDate: startOfHour(addHours(nowMinusHours(90), 1)),
+        fromDate: startOfUtcHour(addHours(nowMinusHours(90), 1)),
         grouping: BucketGranularity.Hour,
         expectedBucketCount: 90,
       },
       [BucketsPeriod.NinetyDays]: {
-        fromDate: startOfDay(nowMinusDays(89)),
+        fromDate: startOfUtcDay(nowMinusDays(89)),
         grouping: BucketGranularity.Day,
         expectedBucketCount: 90,
       },
@@ -107,16 +112,9 @@ export class HttpPingBucketAggregationService {
       existingBucketsMap.set(key, bucket);
     });
 
-    const oneHourMs = 60 * 60 * 1000;
-    const oneDayMs = 24 * oneHourMs;
-    const increment = grouping === BucketGranularity.Hour ? oneHourMs : oneDayMs;
-    let currentDate = new Date(fromDate);
-
-    if (grouping === BucketGranularity.Hour) {
-      currentDate.setMinutes(0, 0, 0);
-    } else {
-      currentDate.setHours(0, 0, 0, 0);
-    }
+    const isHourly = grouping === BucketGranularity.Hour;
+    const increment = isHourly ? HOUR_MS : DAY_MS;
+    let currentDate = isHourly ? startOfUtcHour(fromDate) : startOfUtcDay(fromDate);
 
     for (let i = 0; i < expectedCount; i++) {
       const bucketKey = this.getBucketKey(currentDate, grouping);
@@ -135,18 +133,15 @@ export class HttpPingBucketAggregationService {
   }
 
   private getBucketKey(date: Date, grouping: BucketGranularity): string {
-    if (grouping === BucketGranularity.Hour) {
-      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
-    } else {
-      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-    }
+    // "2025-05-10T12" for hours, "2025-05-10" for days
+    return date.toISOString().slice(0, grouping === BucketGranularity.Hour ? 13 : 10);
   }
 
   private async tryCreateVirtualBucket(
     monitorId: string,
     grouping: BucketGranularity,
   ): Promise<VirtualBucket | null> {
-    const currentHour = startOfHour(new Date());
+    const currentHour = startOfUtcHour(new Date());
     const [mostRecentBucket] = await this.httpPingAggregationService.aggregateByMonitorForTimeRange(
       monitorId,
       currentHour,
@@ -157,11 +152,11 @@ export class HttpPingBucketAggregationService {
       return null;
     }
 
-    const today = new Date(currentHour);
-    today.setUTCHours(0, 0, 0, 0);
-
     return {
-      timestamp: grouping === BucketGranularity.Day ? today : mostRecentBucket.hour_timestamp,
+      timestamp:
+        grouping === BucketGranularity.Day
+          ? startOfUtcDay(currentHour)
+          : mostRecentBucket.hour_timestamp,
       successCount: mostRecentBucket.success_count,
       failureCount: mostRecentBucket.failure_count,
       averageLatencyMs: mostRecentBucket.average_latency_ms,

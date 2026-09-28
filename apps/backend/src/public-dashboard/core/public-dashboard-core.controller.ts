@@ -63,22 +63,32 @@ export class PublicDashboardCoreController {
       );
     }
 
-    const dashboard = await this.publicDashboardWriteService.create({
-      clusterId,
-      httpMonitorsIds: body.httpMonitorsIds,
-      name: body.name,
-      isPublic: body.isPublic,
-    });
-
-    const monitors = await this.httpMonitorReadService.readManyByIds(dashboard.httpMonitorsIds);
-
+    const httpMonitorsIds = body.httpMonitorsIds ?? [];
+    const monitors = await this.httpMonitorReadService.readManyByIds(httpMonitorsIds);
     const projects = await this.projectReadService.readManyByIds(
       monitors.map((monitor) => monitor.projectId),
     );
+    const clusterProjectIds = new Set(
+      projects.filter((project) => project.clusterId === clusterId).map((project) => project.id),
+    );
+    const clusterMonitorIds = new Set(
+      monitors
+        .filter((monitor) => clusterProjectIds.has(monitor.projectId))
+        .map((monitor) => monitor.id),
+    );
 
-    if (projects.some((project) => project.clusterId !== clusterId)) {
+    // Checked before the write: a stored dashboard with another cluster's monitor ids would
+    // publish their names and pings on its public status page.
+    if (httpMonitorsIds.some((id) => !clusterMonitorIds.has(id))) {
       throw new BadRequestException('Some monitors do not belong to the same cluster');
     }
+
+    const dashboard = await this.publicDashboardWriteService.create({
+      clusterId,
+      httpMonitorsIds,
+      name: body.name,
+      isPublic: body.isPublic,
+    });
 
     return PublicDashboardSerializer.serialize(dashboard);
   }
