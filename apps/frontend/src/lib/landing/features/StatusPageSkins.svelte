@@ -442,8 +442,9 @@
   }
 
   .lens-tab {
+    /* The tab's 1px border lands on the frame's outer black ring on both edges. */
     bottom: calc(100% + 6px);
-    left: -6px;
+    left: -5px;
     background: var(--accent);
     color: var(--ink);
     box-shadow: 0 0 0 1px #000;
