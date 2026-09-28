@@ -1,13 +1,14 @@
 FROM node:24-alpine AS base
 
-# Install pnpm
-RUN npm install -g pnpm
-
 # Create app directory
 WORKDIR /app
 
-# Copy root package files and workspace config
-COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+# Copy root package files and workspace config. The root package.json holds
+# the pnpm overrides the frozen lockfile is checked against
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Install the pnpm pinned in packageManager, the one that wrote the lockfile
+RUN npm install -g "$(node -p "require('./package.json').packageManager")"
 
 # Copy the status-page app
 COPY apps/status-page ./apps/status-page
