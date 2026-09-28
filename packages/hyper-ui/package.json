@@ -39,6 +39,7 @@
   "author": "LogDash Team",
   "license": "MIT",
   "dependencies": {
+    "@logdash/status": "workspace:*",
     "axios": "catalog:",
     "bits-ui": "^2.18.0",
     "lucide-svelte": "catalog:",

@@ -1,0 +1,38 @@
+{
+  "name": "@logdash/status",
+  "version": "0.1.0",
+  "description": "Typed client for Logdash public status pages, with React and Svelte bindings",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/logdash-io/logdash.io",
+    "directory": "packages/status"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts",
+    "./svelte": "./src/svelte.ts"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "svelte": ">=5.7"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "openapi-typescript": "^7.9.1",
+    "react": "^19.1.0",
+    "svelte": "catalog:",
+    "svelte-check": "catalog:",
+    "typescript": "catalog:"
+  }
+}

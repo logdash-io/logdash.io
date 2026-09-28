@@ -41,6 +41,7 @@
 	"dependencies": {
 		"@fontsource-variable/geist-mono": "^5.2.7",
 		"@fontsource-variable/kumbh-sans": "^5.2.7",
-		"@logdash/hyper-ui": "workspace:*"
+		"@logdash/hyper-ui": "workspace:*",
+		"@logdash/status": "workspace:*"
 	}
 }
