@@ -6,11 +6,16 @@
 
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
+  import { hasClaimedAccount } from '$lib/domains/anonymous/application/create-anonymous-session';
+  import {
+    openPreviewAddress,
+    readPreviewAddress,
+    writePreviewAddress,
+  } from '$lib/domains/anonymous/application/preview-address';
   import {
     isValidUrl,
     tryPrependProtocol,
   } from '$lib/domains/shared/utils/url';
-  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { Button, Spinner } from '@logdash/hyper-ui/presentational';
@@ -55,7 +60,7 @@
    * survives instead of silently vanishing.
    */
   onMount(() => {
-    const submitted = page.url.searchParams.get('url')?.trim();
+    const submitted = readPreviewAddress();
 
     if (submitted && !url) {
       url = submitted;
@@ -63,6 +68,10 @@
 
     if (!compact && page.url.hash === `#${HERO_URL_INPUT_ID}`) {
       input?.focus({ preventScroll: true });
+    }
+
+    if (submitted && source === 'hero') {
+      void startFromAddress(submitted);
     }
   });
 
@@ -87,33 +96,69 @@
 
     const value = url.trim();
 
+    if (!validate(value)) {
+      return;
+    }
+
+    const hasShowcase = document.getElementById(HERO_SHOWCASE_ID) !== null;
+    const submitting = start(value, source, hasShowcase);
+
+    if (hasShowcase) {
+      writePreviewAddress(value);
+    } else {
+      await openPreviewAddress(value);
+    }
+
+    await submitting;
+  }
+
+  async function startFromAddress(address: string): Promise<void> {
+    anonymousPreviewState.init();
+
+    if (anonymousPreviewState.isShowing(tryPrependProtocol(address))) {
+      return;
+    }
+
+    if (!validate(address)) {
+      return;
+    }
+
+    // A link must not add a project to a real account without a click.
+    if (await hasClaimedAccount()) {
+      input?.focus({ preventScroll: true });
+      return;
+    }
+
+    writePreviewAddress(address);
+    void start(address, 'link', true);
+  }
+
+  function validate(value: string): boolean {
     if (!value) {
       reject('Enter the address you want us to watch.');
-      return;
+      return false;
     }
 
     if (!isValidUrl(value)) {
       reject('That is not a valid URL. Try https://yourapp.com');
-      return;
+      return false;
     }
 
     validationMessage = null;
-    const hasShowcase = document.getElementById(HERO_SHOWCASE_ID) !== null;
+    return true;
+  }
+
+  function start(
+    value: string,
+    runSource: AnonymousPreviewSource,
+    hasShowcase: boolean,
+  ): Promise<void> {
     errorSource = hasShowcase ? source : 'hero';
     heroTakeover.expand(
       hasShowcase ? (composer?.getBoundingClientRect() ?? null) : null,
     );
 
-    const submitting = anonymousPreviewState.submit(
-      tryPrependProtocol(value),
-      source,
-    );
-
-    if (!hasShowcase) {
-      await goto(resolve('/'));
-    }
-
-    await submitting;
+    return anonymousPreviewState.submit(tryPrependProtocol(value), runSource);
   }
 
   function reject(message: string): void {
@@ -156,7 +201,12 @@
   }
 </script>
 
-<form class="flex w-full flex-col" onsubmit={onSubmit} novalidate>
+<form
+  class="flex w-full flex-col"
+  action={resolve('/')}
+  onsubmit={onSubmit}
+  novalidate
+>
   <div
     bind:this={composer}
     class={[
@@ -169,6 +219,7 @@
           isInvalid,
       },
     ]}
+    role="presentation"
     onmousedown={onShellMouseDown}
   >
     <div class="relative flex min-w-0 flex-1">

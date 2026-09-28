@@ -1,12 +1,15 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
   import type { AnonymousStartStep } from '$lib/domains/anonymous/domain/anonymous-preview';
+  import type { WatchHistory } from '$lib/domains/anonymous/domain/watch-history';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings';
-  import { StatusBadge } from '@logdash/hyper-ui/features';
+  import { StatusBadge, UptimeChart } from '@logdash/hyper-ui/features';
   import { Button, Spinner } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon } from 'lucide-svelte';
   import { cubicOut } from 'svelte/easing';
-  import { fade } from 'svelte/transition';
+  import { prefersReducedMotion } from 'svelte/motion';
+  import { fade, slide } from 'svelte/transition';
+  import { match } from 'ts-pattern';
   import ResponseTimePlot from '../ResponseTimePlot.svelte';
   import HeroCheckTrace from './HeroCheckTrace.svelte';
   import { heroClaim } from './hero-claim.svelte';
@@ -32,6 +35,8 @@
   const CHART_HEIGHT = 56;
   const CHART_SWAP_MS = 240;
   const CLOCK_TICK_MS = 1_000;
+  const HISTORY_HOURS = 90;
+  const HISTORY_REVEAL_MS = 240;
 
   const CREATING_STEPS: { key: AnonymousStartStep; label: string }[] = [
     { key: 'account', label: 'Creating your account' },
@@ -51,6 +56,10 @@
   const previewHost = $derived(anonymousPreviewState.previewHost ?? 'your app');
   const previewStats = $derived(statsFor(previewPings));
   const previewFailure = $derived(noResponseReason(previewPings.at(-1)));
+  const previewHistory = $derived(anonymousPreviewState.watchHistory);
+  const historyRevealMs = $derived(
+    prefersReducedMotion.current ? 0 : HISTORY_REVEAL_MS,
+  );
   const claimable = $derived(heroClaim.eligible);
 
   const demoPings = $derived(toChartPings(anonymousPreviewState.demo.pings));
@@ -84,6 +93,19 @@
       { label: 'Status', value: answered ? `${answered.statusCode}` : '--' },
       { label: 'Uptime', value: uptimeLabel(pings) ?? '--' },
     ];
+  }
+
+  function watchedLabel(history: WatchHistory): string {
+    const since = history.since.toLocaleDateString('en', {
+      month: 'short',
+      day: 'numeric',
+    });
+    const outages = match(history.outages)
+      .with(0, () => 'no outages')
+      .with(1, () => '1 outage')
+      .otherwise((count) => `${count} outages`);
+
+    return `Watched since ${since} · ${outages}`;
   }
 
   function maxResponseMs(times: number[]): number {
@@ -207,7 +229,15 @@
     lastCheckLabel(previewPings, now) ?? 'Waiting for the first check',
   )}
 
-  {@render previewActions()}
+  <div class="flex flex-col">
+    {#if previewHistory}
+      <div in:slide={{ duration: historyRevealMs, easing: cubicOut }}>
+        {@render watchedHistory(previewHistory)}
+      </div>
+    {/if}
+
+    {@render previewActions()}
+  </div>
 {/snippet}
 
 {#snippet historyBar(pings: ChartPing[], left: string, right: string)}
@@ -241,6 +271,19 @@
     </div>
 
     {@render tileFooter(left, right)}
+  </div>
+{/snippet}
+
+{#snippet watchedHistory(history: WatchHistory)}
+  <div class="flex flex-col gap-2 pb-4">
+    <p class="text-neutral-400 text-xs">{watchedLabel(history)}</p>
+
+    <UptimeChart
+      class="*:last:text-neutral-500"
+      buckets={history.hours}
+      maxBucketsToShow={HISTORY_HOURS}
+      timeLabel="hours ago"
+    />
   </div>
 {/snippet}
 

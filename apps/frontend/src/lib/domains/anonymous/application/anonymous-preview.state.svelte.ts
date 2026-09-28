@@ -2,6 +2,7 @@ import { resolve } from '$app/paths';
 import type { SimplifiedMetric } from '$lib/domains/app/projects/domain/metric';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor';
+import type { PingBucket } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error';
 import type { Log } from '$lib/domains/logs/domain/log';
 import { createLogger } from '$lib/domains/shared/logger';
@@ -12,7 +13,9 @@ import {
   type AnonymousPreview,
   type AnonymousStartStep,
 } from '../domain/anonymous-preview';
+import { watchHistory, type WatchHistory } from '../domain/watch-history';
 import { anonymousSessionService } from '../infrastructure/anonymous-session.service';
+import { writePreviewAddress } from './preview-address';
 import { startAnonymousMonitoring } from './start-anonymous-monitoring';
 
 const logger = createLogger('anonymous-preview.state', false);
@@ -20,6 +23,7 @@ const logger = createLogger('anonymous-preview.state', false);
 const PREVIEW_STORAGE_KEY = 'logdash_anonymous_preview_v0';
 const PREVIEW_POLL_INTERVAL_MS = 5_000;
 const FIRST_CHECK_POLL_INTERVAL_MS = 1_000;
+const HISTORY_POLL_EVERY = 12;
 const DEMO_POLL_INTERVAL_MS = 5_000;
 /** Metric history moves by the minute, so every 12th poll is enough. */
 const DEMO_SLOW_POLL_EVERY = 12;
@@ -39,7 +43,12 @@ export type AnonymousPreviewPhase =
   | 'ended'
   | 'error';
 
-export type AnonymousPreviewSource = 'hero' | 'final-cta' | 'seo' | 'feature';
+export type AnonymousPreviewSource =
+  | 'hero'
+  | 'final-cta'
+  | 'seo'
+  | 'feature'
+  | 'link';
 
 export type DemoMetric = SimplifiedMetric & {
   /** The last hour, one value per minute, oldest first. */
@@ -61,6 +70,11 @@ type DemoTarget = {
   monitorId: string | null;
 };
 
+type PreviewHistory = {
+  hours: (PingBucket | null)[];
+  days: (PingBucket | null)[];
+};
+
 type StoredAnonymousPreview = {
   preview: AnonymousPreview;
   createdAt: number;
@@ -71,6 +85,7 @@ class AnonymousPreviewState {
   private _preview = $state<AnonymousPreview | null>(null);
   private _submittedUrl = $state<string | null>(null);
   private _pings = $state<HttpPing[]>([]);
+  private _history = $state<PreviewHistory>({ hours: [], days: [] });
   private _creatingStep = $state<AnonymousStartStep | null>(null);
   private _error = $state<AnonymousStartError | null>(null);
   private _demo = $state<AnonymousPreviewDemo>({
@@ -84,6 +99,7 @@ class AnonymousPreviewState {
   private _demoTarget: DemoTarget | null = null;
   private _initialized = false;
   private _previewPollTimer: ReturnType<typeof setInterval> | null = null;
+  private _previewPolls = 0;
   /** Polls can overlap at the fast rate, so an older answer must not win. */
   private _pingsRequested = 0;
   private _pingsApplied = 0;
@@ -113,6 +129,16 @@ class AnonymousPreviewState {
     return this._pings;
   }
 
+  public get watchHistory(): WatchHistory | null {
+    return this._preview
+      ? watchHistory(
+          this._history.hours,
+          this._history.days,
+          this._preview.createdAt,
+        )
+      : null;
+  }
+
   public get creatingStep(): AnonymousStartStep | null {
     return this._creatingStep;
   }
@@ -123,6 +149,10 @@ class AnonymousPreviewState {
 
   public get demo(): AnonymousPreviewDemo {
     return this._demo;
+  }
+
+  public isShowing(url: string): boolean {
+    return (this._preview?.url ?? this._submittedUrl) === url;
   }
 
   public init(): void {
@@ -166,6 +196,7 @@ class AnonymousPreviewState {
     this._preview = null;
     this._submittedUrl = url;
     this._pings = [];
+    this._history = { hours: [], days: [] };
     this._error = null;
     this._creatingStep = 'account';
     this._phase = 'creating';
@@ -227,6 +258,7 @@ class AnonymousPreviewState {
     this._stopPreviewPolling();
     this._stopDemoPolling();
     this._clearStoredPreview();
+    writePreviewAddress(null);
   }
 
   public retry(): void {
@@ -300,9 +332,11 @@ class AnonymousPreviewState {
     this._preview = null;
     this._submittedUrl = null;
     this._pings = [];
+    this._history = { hours: [], days: [] };
     this._creatingStep = null;
     this._error = null;
     this._phase = 'idle';
+    writePreviewAddress(null);
   }
 
   private _startPreviewPolling(): void {
@@ -312,7 +346,8 @@ class AnonymousPreviewState {
       return;
     }
 
-    void this._refreshPings();
+    this._previewPolls = 0;
+    void this._refreshPreview();
     this._schedulePreviewPolls();
   }
 
@@ -321,7 +356,7 @@ class AnonymousPreviewState {
 
     this._previewPollTimer = setInterval(
       () => {
-        void this._refreshPings();
+        void this._refreshPreview();
       },
       this._pings.length
         ? PREVIEW_POLL_INTERVAL_MS
@@ -336,6 +371,45 @@ class AnonymousPreviewState {
 
     clearInterval(this._previewPollTimer);
     this._previewPollTimer = null;
+  }
+
+  private async _refreshPreview(): Promise<void> {
+    const withHistory = this._previewPolls % HISTORY_POLL_EVERY === 0;
+    this._previewPolls += 1;
+
+    await Promise.all([
+      this._refreshPings(),
+      withHistory ? this._refreshHistory() : Promise.resolve(),
+    ]);
+  }
+
+  private async _refreshHistory(): Promise<void> {
+    const preview = this._preview;
+
+    if (!preview || !this._isLivePreview(preview)) {
+      return;
+    }
+
+    try {
+      const [hours, days] = await Promise.all([
+        anonymousSessionService.readHistory(
+          preview.monitorId,
+          '90h',
+          preview.token,
+        ),
+        anonymousSessionService.readHistory(
+          preview.monitorId,
+          '90d',
+          preview.token,
+        ),
+      ]);
+
+      if (this._isLivePreview(preview)) {
+        this._history = { hours, days };
+      }
+    } catch (error) {
+      logger.debug('Failed to read the preview history', error);
+    }
   }
 
   private async _refreshPings(): Promise<void> {

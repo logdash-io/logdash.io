@@ -1,5 +1,10 @@
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
+import type {
+  PingBucket,
+  PingBucketPeriod,
+  PingBucketsResponse,
+} from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor';
 import {
@@ -99,6 +104,23 @@ export class AnonymousSessionService {
         customToken: token,
       },
     );
+  }
+
+  public async readHistory(
+    monitorId: string,
+    period: PingBucketPeriod,
+    token: string,
+  ): Promise<(PingBucket | null)[]> {
+    const response = await httpClient.get<PingBucketsResponse>(
+      `/monitors/${monitorId}/http_ping_buckets`,
+      {
+        params: { period },
+        requireAuth: false,
+        customToken: token,
+      },
+    );
+
+    return response.buckets.reverse();
   }
 
   public listClusters(token: string): Promise<Cluster[]> {

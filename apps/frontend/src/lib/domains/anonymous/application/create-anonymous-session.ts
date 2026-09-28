@@ -8,6 +8,12 @@ export type AnonymousSession = {
   anonymous: boolean;
 };
 
+export const hasClaimedAccount = async (): Promise<boolean> => {
+  const { user } = await sessionService.probeSession();
+
+  return !!user && user.accountClaimStatus !== 'anonymous';
+};
+
 export const ensureAnonymousSession = async (): Promise<AnonymousSession> => {
   const session = await sessionService.probeSession();
 

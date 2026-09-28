@@ -161,6 +161,7 @@ test.describe('anonymous landing flow', () => {
 
     const tile = heroTile(page);
 
+    await expect(page).toHaveURL('/for/example.com');
     await expect(tile.getByText('Your live monitor')).toBeVisible({
       timeout: 30_000,
     });
@@ -264,6 +265,9 @@ test.describe('anonymous landing flow', () => {
     await expect(
       page.getByRole('button', { name: /Upgrade your plan/i }),
     ).toHaveCount(0);
+
+    await page.goBack();
+    await expect(page).toHaveURL('/');
   });
 
   test('check 5: a second URL reuses the same anonymous account', async () => {
@@ -349,7 +353,7 @@ test.describe('anonymous landing flow', () => {
     await page.goto('/features/monitoring');
     await startMonitoring(page, 'https://example.net');
 
-    await expect(page).toHaveURL((url) => url.pathname === '/');
+    await expect(page).toHaveURL('/for/example.net');
     await expectFullScreen(page, 'example.net');
     await expect
       .poll(async () => (await readStoredPreview(page))?.url)
@@ -413,6 +417,88 @@ test.describe('first check and the way in', () => {
     ).toBeVisible({ timeout: 30_000 });
     await expect(card.getByText(`${host} is not answering`)).toBeVisible();
     await expect(card).toContainText('tell you the moment it is back up.');
+  });
+
+  test('check 12: a /for/ link starts monitoring that address once', async ({
+    page,
+  }) => {
+    const created: string[] = [];
+
+    page.on('request', (request) => {
+      if (
+        request.method() === 'POST' &&
+        /\/http_monitors$/.test(request.url())
+      ) {
+        created.push(request.url());
+      }
+    });
+
+    await page.goto('/for/example.com');
+    await expectFullScreen(page, 'example.com');
+    await expect(page.locator('#hero-url-input')).toHaveValue('example.com');
+    await expect
+      .poll(async () => (await readStoredPreview(page))?.url)
+      .toBe('https://example.com');
+
+    await page.reload();
+    await expectFullScreen(page, 'example.com');
+    await expect(page).toHaveURL('/for/example.com');
+    expect(created).toHaveLength(1);
+  });
+
+  test('check 12a: a /?url= link moves to the readable /for/ address', async ({
+    page,
+  }) => {
+    await page.goto('/?url=example.com');
+    await expectFullScreen(page, 'example.com');
+    await expect(page).toHaveURL('/for/example.com');
+  });
+
+  test('check 12b: a /for/ link only fills the field for a signed-in account', async ({
+    page,
+  }) => {
+    const created: string[] = [];
+
+    page.on('request', (request) => {
+      if (
+        request.method() === 'POST' &&
+        /\/(projects|http_monitors)$/.test(request.url())
+      ) {
+        created.push(request.url());
+      }
+    });
+    await page.route('**/app/api/auth/session', (route) =>
+      route.fulfill({ json: { user: CLAIMED_USER, token: 'claimed' } }),
+    );
+
+    await page.goto('/for/example.com');
+
+    const input = page.locator('#hero-url-input');
+    await expect(input).toHaveValue('example.com');
+    await expect(input).toBeFocused();
+    await expect(fullScreenFrame(page)).toHaveCount(0);
+    expect(created).toHaveLength(0);
+
+    // A .md site is an address to watch, not a markdown twin of a page.
+    await page.goto('/for/obsidian.md');
+    await expect(input).toHaveValue('obsidian.md');
+    await expect(page).toHaveTitle('obsidian.md · Logdash');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'noindex',
+    );
+  });
+
+  test('check 13: a /?url= link to something that is not an address says so', async ({
+    page,
+  }) => {
+    await page.goto('/?url=not a site');
+
+    await expect(page.locator('#hero-url-status')).toHaveText(
+      'That is not a valid URL. Try https://yourapp.com',
+    );
+    await expect(fullScreenFrame(page)).toHaveCount(0);
+    expect(await readStoredPreview(page)).toBeNull();
   });
 
   test('check 7: Start monitoring in the nav puts the cursor in the hero field', async ({
