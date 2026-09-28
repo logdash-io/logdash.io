@@ -48,6 +48,15 @@ class PageTransitionState {
   private takeover: Takeover | null = null;
   // `$state.raw`: views are compared by identity, so they must not be proxied.
   private arcView = $state.raw<PageViewHandle | null>(null);
+  private navigated = $state(false);
+
+  get hasNavigated(): boolean {
+    return this.navigated;
+  }
+
+  markNavigated(): void {
+    this.navigated = true;
+  }
 
   /** True while a takeover is carrying the scroll to the top. */
   get active(): boolean {

@@ -46,6 +46,11 @@ export const handle: Handle = async ({ event, resolve }) => {
     });
   }
 
-  const response = await resolve(event);
+  const response = await resolve(event, {
+    preload: ({ type, path }) =>
+      type === 'js' ||
+      type === 'css' ||
+      (type === 'font' && path.includes('inter-latin-opsz-normal')),
+  });
   return response;
 };

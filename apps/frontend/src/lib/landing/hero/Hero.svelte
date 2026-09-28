@@ -1,5 +1,6 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
+  import { pageTransition } from '$lib/landing/page-transition.svelte';
   import FoundersSocialProof from '$lib/landing/social-proof/FoundersSocialProof.svelte';
   import { onMount } from 'svelte';
   import HeroShowcase from './HeroShowcase.svelte';
@@ -35,7 +36,13 @@
   The hero is the live demo, so "Live demo" links land on it. The scroll
   margin clears the sticky nav, which puts it at the very top of the page.
 -->
-<section id={HERO_ID} class="w-full scroll-mt-20 pb-12 lg:pb-16">
+<section
+  id={HERO_ID}
+  class={[
+    'w-full scroll-mt-20 pb-12 lg:pb-16',
+    { entering: !pageTransition.hasNavigated },
+  ]}
+>
   <header
     class="relative mx-auto flex w-full max-w-landing flex-col items-start px-4 pt-12 sm:px-6 lg:px-10 lg:pt-16"
   >
@@ -73,9 +80,76 @@
     </div>
   </header>
 
-  <div class="relative w-full">
+  <div class="showcase relative w-full">
     <HeroStage />
 
     <HeroShowcase />
   </div>
 </section>
+
+<style>
+  @keyframes enter {
+    from {
+      opacity: 0;
+      translate: 0 var(--rise);
+      filter: blur(var(--blur));
+    }
+    50% {
+      translate: 0 0;
+    }
+  }
+
+  .entering header > :global(*),
+  .entering .showcase {
+    animation: enter var(--duration) cubic-bezier(0.25, 1, 0.5, 1) var(--delay)
+      backwards;
+  }
+
+  .entering header > :global(:nth-child(1)) {
+    --rise: 0px;
+    --blur: 4px;
+    --duration: 1200ms;
+    --delay: 250ms;
+  }
+
+  .entering header > :global(:nth-child(2)) {
+    --rise: 4px;
+    --blur: 12px;
+    --duration: 1400ms;
+    --delay: 0ms;
+  }
+
+  .entering header > :global(:nth-child(3)) {
+    --rise: 3px;
+    --blur: 10px;
+    --duration: 1300ms;
+    --delay: 150ms;
+  }
+
+  .entering header > :global(:nth-child(4)) {
+    --rise: 3px;
+    --blur: 8px;
+    --duration: 1300ms;
+    --delay: 300ms;
+  }
+
+  .entering .showcase {
+    --rise: 6px;
+    --blur: 10px;
+    --duration: 1600ms;
+    --delay: 450ms;
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .entering header > :global(*),
+    .entering .showcase {
+      animation: fade 400ms ease backwards;
+    }
+  }
+</style>
