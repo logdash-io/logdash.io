@@ -8,12 +8,7 @@ import {
   type StatusPageOptions,
 } from '@logdash/status';
 import { useStatusPage } from '@logdash/status/react';
-import {
-  useEffect,
-  useState,
-  type FocusEvent,
-  type KeyboardEvent,
-} from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 type Status = { label: string; dot: string };
 type DayStatus = 'up' | 'degraded' | 'down' | 'none';
@@ -33,17 +28,24 @@ const MONITOR_STATUS: Record<Monitor['status'], Status> = {
 };
 
 const DAY_BAR: Record<DayStatus, string> = {
-  up: 'bg-muted-foreground/40 hover:bg-muted-foreground focus-visible:bg-muted-foreground',
+  up: 'bg-muted-foreground/40 data-[open]:bg-muted-foreground',
   degraded: 'bg-amber-500',
   down: 'bg-red-600',
-  none: 'bg-muted-foreground/15 hover:bg-muted-foreground/40 focus-visible:bg-muted-foreground/40',
+  none: 'bg-muted-foreground/15 data-[open]:bg-muted-foreground/40',
+};
+
+const DAY_DOT: Record<DayStatus, string> = {
+  up: 'bg-green-600',
+  degraded: 'bg-amber-500',
+  down: 'bg-red-600',
+  none: 'bg-muted-foreground',
 };
 
 const UPTIME_WINDOWS = [
-  ['24h', '24 hours'],
-  ['7d', '7 days'],
-  ['30d', '30 days'],
-  ['90d', '90 days'],
+  ['24h', '24 h uptime'],
+  ['7d', '7 d uptime'],
+  ['30d', '30 d uptime'],
+  ['90d', '90 d uptime'],
 ] as const;
 
 const DATE = new Intl.DateTimeFormat('en-US', {
@@ -74,7 +76,7 @@ export function StatusPage({
   }
 
   return (
-    <div className={className}>
+    <div className={`text-foreground ${className ?? ''}`}>
       {error ? <StatusUnavailable error={error} /> : <StatusPageSkeleton />}
     </div>
   );
@@ -92,15 +94,18 @@ export function StatusPageView({
       <StatusBanner page={page} />
 
       {page.monitors.length ? (
-        <ul className="border-border mt-8 border-t">
+        <ul className="border-border mt-12 border-t sm:mt-16">
           {page.monitors.map((monitor) => (
-            <li key={monitor.id} className="border-border border-b py-6">
+            <li
+              key={monitor.id}
+              className="border-border border-b py-10 sm:py-12"
+            >
               <MonitorRow monitor={monitor} />
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-muted-foreground mt-8 text-sm">
+        <p className="border-border text-muted-foreground mt-12 border-t pt-10 text-sm sm:mt-16">
           No monitors on this page yet.
         </p>
       )}
@@ -112,15 +117,11 @@ export function StatusBanner({ page }: { page: StatusPageData }) {
   const status = PAGE_STATUS[page.status];
 
   return (
-    <header className="flex flex-col gap-1">
-      <h2 className="text-muted-foreground text-sm">{page.name}</h2>
-      <p className="flex items-center gap-3 text-2xl font-medium tracking-tight sm:text-3xl">
-        <span
-          aria-hidden="true"
-          className={`size-2.5 shrink-0 rounded-full ${status.dot}`}
-        />
-        {status.label}
-      </p>
+    <header>
+      <h2 className="text-muted-foreground mb-3 text-base break-words">
+        {page.name}
+      </h2>
+      <Headline dot={status.dot}>{status.label}</Headline>
       <UpdatedAgo updatedAt={page.updatedAt} />
     </header>
   );
@@ -130,24 +131,26 @@ export function MonitorRow({ monitor }: { monitor: Monitor }) {
   const status = MONITOR_STATUS[monitor.status];
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-4">
-        <h3 className="min-w-0 truncate font-medium">{monitor.name}</h3>
-        <span className="text-muted-foreground flex shrink-0 items-center gap-2 text-sm">
+    <div>
+      <div className="flex items-start justify-between gap-4">
+        <h3 className="min-w-0 text-lg font-medium tracking-[-0.01em] break-words">
+          {monitor.name}
+        </h3>
+        <span className="text-muted-foreground flex h-7 shrink-0 items-center gap-2 text-sm">
           <span
             aria-hidden="true"
-            className={`size-2 rounded-full ${status.dot}`}
+            className={`size-1.5 rounded-full ${status.dot}`}
           />
           {status.label}
         </span>
       </div>
 
-      <dl className="grid grid-cols-4 gap-4 sm:max-w-md">
+      <dl className="mt-6 grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-4">
         {UPTIME_WINDOWS.map(([window, label]) => (
-          <div key={window} className="flex flex-col gap-0.5">
-            <dt className="text-muted-foreground text-xs">{label}</dt>
+          <div key={window} className="flex min-w-0 flex-col gap-1">
+            <dt className="text-muted-foreground truncate text-xs">{label}</dt>
             <dd
-              className={`text-sm tabular-nums ${monitor.uptime[window] === null ? 'text-muted-foreground' : ''}`}
+              className={`truncate text-base font-medium tabular-nums sm:text-lg ${monitor.uptime[window] === null ? 'text-muted-foreground' : ''}`}
             >
               {formatUptime(monitor.uptime[window])}
             </dd>
@@ -155,24 +158,25 @@ export function MonitorRow({ monitor }: { monitor: Monitor }) {
         ))}
       </dl>
 
-      <DailyBars
-        days={monitor.history.daily}
-        label={`${monitor.name}, daily uptime for the last 90 days`}
-      />
+      <div className="mt-5">
+        <DailyBars days={monitor.history.daily} label={monitor.name} />
+      </div>
     </div>
   );
 }
 
 export function DailyBars({ days, label }: { days: Bucket[]; label: string }) {
+  const grid = useRef<HTMLDivElement>(null);
+
+  useEffect(() => (grid.current ? barsTooltip(grid.current) : undefined), []);
+
   return (
     <div>
       <div
+        ref={grid}
         role="grid"
-        tabIndex={-1}
-        aria-label={label}
-        className="relative outline-none"
-        onKeyDown={onBarsKeyDown}
-        onFocus={onBarsFocus}
+        aria-label={`${label}, daily uptime over the last ${days.length} days (UTC)`}
+        className="relative"
       >
         <div role="row" className="flex h-8 gap-px sm:gap-0.5">
           {days.map((day, index) => (
@@ -181,9 +185,9 @@ export function DailyBars({ days, label }: { days: Bucket[]; label: string }) {
               role="gridcell"
               tabIndex={index === days.length - 1 ? 0 : -1}
               aria-label={describeDay(day)}
-              className={`group focus-visible:ring-ring focus-visible:ring-offset-background min-w-0 flex-1 rounded-[1px] outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${DAY_BAR[dayStatus(day)]}`}
+              className={`group focus-visible:outline-ring min-w-0 flex-1 rounded-[1px] focus-visible:outline-2 focus-visible:outline-offset-2 data-[open]:-my-1 ${DAY_BAR[dayStatus(day)]}`}
             >
-              <DayTooltip day={day} left={tooltipLeft(index, days.length)} />
+              <DayTooltip day={day} at={((index + 0.5) / days.length) * 100} />
             </div>
           ))}
         </div>
@@ -193,47 +197,62 @@ export function DailyBars({ days, label }: { days: Bucket[]; label: string }) {
         aria-hidden="true"
         className="text-muted-foreground mt-2 flex justify-between font-mono text-xs"
       >
-        <span>90 days ago</span>
+        <span>{days.length} days ago</span>
         <span>Today</span>
       </div>
     </div>
   );
 }
 
-function DayTooltip({ day, left }: { day: Bucket; left: string }) {
-  const checks = day.successCount + day.failureCount;
+/**
+ * `at` is the bar's centre in percent of the row. The tooltip slides by the same
+ * share of its own width, so it stays over its bar and never leaves the row.
+ */
+function DayTooltip({ day, at }: { day: Bucket; at: number }) {
+  const checks = checksOf(day);
 
   return (
     <div
       aria-hidden="true"
-      style={{ left }}
-      className="border-border bg-popover text-popover-foreground pointer-events-none absolute bottom-full z-10 mb-2 hidden w-44 rounded-md border p-3 text-xs shadow-md group-hover:block group-focus-visible:block"
+      style={{ left: `${at}%`, translate: `-${at}% 0` }}
+      className="border-border bg-popover text-popover-foreground pointer-events-none absolute bottom-full z-10 mb-2 hidden w-max max-w-full flex-col gap-1 rounded-md border px-3 py-2.5 shadow-md group-data-[open]:flex"
     >
-      <p className="font-medium">
+      <p className="text-sm font-medium">
         {DATE.format(new Date(day.timestamp))}{' '}
-        <span className="text-muted-foreground font-normal">UTC</span>
+        <span className="text-muted-foreground font-mono text-xs font-normal">
+          UTC
+        </span>
       </p>
       {checks ? (
-        <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 tabular-nums">
-          <dt className="text-muted-foreground">Uptime</dt>
-          <dd className="text-right">
-            {formatUptime((day.successCount / checks) * 100)}
-          </dd>
-          <dt className="text-muted-foreground">Checks</dt>
-          <dd className="text-right">{checks.toLocaleString('en-US')}</dd>
-          {day.averageLatencyMs !== null && (
-            <>
-              <dt className="text-muted-foreground">Avg response</dt>
-              <dd className="text-right">
-                {Math.round(day.averageLatencyMs)} ms
-              </dd>
-            </>
-          )}
-        </dl>
+        <>
+          <p className="flex items-center gap-2 text-xs tabular-nums">
+            <span
+              className={`size-1.5 shrink-0 rounded-full ${DAY_DOT[dayStatus(day)]}`}
+            />
+            {formatUptime((day.successCount / checks) * 100)} uptime
+          </p>
+          <p className="text-muted-foreground text-xs tabular-nums">
+            {describeChecks(day, ' · ')}
+          </p>
+        </>
       ) : (
-        <p className="text-muted-foreground mt-1">No checks this day</p>
+        <p className="text-muted-foreground text-xs">No checks this day</p>
       )}
     </div>
+  );
+}
+
+function Headline({ dot, children }: { dot: string; children: ReactNode }) {
+  return (
+    <p className="flex items-start gap-3 text-3xl leading-[1.15] font-medium tracking-[-0.03em] text-balance sm:text-4xl">
+      <span
+        aria-hidden="true"
+        className="flex h-[1.15em] shrink-0 items-center"
+      >
+        <span className={`size-2.5 rounded-full ${dot}`} />
+      </span>
+      {children}
+    </p>
   );
 }
 
@@ -249,7 +268,7 @@ function UpdatedAgo({ updatedAt }: { updatedAt: string }) {
   return (
     <time
       dateTime={updatedAt}
-      className="text-muted-foreground min-h-5 text-sm"
+      className="text-muted-foreground mt-4 block min-h-5 text-sm tabular-nums"
     >
       {now === null ? '' : `Updated ${formatAge(updatedAt, now)}`}
     </time>
@@ -258,33 +277,28 @@ function UpdatedAgo({ updatedAt }: { updatedAt: string }) {
 
 function StatusUnavailable({ error }: { error: Error }) {
   return (
-    <div role="alert" className="flex flex-col gap-1">
-      <p className="flex items-center gap-3 text-2xl font-medium tracking-tight sm:text-3xl">
-        <span
-          aria-hidden="true"
-          className="bg-muted-foreground size-2.5 shrink-0 rounded-full"
-        />
-        Status unavailable
+    <div role="alert">
+      <Headline dot="bg-muted-foreground">Status unavailable</Headline>
+      <p className="text-muted-foreground mt-4 text-sm">
+        {describeError(error)}
       </p>
-      <p className="text-muted-foreground text-sm">{describeError(error)}</p>
     </div>
   );
 }
 
 function StatusPageSkeleton() {
   return (
-    <div
-      aria-busy="true"
-      className="flex animate-pulse flex-col motion-reduce:animate-none"
-    >
+    <div aria-busy="true" className="animate-pulse motion-reduce:animate-none">
       <span className="sr-only">Loading status</span>
-      <div className="bg-muted h-4 w-24 rounded-sm" />
-      <div className="bg-muted mt-3 h-8 w-72 max-w-full rounded-sm" />
-      <div className="border-border mt-10 border-t">
+      <div className="bg-muted h-5 w-24 rounded-sm" />
+      <div className="bg-muted mt-4 h-8 w-72 max-w-full rounded-sm sm:h-9" />
+      <div className="bg-muted mt-5 h-4 w-28 rounded-sm" />
+      <div className="border-border mt-12 border-t sm:mt-16">
         {[0, 1].map((row) => (
-          <div key={row} className="border-border border-b py-6">
-            <div className="bg-muted h-4 w-32 rounded-sm" />
-            <div className="bg-muted mt-6 h-8 rounded-sm" />
+          <div key={row} className="border-border border-b py-10 sm:py-12">
+            <div className="bg-muted h-6 w-32 rounded-sm" />
+            <div className="bg-muted mt-6 h-26 rounded-sm sm:h-12" />
+            <div className="bg-muted mt-5 h-8 rounded-sm" />
           </div>
         ))}
       </div>
@@ -292,35 +306,91 @@ function StatusPageSkeleton() {
   );
 }
 
-function onBarsKeyDown(event: KeyboardEvent<HTMLElement>) {
-  const cells = gridCells(event.currentTarget);
-  const from = cells.indexOf(event.target as HTMLElement);
-  const to = {
-    ArrowLeft: from - 1,
-    ArrowRight: from + 1,
-    Home: 0,
-    End: cells.length - 1,
-  }[event.key];
+/**
+ * One tooltip at a time for the bar under the pointer or with focus, whichever
+ * moved last. Escape hides it, arrow keys, Home and End move between days, and
+ * the grid keeps a single tab stop. Touch shows it through focus on tap.
+ */
+function barsTooltip(grid: HTMLElement): () => void {
+  let hovered: HTMLElement | null = null;
+  let focused: HTMLElement | null = null;
 
-  if (to === undefined || !cells[to]) return;
-  event.preventDefault();
-  cells[to].focus();
+  const cells = () =>
+    Array.from(grid.querySelectorAll<HTMLElement>('[role="gridcell"]'));
+  const cellOf = (target: EventTarget | null) =>
+    target instanceof Element
+      ? target.closest<HTMLElement>('[role="gridcell"]')
+      : null;
+  const show = (cell: HTMLElement | null) => {
+    for (const open of grid.querySelectorAll('[data-open]')) {
+      if (open !== cell) open.removeAttribute('data-open');
+    }
+    cell?.setAttribute('data-open', '');
+  };
+
+  const onPointerOver = (event: PointerEvent) => {
+    const cell = cellOf(event.target);
+    if (event.pointerType === 'touch' || !cell || cell === hovered) return;
+    hovered = cell;
+    show(cell);
+  };
+  const onPointerLeave = (event: PointerEvent) => {
+    if (event.pointerType === 'touch') return;
+    hovered = null;
+    show(focused);
+  };
+  const onFocusIn = (event: FocusEvent) => {
+    const cell = cellOf(event.target);
+    if (!cell) return;
+    focused = cell;
+    for (const other of cells()) other.tabIndex = other === cell ? 0 : -1;
+    show(cell);
+  };
+  const onFocusOut = (event: FocusEvent) => {
+    if (grid.contains(event.relatedTarget as Node | null)) return;
+    focused = null;
+    show(hovered);
+  };
+  const onKeyDown = (event: KeyboardEvent) => {
+    const all = cells();
+    const from = all.indexOf(event.target as HTMLElement);
+    const to = {
+      ArrowLeft: from - 1,
+      ArrowRight: from + 1,
+      Home: 0,
+      End: all.length - 1,
+    }[event.key];
+    if (from === -1 || to === undefined || !all[to]) return;
+    event.preventDefault();
+    all[to].focus();
+  };
+  const onEscape = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') show(null);
+  };
+
+  grid.addEventListener('pointerover', onPointerOver);
+  grid.addEventListener('pointerleave', onPointerLeave);
+  grid.addEventListener('focusin', onFocusIn);
+  grid.addEventListener('focusout', onFocusOut);
+  grid.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keydown', onEscape);
+
+  return () => {
+    grid.removeEventListener('pointerover', onPointerOver);
+    grid.removeEventListener('pointerleave', onPointerLeave);
+    grid.removeEventListener('focusin', onFocusIn);
+    grid.removeEventListener('focusout', onFocusOut);
+    grid.removeEventListener('keydown', onKeyDown);
+    window.removeEventListener('keydown', onEscape);
+  };
 }
 
-function onBarsFocus(event: FocusEvent<HTMLElement>) {
-  const cells = gridCells(event.currentTarget);
-  if (!cells.includes(event.target as HTMLElement)) return;
-  for (const cell of cells) {
-    cell.tabIndex = cell === event.target ? 0 : -1;
-  }
-}
-
-function gridCells(grid: HTMLElement): HTMLElement[] {
-  return Array.from(grid.querySelectorAll<HTMLElement>('[role="gridcell"]'));
+function checksOf(day: Bucket): number {
+  return day.successCount + day.failureCount;
 }
 
 function dayStatus(day: Bucket): DayStatus {
-  const checks = day.successCount + day.failureCount;
+  const checks = checksOf(day);
   if (!checks) return 'none';
   const uptime = day.successCount / checks;
   if (uptime < 0.5) return 'down';
@@ -329,20 +399,19 @@ function dayStatus(day: Bucket): DayStatus {
 
 function describeDay(day: Bucket): string {
   const date = DATE.format(new Date(day.timestamp));
-  const checks = day.successCount + day.failureCount;
+  const checks = checksOf(day);
   if (!checks) return `${date}: no checks`;
 
   const uptime = formatUptime((day.successCount / checks) * 100);
-  const latency =
-    day.averageLatencyMs === null
-      ? ''
-      : `, ${Math.round(day.averageLatencyMs)} ms average response`;
-  return `${date}: ${uptime} uptime, ${checks.toLocaleString('en-US')} checks${latency}`;
+  return `${date}: ${uptime} uptime, ${describeChecks(day, ', ')}`;
 }
 
-function tooltipLeft(index: number, count: number): string {
-  const center = ((index + 0.5) / count) * 100;
-  return `clamp(0px, calc(${center}% - 5.5rem), calc(100% - 11rem))`;
+function describeChecks(day: Bucket, separator: string): string {
+  const checks = checksOf(day);
+  const count = `${checks.toLocaleString('en-US')} ${checks === 1 ? 'check' : 'checks'}`;
+  return day.averageLatencyMs === null
+    ? count
+    : `${count}${separator}${Math.round(day.averageLatencyMs)} ms avg`;
 }
 
 function formatUptime(percent: number | null): string {
@@ -352,7 +421,7 @@ function formatUptime(percent: number | null): string {
 }
 
 function formatAge(from: string, now: number): string {
-  const seconds = Math.max(0, Math.round((now - Date.parse(from)) / 1000));
+  const seconds = Math.max(0, Math.floor((now - Date.parse(from)) / 1000));
   if (seconds < 5) return 'just now';
   if (seconds < 60) return `${seconds} s ago`;
   const minutes = Math.floor(seconds / 60);

@@ -138,7 +138,7 @@ Options for `useStatusPage`, `statusPage` and `createStatusPageStore`:
 | `initialData`  |                          | A page fetched earlier, usually on the server.    |
 
 - Polling runs only in the browser and only while something is subscribed.
-- It fetches right away when there is no data yet; with `initialData` the first refresh comes after `pollInterval`.
+- It fetches right away when there is no data yet, or when `initialData` is older than `pollInterval` (for example a cached page served while it revalidates); otherwise the first refresh comes after `pollInterval`.
 - It pauses while the tab is hidden and refetches as soon as the tab is visible again.
 - `isLoading` is `true` while a request is in flight, including background refreshes, and before the first load.
   Show a loading state for `!data && isLoading`, not for `isLoading` alone.

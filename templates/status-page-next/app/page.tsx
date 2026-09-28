@@ -12,7 +12,7 @@ const getStatusPage = cache(async () => {
 
   if (!statusPageId) {
     throw new Error(
-      'LOGDASH_STATUS_PAGE_ID is not set. Copy .env.example to .env.local and set it to your status page id.',
+      'LOGDASH_STATUS_PAGE_ID is not set. Set it to your status page id in .env.local, or in the environment variables of your host (on Vercel: Project Settings, Environment Variables).',
     );
   }
 

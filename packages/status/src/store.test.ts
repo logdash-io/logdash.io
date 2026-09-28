@@ -6,7 +6,7 @@ const page = (updatedAt: string): StatusPage => ({ name: 'Acme', status: 'operat
 const initialData = page('2026-01-01T00:00:00.000Z');
 const fresh = page('2026-01-01T00:01:00.000Z');
 
-let visibility: 'visible' | 'hidden' = 'visible';
+let visibility: DocumentVisibilityState | 'prerender' = 'visible';
 let fetchMock: ReturnType<typeof mockFetch>;
 
 function mockFetch(respond: () => Promise<Response>) {
@@ -21,7 +21,7 @@ function failWith(status: number) {
   return async () => ({ ok: false, status, statusText: '' }) as Response;
 }
 
-function setVisibility(state: 'visible' | 'hidden'): void {
+function setVisibility(state: typeof visibility): void {
   visibility = state;
   document.dispatchEvent(new Event('visibilitychange'));
 }
@@ -32,7 +32,7 @@ beforeEach(() => {
   visibility = 'visible';
   const fakeDocument = Object.defineProperty(new EventTarget(), 'visibilityState', { get: () => visibility });
   Object.defineProperty(globalThis, 'document', { value: fakeDocument, configurable: true });
-  mock.timers.enable({ apis: ['setTimeout'] });
+  mock.timers.enable({ apis: ['setTimeout', 'Date'], now: Date.parse(initialData.updatedAt) });
   fetchMock = mockFetch(ok(fresh));
 });
 
@@ -78,9 +78,6 @@ test('does not poll outside the browser', () => {
 
 test('polls only while subscribed', async () => {
   const store = createStatusPageStore('acme', { initialData, pollInterval: 1_000 });
-  mock.timers.tick(5_000);
-  assert.equal(fetchMock.mock.callCount(), 0);
-
   const unsubscribe = store.subscribe(() => {});
   assert.equal(fetchMock.mock.callCount(), 0);
   const before = store.getSnapshot();
@@ -100,6 +97,28 @@ test('polls only while subscribed', async () => {
   unsubscribe();
   mock.timers.tick(5_000);
   assert.equal(fetchMock.mock.callCount(), 2);
+});
+
+test('does not fetch without subscribers and refreshes stale initialData on subscribe', async () => {
+  const store = createStatusPageStore('acme', { initialData, pollInterval: 60_000 });
+  mock.timers.tick(5 * 60_000);
+  assert.equal(fetchMock.mock.callCount(), 0);
+
+  store.subscribe(() => {});
+  assert.equal(fetchMock.mock.callCount(), 1);
+  await settle();
+  assert.equal(store.getSnapshot().data, fresh);
+
+  mock.timers.tick(60_000);
+  assert.equal(fetchMock.mock.callCount(), 2);
+});
+
+test('treats a visibilityState other than hidden as visible', () => {
+  visibility = 'prerender';
+  const store = createStatusPageStore('acme');
+
+  store.subscribe(() => {});
+  assert.equal(fetchMock.mock.callCount(), 1);
 });
 
 test('keeps the last good data on error and clears the error on the next success', async () => {
@@ -160,11 +179,13 @@ test('fetchStatusPage encodes the id and joins the base URL', async () => {
   assert.equal(fetchMock.mock.calls[0].arguments[0], 'http://localhost:3000/v1/status_pages/status.acme.com%2Fx');
 });
 
-test('a pollInterval of 0 or Infinity does not poll', async () => {
+test('a pollInterval of 0 or Infinity does not poll, not even when the tab becomes visible', async () => {
   for (const pollInterval of [0, Infinity]) {
     const store = createStatusPageStore('acme', { initialData, pollInterval });
     const unsubscribe = store.subscribe(() => {});
     mock.timers.tick(120_000);
+    setVisibility('hidden');
+    setVisibility('visible');
     await settle();
     unsubscribe();
   }

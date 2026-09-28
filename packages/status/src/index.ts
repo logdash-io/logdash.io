@@ -86,18 +86,28 @@ export function createStatusPageStore(
     for (const listener of listeners) listener();
   }
 
+  // 0, Infinity and anything above setTimeout's 32-bit limit would fire immediately and poll in a tight loop.
+  const canPoll = pollInterval > 0 && pollInterval < 2 ** 31;
+
   function isPolling(): boolean {
-    return listeners.size > 0 && typeof document !== 'undefined' && document.visibilityState === 'visible';
+    return listeners.size > 0 && typeof document !== 'undefined' && document.visibilityState !== 'hidden';
+  }
+
+  // initialData can be much older than pollInterval, for example a statically generated page served
+  // stale while it revalidates, so it is refreshed on subscribe instead of after a full interval.
+  function isStale(): boolean {
+    if (!snapshot.lastUpdated) return true;
+    return canPoll && Date.now() - snapshot.lastUpdated.getTime() >= pollInterval;
   }
 
   function schedule(): void {
     clearTimeout(timer);
-    // 0, Infinity and anything above setTimeout's 32-bit limit would fire immediately and poll in a tight loop.
-    if (isPolling() && pollInterval > 0 && pollInterval < 2 ** 31) timer = setTimeout(refresh, pollInterval);
+    if (isPolling() && canPoll) timer = setTimeout(refresh, pollInterval);
   }
 
   function onVisibilityChange(): void {
-    if (isPolling()) void refresh();
+    // With polling off, only a store without data fetches when the tab becomes visible.
+    if (isPolling() && (canPoll || !snapshot.data)) void refresh();
     else clearTimeout(timer);
   }
 
@@ -127,8 +137,8 @@ export function createStatusPageStore(
 
       if (listeners.size === 1 && typeof document !== 'undefined') {
         document.addEventListener('visibilitychange', onVisibilityChange);
-        if (snapshot.data) schedule();
-        else if (isPolling()) void refresh();
+        if (isPolling() && isStale()) void refresh();
+        else schedule();
       }
 
       return () => {
