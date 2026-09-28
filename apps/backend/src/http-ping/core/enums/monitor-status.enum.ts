@@ -1,4 +1,4 @@
-export enum BadgeStatus {
+export enum MonitorStatus {
   Up = 'up',
   Degraded = 'degraded',
   Down = 'down',

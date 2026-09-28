@@ -146,29 +146,22 @@ export class HttpPingBucketAggregationService {
     monitorId: string,
     grouping: BucketGranularity,
   ): Promise<VirtualBucket | null> {
-    const toDate = addHours(new Date(), 1);
-    toDate.setMinutes(0, 0);
-    const fromDateForMostRecent = subHours(toDate, 1);
-    const isDailyGrouping = grouping === BucketGranularity.Day;
-
-    if (isDailyGrouping) {
-      fromDateForMostRecent.setUTCHours(0, 0, 0, 0);
-    }
-
-    const mostRecentBuckets = await this.httpPingAggregationService.aggregateByMonitorForTimeRange(
+    const currentHour = startOfHour(new Date());
+    const [mostRecentBucket] = await this.httpPingAggregationService.aggregateByMonitorForTimeRange(
       monitorId,
-      fromDateForMostRecent,
-      toDate,
+      currentHour,
+      addHours(currentHour, 1),
     );
 
-    if (mostRecentBuckets.length === 0) {
+    if (!mostRecentBucket) {
       return null;
     }
 
-    const mostRecentBucket = mostRecentBuckets[0];
+    const today = new Date(currentHour);
+    today.setUTCHours(0, 0, 0, 0);
 
     return {
-      timestamp: isDailyGrouping ? fromDateForMostRecent : mostRecentBucket.hour_timestamp,
+      timestamp: grouping === BucketGranularity.Day ? today : mostRecentBucket.hour_timestamp,
       successCount: mostRecentBucket.success_count,
       failureCount: mostRecentBucket.failure_count,
       averageLatencyMs: mostRecentBucket.average_latency_ms,

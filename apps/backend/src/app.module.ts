@@ -33,6 +33,7 @@ import { PersonalApiKeyCoreModule } from './personal-api-key/core/personal-api-k
 import { OverviewCoreModule } from './overview/core/overview-core.module';
 import { CliAuthModule } from './cli-auth/core/cli-auth.module';
 import { BadgeCoreModule } from './badge/core/badge-core.module';
+import { StatusPageCoreModule } from './status-page/core/status-page-core.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { BadgeCoreModule } from './badge/core/badge-core.module';
     OverviewCoreModule,
     CliAuthModule,
     BadgeCoreModule,
+    StatusPageCoreModule,
   ],
 })
 export class AppModule {}

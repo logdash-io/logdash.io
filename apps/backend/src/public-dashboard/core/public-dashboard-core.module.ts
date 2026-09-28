@@ -10,6 +10,7 @@ import { ProjectReadModule } from '../../project/read/project-read.module';
 import { PublicDashboardCompositionModule } from '../composition/public-dashboard-composition.module';
 import { PublicDashboardLimitModule } from '../limit/public-dashboard-limit.module';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
+import { StatusPageCompositionModule } from '../../status-page/composition/status-page-composition.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/c
     ProjectReadModule,
     PublicDashboardCompositionModule,
     PublicDashboardLimitModule,
+    StatusPageCompositionModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [PublicDashboardCoreController],

@@ -1,6 +1,7 @@
 import { setHours, startOfHour, subDays, subHours, subMinutes } from 'date-fns';
 import { advanceTo } from 'jest-date-mock';
 import request from 'supertest';
+import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
 
@@ -281,7 +282,29 @@ describe('BadgeCoreController (reads)', () => {
       expect(response.body).not.toContain('mark-top');
     });
 
-    it('reads the badge by custom domain', async () => {
+    it('reads the badge by verified custom domain', async () => {
+      // given
+      const setup = await setupBadge({ isPro: true });
+
+      const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+        domain: 'status.test.com',
+        publicDashboardId: setup.publicDashboard.id,
+        token: setup.token,
+      });
+
+      await bootstrap.models.customDomainModel.findByIdAndUpdate(customDomain.id, {
+        status: CustomDomainStatus.Verified,
+      });
+
+      // when
+      const response = await readBadge(customDomain.domain, setup.monitor.badgeKey);
+
+      // then
+      expect(response.status).toBe(200);
+      expect(readTitle(response)).toBe('uptime 30d: no data');
+    });
+
+    it('returns 404 for a custom domain that is not verified', async () => {
       // given
       const setup = await setupBadge({ isPro: true });
 
@@ -295,8 +318,7 @@ describe('BadgeCoreController (reads)', () => {
       const response = await readBadge(customDomain.domain, setup.monitor.badgeKey);
 
       // then
-      expect(response.status).toBe(200);
-      expect(readTitle(response)).toBe('uptime 30d: no data');
+      expect(response.status).toBe(404);
     });
 
     it('escapes the monitor name', async () => {

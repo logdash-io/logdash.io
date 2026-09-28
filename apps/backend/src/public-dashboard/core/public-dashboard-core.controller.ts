@@ -30,6 +30,7 @@ import { PublicDashboardLimitService } from '../limit/public-dashboard-limit.ser
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { CustomDomainReadService } from '../../custom-domain/read/custom-domain-read.service';
 import { CustomDomainSerializer } from '../../custom-domain/core/entities/custom-domain.serializer';
+import { StatusPageCompositionService } from '../../status-page/composition/status-page-composition.service';
 
 @ApiTags('Public Dashboards')
 @Controller()
@@ -43,6 +44,7 @@ export class PublicDashboardCoreController {
     private readonly publicDashboardCompositionService: PublicDashboardCompositionService,
     private readonly publicDashboardLimitService: PublicDashboardLimitService,
     private readonly customDomainReadService: CustomDomainReadService,
+    private readonly statusPageCompositionService: StatusPageCompositionService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -95,6 +97,7 @@ export class PublicDashboardCoreController {
     });
 
     await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
+    await this.statusPageCompositionService.invalidateCache(publicDashboardId);
 
     return PublicDashboardSerializer.serialize(dashboard);
   }
@@ -216,6 +219,7 @@ export class PublicDashboardCoreController {
     });
 
     await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
+    await this.statusPageCompositionService.invalidateCache(publicDashboardId);
 
     const updatedDashboard = await this.publicDashboardReadService.readById(publicDashboardId);
 
@@ -258,6 +262,7 @@ export class PublicDashboardCoreController {
     });
 
     await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
+    await this.statusPageCompositionService.invalidateCache(publicDashboardId);
 
     const updatedDashboard = await this.publicDashboardReadService.readById(publicDashboardId);
 

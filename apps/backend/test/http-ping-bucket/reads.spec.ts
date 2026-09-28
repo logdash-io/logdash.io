@@ -1,4 +1,4 @@
-import { subDays, subHours } from 'date-fns';
+import { addHours, addMinutes, subDays, subHours } from 'date-fns';
 import { advanceTo } from 'jest-date-mock';
 import { Types } from 'mongoose';
 import request from 'supertest';
@@ -458,6 +458,48 @@ describe('Http Ping Bucket(reads)', () => {
 
     const nullBuckets = body.buckets.filter((bucket) => bucket === null);
     expect(nullBuckets).toHaveLength(89);
+  });
+
+  it('does not count already bucketed hours of today twice', async () => {
+    // given
+    const { token, project } = await bootstrap.utils.generalUtils.setupClaimed({
+      userTier: UserTier.Pro,
+    });
+    const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+      token,
+      projectId: project.id,
+    });
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const nineOClock = addHours(today, 9);
+
+    await createBucket({
+      httpMonitorId: monitor.id,
+      timestamp: nineOClock,
+      successCount: 1,
+      failureCount: 0,
+      averageLatencyMs: 100,
+    });
+    await createPing({
+      httpMonitorId: monitor.id,
+      responseTimeMs: 100,
+      createdAt: addMinutes(nineOClock, 10),
+    });
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer())
+      .get(`/monitors/${monitor.id}/http_ping_buckets?period=90d`)
+      .set('Authorization', `Bearer ${token}`);
+
+    // then
+    expect(response.status).toBe(200);
+    const body = response.body as BucketsResponse;
+    expect(body.buckets[0]).toMatchObject({
+      successCount: 1,
+      failureCount: 0,
+      timestamp: today.toISOString(),
+    });
   });
 
   async function createBucket(params: {

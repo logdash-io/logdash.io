@@ -1,0 +1,250 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/status_pages/{statusPageId}": {
+      "get": {
+        "operationId": "readStatusPage",
+        "parameters": [
+          {
+            "name": "statusPageId",
+            "required": true,
+            "in": "path",
+            "description": "Status page id or its verified custom domain",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusPageDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The status page is not public"
+          },
+          "404": {
+            "description": "No status page with this id or domain"
+          }
+        },
+        "summary": "Read a public status page",
+        "tags": [
+          "Status Pages"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Logdash status page API",
+    "description": "",
+    "version": "1",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [
+    {
+      "url": "https://api.logdash.io"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "StatusPageStatus": {
+        "type": "string",
+        "enum": [
+          "operational",
+          "degraded",
+          "outage",
+          "unknown"
+        ]
+      },
+      "StatusPageMonitorStatus": {
+        "type": "string",
+        "enum": [
+          "up",
+          "degraded",
+          "down",
+          "unknown"
+        ]
+      },
+      "StatusPageUptimeDto": {
+        "type": "object",
+        "properties": {
+          "1h": {
+            "type": "number",
+            "nullable": true,
+            "description": "Percent, null without checks"
+          },
+          "24h": {
+            "type": "number",
+            "nullable": true,
+            "description": "Percent, null without checks"
+          },
+          "7d": {
+            "type": "number",
+            "nullable": true,
+            "description": "Percent, null without checks"
+          },
+          "30d": {
+            "type": "number",
+            "nullable": true,
+            "description": "Percent, null without checks"
+          },
+          "90d": {
+            "type": "number",
+            "nullable": true,
+            "description": "Percent, null without checks"
+          }
+        },
+        "required": [
+          "1h",
+          "24h",
+          "7d",
+          "30d",
+          "90d"
+        ]
+      },
+      "StatusPageBucketDto": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start of the UTC day"
+          },
+          "successCount": {
+            "type": "integer"
+          },
+          "failureCount": {
+            "type": "integer"
+          },
+          "averageLatencyMs": {
+            "type": "number",
+            "nullable": true,
+            "description": "Null when the day has no checks"
+          }
+        },
+        "required": [
+          "timestamp",
+          "successCount",
+          "failureCount",
+          "averageLatencyMs"
+        ]
+      },
+      "StatusPageHistoryDto": {
+        "type": "object",
+        "properties": {
+          "daily": {
+            "description": "90 UTC days, oldest first, today last. Days without checks have zero counts.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusPageBucketDto"
+            }
+          }
+        },
+        "required": [
+          "daily"
+        ]
+      },
+      "StatusPagePingDto": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "statusCode": {
+            "type": "integer",
+            "description": "0 when the request got no response"
+          },
+          "responseTimeMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "createdAt",
+          "statusCode",
+          "responseTimeMs"
+        ]
+      },
+      "StatusPageMonitorDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable public key of the monitor"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatusPageMonitorStatus"
+              }
+            ]
+          },
+          "uptime": {
+            "$ref": "#/components/schemas/StatusPageUptimeDto"
+          },
+          "history": {
+            "$ref": "#/components/schemas/StatusPageHistoryDto"
+          },
+          "pings": {
+            "description": "Last 100 checks, oldest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusPagePingDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "uptime",
+          "history",
+          "pings"
+        ]
+      },
+      "StatusPageDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatusPageStatus"
+              }
+            ]
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the server composed this response"
+          },
+          "monitors": {
+            "description": "In the order configured on the status page",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatusPageMonitorDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "updatedAt",
+          "monitors"
+        ]
+      }
+    }
+  }
+}

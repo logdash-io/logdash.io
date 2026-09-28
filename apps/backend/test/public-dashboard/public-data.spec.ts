@@ -3,6 +3,7 @@ import { createTestApp } from '../utils/bootstrap';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { PublicDashboardDataResponse } from '../../src/public-dashboard/core/dto/public-dashboard-data.response';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { CustomDomainStatus } from '../../src/custom-domain/core/enums/custom-domain-status.enum';
 
 describe('PublicDashboardCoreController (public data read)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -272,7 +273,30 @@ describe('PublicDashboardCoreController (public data read)', () => {
       expect((secondResponse.body as PublicDashboardDataResponse).httpMonitors).toHaveLength(3);
     });
 
-    it('reads public data by custom domain', async () => {
+    it('reads public data by verified custom domain', async () => {
+      // given
+      const setup = await setupPublicDashboard({ isPro: true });
+
+      const customDomain = await bootstrap.utils.customDomainUtils.createCustomDomain({
+        domain: 'status.test.com',
+        publicDashboardId: setup.publicDashboard.id,
+        token: setup.token,
+      });
+
+      await bootstrap.models.customDomainModel.findByIdAndUpdate(customDomain.id, {
+        status: CustomDomainStatus.Verified,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${customDomain.domain}/public_data?period=24h`,
+      );
+
+      // then
+      expect(response.status).toBe(200);
+    });
+
+    it('returns 404 for a custom domain that is not verified', async () => {
       // given
       const setup = await setupPublicDashboard({ isPro: true });
 
@@ -288,7 +312,50 @@ describe('PublicDashboardCoreController (public data read)', () => {
       );
 
       // then
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(404);
+    });
+
+    it('returns monitors in the order configured on the dashboard', async () => {
+      // given
+      const setup = await setupPublicDashboard();
+
+      await bootstrap.models.publicDashboardModel.findByIdAndUpdate(setup.publicDashboard.id, {
+        httpMonitorsIds: [setup.monitorB.id, setup.monitorA.id],
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      const data = response.body as PublicDashboardDataResponse;
+      expect(data.httpMonitors.map((monitor) => monitor.name)).toEqual(['B', 'A']);
+    });
+
+    it('returns pings newest first', async () => {
+      // given
+      const setup = await setupPublicDashboard();
+      const now = Date.now();
+
+      for (const minutesAgo of [30, 10, 50, 20, 40]) {
+        await bootstrap.utils.httpPingUtils.createHttpPing({
+          httpMonitorId: setup.monitorA.id,
+          responseTimeMs: minutesAgo,
+          createdAt: new Date(now - minutesAgo * 60_000),
+        });
+      }
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer()).get(
+        `/public_dashboards/${setup.publicDashboard.id}/public_data?period=24h`,
+      );
+
+      // then
+      const data = response.body as PublicDashboardDataResponse;
+      expect(data.httpMonitors[0].pings.map((ping) => ping.responseTimeMs)).toEqual([
+        100, 10, 20, 30, 40, 50,
+      ]);
     });
   });
 

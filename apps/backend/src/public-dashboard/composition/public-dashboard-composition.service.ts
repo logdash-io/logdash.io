@@ -5,8 +5,6 @@ import { PublicDashboardReadService } from '../read/public-dashboard-read.servic
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { BucketsPeriod } from '../../http-ping-bucket/core/types/bucket-period.enum';
 import { VirtualBucket } from '../../http-ping-bucket/core/types/virtual-bucket.type';
-import { Types } from 'mongoose';
-import { CustomDomainReadService } from '../../custom-domain/read/custom-domain-read.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
 import { RedisService } from '../../shared/redis/redis.service';
@@ -27,7 +25,6 @@ export class PublicDashboardCompositionService {
     private readonly httpPingReadService: HttpPingReadService,
     private readonly publicDashboardReadService: PublicDashboardReadService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
-    private readonly customDomainReadService: CustomDomainReadService,
     private readonly clusterReadService: ClusterReadService,
     private readonly httpPingBucketAggregationService: HttpPingBucketAggregationService,
     private readonly redisService: RedisService,
@@ -51,21 +48,13 @@ export class PublicDashboardCompositionService {
       return cachedResponse;
     }
 
-    let resolvedPublicDashboardId: string | null = null;
+    const dashboard = await this.publicDashboardReadService.readByIdOrDomain(publicDashboardId);
 
-    if (Types.ObjectId.isValid(publicDashboardId)) {
-      resolvedPublicDashboardId = publicDashboardId;
-    } else {
-      const customDomain = await this.customDomainReadService.readByDomain(publicDashboardId);
-
-      if (!customDomain) {
-        throw new NotFoundException('Custom domain not found');
-      }
-
-      resolvedPublicDashboardId = customDomain.publicDashboardId;
+    if (!dashboard) {
+      throw new NotFoundException('Public dashboard not found');
     }
 
-    const response = await this.composeResponseData(resolvedPublicDashboardId, period);
+    const response = await this.composeResponseData(dashboard.id, period);
 
     await this.setCachedResponse(
       publicDashboardId,
