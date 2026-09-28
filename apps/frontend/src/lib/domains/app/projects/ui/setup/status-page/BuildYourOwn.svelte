@@ -22,7 +22,9 @@
     `${envConfig.apiBaseUrl}/v1/status_pages/${dashboardId}`,
   );
   const hookExample = $derived(
-    `import { useStatusPage } from '@logdash/status/react';
+    `'use client';
+
+import { useStatusPage } from '@logdash/status/react';
 
 export function Status() {
   const { data } = useStatusPage('${dashboardId}');

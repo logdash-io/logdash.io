@@ -5,6 +5,9 @@
   const page = generateDemoStatusPage();
 </script>
 
-<div class="h-104 w-full overflow-hidden mask-b-from-40% mask-b-to-85%" inert>
-  <PublicDashboard {page} withBranding={false} />
+<div
+  class="h-104 w-full overflow-hidden mask-b-from-[19.5rem] mask-b-to-[23.5rem]"
+  inert
+>
+  <PublicDashboard class="-mt-10" {page} withBranding={false} />
 </div>

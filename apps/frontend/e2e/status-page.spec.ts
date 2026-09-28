@@ -50,6 +50,10 @@ for (const target of TARGETS) {
 
         await expect(page.getByText(HEADLINE)).toBeVisible();
         await expect(page).toHaveTitle(await name.innerText());
+        await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+          'content',
+          await name.innerText(),
+        );
         await expect(page.getByText(/Auto-refresh/)).toHaveCount(0);
 
         const grids = await page.getByRole('grid').all();
@@ -83,6 +87,30 @@ for (const target of TARGETS) {
 
         await page.keyboard.press('Home');
         await expect(days.first()).toBeFocused();
+      });
+
+      test('Escape dismisses the day tooltip without moving focus or the pointer', async ({
+        page,
+      }) => {
+        await open(page, target.url(STATUS_PAGE_ID!));
+
+        const days = page.getByRole('grid').first().getByRole('gridcell');
+        const tooltip = page.getByText('UTC', { exact: true });
+
+        await days.nth(45).hover();
+        await expect(tooltip).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(tooltip).toHaveCount(0);
+
+        await page.mouse.move(0, 0);
+        await page.keyboard.press('Tab');
+        await expect(tooltip).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(tooltip).toHaveCount(0);
+        await expect(days.last()).toBeFocused();
+
+        await page.keyboard.press('ArrowLeft');
+        await expect(tooltip).toBeVisible();
       });
 
       test('keeps its data and shows its age when a refresh fails', async ({

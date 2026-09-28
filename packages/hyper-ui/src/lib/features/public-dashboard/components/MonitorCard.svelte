@@ -50,7 +50,7 @@
   </span>
 </div>
 
-<dl class="mt-6 grid grid-cols-4 gap-x-3">
+<dl class="mt-6 grid grid-cols-2 gap-x-3 gap-y-4 @min-[22rem]:grid-cols-4">
   {#each UPTIME_WINDOWS as window (window.key)}
     {@render stat(
       window.label,

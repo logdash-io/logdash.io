@@ -6,6 +6,7 @@
     type Bucket,
     type BucketSegment,
   } from "../utils/group-buckets-by-status";
+  import { formatUptime } from "../utils/format-status-page";
 
   interface Props {
     class?: string;
@@ -55,7 +56,7 @@
     }
 
     if (segment.status !== "unknown") {
-      parts.push(`${segment.avgUptime.toFixed(1)}% uptime`);
+      parts.push(`${formatUptime(segment.avgUptime)} uptime`);
     }
 
     return parts.join(" • ");

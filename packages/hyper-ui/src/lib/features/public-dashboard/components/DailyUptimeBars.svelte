@@ -104,7 +104,17 @@
     roving = index;
     focused = index;
   }
+
+  // Hover and focus content must be dismissible without moving either (WCAG 1.4.13).
+  function onWindowKeydown(event: KeyboardEvent): void {
+    if (event.key === "Escape") {
+      hovered = null;
+      focused = null;
+    }
+  }
 </script>
+
+<svelte:window onkeydown={onWindowKeydown} />
 
 <div class="relative">
   <div

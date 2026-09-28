@@ -46,15 +46,8 @@
 <div
   class="relative flex flex-col min-h-[55vh] w-full items-center justify-center"
 >
-  <div
-    class="relative flex items-center justify-center overflow-hidden w-full max-w-md -mb-20"
-    aria-hidden="true"
-  >
+  <div class="w-full max-w-md -mb-6" aria-hidden="true">
     <StatusPageDemo />
-
-    <div
-      class="absolute h-4/5 bottom-11 w-full bg-gradient-to-b from-transparent to-surface-root"
-    ></div>
   </div>
 
   <div
