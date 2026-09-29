@@ -1,10 +1,10 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
+  import { page } from '$app/state';
+  import GridIcon from '$lib/domains/shared/icons/GridIcon.svelte';
   import Logotype from '$lib/domains/shared/icons/Logotype.svelte';
-  import FeedbackButton from '$lib/domains/shared/ui/components/FeedbackButton.svelte';
-  import SidebarClusterNav from './SidebarClusterNav.svelte';
-  import SidebarClusterSelector from './SidebarClusterSelector.svelte';
-  import SidebarServicesList from './SidebarServicesList.svelte';
+  import SidebarMenuItem from './SidebarMenuItem.svelte';
+  import SidebarProjects from './SidebarProjects.svelte';
   import SidebarUserProfile from './SidebarUserProfile.svelte';
 
   type Props = {
@@ -23,17 +23,17 @@
     </a>
   {/if}
 
-  <div class="flex flex-1 flex-col gap-4 px-3 pt-1">
-    <SidebarClusterSelector />
+  <div class="flex min-h-0 flex-1 flex-col gap-4 px-3 pt-1">
+    <SidebarMenuItem
+      href={resolve('/app/clusters')}
+      isActive={page.url.pathname === '/app/clusters'}
+    >
+      <GridIcon class="size-4 shrink-0" />
+      <span class="truncate">All projects</span>
+    </SidebarMenuItem>
 
-    <SidebarClusterNav />
-
-    <SidebarServicesList />
+    <SidebarProjects />
   </div>
 
-  <div class="flex flex-col gap-1 px-3 pt-4 pb-3">
-    <FeedbackButton />
-
-    <SidebarUserProfile />
-  </div>
+  <SidebarUserProfile />
 </div>

@@ -9,6 +9,7 @@
   import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
   import ClusterCreatorTile from '$lib/domains/app/clusters/ui/ClustersList/ClusterCreatorTile.svelte';
   import type { ServiceHealthStatus } from '$lib/domains/app/clusters/domain/service-health-status.js';
+  import { domainLabel } from '$lib/domains/app/clusters/domain/service-groups.js';
   import { type Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
   import { Feature } from '$lib/domains/shared/types.js';
   import type { MonitorStatus } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
@@ -33,6 +34,19 @@
       stopPolling();
     };
   });
+
+  function onClusterOpen(clusterId: string): void {
+    void goto(resolve('/app/clusters/[cluster_id]', { cluster_id: clusterId }));
+  }
+
+  function onClusterKeyDown(e: KeyboardEvent, clusterId: string): void {
+    if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) {
+      return;
+    }
+
+    e.preventDefault();
+    onClusterOpen(clusterId);
+  }
 
   function mapMonitorStatusToServiceStatus(
     status: MonitorStatus | undefined,
@@ -84,7 +98,7 @@
 
 {#if mounted}
   <div class="flex w-full gap-1.5 pb-8">
-    <div class="flex w-full flex-col gap-1.5 sm:hidden">
+    <div class="flex w-full min-w-0 flex-col gap-1.5 sm:hidden">
       {#each clustersState.clusters as cluster, i (cluster.id)}
         {@render clusterTile(cluster, i)}
       {/each}
@@ -95,9 +109,9 @@
       />
     </div>
 
-    <div class="hidden w-full gap-1.5 sm:flex">
+    <div class="hidden w-full min-w-0 gap-1.5 sm:flex">
       {#each [0, 1] as column (column)}
-        <div class="flex w-full flex-col gap-1.5">
+        <div class="flex w-full min-w-0 flex-col gap-1.5">
           {#each projectsPerColumn[column] as cluster, i (cluster.id)}
             {@render clusterTile(cluster, i)}
           {/each}
@@ -118,14 +132,16 @@
 {#snippet clusterTile(cluster: Cluster, i: number)}
   {@const services = getClusterServices(cluster)}
   {@const hasServices = services.length > 0}
+  {@const clusterDomain = domainLabel(
+    cluster.name,
+    clusterHealthState.getMonitors(cluster.id).map((monitor) => monitor.url),
+  )}
   <div
     draggable="false"
     role="button"
-    onclick={() => {
-      void goto(
-        resolve('/app/clusters/[cluster_id]', { cluster_id: cluster.id }),
-      );
-    }}
+    tabindex="0"
+    onclick={() => onClusterOpen(cluster.id)}
+    onkeydown={(e) => onClusterKeyDown(e, cluster.id)}
     class="ld-card-base h-fit w-full cursor-pointer ld-card-rounding p-6"
   >
     <div
@@ -137,10 +153,15 @@
       }}
       class="flex h-full w-full flex-col gap-1"
     >
-      <div class="flex w-full items-center justify-between gap-2">
-        <h5 class="text-lg font-medium">
+      <div class="flex w-full min-w-0 items-baseline gap-2">
+        <h5 class="max-w-full shrink-0 truncate text-lg font-medium">
           {cluster.name}
         </h5>
+        {#if clusterDomain}
+          <span class="text-neutral-500 min-w-0 truncate text-sm">
+            {clusterDomain}
+          </span>
+        {/if}
       </div>
 
       {#if hasServices}
@@ -156,9 +177,11 @@
               onclick={(e) => {
                 e.stopPropagation();
               }}
-              class="flex"
+              class="flex max-w-full min-w-0"
             >
-              <Badge size="sm">{project.name}</Badge>
+              <Badge size="sm" class="max-w-full">
+                <span class="truncate">{project.name}</span>
+              </Badge>
             </a>
           {/each}
         </div>

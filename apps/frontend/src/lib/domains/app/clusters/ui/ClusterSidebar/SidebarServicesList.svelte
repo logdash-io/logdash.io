@@ -4,11 +4,19 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import { serviceEntries } from '$lib/domains/app/clusters/application/service-entries.js';
   import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
+  import {
+    listServices,
+    type ServiceItem,
+  } from '$lib/domains/app/clusters/domain/service-groups.js';
+  import {
+    getStatusFromMonitor,
+    SERVICE_STATUS_DOT,
+  } from '$lib/domains/app/clusters/application/get-status-from-monitor.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
   import MonitorStatus from '$lib/domains/app/projects/ui/monitor-status/MonitorStatus.svelte';
-  import HexagonIcon from '$lib/domains/shared/icons/HexagonIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
   import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
@@ -42,6 +50,13 @@
   const clusterId = $derived(
     isWizardMode ? wizardState.tempClusterId : page.params.cluster_id,
   );
+  const items = $derived.by((): ServiceItem[] => {
+    const { services, dependencies } = listServices(
+      serviceEntries(currentCluster),
+    );
+
+    return [...services, ...dependencies];
+  });
 
   const featureConfig = [
     {
@@ -78,20 +93,6 @@
         project_id: projectId,
       }),
     );
-  }
-
-  function getServiceHealthStatus(projectId: string): boolean | null {
-    if (isWizardMode) return null;
-    const monitor = monitoringState.getMonitorByProjectId(projectId);
-    if (!monitor) {
-      return null;
-    }
-    return monitoringState.isHealthy(monitor.id);
-  }
-
-  function hasMonitor(projectId: string): boolean {
-    if (isWizardMode) return false;
-    return !!monitoringState.getMonitorByProjectId(projectId);
   }
 
   function onOpenForm(): void {
@@ -156,107 +157,116 @@
   }
 </script>
 
-<div class="flex flex-col">
-  <span class="text-neutral-500 px-2 pb-1 text-xs">Services</span>
-  <nav class="flex flex-col gap-0.5">
-    {#each currentCluster?.projects || [] as project (project.id)}
-      {@const isActive = !isWizardMode && project.id === activeProjectId}
-      {@const healthStatus = getServiceHealthStatus(project.id)}
-      {@const projectHasMonitor = hasMonitor(project.id)}
-      <SidebarMenuItem
-        onclick={() => onServiceSelect(project.id)}
-        {isActive}
-        disabled={!clusterId}
-      >
-        <HexagonIcon class="size-4 shrink-0" />
-        <span class="truncate">{project.name || 'New Service'}</span>
-        {#if projectHasMonitor}
-          {#snippet monitorTooltipContent()}
-            <MonitorStatus projectId={project.id}>
-              {null}
-            </MonitorStatus>
-          {/snippet}
-          <Tooltip
-            class="ml-auto flex"
-            content={monitorTooltipContent}
-            placement="bottom"
-          >
-            <span
-              class={[
-                'size-1.5 shrink-0 rounded-full',
-                healthStatus === true ? 'bg-success' : 'bg-error',
-              ]}
-            ></span>
-          </Tooltip>
-        {/if}
-      </SidebarMenuItem>
-    {/each}
+{#each items as item (item.id)}
+  {@render serviceRow(item)}
+{/each}
 
-    {#if isWizardMode && (currentCluster?.projects || []).length === 0}
-      <span class="px-3 py-2 text-sm italic text-neutral-600">
-        No services yet
+{#if isWizardMode && items.length === 0}
+  <span class="pl-8 py-1 text-[13px] text-neutral-600 italic">
+    No services yet
+  </span>
+{/if}
+
+{#if !isWizardMode && clusterId}
+  {@render newService()}
+{/if}
+
+{#snippet serviceRow(item: ServiceItem)}
+  {@const isActive = !isWizardMode && item.id === activeProjectId}
+  {@const monitor = isWizardMode
+    ? undefined
+    : monitoringState.getMonitorByProjectId(item.id)}
+  <SidebarMenuItem
+    onclick={() => onServiceSelect(item.id)}
+    {isActive}
+    disabled={!clusterId}
+    class="pl-8"
+  >
+    <span class="flex size-3.5 shrink-0 items-center justify-center">
+      {#if monitor}
+        {#snippet monitorTooltipContent()}
+          <MonitorStatus projectId={item.id}>
+            {null}
+          </MonitorStatus>
+        {/snippet}
+        <Tooltip content={monitorTooltipContent} placement="bottom">
+          <span
+            class={[
+              'size-1.5 rounded-full',
+              SERVICE_STATUS_DOT[getStatusFromMonitor(monitor)],
+            ]}
+          ></span>
+        </Tooltip>
+      {:else}
+        <span class="size-1.5 rounded-full bg-neutral-600"></span>
+      {/if}
+    </span>
+    <span class="truncate">{item.label || 'New Service'}</span>
+    {#if item.host}
+      <span
+        class="text-neutral-600 ml-auto min-w-6 shrink-[4] truncate text-xs"
+      >
+        {item.host}
       </span>
     {/if}
+  </SidebarMenuItem>
+{/snippet}
 
-    {#if !isWizardMode && clusterId}
-      {#if isFormOpen}
-        <div
-          class="flex flex-col gap-2 p-2 mt-1 ld-card-bg ld-card-border rounded-lg"
-          in:fly={{ y: -5, duration: 200, easing: cubicOut }}
-        >
-          <Input
-            id="new-service-name-input"
-            type="text"
-            placeholder="Service name"
-            size="sm"
-            class="w-full"
-            bind:value={serviceName}
-            onkeydown={onKeyDown}
-            maxlength={64}
-          />
+{#snippet newService()}
+  {#if isFormOpen}
+    <div
+      class="ld-card-bg ld-card-border mt-1 ml-6 flex shrink-0 flex-col gap-2 rounded-lg p-2"
+      in:fly={{ y: -5, duration: 200, easing: cubicOut }}
+    >
+      <Input
+        id="new-service-name-input"
+        type="text"
+        placeholder="Service name"
+        size="sm"
+        class="w-full"
+        bind:value={serviceName}
+        onkeydown={onKeyDown}
+        maxlength={64}
+      />
 
-          <div class="flex flex-col gap-0.5">
-            {#each featureConfig as { feature, label, icon: Icon } (feature)}
-              <label
-                class={[
-                  'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
-                  { 'text-brand': isFeatureEnabled(feature) },
-                ]}
-              >
-                <Checkbox
-                  size="xs"
-                  variant="primary"
-                  checked={isFeatureEnabled(feature)}
-                  onchange={() => onToggleFeature(feature)}
-                />
-                <Icon class="size-3.5 shrink-0" />
-                <span>{label}</span>
-              </label>
-            {/each}
-          </div>
-
-          <div class="flex items-center gap-1.5 mt-1">
-            <Button
-              variant="primary"
+      <div class="flex flex-col gap-0.5">
+        {#each featureConfig as { feature, label, icon: Icon } (feature)}
+          <label
+            class={[
+              'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
+              { 'text-brand': isFeatureEnabled(feature) },
+            ]}
+          >
+            <Checkbox
               size="xs"
-              class="flex-1"
-              onclick={onCreateService}
-              disabled={!canCreate}
-              loading={isCreating}
-            >
-              Create
-            </Button>
-            <Button variant="ghost" size="xs" onclick={onCloseForm}>
-              Cancel
-            </Button>
-          </div>
-        </div>
-      {:else}
-        <SidebarMenuItem onclick={onOpenForm} isActive={false} disabled={false}>
-          <PlusIcon class="size-4 shrink-0 text-neutral-600" />
-          <span class="truncate text-neutral-500">New service</span>
-        </SidebarMenuItem>
-      {/if}
-    {/if}
-  </nav>
-</div>
+              variant="primary"
+              checked={isFeatureEnabled(feature)}
+              onchange={() => onToggleFeature(feature)}
+            />
+            <Icon class="size-3.5 shrink-0" />
+            <span>{label}</span>
+          </label>
+        {/each}
+      </div>
+
+      <div class="flex items-center gap-1.5 mt-1">
+        <Button
+          variant="primary"
+          size="xs"
+          class="flex-1"
+          onclick={onCreateService}
+          disabled={!canCreate}
+          loading={isCreating}
+        >
+          Create
+        </Button>
+        <Button variant="ghost" size="xs" onclick={onCloseForm}>Cancel</Button>
+      </div>
+    </div>
+  {:else}
+    <SidebarMenuItem onclick={onOpenForm} class="pl-8 text-neutral-500">
+      <PlusIcon class="size-3.5 shrink-0" />
+      <span class="truncate">New service</span>
+    </SidebarMenuItem>
+  {/if}
+{/snippet}

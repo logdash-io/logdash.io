@@ -3,13 +3,17 @@
   import { page } from '$app/state';
   import { userInvitationsState } from '$lib/domains/app/clusters/application/user-invitations.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import { serviceEntries } from '$lib/domains/app/clusters/application/service-entries.js';
+  import { domainLabel } from '$lib/domains/app/clusters/domain/service-groups.js';
   import ClaimBanner from '$lib/domains/app/clusters/ui/ClaimBanner/ClaimBanner.svelte';
   import ClusterSidebar from '$lib/domains/app/clusters/ui/ClusterSidebar/ClusterSidebar.svelte';
   import SidebarContent from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarContent.svelte';
   import PendingInvitations from '$lib/domains/app/clusters/ui/PendingInvitations.svelte';
   import ServiceTabsNav from '$lib/domains/app/clusters/ui/ServiceTabsNav.svelte';
   import BottomSheet from '$lib/domains/shared/ui/components/BottomSheet/BottomSheet.svelte';
-  import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
+  import GridIcon from '$lib/domains/shared/icons/GridIcon.svelte';
+  import UserIcon from '$lib/domains/shared/icons/UserIcon.svelte';
+  import ProjectTile from '$lib/domains/app/clusters/ui/ClusterSidebar/ProjectTile.svelte';
   import LogoMark from '$lib/domains/shared/icons/LogoMark.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { ScrollArea } from '@logdash/hyper-ui/presentational';
@@ -23,7 +27,16 @@
 
   const currentCluster = $derived(clustersState.get(page.params.cluster_id));
   const clusterColor = $derived(currentCluster?.color);
-  const clusterName = $derived(currentCluster?.name || 'Projects');
+  const isAccount = $derived(page.url.pathname.startsWith('/app/account'));
+  const clusterName = $derived(
+    currentCluster?.name || (isAccount ? 'Account' : 'Projects'),
+  );
+  const clusterDomain = $derived(
+    domainLabel(
+      clusterName,
+      serviceEntries(currentCluster).map((entry) => entry.url),
+    ),
+  );
   const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
   const pageTitle = $derived(titleFor(page.url.pathname));
@@ -32,7 +45,8 @@
     if (pathname.endsWith('/settings')) return 'Settings';
     if (pathname.includes('/status-pages')) return 'Status pages';
     if (pathname.endsWith('/new')) return 'New project';
-    if (clusterId) return 'Overview';
+    if (pathname.endsWith('/api-keys')) return 'API keys';
+    if (clusterId) return 'Home';
     return null;
   }
 
@@ -85,22 +99,32 @@
 
 {#snippet peekContent()}
   <div class="flex w-full items-center justify-between px-4 pr-5 py-1">
-    <div class="flex items-center gap-3">
-      {#if clusterColor}
-        <div
-          class="size-8 rounded-lg flex items-center justify-center"
-          style="background-color: {clusterColor}20; border: 1px solid {clusterColor}10"
-        >
-          <CubeIcon class="size-5 shrink-0" style="color: {clusterColor}" />
-        </div>
+    <div class="flex min-w-0 items-center gap-3">
+      {#if currentCluster}
+        <ProjectTile
+          name={currentCluster.name}
+          color={clusterColor}
+          class="size-8 rounded-lg text-sm"
+        />
       {:else}
-        <div
-          class="size-6 rounded-md flex items-center justify-center bg-neutral-800 border border-neutral-900"
+        <span
+          class="bg-surface-150 flex size-8 shrink-0 items-center justify-center rounded-lg"
         >
-          <CubeIcon class="size-4 shrink-0 text-brand" />
-        </div>
+          {#if isAccount}
+            <UserIcon class="text-neutral-300 size-4" />
+          {:else}
+            <GridIcon class="text-neutral-300 size-4" />
+          {/if}
+        </span>
       {/if}
-      <span class="text-lg font-medium truncate max-w-52">{clusterName}</span>
+      <span class="flex max-w-52 min-w-0 flex-col text-left">
+        <span class="truncate text-lg leading-tight font-medium">
+          {clusterName}
+        </span>
+        {#if clusterDomain}
+          <span class="text-neutral-500 truncate text-xs">{clusterDomain}</span>
+        {/if}
+      </span>
     </div>
 
     <a

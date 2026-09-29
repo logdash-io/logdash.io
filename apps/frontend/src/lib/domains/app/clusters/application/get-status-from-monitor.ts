@@ -26,3 +26,10 @@ export function getStatusFromMonitor(
   // todo: make sure we get enough data from BE to show degraded here upfront
   return isHealthy ? 'up' : 'down';
 }
+
+export const SERVICE_STATUS_DOT: Record<ServiceStatus, string> = {
+  up: 'bg-success',
+  down: 'bg-error',
+  degraded: 'bg-warning',
+  unknown: 'bg-neutral-600',
+};

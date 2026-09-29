@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
+  import CloudIcon from '$lib/domains/shared/icons/CloudIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { Button } from '@logdash/hyper-ui/presentational';
   import CreateServiceDropdown from './CreateServiceDropdown.svelte';
@@ -24,7 +24,7 @@
 <div
   class="col-span-full flex flex-col items-center justify-center py-12 gap-4"
 >
-  <CubeIcon class="size-12 text-surface-100" />
+  <CloudIcon class="size-12 stroke-[0.5] text-surface-100" />
   <div class="flex flex-col items-center gap-1">
     <h3 class="text-lg font-medium">No services yet</h3>
     <p class="text-neutral-400 text-sm">

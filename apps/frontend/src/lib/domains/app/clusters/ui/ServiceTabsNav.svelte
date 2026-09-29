@@ -111,10 +111,11 @@
 <ScrollArea orientation="x" class="flex min-w-0 items-center">
   <nav class="flex items-center gap-1">
     {#each visibleTabs as tab (tab.id)}
+      {@const active = isActive(tab.id, tab.path)}
       <!-- eslint-disable svelte/no-navigation-without-resolve -- dynamic project route -->
-      <a href={tab.path} class={tabClass(isActive(tab.id, tab.path))}>
+      <a href={tab.path} class={tabClass(active)} aria-label={tab.label}>
         <tab.icon class="size-3.5 shrink-0" />
-        {tab.label}
+        <span class={[{ 'hidden sm:inline': !active }]}>{tab.label}</span>
       </a>
       <!-- eslint-enable svelte/no-navigation-without-resolve -->
     {/each}

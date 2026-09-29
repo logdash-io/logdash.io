@@ -81,6 +81,9 @@
   const phase = $derived(anonymousPreviewState.phase);
   const expanded = $derived(heroTakeover.expanded);
   const claimShown = $derived(expanded && settled && heroClaim.visible);
+  const clusterName = $derived(
+    showcaseClusterName(phase, anonymousPreviewState.clusterName),
+  );
 
   const host = $derived.by(() => {
     const demoHost = anonymousPreviewState.demo.monitor?.name ?? '';
@@ -456,7 +459,7 @@
 
           <span class="text-neutral-500 min-w-0 truncate text-sm xl:hidden">
             <span class="hidden sm:inline">
-              {showcaseClusterName(phase)}
+              {clusterName}
               <span class="text-neutral-700">/</span>
             </span>
             <TypewriterText text={host} class="text-fg-default font-medium" />

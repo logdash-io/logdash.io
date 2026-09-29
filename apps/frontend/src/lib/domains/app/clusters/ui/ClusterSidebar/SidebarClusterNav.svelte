@@ -27,33 +27,34 @@
   const isPublished = $derived(clusterPublicDashboard?.isPublic ?? false);
 </script>
 
-<nav class="flex flex-col gap-0.5">
-  <SidebarMenuItem
-    href="/app/clusters/{clusterId}"
-    isActive={isCockpitActive}
-    disabled={!clusterId || isWizardMode}
-  >
-    <HomeIcon class="size-4 shrink-0" />
-    <span class="truncate">Home</span>
-  </SidebarMenuItem>
+<SidebarMenuItem
+  href="/app/clusters/{clusterId}"
+  isActive={isCockpitActive}
+  disabled={!clusterId || isWizardMode}
+  class="pl-8"
+>
+  <HomeIcon class="size-3.5 shrink-0" />
+  <span class="truncate">Home</span>
+</SidebarMenuItem>
 
-  <SidebarMenuItem
-    href="/app/clusters/{clusterId}/settings"
-    isActive={isSettingsActive}
-    disabled={!clusterId || isWizardMode}
-  >
-    <SettingsIcon class="size-4 shrink-0" />
-    <span class="truncate">Settings</span>
-  </SidebarMenuItem>
+<SidebarMenuItem
+  href="/app/clusters/{clusterId}/status-pages"
+  isActive={isStatusPagesActive}
+  disabled={!clusterId || isWizardMode}
+  class="pl-8"
+>
+  <PublicDashboardIcon
+    class={['size-3.5 shrink-0', { 'text-success!': isPublished }]}
+  />
+  <span class="truncate">Status pages</span>
+</SidebarMenuItem>
 
-  <SidebarMenuItem
-    href="/app/clusters/{clusterId}/status-pages"
-    isActive={isStatusPagesActive}
-    disabled={!clusterId || isWizardMode}
-  >
-    <PublicDashboardIcon
-      class={['size-4 shrink-0', { 'text-success': isPublished }]}
-    />
-    <span class="truncate">Status pages</span>
-  </SidebarMenuItem>
-</nav>
+<SidebarMenuItem
+  href="/app/clusters/{clusterId}/settings"
+  isActive={isSettingsActive}
+  disabled={!clusterId || isWizardMode}
+  class="pl-8"
+>
+  <SettingsIcon class="size-3.5 shrink-0" />
+  <span class="truncate">Settings</span>
+</SidebarMenuItem>

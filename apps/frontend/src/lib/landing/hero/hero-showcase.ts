@@ -14,8 +14,13 @@ export function showsVisitorAccount(phase: AnonymousPreviewPhase): boolean {
   return phase === 'creating' || phase === 'previewing' || phase === 'ended';
 }
 
-export function showcaseClusterName(phase: AnonymousPreviewPhase): string {
-  return showsVisitorAccount(phase) ? 'My first cluster' : 'Logdash';
+export function showcaseClusterName(
+  phase: AnonymousPreviewPhase,
+  visitorClusterName: string | null,
+): string {
+  return showsVisitorAccount(phase) && visitorClusterName
+    ? visitorClusterName
+    : 'Logdash';
 }
 
 export function showcaseSwap(
