@@ -12,13 +12,16 @@ import { ensureAnonymousSession } from './create-anonymous-session';
 export const startAnonymousMonitoring = async (dto: {
   url: string;
   onStep?: (step: AnonymousStartStep) => void;
+  onClusterName?: (clusterName: string) => void;
 }): Promise<AnonymousPreview> => {
   const url = tryPrependProtocol(dto.url.trim());
   const name = previewNameFromUrl(url);
 
   try {
     dto.onStep?.('account');
-    const { token, clusterId, anonymous } = await ensureAnonymousSession();
+    const { token, clusterId, clusterName, anonymous } =
+      await ensureAnonymousSession(url);
+    dto.onClusterName?.(clusterName);
 
     dto.onStep?.('project');
     const { projectId } = await anonymousSessionService.createProject(
@@ -39,6 +42,7 @@ export const startAnonymousMonitoring = async (dto: {
     return {
       token,
       clusterId,
+      clusterName,
       projectId,
       monitorId: monitor.id,
       url,

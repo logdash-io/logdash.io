@@ -71,7 +71,11 @@ function fullScreenFrame(page: Page) {
   return page.locator('#hero-showcase:modal');
 }
 
-async function expectFullScreen(page: Page, host: string): Promise<void> {
+async function expectFullScreen(
+  page: Page,
+  host: string,
+  cluster = host,
+): Promise<void> {
   const frame = fullScreenFrame(page);
   const sidebar = frame.locator('aside[aria-hidden="true"]');
 
@@ -84,8 +88,11 @@ async function expectFullScreen(page: Page, host: string): Promise<void> {
     frame.getByRole('heading', { name: host, exact: true }),
   ).toBeVisible();
   await expect(sidebar).toBeVisible();
-  await expect(sidebar).toContainText('My first cluster');
-  await expect(sidebar).toContainText(host);
+  await expect(sidebar).toHaveText(
+    new RegExp(
+      `^\\s*All projects\\s*Projects\\s*${cluster[0]}\\s*${cluster}\\s*Home\\s*Status pages\\s*Settings\\s*${host}[\\s\\S]*New service\\s*Anonymous\\s*Free\\s*$`,
+    ),
+  );
 }
 
 function claimCard(page: Page): Locator {
@@ -302,7 +309,7 @@ test.describe('anonymous landing flow', () => {
 
     expect(stored?.url).toBe('https://example.org');
 
-    await expectFullScreen(page, 'example.org');
+    await expectFullScreen(page, 'example.org', 'example.com');
     await expectClaimCard(page, 'example.org');
 
     await page.route('**/app/api/auth/oauth-start', (route) =>
@@ -354,7 +361,7 @@ test.describe('anonymous landing flow', () => {
     await startMonitoring(page, 'https://example.net');
 
     await expect(page).toHaveURL('/for/example.net');
-    await expectFullScreen(page, 'example.net');
+    await expectFullScreen(page, 'example.net', 'example.com');
     await expect
       .poll(async () => (await readStoredPreview(page))?.url)
       .toBe('https://example.net');
@@ -417,6 +424,31 @@ test.describe('first check and the way in', () => {
     ).toBeVisible({ timeout: 30_000 });
     await expect(card.getByText(`${host} is not answering`)).toBeVisible();
     await expect(card).toContainText('tell you the moment it is back up.');
+  });
+
+  test('check 15: a subdomain URL with a path names the project after its domain and the service after the URL', async ({
+    page,
+  }) => {
+    const domain = 'logdash-e2e.co.uk';
+    const service = `app.${domain}/login`;
+
+    await page.goto('/');
+    await startMonitoring(page, `https://${service}`);
+    await expectFullScreen(page, service, domain);
+
+    await claimCard(page).getByRole('button', { name: 'Not now' }).click();
+    await page
+      .getByRole('button', { name: 'Open your dashboard' })
+      .first()
+      .click();
+    await page.waitForURL(MONITORING_PATH, { timeout: 30_000 });
+
+    await expect(
+      page.getByRole('button', { name: domain, exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page.getByRole('button', { name: service, exact: true }),
+    ).toBeVisible();
   });
 
   test('check 12: a /for/ link starts monitoring that address once', async ({

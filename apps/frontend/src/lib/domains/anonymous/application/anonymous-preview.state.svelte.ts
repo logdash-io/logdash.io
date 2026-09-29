@@ -9,6 +9,7 @@ import { createLogger } from '$lib/domains/shared/logger';
 import { posthog } from 'posthog-js';
 import {
   AnonymousStartError,
+  clusterNameFromUrl,
   previewNameFromUrl,
   type AnonymousPreview,
   type AnonymousStartStep,
@@ -84,6 +85,7 @@ class AnonymousPreviewState {
   private _phase = $state<AnonymousPreviewPhase>('idle');
   private _preview = $state<AnonymousPreview | null>(null);
   private _submittedUrl = $state<string | null>(null);
+  private _clusterName = $state<string | null>(null);
   private _pings = $state<HttpPing[]>([]);
   private _history = $state<PreviewHistory>({ hours: [], days: [] });
   private _creatingStep = $state<AnonymousStartStep | null>(null);
@@ -123,6 +125,10 @@ class AnonymousPreviewState {
     }
 
     return null;
+  }
+
+  public get clusterName(): string | null {
+    return this._clusterName;
   }
 
   public get pings(): HttpPing[] {
@@ -208,6 +214,9 @@ class AnonymousPreviewState {
         url,
         onStep: (step) => {
           this._creatingStep = step;
+        },
+        onClusterName: (clusterName) => {
+          this._clusterName = clusterName;
         },
       });
     } catch (error) {
@@ -331,6 +340,7 @@ class AnonymousPreviewState {
 
     this._preview = null;
     this._submittedUrl = null;
+    this._clusterName = null;
     this._pings = [];
     this._history = { hours: [], days: [] };
     this._creatingStep = null;
@@ -635,7 +645,20 @@ class AnonymousPreviewState {
     }
 
     this._preview = stored.preview;
+    this._clusterName = stored.preview.clusterName || null;
     this._phase = 'previewing';
+
+    if (!this._clusterName) {
+      void this._nameStoredPreview(stored.preview);
+    }
+  }
+
+  private async _nameStoredPreview(preview: AnonymousPreview): Promise<void> {
+    const clusterName = await clusterNameFromUrl(preview.url);
+
+    if (this._preview?.monitorId === preview.monitorId) {
+      this._clusterName = clusterName;
+    }
   }
 
   private _readStoredPreview(): StoredAnonymousPreview | null {

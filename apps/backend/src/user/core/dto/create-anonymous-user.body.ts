@@ -3,18 +3,11 @@ import { Transform } from 'class-transformer';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { trimToUndefined } from '../../../shared/utils/trim-to-undefined';
 
-export class CompleteOnboardingBody {
-  @ApiPropertyOptional({ maxLength: 64 })
+export class CreateAnonymousUserBody {
+  @ApiPropertyOptional({ maxLength: 255, default: 'My first cluster' })
   @Transform(trimToUndefined)
   @IsOptional()
   @IsString()
-  @MaxLength(64)
-  role?: string;
-
-  @ApiPropertyOptional({ maxLength: 64 })
-  @Transform(trimToUndefined)
-  @IsOptional()
-  @IsString()
-  @MaxLength(64)
-  source?: string;
+  @MaxLength(255)
+  clusterName?: string;
 }
