@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { CheckIcon, CopyIcon } from 'lucide-svelte';
+  import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
   import type { Component } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import Highlight from 'svelte-highlight';

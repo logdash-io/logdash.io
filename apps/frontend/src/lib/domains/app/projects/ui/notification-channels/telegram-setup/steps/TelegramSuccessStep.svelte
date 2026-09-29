@@ -18,7 +18,7 @@
     <div
       class="success-card flex h-14 w-14 items-center justify-center rounded-full"
     >
-      <CheckIcon class="h-6 w-6" />
+      <CheckIcon class="size-6 stroke-1" />
     </div>
 
     <div class="flex flex-col items-start">

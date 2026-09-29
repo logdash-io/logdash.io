@@ -4,7 +4,7 @@
   import LogRow from '$lib/landing/LogRow.svelte';
   import RollingFeed from '$lib/landing/RollingFeed.svelte';
   import { Spinner } from '@logdash/hyper-ui/presentational';
-  import { SearchIcon } from 'lucide-svelte';
+  import SearchIcon from '$lib/domains/shared/icons/SearchIcon.svelte';
   import { showcaseSwap, showsVisitorAccount } from './hero-showcase';
 
   type Props = {

@@ -125,7 +125,7 @@
             { 'text-brand': isFeatureEnabled(feature) },
           ]}
         >
-          <Icon class="size-6 shrink-0" />
+          <Icon class="size-6 shrink-0 stroke-1" />
 
           <div class="flex flex-col flex-1 select-none">
             <span class="font-medium text-sm">{label}</span>

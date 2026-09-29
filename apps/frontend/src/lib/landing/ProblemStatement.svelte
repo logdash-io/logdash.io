@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
   import DowntimeFeed from './DowntimeFeed.svelte';
   import LandingHeading from './LandingHeading.svelte';
   import LandingSection from './LandingSection.svelte';

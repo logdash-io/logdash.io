@@ -56,7 +56,7 @@
           ]}
         >
           <PublicDashboardIcon
-            class={['size-5', { 'text-success': isPublished }]}
+            class={['size-5 stroke-[1.2]', { 'text-success': isPublished }]}
           />
         </div>
         <div class="flex flex-col">

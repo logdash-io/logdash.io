@@ -12,9 +12,9 @@
 
 <div class="flex items-center gap-2">
   {#if good}
-    <PlusIcon class="text-success h-5 w-5 shrink-0" />
+    <PlusIcon class="text-success size-4 shrink-0" />
   {:else}
-    <MinusIcon class="text-error h-5 w-5 shrink-0" />
+    <MinusIcon class="text-error size-4 shrink-0" />
   {/if}
   {#if text}
     {text}

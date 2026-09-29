@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { SearchIcon } from 'lucide-svelte';
+  import SearchIcon from '$lib/domains/shared/icons/SearchIcon.svelte';
   import { flip } from 'svelte/animate';
   import { quintOut } from 'svelte/easing';
   import { prefersReducedMotion } from 'svelte/motion';

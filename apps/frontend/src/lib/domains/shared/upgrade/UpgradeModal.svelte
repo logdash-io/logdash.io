@@ -189,7 +189,7 @@
                 </CardActions>
 
                 <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
-                  <ShieldCheckIcon class="text-success h-5 w-5" />
+                  <ShieldCheckIcon class="text-success size-4" />
                   {plan.guarantee}
                 </div>
 

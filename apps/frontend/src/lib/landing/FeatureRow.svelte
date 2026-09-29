@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
   import { ArrowRightIcon } from 'lucide-svelte';
   import type { Snippet } from 'svelte';
   import LandingSection from './LandingSection.svelte';

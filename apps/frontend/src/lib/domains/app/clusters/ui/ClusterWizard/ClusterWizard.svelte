@@ -61,7 +61,7 @@
       class="text-neutral-500 hover:text-fg-default"
       onclick={() => goto(resolve('/app/clusters'))}
     >
-      <CloseIcon class="size-6" />
+      <CloseIcon class="size-6 stroke-1" />
     </Button>
   </div>
 

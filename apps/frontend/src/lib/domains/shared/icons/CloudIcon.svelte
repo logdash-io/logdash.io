@@ -1,11 +1,7 @@
 <script lang="ts">
   import type { ClassValue } from 'svelte/elements';
 
-  type Props = {
-    class?: ClassValue;
-  };
-
-  const { class: className = '' }: Props = $props();
+  const { class: className = '' }: { class?: ClassValue } = $props();
 </script>
 
 <svg
@@ -19,8 +15,7 @@
   xmlns="http://www.w3.org/2000/svg"
   aria-hidden="true"
 >
-  <path d="M6.5 9.5 9.5 6.5" />
   <path
-    d="m8.75 4.25.9-.9a2.47 2.47 0 0 1 3.5 3.5l-.9.9M7.25 11.75l-.9.9a2.47 2.47 0 0 1-3.5-3.5l.9-.9"
+    d="M4.9 12.25a2.9 2.9 0 0 1-.35-5.78 3.75 3.75 0 0 1 7.25.32 2.75 2.75 0 0 1-.55 5.46Z"
   />
 </svg>

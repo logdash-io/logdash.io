@@ -2,7 +2,7 @@
   import { clusterInvitesState } from '$lib/domains/app/clusters/application/cluster-invites.state.svelte.js';
   import { ClusterRole } from '$lib/domains/app/clusters/domain/cluster-invite';
   import { validateEmail } from '$lib/domains/shared/utils/validators.js';
-  import { UserRoundIcon } from 'lucide-svelte';
+  import UserIcon from '$lib/domains/shared/icons/UserIcon.svelte';
   import {
     SettingsCard,
     SettingsCardHeader,
@@ -116,7 +116,7 @@
                     class="size-full object-cover"
                   />
                 {:else}
-                  <UserRoundIcon class="text-neutral-400 size-3.5" />
+                  <UserIcon class="text-neutral-400 size-3.5" />
                 {/if}
               </span>
               <span class="flex-1 truncate text-sm">
@@ -165,7 +165,7 @@
         <UpgradeElement source="cluster-invite-limit" class="mt-4">
           <div class="primary-card rounded-xl p-4">
             <div class="text-brand flex items-center gap-2">
-              <DangerIcon class="size-5" />
+              <DangerIcon class="size-5 stroke-[1.2]" />
               <span class="font-medium">Team limit reached</span>
             </div>
             <p class="text-neutral-400 mt-2 text-sm">

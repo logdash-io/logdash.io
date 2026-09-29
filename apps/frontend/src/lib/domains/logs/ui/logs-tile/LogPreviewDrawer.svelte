@@ -168,7 +168,7 @@
           onclick={onClose}
           aria-label="Close"
         >
-          <CloseIcon class="size-5" />
+          <CloseIcon class="size-5 stroke-[1.2]" />
         </Button>
       </div>
     </div>

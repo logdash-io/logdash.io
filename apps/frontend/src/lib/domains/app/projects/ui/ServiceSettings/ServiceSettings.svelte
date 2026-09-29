@@ -11,7 +11,6 @@
     SettingsCardItem,
   } from '$lib/domains/shared/ui/components/settings-card/index.js';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
-  import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
   import { Button, Input, Spinner } from '@logdash/hyper-ui/presentational';
   import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
@@ -196,7 +195,7 @@
         {#if projectsState.isLoadingApiKey(projectId)}
           <Spinner size="sm" />
         {:else}
-          <CopyIcon class="size-5 text-neutral-400" />
+          <CopyIcon class="size-4 text-neutral-400" />
         {/if}
       {/snippet}
     </SettingsCardItem>
@@ -274,7 +273,6 @@
       <SettingsCardHeader
         title="Features"
         description="Add additional capabilities to your service"
-        icon={CubeIcon}
       />
 
       {#each availableFeatures as feature, index (feature.id)}

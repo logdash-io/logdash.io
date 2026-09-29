@@ -236,7 +236,7 @@
                   class="border-border-default bg-surface-root flex size-9 items-center justify-center rounded-lg border"
                 >
                   <Icon
-                    class="text-neutral-400 group-hover:text-fg-default size-[18px] transition-ink duration-150"
+                    class="text-neutral-400 group-hover:text-fg-default size-4 transition-ink duration-150"
                   />
                 </div>
                 <div class="flex flex-col gap-1">

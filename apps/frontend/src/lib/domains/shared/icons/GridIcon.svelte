@@ -15,7 +15,8 @@
   xmlns="http://www.w3.org/2000/svg"
   aria-hidden="true"
 >
-  <path
-    d="M3.25 6.25h9.5M3.25 9.75h9.5M6.75 2.75 5.5 13.25M10.5 2.75 9.25 13.25"
-  />
+  <rect x="2.75" y="2.75" width="4.25" height="4.25" rx="1.25" />
+  <rect x="9" y="2.75" width="4.25" height="4.25" rx="1.25" />
+  <rect x="2.75" y="9" width="4.25" height="4.25" rx="1.25" />
+  <rect x="9" y="9" width="4.25" height="4.25" rx="1.25" />
 </svg>

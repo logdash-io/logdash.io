@@ -104,7 +104,7 @@
       <div
         class="bg-surface-root border-border-default text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
       >
-        <BellIcon class="h-6 w-6" />
+        <BellIcon class="size-6 stroke-1" />
       </div>
 
       <div class="flex flex-col items-start">

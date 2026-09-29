@@ -1,5 +1,7 @@
 <script lang="ts">
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
+  import SearchIcon from '$lib/domains/shared/icons/SearchIcon.svelte';
+  import { CloseIcon } from '@logdash/hyper-ui/icons';
   import { untrack } from 'svelte';
 
   type Props = {
@@ -39,15 +41,9 @@
 </script>
 
 <div class="relative w-full">
-  <svg
-    class="text-neutral-600 pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <circle cx="11" cy="11" r="8"></circle>
-    <path d="m21 21-4.35-4.35"></path>
-  </svg>
+  <SearchIcon
+    class="text-neutral-600 pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+  />
 
   <input
     bind:value={localSearchTerm}
@@ -60,22 +56,11 @@
   {#if localSearchTerm}
     <button
       type="button"
+      aria-label="Clear search"
       class="hover:bg-surface-root absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1"
       onclick={clearSearch}
     >
-      <svg
-        class="h-4 w-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M6 18L18 6M6 6l12 12"
-        ></path>
-      </svg>
+      <CloseIcon class="size-4" />
     </button>
   {/if}
 </div>

@@ -70,7 +70,7 @@
       <div class="flex size-4 shrink-0 items-center justify-center md:size-8">
         {#if logsState.shouldFiltersBlockSync}
           <PauseCircleIcon
-            class="size-4 shrink-0 sm:h-5 sm:w-5"
+            class="size-4 shrink-0 sm:size-5 sm:stroke-[1.2]"
             stroke="stroke-warning"
           />
         {:else}
