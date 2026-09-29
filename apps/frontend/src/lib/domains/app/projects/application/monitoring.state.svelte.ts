@@ -35,7 +35,7 @@ class MonitoringState {
   );
   private _timeRange = $state<PingBucketPeriod>('90d');
   private syncConnection: EventSource | null = null;
-  private _shouldReconnect = true;
+  private _streamGeneration = 0;
   private _unsubscribe: (() => void) | null = null;
   private _loadingPage = $state(false);
   private _pingsAbortControllers = new Map<string, AbortController>();
@@ -287,23 +287,6 @@ class MonitoringState {
     return (totalSuccess / totalPings) * 100;
   }
 
-  async updateMonitorName(monitorId: string, newName: string): Promise<void> {
-    if (!monitorId || !newName?.trim()) {
-      throw new Error('Monitor ID and name are required');
-    }
-
-    const monitor = this._monitors[monitorId];
-    if (!monitor) {
-      throw new Error(`Monitor with ID ${monitorId} not found`);
-    }
-
-    await httpClient.put(`/http_monitors/${monitorId}`, {
-      name: newName.trim(),
-    });
-
-    this._monitors[monitorId].name = newName.trim();
-  }
-
   async deleteMonitor(monitorId: string): Promise<void> {
     if (!monitorId) {
       throw new Error('Monitor ID is required');
@@ -355,7 +338,6 @@ class MonitoringState {
     this.unsync();
     logger.debug('syncing monitors...', clusterId);
     this._monitorPings = {};
-    this._shouldReconnect = true;
 
     await Promise.all([
       this._fetchMonitors(clusterId),
@@ -364,7 +346,7 @@ class MonitoringState {
   }
 
   private _stopMonitorsSync(): void {
-    this._shouldReconnect = false;
+    this._streamGeneration += 1;
     logger.debug('unsyncing monitors...');
     this._unsubscribe?.();
     this.syncConnection?.close();
@@ -372,7 +354,7 @@ class MonitoringState {
   }
 
   private _pauseMonitorSync(): void {
-    this._shouldReconnect = false;
+    this._streamGeneration += 1;
     logger.debug('pausing monitors...');
     this._unsubscribe?.();
     this.syncConnection?.close();
@@ -475,6 +457,8 @@ class MonitoringState {
   }
 
   private _openMonitorStream(clusterId: string): Promise<void> {
+    const generation = this._streamGeneration;
+
     return new Promise((resolve, reject) => {
       this._unsubscribe?.();
 
@@ -502,14 +486,12 @@ class MonitoringState {
 
         this._unsubscribe?.();
 
-        if (this._shouldReconnect) {
-          logger.debug('Attempting to reconnect monitors in 3 seconds...');
-          setTimeout(() => {
-            if (this._shouldReconnect) {
-              void this._openMonitorStream(clusterId);
-            }
-          }, 3000);
-        }
+        logger.debug('Attempting to reconnect monitors in 3 seconds...');
+        setTimeout(() => {
+          if (generation === this._streamGeneration) {
+            void this._openMonitorStream(clusterId);
+          }
+        }, 3000);
 
         reject(new Error('Monitor SSE connection failed'));
       };

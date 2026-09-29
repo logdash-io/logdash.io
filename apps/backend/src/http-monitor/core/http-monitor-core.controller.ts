@@ -6,6 +6,7 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  HttpCode,
   Param,
   Post,
   Put,
@@ -39,8 +40,12 @@ import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs'
 import { HttpMonitorMode } from './enums/http-monitor-mode.enum';
 import {
   ThrottleMonitorCreation,
+  ThrottleMonitorProbe,
   ThrottlePushPing,
 } from '../../shared/throttling/rate-limit.decorator';
+import { HttpMonitorProbeService } from '../probe/http-monitor-probe.service';
+import { ProbeHttpMonitorUrlBody } from './dto/probe-http-monitor-url.body';
+import { ProbeHttpMonitorUrlResponse } from './dto/probe-http-monitor-url.response';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -57,6 +62,7 @@ export class HttpMonitorCoreController {
     private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
     private readonly notificationChannelReadService: NotificationChannelReadService,
     private readonly httpMonitorWatchlistService: HttpMonitorWatchlistService,
+    private readonly httpMonitorProbeService: HttpMonitorProbeService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -101,6 +107,16 @@ export class HttpMonitorCoreController {
     }
 
     return HttpMonitorSerializer.serialize(httpMonitor, status);
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Write)
+  @ThrottleMonitorProbe()
+  @HttpCode(200)
+  @Post('projects/:projectId/http_monitors/probe')
+  @ApiResponse({ type: ProbeHttpMonitorUrlResponse })
+  async probe(@Body() dto: ProbeHttpMonitorUrlBody): Promise<ProbeHttpMonitorUrlResponse> {
+    return this.httpMonitorProbeService.probe(dto.url);
   }
 
   @UseGuards(ClusterMemberGuard)

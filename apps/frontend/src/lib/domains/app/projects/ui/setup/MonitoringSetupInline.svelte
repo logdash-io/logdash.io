@@ -1,5 +1,6 @@
 <script lang="ts">
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
+  import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
   import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error.js';
   import { autoFocus } from '$lib/domains/shared/ui/actions/use-autofocus.svelte.js';
@@ -10,6 +11,7 @@
     tryPrependProtocol,
   } from '$lib/domains/shared/utils/url.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
+  import MonitorUrlField from './MonitorUrlField.svelte';
   import {
     Button,
     Input,
@@ -30,19 +32,22 @@
   };
   const { clusterId, projectId }: Props = $props();
 
-  const MIN_NAME_LENGTH = 3;
-  const MAX_NAME_LENGTH = 800;
+  const MAX_NAME_LENGTH = 255;
   const MONITOR_LIMIT_MESSAGE =
     'Too many monitors waiting to be set up. Try again in a few minutes.';
 
   let selectedMode = $state<MonitorMode>(MonitorMode.PULL);
   let url = $state('');
-  let monitorName = $state('');
+  let monitorName = $derived.by(() => {
+    const serviceId = projectId;
+
+    return untrack(() => projectsState.projectName(serviceId));
+  });
   let isSubmitting = $state(false);
   let pendingMonitorId = $state<string | undefined>();
 
-  const urlValid = $derived(isValidUrl(url));
-  const nameValid = $derived(monitorName.length >= MIN_NAME_LENGTH);
+  const urlValid = $derived(isValidUrl(url.trim()));
+  const nameValid = $derived(monitorName.trim().length > 0);
   const isFormValid = $derived(
     selectedMode === MonitorMode.PULL
       ? urlValid && nameValid
@@ -69,7 +74,7 @@
     try {
       const createdMonitorId = await monitoringState.createMonitor(projectId, {
         projectId,
-        name: monitorName,
+        name: monitorName.trim(),
         mode: MonitorMode.PUSH,
         url: undefined,
       });
@@ -85,7 +90,12 @@
     }
   }
 
-  async function onFinishSetup(): Promise<void> {
+  function onSubmit(event: SubmitEvent): void {
+    event.preventDefault();
+    void finishSetup();
+  }
+
+  async function finishSetup(): Promise<void> {
     if (!isFormValid || isSubmitting) return;
 
     isSubmitting = true;
@@ -116,9 +126,9 @@
     const pendingMonitor =
       monitoringState.getUnclaimedMonitor(pendingMonitorId);
 
-    if (pendingMonitor && pendingMonitor.name !== monitorName) {
+    if (pendingMonitor && pendingMonitor.name !== monitorName.trim()) {
       await monitoringState.updateMonitor(pendingMonitorId, {
-        name: monitorName,
+        name: monitorName.trim(),
       });
     }
 
@@ -128,9 +138,9 @@
   async function finishPullSetup(): Promise<void> {
     const createdMonitorId = await monitoringState.createMonitor(projectId, {
       projectId,
-      name: monitorName,
+      name: monitorName.trim(),
       mode: MonitorMode.PULL,
-      url: tryPrependProtocol(url),
+      url: tryPrependProtocol(url.trim()),
     });
 
     await monitoringState.claimMonitor(createdMonitorId);
@@ -147,12 +157,12 @@
   }
 </script>
 
-<div class="flex w-full max-w-2xl flex-col gap-6 ld-card">
+<form class="flex w-full max-w-2xl flex-col gap-6 ld-card" onsubmit={onSubmit}>
   <div class="space-y-2">
-    <h5 class="text-2xl font-medium">Setup Monitoring for your service</h5>
+    <h5 class="text-2xl font-medium">Set up monitoring for your service</h5>
 
     <p class="text-neutral-400">
-      Monitor your services uptime and get alerted when they go down.
+      Check your service's uptime and get alerted when it goes down.
     </p>
   </div>
 
@@ -183,7 +193,7 @@
             active={selectedMode === MonitorMode.PUSH}
             disabled={true}
           >
-            Push (Heartbeat)
+            Push (you ping us)
           </Tab>
         </Tooltip>
       {/if}
@@ -192,33 +202,28 @@
     <div class="space-y-4">
       {#if selectedMode === MonitorMode.PULL}
         <div class="space-y-2">
+          <MonitorUrlField
+            id="monitor-url"
+            {projectId}
+            bind:value={url}
+            autofocus
+          />
+          <p class="text-neutral-400 text-xs">
+            Checked every 5 minutes on the free plan, every 15 seconds on Pro.
+          </p>
+        </div>
+
+        <div class="space-y-2">
           <Label class="font-medium" for="monitor-name-pull">
             Monitor name
           </Label>
           <Input
             id="monitor-name-pull"
             bind:value={monitorName}
-            minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
             class="w-full"
             placeholder="My API Service"
-            {@attach fromAction(autoFocus, () => ({ delay: 100 }))}
           />
-        </div>
-
-        <div class="space-y-2">
-          <Label class="font-medium" for="monitor-url">URL to monitor</Label>
-          <Input
-            id="monitor-url"
-            bind:value={url}
-            minlength={MIN_NAME_LENGTH}
-            maxlength={MAX_NAME_LENGTH}
-            class="w-full"
-            placeholder="https://example.com/health"
-          />
-          <p class="text-neutral-400 text-xs">
-            Checked every 5 minutes on the free plan, every 15 seconds on Pro.
-          </p>
         </div>
       {:else}
         <div class="space-y-2">
@@ -228,7 +233,6 @@
           <Input
             id="monitor-name-push"
             bind:value={monitorName}
-            minlength={MIN_NAME_LENGTH}
             maxlength={MAX_NAME_LENGTH}
             class="w-full"
             placeholder="My Backend Service"
@@ -280,16 +284,16 @@
     </div>
 
     <Button
+      type="submit"
       variant="primary"
       disabled={!isFormValid || isSubmitting}
-      onclick={onFinishSetup}
     >
       {#if isSubmitting}
         <Spinner size="sm" aria-hidden="true" />
       {:else}
         <CheckIcon class="h-4 w-4" />
       {/if}
-      Finish Setup
+      Finish setup
     </Button>
   </div>
-</div>
+</form>

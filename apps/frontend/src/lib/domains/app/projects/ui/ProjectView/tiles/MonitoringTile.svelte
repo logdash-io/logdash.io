@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { PingChart } from '@logdash/hyper-ui/features';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings.js';
@@ -12,6 +11,8 @@
   import NotificationChannelsSection from './monitoring/NotificationChannelsSection.svelte';
   import MonitorSettingsSection from './monitoring/MonitorSettingsSection.svelte';
   import MonitorBadgeModal from './monitoring/MonitorBadgeModal.svelte';
+  import EditMonitorModal from './monitoring/EditMonitorModal.svelte';
+  import CatchAllCallout from './monitoring/CatchAllCallout.svelte';
   import { SettingsCardItem } from '$lib/domains/shared/ui/components/settings-card/index.js';
   import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
@@ -31,6 +32,7 @@
   const monitorName = $derived(projectMonitor?.name || '');
 
   let isBadgeModalOpen = $state(false);
+  let isEditModalOpen = $state(false);
 
   const MAX_PINGS = 190;
   const PING_WIDTH_PX = 8;
@@ -56,10 +58,6 @@
       createdAt: ping.createdAt.toISOString(),
     })),
   );
-
-  function onNavigateToMonitoring(): void {
-    void goto(resolve(`/app/clusters/${clusterId}/${projectId}/monitoring`));
-  }
 
   function onTimeRangeChange(newRange: typeof timeRange): void {
     monitoringState.setTimeRange(newRange);
@@ -107,26 +105,46 @@
 <div
   class="ld-card-bg ld-card-border ld-card-rounding relative w-full overflow-hidden"
 >
-  <button
-    type="button"
-    class={[
-      'flex w-full flex-col items-end justify-center overflow-hidden p-6',
-      {
-        'cursor-pointer group hover:bg-neutral-800': !expanded,
-      },
-    ]}
-    disabled={expanded}
-    onclick={onNavigateToMonitoring}
-  >
-    <MonitoringHeader name={monitorName} {status} showArrow={!expanded} />
+  <div class="group relative">
+    {#if !expanded}
+      <a
+        href={resolve('/app/clusters/[cluster_id]/[project_id]/monitoring', {
+          cluster_id: clusterId,
+          project_id: projectId,
+        })}
+        aria-label={`Open ${monitorName} monitoring`}
+        class="ld-card-rounding group-hover:bg-neutral-800 focus-visible:outline-brand absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2"
+      ></a>
+    {/if}
 
     <div
-      class="z-10 flex w-full cursor-default overflow-hidden sm:mt-2"
-      bind:clientWidth={pingsChartWidth}
+      class={[
+        'relative flex w-full flex-col p-6',
+        { 'pointer-events-none': !expanded },
+      ]}
     >
-      <PingChart {maxPingsToShow} pings={formattedPings} />
+      <MonitoringHeader
+        name={monitorName}
+        url={projectMonitor?.url}
+        {status}
+        showArrow={!expanded}
+      />
+
+      <div
+        class="pointer-events-auto mt-2 flex w-full cursor-default overflow-hidden"
+        bind:clientWidth={pingsChartWidth}
+      >
+        <PingChart {maxPingsToShow} pings={formattedPings} />
+      </div>
+
+      {#if projectMonitor}
+        <CatchAllCallout
+          monitor={projectMonitor}
+          onEdit={() => (isEditModalOpen = true)}
+        />
+      {/if}
     </div>
-  </button>
+  </div>
 
   {#if expanded}
     <UptimeSection {uptime} {timeRange} {pingBuckets} {onTimeRangeChange} />
@@ -151,9 +169,9 @@
       </SettingsCardItem>
       <MonitorSettingsSection
         {monitorId}
-        {monitorName}
         {clusterId}
         {projectId}
+        onEdit={() => (isEditModalOpen = true)}
       />
     </div>
   {/if}
@@ -164,6 +182,11 @@
     isOpen={isBadgeModalOpen}
     onClose={() => (isBadgeModalOpen = false)}
     {clusterId}
+    monitor={projectMonitor}
+  />
+  <EditMonitorModal
+    isOpen={isEditModalOpen}
+    onClose={() => (isEditModalOpen = false)}
     monitor={projectMonitor}
   />
 {/if}

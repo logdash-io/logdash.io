@@ -13,37 +13,12 @@
 
   type Props = {
     monitorId: string;
-    monitorName: string;
     clusterId: string;
     projectId: string;
+    onEdit: () => void;
   };
 
-  const { monitorId, monitorName, clusterId, projectId }: Props = $props();
-
-  async function onRenameMonitor(): Promise<void> {
-    const newName = prompt('Enter new monitor name', monitorName);
-
-    if (newName === null) {
-      return;
-    }
-
-    if (!newName || newName.trim() === '') {
-      toast.warning('Monitor name cannot be empty', 5000);
-      return;
-    }
-
-    if (newName === monitorName) {
-      toast.info('Monitor name is the same, no changes made', 5000);
-      return;
-    }
-
-    try {
-      await monitoringState.updateMonitorName(monitorId, newName);
-      toast.success('Monitor name updated successfully', 5000);
-    } catch {
-      toast.error('Failed to update monitor name', 5000);
-    }
-  }
+  const { monitorId, clusterId, projectId, onEdit }: Props = $props();
 
   async function onDeleteMonitor(): Promise<void> {
     if (!confirm('Are you sure you want to delete this monitor?')) {
@@ -72,11 +47,9 @@
   description="Configure and manage this monitor"
   icon={SettingsIcon}
 >
-  <SettingsCardItem icon={EditIcon} showBorder={true} onclick={onRenameMonitor}>
-    <p class="font-medium">Rename Monitor</p>
-    <p class="text-neutral-400 text-sm">
-      Change the display name of this monitor
-    </p>
+  <SettingsCardItem icon={EditIcon} showBorder={true} onclick={onEdit}>
+    <p class="font-medium">Edit monitor</p>
+    <p class="text-neutral-400 text-sm">Change the name or the checked URL</p>
   </SettingsCardItem>
 
   <SettingsCardItem

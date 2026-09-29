@@ -11,6 +11,7 @@ export const AccountCreationRateLimit = { limit: 10, ttl: seconds(60) };
 export const CliPollingRateLimit = { limit: 30, ttl: seconds(60) };
 export const OauthExchangeRateLimit = { limit: 300, ttl: seconds(60) };
 export const MonitorCreationRateLimit = { limit: 20, ttl: seconds(60) };
+export const MonitorProbeRateLimit = { limit: 30, ttl: seconds(60) };
 export const PushPingRateLimit = { limit: 300, ttl: seconds(60) };
 
 function rateLimit(options: { limit: number; ttl: number }) {
@@ -56,6 +57,16 @@ export function ThrottleOauthExchange() {
  */
 export function ThrottleMonitorCreation() {
   return rateLimit(MonitorCreationRateLimit);
+}
+
+/**
+ * 30 requests per minute per IP. For the monitor url probe, which the app calls
+ * from the browser while someone types or edits a monitor url, debounced, so a
+ * person stays far below it. Each call makes a handful of outbound requests, so
+ * the budget also caps how much traffic one address can make us send elsewhere.
+ */
+export function ThrottleMonitorProbe() {
+  return rateLimit(MonitorProbeRateLimit);
 }
 
 /**
