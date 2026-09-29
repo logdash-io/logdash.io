@@ -1,10 +1,12 @@
 import request from 'supertest';
+import { advanceBy } from 'jest-date-mock';
 import { Types } from 'mongoose';
 import { createTestApp } from '../utils/bootstrap';
 import { Action } from '../../src/personal-api-key/core/enums/action.enum';
 import { Resource } from '../../src/personal-api-key/core/enums/resource.enum';
 import { AccessRestriction } from '../../src/personal-api-key/core/types/access-restriction.type';
 import { ScopeEntry } from '../../src/personal-api-key/core/types/scope-entry.type';
+import { ALL_ACCESS } from '../../src/personal-api-key/core/scope-presets';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { CreatePersonalApiKeyResponse } from '../../src/personal-api-key/core/dto/create-personal-api-key.response';
@@ -75,15 +77,15 @@ describe('Personal API keys (scope + access enforcement)', () => {
       expect(response.status).toBe(200);
     });
 
-    it('write scope implies read (write key can read)', async () => {
+    it.each([Action.Write, Action.Delete])('monitors:%s implies read', async (action) => {
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const key = await createKey(token, [{ resource: Resource.Projects, action: Action.Write }], {
+      const key = await createKey(token, [{ resource: Resource.Monitors, action }], {
         kind: 'all',
       });
 
       const response = await request(server())
-        .get(`/projects/${project.id}`)
+        .get(`/projects/${project.id}/http_monitors`)
         .set('Authorization', `Bearer ${key}`);
 
       expect(response.status).toBe(200);
@@ -140,9 +142,7 @@ describe('Personal API keys (scope + access enforcement)', () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       // even an all-access key cannot manage keys — the endpoint is unannotated
-      const key = await createKey(token, [{ resource: Resource.Account, action: Action.Write }], {
-        kind: 'all',
-      });
+      const key = await createKey(token, ALL_ACCESS, { kind: 'all' });
 
       const response = await request(server())
         .get('/personal-api-keys')
@@ -154,9 +154,7 @@ describe('Personal API keys (scope + access enforcement)', () => {
     it('returns 403 for a personal key creating another key (credential-mints-credential is closed)', async () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const key = await createKey(token, [{ resource: Resource.Account, action: Action.Write }], {
-        kind: 'all',
-      });
+      const key = await createKey(token, ALL_ACCESS, { kind: 'all' });
 
       const response = await request(server())
         .post('/personal-api-keys')
@@ -299,8 +297,9 @@ describe('Personal API keys (scope + access enforcement)', () => {
         token,
         [{ resource: Resource.Projects, action: Action.Read }],
         { kind: 'all' },
-        new Date(Date.now() - 60_000).toISOString(),
+        new Date(Date.now() + 60_000).toISOString(),
       );
+      advanceBy(120_000);
 
       const response = await request(server())
         .get(`/projects/${project.id}`)
@@ -398,8 +397,9 @@ describe('Personal API keys (scope + access enforcement)', () => {
         token,
         [],
         { kind: 'all' },
-        new Date(Date.now() - 60_000).toISOString(),
+        new Date(Date.now() + 60_000).toISOString(),
       );
+      advanceBy(120_000);
 
       const response = await request(server())
         .get('/personal-api-keys/whoami')

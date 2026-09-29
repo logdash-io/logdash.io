@@ -51,7 +51,7 @@ describe('HttpMonitorCoreController (personal API keys)', () => {
     return (response.body as CreatePersonalApiKeyResponse).value;
   };
 
-  it('lets a monitors write key create, claim, list, update, read buckets of and delete a monitor', async () => {
+  it('lets a monitors write key create, claim, list, update and read buckets of a monitor, but not delete it', async () => {
     // given
     const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
     const channel =
@@ -104,6 +104,31 @@ describe('HttpMonitorCoreController (personal API keys)', () => {
     expect(updated.body).toMatchObject({ name: 'renamed' });
     expect(buckets.status).toBe(200);
     expect((buckets.body as BucketsResponse).buckets).toHaveLength(90);
+    expect(deleted.status).toBe(403);
+    expect((deleted.body as ErrorResponse).message).toBe('Missing scope monitors:delete');
+    expect(await bootstrap.models.httpMonitorModel.countDocuments()).toBe(1);
+  });
+
+  it('lets a monitors delete key read and delete a monitor', async () => {
+    // given
+    const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+    const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+      token,
+      projectId: project.id,
+    });
+    const key = await createKey(token, [{ resource: Resource.Monitors, action: Action.Delete }]);
+
+    // when
+    const listed = await request(server())
+      .get(`/projects/${project.id}/http_monitors`)
+      .set('Authorization', `Bearer ${key}`);
+    const deleted = await request(server())
+      .delete(`/http_monitors/${monitor.id}`)
+      .set('Authorization', `Bearer ${key}`);
+
+    // then
+    expect(listed.status).toBe(200);
+    expect((listed.body as HttpMonitorSerialized[]).map((item) => item.id)).toEqual([monitor.id]);
     expect(deleted.status).toBe(200);
     expect(await bootstrap.models.httpMonitorModel.countDocuments()).toBe(0);
   });
@@ -137,7 +162,7 @@ describe('HttpMonitorCoreController (personal API keys)', () => {
     expect(afterDetach!.notificationChannelsIds).toEqual([]);
   });
 
-  it('denies every monitor write route to a monitors read key', async () => {
+  it('denies every monitor write and delete route to a monitors read key', async () => {
     // given
     const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
     const channel =
@@ -170,20 +195,22 @@ describe('HttpMonitorCoreController (personal API keys)', () => {
         .set('Authorization', `Bearer ${key}`)
         .send(updateBody),
       await request(server())
-        .delete(`/http_monitors/${monitor.id}`)
-        .set('Authorization', `Bearer ${key}`),
-      await request(server())
         .post(`/http_monitors/${monitor.id}/claim`)
         .set('Authorization', `Bearer ${key}`),
       await request(server()).post(channelPath).set('Authorization', `Bearer ${key}`),
       await request(server()).delete(channelPath).set('Authorization', `Bearer ${key}`),
     ];
+    const deleted = await request(server())
+      .delete(`/http_monitors/${monitor.id}`)
+      .set('Authorization', `Bearer ${key}`);
 
     // then
     for (const response of responses) {
       expect(response.status).toBe(403);
       expect((response.body as ErrorResponse).message).toBe('Missing scope monitors:write');
     }
+    expect(deleted.status).toBe(403);
+    expect((deleted.body as ErrorResponse).message).toBe('Missing scope monitors:delete');
     expect(await bootstrap.models.httpMonitorModel.countDocuments()).toBe(1);
   });
 
@@ -224,7 +251,7 @@ describe('HttpMonitorCoreController (personal API keys)', () => {
         options: { botToken: '123456:valid-bot-token' },
       });
     const channelPath = `/http_monitors/${monitor.id}/notification_channels/${channel.id}`;
-    const scopes = [{ resource: Resource.Monitors, action: Action.Write }];
+    const scopes = [{ resource: Resource.Monitors, action: Action.Delete }];
     const ownProjectKey = await createKey(token, scopes, { kind: 'projects', ids: [project.id] });
     const otherProjectKey = await createKey(token, scopes, {
       kind: 'projects',

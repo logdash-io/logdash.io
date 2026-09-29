@@ -6,27 +6,32 @@
   type Props = {
     isOpen: boolean;
     onClose: () => void;
+    dismissible?: boolean;
     children: Snippet;
   };
 
-  let { isOpen, onClose, children }: Props = $props();
+  let { isOpen, onClose, dismissible = true, children }: Props = $props();
 
-  function handleBackdropClick() {
-    onClose();
+  function onKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || event.isComposing || event.defaultPrevented) {
+      return;
+    }
+
+    onDismiss();
   }
 
-  function handleDialogClose() {
-    // This handles when dialog is closed by ESC key
-    if (isOpen) {
+  function onDismiss(): void {
+    if (isOpen && dismissible) {
       onClose();
     }
   }
 </script>
 
+<svelte:window onkeydown={onKeydown} />
+
 {#if isOpen}
   <dialog
     class="fixed top-0 left-0 z-[999] flex h-full w-full overflow-y-auto bg-transparent p-4"
-    onclose={handleDialogClose}
   >
     <div
       transition:scale={{
@@ -41,10 +46,8 @@
     <div
       transition:fade={{ duration: 200, easing: quadInOut }}
       class="bg-surface-root/60 fixed inset-0"
-      role="button"
-      onclick={() => {
-        handleBackdropClick();
-      }}
+      aria-hidden="true"
+      onclick={onDismiss}
     ></div>
   </dialog>
 {/if}

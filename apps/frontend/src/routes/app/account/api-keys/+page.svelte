@@ -39,10 +39,24 @@
     return 'All access';
   }
 
-  function formatDate(value?: string): string {
-    if (!value) {
-      return '—';
+  function lastUsedSummary(key: PersonalApiKey): string {
+    if (!key.lastUsedAt) {
+      return 'Never used';
     }
+    return `Last used ${formatDate(key.lastUsedAt)}`;
+  }
+
+  function expirySummary(key: PersonalApiKey): string {
+    if (!key.expiresAt) {
+      return 'No expiration';
+    }
+    if (new Date(key.expiresAt).getTime() <= Date.now()) {
+      return 'Expired';
+    }
+    return `Expires ${formatDate(key.expiresAt)}`;
+  }
+
+  function formatDate(value: string): string {
     return new Date(value).toLocaleDateString();
   }
 
@@ -82,12 +96,11 @@
   }
 </script>
 
-<div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
+<div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
   <SettingsCard>
     <SettingsCardHeader
       title="Personal API keys"
       description="Keys for the CLI, MCP servers and other integrations acting on your behalf"
-      icon={KeyIcon}
     />
 
     <div class="flex items-center justify-between p-4">
@@ -120,8 +133,8 @@
             {scopeSummary(key)}
           </p>
           <p class="text-neutral-400 text-xs">
-            {accessSummary(key)} · Last used {formatDate(key.lastUsedAt)} · Created
-            {formatDate(key.createdAt)}
+            {accessSummary(key)} · {lastUsedSummary(key)} · Created
+            {formatDate(key.createdAt)} · {expirySummary(key)}
           </p>
           {#snippet action()}
             <Button

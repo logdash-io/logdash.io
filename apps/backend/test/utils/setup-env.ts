@@ -19,6 +19,7 @@ const TEST_ENV_DEFAULTS: Record<string, string> = {
   STRIPE_PRO_PRICE_ID: 'test-pro-price-id',
   STRIPE_API_KEY_SECRET: 'test-api-key-secret',
   ADMIN_SUPER_SECRET_ADMIN_KEY: 'test',
+  RESEND_API_KEY: 're_test',
 };
 
 for (const [name, value] of Object.entries(TEST_ENV_DEFAULTS)) {

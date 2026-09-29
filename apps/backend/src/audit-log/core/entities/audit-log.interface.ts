@@ -9,6 +9,7 @@ export class AuditLogNormalized {
   relatedDomain?: string;
   description?: string;
   relatedEntityId?: string;
+  personalApiKeyId?: string;
 }
 
 export class AuditLogSerialized {
@@ -35,4 +36,7 @@ export class AuditLogSerialized {
 
   @ApiPropertyOptional()
   relatedEntityId?: string;
+
+  @ApiPropertyOptional()
+  personalApiKeyId?: string;
 }

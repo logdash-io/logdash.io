@@ -18,6 +18,8 @@ export class AuditLogEntity {
 
   related_entity_id: string | null;
 
+  personal_api_key_id: string | null;
+
   public static fromNormalized(normalized: AuditLogNormalized): AuditLogEntity {
     return {
       id: normalized.id,
@@ -28,6 +30,7 @@ export class AuditLogEntity {
       related_domain: normalized.relatedDomain || null,
       description: normalized.description || null,
       related_entity_id: normalized.relatedEntityId || null,
+      personal_api_key_id: normalized.personalApiKeyId || null,
     };
   }
 }

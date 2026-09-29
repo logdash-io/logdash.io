@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
-  import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import {
     cliAuthErrorMessage,
     type CliAuthRequest,
@@ -14,22 +13,6 @@
   let checking = $state(false);
   let error = $state<string | null>(null);
   let request = $state<CliAuthRequest | null>(null);
-
-  // The access picker reads clusters/projects from clustersState. This page
-  // lives outside the /app/clusters layout, so load them on the client.
-  $effect(() => {
-    if (!clustersState.ready) {
-      void loadClusters();
-    }
-  });
-
-  async function loadClusters(): Promise<void> {
-    try {
-      await clustersState.load();
-    } catch (cause) {
-      console.error(cause);
-    }
-  }
 
   async function onLookup(event: SubmitEvent): Promise<void> {
     event.preventDefault();
@@ -71,11 +54,11 @@
 <div class="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
   <div class="flex w-full max-w-md flex-col items-center gap-3 text-center">
     <div class="bg-surface-100 rounded-lg p-3">
-      <KeyIcon class="text-brand size-6" />
+      <KeyIcon class="text-brand size-6 stroke-1" />
     </div>
     <h1 class="text-xl font-medium">Authorize CLI access</h1>
     <p class="text-neutral-400 text-sm">
-      Type the code shown in your terminal. We never fill it in for you — if
+      Type the code shown in your terminal. We never fill it in for you. If
       someone sent you a link with a code already in it, close this page.
     </p>
 
@@ -111,7 +94,6 @@
     isOpen={request !== null}
     mode="cli"
     cliRequest={request}
-    initialPreset="cli"
     {onClose}
   />
 </div>

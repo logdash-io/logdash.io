@@ -25,7 +25,7 @@ Background, read when unsure: `apps/backend/CONTEXT.md` (the three credentials),
 | --- | --- |
 | Cluster or project owned, id in path | `@UseGuards(ClusterMemberGuard)` |
 | Needs a higher role | add `@RequireRole(ClusterRole.Creator, ClusterRole.Admin)`. Without it every role passes. |
-| The `ld` CLI or MCP should reach it | add `@RequireScope(Resource.X, Action.Read or Action.Write)` |
+| The `ld` CLI or MCP should reach it | add `@RequireScope(Resource.X, Action.Read, Action.Write or Action.Delete)` |
 | Account level or key management | nothing extra. Session only by design. |
 | SDK ingest | `@Public()`, `@ApiSecurity('project-api-key')`, `@Headers('project-api-key')`, resolve with `ApiKeyReadCachedService.readProjectId` (see `log-core.controller.ts`) |
 | Truly public (status page, badge, webhook) | `@Public()`, look up by an unguessable key, return only public data, verify webhook signatures |
@@ -38,9 +38,10 @@ Read the caller with `@CurrentUserId()`. Use `@Req() request: AuthenticatedReque
 
 - Fail closed: a personal key calling a route without `@RequireScope` gets 403.
   Leaving the annotation off is the safe default. Add it only for routes the CLI or MCP needs.
-- `Action.Write` implies read. A write route annotated `Action.Read` is a hole.
-- New `Resource` enum value (`src/personal-api-key/core/enums/resource.enum.ts`): `ALL_ACCESS` picks it up automatically.
-  Decide explicitly whether `CLI_DEFAULT` in `scope-presets.ts` should include it.
+- Levels are `none < read < write < delete`, and each includes the ones below it. A write route annotated `Action.Read` is a hole.
+- Irreversible routes (hard deletes, anything that wipes history) use `Action.Delete`, not `Action.Write`.
+- Raise `MAX_GRANT` in `src/personal-api-key/core/scope-presets.ts` when you annotate a new resource or a new level.
+  Keys can only be created up to `MAX_GRANT`, so until you raise it nobody can hold the new permission, and old keys never gain it by accident.
 - Never let a personal key or an ingest key create, list or revoke keys.
 
 ## Traps

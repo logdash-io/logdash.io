@@ -26,3 +26,20 @@ instead of auditing the whole codebase, and a forgotten annotation denies rather
 **Consequence:** Param-less aggregate endpoints (`GET /overview`, `GET /personal-api-keys`) bypass
 `ClusterMemberGuard`, so they MUST filter by the key's reach in the handler. Every new aggregate
 endpoint needs that check called out in review.
+
+## Amended (2026-09): delete level and `MAX_GRANT`
+
+**Context:** Annotating the monitor write routes with `monitors:write` also gave that scope the hard delete of monitors and their history.
+The "All access" preset stored `write` on every resource, including resources with no key routes.
+So every old "All access" key picked up monitor delete as soon as the routes were annotated.
+
+**Decision:**
+- Scope levels are `none < read < write < delete`, and each level includes the ones below it.
+  `write` covers create, update, claim and linking channels. `delete` adds permanent deletion.
+  Irreversible routes use `Action.Delete`.
+- `Resource` lists only resources that have key routes: `logs`, `metrics`, `monitors`, `projects`, `clusters`, `account`.
+- `MAX_GRANT` in `scope-presets.ts` is the highest level each resource supports (monitors `delete`, the rest `read`).
+  Creating a key above it returns 400, for `POST /personal-api-keys` and `ld login` alike.
+  Raise an entry on purpose when a route is annotated at a new level, so old keys never gain a permission by accident.
+- The migration `20260928120000-clamp-personal-api-key-scopes.js` dropped entries for removed resources and capped the rest at `MAX_GRANT`.
+  Existing `monitors:write` keys lost delete.

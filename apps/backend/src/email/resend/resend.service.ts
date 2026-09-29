@@ -13,6 +13,10 @@ import {
 } from '../../payments/stripe/stripe-event.emitter';
 import { UserEvents } from '../../user/events/user-events.enum';
 import { MarketingConsentGivenEvent } from '../../user/events/definitions/marketing-consent-given.event';
+import { PersonalApiKeyEvents } from '../../personal-api-key/events/personal-api-key-events.enum';
+import { PersonalApiKeyCreatedEvent } from '../../personal-api-key/events/definitions/personal-api-key-created.event';
+import { UserReadService } from '../../user/read/user-read.service';
+import { errorMessage } from '../../shared/utils/error-message';
 
 @Injectable()
 export class ResendService {
@@ -21,6 +25,7 @@ export class ResendService {
   constructor(
     @Inject(EMAILS_LOGGER) private readonly logger: LogdashLogger,
     private readonly resendTemplatedEmailsService: ResendTemplatedEmailsService,
+    private readonly userReadService: UserReadService,
   ) {}
 
   @OnEvent(AuthEvents.UserRegistered)
@@ -60,6 +65,28 @@ export class ResendService {
     }
 
     await this.resendTemplatedEmailsService.sendPaidPlanWelcomeEmail(dto.email);
+  }
+
+  @OnEvent(PersonalApiKeyEvents.Created)
+  public async handlePersonalApiKeyCreatedEvent(dto: PersonalApiKeyCreatedEvent): Promise<void> {
+    if (!getEnvConfig().resend.enabled) {
+      return;
+    }
+
+    try {
+      const user = await this.userReadService.readByIdOrThrow(dto.userId);
+
+      if (!user.email) {
+        return;
+      }
+
+      await this.resendTemplatedEmailsService.sendPersonalApiKeyCreatedEmail(user.email, dto);
+    } catch (error) {
+      this.logger.error('Failed to send personal API key created email', {
+        userId: dto.userId,
+        error: errorMessage(error),
+      });
+    }
   }
 
   private async addToNewsletterAudience(userId: string, email: string): Promise<void> {

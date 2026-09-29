@@ -84,6 +84,7 @@
 
   <div class="flex flex-wrap items-center justify-between gap-2">
     <SegmentedControl
+      label="Badge style"
       options={BADGE_STYLES}
       value={style}
       onChange={(value: BadgeStyle) => (style = value)}
@@ -92,6 +93,7 @@
 
     {#if !isThemed}
       <SegmentedControl
+        label="Badge period"
         options={BADGE_PERIODS}
         value={period}
         onChange={(value: BadgePeriod) => (period = value)}

@@ -1,6 +1,6 @@
 /**
  * What the backend tells us about a pending `ld login` request once the user has
- * typed the code from their terminal. The code is never taken from the URL — see
+ * typed the code from their terminal. The code is never taken from the URL - see
  * ADR-0003 invariant #3.
  */
 export type CliAuthRequest = {

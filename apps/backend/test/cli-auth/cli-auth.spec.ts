@@ -3,6 +3,7 @@ import { createTestApp } from '../utils/bootstrap';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { Action } from '../../src/personal-api-key/core/enums/action.enum';
 import { Resource } from '../../src/personal-api-key/core/enums/resource.enum';
+import { ALL_ACCESS } from '../../src/personal-api-key/core/scope-presets';
 import { Types } from 'mongoose';
 import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 import {
@@ -134,11 +135,7 @@ describe('CLI authorization (device-authorization flow)', () => {
       const createResponse = await request(server())
         .post('/personal-api-keys')
         .set('Authorization', `Bearer ${token}`)
-        .send({
-          label: 'k',
-          scopes: [{ resource: Resource.Account, action: Action.Write }],
-          access: { kind: 'all' },
-        });
+        .send({ label: 'k', scopes: ALL_ACCESS, access: { kind: 'all' } });
       const personalKey = (createResponse.body as CreatePersonalApiKeyResponse).value;
 
       const response = await request(server())
@@ -501,6 +498,19 @@ describe('CLI authorization (device-authorization flow)', () => {
       });
 
       expect(response.status).toBe(400);
+    });
+
+    it('rejects scopes above their max grant and mints no key', async () => {
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { userCode } = await start();
+
+      const response = await approve(token, {
+        userCode,
+        scopes: [{ resource: Resource.Logs, action: Action.Write }],
+      });
+
+      expect(response.status).toBe(400);
+      expect(await bootstrap.models.personalApiKeyModel.countDocuments()).toBe(0);
     });
   });
 

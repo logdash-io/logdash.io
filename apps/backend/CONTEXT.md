@@ -31,8 +31,9 @@ _Avoid_: "auth token", "bearer" (all three are bearers).
 
 **Scope**:
 What *kind* of resource a Personal API Key may touch, and at what level
-(`none` / `read` / `write`, where write implies read). Enforced **only** for Personal
-API Keys; Session Tokens are implicitly all-access. Example: `logs:read`.
+(`none` / `read` / `write` / `delete`, where each level includes the ones below it and
+no resource can go above its `MAX_GRANT`). Enforced **only** for Personal API Keys;
+Session Tokens are implicitly all-access. Example: `logs:read`, `monitors:delete`.
 
 **Access restriction**:
 *Which* clusters or projects a Personal API Key may reach. Only ever **narrows** the

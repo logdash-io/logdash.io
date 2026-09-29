@@ -37,6 +37,10 @@ export class AuditLogUtils {
       return false;
     }
 
+    if (dto.personalApiKeyId && auditLog.personal_api_key_id !== dto.personalApiKeyId) {
+      return false;
+    }
+
     return true;
   }
 

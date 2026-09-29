@@ -163,7 +163,7 @@ export class HttpMonitorCoreController {
   }
 
   @UseGuards(ClusterMemberGuard)
-  @RequireScope(Resource.Monitors, Action.Write)
+  @RequireScope(Resource.Monitors, Action.Delete)
   @Delete('/http_monitors/:httpMonitorId')
   async delete(
     @Param('httpMonitorId') httpMonitorId: string,

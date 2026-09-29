@@ -48,6 +48,7 @@ export class PersonalApiKeyAuthService {
     this.touchLastUsed(stored.id);
 
     return {
+      id: stored.id,
       userId: stored.userId,
       scopes: stored.scopes,
       access: stored.access,

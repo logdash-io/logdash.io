@@ -12,12 +12,13 @@ import { DEMO_ENDPOINT_KEY } from '../../../demo/decorators/demo-endpoint.decora
 import { getEnvConfig } from '../../../shared/configs/env-configs';
 import { PersonalApiKeyAuthService } from '../../../personal-api-key/auth/personal-api-key-auth.service';
 import { ALL_ACCESS } from '../../../personal-api-key/core/scope-presets';
-import { Action } from '../../../personal-api-key/core/enums/action.enum';
+import { Action, ACTION_RANK } from '../../../personal-api-key/core/enums/action.enum';
 import { ScopeEntry } from '../../../personal-api-key/core/types/scope-entry.type';
 import { REQUIRE_SCOPE_KEY } from '../decorators/require-scope.decorator';
 import { ALLOW_ANY_PERSONAL_KEY_KEY } from '../decorators/allow-any-personal-key.decorator';
 import { PERSONAL_API_KEY_PREFIX } from '../../../personal-api-key/core/personal-api-key.token';
 import { AuthenticatedRequest } from '../types/authenticated-request.type';
+import { requestContext } from '../../../shared/request-context/request-context';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -82,6 +83,12 @@ export class AuthGuard implements CanActivate {
         viaPersonalKey: true,
       };
 
+      const store = requestContext.getStore();
+
+      if (store) {
+        store.personalApiKeyId = authed.id;
+      }
+
       return this.enforceScope(context, request);
     }
 
@@ -122,12 +129,9 @@ export class AuthGuard implements CanActivate {
     }
 
     const scopes: ScopeEntry[] = request.user?.scopes ?? [];
-    const action = scopes.find((s) => s.resource === required.resource)?.action ?? Action.None;
+    const held = scopes.find((s) => s.resource === required.resource)?.action ?? Action.None;
 
-    const ok =
-      action === Action.Write || (action === Action.Read && required.action === Action.Read);
-
-    if (!ok) {
+    if (!(ACTION_RANK[held] >= ACTION_RANK[required.action])) {
       throw new ForbiddenException(`Missing scope ${required.resource}:${required.action}`);
     }
 
