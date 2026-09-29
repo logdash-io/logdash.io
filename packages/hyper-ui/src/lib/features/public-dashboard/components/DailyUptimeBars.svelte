@@ -178,6 +178,8 @@
 <div
   class="text-neutral-500 mt-2 flex items-center justify-between font-mono text-xs"
 >
-  <span>{buckets.length} days ago</span>
+  <span>
+    {buckets.length === 0 ? "No data yet" : `${buckets.length} days ago`}
+  </span>
   <span>Today</span>
 </div>

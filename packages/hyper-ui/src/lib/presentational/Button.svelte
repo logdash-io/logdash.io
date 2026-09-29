@@ -110,7 +110,7 @@
       background-color: var(--button-bg);
       color: var(--button-fg);
       font-size: 0.875rem;
-      font-weight: 600;
+      font-weight: 500;
       text-align: center;
       text-decoration: none;
       white-space: nowrap;

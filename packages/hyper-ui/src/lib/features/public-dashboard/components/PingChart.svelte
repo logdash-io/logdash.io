@@ -32,8 +32,12 @@
     class="text-neutral-400 flex items-center justify-between font-mono text-xs"
   >
     <span>
-      {pingsCount}
-      {pingsCount === 1 ? "ping" : "pings"} ago
+      {#if pingsCount === 0}
+        No pings yet
+      {:else}
+        {pingsCount}
+        {pingsCount === 1 ? "ping" : "pings"} ago
+      {/if}
     </span>
     <span>Now</span>
   </div>

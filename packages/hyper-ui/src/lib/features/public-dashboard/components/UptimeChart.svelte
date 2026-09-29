@@ -99,8 +99,7 @@
     class="text-neutral-400 flex items-center justify-between font-mono text-xs"
   >
     <span>
-      {bucketsCount}
-      {timeLabel}
+      {bucketsCount === 0 ? "No data yet" : `${bucketsCount} ${timeLabel}`}
     </span>
     <span>Now</span>
   </div>

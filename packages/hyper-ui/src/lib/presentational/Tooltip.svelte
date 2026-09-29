@@ -123,6 +123,15 @@
     }
   }
 
+  function handleEscape(event: KeyboardEvent) {
+    if (event.key !== "Escape" || !visible || event.defaultPrevented) {
+      return;
+    }
+
+    event.preventDefault();
+    hide();
+  }
+
   function handleClickOutside(event: MouseEvent) {
     if (
       trigger === "click" &&
@@ -250,6 +259,7 @@
     } else if (trigger === "click") {
       wrapper.addEventListener("click", handleClick);
       document.addEventListener("click", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
     }
 
     return () => {
@@ -265,6 +275,7 @@
       } else if (trigger === "click") {
         wrapper.removeEventListener("click", handleClick);
         document.removeEventListener("click", handleClickOutside);
+        document.removeEventListener("keydown", handleEscape);
       }
     };
   });
