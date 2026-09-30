@@ -382,6 +382,9 @@ importers:
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
+      '@posthog/cli':
+        specifier: ^0.18.9
+        version: 0.18.9
       '@sveltejs/adapter-cloudflare':
         specifier: 'catalog:'
         version: 7.2.8(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.55.10(@typescript-eslint/types@8.70.1))(vite@7.3.6(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(sass-embedded@1.89.0)(terser@5.41.0)(yaml@2.8.3)))(svelte@5.55.10(@typescript-eslint/types@8.70.1))(typescript@5.9.3)(vite@7.3.6(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(sass-embedded@1.89.0)(terser@5.41.0)(yaml@2.8.3)))(wrangler@4.95.0(@cloudflare/workers-types@4.20260527.1))
@@ -2108,6 +2111,11 @@ packages:
 
   '@posthog/browser-common@0.9.0':
     resolution: {integrity: sha512-EWoVzs1vVY7ihpn8yOjj3jyjriHUEEMVSBNL/TW3hk09fTriWRe76vJXrRg0G0yjTYxHmtlSkNn4mOV24ZEzzA==}
+
+  '@posthog/cli@0.18.9':
+    resolution: {integrity: sha512-uASaB3MLV5zHIZs9IqeG9d5sgo1lHhxxGh01Ndkmw6RWzLhZaM8ud+pcT0DVbYvpRZvT+eGFookh0/QakeaJ1g==}
+    engines: {node: '>=14.14', npm: '>=6'}
+    hasBin: true
 
   '@posthog/core@1.55.2':
     resolution: {integrity: sha512-2mYxGbDmTLUs096VbcZqSWo0lrI48/BrX65r54NynxxFq409BOx9w73HxOAtOKZ1vblkdV6/GxQTe7KDcIQidg==}
@@ -8610,6 +8618,10 @@ snapshots:
       '@posthog/core': 1.55.2
       '@posthog/types': 1.413.0
 
+  '@posthog/cli@0.18.9':
+    dependencies:
+      detect-libc: 2.1.2
+
   '@posthog/core@1.55.2':
     dependencies:
       '@posthog/types': 1.413.0
@@ -12019,7 +12031,7 @@ snapshots:
 
   lightningcss@1.30.1:
     dependencies:
-      detect-libc: 2.0.4
+      detect-libc: 2.1.2
     optionalDependencies:
       lightningcss-darwin-arm64: 1.30.1
       lightningcss-darwin-x64: 1.30.1
