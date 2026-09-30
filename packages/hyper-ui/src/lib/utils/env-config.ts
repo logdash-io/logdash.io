@@ -7,7 +7,6 @@ export interface EnvironmentConfig {
   github: {
     clientId: string;
   };
-  bffLogdashApiKey: string;
   apiBaseUrl: string;
   stage: "live" | "preview" | "local";
 }
@@ -25,7 +24,6 @@ export function getEnvironmentConfig(): EnvironmentConfig {
     github: {
       clientId: env.VITE_GITHUB_CLIENT_ID,
     },
-    bffLogdashApiKey: env.VITE_LOGDASH_API_KEY,
     apiBaseUrl: env.VITE_API_BASE_URL,
     stage: env.VITE_STAGE || "local",
   };

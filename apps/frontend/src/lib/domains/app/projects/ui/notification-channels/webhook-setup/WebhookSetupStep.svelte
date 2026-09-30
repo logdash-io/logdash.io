@@ -136,7 +136,7 @@
       <Input
         bind:value={webhookUrl}
         variant="outline"
-        class="py-2 pl-16 pr-3"
+        class="ph-no-capture py-2 pl-16 pr-3"
         placeholder="Webhook URL"
         type="text"
       />
@@ -144,7 +144,7 @@
 
     <div class="flex flex-col gap-2">
       {#each headers as header, index (index)}
-        <div class="flex items-start gap-2">
+        <div class="ph-no-capture flex items-start gap-2">
           <div class="flex-1">
             <Input
               type="text"

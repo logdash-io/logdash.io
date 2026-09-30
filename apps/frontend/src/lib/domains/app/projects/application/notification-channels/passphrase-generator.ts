@@ -37,15 +37,20 @@ export class PassphraseGenerator {
     'owl',
   ];
 
+  // The 16 hex chars carry 64 random bits so nobody can guess the passphrase
+  // while it waits in the backend. The backend rejects any other shape.
   static generate(): string {
     const adjective = this.getRandomElement(this.adjectives);
     const noun = this.getRandomElement(this.nouns);
-    const number = Math.floor(Math.random() * 1000);
+    const suffix = Array.from(
+      crypto.getRandomValues(new Uint8Array(8)),
+      (byte) => byte.toString(16).padStart(2, '0'),
+    ).join('');
 
-    return `/${adjective}_${noun}_${number}`;
+    return `/${adjective}_${noun}_${suffix}`;
   }
 
   private static getRandomElement<T>(array: T[]): T {
-    return array[Math.floor(Math.random() * array.length)];
+    return array[crypto.getRandomValues(new Uint32Array(1))[0] % array.length];
   }
 }
