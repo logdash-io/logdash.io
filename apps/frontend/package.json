@@ -61,7 +61,7 @@
     "luxon": "catalog:",
     "node-html-markdown": "^2.0.0",
     "node-html-parser": "^6.1.13",
-    "posthog-js": "^1.225.1",
+    "posthog-js": "^1.435.3",
     "query-string": "^9.1.1",
     "svelte-highlight": "^7.8.2",
     "svelte-intersection-observer": "^1.0.0",
