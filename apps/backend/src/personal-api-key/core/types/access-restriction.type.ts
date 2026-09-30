@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMaxSize, IsArray, IsIn, IsMongoId, ValidateIf } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsIn, IsMongoId, ValidateIf } from 'class-validator';
 
 export const ACCESS_RESTRICTION_KINDS = ['all', 'clusters', 'projects'] as const;
 
@@ -23,6 +23,7 @@ export class AccessRestrictionValidator {
   @ApiPropertyOptional({ type: [String] })
   @ValidateIf((restriction: AccessRestrictionValidator) => restriction.kind !== 'all')
   @IsArray()
+  @ArrayMinSize(1)
   @ArrayMaxSize(100)
   @IsMongoId({ each: true })
   ids?: string[];

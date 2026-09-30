@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { resolve } from '$app/paths';
   import { untrack } from 'svelte';
+  import { MediaQuery } from 'svelte/reactivity';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { serviceEntries } from '$lib/domains/app/clusters/application/service-entries.js';
   import {
-    domainLabel,
     listServices,
     type ServiceItem,
   } from '$lib/domains/app/clusters/domain/service-groups.js';
@@ -14,9 +12,14 @@
     getStatusFromMonitor,
     type ServiceStatus,
   } from '$lib/domains/app/clusters/application/get-status-from-monitor.js';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
+  import PaneHeader from '$lib/domains/shared/ui/components/PaneHeader.svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import ServiceTile from './ServiceTile.svelte';
+  import ServiceErrorsBadge from './ServiceErrorsBadge.svelte';
   import CreateServiceTile from './CreateServiceTile.svelte';
-  import EmptyState from './EmptyState.svelte';
+  import CreateServiceDropdown from './CreateServiceDropdown.svelte';
 
   type Props = {
     clusterId: string;
@@ -24,15 +27,21 @@
 
   const { clusterId }: Props = $props();
 
+  const GRID_CLASS =
+    'bg-hairline border-hairline grid shrink-0 grid-cols-1 gap-px border-b sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4';
+
+  const sm = new MediaQuery('min-width: 640px');
+  const lg = new MediaQuery('min-width: 1024px');
+  const xxl = new MediaQuery('min-width: 1536px');
+
   const cluster = $derived(clustersState.get(clusterId));
   const entries = $derived(serviceEntries(cluster));
   const tiles = $derived(listServices(entries));
-  const subtitle = $derived(
-    domainLabel(
-      cluster?.name ?? '',
-      entries.map((entry) => entry.url),
-    ) ?? 'Services in this project',
+  const columns = $derived(
+    xxl.current ? 4 : lg.current ? 3 : sm.current ? 2 : 1,
   );
+
+  let isFormOpen = $state(false);
 
   $effect(() => {
     const syncedClusterId = clusterId;
@@ -43,61 +52,101 @@
     };
   });
 
-  function onServiceSelect(projectId: string): void {
-    void goto(
-      resolve('/app/clusters/[cluster_id]/[project_id]', {
-        cluster_id: clusterId,
-        project_id: projectId,
-      }),
-    );
-  }
-
   function getStatus(projectId: string): ServiceStatus {
     return getStatusFromMonitor(
       monitoringState.getMonitorByProjectId(projectId),
     );
   }
+
+  function fillerSpan(cells: number): number {
+    return (columns - (cells % columns)) % columns;
+  }
+
+  function onOpenForm(): void {
+    isFormOpen = true;
+  }
+
+  function onCloseForm(): void {
+    isFormOpen = false;
+  }
 </script>
 
-<div class="flex w-full flex-col gap-6">
-  <div class="flex min-w-0 flex-col items-start">
-    <h1 class="max-w-full truncate text-xl font-medium tracking-[-0.01em]">
-      {cluster?.name || 'Project'}
-    </h1>
-    <p class="text-neutral-500 max-w-full truncate text-sm">{subtitle}</p>
+<PaneHeader title="Services">
+  <span class="tabular-nums">
+    {tiles.services.length}
+    {tiles.services.length === 1 ? 'service' : 'services'}
+  </span>
+</PaneHeader>
+
+{#if entries.length === 0}
+  <EmptyState
+    class="p-4"
+    title="No services yet"
+    description="Add the parts of your domain, like a website, an API or a worker."
+  >
+    <div class="relative">
+      <Button variant="primary" size="sm" onclick={onOpenForm}>
+        <PlusIcon class="size-4" />
+        New service
+      </Button>
+
+      {#if isFormOpen}
+        <CreateServiceDropdown
+          {clusterId}
+          onClose={onCloseForm}
+          inputId="empty-state-service-name-input"
+        />
+      {/if}
+    </div>
+  </EmptyState>
+{:else}
+  <div class={GRID_CLASS}>
+    {#each tiles.services as item (item.id)}
+      {@render serviceTile(item)}
+    {/each}
+
+    <CreateServiceTile {clusterId} />
+
+    {@render filler(tiles.services.length + 1)}
   </div>
 
-  {#if entries.length === 0}
-    <EmptyState {clusterId} />
-  {:else}
-    <div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
-      {#each tiles.services as item (item.id)}
+  {#if tiles.dependencies.length > 0}
+    <PaneHeader title="Dependencies">
+      <span class="tabular-nums">
+        {tiles.dependencies.length}
+        {tiles.dependencies.length === 1 ? 'dependency' : 'dependencies'}
+      </span>
+    </PaneHeader>
+
+    <div class={GRID_CLASS}>
+      {#each tiles.dependencies as item (item.id)}
         {@render serviceTile(item)}
       {/each}
 
-      <CreateServiceTile {clusterId} />
+      {@render filler(tiles.dependencies.length)}
     </div>
-
-    {#if tiles.dependencies.length > 0}
-      <section class="flex flex-col gap-2">
-        <h2 class="text-neutral-400 text-sm">Dependencies</h2>
-
-        <div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
-          {#each tiles.dependencies as item (item.id)}
-            {@render serviceTile(item)}
-          {/each}
-        </div>
-      </section>
-    {/if}
   {/if}
-</div>
+{/if}
 
 {#snippet serviceTile(item: ServiceItem)}
   <ServiceTile
-    projectId={item.id}
     name={item.label}
     url={item.urlLabel}
     status={getStatus(item.id)}
-    onclick={() => onServiceSelect(item.id)}
-  />
+    {clusterId}
+    projectId={item.id}
+  >
+    <ServiceErrorsBadge projectId={item.id} />
+  </ServiceTile>
+{/snippet}
+
+{#snippet filler(cells: number)}
+  {@const span = fillerSpan(cells)}
+  {#if span > 0}
+    <div
+      class="bg-surface-elevated"
+      style:grid-column="span {span} / span {span}"
+      aria-hidden="true"
+    ></div>
+  {/if}
 {/snippet}

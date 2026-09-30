@@ -258,7 +258,7 @@ describe('Metrics (writes)', () => {
     // then
     expect(response.status).toBe(409);
     expect((response.body as ErrorResponse).message).toBe(
-      'You have reached the maximum number of metrics for this project',
+      'You have reached the maximum number of metrics for this service',
     );
   });
 

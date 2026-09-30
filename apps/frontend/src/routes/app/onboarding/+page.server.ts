@@ -12,7 +12,7 @@ export const load = async ({
 }: PageServerLoadEvent): Promise<{ user: User; nextUrl: string }> => {
   const nextUrl = safe_redirect_path(
     url.searchParams.get('next_url'),
-    '/app/clusters',
+    '/app/domains',
   );
   const token = get_access_token(cookies);
 

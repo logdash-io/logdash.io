@@ -21,7 +21,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
     session.user.accountClaimStatus !== 'anonymous'
   ) {
     // no checkout (a plan already paid for, or Stripe down) lands in the app
-    redirect(303, (await checkoutUrl(token, tier)) ?? '/app/clusters');
+    redirect(303, (await checkoutUrl(token, tier)) ?? '/app/domains');
   }
 
   redirect(303, `/?tier=${tier}#${HERO_URL_INPUT_ID}`);

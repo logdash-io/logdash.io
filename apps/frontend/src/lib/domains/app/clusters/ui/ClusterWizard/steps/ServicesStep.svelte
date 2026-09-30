@@ -2,11 +2,8 @@
   import { onMount } from 'svelte';
   import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
   import { Feature } from '$lib/domains/shared/types.js';
-  import ServiceCard from '../ServiceCard.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
-  import { Divider } from '@logdash/hyper-ui/presentational';
-  import { fly } from 'svelte/transition';
-  import { cubicOut } from 'svelte/easing';
+  import ServiceCard from '../ServiceCard.svelte';
 
   const services = $derived(wizardState.services);
   const canRemoveServices = $derived(services.length > 1);
@@ -17,38 +14,20 @@
       lastService.features.length > 0,
   );
 
-  let expandedServiceId = $state<string | null>(null);
-
-  const activeExpandedId = $derived(
-    expandedServiceId ?? services[services.length - 1]?.id ?? null,
-  );
-
   onMount(() => {
     const firstServiceId = services[0]?.id;
+
     if (firstServiceId) {
-      setTimeout(() => {
-        const input = document.getElementById(
-          `service-input-${firstServiceId}`,
-        );
-        input?.focus();
-      }, 50);
+      focusService(firstServiceId);
     }
   });
 
   function onAddService(): void {
-    const id = wizardState.addService();
-    expandedServiceId = id;
-    setTimeout(() => {
-      const input = document.getElementById(`service-input-${id}`);
-      input?.focus();
-    }, 50);
+    focusService(wizardState.addService());
   }
 
   function onRemoveService(id: string): void {
     wizardState.removeService(id);
-    if (expandedServiceId === id) {
-      expandedServiceId = null;
-    }
   }
 
   function onServiceNameChange(id: string, name: string): void {
@@ -58,45 +37,34 @@
   function onToggleFeature(serviceId: string, feature: Feature): void {
     wizardState.toggleServiceFeature(serviceId, feature);
   }
+
+  function focusService(id: string): void {
+    setTimeout(() => {
+      document.getElementById(`service-input-${id}`)?.focus();
+    }, 50);
+  }
 </script>
 
-<div class="flex flex-col gap-6">
-  <div class="flex flex-col px-2">
-    <h2 class="text-lg md:text-xl leading-normal font-medium">Add services</h2>
-    <p class="text-sm text-neutral-300">
-      Services are your project building blocks, like a backend, queue worker,
-      or BFF.
-    </p>
+{#each services as service (service.id)}
+  <div id="wizard-service-{service.id}">
+    <ServiceCard
+      {service}
+      canRemove={canRemoveServices}
+      onNameChange={(name: string) => onServiceNameChange(service.id, name)}
+      onRemove={() => onRemoveService(service.id)}
+      onToggleFeature={(feature: Feature) =>
+        onToggleFeature(service.id, feature)}
+    />
   </div>
+{/each}
 
-  {#each services as service (service.id)}
-    <div
-      id="wizard-service-{service.id}"
-      in:fly={{ y: -10, duration: 200, easing: cubicOut }}
-    >
-      <ServiceCard
-        {service}
-        expanded={activeExpandedId === service.id}
-        canRemove={canRemoveServices}
-        onNameChange={(name: string) => onServiceNameChange(service.id, name)}
-        onRemove={() => onRemoveService(service.id)}
-        onToggleFeature={(feature: Feature) =>
-          onToggleFeature(service.id, feature)}
-      />
-    </div>
-  {/each}
-
-  {#if canAddService}
-    <button
-      type="button"
-      class="block w-full cursor-pointer hover:text-brand"
-      onclick={onAddService}
-      in:fly={{ y: -5, duration: 200, easing: cubicOut }}
-    >
-      <Divider class="gap-1">
-        <PlusIcon class="size-4 -mr-2 shrink-0" />
-        Add another service
-      </Divider>
-    </button>
-  {/if}
-</div>
+{#if canAddService}
+  <button
+    type="button"
+    class="text-neutral-500 hover:bg-surface-100 hover:text-fg-default focus-visible:outline-brand flex h-11 w-full cursor-pointer items-center gap-2 px-4 text-left text-sm focus-visible:-outline-offset-2 focus-visible:outline-2"
+    onclick={onAddService}
+  >
+    <PlusIcon class="size-4 shrink-0 text-neutral-600" />
+    Add another service
+  </button>
+{/if}

@@ -4,7 +4,7 @@ import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { trimToUndefined } from '../../../shared/utils/trim-to-undefined';
 
 export class CreateAnonymousUserBody {
-  @ApiPropertyOptional({ maxLength: 255, default: 'My first cluster' })
+  @ApiPropertyOptional({ maxLength: 255, default: 'My domain' })
   @Transform(trimToUndefined)
   @IsOptional()
   @IsString()

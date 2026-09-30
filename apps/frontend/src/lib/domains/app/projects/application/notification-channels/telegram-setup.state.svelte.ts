@@ -76,7 +76,7 @@ export class TelegramSetupState {
     void poll();
   }
 
-  private stopPolling(): void {
+  public stopPolling(): void {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
       this.pollingInterval = null;

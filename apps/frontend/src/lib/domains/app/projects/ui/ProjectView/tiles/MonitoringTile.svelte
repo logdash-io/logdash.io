@@ -1,21 +1,25 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { PingChart } from '@logdash/hyper-ui/features';
-  import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings.js';
+  import { getStatusFromMonitor } from '$lib/domains/app/clusters/application/get-status-from-monitor.js';
+  import { toChartPings } from '$lib/domains/app/projects/application/monitor-pings.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
-  import { logger } from '$lib/domains/shared/logger';
-  import { onMount, untrack } from 'svelte';
-  import MonitoringHeader from './monitoring/MonitoringHeader.svelte';
-  import UptimeSection from './monitoring/UptimeSection.svelte';
-  import NotificationChannelsSection from './monitoring/NotificationChannelsSection.svelte';
-  import MonitorSettingsSection from './monitoring/MonitorSettingsSection.svelte';
-  import MonitorBadgeModal from './monitoring/MonitorBadgeModal.svelte';
-  import EditMonitorModal from './monitoring/EditMonitorModal.svelte';
-  import CatchAllCallout from './monitoring/CatchAllCallout.svelte';
-  import { SettingsCardItem } from '$lib/domains/shared/ui/components/settings-card/index.js';
+  import type { PingBucketPeriod } from '$lib/domains/app/projects/domain/monitoring/ping-bucket.js';
   import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
-  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
+  import {
+    SettingsCard,
+    SettingsCardItem,
+  } from '$lib/domains/shared/ui/components/settings-card/index.js';
+  import { Button } from '@logdash/hyper-ui/presentational';
+  import { untrack } from 'svelte';
+  import MonitorPanel from '../../service/MonitorPanel.svelte';
+  import { monitorPanelContent } from '../../service/monitor-panel-content.js';
+  import CatchAllCallout from './monitoring/CatchAllCallout.svelte';
+  import EditMonitorModal from './monitoring/EditMonitorModal.svelte';
+  import MonitorBadgeModal from './monitoring/MonitorBadgeModal.svelte';
+  import MonitorSettingsSection from './monitoring/MonitorSettingsSection.svelte';
+  import NotificationChannelsSection from './monitoring/NotificationChannelsSection.svelte';
+  import UptimeSection from './monitoring/UptimeSection.svelte';
 
   type Props = {
     clusterId: string;
@@ -25,168 +29,147 @@
 
   const { clusterId, projectId, expanded = false }: Props = $props();
 
-  const projectMonitor = $derived(
-    monitoringState.getMonitorByProjectId(projectId),
-  );
-  const monitorId = $derived(projectMonitor?.id || '');
-  const monitorName = $derived(projectMonitor?.name || '');
+  const PINGS_TO_SHOW = 60;
+  const CLOCK_TICK_MS = 1_000;
 
+  let now = $state(Date.now());
+  let loadedMonitorId = $state<string | null>(null);
+  let failedMonitorId = $state<string | null>(null);
   let isBadgeModalOpen = $state(false);
   let isEditModalOpen = $state(false);
 
-  const MAX_PINGS = 190;
-  const PING_WIDTH_PX = 8;
-  let pingsChartWidth = $state(0);
-  const pingsToLoad = $derived(
-    pingsChartWidth ? Math.floor(pingsChartWidth / PING_WIDTH_PX) : 0,
+  const monitor = $derived(monitoringState.getMonitorByProjectId(projectId));
+  const monitorId = $derived(monitor?.id ?? '');
+  const pings = $derived(
+    toChartPings(
+      monitoringState.monitoringPings(monitorId).slice(-PINGS_TO_SHOW),
+    ),
   );
-  const maxPingsToShow = $derived(pingsToLoad || MAX_PINGS);
-
-  const pings = $derived.by(() => {
-    const allPings = monitoringState.monitoringPings(monitorId);
-    return allPings.slice(-maxPingsToShow);
-  });
-
-  const status = $derived(getStatusFromPings(pings));
   const timeRange = $derived(monitoringState.timeRange);
-  const pingBuckets = $derived(monitoringState.getPingBuckets(monitorId));
-  const uptime = $derived(monitoringState.calculateUptime(monitorId));
-
-  const formattedPings = $derived(
-    pings.map((ping) => ({
-      ...ping,
-      createdAt: ping.createdAt.toISOString(),
-    })),
+  const content = $derived(
+    monitor
+      ? monitorPanelContent({
+          monitor,
+          pings,
+          bucketUptime: monitoringState.calculateUptime(monitor.id),
+          range: timeRange,
+          now,
+          loaded: loadedMonitorId === monitor.id,
+          failed: failedMonitorId === monitor.id,
+        })
+      : null,
   );
-
-  function onTimeRangeChange(newRange: typeof timeRange): void {
-    monitoringState.setTimeRange(newRange);
-  }
+  const monitorPath = $derived(
+    resolve('/app/domains/[cluster_id]/[project_id]/monitoring', {
+      cluster_id: clusterId,
+      project_id: projectId,
+    }),
+  );
 
   $effect(() => {
-    if (!projectMonitor || !projectId) {
-      logger.warn('No project monitor found for syncing pings.');
+    const id = monitorId;
+
+    if (!id) {
       return;
     }
 
-    logger.debug(
-      `Syncing pings for project monitor: ${projectMonitor.id} (${pingsToLoad})`,
-    );
-
     untrack(() => {
-      void monitoringState.loadMonitorPings(
-        projectId,
-        projectMonitor.id,
-        untrack(() => pingsToLoad),
-      );
+      void loadPings(id);
+      void monitoringState.loadPingBuckets(id);
     });
   });
 
   $effect(() => {
-    if (!projectMonitor || !projectId) {
-      logger.warn('Skipping ping buckets sync.');
-      return;
-    }
+    const timer = setInterval(() => {
+      now = Date.now();
+    }, CLOCK_TICK_MS);
 
-    logger.debug(
-      `Syncing ping buckets for project monitor: ${projectMonitor.id}`,
-    );
-
-    void monitoringState.loadPingBuckets(projectMonitor.id);
+    return () => clearInterval(timer);
   });
 
-  onMount(() => {
+  $effect(() => {
     if (expanded) {
       void notificationChannelsState.loadChannels(clusterId);
     }
   });
+
+  async function loadPings(id: string): Promise<void> {
+    const loaded = await monitoringState.loadMonitorPings(
+      projectId,
+      id,
+      PINGS_TO_SHOW,
+    );
+
+    if (id !== monitorId) {
+      return;
+    }
+
+    loadedMonitorId = id;
+    failedMonitorId = loaded ? null : id;
+  }
+
+  function onTimeRangeChange(range: PingBucketPeriod): void {
+    monitoringState.setTimeRange(range);
+  }
+
+  function onEdit(): void {
+    isEditModalOpen = true;
+  }
 </script>
 
-<div
-  class="ld-card-bg ld-card-border ld-card-rounding relative w-full overflow-hidden"
->
-  <div class="group relative">
-    {#if !expanded}
-      <a
-        href={resolve('/app/clusters/[cluster_id]/[project_id]/monitoring', {
-          cluster_id: clusterId,
-          project_id: projectId,
-        })}
-        aria-label={`Open ${monitorName} monitoring`}
-        class="ld-card-rounding group-hover:bg-neutral-800 focus-visible:outline-brand absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2"
-      ></a>
-    {/if}
-
-    <div
-      class={[
-        'relative flex w-full flex-col p-6',
-        { 'pointer-events-none': !expanded },
-      ]}
+{#if monitor && content}
+  <div class="border-hairline shrink-0 border-b">
+    <MonitorPanel
+      {...content}
+      status={getStatusFromMonitor(monitor)}
+      href={expanded ? undefined : monitorPath}
     >
-      <MonitoringHeader
-        name={monitorName}
-        url={projectMonitor?.url}
-        {status}
-        showArrow={!expanded}
-      />
-
-      <div
-        class="pointer-events-auto mt-2 flex w-full cursor-default overflow-hidden"
-        bind:clientWidth={pingsChartWidth}
-      >
-        <PingChart {maxPingsToShow} pings={formattedPings} />
-      </div>
-
-      {#if projectMonitor}
-        <CatchAllCallout
-          monitor={projectMonitor}
-          onEdit={() => (isEditModalOpen = true)}
-        />
-      {/if}
-    </div>
+      <CatchAllCallout {monitor} {onEdit} />
+    </MonitorPanel>
   </div>
 
   {#if expanded}
-    <UptimeSection {uptime} {timeRange} {pingBuckets} {onTimeRangeChange} />
+    <UptimeSection
+      {timeRange}
+      pingBuckets={monitoringState.getPingBuckets(monitorId)}
+      {onTimeRangeChange}
+    />
 
-    <div
-      class="flex w-full flex-col divide-y divide-hairline border-t border-border-default"
+    <NotificationChannelsSection {monitorId} />
+
+    <SettingsCard
+      title="README badge"
+      description="Show its uptime in a README."
     >
-      <NotificationChannelsSection {monitorId} />
-      <SettingsCardItem
-        icon={ShieldCheckIcon}
-        showBorder={false}
-        onclick={() => (isBadgeModalOpen = true)}
-      >
-        <p class="font-medium">README Badge</p>
-        <p class="text-neutral-500">
-          Show this monitor's uptime in your README
-        </p>
+      <SettingsCardItem>
+        <p>Uptime badge</p>
+        <p class="text-neutral-500">Links back to your status page.</p>
 
         {#snippet action()}
-          <ChevronRightIcon class="text-neutral-500 size-4 shrink-0" />
+          <Button
+            variant="neutral"
+            size="sm"
+            onclick={() => (isBadgeModalOpen = true)}
+          >
+            <ShieldCheckIcon class="size-4" />
+            Get badge
+          </Button>
         {/snippet}
       </SettingsCardItem>
-      <MonitorSettingsSection
-        {monitorId}
-        {clusterId}
-        {projectId}
-        onEdit={() => (isEditModalOpen = true)}
-      />
-    </div>
-  {/if}
-</div>
+    </SettingsCard>
 
-{#if projectMonitor}
+    <MonitorSettingsSection {monitorId} {clusterId} {projectId} {onEdit} />
+  {/if}
+
   <MonitorBadgeModal
     isOpen={isBadgeModalOpen}
     onClose={() => (isBadgeModalOpen = false)}
     {clusterId}
-    monitor={projectMonitor}
+    {monitor}
   />
   <EditMonitorModal
     isOpen={isEditModalOpen}
     onClose={() => (isEditModalOpen = false)}
-    monitor={projectMonitor}
+    {monitor}
   />
 {/if}

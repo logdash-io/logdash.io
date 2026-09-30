@@ -2,7 +2,7 @@
   import { prefersReducedMotion } from 'svelte/motion';
   import { countTrailing } from './live-feed';
   import LiveAlertCard from './LiveAlertCard.svelte';
-  import ResponseTimePlot from './ResponseTimePlot.svelte';
+  import ResponseTimePlot from '$lib/domains/app/projects/ui/service/ResponseTimePlot.svelte';
 
   const VISIBLE_CHECKS = 60;
   const TICK_MS = 1_000;

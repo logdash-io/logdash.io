@@ -6,6 +6,18 @@ import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { EMAILS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { PersonalApiKeyCreatedEvent } from '../../personal-api-key/events/definitions/personal-api-key-created.event';
 import { Action } from '../../personal-api-key/core/enums/action.enum';
+import { Resource } from '../../personal-api-key/core/enums/resource.enum';
+
+const RESOURCE_LABELS: Record<Resource, string> = {
+  [Resource.Logs]: 'Logs',
+  [Resource.Metrics]: 'Metrics',
+  [Resource.Monitors]: 'Monitors',
+  [Resource.Projects]: 'Services',
+  [Resource.Clusters]: 'Domains',
+  [Resource.Account]: 'Account',
+};
+
+const ACCESS_NOUNS = { clusters: 'domain', projects: 'service' } as const;
 
 const escapeHtml = (text: string): string =>
   text.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
@@ -98,12 +110,12 @@ P.S. I’d love to know — what made you decide to give Logdash a try?`;
   ): Promise<void> {
     const scopes = key.scopes
       .filter((scope) => scope.action !== Action.None)
-      .map((scope) => `${scope.resource}:${scope.action}`)
+      .map((scope) => `${RESOURCE_LABELS[scope.resource]}: ${scope.action}`)
       .join(', ');
     const access =
       key.access.kind === 'all'
-        ? 'All clusters and projects'
-        : `${key.access.ids.length} ${key.access.ids.length === 1 ? key.access.kind.slice(0, -1) : key.access.kind}`;
+        ? 'All domains and services'
+        : `${key.access.ids.length} ${ACCESS_NOUNS[key.access.kind]}${key.access.ids.length === 1 ? '' : 's'}`;
     const revokeUrl = `${getEnvConfig().app.url}/app/account/api-keys`;
 
     const body = `A new personal API key was created for your Logdash account.<br/><br/>

@@ -1,51 +1,43 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
-  import { fly } from 'svelte/transition';
-  import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
-  import { Badge } from '@logdash/hyper-ui/presentational';
+  import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
+  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
+  import type { PostHog } from 'posthog-js';
+  import { getContext } from 'svelte';
 
   type Props = {
     canAddMore: boolean;
-    delayIn?: number;
   };
-  const { canAddMore, delayIn }: Props = $props();
 
-  function onCreateClick(): void {
-    if (canAddMore) {
-      void goto(resolve('/app/clusters/new'));
-    }
+  const { canAddMore }: Props = $props();
+
+  const ROW_CLASS =
+    'text-neutral-500 hover:bg-surface-100 hover:text-fg-default focus-visible:outline-brand flex h-11 w-full cursor-pointer items-center gap-2 px-4 text-left text-sm focus-visible:-outline-offset-2 focus-visible:outline-2';
+
+  const posthog = getContext<PostHog | undefined>('posthog');
+
+  function onUpgrade(): void {
+    posthog?.capture('upgrade_button_clicked', {
+      source: 'cluster-limit',
+      timestamp: new Date().toISOString(),
+    });
+    upgradeState.openModal('cluster-limit');
   }
 </script>
 
-<div
-  class="ld-card-base relative flex h-full max-h-32 w-full items-center justify-between gap-2 overflow-hidden ld-card-rounding"
-  in:fly|global={{
-    y: -5,
-    duration: 400,
-    delay: delayIn,
-  }}
-  style="min-height: calc(var(--spacing) * 24)"
->
-  {#if canAddMore}
-    <button
-      class="absolute flex h-full w-full cursor-pointer items-center justify-between gap-2 px-8"
-      role="button"
-      onclick={onCreateClick}
-      data-posthog-id="create-cluster-button"
-    >
-      <h5 class="text-lg font-medium">Create new project</h5>
-
-      <Badge size="lg">
-        <PlusIcon class="h-4 w-4" />
-      </Badge>
-    </button>
-  {:else}
-    <div class="flex w-full items-center justify-between gap-2 px-8">
-      <UpgradeButton source="cluster-limit">
-        Upgrade your plan to add more projects
-      </UpgradeButton>
-    </div>
-  {/if}
-</div>
+{#if canAddMore}
+  <a
+    href={resolve('/app/domains/new')}
+    class={ROW_CLASS}
+    data-posthog-id="create-cluster-button"
+  >
+    <PlusIcon class="size-4 shrink-0 text-neutral-600" />
+    Add domain
+  </a>
+{:else}
+  <button type="button" class={ROW_CLASS} onclick={onUpgrade}>
+    <RocketIcon class="size-4 shrink-0 text-neutral-600" />
+    Upgrade your plan to add more services
+  </button>
+{/if}

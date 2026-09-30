@@ -2,7 +2,9 @@ import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monito
 import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings.js';
 import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
 
-export type ServiceStatus = 'up' | 'down' | 'degraded' | 'unknown';
+import type { ServiceStatus } from '$lib/domains/app/clusters/domain/service-status.js';
+
+export type { ServiceStatus };
 
 export function getStatusFromMonitor(
   monitor: Monitor | undefined,
@@ -26,10 +28,3 @@ export function getStatusFromMonitor(
   // todo: make sure we get enough data from BE to show degraded here upfront
   return isHealthy ? 'up' : 'down';
 }
-
-export const SERVICE_STATUS_DOT: Record<ServiceStatus, string> = {
-  up: 'bg-success',
-  down: 'bg-error',
-  degraded: 'bg-warning',
-  unknown: 'bg-neutral-600',
-};

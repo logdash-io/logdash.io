@@ -4,7 +4,6 @@
 @import "./base.css";
 @import "./components.css";
 @import "./scrollbar.css";
-@import "./animations.css";
 
 @theme {
   --color-surface-root: var(--surface-root);

@@ -115,7 +115,7 @@
   }
 
   function onKeyDown(e: KeyboardEvent): void {
-    if (e.key === 'Escape' && bottomSheetState.isOpen) {
+    if (e.key === 'Escape' && bottomSheetState.isOpen && !e.defaultPrevented) {
       bottomSheetState.close();
     }
   }
@@ -163,6 +163,7 @@
     ontouchmove={onTouchMove}
     ontouchend={onTouchEnd}
     role="dialog"
+    tabindex="-1"
     aria-modal={bottomSheetState.isOpen}
   >
     <button

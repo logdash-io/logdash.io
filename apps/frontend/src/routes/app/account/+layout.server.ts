@@ -1,1 +1,1 @@
-export { load } from '../clusters/+layout.server';
+export { load } from '../domains/+layout.server';

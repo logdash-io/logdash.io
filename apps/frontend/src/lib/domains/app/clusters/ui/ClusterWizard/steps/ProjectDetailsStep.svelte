@@ -1,78 +1,47 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
-  import { Button } from '@logdash/hyper-ui/presentational';
-  import { fly } from 'svelte/transition';
+  import {
+    SETTINGS_INPUT_CLASS,
+    SettingsCardItem,
+  } from '$lib/domains/shared/ui/components/settings-card';
+  import { Input } from '@logdash/hyper-ui/presentational';
   import ColorPalette from '../ColorPalette.svelte';
 
-  let inputRef: HTMLInputElement;
-
-  const step = $derived(wizardState.step);
   const project = $derived(wizardState.project);
-  const canProceed = $derived(wizardState.canProceedToStep2);
 
   onMount(() => {
-    inputRef?.focus();
+    document.getElementById('project-name')?.focus();
   });
 
   function onNameChange(e: Event): void {
-    const target = e.target as HTMLInputElement;
-    wizardState.setProjectName(target.value);
+    wizardState.setProjectName((e.target as HTMLInputElement).value);
   }
 
   function onColorSelect(color: string): void {
     wizardState.setProjectColor(color);
   }
-
-  function onNextStep(): void {
-    wizardState.nextStep();
-  }
 </script>
 
-<div class="flex flex-col gap-6">
-  <input
-    bind:this={inputRef}
-    id="project-name"
-    type="text"
-    placeholder="Project Name"
-    class="text-3xl md:text-5xl leading-normal font-medium w-full focus:border-brand border-b-2 border-transparent transition-ink duration-200 outline-0"
-    value={project.name}
-    oninput={onNameChange}
-    minlength={3}
-    maxlength={20}
-  />
+<SettingsCardItem>
+  <label class="flex min-w-0 items-center gap-3">
+    <span class="text-neutral-500 w-16 shrink-0">Name</span>
+    <Input
+      id="project-name"
+      size="sm"
+      class={['-my-1.5 w-full max-w-64', SETTINGS_INPUT_CLASS]}
+      placeholder="acme.com"
+      value={project.name}
+      oninput={onNameChange}
+      minlength={3}
+      maxlength={64}
+    />
+  </label>
+</SettingsCardItem>
 
-  <p class="text-sm text-neutral-300 grid overflow-hidden h-4.5">
-    {#if canProceed}
-      <span
-        class="col-start-1 row-start-1"
-        in:fly={{ y: -20, duration: 300 }}
-        out:fly={{ y: 20, duration: 300 }}
-      >
-        and pick a color to distinguish easily
-      </span>
-    {:else}
-      <span
-        class="col-start-1 row-start-1"
-        in:fly={{ y: -20, duration: 300 }}
-        out:fly={{ y: 20, duration: 300 }}
-      >
-        e.g. Lemonify
-      </span>
-    {/if}
-  </p>
-
-  <ColorPalette
-    selectedColor={project.color}
-    disabled={!canProceed}
-    onSelect={onColorSelect}
-  />
-
-  {#if step === 1}
-    <div class="flex justify-end">
-      <Button variant="primary" onclick={onNextStep} disabled={!canProceed}>
-        Next step
-      </Button>
-    </div>
-  {/if}
-</div>
+<SettingsCardItem>
+  <div class="flex min-w-0 items-center gap-3">
+    <span class="text-neutral-500 w-16 shrink-0">Color</span>
+    <ColorPalette selectedColor={project.color} onSelect={onColorSelect} />
+  </div>
+</SettingsCardItem>

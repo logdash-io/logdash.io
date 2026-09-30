@@ -32,7 +32,6 @@
     isOpen: boolean;
     onClose: () => void;
     mode?: 'manage' | 'cli';
-    /** The pending `ld login` request, resolved from the code the user typed. */
     cliRequest?: CliAuthRequest | null;
     onCreated?: () => void;
   };
@@ -66,20 +65,21 @@
   }));
 
   const accessOptions: { value: AccessRestriction['kind']; label: string }[] = [
-    { value: 'all', label: 'All access' },
-    { value: 'clusters', label: 'Clusters' },
-    { value: 'projects', label: 'Projects' },
+    { value: 'all', label: 'Everything' },
+    { value: 'clusters', label: 'Domains' },
+    { value: 'projects', label: 'Services' },
   ];
 
   const clusters = $derived(clustersState.clusters);
+  const hasAccessTargets = $derived(
+    accessKind === 'all' ||
+      (accessKind === 'clusters' && selectedClusterIds.length > 0) ||
+      (accessKind === 'projects' && selectedProjectIds.length > 0),
+  );
   const canDeleteMonitors = $derived(scopeAction('monitors') === 'delete');
-  const projects = $derived(
-    clustersState.clusters.flatMap((cluster) =>
-      (cluster.projects ?? []).map((project) => ({
-        id: project.id,
-        name: project.name,
-        clusterName: cluster.name,
-      })),
+  const clustersWithProjects = $derived(
+    clustersState.clusters.filter(
+      (cluster) => (cluster.projects ?? []).length > 0,
     ),
   );
 
@@ -156,11 +156,11 @@
 
   async function onSubmit(): Promise<void> {
     if (mode === 'manage' && label.trim() === '') {
-      toast.warning('Please enter a label for this key', 5000);
+      toast.warning('Enter a label for this key', 5000);
       return;
     }
 
-    if (accessKind === null) {
+    if (!hasAccessTargets) {
       toast.warning('Choose what this key is allowed to reach', 5000);
       return;
     }
@@ -254,7 +254,7 @@
 </script>
 
 <Modal {isOpen} onClose={close} dismissible={!createdValue}>
-  <div class="flex flex-col gap-5 p-6">
+  <div class="flex flex-col gap-5 sm:p-6">
     {#if createdValue}
       <div class="flex flex-col gap-4">
         <div class="flex items-center gap-3">
@@ -264,16 +264,13 @@
           <h2 class="text-lg font-medium">Personal API key created</h2>
         </div>
 
-        <div
-          class="border-warning/40 bg-warning/10 text-warning rounded-lg border p-3 text-sm"
-        >
-          Copy this key now. For security reasons you won't be able to see it
-          again.
-        </div>
+        <p class="text-warning text-sm">
+          Copy this key now. You won't be able to see it again.
+        </p>
 
         <div class="flex items-center gap-2">
           <code
-            class="bg-surface-100 border-border-default flex-1 overflow-x-auto rounded-lg border p-3 font-mono text-sm"
+            class="bg-surface-100 border-border-default min-w-0 flex-1 rounded-lg border p-3 font-mono text-sm break-all"
           >
             {createdValue}
           </code>
@@ -355,21 +352,23 @@
 
       <div class="flex flex-col gap-5">
         {#if mode === 'manage'}
-          <div class="flex flex-col gap-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium">Label</span>
             <Input
               bind:value={label}
               class="w-full"
               placeholder="e.g. My laptop CLI"
             />
-          </div>
+          </label>
         {/if}
 
         <div class="flex flex-col gap-2">
           <span class="text-sm font-medium">Scopes</span>
           <div class="flex flex-col gap-1.5">
             {#each scopeRows as row (row.resource)}
-              <div class="flex items-center justify-between gap-3">
+              <div
+                class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+              >
                 <span class="text-sm">{row.label}</span>
                 <SegmentedControl
                   size="xs"
@@ -391,7 +390,7 @@
         <div class="flex flex-col gap-2">
           <span class="text-sm font-medium">Access</span>
           <p class="text-neutral-400 -mt-1 text-xs">
-            Pick what this key may reach. Nothing is selected by default.
+            Everything, or only the domains or services you pick.
           </p>
           <SegmentedControl
             label="Access"
@@ -405,9 +404,7 @@
               class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
             >
               {#if clusters.length === 0}
-                <p class="text-neutral-400 p-1 text-sm">
-                  No clusters available.
-                </p>
+                <p class="text-neutral-400 p-1 text-sm">No domains yet.</p>
               {/if}
               {#each clusters as cluster (cluster.id)}
                 <label class="flex items-center gap-2 p-1 text-sm">
@@ -423,22 +420,22 @@
             <div
               class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
             >
-              {#if projects.length === 0}
-                <p class="text-neutral-400 p-1 text-sm">
-                  No projects available.
-                </p>
+              {#if clustersWithProjects.length === 0}
+                <p class="text-neutral-400 p-1 text-sm">No services yet.</p>
               {/if}
-              {#each projects as project (project.id)}
-                <label class="flex items-center gap-2 p-1 text-sm">
-                  <Checkbox
-                    checked={selectedProjectIds.includes(project.id)}
-                    onchange={() => toggleProject(project.id)}
-                  />
-                  {project.name}
-                  <span class="text-neutral-500">
-                    ({project.clusterName})
-                  </span>
-                </label>
+              {#each clustersWithProjects as cluster (cluster.id)}
+                <p class="text-neutral-500 px-1 pt-1 text-xs">
+                  {cluster.name}
+                </p>
+                {#each cluster.projects ?? [] as project (project.id)}
+                  <label class="flex items-center gap-2 p-1 text-sm">
+                    <Checkbox
+                      checked={selectedProjectIds.includes(project.id)}
+                      onchange={() => toggleProject(project.id)}
+                    />
+                    {project.name}
+                  </label>
+                {/each}
               {/each}
             </div>
           {/if}
@@ -474,7 +471,7 @@
         {/if}
         <Button
           variant="primary"
-          disabled={accessKind === null}
+          disabled={!hasAccessTargets}
           loading={submitting}
           onclick={onSubmit}
         >

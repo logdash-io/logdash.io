@@ -117,7 +117,7 @@ export class UserCoreController {
     );
 
     const cluster = await this.clusterWriteService.create({
-      name: dto.clusterName ?? 'My first cluster',
+      name: dto.clusterName ?? 'My domain',
       creatorId: user.id,
       tier: ClusterTier.Free,
       roles: {

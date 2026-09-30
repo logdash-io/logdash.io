@@ -35,7 +35,7 @@ describe('UserCoreController (writes)', () => {
     expect(body.token).toBeDefined();
     expect(body.user).toBeDefined();
     expect(body.cluster.creatorId).toBe(body.user.id);
-    expect(body.cluster.name).toBe('My first cluster');
+    expect(body.cluster.name).toBe('My domain');
   });
 
   it('creates anonymous user with cluster named after the given name', async () => {
@@ -67,7 +67,7 @@ describe('UserCoreController (writes)', () => {
 
     // then
     expect(response.status).toBe(201);
-    expect((response.body as CreateAnonymousUserResponse).cluster.name).toBe('My first cluster');
+    expect((response.body as CreateAnonymousUserResponse).cluster.name).toBe('My domain');
   });
 
   it('creates anonymous user with token expiring together with the account', async () => {

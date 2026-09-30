@@ -137,7 +137,7 @@ To run it on your machine, see [Developing locally](#developing-locally) and [`C
 
 ## Sending data
 
-Eight SDKs, one API key per project.
+Eight SDKs, one API key per service.
 
 | Language | Install                                       | Repo                                                              |
 | -------- | --------------------------------------------- | ----------------------------------------------------------------- |
@@ -161,7 +161,7 @@ The wire protocol is three HTTP endpoints on `https://api.logdash.io`, and nothi
 
 ```bash
 curl -X POST "https://api.logdash.io/logs" \
-  -H "project-api-key: <your-project-api-key>" \
+  -H "project-api-key: <your-api-key>" \
   -H "Content-Type: application/json" \
   -d '{"message": "Application started successfully", "level": "info",
        "createdAt": "2026-09-04T09:12:33.000Z", "sequenceNumber": 0}'

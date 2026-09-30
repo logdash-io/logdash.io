@@ -19,7 +19,7 @@
       return;
     }
 
-    await goto(resolve(nextUrl as '/app/clusters'), { invalidateAll: true });
+    await goto(resolve(nextUrl as '/app/domains'), { invalidateAll: true });
   }
 </script>
 

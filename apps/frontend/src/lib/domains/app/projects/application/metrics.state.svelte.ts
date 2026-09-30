@@ -10,12 +10,6 @@ import {
   type Metric,
   type SimplifiedMetric,
 } from '$lib/domains/app/projects/domain/metric';
-import {
-  FAKE_METRICS,
-  generateFakeMinuteData,
-  generateFakeHourData,
-  generateFakeDayData,
-} from '$lib/domains/app/projects/domain/fake-metrics-data.js';
 
 const logger = createLogger('metrics.state', true);
 
@@ -31,22 +25,15 @@ class MetricsState {
     >
   >({});
   private _initialized = $state(false);
+  private _projectId = $state<string | null>(null);
   private syncConnection: EventSource | null = null;
-  private _shouldReconnect = true;
+  private _generation = 0;
   private _metricDetailsLoading = $state(false);
+  private _metricDetailsFailed = $state(false);
   private _unsubscribe: (() => void) | null = null;
 
   get simplifiedMetrics(): SimplifiedMetric[] {
     return Object.values(this._simplifiedMetrics);
-  }
-
-  get displayMetrics(): SimplifiedMetric[] {
-    const realMetrics = this.simplifiedMetrics;
-    return realMetrics.length > 0 ? realMetrics : FAKE_METRICS;
-  }
-
-  get isUsingFakeData(): boolean {
-    return this.simplifiedMetrics.length === 0;
   }
 
   get ready(): boolean {
@@ -57,23 +44,12 @@ class MetricsState {
     return this._metricDetailsLoading;
   }
 
-  getById(id: string): SimplifiedMetric | undefined {
-    const real = this._simplifiedMetrics[id];
-    if (real) return real;
-    return FAKE_METRICS.find((m) => m.id === id);
+  get metricDetailsFailed(): boolean {
+    return this._metricDetailsFailed;
   }
 
-  getFakeChartData(granularity: MetricGranularity): { x: string; y: number }[] {
-    switch (granularity) {
-      case MetricGranularity.MINUTE:
-        return generateFakeMinuteData();
-      case MetricGranularity.HOUR:
-        return generateFakeHourData();
-      case MetricGranularity.DAY:
-        return generateFakeDayData();
-      default:
-        return [];
-    }
+  getById(id: string): SimplifiedMetric | undefined {
+    return this._simplifiedMetrics[id];
   }
 
   metricsByMetricRegisterId(
@@ -103,24 +79,39 @@ class MetricsState {
     sessionStorage.setItem(`metrics:lastPreviewed:${projectId}`, metricId);
   }
 
-  set(metrics: SimplifiedMetric[]): void {
+  get projectId(): string | null {
+    return this._projectId;
+  }
+
+  set(projectId: string, metrics: SimplifiedMetric[]): void {
+    this._projectId = projectId;
     this._simplifiedMetrics = arrayToObject(metrics, 'id');
     this._initialized = true;
   }
 
   async sync(project_id: string, tabId: string): Promise<void> {
     this.unsync();
+    const generation = this._generation;
     this._metrics = {};
-    this._shouldReconnect = true;
+
+    if (project_id !== this._projectId) {
+      this._projectId = project_id;
+      this._simplifiedMetrics = {};
+      this._initialized = false;
+    }
 
     logger.debug(`syncing metrics for project ${project_id}...`);
 
-    void this.fetchMetrics(project_id);
-    await this._openMetricsStream(project_id, tabId);
+    void this.fetchMetrics(project_id, generation);
+    await this._openMetricsStream(project_id, tabId, generation);
   }
 
-  private _openMetricsStream(project_id: string, tabId: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+  private _openMetricsStream(
+    project_id: string,
+    tabId: string,
+    generation: number,
+  ): Promise<void> {
+    return new Promise((resolve) => {
       this._unsubscribe?.();
 
       this.syncConnection = new EventSource(
@@ -146,43 +137,32 @@ class MetricsState {
 
         this._unsubscribe?.();
 
-        if (this._shouldReconnect) {
-          logger.debug('Attempting to reconnect in 3 seconds...');
-          setTimeout(() => {
-            if (this._shouldReconnect) {
-              void this._openMetricsStream(project_id, tabId);
-            }
-          }, 3000);
-        }
+        logger.debug('Attempting to reconnect in 3 seconds...');
+        setTimeout(() => {
+          if (generation === this._generation) {
+            void this._openMetricsStream(project_id, tabId, generation);
+          }
+        }, 3000);
 
-        reject(new Error('SSE connection failed'));
+        resolve();
       };
       const onMessage = (event: MessageEvent<string>): void => {
+        if (generation !== this._generation) {
+          return;
+        }
+
         try {
           logger.debug('SSE message:', event);
           const metric = JSON.parse(event.data) as Metric;
           const metricId = metric.metricRegisterEntryId;
 
-          this._metrics[metricId] = this._metrics[metricId] || {};
-          const metricsByDate = this._metrics[metricId][metric.granularity];
-
-          if (!metricsByDate) {
-            this._metrics[metricId][metric.granularity] = {
-              [metric.date]: metric,
-            };
-            logger.debug(
-              `added metric ${metric.name} with the value ${metric.value}`,
-            );
-          } else if (!metricsByDate[metric.date]) {
-            metricsByDate[metric.date] = metric;
-            logger.debug(
-              `added metric ${metric.name} with the value ${metric.value}`,
-            );
-          }
+          this.store(metric);
 
           if (metric.granularity !== MetricGranularity.MINUTE) {
             return;
           }
+
+          this.refreshAllTime(metric);
 
           if (!this._simplifiedMetrics[metricId]) {
             this._simplifiedMetrics[metricId] = {
@@ -212,6 +192,8 @@ class MetricsState {
       this.syncConnection.addEventListener('message', onMessage);
 
       this._unsubscribe = () => {
+        resolve();
+
         if (!this.syncConnection) {
           logger.debug('No active SSE connection to unsubscribe from');
           return;
@@ -236,22 +218,19 @@ class MetricsState {
   }
 
   pauseSync(): void {
-    this._shouldReconnect = false;
     logger.debug('pausing metrics...');
-    this._unsubscribe?.();
-    this.syncConnection?.close();
-    this.syncConnection = null;
+    this.unsync();
   }
 
   unsync(): void {
-    this._shouldReconnect = false;
+    this._generation += 1;
     logger.debug('unsyncing metrics...');
     this._unsubscribe?.();
     this.syncConnection?.close();
     this.syncConnection = null;
   }
 
-  delete(projectId: string, metricId: string): void {
+  async delete(projectId: string, metricId: string): Promise<void> {
     const metric = this._simplifiedMetrics[metricId];
 
     if (this._simplifiedMetrics[metricId]) {
@@ -260,29 +239,29 @@ class MetricsState {
       logger.warn(`Metric with id ${metricId} does not exist`);
     }
 
-    fetch(`/app/api/metrics?project_id=${projectId}&metric_id=${metricId}`, {
-      method: 'DELETE',
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(() => {
-        toast.success(`Deleted metric ${metric.name}`);
-        logger.debug(`Deleted metric with id ${metricId}`);
-      })
-      .catch((error) => {
-        toast.error(
-          `Failed to delete metric ${metric.name}. Please try again.`,
-        );
-        logger.error('Error deleting metric:', error);
-        this._simplifiedMetrics[metricId] = metric;
-      });
+    try {
+      const response = await fetch(
+        `/app/api/metrics?project_id=${projectId}&metric_id=${metricId}`,
+        { method: 'DELETE' },
+      );
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      toast.success(`Deleted metric ${metric.name}`);
+      logger.debug(`Deleted metric with id ${metricId}`);
+    } catch (error) {
+      toast.error(`Failed to delete metric ${metric.name}. Please try again.`);
+      logger.error('Error deleting metric:', error);
+      this._simplifiedMetrics[metricId] = metric;
+    }
   }
 
-  private async fetchMetrics(project_id: string): Promise<void> {
+  private async fetchMetrics(
+    project_id: string,
+    generation: number,
+  ): Promise<void> {
     const url = `/app/api/projects/${project_id}/metrics`;
 
     try {
@@ -293,11 +272,30 @@ class MetricsState {
       }
 
       const { data } = (await response.json()) as { data: SimplifiedMetric[] };
-      this._simplifiedMetrics = arrayToObject(data, 'id');
-      this._initialized = true;
+
+      if (generation === this._generation) {
+        this.set(project_id, data);
+      }
     } catch (error) {
       console.error('Error fetching metrics:', error);
     }
+  }
+
+  private store(metric: Metric): void {
+    const { metricRegisterEntryId, granularity, date } = metric;
+
+    this._metrics[metricRegisterEntryId] ??= {};
+    this._metrics[metricRegisterEntryId][granularity] ??= {};
+    this._metrics[metricRegisterEntryId][granularity][date] = metric;
+  }
+
+  private refreshAllTime(metric: Metric): void {
+    const allTime =
+      this._metrics[metric.metricRegisterEntryId]?.[MetricGranularity.ALL_TIME];
+
+    Object.values(allTime ?? {}).forEach((entry) => {
+      entry.value = metric.value;
+    });
   }
 
   private async fetchMetricDetails(
@@ -305,6 +303,7 @@ class MetricsState {
     metric_id: string,
   ): Promise<void> {
     this._metricDetailsLoading = true;
+    this._metricDetailsFailed = false;
     const url = `/app/api/projects/${project_id}/metrics/details?metric_id=${metric_id}`;
 
     try {
@@ -316,21 +315,9 @@ class MetricsState {
 
       const { data } = (await response.json()) as { data: Metric[] };
 
-      data.forEach((metric) => {
-        const metricId = metric.metricRegisterEntryId;
-        this._metrics[metricId] = this._metrics[metricId] || {};
-        const metricsByDate = this._metrics[metricId][metric.granularity];
-
-        if (!metricsByDate) {
-          this._metrics[metricId][metric.granularity] = {
-            [metric.date]: metric,
-          };
-          return;
-        }
-
-        metricsByDate[metric.date] = metric;
-      });
+      data.forEach((metric) => this.store(metric));
     } catch (error) {
+      this._metricDetailsFailed = true;
       console.error('Error fetching metrics:', error);
     } finally {
       this._metricDetailsLoading = false;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CheckIcon, CloseIcon } from '@logdash/hyper-ui/icons';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
   import { Button } from '@logdash/hyper-ui/presentational';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { userInvitationsState } from '$lib/domains/app/clusters/application/user-invitations.state.svelte.js';
@@ -33,52 +33,45 @@
 </script>
 
 {#if userInvitationsState.hasPendingInvitations}
-  <div class="success-card mb-4 w-full rounded-xl px-2">
-    <div class="space-y-0">
-      {#each invitations as invitation, index (invitation.id)}
-        <div
-          class={[
-            'flex items-center justify-between rounded-lg p-3 pr-1',
-            {
-              'border-success/20 rounded-b-none border-b':
-                invitations.length > 1 && index !== invitations.length - 1,
-            },
-          ]}
-        >
-          <div class="flex flex-1 items-center">
-            <div class="text-sm font-medium">
-              {invitation.clusterName} • Invited {formatDate(
-                invitation.createdAt,
-              )} • {invitation.role === ClusterRole.CREATOR ? 'Admin' : 'Write'}
-              access
-            </div>
-          </div>
-
-          <div class="flex gap-2">
-            <Button
-              variant="success-soft"
-              size="xs"
-              onclick={() => onInvitationAccepted(invitation.id)}
-              disabled={userInvitationsState.isDeclining}
-              loading={userInvitationsState.isAccepting}
-            >
-              <CheckIcon class="h-4 w-4" />
-              Accept
-            </Button>
-
-            <Button
-              variant="danger-soft"
-              size="xs"
-              onclick={() => onInvitationDeclined(invitation.id)}
-              disabled={userInvitationsState.isAccepting}
-              loading={userInvitationsState.isDeclining}
-            >
-              <CloseIcon class="h-4 w-4" />
-              Decline
-            </Button>
-          </div>
+  <ul
+    class="border-hairline divide-hairline flex shrink-0 flex-col divide-y border-b"
+    aria-label="Pending invitations"
+  >
+    {#each invitations as invitation (invitation.id)}
+      <li class="flex flex-wrap items-center gap-x-4 gap-y-3 p-4">
+        <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span class="text-neutral-500 text-xs">
+            Invited {formatDate(invitation.createdAt)} ·
+            {invitation.role === ClusterRole.CREATOR ? 'Admin' : 'Write'} access
+          </span>
+          <p class="min-w-0 truncate text-sm">
+            Join <span class="font-medium">{invitation.clusterName}</span>
+          </p>
         </div>
-      {/each}
-    </div>
-  </div>
+
+        <div class="flex shrink-0 gap-2">
+          <Button
+            variant="primary"
+            size="sm"
+            onclick={() => onInvitationAccepted(invitation.id)}
+            disabled={userInvitationsState.isDeclining}
+            loading={userInvitationsState.isAccepting}
+          >
+            <CheckIcon class="size-4" />
+            Accept
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onclick={() => onInvitationDeclined(invitation.id)}
+            disabled={userInvitationsState.isAccepting}
+            loading={userInvitationsState.isDeclining}
+          >
+            Decline
+          </Button>
+        </div>
+      </li>
+    {/each}
+  </ul>
 {/if}

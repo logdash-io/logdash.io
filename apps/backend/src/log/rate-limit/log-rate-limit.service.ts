@@ -27,7 +27,7 @@ export class LogRateLimitService {
     const project = await this.projectReadCachedService.readProject(projectId);
 
     if (!project) {
-      throw new BadRequestException('Project not found');
+      throw new BadRequestException('Service not found');
     }
 
     const tier = project.tier;

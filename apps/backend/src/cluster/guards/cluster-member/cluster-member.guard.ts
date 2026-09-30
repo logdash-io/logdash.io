@@ -101,7 +101,7 @@ export class ClusterMemberGuard implements CanActivate {
       !customDomainIdFromParams
     ) {
       throw new ForbiddenException(
-        'Cluster ID, project ID, communication channel ID, http monitor ID, public dashboard ID, cluster invite ID or custom domain ID not provided',
+        'Domain ID, service ID, notification channel ID, monitor ID, status page ID, invite ID or custom domain ID not provided',
       );
     }
 
@@ -217,7 +217,7 @@ export class ClusterMemberGuard implements CanActivate {
     projectId?: string;
   }): void {
     if (!this.accessAllows(dto.access, dto.viaPersonalKey, dto.clusterId, dto.projectId)) {
-      throw new ForbiddenException('Personal API key is not scoped to this cluster/project');
+      throw new ForbiddenException('Personal API key is not scoped to this domain or service');
     }
   }
 
@@ -231,7 +231,7 @@ export class ClusterMemberGuard implements CanActivate {
     const project = await this.projectReadCachedService.readProject(dto.projectId);
 
     if (!project) {
-      throw new ForbiddenException('Project not found');
+      throw new ForbiddenException('Service not found');
     }
 
     const role = await this.clusterReadCachedService.readUserRole({
@@ -240,7 +240,7 @@ export class ClusterMemberGuard implements CanActivate {
     });
 
     if (!role) {
-      throw new ForbiddenException('User is not a member of this cluster');
+      throw new ForbiddenException('User is not a member of this domain');
     }
 
     if (!dto.allowedRoles.includes(role)) {
@@ -270,7 +270,7 @@ export class ClusterMemberGuard implements CanActivate {
     });
 
     if (!role) {
-      throw new ForbiddenException('User is not a member of this cluster');
+      throw new ForbiddenException('User is not a member of this domain');
     }
 
     if (!dto.allowedRoles.includes(role)) {
@@ -306,7 +306,7 @@ export class ClusterMemberGuard implements CanActivate {
     });
 
     if (!role) {
-      throw new ForbiddenException('User is not a member of this cluster');
+      throw new ForbiddenException('User is not a member of this domain');
     }
 
     if (!dto.allowedRoles.includes(role)) {
@@ -339,7 +339,7 @@ export class ClusterMemberGuard implements CanActivate {
     const project = await this.projectReadCachedService.readProject(httpMonitor.projectId);
 
     if (!project) {
-      throw new ForbiddenException('Project not found');
+      throw new ForbiddenException('Service not found');
     }
 
     const role = await this.clusterReadCachedService.readUserRole({
@@ -348,7 +348,7 @@ export class ClusterMemberGuard implements CanActivate {
     });
 
     if (!role) {
-      throw new ForbiddenException('User is not a member of this cluster');
+      throw new ForbiddenException('User is not a member of this domain');
     }
 
     if (!dto.allowedRoles.includes(role)) {
@@ -384,7 +384,7 @@ export class ClusterMemberGuard implements CanActivate {
     });
 
     if (!role) {
-      throw new ForbiddenException('User is not a member of this cluster');
+      throw new ForbiddenException('User is not a member of this domain');
     }
 
     if (!dto.allowedRoles.includes(role)) {
@@ -411,7 +411,7 @@ export class ClusterMemberGuard implements CanActivate {
     const invite = await this.clusterInviteReadService.readById(dto.clusterInviteId);
 
     if (!invite) {
-      throw new ForbiddenException('Cluster invite not found');
+      throw new ForbiddenException('Invite not found');
     }
 
     const role = await this.clusterReadCachedService.readUserRole({
@@ -429,7 +429,7 @@ export class ClusterMemberGuard implements CanActivate {
       const user = await this.userReadService.readByIdOrThrow(dto.userId);
 
       if (user.email !== invite.invitedUserEmail) {
-        throw new ForbiddenException('User is not a member of this cluster');
+        throw new ForbiddenException('User is not a member of this domain');
       }
     }
 

@@ -117,7 +117,7 @@
     <p class="text-neutral-400 text-[15px] leading-7">
       Every SDK is a wrapper around a handful of endpoints. If your language has
       no SDK, or you just want to prove the pipe works, curl it. Logs and
-      metrics authenticate with your project API key in a
+      metrics authenticate with your service's API key in a
       <code class="font-mono text-[13px]">project-api-key</code>
       header.
     </p>

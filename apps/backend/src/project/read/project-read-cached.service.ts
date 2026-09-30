@@ -45,7 +45,7 @@ export class ProjectReadCachedService {
   public async readProjectOrThrow(projectId: string): Promise<ProjectNormalized> {
     const project = await this.readProject(projectId);
     if (!project) {
-      throw new NotFoundException('Project not found');
+      throw new NotFoundException('Service not found');
     }
     return project;
   }

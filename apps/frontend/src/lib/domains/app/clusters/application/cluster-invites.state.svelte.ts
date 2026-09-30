@@ -4,12 +4,14 @@ import type {
   ClusterRole,
 } from '$lib/domains/app/clusters/domain/cluster-invite';
 import { ClusterInvitesService } from '$lib/domains/app/clusters/infrastructure/cluster-invites.service';
+import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 
 type ClusterInvitesStateType = {
   invites: ClusterInvite[];
   capacity: ClusterInviteCapacity | null;
   isLoading: boolean;
+  loadFailed: boolean;
   isCreating: boolean;
   isDeleting: boolean;
 };
@@ -19,9 +21,12 @@ class ClusterInvitesState {
     invites: [],
     capacity: null,
     isLoading: false,
+    loadFailed: false,
     isCreating: false,
     isDeleting: false,
   });
+
+  private clusterId: string | null = null;
 
   get invites(): ClusterInvite[] {
     return this._state.invites;
@@ -33,6 +38,10 @@ class ClusterInvitesState {
 
   get isLoading(): boolean {
     return this._state.isLoading;
+  }
+
+  get loadFailed(): boolean {
+    return this._state.loadFailed;
   }
 
   get isCreating(): boolean {
@@ -62,6 +71,11 @@ class ClusterInvitesState {
     clusterId: string,
     silent = false,
   ): Promise<void> {
+    if (this.clusterId !== clusterId) {
+      this.reset();
+      this.clusterId = clusterId;
+    }
+
     if (!silent) {
       this._state.isLoading = true;
     }
@@ -71,13 +85,20 @@ class ClusterInvitesState {
         ClusterInvitesService.getClusterInvites(clusterId),
         ClusterInvitesService.getClusterInviteCapacity(clusterId),
       ]);
+
+      if (this.clusterId !== clusterId) return;
+
       this._state.invites = invites;
       this._state.capacity = capacity;
+      this._state.loadFailed = false;
     } catch (error) {
+      if (this.clusterId !== clusterId) return;
+
+      this._state.loadFailed = true;
       toast.error('Failed to load invitations');
       console.error('Failed to load cluster invites:', error);
     } finally {
-      if (!silent) {
+      if (!silent && this.clusterId === clusterId) {
         this._state.isLoading = false;
       }
     }
@@ -106,11 +127,12 @@ class ClusterInvitesState {
 
       toast.success('Invitation sent successfully');
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error(`Failed to send invitation: ${error.message}`);
-      } else {
-        toast.error('Failed to send invitation');
-      }
+      const message = readHttpErrorMessage(error);
+      toast.error(
+        message
+          ? `Failed to send invitation: ${message}`
+          : 'Failed to send invitation',
+      );
       throw error;
     } finally {
       this._state.isCreating = false;
@@ -146,6 +168,7 @@ class ClusterInvitesState {
     this._state.invites = [];
     this._state.capacity = null;
     this._state.isLoading = false;
+    this._state.loadFailed = false;
     this._state.isCreating = false;
     this._state.isDeleting = false;
   }

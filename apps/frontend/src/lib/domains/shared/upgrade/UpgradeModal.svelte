@@ -13,8 +13,8 @@
     Spinner,
     Tooltip,
   } from '@logdash/hyper-ui/presentational';
-  import { fade, scale } from 'svelte/transition';
-  import { cubicInOut } from 'svelte/easing';
+  import { fade } from 'svelte/transition';
+  import Modal from '$lib/domains/shared/ui/Modal.svelte';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { match } from 'ts-pattern';
@@ -48,7 +48,7 @@
 
   const getButtonText = (plan: (typeof PAYMENT_PLANS)[number]): string => {
     if (isCurrentPlan(plan.tier)) {
-      return 'Current Plan';
+      return 'Current plan';
     }
     if (canUpgradeTo(plan.tier)) {
       return `Upgrade to ${plan.name}`;
@@ -78,164 +78,145 @@
   };
 </script>
 
-{#if upgradeState.modalOpen}
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-    transition:fade={{ duration: 200 }}
-    onclick={(e) => {
-      if (e.target === e.currentTarget) {
-        upgradeState.hideModal();
-      }
-    }}
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="upgrade-modal-title"
+<Modal
+  isOpen={upgradeState.modalOpen}
+  onClose={() => upgradeState.hideModal()}
+  class="w-5xl p-8"
+  aria-labelledby="upgrade-modal-title"
+>
+  <Button
+    variant="ghost"
+    size="sm"
+    shape="circle"
+    class="absolute top-4 right-4 z-10"
+    onclick={() => upgradeState.hideModal()}
+    aria-label="Close modal"
   >
-    <div
-      class="ld-card-base ld-card-rounding relative h-fit max-h-[90dvh] w-full max-w-5xl overflow-y-auto p-8"
-      transition:scale={{
-        duration: 150,
-        easing: cubicInOut,
-        start: 0.95,
-      }}
-    >
-      <Button
-        variant="ghost"
-        size="sm"
-        shape="circle"
-        class="absolute top-4 right-4 z-10"
-        onclick={() => upgradeState.hideModal()}
-        aria-label="Close modal"
-      >
-        <CloseIcon class="h-4 w-4" />
-      </Button>
+    <CloseIcon class="h-4 w-4" />
+  </Button>
 
-      <div class="mb-8 text-center">
-        <h1 id="upgrade-modal-title" class="mb-2 text-3xl font-semibold">
-          Upgrade your plan
-        </h1>
-        <p class="text-neutral-300">Get the one that fits your needs best</p>
-      </div>
-
-      <div class="grid gap-6 md:grid-cols-3">
-        {#each PAYMENT_PLANS as plan (plan.tier)}
-          <div class="relative flex flex-col">
-            <div class="h-4"></div>
-
-            <Card
-              class={[
-                'ld-card-bg border flex-1 overflow-visible ld-card-rounding p-6',
-                {
-                  'border-brand': plan.popular,
-                  'border-success/40': isCurrentPlan(plan.tier),
-                  'border-border-default':
-                    !plan.popular && !isCurrentPlan(plan.tier),
-                },
-              ]}
-            >
-              {#if plan.popular && !isCurrentPlan(plan.tier)}
-                <Badge
-                  variant="inverse"
-                  class="absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
-                >
-                  Most popular
-                </Badge>
-              {/if}
-
-              {#if isCurrentPlan(plan.tier)}
-                <Badge
-                  variant="success"
-                  class="absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
-                >
-                  Current Plan
-                </Badge>
-              {/if}
-
-              <Badge class="mb-3">
-                {plan.badge.text}
-              </Badge>
-
-              <CardBody class="flex-1 p-0">
-                <CardTitle class="text-xl font-normal">
-                  {plan.name}
-                </CardTitle>
-                <div class="mt-2">
-                  <span class="text-3xl font-semibold">{plan.price}</span>
-
-                  <p class="text-neutral-300 mt-3 h-10 text-sm">
-                    {plan.description}
-                  </p>
-                </div>
-
-                <CardActions class="my-4 justify-center">
-                  <Button
-                    variant="primary"
-                    block
-                    class="font-medium"
-                    onclick={() => onSelectPlan(plan.tier)}
-                    disabled={isButtonDisabled(plan)}
-                  >
-                    {#if upgrading && canUpgradeTo(plan.tier)}
-                      <div
-                        in:fade={{ duration: 150 }}
-                        class="flex h-5 w-5 items-center justify-center"
-                      >
-                        <Spinner class="h-4 w-4" />
-                      </div>
-                    {/if}
-
-                    {getButtonText(plan)}
-                  </Button>
-                </CardActions>
-
-                <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
-                  <ShieldCheckIcon class="text-success size-4" />
-                  {plan.guarantee}
-                </div>
-
-                <ul class="space-y-2 text-sm">
-                  {#each plan.features.slice(0, 6) as feature (feature.name)}
-                    <li class="flex items-center gap-2">
-                      <CheckIcon class="text-success h-4 w-4 flex-shrink-0" />
-                      <span>{feature.name}</span>
-                    </li>
-                  {/each}
-                  {#if plan.features.length > 6}
-                    {@const remainingFeatures = plan.features.slice(6)}
-                    {#snippet tooltipContent()}
-                      <ul class="space-y-1.5 p-1 ld-card">
-                        {#each remainingFeatures as feature (feature.name)}
-                          <li class="flex items-center gap-2">
-                            <CheckIcon
-                              class="text-success size-4 flex-shrink-0"
-                            />
-                            <span>{feature.name}</span>
-                          </li>
-                        {/each}
-                      </ul>
-                    {/snippet}
-                    <li>
-                      <Tooltip content={tooltipContent} placement="top">
-                        <span
-                          class="text-brand cursor-help text-xs underline decoration-dotted"
-                        >
-                          +{remainingFeatures.length} more features
-                        </span>
-                      </Tooltip>
-                    </li>
-                  {/if}
-                </ul>
-              </CardBody>
-            </Card>
-          </div>
-        {/each}
-      </div>
-
-      <div class="mt-6 text-center">
-        <p class="text-neutral-300 text-xs">
-          30-day trial. Full refund if you cancel within 30 days.
-        </p>
-      </div>
-    </div>
+  <div class="mb-8 text-center">
+    <h1 id="upgrade-modal-title" class="mb-2 text-3xl font-semibold">
+      Upgrade your plan
+    </h1>
+    <p class="text-neutral-300">Get the one that fits your needs best</p>
   </div>
-{/if}
+
+  <div class="grid gap-6 md:grid-cols-3">
+    {#each PAYMENT_PLANS as plan (plan.tier)}
+      <div class="relative flex flex-col">
+        <div class="h-4"></div>
+
+        <Card
+          class={[
+            'ld-card-bg border flex-1 overflow-visible ld-card-rounding p-6',
+            {
+              'border-brand': plan.popular,
+              'border-success': isCurrentPlan(plan.tier),
+              'border-border-default':
+                !plan.popular && !isCurrentPlan(plan.tier),
+            },
+          ]}
+        >
+          {#if plan.popular && !isCurrentPlan(plan.tier)}
+            <Badge
+              variant="inverse"
+              class="absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
+            >
+              Most popular
+            </Badge>
+          {/if}
+
+          {#if isCurrentPlan(plan.tier)}
+            <Badge
+              variant="success"
+              class="absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
+            >
+              Current plan
+            </Badge>
+          {/if}
+
+          <Badge class="mb-3">
+            {plan.badge.text}
+          </Badge>
+
+          <CardBody class="flex-1 p-0">
+            <CardTitle class="text-xl font-normal">
+              {plan.name}
+            </CardTitle>
+            <div class="mt-2">
+              <span class="text-3xl font-semibold">{plan.price}</span>
+
+              <p class="text-neutral-300 mt-3 h-10 text-sm">
+                {plan.description}
+              </p>
+            </div>
+
+            <CardActions class="my-4 justify-center">
+              <Button
+                variant="primary"
+                block
+                class="font-medium"
+                onclick={() => onSelectPlan(plan.tier)}
+                disabled={isButtonDisabled(plan)}
+              >
+                {#if upgrading && canUpgradeTo(plan.tier)}
+                  <div
+                    in:fade={{ duration: 150 }}
+                    class="flex h-5 w-5 items-center justify-center"
+                  >
+                    <Spinner class="h-4 w-4" />
+                  </div>
+                {/if}
+
+                {getButtonText(plan)}
+              </Button>
+            </CardActions>
+
+            <div class="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <ShieldCheckIcon class="text-success size-4" />
+              {plan.guarantee}
+            </div>
+
+            <ul class="space-y-2 text-sm">
+              {#each plan.features.slice(0, 6) as feature (feature.name)}
+                <li class="flex items-center gap-2">
+                  <CheckIcon class="text-success h-4 w-4 flex-shrink-0" />
+                  <span>{feature.name}</span>
+                </li>
+              {/each}
+              {#if plan.features.length > 6}
+                {@const remainingFeatures = plan.features.slice(6)}
+                {#snippet tooltipContent()}
+                  <ul class="space-y-1.5 p-1 ld-card">
+                    {#each remainingFeatures as feature (feature.name)}
+                      <li class="flex items-center gap-2">
+                        <CheckIcon class="text-success size-4 flex-shrink-0" />
+                        <span>{feature.name}</span>
+                      </li>
+                    {/each}
+                  </ul>
+                {/snippet}
+                <li>
+                  <Tooltip content={tooltipContent} placement="top">
+                    <span
+                      class="text-brand cursor-help text-xs underline decoration-dotted"
+                    >
+                      +{remainingFeatures.length} more features
+                    </span>
+                  </Tooltip>
+                </li>
+              {/if}
+            </ul>
+          </CardBody>
+        </Card>
+      </div>
+    {/each}
+  </div>
+
+  <div class="mt-6 text-center">
+    <p class="text-neutral-300 text-xs">
+      30-day trial. Full refund if you cancel within 30 days.
+    </p>
+  </div>
+</Modal>

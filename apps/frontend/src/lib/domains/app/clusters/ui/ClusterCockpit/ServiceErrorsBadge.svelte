@@ -5,8 +5,7 @@
   import { page } from '$app/state';
   import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
-  import { DangerIcon, CheckIcon } from '@logdash/hyper-ui/icons';
-  import { Spinner } from '@logdash/hyper-ui/presentational';
+  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 
   type Props = {
     projectId: string;
@@ -22,13 +21,13 @@
 
   let errorCount = $state(0);
   let loading = $state(true);
+  let failed = $state(false);
 
   const errorLabel = $derived(
-    `${errorCount}${errorCount === MAX_ERRORS ? '+' : ''} error${errorCount !== 1 ? 's' : ''} (1h)`,
+    `${errorCount}${errorCount === MAX_ERRORS ? '+' : ''} error${errorCount !== 1 ? 's' : ''} in 1h`,
   );
 
   async function fetchErrorCount(): Promise<void> {
-    loading = true;
     const oneHourAgo = new Date(Date.now() - ONE_HOUR_MS).toISOString();
 
     try {
@@ -38,23 +37,26 @@
         limit: MAX_ERRORS,
       });
       errorCount = logs.length;
+      failed = false;
     } catch {
-      errorCount = 0;
+      failed = true;
     } finally {
       loading = false;
     }
   }
 
-  function onBadgeClick(e: MouseEvent): void {
-    e.stopPropagation();
-
+  function onBadgeClick(): void {
     if (!clusterId) {
       return;
     }
 
+    if (userState.id) {
+      filtersStore.initPersistence(userState.id, projectId);
+    }
+
     filtersStore.setLevels(['error']);
     void goto(
-      resolve('/app/clusters/[cluster_id]/[project_id]/logs', {
+      resolve('/app/domains/[cluster_id]/[project_id]/logs', {
         cluster_id: clusterId,
         project_id: projectId,
       }),
@@ -71,20 +73,18 @@
 </script>
 
 {#if loading}
-  <div class="size-6 flex items-center justify-center">
-    <Spinner class="size-3.5 text-neutral-400" />
-  </div>
+  <span class="text-neutral-600 font-mono text-xs">Checking errors</span>
+{:else if failed}
+  <span class="text-neutral-600 font-mono text-xs">Could not check errors</span>
 {:else if errorCount > 0}
   <button
+    type="button"
     onclick={onBadgeClick}
-    class="flex items-center gap-1.5 rounded-lg bg-error/10 px-2 py-1 hover:bg-error/20 cursor-pointer"
+    class="text-error hover:decoration-error relative flex cursor-pointer items-center gap-1.5 font-mono text-xs underline decoration-transparent underline-offset-2 transition-ink duration-150"
   >
-    <DangerIcon class="size-3 text-error" />
-    <span class="text-xs text-error">{errorLabel}</span>
+    <span class="bg-error size-1.5 shrink-0 rounded-full"></span>
+    {errorLabel}
   </button>
 {:else}
-  <div class="flex items-center gap-1.5 rounded-lg bg-success/10 px-2 py-1">
-    <CheckIcon class="size-3 text-success" />
-    <span class="text-xs text-success">No errors (1h)</span>
-  </div>
+  <span class="text-neutral-500 font-mono text-xs">No errors in 1h</span>
 {/if}

@@ -53,7 +53,7 @@ export class HttpPingCoreController {
     }
 
     if (monitor.projectId !== projectId) {
-      throw new NotFoundException('Monitor not found in this project');
+      throw new NotFoundException('Monitor not found in this service');
     }
 
     const pings = await this.httpPingReadService.readByMonitorId(monitorId, query.limit);

@@ -3,7 +3,7 @@
   import { LOG_LEVELS_MAP } from '../../domain/log-level-metadata.js';
   import type { LogLevel } from '../../domain/log-level.js';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
-  import { Button } from '@logdash/hyper-ui/presentational';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import { DateTime } from 'luxon';
   import { fly, fade } from 'svelte/transition';
@@ -37,7 +37,7 @@
   }
 
   const levelColor = $derived(
-    LOG_LEVELS_MAP[log?.level as LogLevel]?.color ?? 'bg-[#155dfc]',
+    LOG_LEVELS_MAP[log?.level as LogLevel]?.color ?? 'bg-neutral-600',
   );
 
   const levelLabel = $derived(
@@ -71,7 +71,7 @@
   }
 
   function onKeyDown(e: KeyboardEvent): void {
-    if (!logPreviewState.isOpen) return;
+    if (!logPreviewState.isOpen || e.defaultPrevented) return;
 
     if (e.key === 'Escape') {
       logPreviewState.close();
@@ -89,96 +89,77 @@
 
 {#if logPreviewState.isOpen && log}
   <button
-    class="absolute inset-0 z-10 bg-gradient-to-t from-surface-root/80 via-95% via-surface-root/80 to-surface-elevated"
+    class="from-surface-root/80 via-surface-root/80 to-surface-elevated absolute inset-0 z-10 bg-gradient-to-t via-95%"
     onclick={onBackdropClick}
     transition:fade={{ duration: 150 }}
     aria-label="Close preview"
   ></button>
 
   <div
-    class="absolute inset-x-0 bottom-0 z-20 flex max-h-[60%] flex-col rounded-t-3xl border-t border-border-default bg-surface-elevated"
+    class="border-hairline bg-surface-elevated absolute inset-x-0 bottom-0 z-20 flex max-h-[60%] flex-col border-t"
     transition:fly={{ y: 200, duration: 200 }}
   >
     <div
-      class="flex shrink-0 items-center justify-between border-b border-hairline px-5 py-3"
+      class="border-hairline flex h-12 shrink-0 items-center gap-3 border-b px-4"
     >
-      <div
-        class="flex flex-col md:flex-row md:items-center items-start md:gap-3"
-      >
-        <span class="fcc gap-1.5 md:gap-3">
-          <div
-            class={['size-2 md:size-2.5 rounded-full shrink-0', levelColor]}
-          ></div>
-          <span class="text-neutral-400 font-mono text-xs uppercase">
-            {log.level}
-          </span>
-          {#if log.namespace}
-            <button
-              class={[
-                'rounded px-1.5 py-0.5 text-xs cursor-pointer outline-0',
-                {
-                  'bg-surface-root hover:bg-surface-100': !isNamespaceLocked,
-                  'bg-surface-150 ring-1 ring-brand': isNamespaceLocked,
-                },
-              ]}
-              onclick={onNamespaceClick}
-            >
-              {log.namespace}
-            </button>
-          {/if}
-        </span>
-        <span class="text-neutral-500 font-mono text-xs">{formattedDate}</span>
-      </div>
+      <span class="flex min-w-0 items-center gap-2 text-xs">
+        <span class={['size-2 shrink-0 rounded-full', levelColor]}></span>
+        <span class="text-neutral-400">{levelLabel}</span>
+      </span>
 
-      <div
-        class="flex items-center gap-0.5 rounded-lg bg-surface-root p-0.5 mr-auto ml-2 border border-border-default"
-      >
-        <Button
-          variant="ghost"
-          size="xs"
-          shape="circle"
-          onclick={onPrev}
+      {#if log.namespace}
+        <button
+          type="button"
+          class={[
+            'ring-hairline hover:text-fg-default transition-ink flex h-6 min-w-0 cursor-pointer items-center rounded-full px-2 text-xs ring-1 ring-inset',
+            isNamespaceLocked
+              ? 'bg-surface-100 text-fg-default'
+              : 'text-neutral-400',
+          ]}
+          aria-pressed={Boolean(isNamespaceLocked)}
+          onclick={onNamespaceClick}
+        >
+          <span class="truncate">{log.namespace}</span>
+        </button>
+      {/if}
+
+      <div class="ml-auto flex shrink-0 items-center gap-1">
+        <IconButton
+          label="Previous {levelLabel}"
           disabled={!logPreviewState.hasPrevSameType}
-          aria-label="Previous {levelLabel}"
+          onclick={onPrev}
         >
           <ChevronRightIcon class="size-4 rotate-180" />
-        </Button>
+        </IconButton>
 
-        <span class="text-neutral-400 hidden px-2 font-mono text-xs md:block">
+        <span class="text-neutral-500 font-mono text-xs tabular-nums">
           {currentPosition}/{sameTypeCount}
         </span>
 
-        <Button
-          variant="ghost"
-          size="xs"
-          shape="circle"
-          onclick={onNext}
+        <IconButton
+          label="Next {levelLabel}"
           disabled={!logPreviewState.hasNextSameType}
-          aria-label="Next {levelLabel}"
+          onclick={onNext}
         >
           <ChevronRightIcon class="size-4" />
-        </Button>
-      </div>
+        </IconButton>
 
-      <div class="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="xs"
-          shape="circle"
-          onclick={onClose}
-          aria-label="Close"
-        >
-          <CloseIcon class="size-5 stroke-[1.2]" />
-        </Button>
+        <span class="bg-hairline mx-1 h-4 w-px"></span>
+
+        <IconButton label="Close" class="-mr-1.5" onclick={onClose}>
+          <CloseIcon class="size-4" />
+        </IconButton>
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-5">
+    <div class="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
+      <span class="text-neutral-500 font-mono text-xs">{formattedDate}</span>
+
       {#if formattedMessage.isJson}
         <pre
-          class="overflow-x-auto rounded-lg bg-surface-root p-4 font-mono text-xs">{formattedMessage.content}</pre>
+          class="ring-hairline overflow-x-auto rounded-lg bg-neutral-950 p-4 font-mono text-xs ring-1 ring-inset">{formattedMessage.content}</pre>
       {:else}
-        <p class="whitespace-pre-wrap break-words font-mono text-sm">
+        <p class="font-mono text-sm break-words whitespace-pre-wrap">
           {formattedMessage.content}
         </p>
       {/if}

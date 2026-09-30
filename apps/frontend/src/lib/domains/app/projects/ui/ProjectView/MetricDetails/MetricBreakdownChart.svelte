@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { DangerIcon } from '@logdash/hyper-ui/icons';
   import { Spinner } from '@logdash/hyper-ui/presentational';
   import * as d3 from 'd3';
   import { onMount } from 'svelte';
+  import { match } from 'ts-pattern';
+  import { thinTicks } from './data.utils.js';
 
   type Format = 'minute' | 'hour' | 'day';
   type DataPoint = {
@@ -11,6 +14,7 @@
   type Props = {
     data: DataPoint[];
     isLoading?: boolean;
+    failed?: boolean;
     color?: string;
     height?: number;
     format?: Format;
@@ -18,6 +22,7 @@
   };
   const {
     isLoading = false,
+    failed = false,
     data,
     color = '#f4f4f4',
     height = 200,
@@ -27,22 +32,18 @@
 
   let chartContainer: HTMLElement;
   let tooltip: HTMLElement;
-  // Constants for chart configuration
-  const MARGIN = { top: 20, right: 20, bottom: 30, left: 50 };
-  const LABELS_OFFSET = 25;
+  const MARGIN = { top: 12, right: 8, bottom: 20, left: 44 };
+  const AXIS_COLOR = '#7f7f86';
+  const AXIS_LINE_COLOR = '#222225';
   function createChart() {
     if (!chartContainer || !data || data.length === 0) {
-      //clear chart if no data
       d3.select(chartContainer).selectAll('*').remove();
       return;
     }
-    // Clean up previous chart
     d3.select(chartContainer).selectAll('*').remove();
-    // Prepare chart dimensions
     const width = chartContainer.clientWidth;
     const innerWidth = width - MARGIN.left - MARGIN.right;
-    const innerHeight = height - MARGIN.top - MARGIN.bottom - LABELS_OFFSET;
-    // Create SVG and chart group
+    const innerHeight = height - MARGIN.top - MARGIN.bottom;
     const svg = d3
       .select(chartContainer)
       .append('svg')
@@ -53,7 +54,6 @@
     const chart = svg
       .append('g')
       .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
-    // Create scales - assuming data is properly formatted
     const xScale = d3
       .scaleBand()
       .domain(data.map((d) => String(d.x)))
@@ -63,74 +63,80 @@
       .scaleLinear()
       .domain([0, d3.max(data, (d) => d.y) || 0])
       .range([innerHeight, 0]);
-    // Function to get the center of each band for line positioning
     const xCenter = (d: DataPoint): number =>
       xScale(String(d.x))! + xScale.bandwidth() / 2;
 
-    // Helper function to determine tick label display
     function getTickLabelForDisplay(
       value: string,
       currentFormat: Format,
       currentTimeRange: 'small' | 'large',
     ): string {
-      switch (currentFormat) {
-        case 'minute': {
+      return match(currentFormat)
+        .with('minute', () => {
           const minute = parseInt(value.split(':')[1], 10);
           if (currentTimeRange === 'small') {
             return minute % 5 === 0 ? value : '';
           }
           return minute === 0 || minute === 30 ? value : '';
-        }
-        case 'hour': {
+        })
+        .with('hour', () => {
           const hour = parseInt(value.split(' ')[1].split(':')[0], 10);
           if (currentTimeRange === 'small') {
             return value;
           }
           return hour === 0 || hour === 12 ? value : '';
-        }
-        case 'day':
-          return value; // For 'day' format, always show the label if the tick is decided to be present
-        default:
-          return value;
-      }
+        })
+        .with('day', () => value)
+        .exhaustive();
     }
 
-    // Determine tick values based on format and timeRange
-    const tickValues = xScale
-      .domain()
-      .filter((tick) => getTickLabelForDisplay(tick, format, timeRange) !== '');
+    const tickValues = thinTicks(
+      xScale
+        .domain()
+        .filter(
+          (tick) => getTickLabelForDisplay(tick, format, timeRange) !== '',
+        ),
+      innerWidth,
+    );
 
-    // Draw axes
-    chart
+    const xAxis = chart
       .append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(
         d3
           .axisBottom(xScale)
           .tickValues(tickValues)
+          .tickSize(0)
+          .tickPadding(8)
           .tickFormat((tick) =>
             getTickLabelForDisplay(tick, format, timeRange),
           ),
       )
-      .attr('color', '#94a3b8')
+      .attr('color', AXIS_COLOR);
+
+    xAxis.selectAll('path, line').attr('stroke', AXIS_LINE_COLOR);
+    xAxis
       .selectAll('text')
-      .style('text-anchor', 'end')
-      .attr('dx', '-.8em')
-      .attr('dy', '.15em')
-      .attr('transform', 'rotate(-45)');
+      .style('font-size', '10px')
+      .style('font-family', 'var(--font-mono)');
+
     chart
       .append('g')
-      .call(d3.axisLeft(yScale))
-      .attr('color', '#94a3b8')
-      .call((g) => g.select('.domain').remove());
-    // Create a line generator
+      .call(d3.axisLeft(yScale).ticks(5).tickSize(0).tickPadding(8))
+      .attr('color', AXIS_COLOR)
+      .call((g) => g.select('.domain').remove())
+      .call((g) =>
+        g
+          .selectAll('text')
+          .style('font-size', '10px')
+          .style('font-family', 'var(--font-mono)'),
+      );
     const line = d3
       .line<DataPoint>()
       .defined((d) => d.y !== null)
       .x((d) => xCenter(d))
       .y((d) => yScale(d.y!))
       .curve(d3.curveMonotoneX);
-    // Add the line path
     chart
       .append('path')
       .datum(data)
@@ -138,7 +144,6 @@
       .attr('stroke', color)
       .attr('stroke-width', 2)
       .attr('d', line);
-    // Add circles at each data point where y is not null
     chart
       .selectAll('.data-point')
       .data(data.filter((d) => d.y !== null))
@@ -148,7 +153,6 @@
       .attr('cy', (d) => yScale(d.y!))
       .attr('r', 2.5)
       .attr('fill', color);
-    // Add a transparent layer for capturing hover events
     chart
       .append('rect')
       .attr('width', innerWidth)
@@ -177,7 +181,6 @@
         }
       })
       .on('mouseout', function () {
-        // Hide the tooltip
         d3.select(tooltip).style('visibility', 'hidden');
       });
 
@@ -185,7 +188,6 @@
   }
   onMount(() => {
     createChart();
-    // Handle resize
     const resizeObserver = new ResizeObserver(() => {
       createChart();
     });
@@ -203,19 +205,24 @@
   });
 </script>
 
-<div class="chart-wrapper relative">
+<div class="chart-wrapper relative h-full">
   {#if isLoading}
     <Spinner
       size="sm"
-      class="text-brand absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+      class="text-neutral-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
     />
   {/if}
 
   {#if !isLoading && data.length === 0}
     <div
-      class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-neutral-500"
+      class="text-neutral-500 absolute inset-0 flex items-center justify-center gap-2 text-sm"
     >
-      No data available
+      {#if failed}
+        <DangerIcon class="size-4" />
+        Could not load this metric
+      {:else}
+        No data in this range
+      {/if}
     </div>
   {/if}
   <div class="chart-container w-full" bind:this={chartContainer}></div>
@@ -223,21 +230,16 @@
 </div>
 
 <style>
-  .chart-wrapper {
-    margin-bottom: 1.5rem;
-  }
   .chart-container {
     position: relative;
-    height: auto;
-    min-height: 200px;
   }
   .point-tooltip {
     position: absolute;
     visibility: hidden;
-    background-color: var(--color-surface-root);
-    color: white;
+    background-color: var(--surface-100);
+    color: var(--fg-default);
     padding: 6px 10px;
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 12px;
     pointer-events: none;
     z-index: 10;

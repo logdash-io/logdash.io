@@ -30,45 +30,6 @@ class LogdashAPI {
     };
   }
 
-  create_cluster(
-    name: string,
-    access_token: string | undefined,
-  ): Promise<Cluster> {
-    return this.post<Cluster>(
-      `${LogdashAPI.v0baseUrl}/users/me/clusters`,
-      { name },
-      access_token,
-    );
-  }
-
-  update_cluster(
-    cluster_id: string,
-    update: Partial<{ name: string }>,
-    access_token: string | undefined,
-  ): Promise<Cluster> {
-    return this.put<Cluster>(
-      `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}`,
-      update,
-      access_token,
-    );
-  }
-
-  delete_cluster(
-    cluster_id: string,
-    access_token: string | undefined,
-  ): Promise<void> {
-    return this.performFetch<void>(
-      `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-      access_token,
-    );
-  }
-
   create_project(
     name: string,
     cluster_id: string,
@@ -77,34 +38,6 @@ class LogdashAPI {
     return this.post<{ project: Project; apiKey: string }>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/projects`,
       { name },
-      access_token,
-    );
-  }
-
-  update_project(
-    project_id: string,
-    update: Partial<{ name: string }>,
-    access_token: string | undefined,
-  ): Promise<Project> {
-    return this.put<Project>(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}`,
-      update,
-      access_token,
-    );
-  }
-
-  delete_project(
-    project_id: string,
-    access_token: string | undefined,
-  ): Promise<void> {
-    return this.performFetch<void>(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
       access_token,
     );
   }
@@ -163,48 +96,6 @@ class LogdashAPI {
       },
       access_token,
     );
-  }
-
-  approve_cli_auth(
-    access_token: string | undefined,
-    body: {
-      userCode: string;
-      scopes?: { resource: string; action: string }[];
-      access?: Record<string, unknown>;
-    },
-  ): Promise<{ status: 'approved'; prefix: string }> {
-    return this.post(
-      `${LogdashAPI.v0baseUrl}/auth/cli/approve`,
-      body,
-      access_token,
-    );
-  }
-
-  deny_cli_auth(
-    access_token: string | undefined,
-    body: { userCode: string },
-  ): Promise<{ status: 'denied' }> {
-    return this.post(
-      `${LogdashAPI.v0baseUrl}/auth/cli/deny`,
-      body,
-      access_token,
-    );
-  }
-
-  get_project_api_keys(
-    access_token: string | undefined,
-    project_id: string,
-  ): Promise<string[]> {
-    return this.get<
-      {
-        id: string;
-        value: string;
-        projectId: string;
-      }[]
-    >(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}/api_keys`,
-      access_token,
-    ).then((keys) => keys.map((k) => k.value));
   }
 
   /**
@@ -337,20 +228,6 @@ class LogdashAPI {
   ): Promise<Monitor[]> {
     return this.get<Monitor[]>(
       `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/http_monitors`,
-      access_token,
-    );
-  }
-
-  create_public_dashboard(
-    cluster_id: string,
-    access_token: string | undefined,
-  ): Promise<PublicDashboard> {
-    return this.post<PublicDashboard>(
-      `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/public_dashboards`,
-      {
-        name: `Status Page`,
-        isPublic: false,
-      },
       access_token,
     );
   }

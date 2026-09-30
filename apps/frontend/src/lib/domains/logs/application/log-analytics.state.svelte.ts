@@ -11,6 +11,7 @@ class LogAnalyticsState {
   private _analyticsData = $state<LogsAnalyticsResponse | null>(null);
   private _isLoading = $state(false);
   private _error = $state<string | null>(null);
+  private _generation = 0;
 
   get analyticsData(): LogsAnalyticsResponse | null {
     return this._analyticsData;
@@ -50,7 +51,7 @@ class LogAnalyticsState {
     const cleanupLogListener = logsSyncService.onLog((log: Log) => {
       const analyticsData = this._analyticsData;
 
-      if (!analyticsData || !this._matchesActiveFilters(log)) {
+      if (!analyticsData?.buckets.length || !this._matchesActiveFilters(log)) {
         return;
       }
 
@@ -79,14 +80,6 @@ class LogAnalyticsState {
     };
   }
 
-  refresh(projectId: string): void {
-    void this._fetchAnalytics(projectId);
-  }
-
-  async fetchAnalytics(projectId: string): Promise<void> {
-    await this._fetchAnalytics(projectId);
-  }
-
   private async _fetchAnalytics(
     projectId: string,
     options: { silent?: boolean } = {},
@@ -96,6 +89,8 @@ class LogAnalyticsState {
     if (!startDate) {
       return;
     }
+
+    const generation = this._generation;
 
     if (!options.silent) {
       this._isLoading = true;
@@ -122,27 +117,35 @@ class LogAnalyticsState {
         searchString,
       );
 
+      if (generation !== this._generation) {
+        return;
+      }
+
       this._analyticsData = data;
+      this._error = null;
       logger.debug('Fetched analytics data:', data);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      this._error = errorMessage;
       logger.error('Error fetching analytics:', error);
+
+      if (generation === this._generation) {
+        this._error = error instanceof Error ? error.message : 'Unknown error';
+      }
     } finally {
-      if (!options.silent) {
+      if (!options.silent && generation === this._generation) {
         this._isLoading = false;
       }
     }
   }
 
   clearData(): void {
+    this._generation++;
     this._analyticsData = {
       buckets: [],
       totalLogs: 0,
       bucketSizeMinutes: 0,
     };
     this._error = null;
+    this._isLoading = false;
   }
 
   private _matchesActiveFilters(log: Log): boolean {

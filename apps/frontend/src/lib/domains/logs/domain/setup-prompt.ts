@@ -1,5 +1,4 @@
 import { LogdashSDKName } from '$lib/domains/shared/types.js';
-import { INSTALL_COMMANDS } from './sdk-config.js';
 
 export function getCodeSnippet(
   sdkName: LogdashSDKName,
@@ -149,50 +148,4 @@ ld.Shutdown(ctx)`,
   };
 
   return snippets[sdkName];
-}
-
-export function generateSetupPrompt(
-  sdkName: LogdashSDKName,
-  apiKey: string,
-): string {
-  const installCommand = INSTALL_COMMANDS[sdkName];
-  const codeSnippet = getCodeSnippet(sdkName, apiKey);
-
-  const nodeJsExtra =
-    sdkName === LogdashSDKName.NODE_JS
-      ? `Ask me if I would like to monkey patch the default console object and if yes, create a monkey patch function that will send the log to Logdash. Like:
-
-function monkeyPatchConsole(): void {
-  console.log = (...args) => {
-    logdash.debug(...args);
-  };
-  console.info = (...args) => {
-    logdash.info(...args);
-  };
-  console.warn = (...args) => {
-    logdash.warn(...args);
-  };
-  console.error = (...args) => {
-    logdash.error(...args);
-  };
-}
-
-and include it at the beginning of the application entry point.`
-      : '';
-
-  return `Integrate Logdash as a default logger for my ${sdkName} application.  
-First, install the package using default repo package manager, otherwise fallback to the following command:
-
-${installCommand}
-
-Here's the example usage:
-
-${codeSnippet}
-
-Save that preference to the project settings and your memory. Act like a cli setup assistant and ask me about my prefered level of integration:
-- recommended (every single log statement is sent to Logdash)
-- minimal (only critical errors and warnings are sent to Logdash)
-
-${nodeJsExtra}
-`;
 }

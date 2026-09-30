@@ -51,7 +51,7 @@ describe('HttpMonitorCoreController (writes)', () => {
 
       expect(response.status).toBe(403);
       expect((response.body as ErrorResponse).message).toBe(
-        'Push monitors are not supported for this project tier',
+        'Push monitors are not available on your plan',
       );
     });
 
@@ -123,7 +123,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // then
       expect(response.status).toBe(409);
       expect((response.body as ErrorResponse).message).toBe(
-        'You have reached the maximum number of monitors for this project',
+        'You have reached the maximum number of monitors for this service',
       );
       expect(await bootstrap.models.httpMonitorModel.countDocuments({ claimed: false })).toBe(3);
     });
@@ -182,7 +182,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // then
       expect(response.status).toBe(409);
       expect((response.body as ErrorResponse).message).toBe(
-        'You have reached the maximum number of monitors for this project',
+        'You have reached the maximum number of monitors for this service',
       );
     });
 
@@ -214,7 +214,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // then
       expect(response.status).toBe(400);
       expect((response.body as ErrorResponse).message).toBe(
-        'Notification channels must belong to the same cluster',
+        'Notification channels must belong to the same domain',
       );
     });
 
@@ -332,7 +332,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // then
       expect(response.status).toBe(400);
       expect((response.body as ErrorResponse).message).toBe(
-        'Notification channels must belong to the same cluster',
+        'Notification channels must belong to the same domain',
       );
       expect(await bootstrap.models.httpMonitorModel.findById(httpMonitor.id).lean()).toMatchObject(
         { notificationChannelsIds: [] },
@@ -761,7 +761,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // then
       expect(response.status).toBe(409);
       expect((response.body as ErrorResponse).message).toBe(
-        'You have reached the maximum number of monitors for this project',
+        'You have reached the maximum number of monitors for this service',
       );
 
       // Verify monitor remains unclaimed

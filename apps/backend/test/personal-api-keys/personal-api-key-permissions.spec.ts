@@ -353,9 +353,9 @@ describe('Personal API keys (scope + access enforcement)', () => {
 
   describe('whoami (any valid key, regardless of scope)', () => {
     it('works for a key with empty scopes and a narrow access restriction', async () => {
-      const { token, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, user, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const key = await createKey(token, [], { kind: 'projects', ids: [] });
+      const key = await createKey(token, [], { kind: 'projects', ids: [project.id] });
 
       const response = await request(server())
         .get('/personal-api-keys/whoami')
@@ -365,7 +365,7 @@ describe('Personal API keys (scope + access enforcement)', () => {
       const body = response.body as WhoamiResponse;
       expect(body.userId).toBe(user.id);
       expect(body.scopes).toEqual([]);
-      expect(body.access).toEqual({ kind: 'projects', ids: [] });
+      expect(body.access).toEqual({ kind: 'projects', ids: [project.id] });
     });
 
     it('returns 401 for whoami with a revoked key', async () => {

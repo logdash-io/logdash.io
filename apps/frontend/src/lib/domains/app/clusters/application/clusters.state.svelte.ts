@@ -1,8 +1,15 @@
-import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import { type Source } from 'sveltekit-sse';
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
+import {
+  ownedUsage,
+  type OwnedUsage,
+} from '$lib/domains/app/clusters/domain/owned-usage';
 import { ClustersService } from '$lib/domains/app/clusters/infrastructure/clusters.service.js';
+import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
+import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
+
+const CUSTOM_DOMAIN_TIERS = ['pro', 'admin'];
 
 // todo: divide api calls responsibility from state
 class ClustersState {
@@ -11,11 +18,14 @@ class ClustersState {
   private _requestStatus = $state<'deleting' | 'updating' | null>(null);
 
   private _clusters = $state<Record<Cluster['id'], Cluster>>({});
+  private _draft = $state<Cluster | null>(null);
 
   get clusters(): Cluster[] {
-    return Object.values(this._clusters).sort((a, b) => {
+    const clusters = Object.values(this._clusters).sort((a, b) => {
       return a.id > b.id ? 1 : -1;
     });
+
+    return this._draft ? [...clusters, this._draft] : clusters;
   }
 
   get isUpdating(): boolean {
@@ -26,20 +36,25 @@ class ClustersState {
     return this._requestStatus === 'deleting';
   }
 
-  get publishedDashboardsCount(): number {
-    return this.clusters.reduce((acc, cluster) => {
-      return (
-        acc +
-        (cluster.publicDashboards?.filter((dashboard) => dashboard.isPublic)
-          ?.length || 0)
-      );
-    }, 0);
+  get canAddDomain(): boolean {
+    const limit = exposedConfigState.maxNumberOfProjects(userState.tier);
+
+    return this.owned.domains < limit && this.owned.services < limit;
   }
 
-  get allClustersProjectsCount(): number {
-    return this.clusters.reduce((acc, cluster) => {
-      return acc + (cluster.projects?.length || 0);
-    }, 0);
+  canCreateStatusPage(clusterId: string): boolean {
+    if (this.get(clusterId)?.creatorId !== userState.id) {
+      return true;
+    }
+
+    return (
+      this.owned.statusPages <
+      exposedConfigState.maxNumberOfPublicDashboards(userState.tier)
+    );
+  }
+
+  private get owned(): OwnedUsage {
+    return ownedUsage(this.clusters, userState.id);
   }
 
   get ready(): boolean {
@@ -50,12 +65,16 @@ class ClustersState {
     return this.get(clusterId)?.creatorId === userId;
   }
 
+  canSetupCustomDomain(clusterId: string): boolean {
+    return CUSTOM_DOMAIN_TIERS.includes(this.get(clusterId)?.tier ?? '');
+  }
+
   get(id: string | undefined): Cluster | undefined {
     if (!id) {
       return undefined;
     }
 
-    return this._clusters[id];
+    return this._draft?.id === id ? this._draft : this._clusters[id];
   }
 
   clusterName(id: string): string {
@@ -72,73 +91,57 @@ class ClustersState {
     };
   }
 
+  renameProject(projectId: string, name: string): void {
+    const project = this.clusters
+      .flatMap((cluster) => cluster.projects ?? [])
+      .find(({ id }) => id === projectId);
+
+    if (project) {
+      project.name = name;
+    }
+  }
+
   set(clusters: Cluster[]): void {
     this._clusters = arrayToObject(clusters, 'id');
     this._initialized = true;
   }
 
-  async create(name: string): Promise<Cluster['id']> {
-    const response = await fetch(`/app/api/clusters`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name }),
-    });
-    const cluster = (await response.json()) as Cluster;
-
-    this._clusters[cluster.id] = cluster;
-    return cluster.id;
+  setDraft(cluster: Cluster | null): void {
+    this._draft = cluster;
   }
 
-  async update(id: string, update: Partial<Cluster>): Promise<void> {
+  async update(
+    id: string,
+    changes: Partial<Pick<Cluster, 'name' | 'color'>>,
+  ): Promise<void> {
     const existingCluster = this._clusters[id];
 
     if (!existingCluster) {
       throw new Error(`Cluster with id ${id} does not exist`);
     }
 
-    const hasNameChange =
-      update.name !== undefined && existingCluster.name !== update.name;
-    const hasColorChange =
-      update.color !== undefined && existingCluster.color !== update.color;
-
-    if (!hasNameChange && !hasColorChange) {
-      return;
-    }
-
-    this._clusters[id] = {
-      ...this._clusters[id],
-      ...(hasNameChange && { name: update.name }),
-      ...(hasColorChange && { color: update.color }),
-    };
-
+    const updatedCluster = { ...existingCluster, ...changes };
+    this._clusters[id] = updatedCluster;
     this._requestStatus = 'updating';
 
-    await fetch(`/app/api/clusters/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: this._clusters[id].name,
-        color: this._clusters[id].color,
-      }),
-    }).finally(() => {
+    try {
+      await ClustersService.updateCluster(id, {
+        name: updatedCluster.name,
+        color: updatedCluster.color,
+      });
+    } catch (error) {
+      this._clusters[id] = existingCluster;
+      throw error;
+    } finally {
       this._requestStatus = null;
-    });
+    }
   }
 
   async delete(id: string): Promise<void> {
     this._requestStatus = 'deleting';
     try {
-      // todo: validate why it returns false positive on error
-      await fetch(`/app/api/clusters/${id}`, {
-        method: 'DELETE',
-      });
+      await ClustersService.deleteCluster(id);
       delete this._clusters[id];
-    } catch (error) {
-      toast.error(`Failed to delete cluster: ${String(error)}`);
     } finally {
       this._requestStatus = null;
     }

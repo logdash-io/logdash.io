@@ -1,5 +1,6 @@
 import type { Log } from '$lib/domains/logs/domain/log';
 import { createLogger } from '$lib/domains/shared/logger';
+import { untrack } from 'svelte';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import type { LogsFilters } from '../domain/logs-filters';
 import { filtersStore } from '../infrastructure/filters.store.svelte';
@@ -33,8 +34,9 @@ function trimLogsObject(logs: Record<Log['id'], Log>): Record<Log['id'], Log> {
 class LogsState {
   private _loadingPage = $state(false);
   private _fetchingLogs = $state(false);
+  private _fetchFailed = $state(false);
   private _projectId: string | null = $state(null);
-  private _initialized = false;
+  private _generation = 0;
 
   private _logs = $state.raw<Record<Log['id'], Log>>({});
 
@@ -55,6 +57,10 @@ class LogsState {
 
   get fetchingLogs(): boolean {
     return this._fetchingLogs;
+  }
+
+  get fetchFailed(): boolean {
+    return this._fetchFailed;
   }
 
   get logs(): Log[] {
@@ -104,15 +110,27 @@ class LogsState {
   }
 
   set(logs: Log[]): void {
-    this._logs = trimLogsObject(arrayToObject(logs, 'id'));
+    untrack(() => {
+      if (Object.keys(this._logs).length > 0 || this.shouldFiltersBlockSync) {
+        return;
+      }
+
+      this._logs = trimLogsObject(arrayToObject(logs, 'id'));
+    });
   }
 
   get shouldFiltersBlockSync(): boolean {
     return Boolean(filtersStore.startDate && filtersStore.endDate);
   }
 
-  resync(project_id: string, skipFetch: boolean = false): void {
-    this._projectId = project_id;
+  get streamPaused(): boolean {
+    return (
+      this._projectId !== null &&
+      (this.shouldFiltersBlockSync || logsSyncService.failed)
+    );
+  }
+
+  resync(project_id: string): void {
     logger.debug(
       'resyncing logs...',
       filtersStore.searchString.trim(),
@@ -121,23 +139,27 @@ class LogsState {
       filtersStore.levels,
     );
 
-    if (this.shouldFiltersBlockSync) {
-      if (!skipFetch) {
-        this.fetchLogs().catch((error: unknown) => {
-          logger.error('failed to fetch logs:', error);
-        });
-      }
-      this.pauseSync();
-    } else {
-      this.resumeSync().catch((error: unknown) => {
-        logger.error('failed to resume logs sync:', error);
+    if (!this.shouldFiltersBlockSync) {
+      this.sync(project_id).catch((error: unknown) => {
+        logger.error('failed to sync logs:', error);
       });
+      return;
+    }
+
+    this.unsync();
+    this._projectId = project_id;
+    void this.fetchLogs();
+  }
+
+  retry(): void {
+    if (this._projectId) {
+      this.resync(this._projectId);
     }
   }
 
   async sync(project_id: string): Promise<void> {
-    this._projectId = project_id;
     this.unsync();
+    this._projectId = project_id;
     logger.debug('syncing logs...', project_id);
 
     this._logs = {};
@@ -181,8 +203,6 @@ class LogsState {
       },
     });
 
-    this._initialized = true;
-
     await Promise.all([this.fetchLogs(), logsSyncService.open()]);
   }
 
@@ -193,19 +213,18 @@ class LogsState {
       return;
     }
 
+    const generation = this._generation;
     this._loadingPage = true;
-    try {
-      await this.fetchLogs({ lastId: lastLog.id });
-    } catch (error) {
-      logger.error('failed to load the next logs page:', error);
-    } finally {
+    await this.fetchLogs({ lastId: lastLog.id });
+
+    if (generation === this._generation) {
       this._loadingPage = false;
     }
   }
 
   pauseSync(): void {
     logger.debug('pausing logs sync...');
-    logsSyncService.pause();
+    logsSyncService.close();
   }
 
   async resumeSync(): Promise<void> {
@@ -224,6 +243,11 @@ class LogsState {
 
   unsync(): void {
     logger.debug('unsyncing logs...');
+    this._generation++;
+    this._projectId = null;
+    this._fetchingLogs = false;
+    this._fetchFailed = false;
+    this._loadingPage = false;
     logsSyncService.close();
   }
 
@@ -239,7 +263,9 @@ class LogsState {
       return;
     }
 
+    const generation = this._generation;
     this._fetchingLogs = true;
+    this._fetchFailed = false;
 
     try {
       const logs = await LogsService.getProjectLogs(projectId, {
@@ -247,14 +273,26 @@ class LogsState {
         ...(pagination && { lastId: pagination.lastId, direction: 'before' }),
       });
 
+      if (generation !== this._generation) {
+        return;
+      }
+
       if (pagination?.lastId) {
         const merged = { ...this._logs, ...arrayToObject<Log>(logs, 'id') };
         this._logs = trimLogsObject(merged);
       } else {
         this._logs = trimLogsObject(arrayToObject<Log>(logs, 'id'));
       }
+    } catch (error) {
+      logger.error('failed to fetch logs:', error);
+
+      if (generation === this._generation) {
+        this._fetchFailed = true;
+      }
     } finally {
-      this._fetchingLogs = false;
+      if (generation === this._generation) {
+        this._fetchingLogs = false;
+      }
     }
   }
 }

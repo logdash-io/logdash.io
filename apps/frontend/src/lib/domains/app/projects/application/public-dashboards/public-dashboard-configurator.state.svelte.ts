@@ -48,60 +48,38 @@ export class PublicDashboardManagerState {
     }
   }
 
-  async addMonitor(dashboardId: string, monitorId: string): Promise<void> {
-    try {
-      await publicDashboardsService.addMonitorToDashboard(
-        dashboardId,
-        monitorId,
-      );
-      if (!this._dashboards[dashboardId]) {
-        this._dashboards[dashboardId] = {
-          id: dashboardId,
-          clusterId: '',
-          name: '',
-          isPublic: false,
-          httpMonitorsIds: [],
-        };
-      }
-      if (!this._dashboards[dashboardId].httpMonitorsIds.includes(monitorId)) {
-        this._dashboards[dashboardId].httpMonitorsIds.push(monitorId);
-      }
-    } catch (error) {
-      console.error('Failed to add monitor to dashboard:', error);
-      throw error;
-    }
-  }
-
-  async removeMonitor(dashboardId: string, monitorId: string): Promise<void> {
-    try {
-      await publicDashboardsService.removeMonitorFromDashboard(
-        dashboardId,
-        monitorId,
-      );
-      if (this._dashboards[dashboardId]) {
-        this._dashboards[dashboardId].httpMonitorsIds = this._dashboards[
-          dashboardId
-        ].httpMonitorsIds.filter((id) => id !== monitorId);
-      }
-    } catch (error) {
-      console.error('Failed to remove monitor from dashboard:', error);
-      throw error;
-    }
-  }
-
   async toggleMonitor(dashboardId: string, monitorId: string): Promise<void> {
-    if (this._dashboards[dashboardId]) {
-      if (this._dashboards[dashboardId].httpMonitorsIds.includes(monitorId)) {
-        await this.removeMonitor(dashboardId, monitorId);
-      } else {
-        await this.addMonitor(dashboardId, monitorId);
-      }
-    } else {
-      await this.addMonitor(dashboardId, monitorId);
+    const dashboard = this._dashboards[dashboardId];
+
+    if (!dashboard) {
+      return;
+    }
+
+    const previousMonitorsIds = dashboard.httpMonitorsIds;
+    const isAdding = !previousMonitorsIds.includes(monitorId);
+
+    dashboard.httpMonitorsIds = isAdding
+      ? [...previousMonitorsIds, monitorId]
+      : previousMonitorsIds.filter((id) => id !== monitorId);
+
+    try {
+      await (isAdding
+        ? publicDashboardsService.addMonitorToDashboard(dashboardId, monitorId)
+        : publicDashboardsService.removeMonitorFromDashboard(
+            dashboardId,
+            monitorId,
+          ));
+    } catch (error) {
+      dashboard.httpMonitorsIds = previousMonitorsIds;
+      throw error;
     }
   }
 
-  async loadPublicDashboards(clusterId: string): Promise<void> {
+  async delete(dashboardId: string): Promise<void> {
+    await publicDashboardsService.deletePublicDashboard(dashboardId);
+  }
+
+  async loadPublicDashboards(clusterId: string): Promise<boolean> {
     try {
       const data = await publicDashboardsService.getPublicDashboards(clusterId);
       this._dashboards = data.reduce(
@@ -111,8 +89,10 @@ export class PublicDashboardManagerState {
         },
         {} as Record<PublicDashboard['id'], PublicDashboard>,
       );
+      return true;
     } catch (error) {
       console.error('Failed to load public dashboards:', error);
+      return false;
     }
   }
 

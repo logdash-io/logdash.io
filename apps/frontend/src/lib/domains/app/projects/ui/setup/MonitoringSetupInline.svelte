@@ -21,8 +21,12 @@
     Tabs,
     Tooltip,
   } from '@logdash/hyper-ui/presentational';
-  import { CheckIcon } from '@logdash/hyper-ui/icons';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
+  import {
+    SETTINGS_INPUT_CLASS,
+    SettingsCardHeader,
+  } from '$lib/domains/shared/ui/components/settings-card/index.js';
   import { untrack } from 'svelte';
   import { fromAction } from 'svelte/attachments';
 
@@ -157,16 +161,16 @@
   }
 </script>
 
-<form class="flex w-full max-w-2xl flex-col gap-6 ld-card" onsubmit={onSubmit}>
-  <div class="space-y-2">
-    <h5 class="text-2xl font-medium">Set up monitoring for your service</h5>
+<form
+  class="border-hairline flex flex-col border-b lg:flex-row"
+  onsubmit={onSubmit}
+>
+  <SettingsCardHeader
+    title="Set up monitoring"
+    description="Check that this service is up and get alerted when it goes down."
+  />
 
-    <p class="text-neutral-400">
-      Check your service's uptime and get alerted when it goes down.
-    </p>
-  </div>
-
-  <div class="space-y-4">
+  <div class="flex min-w-0 flex-1 flex-col items-start gap-5 p-4 lg:max-w-2xl">
     <Tabs size="sm" class="w-fit">
       <Tab
         class="px-4"
@@ -199,101 +203,86 @@
       {/if}
     </Tabs>
 
-    <div class="space-y-4">
-      {#if selectedMode === MonitorMode.PULL}
-        <div class="space-y-2">
-          <MonitorUrlField
-            id="monitor-url"
-            {projectId}
-            bind:value={url}
-            autofocus
-          />
-          <p class="text-neutral-400 text-xs">
-            Checked every 5 minutes on the free plan, every 15 seconds on Pro.
+    {#if selectedMode === MonitorMode.PULL}
+      <div class="flex w-full flex-col gap-2">
+        <MonitorUrlField
+          id="monitor-url"
+          {projectId}
+          bind:value={url}
+          size="sm"
+          inputClass={SETTINGS_INPUT_CLASS}
+          autofocus
+        />
+        <p class="text-neutral-500 text-xs">
+          Checked every 5 minutes on the free plan, every 15 seconds on Pro.
+        </p>
+      </div>
+
+      <div class="flex w-full flex-col gap-2">
+        <Label class="text-xs text-neutral-500" for="monitor-name-pull">
+          Monitor name
+        </Label>
+        <Input
+          id="monitor-name-pull"
+          bind:value={monitorName}
+          maxlength={MAX_NAME_LENGTH}
+          size="sm"
+          class={['w-full', SETTINGS_INPUT_CLASS]}
+          placeholder="My API service"
+        />
+      </div>
+    {:else}
+      <div class="flex w-full flex-col gap-2">
+        <Label class="text-xs text-neutral-500" for="monitor-name-push">
+          Monitor name
+        </Label>
+        <Input
+          id="monitor-name-push"
+          bind:value={monitorName}
+          maxlength={MAX_NAME_LENGTH}
+          size="sm"
+          class={['w-full', SETTINGS_INPUT_CLASS]}
+          placeholder="My backend service"
+          {@attach fromAction(autoFocus, () => ({ delay: 100 }))}
+        />
+        <p class="text-neutral-500 text-xs">
+          Your service will send heartbeat pings to our endpoint.
+        </p>
+      </div>
+
+      {#if isCreatingPushMonitor}
+        <div class="text-neutral-500 flex items-center gap-2 text-sm">
+          <Spinner size="xs" aria-hidden="true" />
+          Generating endpoint
+        </div>
+      {:else if pushEndpoint}
+        <div class="flex w-full flex-col gap-2">
+          <span class="text-neutral-500 text-xs">Ping endpoint</span>
+          <div class="flex items-center gap-2">
+            <code
+              class="ring-hairline bg-neutral-950 flex h-8 min-w-0 flex-1 items-center truncate rounded-lg px-2.5 font-mono text-sm ring-1 ring-inset"
+            >
+              {pushEndpoint}
+            </code>
+            <IconButton label="Copy endpoint" onclick={onCopyEndpoint}>
+              <CopyIcon class="size-4" />
+            </IconButton>
+          </div>
+          <p class="text-neutral-500 text-xs">
+            Send a POST request to this URL from your service.
           </p>
         </div>
-
-        <div class="space-y-2">
-          <Label class="font-medium" for="monitor-name-pull">
-            Monitor name
-          </Label>
-          <Input
-            id="monitor-name-pull"
-            bind:value={monitorName}
-            maxlength={MAX_NAME_LENGTH}
-            class="w-full"
-            placeholder="My API Service"
-          />
-        </div>
-      {:else}
-        <div class="space-y-2">
-          <Label class="font-medium" for="monitor-name-push">
-            Monitor name
-          </Label>
-          <Input
-            id="monitor-name-push"
-            bind:value={monitorName}
-            maxlength={MAX_NAME_LENGTH}
-            class="w-full"
-            placeholder="My Backend Service"
-            {@attach fromAction(autoFocus, () => ({ delay: 100 }))}
-          />
-          <p class="text-neutral-400 text-xs">
-            Your service will send heartbeat pings to our endpoint.
-          </p>
-        </div>
-
-        {#if isCreatingPushMonitor}
-          <div class="border-surface-root border-t pt-4">
-            <div class="text-neutral-400 flex items-center gap-2 text-sm">
-              <Spinner size="xs" aria-hidden="true" />
-              Generating endpoint...
-            </div>
-          </div>
-        {:else if pushEndpoint}
-          <div class="border-surface-root border-t pt-4">
-            <div class="space-y-3">
-              <div class="space-y-1">
-                <p class="text-sm font-medium">Ping endpoint</p>
-                <p class="text-neutral-400 text-xs">
-                  Send a POST request to this URL from your service:
-                </p>
-              </div>
-              <div class="flex items-center gap-2">
-                <code
-                  class="bg-surface-well flex-1 truncate rounded-xl px-3 py-2 font-mono text-sm"
-                >
-                  {pushEndpoint}
-                </code>
-                <Tooltip content="Copy endpoint" placement="top">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    shape="square"
-                    aria-label="Copy endpoint"
-                    onclick={onCopyEndpoint}
-                  >
-                    <CopyIcon class="h-4 w-4" />
-                  </Button>
-                </Tooltip>
-              </div>
-            </div>
-          </div>
-        {/if}
       {/if}
-    </div>
+    {/if}
 
     <Button
       type="submit"
       variant="primary"
+      size="sm"
       disabled={!isFormValid || isSubmitting}
+      loading={isSubmitting}
     >
-      {#if isSubmitting}
-        <Spinner size="sm" aria-hidden="true" />
-      {:else}
-        <CheckIcon class="h-4 w-4" />
-      {/if}
-      Finish setup
+      Start monitoring
     </Button>
   </div>
 </form>

@@ -8,12 +8,14 @@
   import type { PostHog } from 'posthog-js';
 
   type Props = {
+    variant?: 'secondary' | 'neutral';
     class?: ClassValue;
     children?: Snippet;
     source?: UpgradeSource;
     onclick?: () => void;
   };
   const {
+    variant = 'secondary',
     class: className = '',
     children,
     source = 'unknown',
@@ -32,70 +34,11 @@
   };
 </script>
 
-<div class={['btn-wrapper z-10 w-full rounded-full p-[1px]', className]}>
-  <Button variant="neutral" block class="overflow-hidden" onclick={onClick}>
-    <div class="relative z-10 flex w-full items-center justify-between gap-2">
-      {#if children}
-        {@render children?.()}
-      {:else}
-        Upgrade your plan
-      {/if}
-
-      <RocketIcon class="inline h-4 w-4" />
-    </div>
-  </Button>
-</div>
-
-<style>
-  @property --gradient-angle {
-    syntax: '<angle>';
-    initial-value: 90deg;
-    inherits: false;
-  }
-
-  .btn-wrapper {
-    --bg-background: #bada55;
-    --clr-card: var(--color-neutral-800);
-    --clr-1: transparent;
-    --clr-2: transparent;
-    --clr-3: var(--color-neutral-500);
-
-    position: relative;
-    background-color: var(--clr-card);
-
-    &:hover {
-      --clr-3: var(--color-brand);
-    }
-  }
-
-  .btn-wrapper::after,
-  .btn-wrapper::before {
-    content: ' ';
-    position: absolute;
-    z-index: -1;
-    inset: -0.02rem;
-    background: conic-gradient(
-      from var(--gradient-angle),
-      var(--clr-card),
-      var(--clr-1),
-      var(--clr-2),
-      var(--clr-3),
-      /* var(--clr-2), */ /* var(--clr-1), */ var(--clr-card)
-    );
-    border-radius: inherit;
-    animation: rotate 4.5s linear infinite;
-  }
-
-  .btn-wrapper::after {
-    filter: blur(3rem);
-  }
-
-  @keyframes rotate {
-    0% {
-      --gradient-angle: 0deg;
-    }
-    100% {
-      --gradient-angle: 360deg;
-    }
-  }
-</style>
+<Button {variant} size="sm" class={className} onclick={onClick}>
+  <RocketIcon class="size-4 shrink-0" />
+  {#if children}
+    {@render children()}
+  {:else}
+    Upgrade your plan
+  {/if}
+</Button>

@@ -50,7 +50,7 @@
     </div>
 
     <div class="flex flex-col items-start">
-      <h3 class="text-xl font-medium">Setup Telegram Channel</h3>
+      <h3 class="text-xl font-medium">Set up a Telegram channel</h3>
       <p class="text-neutral-400 text-sm">
         This is the hard part, so we made it easy!
       </p>

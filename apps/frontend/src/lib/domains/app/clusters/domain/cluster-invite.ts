@@ -1,5 +1,6 @@
 export enum ClusterRole {
   CREATOR = 'creator',
+  ADMIN = 'admin',
   WRITE = 'write',
 }
 

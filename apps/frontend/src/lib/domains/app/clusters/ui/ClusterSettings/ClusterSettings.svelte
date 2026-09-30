@@ -18,16 +18,11 @@
   );
 </script>
 
-<div class="flex w-full">
-  <div class="flex w-full max-w-2xl flex-col gap-6">
-    {#if isCreator}
-      <TeamManagementCard {clusterId} />
-    {/if}
+<div class="flex w-full flex-col">
+  <ProjectInfoCard {clusterId} canEdit={isCreator} />
 
-    <ProjectInfoCard {clusterId} />
-
-    {#if isCreator}
-      <DangerZoneCard {clusterId} />
-    {/if}
-  </div>
+  {#if isCreator}
+    <TeamManagementCard {clusterId} />
+    <DangerZoneCard {clusterId} />
+  {/if}
 </div>

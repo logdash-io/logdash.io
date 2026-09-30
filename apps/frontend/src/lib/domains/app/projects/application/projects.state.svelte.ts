@@ -3,6 +3,7 @@ import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import type { Project } from '$lib/domains/app/projects/domain/project';
 import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
 
 // todo: divide api calls responsibility from state
 class ProjectsState {
@@ -66,17 +67,14 @@ class ProjectsState {
     }
 
     this._loadingApiKey[projectId] = true;
-    const response = await fetch(`/app/api/projects/${projectId}/api-key`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const { data } = (await response.json()) as { data: string };
 
-    delete this._loadingApiKey[projectId];
-    this._apiKeys[projectId] = data;
-    return data;
+    try {
+      const apiKey = await ProjectsService.getApiKey(projectId);
+      this._apiKeys[projectId] = apiKey;
+      return apiKey;
+    } finally {
+      delete this._loadingApiKey[projectId];
+    }
   }
 
   async createProject(clusterId: string, name: string): Promise<Project['id']> {
@@ -99,16 +97,17 @@ class ProjectsState {
     }
     this._updatingProject[projectId] = true;
 
-    await fetch(`/app/api/projects/${projectId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name }),
-    });
+    try {
+      await ProjectsService.updateProject(projectId, { name });
 
-    this._projects[projectId].name = name;
-    delete this._updatingProject[projectId];
+      const project = this._projects[projectId];
+      if (project) {
+        project.name = name;
+      }
+      clustersState.renameProject(projectId, name);
+    } finally {
+      delete this._updatingProject[projectId];
+    }
   }
 
   async deleteProject(projectId: string): Promise<void> {
@@ -117,17 +116,14 @@ class ProjectsState {
     }
     this._deletingProject[projectId] = true;
 
-    await fetch(`/app/api/projects/${projectId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    delete this._projects[projectId];
-    delete this._apiKeys[projectId];
-    delete this._loadingApiKey[projectId];
-    delete this._deletingProject[projectId];
+    try {
+      await ProjectsService.deleteProject(projectId);
+      delete this._projects[projectId];
+      delete this._apiKeys[projectId];
+      delete this._loadingApiKey[projectId];
+    } finally {
+      delete this._deletingProject[projectId];
+    }
   }
 
   async addFeature(projectId: string, feature: Feature): Promise<void> {
@@ -158,7 +154,7 @@ class ProjectsState {
         selectedFeatures: previousFeatures,
       };
 
-      toast.error('Failed to add feature to project');
+      toast.error('Failed to add feature to service');
       throw error;
     }
   }

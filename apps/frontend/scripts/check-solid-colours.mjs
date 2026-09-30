@@ -51,15 +51,11 @@ const CHECKS = [
 const ALLOW = {
   'domains/shared/ui/Modal.svelte': ['bg-surface-root/60'],
   'domains/shared/upgrade/UpgradeModal.svelte': ['bg-black/60'],
-  'ui/setup/UnifiedSetupOverlay.svelte': ['bg-surface-root/80'],
-  'ProjectView/UnconfiguredFeatureTile.svelte': ['bg-surface-root/60'],
   'ProjectView/ProjectSync.svelte': ['bg-surface-root/40'],
-  'header/LogsAnalyticsChart.svelte': ['bg-surface-elevated/50'],
   'logs-tile/LogPreviewDrawer.svelte': [
     'from-surface-root/80',
     'via-surface-root/80',
   ],
-  'tiles/monitoring/UptimeSection.svelte': ['via-surface-elevated/60'],
   'landing/hero/HeroClaimCard.svelte': ['bg-surface-root/70'],
   'landing/stage/StageLight.svelte': [
     'color-mix(in srgb, var(--color-fg-default) 18%, transparent)',

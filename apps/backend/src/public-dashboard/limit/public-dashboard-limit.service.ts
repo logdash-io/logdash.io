@@ -12,18 +12,18 @@ export class PublicDashboardLimitService {
     private readonly userReadCachedService: UserReadCachedService,
   ) {}
 
-  public async hasCapacity(userId: string): Promise<boolean> {
-    const tier = await this.userReadCachedService.readTier(userId);
+  public async hasCapacity(clusterId: string): Promise<boolean> {
+    const { creatorId } = await this.clusterReadService.readByIdOrThrow(clusterId);
+    const tier = await this.userReadCachedService.readTier(creatorId);
 
     const allowedNumberOfPublicDashboards =
       getUserPlanConfig(tier).publicDashboards.maxNumberOfPublicDashboards;
 
-    const userClusters = await this.clusterReadService.readByCreatorId(userId);
-    const clusterIds = userClusters.map((cluster) => cluster.id);
+    const ownerClusters = await this.clusterReadService.readByCreatorId(creatorId);
+    const clusterIds = ownerClusters.map((cluster) => cluster.id);
 
     const dashboards = await this.publicDashboardReadService.readByClustersIds(clusterIds);
-    const totalDashboards = dashboards.length;
 
-    return totalDashboards + 1 <= allowedNumberOfPublicDashboards;
+    return dashboards.length + 1 <= allowedNumberOfPublicDashboards;
   }
 }

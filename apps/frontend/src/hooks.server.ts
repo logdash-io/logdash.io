@@ -3,6 +3,15 @@ import type { Handle } from '@sveltejs/kit';
 export const handle: Handle = async ({ event, resolve }) => {
   const { pathname } = event.url;
 
+  if (pathname === '/app/clusters' || pathname.startsWith('/app/clusters/')) {
+    return new Response(null, {
+      status: 308,
+      headers: {
+        location: `${pathname.replace('/app/clusters', '/app/domains')}${event.url.search}`,
+      },
+    });
+  }
+
   if (pathname.startsWith('/ingest')) {
     // Determine target hostname based on static or dynamic ingestion
     const hostname = pathname.startsWith('/ingest/static/')

@@ -68,7 +68,7 @@ export const alternativesPages: SeoPage[] = [
           },
           {
             title: 'Connect a channel',
-            text: 'Add a Telegram channel once at the cluster level and every monitor can use it. Webhooks work the same way if you want to route alerts through your own handler.',
+            text: 'Add a Telegram channel once at the domain level and every monitor can use it. Webhooks work the same way if you want to route alerts through your own handler.',
           },
           {
             title: 'Break it before it breaks you',
@@ -764,7 +764,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
       },
       {
         type: 'paragraph',
-        text: 'Logdash runs both directions in one project. Pull monitors hit a URL on a schedule and record the status code and the response time. Push monitors sit and wait for your job to call in. Same alert channels, same uptime history, and the logs your SDK sends land beside them. When the queue drains late and the API starts handing out 503s, the two sit next to each other on one timeline instead of being reconstructed from timestamps in two tabs.',
+        text: 'Logdash runs both directions in one domain. Pull monitors hit a URL on a schedule and record the status code and the response time. Push monitors sit and wait for your job to call in. Same alert channels, same uptime history, and the logs your SDK sends land beside them. When the queue drains late and the API starts handing out 503s, the two sit next to each other on one timeline instead of being reconstructed from timestamps in two tabs.',
       },
       {
         type: 'paragraph',
@@ -830,7 +830,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
           },
           {
             feature: 'Logs and metrics beside the monitor',
-            logdash: 'Eight SDKs, same project, same timeline',
+            logdash: 'Eight SDKs, same service, same timeline',
             them: 'Not part of the product',
             winner: 'logdash',
           },
@@ -976,7 +976,7 @@ app.get('/health', async (_req, res) => {
           },
           {
             feature: 'Logs and metrics from your own app',
-            logdash: 'Eight SDKs into the same project',
+            logdash: 'Eight SDKs into the same service',
             them: 'Not what the product is for',
             winner: 'logdash',
           },
@@ -1056,7 +1056,7 @@ app.get('/health', async (_req, res) => {
       },
       {
         type: 'paragraph',
-        text: 'Here is the Logdash free plan without the marketing. Each service gets one HTTP monitor, checked every five minutes, recording status code and response time. Alerts go to Telegram or a webhook, both free, with no per-channel upsell. Your dashboard can be made public as a status page on a logdash.io URL, and a custom domain is on Pro. Logs and metrics arrive from the same SDK into the same project, with a day of log retention on free. Push monitors for cron jobs and faster check intervals are paid, and there is no free path to them.',
+        text: 'Here is the Logdash free plan without the marketing. Each service gets one HTTP monitor, checked every five minutes, recording status code and response time. Alerts go to Telegram or a webhook, both free, with no per-channel upsell. Your dashboard can be made public as a status page on a logdash.io URL, and a custom domain is on Pro. Logs and metrics arrive from the same SDK into the same service, with a day of log retention on free. Push monitors for cron jobs and faster check intervals are paid, and there is no free path to them.',
       },
       { type: 'heading', text: 'The endpoint the monitor will hit' },
       {
@@ -1120,7 +1120,7 @@ async def health():
             winner: 'logdash',
           },
           {
-            feature: 'Logs and metrics in the same project',
+            feature: 'Logs and metrics in the same service',
             logdash: 'Eight SDKs, one timeline with the uptime history',
             them: 'A monitoring product, not a log store',
             winner: 'logdash',
@@ -1201,7 +1201,7 @@ async def health():
       },
       {
         type: 'paragraph',
-        text: 'Logdash has one shape. A service has a URL, the monitor hits it on a schedule, and it records the status code and the response time. Anything without a URL gets a push monitor and POSTs to Logdash when it finishes. Alerts go to Telegram or a webhook. Logs and metrics come from the same SDK into the same project, and the dashboard can be made public as a status page. Each service carries one monitor, so four checks means four services, which is how you would have grouped them anyway. There is no agent and nothing to size.',
+        text: 'Logdash has one shape. A service has a URL, the monitor hits it on a schedule, and it records the status code and the response time. Anything without a URL gets a push monitor and POSTs to Logdash when it finishes. Alerts go to Telegram or a webhook. Logs and metrics come from the same SDK into the same service, and the dashboard can be made public as a status page. Each service carries one monitor, so four checks means four services, which is how you would have grouped them anyway. There is no agent and nothing to size.',
       },
       { type: 'heading', text: 'What the monitor needs from your app' },
       {
@@ -1267,7 +1267,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
           },
           {
             feature: 'Logs and metrics from your code',
-            logdash: 'Eight SDKs into the same project',
+            logdash: 'Eight SDKs into the same service',
             them: 'Log management and APM as their own modules',
             winner: 'tie',
           },

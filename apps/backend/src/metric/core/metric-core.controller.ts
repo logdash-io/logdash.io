@@ -118,7 +118,7 @@ export class MetricCoreController {
     }
 
     if (metricRegisterEntry.projectId !== projectId) {
-      throw new ForbiddenException('Metric register entry does not belong to this project');
+      throw new ForbiddenException('Metric does not belong to this service');
     }
 
     const metrics = await this.metricReadService.readByMetricRegisterEntryId(

@@ -20,7 +20,7 @@ import {
 import { safe_redirect_path } from '$lib/domains/shared/utils/safe-redirect.util';
 import type { Cookies } from '@sveltejs/kit';
 
-const SIGNED_IN_URL = '/app/clusters';
+const SIGNED_IN_URL = '/app/domains';
 const POPUP_RESULT_URL = '/app/auth/popup';
 
 type CallbackResult =

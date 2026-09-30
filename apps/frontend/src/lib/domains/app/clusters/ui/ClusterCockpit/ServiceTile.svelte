@@ -1,54 +1,47 @@
 <script lang="ts">
-  import { getStatusConfig } from '$lib/domains/app/projects/domain/monitoring/status-config.js';
-  import {
-    SERVICE_STATUS_DOT,
-    type ServiceStatus,
-  } from '$lib/domains/app/clusters/application/get-status-from-monitor.js';
-  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
-  import CloudIcon from '$lib/domains/shared/icons/CloudIcon.svelte';
-  import ServiceErrorsBadge from './ServiceErrorsBadge.svelte';
+  import { resolve } from '$app/paths';
+  import type { ServiceStatus } from '$lib/domains/app/clusters/domain/service-status.js';
+  import { StatusBadge } from '@logdash/hyper-ui/features';
+  import type { Snippet } from 'svelte';
 
   type Props = {
-    projectId: string;
     name: string;
     url: string | null;
     status: ServiceStatus;
-    onclick: () => void;
+    clusterId: string;
+    projectId: string;
+    children?: Snippet;
   };
 
-  const { projectId, name, url, status, onclick }: Props = $props();
-
-  const statusConfig = $derived(getStatusConfig(status));
+  const { name, url, status, clusterId, projectId, children }: Props = $props();
 </script>
 
-<button
-  {onclick}
-  class="ld-card-base group flex cursor-pointer flex-col justify-between gap-4 rounded-xl p-4 text-left hover:bg-neutral-800"
+<div
+  class="bg-surface-elevated hover:bg-surface-100 relative flex min-w-0 flex-col justify-between gap-4 p-4"
 >
-  <div class="flex flex-col gap-0.5">
-    <div class="flex items-center gap-3">
-      <CloudIcon class="text-neutral-400 size-4 shrink-0" />
+  <div class="flex min-w-0 flex-col gap-0.5">
+    <div class="flex items-center justify-between gap-3">
+      <a
+        href={resolve('/app/domains/[cluster_id]/[project_id]', {
+          cluster_id: clusterId,
+          project_id: projectId,
+        })}
+        class="focus-visible:after:outline-brand min-w-0 truncate text-base font-medium outline-none after:absolute after:inset-0 focus-visible:after:-outline-offset-2 focus-visible:after:outline-2"
+      >
+        {name}
+      </a>
 
-      <h3 class="min-w-0 flex-1 truncate text-sm font-medium">{name}</h3>
-
-      <span class="flex shrink-0 items-center gap-1.5 text-xs">
-        <span
-          class={['size-1.5 rounded-full', SERVICE_STATUS_DOT[status]]}
-        ></span>
-        <span class="text-neutral-400">{statusConfig.text}</span>
-      </span>
-
-      <ChevronRightIcon
-        class="text-neutral-600 group-hover:text-neutral-400 size-3.5 shrink-0 transition-ink duration-150"
-      />
+      <div class="shrink-0">
+        <StatusBadge {status} showText={true} />
+      </div>
     </div>
 
-    {#if url}
-      <p class="text-neutral-500 truncate pl-7 text-xs">{url}</p>
-    {/if}
+    <span class="text-neutral-500 truncate text-sm sm:min-h-5">{url}</span>
   </div>
 
-  <div class="flex items-center gap-2">
-    <ServiceErrorsBadge {projectId} />
-  </div>
-</button>
+  {#if children}
+    <div class="flex h-5 items-center">
+      {@render children()}
+    </div>
+  {/if}
+</div>

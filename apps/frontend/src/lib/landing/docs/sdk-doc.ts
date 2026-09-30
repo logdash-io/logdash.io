@@ -55,7 +55,7 @@ export function toDocPage(doc: SdkDoc): DocPage {
     { type: 'heading', text: 'Initialise' },
     {
       type: 'paragraph',
-      text: 'Create a project in Logdash, copy its API key and keep it in an environment variable. The key identifies the project the data lands in.',
+      text: 'Create a service in Logdash, copy its API key and keep it in an environment variable. The key identifies the service the data lands in.',
     },
     { type: 'code', ...doc.init },
     { type: 'heading', text: 'Send a log' },

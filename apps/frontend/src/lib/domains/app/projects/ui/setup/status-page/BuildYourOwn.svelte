@@ -4,7 +4,8 @@
   import { typescript } from 'svelte-highlight/languages';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
-  import { Button, Tooltip } from '@logdash/hyper-ui/presentational';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { envConfig } from '$lib/domains/shared/utils/env-config.js';
 
@@ -39,20 +40,22 @@ export function Status() {
   }
 </script>
 
-<div class="border-border-default flex flex-col gap-4 rounded-xl border p-4">
-  {@render copyRow('Status page id', dashboardId)}
+<div class="flex flex-col gap-4">
+  {@render copyRow('Status page ID', dashboardId)}
   {@render copyRow('API URL', apiUrl)}
   {@render copyRow('Install command', INSTALL_COMMAND)}
 
   <div class="flex flex-col gap-1.5">
-    <span class="text-sm text-neutral-400">React hook</span>
-    <div class="flex items-start gap-2">
+    <span class="text-xs text-neutral-500">React hook</span>
+    <div class="relative">
       <Highlight
-        class="code-snippet selection:bg-surface-100 min-w-0 flex-1 text-sm"
+        class="border-hairline selection:bg-surface-100 rounded-lg border bg-neutral-950 text-sm [&>code]:pr-12!"
         code={hookExample}
         language={typescript}
       />
-      {@render copyButton('Hook example', hookExample)}
+      <span class="absolute top-3 right-3">
+        {@render copyButton('Hook example', hookExample)}
+      </span>
     </div>
   </div>
 
@@ -66,22 +69,21 @@ export function Status() {
       rel="noopener noreferrer"
       variant="neutral"
       size="sm"
-      class="gap-1"
     >
-      <OpenIcon class="size-3.5" />
       Next.js starter
+      <OpenIcon class="size-3.5" />
     </Button>
   </div>
 </div>
 
 {#snippet copyRow(label: string, value: string)}
   <div class="flex flex-col gap-1.5">
-    <span class="text-sm text-neutral-400">{label}</span>
+    <span class="text-xs text-neutral-500">{label}</span>
     <div class="flex items-center gap-2">
       <code
-        class="bg-surface-well border-border-default min-w-0 flex-1 truncate rounded-xl border px-3 py-2 font-mono text-sm"
+        class="border-hairline flex h-8 min-w-0 flex-1 items-center rounded-lg border bg-neutral-950 px-2.5 font-mono text-sm"
       >
-        {value}
+        <span class="truncate">{value}</span>
       </code>
       {@render copyButton(label, value)}
     </div>
@@ -89,15 +91,11 @@ export function Status() {
 {/snippet}
 
 {#snippet copyButton(label: string, value: string)}
-  <Tooltip content="Copy" placement="top">
-    <Button
-      variant="ghost"
-      size="sm"
-      shape="square"
-      aria-label="Copy {label.toLowerCase()}"
-      onclick={() => onCopy(value, label)}
-    >
-      <CopyIcon class="h-4 w-4" />
-    </Button>
-  </Tooltip>
+  <IconButton
+    label="Copy {label.toLowerCase()}"
+    tooltip="Copy"
+    onclick={() => onCopy(value, label)}
+  >
+    <CopyIcon class="size-4" />
+  </IconButton>
 {/snippet}

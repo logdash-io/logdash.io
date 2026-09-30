@@ -95,7 +95,7 @@
       projectIdToSync
     ) {
       void goto(
-        resolve('/app/clusters/[cluster_id]/[project_id]/metrics', {
+        resolve('/app/domains/[cluster_id]/[project_id]/metrics', {
           cluster_id: clusterId,
           project_id: projectIdToSync,
         }),
@@ -128,7 +128,7 @@
   });
 </script>
 
-<div class="flex w-full max-w-full flex-col gap-1.5 pb-8 md:flex-row">
+<div class="relative flex w-full flex-1 flex-col">
   {#if !isPageVisible}
     <div
       in:fade={{ duration: 200, easing: cubicInOut }}
@@ -143,7 +143,7 @@
     >
       <div class="flex items-center gap-2 text-sm font-medium">
         <Spinner size="xs" aria-hidden="true" />
-        <span>Updating...</span>
+        <span>Updating</span>
       </div>
     </div>
   {/if}

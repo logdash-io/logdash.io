@@ -45,8 +45,8 @@ export const RESOURCES: {
     label: 'Monitors',
     actions: ['none', 'read', 'write', 'delete'],
   },
-  { resource: 'projects', label: 'Projects', actions: ['none', 'read'] },
-  { resource: 'clusters', label: 'Clusters', actions: ['none', 'read'] },
+  { resource: 'projects', label: 'Services', actions: ['none', 'read'] },
+  { resource: 'clusters', label: 'Domains', actions: ['none', 'read'] },
   { resource: 'account', label: 'Account', actions: ['none', 'read'] },
 ];
 

@@ -2,23 +2,22 @@
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import ColorPalette from '$lib/domains/app/clusters/ui/ClusterWizard/ColorPalette.svelte';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
   import {
+    SETTINGS_INPUT_CLASS,
     SettingsCard,
-    SettingsCardHeader,
     SettingsCardItem,
   } from '$lib/domains/shared/ui/components/settings-card';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
-  import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
-  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
-  import HashIcon from '$lib/domains/shared/icons/HashIcon.svelte';
-  import PaletteIcon from '$lib/domains/shared/icons/PaletteIcon.svelte';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import { Button, Input } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     clusterId: string;
+    canEdit: boolean;
   };
 
-  const { clusterId }: Props = $props();
+  const { clusterId, canEdit }: Props = $props();
 
   const cluster = $derived(clustersState.get(clusterId));
 
@@ -27,24 +26,18 @@
   let isEditingColor = $state(false);
   let originalColor = $state<string | undefined>('');
 
-  $effect(() => {
-    if (cluster?.name) {
-      newName = cluster.name;
-    }
-  });
-
   function onStartRenaming(): void {
+    newName = cluster?.name ?? '';
     isEditingName = true;
   }
 
   function onCancelRenaming(): void {
     isEditingName = false;
-    newName = cluster?.name || '';
   }
 
   async function onSaveRename(): Promise<void> {
     if (!newName || newName.trim() === '') {
-      toast.warning('Project name cannot be empty', 5000);
+      toast.warning('Domain name cannot be empty', 5000);
       return;
     }
 
@@ -55,16 +48,16 @@
 
     try {
       await clustersState.update(clusterId, { name: newName });
-      toast.success('Project name updated successfully', 5000);
+      toast.success('Domain name updated', 5000);
       isEditingName = false;
-    } catch {
-      toast.error('Failed to update project name', 5000);
+    } catch (error) {
+      toast.error(failureMessage('name', error), 5000);
     }
   }
 
-  async function onCopyProjectId(): Promise<void> {
+  async function onCopyClusterId(): Promise<void> {
     await navigator.clipboard.writeText(clusterId);
-    toast.success('Project ID copied to clipboard', 5000);
+    toast.success('Domain ID copied to clipboard', 5000);
   }
 
   function onKeydown(e: KeyboardEvent): void {
@@ -93,134 +86,129 @@
       return;
     }
 
-    await clustersState.update(clusterId, { color: currentColor });
-    toast.success('Project color updated successfully', 5000);
-    isEditingColor = false;
+    try {
+      await clustersState.update(clusterId, { color: currentColor });
+      toast.success('Domain color updated', 5000);
+      isEditingColor = false;
+    } catch (error) {
+      toast.error(failureMessage('color', error), 5000);
+    }
+  }
+
+  function failureMessage(field: 'name' | 'color', error: unknown): string {
+    const reason = readHttpErrorMessage(error);
+    const message = `Failed to update the domain ${field}`;
+
+    return reason ? `${message}: ${reason}` : message;
   }
 </script>
 
-<SettingsCard>
-  <SettingsCardHeader
-    title="Project Information"
-    description="Basic details about your project"
-  />
-
-  <div class="flex flex-col">
-    <SettingsCardItem icon={EditIcon}>
-      <p class="text-neutral-400 text-sm">Project Name</p>
+<SettingsCard title="Domain" description="Its name, color and ID.">
+  <SettingsCardItem>
+    <div class="flex min-w-0 items-center gap-3">
+      <span class="text-neutral-500 w-16 shrink-0">Name</span>
       {#if isEditingName}
         <Input
           bind:value={newName}
           size="sm"
-          class="mt-1 w-64"
-          placeholder="Enter project name"
+          class={['-my-1.5 w-full max-w-64', SETTINGS_INPUT_CLASS]}
+          placeholder="Domain name"
+          aria-label="Domain name"
+          autofocus
           onkeydown={onKeydown}
         />
       {:else}
-        <p class="font-medium">{cluster?.name || 'Unknown'}</p>
+        <span class="truncate">{cluster?.name || 'Unknown'}</span>
       {/if}
+    </div>
 
-      {#snippet action()}
-        {#if isEditingName}
-          <Button
-            variant="ghost"
-            size="sm"
-            onclick={onCancelRenaming}
-            disabled={clustersState.isUpdating}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onclick={onSaveRename}
-            loading={clustersState.isUpdating}
-          >
-            Save
-          </Button>
-        {:else}
-          <Button
-            variant="ghost"
-            size="sm"
-            class="text-neutral-400"
-            onclick={onStartRenaming}
-          >
-            Rename
-            <ChevronRightIcon class="h-4 w-4" />
-          </Button>
-        {/if}
-      {/snippet}
-    </SettingsCardItem>
-
-    <SettingsCardItem icon={PaletteIcon}>
-      <p class="text-neutral-400 text-sm">Project Color</p>
-      {#if isEditingColor}
-        <div class="mt-2">
-          <ColorPalette
-            selectedColor={cluster?.color ?? ''}
-            onSelect={onColorSelect}
-          />
-        </div>
-      {:else}
-        <div class="flex items-center gap-2">
-          {#if cluster?.color}
-            <div
-              class="size-3.5 rounded-md"
-              style="background-color: {cluster.color}"
-            ></div>
-            <p class="font-mono text-sm">{cluster.color}</p>
-          {:else}
-            <p class="text-neutral-500 text-sm">No color set</p>
-          {/if}
-        </div>
-      {/if}
-
-      {#snippet action()}
-        {#if isEditingColor}
-          <Button
-            variant="ghost"
-            size="sm"
-            onclick={onCancelEditingColor}
-            disabled={clustersState.isUpdating}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onclick={onSaveColor}
-            loading={clustersState.isUpdating}
-          >
-            Save
-          </Button>
-        {:else}
-          <Button
-            variant="ghost"
-            size="sm"
-            class="text-neutral-400"
-            onclick={onStartEditingColor}
-          >
-            Change
-            <ChevronRightIcon class="h-4 w-4" />
-          </Button>
-        {/if}
-      {/snippet}
-    </SettingsCardItem>
-
-    <SettingsCardItem icon={HashIcon} showBorder={false}>
-      <p class="text-neutral-400 text-sm">Project ID</p>
-      <p class="font-mono text-sm">{clusterId}</p>
-
-      {#snippet action()}
+    {#snippet action()}
+      {#if isEditingName}
         <Button
           variant="ghost"
           size="sm"
-          class="text-neutral-400"
-          onclick={onCopyProjectId}
+          onclick={onCancelRenaming}
+          disabled={clustersState.isUpdating}
         >
-          <CopyIcon class="h-4 w-4" />
+          Cancel
         </Button>
-      {/snippet}
-    </SettingsCardItem>
-  </div>
+        <Button
+          variant="primary"
+          size="sm"
+          onclick={onSaveRename}
+          loading={clustersState.isUpdating}
+        >
+          Save
+        </Button>
+      {:else if canEdit}
+        <Button variant="neutral" size="sm" onclick={onStartRenaming}>
+          Rename
+        </Button>
+      {/if}
+    {/snippet}
+  </SettingsCardItem>
+
+  <SettingsCardItem>
+    <div class="flex min-w-0 items-center gap-3">
+      <span class="text-neutral-500 w-16 shrink-0">Color</span>
+      {#if isEditingColor}
+        <ColorPalette
+          selectedColor={cluster?.color ?? ''}
+          onSelect={onColorSelect}
+        />
+      {:else if cluster?.color}
+        <span class="flex min-w-0 items-center gap-2">
+          <span
+            class="size-3 shrink-0 rounded-full"
+            style:background-color={cluster.color}
+          ></span>
+          <span class="truncate font-mono">{cluster.color}</span>
+        </span>
+      {:else}
+        <span class="text-neutral-500 truncate">None</span>
+      {/if}
+    </div>
+
+    {#snippet action()}
+      {#if isEditingColor}
+        <Button
+          variant="ghost"
+          size="sm"
+          onclick={onCancelEditingColor}
+          disabled={clustersState.isUpdating}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
+          onclick={onSaveColor}
+          loading={clustersState.isUpdating}
+        >
+          Save
+        </Button>
+      {:else if canEdit}
+        <Button variant="neutral" size="sm" onclick={onStartEditingColor}>
+          Change
+        </Button>
+      {/if}
+    {/snippet}
+  </SettingsCardItem>
+
+  <SettingsCardItem>
+    <div class="flex min-w-0 items-center gap-3">
+      <span class="text-neutral-500 w-16 shrink-0">ID</span>
+      <span class="truncate font-mono">{clusterId}</span>
+    </div>
+
+    {#snippet action()}
+      <IconButton
+        label="Copy domain ID"
+        class="-mr-1.5"
+        onclick={onCopyClusterId}
+      >
+        <CopyIcon class="size-4" />
+      </IconButton>
+    {/snippet}
+  </SettingsCardItem>
 </SettingsCard>

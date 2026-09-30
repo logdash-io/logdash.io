@@ -19,12 +19,15 @@
   } from '@logdash/hyper-ui/presentational';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
   import { fromAction } from 'svelte/attachments';
+  import type { ClassValue } from 'svelte/elements';
 
   type Props = {
     id: string;
     projectId: string;
     value: string;
     autofocus?: boolean;
+    size?: 'sm' | 'md';
+    inputClass?: ClassValue;
   };
 
   let {
@@ -32,6 +35,8 @@
     projectId,
     value = $bindable(),
     autofocus = false,
+    size = 'md',
+    inputClass,
   }: Props = $props();
 
   const logger = createLogger('monitor-url-field', false);
@@ -94,7 +99,12 @@
 </script>
 
 <div class="flex flex-col gap-2">
-  <Label class="font-medium" for={id}>URL to monitor</Label>
+  <Label
+    class={size === 'sm' ? 'text-xs text-neutral-500' : 'text-sm'}
+    for={id}
+  >
+    URL to monitor
+  </Label>
 
   <div class="relative">
     <Input
@@ -106,7 +116,8 @@
       autocapitalize="off"
       spellcheck="false"
       maxlength={MAX_URL_LENGTH}
-      class="w-full pr-9"
+      {size}
+      class={['w-full pr-9', inputClass]}
       placeholder="https://example.com/health"
       {@attach fromAction(autoFocus, () => ({
         delay: 100,

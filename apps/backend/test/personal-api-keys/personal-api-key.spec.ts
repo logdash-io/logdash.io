@@ -95,6 +95,8 @@ describe('Personal API keys (CRUD under JWT)', () => {
       ],
       ['a removed resource', { scopes: [{ resource: 'payments', action: Action.Read }] }],
       ['an expiry in the past', { expiresAt: new Date(Date.now() - 60_000).toISOString() }],
+      ['a domain restriction with no domains', { access: { kind: 'clusters', ids: [] } }],
+      ['a service restriction with no services', { access: { kind: 'projects', ids: [] } }],
     ])('returns 400 for %s', async (_label, override) => {
       // given
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();

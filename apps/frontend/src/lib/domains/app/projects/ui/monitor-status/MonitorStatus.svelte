@@ -1,70 +1,93 @@
 <script lang="ts">
+  import { getStatusFromMonitor } from '$lib/domains/app/clusters/application/get-status-from-monitor.js';
+  import { toChartPings } from '$lib/domains/app/projects/application/monitor-pings.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import { logger } from '$lib/domains/shared/logger';
-  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
   import type { Snippet } from 'svelte';
-  import { PingChart } from '@logdash/hyper-ui/features';
-  import { Badge, Spinner, StatusDot } from '@logdash/hyper-ui/presentational';
+  import { untrack } from 'svelte';
+  import MonitorPanel from '../service/MonitorPanel.svelte';
+  import { monitorPanelContent } from '../service/monitor-panel-content.js';
 
   type Props = {
     projectId: string;
-    children: Snippet;
+    children?: Snippet;
   };
-  const { projectId, children }: Props = $props();
-  const MAX_PINGS = 60;
 
-  const projectMonitor = $derived(
-    monitoringState.getMonitorByProjectId(projectId),
-  );
-  const isHealthy = $derived(
-    projectMonitor ? monitoringState.isHealthy(projectMonitor.id) : false,
-  );
-  const healthVariant = $derived(isHealthy ? 'success' : 'error');
+  const { projectId, children }: Props = $props();
+
+  const PINGS_TO_SHOW = 60;
+  const CLOCK_TICK_MS = 1_000;
+
+  let now = $state(Date.now());
+  let loadedMonitorId = $state<string | null>(null);
+  let failedMonitorId = $state<string | null>(null);
+
+  const monitor = $derived(monitoringState.getMonitorByProjectId(projectId));
+  const monitorId = $derived(monitor?.id);
   const pings = $derived(
-    projectMonitor
-      ? monitoringState.monitoringPings(projectMonitor.id).slice(-MAX_PINGS)
-      : [],
+    monitor ? monitoringState.monitoringPings(monitor.id) : [],
+  );
+  const content = $derived(
+    monitor
+      ? monitorPanelContent({
+          monitor,
+          pings: toChartPings(pings.slice(-PINGS_TO_SHOW)),
+          bucketUptime: monitoringState.calculateUptime(monitor.id),
+          range: monitoringState.timeRange,
+          now,
+          loaded: pings.length > 0 || loadedMonitorId === monitor.id,
+          failed: failedMonitorId === monitor.id,
+        })
+      : null,
   );
 
   $effect(() => {
-    logger.debug(`Syncing pings for project monitor: ${projectMonitor?.id}`);
+    const id = monitorId;
 
-    if (!projectMonitor || !projectId || pings.length) {
-      logger.warn('Skipping pings sync.');
+    if (!id) {
       return;
     }
 
-    void monitoringState.loadMonitorPings(projectId, projectMonitor.id);
+    untrack(() => {
+      if (!pings.length) {
+        void loadPings(id);
+      }
+    });
   });
+
+  $effect(() => {
+    const timer = setInterval(() => {
+      now = Date.now();
+    }, CLOCK_TICK_MS);
+
+    return () => clearInterval(timer);
+  });
+
+  async function loadPings(id: string): Promise<void> {
+    const loaded = await monitoringState.loadMonitorPings(
+      projectId,
+      id,
+      PINGS_TO_SHOW,
+    );
+
+    if (id !== monitorId) {
+      return;
+    }
+
+    loadedMonitorId = id;
+    failedMonitorId = loaded ? null : id;
+  }
 </script>
 
-<DataTile>
-  <div class="flex w-full flex-col gap-2">
-    <div class="flex w-full gap-2">
-      <div class="flex w-full items-center gap-2">
-        <h5 class="max-w-80 truncate text-2xl font-medium">
-          {projectMonitor?.name}
-        </h5>
-
-        <Badge variant={healthVariant}>
-          <StatusDot variant={healthVariant} />
-          {isHealthy ? 'up' : 'down'}
-        </Badge>
-      </div>
-
-      <Spinner variant="ring" size="sm" aria-hidden="true" />
-    </div>
-
-    <div class="flex w-full flex-col">
-      <PingChart
-        maxPingsToShow={MAX_PINGS}
-        pings={pings.map((ping) => ({
-          ...ping,
-          createdAt: ping.createdAt.toISOString(),
-        }))}
-      />
-    </div>
-
-    {@render children()}
+{#if monitor && content}
+  <div
+    class="bg-surface-elevated border-border-default w-96 rounded-xl border shadow-[0_16px_40px_-8px_rgba(0,0,0,0.9)]"
+  >
+    <MonitorPanel
+      {...content}
+      eyebrowHref={undefined}
+      status={getStatusFromMonitor(monitor)}
+    >
+      {@render children?.()}
+    </MonitorPanel>
   </div>
-</DataTile>
+{/if}

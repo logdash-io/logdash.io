@@ -64,7 +64,7 @@
           Add this monitor to a status page and publish it to get its badge.
         </p>
         <Button
-          href={resolve('/app/clusters/[cluster_id]/status-pages', {
+          href={resolve('/app/domains/[cluster_id]/status-pages', {
             cluster_id: clusterId,
           })}
           variant="primary"

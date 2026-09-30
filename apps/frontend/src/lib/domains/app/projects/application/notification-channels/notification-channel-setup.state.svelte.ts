@@ -1,24 +1,37 @@
+import type { NotificationChannelType } from '$lib/domains/shared/exposed-config/domain/exposed-config.js';
+
 type Props = {
   isOpen: boolean;
   monitorId: string | null;
+  channel: NotificationChannelType | null;
 };
 
 export class NotificationChannelSetupState {
   state = $state<Props>({
     isOpen: false,
     monitorId: null,
+    channel: null,
   });
 
-  get isOpen(): boolean {
+  public get isOpen(): boolean {
     return this.state.isOpen;
   }
 
-  open(monitorId: string): void {
-    this.state.isOpen = true;
-    this.state.monitorId = monitorId;
+  public get channel(): NotificationChannelType | null {
+    return this.state.channel;
   }
 
-  close(): void {
+  public open(monitorId: string): void {
+    this.state.isOpen = true;
+    this.state.monitorId = monitorId;
+    this.state.channel = null;
+  }
+
+  public selectChannel(channel: NotificationChannelType | null): void {
+    this.state.channel = channel;
+  }
+
+  public close(): void {
     this.state.isOpen = false;
   }
 }

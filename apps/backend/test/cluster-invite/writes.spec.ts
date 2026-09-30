@@ -127,7 +127,7 @@ describe('ClusterInviteCoreController (writes)', () => {
 
       expect(response.statusCode).toBe(400);
       expect((response.body as ErrorResponse).message).toBe(
-        'User is already invited to this cluster',
+        'User is already invited to this domain',
       );
     });
 
@@ -210,7 +210,9 @@ describe('ClusterInviteCoreController (writes)', () => {
           });
 
         expect(response.statusCode).toBe(400);
-        expect((response.body as ErrorResponse).message).toBe('Cluster is at capacity');
+        expect((response.body as ErrorResponse).message).toBe(
+          'This domain has reached its member limit',
+        );
       });
 
       it('throws error when cluster is at max capacity (EARLY BIRD - MEMBERS)', async () => {
@@ -250,7 +252,9 @@ describe('ClusterInviteCoreController (writes)', () => {
           });
 
         expect(response.statusCode).toBe(400);
-        expect((response.body as ErrorResponse).message).toBe('Cluster is at capacity');
+        expect((response.body as ErrorResponse).message).toBe(
+          'This domain has reached its member limit',
+        );
       });
 
       it('throws error when cluster is at max capacity (EARLY BIRD - INVITES)', async () => {
@@ -284,7 +288,9 @@ describe('ClusterInviteCoreController (writes)', () => {
           });
 
         expect(response.statusCode).toBe(400);
-        expect((response.body as ErrorResponse).message).toBe('Cluster is at capacity');
+        expect((response.body as ErrorResponse).message).toBe(
+          'This domain has reached its member limit',
+        );
       });
     });
 
@@ -408,9 +414,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         .set('Authorization', `Bearer ${invitedUserToken}`);
 
       expect(response.statusCode).toBe(400);
-      expect((response.body as ErrorResponse).message).toBe(
-        'You are a member of too many clusters',
-      );
+      expect((response.body as ErrorResponse).message).toBe('You are a member of too many domains');
     });
   });
 
@@ -459,7 +463,7 @@ describe('ClusterInviteCoreController (writes)', () => {
         .set('Authorization', `Bearer ${otherSetup.token}`);
 
       expect(response.statusCode).toBe(403);
-      expect((response.body as ErrorResponse).message).toBe('User is not a member of this cluster');
+      expect((response.body as ErrorResponse).message).toBe('User is not a member of this domain');
     });
 
     it('allows invited user to delete (decline) invite', async () => {

@@ -152,10 +152,37 @@ describe('Personal API key created email', () => {
       expect(email.html).not.toContain('<script>');
       expect(email.html).toContain('&#60;script&#62;alert(&#34;x&#34;)&#60;/script&#62;');
       expect(email.html).toContain('ldp_abcdefgh');
-      expect(email.html).toContain('monitors:delete<br/>');
-      expect(email.html).toContain('2 projects');
+      expect(email.html).toContain('Monitors: delete<br/>');
+      expect(email.html).toContain('2 services');
       expect(email.html).toContain('No expiration');
       expect(email.html).toContain(`${getEnvConfig().app.url}/app/account/api-keys`);
+    });
+
+    it('names clusters and projects as domains and services', async () => {
+      // given
+      jest.restoreAllMocks();
+      const service = bootstrap.app.get(ResendTemplatedEmailsService);
+      const resendSpy = jest
+        .spyOn(service['resend'].emails, 'send')
+        .mockResolvedValue({ data: { id: 'email-id' }, error: null, headers: null });
+
+      // when
+      await service.sendPersonalApiKeyCreatedEmail('owner@example.com', {
+        userId: 'user-id',
+        label: 'k',
+        prefix: 'ldp_abcdefgh',
+        scopes: [
+          { resource: Resource.Clusters, action: Action.Read },
+          { resource: Resource.Projects, action: Action.Read },
+        ],
+        access: { kind: 'clusters', ids: ['a'] },
+      });
+
+      // then
+      const [email] = resendSpy.mock.calls[0];
+      expect(email.html).toContain('Domains: read, Services: read<br/>');
+      expect(email.html).toContain('1 domain<br/>');
+      expect(email.html).not.toMatch(/cluster|project/i);
     });
   });
 });

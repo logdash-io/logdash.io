@@ -8,7 +8,7 @@ import {
 
 const ACCESS_TOKEN_COOKIE = 'logdash_access_token_v0';
 const PREVIEW_STORAGE_KEY = 'logdash_anonymous_preview_v0';
-const MONITORING_PATH = /\/app\/clusters\/[^/]+\/[^/]+\/monitoring/;
+const MONITORING_PATH = /\/app\/domains\/[^/]+\/[^/]+\/monitoring/;
 const CLAIMED_USER = {
   id: '000000000000000000000001',
   tier: 'free',
@@ -90,7 +90,7 @@ async function expectFullScreen(
   await expect(sidebar).toBeVisible();
   await expect(sidebar).toHaveText(
     new RegExp(
-      `^\\s*All projects\\s*Projects\\s*${cluster[0]}\\s*${cluster}\\s*Home\\s*Status pages\\s*Settings\\s*${host}[\\s\\S]*New service\\s*Anonymous\\s*Free\\s*$`,
+      `^\\s*All domains\\s*Domains\\s*${cluster[0]}\\s*${cluster}\\s*Home\\s*Status pages\\s*Settings\\s*${host}[\\s\\S]*New service\\s*Anonymous\\s*Free\\s*$`,
     ),
   );
 }
@@ -126,6 +126,7 @@ test.describe('anonymous landing flow', () => {
   let context: BrowserContext;
   let page: Page;
   let landingTitle = '';
+  let dashboardPath = '';
   const consoleErrors: string[] = [];
 
   test.beforeAll(async ({ browser }) => {
@@ -248,8 +249,9 @@ test.describe('anonymous landing flow', () => {
     await page.waitForURL(MONITORING_PATH, { timeout: 30_000 });
 
     expect(page.url()).toContain(
-      `/app/clusters/${stored!.clusterId}/${stored!.projectId}/monitoring`,
+      `/app/domains/${stored!.clusterId}/${stored!.projectId}/monitoring`,
     );
+    dashboardPath = new URL(page.url()).pathname;
 
     const claimBanner = page.getByText('Temporary dashboard');
 
@@ -275,6 +277,36 @@ test.describe('anonymous landing flow', () => {
 
     await page.goBack();
     await expect(page).toHaveURL('/');
+  });
+
+  test('check 4b: the profile menu opens, moves and closes from the keyboard', async () => {
+    expect(dashboardPath, 'the dashboard was never opened').toBeTruthy();
+
+    await page.goto(dashboardPath);
+
+    const profile = page.getByRole('button', { name: /Anonymous/ }).first();
+    const apiKeys = page.getByRole('link', { name: 'API keys' });
+
+    await expect(profile).toHaveAttribute('aria-expanded', 'false');
+    await profile.focus();
+    await page.keyboard.press('Enter');
+
+    await expect(profile).toHaveAttribute('aria-expanded', 'true');
+    await expect(apiKeys).toBeFocused();
+
+    await page.keyboard.press('ArrowUp');
+    await expect(page.getByRole('button', { name: 'Logout' })).toBeFocused();
+
+    await page.keyboard.press('Tab');
+    await expect(profile).toBeFocused();
+    await expect(profile).toHaveAttribute('aria-expanded', 'false');
+
+    await page.keyboard.press('Enter');
+    await expect(apiKeys).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(apiKeys).toHaveCount(0);
+    await expect(profile).toBeFocused();
   });
 
   test('check 5: a second URL reuses the same anonymous account', async () => {
@@ -351,7 +383,7 @@ test.describe('anonymous landing flow', () => {
     await page.unrouteAll({ behavior: 'ignoreErrors' });
 
     expect(page.url()).toContain(
-      `/app/clusters/${stored!.clusterId}/${stored!.projectId}/monitoring`,
+      `/app/domains/${stored!.clusterId}/${stored!.projectId}/monitoring`,
     );
     expect(await readStoredPreview(page)).toBeNull();
   });
@@ -394,7 +426,7 @@ test.describe('expiry without a session', () => {
       },
     ]);
 
-    await page.goto('/app/clusters');
+    await page.goto('/app/domains');
 
     await page.waitForURL(/\/app\/auth\?expired=1/, { timeout: 30_000 });
 
@@ -404,6 +436,19 @@ test.describe('expiry without a session', () => {
       ),
     ).toBeVisible();
   });
+});
+
+test('check 16: an old /app/clusters link moves to /app/domains', async ({
+  request,
+}) => {
+  const response = await request.get('/app/clusters/a/b/monitoring?claimed=1', {
+    maxRedirects: 0,
+  });
+
+  expect(response.status()).toBe(308);
+  expect(response.headers().location).toBe(
+    '/app/domains/a/b/monitoring?claimed=1',
+  );
 });
 
 test.describe('first check and the way in', () => {

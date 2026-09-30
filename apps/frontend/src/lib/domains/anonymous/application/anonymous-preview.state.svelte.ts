@@ -250,7 +250,7 @@ class AnonymousPreviewState {
 
     window.location.assign(
       resolve(
-        `/app/clusters/${claimed.clusterId}/${claimed.projectId}/monitoring`,
+        `/app/domains/${claimed.clusterId}/${claimed.projectId}/monitoring`,
       ),
     );
   }

@@ -22,12 +22,20 @@ class NamespacesState {
     this._loading = true;
 
     try {
-      this._namespaces = await LogsService.getLogsNamespaces(projectId);
+      const namespaces = await LogsService.getLogsNamespaces(projectId);
+
+      if (this._projectId === projectId) {
+        this._namespaces = namespaces;
+      }
     } catch {
-      toast.error('Failed to load namespaces. Please try again later.');
-      this._namespaces = [];
+      if (this._projectId === projectId) {
+        toast.error('Failed to load namespaces. Please try again later.');
+        this._namespaces = [];
+      }
     } finally {
-      this._loading = false;
+      if (this._projectId === projectId) {
+        this._loading = false;
+      }
     }
   }
 

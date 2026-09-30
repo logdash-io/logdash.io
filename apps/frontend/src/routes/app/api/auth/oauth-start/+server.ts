@@ -39,7 +39,7 @@ export const POST: RequestHandler = async ({ request, cookies, url }) => {
 
   save_oauth_state(cookies, {
     state,
-    next_url: safe_redirect_path(body.next_url, '/app/clusters'),
+    next_url: safe_redirect_path(body.next_url, '/app/domains'),
     flow: SUPPORTED_FLOWS.includes(body.flow as SupportedFlow)
       ? (body.flow as SupportedFlow)
       : 'login',

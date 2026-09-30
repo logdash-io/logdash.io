@@ -57,13 +57,13 @@ export class ClusterInviteCoreController {
     });
 
     if (existingInvite) {
-      throw new BadRequestException('User is already invited to this cluster');
+      throw new BadRequestException('User is already invited to this domain');
     }
 
     const hasCapacity = await this.clusterInviteLimitService.hasCapacity(clusterId);
 
     if (!hasCapacity) {
-      throw new BadRequestException('Cluster is at capacity');
+      throw new BadRequestException('This domain has reached its member limit');
     }
 
     const invite = await this.clusterInviteWriteService.create({
@@ -189,7 +189,7 @@ export class ClusterInviteCoreController {
     const numberOfClusters = await this.clusterReadService.countBeingMemberOfClusters(user.id);
 
     if (numberOfClusters + 1 >= getUserPlanConfig(user.tier).projects.maxNumberOfProjects) {
-      throw new BadRequestException('You are a member of too many clusters');
+      throw new BadRequestException('You are a member of too many domains');
     }
 
     await this.clusterWriteService.addRole(invite.clusterId, user.id, invite.role);

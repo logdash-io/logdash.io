@@ -149,7 +149,7 @@ describe('Auth (anonymous)', () => {
 
     // then
     expect(response.status).toEqual(409);
-    expect((response.body as ErrorResponse).message).toEqual('User has reached the project limit');
+    expect((response.body as ErrorResponse).message).toEqual('User has reached the service limit');
 
     const temporaryUserAfterClaim = await bootstrap.models.userModel.findById(
       new Types.ObjectId(anonymous.user.id),

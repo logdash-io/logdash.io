@@ -88,18 +88,15 @@
 </script>
 
 {#if probe?.catchAll && !isDismissed}
-  <div
-    class="border-border-default bg-surface-well pointer-events-auto mt-6 flex gap-3 rounded-xl border p-4"
-    role="status"
-  >
+  <div class="flex gap-3" role="status">
     <DangerIcon class="text-warning mt-0.5 size-4 shrink-0" />
 
     <div class="flex min-w-0 flex-1 flex-col gap-3">
-      <div class="flex flex-col gap-1 text-sm">
-        <p class="text-warning font-medium">
+      <div class="flex flex-col gap-0.5 text-sm">
+        <p class="text-warning">
           This host answers every path with the same page
         </p>
-        <p class="text-neutral-400 text-pretty">
+        <p class="text-neutral-500 text-pretty">
           A check here only proves the host is up, not that your app works.
           {#if probe.healthPaths.length === 0}
             Point it at a health endpoint if your app has one.

@@ -3,7 +3,7 @@ import type {
   CreateCustomDomainDTO,
 } from '$lib/domains/app/projects/domain/public-dashboards/custom-domain';
 import { customDomainsService } from '$lib/domains/app/projects/infrastructure/custom-domains.service';
-import { isAxiosError } from 'axios';
+import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
 
 export class CustomDomainsState {
   private _customDomains = $state<Record<string, CustomDomain | null>>({});
@@ -46,7 +46,7 @@ export class CustomDomainsState {
       this._customDomains[publicDashboardId] = customDomain;
     } catch (error) {
       this._setError(
-        error instanceof Error ? error.message : 'Failed to load custom domain',
+        readHttpErrorMessage(error) ?? 'Failed to load custom domain',
       );
       console.error('Failed to load custom domain:', error);
     } finally {
@@ -68,7 +68,9 @@ export class CustomDomainsState {
       );
       this._customDomains[publicDashboardId] = customDomain;
     } catch (error) {
-      this._setError(this._readCreateErrorMessage(error));
+      this._setError(
+        readHttpErrorMessage(error) ?? 'Failed to create custom domain',
+      );
       console.error('Failed to create custom domain:', error);
       throw error;
     } finally {
@@ -86,32 +88,15 @@ export class CustomDomainsState {
 
       await customDomainsService.deleteCustomDomain(customDomain.id);
       this._customDomains[publicDashboardId] = null;
-      // Error is automatically cleared since operation succeeded
     } catch (error) {
       this._setError(
-        error instanceof Error
-          ? error.message
-          : 'Failed to delete custom domain',
+        readHttpErrorMessage(error) ?? 'Failed to delete custom domain',
       );
       console.error('Failed to delete custom domain:', error);
       throw error;
     } finally {
       this._loading[publicDashboardId] = false;
     }
-  }
-
-  private _readCreateErrorMessage(error: unknown): string {
-    if (!isAxiosError<{ message?: string | string[] }>(error)) {
-      return 'Failed to create custom domain';
-    }
-
-    const message = error.response?.data?.message;
-
-    if (Array.isArray(message)) {
-      return message[0];
-    }
-
-    return message ?? 'Failed to create custom domain';
   }
 
   private _clearError(): void {

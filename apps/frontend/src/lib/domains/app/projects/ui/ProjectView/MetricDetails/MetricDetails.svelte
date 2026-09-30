@@ -1,191 +1,193 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { MetricGranularity } from '$lib/domains/app/projects/domain/metric.js';
-  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
-  import {
-    ChartOptions,
-    ChartTitles,
-    ChartType,
-  } from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/chart-types.js';
   import { getGraphReadyPoints } from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/data.utils.js';
   import MetricBreakdownChart from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricBreakdownChart.svelte';
-  import TimeRangeSelector from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/TimeRangeSelector.svelte';
+  import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
+  import PaneHeader from '$lib/domains/shared/ui/components/PaneHeader.svelte';
+  import TimeRangeSelector from '$lib/domains/shared/ui/components/TimeRangeSelector.svelte';
+  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
+  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 
-  const previewedMetricId = $derived(page.params.metric_id);
+  type Range = {
+    label: string;
+    granularity:
+      | MetricGranularity.MINUTE
+      | MetricGranularity.HOUR
+      | MetricGranularity.DAY;
+    points: number;
+    pro: boolean;
+  };
+
+  const RANGES: Range[] = [
+    {
+      label: '1h',
+      granularity: MetricGranularity.MINUTE,
+      points: 60,
+      pro: false,
+    },
+    {
+      label: '12h',
+      granularity: MetricGranularity.MINUTE,
+      points: 720,
+      pro: true,
+    },
+    {
+      label: '24h',
+      granularity: MetricGranularity.HOUR,
+      points: 24,
+      pro: false,
+    },
+    { label: '7d', granularity: MetricGranularity.DAY, points: 7, pro: false },
+    { label: '30d', granularity: MetricGranularity.DAY, points: 30, pro: true },
+  ];
+  const CHART_INSET_PX = 32;
+
+  const integer = new Intl.NumberFormat('en-US');
+  const decimal = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
+
+  const clusterId = $derived(page.params.cluster_id);
   const projectId = $derived(page.params.project_id);
-  const previewedMetric = $derived(
-    previewedMetricId ? metricsState.getById(previewedMetricId) : undefined,
+  const metricId = $derived(page.params.metric_id);
+  const metric = $derived(
+    metricId ? metricsState.getById(metricId) : undefined,
+  );
+  const isPaid = $derived(userState.isPaid);
+
+  let rangeLabel = $state(RANGES[0].label);
+  let chartHeight = $state(0);
+
+  const range = $derived(
+    RANGES.find(({ label }) => label === rangeLabel) ?? RANGES[0],
+  );
+  const options = $derived(
+    RANGES.map(({ label, pro }) => ({
+      value: label,
+      label,
+      locked: pro && !isPaid,
+    })),
   );
 
-  let minuteDataTimeRange: string = $state(
-    ChartOptions[ChartType.MINUTE].SMALL,
-  );
-  let hourDataTimeRange: string = $state(ChartOptions[ChartType.HOUR].SMALL);
-  let dayDataTimeRange: string = $state(ChartOptions[ChartType.DAY].SMALL);
+  const data = $derived.by(() => {
+    if (!metricId) {
+      return [];
+    }
+
+    const allTime = metricsState.metricsByMetricRegisterId(
+      metricId,
+      MetricGranularity.ALL_TIME,
+    );
+
+    if (allTime.length === 0) {
+      return [];
+    }
+
+    const points = getGraphReadyPoints(
+      [
+        ...metricsState.metricsByMetricRegisterId(metricId, range.granularity),
+        ...allTime,
+      ],
+      { minute: 1, hour: 1, day: 1, [range.granularity]: range.points },
+    );
+
+    return {
+      [MetricGranularity.MINUTE]: points.minuteData,
+      [MetricGranularity.HOUR]: points.hourData,
+      [MetricGranularity.DAY]: points.dayData,
+    }[range.granularity];
+  });
 
   $effect(() => {
-    if (!projectId || !previewedMetricId || metricsState.isUsingFakeData) {
+    if (!projectId || !metricId) {
       return;
     }
 
-    void minuteDataTimeRange;
-    void hourDataTimeRange;
-    void dayDataTimeRange;
+    void rangeLabel;
 
-    metricsState.previewMetric(projectId, previewedMetricId);
+    metricsState.previewMetric(projectId, metricId);
   });
 
-  const isPaid = $derived(userState.isPaid);
+  function onRangeSelect(label: string): void {
+    const selected = RANGES.find((candidate) => candidate.label === label);
 
-  const { minuteData, hourData, dayData } = $derived.by(() => {
-    if (metricsState.isUsingFakeData) {
-      return {
-        minuteData: metricsState.getFakeChartData(MetricGranularity.MINUTE),
-        hourData: metricsState.getFakeChartData(MetricGranularity.HOUR),
-        dayData: metricsState.getFakeChartData(MetricGranularity.DAY),
-      };
+    if (selected?.pro && !isPaid) {
+      upgradeState.openModal();
+      return;
     }
 
-    if (!previewedMetricId) {
-      return {
-        minuteData: [],
-        hourData: [],
-        dayData: [],
-      };
+    rangeLabel = label;
+  }
+
+  function onDelete(): void {
+    if (!clusterId || !projectId || !metric) {
+      return;
     }
 
-    const minuteData = metricsState.metricsByMetricRegisterId(
-      previewedMetricId,
-      MetricGranularity.MINUTE,
-    );
-    const hourData = metricsState.metricsByMetricRegisterId(
-      previewedMetricId,
-      MetricGranularity.HOUR,
-    );
-    const dayData = metricsState.metricsByMetricRegisterId(
-      previewedMetricId,
-      MetricGranularity.DAY,
-    );
-    const allTimeData = metricsState.metricsByMetricRegisterId(
-      previewedMetricId,
-      MetricGranularity.ALL_TIME,
-    );
-    const metricsData = [
-      ...minuteData,
-      ...hourData,
-      ...dayData,
-      ...allTimeData,
-    ];
-
-    if (!metricsData.length || !allTimeData.length) {
-      return {
-        minuteData: [],
-        hourData: [],
-        dayData: [],
-      };
+    if (!confirm(`Delete the ${metric.name} metric?`)) {
+      return;
     }
 
-    const freeConfig = {
-      minute: 60,
-      hour: 12,
-      day: 7,
-    };
+    void metricsState.delete(projectId, metric.id);
+    void goto(
+      resolve('/app/domains/[cluster_id]/[project_id]/metrics', {
+        cluster_id: clusterId,
+        project_id: projectId,
+      }),
+    );
+  }
 
-    const paidConfig = {
-      minute: 60 * 12,
-      hour: 12 * 24,
-      day: 30,
-    };
-
-    const compiledConfig = {
-      minute:
-        isPaid && minuteDataTimeRange === ChartOptions[ChartType.MINUTE].LARGE
-          ? paidConfig.minute
-          : freeConfig.minute,
-      hour:
-        isPaid && hourDataTimeRange === ChartOptions[ChartType.HOUR].LARGE
-          ? paidConfig.hour
-          : freeConfig.hour,
-      day:
-        isPaid && dayDataTimeRange === ChartOptions[ChartType.DAY].LARGE
-          ? paidConfig.day
-          : freeConfig.day,
-    };
-
-    const graphReadyPoints = getGraphReadyPoints(metricsData, compiledConfig);
-    return graphReadyPoints;
-  });
+  function format(value: number): string {
+    return Number.isInteger(value)
+      ? integer.format(value)
+      : decimal.format(value);
+  }
 </script>
 
-{#snippet previewedMetricSubtitle()}
-  <p class="mb-4 text-sm text-neutral-500 font-medium">
-    {previewedMetric?.name}
-  </p>
-{/snippet}
+<div class="flex min-h-0 flex-1 flex-col">
+  <PaneHeader title={metric?.name ?? 'Metric'}>
+    <TimeRangeSelector
+      {options}
+      selected={rangeLabel}
+      onSelect={onRangeSelect}
+    />
 
-<DataTile delayIn={0}>
-  <TimeRangeSelector
-    canSwitchTabs={isPaid}
-    currentRange={minuteDataTimeRange}
-    largeOption={ChartOptions[ChartType.MINUTE].LARGE}
-    onRangeChange={(range: string) => (minuteDataTimeRange = range)}
-    smallOption={ChartOptions[ChartType.MINUTE].SMALL}
-    title={ChartTitles[ChartType.MINUTE]}
-  />
+    {#if metric}
+      <span class="bg-hairline h-4 w-px"></span>
+      <IconButton
+        label="Delete metric"
+        danger
+        class="-mr-1.5"
+        data-posthog-id="delete-metric-button"
+        onclick={onDelete}
+      >
+        <TrashIcon class="size-4" />
+      </IconButton>
+    {/if}
+  </PaneHeader>
 
-  {@render previewedMetricSubtitle()}
-  <MetricBreakdownChart
-    data={minuteData}
-    height={250}
-    isLoading={metricsState.metricDetailsLoading}
-    timeRange={minuteDataTimeRange === ChartOptions[ChartType.MINUTE].LARGE
-      ? 'large'
-      : 'small'}
-  />
-</DataTile>
+  <div class="flex flex-col gap-0.5 px-4 pt-4">
+    <span class="text-neutral-500 text-xs">Now</span>
+    <span class="h-8 truncate text-2xl font-medium tabular-nums">
+      {metric ? format(metric.value) : ''}
+    </span>
+  </div>
 
-<DataTile delayIn={50}>
-  <TimeRangeSelector
-    canSwitchTabs={isPaid}
-    currentRange={hourDataTimeRange}
-    largeOption={ChartOptions[ChartType.HOUR].LARGE}
-    onRangeChange={(range: string) => (hourDataTimeRange = range)}
-    smallOption={ChartOptions[ChartType.HOUR].SMALL}
-    title={ChartTitles[ChartType.HOUR]}
-  />
-
-  {@render previewedMetricSubtitle()}
-  <MetricBreakdownChart
-    data={hourData}
-    format="hour"
-    height={250}
-    isLoading={metricsState.metricDetailsLoading}
-    timeRange={hourDataTimeRange === ChartOptions[ChartType.HOUR].LARGE
-      ? 'large'
-      : 'small'}
-  />
-</DataTile>
-
-<DataTile delayIn={100}>
-  <TimeRangeSelector
-    canSwitchTabs={isPaid}
-    currentRange={dayDataTimeRange}
-    largeOption={ChartOptions[ChartType.DAY].LARGE}
-    onRangeChange={(range: string) => (dayDataTimeRange = range)}
-    smallOption={ChartOptions[ChartType.DAY].SMALL}
-    title={ChartTitles[ChartType.DAY]}
-  />
-
-  {@render previewedMetricSubtitle()}
-  <MetricBreakdownChart
-    data={dayData}
-    format="day"
-    height={250}
-    isLoading={metricsState.metricDetailsLoading}
-    timeRange={dayDataTimeRange === ChartOptions[ChartType.DAY].LARGE
-      ? 'large'
-      : 'small'}
-  />
-</DataTile>
+  <div class="relative min-h-72 flex-1" bind:clientHeight={chartHeight}>
+    <div class="absolute inset-0 p-4">
+      {#if chartHeight > 0}
+        <MetricBreakdownChart
+          {data}
+          format={range.granularity}
+          height={chartHeight - CHART_INSET_PX}
+          isLoading={metricsState.metricDetailsLoading && data.length === 0}
+          failed={metricsState.metricDetailsFailed && data.length === 0}
+          timeRange={range.pro ? 'large' : 'small'}
+        />
+      {/if}
+    </div>
+  </div>
+</div>

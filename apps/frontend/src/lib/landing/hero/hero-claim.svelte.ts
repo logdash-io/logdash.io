@@ -35,7 +35,7 @@ export type HeroClaimTrigger = 'nudge' | 'alerts';
 const logger = createLogger('hero-claim.state', false);
 
 const PROJECT_LIMIT_MESSAGE =
-  'That account has reached its project limit. Free a slot there, then try again.';
+  'That account has reached its service limit. Free a slot there, then try again.';
 const FAILED_MESSAGE =
   'Signing in did not go through. Your dashboard is untouched. Try again.';
 
@@ -238,7 +238,7 @@ class HeroClaimState {
         provider,
         flow: 'claim',
         tier: this.trialTier,
-        next_url: `/app/clusters/${preview.clusterId}/${preview.projectId}/monitoring?claimed=1`,
+        next_url: `/app/domains/${preview.clusterId}/${preview.projectId}/monitoring?claimed=1`,
       });
       anonymousPreviewState.handOffPreview();
     } catch (error) {
@@ -256,9 +256,9 @@ class HeroClaimState {
     window.location.assign(
       preview
         ? resolve(
-            `/app/clusters/${preview.clusterId}/${preview.projectId}/monitoring?claimed=1`,
+            `/app/domains/${preview.clusterId}/${preview.projectId}/monitoring?claimed=1`,
           )
-        : resolve('/app/clusters'),
+        : resolve('/app/domains'),
     );
   }
 }

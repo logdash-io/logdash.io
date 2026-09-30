@@ -76,7 +76,7 @@ describe('Metrics (reads)', () => {
 
       expect(response.status).toEqual(403);
       expect((response.body as ErrorResponse).message).toEqual(
-        'User is not a member of this cluster',
+        'User is not a member of this domain',
       );
     });
   });
@@ -259,7 +259,7 @@ describe('Metrics (reads)', () => {
       // then
       expect(response.status).toEqual(403);
       expect((response.body as ErrorResponse).message).toEqual(
-        'User is not a member of this cluster',
+        'User is not a member of this domain',
       );
     });
   });

@@ -53,7 +53,7 @@ export class AnonymousStartError extends Error {
         () =>
           new AnonymousStartError(
             'limit-reached',
-            'This project already has its monitor. Open your dashboard to manage it.',
+            'This service already has its monitor. Open your dashboard to manage it.',
           ),
       )
       .otherwise(() => AnonymousStartError.fromStatus(status));
@@ -78,7 +78,7 @@ export class AnonymousStartError extends Error {
         () =>
           new AnonymousStartError(
             'limit-reached',
-            'Project limit reached. Open your dashboard to add it there.',
+            'Service limit reached. Open your dashboard to add it there.',
           ),
       )
       .otherwise(

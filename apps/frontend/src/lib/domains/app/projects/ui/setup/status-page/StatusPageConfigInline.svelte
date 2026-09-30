@@ -1,32 +1,31 @@
 <script lang="ts">
-  import { invalidateAll } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
-  import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
-  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
+  import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { debounce } from '$lib/domains/shared/utils/debounce.js';
-  import { stripProtocol } from '$lib/domains/shared/utils/url.js';
-  import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
+  import { displayUrl, stripProtocol } from '$lib/domains/shared/utils/url.js';
+  import PaneHeader, {
+    PANE_HEADER_ACTION_CLASS,
+  } from '$lib/domains/shared/ui/components/PaneHeader.svelte';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
+  import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
+  import LoadingLine from '$lib/domains/shared/ui/components/LoadingLine.svelte';
+  import {
+    SettingsCard,
+    SettingsCardHeader,
+    SettingsCardItem,
+  } from '$lib/domains/shared/ui/components/settings-card';
   import CustomDomainSetup from '../public-dashboard/CustomDomainSetup.svelte';
   import BadgePicker from './BadgePicker.svelte';
   import BuildYourOwn from './BuildYourOwn.svelte';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
-  import { CheckIcon } from '@logdash/hyper-ui/icons';
-  import { onMount } from 'svelte';
-  import { ArrowLeftIcon } from 'lucide-svelte';
-  import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
-  import {
-    Badge,
-    Button,
-    Checkbox,
-    Input,
-    Label,
-    Spinner,
-  } from '@logdash/hyper-ui/presentational';
+  import { onMount, type Snippet } from 'svelte';
+  import { Button, Checkbox, Input } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     clusterId: string;
@@ -34,13 +33,22 @@
   };
   const { clusterId, dashboardId }: Props = $props();
 
+  const FIELD_CLASS =
+    'border-hairline bg-neutral-950 h-8 w-full rounded-lg px-2.5 text-sm';
+
   let dashboardName = $state('');
   let isUpdating = $state(false);
   let isPublishing = $state(false);
+  let isDeleting = $state(false);
   let hasInitialized = $state(false);
+  let loadFailed = $state(false);
 
-  const debouncedNameUpdate = debounce((name: string) => {
-    void publicDashboardManagerState.update(dashboardId, { name });
+  const debouncedNameUpdate = debounce(async (name: string) => {
+    try {
+      await publicDashboardManagerState.update(dashboardId, { name });
+    } catch (error) {
+      toast.error(failureMessage('Failed to rename status page', error));
+    }
   }, 250);
 
   const dashboard = $derived(
@@ -49,53 +57,42 @@
   const dashboardMonitors = $derived(dashboard?.httpMonitorsIds ?? []);
   const isPublished = $derived(dashboard?.isPublic ?? false);
 
-  const totalPublishedCount = $derived(clustersState.publishedDashboardsCount);
-  const maxAllowed = $derived(
-    exposedConfigState.maxNumberOfPublicDashboards(userState.tier),
-  );
-  const canPublish = $derived(isPublished || totalPublishedCount < maxAllowed);
-
-  const dashboardUrl = $derived(
-    publicDashboardManagerState.getDashboardUrl(dashboardId),
-  );
   const statusPageUrl = $derived(
     publicDashboardManagerState.getStatusPageUrl(dashboardId),
   );
+  const monitors = $derived(monitoringState.monitors);
   const badgeMonitors = $derived(
-    monitoringState.monitors.filter((monitor) =>
-      dashboardMonitors.includes(monitor.id),
-    ),
+    monitors.filter((monitor) => dashboardMonitors.includes(monitor.id)),
   );
 
-  onMount(async () => {
-    monitoringState.load(clusterId);
-    await publicDashboardManagerState.loadPublicDashboards(clusterId);
+  onMount(() => {
+    void monitoringState.load(clusterId);
+    void loadDashboard();
+  });
+
+  async function loadDashboard(): Promise<void> {
+    hasInitialized = false;
+    loadFailed =
+      !(await publicDashboardManagerState.loadPublicDashboards(clusterId));
+    dashboardName = dashboard?.name ?? '';
     hasInitialized = true;
+  }
 
-    if (dashboard?.name) {
-      dashboardName = dashboard.name;
-    }
-  });
+  function onNameInput(
+    event: Event & { currentTarget: HTMLInputElement },
+  ): void {
+    const name = event.currentTarget.value;
+    if (!name.trim()) return;
 
-  $effect(() => {
-    if (!hasInitialized) return;
-    if (!dashboard?.name) return;
-    if (dashboardName) return;
-
-    dashboardName = dashboard.name;
-  });
-
-  $effect(() => {
-    if (!hasInitialized) return;
-    if (!dashboardName.trim()) return;
-
-    debouncedNameUpdate(dashboardName);
-  });
+    debouncedNameUpdate(name);
+  }
 
   async function onToggleMonitor(monitorId: string): Promise<void> {
     isUpdating = true;
     try {
       await publicDashboardManagerState.toggleMonitor(dashboardId, monitorId);
+    } catch (error) {
+      toast.error(failureMessage('Failed to update monitors', error));
     } finally {
       isUpdating = false;
     }
@@ -133,207 +130,289 @@
     }
   }
 
+  async function onDelete(): Promise<void> {
+    const confirmed = confirm(
+      'Delete this status page? Its link and badges stop working. This cannot be undone.',
+    );
+
+    if (!confirmed || isDeleting) return;
+    isDeleting = true;
+
+    try {
+      await publicDashboardManagerState.delete(dashboardId);
+      toast.success('Status page deleted');
+      await goto(
+        resolve('/app/domains/[cluster_id]/status-pages', {
+          cluster_id: clusterId,
+        }),
+        { invalidateAll: true },
+      );
+    } catch (error) {
+      toast.error(failureMessage('Failed to delete status page', error));
+    } finally {
+      isDeleting = false;
+    }
+  }
+
   async function onCopyUrl(): Promise<void> {
-    await navigator.clipboard.writeText(dashboardUrl);
+    await navigator.clipboard.writeText(statusPageUrl);
     toast.success('Status page URL copied to clipboard');
+  }
+
+  function failureMessage(message: string, error: unknown): string {
+    const reason = readHttpErrorMessage(error);
+
+    return reason ? `${message}: ${reason}` : message;
   }
 </script>
 
-<div class="flex w-full max-w-2xl flex-col gap-6 ld-card">
-  <div class="flex flex-col space-y-2">
-    <div class="flex items-center gap-2">
-      <Button
-        href={resolve('/app/clusters/[cluster_id]/status-pages', {
-          cluster_id: clusterId,
-        })}
-        variant="ghost"
-        size="sm"
-        shape="square"
-        aria-label="Back to status pages"
-      >
-        <ArrowLeftIcon class="size-5" />
-      </Button>
-      <h5 class="text-lg md:text-2xl font-medium">
-        Configure your status page
-      </h5>
-    </div>
-
-    <p class="text-neutral-400 text-sm">
-      Customize how your status page will look like for your users.
-    </p>
-
-    <div class="flex items-center justify-start gap-2">
-      <Badge variant={isPublished ? 'success' : 'neutral'} class="gap-1">
-        {#if isPublished}
-          <CheckIcon class="size-3" />
-        {:else}
-          <EditIcon class="size-3" />
-        {/if}
-        {isPublished ? 'Published' : 'Draft'}
-      </Badge>
-
-      {#if isPublished}
-        <Button
-          href={dashboardUrl}
-          target="_blank"
-          variant="primary"
-          size="xs"
-          class="gap-1"
-        >
-          <OpenIcon class="size-3.5" />
-          Open
-        </Button>
-      {/if}
-    </div>
-  </div>
-
-  <div class="space-y-6">
-    <div class="space-y-3">
-      <Label class="font-medium">1. Select monitors to display</Label>
-      <div
-        class="border-border-default w-full max-w-full overflow-hidden rounded-xl border"
-      >
-        {#if !hasInitialized}
-          <div class="flex items-center justify-start py-3 px-3.5">
-            <Spinner size="xs" />
-          </div>
-        {:else if monitoringState.monitors.length === 0}
-          <div class="flex flex-col items-center justify-center gap-2 py-6">
-            <span class="text-neutral-400 text-center text-sm">
-              No HTTP monitors available
-            </span>
-            <a
-              href={resolve('/app/clusters/[cluster_id]', {
-                cluster_id: clusterId,
-              })}
-              class="text-fg-default text-sm underline hover:text-[color-mix(in_oklab,var(--fg-default)_80%,#000)] focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              Create a monitor first
-            </a>
-          </div>
-        {:else}
-          {#each monitoringState.monitors as monitor, index (monitor.id)}
-            <label
-              class={[
-                'hover:bg-neutral-800 flex cursor-pointer select-none items-center gap-2 p-2 px-3',
-                { 'border-border-default border-t': index > 0 },
-              ]}
-            >
-              <Checkbox
-                size="xs"
-                variant="primary"
-                checked={dashboardMonitors.includes(monitor.id)}
-                disabled={isUpdating}
-                onchange={() => onToggleMonitor(monitor.id)}
-              />
-              <span class="truncate font-medium">
-                {monitor.name || stripProtocol(monitor.url ?? '')}
-              </span>
-            </label>
-          {/each}
-        {/if}
-      </div>
-    </div>
-
-    <div class="space-y-3">
-      <Label class="font-medium" for="status-page-name">
-        2. Status page name
-      </Label>
-      <Input
-        id="status-page-name"
-        bind:value={dashboardName}
-        class="w-full"
-        placeholder="Status Page"
-        type="text"
-      />
-      <p class="text-xs text-neutral-400">
-        This name will appear in the header of your status page.
-      </p>
-    </div>
-
-    <div class="space-y-3">
-      <Label class="font-medium">
-        3. Custom domain (like status.example.com)
-      </Label>
-      <CustomDomainSetup {dashboardId} />
-    </div>
-
-    <div class="space-y-3">
-      <Label class="font-medium">4. Manage visibility</Label>
-
-      <div
-        class="border-border-default flex flex-col gap-4 rounded-xl border p-4"
-      >
-        {#if isPublished}
-          <div class="flex flex-wrap items-center gap-2">
-            <Button variant="ghost" size="sm" class="gap-1" onclick={onCopyUrl}>
-              <CopyIcon class="size-4" />
-              Copy URL
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              loading={isPublishing}
-              onclick={onUnpublish}
-            >
-              Unpublish
-            </Button>
-          </div>
-        {:else if canPublish}
-          <p class="text-sm text-neutral-400">
-            Once published, anyone with the link can view your status page.
-          </p>
-
-          <div class="flex items-center gap-3">
-            <Button
-              variant="primary"
-              size="sm"
-              loading={isPublishing}
-              onclick={onPublish}
-            >
-              Publish status page
-            </Button>
-          </div>
-        {:else}
-          <p class="text-sm text-neutral-400">
-            You've reached the limit of {maxAllowed} published status page{maxAllowed ===
-            1
-              ? ''
-              : 's'} on your plan.
-          </p>
-
-          <UpgradeButton source="status-page-limit">
-            Upgrade to publish more status pages
-          </UpgradeButton>
-        {/if}
-      </div>
-    </div>
+<PaneHeader title="Status page">
+  {#if dashboard}
+    <span class="flex items-center gap-1.5">
+      <span
+        class={[
+          'size-1.5 rounded-full',
+          isPublished ? 'bg-success' : 'bg-neutral-600',
+        ]}
+      ></span>
+      {isPublished ? 'Published' : 'Draft'}
+    </span>
 
     {#if isPublished}
-      <div class="space-y-3">
-        <Label class="font-medium">5. README badges</Label>
-        <p class="text-sm text-neutral-400">
-          Show your uptime in a README or on your website.
-        </p>
-
-        {#if badgeMonitors.length === 0}
-          <p class="text-sm text-neutral-500">
-            Select monitors above to get their badges.
-          </p>
-        {:else}
-          <BadgePicker {dashboardId} {statusPageUrl} monitors={badgeMonitors} />
-        {/if}
-      </div>
-
-      <div class="space-y-3">
-        <Label class="font-medium">6. Build your own</Label>
-        <p class="text-sm text-neutral-400">
-          Build a status page in your own design with the public status page
-          API, or start from the Next.js starter.
-        </p>
-
-        <BuildYourOwn {dashboardId} />
-      </div>
+      <!-- eslint-disable svelte/no-navigation-without-resolve -- the public URL can be a custom domain -->
+      <a
+        href={statusPageUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class={PANE_HEADER_ACTION_CLASS}
+      >
+        Open
+        <OpenIcon class="size-3.5 shrink-0" />
+      </a>
+      <!-- eslint-enable svelte/no-navigation-without-resolve -->
     {/if}
+  {/if}
+</PaneHeader>
+
+{#if !hasInitialized}
+  <div class="flex h-11 items-center px-4">
+    <LoadingLine label="Loading status page" />
   </div>
-</div>
+{:else if !dashboard && loadFailed}
+  <EmptyState
+    class="p-4"
+    title="Could not load this status page"
+    description="Check your connection and try again."
+  >
+    <Button variant="neutral" size="sm" onclick={loadDashboard}>
+      Try again
+    </Button>
+  </EmptyState>
+{:else if !dashboard}
+  <EmptyState
+    class="p-4"
+    title="Status page not found"
+    description="It may have been deleted, or it belongs to another domain."
+  >
+    <Button
+      href={resolve('/app/domains/[cluster_id]/status-pages', {
+        cluster_id: clusterId,
+      })}
+      variant="neutral"
+      size="sm"
+    >
+      Back to status pages
+    </Button>
+  </EmptyState>
+{:else}
+  {@render section(
+    'Name',
+    'Shown in the header of your status page.',
+    nameField,
+  )}
+  {@render section(
+    'Monitors',
+    'Pick the monitors your status page shows.',
+    monitorsField,
+  )}
+  {@render section(
+    'Visibility',
+    'Once published, anyone with the link can view your status page.',
+    visibilityField,
+  )}
+  {@render section(
+    'Custom domain',
+    'Serve your status page from a domain you own, like status.example.com.',
+    customDomainField,
+  )}
+
+  {#if isPublished}
+    {@render section(
+      'README badges',
+      'Show your uptime in a README or on your website.',
+      badgesField,
+    )}
+    {@render section(
+      'Build your own',
+      'Build a status page in your own design with the public status page API, or start from the Next.js starter.',
+      buildYourOwnField,
+    )}
+  {/if}
+
+  <SettingsCard
+    title="Danger zone"
+    description="Actions that cannot be undone."
+    variant="danger"
+  >
+    <SettingsCardItem>
+      <p>Delete status page</p>
+      <p class="text-neutral-500">
+        Removes this status page. Its link and badges stop working.
+      </p>
+
+      {#snippet action()}
+        <Button
+          variant="danger"
+          size="sm"
+          loading={isDeleting}
+          onclick={onDelete}
+        >
+          Delete
+        </Button>
+      {/snippet}
+    </SettingsCardItem>
+  </SettingsCard>
+{/if}
+
+{#snippet section(title: string, description: string, field: Snippet)}
+  <section class="border-hairline flex flex-col border-b lg:flex-row">
+    <SettingsCardHeader {title} {description} />
+
+    <div class="min-w-0 flex-1 p-4 lg:max-w-2xl">
+      {@render field()}
+    </div>
+  </section>
+{/snippet}
+
+{#snippet nameField()}
+  <Input
+    aria-label="Status page name"
+    bind:value={dashboardName}
+    oninput={onNameInput}
+    class={FIELD_CLASS}
+    placeholder="Status page"
+    type="text"
+  />
+{/snippet}
+
+{#snippet monitorsField()}
+  {#if monitors.length === 0}
+    <EmptyState
+      title="No monitors yet"
+      description="Add a monitor to one of your services, then pick it here."
+    >
+      <Button
+        href={resolve('/app/domains/[cluster_id]', {
+          cluster_id: clusterId,
+        })}
+        variant="neutral"
+        size="sm"
+      >
+        Go to your services
+      </Button>
+    </EmptyState>
+  {:else}
+    <ul
+      class="border-hairline divide-hairline divide-y overflow-hidden rounded-lg border"
+    >
+      {#each monitors as monitor (monitor.id)}
+        <li>
+          <label
+            class="hover:bg-surface-100 flex h-10 cursor-pointer items-center gap-3 px-3 text-sm select-none"
+          >
+            <Checkbox
+              size="xs"
+              variant="primary"
+              checked={dashboardMonitors.includes(monitor.id)}
+              disabled={isUpdating}
+              onchange={() => onToggleMonitor(monitor.id)}
+            />
+            <span class="min-w-0 truncate">
+              {monitor.name || stripProtocol(monitor.url ?? '')}
+            </span>
+            {#if monitor.url}
+              <span class="text-neutral-500 ml-auto min-w-0 truncate pl-2">
+                {displayUrl(monitor.url)}
+              </span>
+            {/if}
+          </label>
+        </li>
+      {/each}
+    </ul>
+  {/if}
+{/snippet}
+
+{#snippet visibilityField()}
+  {#if isPublished}
+    <div class="flex flex-col items-start gap-3">
+      <div class="flex w-full items-center gap-2">
+        <span
+          class={[FIELD_CLASS, 'flex min-w-0 items-center border font-mono']}
+        >
+          <span class="truncate">{stripProtocol(statusPageUrl)}</span>
+        </span>
+        <IconButton
+          label="Copy status page URL"
+          tooltip="Copy URL"
+          onclick={onCopyUrl}
+        >
+          <CopyIcon class="size-4" />
+        </IconButton>
+      </div>
+
+      <Button
+        variant="danger"
+        size="sm"
+        loading={isPublishing}
+        onclick={onUnpublish}
+      >
+        Unpublish
+      </Button>
+    </div>
+  {:else}
+    <div class="flex flex-col items-start gap-3">
+      <p class="text-sm text-neutral-500">
+        Your status page stays private until you publish it.
+      </p>
+      <Button
+        variant="primary"
+        size="sm"
+        loading={isPublishing}
+        onclick={onPublish}
+      >
+        Publish status page
+      </Button>
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet customDomainField()}
+  <CustomDomainSetup
+    {dashboardId}
+    canSetup={clustersState.canSetupCustomDomain(clusterId)}
+  />
+{/snippet}
+
+{#snippet badgesField()}
+  {#if badgeMonitors.length === 0}
+    <p class="text-sm text-neutral-500">
+      Pick monitors above to get their badges.
+    </p>
+  {:else}
+    <BadgePicker {dashboardId} {statusPageUrl} monitors={badgeMonitors} />
+  {/if}
+{/snippet}
+
+{#snippet buildYourOwnField()}
+  <BuildYourOwn {dashboardId} />
+{/snippet}

@@ -84,13 +84,13 @@
     <h3 class="text-lg font-medium">Edit monitor</h3>
 
     <div class="flex flex-col gap-2">
-      <Label class="font-medium" for="edit-monitor-name">Name</Label>
+      <Label class="text-sm" for="edit-monitor-name">Name</Label>
       <Input
         id="edit-monitor-name"
         bind:value={name}
         maxlength={MAX_NAME_LENGTH}
         class="w-full"
-        placeholder="My API Service"
+        placeholder="My API service"
         {@attach fromAction(autoFocus, () => ({ delay: 100 }))}
       />
     </div>

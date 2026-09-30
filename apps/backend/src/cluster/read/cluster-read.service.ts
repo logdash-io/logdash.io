@@ -22,7 +22,7 @@ export class ClusterReadService {
   public async readByIdOrThrow(clusterId: string): Promise<ClusterNormalized> {
     const cluster = await this.readById(clusterId);
     if (!cluster) {
-      throw new NotFoundException('Cluster not found');
+      throw new NotFoundException('Domain not found');
     }
     return cluster;
   }

@@ -2,6 +2,8 @@ import { type ClusterInvite } from '$lib/domains/app/clusters/domain/cluster-inv
 import { ClusterInvitesService } from '$lib/domains/app/clusters/infrastructure/cluster-invites.service';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 
+const POLL_INTERVAL_MS = 30_000;
+
 type UserInvitationsStateType = {
   invitations: ClusterInvite[];
   isLoading: boolean;
@@ -38,11 +40,20 @@ class UserInvitationsState {
   }
 
   startPollingInvitations(): () => void {
-    const interval = setInterval(() => {
-      void this.loadInvitations();
-    }, 1500);
+    const refreshWhenVisible = (): void => {
+      if (document.visibilityState === 'visible') {
+        void this.loadInvitations();
+      }
+    };
 
-    return () => clearInterval(interval);
+    refreshWhenVisible();
+    const interval = setInterval(refreshWhenVisible, POLL_INTERVAL_MS);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }
 
   async loadInvitations(): Promise<void> {
@@ -52,7 +63,6 @@ class UserInvitationsState {
       this._state.invitations = invitations;
     } catch (error) {
       console.error('Failed to load user invitations:', error);
-      toast.error('Failed to load invitations');
     } finally {
       this._state.isLoading = false;
     }

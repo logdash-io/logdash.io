@@ -81,13 +81,13 @@ export class HttpMonitorCoreController {
       dto.mode === HttpMonitorMode.Push &&
       !getProjectPlanConfig(project.tier).httpMonitors.canCreatePushMonitors
     ) {
-      throw new ForbiddenException('Push monitors are not supported for this project tier');
+      throw new ForbiddenException('Push monitors are not available on your plan');
     }
 
     const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(
-        'You have reached the maximum number of monitors for this project',
+        'You have reached the maximum number of monitors for this service',
       );
     }
 
@@ -248,7 +248,7 @@ export class HttpMonitorCoreController {
         clusterId,
       ))
     ) {
-      throw new BadRequestException('Notification channels must belong to the same cluster');
+      throw new BadRequestException('Notification channels must belong to the same domain');
     }
   }
 
@@ -265,7 +265,7 @@ export class HttpMonitorCoreController {
     const hasCapacity = await this.httpMonitorLimitService.hasClaimedCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(
-        'You have reached the maximum number of monitors for this project',
+        'You have reached the maximum number of monitors for this service',
       );
     }
 

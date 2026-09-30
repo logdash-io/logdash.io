@@ -31,6 +31,10 @@ export class PublicDashboardsService {
     );
   }
 
+  deletePublicDashboard(dashboardId: string): Promise<void> {
+    return httpClient.delete<void>(`/public_dashboards/${dashboardId}`);
+  }
+
   addMonitorToDashboard(
     dashboardId: string,
     monitorId: string,
