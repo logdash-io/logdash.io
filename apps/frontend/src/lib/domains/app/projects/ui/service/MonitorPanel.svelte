@@ -48,7 +48,9 @@
   const CHART_SWAP_MS = 240;
 
   const times = $derived(responseTimes ?? []);
-  const hasFooter = $derived(Boolean(checkingLabel || lastCheckLabel));
+  const hasFooter = $derived(
+    Boolean(notice || checkingLabel || lastCheckLabel),
+  );
 </script>
 
 <div class="flex w-full flex-col gap-4 p-4">
@@ -89,10 +91,6 @@
       </div>
     </div>
   </div>
-
-  {#if notice}
-    <p class="text-error -mt-2 text-sm text-pretty" role="status">{notice}</p>
-  {/if}
 
   {#if stats}
     <div class="flex flex-wrap gap-x-10 gap-y-3 sm:gap-x-14">
@@ -146,7 +144,13 @@
         <div
           class="text-neutral-500 flex items-center justify-between gap-3 font-mono text-xs"
         >
-          <span class="truncate">{checkingLabel}</span>
+          <span
+            class={['truncate', { 'text-error': notice }]}
+            title={notice ?? undefined}
+            role="status"
+          >
+            {notice ?? checkingLabel}
+          </span>
           <span class="shrink-0">{lastCheckLabel}</span>
         </div>
       {/if}
