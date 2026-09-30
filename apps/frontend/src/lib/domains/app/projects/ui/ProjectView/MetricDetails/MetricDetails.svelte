@@ -171,7 +171,7 @@
 
   <div class="flex flex-col gap-0.5 px-4 pt-4">
     <span class="text-neutral-500 text-xs">Now</span>
-    <span class="h-8 truncate text-2xl font-medium tabular-nums">
+    <span class="font-figure h-8 truncate text-2xl">
       {metric ? format(metric.value) : ''}
     </span>
   </div>

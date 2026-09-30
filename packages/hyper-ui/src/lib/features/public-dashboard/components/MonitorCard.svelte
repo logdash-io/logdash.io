@@ -2,7 +2,7 @@
   import type { Monitor } from "@logdash/status";
   import { formatUptime } from "../utils/format-status-page";
   import { isHealthyStatus } from "../utils/group-pings-by-status";
-  import DailyUptimeBars from "./DailyUptimeBars.svelte";
+  import UptimeBars from "./UptimeBars.svelte";
   import ResponseTimeChart from "./ResponseTimeChart.svelte";
 
   interface Props {
@@ -61,7 +61,7 @@
 </dl>
 
 <div class="mt-5">
-  <DailyUptimeBars buckets={monitor.history.daily} label={monitor.name} />
+  <UptimeBars buckets={monitor.history.daily} label={monitor.name} />
 </div>
 
 <dl class="mt-10 grid grid-cols-2 gap-x-3 @md:grid-cols-4">
@@ -88,7 +88,7 @@
     <dt class="text-neutral-500 truncate text-xs">{label}</dt>
     <dd
       class={[
-        "truncate text-base font-medium tabular-nums @xl:text-lg",
+        "font-figure truncate text-base @xl:text-lg",
         tone || (empty ? "text-neutral-500" : "text-fg-default"),
       ]}
     >

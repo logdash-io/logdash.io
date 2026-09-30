@@ -104,15 +104,15 @@
     <div class="flex min-w-24 flex-col gap-0.5">
       <span class="text-neutral-500 text-xs">Response</span>
       {#if isDown(current)}
-        <span class="text-error text-2xl font-medium">Down</span>
+        <span class="text-error font-figure text-2xl">Down</span>
       {:else}
-        <span class="text-2xl font-medium tabular-nums">{current} ms</span>
+        <span class="font-figure text-2xl">{current} ms</span>
       {/if}
     </div>
 
     <div class="hidden flex-col gap-0.5 sm:flex">
       <span class="text-neutral-500 text-xs">30 d uptime</span>
-      <span class="text-2xl font-medium tabular-nums">99.97%</span>
+      <span class="font-figure text-2xl">99.97%</span>
     </div>
 
     {#if isDown(current)}

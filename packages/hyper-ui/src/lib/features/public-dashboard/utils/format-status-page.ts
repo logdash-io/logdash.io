@@ -5,6 +5,15 @@ const UTC_DATE = new Intl.DateTimeFormat("en", {
   timeZone: "UTC",
 });
 
+const UTC_HOUR = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: "UTC",
+});
+
 export function formatUptime(uptime: number | null): string {
   if (uptime === null) return "No data";
   if (uptime >= 100) return "100%";
@@ -13,6 +22,10 @@ export function formatUptime(uptime: number | null): string {
 
 export function formatUtcDate(timestamp: string): string {
   return UTC_DATE.format(new Date(timestamp));
+}
+
+export function formatUtcHour(timestamp: string): string {
+  return UTC_HOUR.format(new Date(timestamp));
 }
 
 export function formatCount(count: number, noun: string): string {

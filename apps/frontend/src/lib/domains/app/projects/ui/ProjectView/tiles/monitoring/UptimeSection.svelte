@@ -1,27 +1,28 @@
 <script lang="ts">
-  import type {
-    PingBucket,
-    PingBucketPeriod,
+  import {
+    fillEmptySlots,
+    type PingBucket,
+    type PingBucketPeriod,
   } from '$lib/domains/app/projects/domain/monitoring/ping-bucket.js';
   import PaneHeader from '$lib/domains/shared/ui/components/PaneHeader.svelte';
   import TimeRangeSelector from '$lib/domains/shared/ui/components/TimeRangeSelector.svelte';
-  import { UptimeChart } from '@logdash/hyper-ui/features';
+  import { UptimeBars } from '@logdash/hyper-ui/features';
 
   type Props = {
+    label: string;
     timeRange: PingBucketPeriod;
     pingBuckets: (PingBucket | null)[];
     onTimeRangeChange: (range: PingBucketPeriod) => void;
   };
 
-  const { timeRange, pingBuckets, onTimeRangeChange }: Props = $props();
+  const { label, timeRange, pingBuckets, onTimeRangeChange }: Props = $props();
 
   const RANGES: { value: PingBucketPeriod; label: string }[] = [
     { value: '90h', label: '90h' },
     { value: '90d', label: '90d' },
   ];
-  const BUCKETS = 90;
 
-  const timeLabel = $derived(timeRange === '90h' ? 'hours ago' : 'days ago');
+  const unit = $derived(timeRange === '90d' ? 'day' : 'hour');
 </script>
 
 <section class="border-hairline border-b">
@@ -35,11 +36,11 @@
   </PaneHeader>
 
   <div class="p-4">
-    <UptimeChart
-      class="*:last:text-neutral-500"
-      buckets={pingBuckets}
-      maxBucketsToShow={BUCKETS}
-      {timeLabel}
+    <UptimeBars
+      buckets={fillEmptySlots(pingBuckets, unit)}
+      {label}
+      {unit}
+      raised
     />
   </div>
 </section>

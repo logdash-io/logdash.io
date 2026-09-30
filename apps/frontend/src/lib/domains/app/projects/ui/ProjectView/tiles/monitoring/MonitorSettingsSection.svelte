@@ -2,7 +2,8 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
+  import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
+  import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
   import {
     SettingsCard,
     SettingsCardItem,
@@ -11,13 +12,14 @@
   import { Button } from '@logdash/hyper-ui/presentational';
 
   type Props = {
-    monitorId: string;
+    monitor: Monitor;
     clusterId: string;
     projectId: string;
     onEdit: () => void;
+    onGetBadge: () => void;
   };
 
-  const { monitorId, clusterId, projectId, onEdit }: Props = $props();
+  const { monitor, clusterId, projectId, onEdit, onGetBadge }: Props = $props();
 
   let isDeleting = $state(false);
 
@@ -29,7 +31,7 @@
     isDeleting = true;
 
     try {
-      await monitoringState.deleteMonitor(monitorId);
+      await monitoringState.deleteMonitor(monitor.id);
       toast.success('Monitor deleted successfully', 5000);
       void goto(
         resolve('/app/domains/[cluster_id]/[project_id]', {
@@ -46,21 +48,48 @@
 </script>
 
 <SettingsCard
-  title="Monitor settings"
-  description="Change what is checked, or remove it."
+  title="Monitor"
+  description={monitor.url ? 'Its name, URL and badge.' : 'Its name and badge.'}
 >
   <SettingsCardItem>
-    <p>Edit monitor</p>
-    <p class="text-neutral-500">Change the name or the checked URL.</p>
+    {@render field('Name', monitor.name)}
 
     {#snippet action()}
-      <Button variant="neutral" size="sm" onclick={onEdit}>
-        <EditIcon class="size-4" />
-        Edit
-      </Button>
+      <Button variant="neutral" size="sm" onclick={onEdit}>Edit</Button>
     {/snippet}
   </SettingsCardItem>
 
+  {#if monitor.url}
+    <SettingsCardItem>
+      {@render field('URL', monitor.url)}
+
+      {#snippet action()}
+        <Button variant="neutral" size="sm" onclick={onEdit}>Edit</Button>
+      {/snippet}
+    </SettingsCardItem>
+  {/if}
+
+  <SettingsCardItem>
+    {@render field(
+      'Badge',
+      'Its uptime in a README, linked to your status page.',
+      true,
+    )}
+
+    {#snippet action()}
+      <Button variant="neutral" size="sm" onclick={onGetBadge}>
+        <ShieldCheckIcon class="size-4" />
+        Get badge
+      </Button>
+    {/snippet}
+  </SettingsCardItem>
+</SettingsCard>
+
+<SettingsCard
+  title="Danger zone"
+  description="Actions that cannot be undone."
+  variant="danger"
+>
   <SettingsCardItem>
     <p>Delete monitor</p>
     <p class="text-neutral-500">
@@ -79,3 +108,10 @@
     {/snippet}
   </SettingsCardItem>
 </SettingsCard>
+
+{#snippet field(label: string, value: string, muted = false)}
+  <div class="flex min-w-0 items-center gap-3">
+    <span class="text-neutral-500 w-16 shrink-0">{label}</span>
+    <span class={['truncate', { 'text-neutral-500': muted }]}>{value}</span>
+  </div>
+{/snippet}

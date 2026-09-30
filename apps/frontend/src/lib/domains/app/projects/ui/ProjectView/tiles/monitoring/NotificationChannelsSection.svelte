@@ -15,7 +15,7 @@
   } from '$lib/domains/shared/ui/components/settings-card/index.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
-  import { Checkbox } from '@logdash/hyper-ui/presentational';
+  import { Button, Checkbox } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     monitorId: string;
@@ -59,10 +59,7 @@
   }
 </script>
 
-<SettingsCard
-  title="Notification channels"
-  description="Where down and recovery alerts go."
->
+<SettingsCard title="Alerts" description="Where down and recovery alerts go.">
   {#each channels as channel (channel.id)}
     <SettingsCardItem>
       <label class="flex min-w-0 cursor-pointer items-center gap-3">
@@ -98,10 +95,14 @@
     </SettingsCardItem>
   {/each}
 
-  <SettingsCardItem onclick={onAddChannel}>
-    <span class="flex items-center gap-3">
-      <PlusIcon class="text-neutral-600 size-4 shrink-0" />
-      <span class="text-neutral-500">Add notification channel</span>
-    </span>
+  <SettingsCardItem>
+    <p class="text-neutral-500">Telegram or any webhook.</p>
+
+    {#snippet action()}
+      <Button variant="neutral" size="sm" onclick={onAddChannel}>
+        <PlusIcon class="size-4" />
+        Add channel
+      </Button>
+    {/snippet}
   </SettingsCardItem>
 </SettingsCard>

@@ -7,17 +7,6 @@ export interface Bucket {
 
 export type BucketStatus = "up" | "degraded" | "down" | "unknown";
 
-export interface BucketSegment {
-  status: BucketStatus;
-  buckets: (Bucket | null)[];
-  bucketCount: number;
-  startTime: Date | null;
-  endTime: Date | null;
-  avgUptime: number;
-  totalSuccess: number;
-  totalFailure: number;
-}
-
 type BucketCounts = Pick<Bucket, "successCount" | "failureCount">;
 
 export function getUptimeFromBucket(bucket: BucketCounts | null): number | null {
@@ -33,72 +22,3 @@ export function getBucketStatus(bucket: BucketCounts | null): BucketStatus {
   if (uptime >= 50) return "degraded";
   return "down";
 }
-
-export const groupBucketsByStatus = (
-  buckets: (Bucket | null)[]
-): BucketSegment[] => {
-  if (!buckets.length) return [];
-
-  const segments: BucketSegment[] = [];
-  let currentSegment: BucketSegment | null = null;
-
-  for (const bucket of buckets) {
-    const bucketStatus = getBucketStatus(bucket);
-    const bucketDate = bucket ? new Date(bucket.timestamp) : null;
-
-    if (!currentSegment || currentSegment.status !== bucketStatus) {
-      if (currentSegment) {
-        segments.push(currentSegment);
-      }
-
-      currentSegment = {
-        status: bucketStatus,
-        buckets: [bucket],
-        bucketCount: 1,
-        startTime: bucketDate,
-        endTime: bucketDate,
-        avgUptime: getUptimeFromBucket(bucket) ?? 100,
-        totalSuccess: bucket?.successCount ?? 0,
-        totalFailure: bucket?.failureCount ?? 0,
-      };
-    } else {
-      currentSegment.buckets.push(bucket);
-      currentSegment.bucketCount++;
-      if (bucketDate) {
-        currentSegment.endTime = bucketDate;
-      }
-      currentSegment.totalSuccess += bucket?.successCount ?? 0;
-      currentSegment.totalFailure += bucket?.failureCount ?? 0;
-
-      const total = currentSegment.totalSuccess + currentSegment.totalFailure;
-      currentSegment.avgUptime =
-        total > 0 ? (currentSegment.totalSuccess / total) * 100 : 100;
-    }
-  }
-
-  if (currentSegment) {
-    segments.push(currentSegment);
-  }
-
-  return segments;
-};
-
-export const formatBucketTimeRange = (
-  start: Date | null,
-  end: Date | null
-): string => {
-  if (!start && !end) return "No data";
-
-  const formatDate = (date: Date) =>
-    date.toLocaleString("en", {
-      month: "short",
-      day: "numeric",
-      timeZone: "UTC",
-    });
-
-  if (!start || !end || start.getTime() === end.getTime()) {
-    return formatDate(start || end!);
-  }
-
-  return `${formatDate(start)} - ${formatDate(end)}`;
-};

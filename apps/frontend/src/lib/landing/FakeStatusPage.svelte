@@ -41,7 +41,7 @@
       >
         <div class="flex items-center justify-between gap-3 text-sm">
           <span class="text-neutral-300">{service.name}</span>
-          <span class="text-neutral-500 tabular-nums">{service.uptime}</span>
+          <span class="text-neutral-500 font-figure">{service.uptime}</span>
         </div>
 
         <div class="flex h-7 gap-px sm:gap-0.5" aria-hidden="true">

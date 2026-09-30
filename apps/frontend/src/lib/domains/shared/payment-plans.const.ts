@@ -31,7 +31,7 @@ export const PAYMENT_PLANS = [
   },
   {
     name: 'Builder',
-    price: '$9/mo.',
+    price: '$9/mo',
     period: 'per month',
     description: 'When things are getting more serious.',
     tldr: 'Your 24/7 safety net. We watch the servers so you can sleep.',
@@ -63,7 +63,7 @@ export const PAYMENT_PLANS = [
   },
   {
     name: 'Pro',
-    price: '$15/mo.',
+    price: '$15/mo',
     period: 'per month',
     description: '"Sky is the limit" option for seasoned professionals.',
     tldr: 'Take the training wheels off, forget about the limits & squeeze every drop of juice from logdash.',

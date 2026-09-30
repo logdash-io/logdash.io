@@ -113,9 +113,7 @@
     >
       Day
     </span>
-    <span
-      class="flex h-7 items-center justify-center font-mono text-base font-medium tabular-nums"
-    >
+    <span class="font-figure flex h-7 items-center justify-center text-base">
       {day}
     </span>
   </span>

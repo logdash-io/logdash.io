@@ -9,14 +9,19 @@
     formatCount,
     formatUptime,
     formatUtcDate,
+    formatUtcHour,
   } from "../utils/format-status-page";
+
+  type Unit = "day" | "hour";
 
   interface Props {
     buckets: Bucket[];
     label: string;
+    unit?: Unit;
+    raised?: boolean;
   }
 
-  let { buckets, label }: Props = $props();
+  let { buckets, label, unit = "day", raised = false }: Props = $props();
 
   const TOOLTIP_WIDTH_REM = 12;
 
@@ -30,18 +35,18 @@
   const shown = $derived(hovered ?? focused);
   const shownBucket = $derived(shown === null ? null : buckets[shown]);
 
-  const barColors: Record<BucketStatus, string> = {
+  const barColors: Record<BucketStatus, string> = $derived({
     up: "bg-neutral-700",
     degraded: "bg-warning",
     down: "bg-error",
-    unknown: "bg-neutral-900",
-  };
+    unknown: raised ? "bg-neutral-800" : "bg-neutral-900",
+  });
 
-  const activeBarColors: Record<BucketStatus, string> = {
+  const activeBarColors: Record<BucketStatus, string> = $derived({
     ...barColors,
     up: "bg-neutral-400",
     unknown: "bg-neutral-600",
-  };
+  });
 
   const dotColors: Record<BucketStatus, string> = {
     up: "bg-success",
@@ -51,14 +56,20 @@
   };
 
   function describe(bucket: Bucket): string {
-    const date = formatUtcDate(bucket.timestamp);
+    const when = formatSlot(bucket);
     const uptime = getUptimeFromBucket(bucket);
 
     if (uptime === null) {
-      return `${date}: no data`;
+      return `${when}: no data`;
     }
 
-    return `${date}: ${formatUptime(uptime)} uptime, ${details(bucket, ", ")}`;
+    return `${when}: ${formatUptime(uptime)} uptime, ${details(bucket, ", ")}`;
+  }
+
+  function formatSlot(bucket: Bucket): string {
+    return unit === "hour"
+      ? formatUtcHour(bucket.timestamp)
+      : formatUtcDate(bucket.timestamp);
   }
 
   function details(bucket: Bucket, separator: string): string {
@@ -116,11 +127,11 @@
 
 <svelte:window onkeydown={onWindowKeydown} />
 
-<div class="relative">
+<div class="@container relative">
   <div
     role="grid"
     tabindex="-1"
-    aria-label="{label}, daily uptime over the last {buckets.length} days (UTC)"
+    aria-label="{label}, {unit === 'hour' ? 'hourly' : 'daily'} uptime over the last {buckets.length} {unit}s (UTC)"
     class="-m-1 rounded-sm p-1 has-[:focus-visible]:outline-2"
     onkeydown={onKeydown}
     onpointerleave={() => (hovered = null)}
@@ -156,11 +167,11 @@
       style:left={tooltipLeft(shown)}
     >
       <span class="text-sm font-medium">
-        {formatUtcDate(shownBucket.timestamp)}
+        {formatSlot(shownBucket)}
         <span class="text-neutral-400 font-mono text-xs font-normal">UTC</span>
       </span>
       {#if uptime === null}
-        <span class="text-neutral-400 text-xs">No checks this day</span>
+        <span class="text-neutral-400 text-xs">No checks this {unit}</span>
       {:else}
         <span class="text-neutral-300 flex items-center gap-2 text-xs tabular-nums">
           <span class={["size-1.5 shrink-0 rounded-full", dotColors[status]]}
@@ -173,13 +184,13 @@
       {/if}
     </div>
   {/if}
-</div>
 
-<div
-  class="text-neutral-500 mt-2 flex items-center justify-between font-mono text-xs"
->
-  <span>
-    {buckets.length === 0 ? "No data yet" : `${buckets.length} days ago`}
-  </span>
-  <span>Today</span>
+  <div
+    class="text-neutral-500 mt-2 flex items-center justify-between font-mono text-xs"
+  >
+    <span>
+      {buckets.length === 0 ? "No data yet" : `${buckets.length} ${unit}s ago`}
+    </span>
+    <span>{unit === "hour" ? "Now" : "Today"}</span>
+  </div>
 </div>

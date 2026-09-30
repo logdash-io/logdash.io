@@ -137,7 +137,7 @@
     >
       {metric.name}
     </span>
-    <span class="truncate text-2xl font-medium tabular-nums">
+    <span class="font-figure truncate text-2xl">
       {format(metric.value)}
     </span>
   </div>
