@@ -17,7 +17,8 @@
   import NavigationLoadingBar from '$lib/domains/shared/ui/components/NavigationLoadingBar.svelte';
   import Toaster from '$lib/domains/shared/ui/toaster/Toaster.svelte';
   import { envConfig } from '$lib/domains/shared/utils/env-config';
-  import posthog, { PostHog } from 'posthog-js';
+  import { dropThirdPartyExceptions } from '$lib/domains/shared/posthog/drop-third-party-exceptions';
+  import posthog, { type PostHogInterface } from 'posthog-js';
   import { getContext, setContext, type Snippet } from 'svelte';
   import '@fontsource-variable/inter/opsz.css';
   import '@fontsource-variable/geist-mono';
@@ -41,7 +42,7 @@
   const shouldRecordRoute = $derived(
     RECORDED_ROUTES.some((path) => page.url.pathname.includes(path)),
   );
-  let loadedPosthogInstance: PostHog | null = $state(null);
+  let loadedPosthogInstance: PostHogInterface | null = $state(null);
 
   $effect(() => installPressFeedback(document));
 
@@ -73,6 +74,7 @@
         ui_host: envConfig.posthog.host,
         person_profiles: 'always',
         disable_session_recording: true,
+        before_send: dropThirdPartyExceptions,
         loaded(ph) {
           loadedPosthogInstance = ph;
         },

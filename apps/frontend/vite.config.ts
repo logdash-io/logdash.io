@@ -37,5 +37,6 @@ export default defineConfig({
   },
   build: {
     target: ['es2015', 'ios11'],
+    sourcemap: true,
   },
 });
