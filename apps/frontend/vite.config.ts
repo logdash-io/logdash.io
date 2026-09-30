@@ -15,7 +15,7 @@ export default defineConfig({
         });
       },
     },
-    transformLucideImports(),
+    { ...transformLucideImports(), apply: 'serve' },
   ],
   /*
     transformLucideImports rewrites icon imports to deep paths after the dep
