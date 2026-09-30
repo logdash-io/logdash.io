@@ -190,14 +190,14 @@
     <div class="flex gap-x-10 sm:gap-x-14">
       <div class="flex flex-col gap-0.5">
         <span class="text-neutral-500 text-xs">Last hour</span>
-        <span class="text-2xl font-medium tabular-nums">
+        <span class="font-figure text-2xl">
           {linesLastHour.toLocaleString('en-US')} lines
         </span>
       </div>
 
       <div class="flex flex-col gap-0.5">
         <span class="text-neutral-500 text-xs">Errors</span>
-        <span class="text-2xl font-medium tabular-nums">{errorsLastHour}</span>
+        <span class="font-figure text-2xl">{errorsLastHour}</span>
       </div>
     </div>
 

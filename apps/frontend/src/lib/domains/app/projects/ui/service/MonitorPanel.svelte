@@ -97,7 +97,7 @@
       {#each stats as stat (stat.label)}
         <div class="flex min-w-0 flex-col gap-0.5">
           <span class="text-neutral-500 text-xs">{stat.label}</span>
-          <span class="truncate text-2xl font-medium tabular-nums">
+          <span class="font-figure truncate text-2xl">
             {stat.value}
           </span>
         </div>

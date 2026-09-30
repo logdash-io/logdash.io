@@ -196,19 +196,14 @@
   <div class="relative flex gap-x-10 sm:gap-x-14">
     <div class="flex flex-col gap-0.5">
       <span class="text-neutral-500 text-xs">Now</span>
-      <span
-        class={[
-          'text-2xl font-medium tabular-nums',
-          { 'text-error': isOver(current) },
-        ]}
-      >
+      <span class={['font-figure text-2xl', { 'text-error': isOver(current) }]}>
         {current}%
       </span>
     </div>
 
     <div class="hidden flex-col gap-0.5 sm:flex">
       <span class="text-neutral-500 text-xs">60 s peak</span>
-      <span class="text-2xl font-medium tabular-nums">{peak}%</span>
+      <span class="font-figure text-2xl">{peak}%</span>
     </div>
 
     {#if alert.visible}

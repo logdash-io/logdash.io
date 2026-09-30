@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Price from '$lib/domains/shared/ui/components/Price.svelte';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
   import MinusIcon from '$lib/domains/shared/icons/MinusIcon.svelte';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
@@ -30,8 +31,8 @@
             class="border-hairline border-l px-4 py-8 text-left align-top font-normal lg:px-6"
           >
             <span class="block text-base font-medium">{plan.name}</span>
-            <span class="text-neutral-400 mt-1 block tabular-nums">
-              {plan.price}
+            <span class="text-neutral-400 mt-1 block">
+              <Price price={plan.price} />
             </span>
             <Button
               href={planHref(plan.tier)}

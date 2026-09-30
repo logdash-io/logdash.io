@@ -88,7 +88,7 @@
     <dt class="text-neutral-500 truncate text-xs">{label}</dt>
     <dd
       class={[
-        "truncate text-base font-medium tabular-nums @xl:text-lg",
+        "font-figure truncate text-base @xl:text-lg",
         tone || (empty ? "text-neutral-500" : "text-fg-default"),
       ]}
     >

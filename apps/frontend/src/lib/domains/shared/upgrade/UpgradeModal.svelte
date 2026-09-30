@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Price from '$lib/domains/shared/ui/components/Price.svelte';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { UserTier } from '$lib/domains/shared/types.js';
   import { CheckIcon, CloseIcon } from '@logdash/hyper-ui/icons';
@@ -145,7 +146,9 @@
               {plan.name}
             </CardTitle>
             <div class="mt-2">
-              <span class="text-3xl font-semibold">{plan.price}</span>
+              <span class="text-3xl font-medium">
+                <Price price={plan.price} />
+              </span>
 
               <p class="text-neutral-300 mt-3 h-10 text-sm">
                 {plan.description}

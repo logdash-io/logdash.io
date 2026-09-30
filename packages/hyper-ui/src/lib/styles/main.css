@@ -56,3 +56,9 @@
   );
   transition-duration: var(--tw-duration, var(--default-transition-duration));
 }
+
+@utility font-figure {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0;
+}

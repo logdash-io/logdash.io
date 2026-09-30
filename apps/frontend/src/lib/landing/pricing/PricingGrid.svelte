@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Price from '$lib/domains/shared/ui/components/Price.svelte';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { Button } from '@logdash/hyper-ui/presentational';
@@ -30,10 +31,8 @@
         </span>
       </div>
 
-      <p
-        class="mt-6 text-4xl font-medium tracking-[-0.03em] tabular-nums sm:text-[40px]"
-      >
-        {plan.price}
+      <p class="mt-6 text-4xl font-medium tracking-[-0.03em] sm:text-[40px]">
+        <Price price={plan.price} />
       </p>
 
       <p class="text-neutral-400 mt-3 leading-relaxed text-pretty lg:min-h-13">
