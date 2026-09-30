@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { filter, fromEvent, map, Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
 import { Resource } from '../../personal-api-key/core/enums/resource.enum';
@@ -25,12 +25,19 @@ import { HttpPingSerializer } from './entities/http-ping.serializer';
 import { HttpPingReadService } from '../read/http-ping-read.service';
 import { ReadByMonitorIdQuery } from './dto/read-by-monitor-id.query';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
+import { KeyedEventStream } from '../../shared/utils/keyed-event-stream';
 
 @ApiBearerAuth()
 @ApiTags('HTTP Pings')
 @Controller()
 @UseGuards(ClusterMemberGuard)
 export class HttpPingCoreController {
+  private readonly pingStream = new KeyedEventStream<HttpPingCreatedEvent>(
+    this.eventEmitter,
+    HttpPingEvent.HttpPingCreatedEvent,
+    (event) => event.clusterId,
+  );
+
   constructor(
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpPingReadService: HttpPingReadService,
@@ -65,11 +72,7 @@ export class HttpPingCoreController {
   @ApiBearerAuth()
   @Sse('clusters/:clusterId/http_pings/sse')
   public streamHttpMonitorPings(@Param('clusterId') clusterId: string): Observable<MessageEvent> {
-    const eventStream$ = fromEvent(this.eventEmitter, HttpPingEvent.HttpPingCreatedEvent).pipe(
-      map((data) => data as HttpPingCreatedEvent),
-      filter((data) => data.clusterId === clusterId),
-      map((data) => ({ data })),
-    );
+    const eventStream$ = this.pingStream.stream(clusterId).pipe(map((data) => ({ data })));
 
     return new Observable<MessageEvent>((observer) => {
       const subscription = eventStream$.subscribe(observer);

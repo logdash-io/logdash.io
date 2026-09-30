@@ -6,6 +6,8 @@ import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { HttpPingEvent } from '../../src/http-ping/events/http-ping-event.enum';
 
 describe('Http Ping (SSE)', () => {
   let controller: HttpPingCoreController;
@@ -31,6 +33,23 @@ describe('Http Ping (SSE)', () => {
   });
 
   describe('GET /clusters/:clusterId/http_pings/sse', () => {
+    it('does not add an event listener per open stream', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const eventEmitter = bootstrap.app.get(EventEmitter2);
+      const listenersBefore = eventEmitter.listenerCount(HttpPingEvent.HttpPingCreatedEvent);
+
+      // when
+      const subscriptions = [1, 2, 3].map(() =>
+        controller.streamHttpMonitorPings(cluster.id).subscribe(),
+      );
+
+      // then
+      expect(eventEmitter.listenerCount(HttpPingEvent.HttpPingCreatedEvent)).toBe(listenersBefore);
+
+      subscriptions.forEach((subscription) => subscription.unsubscribe());
+    });
+
     it('receives ping events for the specified cluster', async () => {
       // given
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();

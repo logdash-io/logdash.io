@@ -30,17 +30,24 @@ import { RequireScope } from '../../auth/core/decorators/require-scope.decorator
 import { Resource } from '../../personal-api-key/core/enums/resource.enum';
 import { Action } from '../../personal-api-key/core/enums/action.enum';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { filter, fromEvent, map, Observable } from 'rxjs';
+import { filter, map, Observable } from 'rxjs';
 import { MetricEvents } from '../events/metric-events.enum';
 import { MetricCreatedEvent } from '../events/definitions/metric-created.event';
 import { MetricGranularity } from '../../metric-shared/enums/metric-granularity.enum';
 import { DemoEndpoint } from '../../demo/decorators/demo-endpoint.decorator';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
 import { NewMetricQueueingService } from '../new-queueing/new-metric-queueing.service';
+import { KeyedEventStream } from '../../shared/utils/keyed-event-stream';
 
 @Controller('')
 @ApiTags('Metrics')
 export class MetricCoreController {
+  private readonly metricStream = new KeyedEventStream<MetricCreatedEvent>(
+    this.eventEmitter,
+    MetricEvents.MetricCreatedEvent,
+    (event) => event.projectId,
+  );
+
   constructor(
     private readonly metricQueueingService: MetricQueueingService,
     private readonly metricReadService: MetricReadService,
@@ -81,11 +88,8 @@ export class MetricCoreController {
   @ApiBearerAuth()
   @Sse('projects/:projectId/metrics/sse')
   public streamProjectMetrics(@Param('projectId') projectId: string): Observable<MessageEvent> {
-    const eventStream$ = fromEvent(this.eventEmitter, MetricEvents.MetricCreatedEvent).pipe(
-      map((data) => data as MetricCreatedEvent),
-      filter(
-        (data) => data.projectId === projectId && data.granularity !== MetricGranularity.AllTime,
-      ),
+    const eventStream$ = this.metricStream.stream(projectId).pipe(
+      filter((data) => data.granularity !== MetricGranularity.AllTime),
       map((data) => ({ data })),
     );
 
