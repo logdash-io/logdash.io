@@ -15,6 +15,9 @@ on:
     - cron: '*/15 * * * *' # Every 15 minutes
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   backup:
     runs-on: ubuntu-latest

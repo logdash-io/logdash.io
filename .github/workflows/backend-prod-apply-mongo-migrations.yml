@@ -8,6 +8,9 @@ on:
       - 'apps/backend/migrations/**'
       - '.github/**'
 
+permissions:
+  contents: read
+
 jobs:
   migrate:
     runs-on: ubuntu-latest

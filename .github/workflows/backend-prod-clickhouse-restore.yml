@@ -16,14 +16,20 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   restore:
     runs-on: ubuntu-latest
 
     steps:
       - name: Validate Input Password
+        env:
+          CONFIRMATION_PASSWORD: ${{ github.event.inputs.confirmation_password }}
         run: |
-          if [ "${{ github.event.inputs.confirmation_password }}" != "RESTORE_CONFIRMED" ]; then
+          if [ "$CONFIRMATION_PASSWORD" != "RESTORE_CONFIRMED" ]; then
             echo "❌ Invalid confirmation password. Please type 'RESTORE_CONFIRMED' to proceed."
             exit 1
           fi
