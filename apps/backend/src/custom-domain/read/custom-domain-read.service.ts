@@ -39,6 +39,16 @@ export class CustomDomainReadService {
     return CustomDomainSerializer.normalize(entity);
   }
 
+  public async readVerifiedByDomain(domain: string): Promise<CustomDomainNormalized | null> {
+    const entity = await this.customDomainModel
+      .findOne({ domain, status: CustomDomainStatus.Verified })
+      .exec();
+    if (!entity) {
+      return null;
+    }
+    return CustomDomainSerializer.normalize(entity);
+  }
+
   public async readDomainsToVerify(): Promise<CustomDomainNormalized[]> {
     const entities = await this.customDomainModel
       .find({ status: CustomDomainStatus.Verifying })

@@ -35,6 +35,15 @@ jobs:
         run: npm run lint
         working-directory: apps/backend
 
+      - name: Check the status page OpenAPI spec is up to date
+        run: |
+          npm run openapi:export
+          git diff --exit-code -- openapi || {
+            echo "::error::openapi/status-page-v1.json is out of date. Run 'npm run openapi:export' in apps/backend and commit the result."
+            exit 1
+          }
+        working-directory: apps/backend
+
   find-tests:
     runs-on: ubuntu-latest
     outputs:

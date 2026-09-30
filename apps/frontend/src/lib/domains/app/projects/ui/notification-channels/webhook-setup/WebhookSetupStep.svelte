@@ -24,7 +24,7 @@
     clusterName: string;
     monitorName: string;
     onCancel?: () => void;
-    onSubmit: (dto: WebhookSetupDTO) => void;
+    onSubmit: (dto: WebhookSetupDTO) => Promise<void>;
   };
 
   const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
@@ -34,6 +34,8 @@
   const HEADER_VALUE_PATTERN = /^[\x20-\x7E]*$/;
 
   let { monitorName, clusterName, onCancel, onSubmit }: Props = $props();
+
+  let isSaving = $state(false);
 
   const canUseAdvancedMethods = $derived(!userState.isFree);
   const canUseCustomHeaders = $derived(!userState.isFree);
@@ -64,6 +66,34 @@
       webhookName.trim() !== '' && webhookUrl.trim() !== '' && hasValidHeaders()
     );
   }
+
+  async function onSave(): Promise<void> {
+    if (isSaving) {
+      return;
+    }
+
+    isSaving = true;
+
+    try {
+      await onSubmit({
+        withAssignment: assignToServiceMonitor,
+        url: webhookUrl,
+        name: webhookName,
+        headers: headers.reduce(
+          (acc, header) => {
+            if (header.key && header.value) {
+              acc[header.key] = header.value;
+            }
+            return acc;
+          },
+          {} as Record<string, string>,
+        ),
+        method,
+      });
+    } finally {
+      isSaving = false;
+    }
+  }
 </script>
 
 <div class="space-y-8 text-center">
@@ -71,13 +101,13 @@
     <div
       class="success-card flex h-14 w-14 items-center justify-center rounded-full"
     >
-      <LinkIcon class="h-6 w-6" />
+      <LinkIcon class="size-6 stroke-1" />
     </div>
 
     <div class="flex flex-col items-start">
-      <h3 class="text-xl font-medium">Configure webhook channel</h3>
+      <h3 class="text-xl font-medium">Set up a webhook channel</h3>
       <p class="text-neutral-400 text-sm">
-        Add it with a memorable name to your project.
+        Add it with a memorable name to your domain.
       </p>
     </div>
   </div>
@@ -202,25 +232,11 @@
     <Button
       variant="primary"
       class="flex-1"
-      disabled={!canSubmit()}
-      onclick={() =>
-        onSubmit({
-          withAssignment: assignToServiceMonitor,
-          url: webhookUrl,
-          name: webhookName,
-          headers: headers.reduce(
-            (acc, header) => {
-              if (header.key && header.value) {
-                acc[header.key] = header.value;
-              }
-              return acc;
-            },
-            {} as Record<string, string>,
-          ),
-          method,
-        })}
+      disabled={!canSubmit() || isSaving}
+      loading={isSaving}
+      onclick={onSave}
     >
-      Save channel to {clusterName} project
+      Save channel to {clusterName}
     </Button>
   </div>
 </div>

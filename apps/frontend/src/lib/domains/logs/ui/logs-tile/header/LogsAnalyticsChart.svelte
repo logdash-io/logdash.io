@@ -10,16 +10,10 @@
   import { fade } from 'svelte/transition';
 
   type Props = {
-    selectedStartDate: string | null;
-    selectedEndDate: string | null;
-    onDateRangeChange?: (startDate: Date | null, endDate: Date | null) => void;
+    onDateRangeChange?: (startDate: Date, endDate: Date) => void;
   };
 
-  let {
-    selectedStartDate = $bindable(),
-    selectedEndDate = $bindable(),
-    onDateRangeChange,
-  }: Props = $props();
+  const { onDateRangeChange }: Props = $props();
 
   let chartContainer: HTMLElement;
   let tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined>;
@@ -28,8 +22,16 @@
   let dragEnd: Date | null = $state(null);
   let currentTooltipBucket: LogsAnalyticsResponse['buckets'][0] | null = null;
 
-  const CHART_HEIGHT = 70;
-  const MARGIN = { top: 5, right: 10, bottom: 25, left: 5 };
+  const CHART_HEIGHT = 72;
+  const MARGIN = { top: 4, right: 0, bottom: 20, left: 0 };
+  const AXIS_COLOR = '#7f7f86';
+  const AXIS_LINE_COLOR = '#222225';
+  const SELECTION_COLOR = '#2c2c2e';
+  const TIME_FORMAT: Intl.DateTimeFormatOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  };
   const LOG_TYPES: LogLevel[] = [
     'error',
     'warning',
@@ -42,11 +44,11 @@
   const LOG_COLORS = [
     '#e7000b',
     '#fe9a00',
-    '#2c2c2e',
-    '#2c2c2e',
-    '#2c2c2e',
-    '#2c2c2e',
-    '#2c2c2e',
+    '#414145',
+    '#414145',
+    '#414145',
+    '#414145',
+    '#414145',
   ];
 
   const analyticsData = $derived(logAnalyticsState.analyticsData);
@@ -86,7 +88,6 @@
       .append('g')
       .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
 
-    // Create scales
     const timeRangeToUse = {
       start: new Date(data.buckets[0].bucketStart),
       end: new Date(data.buckets[data.buckets.length - 1].bucketEnd),
@@ -108,80 +109,77 @@
       .domain(LOG_TYPES)
       .range(LOG_COLORS);
 
-    // No grid lines needed without Y axis
-
-    // Draw bars
     data.buckets.forEach((bucket) => {
       const bucketStart = new Date(bucket.bucketStart);
       const bucketEnd = new Date(bucket.bucketEnd);
 
-      // Position bars to fill the space between bucket start and end
       const xStart = xScale(bucketStart);
       const xEnd = xScale(bucketEnd);
       const actualBarWidth = Math.max(1, (xEnd - xStart) * 0.8);
       const barX = xStart + (xEnd - xStart - actualBarWidth) / 2;
 
+      const other = LOG_TYPES.slice(2).reduce(
+        (sum, logType) => sum + bucket.countByLevel[logType],
+        0,
+      );
+      const segments = [
+        { count: bucket.countByLevel.error, color: colorScale('error') },
+        { count: bucket.countByLevel.warning, color: colorScale('warning') },
+        { count: other, color: colorScale('info') },
+      ];
+
       let yOffset = innerHeight;
 
-      LOG_TYPES.forEach((logType) => {
-        const count = bucket.countByLevel[logType];
-        if (count > 0) {
-          const barHeight = innerHeight - yScale(count);
-
-          chart
-            .append('rect')
-            .attr('class', `bar-${logType}`)
-            .attr('x', barX)
-            .attr('y', yOffset - barHeight)
-            .attr('width', actualBarWidth)
-            .attr('height', barHeight)
-            .attr('fill', colorScale(logType))
-            .attr('opacity', 0.9);
-
-          yOffset -= barHeight;
+      segments.forEach(({ count, color }) => {
+        if (count <= 0) {
+          return;
         }
+
+        const barHeight = innerHeight - yScale(count);
+
+        chart
+          .append('rect')
+          .attr('x', barX)
+          .attr('y', yOffset - barHeight)
+          .attr('width', actualBarWidth)
+          .attr('height', barHeight)
+          .attr('fill', color)
+          .attr('shape-rendering', 'crispEdges');
+
+        yOffset -= barHeight;
       });
     });
 
-    // Draw axes (X axis only)
     const xAxis = chart
       .append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(
         d3
           .axisBottom<Date>(xScale)
+          .tickSize(0)
+          .tickPadding(8)
           .ticks(Math.max(2, Math.min(6, Math.floor(innerWidth / 90))))
-          .tickFormat((d: Date) => {
-            return d.toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            });
-          }),
+          .tickFormat((d: Date) => d.toLocaleTimeString([], TIME_FORMAT)),
       )
-      .attr('color', '#909090');
+      .attr('color', AXIS_COLOR);
 
     xAxis
       .selectAll('text')
-      .style('font-size', '9px')
-      .style('font-family', 'monospace');
-    xAxis.selectAll('path, line').attr('stroke', '#393939');
+      .style('font-size', '10px')
+      .style('font-family', 'var(--font-mono)');
+    xAxis.selectAll('path, line').attr('stroke', AXIS_LINE_COLOR);
 
-    // Align text to prevent cutoff
     xAxis.selectAll('text').each(function (d, i, nodes) {
       const text = d3.select(this);
       if (i === 0) {
-        // First tick - align to start (left)
         text.attr('text-anchor', 'start');
       } else if (i === nodes.length - 1) {
-        // Last tick - align to end (right)
         text.attr('text-anchor', 'end');
       } else {
-        // Middle ticks - keep centered
         text.attr('text-anchor', 'middle');
       }
     });
 
-    // Add drag selection
     addDragSelection(chart, xScale, innerWidth, innerHeight);
   }
 
@@ -199,7 +197,6 @@
     > | null = null;
     let dragStartX: number | null = null;
 
-    // Add invisible overlay for drag interaction
     const overlay = chart
       .append('rect')
       .attr('width', width)
@@ -211,18 +208,14 @@
       .drag<SVGRectElement, unknown>()
       .on('start', (event) => {
         isDragging = true;
-        // Get coordinates relative to the chart group (overlay)
         const [rawX] = d3.pointer(event, overlay.node());
-        // Clamp coordinates to chart boundaries
         const x = Math.max(0, Math.min(width, rawX));
         dragStartX = x;
         dragStart = xScale.invert(x);
         dragEnd = null;
 
-        // Hide tooltip when starting drag
         hideTooltip();
 
-        // Create selection rectangle - use raw pixel coordinates
         dragSelection = chart
           .append('rect')
           .attr('class', 'drag-selection')
@@ -230,20 +223,16 @@
           .attr('y', 0)
           .attr('width', 0)
           .attr('height', height)
-          .attr('fill', 'rgba(59, 130, 246, 0.2)')
-          .attr('stroke', 'rgba(59, 130, 246, 0.5)')
-          .attr('stroke-width', 1);
+          .attr('fill', SELECTION_COLOR)
+          .lower();
       })
       .on('drag', (event) => {
         if (!dragSelection || dragStartX === null) return;
 
-        // Get coordinates relative to the chart group (overlay)
         const [rawX] = d3.pointer(event, overlay.node());
-        // Clamp coordinates to chart boundaries
         const x = Math.max(0, Math.min(width, rawX));
         dragEnd = xScale.invert(x);
 
-        // Work with raw pixel coordinates for visual selection
         const minX = Math.min(dragStartX, x);
         const maxX = Math.max(dragStartX, x);
 
@@ -261,10 +250,7 @@
           const start = dragStart < dragEnd ? dragStart : dragEnd;
           const end = dragStart < dragEnd ? dragEnd : dragStart;
 
-          // Only update if there's a meaningful range (more than 1 minute)
           if (end.getTime() - start.getTime() > 1 * 60000) {
-            selectedStartDate = start.toISOString();
-            selectedEndDate = end.toISOString();
             onDateRangeChange?.(start, end);
           }
         }
@@ -294,11 +280,9 @@
     width: number,
   ) {
     const [rawX] = d3.pointer(event);
-    // Clamp coordinates to chart boundaries
     const x = Math.max(0, Math.min(width, rawX));
     const hoverDate = xScale.invert(x);
 
-    // Find the bucket that corresponds to this x position
     const bucket = analyticsData?.buckets.find((b) => {
       const bucketStart = new Date(b.bucketStart);
       const bucketEnd = new Date(b.bucketEnd);
@@ -306,12 +290,10 @@
     });
 
     if (bucket) {
-      // Show tooltip if bucket changed or tooltip is not visible
       if (currentTooltipBucket !== bucket) {
         currentTooltipBucket = bucket;
         showTooltip(event, bucket);
       } else {
-        // Same bucket, just move the tooltip
         moveTooltip(event);
       }
     } else {
@@ -327,23 +309,13 @@
     const bucketStart = new Date(bucket.bucketStart);
     const bucketEnd = new Date(bucket.bucketEnd);
 
-    const formattedDateRange = `${bucketStart.toLocaleDateString()} ${bucketStart.toLocaleTimeString(
-      [],
-      {
-        hour: '2-digit',
-        minute: '2-digit',
-      },
-    )} - ${bucketEnd.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    })}`;
+    const formattedDateRange = `${bucketStart.toLocaleDateString()} ${bucketStart.toLocaleTimeString([], TIME_FORMAT)} - ${bucketEnd.toLocaleTimeString([], TIME_FORMAT)}`;
 
     const colorScale = d3
       .scaleOrdinal<string>()
       .domain(LOG_TYPES)
       .range(LOG_COLORS);
 
-    // Position tooltip above the chart to prevent it going off-screen
     const tooltipX = Math.min(event.pageX + 10, window.innerWidth - 200);
     const tooltipY = event.pageY - 100;
 
@@ -384,22 +356,9 @@
   function renderEmptyState(container: HTMLElement) {
     d3.select(container)
       .append('div')
-      .attr('class', 'flex items-center justify-center text-neutral-400')
+      .attr('class', 'flex items-center text-xs text-neutral-500')
       .style('height', `${CHART_HEIGHT}px`)
-      .html('<p>No log data available</p>');
-  }
-
-  function clearSelection() {
-    selectedStartDate = null;
-    selectedEndDate = null;
-
-    onDateRangeChange?.(null, null);
-  }
-
-  function handleEscapeKey(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      clearSelection();
-    }
+      .text('No logs in this range');
   }
 
   onMount(() => {
@@ -437,48 +396,33 @@
     };
   });
 
-  // Re-render chart when analytics data changes
   $effect(() => {
     if (analyticsData && chartContainer) {
       createChart(chartContainer, analyticsData);
     }
   });
-
-  // Handle escape key to clear selection
-  $effect(() => {
-    if (selectedStartDate || selectedEndDate) {
-      document.addEventListener('keydown', handleEscapeKey);
-      return () => {
-        document.removeEventListener('keydown', handleEscapeKey);
-      };
-    }
-  });
 </script>
 
-<div class="space-y-4 p-4 pb-0 font-mono">
-  <div class="chart-container relative">
-    {#if isLoading}
-      <div
-        transition:fade={{ duration: 200, easing: cubicOut }}
-        class="bg-surface-elevated text-neutral-400 absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
-        style="height: {CHART_HEIGHT}px"
-      >
-        <Spinner size="xs" class="mr-2" aria-hidden="true" />
-        Loading analytics data...
-      </div>
-    {:else if error}
-      <div
-        class="bg-surface-elevated/50 text-fg-default absolute inset-0 flex h-full w-full items-center justify-center pb-4 text-xs"
-        style="height: {CHART_HEIGHT}px"
-      >
-        <span class="mr-2">
-          <DangerIcon class="size-4" />
-        </span>
-        Failed to load analytics data
-      </div>
-    {/if}
-    <div class="chart-wrapper w-full" bind:this={chartContainer}></div>
-  </div>
+<div class="chart-container relative">
+  {#if isLoading}
+    <div
+      transition:fade={{ duration: 200, easing: cubicOut }}
+      class="bg-surface-elevated text-neutral-500 absolute inset-0 flex items-center gap-2 text-xs"
+      style="height: {CHART_HEIGHT}px"
+    >
+      <Spinner size="xs" aria-hidden="true" />
+      Loading log volume
+    </div>
+  {:else if error}
+    <div
+      class="bg-surface-elevated text-neutral-500 absolute inset-0 flex items-center gap-2 text-xs"
+      style="height: {CHART_HEIGHT}px"
+    >
+      <DangerIcon class="size-4" />
+      Could not load log volume
+    </div>
+  {/if}
+  <div class="chart-wrapper w-full" bind:this={chartContainer}></div>
 </div>
 
 <style>
@@ -489,7 +433,7 @@
 
   .chart-wrapper {
     width: 100%;
-    min-height: 70px;
+    min-height: 72px;
     overflow: hidden;
   }
 

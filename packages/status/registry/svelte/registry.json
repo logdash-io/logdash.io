@@ -1,0 +1,21 @@
+{
+  "$schema": "https://shadcn-svelte.com/schema/registry.json",
+  "name": "logdash",
+  "homepage": "https://logdash.io",
+  "items": [
+    {
+      "name": "status-page",
+      "type": "registry:component",
+      "title": "Status page",
+      "description": "A Logdash status page: overall status, uptime per monitor and 90 days of daily bars, styled with your theme.",
+      "dependencies": ["@logdash/status"],
+      "files": [
+        {
+          "path": "registry/svelte/StatusPage.svelte",
+          "type": "registry:component"
+        }
+      ],
+      "registryDependencies": []
+    }
+  ]
+}

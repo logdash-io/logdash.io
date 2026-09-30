@@ -73,10 +73,6 @@ class UserState {
     );
   }
 
-  get canSetupCustomDomain(): boolean {
-    return this.isPro;
-  }
-
   set(user: User): void {
     this._user = user;
   }

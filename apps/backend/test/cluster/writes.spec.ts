@@ -71,7 +71,7 @@ describe('ClusterCoreController (writes)', () => {
 
       // then
       expect((response.body as ErrorResponse).message).toBe(
-        'Cannot create more clusters. Maximum limit reached.',
+        'Cannot create more domains. Maximum limit reached.',
       );
 
       // Verify no new cluster was created
@@ -267,7 +267,7 @@ describe('ClusterCoreController (writes)', () => {
 
       // then
       expect(response.statusCode).toBe(403);
-      expect((response.body as ErrorResponse).message).toBe('User is not a member of this cluster');
+      expect((response.body as ErrorResponse).message).toBe('User is not a member of this domain');
     });
 
     it('throws 403 error when user is member of the cluster but does not have the required role', async () => {
@@ -341,7 +341,7 @@ describe('ClusterCoreController (writes)', () => {
       // then
       expect(response.status).toBe(400);
       expect((response.body as ErrorResponse).message).toBe(
-        'Cannot delete role. User is the creator of this cluster.',
+        'Cannot delete role. User is the creator of this domain.',
       );
     });
 

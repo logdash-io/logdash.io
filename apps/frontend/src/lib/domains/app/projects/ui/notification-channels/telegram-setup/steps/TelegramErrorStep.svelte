@@ -16,11 +16,11 @@
     <div
       class="error-card flex h-14 w-14 items-center justify-center rounded-full"
     >
-      <DangerIcon class="h-6 w-6" />
+      <DangerIcon class="size-6 stroke-1" />
     </div>
 
     <div class="flex flex-col items-start">
-      <h3 class="text-xl font-medium">Telegram Setup Failed</h3>
+      <h3 class="text-xl font-medium">Telegram setup failed</h3>
       <p class="text-neutral-400 text-sm">
         Please check your connection and try again.
       </p>

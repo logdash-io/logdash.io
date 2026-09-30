@@ -55,7 +55,7 @@ export class NewMetricQueueingService {
       await this.metricBufferService.addToBuffer(dto);
     } else if (result === AddToSetResult.OverLimit) {
       throw new ConflictException(
-        'You have reached the maximum number of metrics for this project',
+        'You have reached the maximum number of metrics for this service',
       );
     }
   }

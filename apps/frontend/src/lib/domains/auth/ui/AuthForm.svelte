@@ -24,8 +24,8 @@
 
   type AuthMode = 'claim' | 'login';
 
-  const CLAIMED_NEXT_URL = '/app/clusters?claimed=1';
-  const SIGNED_IN_NEXT_URL = '/app/clusters';
+  const CLAIMED_NEXT_URL = '/app/domains?claimed=1';
+  const SIGNED_IN_NEXT_URL = '/app/domains';
 
   const params = $derived(page.url.searchParams);
   const mode: AuthMode = $derived(
@@ -38,7 +38,7 @@
       .with(
         'project-limit',
         () =>
-          'That account has reached its project limit. Free a slot there, then claim again. Your temporary dashboard is still here.',
+          'That account has reached its service limit. Free a slot there, then claim again. Your temporary dashboard is still here.',
       )
       .with(
         'unavailable',

@@ -24,6 +24,7 @@
     type FeatureLink,
     type FeaturePageData,
   } from './feature-page';
+  import StatusPageSkins from './StatusPageSkins.svelte';
 
   type Props = {
     page: FeaturePageData;
@@ -171,6 +172,10 @@
       {/each}
     </ol>
   </LandingSection>
+
+  {#if page.statusPages}
+    <StatusPageSkins copy={page.statusPages} />
+  {/if}
 
   {#if page.sdk}
     <LandingSection>

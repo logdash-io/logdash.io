@@ -9,7 +9,9 @@ const logger = createLogger('logs-sync.service', true);
 
 export class LogsSyncService {
   private _syncConnection: EventSource | null = $state(null);
+  private _failed = $state(false);
   private _shouldReconnect = true;
+  private _reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   private _unsubscribe: (() => void) | null = null;
   private _config: LogsSyncConfig | null = null;
   private _newLogHandlers: ((log: Log) => void)[] = [];
@@ -18,25 +20,22 @@ export class LogsSyncService {
     return this._syncConnection === null;
   }
 
+  get failed(): boolean {
+    return this._failed;
+  }
+
   onLog(handler: (log: Log) => void): () => void {
     this._newLogHandlers.push(handler);
 
     return () => {
       this._newLogHandlers = this._newLogHandlers.filter(
-        (handler) => handler !== handler,
+        (registered) => registered !== handler,
       );
     };
   }
 
   init(config: LogsSyncConfig): void {
     this._config = config;
-  }
-
-  get isConnected(): boolean {
-    return (
-      this._syncConnection !== null &&
-      this._syncConnection.readyState === EventSource.OPEN
-    );
   }
 
   async open(): Promise<void> {
@@ -67,23 +66,24 @@ export class LogsSyncService {
 
       const onOpen = (event: Event): void => {
         logger.debug('SSE connection opened', event);
+        this._failed = false;
         this._config?.onOpen?.();
         resolve();
       };
 
       const onError = (event: ErrorEvent): void => {
         logger.error('SSE connection error:', event);
+        this._failed = true;
         this._config?.onError?.();
         this._unsubscribe?.();
 
         if (this._shouldReconnect) {
           logger.debug('Attempting to reconnect in 3 seconds...');
-          setTimeout(() => {
-            if (this._shouldReconnect) {
-              this.open().catch((error) => {
-                logger.error('Failed to reconnect:', error);
-              });
-            }
+          clearTimeout(this._reconnectTimer);
+          this._reconnectTimer = setTimeout(() => {
+            this.open().catch((error) => {
+              logger.error('Failed to reconnect:', error);
+            });
           }, 3000);
         }
 
@@ -126,25 +126,11 @@ export class LogsSyncService {
     });
   }
 
-  pause(): void {
-    logger.debug('pausing logs sync...');
-    this._shouldReconnect = false;
-    this._unsubscribe?.();
-    this._syncConnection?.close();
-    this._syncConnection = null;
-  }
-
-  resume(): void {
-    logger.debug('resuming logs sync...');
-    this._shouldReconnect = true;
-    this.open().catch((error) => {
-      logger.error('Failed to resume sync:', error);
-    });
-  }
-
   close(): void {
     logger.debug('closing logs sync...');
     this._shouldReconnect = false;
+    clearTimeout(this._reconnectTimer);
+    this._failed = false;
     this._unsubscribe?.();
     this._syncConnection?.close();
     this._syncConnection = null;

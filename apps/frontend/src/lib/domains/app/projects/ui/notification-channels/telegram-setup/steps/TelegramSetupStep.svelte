@@ -46,11 +46,11 @@
     <div
       class="bg-surface-root border-border-default text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
     >
-      <SendIcon class="h-6 w-6" />
+      <SendIcon class="size-6 stroke-1" />
     </div>
 
     <div class="flex flex-col items-start">
-      <h3 class="text-xl font-medium">Setup Telegram Channel</h3>
+      <h3 class="text-xl font-medium">Set up a Telegram channel</h3>
       <p class="text-neutral-400 text-sm">
         This is the hard part, so we made it easy!
       </p>

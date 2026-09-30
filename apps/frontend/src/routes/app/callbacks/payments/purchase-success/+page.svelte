@@ -32,7 +32,7 @@
       </p>
 
       <CardActions class="w-full justify-center gap-2 rounded-xl">
-        <Button href={resolve('/app/clusters')} variant="primary" size="sm">
+        <Button href={resolve('/app/domains')} variant="primary" size="sm">
           Continue
         </Button>
       </CardActions>

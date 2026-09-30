@@ -15,7 +15,7 @@
     providerName,
     type HeroClaimStep,
   } from './hero-claim.svelte';
-  import { toChartPings } from './hero-pings';
+  import { toChartPings } from '$lib/domains/app/projects/application/monitor-pings';
 
   type LiveStatus = {
     dotClass: string;

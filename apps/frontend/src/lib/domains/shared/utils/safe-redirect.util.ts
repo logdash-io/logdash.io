@@ -1,9 +1,20 @@
-/**
- * Only same-origin, non protocol-relative paths are safe to feed into
- * `redirect()`. Anything else (absolute urls, `//evil.example`,
- * `/\evil.example`) turns a redirect into an open redirect.
- */
-const SAFE_PATH_PATTERN = /^\/(?![\\/])/;
+const BASE = 'http://x.invalid';
 
-export const safe_redirect_path = (path: unknown, fallback: string): string =>
-  typeof path === 'string' && SAFE_PATH_PATTERN.test(path) ? path : fallback;
+/**
+ * Only same-origin paths are safe to feed into `redirect()`. The path is
+ * resolved the way a browser resolves a `Location` header, so tabs, newlines,
+ * backslashes and dot segments cannot turn it into `//evil.example`.
+ */
+export const safe_redirect_path = (path: unknown, fallback: string): string => {
+  if (typeof path !== 'string' || !path.startsWith('/')) {
+    return fallback;
+  }
+
+  const url = URL.parse(path, BASE);
+
+  if (url?.origin !== BASE || url.pathname.startsWith('//')) {
+    return fallback;
+  }
+
+  return url.pathname + url.search + url.hash;
+};

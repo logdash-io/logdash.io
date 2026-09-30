@@ -19,7 +19,8 @@ export function markdownPath(path: string): string {
  * `.md` URL is rerouted to the twin endpoint before routing happens.
  */
 export function markdownRoute(pathname: string): string | undefined {
-  if (!pathname.endsWith('.md')) {
+  // `/for/obsidian.md` is a site to monitor, not a markdown twin.
+  if (!pathname.endsWith('.md') || pathname.startsWith('/for/')) {
     return undefined;
   }
 

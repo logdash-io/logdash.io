@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /for/
 
 Sitemap: https://logdash.io/sitemap.xml

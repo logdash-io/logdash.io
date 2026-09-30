@@ -100,7 +100,7 @@ export const healthCheckFamily: SeoFamily = {
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a project in Logdash and give it the address of the endpoint you just wrote. One HTTP monitor per project, five projects on the free plan. Every check records the status code and response time, so the latency chart fills itself in.',
+            text: 'Create a service in Logdash and give it the address of the endpoint you just wrote. One HTTP monitor per service, five services on the free plan. Every check records the status code and response time, so the latency chart fills itself in.',
           },
           {
             title: 'Pick the interval',
@@ -204,7 +204,7 @@ export async function GET() {
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a project in Logdash and give the monitor https://yourapp.com/api/health. The first check runs straight away, so a wrong path shows up in the next few seconds rather than during an incident.',
+            text: 'Create a service in Logdash and give the monitor https://yourapp.com/api/health. The first check runs straight away, so a wrong path shows up in the next few seconds rather than during an incident.',
           },
           {
             title: 'Choose the interval',
@@ -335,11 +335,11 @@ health.get('/readyz', async (req, res) => {
         items: [
           {
             title: 'Create the monitor',
-            text: 'Add a project in Logdash and paste https://api.yourapp.com/readyz. The check runs immediately and stores the status code and response time from that first request.',
+            text: 'Add a service in Logdash and paste https://api.yourapp.com/readyz. The check runs immediately and stores the status code and response time from that first request.',
           },
           {
             title: 'Set how often it runs',
-            text: 'Free plans check every 5 minutes and cover five projects, Builder drops to every minute and Pro to every 15 seconds. Pick the gap you are willing to be down for without knowing.',
+            text: 'Free plans check every 5 minutes and cover five services, Builder drops to every minute and Pro to every 15 seconds. Pick the gap you are willing to be down for without knowing.',
           },
           {
             title: 'Prove the alert path works',
@@ -439,11 +439,11 @@ export const GET: RequestHandler = async () => {
         items: [
           {
             title: 'Add the endpoint',
-            text: 'Create a project in Logdash and enter https://yourapp.com/health. The first check fires on save, which is when a typo in the route path is cheap to find.',
+            text: 'Create a service in Logdash and enter https://yourapp.com/health. The first check fires on save, which is when a typo in the route path is cheap to find.',
           },
           {
             title: 'Pick the check interval',
-            text: 'Free is every 5 minutes across five projects, Builder is every minute, Pro is every 15 seconds. The response time from each check lands on a chart next to the uptime history.',
+            text: 'Free is every 5 minutes across five services, Builder is every minute, Pro is every 15 seconds. The response time from each check lands on a chart next to the uptime history.',
           },
           {
             title: 'Trigger a real failure',
@@ -541,7 +541,7 @@ export default defineEventHandler(async (event) => {
         items: [
           {
             title: 'Register the URL',
-            text: 'Create a project in Logdash and add https://yourapp.com/api/health. The first check runs on save and records both the status code and how long the request took.',
+            text: 'Create a service in Logdash and add https://yourapp.com/api/health. The first check runs on save and records both the status code and how long the request took.',
           },
           {
             title: 'Choose the frequency',
@@ -965,7 +965,7 @@ def worker_health(request):
           },
           {
             title: 'Create the monitors',
-            text: 'One Logdash project per endpoint, since a project carries one monitor. The free plan covers five projects at a 5-minute interval, Builder drops it to a minute and Pro to 15 seconds.',
+            text: 'One Logdash service per endpoint, since a service carries one monitor. The free plan covers five services at a 5-minute interval, Builder drops it to a minute and Pro to 15 seconds.',
           },
           {
             title: 'Confirm the alert',
@@ -1422,7 +1422,7 @@ end`,
       { type: 'heading', text: 'One node is not the fleet' },
       {
         type: 'paragraph',
-        text: 'An HTTP check hits whichever node the load balancer picks, so with four nodes behind one hostname a single monitor tells you about roughly one in four. It catches a database outage, because that hits everyone at once. It misses one node that has lost its Repo, right up until the balancer sends the check that way. If per-node health matters, expose the endpoint on each node address and watch them separately. The free plan gives you one monitor per project across five projects, which covers a small fleet.',
+        text: 'An HTTP check hits whichever node the load balancer picks, so with four nodes behind one hostname a single monitor tells you about roughly one in four. It catches a database outage, because that hits everyone at once. It misses one node that has lost its Repo, right up until the balancer sends the check that way. If per-node health matters, expose the endpoint on each node address and watch them separately. The free plan gives you five services with one monitor each, which covers a small fleet.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -1544,11 +1544,11 @@ class PaymentsHealthIndicator implements HealthIndicator {
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a project in Logdash and point its HTTP monitor at https://yourapp.com/actuator/health. Every check stores the status code and the response time, so the latency chart builds itself from the first ping.',
+            text: 'Create a service in Logdash and point its HTTP monitor at https://yourapp.com/actuator/health. Every check stores the status code and the response time, so the latency chart builds itself from the first ping.',
           },
           {
             title: 'Pick the interval',
-            text: 'Checks run every 5 minutes on the free plan, every minute on Builder and every 15 seconds on Pro. One monitor per project, and the free plan covers five projects, which is usually one per service.',
+            text: 'Checks run every 5 minutes on the free plan, every minute on Builder and every 15 seconds on Pro. One monitor per service, and the free plan covers five services.',
           },
           {
             title: 'Take the database away',
@@ -1659,7 +1659,7 @@ app.Run();`,
           },
           {
             title: 'Create the monitor',
-            text: 'Add a project in Logdash, paste the health URL, and every check from then on records the status code and the response time. The free plan checks every 5 minutes, Builder every minute, Pro every 15 seconds, and the pinger gives up after 10 seconds.',
+            text: 'Add a service in Logdash, paste the health URL, and every check from then on records the status code and the response time. The free plan checks every 5 minutes, Builder every minute, Pro every 15 seconds, and the pinger gives up after 10 seconds.',
           },
           {
             title: 'Break the connection string',
@@ -1760,7 +1760,7 @@ func healthHandler(db *sql.DB) http.HandlerFunc {
           },
           {
             title: 'Add the monitor',
-            text: 'Create a Logdash project and paste the URL. Status code and response time are recorded on every check: every 5 minutes on the free plan, every minute on Builder, every 15 seconds on Pro.',
+            text: 'Create a Logdash service and paste the URL. Status code and response time are recorded on every check: every 5 minutes on the free plan, every minute on Builder, every 15 seconds on Pro.',
           },
           {
             title: 'Kill the database',

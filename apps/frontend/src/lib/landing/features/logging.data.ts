@@ -53,7 +53,7 @@ export const loggingPage: FeaturePageData = {
     items: [
       {
         title: 'Copy the setup prompt',
-        body: 'Open Logs in your project and pick your stack. The prompt Logdash copies holds your API key, the install command and a code sample.',
+        body: 'Open Logs in your service and pick your stack. The prompt Logdash copies holds your API key, the install command and a code sample.',
       },
       {
         title: 'Paste it, or wire it by hand',

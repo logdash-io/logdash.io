@@ -2,13 +2,13 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { Font, parse, PathCommand } from 'opentype.js';
 import { VirtualBucket } from '../../http-ping-bucket/core/types/virtual-bucket.type';
-import { BadgeStatus } from '../core/enums/badge-status.enum';
+import { MonitorStatus } from '../../http-ping/core/enums/monitor-status.enum';
 import { BadgeStyle } from '../core/enums/badge-style.enum';
 import { BadgeTheme } from '../core/enums/badge-theme.enum';
 import { RenderBadgeDto } from './dto/render-badge.dto';
 
 interface Palette {
-  statuses: Record<BadgeStatus, string>;
+  statuses: Record<MonitorStatus, string>;
   background: string;
   border: string;
   text: string;
@@ -34,11 +34,11 @@ const MAX_STATUS_NAME_WIDTH = 220;
 
 // Colours from the app's neutral ramp, as on the landing's status page: healthy days are grey
 // and only incidents get a colour. The light theme mirrors the dark one step for step.
-const STATUS_COLORS: Record<BadgeStatus, string> = {
-  [BadgeStatus.Up]: '#16a34a',
-  [BadgeStatus.Degraded]: '#f59e0b',
-  [BadgeStatus.Down]: '#dc2626',
-  [BadgeStatus.Unknown]: '#7f7f86',
+const STATUS_COLORS: Record<MonitorStatus, string> = {
+  [MonitorStatus.Up]: '#16a34a',
+  [MonitorStatus.Degraded]: '#f59e0b',
+  [MonitorStatus.Down]: '#dc2626',
+  [MonitorStatus.Unknown]: '#7f7f86',
 };
 
 const PALETTES: Record<BadgeTheme, Palette> = {
@@ -74,11 +74,11 @@ const CLASSIC_COLORS = {
   markTile: '#f2f2f3',
 };
 
-const STATUS_LABELS: Record<BadgeStatus, string> = {
-  [BadgeStatus.Up]: 'Operational',
-  [BadgeStatus.Degraded]: 'Degraded',
-  [BadgeStatus.Down]: 'Down',
-  [BadgeStatus.Unknown]: 'Unknown',
+const STATUS_LABELS: Record<MonitorStatus, string> = {
+  [MonitorStatus.Up]: 'Operational',
+  [MonitorStatus.Degraded]: 'Degraded',
+  [MonitorStatus.Down]: 'Down',
+  [MonitorStatus.Unknown]: 'Unknown',
 };
 
 const PULSE_STYLE =
@@ -171,7 +171,7 @@ function renderStatus(dto: RenderBadgeDto): string {
   );
 
   return wrapSvg(width, height, `${dto.name}: ${statusLabel}`, [
-    dto.status === BadgeStatus.Unknown ? '' : PULSE_STYLE,
+    dto.status === MonitorStatus.Unknown ? '' : PULSE_STYLE,
     `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="${(height - 1) / 2}" fill="${palette.background}" stroke="${palette.border}"/>`,
     drawStatusDot(10, 10, 3, dto.status, palette),
     drawText(name, textStart, 14, nameStyle),
@@ -220,7 +220,7 @@ function renderCard(dto: RenderBadgeDto): string {
     height,
     `${dto.name}: ${STATUS_LABELS[dto.status]}, ${uptimeTitle} over ${dto.dailyBuckets.length} days`,
     [
-      dto.status === BadgeStatus.Unknown ? '' : PULSE_STYLE,
+      dto.status === MonitorStatus.Unknown ? '' : PULSE_STYLE,
       `<rect x=".5" y=".5" width="${width - 1}" height="${height - 1}" rx="12" fill="${palette.background}" stroke="${palette.border}"/>`,
       drawStatusDot(padding + dotRadius, headerBaseline - 5, dotRadius, dto.status, palette),
       drawText(name, nameStart, headerBaseline, nameStyle),
@@ -260,13 +260,13 @@ function drawStatusDot(
   centerX: number,
   centerY: number,
   radius: number,
-  status: BadgeStatus,
+  status: MonitorStatus,
   palette: Palette,
 ): string {
   const color = palette.statuses[status];
   const dot = `<circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="${color}"/>`;
 
-  if (status === BadgeStatus.Unknown) {
+  if (status === MonitorStatus.Unknown) {
     return dot;
   }
 
@@ -346,20 +346,20 @@ function formatUptime(uptime: number): string {
   return flooredUptime >= 100 ? '100%' : `${flooredUptime.toFixed(2)}%`;
 }
 
-function getUptimeLevel(uptime: number | null): BadgeStatus {
+function getUptimeLevel(uptime: number | null): MonitorStatus {
   if (uptime === null) {
-    return BadgeStatus.Unknown;
+    return MonitorStatus.Unknown;
   }
 
   if (uptime >= 99.9) {
-    return BadgeStatus.Up;
+    return MonitorStatus.Up;
   }
 
   if (uptime >= 99) {
-    return BadgeStatus.Degraded;
+    return MonitorStatus.Degraded;
   }
 
-  return BadgeStatus.Down;
+  return MonitorStatus.Down;
 }
 
 function getBucketColor(bucket: VirtualBucket | null, palette: Palette): string {
@@ -376,10 +376,10 @@ function getBucketColor(bucket: VirtualBucket | null, palette: Palette): string 
   }
 
   if (uptime >= 50) {
-    return palette.statuses[BadgeStatus.Degraded];
+    return palette.statuses[MonitorStatus.Degraded];
   }
 
-  return palette.statuses[BadgeStatus.Down];
+  return palette.statuses[MonitorStatus.Down];
 }
 
 function wrapSvg(width: number, height: number, title: string, elements: string[]): string {

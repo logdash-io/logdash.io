@@ -5,6 +5,7 @@ import { Types } from 'mongoose';
 import { AuditLogEntity } from '../core/entities/audit-log.entity';
 import { AuditLogNormalized } from '../core/entities/audit-log.interface';
 import { AuditLogSerializer } from '../core/entities/audit-log.serializer';
+import { requestContext } from '../../shared/request-context/request-context';
 
 @Injectable()
 export class AuditLogWriteService {
@@ -20,6 +21,7 @@ export class AuditLogWriteService {
       relatedDomain: dto.relatedDomain,
       description: dto.description,
       relatedEntityId: dto.relatedEntityId,
+      personalApiKeyId: requestContext.getStore()?.personalApiKeyId,
     });
 
     await this.clickhouse.insert({
@@ -34,6 +36,8 @@ export class AuditLogWriteService {
   public async createMany(dtos: CreateAuditLogDto[]): Promise<AuditLogNormalized[]> {
     if (dtos.length === 0) return [];
 
+    const personalApiKeyId = requestContext.getStore()?.personalApiKeyId;
+
     const auditLogs = dtos.map((dto) =>
       AuditLogEntity.fromNormalized({
         id: new Types.ObjectId().toString(),
@@ -44,6 +48,7 @@ export class AuditLogWriteService {
         relatedDomain: dto.relatedDomain,
         description: dto.description,
         relatedEntityId: dto.relatedEntityId,
+        personalApiKeyId,
       }),
     );
 

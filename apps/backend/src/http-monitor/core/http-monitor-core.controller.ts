@@ -6,6 +6,7 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  HttpCode,
   Param,
   Post,
   Put,
@@ -32,14 +33,19 @@ import { HttpPingPushService } from '../../http-ping/push/http-ping-push.service
 import { DemoEndpoint } from 'src/demo/decorators/demo-endpoint.decorator';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
 import { HttpMonitorRemovalService } from '../removal/http-monitor-removal.service';
+import { HttpMonitorWatchlistService } from '../watchlist/http-monitor-watchlist.service';
 import { NotificationChannelReadService } from '../../notification-channel/read/notification-channel-read.service';
 import { Public } from '../../auth/core/decorators/is-public';
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 import { HttpMonitorMode } from './enums/http-monitor-mode.enum';
 import {
   ThrottleMonitorCreation,
+  ThrottleMonitorProbe,
   ThrottlePushPing,
 } from '../../shared/throttling/rate-limit.decorator';
+import { HttpMonitorProbeService } from '../probe/http-monitor-probe.service';
+import { ProbeHttpMonitorUrlBody } from './dto/probe-http-monitor-url.body';
+import { ProbeHttpMonitorUrlResponse } from './dto/probe-http-monitor-url.response';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -55,9 +61,12 @@ export class HttpMonitorCoreController {
     private readonly httpPingPushService: HttpPingPushService,
     private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
     private readonly notificationChannelReadService: NotificationChannelReadService,
+    private readonly httpMonitorWatchlistService: HttpMonitorWatchlistService,
+    private readonly httpMonitorProbeService: HttpMonitorProbeService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Write)
   @ThrottleMonitorCreation()
   @Post('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized })
@@ -72,13 +81,13 @@ export class HttpMonitorCoreController {
       dto.mode === HttpMonitorMode.Push &&
       !getProjectPlanConfig(project.tier).httpMonitors.canCreatePushMonitors
     ) {
-      throw new ForbiddenException('Push monitors are not supported for this project tier');
+      throw new ForbiddenException('Push monitors are not available on your plan');
     }
 
     const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(
-        'You have reached the maximum number of monitors for this project',
+        'You have reached the maximum number of monitors for this service',
       );
     }
 
@@ -88,6 +97,7 @@ export class HttpMonitorCoreController {
     });
 
     const httpMonitor = await this.httpMonitorWriteService.create(projectId, dto, userId);
+    await this.httpMonitorWatchlistService.inheritHistory(httpMonitor);
     const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
 
     if (process.env.NODE_ENV !== 'test') {
@@ -97,6 +107,16 @@ export class HttpMonitorCoreController {
     }
 
     return HttpMonitorSerializer.serialize(httpMonitor, status);
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Write)
+  @ThrottleMonitorProbe()
+  @HttpCode(200)
+  @Post('projects/:projectId/http_monitors/probe')
+  @ApiResponse({ type: ProbeHttpMonitorUrlResponse })
+  async probe(@Body() dto: ProbeHttpMonitorUrlBody): Promise<ProbeHttpMonitorUrlResponse> {
+    return this.httpMonitorProbeService.probe(dto.url);
   }
 
   @UseGuards(ClusterMemberGuard)
@@ -133,6 +153,7 @@ export class HttpMonitorCoreController {
   }
 
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Write)
   @Put('/http_monitors/:httpMonitorId')
   @ApiResponse({ type: HttpMonitorSerialized })
   async update(
@@ -140,6 +161,16 @@ export class HttpMonitorCoreController {
     @Body() dto: UpdateHttpMonitorBody,
     @CurrentUserId() userId: string,
   ): Promise<HttpMonitorSerialized> {
+    const { projectId, notificationChannelsIds } =
+      await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
+
+    await this.validateNotificationChannels({
+      notificationChannelsIds: dto.notificationChannelsIds?.filter(
+        (notificationChannelId) => !notificationChannelsIds.includes(notificationChannelId),
+      ),
+      projectId,
+    });
+
     const httpMonitor = await this.httpMonitorWriteService.update(httpMonitorId, dto, userId);
 
     const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
@@ -148,6 +179,7 @@ export class HttpMonitorCoreController {
   }
 
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Delete)
   @Delete('/http_monitors/:httpMonitorId')
   async delete(
     @Param('httpMonitorId') httpMonitorId: string,
@@ -157,6 +189,7 @@ export class HttpMonitorCoreController {
   }
 
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Write)
   @Post('/http_monitors/:httpMonitorId/notification_channels/:notificationChannelId')
   async addNotificationChannel(
     @Param('httpMonitorId') httpMonitorId: string,
@@ -176,6 +209,7 @@ export class HttpMonitorCoreController {
   }
 
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Write)
   @Delete('/http_monitors/:httpMonitorId/notification_channels/:notificationChannelId')
   async removeNotificationChannel(
     @Param('httpMonitorId') httpMonitorId: string,
@@ -214,11 +248,12 @@ export class HttpMonitorCoreController {
         clusterId,
       ))
     ) {
-      throw new BadRequestException('Notification channels must belong to the same cluster');
+      throw new BadRequestException('Notification channels must belong to the same domain');
     }
   }
 
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Write)
   @Post('/http_monitors/:httpMonitorId/claim')
   async claim(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
     const { projectId, claimed } = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
@@ -230,7 +265,7 @@ export class HttpMonitorCoreController {
     const hasCapacity = await this.httpMonitorLimitService.hasClaimedCapacity(projectId);
     if (!hasCapacity) {
       throw new ConflictException(
-        'You have reached the maximum number of monitors for this project',
+        'You have reached the maximum number of monitors for this service',
       );
     }
 

@@ -48,3 +48,57 @@ export const stripProtocol = (url: string): string => {
   }
   return url;
 };
+
+export function urlHost(value: string): string | null {
+  try {
+    const { host } = new URL(tryPrependProtocol(value.trim()));
+
+    return host.toLowerCase().replace(/^www\./, '') || null;
+  } catch {
+    return null;
+  }
+}
+
+export function urlPath(value: string): string {
+  try {
+    const { pathname, search } = new URL(tryPrependProtocol(value.trim()));
+
+    return `${pathname.replace(/\/+$/, '')}${search}` || '/';
+  } catch {
+    return '/';
+  }
+}
+
+export function displayUrl(value: string): string {
+  const host = urlHost(value);
+
+  if (!host) {
+    return value;
+  }
+
+  const path = urlPath(value);
+
+  return path === '/' ? host : `${host}${path}`;
+}
+
+const GENERATED_NAME_MAX_LENGTH = 64;
+
+export function isNameFromUrl(name: string, url: string): boolean {
+  const host = urlHost(url);
+
+  if (!host) {
+    return false;
+  }
+
+  const normalized = name.trim().toLowerCase();
+  const candidates =
+    urlPath(url) === '/'
+      ? [host, `www.${host}`, displayUrl(url)]
+      : [displayUrl(url)];
+
+  return candidates.some(
+    (candidate) =>
+      candidate.toLowerCase().slice(0, GENERATED_NAME_MAX_LENGTH) ===
+      normalized,
+  );
+}

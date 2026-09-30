@@ -2,15 +2,15 @@
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { resolve } from '$app/paths';
   import { logout } from '$lib/domains/auth/application/logout.js';
-  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import { Menu, Tooltip } from '@logdash/hyper-ui/presentational';
+  import { Menu } from '@logdash/hyper-ui/presentational';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
   import LogoutIcon from '$lib/domains/shared/icons/LogoutIcon.svelte';
-  import { UserRoundIcon } from 'lucide-svelte';
+  import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
   import type { PostHog } from 'posthog-js';
   import { getContext } from 'svelte';
+  import SidebarAccountRow from './SidebarAccountRow.svelte';
 
   const posthog = getContext<PostHog>('posthog');
 
@@ -27,57 +27,44 @@
   const accountName = $derived(
     userState.isAnonymous ? 'Anonymous' : userState.user?.email || 'Account',
   );
-  const planLabel = $derived(
-    `${capitalize(userState.tier.replaceAll('-', ' '))} plan`,
-  );
+  const planLabel = $derived(capitalize(userState.tier.replaceAll('-', ' ')));
 
   function capitalize(text: string): string {
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
 </script>
 
-<Tooltip
-  class="w-full"
-  content={userProfileMenu}
-  interactive={true}
-  placement="right"
-  align="bottom"
-  trigger="click"
-  closeOnOutsideTooltipClick={true}
->
-  <button
-    class="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left"
-  >
-    <span
-      class="bg-surface-100 flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full"
-    >
-      {#if userState.avatar}
-        <img class="size-full object-cover" src={userState.avatar} alt="" />
-      {:else}
-        <UserRoundIcon class="text-neutral-400 size-3.5" />
-      {/if}
-    </span>
-
-    <span class="flex min-w-0 flex-1 flex-col">
-      <span class="truncate text-sm font-medium">{accountName}</span>
-      <span class="text-neutral-500 text-xs">{planLabel}</span>
-    </span>
-
-    <ChevronRightIcon class="text-neutral-600 size-3.5 shrink-0" />
-  </button>
-</Tooltip>
+<SidebarAccountRow
+  name={accountName}
+  plan={planLabel}
+  avatar={userState.avatar}
+  menu={userProfileMenu}
+/>
 
 {#snippet userProfileMenu(close: () => void)}
   <Menu class="ld-card-base z-1 w-56 rounded-xl">
     {#if userState.canUpgrade}
-      <UpgradeButton
-        class="mb-1"
-        source="nav-menu"
-        onclick={() => {
-          close();
-        }}
-      />
+      <li>
+        <UpgradeButton
+          class="mb-1 w-full"
+          source="nav-menu"
+          onclick={() => {
+            close();
+          }}
+        />
+      </li>
     {/if}
+
+    <li>
+      <a
+        href={resolve('/app/account/api-keys')}
+        class="flex w-full items-center gap-3 rounded-lg"
+        onclick={close}
+      >
+        <KeyIcon class="inline h-4 w-4" />
+        API keys
+      </a>
+    </li>
 
     {#if userState.hasBilling}
       <li>

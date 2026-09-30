@@ -53,6 +53,43 @@ export class HttpPingAggregationService {
     }));
   }
 
+  public async aggregateByMonitorsForTimeRange(
+    monitorIds: string[],
+    startTime: Date,
+    endTime: Date,
+  ): Promise<Record<string, { successCount: number; failureCount: number }>> {
+    const aggregationResult = await this.clickhouse.query({
+      query: `
+        SELECT
+          http_monitor_id,
+          countIf(status_code >= 200 AND status_code < 400) as success_count,
+          countIf(status_code >= 400 OR status_code = 0) as failure_count
+        FROM http_pings
+        WHERE http_monitor_id IN ({monitorIds:Array(FixedString(24))})
+          AND created_at >= {startTime:DateTime64(3)}
+          AND created_at < {endTime:DateTime64(3)}
+        GROUP BY http_monitor_id
+      `,
+      query_params: {
+        monitorIds,
+        startTime: ClickhouseUtils.jsDateToClickhouseDate(startTime),
+        endTime: ClickhouseUtils.jsDateToClickhouseDate(endTime),
+      },
+    });
+
+    const { data } =
+      await aggregationResult.json<
+        Pick<HttpPingBucketEntity, 'http_monitor_id' | 'success_count' | 'failure_count'>
+      >();
+
+    return Object.fromEntries(
+      data.map((row) => [
+        row.http_monitor_id,
+        { successCount: Number(row.success_count), failureCount: Number(row.failure_count) },
+      ]),
+    );
+  }
+
   public async aggregateAllForTimeRange(
     startTime: Date,
     endTime: Date,

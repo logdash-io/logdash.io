@@ -6,6 +6,7 @@ import type {
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
 import type { MonitorMode } from '../domain/monitoring/monitor-mode.js';
 import type { Monitor } from '../domain/monitoring/monitor.js';
+import type { UrlProbe } from '../domain/monitoring/url-hint.js';
 
 export type CreateMonitorDto = {
   projectId: string;
@@ -74,6 +75,13 @@ export class MonitoringService {
 
   updateMonitor(monitorId: string, dto: UpdateMonitorDto): Promise<Monitor> {
     return httpClient.put<Monitor>(`/http_monitors/${monitorId}`, dto);
+  }
+
+  probeUrl(projectId: string, url: string): Promise<UrlProbe> {
+    return httpClient.post<UrlProbe>(
+      `/projects/${projectId}/http_monitors/probe`,
+      { url },
+    );
   }
 }
 

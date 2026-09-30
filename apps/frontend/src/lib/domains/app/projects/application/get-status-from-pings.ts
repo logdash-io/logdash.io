@@ -10,7 +10,7 @@ export const getStatusFromPings = (
     return 'down';
   }
 
-  const recentPings = pings.slice(0, 10);
+  const recentPings = pings.slice(-10);
   const hasRecentErrors = recentPings.some(
     (ping) => ping.statusCode < 200 || ping.statusCode >= 400,
   );

@@ -16,7 +16,7 @@ import type { OAuthStatePayload } from '$lib/domains/shared/utils/oauth-state.se
 import { safe_redirect_path } from '$lib/domains/shared/utils/safe-redirect.util';
 import type { Cookies } from '@sveltejs/kit';
 
-const CLAIMED_URL = '/app/clusters?claimed=1';
+const CLAIMED_URL = '/app/domains?claimed=1';
 
 type ClaimFailureReason = Extract<
   OAuthFailureReason,

@@ -36,7 +36,11 @@ export class HttpMonitorReadService {
       .find({ _id: { $in: ids } })
       .lean<HttpMonitorEntity[]>()
       .exec();
-    return HttpMonitorSerializer.normalizeMany(entities);
+    const positions = new Map(ids.map((id, index) => [id, index]));
+
+    return HttpMonitorSerializer.normalizeMany(entities).sort(
+      (a, b) => (positions.get(a.id) ?? 0) - (positions.get(b.id) ?? 0),
+    );
   }
 
   async readByProjectId(projectId: string): Promise<HttpMonitorNormalized[]> {

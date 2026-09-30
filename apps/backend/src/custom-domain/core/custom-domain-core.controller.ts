@@ -65,7 +65,7 @@ export class CustomDomainCoreController {
     const cluster = await this.clusterReadService.readByIdOrThrow(publicDashboard.clusterId);
 
     if (!getClusterPlanConfig(cluster.tier).customDomains.canCreate) {
-      throw new ForbiddenException('Custom domains are not supported for this cluster tier');
+      throw new ForbiddenException('Custom domains are not available on your plan');
     }
 
     const customDomain = await this.customDomainWriteService.create({

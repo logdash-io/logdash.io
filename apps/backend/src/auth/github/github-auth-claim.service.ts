@@ -99,10 +99,10 @@ export class GithubAuthClaimService {
       await this.projectLimitService.newProjectWouldBeWithinLimit(existingUserId);
 
     if (!isWithinLimit) {
-      this.logger.error(`User has reached the project limit`, {
+      this.logger.error(`User has reached the service limit`, {
         userId: existingUserId,
       });
-      throw new ConflictException('User has reached the project limit');
+      throw new ConflictException('User has reached the service limit');
     }
 
     const affectedClusters = await this.clusterReadService.readByCreatorId(tempUserId);

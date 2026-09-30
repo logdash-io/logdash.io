@@ -1,5 +1,4 @@
 import { LogdashSDKName } from '$lib/domains/shared/types.js';
-import { INSTALL_COMMANDS } from '$lib/domains/logs/domain/sdk-config.js';
 
 export function getMetricsCodeSnippet(
   sdkName: LogdashSDKName,
@@ -128,28 +127,4 @@ ld.Shutdown(ctx)`,
   };
 
   return snippets[sdkName];
-}
-
-export function generateMetricsSetupPrompt(
-  sdkName: LogdashSDKName,
-  apiKey: string,
-): string {
-  const installCommand = INSTALL_COMMANDS[sdkName];
-  const codeSnippet = getMetricsCodeSnippet(sdkName, apiKey);
-
-  return `Integrate Logdash metrics for my ${sdkName} application.  
-First, install the package using default repo package manager, otherwise fallback to the following command:
-
-${installCommand}
-
-Here's the example usage for tracking metrics:
-
-${codeSnippet}
-
-Key concepts:
-- metrics.set(name, value) - sets an absolute value for a metric
-- metrics.mutate(name, delta) - increments/decrements a metric by the given amount
-
-Save that preference to the project settings and your memory. Help me integrate metrics tracking into my application by identifying key metrics to track (e.g., user counts, request counts, error rates).
-`;
 }

@@ -1,30 +1,34 @@
 <script lang="ts">
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error.js';
+  import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import { serviceEntries } from '$lib/domains/app/clusters/application/service-entries.js';
   import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
+  import {
+    listServices,
+    type ServiceItem,
+  } from '$lib/domains/app/clusters/domain/service-groups.js';
+  import { getStatusFromMonitor } from '$lib/domains/app/clusters/application/get-status-from-monitor.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
   import MonitorStatus from '$lib/domains/app/projects/ui/monitor-status/MonitorStatus.svelte';
-  import HexagonIcon from '$lib/domains/shared/icons/HexagonIcon.svelte';
-  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
   import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
   import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
   import { Feature } from '$lib/domains/shared/types.js';
-  import {
-    Button,
-    Checkbox,
-    Input,
-    Tooltip,
-  } from '@logdash/hyper-ui/presentational';
+  import { Button, Checkbox, Input } from '@logdash/hyper-ui/presentational';
+  import { tick } from 'svelte';
   import { fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
-  import SidebarMenuItem from './SidebarMenuItem.svelte';
+  import SidebarNewServiceRow from './SidebarNewServiceRow.svelte';
+  import SidebarServiceRow from './SidebarServiceRow.svelte';
 
   let isFormOpen = $state(false);
+  let newServiceSlot: HTMLDivElement | null = null;
   let isCreating = $state(false);
   let serviceName = $state('');
   let selectedFeatures = $state<Feature[]>([]);
@@ -42,6 +46,13 @@
   const clusterId = $derived(
     isWizardMode ? wizardState.tempClusterId : page.params.cluster_id,
   );
+  const items = $derived.by((): ServiceItem[] => {
+    const { services, dependencies } = listServices(
+      serviceEntries(currentCluster),
+    );
+
+    return [...services, ...dependencies];
+  });
 
   const featureConfig = [
     {
@@ -73,25 +84,11 @@
     }
 
     void goto(
-      resolve('/app/clusters/[cluster_id]/[project_id]', {
+      resolve('/app/domains/[cluster_id]/[project_id]', {
         cluster_id: clusterId,
         project_id: projectId,
       }),
     );
-  }
-
-  function getServiceHealthStatus(projectId: string): boolean | null {
-    if (isWizardMode) return null;
-    const monitor = monitoringState.getMonitorByProjectId(projectId);
-    if (!monitor) {
-      return null;
-    }
-    return monitoringState.isHealthy(monitor.id);
-  }
-
-  function hasMonitor(projectId: string): boolean {
-    if (isWizardMode) return false;
-    return !!monitoringState.getMonitorByProjectId(projectId);
   }
 
   function onOpenForm(): void {
@@ -103,10 +100,15 @@
     }, 50);
   }
 
-  function onCloseForm(): void {
+  async function onCloseForm(): Promise<void> {
+    const hadFocus = newServiceSlot?.contains(document.activeElement) ?? false;
     isFormOpen = false;
     serviceName = '';
     selectedFeatures = [];
+
+    if (!hadFocus) return;
+    await tick();
+    newServiceSlot?.querySelector('button')?.focus();
   }
 
   function onToggleFeature(feature: Feature): void {
@@ -132,15 +134,21 @@
           selectedFeatures.length > 0 ? selectedFeatures : undefined,
       });
 
-      onCloseForm();
+      void onCloseForm();
       await goto(
-        resolve('/app/clusters/[cluster_id]/[project_id]', {
+        resolve('/app/domains/[cluster_id]/[project_id]', {
           cluster_id: clusterId,
           project_id: result.project.id,
         }),
         { invalidateAll: true },
       );
-    } catch {
+    } catch (error) {
+      if (readHttpErrorStatus(error) === 409) {
+        void onCloseForm();
+        upgradeState.openModal('project-limit');
+        return;
+      }
+
       toast.error('Failed to create service');
     } finally {
       isCreating = false;
@@ -150,113 +158,110 @@
   function onKeyDown(e: KeyboardEvent): void {
     if (e.key === 'Enter' && canCreate) {
       void onCreateService();
-    } else if (e.key === 'Escape') {
-      onCloseForm();
+    }
+  }
+
+  function onFormKeyDown(e: KeyboardEvent): void {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      void onCloseForm();
     }
   }
 </script>
 
-<div class="flex flex-col">
-  <span class="text-neutral-500 px-2 pb-1 text-xs">Services</span>
-  <nav class="flex flex-col gap-0.5">
-    {#each currentCluster?.projects || [] as project (project.id)}
-      {@const isActive = !isWizardMode && project.id === activeProjectId}
-      {@const healthStatus = getServiceHealthStatus(project.id)}
-      {@const projectHasMonitor = hasMonitor(project.id)}
-      <SidebarMenuItem
-        onclick={() => onServiceSelect(project.id)}
-        {isActive}
-        disabled={!clusterId}
+{#each items as item (item.id)}
+  {@render serviceRow(item)}
+{/each}
+
+{#if isWizardMode && items.length === 0}
+  <span class="pl-5 py-1 text-[13px] text-neutral-600 italic">
+    No services yet
+  </span>
+{/if}
+
+{#if !isWizardMode && clusterId}
+  {@render newService()}
+{/if}
+
+{#snippet serviceRow(item: ServiceItem)}
+  {@const monitor = isWizardMode
+    ? undefined
+    : monitoringState.getMonitorByProjectId(item.id)}
+  <SidebarServiceRow
+    label={item.label || 'New service'}
+    host={item.host}
+    status={monitor ? getStatusFromMonitor(monitor) : 'unknown'}
+    tooltip={monitor ? monitorTooltip : undefined}
+    active={!isWizardMode && item.id === activeProjectId}
+    disabled={!clusterId}
+    onclick={() => onServiceSelect(item.id)}
+  />
+
+  {#snippet monitorTooltip()}
+    <MonitorStatus projectId={item.id}>
+      {null}
+    </MonitorStatus>
+  {/snippet}
+{/snippet}
+
+{#snippet newService()}
+  <div class="contents" bind:this={newServiceSlot}>
+    {#if isFormOpen}
+      <div
+        role="presentation"
+        class="ld-card-bg ld-card-border mt-1 ml-3 flex shrink-0 flex-col gap-2 rounded-lg p-2"
+        in:fly={{ y: -5, duration: 200, easing: cubicOut }}
+        onkeydown={onFormKeyDown}
       >
-        <HexagonIcon class="size-4 shrink-0" />
-        <span class="truncate">{project.name || 'New Service'}</span>
-        {#if projectHasMonitor}
-          {#snippet monitorTooltipContent()}
-            <MonitorStatus projectId={project.id}>
-              {null}
-            </MonitorStatus>
-          {/snippet}
-          <Tooltip
-            class="ml-auto flex"
-            content={monitorTooltipContent}
-            placement="bottom"
-          >
-            <span
+        <Input
+          id="new-service-name-input"
+          type="text"
+          placeholder="Service name"
+          size="sm"
+          class="w-full"
+          bind:value={serviceName}
+          onkeydown={onKeyDown}
+          maxlength={64}
+        />
+
+        <div class="flex flex-col gap-0.5">
+          {#each featureConfig as { feature, label, icon: Icon } (feature)}
+            <label
               class={[
-                'size-1.5 shrink-0 rounded-full',
-                healthStatus === true ? 'bg-success' : 'bg-error',
+                'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
+                { 'text-brand': isFeatureEnabled(feature) },
               ]}
-            ></span>
-          </Tooltip>
-        {/if}
-      </SidebarMenuItem>
-    {/each}
-
-    {#if isWizardMode && (currentCluster?.projects || []).length === 0}
-      <span class="px-3 py-2 text-sm italic text-neutral-600">
-        No services yet
-      </span>
-    {/if}
-
-    {#if !isWizardMode && clusterId}
-      {#if isFormOpen}
-        <div
-          class="flex flex-col gap-2 p-2 mt-1 ld-card-bg ld-card-border rounded-lg"
-          in:fly={{ y: -5, duration: 200, easing: cubicOut }}
-        >
-          <Input
-            id="new-service-name-input"
-            type="text"
-            placeholder="Service name"
-            size="sm"
-            class="w-full"
-            bind:value={serviceName}
-            onkeydown={onKeyDown}
-            maxlength={64}
-          />
-
-          <div class="flex flex-col gap-0.5">
-            {#each featureConfig as { feature, label, icon: Icon } (feature)}
-              <label
-                class={[
-                  'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
-                  { 'text-brand': isFeatureEnabled(feature) },
-                ]}
-              >
-                <Checkbox
-                  size="xs"
-                  variant="primary"
-                  checked={isFeatureEnabled(feature)}
-                  onchange={() => onToggleFeature(feature)}
-                />
-                <Icon class="size-3.5 shrink-0" />
-                <span>{label}</span>
-              </label>
-            {/each}
-          </div>
-
-          <div class="flex items-center gap-1.5 mt-1">
-            <Button
-              variant="primary"
-              size="xs"
-              class="flex-1"
-              onclick={onCreateService}
-              disabled={!canCreate}
-              loading={isCreating}
             >
-              Create
-            </Button>
-            <Button variant="ghost" size="xs" onclick={onCloseForm}>
-              Cancel
-            </Button>
-          </div>
+              <Checkbox
+                size="xs"
+                variant="primary"
+                checked={isFeatureEnabled(feature)}
+                onchange={() => onToggleFeature(feature)}
+              />
+              <Icon class="size-3.5 shrink-0" />
+              <span>{label}</span>
+            </label>
+          {/each}
         </div>
-      {:else}
-        <SidebarMenuItem onclick={onOpenForm} isActive={false} disabled={false}>
-          <PlusIcon class="size-4 shrink-0 text-neutral-600" />
-          <span class="truncate text-neutral-500">New service</span>
-        </SidebarMenuItem>
-      {/if}
+
+        <div class="flex items-center gap-1.5 mt-1">
+          <Button
+            variant="primary"
+            size="xs"
+            class="flex-1"
+            onclick={onCreateService}
+            disabled={!canCreate}
+            loading={isCreating}
+          >
+            Create
+          </Button>
+          <Button variant="ghost" size="xs" onclick={onCloseForm}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    {:else}
+      <SidebarNewServiceRow onclick={onOpenForm} />
     {/if}
-  </nav>
-</div>
+  </div>
+{/snippet}

@@ -31,7 +31,7 @@ export class ClusterRemovalService {
     const cluster = await this.clusterReadService.readById(clusterId);
 
     if (!cluster) {
-      throw new NotFoundException('Cluster not found');
+      throw new NotFoundException('Domain not found');
     }
 
     await this.clusterWriteService.delete(clusterId, actorUserId);

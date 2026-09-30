@@ -2,6 +2,10 @@ import { createClickHouseTestContainer } from './clickhouse-test-container-serve
 import { createRedisTestContainer } from './redis-test-container-server';
 
 export default async () => {
+  // Set here, not in setup-env.ts: test files get a copy of process.env, so only the parent
+  // process can change the time zone the test workers start with. Production runs in UTC.
+  process.env.TZ = 'UTC';
+
   console.log('\nStarting global test setup...');
 
   try {

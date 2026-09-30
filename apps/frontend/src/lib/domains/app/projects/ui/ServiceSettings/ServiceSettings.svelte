@@ -6,22 +6,15 @@
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { Feature } from '$lib/domains/shared/types.js';
   import {
+    SETTINGS_INPUT_CLASS,
     SettingsCard,
-    SettingsCardHeader,
     SettingsCardItem,
   } from '$lib/domains/shared/ui/components/settings-card/index.js';
+  import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
-  import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
-  import { DangerIcon } from '@logdash/hyper-ui/icons';
-  import { Button, Input, Spinner } from '@logdash/hyper-ui/presentational';
-  import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
-  import HashIcon from '$lib/domains/shared/icons/HashIcon.svelte';
-  import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
-  import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
-  import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
-  import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
+  import { Button, Input } from '@logdash/hyper-ui/presentational';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
-  import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
 
   type Props = {
     clusterId: string;
@@ -29,9 +22,9 @@
   };
 
   type FeatureRoute =
-    | '/app/clusters/[cluster_id]/[project_id]/logs'
-    | '/app/clusters/[cluster_id]/[project_id]/metrics'
-    | '/app/clusters/[cluster_id]/[project_id]/monitoring';
+    | '/app/domains/[cluster_id]/[project_id]/logs'
+    | '/app/domains/[cluster_id]/[project_id]/metrics'
+    | '/app/domains/[cluster_id]/[project_id]/monitoring';
 
   const { clusterId, projectId }: Props = $props();
 
@@ -44,16 +37,15 @@
   let newName = $state('');
   let isEditingName = $state(false);
 
-  $effect(() => {
-    if (project?.name) {
-      newName = project.name;
-    }
-  });
-
   async function onCopyApiKey(): Promise<void> {
-    const key = await projectsState.getApiKey(projectId);
-    await navigator.clipboard.writeText(key);
-    toast.success('API key copied to clipboard', 5000);
+    try {
+      const key = await projectsState.getApiKey(projectId);
+      await navigator.clipboard.writeText(key);
+      toast.success('API key copied to clipboard', 5000);
+    } catch (error) {
+      const message = readHttpErrorMessage(error) ?? 'Something went wrong';
+      toast.error(`Failed to copy the API key: ${message}`, 5000);
+    }
   }
 
   async function onCopyServiceId(): Promise<void> {
@@ -62,12 +54,12 @@
   }
 
   function onStartRenaming(): void {
+    newName = project?.name ?? '';
     isEditingName = true;
   }
 
   function onCancelRenaming(): void {
     isEditingName = false;
-    newName = project?.name || '';
   }
 
   async function onSaveRename(): Promise<void> {
@@ -83,26 +75,33 @@
 
     try {
       await projectsState.updateProject(projectId, newName);
-      toast.success('Service name updated successfully', 5000);
+      toast.success('Service name updated', 5000);
       isEditingName = false;
     } catch {
-      toast.error('Failed to update service name', 5000);
+      toast.error('Failed to update the service name', 5000);
     }
   }
 
   async function onDeleteService(): Promise<void> {
     const confirmed = confirm(
-      'Are you sure you want to delete this service? This action cannot be undone.',
+      'Delete this service? Its logs, metrics and monitors will be deleted. This cannot be undone.',
     );
 
     if (!confirmed) {
       return;
     }
 
-    await projectsState.deleteProject(projectId);
-    await clustersState.load();
-    void goto(resolve('/app/clusters/[cluster_id]', { cluster_id: clusterId }));
-    toast.success('Service deleted successfully', 5000);
+    try {
+      await projectsState.deleteProject(projectId);
+      await clustersState.load();
+      void goto(
+        resolve('/app/domains/[cluster_id]', { cluster_id: clusterId }),
+      );
+      toast.success('Service deleted', 5000);
+    } catch (error) {
+      const message = readHttpErrorMessage(error) ?? 'Something went wrong';
+      toast.error(`Failed to delete service: ${message}`, 5000);
+    }
   }
 
   function onKeyDown(e: KeyboardEvent): void {
@@ -130,7 +129,6 @@
       id: Feature;
       label: string;
       description: string;
-      icon: typeof LogsIcon;
       route: FeatureRoute;
     }> = [];
 
@@ -138,9 +136,8 @@
       features.push({
         id: Feature.LOGGING,
         label: 'Logging',
-        description: 'Collect and analyze logs from your service',
-        icon: LogsIcon,
-        route: '/app/clusters/[cluster_id]/[project_id]/logs',
+        description: 'Collect and search the logs your app writes.',
+        route: '/app/domains/[cluster_id]/[project_id]/logs',
       });
     }
 
@@ -148,9 +145,8 @@
       features.push({
         id: Feature.METRICS,
         label: 'Metrics',
-        description: 'Track custom metrics and performance indicators',
-        icon: MetricsIcon,
-        route: '/app/clusters/[cluster_id]/[project_id]/metrics',
+        description: 'Track the numbers your app reports.',
+        route: '/app/domains/[cluster_id]/[project_id]/metrics',
       });
     }
 
@@ -158,9 +154,8 @@
       features.push({
         id: Feature.MONITORING,
         label: 'Monitoring',
-        description: 'Monitor uptime with HTTP health checks',
-        icon: MonitoringIcon,
-        route: '/app/clusters/[cluster_id]/[project_id]/monitoring',
+        description: 'Check that your site is up.',
+        route: '/app/domains/[cluster_id]/[project_id]/monitoring',
       });
     }
 
@@ -174,53 +169,63 @@
     route: FeatureRoute,
   ): Promise<void> {
     addingFeature = feature;
-    await projectsState.addFeature(projectId, feature);
-    addingFeature = null;
-    void goto(resolve(route, { cluster_id: clusterId, project_id: projectId }));
+
+    try {
+      await projectsState.addFeature(projectId, feature);
+      void goto(
+        resolve(route, { cluster_id: clusterId, project_id: projectId }),
+      );
+    } catch {
+      return;
+    } finally {
+      addingFeature = null;
+    }
   }
 </script>
 
-<div class="flex w-full max-w-2xl flex-col gap-6">
-  <SettingsCard>
-    <SettingsCardHeader
-      title="API Keys"
-      description="Access keys for integrating with this service"
-    />
+<div class="flex w-full flex-col">
+  <SettingsCard title="API key" description="Your app sends data with it.">
+    <SettingsCardItem>
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="text-neutral-500 w-16 shrink-0">Key</span>
+        <span class="text-neutral-500 truncate font-mono" aria-hidden="true">
+          ••••••••••••••••
+        </span>
+      </div>
 
-    <SettingsCardItem icon={KeyIcon} showBorder={false} onclick={onCopyApiKey}>
-      <p class="font-medium">Service API Key</p>
-      <p class="text-neutral-400 text-sm">
-        Click to copy the API key to clipboard
-      </p>
       {#snippet action()}
-        {#if projectsState.isLoadingApiKey(projectId)}
-          <Spinner size="sm" />
-        {:else}
-          <CopyIcon class="size-5 text-neutral-400" />
-        {/if}
+        <Button
+          variant="neutral"
+          size="sm"
+          onclick={onCopyApiKey}
+          loading={projectsState.isLoadingApiKey(projectId)}
+        >
+          <CopyIcon class="size-4" />
+          Copy
+        </Button>
       {/snippet}
     </SettingsCardItem>
   </SettingsCard>
 
-  <SettingsCard>
-    <SettingsCardHeader
-      title="Service Information"
-      description="Basic details about your service"
-    />
+  <SettingsCard title="Service" description="Its name and ID.">
+    <SettingsCardItem>
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="text-neutral-500 w-16 shrink-0">Name</span>
+        {#if isEditingName}
+          <Input
+            bind:value={newName}
+            size="sm"
+            class={['-my-1.5 w-full max-w-64', SETTINGS_INPUT_CLASS]}
+            placeholder="Service name"
+            aria-label="Service name"
+            autofocus
+            onkeydown={onKeyDown}
+          />
+        {:else}
+          <span class="truncate">{project?.name || 'Unknown'}</span>
+        {/if}
+      </div>
 
-    <SettingsCardItem icon={EditIcon} showBorder={true}>
-      <p class="text-neutral-400 text-sm">Service Name</p>
-      {#if isEditingName}
-        <Input
-          bind:value={newName}
-          size="sm"
-          class="mt-1 w-64"
-          placeholder="Enter service name"
-          onkeydown={onKeyDown}
-        />
-      {:else}
-        <p class="font-medium">{project?.name || 'Unknown'}</p>
-      {/if}
       {#snippet action()}
         {#if isEditingName}
           <Button
@@ -240,53 +245,41 @@
             Save
           </Button>
         {:else}
-          <Button
-            variant="ghost"
-            size="sm"
-            class="text-neutral-400"
-            onclick={onStartRenaming}
-          >
+          <Button variant="neutral" size="sm" onclick={onStartRenaming}>
             Rename
           </Button>
         {/if}
       {/snippet}
     </SettingsCardItem>
 
-    <SettingsCardItem icon={HashIcon} showBorder={false}>
-      <p class="text-neutral-400 text-sm">Service ID</p>
-      <p class="font-mono text-sm">{projectId}</p>
+    <SettingsCardItem>
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="text-neutral-500 w-16 shrink-0">ID</span>
+        <span class="truncate font-mono">{projectId}</span>
+      </div>
+
       {#snippet action()}
-        <Button
-          variant="ghost"
-          size="sm"
-          class="text-neutral-400"
-          aria-label="Copy service ID"
+        <IconButton
+          label="Copy service ID"
+          class="-mr-1.5"
           onclick={onCopyServiceId}
         >
           <CopyIcon class="size-4" />
-        </Button>
+        </IconButton>
       {/snippet}
     </SettingsCardItem>
   </SettingsCard>
 
   {#if availableFeatures.length > 0}
-    <SettingsCard>
-      <SettingsCardHeader
-        title="Features"
-        description="Add additional capabilities to your service"
-        icon={CubeIcon}
-      />
+    <SettingsCard title="Features" description="Add more to this service.">
+      {#each availableFeatures as feature (feature.id)}
+        <SettingsCardItem>
+          <p>{feature.label}</p>
+          <p class="text-neutral-500">{feature.description}</p>
 
-      {#each availableFeatures as feature, index (feature.id)}
-        <SettingsCardItem
-          icon={feature.icon}
-          showBorder={index < availableFeatures.length - 1}
-        >
-          <p class="font-medium">{feature.label}</p>
-          <p class="text-neutral-400 text-sm">{feature.description}</p>
           {#snippet action()}
             <Button
-              variant="outline"
+              variant="neutral"
               size="sm"
               onclick={() => onAddFeature(feature.id, feature.route)}
               disabled={addingFeature !== null}
@@ -302,35 +295,27 @@
     </SettingsCard>
   {/if}
 
-  <SettingsCard>
-    <SettingsCardHeader
-      title="Danger Zone"
-      description="Irreversible actions that affect your service"
-      icon={DangerIcon}
-      variant="danger"
-    />
+  <SettingsCard
+    title="Danger zone"
+    description="Actions that cannot be undone."
+    variant="danger"
+  >
+    <SettingsCardItem>
+      <p>Delete service</p>
+      <p class="text-neutral-500">
+        Removes this service with all its logs, metrics and monitors.
+      </p>
 
-    <div class="ld-card-bg">
-      <SettingsCardItem
-        icon={TrashIcon}
-        iconVariant="danger"
-        showBorder={false}
-      >
-        <p class="font-medium">Delete Service</p>
-        <p class="text-neutral-400 text-sm">
-          Permanently delete this service and all its data
-        </p>
-        {#snippet action()}
-          <Button
-            variant="danger-ghost"
-            size="sm"
-            onclick={onDeleteService}
-            loading={projectsState.isDeletingProject(projectId)}
-          >
-            Delete
-          </Button>
-        {/snippet}
-      </SettingsCardItem>
-    </div>
+      {#snippet action()}
+        <Button
+          variant="danger"
+          size="sm"
+          onclick={onDeleteService}
+          loading={projectsState.isDeletingProject(projectId)}
+        >
+          Delete
+        </Button>
+      {/snippet}
+    </SettingsCardItem>
   </SettingsCard>
 </div>

@@ -87,6 +87,50 @@ describe('Personal API keys (CRUD under JWT)', () => {
     });
   });
 
+  describe('create validation', () => {
+    it.each([
+      [
+        'a scope above its max grant',
+        { scopes: [{ resource: Resource.Logs, action: Action.Write }] },
+      ],
+      ['a removed resource', { scopes: [{ resource: 'payments', action: Action.Read }] }],
+      ['an expiry in the past', { expiresAt: new Date(Date.now() - 60_000).toISOString() }],
+      ['a domain restriction with no domains', { access: { kind: 'clusters', ids: [] } }],
+      ['a service restriction with no services', { access: { kind: 'projects', ids: [] } }],
+    ])('returns 400 for %s', async (_label, override) => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/personal-api-keys')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ ...createBody(), ...override });
+
+      // then
+      expect(response.status).toBe(400);
+      expect(await bootstrap.models.personalApiKeyModel.countDocuments()).toBe(0);
+    });
+
+    it('creates a monitors delete key with no expiry', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const scopes = [{ resource: Resource.Monitors, action: Action.Delete }];
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/personal-api-keys')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ ...createBody(), scopes });
+
+      // then
+      expect(response.status).toBe(201);
+      const stored = await bootstrap.models.personalApiKeyModel.findOne().lean();
+      expect(stored!.scopes).toEqual(scopes);
+      expect(stored!.expiresAt).toBeUndefined();
+    });
+  });
+
   describe('create response secrecy', () => {
     it('returns value only on create; list never returns value or hash', async () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();

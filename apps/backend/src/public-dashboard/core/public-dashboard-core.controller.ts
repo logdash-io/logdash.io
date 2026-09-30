@@ -27,9 +27,9 @@ import { PublicDashboardCompositionService } from '../composition/public-dashboa
 import { PublicDashboardDataQuery } from './dto/public-dashboard-data.query';
 import { UpdatePublicDashboardBody } from './dto/update-public-dashboard.body';
 import { PublicDashboardLimitService } from '../limit/public-dashboard-limit.service';
-import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { CustomDomainReadService } from '../../custom-domain/read/custom-domain-read.service';
 import { CustomDomainSerializer } from '../../custom-domain/core/entities/custom-domain.serializer';
+import { StatusPageCompositionService } from '../../status-page/composition/status-page-composition.service';
 
 @ApiTags('Public Dashboards')
 @Controller()
@@ -43,6 +43,7 @@ export class PublicDashboardCoreController {
     private readonly publicDashboardCompositionService: PublicDashboardCompositionService,
     private readonly publicDashboardLimitService: PublicDashboardLimitService,
     private readonly customDomainReadService: CustomDomainReadService,
+    private readonly statusPageCompositionService: StatusPageCompositionService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -51,32 +52,41 @@ export class PublicDashboardCoreController {
   public async create(
     @Param('clusterId') clusterId: string,
     @Body() body: CreatePublicDashboardBody,
-    @CurrentUserId() userId: string,
   ): Promise<PublicDashboardSerialized> {
-    const hasCapacity = await this.publicDashboardLimitService.hasCapacity(userId);
+    const hasCapacity = await this.publicDashboardLimitService.hasCapacity(clusterId);
 
     if (!hasCapacity) {
       throw new BadRequestException(
-        'You have reached the maximum number of public dashboards allowed for your plan',
+        'You have reached the maximum number of status pages for this plan',
       );
+    }
+
+    const httpMonitorsIds = body.httpMonitorsIds ?? [];
+    const monitors = await this.httpMonitorReadService.readManyByIds(httpMonitorsIds);
+    const projects = await this.projectReadService.readManyByIds(
+      monitors.map((monitor) => monitor.projectId),
+    );
+    const clusterProjectIds = new Set(
+      projects.filter((project) => project.clusterId === clusterId).map((project) => project.id),
+    );
+    const clusterMonitorIds = new Set(
+      monitors
+        .filter((monitor) => clusterProjectIds.has(monitor.projectId))
+        .map((monitor) => monitor.id),
+    );
+
+    // Checked before the write: a stored dashboard with another cluster's monitor ids would
+    // publish their names and pings on its public status page.
+    if (httpMonitorsIds.some((id) => !clusterMonitorIds.has(id))) {
+      throw new BadRequestException('Some monitors do not belong to the same domain');
     }
 
     const dashboard = await this.publicDashboardWriteService.create({
       clusterId,
-      httpMonitorsIds: body.httpMonitorsIds,
+      httpMonitorsIds,
       name: body.name,
       isPublic: body.isPublic,
     });
-
-    const monitors = await this.httpMonitorReadService.readManyByIds(dashboard.httpMonitorsIds);
-
-    const projects = await this.projectReadService.readManyByIds(
-      monitors.map((monitor) => monitor.projectId),
-    );
-
-    if (projects.some((project) => project.clusterId !== clusterId)) {
-      throw new BadRequestException('Some monitors do not belong to the same cluster');
-    }
 
     return PublicDashboardSerializer.serialize(dashboard);
   }
@@ -95,6 +105,7 @@ export class PublicDashboardCoreController {
     });
 
     await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
+    await this.statusPageCompositionService.invalidateCache(publicDashboardId);
 
     return PublicDashboardSerializer.serialize(dashboard);
   }
@@ -207,7 +218,7 @@ export class PublicDashboardCoreController {
     const project = await this.projectReadService.readById(monitor.projectId);
 
     if (project?.clusterId !== dashboard.clusterId) {
-      throw new NotFoundException('Monitor does not belong to the same cluster');
+      throw new NotFoundException('Monitor does not belong to the same domain');
     }
 
     await this.publicDashboardWriteService.addMonitorToDashboard({
@@ -216,6 +227,7 @@ export class PublicDashboardCoreController {
     });
 
     await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
+    await this.statusPageCompositionService.invalidateCache(publicDashboardId);
 
     const updatedDashboard = await this.publicDashboardReadService.readById(publicDashboardId);
 
@@ -249,7 +261,7 @@ export class PublicDashboardCoreController {
     const project = await this.projectReadService.readById(monitor.projectId);
 
     if (project?.clusterId !== dashboard.clusterId) {
-      throw new NotFoundException('Monitor does not belong to the same cluster');
+      throw new NotFoundException('Monitor does not belong to the same domain');
     }
 
     await this.publicDashboardWriteService.removeMonitorFromDashboard({
@@ -258,6 +270,7 @@ export class PublicDashboardCoreController {
     });
 
     await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
+    await this.statusPageCompositionService.invalidateCache(publicDashboardId);
 
     const updatedDashboard = await this.publicDashboardReadService.readById(publicDashboardId);
 

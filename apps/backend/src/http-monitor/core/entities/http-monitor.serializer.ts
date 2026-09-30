@@ -13,6 +13,7 @@ export class HttpMonitorSerializer {
       mode: entity.mode,
       badgeKey: entity.badgeKey,
       claimed: entity.claimed,
+      createdAt: entity.createdAt,
     };
   }
 

@@ -43,15 +43,6 @@ export class HttpPingReadService {
   ): Promise<Record<string, HttpPingNormalized[]>> {
     const result = await this.clickhouse.query({
       query: `
-        WITH
-          (
-            SELECT groupArray(http_monitor_id)
-            FROM (
-              SELECT DISTINCT http_monitor_id
-              FROM http_pings
-              WHERE http_monitor_id IN ({monitorIds:Array(FixedString(24))})
-            )
-          ) AS monitor_ids
         SELECT 
           id,
           http_monitor_id,
@@ -67,6 +58,7 @@ export class HttpPingReadService {
           WHERE http_monitor_id IN ({monitorIds:Array(FixedString(24))})
         )
         WHERE rn <= {limitPerMonitor:UInt64}
+        ORDER BY created_at DESC
       `,
       query_params: {
         monitorIds,

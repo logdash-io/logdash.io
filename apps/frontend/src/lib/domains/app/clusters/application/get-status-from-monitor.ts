@@ -2,7 +2,9 @@ import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monito
 import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings.js';
 import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
 
-export type ServiceStatus = 'up' | 'down' | 'degraded' | 'unknown';
+import type { ServiceStatus } from '$lib/domains/app/clusters/domain/service-status.js';
+
+export type { ServiceStatus };
 
 export function getStatusFromMonitor(
   monitor: Monitor | undefined,

@@ -190,4 +190,48 @@ describe('safeHttpRequest', () => {
     expect(Date.now() - startedAt).toBeLessThan(1500);
     expect(origin.requests.length).toBeLessThan(6);
   });
+
+  it('cuts a response that trickles its body at the deadline', async () => {
+    let connectionClosed!: Promise<void>;
+    const origin = await serve((_req, res) => {
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      const interval = setInterval(() => res.write('a'), 500);
+      connectionClosed = new Promise((resolve) =>
+        res.on('close', () => {
+          clearInterval(interval);
+          resolve();
+        }),
+      );
+    });
+    pinToLoopback();
+
+    const startedAt = Date.now();
+
+    await expect(
+      safeHttpRequest({ url: `http://origin.invalid:${origin.port}/trickle`, timeout: 1_000 }),
+    ).rejects.toMatchObject({ code: 'ETIMEDOUT' });
+
+    // axios' own timeout only fires on an idle socket and would never end this
+    expect(Date.now() - startedAt).toBeLessThan(2_000);
+    await connectionClosed;
+  });
+
+  it('stops when the caller aborts', async () => {
+    const origin = await serve((_req, res) => {
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      const interval = setInterval(() => res.write('a'), 500);
+      res.on('close', () => clearInterval(interval));
+    });
+    pinToLoopback();
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 300);
+
+    await expect(
+      safeHttpRequest({
+        url: `http://origin.invalid:${origin.port}/trickle`,
+        timeout: 5_000,
+        signal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ code: 'ERR_CANCELED' });
+  });
 });

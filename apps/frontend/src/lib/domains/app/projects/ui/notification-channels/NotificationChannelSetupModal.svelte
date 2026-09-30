@@ -47,7 +47,7 @@
       icon: LinkIcon,
     },
   ]);
-  let selectedChannel: string | null = $state(null);
+  const selectedChannel = $derived(notificationChannelSetupState.channel);
 
   const monitorName = $derived.by(() => {
     const monitorId = notificationChannelSetupState.state.monitorId;
@@ -59,8 +59,13 @@
     return monitoringState.getMonitorById(monitorId)?.name || '';
   });
 
-  function closeModal() {
+  function closeModal(): void {
     notificationChannelSetupState.close();
+    telegramSetupState.stopPolling();
+  }
+
+  function onBackToChannels(): void {
+    notificationChannelSetupState.selectChannel(null);
   }
 
   async function onWebhookSubmit(dto: WebhookSetupDTO): Promise<void> {
@@ -76,13 +81,18 @@
         },
       },
     );
+
+    if (!createdChannelId) {
+      return;
+    }
+
     const monitorId = notificationChannelSetupState.state.monitorId;
 
-    if (dto.withAssignment && monitorId && createdChannelId) {
+    if (dto.withAssignment && monitorId) {
       void assignChannelToMonitor(monitorId, createdChannelId);
     }
-    notificationChannelSetupState.close();
-    selectedChannel = null;
+
+    closeModal();
     void notificationChannelsState.loadChannels(clusterId);
   }
 
@@ -104,13 +114,13 @@
       <div
         class="bg-surface-root border-border-default text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
       >
-        <BellIcon class="h-6 w-6" />
+        <BellIcon class="size-6 stroke-1" />
       </div>
 
       <div class="flex flex-col items-start">
-        <h3 class="text-xl font-medium">Setup alerting channel</h3>
+        <h3 class="text-xl font-medium">Add a notification channel</h3>
         <p class="text-neutral-400 text-sm">
-          Choose from options below to set up your alerting channel.
+          Choose where alerts for this monitor go.
         </p>
       </div>
     </div>
@@ -122,14 +132,15 @@
           enabled={!allowedNotificationChannels.includes(channel.id)}
           source="notification-channel-setup"
         >
-          <div
-            class="hover:bg-neutral-800 flex cursor-pointer items-center justify-start gap-4 rounded-xl px-4 py-3 select-none"
+          <button
+            type="button"
+            class="hover:bg-neutral-800 focus-visible:bg-neutral-800 flex w-full cursor-pointer items-center justify-start gap-4 rounded-xl px-4 py-3 text-left outline-none select-none"
             onclick={() => {
               if (!allowedNotificationChannels.includes(channel.id)) {
                 return;
               }
 
-              selectedChannel = channel.id;
+              notificationChannelSetupState.selectChannel(channel.id);
               channel.onclick?.();
             }}
           >
@@ -144,14 +155,14 @@
                   )}
                 {requiredTier
                   ? `Upgrade to ${exposedConfigState.formatTierName(requiredTier)}`
-                  : 'Upgrade Tier'}
+                  : 'Upgrade'}
               {/snippet}
 
-              <Badge size="sm" class="ml-auto capitalize">
+              <Badge size="sm" class="ml-auto">
                 {@render upgradeText()}
               </Badge>
             {/if}
-          </div>
+          </button>
         </UpgradeElement>
       {/each}
     </div>
@@ -167,23 +178,20 @@
     {@render base()}
   {/if}
 
-  {#if selectedChannel === 'telegram'}
+  {#if selectedChannel === NotificationChannelType.TELEGRAM}
     <TelegramAlertingSetup
-      onCancel={() => {
-        selectedChannel = null;
-      }}
+      onCancel={onBackToChannels}
+      onDone={closeModal}
       {clusterId}
     />
   {/if}
 
-  {#if selectedChannel === 'webhook'}
+  {#if selectedChannel === NotificationChannelType.WEBHOOK}
     <WebhookSetupStep
       clusterName={clustersState.clusterName(clusterId)}
       {monitorName}
       onSubmit={onWebhookSubmit}
-      onCancel={() => {
-        selectedChannel = null;
-      }}
+      onCancel={onBackToChannels}
     />
   {/if}
 </Modal>

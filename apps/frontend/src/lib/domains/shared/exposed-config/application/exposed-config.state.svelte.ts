@@ -102,13 +102,14 @@ class ExposedConfigState {
   }
 
   formatTierName(tier: UserTier): string {
-    // todo: make usertier a value object
     return match(tier)
       .with(UserTier.FREE, () => 'Free')
+      .with(UserTier.EARLY_USER, () => 'Early User')
       .with(UserTier.EARLY_BIRD, () => 'Early Bird')
       .with(UserTier.CONTRIBUTOR, () => 'Contributor')
+      .with(UserTier.BUILDER, () => 'Builder')
       .with(UserTier.PRO, () => 'Pro')
-      .otherwise(() => tier);
+      .exhaustive();
   }
 }
 

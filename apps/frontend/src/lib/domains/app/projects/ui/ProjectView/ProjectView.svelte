@@ -1,19 +1,13 @@
 <script lang="ts">
-  import { page } from '$app/state';
-  import { Feature } from '$lib/domains/shared/types.js';
-  import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
-  import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
-  import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
-  import NotificationChannelSetupModal from '$lib/domains/app/projects/ui/notification-channels/NotificationChannelSetupModal.svelte';
-  import MetricDetails from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricDetails.svelte';
+  import { resolve } from '$app/paths';
+  import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import ProjectSync from '$lib/domains/app/projects/ui/ProjectView/ProjectSync.svelte';
-  import DataTile from '$lib/domains/shared/ui/components/DataTile.svelte';
-  import LogsTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
+  import LogsTile from '$lib/domains/logs/ui/logs-tile/LogsTile.svelte';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import MonitoringTile from './tiles/MonitoringTile.svelte';
-  import UnconfiguredFeatureTile from './UnconfiguredFeatureTile.svelte';
-  import UnifiedSetupOverlay from '$lib/domains/app/projects/ui/setup/UnifiedSetupOverlay.svelte';
-  import { monitoringState } from '../../application/monitoring.state.svelte.js';
 
   type Props = {
     clusterId: string;
@@ -22,85 +16,50 @@
 
   const { clusterId, projectId }: Props = $props();
 
-  const previewedMetricId = $derived(page.params.metric_id);
-
-  const selectedLogging = $derived(
-    projectsState.hasFeature(projectId, Feature.LOGGING),
-  );
-  const selectedMetrics = $derived(
-    projectsState.hasFeature(projectId, Feature.METRICS),
-  );
-  const selectedMonitoring = $derived(
-    projectsState.hasFeature(projectId, Feature.MONITORING),
-  );
-
-  const hasLogging = $derived(
-    projectsState.hasConfiguredFeature(projectId, Feature.LOGGING) ||
-      logsState.logs.length > 0,
-  );
-  const hasMonitoring = $derived(
+  const hasMonitor = $derived(
     Boolean(monitoringState.getMonitorByProjectId(projectId)),
   );
-
-  const isMobile = $derived.by(() => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    return window.innerWidth < 640;
-  });
 </script>
 
 <ProjectSync>
-  <NotificationChannelSetupModal {clusterId} />
-
-  {#if (selectedLogging || selectedMonitoring) && (!previewedMetricId || isMobile) && metricsState.ready}
-    <div class="flex w-full flex-1 flex-col gap-1.5 overflow-hidden">
-      {#if selectedMonitoring}
-        {#if hasMonitoring}
+  <div class="flex flex-1 flex-col lg:relative">
+    <div class="flex flex-col lg:absolute lg:inset-0 lg:flex-row">
+      <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+        {#if hasMonitor}
           <MonitoringTile {clusterId} {projectId} />
         {:else}
-          <UnconfiguredFeatureTile {clusterId} {projectId} />
+          <EmptyState
+            class="border-hairline shrink-0 border-b p-4"
+            title="No monitor yet"
+            description="Add one to check that this service is up and how fast it answers."
+          >
+            <Button
+              href={resolve(
+                '/app/domains/[cluster_id]/[project_id]/monitoring',
+                {
+                  cluster_id: clusterId,
+                  project_id: projectId,
+                },
+              )}
+              variant="primary"
+              size="sm"
+            >
+              <PlusIcon class="size-4" />
+              Add monitor
+            </Button>
+          </EmptyState>
         {/if}
-      {/if}
 
-      {#if selectedLogging && projectsState.ready}
-        <DataTile
-          delayIn={0}
-          class={[
-            'relative overflow-hidden ld-card-rounding p-0',
-            {
-              'pt-3': hasLogging,
-            },
-          ]}
-        >
+        <div class="flex min-h-0 flex-1 flex-col">
           <LogsTile />
-          {#if !hasLogging}
-            <UnifiedSetupOverlay {projectId} />
-          {/if}
-        </DataTile>
-      {/if}
-    </div>
-  {/if}
+        </div>
+      </div>
 
-  {#if previewedMetricId && projectsState.ready && hasLogging && metricsState.ready}
-    <div class="flex flex-1 flex-col gap-3">
-      <MetricDetails />
+      <div
+        class="border-hairline flex shrink-0 flex-col max-lg:border-t lg:w-64 lg:overflow-y-auto lg:border-l xl:w-72"
+      >
+        <MetricsTiles />
+      </div>
     </div>
-  {/if}
-
-  {#if selectedMetrics && metricsState.ready}
-    <div class="relative w-full shrink-0 sm:w-80 h-fit">
-      <MetricsTiles />
-      {#if metricsState.isUsingFakeData && projectsState.ready}
-        <UnifiedSetupOverlay {projectId} />
-      {/if}
-    </div>
-  {/if}
-
-  {#if previewedMetricId && projectsState.ready && !hasLogging}
-    <div class="flex flex-1 flex-col gap-3">
-      <MetricDetails />
-    </div>
-  {/if}
+  </div>
 </ProjectSync>

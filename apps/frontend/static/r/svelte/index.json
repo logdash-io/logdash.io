@@ -1,0 +1,13 @@
+[
+	{
+		"name": "status-page",
+		"title": "Status page",
+		"type": "registry:component",
+		"description": "A Logdash status page: overall status, uptime per monitor and 90 days of daily bars, styled with your theme.",
+		"dependencies": [
+			"@logdash/status"
+		],
+		"registryDependencies": [],
+		"relativeUrl": "status-page.json"
+	}
+]

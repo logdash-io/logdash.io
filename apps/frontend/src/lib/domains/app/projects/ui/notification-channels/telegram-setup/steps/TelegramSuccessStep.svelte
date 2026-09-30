@@ -18,13 +18,13 @@
     <div
       class="success-card flex h-14 w-14 items-center justify-center rounded-full"
     >
-      <CheckIcon class="h-6 w-6" />
+      <CheckIcon class="size-6 stroke-1" />
     </div>
 
     <div class="flex flex-col items-start">
-      <h3 class="text-xl font-medium">Telegram Channel Found</h3>
+      <h3 class="text-xl font-medium">Telegram channel found</h3>
       <p class="text-neutral-400 text-sm">
-        You can now save it to your project.
+        You can now save it to your domain.
       </p>
     </div>
   </div>
@@ -51,6 +51,6 @@
     block
     onclick={() => onSubmit(assignToServiceMonitor)}
   >
-    Save channel to {clusterName} project
+    Save channel to {clusterName}
   </Button>
 </div>

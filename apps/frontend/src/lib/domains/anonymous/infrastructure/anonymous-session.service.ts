@@ -1,5 +1,10 @@
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
+import type {
+  PingBucket,
+  PingBucketPeriod,
+  PingBucketsResponse,
+} from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor';
 import {
@@ -18,6 +23,7 @@ const DEMO_METRIC_HISTORY_LIMIT = 60;
 export type AnonymousUserDto = {
   token: string;
   clusterId: string;
+  clusterName: string;
 };
 
 export type CreatedProjectDto = {
@@ -32,7 +38,7 @@ export type DemoTargetDto = {
 
 type CreateAnonymousUserResponseDto = {
   token: string;
-  cluster: { id: string };
+  cluster: { id: string; name: string };
 };
 
 type CreateProjectResponseDto = {
@@ -41,14 +47,20 @@ type CreateProjectResponseDto = {
 };
 
 export class AnonymousSessionService {
-  public async createAnonymousUser(): Promise<AnonymousUserDto> {
+  public async createAnonymousUser(
+    clusterName?: string,
+  ): Promise<AnonymousUserDto> {
     const response = await httpClient.post<CreateAnonymousUserResponseDto>(
       '/users/anonymous',
-      {},
+      { clusterName },
       { requireAuth: false },
     );
 
-    return { token: response.token, clusterId: response.cluster.id };
+    return {
+      token: response.token,
+      clusterId: response.cluster.id,
+      clusterName: response.cluster.name,
+    };
   }
 
   public async createProject(
@@ -99,6 +111,23 @@ export class AnonymousSessionService {
         customToken: token,
       },
     );
+  }
+
+  public async readHistory(
+    monitorId: string,
+    period: PingBucketPeriod,
+    token: string,
+  ): Promise<(PingBucket | null)[]> {
+    const response = await httpClient.get<PingBucketsResponse>(
+      `/monitors/${monitorId}/http_ping_buckets`,
+      {
+        params: { period },
+        requireAuth: false,
+        customToken: token,
+      },
+    );
+
+    return response.buckets.reverse();
   }
 
   public listClusters(token: string): Promise<Cluster[]> {

@@ -1,87 +1,47 @@
 <script lang="ts">
-  import { DateTime } from "luxon";
-  import { CheckIcon, DangerIcon, CloseIcon, ClockIcon } from "../../../icons";
+  import type { StatusPage } from "@logdash/status";
   import { onMount } from "svelte";
-
-  type SystemStatus = "operational" | "degraded" | "outage" | "unknown";
+  import { formatAge } from "../utils/format-status-page";
 
   interface Props {
-    systemStatus: SystemStatus;
-    lastUpdated: Date;
-    monitorCount: number;
+    name: string;
+    status: StatusPage["status"];
+    updatedAt: Date;
   }
 
-  let { systemStatus, lastUpdated, monitorCount }: Props = $props();
+  let { name, status, updatedAt }: Props = $props();
 
-  const statusConfig = {
-    operational: {
-      text: "All Systems Operational",
-      color: "text-green-600",
-      icon: CheckIcon,
-    },
-    degraded: {
-      text: "Partial System Outage",
-      color: "text-yellow-600",
-      icon: DangerIcon,
-    },
-    outage: {
-      text: "Major System Outage",
-      color: "text-red-600",
-      icon: CloseIcon,
-    },
-    unknown: {
-      text: "Status Unknown",
-      color: "text-neutral-600",
-      icon: ClockIcon,
-    },
-  };
+  const statuses: Record<StatusPage["status"], { label: string; dot: string }> =
+    {
+      operational: { label: "All systems operational", dot: "bg-success" },
+      degraded: { label: "Partial outage", dot: "bg-warning" },
+      outage: { label: "Major outage", dot: "bg-error" },
+      unknown: { label: "Status unknown", dot: "bg-neutral-600" },
+    };
 
-  const config = $derived(statusConfig[systemStatus]);
-  let now = $state(new Date());
+  let now = $state<Date | null>(null);
+
+  const headline = $derived(statuses[status]);
 
   onMount(() => {
-    const interval = setInterval(() => {
-      now = new Date();
-    }, 1000);
+    now = new Date();
+    const timer = setInterval(() => (now = new Date()), 1000);
 
-    return () => clearInterval(interval);
-  });
-
-  const userFriendlyLastUpdated = $derived.by(() => {
-    const diffInSeconds = Math.floor(
-      (now.getTime() - lastUpdated.getTime()) / 1000
-    );
-
-    if (diffInSeconds < 10) {
-      return "Updated just now";
-    }
-
-    if (diffInSeconds < 60) {
-      return `Updated less than a minute ago`;
-    }
-
-    const relativeTime = DateTime.fromJSDate(lastUpdated).toRelative();
-    return `Last updated ${relativeTime}`;
+    return () => clearInterval(timer);
   });
 </script>
 
-<div class={`mb-1.5 ld-card-rounding px-3 py-1.5`}>
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      {#if config.icon}
-        {@const IconComponent = config.icon}
-        <IconComponent class={`size-5 ${config.color}`} />
-      {/if}
+<h1 class="text-neutral-400 text-base break-words">{name}</h1>
 
-      <h2 class={`text-base font-normal ${config.color}`}>
-        {config.text}
-      </h2>
-    </div>
+<p
+  class="mt-3 flex items-start gap-3 text-3xl leading-[1.15] font-medium tracking-[-0.03em] text-balance @xl:text-4xl"
+>
+  <span class="flex h-[1.15em] shrink-0 items-center">
+    <span class={["size-2.5 rounded-full", headline.dot]}></span>
+  </span>
+  {headline.label}
+</p>
 
-    <div class="text-right">
-      <div class="text-sm text-neutral-500">
-        {monitorCount} component{monitorCount !== 1 ? "s" : ""}
-      </div>
-    </div>
-  </div>
-</div>
+<p class="text-neutral-500 mt-4 text-sm tabular-nums">
+  {now ? `Updated ${formatAge(updatedAt, now)}` : "\u00a0"}
+</p>

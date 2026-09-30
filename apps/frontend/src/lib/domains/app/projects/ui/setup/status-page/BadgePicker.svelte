@@ -4,7 +4,8 @@
   import { untrack } from 'svelte';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
-  import { Button, Checkbox, Select } from '@logdash/hyper-ui/presentational';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
+  import { Checkbox, Select } from '@logdash/hyper-ui/presentational';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { stripProtocol } from '$lib/domains/shared/utils/url.js';
   import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
@@ -68,11 +69,15 @@
   }
 </script>
 
-<div class="border-border-default flex flex-col gap-4 rounded-xl border p-4">
+<div class="flex flex-col gap-4">
   {#if monitors.length > 1}
-    <label class="flex flex-col gap-1.5 text-sm">
-      <span class="text-neutral-400">Monitor</span>
-      <Select size="sm" class="w-full" bind:value={selectedMonitorId}>
+    <label class="flex flex-col gap-1.5">
+      <span class="text-xs text-neutral-500">Monitor</span>
+      <Select
+        size="sm"
+        class="border-hairline w-full rounded-lg bg-neutral-950 pl-2.5 text-sm [&::picker(select)]:bg-surface-100"
+        bind:value={selectedMonitorId}
+      >
         {#each monitors as option (option.id)}
           <option value={option.id}>
             {option.name || stripProtocol(option.url ?? '')}
@@ -84,6 +89,7 @@
 
   <div class="flex flex-wrap items-center justify-between gap-2">
     <SegmentedControl
+      label="Badge style"
       options={BADGE_STYLES}
       value={style}
       onChange={(value: BadgeStyle) => (style = value)}
@@ -92,6 +98,7 @@
 
     {#if !isThemed}
       <SegmentedControl
+        label="Badge period"
         options={BADGE_PERIODS}
         value={period}
         onChange={(value: BadgePeriod) => (period = value)}
@@ -136,28 +143,26 @@
   {/if}
 
   <div class="flex flex-col gap-2">
-    <p class="text-sm text-neutral-400">
+    <p class="text-sm text-neutral-500">
       Paste this into your README. The badge links to your status page.
     </p>
 
-    <div
-      class="ld-card-base relative w-full overflow-hidden rounded-xl text-sm"
-    >
+    <div class="relative">
       <Highlight
-        class="code-snippet selection:bg-surface-100 break-all whitespace-pre-wrap [&>code]:pr-12!"
+        class="border-hairline selection:bg-surface-100 rounded-lg border bg-neutral-950 text-sm break-all whitespace-pre-wrap [&>code]:pr-12!"
         code={snippet}
         language={isHtmlSnippet ? xml : markdown}
       />
 
-      <Button
-        size="sm"
-        shape="square"
-        class="bg-surface-100 absolute right-2 top-2 border-transparent"
-        aria-label="Copy badge snippet"
-        onclick={onCopySnippet}
-      >
-        <CopyIcon class="h-4 w-4" />
-      </Button>
+      <span class="absolute top-3 right-3">
+        <IconButton
+          label="Copy badge snippet"
+          tooltip="Copy"
+          onclick={onCopySnippet}
+        >
+          <CopyIcon class="size-4" />
+        </IconButton>
+      </span>
     </div>
   </div>
 </div>

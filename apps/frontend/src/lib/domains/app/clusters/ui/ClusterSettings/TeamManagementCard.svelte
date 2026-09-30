@@ -2,16 +2,19 @@
   import { clusterInvitesState } from '$lib/domains/app/clusters/application/cluster-invites.state.svelte.js';
   import { ClusterRole } from '$lib/domains/app/clusters/domain/cluster-invite';
   import { validateEmail } from '$lib/domains/shared/utils/validators.js';
-  import { UserRoundIcon } from 'lucide-svelte';
+  import UserIcon from '$lib/domains/shared/icons/UserIcon.svelte';
   import {
+    SETTINGS_INPUT_CLASS,
     SettingsCard,
-    SettingsCardHeader,
   } from '$lib/domains/shared/ui/components/settings-card';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import AtIcon from '$lib/domains/shared/icons/AtIcon.svelte';
-  import { DangerIcon } from '@logdash/hyper-ui/icons';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
-  import { Button, Input, Spinner } from '@logdash/hyper-ui/presentational';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
+  import LoadingLine from '$lib/domains/shared/ui/components/LoadingLine.svelte';
+  import { DangerIcon } from '@logdash/hyper-ui/icons';
+  import { Button, Input } from '@logdash/hyper-ui/presentational';
+  import { match } from 'ts-pattern';
 
   type Props = {
     clusterId: string;
@@ -26,9 +29,6 @@
   const capacity = $derived(clusterInvitesState.capacity);
   const memberCount = $derived(
     capacity ? capacity.currentUsersCount + capacity.currentInvitesCount : 0,
-  );
-  const usagePercent = $derived(
-    capacity ? (memberCount / capacity.maxMembers) * 100 : 0,
   );
 
   $effect(() => {
@@ -60,6 +60,10 @@
     }
   }
 
+  function onInviteKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Enter') void onInviteUser();
+  }
+
   function formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -68,148 +72,122 @@
     });
   }
 
-  function formatRole(role: ClusterRole): string {
-    return role === ClusterRole.CREATOR ? 'Admin' : 'Write';
+  function roleLabel(role: ClusterRole): string {
+    return match(role)
+      .with(ClusterRole.CREATOR, () => 'Owner')
+      .with(ClusterRole.ADMIN, () => 'Admin')
+      .with(ClusterRole.WRITE, () => 'Member')
+      .exhaustive();
   }
 </script>
 
-<SettingsCard>
-  <SettingsCardHeader
-    title="Team Management"
-    description="Manage who has access to this project"
-  />
+<SettingsCard title="Team" description="People who can open this domain.">
+  {#if clusterInvitesState.isLoading || !capacity}
+    <div class="min-h-39.5 px-4 py-4">
+      {#if clusterInvitesState.loadFailed && !clusterInvitesState.isLoading}
+        <div class="text-neutral-500 flex items-center gap-2 text-sm">
+          <DangerIcon class="size-4 shrink-0" />
+          Could not load members. Retrying in a few seconds.
+        </div>
+      {:else}
+        <LoadingLine label="Loading members" />
+      {/if}
+    </div>
+  {:else}
+    <div class="flex items-center gap-3 px-4 py-4 text-sm">
+      <span class="text-neutral-500 w-16 shrink-0">Seats</span>
+      <span class="tabular-nums">
+        {memberCount} of {capacity.maxMembers} used
+      </span>
+    </div>
 
-  <div class="p-4">
-    {#if clusterInvitesState.isLoading || !capacity}
-      <div class="flex justify-center py-8">
-        <Spinner size="xs" class="text-neutral-400" />
+    {#each capacity.members as member (member.email)}
+      <div class="flex items-center gap-3 px-4 py-4 text-sm">
+        <span class="text-neutral-500 w-16 shrink-0">
+          {roleLabel(member.role)}
+        </span>
+        <span
+          class="bg-surface-100 flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full"
+        >
+          {#if member.avatarUrl}
+            <img src={member.avatarUrl} alt="" class="size-full object-cover" />
+          {:else}
+            <UserIcon class="text-neutral-400 size-3" />
+          {/if}
+        </span>
+        <span class="min-w-0 flex-1 truncate">
+          {member.email || 'Anonymous'}
+        </span>
+      </div>
+    {/each}
+
+    {#each clusterInvitesState.invites as invite (invite.id)}
+      <div class="flex items-center gap-3 px-4 py-4 text-sm">
+        <span class="text-neutral-500 w-16 shrink-0">Invited</span>
+        <span
+          class="border-neutral-600 size-5 shrink-0 rounded-full border border-dashed"
+        ></span>
+        <span class="min-w-0 flex-1 truncate">{invite.invitedUserEmail}</span>
+        <span class="text-neutral-500 shrink-0 font-mono text-xs max-sm:hidden">
+          {formatDate(invite.createdAt)}
+        </span>
+        <IconButton
+          label="Cancel the invite to {invite.invitedUserEmail}"
+          tooltip="Cancel invite"
+          danger
+          class="-my-1.5 -mr-1.5"
+          disabled={clusterInvitesState.isDeleting}
+          onclick={() => onDeleteInvite(invite.id)}
+        >
+          <TrashIcon class="size-4" />
+        </IconButton>
+      </div>
+    {/each}
+
+    {#if clusterInvitesState.canInviteMore}
+      <div class="flex flex-col gap-2 px-4 py-2.5 text-sm">
+        <div class="flex items-center gap-3">
+          <span class="text-neutral-500 w-16 shrink-0">Invite</span>
+          <Input
+            type="email"
+            size="sm"
+            class={['min-w-0 flex-1 sm:max-w-sm', SETTINGS_INPUT_CLASS]}
+            placeholder="name@company.com"
+            aria-label="Email of the person to invite"
+            error={!!emailError && !!emailInput.trim()}
+            bind:value={emailInput}
+            disabled={clusterInvitesState.isCreating}
+            onkeydown={onInviteKeydown}
+          >
+            {#snippet leading()}
+              <AtIcon class="text-neutral-500 size-3.5 shrink-0" />
+            {/snippet}
+          </Input>
+          <Button
+            variant="primary"
+            size="sm"
+            onclick={onInviteUser}
+            disabled={!isEmailValid}
+            loading={clusterInvitesState.isCreating}
+          >
+            Send
+          </Button>
+        </div>
+        {#if emailError && emailInput.trim()}
+          <p class="text-error pl-19">{emailError}</p>
+        {/if}
       </div>
     {:else}
-      {#if capacity}
-        <div class="mb-4">
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-neutral-400">Team members</span>
-            <span class="font-mono text-xs">
-              {memberCount}/{capacity.maxMembers}
-            </span>
-          </div>
-          <div class="bg-neutral-700 mt-2 h-1 w-full rounded-full">
-            <div
-              class="bg-brand h-1 rounded-full transition-[width]"
-              style="width: {usagePercent}%"
-            ></div>
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          {#each capacity.members as member (member.email)}
-            <div
-              class="flex items-center gap-3 rounded-lg bg-neutral-800 px-3 py-2.5"
-            >
-              <span
-                class="bg-neutral-700 flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full"
-              >
-                {#if member.avatarUrl}
-                  <img
-                    src={member.avatarUrl}
-                    alt=""
-                    class="size-full object-cover"
-                  />
-                {:else}
-                  <UserRoundIcon class="text-neutral-400 size-3.5" />
-                {/if}
-              </span>
-              <span class="flex-1 truncate text-sm">
-                {member.email || 'Anonymous'}
-              </span>
-              <span class="text-neutral-400 text-xs capitalize">
-                {member.role}
-              </span>
-            </div>
-          {/each}
-        </div>
-      {/if}
-
-      {#if clusterInvitesState.canInviteMore}
-        <div class="mt-4 border-t border-hairline pt-4">
-          <div class="flex gap-3">
-            <Input
-              type="email"
-              class="flex-1"
-              placeholder="New member email address"
-              error={!!emailError && !!emailInput.trim()}
-              bind:value={emailInput}
-              disabled={clusterInvitesState.isCreating}
-              onkeydown={(e: KeyboardEvent) => {
-                if (e.key === 'Enter') void onInviteUser();
-              }}
-            >
-              {#snippet leading()}
-                <AtIcon class="size-4 text-neutral-500" />
-              {/snippet}
-            </Input>
-            <Button
-              variant="primary"
-              onclick={onInviteUser}
-              disabled={!isEmailValid}
-              loading={clusterInvitesState.isCreating}
-            >
-              Invite
-            </Button>
-          </div>
-          {#if emailError && emailInput.trim()}
-            <div class="text-error mt-1 text-sm">{emailError}</div>
-          {/if}
-        </div>
-      {:else if capacity}
-        <UpgradeElement source="cluster-invite-limit" class="mt-4">
-          <div class="primary-card rounded-xl p-4">
-            <div class="text-brand flex items-center gap-2">
-              <DangerIcon class="size-5" />
-              <span class="font-medium">Team limit reached</span>
-            </div>
-            <p class="text-neutral-400 mt-2 text-sm">
-              Upgrade your plan to invite more team members
-            </p>
-          </div>
-        </UpgradeElement>
-      {/if}
-
-      {#if clusterInvitesState.invites.length > 0}
-        <div class="pt-4">
-          <h3 class="text-neutral-400 mb-2 text-sm font-medium">
-            Pending invitations
-          </h3>
-          <div class="flex flex-col gap-2">
-            {#each clusterInvitesState.invites as invite (invite.id)}
-              <div
-                class="flex items-center justify-between rounded-xl bg-neutral-800 p-3"
-              >
-                <div class="flex-1">
-                  <div class="text-sm font-medium">
-                    {invite.invitedUserEmail}
-                  </div>
-                  <div class="text-neutral-400 text-xs">
-                    Invited {formatDate(invite.createdAt)} • {formatRole(
-                      invite.role,
-                    )} access
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  shape="square"
-                  class="text-error hover:bg-error/10"
-                  onclick={() => onDeleteInvite(invite.id)}
-                  loading={clusterInvitesState.isDeleting}
-                >
-                  <TrashIcon class="h-4 w-4" />
-                </Button>
-              </div>
-            {/each}
-          </div>
-        </div>
-      {/if}
+      <UpgradeElement
+        source="cluster-invite-limit"
+        class="hover:bg-surface-100 flex items-center gap-3 px-4 py-4 text-sm"
+      >
+        <span class="text-neutral-500 w-16 shrink-0">Invite</span>
+        <span class="min-w-0 flex-1">
+          All seats are taken. Upgrade to invite more people.
+        </span>
+        <span class="shrink-0 text-xs font-medium">Upgrade</span>
+      </UpgradeElement>
     {/if}
-  </div>
+  {/if}
 </SettingsCard>

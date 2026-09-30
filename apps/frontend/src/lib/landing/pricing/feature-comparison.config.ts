@@ -9,11 +9,11 @@ export const FEATURES_COMPARISON = {
   ] as const,
   sections: [
     {
-      name: 'Projects',
+      name: 'Domains',
       icon: '🚀',
       features: [
         {
-          name: 'Projects',
+          name: 'Domains',
           [UserTier.FREE]: 'Unlimited',
           [UserTier.BUILDER]: 'Unlimited',
           [UserTier.PRO]: 'Unlimited',
@@ -194,9 +194,9 @@ export const FEATURES_COMPARISON = {
       features: [
         {
           name: 'Multiple Collaborators',
-          [UserTier.FREE]: '1 extra user per project',
-          [UserTier.BUILDER]: '2 extra users per project',
-          [UserTier.PRO]: '3 extra users per project',
+          [UserTier.FREE]: '1 extra user per domain',
+          [UserTier.BUILDER]: '2 extra users per domain',
+          [UserTier.PRO]: '3 extra users per domain',
         },
         {
           name: '99.9% uptime SLA',

@@ -21,9 +21,3 @@ export const LOG_LEVELS_MAP: Record<LogLevel, LogLevelMetadata> =
     LogLevel,
     LogLevelMetadata
   >;
-
-export function getLogLevelMetadata(
-  level: LogLevel,
-): LogLevelMetadata | undefined {
-  return LOG_LEVELS_MAP[level];
-}

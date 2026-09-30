@@ -10,22 +10,17 @@
 
 <svg
   class={className}
-  viewBox="0 0 24 24"
+  viewBox="0 0 16 16"
   fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
   xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
 >
   <path
-    d="M9.02 2.84004L3.63 7.04004C2.73 7.74004 2 9.23004 2 10.36V17.77C2 20.09 3.89 21.99 6.21 21.99H17.79C20.11 21.99 22 20.09 22 17.78V10.5C22 9.29004 21.19 7.74004 20.2 7.05004L14.02 2.72004C12.62 1.74004 10.37 1.79004 9.02 2.84004Z"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
+    d="M2.75 6.55 7.19 2.74a1.25 1.25 0 0 1 1.62 0l4.44 3.81v5.2c0 .83-.67 1.5-1.5 1.5h-7.5c-.83 0-1.5-.67-1.5-1.5Z"
   />
-  <path
-    d="M12 17.99V14.99"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <path d="M6.5 13.25v-2.5a1.5 1.5 0 0 1 3 0v2.5" />
 </svg>

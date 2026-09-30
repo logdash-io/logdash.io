@@ -38,6 +38,7 @@ import { BlogPostEntity } from '../../src/blog/core/entities/blog-post.entity';
 import { BlogCoreModule } from '../../src/blog/core/blog-core.module';
 import { CustomDomainCoreModule } from '../../src/custom-domain/core/custom-domain-core.module';
 import { BadgeCoreModule } from '../../src/badge/core/badge-core.module';
+import { StatusPageCoreModule } from '../../src/status-page/core/status-page-core.module';
 import { CustomDomainEntity } from '../../src/custom-domain/core/entities/custom-domain.entity';
 import { CustomDomainDnsService } from '../../src/custom-domain/dns/custom-domain-dns.service';
 import { CustomDomainDnsServiceMock } from '../../src/custom-domain/dns/custom-domain-dns.service.mock';
@@ -75,12 +76,17 @@ import { SubscriptionEntity } from '../../src/subscription/core/entities/subscri
 import { SubscriptionCoreModule } from '../../src/subscription/core/subscription-core.module';
 import { AuditLogUtils } from './audit-log-utils';
 import { AuditLogCreationModule } from '../../src/audit-log/creation/audit-log-creation.module';
+import { ResendModule } from '../../src/email/resend/resend.module';
+import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { UserUtils } from './user.utils';
 import { CastErrorFilter } from '../../src/shared/filters/cast-error.filter';
+import { withRequestContext } from '../../src/shared/request-context/request-context';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/pinger/http-ping-pinger.service';
 import { ALL_LOGGER_TOKENS, LOGDASH_METRICS } from '../../src/shared/logdash/logdash-tokens';
 
 export async function createTestApp() {
+  getEnvConfig().resend.enabled = false;
+
   let moduleBuilder = Test.createTestingModule({
     imports: [
       rootMongooseTestModule(),
@@ -108,10 +114,12 @@ export async function createTestApp() {
       PublicDashboardCoreModule,
       CustomDomainCoreModule,
       BadgeCoreModule,
+      StatusPageCoreModule,
       BlogCoreModule,
       StripeModule,
       SubscriptionCoreModule,
       AuditLogCreationModule,
+      ResendModule,
       RedisModule.forRoot({
         url: getRedisTestContainerUrl(),
       }),
@@ -146,6 +154,7 @@ export async function createTestApp() {
     }),
   );
   app.useGlobalFilters(new CastErrorFilter(app.getHttpAdapter()));
+  app.use(withRequestContext);
   await app.listen(0, '127.0.0.1');
 
   // Crons would flush queues and delete data behind the specs' backs, so none

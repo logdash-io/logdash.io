@@ -13,6 +13,7 @@ export class AuditLogSerializer {
       relatedDomain: entity.related_domain || undefined,
       description: entity.description || undefined,
       relatedEntityId: entity.related_entity_id || undefined,
+      personalApiKeyId: entity.personal_api_key_id || undefined,
     };
   }
 
@@ -30,6 +31,7 @@ export class AuditLogSerializer {
       relatedDomain: normalized.relatedDomain,
       description: normalized.description,
       relatedEntityId: normalized.relatedEntityId,
+      personalApiKeyId: normalized.personalApiKeyId,
     };
   }
 

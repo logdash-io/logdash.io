@@ -2,6 +2,7 @@ import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
+import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 import { PublicDashboardSerialized } from '../../src/public-dashboard/core/entities/public-dashboard.interface';
 import { ErrorResponse } from '../utils/error-response';
 
@@ -68,10 +69,35 @@ describe('PublicDashboardCoreController (writes)', () => {
         .set('Authorization', `Bearer ${setupA.token}`)
         .send({
           httpMonitorsIds: [httpMonitor.id],
+          name: 'stolen monitors',
+          isPublic: true,
         });
 
       // then
       expect(response.status).toEqual(400);
+      expect((response.body as ErrorResponse).message).toBe(
+        'Some monitors do not belong to the same domain',
+      );
+      expect(await bootstrap.models.publicDashboardModel.countDocuments()).toBe(0);
+    });
+
+    it('does not create public dashboard with a monitor id that does not exist', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/public_dashboards`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          httpMonitorsIds: [new Types.ObjectId().toString()],
+          name: 'future monitor',
+          isPublic: true,
+        });
+
+      // then
+      expect(response.status).toEqual(400);
+      expect(await bootstrap.models.publicDashboardModel.countDocuments()).toBe(0);
     });
 
     it('does not allow free user to create second public dashboard', async () => {
@@ -103,8 +129,41 @@ describe('PublicDashboardCoreController (writes)', () => {
       // then
       expect(response.status).toBe(400);
       expect((response.body as ErrorResponse).message).toBe(
-        'You have reached the maximum number of public dashboards allowed for your plan',
+        'You have reached the maximum number of status pages for this plan',
       );
+    });
+
+    it('charges status pages in a shared domain to the domain owner', async () => {
+      // given
+      const owner = await bootstrap.utils.generalUtils.setupAnonymous();
+      const member = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'member@test.com',
+        userTier: UserTier.EarlyBird,
+      });
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: owner.cluster.id,
+        userId: member.user.id,
+        role: ClusterRole.Write,
+      });
+      await bootstrap.utils.publicDashboardUtils.createPublicDashboard({
+        clusterId: owner.cluster.id,
+        token: owner.token,
+        name: 'owner dashboard',
+      });
+
+      // when
+      const inOwnerDomain = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${owner.cluster.id}/public_dashboards`)
+        .set('Authorization', `Bearer ${member.token}`)
+        .send({ name: 'member dashboard', isPublic: false });
+      const inMemberDomain = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${member.cluster.id}/public_dashboards`)
+        .set('Authorization', `Bearer ${member.token}`)
+        .send({ name: 'own dashboard', isPublic: false });
+
+      // then
+      expect(inOwnerDomain.status).toBe(400);
+      expect(inMemberDomain.status).toBe(201);
     });
 
     it('allows early bird user to create more public dashboards', async () => {

@@ -10,26 +10,14 @@
 
 <svg
   class={className}
-  viewBox="0 0 24 24"
+  viewBox="0 0 16 16"
   fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
   xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
 >
-  <path
-    d="M3 7H21"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <path
-    d="M3 12H21"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <path
-    d="M3 17H21"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
+  <path d="M2.75 4.25h10.5M2.75 8h10.5M2.75 11.75h10.5" />
 </svg>

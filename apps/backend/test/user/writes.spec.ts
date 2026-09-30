@@ -6,6 +6,7 @@ import request from 'supertest';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { createTestApp } from '../utils/bootstrap';
 import { CreateAnonymousUserResponse } from '../../src/user/core/dto/create-anonymous-user.response';
+import { CreateAnonymousUserBody } from '../../src/user/core/dto/create-anonymous-user.body';
 import { UserSerialized } from '../../src/user/core/entities/user.interface';
 import { MarketingConsentGivenEvent } from '../../src/user/events/definitions/marketing-consent-given.event';
 import { UserEvents } from '../../src/user/events/user-events.enum';
@@ -34,6 +35,39 @@ describe('UserCoreController (writes)', () => {
     expect(body.token).toBeDefined();
     expect(body.user).toBeDefined();
     expect(body.cluster.creatorId).toBe(body.user.id);
+    expect(body.cluster.name).toBe('My domain');
+  });
+
+  it('creates anonymous user with cluster named after the given name', async () => {
+    // given
+    const dto: CreateAnonymousUserBody = { clusterName: '  acme.com  ' };
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer())
+      .post('/users/anonymous')
+      .send(dto);
+
+    // then
+    const body = response.body as CreateAnonymousUserResponse;
+    expect(response.status).toBe(201);
+    expect(body.cluster.name).toBe('acme.com');
+    expect((await bootstrap.models.clusterModel.findById(body.cluster.id).lean())!.name).toBe(
+      'acme.com',
+    );
+  });
+
+  it('creates anonymous user with default cluster name when the given name is blank', async () => {
+    // given
+    const dto: CreateAnonymousUserBody = { clusterName: '   ' };
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer())
+      .post('/users/anonymous')
+      .send(dto);
+
+    // then
+    expect(response.status).toBe(201);
+    expect((response.body as CreateAnonymousUserResponse).cluster.name).toBe('My domain');
   });
 
   it('creates anonymous user with token expiring together with the account', async () => {

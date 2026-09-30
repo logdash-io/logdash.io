@@ -266,3 +266,14 @@ export function getGraphReadyPoints(
     dayData: graphReadyDayPoints,
   };
 }
+
+const TICK_CHAR_WIDTH_PX = 6.2;
+const TICK_GAP_PX = 24;
+
+export function thinTicks(ticks: string[], width: number): string[] {
+  const longest = Math.max(0, ...ticks.map((tick) => tick.length));
+  const tickWidth = longest * TICK_CHAR_WIDTH_PX + TICK_GAP_PX;
+  const step = Math.max(1, Math.ceil((ticks.length * tickWidth) / width));
+
+  return ticks.filter((_, index) => index % step === 0);
+}

@@ -1,12 +1,26 @@
 import { ClickHouseClient } from '@clickhouse/client';
 import { Injectable } from '@nestjs/common';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
+import { HttpPingBucketEntity } from '../core/entities/http-ping-bucket.entity';
+import { HttpPingBucketNormalized } from '../core/entities/http-ping-bucket.interface';
+import { HttpPingBucketSerializer } from '../core/entities/http-ping-bucket.serializer';
 import { BucketGranularity } from '../core/types/bucket-granularity.enum';
 import { VirtualBucket } from '../core/types/virtual-bucket.type';
 
 @Injectable()
 export class HttpPingBucketReadService {
   constructor(private readonly clickhouse: ClickHouseClient) {}
+
+  public async readByMonitorId(monitorId: string): Promise<HttpPingBucketNormalized[]> {
+    const result = await this.clickhouse.query({
+      query: `SELECT * FROM http_ping_buckets WHERE http_monitor_id = {monitorId:FixedString(24)}`,
+      query_params: { monitorId },
+    });
+
+    const { data } = await result.json<HttpPingBucketEntity>();
+
+    return HttpPingBucketSerializer.normalizeMany(data);
+  }
 
   public async readBucketsForMonitor(
     monitorId: string,

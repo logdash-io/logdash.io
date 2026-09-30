@@ -118,6 +118,9 @@ interface EnvConfig {
   customDomain: {
     targetCname: string;
   };
+  watchlist: {
+    projectId?: string;
+  };
 }
 
 interface EnvConfigs {
@@ -146,7 +149,7 @@ export const EnvConfigs: EnvConfigs = {
       builderPriceId: process.env.STRIPE_BUILDER_PRICE_ID!,
       proPriceId: process.env.STRIPE_PRO_PRICE_ID!,
       successUrl: 'https://logdash.io/app/callbacks/payments/purchase-success',
-      returnFromBillingUrl: 'https://logdash.io/app/clusters',
+      returnFromBillingUrl: 'https://logdash.io/app/domains',
       apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,
       signature: process.env.STRIPE_SIGNATURE!,
     },
@@ -237,6 +240,9 @@ export const EnvConfigs: EnvConfigs = {
     customDomain: {
       targetCname: 'statuspage.logdash.io',
     },
+    watchlist: {
+      projectId: process.env.WATCHLIST_PROJECT_ID,
+    },
   },
   [OurEnv.Local]: {
     app: {
@@ -258,7 +264,7 @@ export const EnvConfigs: EnvConfigs = {
       builderPriceId: process.env.STRIPE_BUILDER_PRICE_ID!,
       proPriceId: process.env.STRIPE_PRO_PRICE_ID!,
       successUrl: 'http://localhost:5173/app/callbacks/payments/purchase-success',
-      returnFromBillingUrl: 'http://localhost:5173/app/clusters',
+      returnFromBillingUrl: 'http://localhost:5173/app/domains',
       apiKeySecret: process.env.STRIPE_API_KEY_SECRET!,
       signature: process.env.STRIPE_SIGNATURE!,
     },
@@ -348,6 +354,9 @@ export const EnvConfigs: EnvConfigs = {
     },
     customDomain: {
       targetCname: 'statuspage.logdash.io',
+    },
+    watchlist: {
+      projectId: process.env.WATCHLIST_PROJECT_ID,
     },
   },
 };

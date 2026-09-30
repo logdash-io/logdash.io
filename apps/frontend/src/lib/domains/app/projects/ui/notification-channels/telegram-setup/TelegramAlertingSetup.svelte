@@ -12,9 +12,10 @@
   type Props = {
     clusterId: string;
     onCancel?: () => void;
+    onDone: () => void;
   };
 
-  const { clusterId, onCancel }: Props = $props();
+  const { clusterId, onCancel, onDone }: Props = $props();
 
   const monitorName = $derived.by(() => {
     const monitorId = telegramSetupState.state.monitorId;
@@ -56,12 +57,18 @@
         },
       },
     );
+
+    if (!createdChannelId) {
+      return;
+    }
+
     const monitorId = telegramSetupState.state.monitorId;
 
-    if (shouldAssignToServiceMonitor && monitorId && createdChannelId) {
+    if (shouldAssignToServiceMonitor && monitorId) {
       void assignChannelToMonitor(monitorId, createdChannelId);
     }
-    telegramSetupState.close();
+
+    onDone();
     void notificationChannelsState.loadChannels(clusterId);
   }
 

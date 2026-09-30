@@ -19,10 +19,10 @@
   import { envConfig } from '$lib/domains/shared/utils/env-config';
   import posthog, { PostHog } from 'posthog-js';
   import { getContext, setContext, type Snippet } from 'svelte';
-  import { atomOneDark } from 'svelte-highlight/styles';
   import '@fontsource-variable/inter/opsz.css';
   import '@fontsource-variable/geist-mono';
-  import '@logdash/hyper-ui/styles';
+  import '../code-theme.css';
+  import '../app.css';
   import { installPressFeedback } from '@logdash/hyper-ui/utils/press';
 
   type Props = {
@@ -108,11 +108,6 @@
 
   $effect(syncExposedConfig);
 </script>
-
-<svelte:head>
-  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-  {@html atomOneDark}
-</svelte:head>
 
 <svelte:boundary onerror={(error) => console.log('💥', error)}>
   <Toaster />

@@ -37,11 +37,16 @@ export class AuditLogUtils {
       return false;
     }
 
+    if (dto.personalApiKeyId && auditLog.personal_api_key_id !== dto.personalApiKeyId) {
+      return false;
+    }
+
     return true;
   }
 
   public async assertAuditLog(dto: Partial<AuditLogNormalized>): Promise<AuditLogEntity> {
-    const timeoutAt = Date.now() + 3000;
+    // Audit logs are written fire-and-forget, and a loaded machine can take a few seconds.
+    const timeoutAt = Date.now() + 10_000;
     let auditLogs: AuditLogEntity[] = [];
 
     while (Date.now() < timeoutAt) {

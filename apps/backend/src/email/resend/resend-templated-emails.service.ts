@@ -4,6 +4,23 @@ import { Resend } from 'resend';
 import { getBasicTemplate } from './templates/basic';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { EMAILS_LOGGER } from '../../shared/logdash/logdash-tokens';
+import { PersonalApiKeyCreatedEvent } from '../../personal-api-key/events/definitions/personal-api-key-created.event';
+import { Action } from '../../personal-api-key/core/enums/action.enum';
+import { Resource } from '../../personal-api-key/core/enums/resource.enum';
+
+const RESOURCE_LABELS: Record<Resource, string> = {
+  [Resource.Logs]: 'Logs',
+  [Resource.Metrics]: 'Metrics',
+  [Resource.Monitors]: 'Monitors',
+  [Resource.Projects]: 'Services',
+  [Resource.Clusters]: 'Domains',
+  [Resource.Account]: 'Account',
+};
+
+const ACCESS_NOUNS = { clusters: 'domain', projects: 'service' } as const;
+
+const escapeHtml = (text: string): string =>
+  text.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 
 @Injectable()
 export class ResendTemplatedEmailsService {
@@ -69,6 +86,52 @@ P.S. I’d love to know — what made you decide to give Logdash a try?`;
       from: 'LogDash <hello@updates.logdash.io>',
       to,
       subject: 'Logdash - thanks again!',
+      html: getBasicTemplate({
+        body,
+      }),
+      replyTo: 'logdash.contact@gmail.com',
+      headers: {
+        'X-Entity-Ref-ID': `user-${Date.now()}`,
+      },
+    });
+
+    if (error) {
+      this.logger.error(`Failed to send email`, {
+        errorMessage: error.message,
+        error,
+        to,
+      });
+    }
+  }
+
+  public async sendPersonalApiKeyCreatedEmail(
+    to: string,
+    key: PersonalApiKeyCreatedEvent,
+  ): Promise<void> {
+    const scopes = key.scopes
+      .filter((scope) => scope.action !== Action.None)
+      .map((scope) => `${RESOURCE_LABELS[scope.resource]}: ${scope.action}`)
+      .join(', ');
+    const access =
+      key.access.kind === 'all'
+        ? 'All domains and services'
+        : `${key.access.ids.length} ${ACCESS_NOUNS[key.access.kind]}${key.access.ids.length === 1 ? '' : 's'}`;
+    const revokeUrl = `${getEnvConfig().app.url}/app/account/api-keys`;
+
+    const body = `A new personal API key was created for your Logdash account.<br/><br/>
+
+<b>Label:</b> ${escapeHtml(key.label)}<br/>
+<b>Prefix:</b> ${key.prefix}<br/>
+<b>Scopes:</b> ${scopes || 'None'}<br/>
+<b>Access:</b> ${access}<br/>
+<b>Expires:</b> ${key.expiresAt ? key.expiresAt.toUTCString() : 'No expiration'}<br/><br/>
+
+Not you? Revoke it at <a href="${revokeUrl}">${revokeUrl}</a>`;
+
+    const { error } = await this.resend.emails.send({
+      from: 'LogDash <hello@updates.logdash.io>',
+      to,
+      subject: 'Logdash - new personal API key created',
       html: getBasicTemplate({
         body,
       }),

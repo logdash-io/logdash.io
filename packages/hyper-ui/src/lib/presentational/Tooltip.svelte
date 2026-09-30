@@ -32,11 +32,14 @@
     closeOnOutsideTooltipClick = false,
   }: Props = $props();
 
+  const FOCUSABLE = "a[href], button, input, select, textarea, [tabindex]";
+
   let wrapper: HTMLSpanElement;
   let tooltip = $state<HTMLDivElement | null>(null);
   let portalContainer: HTMLDivElement | null = null;
 
   let visible = $state(false);
+  let focusOnOpen = false;
   let coords = { top: 0, left: 0 };
   let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -76,7 +79,13 @@
   }
 
   function portal(node: HTMLElement, target: HTMLElement) {
+    const focused = node.contains(document.activeElement)
+      ? document.activeElement
+      : null;
     target.appendChild(node);
+    if (focused instanceof HTMLElement) {
+      focused.focus();
+    }
     return {
       destroy() {
         if (node.parentNode === target) {
@@ -108,6 +117,17 @@
     }
   }
 
+  function close(): void {
+    returnFocus();
+    visible = false;
+  }
+
+  function returnFocus(): void {
+    if (tooltip?.contains(document.activeElement)) {
+      triggerElement()?.focus();
+    }
+  }
+
   function toggle() {
     if (visible) {
       hide();
@@ -119,23 +139,97 @@
   function handleClick(event: MouseEvent) {
     if (trigger === "click") {
       event.stopPropagation();
+      focusOnOpen = !visible && event.detail === 0;
       toggle();
     }
   }
 
+  function handleEscape(event: KeyboardEvent) {
+    if (
+      event.key !== "Escape" ||
+      !visible ||
+      event.defaultPrevented ||
+      tooltip?.contains(event.target as Node)
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    hide();
+  }
+
+  function onTooltipKeydown(event: KeyboardEvent): void {
+    const root = tooltip;
+    if (trigger !== "click" || !root || event.defaultPrevented) {
+      return;
+    }
+
+    match(event.key)
+      .with("Escape", () => {
+        event.preventDefault();
+        close();
+      })
+      .with("Tab", () => leaveOnTab(event, root))
+      .with("ArrowDown", "ArrowUp", () => moveWithinList(event, root))
+      .otherwise(() => {});
+  }
+
+  function leaveOnTab(event: KeyboardEvent, root: HTMLElement): void {
+    const items = focusables(root);
+    const current = items.indexOf(document.activeElement as HTMLElement);
+    const edge = event.shiftKey ? 0 : items.length - 1;
+    if (current !== -1 && current !== edge) {
+      return;
+    }
+
+    event.preventDefault();
+    close();
+  }
+
+  function moveWithinList(event: KeyboardEvent, root: HTMLElement): void {
+    const list = (event.target as Element).closest("ul");
+    if (!list || !root.contains(list)) {
+      return;
+    }
+
+    const items = focusables(list).filter(
+      (item) => item.closest("ul") === list
+    );
+    const current = items.indexOf(event.target as HTMLElement);
+    if (current === -1) {
+      return;
+    }
+
+    event.preventDefault();
+    const step = event.key === "ArrowDown" ? 1 : -1;
+    items[(current + step + items.length) % items.length].focus();
+  }
+
+  function focusables(root: HTMLElement): HTMLElement[] {
+    return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+      (element) =>
+        element.tabIndex >= 0 &&
+        !element.matches(":disabled") &&
+        element.checkVisibility()
+    );
+  }
+
+  function triggerElement(): HTMLElement | null {
+    return wrapper.querySelector<HTMLElement>(FOCUSABLE);
+  }
+
   function handleClickOutside(event: MouseEvent) {
+    const path = event.composedPath();
     if (
       trigger === "click" &&
       visible &&
       tooltip &&
-      !tooltip.contains(event.target as Node) &&
-      !wrapper.contains(event.target as Node)
+      !path.includes(tooltip) &&
+      !path.includes(wrapper)
     ) {
-      const clickTarget = event.target as Element;
-      const allTooltips = document.querySelectorAll("[data-tooltip-portal]");
-      debug("allTooltips", allTooltips);
-      const isInsideAnyTooltip = Array.from(allTooltips).some((tooltipEl) =>
-        tooltipEl.contains(clickTarget)
+      const isInsideAnyTooltip = path.some(
+        (node) =>
+          node instanceof Element && node.hasAttribute("data-tooltip-portal")
       );
 
       // Respect the closeOnOutsideTooltipClick flag
@@ -250,6 +344,7 @@
     } else if (trigger === "click") {
       wrapper.addEventListener("click", handleClick);
       document.addEventListener("click", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
     }
 
     return () => {
@@ -265,6 +360,7 @@
       } else if (trigger === "click") {
         wrapper.removeEventListener("click", handleClick);
         document.removeEventListener("click", handleClickOutside);
+        document.removeEventListener("keydown", handleEscape);
       }
     };
   });
@@ -301,6 +397,23 @@
       positionTooltip();
     }
   });
+
+  $effect(() => {
+    if (!tooltip || !focusOnOpen) {
+      return;
+    }
+
+    focusOnOpen = false;
+    if (!tooltip.contains(document.activeElement)) {
+      focusables(tooltip)[0]?.focus();
+    }
+  });
+
+  $effect(() => {
+    if (trigger === "click") {
+      triggerElement()?.setAttribute("aria-expanded", String(visible));
+    }
+  });
 </script>
 
 <span class={["flex", className]} bind:this={wrapper}>
@@ -315,6 +428,7 @@
       transition:fly={{ y: 5, easing: cubicInOut, duration: 200 }}
       bind:this={tooltip}
       data-tooltip-portal
+      role="presentation"
       class={[
         "absolute",
         {
@@ -324,13 +438,15 @@
       ]}
       style="top: 0; left: 0; pointer-events: {interactive ? 'auto' : 'none'};"
       onclick={(e) => e.stopPropagation()}
+      onkeydown={onTooltipKeydown}
       use:portal={container}
     >
       {#if isSnippet}
         {@render content(() => {
+          returnFocus();
           setTimeout(() => {
             debug("hiding tooltip via snippet");
-            visible = false;
+            close();
           });
         })}
       {:else}

@@ -1,23 +1,28 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	import { PublicDashboard } from '@logdash/hyper-ui';
-	import { PublicDashboardPublicState } from '@logdash/hyper-ui/features/public-dashboard/states/public-dashboard-public.state.svelte';
-	import '@logdash/hyper-ui/styles';
-	import '@fontsource-variable/geist-mono';
-	import '@fontsource-variable/kumbh-sans';
+	import { envConfig } from '@logdash/hyper-ui';
+	import { PublicDashboard } from '@logdash/hyper-ui/features';
+	import { statusPage } from '@logdash/status/svelte';
+	import type { PageProps } from './$types';
 
-	const { data }: { data: PageData } = $props();
+	const { data }: PageProps = $props();
 
-	const dashboardState = $derived.by(() => {
-		const state = new PublicDashboardPublicState();
-		state.setDashboardData(data.dashboardData);
-		return state;
-	});
+	const status = $derived(
+		statusPage(data.statusPageId, { baseUrl: envConfig.apiBaseUrl, initialData: data.page })
+	);
+	const page = $derived(status.data ?? data.page);
+	const description = $derived(`Current status and 90-day uptime of ${page.name}`);
 </script>
 
+<svelte:head>
+	<title>{page.name}</title>
+	<meta name="description" content={description} />
+	<meta property="og:title" content={page.name} />
+	<meta property="og:description" content={description} />
+</svelte:head>
+
 <PublicDashboard
-	enablePolling={true}
-	onRefresh={() => dashboardState.loadDashboard(data.dashboardId)}
-	pollingInterval={60}
-	state={dashboardState}
+	class="min-h-dvh"
+	{page}
+	lastUpdated={status.lastUpdated}
+	isRefreshing={status.isLoading}
 />

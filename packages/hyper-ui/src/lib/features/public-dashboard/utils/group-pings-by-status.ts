@@ -17,7 +17,7 @@ export interface StatusSegment {
   maxResponseTime: number;
 }
 
-const isHealthyStatus = (statusCode: number): boolean =>
+export const isHealthyStatus = (statusCode: number): boolean =>
   statusCode >= 200 && statusCode < 400;
 
 export const groupPingsByStatus = (pings: Ping[]): StatusSegment[] => {

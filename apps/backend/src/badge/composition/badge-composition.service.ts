@@ -1,7 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Types } from 'mongoose';
 import { ClusterReadCachedService } from '../../cluster/read/cluster-read-cached.service';
-import { CustomDomainReadService } from '../../custom-domain/read/custom-domain-read.service';
 import { HttpMonitorNormalized } from '../../http-monitor/core/entities/http-monitor.interface';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { HttpPingBucketAggregationService } from '../../http-ping-bucket/aggregation/http-ping-bucket-aggregation.service';
@@ -13,13 +11,14 @@ import { PublicDashboardReadService } from '../../public-dashboard/read/public-d
 import { getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
 import { RedisService } from '../../shared/redis/redis.service';
 import { BadgePeriod } from '../core/enums/badge-period.enum';
-import { BadgeStatus } from '../core/enums/badge-status.enum';
+import { MonitorStatus } from '../../http-ping/core/enums/monitor-status.enum';
+import { getMonitorStatus, RECENT_PINGS_COUNT } from '../../http-ping/core/get-monitor-status';
+import { calculateUptime } from '../../http-ping-bucket/core/calculate-uptime';
 import { BadgeStyle } from '../core/enums/badge-style.enum';
 import { renderBadge } from '../render/badge-renderer';
 import { ComposeBadgeDto } from './dto/compose-badge.dto';
 
 const BADGE_CACHE_TTL_SECONDS = 60;
-const RECENT_PINGS_COUNT = 10;
 
 const PERIOD_WINDOWS: Record<
   BadgePeriod,
@@ -35,7 +34,6 @@ const PERIOD_WINDOWS: Record<
 export class BadgeCompositionService {
   constructor(
     private readonly publicDashboardReadService: PublicDashboardReadService,
-    private readonly customDomainReadService: CustomDomainReadService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly clusterReadCachedService: ClusterReadCachedService,
     private readonly httpPingReadService: HttpPingReadService,
@@ -56,7 +54,7 @@ export class BadgeCompositionService {
     const clusterTier = await this.clusterReadCachedService.readTier(dashboard.clusterId);
 
     const [status, periodUptime, dailyBuckets] = await Promise.all([
-      dto.style === BadgeStyle.Classic ? BadgeStatus.Unknown : this.readStatus(monitor.id),
+      dto.style === BadgeStyle.Classic ? MonitorStatus.Unknown : this.readStatus(monitor.id),
       dto.style === BadgeStyle.Classic ? this.readPeriodUptime(monitor.id, dto.period) : null,
       dto.style === BadgeStyle.Card ? this.readDailyBuckets(monitor.id) : [],
     ]);
@@ -66,7 +64,7 @@ export class BadgeCompositionService {
       theme: dto.theme,
       name: monitor.name,
       status,
-      uptime: periodUptime ? periodUptime.uptime : this.calculateUptime(dailyBuckets),
+      uptime: periodUptime ? periodUptime.uptime : calculateUptime(dailyBuckets),
       periodLabel: periodUptime ? periodUptime.periodLabel : dto.period,
       dailyBuckets,
       isWhiteLabel: getClusterPlanConfig(clusterTier).customDomains.canCreate,
@@ -80,14 +78,8 @@ export class BadgeCompositionService {
   private async readPublicDashboard(
     publicDashboardIdOrDomain: string,
   ): Promise<PublicDashboardNormalized> {
-    const publicDashboardId = Types.ObjectId.isValid(publicDashboardIdOrDomain)
-      ? publicDashboardIdOrDomain
-      : (await this.customDomainReadService.readByDomain(publicDashboardIdOrDomain))
-          ?.publicDashboardId;
-
-    const dashboard = publicDashboardId
-      ? await this.publicDashboardReadService.readById(publicDashboardId)
-      : null;
+    const dashboard =
+      await this.publicDashboardReadService.readByIdOrDomain(publicDashboardIdOrDomain);
 
     if (!dashboard || !dashboard.isPublic) {
       throw new NotFoundException('Badge not found');
@@ -110,24 +102,10 @@ export class BadgeCompositionService {
     return monitor;
   }
 
-  private async readStatus(monitorId: string): Promise<BadgeStatus> {
-    const pings = await this.httpPingReadService.readByMonitorId(monitorId, RECENT_PINGS_COUNT);
-
-    if (pings.length === 0) {
-      return BadgeStatus.Unknown;
-    }
-
-    const isHealthy = (statusCode: number): boolean => statusCode >= 200 && statusCode < 400;
-
-    if (!isHealthy(pings[0].statusCode)) {
-      return BadgeStatus.Down;
-    }
-
-    if (pings.some((ping) => !isHealthy(ping.statusCode))) {
-      return BadgeStatus.Degraded;
-    }
-
-    return BadgeStatus.Up;
+  private async readStatus(monitorId: string): Promise<MonitorStatus> {
+    return getMonitorStatus(
+      await this.httpPingReadService.readByMonitorId(monitorId, RECENT_PINGS_COUNT),
+    );
   }
 
   private async readPeriodUptime(
@@ -143,7 +121,7 @@ export class BadgeCompositionService {
     const coveredBucketCount = periodBuckets.map((bucket) => bucket !== null).lastIndexOf(true) + 1;
 
     return {
-      uptime: this.calculateUptime(periodBuckets),
+      uptime: calculateUptime(periodBuckets),
       periodLabel: coveredBucketCount === 0 ? period : `${coveredBucketCount}${window.unit}`,
     };
   }
@@ -155,16 +133,5 @@ export class BadgeCompositionService {
     );
 
     return [...buckets].reverse();
-  }
-
-  private calculateUptime(buckets: (VirtualBucket | null)[]): number | null {
-    const presentBuckets = buckets.filter((bucket) => bucket !== null);
-    const successCount = presentBuckets.reduce((sum, bucket) => sum + bucket.successCount, 0);
-    const totalCount = presentBuckets.reduce(
-      (sum, bucket) => sum + bucket.successCount + bucket.failureCount,
-      0,
-    );
-
-    return totalCount === 0 ? null : (successCount / totalCount) * 100;
   }
 }

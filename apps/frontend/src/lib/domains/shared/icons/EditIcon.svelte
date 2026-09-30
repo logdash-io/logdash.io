@@ -6,31 +6,17 @@
 
 <svg
   class={className}
-  viewBox="0 0 24 24"
+  viewBox="0 0 16 16"
   fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
   xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
 >
   <path
-    d="M11 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22H15C20 22 22 20 22 15V13"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
+    d="M7.25 2.75H5A2.25 2.25 0 0 0 2.75 5v6A2.25 2.25 0 0 0 5 13.25h6A2.25 2.25 0 0 0 13.25 11V8.75"
   />
-  <path
-    d="M16.04 3.02001L8.16 10.9C7.86 11.2 7.56 11.79 7.5 12.22L7.07 15.23C6.91 16.32 7.68 17.08 8.77 16.93L11.78 16.5C12.2 16.44 12.79 16.14 13.1 15.84L20.98 7.96001C22.34 6.60001 22.98 5.02001 20.98 3.02001C18.98 1.02001 17.4 1.66001 16.04 3.02001Z"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-miterlimit="10"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-  <path
-    d="M14.91 4.1499C15.58 6.5399 17.45 8.4099 19.85 9.0899"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-miterlimit="10"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <path d="M11.9 2.6a1.2 1.2 0 0 1 1.7 1.7L8.5 9.4l-2.25.5.5-2.25Z" />
 </svg>

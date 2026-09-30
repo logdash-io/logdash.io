@@ -8,9 +8,11 @@ const MAX_REDIRECTS = 5;
 const REDIRECT_STATUS_CODES = [301, 302, 303, 307, 308];
 
 /**
- * One deadline for the whole redirect chain. A per hop timeout would let a
- * hostile endpoint hold a worker for MAX_REDIRECTS + 1 timeout windows by
- * answering slowly with a redirect every time.
+ * One deadline for the whole redirect chain, body download included. A per hop
+ * timeout would let a hostile endpoint hold a worker for MAX_REDIRECTS + 1
+ * timeout windows by answering slowly with a redirect every time, and axios'
+ * own `timeout` only fires on an idle socket, so a body trickled one byte at a
+ * time would never hit it. The deadline is an abort signal instead.
  */
 const DEFAULT_TOTAL_TIMEOUT_MS = 30_000;
 
@@ -96,7 +98,15 @@ export async function safeHttpRequest(
   const validateStatus =
     config.validateStatus === undefined ? defaultValidateStatus : config.validateStatus;
 
-  const deadline = Date.now() + (config.timeout || DEFAULT_TOTAL_TIMEOUT_MS);
+  const { timeout, signal: callerSignal, ...requestConfig } = config;
+  const totalTimeoutMs = timeout || DEFAULT_TOTAL_TIMEOUT_MS;
+  const deadline = AbortSignal.timeout(totalTimeoutMs);
+  const signal = callerSignal ? AbortSignal.any([deadline, callerSignal as AbortSignal]) : deadline;
+  const timedOut = (): AxiosError =>
+    new AxiosError(
+      `Request to ${config.url} timed out after ${totalTimeoutMs}ms`,
+      AxiosError.ETIMEDOUT,
+    );
 
   let currentUrl = config.url;
   let method = (config.method ?? 'GET').toString().toUpperCase();
@@ -104,13 +114,8 @@ export async function safeHttpRequest(
   let data: unknown = config.data;
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    const remainingMs = deadline - Date.now();
-
-    if (remainingMs <= 0) {
-      throw new AxiosError(
-        `Request to ${config.url} timed out after ${config.timeout || DEFAULT_TOTAL_TIMEOUT_MS}ms`,
-        AxiosError.ETIMEDOUT,
-      );
+    if (deadline.aborted) {
+      throw timedOut();
     }
 
     const { addresses } = await assertPublicUrl(currentUrl);
@@ -121,7 +126,7 @@ export async function safeHttpRequest(
     let response: AxiosResponse;
     try {
       response = await axios.request({
-        ...config,
+        ...requestConfig,
         url: currentUrl,
         method,
         headers,
@@ -130,12 +135,14 @@ export async function safeHttpRequest(
         // weaken the guarantees this wrapper exists to provide
         httpAgent,
         httpsAgent,
-        timeout: remainingMs,
+        signal,
         maxRedirects: 0,
         maxContentLength: MAX_RESPONSE_BYTES,
         maxBodyLength: MAX_RESPONSE_BYTES,
         validateStatus: () => true,
       });
+    } catch (error) {
+      throw deadline.aborted ? timedOut() : error;
     } finally {
       httpAgent.destroy();
       httpsAgent.destroy();

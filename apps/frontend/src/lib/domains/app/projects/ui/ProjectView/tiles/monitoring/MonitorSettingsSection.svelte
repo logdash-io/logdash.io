@@ -2,92 +2,80 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
-  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
   import {
-    SettingsCardExpandable,
+    SettingsCard,
     SettingsCardItem,
   } from '$lib/domains/shared/ui/components/settings-card/index.js';
-  import EditIcon from '$lib/domains/shared/icons/EditIcon.svelte';
-  import SettingsIcon from '$lib/domains/shared/icons/SettingsIcon.svelte';
-  import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+  import { Button } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     monitorId: string;
-    monitorName: string;
     clusterId: string;
     projectId: string;
+    onEdit: () => void;
   };
 
-  const { monitorId, monitorName, clusterId, projectId }: Props = $props();
+  const { monitorId, clusterId, projectId, onEdit }: Props = $props();
 
-  async function onRenameMonitor(): Promise<void> {
-    const newName = prompt('Enter new monitor name', monitorName);
-
-    if (newName === null) {
-      return;
-    }
-
-    if (!newName || newName.trim() === '') {
-      toast.warning('Monitor name cannot be empty', 5000);
-      return;
-    }
-
-    if (newName === monitorName) {
-      toast.info('Monitor name is the same, no changes made', 5000);
-      return;
-    }
-
-    try {
-      await monitoringState.updateMonitorName(monitorId, newName);
-      toast.success('Monitor name updated successfully', 5000);
-    } catch {
-      toast.error('Failed to update monitor name', 5000);
-    }
-  }
+  let isDeleting = $state(false);
 
   async function onDeleteMonitor(): Promise<void> {
     if (!confirm('Are you sure you want to delete this monitor?')) {
       return;
     }
 
+    isDeleting = true;
+
     try {
-      const onDeleted = toast.info('Deleting monitor...', 60000);
       await monitoringState.deleteMonitor(monitorId);
-      onDeleted();
       toast.success('Monitor deleted successfully', 5000);
       void goto(
-        resolve('/app/clusters/[cluster_id]/[project_id]', {
+        resolve('/app/domains/[cluster_id]/[project_id]', {
           cluster_id: clusterId,
           project_id: projectId,
         }),
       );
     } catch {
       toast.error('Failed to delete monitor', 5000);
+    } finally {
+      isDeleting = false;
     }
   }
 </script>
 
-<SettingsCardExpandable
-  title="Monitor Settings"
-  description="Configure and manage this monitor"
-  icon={SettingsIcon}
+<SettingsCard
+  title="Monitor settings"
+  description="Change what is checked, or remove it."
 >
-  <SettingsCardItem icon={EditIcon} showBorder={true} onclick={onRenameMonitor}>
-    <p class="font-medium">Rename Monitor</p>
-    <p class="text-neutral-400 text-sm">
-      Change the display name of this monitor
-    </p>
+  <SettingsCardItem>
+    <p>Edit monitor</p>
+    <p class="text-neutral-500">Change the name or the checked URL.</p>
+
+    {#snippet action()}
+      <Button variant="neutral" size="sm" onclick={onEdit}>
+        <EditIcon class="size-4" />
+        Edit
+      </Button>
+    {/snippet}
   </SettingsCardItem>
 
-  <SettingsCardItem
-    icon={TrashIcon}
-    iconVariant="danger"
-    showBorder={false}
-    onclick={onDeleteMonitor}
-  >
-    <p class="font-medium text-error">Delete Monitor</p>
-    <p class="text-neutral-400 text-sm">
-      Permanently delete this monitor and all its data
+  <SettingsCardItem>
+    <p>Delete monitor</p>
+    <p class="text-neutral-500">
+      Removes this monitor with all its checks and uptime history.
     </p>
+
+    {#snippet action()}
+      <Button
+        variant="danger"
+        size="sm"
+        loading={isDeleting}
+        onclick={onDeleteMonitor}
+      >
+        Delete
+      </Button>
+    {/snippet}
   </SettingsCardItem>
-</SettingsCardExpandable>
+</SettingsCard>

@@ -75,7 +75,9 @@
 -->
 <article class="flex w-full max-w-2xl flex-col">
   <header class="flex flex-col gap-3">
-    <h1 class="text-4xl font-medium tracking-[-0.03em]">{page.title}</h1>
+    <h1 class="text-4xl font-medium tracking-[-0.03em] text-balance">
+      {page.title}
+    </h1>
     <p class="text-neutral-400 text-lg leading-7">{page.description}</p>
   </header>
 
@@ -83,7 +85,9 @@
     {#each page.blocks as block, index (index)}
       <div class={blockSpacing(page.blocks, index)}>
         {#if block.type === 'paragraph'}
-          <p class="text-neutral-400 text-[15px] leading-7">{block.text}</p>
+          <p class="text-neutral-400 text-[15px] leading-7">
+            {@render inline(block.text)}
+          </p>
         {:else if block.type === 'heading'}
           <h2
             id={anchor(block.text)}
@@ -101,7 +105,7 @@
                   aria-hidden="true"
                   class="bg-neutral-600 mt-[13px] size-1 shrink-0 rounded-full"
                 ></span>
-                <span>{item}</span>
+                <span>{@render inline(item)}</span>
               </li>
             {/each}
           </ul>
@@ -232,7 +236,7 @@
                   class="border-border-default bg-surface-root flex size-9 items-center justify-center rounded-lg border"
                 >
                   <Icon
-                    class="text-neutral-400 group-hover:text-fg-default size-[18px] transition-ink duration-150"
+                    class="text-neutral-400 group-hover:text-fg-default size-4 transition-ink duration-150"
                   />
                 </div>
                 <div class="flex flex-col gap-1">
@@ -273,6 +277,20 @@
     {/each}
   </div>
 </article>
+
+{#snippet inline(text: string)}
+  {#each text.split('`') as part, index (index)}
+    {#if index % 2}
+      <code
+        class="bg-surface-elevated text-neutral-300 rounded px-1 py-0.5 font-mono text-[0.875em]"
+      >
+        {part}
+      </code>
+    {:else}
+      {part}
+    {/if}
+  {/each}
+{/snippet}
 
 {#snippet limitsTable(key: TableType, table: Table)}
   <div class="flex flex-col gap-3">

@@ -2,7 +2,7 @@ import type { NotificationChannelsState } from '$lib/domains/app/projects/domain
 import type { CreateNotificationChannelDTO } from '$lib/domains/app/projects/domain/telegram/telegram.types';
 import { NotificationChannelsService } from '$lib/domains/app/projects/infrastructure/notification-channels/notification-channels.service';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-import { isAxiosError } from 'axios';
+import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
 
 export class NotificationChannelsStateManager {
   state = $state<NotificationChannelsState>({
@@ -11,13 +11,24 @@ export class NotificationChannelsStateManager {
     error: null,
   });
 
+  private clusterId: string | null = null;
+
   async loadChannels(clusterId: string): Promise<void> {
+    if (clusterId !== this.clusterId) {
+      this.clusterId = clusterId;
+      this.state.channels = [];
+    }
+
     this.state.isLoading = true;
     this.state.error = null;
 
     try {
       const channels =
         await NotificationChannelsService.getNotificationChannels(clusterId);
+
+      if (clusterId !== this.clusterId) {
+        return;
+      }
 
       this.state.channels = channels.sort(
         (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
@@ -43,11 +54,9 @@ export class NotificationChannelsStateManager {
 
       toast.success('Notification channel deleted');
     } catch (error) {
-      console.error('Error deleting notification channel:', error);
-      this.state.error =
-        error instanceof Error
-          ? error.message
-          : 'Failed to delete notification channel';
+      toast.error(
+        readHttpErrorMessage(error) ?? 'Failed to delete notification channel',
+      );
     }
   }
 
@@ -71,13 +80,8 @@ export class NotificationChannelsStateManager {
       // todo: push to state.channels once backend contract returns NotificationChannel from creation
       // this.state.channels.push(createdChannel);
     } catch (error) {
-      // todo: make error handling generic
       toast.error(
-        `${
-          isAxiosError<{ message?: string }>(error)
-            ? error.response?.data?.message
-            : 'Failed to create notification channel'
-        }`,
+        readHttpErrorMessage(error) ?? 'Failed to create notification channel',
       );
     } finally {
       this.state.isLoading = false;

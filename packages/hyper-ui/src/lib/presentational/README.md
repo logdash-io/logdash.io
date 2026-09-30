@@ -143,7 +143,7 @@ Layout only, no fill: keep `ld-card-bg`, borders and radius utilities on `class`
 Props: `children`, rest onto the wrapper.
 Children sit in an inline flex row, each one after the first overlaps its neighbour by 1px, and the focused one is raised.
 Inner corners are squared, so a row of pill buttons reads as one pill; only the outer corners keep the children's own radius.
-A group whose items do not share an edge is not a join: `SegmentedControl` (ghost pill toggles) is a plain `inline-flex` row, and a single field with a button laid over it is a plain `relative` wrapper.
+A group whose items do not share an edge is not a join: `SegmentedControl` (a sunken track with a sliding indicator) is its own component, and a single field with a button laid over it is a plain `relative` wrapper.
 
 | daisyUI     | Component                                                                               |
 | ----------- | --------------------------------------------------------------------------------------- |

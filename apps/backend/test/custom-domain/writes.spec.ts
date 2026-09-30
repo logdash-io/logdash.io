@@ -192,7 +192,7 @@ describe('CustomDomainCoreController (writes)', () => {
       // then
       expect(response.status).toBe(403);
       expect((response.body as ErrorResponse).message).toBe(
-        'Custom domains are not supported for this cluster tier',
+        'Custom domains are not available on your plan',
       );
     });
   });

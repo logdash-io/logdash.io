@@ -169,26 +169,21 @@ class WizardState {
   }
 
   private syncWithClustersState(): void {
-    const tempCluster = {
+    clustersState.setDraft({
       id: TEMP_CLUSTER_ID,
-      name: this._state.project.name || 'New Project',
+      name: this._state.project.name || 'New domain',
       members: [],
       creatorId: '',
       tier: 'free',
       projects: this._state.services.map((service) => ({
         id: service.id,
-        name: service.name || 'New Service',
+        name: service.name || 'New service',
         features: service.features,
         selectedFeatures: service.features,
       })),
       publicDashboards: [],
       color: this._state.project.color,
-    };
-
-    const existingClusters = clustersState.clusters.filter(
-      (c) => c.id !== TEMP_CLUSTER_ID,
-    );
-    clustersState.set([...existingClusters, tempCluster]);
+    });
   }
 
   async submit(): Promise<void> {
@@ -202,7 +197,7 @@ class WizardState {
         color: this._state.project.color,
       });
 
-      if (this._state.services.length > 0) {
+      try {
         await ProjectsService.createProjectsBulk(
           cluster.id,
           this._state.services.map((s) => ({
@@ -210,12 +205,15 @@ class WizardState {
             selectedFeatures: s.features,
           })),
         );
+      } catch (error) {
+        await ClustersService.deleteCluster(cluster.id).catch(() => undefined);
+        throw error;
       }
 
       this.removeTempCluster();
       this.reset();
 
-      void goto(resolve(`/app/clusters/${cluster.id}`), {
+      void goto(resolve(`/app/domains/${cluster.id}`), {
         invalidateAll: true,
       });
     } finally {
@@ -224,10 +222,7 @@ class WizardState {
   }
 
   private removeTempCluster(): void {
-    const existingClusters = clustersState.clusters.filter(
-      (c) => c.id !== TEMP_CLUSTER_ID,
-    );
-    clustersState.set(existingClusters);
+    clustersState.setDraft(null);
   }
 
   reset(): void {

@@ -23,7 +23,7 @@ export class ProjectReadService {
   public async readByIdOrThrow(projectId: string): Promise<ProjectNormalized> {
     const project = await this.readById(projectId);
     if (!project) {
-      throw new NotFoundException('Project not found');
+      throw new NotFoundException('Service not found');
     }
     return project;
   }

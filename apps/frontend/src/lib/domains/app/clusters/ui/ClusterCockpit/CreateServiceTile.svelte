@@ -19,16 +19,22 @@
   }
 </script>
 
-<div class="relative">
+<div class="relative flex">
   <button
+    type="button"
     onclick={onOpenForm}
+    aria-expanded={isFormOpen}
     class={[
-      'text-neutral-400 hover:text-fg-default flex h-full min-h-24 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed text-sm transition-ink duration-150',
-      isFormOpen ? 'border-neutral-600' : 'border-neutral-700',
+      'hover:bg-surface-100 hover:text-fg-default focus-visible:outline-brand flex w-full cursor-pointer items-start p-4 text-left text-sm focus-visible:-outline-offset-2 focus-visible:outline-2',
+      isFormOpen
+        ? 'bg-surface-100 text-fg-default'
+        : 'bg-surface-elevated text-neutral-500',
     ]}
   >
-    <PlusIcon class="size-4" />
-    New service
+    <span class="flex h-6 items-center gap-2">
+      <PlusIcon class="size-4 shrink-0 text-neutral-600" />
+      New service
+    </span>
   </button>
 
   {#if isFormOpen}

@@ -12,8 +12,12 @@ If one of them fails for you, that is a bug in this file - open an issue or say 
 - **pnpm 10.7.** The root `package.json` pins `packageManager: pnpm@10.7.0`. `corepack enable` is enough; otherwise `npm i -g pnpm@10.7.0`.
 - **Docker.** You need it twice: once for the local datastores (Mongo, Redis, ClickHouse) and once for the backend test suite, which spins up Redis and ClickHouse containers per run.
 
-This is a pnpm workspace with four packages: `apps/backend`, `apps/frontend`, `apps/status-page` and `packages/hyper-ui`.
+This is a pnpm workspace with five packages: `apps/backend`, `apps/frontend`, `apps/status-page`, `packages/hyper-ui` and `packages/status`.
 Commands below name a package with `--filter`, or use a root script where one exists (`pnpm dev:backend`, `pnpm dev:frontend`).
+
+`packages/status` is `@logdash/status`, the MIT-licensed status page client published to npm, with the copy-paste status page components in `packages/status/registry`.
+`templates/status-page-next` is a Next.js starter built on it.
+The starter sits outside the workspace on purpose, so it installs `@logdash/status` from npm the way a customer does.
 
 ## Running locally
 
@@ -147,11 +151,29 @@ pnpm --filter frontend lint    # prettier --check + eslint
 pnpm --filter backend check    # tsc
 pnpm --filter backend lint     # oxlint with type-aware rules + prettier --check
 pnpm --filter backend format   # prettier --write over src and test
+pnpm --filter @logdash/status check   # tsc
+pnpm --filter @logdash/status test    # node --test
 ```
 
 The backend lints with oxlint (`apps/backend/.oxlintrc.json`), which runs the typescript-eslint rules, including the type-aware ones, in about a second.
 Its type-aware rules use TypeScript 7, so the backend tsconfig has to stay valid for TypeScript 7: no `baseUrl`, `paths` starting with `./`, and `esModuleInterop` on.
 With `esModuleInterop`, import CommonJS modules that export a function with a default import: `import request from 'supertest'`, not `import * as request`.
+
+### Status page package and starter
+
+The package types are generated from the backend, so a change to the status page API goes through three steps: `npm run openapi` in `apps/backend`, then `pnpm --filter @logdash/status generate` and `pnpm --filter @logdash/status registry:build`.
+CI regenerates all three and fails when the committed files differ.
+
+To try the starter against your local package, pack it and install the tarball in a copy of `templates/status-page-next` outside the repository:
+
+```bash
+cd packages/status && pnpm pack --pack-destination /tmp
+npm install --no-save /tmp/logdash-status-*.tgz   # then, in the starter copy
+```
+
+`templates/status-page-next/components/status-page.tsx` is a copy of `packages/status/registry/react/status-page.tsx`.
+Edit the registry file, then copy it over.
+CI fails when the two differ.
 
 ## Conventions
 

@@ -11,6 +11,7 @@ export class HttpMonitorNormalized {
   mode: HttpMonitorMode;
   badgeKey: string;
   claimed: boolean;
+  createdAt: Date;
 }
 
 export class HttpMonitorSerialized {

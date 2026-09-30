@@ -1,94 +1,60 @@
 <script lang="ts">
-  import type { PublicDashboardState } from "./states";
+  import type { StatusPage } from "@logdash/status";
+  import type { ClassValue } from "svelte/elements";
   import {
-    SystemStatusHeader,
-    DashboardTitle,
-    MonitorCard,
-    EmptyState,
     DashboardFooter,
+    MonitorCard,
+    SystemStatusHeader,
   } from "./components";
 
   interface Props {
-    state: PublicDashboardState;
-    title?: string;
-    maxBucketsToShow?: number;
-    maxPingsToShow?: number;
-    enablePolling?: boolean;
-    pollingInterval?: number;
-    onRefresh?: () => void;
+    page: StatusPage;
+    lastUpdated?: Date | null;
+    isRefreshing?: boolean;
     withBranding?: boolean;
-    withHeader?: boolean;
-    expanded?: boolean;
+    class?: ClassValue;
   }
 
   let {
-    state: dashboardState,
-    title,
-    maxBucketsToShow = 90,
-    maxPingsToShow = 90,
-    enablePolling = true,
-    pollingInterval = 60,
-    onRefresh,
+    page,
+    lastUpdated = null,
+    isRefreshing = false,
     withBranding = true,
-    withHeader = true,
-    expanded = false,
+    class: className,
   }: Props = $props();
 
-  const dashboardData = $derived(dashboardState.data);
-  const loading = $derived(dashboardState.isLoading);
-  const systemStatus = $derived(dashboardState.systemStatus);
-  const lastUpdated = $derived(dashboardState.lastUpdate);
-  const pageName = $derived(title || dashboardData?.name || "Status Page");
+  const COLUMN =
+    "border-hairline mx-auto w-full max-w-3xl px-5 @xl:px-10 @min-[52rem]:border-x";
+
+  const updatedAt = $derived(lastUpdated ?? new Date(page.updatedAt));
 </script>
 
-<svelte:head>
-  <title>{pageName}</title>
-  <meta content="Real-time status page for your project" name="description" />
-</svelte:head>
+<div class={["@container flex flex-col", className]} aria-busy={isRefreshing}>
+  <header class="border-hairline border-b">
+    <div class={[COLUMN, "pt-16 pb-12 @xl:pt-24 @xl:pb-16"]}>
+      <SystemStatusHeader name={page.name} status={page.status} {updatedAt} />
+    </div>
+  </header>
 
-<div class="mx-auto h-full w-full max-w-none">
-  <div class="w-full px-4 py-8 sm:px-6 lg:px-8">
-    {#if withBranding}
-      <DashboardTitle {enablePolling} {loading} {onRefresh} {pollingInterval}>
-        {pageName}
-      </DashboardTitle>
-    {/if}
-
-    {#if dashboardData && dashboardData.httpMonitors.length > 0}
-      {#if withHeader}
-        <SystemStatusHeader
-          {systemStatus}
-          {lastUpdated}
-          monitorCount={dashboardData.httpMonitors.length}
-        />
-      {/if}
-
-      <div class="mb-4">
-        <div class="space-y-1.5">
-          {#each dashboardData.httpMonitors as monitor, index (index)}
-            {@const status = dashboardState.getMonitorStatus(monitor)}
-            {@const uptime = dashboardState.getUptimeFromBuckets(monitor, 90)}
-
-            <MonitorCard
-              {monitor}
-              {status}
-              {uptime}
-              {maxBucketsToShow}
-              {maxPingsToShow}
-              defaultExpanded={expanded}
-            />
-          {/each}
-        </div>
+  {#each page.monitors as monitor (monitor.id)}
+    <section class="border-hairline border-b">
+      <div class={[COLUMN, "py-10 @xl:py-12"]}>
+        <MonitorCard {monitor} />
       </div>
-    {:else}
-      <EmptyState
-        title="No Monitors Found"
-        description="No HTTP monitors selected. Please add monitors to see their status."
-      />
-    {/if}
+    </section>
+  {:else}
+    <section class="border-hairline border-b">
+      <p class={[COLUMN, "text-neutral-500 py-10 text-sm"]}>
+        No monitors on this page yet.
+      </p>
+    </section>
+  {/each}
 
-    {#if withBranding}
-      <DashboardFooter />
-    {/if}
-  </div>
+  {#if withBranding}
+    <footer class="flex flex-1 flex-col">
+      <div class={[COLUMN, "flex-1 py-8"]}>
+        <DashboardFooter />
+      </div>
+    </footer>
+  {/if}
 </div>

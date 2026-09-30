@@ -8,7 +8,7 @@ import {
 
 const ACCESS_TOKEN_COOKIE = 'logdash_access_token_v0';
 const PREVIEW_STORAGE_KEY = 'logdash_anonymous_preview_v0';
-const MONITORING_PATH = /\/app\/clusters\/[^/]+\/[^/]+\/monitoring/;
+const MONITORING_PATH = /\/app\/domains\/[^/]+\/[^/]+\/monitoring/;
 const CLAIMED_USER = {
   id: '000000000000000000000001',
   tier: 'free',
@@ -71,7 +71,11 @@ function fullScreenFrame(page: Page) {
   return page.locator('#hero-showcase:modal');
 }
 
-async function expectFullScreen(page: Page, host: string): Promise<void> {
+async function expectFullScreen(
+  page: Page,
+  host: string,
+  cluster = host,
+): Promise<void> {
   const frame = fullScreenFrame(page);
   const sidebar = frame.locator('aside[aria-hidden="true"]');
 
@@ -84,8 +88,11 @@ async function expectFullScreen(page: Page, host: string): Promise<void> {
     frame.getByRole('heading', { name: host, exact: true }),
   ).toBeVisible();
   await expect(sidebar).toBeVisible();
-  await expect(sidebar).toContainText('My first cluster');
-  await expect(sidebar).toContainText(host);
+  await expect(sidebar).toHaveText(
+    new RegExp(
+      `^\\s*All domains\\s*Domains\\s*${cluster[0]}\\s*${cluster}\\s*Home\\s*Status pages\\s*Settings\\s*${host}[\\s\\S]*New service\\s*Anonymous\\s*Free\\s*$`,
+    ),
+  );
 }
 
 function claimCard(page: Page): Locator {
@@ -119,6 +126,7 @@ test.describe('anonymous landing flow', () => {
   let context: BrowserContext;
   let page: Page;
   let landingTitle = '';
+  let dashboardPath = '';
   const consoleErrors: string[] = [];
 
   test.beforeAll(async ({ browser }) => {
@@ -161,6 +169,7 @@ test.describe('anonymous landing flow', () => {
 
     const tile = heroTile(page);
 
+    await expect(page).toHaveURL('/for/example.com');
     await expect(tile.getByText('Your live monitor')).toBeVisible({
       timeout: 30_000,
     });
@@ -240,8 +249,9 @@ test.describe('anonymous landing flow', () => {
     await page.waitForURL(MONITORING_PATH, { timeout: 30_000 });
 
     expect(page.url()).toContain(
-      `/app/clusters/${stored!.clusterId}/${stored!.projectId}/monitoring`,
+      `/app/domains/${stored!.clusterId}/${stored!.projectId}/monitoring`,
     );
+    dashboardPath = new URL(page.url()).pathname;
 
     const claimBanner = page.getByText('Temporary dashboard');
 
@@ -264,6 +274,39 @@ test.describe('anonymous landing flow', () => {
     await expect(
       page.getByRole('button', { name: /Upgrade your plan/i }),
     ).toHaveCount(0);
+
+    await page.goBack();
+    await expect(page).toHaveURL('/');
+  });
+
+  test('check 4b: the profile menu opens, moves and closes from the keyboard', async () => {
+    expect(dashboardPath, 'the dashboard was never opened').toBeTruthy();
+
+    await page.goto(dashboardPath);
+
+    const profile = page.getByRole('button', { name: /Anonymous/ }).first();
+    const apiKeys = page.getByRole('link', { name: 'API keys' });
+
+    await expect(profile).toHaveAttribute('aria-expanded', 'false');
+    await profile.focus();
+    await page.keyboard.press('Enter');
+
+    await expect(profile).toHaveAttribute('aria-expanded', 'true');
+    await expect(apiKeys).toBeFocused();
+
+    await page.keyboard.press('ArrowUp');
+    await expect(page.getByRole('button', { name: 'Logout' })).toBeFocused();
+
+    await page.keyboard.press('Tab');
+    await expect(profile).toBeFocused();
+    await expect(profile).toHaveAttribute('aria-expanded', 'false');
+
+    await page.keyboard.press('Enter');
+    await expect(apiKeys).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(apiKeys).toHaveCount(0);
+    await expect(profile).toBeFocused();
   });
 
   test('check 5: a second URL reuses the same anonymous account', async () => {
@@ -298,7 +341,7 @@ test.describe('anonymous landing flow', () => {
 
     expect(stored?.url).toBe('https://example.org');
 
-    await expectFullScreen(page, 'example.org');
+    await expectFullScreen(page, 'example.org', 'example.com');
     await expectClaimCard(page, 'example.org');
 
     await page.route('**/app/api/auth/oauth-start', (route) =>
@@ -340,7 +383,7 @@ test.describe('anonymous landing flow', () => {
     await page.unrouteAll({ behavior: 'ignoreErrors' });
 
     expect(page.url()).toContain(
-      `/app/clusters/${stored!.clusterId}/${stored!.projectId}/monitoring`,
+      `/app/domains/${stored!.clusterId}/${stored!.projectId}/monitoring`,
     );
     expect(await readStoredPreview(page)).toBeNull();
   });
@@ -349,8 +392,8 @@ test.describe('anonymous landing flow', () => {
     await page.goto('/features/monitoring');
     await startMonitoring(page, 'https://example.net');
 
-    await expect(page).toHaveURL((url) => url.pathname === '/');
-    await expectFullScreen(page, 'example.net');
+    await expect(page).toHaveURL('/for/example.net');
+    await expectFullScreen(page, 'example.net', 'example.com');
     await expect
       .poll(async () => (await readStoredPreview(page))?.url)
       .toBe('https://example.net');
@@ -383,7 +426,7 @@ test.describe('expiry without a session', () => {
       },
     ]);
 
-    await page.goto('/app/clusters');
+    await page.goto('/app/domains');
 
     await page.waitForURL(/\/app\/auth\?expired=1/, { timeout: 30_000 });
 
@@ -393,6 +436,19 @@ test.describe('expiry without a session', () => {
       ),
     ).toBeVisible();
   });
+});
+
+test('check 16: an old /app/clusters link moves to /app/domains', async ({
+  request,
+}) => {
+  const response = await request.get('/app/clusters/a/b/monitoring?claimed=1', {
+    maxRedirects: 0,
+  });
+
+  expect(response.status()).toBe(308);
+  expect(response.headers().location).toBe(
+    '/app/domains/a/b/monitoring?claimed=1',
+  );
 });
 
 test.describe('first check and the way in', () => {
@@ -413,6 +469,113 @@ test.describe('first check and the way in', () => {
     ).toBeVisible({ timeout: 30_000 });
     await expect(card.getByText(`${host} is not answering`)).toBeVisible();
     await expect(card).toContainText('tell you the moment it is back up.');
+  });
+
+  test('check 15: a subdomain URL with a path names the project after its domain and the service after the URL', async ({
+    page,
+  }) => {
+    const domain = 'logdash-e2e.co.uk';
+    const service = `app.${domain}/login`;
+
+    await page.goto('/');
+    await startMonitoring(page, `https://${service}`);
+    await expectFullScreen(page, service, domain);
+
+    await claimCard(page).getByRole('button', { name: 'Not now' }).click();
+    await page
+      .getByRole('button', { name: 'Open your dashboard' })
+      .first()
+      .click();
+    await page.waitForURL(MONITORING_PATH, { timeout: 30_000 });
+
+    await expect(
+      page.getByRole('button', { name: domain, exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page.getByRole('button', { name: service, exact: true }),
+    ).toBeVisible();
+  });
+
+  test('check 12: a /for/ link starts monitoring that address once', async ({
+    page,
+  }) => {
+    const created: string[] = [];
+
+    page.on('request', (request) => {
+      if (
+        request.method() === 'POST' &&
+        /\/http_monitors$/.test(request.url())
+      ) {
+        created.push(request.url());
+      }
+    });
+
+    await page.goto('/for/example.com');
+    await expectFullScreen(page, 'example.com');
+    await expect(page.locator('#hero-url-input')).toHaveValue('example.com');
+    await expect
+      .poll(async () => (await readStoredPreview(page))?.url)
+      .toBe('https://example.com');
+
+    await page.reload();
+    await expectFullScreen(page, 'example.com');
+    await expect(page).toHaveURL('/for/example.com');
+    expect(created).toHaveLength(1);
+  });
+
+  test('check 12a: a /?url= link moves to the readable /for/ address', async ({
+    page,
+  }) => {
+    await page.goto('/?url=example.com');
+    await expectFullScreen(page, 'example.com');
+    await expect(page).toHaveURL('/for/example.com');
+  });
+
+  test('check 12b: a /for/ link only fills the field for a signed-in account', async ({
+    page,
+  }) => {
+    const created: string[] = [];
+
+    page.on('request', (request) => {
+      if (
+        request.method() === 'POST' &&
+        /\/(projects|http_monitors)$/.test(request.url())
+      ) {
+        created.push(request.url());
+      }
+    });
+    await page.route('**/app/api/auth/session', (route) =>
+      route.fulfill({ json: { user: CLAIMED_USER, token: 'claimed' } }),
+    );
+
+    await page.goto('/for/example.com');
+
+    const input = page.locator('#hero-url-input');
+    await expect(input).toHaveValue('example.com');
+    await expect(input).toBeFocused();
+    await expect(fullScreenFrame(page)).toHaveCount(0);
+    expect(created).toHaveLength(0);
+
+    // A .md site is an address to watch, not a markdown twin of a page.
+    await page.goto('/for/obsidian.md');
+    await expect(input).toHaveValue('obsidian.md');
+    await expect(page).toHaveTitle('obsidian.md · Logdash');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'noindex',
+    );
+  });
+
+  test('check 13: a /?url= link to something that is not an address says so', async ({
+    page,
+  }) => {
+    await page.goto('/?url=not a site');
+
+    await expect(page.locator('#hero-url-status')).toHaveText(
+      'That is not a valid URL. Try https://yourapp.com',
+    );
+    await expect(fullScreenFrame(page)).toHaveCount(0);
+    expect(await readStoredPreview(page)).toBeNull();
   });
 
   test('check 7: Start monitoring in the nav puts the cursor in the hero field', async ({

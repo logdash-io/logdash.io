@@ -9,6 +9,7 @@ import helmet from 'helmet';
 import { NextFunction, Request, Response } from 'express';
 import { swaggerDarkModeCSS } from './swagger/swagger-dark-mode.js';
 import { CastErrorFilter } from './shared/filters/cast-error.filter';
+import { withRequestContext } from './shared/request-context/request-context';
 
 // Documented batch maximum is 100 logs x 4096 chars, plus JSON overhead.
 const BODY_SIZE_LIMIT = '2mb';
@@ -18,6 +19,7 @@ async function bootstrap(): Promise<void> {
 
   app.enableShutdownHooks();
   app.enableCors({ origin: '*' });
+  app.use(withRequestContext);
 
   // Deployed behind a single reverse proxy, so req.ip has to come from the last
   // X-Forwarded-For hop for per-client rate limiting to work.

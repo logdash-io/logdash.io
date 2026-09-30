@@ -11,25 +11,14 @@
 <!-- Marks a link that leaves the site: a bare top-right arrow. -->
 <svg
   class={className}
-  viewBox="0 0 24 25"
+  viewBox="0 0 16 16"
   fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
   xmlns="http://www.w3.org/2000/svg"
   aria-hidden="true"
 >
-  <path
-    d="M6.33997 18.56L17.66 7.25"
-    stroke="currentColor"
-    stroke-width="2.7"
-    stroke-miterlimit="10"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-  <path
-    d="M9.04004 7.25H17.66V15.87"
-    stroke="currentColor"
-    stroke-width="2.7"
-    stroke-miterlimit="10"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <path d="M4.25 11.75 11.75 4.25M5.75 4.25h6v6" />
 </svg>

@@ -4,6 +4,7 @@
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
+  import { CheckIcon, CloseIcon } from '@logdash/hyper-ui/icons';
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
   import {
     Button,
@@ -16,14 +17,13 @@
     type CliAuthRequest,
   } from '../domain/cli-auth.js';
   import {
-    ACTIONS,
-    PRESETS,
+    ACTION_LABELS,
+    DEFAULT_SCOPES,
+    EXPIRY_OPTIONS,
     RESOURCES,
-    presetToScopes,
     type AccessRestriction,
     type Action,
     type CreatedPersonalApiKey,
-    type PresetId,
     type Resource,
     type ScopeEntry,
   } from '../domain/personal-api-key.js';
@@ -32,9 +32,7 @@
     isOpen: boolean;
     onClose: () => void;
     mode?: 'manage' | 'cli';
-    /** The pending `ld login` request, resolved from the code the user typed. */
     cliRequest?: CliAuthRequest | null;
-    initialPreset?: PresetId;
     onCreated?: () => void;
   };
 
@@ -43,76 +41,73 @@
     onClose,
     mode = 'manage',
     cliRequest = null,
-    initialPreset = 'cli',
     onCreated,
   }: Props = $props();
 
   let label = $state('');
-  let preset = $state<PresetId>('cli');
-  let scopes = $state<ScopeEntry[]>(presetToScopes('cli'));
-  // `null` in CLI mode: granting reach must be an explicit choice, never a default.
-  let accessKind = $state<AccessRestriction['kind'] | null>('all');
+  let scopes = $state<ScopeEntry[]>(DEFAULT_SCOPES);
+  let accessKind = $state<AccessRestriction['kind'] | null>(null);
   let selectedClusterIds = $state<string[]>([]);
   let selectedProjectIds = $state<string[]>([]);
-  let expiresAt = $state('');
+  let expiryDays = $state<number | null>(90);
 
   let submitting = $state(false);
   let createdValue = $state<string | null>(null);
   let cliResult = $state<'approved' | 'denied' | null>(null);
+  let loadingClusters = false;
 
-  const actionOptions = ACTIONS.map((a) => ({
-    value: a.action,
-    label: a.label,
+  const scopeRows = RESOURCES.map((row) => ({
+    ...row,
+    options: row.actions.map((action) => ({
+      value: action,
+      label: ACTION_LABELS[action],
+    })),
   }));
 
   const accessOptions: { value: AccessRestriction['kind']; label: string }[] = [
-    { value: 'all', label: 'All access' },
-    { value: 'clusters', label: 'Clusters' },
-    { value: 'projects', label: 'Projects' },
+    { value: 'all', label: 'Everything' },
+    { value: 'clusters', label: 'Domains' },
+    { value: 'projects', label: 'Services' },
   ];
 
-  // Seed scopes from the requested preset each time the modal opens so a
-  // reopened modal always starts from a clean, preset-aligned state.
-  let wasOpen = false;
-  $effect(() => {
-    if (isOpen && !wasOpen) {
-      preset = initialPreset;
-      scopes = presetToScopes(initialPreset);
-      label = '';
-      accessKind = mode === 'cli' ? null : 'all';
-      selectedClusterIds = [];
-      selectedProjectIds = [];
-      expiresAt = '';
-      createdValue = null;
-      cliResult = null;
-    }
-    wasOpen = isOpen;
-  });
-
   const clusters = $derived(clustersState.clusters);
-  const projects = $derived(
-    clustersState.clusters.flatMap((cluster) =>
-      (cluster.projects ?? []).map((project) => ({
-        id: project.id,
-        name: project.name,
-        clusterName: cluster.name,
-      })),
+  const hasAccessTargets = $derived(
+    accessKind === 'all' ||
+      (accessKind === 'clusters' && selectedClusterIds.length > 0) ||
+      (accessKind === 'projects' && selectedProjectIds.length > 0),
+  );
+  const canDeleteMonitors = $derived(scopeAction('monitors') === 'delete');
+  const clustersWithProjects = $derived(
+    clustersState.clusters.filter(
+      (cluster) => (cluster.projects ?? []).length > 0,
     ),
   );
 
-  function applyPreset(next: PresetId): void {
-    preset = next;
-    if (next !== 'custom') {
-      scopes = presetToScopes(next);
+  $effect(() => {
+    if (isOpen && !clustersState.ready) {
+      void loadClusters();
+    }
+  });
+
+  async function loadClusters(): Promise<void> {
+    if (loadingClusters) {
+      return;
+    }
+    loadingClusters = true;
+    try {
+      await clustersState.load();
+    } catch (cause) {
+      console.error(cause);
+    } finally {
+      loadingClusters = false;
     }
   }
 
   function setScope(resource: Resource, action: Action): void {
-    scopes = scopes.map((entry) =>
-      entry.resource === resource ? { ...entry, action } : entry,
-    );
-    // Editing the grid switches the user into custom mode.
-    preset = 'custom';
+    scopes = RESOURCES.map((row) => ({
+      resource: row.resource,
+      action: row.resource === resource ? action : scopeAction(row.resource),
+    })).filter((entry) => entry.action !== 'none');
   }
 
   function scopeAction(resource: Resource): Action {
@@ -147,12 +142,13 @@
     return new Date(value).toLocaleString();
   }
 
-  function activeScopes(): ScopeEntry[] {
-    return scopes.filter((entry) => entry.action !== 'none');
-  }
-
   function close(): void {
-    // Reset transient creation state so reopening starts fresh.
+    label = '';
+    scopes = DEFAULT_SCOPES;
+    accessKind = null;
+    selectedClusterIds = [];
+    selectedProjectIds = [];
+    expiryDays = 90;
     createdValue = null;
     cliResult = null;
     onClose();
@@ -160,11 +156,11 @@
 
   async function onSubmit(): Promise<void> {
     if (mode === 'manage' && label.trim() === '') {
-      toast.warning('Please enter a label for this key', 5000);
+      toast.warning('Enter a label for this key', 5000);
       return;
     }
 
-    if (mode === 'cli' && accessKind === null) {
+    if (!hasAccessTargets) {
       toast.warning('Choose what this key is allowed to reach', 5000);
       return;
     }
@@ -178,7 +174,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userCode: cliRequest?.userCode,
-            scopes: activeScopes(),
+            scopes,
             access: buildAccess(),
           }),
         });
@@ -195,11 +191,12 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             label: label.trim(),
-            scopes: activeScopes(),
+            scopes,
             access: buildAccess(),
-            ...(expiresAt
-              ? { expiresAt: new Date(expiresAt).toISOString() }
-              : {}),
+            expiresAt:
+              expiryDays === null
+                ? undefined
+                : new Date(Date.now() + expiryDays * 86_400_000).toISOString(),
           }),
         });
 
@@ -256,27 +253,24 @@
   }
 </script>
 
-<Modal {isOpen} onClose={close}>
-  <div class="flex flex-col gap-5 p-6">
+<Modal {isOpen} onClose={close} dismissible={!createdValue}>
+  <div class="flex flex-col gap-5 sm:p-6">
     {#if createdValue}
       <div class="flex flex-col gap-4">
         <div class="flex items-center gap-3">
           <div class="bg-surface-100 rounded-lg p-2.5">
-            <KeyIcon class="text-brand size-5" />
+            <KeyIcon class="text-brand size-5 stroke-[1.2]" />
           </div>
           <h2 class="text-lg font-medium">Personal API key created</h2>
         </div>
 
-        <div
-          class="border-warning/40 bg-warning/10 text-warning rounded-lg border p-3 text-sm"
-        >
-          Copy this key now. For security reasons you won't be able to see it
-          again.
-        </div>
+        <p class="text-warning text-sm">
+          Copy this key now. You won't be able to see it again.
+        </p>
 
         <div class="flex items-center gap-2">
           <code
-            class="bg-surface-100 border-border-default flex-1 overflow-x-auto rounded-lg border p-3 font-mono text-sm"
+            class="bg-surface-100 border-border-default min-w-0 flex-1 rounded-lg border p-3 font-mono text-sm break-all"
           >
             {createdValue}
           </code>
@@ -292,7 +286,7 @@
       </div>
     {:else if cliResult === 'approved'}
       <div class="flex flex-col items-center gap-3 py-6 text-center">
-        <div class="text-success text-4xl">✓</div>
+        <CheckIcon class="text-success size-9 stroke-[0.67]" />
         <h2 class="text-lg font-medium">Approved</h2>
         <p class="text-neutral-400 text-sm">
           Return to your terminal to continue.
@@ -301,7 +295,7 @@
       </div>
     {:else if cliResult === 'denied'}
       <div class="flex flex-col items-center gap-3 py-6 text-center">
-        <div class="text-error text-4xl">✕</div>
+        <CloseIcon class="text-error size-9 stroke-[0.67]" />
         <h2 class="text-lg font-medium">Request denied</h2>
         <p class="text-neutral-400 text-sm">
           The CLI authorization request was denied.
@@ -311,7 +305,7 @@
     {:else}
       <div class="flex items-center gap-3">
         <div class="bg-surface-100 rounded-lg p-2.5">
-          <KeyIcon class="text-brand size-5" />
+          <KeyIcon class="text-brand size-5 stroke-[1.2]" />
         </div>
         <h2 class="text-lg font-medium">
           {mode === 'cli' ? 'Authorize CLI access' : 'Create personal API key'}
@@ -356,124 +350,115 @@
         </div>
       {/if}
 
-      <div class="max-h-[60vh] overflow-y-auto pr-1">
-        <div class="flex flex-col gap-5">
-          {#if mode === 'manage'}
-            <div class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium">Label</span>
-              <Input
-                bind:value={label}
-                class="w-full"
-                placeholder="e.g. My laptop CLI"
-              />
-            </div>
-          {/if}
-
-          <div class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium">Preset</span>
-            <Select
+      <div class="flex flex-col gap-5">
+        {#if mode === 'manage'}
+          <label class="flex flex-col gap-1.5">
+            <span class="text-sm font-medium">Label</span>
+            <Input
+              bind:value={label}
               class="w-full"
-              bind:value={() => preset, (next) => applyPreset(next as PresetId)}
-            >
-              {#each PRESETS as presetOption (presetOption.id)}
-                <option value={presetOption.id}>
-                  {presetOption.label} — {presetOption.description}
-                </option>
-              {/each}
-            </Select>
-          </div>
+              placeholder="e.g. My laptop CLI"
+            />
+          </label>
+        {/if}
 
-          <div class="flex flex-col gap-2">
-            <span class="text-sm font-medium">Scopes</span>
-            <div class="flex flex-col gap-1.5">
-              {#each RESOURCES as resourceOption (resourceOption.resource)}
-                <div class="flex items-center justify-between gap-3">
-                  <span class="text-sm">{resourceOption.label}</span>
-                  <SegmentedControl
-                    size="xs"
-                    options={actionOptions}
-                    value={scopeAction(resourceOption.resource)}
-                    onChange={(action: Action) =>
-                      setScope(resourceOption.resource, action)}
+        <div class="flex flex-col gap-2">
+          <span class="text-sm font-medium">Scopes</span>
+          <div class="flex flex-col gap-1.5">
+            {#each scopeRows as row (row.resource)}
+              <div
+                class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+              >
+                <span class="text-sm">{row.label}</span>
+                <SegmentedControl
+                  size="xs"
+                  label={row.label}
+                  options={row.options}
+                  value={scopeAction(row.resource)}
+                  onChange={(action: Action) => setScope(row.resource, action)}
+                />
+              </div>
+            {/each}
+          </div>
+          {#if canDeleteMonitors}
+            <p class="text-warning text-xs">
+              Can permanently delete monitors and their history.
+            </p>
+          {/if}
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <span class="text-sm font-medium">Access</span>
+          <p class="text-neutral-400 -mt-1 text-xs">
+            Everything, or only the domains or services you pick.
+          </p>
+          <SegmentedControl
+            label="Access"
+            options={accessOptions}
+            value={accessKind}
+            onChange={(kind: AccessRestriction['kind']) => (accessKind = kind)}
+          />
+
+          {#if accessKind === 'clusters'}
+            <div
+              class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
+            >
+              {#if clusters.length === 0}
+                <p class="text-neutral-400 p-1 text-sm">No domains yet.</p>
+              {/if}
+              {#each clusters as cluster (cluster.id)}
+                <label class="flex items-center gap-2 p-1 text-sm">
+                  <Checkbox
+                    checked={selectedClusterIds.includes(cluster.id)}
+                    onchange={() => toggleCluster(cluster.id)}
                   />
-                </div>
+                  {cluster.name}
+                </label>
               {/each}
             </div>
-          </div>
-
-          <div class="flex flex-col gap-2">
-            <span class="text-sm font-medium">Access</span>
-            {#if mode === 'cli'}
-              <p class="text-neutral-400 -mt-1 text-xs">
-                Pick what this key may reach. Nothing is selected by default.
-              </p>
-            {/if}
-            <SegmentedControl
-              options={accessOptions}
-              value={accessKind}
-              onChange={(kind: AccessRestriction['kind']) =>
-                (accessKind = kind)}
-            />
-
-            {#if accessKind === 'clusters'}
-              <div
-                class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
-              >
-                {#if clusters.length === 0}
-                  <p class="text-neutral-400 p-1 text-sm">
-                    No clusters available.
-                  </p>
-                {/if}
-                {#each clusters as cluster (cluster.id)}
-                  <label class="flex items-center gap-2 p-1 text-sm">
-                    <Checkbox
-                      checked={selectedClusterIds.includes(cluster.id)}
-                      onchange={() => toggleCluster(cluster.id)}
-                    />
-                    {cluster.name}
-                  </label>
-                {/each}
-              </div>
-            {:else if accessKind === 'projects'}
-              <div
-                class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
-              >
-                {#if projects.length === 0}
-                  <p class="text-neutral-400 p-1 text-sm">
-                    No projects available.
-                  </p>
-                {/if}
-                {#each projects as project (project.id)}
+          {:else if accessKind === 'projects'}
+            <div
+              class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
+            >
+              {#if clustersWithProjects.length === 0}
+                <p class="text-neutral-400 p-1 text-sm">No services yet.</p>
+              {/if}
+              {#each clustersWithProjects as cluster (cluster.id)}
+                <p class="text-neutral-500 px-1 pt-1 text-xs">
+                  {cluster.name}
+                </p>
+                {#each cluster.projects ?? [] as project (project.id)}
                   <label class="flex items-center gap-2 p-1 text-sm">
                     <Checkbox
                       checked={selectedProjectIds.includes(project.id)}
                       onchange={() => toggleProject(project.id)}
                     />
                     {project.name}
-                    <span class="text-neutral-500">
-                      ({project.clusterName})
-                    </span>
                   </label>
                 {/each}
-              </div>
-            {/if}
-          </div>
-
-          {#if mode === 'manage'}
-            <div class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium">Expiry (optional)</span>
-              <Input bind:value={expiresAt} type="date" class="w-full" />
-            </div>
-          {:else}
-            <div class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium">Expiry</span>
-              <p class="text-neutral-400 text-xs">
-                CLI keys always expire after 30 days. You can revoke this one
-                sooner from Account → API keys.
-              </p>
+              {/each}
             </div>
           {/if}
         </div>
+
+        {#if mode === 'manage'}
+          <div class="flex flex-col gap-1.5">
+            <span class="text-sm font-medium">Expiry</span>
+            <Select class="w-full" aria-label="Expiry" bind:value={expiryDays}>
+              {#each EXPIRY_OPTIONS as option (option.label)}
+                <option value={option.days}>{option.label}</option>
+              {/each}
+            </Select>
+          </div>
+        {:else}
+          <div class="flex flex-col gap-1.5">
+            <span class="text-sm font-medium">Expiry</span>
+            <p class="text-neutral-400 text-xs">
+              CLI keys always expire after 30 days. You can revoke this one
+              sooner from Account → API keys.
+            </p>
+          </div>
+        {/if}
       </div>
 
       <div class="flex justify-end gap-2">
@@ -486,7 +471,7 @@
         {/if}
         <Button
           variant="primary"
-          disabled={mode === 'cli' && accessKind === null}
+          disabled={!hasAccessTargets}
           loading={submitting}
           onclick={onSubmit}
         >

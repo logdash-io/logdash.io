@@ -27,6 +27,12 @@ export type FeaturePageData = {
   capabilities: FeatureCopy[];
   steps: { title: string; description: string; items: FeatureCopy[] };
   sdk?: FeatureCopy & { language: CodeLanguage; code: string; file: string };
+  statusPages?: {
+    title: string;
+    quiet: string;
+    description: string;
+    install: FeatureCopy;
+  };
   faq: DocFaqItem[];
   related: FeatureLink[];
 };

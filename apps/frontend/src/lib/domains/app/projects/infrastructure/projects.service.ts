@@ -32,10 +32,20 @@ export class ProjectsService {
     clusterId: string,
     projects: CreateProjectDto[],
   ): Promise<CreateProjectResponse[]> {
-    const results = await Promise.all(
+    const results = await Promise.allSettled(
       projects.map((project) => this.createProject(clusterId, project)),
     );
-    return results;
+    const failure = results.find(
+      (result): result is PromiseRejectedResult => result.status === 'rejected',
+    );
+
+    if (failure) {
+      throw failure.reason;
+    }
+
+    return results.flatMap((result) =>
+      result.status === 'fulfilled' ? [result.value] : [],
+    );
   }
 
   static async updateProject(
@@ -43,5 +53,21 @@ export class ProjectsService {
     dto: UpdateProjectDto,
   ): Promise<void> {
     return httpClient.put<void>(`/projects/${projectId}`, dto);
+  }
+
+  static async getApiKey(projectId: string): Promise<string> {
+    const [apiKey] = await httpClient.get<{ value: string }[]>(
+      `/projects/${projectId}/api_keys`,
+    );
+
+    if (!apiKey) {
+      throw new Error('This service has no API key');
+    }
+
+    return apiKey.value;
+  }
+
+  static async deleteProject(projectId: string): Promise<void> {
+    return httpClient.delete<void>(`/projects/${projectId}`);
   }
 }

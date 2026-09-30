@@ -1,14 +1,27 @@
-import { AnonymousStartError } from '../domain/anonymous-preview';
+import {
+  AnonymousStartError,
+  clusterNameFromUrl,
+} from '../domain/anonymous-preview';
 import { anonymousSessionService } from '../infrastructure/anonymous-session.service';
 import { sessionService } from '../infrastructure/session.service';
 
 export type AnonymousSession = {
   token: string;
   clusterId: string;
+  clusterName: string;
   anonymous: boolean;
 };
 
-export const ensureAnonymousSession = async (): Promise<AnonymousSession> => {
+export const hasClaimedAccount = async (): Promise<boolean> => {
+  const { user } = await sessionService.probeSession();
+
+  return !!user && user.accountClaimStatus !== 'anonymous';
+};
+
+export const ensureAnonymousSession = async (
+  firstUrl: string,
+): Promise<AnonymousSession> => {
+  const clusterName = clusterNameFromUrl(firstUrl);
   const session = await sessionService.probeSession();
 
   if (session.unavailable) {
@@ -17,20 +30,23 @@ export const ensureAnonymousSession = async (): Promise<AnonymousSession> => {
 
   if (session.user && session.token) {
     const clusters = await anonymousSessionService.listClusters(session.token);
-    const clusterId = clusters[0]?.id;
+    const cluster = clusters[0];
 
-    if (!clusterId) {
+    if (!cluster) {
       throw new Error('The signed in user has no cluster');
     }
 
     return {
       token: session.token,
-      clusterId,
+      clusterId: cluster.id,
+      clusterName: cluster.name,
       anonymous: session.user.accountClaimStatus === 'anonymous',
     };
   }
 
-  const anonymousUser = await anonymousSessionService.createAnonymousUser();
+  const anonymousUser = await anonymousSessionService.createAnonymousUser(
+    await clusterName,
+  );
 
   await sessionService.installSession(anonymousUser.token);
 

@@ -10,6 +10,7 @@ import type {
   HttpPingCreatedEvent,
 } from '$lib/domains/app/projects/domain/monitoring/http-ping.js';
 import { httpClient } from '$lib/domains/shared/http/http-client.js';
+import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error.js';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 import {
   monitoringService,
@@ -35,14 +36,9 @@ class MonitoringState {
   );
   private _timeRange = $state<PingBucketPeriod>('90d');
   private syncConnection: EventSource | null = null;
-  private _shouldReconnect = true;
+  private _streamGeneration = 0;
   private _unsubscribe: (() => void) | null = null;
-  private _loadingPage = $state(false);
   private _pingsAbortControllers = new Map<string, AbortController>();
-
-  get pageIsLoading(): boolean {
-    return this._loadingPage;
-  }
 
   get monitors(): Monitor[] {
     return this._getSortedMonitors();
@@ -116,14 +112,9 @@ class MonitoringState {
       `Adding notification channel ${channelId} to monitor ${monitorId}`,
     );
 
-    this._monitors[monitorId].notificationChannelsIds.push(channelId);
-
-    await httpClient.put(`/http_monitors/${monitorId}`, {
-      notificationChannelsIds:
-        this._monitors[monitorId].notificationChannelsIds,
-    });
-
-    toast.success(`Notification channel added to monitor ${monitor.name}`);
+    if (await this._saveNotificationChannel(monitorId, channelId, true)) {
+      toast.success(`Notification channel added to monitor ${monitor.name}`);
+    }
   }
 
   async removeNotificationChannel(
@@ -152,16 +143,55 @@ class MonitoringState {
       `Removing notification channel ${channelId} from monitor ${monitorId}`,
     );
 
-    this._monitors[monitorId].notificationChannelsIds = this._monitors[
-      monitorId
-    ].notificationChannelsIds.filter((id) => id !== channelId);
+    if (await this._saveNotificationChannel(monitorId, channelId, false)) {
+      toast.success(
+        `Notification channel removed from monitor ${monitor.name}`,
+      );
+    }
+  }
 
-    await httpClient.put(`/http_monitors/${monitorId}`, {
-      notificationChannelsIds:
-        this._monitors[monitorId].notificationChannelsIds,
-    });
+  private async _saveNotificationChannel(
+    monitorId: string,
+    channelId: string,
+    attached: boolean,
+  ): Promise<boolean> {
+    this._setNotificationChannel(monitorId, channelId, attached);
 
-    toast.success(`Notification channel removed from monitor ${monitor.name}`);
+    try {
+      await httpClient.put(`/http_monitors/${monitorId}`, {
+        notificationChannelsIds:
+          this._monitors[monitorId]?.notificationChannelsIds ?? [],
+      });
+
+      return true;
+    } catch (error) {
+      this._setNotificationChannel(monitorId, channelId, !attached);
+      toast.error(
+        readHttpErrorMessage(error) ??
+          'Failed to update the notification channels',
+      );
+
+      return false;
+    }
+  }
+
+  private _setNotificationChannel(
+    monitorId: string,
+    channelId: string,
+    attached: boolean,
+  ): void {
+    const monitor = this._monitors[monitorId];
+
+    if (!monitor) {
+      return;
+    }
+
+    const others = monitor.notificationChannelsIds.filter(
+      (id) => id !== channelId,
+    );
+    monitor.notificationChannelsIds = attached
+      ? [...others, channelId]
+      : others;
   }
 
   toggleNotificationChannel(
@@ -190,10 +220,14 @@ class MonitoringState {
   }
 
   async sync(clusterId: string): Promise<void> {
-    await Promise.all([
-      this._syncClusterMonitors(clusterId),
-      this.reloadAllPingBuckets(),
-    ]);
+    try {
+      await Promise.all([
+        this._syncClusterMonitors(clusterId),
+        this.reloadAllPingBuckets(),
+      ]);
+    } catch (error) {
+      logger.error('Failed to sync monitors:', error);
+    }
   }
 
   unsync(): void {
@@ -225,17 +259,16 @@ class MonitoringState {
     return this.monitors.find((monitor) => monitor.url === url);
   }
 
-  load(clusterId: string): void {
+  async load(clusterId: string): Promise<void> {
     logger.debug('loading monitors...');
-    this._loadingPage = true;
-    void this._fetchMonitors(clusterId);
+    await this._fetchMonitors(clusterId).catch(() => undefined);
   }
 
   loadMonitorPings(
     projectId: string,
     monitorId: string,
     limit: number = 60,
-  ): Promise<void> {
+  ): Promise<boolean> {
     return this._fetchPings(projectId, monitorId, limit);
   }
 
@@ -285,23 +318,6 @@ class MonitoringState {
     }
 
     return (totalSuccess / totalPings) * 100;
-  }
-
-  async updateMonitorName(monitorId: string, newName: string): Promise<void> {
-    if (!monitorId || !newName?.trim()) {
-      throw new Error('Monitor ID and name are required');
-    }
-
-    const monitor = this._monitors[monitorId];
-    if (!monitor) {
-      throw new Error(`Monitor with ID ${monitorId} not found`);
-    }
-
-    await httpClient.put(`/http_monitors/${monitorId}`, {
-      name: newName.trim(),
-    });
-
-    this._monitors[monitorId].name = newName.trim();
   }
 
   async deleteMonitor(monitorId: string): Promise<void> {
@@ -355,7 +371,6 @@ class MonitoringState {
     this.unsync();
     logger.debug('syncing monitors...', clusterId);
     this._monitorPings = {};
-    this._shouldReconnect = true;
 
     await Promise.all([
       this._fetchMonitors(clusterId),
@@ -364,7 +379,7 @@ class MonitoringState {
   }
 
   private _stopMonitorsSync(): void {
-    this._shouldReconnect = false;
+    this._streamGeneration += 1;
     logger.debug('unsyncing monitors...');
     this._unsubscribe?.();
     this.syncConnection?.close();
@@ -372,7 +387,7 @@ class MonitoringState {
   }
 
   private _pauseMonitorSync(): void {
-    this._shouldReconnect = false;
+    this._streamGeneration += 1;
     logger.debug('pausing monitors...');
     this._unsubscribe?.();
     this.syncConnection?.close();
@@ -475,7 +490,9 @@ class MonitoringState {
   }
 
   private _openMonitorStream(clusterId: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    const generation = this._streamGeneration;
+
+    return new Promise((resolve) => {
       this._unsubscribe?.();
 
       this.syncConnection = new EventSource(
@@ -502,16 +519,14 @@ class MonitoringState {
 
         this._unsubscribe?.();
 
-        if (this._shouldReconnect) {
-          logger.debug('Attempting to reconnect monitors in 3 seconds...');
-          setTimeout(() => {
-            if (this._shouldReconnect) {
-              void this._openMonitorStream(clusterId);
-            }
-          }, 3000);
-        }
+        logger.debug('Attempting to reconnect monitors in 3 seconds...');
+        setTimeout(() => {
+          if (generation === this._streamGeneration) {
+            void this._openMonitorStream(clusterId);
+          }
+        }, 3000);
 
-        reject(new Error('Monitor SSE connection failed'));
+        resolve();
       };
 
       const onMessage = (event: MessageEvent<string>): void => {
@@ -546,6 +561,8 @@ class MonitoringState {
       this.syncConnection.addEventListener('message', onMessage);
 
       this._unsubscribe = () => {
+        resolve();
+
         if (!this.syncConnection) {
           logger.debug('No active monitor SSE connection to unsubscribe from');
           return;
@@ -589,7 +606,7 @@ class MonitoringState {
     projectId: string,
     monitorId: string,
     limit: number = 60,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const existingController = this._pingsAbortControllers.get(monitorId);
     if (existingController) {
       existingController.abort();
@@ -620,11 +637,15 @@ class MonitoringState {
           }
           return 0;
         });
+
+      return true;
     } catch (error) {
       if (error instanceof Error && error.name === 'CanceledError') {
-        return;
+        return true;
       }
       logger.error('Failed to load monitor pings:', error);
+
+      return false;
     } finally {
       if (this._pingsAbortControllers.get(monitorId) === controller) {
         this._pingsAbortControllers.delete(monitorId);

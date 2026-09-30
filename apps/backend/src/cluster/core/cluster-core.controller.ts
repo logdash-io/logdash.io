@@ -58,7 +58,7 @@ export class ClusterCoreController {
     const currentClusterCount = await this.clusterReadCachedService.countByCreatorId(userId);
 
     if (currentClusterCount >= MAX_CLUSTERS_PER_USER) {
-      throw new BadRequestException('Cannot create more clusters. Maximum limit reached.');
+      throw new BadRequestException('Cannot create more domains. Maximum limit reached.');
     }
 
     const clusterTier = clusterTierFromUserTier(userTier);
@@ -128,12 +128,12 @@ export class ClusterCoreController {
     const cluster = await this.clusterReadService.readById(clusterId);
 
     if (!cluster) {
-      throw new NotFoundException('Cluster not found');
+      throw new NotFoundException('Domain not found');
     }
 
     if (cluster.creatorId !== userId) {
       throw new BadRequestException(
-        'Cannot update cluster. User is not the creator of this cluster.',
+        'Cannot update domain. User is not the creator of this domain.',
       );
     }
 
@@ -149,7 +149,7 @@ export class ClusterCoreController {
     const updatedCluster = await this.clusterReadService.readById(clusterId);
 
     if (!updatedCluster) {
-      throw new NotFoundException('Cluster not found after update');
+      throw new NotFoundException('Domain not found after update');
     }
 
     const projectsGroupedByCluster = await this.projectReadService.readGroupedByClusterMany([
@@ -175,11 +175,11 @@ export class ClusterCoreController {
     const cluster = await this.clusterReadService.readById(clusterId);
 
     if (!cluster) {
-      throw new NotFoundException('Cluster not found');
+      throw new NotFoundException('Domain not found');
     }
 
     if (cluster.creatorId === userId) {
-      throw new BadRequestException('Cannot delete role. User is the creator of this cluster.');
+      throw new BadRequestException('Cannot delete role. User is the creator of this domain.');
     }
 
     await this.clusterWriteService.deleteRole(clusterId, userId);

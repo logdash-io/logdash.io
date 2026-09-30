@@ -2,14 +2,12 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import {
     SettingsCard,
-    SettingsCardHeader,
     SettingsCardItem,
   } from '$lib/domains/shared/ui/components/settings-card';
-  import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
-  import { DangerIcon } from '@logdash/hyper-ui/icons';
   import { Button } from '@logdash/hyper-ui/presentational';
 
   type Props = {
@@ -18,53 +16,49 @@
 
   const { clusterId }: Props = $props();
 
-  async function onDeleteProject(): Promise<void> {
+  async function onDeleteCluster(): Promise<void> {
     const confirmed = confirm(
-      'Are you sure you want to delete this project? This action cannot be undone and will delete all services and data.',
+      'Delete this domain from Logdash? All its services and their data will be deleted. This cannot be undone. Your registered domain is not affected.',
     );
 
     if (!confirmed) return;
 
-    const dismissLoading = toast.info('Deleting project...', 60000);
+    const dismissLoading = toast.info('Deleting domain', 60000);
 
     try {
       await clustersState.delete(clusterId);
       dismissLoading();
-      toast.success('Project deleted successfully', 5000);
-      void goto(resolve('/app/clusters'));
+      toast.success('Domain deleted', 5000);
+      void goto(resolve('/app/domains'));
     } catch (error) {
       dismissLoading();
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      toast.error(`Failed to delete project: ${message}`, 5000);
+      const message = readHttpErrorMessage(error) ?? 'Something went wrong';
+      toast.error(`Failed to delete domain: ${message}`, 5000);
     }
   }
 </script>
 
-<SettingsCard>
-  <SettingsCardHeader
-    title="Danger Zone"
-    description="Irreversible actions that affect your project"
-    icon={DangerIcon}
-    variant="danger"
-  />
+<SettingsCard
+  title="Danger zone"
+  description="Actions that cannot be undone."
+  variant="danger"
+>
+  <SettingsCardItem>
+    <p>Delete domain</p>
+    <p class="text-neutral-500">
+      Removes this domain and its services from Logdash. Your registered domain
+      is not affected.
+    </p>
 
-  <div class="ld-card-bg">
-    <SettingsCardItem icon={TrashIcon} iconVariant="danger" showBorder={false}>
-      <p class="font-medium">Delete Project</p>
-      <p class="text-neutral-400 text-sm">
-        Permanently delete this project and all its services
-      </p>
-
-      {#snippet action()}
-        <Button
-          variant="danger-ghost"
-          size="sm"
-          onclick={onDeleteProject}
-          loading={clustersState.isDeleting}
-        >
-          Delete
-        </Button>
-      {/snippet}
-    </SettingsCardItem>
-  </div>
+    {#snippet action()}
+      <Button
+        variant="danger"
+        size="sm"
+        onclick={onDeleteCluster}
+        loading={clustersState.isDeleting}
+      >
+        Delete
+      </Button>
+    {/snippet}
+  </SettingsCardItem>
 </SettingsCard>

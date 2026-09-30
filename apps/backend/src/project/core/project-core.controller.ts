@@ -57,7 +57,7 @@ export class ProjectCoreController {
     const project = await this.projectReadService.readById(projectId);
 
     if (!project) {
-      throw new NotFoundException('Project not found');
+      throw new NotFoundException('Service not found');
     }
 
     const logsPerHourRateLimit = getProjectPlanConfig(project.tier).logs.rateLimitPerHour;
@@ -119,7 +119,7 @@ export class ProjectCoreController {
     const isWithinLimit = await this.projectLimitService.newProjectWouldBeWithinLimit(userId);
 
     if (!isWithinLimit) {
-      throw new ConflictException('User has reached the project limit');
+      throw new ConflictException('User has reached the service limit');
     }
 
     const userTier = await this.userReadCachedService.readTier(userId);

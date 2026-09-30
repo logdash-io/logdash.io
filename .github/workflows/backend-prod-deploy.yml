@@ -77,6 +77,7 @@ jobs:
           github-oauth-client-id-local: ${{ secrets.BACKEND_PROD_GITHUB_OAUTH_CLIENT_ID_LOCAL }}
           github-oauth-client-secret-local: ${{ secrets.BACKEND_PROD_GITHUB_OAUTH_CLIENT_SECRET_LOCAL }}
           google-oauth-redirect-uri-local: http://localhost:5173/app/callbacks/oauth/google-alternative
+          watchlist-project-id: ${{ vars.BACKEND_PROD_WATCHLIST_PROJECT_ID }}
       - name: Prune
         uses: './.github/templates/prune'
         with:

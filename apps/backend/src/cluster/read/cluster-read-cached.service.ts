@@ -22,7 +22,7 @@ export class ClusterReadCachedService {
     const clusterJson = await this.redisService.get(cacheKey);
 
     if (clusterJson === 'null') {
-      throw Error('Cluster not found. You have to wait 5 seconds before trying again');
+      throw Error('Domain not found. You have to wait 5 seconds before trying again');
     }
 
     if (clusterJson !== null) {
@@ -49,7 +49,7 @@ export class ClusterReadCachedService {
     const tier = await this.redisService.get(cacheKey);
 
     if (tier === 'null') {
-      throw Error('Cluster not found. You have to wait 5 seconds before trying again');
+      throw Error('Domain not found. You have to wait 5 seconds before trying again');
     }
 
     if (tier !== null) {
@@ -61,7 +61,7 @@ export class ClusterReadCachedService {
     if (!cluster) {
       await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
       this.logger.error(`Cluster not found`, { clusterId });
-      throw Error('Cluster not found');
+      throw Error('Domain not found');
     }
 
     await this.redisService.set(cacheKey, cluster.tier, cacheTtlSeconds);

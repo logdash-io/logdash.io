@@ -107,6 +107,8 @@ inputs:
     required: false
   google-oauth-redirect-uri-local:
     required: false
+  watchlist-project-id:
+    required: false
 
 runs:
   using: 'composite'
@@ -165,4 +167,5 @@ runs:
           -e GITHUB_OAUTH_CLIENT_ID_LOCAL=${{ inputs.github-oauth-client-id-local }} \
           -e GITHUB_OAUTH_CLIENT_SECRET_LOCAL=${{ inputs.github-oauth-client-secret-local }} \
           -e GOOGLE_OAUTH_REDIRECT_URI_LOCAL=${{ inputs.google-oauth-redirect-uri-local }} \
+          -e WATCHLIST_PROJECT_ID=${{ inputs.watchlist-project-id }} \
           ${{ inputs.image-name }}

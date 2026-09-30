@@ -1,38 +1,15 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
-  import HomeIcon from '$lib/domains/shared/icons/HomeIcon.svelte';
-  import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
-  import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
-  import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
-  import SettingsIcon from '$lib/domains/shared/icons/SettingsIcon.svelte';
-  import { Spinner, Tooltip } from '@logdash/hyper-ui/presentational';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import { Maximize2Icon, Minimize2Icon } from 'lucide-svelte';
-  import { flushSync, type Component } from 'svelte';
-  import type { ClassValue } from 'svelte/elements';
+  import { flushSync } from 'svelte';
   import { prefersReducedMotion } from 'svelte/motion';
   import { MediaQuery } from 'svelte/reactivity';
-  import { match } from 'ts-pattern';
   import { HERO_SHOWCASE_ID } from './hero-anchors';
   import HeroClaimCard from './HeroClaimCard.svelte';
-  import HeroLogsPanel from './HeroLogsPanel.svelte';
-  import HeroMetricsColumn from './HeroMetricsColumn.svelte';
-  import HeroMonitorTile from './HeroMonitorTile.svelte';
-  import HeroSidebar from './HeroSidebar.svelte';
+  import HeroDashboard from './HeroDashboard.svelte';
   import { heroClaim } from './hero-claim.svelte';
-  import { showcaseClusterName } from './hero-showcase';
   import { heroTakeover } from './hero-takeover.svelte';
-  import TypewriterText from './TypewriterText.svelte';
-
-  type WindowBarStatus = {
-    label: string;
-    dotClass: string | null;
-  };
-
-  type ServiceTab = {
-    label: string;
-    icon: Component<{ class?: ClassValue }>;
-    active: boolean;
-  };
 
   type FrameStyle = {
     inset: string;
@@ -41,17 +18,6 @@
     scale: string;
   };
 
-  /** The tabs a service has in the app, with its overview open. */
-  const SERVICE_TABS: ServiceTab[] = [
-    { label: 'Overview', icon: HomeIcon, active: true },
-    { label: 'Logs', icon: LogsIcon, active: false },
-    { label: 'Metrics', icon: MetricsIcon, active: false },
-    { label: 'Monitoring', icon: MonitoringIcon, active: false },
-    { label: 'Settings', icon: SettingsIcon, active: false },
-  ];
-
-  /** Below lg the frame grows with its content and the tail shows this many rows. */
-  const LOG_ROWS = 6;
   const largeFrame = new MediaQuery('(min-width: 1024px)');
 
   const EXPAND_MS = 550;
@@ -72,13 +38,12 @@
 
   let dialog = $state<HTMLDialogElement | null>(null);
   let slot = $state<HTMLDivElement | null>(null);
-  let toggle = $state<HTMLButtonElement | null>(null);
+  let toggleButton = $state<HTMLButtonElement | null>(null);
   let full = $state(false);
   let settled = $state(false);
   let target: 'inline' | 'full' = 'inline';
   let animations: Animation[] = [];
 
-  const phase = $derived(anonymousPreviewState.phase);
   const expanded = $derived(heroTakeover.expanded);
   const claimShown = $derived(expanded && settled && heroClaim.visible);
 
@@ -89,27 +54,6 @@
       ? (anonymousPreviewState.previewHost ?? demoHost)
       : demoHost;
   });
-
-  const status = $derived<WindowBarStatus>(
-    match(phase)
-      .with('creating', () => ({
-        label: 'Starting',
-        dotClass: null,
-      }))
-      .with('previewing', 'idle', () => ({
-        label: 'Live',
-        dotClass: 'bg-success',
-      }))
-      .with('ended', () => ({
-        label: 'Expired',
-        dotClass: 'bg-neutral-600',
-      }))
-      .with('error', () => ({
-        label: 'Stopped',
-        dotClass: 'bg-error',
-      }))
-      .exhaustive(),
-  );
 
   $effect.pre(() => {
     if (!slot || dialog?.open) {
@@ -396,7 +340,7 @@
 
   function keepToggleFocus(): void {
     flushSync();
-    toggle?.focus({ preventScroll: true });
+    toggleButton?.focus({ preventScroll: true });
   }
 </script>
 
@@ -432,51 +376,12 @@
       oncancel={onCancel}
       onclose={onClose}
     >
-      <HeroSidebar />
-
-      <div class="flex min-w-0 flex-1 flex-col" inert={claimShown}>
-        <div
-          class="border-hairline flex h-11 shrink-0 items-center gap-3 border-b px-4"
-        >
-          <nav class="hidden items-center gap-1 xl:flex" aria-hidden="true">
-            {#each SERVICE_TABS as tab (tab.label)}
-              <span
-                class={[
-                  'flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-sm',
-                  tab.active
-                    ? 'bg-surface-100 text-fg-default'
-                    : 'text-neutral-500',
-                ]}
-              >
-                <tab.icon class="size-3.5 shrink-0" />
-                {tab.label}
-              </span>
-            {/each}
-          </nav>
-
-          <span class="text-neutral-500 min-w-0 truncate text-sm xl:hidden">
-            <span class="hidden sm:inline">
-              {showcaseClusterName(phase)}
-              <span class="text-neutral-700">/</span>
-            </span>
-            <TypewriterText text={host} class="text-fg-default font-medium" />
-          </span>
-
-          <span
-            class="text-neutral-400 ml-auto flex shrink-0 items-center gap-1.5 text-xs"
-          >
-            {#if status.dotClass}
-              <span class={['size-1.5 rounded-full', status.dotClass]}></span>
-            {:else}
-              <Spinner class="size-3" aria-hidden="true" />
-            {/if}
-            {status.label}
-          </span>
-
+      <HeroDashboard fit={full || largeFrame.current} covered={claimShown}>
+        {#snippet toggle()}
           {#if expanded}
             <Tooltip content={backHint} placement="bottom" align="right">
               <button
-                bind:this={toggle}
+                bind:this={toggleButton}
                 type="button"
                 class={WINDOW_BUTTON_CLASS}
                 aria-label="Back to site"
@@ -492,7 +397,7 @@
               align="right"
             >
               <button
-                bind:this={toggle}
+                bind:this={toggleButton}
                 type="button"
                 class={WINDOW_BUTTON_CLASS}
                 aria-label="Open full screen"
@@ -502,22 +407,8 @@
               </button>
             </Tooltip>
           {/if}
-        </div>
-
-        <div class="bg-hairline flex min-h-0 flex-1 gap-px">
-          <div class="bg-surface-elevated flex min-h-0 min-w-0 flex-1 flex-col">
-            <div class="border-hairline shrink-0 border-b">
-              <HeroMonitorTile />
-            </div>
-
-            <HeroLogsPanel rows={LOG_ROWS} fit={full || largeFrame.current} />
-          </div>
-
-          <div class="bg-surface-elevated hidden w-64 shrink-0 lg:flex xl:w-72">
-            <HeroMetricsColumn />
-          </div>
-        </div>
-      </div>
+        {/snippet}
+      </HeroDashboard>
 
       {#if full && expanded && settled}
         <HeroClaimCard />

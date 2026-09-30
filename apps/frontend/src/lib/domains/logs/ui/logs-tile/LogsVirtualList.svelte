@@ -4,8 +4,11 @@
   import type { Log } from '$lib/domains/logs/domain/log';
   import { intersect } from '$lib/domains/shared/ui/actions/use-intersect.svelte.js';
   import { filtersStore } from '../../infrastructure/filters.store.svelte.js';
-  import EnhancedLogRow from './log-row/LogRow.svelte';
+  import { timeDisplayState } from '../../infrastructure/time-display.state.svelte.js';
+  import LogRow from './log-row/LogRow.svelte';
   import LogPreviewDrawer from './LogPreviewDrawer.svelte';
+  import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
+  import LoadingLine from '$lib/domains/shared/ui/components/LoadingLine.svelte';
   import {
     Button,
     ScrollArea,
@@ -19,6 +22,18 @@
   };
 
   const { logs, rendered }: Props = $props();
+
+  const filtered = $derived(
+    Boolean(
+      filtersStore.searchString.trim() ||
+        filtersStore.endDate ||
+        filtersStore.levels.length > 0 ||
+        filtersStore.namespaces.length > 0,
+    ),
+  );
+  const loading = $derived(
+    logs.length === 0 && (logsState.fetchingLogs || logsState.pageIsLoading),
+  );
 
   const ROW_HEIGHT = 28;
   const BUFFER_COUNT = 15;
@@ -237,78 +252,98 @@
   });
 </script>
 
-<div
-  class="relative flex h-full max-h-[690px] w-full max-w-full flex-1 flex-col"
->
+<div class="relative flex min-h-96 flex-1 flex-col">
   {#if scrolledFromTop}
     <div
-      class="pointer-events-none absolute top-0 left-0 z-10 -mt-1 h-12 w-full bg-gradient-to-b from-surface-elevated to-transparent"
+      class="from-surface-elevated pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b to-transparent"
     ></div>
   {/if}
 
-  <ScrollArea
-    class="flex h-full max-h-full w-full flex-col gap-1.5 overflow-auto px-2 sm:gap-0 md:overscroll-contain"
-    onscroll={onScroll}
-    bind:viewportRef
-  >
-    {#if logs.length === 0 && logsState.hasFilters && !logsState.fetchingLogs}
-      <div
-        class="flex h-full w-full flex-col items-center justify-center gap-2 py-16"
-      >
-        <p class="text-neutral-600 text-sm">
-          No logs found for the selected filters
-        </p>
-        <Button
-          variant="primary"
-          size="sm"
-          onclick={() => {
-            filtersStore.reset();
-          }}
-        >
-          Reset filters
-        </Button>
-      </div>
-    {/if}
-
-    <div class="relative" style="height: {totalHeight}px;">
-      {#each visibleLogs as { log, index, translateY } (log.id)}
-        {@const shouldAnimate = index < newLogsCount}
-        {@const animationDelay = !rendered ? index * 5 : 0}
-        <div
-          class="absolute inset-x-0"
-          style="transform: translate3d(0, {translateY}px, 0);"
-          in:fade|global={{
-            duration: shouldAnimate ? 300 : 0,
-            delay: animationDelay,
-          }}
-        >
-          <EnhancedLogRow
-            date={log.createdAt}
-            level={log.level}
-            message={log.message}
-            namespace={log.namespace}
-            isSelected={logPreviewState.selectedLog?.id === log.id}
-            onclick={() => onLogClick(log)}
+  <div class="absolute inset-0">
+    <ScrollArea class="h-full" onscroll={onScroll} bind:viewportRef>
+      {#if logs.length === 0}
+        {#if loading}
+          <div class="px-4 pb-4">
+            <LoadingLine label="Loading logs" />
+          </div>
+        {:else if logsState.fetchFailed}
+          <EmptyState
+            class="px-4 pb-4"
+            title="Could not load logs"
+            description="Check your connection and try again."
+          >
+            <Button
+              variant="neutral"
+              size="sm"
+              onclick={() => logsState.retry()}
+            >
+              Retry
+            </Button>
+          </EmptyState>
+        {:else if filtered}
+          <EmptyState
+            class="px-4 pb-4"
+            title="No matching logs"
+            description="Nothing matches this search and these filters."
+          >
+            <Button
+              variant="neutral"
+              size="sm"
+              onclick={() => filtersStore.reset()}
+            >
+              Reset filters
+            </Button>
+          </EmptyState>
+        {:else}
+          <EmptyState
+            class="px-4 pb-4"
+            title="No logs yet"
+            description="New logs show up here as your app sends them."
           />
-        </div>
-      {/each}
+        {/if}
+      {/if}
 
-      <div
-        class="absolute inset-x-0 h-0.5"
-        style="top: {totalHeight - 1}px;"
-        use:intersect={{ callback: onIntersect }}
-      ></div>
-    </div>
+      <div class="relative" style="height: {totalHeight}px;">
+        {#each visibleLogs as { log, index, translateY } (log.id)}
+          {@const shouldAnimate = index < newLogsCount}
+          {@const animationDelay = !rendered ? index * 5 : 0}
+          <div
+            class="absolute inset-x-0"
+            style="transform: translate3d(0, {translateY}px, 0);"
+            in:fade|global={{
+              duration: shouldAnimate ? 300 : 0,
+              delay: animationDelay,
+            }}
+          >
+            <LogRow
+              date={log.createdAt}
+              level={log.level}
+              message={log.message}
+              namespace={log.namespace}
+              prefix={timeDisplayState.isRelative ? 'relative' : 'full'}
+              selected={logPreviewState.selectedLog?.id === log.id}
+              onclick={() => onLogClick(log)}
+            />
+          </div>
+        {/each}
 
-    {#if logsState.pageIsLoading || logsState.fetchingLogs}
-      <div class="flex h-12 shrink-0 items-center justify-center gap-2">
-        <Spinner size="sm" />
+        <div
+          class="absolute inset-x-0 h-0.5"
+          style="top: {totalHeight - 1}px;"
+          use:intersect={{ callback: onIntersect }}
+        ></div>
       </div>
-    {/if}
-  </ScrollArea>
+
+      {#if logs.length > 0 && logsState.pageIsLoading}
+        <div class="flex h-12 shrink-0 items-center px-4">
+          <Spinner size="sm" aria-hidden="true" />
+        </div>
+      {/if}
+    </ScrollArea>
+  </div>
 
   <div
-    class="pointer-events-none absolute bottom-0 left-0 z-10 h-4 w-full bg-gradient-to-b from-transparent to-surface-elevated"
+    class="from-surface-elevated pointer-events-none absolute inset-x-0 bottom-0 z-10 h-6 bg-gradient-to-t to-transparent"
   ></div>
 
   <LogPreviewDrawer />

@@ -51,7 +51,11 @@ export async function renderMarkdownTwin(
   fetch: Fetch,
   path: string,
 ): Promise<string> {
-  const page = parse(await fetchText(fetch, path));
+  // The parser keeps <pre> as raw text by default, which hides the <code>
+  // inside from querySelector and drops the language off every code fence.
+  const page = parse(await fetchText(fetch, path), {
+    blockTextElements: { script: true, noscript: true, style: true },
+  });
   const title = page.querySelector('title')?.text.trim() ?? path;
   const description =
     page

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CheckIcon from '$lib/domains/shared/icons/CheckIcon.svelte';
+  import { CheckIcon } from '@logdash/hyper-ui/icons';
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { Button } from '@logdash/hyper-ui/presentational';
   import { planHref } from './plan-href';

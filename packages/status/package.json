@@ -1,0 +1,71 @@
+{
+  "name": "@logdash/status",
+  "version": "0.1.0",
+  "description": "Typed client for Logdash public status pages, with React and Svelte bindings",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/logdash-io/logdash.io",
+    "directory": "packages/status"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts",
+    "./svelte": "./src/svelte.ts",
+    "./registry/svelte": "./registry/svelte/StatusPage.svelte"
+  },
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./react": {
+        "types": "./dist/react.d.ts",
+        "default": "./dist/react.js"
+      },
+      "./svelte": {
+        "types": "./dist/svelte.d.ts",
+        "default": "./dist/svelte.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "pnpm run build",
+    "check": "tsc -p tsconfig.json",
+    "test": "node --test src/*.test.ts",
+    "generate": "openapi-typescript ../../apps/backend/openapi/status-page-v1.json -o src/api.generated.ts",
+    "registry:build": "pnpm dlx shadcn@4.21.0 build registry/react/registry.json -o ../../apps/frontend/static/r/react && pnpm dlx shadcn-svelte@1.7.0 registry build registry/svelte/registry.json -o ../../apps/frontend/static/r/svelte",
+    "registry:check": "tsc -p registry && svelte-check --tsconfig ./registry/tsconfig.json --fail-on-warnings"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "svelte": ">=5.7"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "openapi-typescript": "^7.9.1",
+    "react": "^19.1.0",
+    "svelte": "catalog:",
+    "svelte-check": "catalog:",
+    "typescript": "catalog:"
+  }
+}

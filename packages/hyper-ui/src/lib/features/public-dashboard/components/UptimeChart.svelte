@@ -6,6 +6,7 @@
     type Bucket,
     type BucketSegment,
   } from "../utils/group-buckets-by-status";
+  import { formatUptime } from "../utils/format-status-page";
 
   interface Props {
     class?: string;
@@ -27,13 +28,7 @@
 
   const GAP_PX = 2;
 
-  const sortedBuckets = $derived(
-    [...(buckets || [])].sort((a, b) => {
-      if (!a || !b) return 0;
-      return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
-    })
-  );
-  const displayBuckets = $derived(sortedBuckets.slice(-maxBucketsToShow));
+  const displayBuckets = $derived(buckets.slice(-maxBucketsToShow));
   const segments = $derived(groupBucketsByStatus(displayBuckets));
   const bucketsCount = $derived(displayBuckets.length);
 
@@ -51,11 +46,20 @@
       down: "Down",
       unknown: "No data",
     };
-    const status = statusLabels[segment.status];
-    const timeRange = formatBucketTimeRange(segment.startTime, segment.endTime);
-    const uptime = segment.avgUptime.toFixed(1);
+    const parts = [
+      statusLabels[segment.status],
+      `${segment.bucketCount} ${segment.bucketCount > 1 ? "periods" : "period"}`,
+    ];
 
-    return `${status} • ${segment.bucketCount} ${segment.bucketCount > 1 ? "periods" : "period"} • ${timeRange} • ${uptime}% uptime`;
+    if (segment.startTime) {
+      parts.push(formatBucketTimeRange(segment.startTime, segment.endTime));
+    }
+
+    if (segment.status !== "unknown") {
+      parts.push(`${formatUptime(segment.avgUptime)} uptime`);
+    }
+
+    return parts.join(" • ");
   }
 </script>
 
@@ -95,8 +99,7 @@
     class="text-neutral-400 flex items-center justify-between font-mono text-xs"
   >
     <span>
-      {bucketsCount}
-      {timeLabel}
+      {bucketsCount === 0 ? "No data yet" : `${bucketsCount} ${timeLabel}`}
     </span>
     <span>Now</span>
   </div>
