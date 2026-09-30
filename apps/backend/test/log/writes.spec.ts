@@ -293,6 +293,24 @@ describe('LogCoreController (writes)', () => {
     }, 10_000);
   });
 
+  describe('project-api-key header', () => {
+    it.each(['/logs', '/logs/batch'])('POST %s without the header returns 401', async (path) => {
+      // given
+      const log: CreateLogBody = {
+        createdAt: new Date().toISOString(),
+        message: 'no key',
+        level: LogLevel.Info,
+      };
+      const body = path === '/logs' ? log : { logs: [log] };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer()).post(path).send(body);
+
+      // then
+      expect(response.status).toEqual(401);
+    });
+  });
+
   describe('Namespace support', () => {
     it('creates log with namespace via single endpoint', async () => {
       const { apiKey, project } = await bootstrap.utils.generalUtils.setupAnonymous();

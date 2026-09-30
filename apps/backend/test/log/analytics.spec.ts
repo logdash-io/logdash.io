@@ -5,7 +5,17 @@ import { createTestApp } from '../utils/bootstrap';
 import { Types } from 'mongoose';
 import { LogWriteService } from '../../src/log/write/log-write.service';
 import { LogAnalyticsResponse } from '../../src/log/analytics/dto/log-analytics-response.dto';
-import { subHours, addMinutes, subMinutes, addHours, addSeconds, startOfMinute } from 'date-fns';
+import {
+  subHours,
+  addMinutes,
+  subMinutes,
+  addHours,
+  addSeconds,
+  startOfMinute,
+  startOfHour,
+} from 'date-fns';
+import { advanceTo } from 'jest-date-mock';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('LogCoreController (analytics)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -1128,6 +1138,49 @@ describe('LogCoreController (analytics)', () => {
 
       expect(response.status).toEqual(200);
       expect(body.totalLogs).toEqual(2);
+    });
+
+    it('ends the range at now when endDate is in the future', async () => {
+      // given
+      const now = startOfHour(new Date());
+      advanceTo(now);
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: subHours(now, 1).toISOString(),
+          endDate: '2100-01-01T00:00:00.000Z',
+        });
+
+      const body = response.body as LogAnalyticsResponse;
+
+      // then
+      expect(response.status).toEqual(200);
+      expect(body.bucketSizeMinutes).toEqual(5);
+      expect(body.buckets).toHaveLength(12);
+      expect(body.buckets[body.buckets.length - 1].bucketEnd).toEqual(now.toISOString());
+    });
+
+    it('rejects an endDate that is not after startDate', async () => {
+      // given
+      const { project, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const startTime = subHours(new Date(), 2);
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/projects/${project.id}/logs/analytics/v1`)
+        .set('Authorization', `Bearer ${token}`)
+        .query({
+          startDate: startTime.toISOString(),
+          endDate: startTime.toISOString(),
+        });
+
+      // then
+      expect(response.status).toEqual(400);
+      expect((response.body as ErrorResponse).message).toEqual('endDate must be after startDate');
     });
   });
 });

@@ -34,11 +34,14 @@ function isBlockedIpv4(ip: string): boolean {
 
 function isBlockedIpv6(ip: string): boolean {
   const normalized = ip.toLowerCase().split('%')[0];
-  const firstHextet = normalized.split(':')[0];
+  const [firstHextet, secondHextet] = normalized.split(':');
   const head = firstHextet === '' ? 0 : parseInt(firstHextet, 16);
+  const second = secondHextet ? parseInt(secondHextet, 16) : 0;
 
   // ::, ::1, ::ffff:a.b.c.d and the rest of the reserved ::/8 block
   if (Number.isNaN(head) || head === 0) return true;
+  if (head === 0x64 && second === 0xff9b) return true; // nat64, 64:ff9b::/32 holds 64:ff9b::/96 and 64:ff9b:1::/48
+  if (head === 0x2002) return true; // 6to4, 2002::/16
   if (head >> 8 === 0xfc || head >> 8 === 0xfd) return true; // unique local, fc00::/7
   if (head >= 0xfe80 && head <= 0xfebf) return true; // link-local, fe80::/10
   if (head >> 8 === 0xff) return true; // multicast, ff00::/8

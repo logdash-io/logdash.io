@@ -16,7 +16,11 @@ export class ApiKeyReadCachedService {
     private readonly redisService: RedisService,
   ) {}
 
-  public async readProjectId(apiKeyValue: string): Promise<string | null> {
+  public async readProjectId(apiKeyValue: string | undefined): Promise<string | null> {
+    if (!apiKeyValue) {
+      return null;
+    }
+
     const cacheKey = `api-key:${this.hashApiKeyValue(apiKeyValue)}:project-id`;
     const cacheTtlSeconds = 60;
 

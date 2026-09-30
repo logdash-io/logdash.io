@@ -63,7 +63,9 @@ export class StripePaymentSucceededHandler {
       return;
     }
 
-    const user = await this.userReadService.readByEmail(email);
+    const user =
+      (await this.userReadService.readByStripeCustomerId(customerId as string)) ??
+      (await this.userReadService.readByEmail(email));
 
     if (!user) {
       this.logger.error(`User not found`, { email });
@@ -111,7 +113,7 @@ export class StripePaymentSucceededHandler {
 
     try {
       this.stripeEventEmitter.emitPaymentSucceeded({
-        email,
+        email: user.email,
         tier,
       });
     } catch (error) {

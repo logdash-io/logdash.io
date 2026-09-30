@@ -220,6 +220,21 @@ describe('HttpMonitorCoreController (probe)', () => {
       expect(response.status).toBe(400);
     });
 
+    it.each([
+      'http://[64:ff9b::a9fe:a9fe]/latest/meta-data',
+      'http://[64:ff9b:1::a9fe:a9fe]/latest/meta-data',
+      'http://[2002:a9fe:a9fe::]/latest/meta-data',
+    ])('rejects %s, an ipv6 address that translates to ipv4', async (url) => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await probe(token, project.id, url);
+
+      // then
+      expect(response.status).toBe(400);
+    });
+
     it('rejects a request without a token', async () => {
       // given
       const { project } = await bootstrap.utils.generalUtils.setupAnonymous();

@@ -247,12 +247,18 @@ export class LogCoreController {
     @Param('projectId') projectId: string,
     @Query() dto: LogAnalyticsQuery,
   ): Promise<LogAnalyticsResponse> {
+    if (dto.endDate <= dto.startDate) {
+      throw new BadRequestException('endDate must be after startDate');
+    }
+
     const project = await this.projectReadCachedService.readProjectOrThrow(projectId);
 
     const retentionHours = getProjectPlanConfig(project.tier).logs.retentionHours;
 
-    const cutOffDate = subHours(new Date(), retentionHours);
+    const now = new Date();
+    const cutOffDate = subHours(now, retentionHours);
     dto.startDate = dto.startDate < cutOffDate ? cutOffDate : dto.startDate;
+    dto.endDate = dto.endDate > now ? now : dto.endDate;
 
     return await this.logAnalyticsService.getBucketedAnalytics(projectId, dto);
   }

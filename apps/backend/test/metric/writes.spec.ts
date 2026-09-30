@@ -26,6 +26,17 @@ describe('Metrics (writes)', () => {
     await bootstrap.methods.afterAll();
   });
 
+  it('rejects PUT /metrics without the project-api-key header with 401', async () => {
+    // given
+    const body: RecordMetricBody = { name: 'users', value: 1, operation: MetricOperation.Set };
+
+    // when
+    const response = await request(bootstrap.app.getHttpServer()).put('/metrics').send(body);
+
+    // then
+    expect(response.status).toEqual(401);
+  });
+
   it('records metrics with dynamic granularity (SET)', async () => {
     // given
     const { apiKey } = await bootstrap.utils.generalUtils.setupAnonymous();

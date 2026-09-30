@@ -159,7 +159,8 @@ export class GeneralUtils {
       type: 'invoice.payment_succeeded',
       data: {
         object: {
-          customer: 'mock-customer-id',
+          // stripe customer ids are unique per customer, and the handler looks users up by them
+          customer: `mock-customer-${userEmail}`,
           customer_email: userEmail,
           lines: {
             data: [

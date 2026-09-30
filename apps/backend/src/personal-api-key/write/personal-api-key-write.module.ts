@@ -5,10 +5,12 @@ import {
   PersonalApiKeySchema,
 } from '../core/entities/personal-api-key.entity';
 import { PersonalApiKeyWriteService } from './personal-api-key-write.service';
+import { PersonalApiKeyReadModule } from '../read/personal-api-key-read.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: PersonalApiKeyEntity.name, schema: PersonalApiKeySchema }]),
+    PersonalApiKeyReadModule,
   ],
   providers: [PersonalApiKeyWriteService],
   exports: [PersonalApiKeyWriteService],

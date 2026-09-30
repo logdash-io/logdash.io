@@ -17,6 +17,7 @@ import { MAX_GRANT } from '../core/scope-presets';
 import { CreatePersonalApiKeyDto } from './dto/create-personal-api-key.dto';
 import { PersonalApiKeyEvents } from '../events/personal-api-key-events.enum';
 import { PersonalApiKeyCreatedEvent } from '../events/definitions/personal-api-key-created.event';
+import { PersonalApiKeyReadCachedService } from '../read/personal-api-key-read-cached.service';
 
 export interface CreatedPersonalApiKey {
   key: PersonalApiKeyNormalized;
@@ -29,6 +30,7 @@ export class PersonalApiKeyWriteService {
     @InjectModel(PersonalApiKeyEntity.name)
     private personalApiKeyModel: Model<PersonalApiKeyEntity>,
     private readonly eventEmitter: EventEmitter2,
+    private readonly personalApiKeyReadCachedService: PersonalApiKeyReadCachedService,
   ) {}
 
   public async create(dto: CreatePersonalApiKeyDto): Promise<CreatedPersonalApiKey> {
@@ -87,5 +89,6 @@ export class PersonalApiKeyWriteService {
     }
 
     await this.personalApiKeyModel.updateOne({ _id: key._id }, { revokedAt: new Date() }).exec();
+    await this.personalApiKeyReadCachedService.invalidate(key.prefix);
   }
 }

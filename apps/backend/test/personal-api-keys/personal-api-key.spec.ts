@@ -228,6 +228,36 @@ describe('Personal API keys (CRUD under JWT)', () => {
       expect(listResponse.status).toBe(200);
       expect(listResponse.body).toHaveLength(0);
     });
+
+    it('rejects a revoked key right away, even when it was used just before', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const createResponse = await request(bootstrap.app.getHttpServer())
+        .post('/personal-api-keys')
+        .set('Authorization', `Bearer ${token}`)
+        .send(createBody());
+
+      const created = createResponse.body as CreatePersonalApiKeyResponse;
+
+      const whoamiBeforeRevoke = await request(bootstrap.app.getHttpServer())
+        .get('/personal-api-keys/whoami')
+        .set('Authorization', `Bearer ${created.value}`);
+
+      expect(whoamiBeforeRevoke.status).toBe(200);
+
+      // when
+      await request(bootstrap.app.getHttpServer())
+        .delete(`/personal-api-keys/${created.id}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      const whoamiAfterRevoke = await request(bootstrap.app.getHttpServer())
+        .get('/personal-api-keys/whoami')
+        .set('Authorization', `Bearer ${created.value}`);
+
+      expect(whoamiAfterRevoke.status).toBe(401);
+    });
   });
 
   describe('authentication', () => {
