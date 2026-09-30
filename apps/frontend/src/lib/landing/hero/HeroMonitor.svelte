@@ -2,12 +2,13 @@
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
   import type { AnonymousStartStep } from '$lib/domains/anonymous/domain/anonymous-preview';
   import type { WatchHistory } from '$lib/domains/anonymous/domain/watch-history';
+  import { fillEmptySlots } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
   import CheckTrace from '$lib/domains/app/projects/ui/service/CheckTrace.svelte';
   import MonitorPanel, {
     CHART_HEIGHT,
     CHART_WIDTH,
   } from '$lib/domains/app/projects/ui/service/MonitorPanel.svelte';
-  import { UptimeChart } from '@logdash/hyper-ui/features';
+  import { UptimeBars } from '@logdash/hyper-ui/features';
   import { Button, Spinner } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon } from 'lucide-svelte';
   import { cubicOut } from 'svelte/easing';
@@ -20,7 +21,6 @@
   import { heroTakeover } from './hero-takeover.svelte';
 
   const CLOCK_TICK_MS = 1_000;
-  const HISTORY_HOURS = 90;
   const HISTORY_REVEAL_MS = 240;
 
   const CREATING_STEPS: { key: AnonymousStartStep; label: string }[] = [
@@ -201,11 +201,11 @@
   <div class="flex flex-col gap-2 pb-4">
     <p class="text-neutral-400 text-xs">{watchedLabel(watched)}</p>
 
-    <UptimeChart
-      class="*:last:text-neutral-500"
-      buckets={watched.hours}
-      maxBucketsToShow={HISTORY_HOURS}
-      timeLabel="hours ago"
+    <UptimeBars
+      buckets={fillEmptySlots(watched.hours, 'hour')}
+      label={previewHost}
+      unit="hour"
+      raised
     />
   </div>
 {/snippet}

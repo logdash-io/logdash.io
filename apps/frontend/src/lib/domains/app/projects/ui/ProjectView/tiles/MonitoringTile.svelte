@@ -5,12 +5,6 @@
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
   import type { PingBucketPeriod } from '$lib/domains/app/projects/domain/monitoring/ping-bucket.js';
-  import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
-  import {
-    SettingsCard,
-    SettingsCardItem,
-  } from '$lib/domains/shared/ui/components/settings-card/index.js';
-  import { Button } from '@logdash/hyper-ui/presentational';
   import { untrack } from 'svelte';
   import MonitorPanel from '../../service/MonitorPanel.svelte';
   import { monitorPanelContent } from '../../service/monitor-panel-content.js';
@@ -130,6 +124,7 @@
 
   {#if expanded}
     <UptimeSection
+      label={monitor.name}
       {timeRange}
       pingBuckets={monitoringState.getPingBuckets(monitorId)}
       {onTimeRangeChange}
@@ -137,28 +132,13 @@
 
     <NotificationChannelsSection {monitorId} />
 
-    <SettingsCard
-      title="README badge"
-      description="Show its uptime in a README."
-    >
-      <SettingsCardItem>
-        <p>Uptime badge</p>
-        <p class="text-neutral-500">Links back to your status page.</p>
-
-        {#snippet action()}
-          <Button
-            variant="neutral"
-            size="sm"
-            onclick={() => (isBadgeModalOpen = true)}
-          >
-            <ShieldCheckIcon class="size-4" />
-            Get badge
-          </Button>
-        {/snippet}
-      </SettingsCardItem>
-    </SettingsCard>
-
-    <MonitorSettingsSection {monitorId} {clusterId} {projectId} {onEdit} />
+    <MonitorSettingsSection
+      {monitor}
+      {clusterId}
+      {projectId}
+      {onEdit}
+      onGetBadge={() => (isBadgeModalOpen = true)}
+    />
   {/if}
 
   <MonitorBadgeModal
