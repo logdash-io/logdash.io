@@ -58,6 +58,10 @@ export class RedisService {
     return result;
   }
 
+  public async getDel(key: string): Promise<string | null> {
+    return this.client.getDel(key);
+  }
+
   public async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
     if (ttlSeconds) {
       await this.client.set(key, value, { EX: ttlSeconds });

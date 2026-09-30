@@ -28,5 +28,11 @@ export function parseSince(since: string, now: Date = new Date()): Date {
     throw new BadRequestException(`Invalid "since" value "${since}". Duration must be positive.`);
   }
 
-  return new Date(now.getTime() - amount * UNIT_MS[unit]);
+  const start = new Date(now.getTime() - amount * UNIT_MS[unit]);
+
+  if (Number.isNaN(start.getTime())) {
+    throw new BadRequestException(`Invalid "since" value "${since}". Duration is too long.`);
+  }
+
+  return start;
 }

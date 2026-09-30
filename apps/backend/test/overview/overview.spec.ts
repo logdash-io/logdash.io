@@ -170,6 +170,16 @@ describe('Overview (aggregation verdict)', () => {
 
       expect(response.status).toBe(400);
     });
+
+    it('rejects a since value too large to be a date with 400', async () => {
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const response = await request(server())
+        .get(`/projects/${project.id}/overview?since=99999999999999999999d`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(400);
+    });
   });
 
   describe('cluster overview', () => {

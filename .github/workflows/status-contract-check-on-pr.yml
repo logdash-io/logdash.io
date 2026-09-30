@@ -12,6 +12,9 @@ on:
       - 'templates/**'
       - '.github/workflows/status-contract-check-on-pr.yml'
 
+permissions:
+  contents: read
+
 jobs:
   package:
     runs-on: ubuntu-latest

@@ -38,9 +38,13 @@
   const isLandingPath = (pathname: string) =>
     !isPublicDashboardPath(pathname) && !isAppPath(pathname);
 
-  const RECORDED_ROUTES = ['/', '/setup', '/configure', '/pricing'];
+  const RECORDED_ROUTES = ['/', '/pricing'];
   const shouldRecordRoute = $derived(
-    RECORDED_ROUTES.some((path) => page.url.pathname.includes(path)),
+    RECORDED_ROUTES.some((path) =>
+      path === '/'
+        ? page.url.pathname === path
+        : page.url.pathname.startsWith(path),
+    ),
   );
   let loadedPosthogInstance: PostHogInterface | null = $state(null);
 

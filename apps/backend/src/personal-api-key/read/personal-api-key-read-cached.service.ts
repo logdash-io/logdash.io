@@ -31,7 +31,7 @@ export class PersonalApiKeyReadCachedService {
    * cache — a revoked/typo'd key must not lock out a real one for the whole TTL.
    */
   public async readActiveByPrefix(prefix: string): Promise<CachedPersonalApiKey | null> {
-    const cacheKey = `personal-api-key:${prefix}`;
+    const cacheKey = this.getCacheKey(prefix);
 
     const cached = await this.redisService.get(cacheKey);
 
@@ -67,5 +67,13 @@ export class PersonalApiKeyReadCachedService {
     await this.redisService.set(cacheKey, JSON.stringify(value), CACHE_TTL_SECONDS);
 
     return value;
+  }
+
+  public async invalidate(prefix: string): Promise<void> {
+    await this.redisService.del(this.getCacheKey(prefix));
+  }
+
+  private getCacheKey(prefix: string): string {
+    return `personal-api-key:${prefix}`;
   }
 }

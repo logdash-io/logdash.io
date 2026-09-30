@@ -174,6 +174,60 @@ describe('StripeController (writes)', () => {
 
       expect(userAfterUpdate!.paymentsMetadata?.trialUsed).toBe(true);
     }, 60_000);
+
+    it('upgrades the owner of the Stripe customer, not the account matching the invoice email', async () => {
+      // given
+      const { user: subscriber } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'subscriber@test.com',
+        userTier: UserTier.Free,
+      });
+      const { user: bystander } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'bystander@test.com',
+        userTier: UserTier.Free,
+      });
+      await bootstrap.models.userModel.updateOne(
+        { _id: subscriber.id },
+        { stripeCustomerId: 'subscriber-customer-id' },
+      );
+
+      const event = {
+        type: 'invoice.payment_succeeded',
+        data: {
+          object: {
+            customer: 'subscriber-customer-id',
+            customer_email: bystander.email,
+            lines: {
+              data: [
+                {
+                  pricing: {
+                    price_details: {
+                      price: { id: getEnvConfig().stripe.proPriceId },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      } as unknown as Stripe.PaymentIntentSucceededEvent;
+
+      // when
+      await bootstrap.app.get(StripePaymentSucceededHandler).handle(event);
+
+      await waitFor(
+        () => bootstrap.models.userModel.findById(subscriber.id).lean(),
+        (found) => found?.paymentsMetadata?.trialUsed === true,
+      );
+
+      // then
+      const subscriberAfterUpdate = await bootstrap.models.userModel.findById(subscriber.id);
+      const bystanderAfterUpdate = await bootstrap.models.userModel.findById(bystander.id);
+
+      expect(subscriberAfterUpdate!.tier).toBe(UserTier.Pro);
+      expect(bystanderAfterUpdate!.tier).toBe(UserTier.Free);
+      expect(bystanderAfterUpdate!.stripeCustomerId).toBeUndefined();
+      expect(bystanderAfterUpdate!.paymentsMetadata?.trialUsed).toBeUndefined();
+    });
   });
 
   describe('Subscription deleted webhook', () => {
@@ -184,11 +238,13 @@ describe('StripeController (writes)', () => {
         userTier: UserTier.EarlyBird,
       });
 
+      const { stripeCustomerId } = (await bootstrap.models.userModel.findById(setup.user.id))!;
+
       const event = {
         type: 'customer.subscription.deleted',
         data: {
           object: {
-            customer: 'mock-customer-id',
+            customer: stripeCustomerId,
           },
         },
       } as unknown as Stripe.CustomerSubscriptionDeletedEvent;

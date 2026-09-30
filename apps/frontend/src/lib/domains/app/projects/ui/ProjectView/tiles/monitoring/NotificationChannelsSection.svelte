@@ -75,7 +75,7 @@
 
         <span class="flex min-w-0 flex-col">
           <span class="truncate">{getChannelDisplayName(channel)}</span>
-          <span class="text-neutral-500 truncate">
+          <span class="ph-no-capture text-neutral-500 truncate">
             {channelDetails(channel)}
           </span>
         </span>

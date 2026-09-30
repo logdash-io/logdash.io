@@ -79,6 +79,11 @@ describe('NotificationChannelCoreController (writes)', () => {
           },
         };
 
+        await bootstrap.utils.notificationChannelUtils.linkTelegramChat({
+          token,
+          chatId: 'valid-chat-id',
+        });
+
         // when
         const response = await request(bootstrap.app.getHttpServer())
           .post(`/clusters/${cluster.id}/notification_channels`)
@@ -141,6 +146,11 @@ describe('NotificationChannelCoreController (writes)', () => {
 
         const requestBodies: TelegramSendMessageBody[] = [];
 
+        await bootstrap.utils.notificationChannelUtils.linkTelegramChat({
+          token,
+          chatId: 'valid-chat-id',
+        });
+
         nock.cleanAll();
         bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
           botId: getEnvConfig().notificationChannels.telegramUptimeBot.token,
@@ -165,6 +175,60 @@ Setup was completed successfully
 
 I'll notify you about the status of your services`,
         });
+      });
+
+      it('rejects the built-in bot for a chat the user never linked', async () => {
+        // given
+        const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        const requestBodies: TelegramSendMessageBody[] = [];
+
+        nock.cleanAll();
+        bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
+          botId: getEnvConfig().notificationChannels.telegramUptimeBot.token,
+          onMessage: (body) => {
+            requestBodies.push(body);
+          },
+        });
+
+        // when
+        const response = await request(bootstrap.app.getHttpServer())
+          .post(`/clusters/${cluster.id}/notification_channels`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({
+            type: NotificationChannelType.Telegram,
+            name: 'Victim chat',
+            options: { chatId: 'victim-chat-id' },
+          });
+
+        // then
+        expect(response.status).toBe(400);
+        expect(await bootstrap.models.notificationChannelModel.countDocuments()).toBe(0);
+        expect(requestBodies).toEqual([]);
+      });
+
+      it('rejects the built-in bot for a chat another user linked', async () => {
+        // given
+        const owner = await bootstrap.utils.generalUtils.setupAnonymous();
+        const attacker = await bootstrap.utils.generalUtils.setupAnonymous();
+
+        await bootstrap.utils.notificationChannelUtils.linkTelegramChat({
+          token: owner.token,
+          chatId: 'owner-chat-id',
+        });
+
+        // when
+        const response = await request(bootstrap.app.getHttpServer())
+          .post(`/clusters/${attacker.cluster.id}/notification_channels`)
+          .set('Authorization', `Bearer ${attacker.token}`)
+          .send({
+            type: NotificationChannelType.Telegram,
+            name: 'Owner chat',
+            options: { chatId: 'owner-chat-id' },
+          });
+
+        // then
+        expect(response.status).toBe(400);
       });
     });
 
@@ -532,12 +596,18 @@ I'll notify you about the status of your services`,
 
       const { cluster, token } = await setupMethod();
 
+      const chatId = `test-chat-${Date.now()}`;
+
+      if (channelType === NotificationChannelType.Telegram) {
+        await bootstrap.utils.notificationChannelUtils.linkTelegramChat({ token, chatId });
+      }
+
       const channelData = {
         type: channelType,
         name: `Test ${channelType} Channel`,
         options:
           channelType === NotificationChannelType.Telegram
-            ? { chatId: `test-chat-${Date.now()}` }
+            ? { chatId }
             : { url: 'https://example.com/webhook' },
       };
 
@@ -618,6 +688,54 @@ I'll notify you about the status of your services`,
       const entity = await bootstrap.models.notificationChannelModel.findById(channel.id);
       expect((entity!.options as TelegramOptions).botToken).toBe('123456:updated-bot-token');
       expect((entity!.options as TelegramOptions).chatId).toBe('updated-chat-id');
+    });
+
+    it('keeps the built-in bot token when options are saved without one', async () => {
+      // given
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const channel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: cluster.id,
+          options: { chatId: 'some-chat' },
+          token,
+        });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/notification_channels/${channel.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ options: { chatId: 'some-chat' } });
+
+      // then
+      expect(response.status).toBe(200);
+      const entity = await bootstrap.models.notificationChannelModel.findById(channel.id);
+      expect((entity!.options as TelegramOptions).botToken).toBe(
+        getEnvConfig().notificationChannels.telegramUptimeBot.token,
+      );
+    });
+
+    it('rejects switching a channel to the built-in bot for an unlinked chat', async () => {
+      // given
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const channel =
+        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
+          clusterId: cluster.id,
+          options: { botToken: '123456:own-bot-token', chatId: 'victim-chat-id' },
+          token,
+        });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/notification_channels/${channel.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ options: { chatId: 'victim-chat-id' } });
+
+      // then
+      expect(response.status).toBe(400);
+      const entity = await bootstrap.models.notificationChannelModel.findById(channel.id);
+      expect((entity!.options as TelegramOptions).botToken).toBe('123456:own-bot-token');
     });
 
     it('creates audit log when notification channel is updated', async () => {

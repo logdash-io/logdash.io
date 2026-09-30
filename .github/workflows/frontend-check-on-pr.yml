@@ -9,6 +9,9 @@ on:
       - 'packages/**'
       - '.github/templates/**'
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest

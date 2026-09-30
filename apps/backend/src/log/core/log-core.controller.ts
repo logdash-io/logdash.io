@@ -21,7 +21,7 @@ import {
   ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
-import { Observable, concat, filter, from, fromEvent, map } from 'rxjs';
+import { Observable, concat, from, map } from 'rxjs';
 import { ApiKeyReadCachedService } from '../../api-key/read/api-key-read-cached.service';
 import { Public } from '../../auth/core/decorators/is-public';
 import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
@@ -51,10 +51,17 @@ import { ProjectReadCachedService } from '../../project/read/project-read-cached
 import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 import { subHours } from 'date-fns';
 import { NamespaceMetadata } from '../read/dto/namespace-metadata.dto';
+import { KeyedEventStream } from '../../shared/utils/keyed-event-stream';
 
 @Controller('')
 @ApiTags('Logs')
 export class LogCoreController {
+  private readonly logStream = new KeyedEventStream<LogCreatedEvent>(
+    this.eventEmitter,
+    LogEvents.LogCreatedEvent,
+    (event) => event.projectId,
+  );
+
   constructor(
     private readonly logReadService: LogReadService,
     private readonly logQueueingService: LogQueueingService,
@@ -75,13 +82,7 @@ export class LogCoreController {
     @Query() dto: StreamProjectLogsQuery,
     @Param('projectId') projectId: string,
   ): Promise<Observable<MessageEvent>> {
-    const eventStream$ = fromEvent(this.eventEmitter, LogEvents.LogCreatedEvent).pipe(
-      map((data) => data as LogCreatedEvent),
-      filter((data) => {
-        return data.projectId === projectId;
-      }),
-      map((data) => ({ data })),
-    );
+    const eventStream$ = this.logStream.stream(projectId).pipe(map((data) => ({ data })));
 
     let historicalLogs$: Observable<{ data: LogClickhouseSerialized }> = from([]);
 
@@ -246,12 +247,18 @@ export class LogCoreController {
     @Param('projectId') projectId: string,
     @Query() dto: LogAnalyticsQuery,
   ): Promise<LogAnalyticsResponse> {
+    if (dto.endDate <= dto.startDate) {
+      throw new BadRequestException('endDate must be after startDate');
+    }
+
     const project = await this.projectReadCachedService.readProjectOrThrow(projectId);
 
     const retentionHours = getProjectPlanConfig(project.tier).logs.retentionHours;
 
-    const cutOffDate = subHours(new Date(), retentionHours);
+    const now = new Date();
+    const cutOffDate = subHours(now, retentionHours);
     dto.startDate = dto.startDate < cutOffDate ? cutOffDate : dto.startDate;
+    dto.endDate = dto.endDate > now ? now : dto.endDate;
 
     return await this.logAnalyticsService.getBucketedAnalytics(projectId, dto);
   }

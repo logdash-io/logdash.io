@@ -9,6 +9,9 @@ on:
       - 'packages/**'
       - '.github/workflows/status-page-check-on-pr.yml'
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest

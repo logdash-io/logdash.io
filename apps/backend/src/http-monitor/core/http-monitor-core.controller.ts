@@ -75,13 +75,8 @@ export class HttpMonitorCoreController {
     @Body() dto: CreateHttpMonitorBody,
     @CurrentUserId() userId: string,
   ): Promise<HttpMonitorSerialized> {
-    const project = await this.projectReadService.readByIdOrThrow(projectId);
-
-    if (
-      dto.mode === HttpMonitorMode.Push &&
-      !getProjectPlanConfig(project.tier).httpMonitors.canCreatePushMonitors
-    ) {
-      throw new ForbiddenException('Push monitors are not available on your plan');
+    if (dto.mode === HttpMonitorMode.Push) {
+      await this.assertPushMonitorsAllowed(projectId);
     }
 
     const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
@@ -161,8 +156,12 @@ export class HttpMonitorCoreController {
     @Body() dto: UpdateHttpMonitorBody,
     @CurrentUserId() userId: string,
   ): Promise<HttpMonitorSerialized> {
-    const { projectId, notificationChannelsIds } =
+    const { projectId, notificationChannelsIds, mode } =
       await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
+
+    if (dto.mode === HttpMonitorMode.Push && mode !== HttpMonitorMode.Push) {
+      await this.assertPushMonitorsAllowed(projectId);
+    }
 
     await this.validateNotificationChannels({
       notificationChannelsIds: dto.notificationChannelsIds?.filter(
@@ -233,6 +232,14 @@ export class HttpMonitorCoreController {
   @Post('/ping/:httpMonitorId')
   async recordPing(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
     await this.httpPingPushService.record(httpMonitorId);
+  }
+
+  private async assertPushMonitorsAllowed(projectId: string): Promise<void> {
+    const project = await this.projectReadService.readByIdOrThrow(projectId);
+
+    if (!getProjectPlanConfig(project.tier).httpMonitors.canCreatePushMonitors) {
+      throw new ForbiddenException('Push monitors are not available on your plan');
+    }
   }
 
   private async validateNotificationChannels(params: {

@@ -268,6 +268,33 @@ describe('HttpMonitorCoreController (writes)', () => {
   });
 
   describe('PUT /http_monitors/:httpMonitorId', () => {
+    it('denies switching a monitor to push mode for non-Pro project', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      const httpMonitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+        projectId: project.id,
+        token,
+      });
+
+      const dto: UpdateHttpMonitorBody = { mode: HttpMonitorMode.Push };
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/http_monitors/${httpMonitor.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(dto);
+
+      // then
+      expect(response.status).toBe(403);
+      expect((response.body as ErrorResponse).message).toBe(
+        'Push monitors are not available on your plan',
+      );
+      expect(await bootstrap.models.httpMonitorModel.findById(httpMonitor.id)).toMatchObject({
+        mode: HttpMonitorMode.Pull,
+      });
+    });
+
     it('updates monitor', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();

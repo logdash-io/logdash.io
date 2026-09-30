@@ -270,7 +270,7 @@
 
         <div class="flex items-center gap-2">
           <code
-            class="bg-surface-100 border-border-default min-w-0 flex-1 rounded-lg border p-3 font-mono text-sm break-all"
+            class="ph-no-capture bg-surface-100 border-border-default min-w-0 flex-1 rounded-lg border p-3 font-mono text-sm break-all"
           >
             {createdValue}
           </code>

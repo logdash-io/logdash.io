@@ -70,6 +70,7 @@ export class NotificationChannelCoreController {
       dto.options,
       dto.type,
       clusterId,
+      userId,
       userTier,
     );
 
@@ -111,6 +112,7 @@ export class NotificationChannelCoreController {
         dto.options,
         channel.target,
         channel.clusterId,
+        userId,
         userTier,
         id,
       );
@@ -119,7 +121,12 @@ export class NotificationChannelCoreController {
     await this.notificationChannelWriteService.update(
       {
         id,
-        options: dto.options,
+        options:
+          dto.options &&
+          this.notificationChannelOptionsEnrichmentService.enrichOptions(
+            dto.options,
+            channel.target,
+          ),
       },
       userId,
     );
