@@ -11,15 +11,21 @@ import {
 } from './types/webhook-options.type';
 import { NotificationChannelReadService } from '../read/notification-channel-read.service';
 import { UserTier } from '../../user/core/enum/user-tier.enum';
+import { TelegramSetupService } from '../setup/telegram/telegram-setup.service';
+import { getEnvConfig } from '../../shared/configs/env-configs';
 
 @Injectable()
 export class NotificationChannelOptionsValidationService {
-  constructor(private readonly notificationChannelReadService: NotificationChannelReadService) {}
+  constructor(
+    private readonly notificationChannelReadService: NotificationChannelReadService,
+    private readonly telegramSetupService: TelegramSetupService,
+  ) {}
 
   public async validateOptions(
     options: NotificationChannelOptions,
     target: NotificationChannelType,
     clusterId: string,
+    userId: string,
     userTier?: UserTier,
     excludeNotificationChannelId?: string,
   ): Promise<void> {
@@ -29,6 +35,7 @@ export class NotificationChannelOptionsValidationService {
       await this.validateTelegramOptions(
         options as TelegramOptions,
         clusterId,
+        userId,
         excludeNotificationChannelId,
       );
     }
@@ -64,6 +71,7 @@ export class NotificationChannelOptionsValidationService {
   private async validateTelegramOptions(
     options: TelegramOptions,
     clusterId: string,
+    userId: string,
     excludeNotificationChannelId?: string,
   ): Promise<void> {
     const existingChannel =
@@ -74,6 +82,27 @@ export class NotificationChannelOptionsValidationService {
 
     if (existingChannel && existingChannel.id !== excludeNotificationChannelId) {
       throw new BadRequestException('Channel with this chatId already exists');
+    }
+
+    if (options.botToken) {
+      return;
+    }
+
+    // The built-in bot can post to every chat that ever started it, so it only
+    // targets a chat this user proved with the setup passphrase. A channel that
+    // already sends to this chat through the built-in bot keeps it.
+    const defaultBotToken = getEnvConfig().notificationChannels.telegramUptimeBot.token;
+    const existingBotToken = (existingChannel?.options as TelegramOptions | undefined)?.botToken;
+    const keepsDefaultBotChat =
+      existingChannel !== null && (!existingBotToken || existingBotToken === defaultBotToken);
+
+    if (
+      !keepsDefaultBotChat &&
+      !(await this.telegramSetupService.isChatLinkedToUser(options.chatId, userId))
+    ) {
+      throw new BadRequestException(
+        'Send the setup passphrase in this chat before connecting it to the logdash bot',
+      );
     }
   }
 

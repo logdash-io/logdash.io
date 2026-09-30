@@ -2,11 +2,7 @@ import request from 'supertest';
 import { createTestApp } from '../../utils/bootstrap';
 import { getEnvConfig } from '../../../src/shared/configs/env-configs';
 import { TelegramUpdateDto } from '../../../src/notification-channel/setup/telegram/dto/telegram-update.dto';
-import { TelegramTestMessageBody } from '../../../src/notification-channel/setup/telegram/dto/telegram-test-message.body';
-import { removeKeysWhichWouldExpireInNextXSeconds } from '../../utils/redis-test-container-server';
 import { RedisService } from '../../../src/shared/redis/redis.service';
-import { TelegramSendMessageBody } from '../../utils/telegram-utils';
-import { ErrorResponse } from '../../utils/error-response';
 
 describe('TelegramSetupController', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -46,7 +42,7 @@ describe('TelegramSetupController', () => {
             username: 'johndoe',
           },
           date: Math.floor(Date.now() / 1000),
-          text: '/private-test-phrase',
+          text: '/swift_fox_0123456789abcdef',
         },
       };
 
@@ -59,7 +55,7 @@ describe('TelegramSetupController', () => {
     });
 
     it('processes webhook update for group chat', async () => {
-      const groupPassphrase = '/group-test-phrase';
+      const groupPassphrase = '/calm_owl_fedcba9876543210';
       const telegramUpdate: TelegramUpdateDto = {
         update_id: 123457,
         message: {
@@ -104,7 +100,7 @@ describe('TelegramSetupController', () => {
             first_name: 'John',
           },
           date: Math.floor(Date.now() / 1000),
-          text: 'invalid-secret-test',
+          text: '/bold_lynx_1111111111111111',
         },
       };
 
@@ -168,7 +164,7 @@ describe('TelegramSetupController', () => {
             username: 'johndoe',
           },
           date: Math.floor(Date.now() / 1000),
-          text: '/private-test-phrase',
+          text: '/swift_fox_0123456789abcdef',
         },
       };
 
@@ -180,7 +176,7 @@ describe('TelegramSetupController', () => {
       const chatInfoResponse = await request(bootstrap.app.getHttpServer())
         .get('/notification_channel_setup/telegram/chat_info')
         .set('Authorization', `Bearer ${token}`)
-        .query({ passphrase: '/private-test-phrase' });
+        .query({ passphrase: '/swift_fox_0123456789abcdef' });
 
       expect(chatInfoResponse.status).toBe(200);
       expect(chatInfoResponse.body).toEqual({
@@ -193,7 +189,7 @@ describe('TelegramSetupController', () => {
     it('gets group chat info', async () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const groupPassphrase = '/group-test-phrase';
+      const groupPassphrase = '/calm_owl_fedcba9876543210';
       const telegramUpdate: TelegramUpdateDto = {
         update_id: 123457,
         message: {
@@ -245,14 +241,14 @@ describe('TelegramSetupController', () => {
             from: { id: 987654321, is_bot: false, first_name: 'John' },
             chat: { id: 123456789, type: 'private', first_name: 'John' },
             date: Math.floor(Date.now() / 1000),
-            text: 'invalid-secret-test',
+            text: '/bold_lynx_1111111111111111',
           },
         });
 
       const chatInfoResponse = await request(bootstrap.app.getHttpServer())
         .get('/notification_channel_setup/telegram/chat_info')
         .set('Authorization', `Bearer ${token}`)
-        .query({ passphrase: 'invalid-secret-test' });
+        .query({ passphrase: '/bold_lynx_1111111111111111' });
 
       expect(chatInfoResponse.status).toBe(200);
       expect(chatInfoResponse.body).toEqual({
@@ -280,7 +276,7 @@ describe('TelegramSetupController', () => {
       const chatInfoResponse = await request(bootstrap.app.getHttpServer())
         .get('/notification_channel_setup/telegram/chat_info')
         .set('Authorization', `Bearer ${token}`)
-        .query({ passphrase: 'invalid-passphrase-test' });
+        .query({ passphrase: '/gentle_deer_2222222222222222' });
 
       expect(chatInfoResponse.status).toBe(200);
       expect(chatInfoResponse.body).toEqual({
@@ -289,115 +285,93 @@ describe('TelegramSetupController', () => {
     });
   });
 
-  describe('POST /notification_channel_setup/telegram/send_test_message', () => {
-    it('sends test message successfully', async () => {
+  describe('passphrase abuse', () => {
+    const sendUpdate = (text: string, chatId = 123456789) =>
+      request(bootstrap.app.getHttpServer())
+        .post('/notification_channel_setup/telegram/bot_webhook')
+        .set('X-Telegram-Bot-Api-Secret-Token', validTelegramSecret)
+        .send({
+          update_id: 1,
+          message: {
+            message_id: 1,
+            from: { id: chatId, is_bot: false, first_name: 'Victim' },
+            chat: { id: chatId, type: 'private', first_name: 'Victim' },
+            date: Math.floor(Date.now() / 1000),
+            text,
+          },
+        });
+
+    it('does not store ordinary bot commands such as /start', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      await sendUpdate('/start');
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get('/notification_channel_setup/telegram/chat_info')
+        .set('Authorization', `Bearer ${token}`)
+        .query({ passphrase: '/start' });
+
+      // then
+      expect(response.status).toBe(400);
+      expect(
+        await bootstrap.app.get(RedisService).keys('notification-channel-setup:telegram:*'),
+      ).toEqual([]);
+    });
+
+    it('rejects low-entropy passphrases', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      await sendUpdate('/swift_fox_42');
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get('/notification_channel_setup/telegram/chat_info')
+        .set('Authorization', `Bearer ${token}`)
+        .query({ passphrase: '/swift_fox_42' });
+
+      // then
+      expect(response.status).toBe(400);
+    });
+
+    it('spends a passphrase on its first read', async () => {
+      // given
+      const owner = await bootstrap.utils.generalUtils.setupAnonymous();
+      const other = await bootstrap.utils.generalUtils.setupAnonymous();
+      const passphrase = '/wise_raven_abcdefabcdefabcd';
+      await sendUpdate(passphrase);
+
+      await request(bootstrap.app.getHttpServer())
+        .get('/notification_channel_setup/telegram/chat_info')
+        .set('Authorization', `Bearer ${owner.token}`)
+        .query({ passphrase })
+        .expect(200, { success: true, chatId: '123456789', name: 'Victim' });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get('/notification_channel_setup/telegram/chat_info')
+        .set('Authorization', `Bearer ${other.token}`)
+        .query({ passphrase });
+
+      // then
+      expect(response.body).toEqual({ success: false });
+    });
+
+    it('no longer sends arbitrary messages through the bot', async () => {
+      // given
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
-      const testMessageBody: TelegramTestMessageBody = {
-        chatId: '123456789',
-        message: 'This is a test message from the notification system',
-      };
-
-      const requestBodies: TelegramSendMessageBody[] = [];
-
-      bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
-        botId: getEnvConfig().notificationChannels.telegramUptimeBot.token,
-        onMessage: (body) => {
-          requestBodies.push(body);
-        },
-      });
-
+      // when
       const response = await request(bootstrap.app.getHttpServer())
         .post('/notification_channel_setup/telegram/send_test_message')
         .set('Authorization', `Bearer ${token}`)
-        .send(testMessageBody);
+        .send({
+          chatId: '123456789',
+          message: 'Your account is suspended, log in at evil.example',
+        });
 
-      expect(response.status).toBe(201);
-      expect(requestBodies.length).toBe(1);
-      expect(requestBodies[0]).toEqual({
-        chat_id: testMessageBody.chatId,
-        text: testMessageBody.message,
-      });
-    });
-
-    it('enforces rate limit for test messages', async () => {
-      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
-
-      const testMessageBody: TelegramTestMessageBody = {
-        chatId: '123456789',
-        message: 'This is a test message',
-      };
-
-      bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
-        botId: getEnvConfig().notificationChannels.telegramUptimeBot.token,
-        onMessage: () => {},
-      });
-
-      const firstResponse = await request(bootstrap.app.getHttpServer())
-        .post('/notification_channel_setup/telegram/send_test_message')
-        .set('Authorization', `Bearer ${token}`)
-        .send(testMessageBody);
-
-      expect(firstResponse.status).toBe(201);
-
-      const secondResponse = await request(bootstrap.app.getHttpServer())
-        .post('/notification_channel_setup/telegram/send_test_message')
-        .set('Authorization', `Bearer ${token}`)
-        .send(testMessageBody);
-
-      expect(secondResponse.status).toBe(429);
-      expect((secondResponse.body as ErrorResponse).message).toContain('Rate limit exceeded');
-    });
-
-    it('allows test messages after rate limit expires', async () => {
-      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
-
-      const testMessageBody: TelegramTestMessageBody = {
-        chatId: '123456789',
-        message: 'This is a test message',
-      };
-
-      const requestBodies: TelegramSendMessageBody[] = [];
-
-      bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
-        botId: getEnvConfig().notificationChannels.telegramUptimeBot.token,
-        onMessage: (body) => {
-          requestBodies.push(body);
-        },
-      });
-
-      const firstResponse = await request(bootstrap.app.getHttpServer())
-        .post('/notification_channel_setup/telegram/send_test_message')
-        .set('Authorization', `Bearer ${token}`)
-        .send(testMessageBody);
-
-      expect(firstResponse.status).toBe(201);
-
-      await removeKeysWhichWouldExpireInNextXSeconds(
-        bootstrap.app.get(RedisService).getClient(),
-        3,
-      );
-
-      const secondResponse = await request(bootstrap.app.getHttpServer())
-        .post('/notification_channel_setup/telegram/send_test_message')
-        .set('Authorization', `Bearer ${token}`)
-        .send(testMessageBody);
-
-      expect(secondResponse.status).toBe(201);
-      expect(requestBodies.length).toBe(2);
-    });
-
-    it('requires authentication for send test message', async () => {
-      const testMessageBody: TelegramTestMessageBody = {
-        chatId: '123456789',
-        message: 'This is a test message',
-      };
-
-      const response = await request(bootstrap.app.getHttpServer())
-        .post('/notification_channel_setup/telegram/send_test_message')
-        .send(testMessageBody);
-
-      expect(response.status).toBe(401);
+      // then
+      expect(response.status).toBe(404);
     });
   });
 });

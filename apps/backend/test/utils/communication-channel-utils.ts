@@ -5,7 +5,9 @@ import { NotificationChannelType } from '../../src/notification-channel/core/enu
 import { TelegramOptions } from '../../src/notification-channel/core/types/telegram-options.type';
 import { WebhookOptions } from '../../src/notification-channel/core/types/webhook-options.type';
 import request from 'supertest';
+import { randomBytes } from 'crypto';
 import { CreateNotificationChannelBody } from '../../src/notification-channel/core/dto/create-notification-channel.body';
+import { getEnvConfig } from '../../src/shared/configs/env-configs';
 
 export class NotificationChannelUtils {
   constructor(private readonly app: INestApplication<App>) {}
@@ -27,6 +29,10 @@ export class NotificationChannelUtils {
       options.chatId = 'some-chat-id';
     }
 
+    if (!options.botToken) {
+      await this.linkTelegramChat({ token: dto.token, chatId: options.chatId });
+    }
+
     const body: CreateNotificationChannelBody = {
       type: NotificationChannelType.Telegram,
       name: dto.name || 'Test Telegram Channel',
@@ -39,6 +45,39 @@ export class NotificationChannelUtils {
       .send(body);
 
     return response.body as NotificationChannelSerialized;
+  }
+
+  /**
+   * Proves a chat the way a real user does: the bot receives the setup
+   * passphrase in that chat, then the user reads it back through chat_info.
+   * The built-in bot only accepts chats linked like this.
+   */
+  public async linkTelegramChat(dto: { token: string; chatId: string }): Promise<void> {
+    const passphrase = `/test_chat_${randomBytes(8).toString('hex')}`;
+
+    await request(this.app.getHttpServer())
+      .post('/notification_channel_setup/telegram/bot_webhook')
+      .set(
+        'X-Telegram-Bot-Api-Secret-Token',
+        getEnvConfig().notificationChannels.telegramUptimeBot.secret,
+      )
+      .send({
+        update_id: 1,
+        message: {
+          message_id: 1,
+          from: { id: 1, is_bot: false, first_name: 'Test' },
+          chat: { id: dto.chatId, type: 'private', first_name: 'Test' },
+          date: Math.floor(Date.now() / 1000),
+          text: passphrase,
+        },
+      })
+      .expect(201);
+
+    await request(this.app.getHttpServer())
+      .get('/notification_channel_setup/telegram/chat_info')
+      .set('Authorization', `Bearer ${dto.token}`)
+      .query({ passphrase })
+      .expect(200, { success: true, chatId: dto.chatId, name: 'Test' });
   }
 
   public async createWebhookNotificationChannel(dto: {
