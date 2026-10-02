@@ -27,7 +27,7 @@ const FAMILY_PREFIXES = [
   '/learn/',
   '/monitoring/',
   '/alerts/',
-  '/for/',
+  '/use-cases/',
 ];
 
 const familyPaths = sitemapPaths.filter((path) =>
@@ -98,15 +98,26 @@ test.describe('sitemap', () => {
     expect(sitemapUrls.length).toBeGreaterThan(40);
   });
 
-  test('the noindexed use-cases stub stays out of the sitemap', () => {
-    expect(sitemapPaths).not.toContain('/use-cases');
-  });
-
   test('robots.txt points at the sitemap', async ({ request }) => {
     const response = await request.get('/robots.txt');
 
     expect(response.status()).toBe(200);
     expect(await response.text()).toContain(`${SITE_ORIGIN}/sitemap.xml`);
+  });
+
+  test('robots.txt blocks no sitemap URL', async ({ request }) => {
+    const robots = await (await request.get('/robots.txt')).text();
+    const rules = [...robots.matchAll(/^(Allow|Disallow): (\S+)$/gm)].map(
+      ([, kind, prefix]) => ({ allow: kind === 'Allow', prefix }),
+    );
+
+    for (const path of sitemapPaths) {
+      const winner = rules
+        .filter((rule) => path.startsWith(rule.prefix))
+        .sort((a, b) => b.prefix.length - a.prefix.length)[0];
+
+      expect(winner?.allow ?? true, `robots.txt blocks ${path}`).toBe(true);
+    }
   });
 });
 
@@ -319,17 +330,8 @@ test.describe('generated family pages', () => {
   }
 });
 
-test.describe('deliberately unindexed routes', () => {
+test.describe('routes that are not pages', () => {
   test.use({ javaScriptEnabled: false });
-
-  test('/use-cases is a 200 that asks not to be indexed', async ({ page }) => {
-    const response = await page.goto('/use-cases');
-
-    expect(response?.status()).toBe(200);
-    expect(await attribute(page, 'meta[name=robots]', 'content')).toContain(
-      'noindex',
-    );
-  });
 
   test('an unknown family slug is a 404', async ({ page }) => {
     const response = await page.goto('/alternatives/does-not-exist');

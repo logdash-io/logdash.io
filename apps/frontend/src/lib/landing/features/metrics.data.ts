@@ -2,18 +2,18 @@ import type { FeaturePageData } from './feature-page';
 
 export const metricsPage: FeaturePageData = {
   slug: 'metrics',
-  name: 'Custom metrics',
+  name: 'Response time and metrics',
   meta: {
-    title: 'Custom metrics dashboard in one line of code | Logdash',
+    title: 'Response time monitoring and custom metrics | Logdash',
     description:
-      'Track custom metrics like sign-ups, payments and queue depth with one line of code. Live charts by minute, hour and day. Free for 5 metrics per service.',
+      'Response time on every uptime check, plus sign-ups, payments or queue depth from your code in one line. Live charts by minute, hour and day. 5 metrics free.',
     keywords:
-      'custom metrics, custom metrics dashboard, application metrics, track metrics in node.js, simple metrics dashboard, business metrics dashboard, logdash metrics',
+      'response time monitoring, api response time monitoring, website response time, custom metrics, custom metrics dashboard, application metrics, track metrics in node.js',
   },
-  h1: 'Custom metrics in one line of code.',
-  h1Quiet: 'Live charts and nothing to host.',
+  h1: 'Response time and custom metrics.',
+  h1Quiet: 'See the slowdown before the outage.',
   intro:
-    'Sign-ups, payments, queue depth. Send any number from your code and watch it on a live chart, right next to your logs and uptime.',
+    'Every uptime check records how long your server took to answer. Add any number from your code, like queue depth or failed payments, with one line.',
   overview: {
     title: 'The number moves first.',
     quiet: 'The outage follows.',
@@ -21,6 +21,10 @@ export const metricsPage: FeaturePageData = {
       'Queue depth creeps up before the worker stalls. Failed payments pile up before anyone writes in. Send those numbers from your code and watch them move.',
   },
   capabilities: [
+    {
+      title: 'Response time on every check',
+      body: 'Every HTTP check records how long your endpoint took to answer. No answer within 10\u00a0seconds counts as down and sends the alert.',
+    },
     {
       title: 'One line per metric',
       body: 'Call setMetric or mutateMetric where the number changes. A new name shows up in your dashboard the first time you send it.',
@@ -38,16 +42,12 @@ export const metricsPage: FeaturePageData = {
       body: 'Zoom from per-minute detail for the last hour to daily points. Your plan sets how far back you can look, up to 30 days.',
     },
     {
-      title: 'Response time on every check',
-      body: 'Every HTTP check records how long your endpoint took to answer. No answer within 10\u00a0seconds counts as down.',
-    },
-    {
       title: 'Next to your logs and uptime',
       body: 'Metric tiles sit on the same screen as your logs and monitors, so a spike and the error behind it are side by side.',
     },
   ],
   steps: {
-    title: 'Three steps to your first chart',
+    title: 'Three steps to your first chart.',
     description:
       'No agent to run, no dashboard to build. Charts appear with the first value.',
     items: [
@@ -66,7 +66,7 @@ export const metricsPage: FeaturePageData = {
     ],
   },
   sdk: {
-    title: 'Track metrics in Node.js',
+    title: 'Track metrics in Node.js.',
     body: 'Install @logdash/node, create the client with your API key, then set or mutate any metric in one line. Python, Go, .NET, Java, Rust, Ruby and PHP work the same way.',
     language: 'typescript',
     file: 'server.ts',
@@ -82,6 +82,11 @@ logdash.mutateMetric('users', 1);`,
   },
   faq: [
     {
+      question: 'Can Logdash monitor API response time?',
+      answer:
+        'Yes. Every HTTP check records how long your endpoint took to answer, and no answer within 10 seconds counts as down. For timings inside your code, like a slow query, send the duration as a metric with setMetric.',
+    },
+    {
       question: 'How do I track custom metrics in my app?',
       answer:
         'Install the Logdash SDK for your language and create the client with your API key. Then call setMetric or mutateMetric in Node.js, or set and mutate on the metrics client in the other SDKs. The metric appears in your dashboard the first time a value arrives.',
@@ -95,11 +100,6 @@ logdash.mutateMetric('users', 1);`,
       question: 'Which languages are supported?',
       answer:
         'There are official SDKs for Node.js, Python, Go, .NET, Java, Rust, Ruby and PHP. Anything else can send a metric with a single HTTP PUT request and your API key.',
-    },
-    {
-      question: 'Can Logdash monitor API response time?',
-      answer:
-        'Yes. Every HTTP check records how long your endpoint took to answer, and no answer within 10 seconds counts as down. For timings inside your code, like a slow query, send the duration as a metric with setMetric.',
     },
     {
       question: 'How long is metric history kept?',
@@ -119,7 +119,7 @@ logdash.mutateMetric('users', 1);`,
     {
       question: 'Can I get an alert when a metric changes?',
       answer:
-        'Not yet. Alerts cover uptime today: when a monitor goes down, Logdash tells you on Telegram or a webhook. Metrics are for watching trends on the dashboard.',
+        'Not yet. Alerts cover uptime today: when a monitor goes down, or takes longer than 10 seconds to answer, Logdash tells you on Telegram or a webhook. Response times and metrics are for spotting the trend on the dashboard.',
     },
   ],
   related: [

@@ -300,6 +300,20 @@
         Read the status page docs
         <ArrowRightIcon class="size-4" />
       </a>
+
+      <ul class="border-hairline mt-10 flex flex-col gap-3 border-t pt-6">
+        {#each copy.guides as guide (guide.href)}
+          <li>
+            <a
+              href={resolve(guide.href)}
+              class="text-neutral-400 hover:text-fg-default inline-flex items-center gap-1.5 text-sm transition-ink duration-150"
+            >
+              {guide.title}
+              <ChevronRightIcon class="text-neutral-600 size-3.5" />
+            </a>
+          </li>
+        {/each}
+      </ul>
     </div>
 
     <div

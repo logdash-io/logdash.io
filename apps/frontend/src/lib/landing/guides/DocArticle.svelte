@@ -2,6 +2,7 @@
   import { resolve } from '$app/paths';
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
   import FaqList from '$lib/landing/FaqList.svelte';
+  import type { Snippet } from 'svelte';
   import CodeBlock from './blocks/CodeBlock.svelte';
   import {
     SDKS,
@@ -15,9 +16,10 @@
     page: DocPage;
     /** Only the plan pages have limits to show, so table blocks may find nothing. */
     tables?: Record<TableType, Table>;
+    afterHeader?: Snippet;
   };
 
-  const { page, tables }: Props = $props();
+  const { page, tables, afterHeader }: Props = $props();
 
   function anchor(text: string): string {
     return text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -80,6 +82,8 @@
     </h1>
     <p class="text-neutral-400 text-lg leading-7">{page.description}</p>
   </header>
+
+  {@render afterHeader?.()}
 
   <div class="mt-10 flex flex-col">
     {#each page.blocks as block, index (index)}

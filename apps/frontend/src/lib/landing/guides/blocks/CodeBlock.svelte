@@ -12,6 +12,7 @@
     javascript,
     json,
     php,
+    powershell,
     python,
     ruby,
     rust,
@@ -33,7 +34,7 @@
   const { code, language, title, icon: Icon }: Props = $props();
 
   /**
-   * Grammars are named one by one so highlight.js ships fourteen languages
+   * Grammars are named one by one so highlight.js ships sixteen languages
    * rather than the whole two hundred the barrel export can reach.
    */
   const grammars: Record<CodeLanguage, LanguageType<string>> = {
@@ -50,6 +51,8 @@
     rust,
     yaml,
     json,
+    html: { name: 'html', register: xml.register },
+    powershell,
     svelte: { name: 'svelte', register: xml.register },
   };
 

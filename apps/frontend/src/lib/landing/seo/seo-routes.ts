@@ -11,6 +11,7 @@ import { platforms } from './families/monitor.data';
 import { assets } from './families/monitoring.data';
 import { statusPages } from './families/status-page.data';
 import { tools } from './families/tools.data';
+import { useCases } from './families/use-cases.data';
 import { pagePath, type SeoFamilyData } from './seo-page';
 
 export type SitemapEntry = {
@@ -27,8 +28,8 @@ export const SITE_ORIGIN = 'https://logdash.io';
  * a data file. Everything else derives from the same data the page renders
  * from, so a sitemap entry cannot drift from a route.
  *
- * Deliberately absent: `/demo-dashboard` (a redirect to the hero),
- * `/use-cases` (noindex until it has content) and `/vs` (a redirect).
+ * Deliberately absent: `/demo-dashboard` (a redirect to the hero) and `/vs`
+ * (a redirect).
  */
 const staticPaths: string[] = [
   '/',
@@ -56,6 +57,7 @@ const families: SeoFamilyData[] = [
   learn,
   assets,
   alerts,
+  useCases,
 ];
 
 export function familyRoutes(data: SeoFamilyData): SitemapEntry[] {

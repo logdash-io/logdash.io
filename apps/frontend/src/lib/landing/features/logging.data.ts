@@ -2,18 +2,18 @@ import type { FeaturePageData } from './feature-page';
 
 export const loggingPage: FeaturePageData = {
   slug: 'logging',
-  name: 'Log management',
+  name: 'Error logs',
   meta: {
-    title: 'Log management and live search for SaaS apps | Logdash',
+    title: 'Error logs that show why your app went down | Logdash',
     description:
-      'Log management for SaaS apps. Send logs from Node.js, Python, Go and more with one line, then search and filter them live. Free for 10,000 logs an hour.',
+      'Error logs from every service in one live stream. Search them to see why your app went down. SDKs for Node.js, Python, Go and 5 more. Free for 10,000 logs an hour.',
     keywords:
-      'log management, centralized logging, application logs, log monitoring, live tail logs, log search, node.js logging',
+      'error logs, application error logs, error log monitoring, log management, centralized logging, live tail logs, log search, node.js logging',
   },
-  h1: 'Log management for SaaS apps.',
+  h1: 'Error logs that show why it went down.',
   h1Quiet: 'Every line, one search away.',
   intro:
-    'Send logs from any language with one line of code. Search and filter them live, with every instance of your app in one stream.',
+    'Your monitor tells you the app is down. Logs from every instance, in one live stream, tell you why. One line of code in any of 8 languages.',
   overview: {
     title: 'A monitor tells you it’s down.',
     quiet: 'Your\u00a0logs tell you why.',
@@ -21,6 +21,10 @@ export const loggingPage: FeaturePageData = {
       'Logs spread across servers and terminals turn every bug into a hunt. Put them in one stream and the hunt becomes a search.',
   },
   capabilities: [
+    {
+      title: 'Error volume chart',
+      body: 'A chart above the list counts lines over time, with errors in red. Drag across a spike to zoom the list into those minutes.',
+    },
     {
       title: 'Every instance, one stream',
       body: 'Every server, worker and cron job that uses your API key writes to the same stream. No more hopping between machines.',
@@ -36,10 +40,6 @@ export const loggingPage: FeaturePageData = {
     {
       title: 'Levels and namespaces',
       body: 'Seven log levels, from error down to silly. Split a service into auth, payments or cron with namespaces and filter by them.',
-    },
-    {
-      title: 'Error volume chart',
-      body: 'A chart above the list counts lines over time, with errors in red. Drag across a spike to zoom the list into those minutes.',
     },
     {
       title: 'The whole line',
@@ -121,7 +121,7 @@ authLogdash.error('Authentication failed');`,
     {
       question: 'Can I get alerts on error logs?',
       answer:
-        'Not from log lines. Alerts fire when an uptime check fails, on Telegram or a webhook. In the log view, errors are drawn in red on the volume chart, so a spike stands out.',
+        'Not yet. Alerts fire when an uptime check fails, on Telegram or a webhook. In the log view, errors are drawn in red on the volume chart, so a spike stands out the moment you open it.',
     },
   ],
   related: [

@@ -180,7 +180,7 @@ export const alternativesPages: SeoPage[] = [
       },
       {
         type: 'paragraph',
-        text: 'Logdash is the hosted answer to that, not a drop-in self-hosted replacement, and the distinction matters. Logdash is AGPL-3.0 licensed with a public repository, but production self-hosting is not a one-command install today. It runs locally for development and the rest is tracked on GitHub. If self-hosting is the actual point for you, stay on Kuma. If the point was a monitor that keeps working when your server does not, that is the trade on offer here.',
+        text: 'Logdash is the hosted answer to that, not a self-hosted replacement. It is AGPL-3.0 licensed with a public repository, but production self-hosting is not a one-command install today. It runs locally for development and the rest is tracked on GitHub. If self-hosting is the point, stay on Kuma. If the point was a monitor that outlives your server, that is the trade here.',
       },
       { type: 'heading', text: 'The endpoint the hosted check hits' },
       {
@@ -205,13 +205,30 @@ async def health():
           },
           {
             title: 'Move the heartbeats',
-            text: 'Anything that used a Kuma push URL posts to https://api.logdash.io/ping/<httpMonitorId> instead. No auth header, no body, no query string.',
+            text: 'Kuma push URLs become a POST to https://api.logdash.io/ping/<httpMonitorId>, no auth, no body. Pro expects one every 15 seconds, so anything that pinged less often needs a heartbeat loop, plus a stamp file for scheduled jobs.',
           },
           {
             title: 'Turn the app off',
             text: 'Stop the container and let one check fail. The status page flips to down and the Telegram alert arrives with the status code, this time sent from somewhere that is not the machine you just turned off.',
           },
         ],
+      },
+      { type: 'heading', text: 'Uptime Kuma status page API and badges' },
+      {
+        type: 'paragraph',
+        text: 'Kuma has both, with caveats. Its badges cover status, uptime, ping and certificate expiry, and the Badge Maker builds the URL for you. Its status page JSON lives under /api/status-page, but the wiki says that API is for Kuma itself and not officially supported. Logdash publishes a versioned public endpoint, a typed client, a shadcn component and a Next.js starter, so a custom status page in your own design is a template away. Badges come per monitor: classic shows uptime over 24h, 7d, 30d or 90d, and status and card come in light or dark.',
+      },
+      {
+        type: 'code',
+        language: 'bash',
+        title: 'terminal',
+        code: `# The whole status page as JSON, no key
+curl https://api.logdash.io/v1/status_pages/your-status-page-id
+
+# One monitor's badge: classic style, 30-day uptime by default.
+# your-badge-key is that monitor's id in the JSON above.
+curl -o uptime.svg \\
+  https://logdash.io/d/your-status-page-id/badges/your-badge-key.svg`,
       },
       {
         type: 'comparison',
@@ -260,6 +277,12 @@ async def health():
             them: 'The entire point, one container',
             winner: 'them',
           },
+          {
+            feature: 'Status page API',
+            logdash: 'Versioned public JSON, typed client, component',
+            them: 'Internal endpoints, not officially supported',
+            winner: 'logdash',
+          },
         ],
       },
       {
@@ -275,7 +298,7 @@ async def health():
       { type: 'heading', text: 'What migrating involves' },
       {
         type: 'paragraph',
-        text: 'No importer, and for most people that is fine because the list is a dozen URLs. Copy them across, swap the Kuma push URLs in your jobs for the Logdash ping URL, and leave Kuma running for a week alongside. Two monitors watching the same endpoint costs nothing and settles the argument. The history does not come with you, so if you quote an uptime figure to customers, screenshot the Kuma dashboard before you shut it down.',
+        text: 'No importer, and for a dozen URLs that is fine. Copy them across, rewire the push jobs as above, and run both for a week. The history does not come with you, so if you quote an uptime figure to customers, screenshot the Kuma dashboard first.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -306,7 +329,7 @@ async def health():
           'Gatus when they want checks defined in YAML next to the app, Healthchecks for cron, and a hosted monitor once they have had an outage where Kuma was on the same host as the thing that broke.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'pingdom',
@@ -477,7 +500,7 @@ async def health():
       },
       {
         type: 'paragraph',
-        text: 'Logdash does the narrow version on purpose. HTTP checks with status code and response time, cron-scheduled intervals, push heartbeats for background jobs, a public status page with a custom domain on Pro, and alerts on Telegram or a webhook. No schedules, no escalation ladders, no acknowledgement tracking. If someone has to be woken in a defined order at 4am and it matters that the second name gets called when the first one sleeps through, that is a real requirement and Better Stack has it.',
+        text: 'Logdash does the narrow version on purpose. HTTP checks with status code and response time, push heartbeats for background jobs, a public status page with a custom domain on Pro, and alerts on Telegram or a webhook. No schedules, no escalation ladders, no acknowledgement tracking. If the second name has to get called when the first one sleeps through, that is a real requirement and Better Stack has it.',
       },
       { type: 'heading', text: 'The health check the monitor reads' },
       {
@@ -511,6 +534,24 @@ async def health():
           },
         ],
       },
+      { type: 'heading', text: 'Better Stack status page API alternative' },
+      {
+        type: 'paragraph',
+        text: 'Better Stack already exposes its pages. Add /index.json to any status page URL and you get public JSON with no token, and the authenticated API manages pages, resources and status reports. So the API is not the edge. Logdash serves a published page at /v1/status_pages/:id with no key and open CORS, so a browser can call it straight from your site. On top of it ships a typed client, a status page component for React or Svelte that follows your shadcn theme, and a Next.js starter. Better Stack wins on writes: its API posts status reports, and Logdash has no incidents to post.',
+      },
+      {
+        type: 'code',
+        language: 'bash',
+        title: 'terminal',
+        code: `# Better Stack: any status page as public JSON
+curl https://status.example.com/index.json
+
+# Logdash: the same idea, no key
+curl https://api.logdash.io/v1/status_pages/your-status-page-id
+
+# Then the page itself, as a component in your Svelte app
+npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
+      },
       {
         type: 'comparison',
         title: 'Logdash vs Better Stack',
@@ -536,9 +577,9 @@ async def health():
           },
           {
             feature: 'Heartbeats for background jobs',
-            logdash: 'A public POST, no auth header',
-            them: 'Heartbeat monitors included',
-            winner: 'tie',
+            logdash: 'Pro only, a ping every 15 seconds, no grace period',
+            them: 'Heartbeat monitors with a period and grace',
+            winner: 'them',
           },
           {
             feature: 'Cost at four services and one person',
@@ -596,10 +637,15 @@ async def health():
       {
         question: 'Does Logdash have a status page?',
         answer:
-          'Yes, a public page per service showing its uptime history, with a custom domain available on Pro.',
+          'Yes, a hosted page with uptime history per monitor and a custom domain on Pro. The same data is public JSON, so you can also build the page into your own site.',
+      },
+      {
+        question: 'Is there a Better Stack status page API alternative?',
+        answer:
+          'Logdash serves every published status page at GET https://api.logdash.io/v1/status_pages/:id, no key needed, with a typed client on npm as @logdash/status. It is read-only, so status reports stay a Better Stack feature.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'cronitor',
@@ -622,38 +668,35 @@ async def health():
       },
       {
         type: 'paragraph',
-        text: 'Logdash puts them on one service: a push monitor for the job, an HTTP monitor for the API, and logs and metrics from the same app through an SDK. The heartbeat is a plain POST with no auth header and no body, so it fits on the end of a crontab line without installing a client. One thing to know up front - Logdash expects a heartbeat inside each check window, so push monitors suit jobs that run frequently rather than a weekly backup.',
+        text: 'Logdash puts them on one service: a push monitor for the job, an HTTP monitor for the API, and logs and metrics from the same app through an SDK. The ping is a plain POST with no auth header and no body. Know the catch up front. Push monitors are on Pro and expect a ping in every 15-second window, with no schedule and no grace setting, so a job that pings once per run, even every minute, reads as down between runs. A scheduled job leaves a stamp when it succeeds, and a heartbeat line pings every 5 seconds while the stamp is fresh.',
       },
-      { type: 'heading', text: 'Ping from the crontab line' },
+      { type: 'heading', text: 'A stamp and a heartbeat in the crontab' },
       {
         type: 'code',
         language: 'bash',
         title: 'crontab -e',
-        code: `# Drain the outbox every minute. The && means a failed run stays silent,
-# and silence is what trips the monitor.
-* * * * * /srv/app/bin/drain-outbox && curl -fsS -m 10 -X POST \\
-  https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab
+        code: `# Once: mkdir -p /var/lib/heartbeat
 
-# Same idea from inside a script, after the work is done.
-#!/usr/bin/env bash
-set -euo pipefail
-/srv/app/bin/drain-outbox
-curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
+# The job. The stamp moves only when it exits 0.
+*/15 * * * * /srv/app/bin/drain-outbox && touch /var/lib/heartbeat/drain-outbox
+
+# The heartbeat. Pings every 5 seconds while the stamp is under 20 minutes old.
+* * * * * for i in $(seq 12); do find /var/lib/heartbeat/drain-outbox -mmin -20 2>/dev/null | grep -q . && curl -fsS -m 4 -o /dev/null -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab; sleep 5; done`,
       },
       {
         type: 'steps',
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service, switch the monitor to push, and copy the ping URL. The id in that URL is the monitor id and it is the only thing the endpoint needs.',
+            text: 'On Pro, add a service, switch the monitor to push, and copy the ping URL. The id in that URL is the only thing the endpoint needs.',
           },
           {
-            title: 'Append the curl',
-            text: 'Put it after the command with && so a failed run never reports success. Anything that can make an HTTP request works: cron, a systemd timer, a GitHub Action, a Kubernetes CronJob.',
+            title: 'Paste both lines',
+            text: 'Add the job and the heartbeat to the crontab, then run the job once by hand so the stamp exists. The -mmin value is the schedule plus the lateness you accept.',
           },
           {
             title: 'Comment the job out',
-            text: 'Disable it for one cycle and let the heartbeat go missing. The monitor records the miss and the Telegram alert arrives telling you the job stopped running, which is the failure mode that never shows up in your error tracker.',
+            text: 'Connect a Telegram channel and disable the job. Once the stamp passes 20 minutes the pings stop, and within 30 seconds Telegram tells you the job stopped running, the failure mode that never shows up in your error tracker.',
           },
         ],
       },
@@ -664,7 +707,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
         rows: [
           {
             feature: 'Schedule awareness',
-            logdash: 'Alerts on a missing heartbeat',
+            logdash: 'None, the stamp age in your crontab stands in',
             them: 'Parses the schedule and knows when a run is late',
             winner: 'them',
           },
@@ -694,9 +737,9 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
           },
           {
             feature: 'Free plan',
-            logdash: 'Five services, checks every 5 minutes',
+            logdash: 'HTTP checks only, push monitors need Pro',
             them: 'Free tier for a small number of monitors',
-            winner: 'tie',
+            winner: 'them',
           },
           {
             feature: 'Source code',
@@ -710,7 +753,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
         type: 'pick-them',
         them: 'Cronitor',
         reasons: [
-          'Your jobs run nightly or weekly. Cronitor knows the schedule and applies a grace period; Logdash wants a heartbeat inside every check window.',
+          'You want schedule-based cron monitoring, where it is the better pick today. Cronitor reads the schedule and applies a grace period. Logdash needs a stamp and a heartbeat line per job.',
           'You have a lot of jobs. Reading a crontab and creating the monitors automatically beats pasting curl lines by hand across ten hosts.',
           'You need to know a run started, ran too long, or exited non-zero, not only that it finished. Logdash sees one ping and nothing around it.',
           'You want the job output attached to the alert so you can read the traceback without opening an SSH session first.',
@@ -719,7 +762,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
       { type: 'heading', text: 'Moving a crontab across' },
       {
         type: 'paragraph',
-        text: 'One line per job. Swap the Cronitor ping URL for the Logdash one and keep the && so a failing command stays quiet instead of reporting a clean run. Two curls on a single line costs nothing, so run both for a week and check they agree about which runs happened. What does not transfer is the schedule parsing, so plan the frequent jobs onto push monitors and leave the nightly ones where they are until you have watched the new alerts fire.',
+        text: 'Two lines per job, not a URL swap: the && touch on the job and a heartbeat that reads the stamp. Leave the Cronitor ping in place for a week and check both agree about which runs happened. The schedule parsing does not transfer, so you set each threshold by hand, and the ping endpoint allows 300 requests a minute per IP, which caps one host at 25 heartbeat lines. If that is more plumbing than you want, keep the jobs on Cronitor and move only the uptime checks.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -732,7 +775,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
       {
         question: 'Is there a free Cronitor alternative?',
         answer:
-          'Logdash has a free plan covering five services with HTTP checks every 5 minutes. Push heartbeat monitors are a Pro feature, so the free plan gets you uptime checks rather than job monitoring.',
+          'Logdash has a free plan covering five services with HTTP checks every 5 minutes. Push monitors are a Pro feature. On free, a job can record its last success in your app, and an HTTP monitor checks a route that returns 503 once that gets too old.',
       },
       {
         question: 'Can Logdash monitor cron jobs and websites together?',
@@ -745,13 +788,13 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
           'POST https://api.logdash.io/ping/<httpMonitorId>. It is public, so there is no auth header, no body and no query string to get wrong.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'healthchecks-io',
     h1: 'Healthchecks.io alternative for heartbeats and uptime checks in one place',
     answer:
-      'Logdash puts cron heartbeats and HTTP uptime checks in the same hosted dashboard, which is the better trade unless you want to self-host, because Healthchecks.io self-hosts properly today and Logdash does not.',
+      'Logdash puts heartbeats and HTTP uptime checks in the same hosted dashboard, which is the better trade when you want both on one timeline, while Healthchecks.io stays the better pick for schedule-based cron jobs and for self-hosting.',
     meta: {
       title: 'Healthchecks.io alternative | Logdash',
       description:
@@ -770,31 +813,34 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/6710b3f2c9a14e0021d9f8ab`,
         type: 'paragraph',
         text: 'The honest part first. Healthchecks.io is open source and the self-hosted build is the same code that runs the hosted service, so you can have it on your own box tonight. Logdash is AGPL-3.0 licensed with the source on GitHub, but self-hosting is not a one-command install today. It runs locally for development, and production self-hosting is open work tracked on GitHub. If self-hosting is why you are reading this, stay where you are.',
       },
-      { type: 'heading', text: 'Ping Logdash from the job you already run' },
+      { type: 'heading', text: 'Watch the job you already run' },
       {
         type: 'code',
         language: 'bash',
         title: 'crontab',
-        code: `# A push monitor takes a plain POST. No auth header, no body.
-curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
+        code: `# Once: mkdir -p /var/lib/heartbeat
 
-# Chained behind && so a failed run stays silent and the monitor goes red.
-* * * * * /srv/app/bin/drain-queue && curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234`,
+# The job, chained behind && so only a clean exit moves the stamp.
+*/5 * * * * /srv/app/bin/drain-queue && touch /var/lib/heartbeat/drain-queue
+
+# A push monitor wants a ping in every 15-second window, so this line pings
+# every 5 seconds while the stamp is under 10 minutes old. Plain POST, no auth.
+* * * * * for i in $(seq 12); do find /var/lib/heartbeat/drain-queue -mmin -10 2>/dev/null | grep -q . && curl -fsS -m 4 -o /dev/null -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234; sleep 5; done`,
       },
       {
         type: 'steps',
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service, set the monitor to push mode and copy the monitor id out of the ping URL.',
+            text: 'On Pro, add a service, set the monitor to push mode and copy the monitor id out of the ping URL.',
           },
           {
-            title: 'Ping at the end of the job',
-            text: 'Append the curl to the command in your crontab. Put it behind && so a non-zero exit never reports success.',
+            title: 'Stamp the job, ping from a heartbeat',
+            text: 'Append && touch to the job so a non-zero exit never moves the stamp, then add the heartbeat line. Run the job once by hand so the stamp exists.',
           },
           {
             title: 'Attach Telegram',
-            text: 'Connect a Telegram channel to the monitor. The first check window that passes without a ping sends the alert to Telegram.',
+            text: 'Connect a Telegram channel to the monitor. Once the stamp goes stale the pings stop, and the next empty 15-second window sends the alert to Telegram.',
           },
         ],
       },
@@ -811,14 +857,13 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
           },
           {
             feature: 'Heartbeat signals',
-            logdash: 'One POST when the job finishes',
+            logdash: 'A ping in every 15-second window, silence is the failure',
             them: 'Ping, plus start, fail and exit code signals',
             winner: 'them',
           },
           {
             feature: 'Expected schedule per job',
-            logdash:
-              'The monitor expects a ping inside every check window on your plan',
+            logdash: 'None, the stamp age in your crontab stands in',
             them: 'A cron expression and a grace period per check',
             winner: 'them',
           },
@@ -836,9 +881,15 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
           },
           {
             feature: 'Public status page',
-            logdash: 'Public dashboard, custom domain on Pro',
-            them: 'Status badges you can embed',
+            logdash: 'Hosted page, plus public JSON for your own build',
+            them: 'None, badges instead',
             winner: 'logdash',
+          },
+          {
+            feature: 'Status badges',
+            logdash: 'SVG badge per monitor, in 3 styles',
+            them: 'SVG, JSON and Shields.io badges',
+            winner: 'tie',
           },
           {
             feature: 'Open source',
@@ -853,7 +904,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
         them: 'Healthchecks.io',
         reasons: [
           'You want to self-host in production. Their self-hosted build is the same code as the hosted service. Ours is not there yet, and saying otherwise would waste your evening.',
-          'Your jobs run on their own odd schedules. A cron expression and a grace period per check is the right model for a backup that runs at 03:00 on Sundays, and Logdash does not have that.',
+          'Your jobs run on schedules. A cron expression and a grace period per check is the right model for a backup that runs at 03:00 on Sundays, which makes Healthchecks.io the better pick for cron monitoring today.',
           'You need the alert somewhere Logdash cannot send it. A webhook bridge you build and then maintain is still a thing you maintain.',
           'Nothing you own answers HTTP. If you only ever watch jobs, half of Logdash is dead weight.',
         ],
@@ -861,7 +912,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
       { type: 'heading', text: 'What moving over actually takes' },
       {
         type: 'paragraph',
-        text: 'Per job it is one line: swap the ping URL and keep the same shell. The schedule model is the part that takes thought. A Logdash push monitor wants to hear from you inside every check window rather than by a deadline you set, so anything that runs less often than the window needs rethinking. Most people move the frequent jobs first, leave the nightly ones on Healthchecks.io, and decide later. Keep both pinging for a week while you do it. A duplicate heartbeat costs nothing, and running them side by side is how you find out that one of your jobs has been quietly failing since a deploy in March.',
+        text: 'Per job it is two lines, not a URL swap: the && touch on the job and a heartbeat that turns the age of the stamp into pings. A Logdash push monitor wants a ping in every 15-second window rather than by a deadline you set, so no scheduled job can ping it directly, every-minute jobs included. Workers that loop all day are the easy move: a canary that pings every 5 to 10 seconds. Keep both running for a week while you do it. A duplicate heartbeat costs nothing, and running them side by side is how you find out that one of your jobs has been quietly failing since a deploy in March.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -879,7 +930,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
       {
         question: 'Does Logdash do cron job monitoring?',
         answer:
-          'Yes, through push monitors. Your job sends a POST to https://api.logdash.io/ping/<monitorId> when it finishes, and the monitor goes down if a check window passes without one. There is no per-job cron expression or grace period, which is the main difference.',
+          'Yes, through push monitors on Pro, with one difference that matters. A monitor goes down on the first 15-second window without a POST to https://api.logdash.io/ping/<monitorId>, and there is no cron expression or grace period. So a job touches a stamp file when it succeeds, and a heartbeat line pings while the stamp is fresh.',
       },
       {
         question: 'Which alert channels does Logdash support?',
@@ -887,7 +938,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
           'Telegram and webhooks. That is the complete list. Everything else has to go through the webhook, which means you build and keep the bridge.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'checkly',
@@ -910,7 +961,7 @@ curl -fsS -m 10 -X POST https://api.logdash.io/ping/68b4c1f0e3a2d5c7b9f01234
       },
       {
         type: 'paragraph',
-        text: 'Logdash does not do browser synthetics at all. It will not click a button, fill a form or run your specs, and there is no roadmap where it does. It hits a URL on a schedule, records the status code and the response time, keeps the history and messages you when that changes. If your monitoring-as-code repo is really four HTTP checks written in TypeScript, this is the smaller version of it. There is also a push monitor for the jobs that have no URL at all, so the nightly export ends up in the same list as the API.',
+        text: 'Logdash does not do browser synthetics at all. It will not click a button, fill a form or run your specs, and there is no roadmap where it does. It hits a URL on a schedule, records the status code and the response time, keeps 90 days of hourly history and messages you when that changes. If your monitoring-as-code repo is really four HTTP checks written in TypeScript, this is the smaller version of it. There is also a push monitor for the jobs that have no URL at all, so the queue worker ends up in the same list as the API.',
       },
       { type: 'heading', text: 'A health endpoint worth checking' },
       {
@@ -970,7 +1021,7 @@ app.get('/health', async (_req, res) => {
           },
           {
             feature: 'What you maintain',
-            logdash: 'A URL and an interval',
+            logdash: 'A URL, nothing else',
             them: 'A test suite that has to stay green',
             winner: 'logdash',
           },
@@ -1030,10 +1081,10 @@ app.get('/health', async (_req, res) => {
       {
         question: 'Can Logdash monitor cron jobs as well?',
         answer:
-          'Yes. A push monitor gives you a URL your job POSTs to when it finishes, and the monitor goes down when a check window passes with no ping.',
+          'Yes, on Pro, with a push monitor that goes down on the first 15-second window without a ping. A worker pings from its loop. A scheduled job touches a stamp file and a heartbeat pings while it is fresh, because one ping per run would read as down between runs.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'statuscake',
@@ -1056,7 +1107,7 @@ app.get('/health', async (_req, res) => {
       },
       {
         type: 'paragraph',
-        text: 'Here is the Logdash free plan without the marketing. Each service gets one HTTP monitor, checked every five minutes, recording status code and response time. Alerts go to Telegram or a webhook, both free, with no per-channel upsell. Your dashboard can be made public as a status page on a logdash.io URL, and a custom domain is on Pro. Logs and metrics arrive from the same SDK into the same service, with a day of log retention on free. Push monitors for cron jobs and faster check intervals are paid, and there is no free path to them.',
+        text: 'Here is the Logdash free plan without the marketing. Each service gets one HTTP monitor, checked every five minutes, recording status code and response time. Alerts go to Telegram or a webhook, both free, though the free webhook is a bare GET with no body or custom headers. Your dashboard can be made public as a status page on a logdash.io URL, and a custom domain is on Pro. Logs and metrics arrive from the same SDK into the same service, with a day of log retention on free. Push monitors for cron jobs and faster check intervals are paid, and there is no free path to them.',
       },
       { type: 'heading', text: 'The endpoint the monitor will hit' },
       {
@@ -1115,7 +1166,7 @@ async def health():
           },
           {
             feature: 'Jobs that have no URL',
-            logdash: 'Push monitors: the job POSTs to Logdash when it finishes',
+            logdash: 'Push monitors on Pro, a ping every 15 seconds',
             them: 'Checks reach out to a URL you own',
             winner: 'logdash',
           },
@@ -1170,7 +1221,7 @@ async def health():
       {
         question: 'Are alerts included on the free plan?',
         answer:
-          'Yes. Telegram and webhooks are both free, and they are also the only two channels on any plan.',
+          'Yes. Telegram and webhooks are both free, and they are also the only two channels on any plan. On free the webhook is a plain GET with no body, so it says that something changed but not what.',
       },
       {
         question: 'Can I self-host Logdash?',
@@ -1178,7 +1229,7 @@ async def health():
           'Not for production yet. The repo runs locally for development and a proper install is open work tracked on GitHub.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'site24x7',
@@ -1201,7 +1252,7 @@ async def health():
       },
       {
         type: 'paragraph',
-        text: 'Logdash has one shape. A service has a URL, the monitor hits it on a schedule, and it records the status code and the response time. Anything without a URL gets a push monitor and POSTs to Logdash when it finishes. Alerts go to Telegram or a webhook. Logs and metrics come from the same SDK into the same service, and the dashboard can be made public as a status page. Each service carries one monitor, so four checks means four services, which is how you would have grouped them anyway. There is no agent and nothing to size.',
+        text: 'Logdash has one shape. A service has a URL, the monitor hits it on a schedule, and it records the status code and the response time. Anything without a URL gets a push monitor on Pro, pinged every few seconds from a loop next to the work. Alerts go to Telegram or a webhook. Logs and metrics come from the same SDK into the same service, and the dashboard can be made public as a status page. Each service carries one monitor, so four checks means four services, which is how you would have grouped them anyway. There is no agent and nothing to size.',
       },
       { type: 'heading', text: 'What the monitor needs from your app' },
       {
@@ -1261,7 +1312,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
           },
           {
             feature: 'Signup to a working check',
-            logdash: 'Minutes. One URL and an interval.',
+            logdash: 'Minutes. One URL, nothing else.',
             them: 'Longer, with more to configure first',
             winner: 'logdash',
           },
@@ -1324,7 +1375,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
           'Not in production yet. It runs locally for development and a supported production install is tracked on GitHub, so the hosted version is the only real option today.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'freshping',
@@ -1339,7 +1390,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
     blocks: [
       {
         type: 'paragraph',
-        text: 'Freshping is gone. Freshworks disabled free accounts on 6 March 2026, stopped processing renewals the same day, and deleted account data once the export window closed on 4 June 2026. The deprecation FAQ put the reason plainly: supporting Freshping was no longer part of the go forward plan. There is no successor product inside Freshworks and nobody was migrated anywhere automatically.',
+        text: 'Freshping is gone. Freshworks disabled free accounts on 6 March 2026 and deleted their data once the export window closed on 4 June 2026. No renewal has been processed since that date, so a paid plan runs to its end date and stops. The deprecation FAQ put the reason plainly: supporting Freshping was no longer part of the go forward plan. There is no successor product inside Freshworks and nobody was migrated anywhere automatically.',
       },
       {
         type: 'paragraph',
@@ -1397,7 +1448,7 @@ app.listen(3000);`,
           {
             feature: 'Still running today',
             logdash: 'Yes',
-            them: 'No, accounts disabled 6 March 2026',
+            them: 'No, free accounts off since 6 March 2026, no renewals',
             winner: 'logdash',
           },
           {
@@ -1426,7 +1477,7 @@ app.listen(3000);`,
           },
           {
             feature: 'Cron and background job heartbeats',
-            logdash: 'Push monitors, POST to a ping URL',
+            logdash: 'Push monitors on Pro, a ping every 15 seconds',
             them: 'Not offered',
             winner: 'logdash',
           },
@@ -1477,7 +1528,7 @@ app.listen(3000);`,
           '5 minutes on the free plan, 1 minute on Builder at $9 a month, 15 seconds on Pro at $15. Freshping was 1 minute on every plan including the free one.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'hyperping',
@@ -1572,8 +1623,14 @@ func main() {
           },
           {
             feature: 'Cron and background job heartbeats',
-            logdash: 'POST to a ping URL, no auth header, no body',
+            logdash: 'Pro only, a ping every 15 seconds, no grace',
             them: 'Heartbeat URLs with a grace window',
+            winner: 'them',
+          },
+          {
+            feature: 'Status page on the free plan',
+            logdash: 'One hosted page',
+            them: 'One hosted page',
             winner: 'tie',
           },
           {
@@ -1622,12 +1679,12 @@ func main() {
       {
         question: 'Does Logdash do status pages?',
         answer:
-          'Yes. Every plan includes public status pages, and Pro serves them from your own domain. They are not as configurable as Hyperping status pages.',
+          'Yes. Every plan includes a hosted status page, and Pro serves it from your own domain. The hosted page is less configurable than a Hyperping page, where you set logo, colours, fonts and theme. The API and the copy-paste component are fully yours, so your own build can look like anything.',
       },
       {
         question: 'Can I monitor cron jobs like Hyperping heartbeats?',
         answer:
-          'Yes. Create a push monitor and have the job send POST https://api.logdash.io/ping/<httpMonitorId> when it finishes. No auth header and no body. Miss the window and the monitor goes down.',
+          'Yes, on Pro, but not one ping per run. A push monitor expects POST https://api.logdash.io/ping/<httpMonitorId> in every 15-second window, with no grace setting. So the job touches a stamp file when it succeeds and a heartbeat line pings while the stamp is fresh. For plain schedule-based heartbeats, Hyperping is simpler.',
       },
       {
         question: 'Can I get alerts without email?',
@@ -1640,7 +1697,7 @@ func main() {
           'Not properly yet. The code is AGPL-3.0 and runs locally for development, but a production self-host is not a one command install and is still tracked as open work on GitHub.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'updown-io',
@@ -1697,7 +1754,7 @@ async def health(response: Response):
           },
           {
             title: 'Cover the jobs updown.io pulses',
-            text: 'For anything without a public URL, create a push monitor and POST to https://api.logdash.io/ping/<httpMonitorId> at the end of the job. No auth header, no body.',
+            text: 'For anything without a public URL, create a push monitor on Pro. It wants a POST to https://api.logdash.io/ping/<httpMonitorId> in every 15-second window, so a worker pings from its loop and a scheduled job touches a stamp that a heartbeat line reads.',
           },
           {
             title: 'Add Telegram and break something',
@@ -1729,9 +1786,9 @@ async def health(response: Response):
           },
           {
             feature: 'Cron and background job heartbeats',
-            logdash: 'Push monitors, POST to a ping URL',
-            them: 'Pulse checks',
-            winner: 'tie',
+            logdash: 'Push monitors on Pro, a ping every 15 seconds',
+            them: 'Pulse checks with a period you set',
+            winner: 'them',
           },
           {
             feature: 'Application logs from the failing service',
@@ -1789,10 +1846,10 @@ async def health(response: Response):
       {
         question: 'Can I get alerts without email?',
         answer:
-          'Yes. Logdash only sends Telegram messages and webhooks. There is no email channel at all, so if you want Slack or Discord you route the webhook there yourself.',
+          'Yes. Logdash only sends Telegram messages and webhooks. There is no email channel at all, so Slack or Discord means a small relay behind the webhook, on Builder or Pro, because the free webhook is a GET with no body.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'hetrixtools',
@@ -1850,7 +1907,7 @@ try {
           },
           {
             title: 'Cover the cron jobs the agent never watched',
-            text: 'Create a push monitor for each scheduled job and POST to https://api.logdash.io/ping/<httpMonitorId> when it completes. No auth header, no body. A missed window marks the monitor down.',
+            text: 'On Pro, create a push monitor per scheduled job. It expects a POST to https://api.logdash.io/ping/<httpMonitorId> in every 15-second window, so the job touches a stamp file when it succeeds and a heartbeat line pings while the stamp is fresh.',
           },
           {
             title: 'Point the alerts at Telegram',
@@ -1888,7 +1945,7 @@ try {
           },
           {
             feature: 'Cron and background job heartbeats',
-            logdash: 'Push monitors, POST to a ping URL',
+            logdash: 'Push monitors on Pro, a ping every 15 seconds',
             them: 'Not offered',
             winner: 'logdash',
           },
@@ -1950,7 +2007,7 @@ try {
           'Not in production yet. Logdash is AGPL-3.0 licensed and runs locally for development, but a supported self-hosted deployment is still open work tracked on GitHub.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'gatus',
@@ -1973,7 +2030,7 @@ try {
       },
       {
         type: 'paragraph',
-        text: 'Logdash checks your endpoints from outside your network. There is no config file, which is a genuine loss: no diff, no review, no config in git. What you get is an HTTP monitor with a URL, an interval, status code and response time history, a public status page on your own domain, and alerts to Telegram or a webhook. Two channels, not forty. Gatus ships providers for PagerDuty, Opsgenie, Slack and email, and Logdash does not.',
+        text: 'Logdash checks your endpoints from outside your network. There is no config file, which is a genuine loss: no diff, no review, no config in git. What you get is an HTTP monitor with a URL, status code and response time history, a public status page on your own domain, and alerts to Telegram or a webhook. Two channels, not forty. Gatus ships providers for PagerDuty, Opsgenie, Slack and email, and Logdash does not.',
       },
       {
         type: 'paragraph',
@@ -1996,14 +2053,14 @@ try {
       },
       {
         type: 'paragraph',
-        text: 'Gatus points at that with an endpoints entry, an interval and a condition on the status code. Logdash asks for the same three things in a form. The endpoint does not change, so you can run both against it for a week before you turn either one off.',
+        text: 'Gatus points at that with an endpoints entry, an interval and a condition on the status code. Logdash asks for the URL, takes the interval from your plan and treats any 2xx or 3xx as up. The endpoint does not change, so you can run both against it for a week.',
       },
       {
         type: 'steps',
         items: [
           {
             title: 'Add the monitor',
-            text: 'Paste the health URL and pick an interval. The first check runs immediately, so within seconds you know whether the URL answers from outside your own network.',
+            text: 'Paste the health URL. The first check runs immediately, so within seconds you know whether the URL answers from outside your own network.',
           },
           {
             title: 'Publish the status page',
@@ -2028,7 +2085,8 @@ try {
           },
           {
             feature: 'Public status page',
-            logdash: 'Hosted page on your own domain',
+            logdash:
+              'Hosted page on your own domain, or your own build via API',
             them: 'Expose the Gatus dashboard yourself',
             winner: 'logdash',
           },
@@ -2077,7 +2135,7 @@ try {
       { type: 'heading', text: 'What moving actually looks like' },
       {
         type: 'paragraph',
-        text: 'Read the endpoints block out of your config and recreate each url and interval as a monitor. Leave Gatus running while you do it, watch both for a week, then compare the two incident timelines and delete the one you trust less. Anything Gatus watches that is not HTTP has no equivalent here, so keep a small instance around for those.',
+        text: 'Read the endpoints block out of your config and recreate each url as a monitor. Leave Gatus running while you do it, watch both for a week, then compare what each one caught and delete the one you trust less. Anything Gatus watches that is not HTTP has no equivalent here, so keep a small instance around for those.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -2103,7 +2161,7 @@ try {
           'No. Logdash checks HTTP status codes and response time and accepts push heartbeats. Certificate expiry, domain expiry, DNS, TCP and ICMP are Gatus-only.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'upptime',
@@ -2126,41 +2184,40 @@ try {
       },
       {
         type: 'paragraph',
-        text: 'The second is the repository. The workflows commit their results back, and every incident is a GitHub issue. The commit graph and the issue list stop being a record of your work. If you watch that repo, monitoring noise arrives in the same inbox as pull requests, and the thing you actually wanted - response time over the last month - is spread across thousands of commits.',
+        text: 'The second is the repository. The workflows commit their results back and every incident is a GitHub issue, so monitoring noise lands in the same inbox as pull requests, and response time over the last month is spread across thousands of commits.',
       },
       {
         type: 'paragraph',
-        text: 'Logdash runs the checks itself on the interval you set and keeps the history without committing anything. Two things Upptime has that Logdash does not: it is free at any scale, and it is genuinely yours. Logdash has a free Hobby plan with paid tiers above it, and while it is AGPL-3.0 licensed, production self-hosting is not a one-command install yet. It runs locally for development and the rest is tracked on GitHub.',
+        text: 'Logdash runs the checks itself, every minute on Builder and every 15 seconds on Pro, and keeps 90 days of hourly history without committing anything. Two things Upptime has that Logdash does not: it is free at any scale, and it is genuinely yours. Logdash has a free Hobby plan with paid tiers above it, and while it is AGPL-3.0 licensed, production self-hosting is not a one-command install yet.',
       },
-      { type: 'heading', text: 'Heartbeat from the Action you already have' },
+      { type: 'heading', text: 'A status page you still deploy yourself' },
       {
         type: 'code',
-        language: 'yaml',
-        title: '.github/workflows/nightly.yml',
-        code: `jobs:
-  nightly-sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: ./bin/nightly-sync
+        language: 'bash',
+        title: 'terminal',
+        code: `npx create-next-app@latest status-page \\
+  --example https://github.com/logdash-io/logdash.io \\
+  --example-path templates/status-page-next
+cd status-page
+cp .env.example .env.local
 
-      - name: Heartbeat
-        run: curl -fsS -X POST https://api.logdash.io/ping/<monitorId>`,
+# set LOGDASH_STATUS_PAGE_ID in .env.local, then
+npm run dev`,
       },
       {
         type: 'paragraph',
-        text: 'That endpoint is public and takes no body and no auth header. If the job stops running, or fails before it reaches the last step, the heartbeat never arrives and the monitor goes down. Upptime cannot watch a job that has no URL.',
+        text: 'That is the Logdash Next.js starter: one page, one component and a Tailwind theme you own, in your own repo. It renders on the server, refreshes at most once a minute, and its README has a one-click Vercel deploy. Logdash runs the checks and serves the data. The page, its styling and where it is hosted are yours, as they were with Upptime.',
       },
       {
         type: 'steps',
         items: [
           {
             title: 'Copy the sites list out of .upptimerc.yml',
-            text: 'Each url becomes one HTTP monitor. Set the interval you actually wanted instead of the five minute floor you were living with.',
+            text: 'Each url becomes one HTTP monitor, checked every minute on Builder or every 15 seconds on Pro instead of the five minute floor.',
           },
           {
             title: 'Turn on the public status page',
-            text: 'Add the monitors to a page and point your own domain at it. That replaces the GitHub Pages site, and nothing has to build on push.',
+            text: 'Add the monitors to a page and point your own domain at it, or deploy the starter above. Either replaces the GitHub Pages site.',
           },
           {
             title: 'Attach Telegram',
@@ -2175,13 +2232,13 @@ try {
         rows: [
           {
             feature: 'Minimum check interval',
-            logdash: 'The interval you set on the monitor',
+            logdash: '1 minute on Builder, 15 seconds on Pro',
             them: 'Five minutes, and Actions cron can start late',
             winner: 'logdash',
           },
           {
             feature: 'Cron and background jobs',
-            logdash: 'POST a heartbeat to a monitor URL',
+            logdash: 'Push heartbeats on Pro, one ping per check window',
             them: 'Not covered, Upptime pulls URLs',
             winner: 'logdash',
           },
@@ -2205,13 +2262,14 @@ try {
           },
           {
             feature: 'Where incidents live',
-            logdash: 'Incident timeline in the dashboard',
+            logdash: 'Failed checks in the uptime history, no incident posts',
             them: 'GitHub issues, commentable and searchable',
-            winner: 'tie',
+            winner: 'them',
           },
           {
             feature: 'Status page',
-            logdash: 'Hosted page on your own domain',
+            logdash:
+              'Hosted page on your own domain, or your own build via API',
             them: 'GitHub Pages site you style and deploy',
             winner: 'tie',
           },
@@ -2224,7 +2282,7 @@ try {
           'The bill is zero and it stays zero. If cost is the constraint, nothing here competes.',
           'Everything lives in a repo you control. No account to lose, no vendor to outlive.',
           'Five minutes is fine for most side projects. If nobody is woken up at 3am, the floor does not matter.',
-          'You want the status page in your own GitHub organisation, styled by you and deployed by you.',
+          'You want no outside data source at all. Logdash lets you style and deploy the page yourself, but the data still comes from Logdash. Upptime keeps the checks, the history and the page in your own GitHub organisation.',
         ],
       },
       { type: 'heading', text: 'What moving actually looks like' },
@@ -2256,7 +2314,7 @@ try {
           'They stay in the repo. Nothing imports them into Logdash, so archive the repository instead of deleting it if that incident history matters to you.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'instatus',
@@ -2283,7 +2341,7 @@ try {
       },
       {
         type: 'paragraph',
-        text: 'The rest of the difference is scope in both directions. Logdash also carries logs and metrics from eight SDKs, so the request that failed and the check that caught it sit in one dashboard. Instatus does not do logs. Going the other way, Instatus checks things Logdash cannot: ping, TCP, UDP and DNS. Logdash does HTTP status and response time plus push heartbeats for cron jobs, and that is where the list ends.',
+        text: 'Scope differs in both directions. Logdash carries logs and metrics from eight SDKs, so the failed request and the check that caught it sit in one dashboard. Instatus does not do logs. It does check things Logdash cannot: ping, TCP, UDP and DNS. Logdash stops at HTTP checks and push heartbeats for cron jobs.',
       },
       { type: 'heading', text: 'The endpoint the monitor calls' },
       {
@@ -2303,16 +2361,30 @@ def health(response: Response):
 
     return {"status": "ok"}`,
       },
+      { type: 'heading', text: 'Instatus API alternative' },
       {
         type: 'paragraph',
-        text: 'Cron jobs work the other way round. Instead of Logdash calling you, the job calls Logdash: a POST to https://api.logdash.io/ping/<monitorId> when it finishes. The endpoint is public, takes no body and no auth header, so it is one curl at the end of a script. If the job stops running, the heartbeat stops arriving and the monitor goes down. Instatus has cron monitors too, so this is not a reason to move on its own. It is a reason you lose nothing if you do.',
+        text: 'Instatus has an API too, two in fact. Every page serves public JSON at /v3/summary.json and /v3/components.json, and the REST API at api.instatus.com manages pages, incidents and subscribers with a bearer token. So an API is not what you gain by moving. Logdash serves one public, read-only endpoint, /v1/status_pages/:id, with uptime per monitor from 1 hour to 90 days, 90 daily buckets and the last 100 checks. What ships on top is the difference: a typed client with React and Svelte bindings, a component you copy into your app with one shadcn command, and a Next.js starter. Instatus wins on writes, since its API can open an incident and Logdash has no incidents at all.',
+      },
+      {
+        type: 'code',
+        language: 'typescript',
+        title: 'status.ts',
+        code: `import { fetchStatusPage } from '@logdash/status';
+
+const page = await fetchStatusPage('your-status-page-id');
+
+console.log(page.status); // 'operational' | 'degraded' | 'outage' | 'unknown'
+for (const monitor of page.monitors) {
+  console.log(monitor.name, monitor.status, monitor.uptime['30d']);
+}`,
       },
       {
         type: 'steps',
         items: [
           {
             title: 'Add the monitor',
-            text: 'Paste the health URL and pick an interval. The first check runs straight away, so you find out in seconds if the endpoint does not answer from outside.',
+            text: 'Paste the health URL. The first check runs straight away, then every 5 minutes on the free plan or every 15 seconds on Pro.',
           },
           {
             title: 'Publish the page',
@@ -2349,8 +2421,9 @@ def health(response: Response):
           },
           {
             feature: 'Custom domain on the page',
-            logdash: 'Point your own domain at it',
-            them: 'Point your own domain at it',
+            logdash:
+              'Hosted page on your own domain, or your own build via API',
+            them: 'Hosted page on your own domain, plus public JSON',
             winner: 'tie',
           },
           {
@@ -2367,7 +2440,7 @@ def health(response: Response):
           },
           {
             feature: 'Writing the incident',
-            logdash: 'Type the update on the page',
+            logdash: 'No incident posts, the page shows the checks',
             them: 'Templates and scheduled maintenance',
             winner: 'them',
           },
@@ -2410,8 +2483,13 @@ def health(response: Response):
         answer:
           'Yes, if it is on your own domain. Point it at the Logdash page when you are ready. Tell subscribers first, since the subscriber list itself does not transfer.',
       },
+      {
+        question: 'Is there an Instatus API alternative?',
+        answer:
+          'GET https://api.logdash.io/v1/status_pages/:id returns a published Logdash page as JSON, with no key. The API docs live at logdash.io/docs/status-pages. It is read-only, so incidents and subscribers stay an Instatus strength.',
+      },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
   {
     slug: 'atlassian-statuspage',
@@ -2430,15 +2508,15 @@ def health(response: Response):
       },
       {
         type: 'paragraph',
-        text: 'It also checks nothing. Atlassian says so in their own docs: Statuspage does not do any direct monitoring of your websites or servers. Components change colour when a person clicks them, when a third-party integration says so, or when something calls the API. The real stack is a checker, plus Statuspage, plus the glue between them, and the glue is the part that fails quietly. The token expires, the automation stops firing, and the page says everything is fine right through an outage.',
+        text: 'It also checks nothing. Atlassian says so in their own docs: Statuspage does not do any direct monitoring of your websites or servers. Components change colour when a person clicks them, when an integration says so, or when something calls the API. The real stack is a checker, plus Statuspage, plus the glue between them, and the glue fails quietly. The token expires, the automation stops firing, and the page says everything is fine right through an outage.',
       },
       {
         type: 'paragraph',
-        text: 'Logdash removes the middle piece. The HTTP monitor that decides your API is down is the same object the public page renders. There is no integration to keep authorised, because nothing sits between the check and the page. The Telegram or webhook alert goes out at the same moment.',
+        text: 'Logdash removes the middle piece. The HTTP monitor that decides your API is down is the same object the public page renders, and the Telegram or webhook alert goes out at the same moment. There is no integration to keep authorised.',
       },
       {
         type: 'paragraph',
-        text: 'What you give up is real and worth listing. Statuspage has email and SMS subscribers, audience-specific pages, component groups, scheduled maintenance windows and first-class links into Jira, Opsgenie and PagerDuty. Logdash has a public page showing your monitors on a custom domain. If your status page has thousands of subscribers and an SLA attached to it, stay where you are.',
+        text: 'What you give up is real. Statuspage has email and SMS subscribers, audience-specific pages, component groups, scheduled maintenance and links into Jira, Opsgenie and PagerDuty. Logdash has a hosted page on a custom domain, and the same data as JSON for a page you build yourself. If your status page has thousands of subscribers and an SLA attached, stay where you are.',
       },
       { type: 'heading', text: 'The check behind the component' },
       {
@@ -2461,15 +2539,11 @@ app.get('/health', async (_req, res) => {
 app.listen(3000);`,
       },
       {
-        type: 'paragraph',
-        text: 'There is a second shape for the things that have no URL. Nightly billing runs, queue workers, sync scripts. Give each one a monitor and have the job POST to https://api.logdash.io/ping/<monitorId> when it finishes. That endpoint is public and takes no body and no auth header, so it is one line at the end of the script. Miss the window and the monitor goes down like any other, which is a class of failure a status page with no checker behind it will never notice.',
-      },
-      {
         type: 'steps',
         items: [
           {
             title: 'Point a monitor at the endpoint',
-            text: 'One URL, one interval. Status code and response time are recorded from the first check, so you have history before you have a page.',
+            text: 'One URL, checked every 5 minutes on the free plan and every 15 seconds on Pro. Status code and response time are recorded from the first check, so you have history before you have a page.',
           },
           {
             title: 'Publish the page',
@@ -2480,6 +2554,24 @@ app.listen(3000);`,
             text: 'Attach a Telegram channel to the monitor, then take the service down on purpose. The alert reaches your chat while the page is still repainting.',
           },
         ],
+      },
+      { type: 'heading', text: 'Statuspage API alternative' },
+      {
+        type: 'paragraph',
+        text: 'Statuspage already has a public API. Every public page serves JSON at /api/v2/summary.json with no key, and the REST API manages components and incidents with one. So the API alone is no reason to move. Logdash serves the same kind of public JSON at /v1/status_pages/:id: overall status, uptime per monitor for 1 hour up to 90 days, 90 daily buckets and the last 100 checks. The difference is what ships on top of it. A typed client on npm, a status page component you copy into a React or Svelte app with one command, and a Next.js starter that deploys to Vercel in one click. For a page inside your own site, Statuspage hands you the data and leaves the rendering to you.',
+      },
+      {
+        type: 'code',
+        language: 'bash',
+        title: 'terminal',
+        code: `# Statuspage: public JSON for any page, no key
+curl https://metastatuspage.com/api/v2/summary.json
+
+# Logdash: the same idea, with the checks behind it
+curl https://api.logdash.io/v1/status_pages/your-status-page-id
+
+# What Statuspage does not ship: the page, as code in your app
+npx shadcn add https://logdash.io/r/react/status-page.json`,
       },
       {
         type: 'comparison',
@@ -2524,9 +2616,15 @@ app.listen(3000);`,
           },
           {
             feature: 'Incident workflow',
-            logdash: 'Post an update on the page',
+            logdash: 'None, the page shows check results only',
             them: 'Templates, maintenance windows, Jira and Opsgenie',
             winner: 'them',
+          },
+          {
+            feature: 'Status page in your own code',
+            logdash: 'Public JSON, typed client, component, starter',
+            them: 'Public JSON, the page is yours to write',
+            winner: 'logdash',
           },
         ],
       },
@@ -2543,7 +2641,7 @@ app.listen(3000);`,
       { type: 'heading', text: 'What moving actually looks like' },
       {
         type: 'paragraph',
-        text: 'Map each component to one HTTP monitor. If a component turns out to have no check behind it, that is worth knowing on its own, and it is common. Publish the Logdash page on a subdomain and run both for a couple of weeks so you can compare what each one showed during a real incident. Before you move DNS, tell your subscribers, because that list does not come with you and there is no import.',
+        text: 'Map each component to one HTTP monitor. A component with no check behind it is common, and worth knowing about. Publish the Logdash page on a subdomain and run both for two weeks. Before you move DNS, tell your subscribers, because that list does not come with you.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -2568,8 +2666,13 @@ app.listen(3000);`,
         answer:
           'The Logdash monitor is the checker. You drop the separate uptime tool and the integration, and the page reads from the same monitors that send your Telegram alerts.',
       },
+      {
+        question: 'Is there an alternative to the Statuspage API v2?',
+        answer:
+          'GET https://api.logdash.io/v1/status_pages/:id returns a published Logdash page as JSON, with no key and open CORS. It is read-only, so unlike the Statuspage REST API you cannot post incidents through it.',
+      },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-10-02',
   },
 ];
 

@@ -32,7 +32,7 @@ const NOT_CONTENT = [
 
 /** First path segment to llms.txt section, in the order they are listed. */
 const SECTIONS: [title: string, segments: string[]][] = [
-  ['Product', ['', 'features', 'pricing']],
+  ['Product', ['', 'features', 'pricing', 'use-cases']],
   ['Docs', ['docs']],
   ['Comparisons', ['vs', 'alternatives']],
   [

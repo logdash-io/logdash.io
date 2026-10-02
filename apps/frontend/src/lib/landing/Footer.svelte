@@ -21,6 +21,7 @@
 
   /** Internal paths go through resolve(); mailto: stays in the current tab. */
   function linkAttrs(link: FooterLink): Record<string, string> {
+    if (link.kind === 'hub') return { href: resolve(link.path) };
     if (link.kind === 'internal')
       return { href: `${resolve(link.path)}${link.hash ?? ''}` };
     const href = hrefOf(link);
@@ -37,7 +38,7 @@
 
 <!--
   How the page ends: a hatched band across the full width, then the landing
-  column between its rails with the logo mark alone on the left, five equal
+  column between its rails with the logo mark alone on the left, six equal
   columns packed against the right edge, and a quiet bottom row with the
   social icons, where the data lives and the copyright. Last, the wordmark
   rising out of the page bottom (FooterEnding's runway; the root layout
@@ -52,11 +53,11 @@
     class="px-4 pt-16 pb-8 sm:px-6 lg:px-10 lg:pt-20 lg:pb-12"
   >
     <div
-      class="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-[minmax(0,1fr)_repeat(5,12rem)] xl:gap-x-0"
+      class="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-[minmax(0,1fr)_repeat(6,10rem)] xl:gap-x-0"
     >
       <a
         href={resolve('/')}
-        class="col-span-2 flex h-7 w-fit items-center sm:col-span-3 lg:col-span-5 xl:col-span-1"
+        class="col-span-2 flex h-7 w-fit items-center sm:col-span-3 lg:col-span-6 xl:col-span-1"
         draggable="false"
         aria-label="Logdash home"
       >

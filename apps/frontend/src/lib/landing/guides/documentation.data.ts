@@ -35,6 +35,8 @@ export type CodeLanguage =
   | 'elixir'
   | 'yaml'
   | 'json'
+  | 'html'
+  | 'powershell'
   | 'svelte';
 
 export type DocFaqItem = { question: string; answer: string };
