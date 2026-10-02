@@ -7,7 +7,7 @@ export const PAYMENT_PLANS = [
     description: 'Great for kicking the tires or for your personal stuff.',
     tldr: 'Validate your MVP in minutes. Zero friction, zero cost.',
     features: [
-      { name: 'Unlimited domains' },
+      { name: 'Max 5 domains' },
       { name: 'Max 5 services' },
       { name: 'Max 5 HTTP monitors' },
       { name: 'Max 1 status page' },
@@ -37,6 +37,7 @@ export const PAYMENT_PLANS = [
     tldr: 'Your 24/7 safety net. We watch the servers so you can sleep.',
     features: [
       { name: 'Everything in Hobby, plus:' },
+      { name: 'Max 20 domains' },
       { name: 'Max 20 services' },
       { name: 'Max 20 HTTP monitors' },
       { name: 'Max 5 status pages' },
@@ -51,7 +52,6 @@ export const PAYMENT_PLANS = [
       { name: 'Regular catch-up calls' },
       { name: 'Early access to new features' },
       { name: 'Priority feature requests' },
-      { name: 'Push pings' },
     ],
     badge: {
       text: 'Save 10%',
@@ -69,6 +69,7 @@ export const PAYMENT_PLANS = [
     tldr: 'Take the training wheels off, forget about the limits & squeeze every drop of juice from logdash.',
     features: [
       { name: 'Everything in Builder, plus:' },
+      { name: 'Max 50 domains' },
       { name: 'Max 50 services' },
       { name: 'Max 50 HTTP monitors' },
       { name: 'Max 15 status pages' },
@@ -82,6 +83,7 @@ export const PAYMENT_PLANS = [
       { name: 'Team management features' },
       { name: 'Custom branding options' },
       { name: 'Custom status page domain' },
+      { name: 'Push pings' },
     ],
     badge: {
       text: 'Save 50%',
