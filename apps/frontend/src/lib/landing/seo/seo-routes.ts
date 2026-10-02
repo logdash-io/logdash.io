@@ -3,7 +3,14 @@ import { docPages } from '$lib/landing/guides/documentation.data';
 import { sdkPath } from '$lib/landing/docs/sdk-doc';
 import { sdkDocs } from '$lib/landing/docs/sdk-docs.data';
 import { alternatives } from './families/alternatives.data';
+import { alerts } from './families/alerts.data';
+import { cronMonitoring } from './families/cron-monitoring.data';
 import { healthCheck } from './families/health-check.data';
+import { learn } from './families/learn.data';
+import { platforms } from './families/monitor.data';
+import { assets } from './families/monitoring.data';
+import { statusPages } from './families/status-page.data';
+import { tools } from './families/tools.data';
 import { pagePath, type SeoFamilyData } from './seo-page';
 
 export type SitemapEntry = {
@@ -39,7 +46,17 @@ const staticPaths: string[] = [
  * register() call, so the sitemap cannot depend on which module happened to be
  * imported first.
  */
-const families: SeoFamilyData[] = [alternatives, healthCheck];
+const families: SeoFamilyData[] = [
+  alternatives,
+  healthCheck,
+  statusPages,
+  cronMonitoring,
+  platforms,
+  tools,
+  learn,
+  assets,
+  alerts,
+];
 
 export function familyRoutes(data: SeoFamilyData): SitemapEntry[] {
   return [

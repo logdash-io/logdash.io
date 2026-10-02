@@ -35,7 +35,19 @@ const SECTIONS: [title: string, segments: string[]][] = [
   ['Product', ['', 'features', 'pricing']],
   ['Docs', ['docs']],
   ['Comparisons', ['vs', 'alternatives']],
-  ['Guides', ['health-check']],
+  [
+    'Guides',
+    [
+      'health-check',
+      'status-page',
+      'cron-monitoring',
+      'monitor',
+      'monitoring',
+      'alerts',
+    ],
+  ],
+  ['Tools', ['tools']],
+  ['Learn', ['learn']],
   ['More', []],
   // llmstxt.org: an agent short on context may skip the Optional section.
   ['Optional', ['terms-of-service', 'privacy-policy', 'cookies-policy']],

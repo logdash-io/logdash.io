@@ -17,7 +17,18 @@ const sitemapXml = await loadSitemap();
 const sitemapUrls = parseLocs(sitemapXml);
 const sitemapPaths = sitemapUrls.map(toPath);
 /** Every generated SEO family obeys the same page contract. */
-const FAMILY_PREFIXES = ['/alternatives/', '/health-check/'];
+const FAMILY_PREFIXES = [
+  '/alternatives/',
+  '/health-check/',
+  '/status-page/',
+  '/cron-monitoring/',
+  '/monitor/',
+  '/tools/',
+  '/learn/',
+  '/monitoring/',
+  '/alerts/',
+  '/for/',
+];
 
 const familyPaths = sitemapPaths.filter((path) =>
   FAMILY_PREFIXES.some((prefix) => path.startsWith(prefix)),
