@@ -71,8 +71,9 @@ export function ThrottleMonitorProbe() {
 
 /**
  * 300 requests per minute per IP. For the public push monitor ping, called by
- * customers' cron jobs. A push monitor pings about once a minute, so this fits
- * around 300 monitors behind one NAT address while stopping a single machine
+ * customers' jobs. A push monitor must ping inside every check window (15
+ * seconds on Pro), so a heartbeat every 10 seconds fits around 50 monitors
+ * behind one NAT address while stopping a single machine
  * from flooding the route with made up ids.
  */
 export function ThrottlePushPing() {
