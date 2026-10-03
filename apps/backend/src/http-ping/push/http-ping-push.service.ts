@@ -57,6 +57,10 @@ export class HttpPingPushService {
       return;
     }
 
+    if (!(await this.redisService.claimCronTick('http-ping-push:15s', 10_000))) {
+      return;
+    }
+
     const tiers = this.getTiersWithFrequency(HttpPingCron.Every15Seconds);
     await this.tryCheckPushMonitors(tiers);
   }
@@ -67,6 +71,10 @@ export class HttpPingPushService {
       return;
     }
 
+    if (!(await this.redisService.claimCronTick('http-ping-push:1m', 50_000))) {
+      return;
+    }
+
     const tiers = this.getTiersWithFrequency(HttpPingCron.EveryMinute);
     await this.tryCheckPushMonitors(tiers);
   }
@@ -74,6 +82,10 @@ export class HttpPingPushService {
   @Cron(HttpPingCron.Every5Minutes)
   private async processPushMonitors5m(): Promise<void> {
     if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    if (!(await this.redisService.claimCronTick('http-ping-push:5m', 240_000))) {
       return;
     }
 

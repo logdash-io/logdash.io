@@ -3,6 +3,7 @@ import { RedisClientType } from '@redis/client';
 import { REDIS_CLIENT } from './redis.constants';
 import { LogdashLogger } from '../logdash/aggregate-logger';
 import { REDIS_LOGGER } from '../logdash/logdash-tokens';
+import { errorMessage } from '../utils/error-message';
 
 export enum TtlOverwriteStrategy {
   SetAlways = 'set-always',
@@ -85,6 +86,22 @@ export class RedisService {
   public async exists(key: string): Promise<boolean> {
     const result = await this.client.exists(key);
     return result === 1;
+  }
+
+  public async claimCronTick(cronName: string, ttlMs: number): Promise<boolean> {
+    try {
+      const result = await this.client.set(`cron-tick:${cronName}`, '1', {
+        condition: 'NX',
+        expiration: { type: 'PX', value: ttlMs },
+      });
+      return result === 'OK';
+    } catch (error) {
+      this.logger.error('Failed to claim cron tick, running it anyway', {
+        cronName,
+        error: errorMessage(error),
+      });
+      return true;
+    }
   }
 
   public getClient(): RedisClientType {

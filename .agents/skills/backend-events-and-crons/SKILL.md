@@ -55,6 +55,15 @@ public async runCron(): Promise<void> {
 - Put crons in their own submodule (`ttl/`, or a named job folder) with the service as a provider.
 - The `@Cron` method only guards and delegates. Tests call the delegate: `bootstrap.app.get(HttpMonitorTtlService).deleteOldUnclaimedMonitors()`.
 - E2E tests stop every cron (`test/utils/bootstrap.ts`), so no `NODE_ENV` guard is needed. The guards in older crons predate that.
+- During a deploy the old and new backend run side by side for a few seconds. A cron that writes shared data, pings or notifies claims the tick first, with a ttl just under its interval, so only one instance runs it:
+
+  ```ts
+  if (!(await this.redisService.claimCronTick('http-ping-pinger:15s', 10_000))) {
+    return;
+  }
+  ```
+
+  Per-instance work, like flushing an in-memory queue, does not claim. Idempotent deletes (`ttl/`) do not need to.
 - Loop with a `try/catch` per item and log failures, so one bad record does not stop the batch.
 - Stream large sets with a cursor (`readUnclaimedUserIdsCreatedBeforeCursor` in `user-ttl.service.ts`).
 - Read windows and limits from `getEnvConfig()` or a plan config, not literals scattered in the job.

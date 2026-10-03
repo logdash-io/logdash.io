@@ -20,6 +20,7 @@ import { HttpPingCron } from '../core/enums/http-ping-cron.enum';
 import { ProjectPlanConfigs } from '../../shared/configs/project-plan-configs';
 import { errorMessage } from '../../shared/utils/error-message';
 import { isRecord } from '../../shared/utils/is-record';
+import { RedisService } from '../../shared/redis/redis.service';
 
 interface QueueItem {
   monitor: HttpMonitorNormalized;
@@ -55,11 +56,16 @@ export class HttpPingPingerService {
     private readonly maxConcurrentRequests: number,
     private readonly httpPingPingerDataService: HttpPingPingerDataService,
     private readonly projectReadService: ProjectReadService,
+    private readonly redisService: RedisService,
   ) {}
 
   @Cron(HttpPingCron.Every15Seconds)
   private async triggerPingMonitors15s(): Promise<void> {
     if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    if (!(await this.redisService.claimCronTick('http-ping-pinger:15s', 10_000))) {
       return;
     }
 
@@ -73,6 +79,10 @@ export class HttpPingPingerService {
       return;
     }
 
+    if (!(await this.redisService.claimCronTick('http-ping-pinger:1m', 50_000))) {
+      return;
+    }
+
     const tiers = this.getTiersWithFrequency(HttpPingCron.EveryMinute);
     await this.tryPingMonitors(tiers);
   }
@@ -83,6 +93,10 @@ export class HttpPingPingerService {
       return;
     }
 
+    if (!(await this.redisService.claimCronTick('http-ping-pinger:5m', 240_000))) {
+      return;
+    }
+
     const tiers = this.getTiersWithFrequency(HttpPingCron.Every5Minutes);
     await this.tryPingMonitors(tiers);
   }
@@ -90,6 +104,10 @@ export class HttpPingPingerService {
   @Cron(HttpPingCron.Every15Seconds)
   private async triggerPingUnclaimedMonitors15s(): Promise<void> {
     if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    if (!(await this.redisService.claimCronTick('http-ping-pinger:unclaimed:15s', 10_000))) {
       return;
     }
 

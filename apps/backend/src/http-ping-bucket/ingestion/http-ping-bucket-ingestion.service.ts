@@ -10,6 +10,7 @@ import {
 import { CreateHttpPingBucketDto } from '../write/dto/create-http-ping-bucket.dto';
 import { HttpPingBucketWriteService } from '../write/http-ping-bucket-write.service';
 import { errorMessage } from '../../shared/utils/error-message';
+import { RedisService } from '../../shared/redis/redis.service';
 
 @Injectable()
 export class HttpPingBucketIngestionService {
@@ -17,9 +18,18 @@ export class HttpPingBucketIngestionService {
     private readonly httpPingAggregationService: HttpPingAggregationService,
     private readonly httpPingBucketWriteService: HttpPingBucketWriteService,
     @Inject(HTTP_PING_BUCKETS_LOGGER) private readonly logger: LogdashLogger,
+    private readonly redisService: RedisService,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
+  public async runCron(): Promise<void> {
+    if (!(await this.redisService.claimCronTick('http-ping-bucket-ingestion', 50 * 60_000))) {
+      return;
+    }
+
+    await this.createBucketsForPreviousHour();
+  }
+
   public async createBucketsForPreviousHour(): Promise<void> {
     try {
       await this.aggregatePingsIntoBuckets();
