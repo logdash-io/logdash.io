@@ -13,6 +13,9 @@ const config = {
         remoteBindings: process.env.REMOTE_BINDINGS === 'true',
       },
     }),
+    prerender: {
+      origin: 'https://logdash.io',
+    },
     paths: {
       relative: false,
       base: process.env.NODE_ENV === 'production' ? '' : '',
