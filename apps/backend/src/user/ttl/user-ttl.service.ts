@@ -8,6 +8,7 @@ import { ClusterRemovalService } from '../../cluster/removal/cluster-removal.ser
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { USERS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { errorMessage } from '../../shared/utils/error-message';
+import { RedisService } from '../../shared/redis/redis.service';
 
 @Injectable()
 export class UserTtlService {
@@ -16,9 +17,18 @@ export class UserTtlService {
     private readonly userWriteService: UserWriteService,
     private readonly clusterRemovalService: ClusterRemovalService,
     @Inject(USERS_LOGGER) private readonly logger: LogdashLogger,
+    private readonly redisService: RedisService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
+  public async runCron(): Promise<void> {
+    if (!(await this.redisService.claimCronTick('user-ttl', 50_000))) {
+      return;
+    }
+
+    await this.deleteOldUnclaimedUsers();
+  }
+
   public async deleteOldUnclaimedUsers(): Promise<void> {
     const cutoffDate = subHours(new Date(), getEnvConfig().anonymousAccounts.removeAfterHours);
 

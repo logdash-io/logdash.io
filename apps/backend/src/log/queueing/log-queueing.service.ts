@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { CreateLogDto } from '../write/dto/create-log.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LogIngestionService } from '../ingestion/log-creation.service';
@@ -9,7 +9,7 @@ import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { LOGS_LOGGER } from '../../shared/logdash/logdash-tokens';
 
 @Injectable()
-export class LogQueueingService {
+export class LogQueueingService implements OnApplicationShutdown {
   private queuedDtos: CreateLogDto[] = [];
 
   constructor(
@@ -25,6 +25,10 @@ export class LogQueueingService {
     return {
       id,
     };
+  }
+
+  public async onApplicationShutdown(): Promise<void> {
+    await this.processQueue();
   }
 
   @Cron(CronExpression.EVERY_SECOND)

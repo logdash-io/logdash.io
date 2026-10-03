@@ -8,6 +8,7 @@ import { MetricBufferDataService } from './metric-buffer.data.service';
 import { RecordMetricDto } from '../ingestion/dto/record-metric.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
+import { RedisService } from '../../shared/redis/redis.service';
 
 @Injectable()
 export class MetricBufferService {
@@ -17,6 +18,7 @@ export class MetricBufferService {
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly averageRecorder: AverageRecorder,
     @Inject(METRICS_LOGGER) private readonly logger: LogdashLogger,
+    private readonly redisService: RedisService,
   ) {}
 
   public async addToBuffer(dto: RecordMetricDto): Promise<void> {
@@ -44,6 +46,14 @@ export class MetricBufferService {
   }
 
   @Cron(CronExpression.EVERY_5_SECONDS)
+  public async runCron(): Promise<void> {
+    if (!(await this.redisService.claimCronTick('metric-buffer-flush', 4_000))) {
+      return;
+    }
+
+    await this.flushBuffer();
+  }
+
   public async flushBuffer(): Promise<void> {
     const now = performance.now();
 

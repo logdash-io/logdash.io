@@ -121,51 +121,73 @@ runs:
         PORT: ${{ inputs.port }}
         KEY: ${{ inputs.ssh-private-key }}
         script: |
-          docker pull ${{ inputs.image-name }}
-          docker rm -f ${{ inputs.container-name }}
-          docker run -d \
-          -p ${{ inputs.server-port }}:${{ inputs.application-port }} \
-          --restart=always \
-          --add-host=host.docker.internal:host-gateway \
-          --name ${{ inputs.container-name }} \
-          -v /var/run/dragonfly:/var/run/dragonfly \
-          -e MONGO_URL=${{ inputs.mongo-url }} \
-          -e GITHUB_OAUTH_CLIENT_ID=${{ inputs.github-oauth-client-id }} \
-          -e GITHUB_OAUTH_CLIENT_SECRET=${{ inputs.github-oauth-client-secret }} \
-          -e GITHUB_OAUTH_CLIENT_ID_ALTERNATIVE=${{ inputs.github-oauth-client-id-alternative }} \
-          -e GITHUB_OAUTH_CLIENT_SECRET_ALTERNATIVE=${{ inputs.github-oauth-client-secret-alternative }} \
-          -e RESEND_API_KEY=${{ inputs.resend-api-key }} \
-          -e STRIPE_API_KEY_SECRET=${{ inputs.stripe-api-key-secret }} \
-          -e STRIPE_SIGNATURE=${{ inputs.stripe-signature }} \
-          -e OUR_ENV=${{ inputs.our-env }} \
-          -e REDIS_URL=${{ inputs.redis-url }} \
-          -e REDIS_SOCKET_PATH=${{ inputs.redis-socket-path }} \
-          -e REDIS_PASSWORD=${{ inputs.redis-password }} \
-          -e STRIPE_EARLY_BIRD_PRICE_ID=${{ inputs.stripe-early-bird-price-id }} \
-          -e STRIPE_BUILDER_PRICE_ID=${{ inputs.stripe-builder-price-id }} \
-          -e STRIPE_PRO_PRICE_ID=${{ inputs.stripe-pro-price-id }} \
-          -e DEMO_DASHBOARD_API_KEY=${{ inputs.demo-dashboard-api-key }} \
-          -e LOGDASH_API_KEY=${{ inputs.logdash-api-key }} \
-          -e TELEGRAM_TOKEN=${{ inputs.telegram-token }} \
-          -e WHITELISTED_EMAILS=${{ inputs.whitelisted-emails }} \
-          -e AUTH_JWT_SECRET=${{ inputs.auth-jwt-secret }} \
-          -e PERSONAL_API_KEY_HMAC_SECRET=${{ inputs.personal-api-key-hmac-secret }} \
-          -e CLICKHOUSE_HOST=${{ inputs.clickhouse-host }} \
-          -e CLICKHOUSE_PORT=${{ inputs.clickhouse-port }} \
-          -e CLICKHOUSE_USER=${{ inputs.clickhouse-user }} \
-          -e CLICKHOUSE_PASSWORD=${{ inputs.clickhouse-password }} \
-          -e CLICKHOUSE_DATABASE=${{ inputs.clickhouse-database }} \
-          -e SWAGGER_PASSWORD=${{ inputs.swagger-password }} \
-          -e TELEGRAM_UPTIME_BOT_TOKEN=${{ inputs.telegram-uptime-bot-token }} \
-          -e TELEGRAM_UPTIME_BOT_SECRET=${{ inputs.telegram-uptime-bot-secret }} \
-          -e ADMIN_SUPER_SECRET_ADMIN_KEY=${{ inputs.admin-super-secret-admin-key }} \
-          -e INTERNAL_TELEGRAM_BOT_TOKEN=${{ inputs.internal-telegram-bot-token }} \
-          -e GOOGLE_OAUTH_CLIENT_ID=${{ inputs.google-oauth-client-id }} \
-          -e GOOGLE_OAUTH_CLIENT_SECRET=${{ inputs.google-oauth-client-secret }} \
-          -e GOOGLE_OAUTH_CLIENT_ID_LOCAL=${{ inputs.google-oauth-client-id-local }} \
-          -e GOOGLE_OAUTH_CLIENT_SECRET_LOCAL=${{ inputs.google-oauth-client-secret-local }} \
-          -e GITHUB_OAUTH_CLIENT_ID_LOCAL=${{ inputs.github-oauth-client-id-local }} \
-          -e GITHUB_OAUTH_CLIENT_SECRET_LOCAL=${{ inputs.github-oauth-client-secret-local }} \
-          -e GOOGLE_OAUTH_REDIRECT_URI_LOCAL=${{ inputs.google-oauth-redirect-uri-local }} \
-          -e WATCHLIST_PROJECT_ID=${{ inputs.watchlist-project-id }} \
-          ${{ inputs.image-name }}
+          set -e
+          umask 077
+          mkdir -p ~/logdash
+          ENV_FILE=~/logdash/${{ inputs.container-name }}.env
+          cat > "$ENV_FILE" <<'EOF'
+          MONGO_URL=${{ inputs.mongo-url }}
+          GITHUB_OAUTH_CLIENT_ID=${{ inputs.github-oauth-client-id }}
+          GITHUB_OAUTH_CLIENT_SECRET=${{ inputs.github-oauth-client-secret }}
+          GITHUB_OAUTH_CLIENT_ID_ALTERNATIVE=${{ inputs.github-oauth-client-id-alternative }}
+          GITHUB_OAUTH_CLIENT_SECRET_ALTERNATIVE=${{ inputs.github-oauth-client-secret-alternative }}
+          RESEND_API_KEY=${{ inputs.resend-api-key }}
+          STRIPE_API_KEY_SECRET=${{ inputs.stripe-api-key-secret }}
+          STRIPE_SIGNATURE=${{ inputs.stripe-signature }}
+          OUR_ENV=${{ inputs.our-env }}
+          REDIS_URL=${{ inputs.redis-url }}
+          REDIS_SOCKET_PATH=${{ inputs.redis-socket-path }}
+          REDIS_PASSWORD=${{ inputs.redis-password }}
+          STRIPE_EARLY_BIRD_PRICE_ID=${{ inputs.stripe-early-bird-price-id }}
+          STRIPE_BUILDER_PRICE_ID=${{ inputs.stripe-builder-price-id }}
+          STRIPE_PRO_PRICE_ID=${{ inputs.stripe-pro-price-id }}
+          DEMO_DASHBOARD_API_KEY=${{ inputs.demo-dashboard-api-key }}
+          LOGDASH_API_KEY=${{ inputs.logdash-api-key }}
+          TELEGRAM_TOKEN=${{ inputs.telegram-token }}
+          WHITELISTED_EMAILS=${{ inputs.whitelisted-emails }}
+          AUTH_JWT_SECRET=${{ inputs.auth-jwt-secret }}
+          PERSONAL_API_KEY_HMAC_SECRET=${{ inputs.personal-api-key-hmac-secret }}
+          CLICKHOUSE_HOST=${{ inputs.clickhouse-host }}
+          CLICKHOUSE_PORT=${{ inputs.clickhouse-port }}
+          CLICKHOUSE_USER=${{ inputs.clickhouse-user }}
+          CLICKHOUSE_PASSWORD=${{ inputs.clickhouse-password }}
+          CLICKHOUSE_DATABASE=${{ inputs.clickhouse-database }}
+          SWAGGER_PASSWORD=${{ inputs.swagger-password }}
+          TELEGRAM_UPTIME_BOT_TOKEN=${{ inputs.telegram-uptime-bot-token }}
+          TELEGRAM_UPTIME_BOT_SECRET=${{ inputs.telegram-uptime-bot-secret }}
+          ADMIN_SUPER_SECRET_ADMIN_KEY=${{ inputs.admin-super-secret-admin-key }}
+          INTERNAL_TELEGRAM_BOT_TOKEN=${{ inputs.internal-telegram-bot-token }}
+          GOOGLE_OAUTH_CLIENT_ID=${{ inputs.google-oauth-client-id }}
+          GOOGLE_OAUTH_CLIENT_SECRET=${{ inputs.google-oauth-client-secret }}
+          GOOGLE_OAUTH_CLIENT_ID_LOCAL=${{ inputs.google-oauth-client-id-local }}
+          GOOGLE_OAUTH_CLIENT_SECRET_LOCAL=${{ inputs.google-oauth-client-secret-local }}
+          GITHUB_OAUTH_CLIENT_ID_LOCAL=${{ inputs.github-oauth-client-id-local }}
+          GITHUB_OAUTH_CLIENT_SECRET_LOCAL=${{ inputs.github-oauth-client-secret-local }}
+          GOOGLE_OAUTH_REDIRECT_URI_LOCAL=${{ inputs.google-oauth-redirect-uri-local }}
+          WATCHLIST_PROJECT_ID=${{ inputs.watchlist-project-id }}
+          SHUTDOWN_DRAIN_MS=5000
+          EOF
+
+          # The zero-downtime deploy script is installed on the server from the infrastructure repo.
+          if [ -x /usr/local/bin/logdash-deploy-backend ]; then
+            /usr/local/bin/logdash-deploy-backend ${{ inputs.container-name }} ${{ inputs.image-name }} "$ENV_FILE"
+          else
+            echo "::warning::Zero-downtime deploy script not installed, replacing the container in place"
+            docker pull ${{ inputs.image-name }}
+            # Builds with /health flush their queues on SIGTERM. Older ones keep accepting logs without
+            # flushing until Docker kills them, so they are killed right away.
+            for container in $(docker ps -q --filter "name=^${{ inputs.container-name }}"); do
+              if docker exec "$container" wget -qO /dev/null http://localhost:${{ inputs.application-port }}/health; then
+                docker stop -t 30 "$container"
+              fi
+            done
+            docker ps -aq --filter "name=^${{ inputs.container-name }}" | xargs -r docker rm -f
+            docker run -d \
+            -p ${{ inputs.server-port }}:${{ inputs.application-port }} \
+            --restart=always \
+            --add-host=host.docker.internal:host-gateway \
+            --name ${{ inputs.container-name }} \
+            -v /var/run/dragonfly:/var/run/dragonfly \
+            --env-file "$ENV_FILE" \
+            ${{ inputs.image-name }}
+          fi

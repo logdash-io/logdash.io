@@ -34,6 +34,7 @@ import { OverviewCoreModule } from './overview/core/overview-core.module';
 import { CliAuthModule } from './cli-auth/core/cli-auth.module';
 import { BadgeCoreModule } from './badge/core/badge-core.module';
 import { StatusPageCoreModule } from './status-page/core/status-page-core.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { StatusPageCoreModule } from './status-page/core/status-page-core.module
     CliAuthModule,
     BadgeCoreModule,
     StatusPageCoreModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
