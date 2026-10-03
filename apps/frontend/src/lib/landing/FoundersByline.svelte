@@ -6,27 +6,18 @@
   };
 
   const { class: className }: Props = $props();
-
-  const FOUNDERS = [
-    { name: 'Aleksander Blaszkiewicz', img: '/images/founders/olo.webp' },
-    { name: 'Simon Gracki', img: '/images/founders/simon.webp' },
-  ];
 </script>
 
 <div class={['flex items-center gap-3', className]}>
-  <div class="flex -space-x-2">
-    {#each FOUNDERS as founder (founder.name)}
-      <img
-        class="ring-surface-root size-9 rounded-full object-cover grayscale ring-2"
-        src={founder.img}
-        alt={founder.name}
-        loading="lazy"
-      />
-    {/each}
-  </div>
+  <img
+    class="ring-surface-root-bg size-9 rounded-full object-cover grayscale ring-2"
+    src="/images/founders/simon.webp"
+    alt="Simon Gracki"
+    loading="lazy"
+  />
 
   <div class="flex flex-col text-left">
-    <span class="text-sm font-medium">Aleksander & Simon</span>
-    <span class="text-neutral-500 text-sm">Co-founders</span>
+    <span class="text-sm font-medium">Simon Gracki</span>
+    <span class="text-fg-muted text-sm">Co-founder</span>
   </div>
 </div>

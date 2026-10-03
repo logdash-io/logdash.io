@@ -238,7 +238,7 @@ Please do not open a public issue for a vulnerability.
 ## License
 
 AGPL-3.0. See [`LICENSE`](./LICENSE).
-Copyright (c) 2025 Aleksander Błaszkiewicz and Szymon Grącki.
+Copyright (c) 2025 The Logdash Authors.
 You can run, change and self-host Logdash for anything, including commercial use.
 If you run a modified version as a service for others, you have to publish your changes under the same licence.
 `packages/hyper-ui`, `packages/status` and `templates/status-page-next` are MIT, see the `LICENSE` file in each.
