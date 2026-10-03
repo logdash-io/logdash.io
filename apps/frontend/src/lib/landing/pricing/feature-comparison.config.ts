@@ -14,9 +14,9 @@ export const FEATURES_COMPARISON = {
       features: [
         {
           name: 'Domains',
-          [UserTier.FREE]: 'Unlimited',
-          [UserTier.BUILDER]: 'Unlimited',
-          [UserTier.PRO]: 'Unlimited',
+          [UserTier.FREE]: '5',
+          [UserTier.BUILDER]: '20',
+          [UserTier.PRO]: '50',
         },
         {
           name: 'Services',
@@ -105,7 +105,7 @@ export const FEATURES_COMPARISON = {
         {
           name: 'Push pings',
           [UserTier.FREE]: false,
-          [UserTier.BUILDER]: true,
+          [UserTier.BUILDER]: false,
           [UserTier.PRO]: true,
         },
       ],

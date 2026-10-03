@@ -194,6 +194,10 @@ export class HttpPingPingerService {
   public async pingSingleMonitor(httpMonitorId: string): Promise<void> {
     const monitor = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
 
+    if (monitor.mode === HttpMonitorMode.Push) {
+      return;
+    }
+
     const ping = await this.pingMonitor(monitor);
     await this.saveCompletedPings([ping]);
   }

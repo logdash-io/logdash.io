@@ -218,6 +218,9 @@ function classAttributeChunks(markup, offset) {
 function looksLikeClassList(tokens) {
   if (tokens.length < 2) return false;
   if (!tokens.every(({ token }) => CLASS_TOKEN.test(token))) return false;
+  // A variant colon is always followed by a class. Prose like "uptime: the
+  // full table" ends a word on one, and is not a class list.
+  if (tokens.some(({ token }) => token.endsWith(':'))) return false;
   return tokens.some(({ token }) => /[-:]/.test(token));
 }
 

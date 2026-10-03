@@ -10,8 +10,8 @@
 
 <LandingHeading
   id="features"
-  title="Everything you need to know your app is healthy."
-  description="Uptime, status pages, logs and metrics in one dashboard. Start with a URL and add the rest when you need it."
+  title="Know the moment it goes down."
+  description="Uptime checks and a public status page. Start with a URL and add the rest when you need it."
 />
 
 <FeatureRow
@@ -33,26 +33,29 @@
 <FeatureRow
   mirrored
   title="Status pages"
-  body="Show customers you are up. Uptime history and response times on a page that lives on your own domain."
+  body="Show customers you are up. Uptime history and response times on a public page, hosted by us or built by you."
   href="/features/monitoring"
   hash="status-pages"
   linkLabel="Explore status pages"
   posthogId="features-status-pages-cta"
   checks={[
     'Uptime history your customers can check themselves',
-    'Served from your own domain',
+    'Your own domain on Pro, or your own page on the API',
   ]}
   panelHeader={statusPageHeader}
   panel={statusPagePanel}
 />
 
-<LandingGap />
+<LandingHeading
+  title="Know why it went down."
+  description="Error logs and response times sit next to your monitors, so the alert and its cause are one click apart."
+/>
 
 <FeatureRow
-  title="Logs"
-  body="Every service in one searchable tail. Filter by level and find the line that broke it."
+  title="Error logs"
+  body="Every service in one searchable tail. Filter to errors and find the line that broke it."
   href="/features/logging"
-  linkLabel="Explore logs"
+  linkLabel="Explore error logs"
   posthogId="features-logs-cta"
   checks={[
     'Logs from every service in one place',
@@ -65,14 +68,14 @@
 
 <FeatureRow
   mirrored
-  title="Metrics"
-  body="Sign-ups, payments, queue depth. Track what matters with one line of code, with nothing to host or maintain."
+  title="Response time and metrics"
+  body="Every check records how long your server took to answer. Add sign-ups, payments or queue depth with one line of code."
   href="/features/metrics"
-  linkLabel="Explore metrics"
+  linkLabel="Explore response time"
   posthogId="features-metrics-cta"
   checks={[
-    'One line of code per metric',
-    'Live charts next to your logs and uptime',
+    'Response time on every uptime check',
+    'One line of code per custom metric',
   ]}
   panelHeader={metricsHeader}
   panel={metricsPanel}

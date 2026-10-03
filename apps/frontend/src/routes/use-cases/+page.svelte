@@ -1,25 +1,6 @@
 <script lang="ts">
-  import Footer from '$lib/landing/Footer.svelte';
-  import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
+  import { useCases } from '$lib/landing/seo/families/use-cases.data';
+  import SeoHubLayout from '$lib/landing/seo/SeoHubLayout.svelte';
 </script>
 
-<SeoMeta
-  title="Use Cases | Logdash"
-  description="Discover how developers use Logdash to monitor their applications and track business metrics."
-  keywords="logdash use cases, monitoring examples, logging use cases"
-  robots="noindex"
-/>
-
-<div class="relative mx-auto flex w-full max-w-landing flex-col">
-  <div class="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-24 sm:px-8">
-    <div class="text-center">
-      <h1 class="mb-4 text-4xl font-semibold">Use Cases</h1>
-      <p class="text-neutral-400 mx-auto max-w-2xl text-lg">
-        Coming soon. We're working on documenting real-world use cases to help
-        you get the most out of Logdash.
-      </p>
-    </div>
-  </div>
-</div>
-
-<Footer />
+<SeoHubLayout family={useCases.family} pages={useCases.pages} />

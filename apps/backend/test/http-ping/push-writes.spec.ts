@@ -1,6 +1,7 @@
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { createTestApp } from '../utils/bootstrap';
 import { HttpPingPushService } from '../../src/http-ping/push/http-ping-push.service';
+import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { HttpMonitorNormalized } from '../../src/http-monitor/core/entities/http-monitor.interface';
@@ -51,6 +52,27 @@ describe('Http Ping Push (writes)', () => {
       responseTimeMs: 0,
       message: undefined,
     });
+  });
+
+  it('does not record a check when a single ping targets a push monitor', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous({
+      userTier: UserTier.Pro,
+    });
+    const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+      token: setup.token,
+      projectId: setup.project.id,
+      mode: HttpMonitorMode.Push,
+    });
+
+    // when
+    await bootstrap.app.get(HttpPingPingerService).pingSingleMonitor(monitor.id);
+
+    // then
+    const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
+      httpMonitorId: monitor.id,
+    });
+    expect(pings).toHaveLength(0);
   });
 
   it('creates failed ping when no push record exists', async () => {

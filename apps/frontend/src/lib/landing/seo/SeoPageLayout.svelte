@@ -9,6 +9,7 @@
   import type { DocPage } from '$lib/landing/guides/documentation.data';
   import HeroUrlForm from '$lib/landing/hero/HeroUrlForm.svelte';
   import { pagePath, siblings, type SeoFamily, type SeoPage } from './seo-page';
+  import SeoToolWidget from './tools/SeoToolWidget.svelte';
 
   type Props = {
     family: SeoFamily;
@@ -92,21 +93,30 @@
   <main
     class="mx-auto flex w-full max-w-2xl flex-col px-4 py-12 sm:px-6 lg:py-16"
   >
-    <DocArticle page={article} />
+    <DocArticle page={article}>
+      {#snippet afterHeader()}
+        {#if page.tool}
+          <SeoToolWidget tool={page.tool} />
+        {/if}
+      {/snippet}
+    </DocArticle>
 
     <!--
       The article always ends on the FAQ block's own hairline, so the CTA
       leans on space rather than adding a second rule right under the first.
       A form is nothing to quote, so snippets and markdown twins skip it.
+      The site check tool already is this form, so its page skips the CTA.
     -->
-    <section data-nosnippet class="mt-12 flex flex-col gap-4">
-      <h2 class="text-[15px] font-medium">
-        Point it at your own URL and watch it for real.
-      </h2>
-      <div class="w-full max-w-md">
-        <HeroUrlForm source="seo" compact />
-      </div>
-    </section>
+    {#if page.tool?.kind !== 'site-check'}
+      <section data-nosnippet class="mt-12 flex flex-col gap-4">
+        <h2 class="text-[15px] font-medium">
+          Point it at your own URL and watch it for real.
+        </h2>
+        <div class="w-full max-w-md">
+          <HeroUrlForm source="seo" compact />
+        </div>
+      </section>
+    {/if}
 
     <nav aria-label="Keep reading" class="mt-14 flex flex-col gap-3">
       <h2 class="text-neutral-500 text-sm font-medium">Keep reading</h2>

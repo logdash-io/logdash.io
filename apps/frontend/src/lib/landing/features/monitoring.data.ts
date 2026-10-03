@@ -4,7 +4,7 @@ export const monitoringPage: FeaturePageData = {
   slug: 'monitoring',
   name: 'Uptime monitoring',
   meta: {
-    title: 'Uptime monitoring with Telegram downtime alerts | Logdash',
+    title: 'Uptime monitoring with Telegram and webhook alerts | Logdash',
     description:
       'Uptime monitoring for your site and API. Checks as often as every 15 seconds, Telegram and webhook alerts, and status pages with a public API. Start free.',
     keywords:
@@ -71,9 +71,15 @@ export const monitoringPage: FeaturePageData = {
     description:
       'Every status page has a public API, so yours can look like anything. Swap the lens and the data underneath stays put. Start from our React or Svelte component, or from a blank file.',
     install: {
-      title: 'Add it with one command',
+      title: 'Add it with one command.',
       body: 'The command copies the component into your project, so the code is yours to change. It runs on @logdash/status, a typed client with React and Svelte hooks. Or deploy the Next.js starter as a site of its own.',
     },
+    guides: [
+      { title: 'Status page API', href: '/status-page/api' },
+      { title: 'React status page', href: '/status-page/react' },
+      { title: 'Status page template', href: '/status-page/template' },
+      { title: 'All status page guides', href: '/status-page' },
+    ],
   },
   faq: [
     {

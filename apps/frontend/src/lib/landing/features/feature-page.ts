@@ -1,3 +1,4 @@
+import type { Pathname } from '$app/types';
 import type {
   CodeLanguage,
   DocFaqItem,
@@ -32,6 +33,10 @@ export type FeaturePageData = {
     quiet: string;
     description: string;
     install: FeatureCopy;
+    guides: {
+      title: string;
+      href: Extract<Pathname, '/status-page' | `/status-page/${string}`>;
+    }[];
   };
   faq: DocFaqItem[];
   related: FeatureLink[];
