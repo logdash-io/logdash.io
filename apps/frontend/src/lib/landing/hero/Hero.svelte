@@ -113,10 +113,7 @@
   }
 
   .entering header > :global(:nth-child(2)) {
-    --rise: 4px;
-    --blur: 12px;
-    --duration: 1400ms;
-    --delay: 0ms;
+    animation: none;
   }
 
   .entering header > :global(:nth-child(3)) {
