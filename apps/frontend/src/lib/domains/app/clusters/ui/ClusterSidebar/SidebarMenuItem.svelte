@@ -6,6 +6,7 @@
     href?: string;
     onclick?: () => void;
     isActive?: boolean;
+    nested?: boolean;
     disabled?: boolean;
     target?: string;
     class?: ClassValue;
@@ -16,6 +17,7 @@
     href,
     onclick,
     isActive = false,
+    nested = false,
     disabled = false,
     target,
     class: className,
@@ -24,13 +26,15 @@
 
   const isStatic = $derived(!href && !onclick);
   const baseClasses = $derived([
-    'flex h-7 w-full min-w-0 items-center gap-2 rounded-lg px-2 text-[13px] select-none pointer-coarse:h-9',
+    'flex h-7.5 min-w-0 items-center gap-1.5 rounded-lg text-sm font-medium select-none pointer-coarse:h-9',
     {
-      'bg-surface-100 text-fg-default': isActive,
-      'text-neutral-400 [&>svg]:text-neutral-500': !isActive && !disabled,
-      'hover:bg-surface-hover hover:text-fg-default cursor-pointer hover:[&>svg]:text-neutral-300':
+      'w-full px-2': !nested,
+      'ml-5.5 w-[calc(100%-1.375rem)] pr-2 pl-1.5': nested,
+      'bg-surface-root-selected-bg text-fg-default': isActive,
+      'text-fg-tertiary': !isActive && !disabled,
+      'hover:bg-surface-root-hover-bg hover:text-fg-default cursor-pointer':
         !isActive && !disabled && !isStatic,
-      'text-neutral-600 cursor-not-allowed': disabled,
+      'text-fg-faint cursor-not-allowed': disabled,
     },
     className,
   ]);

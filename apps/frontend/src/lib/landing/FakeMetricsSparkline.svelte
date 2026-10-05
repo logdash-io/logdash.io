@@ -91,7 +91,7 @@
         detail: `Resolved after ${alert.seconds} s`,
       }))
       .with('ignored', () => ({
-        dot: 'bg-neutral-500',
+        dot: 'bg-current text-fg-muted',
         title: `Back under ${THRESHOLD}%`,
         detail: `${alert.seconds} s spike, no alert`,
       }))
@@ -195,14 +195,14 @@
 <div class="flex h-full w-full flex-col gap-5">
   <div class="relative flex gap-x-10 sm:gap-x-14">
     <div class="flex flex-col gap-0.5">
-      <span class="text-neutral-500 text-xs">Now</span>
+      <span class="text-fg-muted text-xs">Now</span>
       <span class={['font-figure text-2xl', { 'text-error': isOver(current) }]}>
         {current}%
       </span>
     </div>
 
     <div class="hidden flex-col gap-0.5 sm:flex">
-      <span class="text-neutral-500 text-xs">60 s peak</span>
+      <span class="text-fg-muted text-xs">60 s peak</span>
       <span class="font-figure text-2xl">{peak}%</span>
     </div>
 
@@ -302,7 +302,7 @@
           {#each markers as marker (marker)}
             <path
               d={marker}
-              stroke="var(--color-surface-elevated)"
+              stroke="var(--surface-100-bg)"
               stroke-width="12"
               stroke-linecap="round"
               vector-effect="non-scaling-stroke"
@@ -330,7 +330,7 @@
   </div>
 
   <div
-    class="text-neutral-600 flex items-center justify-between pr-11 font-mono text-xs"
+    class="text-fg-faint flex items-center justify-between pr-11 font-mono text-xs"
   >
     <span>60 s ago</span>
     <span>Now</span>

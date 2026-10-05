@@ -178,8 +178,8 @@
       ITEM_CLASS,
       current || open
         ? 'text-fg-default'
-        : 'text-neutral-400 hover:text-fg-default',
-      { 'bg-neutral-900': open },
+        : 'text-fg-tertiary hover:text-fg-default',
+      { 'aria-expanded:bg-surface-root-hover-bg': open },
     ] as string[];
   }
 </script>
@@ -229,7 +229,7 @@
               '-mr-1 size-3.5 transition-transform duration-200 ease-out',
               active === item.key
                 ? 'rotate-180 text-fg-default'
-                : 'text-neutral-600',
+                : 'text-fg-faint',
             ]}
           />
         </button>
@@ -273,7 +273,7 @@
   >
     <div
       class={[
-        'nav-panel border-hairline bg-surface-root rounded-[14px] border',
+        'nav-panel border-surface-root-border bg-surface-root-bg rounded-[14px] border',
         { moving },
       ]}
       style:width={size ? `${size.width}px` : undefined}
@@ -300,7 +300,7 @@
   {@const menu = NAV_PANELS[key]}
   <div class="p-2">
     <div
-      class="divide-hairline bg-neutral-900 ring-hairline grid grid-cols-[280px_280px_280px] divide-x rounded-lg ring-1 ring-inset"
+      class="divide-surface-100-border bg-surface-100-bg ring-surface-100-border grid grid-cols-[280px_280px_280px] divide-x rounded-lg ring-1 ring-inset"
     >
       {#each menu.columns as column, columnIndex (columnIndex)}
         <div class="flex flex-col p-2">
@@ -309,9 +309,9 @@
               {...anchorAttrs(item)}
               draggable="false"
               class={[
-                'hover:bg-neutral-800 group flex flex-col gap-1.5 rounded-md px-3.5 py-3',
+                'hover:bg-surface-100-hover-bg group flex flex-col gap-1.5 rounded-md px-3.5 py-3',
                 {
-                  'bg-neutral-800': isCurrentTarget(item, page.url.pathname),
+                  'bg-surface-150-bg': isCurrentTarget(item, page.url.pathname),
                 },
               ]}
               onclick={close}
@@ -320,7 +320,7 @@
                 {item.title}
               </span>
               <span
-                class="text-neutral-500 group-hover:text-neutral-400 text-[15px] leading-5"
+                class="text-fg-muted group-hover:text-fg-tertiary text-[15px] leading-5"
               >
                 {item.description}
               </span>
@@ -334,10 +334,10 @@
             {...anchorAttrs(link)}
             draggable="false"
             class={[
-              'hover:bg-neutral-800 hover:text-fg-default rounded-md px-3.5 py-2.5 text-[15px] leading-5',
+              'hover:bg-surface-100-hover-bg hover:text-fg-default rounded-md px-3.5 py-2.5 text-[15px] leading-5',
               isCurrentTarget(link, page.url.pathname)
                 ? 'text-fg-default'
-                : 'text-neutral-300',
+                : 'text-fg-secondary',
             ]}
             onclick={close}
           >
@@ -352,12 +352,12 @@
       >
         <span class="flex items-center gap-2">
           <span class="font-medium">{menu.footer.badge}</span>
-          <span class="text-neutral-500">{menu.footer.text}</span>
+          <span class="text-fg-muted">{menu.footer.text}</span>
         </span>
         <a
           {...anchorAttrs(menu.footer.cta)}
           draggable="false"
-          class="text-neutral-500 hover:text-fg-default group flex items-center gap-1.5 transition-ink duration-150"
+          class="text-fg-muted hover:text-fg-default group flex items-center gap-1.5 transition-ink duration-150"
           onclick={close}
         >
           {menu.footer.cta.label}

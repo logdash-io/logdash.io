@@ -659,6 +659,58 @@ I'll notify you about the status of your services`,
     }, 10_000);
   });
 
+  describe('POST /clusters/:clusterId/notification_channels (email)', () => {
+    it('creates an email channel for a member of the domain', async () => {
+      // given
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'member@example.com',
+      });
+
+      // when
+      const response =
+        await bootstrap.utils.notificationChannelUtils.createEmailNotificationChannel({
+          clusterId: cluster.id,
+          token,
+          email: 'Member@example.com',
+        });
+
+      // then
+      expect(response.status).toBe(201);
+    });
+
+    it('rejects an address that does not belong to a member', async () => {
+      // given
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed();
+
+      // when
+      const response =
+        await bootstrap.utils.notificationChannelUtils.createEmailNotificationChannel({
+          clusterId: cluster.id,
+          token,
+          email: 'stranger@example.com',
+        });
+
+      // then
+      expect(response.status).toBe(400);
+    });
+
+    it('rejects a second channel for the same address', async () => {
+      // given
+      const { cluster, token } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'member@example.com',
+      });
+      const dto = { clusterId: cluster.id, token, email: 'member@example.com' };
+      await bootstrap.utils.notificationChannelUtils.createEmailNotificationChannel(dto);
+
+      // when
+      const response =
+        await bootstrap.utils.notificationChannelUtils.createEmailNotificationChannel(dto);
+
+      // then
+      expect(response.status).toBe(400);
+    });
+  });
+
   describe('PUT /notification_channels/:id', () => {
     it('updates notification channel options', async () => {
       // given

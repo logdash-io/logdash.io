@@ -16,6 +16,7 @@
   import { logger } from '$lib/domains/shared/logger/index.js';
   import NavigationLoadingBar from '$lib/domains/shared/ui/components/NavigationLoadingBar.svelte';
   import Toaster from '$lib/domains/shared/ui/toaster/Toaster.svelte';
+  import ConfirmDialog from '$lib/domains/shared/ui/confirm/ConfirmDialog.svelte';
   import { envConfig } from '$lib/domains/shared/utils/env-config';
   import { dropThirdPartyExceptions } from '$lib/domains/shared/posthog/drop-third-party-exceptions';
   import posthog, { type PostHogInterface } from 'posthog-js';
@@ -117,6 +118,7 @@
 
 <svelte:boundary onerror={(error) => console.log('💥', error)}>
   <Toaster />
+  <ConfirmDialog />
   <NavigationLoadingBar />
 
   {#if isPublicDashboardPath(page.url.pathname)}

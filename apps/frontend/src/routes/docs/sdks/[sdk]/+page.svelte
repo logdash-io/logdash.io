@@ -23,14 +23,14 @@
   and a reader can diff it against whatever upstream looks like today.
 -->
 <footer class="mt-10 w-full max-w-2xl">
-  <p class="text-neutral-500 text-sm leading-6">
+  <p class="text-fg-muted text-sm leading-6">
     Copied from the
     <!-- eslint-disable svelte/no-navigation-without-resolve -- pinned upstream README -->
     <a
       href={data.doc.sourceRef.url}
       target="_blank"
       rel="noopener noreferrer"
-      class="text-neutral-400 hover:text-fg-default underline underline-offset-2 transition-ink duration-150"
+      class="text-fg-tertiary hover:text-fg-default underline underline-offset-2 transition-ink duration-150"
     >
       <!-- eslint-enable svelte/no-navigation-without-resolve -->
       {data.doc.repo} README at {shortSha}

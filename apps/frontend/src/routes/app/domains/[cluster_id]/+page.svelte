@@ -1,10 +1,10 @@
 <script lang="ts">
-  import ClusterCockpit from '$lib/domains/app/clusters/ui/ClusterCockpit/ClusterCockpit.svelte';
+  import WebAnalyticsDashboard from '$lib/domains/web-analytics/ui/WebAnalyticsDashboard.svelte';
   import type { PageProps } from './$types';
 
   const { params }: PageProps = $props();
-
-  const clusterId = $derived(params.cluster_id);
 </script>
 
-<ClusterCockpit {clusterId} />
+{#key params.cluster_id}
+  <WebAnalyticsDashboard clusterId={params.cluster_id} />
+{/key}

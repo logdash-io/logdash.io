@@ -19,14 +19,14 @@
   const { tabs }: Props = $props();
 
   const tabClass = (tab: ServiceTab): ClassValue => [
-    'flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm',
+    'flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium',
     tab.active
-      ? 'bg-surface-100 text-fg-default'
-      : 'text-neutral-500 transition-ink hover:text-fg-default',
+      ? 'bg-surface-150-bg border-transparent text-fg-default'
+      : 'border-surface-50-border text-fg-tertiary transition-ink hover:text-fg-default',
   ];
 </script>
 
-<nav class="flex items-center gap-1" aria-label="Service">
+<nav class="flex items-center gap-1.5" aria-label="Service">
   {#each tabs as tab (tab.id)}
     {#if tab.href}
       <!-- eslint-disable svelte/no-navigation-without-resolve -- href is supplied by the caller -->
@@ -48,6 +48,6 @@
 </nav>
 
 {#snippet content(tab: ServiceTab)}
-  <tab.icon class="size-3.5 shrink-0" />
+  <tab.icon class="size-3.5 shrink-0 sm:hidden" />
   <span class={[{ 'max-sm:hidden': !tab.active }]}>{tab.label}</span>
 {/snippet}

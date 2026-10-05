@@ -137,7 +137,7 @@
         title={previewHost}
         status="unknown"
       >
-        <p class="text-neutral-400 text-sm leading-relaxed">
+        <p class="text-fg-tertiary text-sm leading-relaxed">
           This preview is no longer available. Start a new one to keep an eye on
           {previewHost}.
         </p>
@@ -167,7 +167,7 @@
         <li class="flex items-center gap-3">
           {#if index < activeStepIndex}
             <span
-              class="bg-surface-100 text-success flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
+              class="bg-surface-150-bg text-success flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
             >
               &check;
             </span>
@@ -177,14 +177,14 @@
             </span>
           {:else}
             <span
-              class="border-neutral-700 size-5 shrink-0 rounded-full border border-dashed"
+              class="border-surface-150-border size-5 shrink-0 rounded-full border border-dashed"
             ></span>
           {/if}
 
           <span
             class={[
               'text-sm transition-ink duration-200',
-              index <= activeStepIndex ? 'text-fg-default' : 'text-neutral-500',
+              index <= activeStepIndex ? 'text-fg-default' : 'text-fg-muted',
             ]}
           >
             {step.label}
@@ -199,7 +199,7 @@
 
 {#snippet watchedHistory(watched: WatchHistory)}
   <div class="flex flex-col gap-2 pb-4">
-    <p class="text-neutral-400 text-xs">{watchedLabel(watched)}</p>
+    <p class="text-fg-tertiary text-xs">{watchedLabel(watched)}</p>
 
     <UptimeBars
       buckets={fillEmptySlots(watched.hours, 'hour')}
@@ -216,7 +216,6 @@
       <Button
         variant="primary"
         size="sm"
-        class="px-5 font-medium"
         data-posthog-id="hero-setup-alerts-cta"
         disabled={isOpening}
         onclick={onSetUpAlerts}
@@ -224,14 +223,12 @@
         Set up alerts
       </Button>
 
-      {@render openDashboardButton('subtle')}
+      {@render openDashboardButton('secondary')}
     {:else}
       {@render openDashboardButton('primary')}
 
       <Button
-        variant="subtle"
         size="sm"
-        class="px-4 font-medium"
         data-posthog-id="hero-setup-alerts-cta"
         disabled={isOpening}
         onclick={onOpenDashboard}
@@ -242,11 +239,10 @@
   </div>
 {/snippet}
 
-{#snippet openDashboardButton(variant: 'primary' | 'subtle')}
+{#snippet openDashboardButton(variant: 'primary' | 'secondary')}
   <Button
     {variant}
     size="sm"
-    class="px-5 font-medium"
     data-posthog-id="hero-open-dashboard-cta"
     disabled={isOpening}
     onclick={onOpenDashboard}
@@ -264,7 +260,6 @@
     <Button
       variant="primary"
       size="sm"
-      class="px-5 font-medium"
       data-posthog-id={posthogId}
       onclick={onRetry}
     >

@@ -432,7 +432,7 @@
       class={[
         "absolute",
         {
-          "bg-surface-100 rounded-lg px-3 py-1 text-sm whitespace-nowrap text-white shadow":
+          "bg-surface-elevated-bg edge rounded-lg px-3 py-1 text-sm whitespace-nowrap text-fg-default shadow":
             !isSnippet,
         },
       ]}

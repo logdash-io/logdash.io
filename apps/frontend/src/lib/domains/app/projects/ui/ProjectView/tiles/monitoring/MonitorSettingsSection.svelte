@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
@@ -24,7 +25,14 @@
   let isDeleting = $state(false);
 
   async function onDeleteMonitor(): Promise<void> {
-    if (!confirm('Are you sure you want to delete this monitor?')) {
+    const confirmed = await confirmDialog.ask({
+      title: 'Delete monitor',
+      description:
+        'Its uptime history and alerts will be deleted. This cannot be undone.',
+      confirmLabel: 'Delete monitor',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -55,7 +63,7 @@
     {@render field('Name', monitor.name)}
 
     {#snippet action()}
-      <Button variant="neutral" size="sm" onclick={onEdit}>Edit</Button>
+      <Button size="sm" onclick={onEdit}>Edit</Button>
     {/snippet}
   </SettingsCardItem>
 
@@ -64,7 +72,7 @@
       {@render field('URL', monitor.url)}
 
       {#snippet action()}
-        <Button variant="neutral" size="sm" onclick={onEdit}>Edit</Button>
+        <Button size="sm" onclick={onEdit}>Edit</Button>
       {/snippet}
     </SettingsCardItem>
   {/if}
@@ -77,7 +85,7 @@
     )}
 
     {#snippet action()}
-      <Button variant="neutral" size="sm" onclick={onGetBadge}>
+      <Button size="sm" onclick={onGetBadge}>
         <ShieldCheckIcon class="size-4" />
         Get badge
       </Button>
@@ -92,7 +100,7 @@
 >
   <SettingsCardItem>
     <p>Delete monitor</p>
-    <p class="text-neutral-500">
+    <p class="text-fg-muted">
       Removes this monitor with all its checks and uptime history.
     </p>
 
@@ -111,7 +119,7 @@
 
 {#snippet field(label: string, value: string, muted = false)}
   <div class="flex min-w-0 items-center gap-3">
-    <span class="text-neutral-500 w-16 shrink-0">{label}</span>
-    <span class={['truncate', { 'text-neutral-500': muted }]}>{value}</span>
+    <span class="text-fg-muted w-16 shrink-0">{label}</span>
+    <span class={['truncate', { 'text-fg-muted': muted }]}>{value}</span>
   </div>
 {/snippet}

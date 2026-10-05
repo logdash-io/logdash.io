@@ -99,4 +99,21 @@ export class NotificationChannelUtils {
 
     return response.body as NotificationChannelSerialized;
   }
+
+  public async createEmailNotificationChannel(dto: {
+    clusterId: string;
+    token: string;
+    email: string;
+  }): Promise<request.Response> {
+    const body: CreateNotificationChannelBody = {
+      type: NotificationChannelType.Email,
+      name: dto.email,
+      options: { email: dto.email },
+    };
+
+    return request(this.app.getHttpServer())
+      .post(`/clusters/${dto.clusterId}/notification_channels`)
+      .set('Authorization', `Bearer ${dto.token}`)
+      .send(body);
+  }
 }

@@ -30,8 +30,8 @@
   }: Props = $props();
 
   const buttonClass = $derived([
-    'text-neutral-500 focus-visible:outline-brand transition-ink relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md focus-visible:outline-2 disabled:pointer-events-none disabled:text-neutral-700',
-    raised ? 'hover:bg-surface-150' : 'hover:bg-surface-100',
+    'text-fg-muted focus-visible:outline-brand transition-ink relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md focus-visible:outline-2 disabled:pointer-events-none disabled:text-fg-disabled',
+    raised ? 'hover:bg-surface-150-hover-bg' : 'hover:bg-surface-100-hover-bg',
     danger ? 'hover:text-error' : 'hover:text-fg-default',
     className,
   ]);

@@ -109,21 +109,23 @@
     </section>
 
     <nav aria-label="Keep reading" class="mt-14 flex flex-col gap-3">
-      <h2 class="text-neutral-500 text-sm font-medium">Keep reading</h2>
-      <div class="border-hairline divide-hairline divide-y border-y">
+      <h2 class="text-fg-muted text-sm font-medium">Keep reading</h2>
+      <div
+        class="border-surface-root-border divide-surface-root-border divide-y border-y"
+      >
         <!-- eslint-disable svelte/no-navigation-without-resolve -- every href is built with resolve() above -->
         {#each links as link (link.href)}
           <a href={link.href} class="group flex items-center gap-4 py-4">
             <span class="flex min-w-0 flex-col gap-0.5">
               <span class="text-[15px] font-medium">{link.title}</span>
               <span
-                class="text-neutral-400 group-hover:text-neutral-300 line-clamp-1 text-sm transition-ink duration-150"
+                class="text-fg-tertiary group-hover:text-fg-secondary line-clamp-1 text-sm transition-ink duration-150"
               >
                 {link.description}
               </span>
             </span>
             <ChevronRightIcon
-              class="text-neutral-600 group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
+              class="text-fg-faint group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
             />
           </a>
         {/each}

@@ -22,7 +22,7 @@
     up: { label: "Operational", dot: "bg-success" },
     degraded: { label: "Degraded", dot: "bg-warning" },
     down: { label: "Down", dot: "bg-error" },
-    unknown: { label: "Unknown", dot: "bg-neutral-600" },
+    unknown: { label: "Unknown", dot: "bg-idle" },
   };
 
   const status = $derived(statuses[monitor.status]);
@@ -43,7 +43,7 @@
     {monitor.name}
   </h2>
   <span
-    class="text-neutral-400 flex h-7 shrink-0 items-center gap-2 text-sm"
+    class="text-fg-tertiary flex h-7 shrink-0 items-center gap-2 text-sm"
   >
     <span class={["size-1.5 rounded-full", status.dot]}></span>
     {status.label}
@@ -85,11 +85,11 @@
 
 {#snippet stat(label: string, value: string, empty = false, tone = "")}
   <div class="flex min-w-0 flex-col gap-1">
-    <dt class="text-neutral-500 truncate text-xs">{label}</dt>
+    <dt class="text-fg-muted truncate text-xs">{label}</dt>
     <dd
       class={[
         "font-figure truncate text-base @xl:text-lg",
-        tone || (empty ? "text-neutral-500" : "text-fg-default"),
+        tone || (empty ? "text-fg-muted" : "text-fg-default"),
       ]}
     >
       {value}

@@ -6,33 +6,134 @@
 @import "./scrollbar.css";
 
 @theme {
-  --color-surface-root: var(--surface-root);
-  --color-surface-elevated: var(--surface-elevated);
-  --color-surface-100: var(--surface-100);
-  --color-surface-150: var(--surface-150);
-  --color-surface-well: var(--surface-well);
-  --color-surface-hover: var(--surface-hover);
-  --color-surface-inverse: var(--surface-inverse);
-  --color-surface-inverse-hover: var(--surface-inverse-hover);
+  --background-color-surface-root-bg: var(--surface-root-bg);
+  --background-color-surface-root-hover-bg: var(--surface-root-hover-bg);
+  --background-color-surface-root-selected-bg: var(--surface-root-selected-bg);
+  --background-color-surface-25-bg: var(--surface-25-bg);
+  --background-color-surface-25-hover-bg: var(--surface-25-hover-bg);
+  --background-color-surface-25-selected-bg: var(--surface-25-selected-bg);
+  --background-color-surface-50-bg: var(--surface-50-bg);
+  --background-color-surface-50-hover-bg: var(--surface-50-hover-bg);
+  --background-color-surface-50-selected-bg: var(--surface-50-selected-bg);
+  --background-color-surface-100-bg: var(--surface-100-bg);
+  --background-color-surface-100-hover-bg: var(--surface-100-hover-bg);
+  --background-color-surface-100-selected-bg: var(--surface-100-selected-bg);
+  --background-color-surface-150-bg: var(--surface-150-bg);
+  --background-color-surface-150-hover-bg: var(--surface-150-hover-bg);
+  --background-color-surface-150-selected-bg: var(--surface-150-selected-bg);
+  --background-color-surface-200-bg: var(--surface-200-bg);
+  --background-color-surface-200-hover-bg: var(--surface-200-hover-bg);
+  --background-color-surface-elevated-bg: var(--surface-elevated-bg);
+  --background-color-surface-elevated-hover-bg: var(
+    --surface-elevated-hover-bg
+  );
+  --background-color-surface-elevated-selected-bg: var(
+    --surface-elevated-selected-bg
+  );
+  --background-color-surface-input-bg: var(--surface-input-bg);
+  --background-color-surface-inverse-bg: var(--surface-inverse-bg);
+  --background-color-surface-inverse-hover-bg: var(--surface-inverse-hover-bg);
 
-  --color-fg-default: var(--fg-default);
-  --color-fg-secondary: var(--fg-secondary);
-  --color-fg-muted: var(--fg-muted);
-  --color-fg-faint: var(--fg-faint);
+  --border-color-surface-root-border: var(--surface-root-border);
+  --border-color-surface-25-border: var(--surface-25-border);
+  --border-color-surface-50-border: var(--surface-50-border);
+  --border-color-surface-100-border: var(--surface-100-border);
+  --border-color-surface-150-border: var(--surface-150-border);
+  --border-color-surface-200-border: var(--surface-200-border);
+  --border-color-surface-elevated-border: var(--surface-elevated-border);
+  --border-color-surface-input-border: var(--surface-input-border);
+  --border-color-surface-input-hover-border: var(--surface-input-hover-border);
 
-  --color-border-subtle: var(--border-subtle);
-  --color-border-default: var(--border-default);
-  --color-border-strong: var(--border-strong);
-  --color-hairline: var(--hairline);
+  --ring-color-surface-root-border: var(--surface-root-border);
+  --ring-color-surface-25-border: var(--surface-25-border);
+  --ring-color-surface-50-border: var(--surface-50-border);
+  --ring-color-surface-100-border: var(--surface-100-border);
+  --ring-color-surface-150-border: var(--surface-150-border);
+  --ring-color-surface-200-border: var(--surface-200-border);
+  --ring-color-surface-elevated-border: var(--surface-elevated-border);
+  --ring-color-surface-input-border: var(--surface-input-border);
+  --ring-color-surface-input-hover-border: var(--surface-input-hover-border);
+
+  --ring-color-surface-root-bg: var(--surface-root-bg);
+  --ring-color-surface-root-hover-bg: var(--surface-root-hover-bg);
+  --ring-color-surface-root-selected-bg: var(--surface-root-selected-bg);
+  --ring-color-surface-25-bg: var(--surface-25-bg);
+  --ring-color-surface-25-hover-bg: var(--surface-25-hover-bg);
+  --ring-color-surface-25-selected-bg: var(--surface-25-selected-bg);
+  --ring-color-surface-50-bg: var(--surface-50-bg);
+  --ring-color-surface-50-hover-bg: var(--surface-50-hover-bg);
+  --ring-color-surface-50-selected-bg: var(--surface-50-selected-bg);
+  --ring-color-surface-100-bg: var(--surface-100-bg);
+  --ring-color-surface-100-hover-bg: var(--surface-100-hover-bg);
+  --ring-color-surface-100-selected-bg: var(--surface-100-selected-bg);
+  --ring-color-surface-150-bg: var(--surface-150-bg);
+  --ring-color-surface-150-hover-bg: var(--surface-150-hover-bg);
+  --ring-color-surface-150-selected-bg: var(--surface-150-selected-bg);
+  --ring-color-surface-200-bg: var(--surface-200-bg);
+  --ring-color-surface-200-hover-bg: var(--surface-200-hover-bg);
+  --ring-color-surface-elevated-bg: var(--surface-elevated-bg);
+  --ring-color-surface-elevated-hover-bg: var(--surface-elevated-hover-bg);
+  --ring-color-surface-elevated-selected-bg: var(
+    --surface-elevated-selected-bg
+  );
+  --ring-color-surface-input-bg: var(--surface-input-bg);
+  --ring-color-surface-inverse-bg: var(--surface-inverse-bg);
+  --ring-color-surface-inverse-hover-bg: var(--surface-inverse-hover-bg);
+
+  --background-color-surface-root-border: var(--surface-root-border);
+  --background-color-surface-25-border: var(--surface-25-border);
+  --background-color-surface-50-border: var(--surface-50-border);
+  --background-color-surface-100-border: var(--surface-100-border);
+  --background-color-surface-150-border: var(--surface-150-border);
+  --background-color-surface-200-border: var(--surface-200-border);
+  --background-color-surface-elevated-border: var(--surface-elevated-border);
+  --background-color-surface-input-border: var(--surface-input-border);
+  --background-color-surface-input-hover-border: var(
+    --surface-input-hover-border
+  );
+
+  --text-color-fg-default: var(--fg-default);
+  --text-color-fg-secondary: var(--fg-secondary);
+  --text-color-fg-tertiary: var(--fg-tertiary);
+  --text-color-fg-muted: var(--fg-muted);
+  --text-color-fg-faint: var(--fg-faint);
+  --text-color-fg-disabled: var(--fg-disabled);
+  --text-color-fg-inverse: var(--fg-inverse);
+
+  --fill-fg-default: var(--fg-default);
+  --fill-fg-secondary: var(--fg-secondary);
+  --fill-fg-tertiary: var(--fg-tertiary);
+  --fill-fg-muted: var(--fg-muted);
+  --fill-fg-faint: var(--fg-faint);
+  --fill-fg-disabled: var(--fg-disabled);
+  --fill-fg-inverse: var(--fg-inverse);
+
+  --text-decoration-color-fg-default: var(--fg-default);
+  --text-decoration-color-fg-secondary: var(--fg-secondary);
+  --text-decoration-color-fg-tertiary: var(--fg-tertiary);
+  --text-decoration-color-fg-muted: var(--fg-muted);
+  --text-decoration-color-fg-faint: var(--fg-faint);
+  --text-decoration-color-fg-disabled: var(--fg-disabled);
+  --text-decoration-color-fg-inverse: var(--fg-inverse);
 
   --color-brand: var(--brand);
-
   --color-error: var(--error);
-  --color-error-bg: var(--error-bg);
-  --color-error-bg-hover: var(--error-bg-hover);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
+  --color-idle: var(--idle);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-heat-0: var(--heat-0);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+
+  --background-color-error-bg: var(--error-bg);
+  --background-color-error-hover-bg: var(--error-hover-bg);
 
   --container-8xl: 90rem;
   --container-9xl: 100rem;
@@ -40,6 +141,35 @@
   --container-landing: 85rem;
 
   --z-top: 2147483647;
+}
+
+/*
+  A border belongs to a surface. Painting an element with a surface makes its
+  edge utilities, and those of everything inside it, draw in that surface's
+  border colour.
+*/
+.bg-surface-root-bg {
+  --edge-color: var(--surface-root-border);
+}
+
+.bg-surface-50-bg {
+  --edge-color: var(--surface-50-border);
+}
+
+.bg-surface-100-bg {
+  --edge-color: var(--surface-100-border);
+}
+
+.bg-surface-150-bg {
+  --edge-color: var(--surface-150-border);
+}
+
+.bg-surface-200-bg {
+  --edge-color: var(--surface-200-border);
+}
+
+.bg-surface-elevated-bg {
+  --edge-color: var(--surface-elevated-border);
 }
 
 /*
@@ -61,4 +191,155 @@
   font-family: var(--font-mono);
   font-weight: 500;
   letter-spacing: 0;
+}
+
+/*
+  Hairlines: half-pixel lines drawn with inset box-shadows instead of borders,
+  one device pixel on high-density screens. They take no layout space, follow
+  the corner radius, and stack with each other and with Tailwind's shadow and
+  ring utilities, since every side sits in its own non-inheriting variable
+  that feeds Tailwind's inset-shadow slot.
+  `edge` outlines a box, `edge-t|r|b|l|x|y` draw single sides,
+  `edge-between` and `edge-between-x` separate the children of a list, and
+  `edge-over` draws the outline on ::after for content that covers the box.
+*/
+@property --edge-all {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+
+@property --edge-t {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+
+@property --edge-r {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+
+@property --edge-b {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+
+@property --edge-l {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+
+@utility edge {
+  --edge-all: inset 0 0 0 0.5px var(--edge-color);
+  --tw-inset-shadow:
+    var(--edge-all), var(--edge-t), var(--edge-r), var(--edge-b), var(--edge-l);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow, 0 0 #0000);
+}
+
+@utility edge-t {
+  --edge-t: inset 0 0.5px 0 var(--edge-color);
+  --tw-inset-shadow:
+    var(--edge-all), var(--edge-t), var(--edge-r), var(--edge-b), var(--edge-l);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow, 0 0 #0000);
+}
+
+@utility edge-r {
+  --edge-r: inset -0.5px 0 0 var(--edge-color);
+  --tw-inset-shadow:
+    var(--edge-all), var(--edge-t), var(--edge-r), var(--edge-b), var(--edge-l);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow, 0 0 #0000);
+}
+
+@utility edge-b {
+  --edge-b: inset 0 -0.5px 0 var(--edge-color);
+  --tw-inset-shadow:
+    var(--edge-all), var(--edge-t), var(--edge-r), var(--edge-b), var(--edge-l);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow, 0 0 #0000);
+}
+
+@utility edge-l {
+  --edge-l: inset 0.5px 0 0 var(--edge-color);
+  --tw-inset-shadow:
+    var(--edge-all), var(--edge-t), var(--edge-r), var(--edge-b), var(--edge-l);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow, 0 0 #0000);
+}
+
+@utility edge-x {
+  --edge-r: inset -0.5px 0 0 var(--edge-color);
+  --edge-l: inset 0.5px 0 0 var(--edge-color);
+  --tw-inset-shadow:
+    var(--edge-all), var(--edge-t), var(--edge-r), var(--edge-b), var(--edge-l);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow, 0 0 #0000);
+}
+
+@utility edge-y {
+  --edge-t: inset 0 0.5px 0 var(--edge-color);
+  --edge-b: inset 0 -0.5px 0 var(--edge-color);
+  --tw-inset-shadow:
+    var(--edge-all), var(--edge-t), var(--edge-r), var(--edge-b), var(--edge-l);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000),
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow, 0 0 #0000);
+}
+
+@utility edge-between {
+  & > :not(:first-child) {
+    --edge-t: inset 0 0.5px 0 var(--edge-color);
+    --tw-inset-shadow:
+      var(--edge-all), var(--edge-t), var(--edge-r), var(--edge-b),
+      var(--edge-l);
+    box-shadow:
+      var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000),
+      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+      var(--tw-shadow, 0 0 #0000);
+  }
+}
+
+@utility edge-between-x {
+  & > :not(:first-child) {
+    --edge-l: inset 0.5px 0 0 var(--edge-color);
+    --tw-inset-shadow:
+      var(--edge-all), var(--edge-t), var(--edge-r), var(--edge-b),
+      var(--edge-l);
+    box-shadow:
+      var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000),
+      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+      var(--tw-shadow, 0 0 #0000);
+  }
+}
+
+@utility edge-over {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 0.5px var(--edge-color);
+    pointer-events: none;
+  }
 }

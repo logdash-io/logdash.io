@@ -34,9 +34,9 @@
       width: clamp(3rem, 20rem, 100%);
       height: 2.5rem;
       padding-inline: 0.75rem 1.75rem;
-      border: 1px solid var(--fg-faint);
+      border: 1px solid var(--surface-input-border);
       border-radius: 0.75rem;
-      background-color: var(--surface-100);
+      background-color: var(--surface-input-bg);
       background-image:
         linear-gradient(45deg, #0000 50%, currentColor 50%),
         linear-gradient(135deg, currentColor 50%, #0000 50%);
@@ -61,6 +61,10 @@
       font-size: 0.75rem;
     }
 
+    .ld-select:hover {
+      border-color: var(--surface-input-hover-border);
+    }
+
     .ld-select:focus {
       outline: none;
       border-color: var(--brand);
@@ -69,8 +73,8 @@
 
     .ld-select:disabled {
       cursor: not-allowed;
-      border-color: var(--surface-elevated);
-      background-color: var(--surface-elevated);
+      border-color: transparent;
+      background-color: var(--surface-100-bg);
       color: var(--fg-muted);
     }
 
@@ -86,9 +90,9 @@
       margin-block: 0.5rem;
       margin-inline: 0.5rem;
       padding: 0.5rem;
-      border: 1px solid var(--surface-elevated);
+      border: 1px solid var(--surface-elevated-border);
       border-radius: 0.75rem;
-      background-color: inherit;
+      background-color: var(--surface-elevated-bg);
       color: inherit;
       translate: -0.5rem 0;
     }
@@ -111,11 +115,11 @@
     .ld-select :global(option:not(:disabled):is(:hover, :focus-visible)) {
       cursor: pointer;
       outline: none;
-      background-color: var(--surface-150);
+      background-color: var(--surface-elevated-hover-bg);
     }
 
     .ld-select :global(option:not(:disabled):active) {
-      background-color: var(--surface-100);
+      background-color: var(--surface-elevated-selected-bg);
       color: var(--fg-default);
     }
   }

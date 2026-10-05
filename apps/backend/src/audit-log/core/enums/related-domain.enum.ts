@@ -9,4 +9,5 @@ export enum RelatedDomain {
   HttpMonitor = 'httpMonitor',
   CustomDomain = 'customDomain',
   PersonalApiKey = 'personalApiKey',
+  WebAnalytics = 'webAnalytics',
 }

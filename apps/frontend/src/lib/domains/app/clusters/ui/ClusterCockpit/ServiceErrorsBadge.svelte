@@ -6,6 +6,7 @@
   import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
+  import { Badge } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     projectId: string;
@@ -72,19 +73,19 @@
   });
 </script>
 
-{#if loading}
-  <span class="text-neutral-600 font-mono text-xs">Checking errors</span>
-{:else if failed}
-  <span class="text-neutral-600 font-mono text-xs">Could not check errors</span>
-{:else if errorCount > 0}
+{#if !loading && !failed && errorCount > 0}
   <button
     type="button"
     onclick={onBadgeClick}
-    class="text-error hover:decoration-error relative flex cursor-pointer items-center gap-1.5 font-mono text-xs underline decoration-transparent underline-offset-2 transition-ink duration-150"
+    class="relative cursor-pointer"
+    title="Show errors from the last hour"
   >
-    <span class="bg-error size-1.5 shrink-0 rounded-full"></span>
-    {errorLabel}
+    <Badge
+      variant="outline"
+      class="hover:border-surface-150-border tabular-nums"
+    >
+      <span class="bg-error size-1.5 shrink-0 rounded-full"></span>
+      {errorLabel}
+    </Badge>
   </button>
-{:else}
-  <span class="text-neutral-500 font-mono text-xs">No errors in 1h</span>
 {/if}

@@ -35,7 +35,7 @@
           <span class="faq-thinking">Thinking…</span>
         {:else if entry.status === 'answered'}
           <p class="whitespace-pre-line">{entry.answer}</p>
-          <p class="text-neutral-600 mt-3 text-xs">Answered by AI</p>
+          <p class="text-fg-faint mt-3 text-xs">Answered by AI</p>
         {:else}
           <p>
             {entry.failure}
@@ -56,7 +56,7 @@
 
 <form class="flex items-center gap-6" onsubmit={onSubmit}>
   <input
-    class="selection:bg-neutral-700 placeholder:text-neutral-500 focus:placeholder:text-neutral-600 min-w-0 flex-1 bg-transparent py-5 text-base font-medium outline-none"
+    class="selection:bg-surface-200-bg placeholder:text-fg-muted focus:placeholder:text-fg-faint min-w-0 flex-1 bg-transparent py-5 text-base font-medium outline-none"
     type="text"
     name="question"
     autocomplete="off"
@@ -69,7 +69,7 @@
 
   <button
     type="submit"
-    class="text-neutral-600 enabled:text-fg-default enabled:hover:bg-surface-hover transition-ink -mr-1 grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg outline-none focus-visible:shadow-(--focus-ring) disabled:cursor-default"
+    class="text-fg-faint enabled:text-fg-default enabled:hover:bg-surface-root-hover-bg transition-ink -mr-1 grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg outline-none focus-visible:shadow-(--focus-ring) disabled:cursor-default"
     aria-label="Send question"
     data-posthog-id="faq-ask-submit"
     disabled={!canSend}
@@ -82,9 +82,9 @@
   .faq-thinking {
     background: linear-gradient(
         90deg,
-        var(--color-neutral-600) 35%,
-        var(--color-neutral-300) 50%,
-        var(--color-neutral-600) 65%
+        var(--fg-faint) 35%,
+        var(--fg-secondary) 50%,
+        var(--fg-faint) 65%
       )
       0 0 / 300% 100%;
     background-clip: text;
@@ -105,7 +105,7 @@
   @media (prefers-reduced-motion: reduce) {
     .faq-thinking {
       animation: none;
-      color: var(--color-neutral-500);
+      color: var(--fg-muted);
       background: none;
     }
   }

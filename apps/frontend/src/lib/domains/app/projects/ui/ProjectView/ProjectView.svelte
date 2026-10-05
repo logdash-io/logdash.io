@@ -29,7 +29,7 @@
           <MonitoringTile {clusterId} {projectId} />
         {:else}
           <EmptyState
-            class="border-hairline shrink-0 border-b p-4"
+            class="shrink-0 edge-b p-4"
             title="No monitor yet"
             description="Add one to check that this service is up and how fast it answers."
           >
@@ -56,7 +56,7 @@
       </div>
 
       <div
-        class="border-hairline flex shrink-0 flex-col max-lg:border-t lg:w-64 lg:overflow-y-auto lg:border-l xl:w-72"
+        class="flex shrink-0 flex-col max-lg:edge-t lg:w-64 lg:overflow-y-auto lg:edge-l xl:w-72"
       >
         <MetricsTiles />
       </div>

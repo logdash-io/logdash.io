@@ -8,14 +8,12 @@
   import type { PostHog } from 'posthog-js';
 
   type Props = {
-    variant?: 'secondary' | 'neutral';
     class?: ClassValue;
     children?: Snippet;
     source?: UpgradeSource;
     onclick?: () => void;
   };
   const {
-    variant = 'secondary',
     class: className = '',
     children,
     source = 'unknown',
@@ -34,7 +32,7 @@
   };
 </script>
 
-<Button {variant} size="sm" class={className} onclick={onClick}>
+<Button size="sm" class={className} onclick={onClick}>
   <RocketIcon class="size-4 shrink-0" />
   {#if children}
     {@render children()}

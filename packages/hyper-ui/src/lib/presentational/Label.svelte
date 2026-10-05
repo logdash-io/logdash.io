@@ -22,7 +22,7 @@
       align-items: center;
       gap: 0.375rem;
       white-space: nowrap;
-      color: var(--fg-secondary);
+      color: var(--fg-tertiary);
     }
 
     .ld-label:has(:global(input)) {

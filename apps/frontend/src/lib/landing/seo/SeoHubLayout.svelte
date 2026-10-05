@@ -72,7 +72,7 @@
     {:else}
       <header class="flex flex-col gap-3">
         <h1 class="text-4xl font-medium tracking-[-0.03em]">{heading}</h1>
-        <p class="text-neutral-400 text-lg leading-7">{family.intro}</p>
+        <p class="text-fg-tertiary text-lg leading-7">{family.intro}</p>
       </header>
     {/if}
 
@@ -106,24 +106,26 @@
         class={['flex flex-col gap-3', article ? 'mt-14' : 'mt-12']}
       >
         {#if article}
-          <h2 class="text-neutral-500 text-sm font-medium">
+          <h2 class="text-fg-muted text-sm font-medium">
             {family.hubLabel}
           </h2>
         {/if}
-        <div class="border-hairline divide-hairline divide-y border-y">
+        <div
+          class="border-surface-root-border divide-surface-root-border divide-y border-y"
+        >
           <!-- eslint-disable svelte/no-navigation-without-resolve -- every href is built with resolve() above -->
           {#each entries as entry (entry.href)}
             <a href={entry.href} class="group flex items-center gap-4 py-4">
               <span class="flex min-w-0 flex-col gap-0.5">
                 <span class="text-[15px] font-medium">{entry.title}</span>
                 <span
-                  class="text-neutral-400 group-hover:text-neutral-300 line-clamp-1 text-sm transition-ink duration-150"
+                  class="text-fg-tertiary group-hover:text-fg-secondary line-clamp-1 text-sm transition-ink duration-150"
                 >
                   {entry.description}
                 </span>
               </span>
               <ChevronRightIcon
-                class="text-neutral-600 group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
+                class="text-fg-faint group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
               />
             </a>
           {/each}

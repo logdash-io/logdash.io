@@ -37,7 +37,7 @@
       width: var(--checkbox-size);
       height: var(--checkbox-size);
       padding: 0.1875rem;
-      border: 1px solid var(--border-strong);
+      border: 1px solid var(--surface-input-border);
       border-radius: 0.375rem;
       color: var(--fg-default);
       vertical-align: middle;
@@ -54,7 +54,7 @@
 
     .ld-checkbox[data-variant="primary"] {
       border-color: var(--brand);
-      color: var(--surface-root);
+      color: var(--fg-inverse);
     }
 
     .ld-checkbox[data-variant="primary"]:checked {

@@ -9,7 +9,7 @@
 </script>
 
 <header
-  class="border-hairline flex h-12 shrink-0 items-center gap-3 border-b px-4"
+  class="flex min-h-12 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 edge-b px-4 py-2"
 >
   {@render children()}
 </header>

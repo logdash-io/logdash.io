@@ -30,7 +30,7 @@
     {#each avatars as avatar, i (avatar.src)}
       <img
         class={[
-          'ring-surface-root bg-surface-elevated size-6 rounded-full object-cover grayscale ring-2 not-first:-ml-1.5',
+          'ring-surface-root-bg bg-surface-100-bg size-6 rounded-full object-cover grayscale ring-2 not-first:-ml-1.5',
           i >= MOBILE_AVATARS ? 'hidden sm:block' : 'block',
         ]}
         src={avatar.src}
@@ -39,7 +39,7 @@
     {/each}
   </div>
 
-  <span class="text-neutral-400 text-sm text-pretty">
+  <span class="text-fg-tertiary text-sm text-pretty">
     {#each TRUSTED_BY as part (part.text)}
       {#if part.strong}
         <span class="text-fg-default font-medium">{part.text}</span>

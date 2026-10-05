@@ -20,14 +20,13 @@ import {
   trialTier,
 } from '$lib/domains/shared/payment-plans.const';
 import type { UserTier } from '$lib/domains/shared/types';
-import type { User } from '$lib/domains/shared/user/domain/user';
 import { posthog } from 'posthog-js';
 import { match } from 'ts-pattern';
 
 export type HeroClaimStep =
   | { kind: 'intro' }
   | { kind: 'waiting'; provider: OAuthProvider }
-  | { kind: 'onboarding'; user: User }
+  | { kind: 'onboarding' }
   | { kind: 'busy'; label: string };
 
 export type HeroClaimTrigger = 'nudge' | 'alerts';
@@ -197,7 +196,7 @@ class HeroClaimState {
     }
 
     if (user && needsOnboarding(user)) {
-      this._step = { kind: 'onboarding', user };
+      this._step = { kind: 'onboarding' };
       return;
     }
 
@@ -238,7 +237,7 @@ class HeroClaimState {
         provider,
         flow: 'claim',
         tier: this.trialTier,
-        next_url: `/app/domains/${preview.clusterId}/${preview.projectId}/monitoring?claimed=1`,
+        next_url: `/app/domains/${preview.clusterId}?claimed=1`,
       });
       anonymousPreviewState.handOffPreview();
     } catch (error) {
@@ -253,12 +252,13 @@ class HeroClaimState {
     this._step = { kind: 'busy', label: 'Opening your dashboard' };
     anonymousPreviewState.handOffPreview();
 
+    if (!preview) {
+      window.location.assign(resolve('/app/domains'));
+      return;
+    }
+
     window.location.assign(
-      preview
-        ? resolve(
-            `/app/domains/${preview.clusterId}/${preview.projectId}/monitoring?claimed=1`,
-          )
-        : resolve('/app/domains'),
+      resolve(`/app/domains/${preview.clusterId}?claimed=1`),
     );
   }
 }

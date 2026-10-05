@@ -9,8 +9,8 @@
   const { children, action }: Props = $props();
 </script>
 
-<div class="flex w-full items-center justify-between gap-4 px-4 py-4">
-  <div class="min-w-0 flex-1 text-sm">
+<div class="flex min-h-15 w-full items-center justify-between gap-4 px-4 py-3">
+  <div class="min-w-0 flex-1 text-[13px]">
     {@render children()}
   </div>
 

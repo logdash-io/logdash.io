@@ -44,10 +44,10 @@
   };
   const SUBMENU_ITEMS = 'input, button, [tabindex="0"]';
   const FOCUS_CLASS =
-    'outline-none focus-visible:bg-surface-100 focus-visible:shadow-(--focus-ring)';
-  const INLINE_SUBMENU_CLASS = 'border-hairline my-0.5 ml-3 border-l pl-1';
+    'outline-none focus-visible:bg-surface-elevated-hover-bg focus-visible:shadow-(--focus-ring)';
+  const INLINE_SUBMENU_CLASS = 'my-0.5 ml-3 edge-l pl-1';
   const SELECTABLE_ROW_CLASS =
-    'hover:bg-surface-100 flex items-center gap-1.5 rounded-lg pl-3 has-[>button:focus-visible]:bg-surface-100 has-[>button:focus-visible]:shadow-(--focus-ring)';
+    'hover:bg-surface-elevated-hover-bg flex items-center gap-1.5 rounded-lg pl-3 has-[>button:focus-visible]:bg-surface-elevated-hover-bg has-[>button:focus-visible]:shadow-(--focus-ring)';
 
   const floating = new MediaQuery('min-width: 640px');
 
@@ -58,7 +58,7 @@
   const submenuClass = $derived(
     floating.current
       ? [
-          'ld-card-base absolute z-50 rounded-xl whitespace-nowrap shadow-lg',
+          'bg-surface-elevated-bg border-surface-elevated-border absolute z-50 rounded-xl border whitespace-nowrap shadow-lg',
           SUBMENU_POSITION[submenuSide],
         ]
       : INLINE_SUBMENU_CLASS,
@@ -292,7 +292,9 @@
   role="button"
   tabindex="-1"
 ></div>
-<div class="text-fg-default ld-card-base z-1 w-fit rounded-xl p-0.5 shadow">
+<div
+  class="text-fg-default bg-surface-elevated-bg border-surface-elevated-border z-1 w-fit rounded-xl border p-0.5 shadow"
+>
   {#if showCustomDatePicker}
     {@render customDatePickerContent(close)}
   {:else}
@@ -312,7 +314,7 @@
             class={[
               FOCUS_CLASS,
               'flex w-full cursor-pointer items-center justify-between gap-6 rounded-lg px-3 py-2 text-left',
-              { 'bg-surface-100': openMenu === row.id },
+              'aria-expanded:bg-surface-elevated-hover-bg',
             ]}
             onclick={(event) => onRowClick(event, row.id)}
             onkeydown={(event) => onRowKeydown(event, row.id)}
@@ -330,7 +332,7 @@
             </span>
             <ChevronRightIcon
               class={[
-                'h-4 w-4 text-neutral-500 transition-transform',
+                'h-4 w-4 text-fg-muted transition-transform',
                 { 'rotate-90': !floating.current && openMenu === row.id },
               ]}
             />
@@ -354,7 +356,12 @@
   <ul class="p-0">
     {#each LOG_LEVELS as level (level.value)}
       {@const isSelected = filtersStore.hasLevel(level.value)}
-      <li class={[SELECTABLE_ROW_CLASS, { 'bg-surface-100': isSelected }]}>
+      <li
+        class={[
+          SELECTABLE_ROW_CLASS,
+          { 'bg-surface-elevated-selected-bg': isSelected },
+        ]}
+      >
         <Checkbox
           size="xs"
           checked={isSelected}
@@ -372,12 +379,12 @@
       </li>
     {/each}
     {#if filtersStore.levels.length > 0}
-      <li class="border-border-default mt-1 border-t pt-1">
+      <li class="border-surface-elevated-border mt-1 border-t pt-1">
         <button
           type="button"
           class={[
             FOCUS_CLASS,
-            'hover:bg-surface-100 text-neutral-400 w-full rounded-lg px-3 py-1.5 text-left text-xs',
+            'hover:bg-surface-elevated-hover-bg text-fg-tertiary w-full rounded-lg px-3 py-1.5 text-left text-xs',
           ]}
           onclick={onClearLevels}
         >
@@ -399,8 +406,11 @@
         <UpgradeElement
           class={[
             FOCUS_CLASS,
-            'hover:bg-surface-100 flex w-full items-center justify-between gap-4 rounded-lg px-3 py-1.5 text-left',
-            { 'bg-surface-100': currentTimeRangeLabel === range.label },
+            'hover:bg-surface-elevated-hover-bg flex w-full items-center justify-between gap-4 rounded-lg px-3 py-1.5 text-left',
+            {
+              'bg-surface-elevated-selected-bg':
+                currentTimeRangeLabel === range.label,
+            },
           ]}
           onclick={() => {
             if (requiresUpgrade) {
@@ -426,13 +436,18 @@
 {#snippet namespaceSubmenu(close: () => void)}
   <ul class="p-0">
     {#if loadingNamespaces}
-      <li class="px-3 py-1.5 text-neutral-400">Loading namespaces</li>
+      <li class="px-3 py-1.5 text-fg-tertiary">Loading namespaces</li>
     {:else if availableNamespaces.length === 0}
-      <li class="px-3 py-1.5 text-neutral-400">No namespaces</li>
+      <li class="px-3 py-1.5 text-fg-tertiary">No namespaces</li>
     {:else}
       {#each availableNamespaces as nsMetadata (nsMetadata.namespace)}
         {@const isSelected = filtersStore.hasNamespace(nsMetadata.namespace)}
-        <li class={[SELECTABLE_ROW_CLASS, { 'bg-surface-100': isSelected }]}>
+        <li
+          class={[
+            SELECTABLE_ROW_CLASS,
+            { 'bg-surface-elevated-selected-bg': isSelected },
+          ]}
+        >
           <Checkbox
             size="xs"
             checked={isSelected}
@@ -458,7 +473,7 @@
     <div class="text-sm font-medium">Custom range</div>
     <div class="space-y-2">
       <div class="space-y-1">
-        <span class="text-neutral-400 block text-xs">From</span>
+        <span class="text-fg-tertiary block text-xs">From</span>
         <SveltyPicker
           bind:value={customStartDate}
           mode="datetime"
@@ -468,7 +483,7 @@
         />
       </div>
       <div class="space-y-1">
-        <span class="text-neutral-400 block text-xs">To</span>
+        <span class="text-fg-tertiary block text-xs">To</span>
         <SveltyPicker
           bind:value={customEndDate}
           mode="datetime"
@@ -479,12 +494,7 @@
       </div>
     </div>
     <div class="flex gap-2">
-      <Button
-        variant="neutral"
-        size="xs"
-        class="flex-1"
-        onclick={onCustomDateCancel}
-      >
+      <Button size="xs" class="flex-1" onclick={onCustomDateCancel}>
         Cancel
       </Button>
       <UpgradeElement

@@ -73,7 +73,7 @@
     {/if}
   </PaneHeader>
 
-  <div class="divide-hairline flex flex-col divide-y">
+  <div class="flex flex-col edge-between">
     {#if loading}
       <div class="flex h-11 items-center px-4">
         <LoadingLine label="Loading metrics" />
@@ -87,8 +87,8 @@
             class={[
               'focus-visible:outline-brand focus-visible:-outline-offset-2 focus-visible:outline-2 flex flex-col gap-2 p-4',
               metric.active
-                ? 'bg-surface-100 hover:bg-surface-150'
-                : 'hover:bg-surface-100',
+                ? 'bg-surface-50-selected-bg'
+                : 'hover:bg-surface-50-hover-bg',
             ]}
             aria-current={metric.active ? 'page' : undefined}
           >
@@ -111,13 +111,13 @@
       {#if onNewMetric}
         <button
           type="button"
-          class="text-neutral-500 hover:bg-surface-100 focus-visible:outline-brand focus-visible:-outline-offset-2 focus-visible:outline-2 flex h-11 cursor-pointer items-center gap-2 px-4 text-left text-sm"
+          class="text-fg-muted hover:bg-surface-50-hover-bg focus-visible:outline-brand focus-visible:-outline-offset-2 focus-visible:outline-2 flex h-11 cursor-pointer items-center gap-2 px-4 text-left text-sm"
           onclick={onNewMetric}
         >
           {@render newMetric()}
         </button>
       {:else}
-        <div class="text-neutral-500 flex h-11 items-center gap-2 px-4 text-sm">
+        <div class="text-fg-muted flex h-11 items-center gap-2 px-4 text-sm">
           {@render newMetric()}
         </div>
       {/if}
@@ -132,7 +132,7 @@
     <span
       class={[
         'truncate text-xs',
-        metric.active ? 'text-neutral-300' : 'text-neutral-500',
+        metric.active ? 'text-fg-secondary' : 'text-fg-muted',
       ]}
     >
       {metric.name}
@@ -143,10 +143,7 @@
   </div>
 
   <svg
-    class={[
-      'h-9 w-full',
-      metric.active ? 'text-neutral-400' : 'text-neutral-500',
-    ]}
+    class={['h-9 w-full', metric.active ? 'text-fg-tertiary' : 'text-fg-muted']}
     viewBox="0 0 {SPARK_WIDTH} {SPARK_HEIGHT}"
     preserveAspectRatio="none"
     aria-hidden="true"
@@ -166,6 +163,6 @@
 {/snippet}
 
 {#snippet newMetric()}
-  <PlusIcon class="size-4 shrink-0 text-neutral-600" />
+  <PlusIcon class="size-4 shrink-0 text-fg-faint" />
   <span>New metric</span>
 {/snippet}

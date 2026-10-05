@@ -28,7 +28,7 @@
   <div
     class="flex flex-col items-center gap-6 px-4 py-10 sm:px-6 lg:px-10 lg:py-12"
   >
-    <p class="text-neutral-500 text-sm">Works with your stack</p>
+    <p class="text-fg-muted text-sm">Works with your stack</p>
 
     <!-- The names are in the list itself, not only in tooltips, so screen readers and markdown twins get them. -->
     <ul class="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">

@@ -10,7 +10,7 @@
   let className: ClassValue = '';
   export { className as class };
   let id = crypto.randomUUID().toString().slice(0, 8);
-  export let fillColor = 'var(--color-neutral-700)';
+  export let fillColor = 'var(--surface-root-border)';
   export let strokeWidth = 1;
 </script>
 

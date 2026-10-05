@@ -45,7 +45,7 @@
 -->
 <!-- eslint-disable svelte/no-navigation-without-resolve -- linkAttrs() resolves internal paths -->
 <footer class="w-full">
-  <div class="border-hairline ld-hatch h-5 border-y lg:h-8"></div>
+  <div class="border-surface-root-border ld-hatch h-5 border-y lg:h-8"></div>
 
   <LandingSection
     divider={false}
@@ -65,9 +65,7 @@
 
       {#each FOOTER_COLUMNS as column (column.title)}
         <nav aria-label={column.title} class="flex flex-col">
-          <h3
-            class="text-neutral-500 flex h-7 items-center text-sm font-medium"
-          >
+          <h3 class="text-fg-muted flex h-7 items-center text-sm font-medium">
             {column.title}
           </h3>
           <ul class="flex flex-col">
@@ -75,12 +73,12 @@
               <li>
                 <a
                   {...linkAttrs(link)}
-                  class="text-neutral-300 hover:text-fg-default flex h-7 w-fit items-center gap-1.5 text-sm transition-ink duration-150"
+                  class="text-fg-secondary hover:text-fg-default flex h-7 w-fit items-center gap-1.5 text-sm transition-ink duration-150"
                   draggable="false"
                 >
                   {link.title}
                   {#if leavesSite(link)}
-                    <OpenIcon class="text-neutral-600 size-3 shrink-0" />
+                    <OpenIcon class="text-fg-faint size-3 shrink-0" />
                   {/if}
                 </a>
               </li>
@@ -102,7 +100,7 @@
               target="_blank"
               rel="noopener noreferrer"
               aria-label={social.label}
-              class="text-neutral-500 hover:text-fg-default flex size-6 items-center justify-center transition-ink duration-150"
+              class="text-fg-muted hover:text-fg-default flex size-6 items-center justify-center transition-ink duration-150"
               draggable="false"
             >
               <Icon class="size-4" />
@@ -112,7 +110,7 @@
       </ul>
 
       <div
-        class="text-neutral-500 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs leading-[18px] sm:justify-end"
+        class="text-fg-muted flex flex-wrap items-center gap-x-6 gap-y-2 text-xs leading-[18px] sm:justify-end"
       >
         <!-- An SVG flag, not the emoji: Windows shows 🇪🇺 as the letters "EU". -->
         <span class="flex items-center gap-1.5">
@@ -138,7 +136,7 @@
       class="pointer-events-none absolute inset-0 mx-auto w-full max-w-landing lg:px-10"
       aria-hidden="true"
     >
-      <div class="border-hairline h-full lg:border-x"></div>
+      <div class="border-surface-root-border h-full lg:border-x"></div>
     </div>
 
     <FooterEnding part="runway" />

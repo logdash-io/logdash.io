@@ -30,9 +30,22 @@ interface WebhookNotificationChannel {
   updatedAt: string;
 }
 
+interface EmailNotificationChannel {
+  id: string;
+  clusterId: string;
+  target: 'email';
+  name: string;
+  options: {
+    email: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type NotificationChannel =
   | TelegramNotificationChannel
-  | WebhookNotificationChannel;
+  | WebhookNotificationChannel
+  | EmailNotificationChannel;
 
 type CreateTelegramNotificationChannelDTO = {
   type: 'telegram';

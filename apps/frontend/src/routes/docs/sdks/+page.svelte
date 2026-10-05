@@ -67,7 +67,7 @@
 <article class="flex w-full max-w-2xl flex-col">
   <header class="flex flex-col gap-3">
     <h1 class="text-4xl font-medium tracking-[-0.03em]">SDKs</h1>
-    <p class="text-neutral-400 text-lg leading-7">
+    <p class="text-fg-tertiary text-lg leading-7">
       Reference for the eight official SDKs and the HTTP API underneath them.
       Pick your language, or skip the SDK and post the JSON yourself.
     </p>
@@ -77,32 +77,32 @@
     <h2 id="sdks" class="scroll-mt-24 text-xl font-medium tracking-[-0.02em]">
       Official SDKs
     </h2>
-    <p class="text-neutral-400 text-[15px] leading-7">
+    <p class="text-fg-tertiary text-[15px] leading-7">
       Each page covers installation, initialisation, one log, one metric and the
       questions people actually ask. Every snippet is copied from the SDK README
       it links back to.
     </p>
 
     <div
-      class="bg-hairline border-hairline grid grid-cols-1 gap-px overflow-hidden rounded-xl border sm:grid-cols-2"
+      class="bg-surface-root-border border-surface-root-border grid grid-cols-1 gap-px overflow-hidden rounded-xl border sm:grid-cols-2"
     >
       {#each sdks as { doc, icon } (doc.slug)}
         {@const Icon = icon}
         <a
           href={resolve('/docs/sdks/[sdk]', { sdk: doc.slug })}
-          class="bg-surface-root hover:bg-surface-elevated group flex items-center gap-3 px-4 py-3.5"
+          class="bg-surface-root-bg hover:bg-surface-root-hover-bg group flex items-center gap-3 px-4 py-3.5"
         >
           {#if Icon}
             <Icon class="size-4 shrink-0" />
           {/if}
           <span class="flex min-w-0 flex-col gap-0.5">
             <span class="text-[15px] leading-5">{doc.name}</span>
-            <span class="text-neutral-500 truncate font-mono text-xs">
+            <span class="text-fg-muted truncate font-mono text-xs">
               {installLine(doc.install.code)}
             </span>
           </span>
           <ChevronRightIcon
-            class="text-neutral-600 group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
+            class="text-fg-faint group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
           />
         </a>
       {/each}
@@ -114,7 +114,7 @@
     >
       Raw HTTP API
     </h2>
-    <p class="text-neutral-400 text-[15px] leading-7">
+    <p class="text-fg-tertiary text-[15px] leading-7">
       Every SDK is a wrapper around a handful of endpoints. If your language has
       no SDK, or you just want to prove the pipe works, curl it. Logs and
       metrics authenticate with your service's API key in a
@@ -126,7 +126,7 @@
 
     <CodeBlock language="bash" title="PUT /metrics" code={metricsCurl} />
 
-    <p class="text-neutral-400 text-[15px] leading-7">
+    <p class="text-fg-tertiary text-[15px] leading-7">
       Heartbeats are the exception. A push monitor exposes a public endpoint
       with no key and no body, so the URL is the secret. Call it on a schedule
       and Logdash marks the monitor down when the calls stop.
@@ -141,7 +141,9 @@
       More
     </h2>
 
-    <div class="border-hairline divide-hairline divide-y border-y">
+    <div
+      class="border-surface-root-border divide-surface-root-border divide-y border-y"
+    >
       {#each moreLinks as link (link.href)}
         <a
           href={resolve(link.href)}
@@ -149,10 +151,10 @@
         >
           <div class="flex min-w-0 flex-col gap-0.5">
             <span class="text-[15px] font-medium">{link.title}</span>
-            <span class="text-neutral-400 text-sm">{link.description}</span>
+            <span class="text-fg-tertiary text-sm">{link.description}</span>
           </div>
           <ChevronRightIcon
-            class="text-neutral-600 group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
+            class="text-fg-faint group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
           />
         </a>
       {/each}

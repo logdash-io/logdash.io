@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { SERVICE_STATUS_DOT } from '$lib/domains/app/clusters/domain/service-status.js';
+  import {
+    SERVICE_STATUS_DOT,
+    SERVICE_STATUS_LABEL,
+  } from '$lib/domains/app/clusters/domain/service-status.js';
   import type { MonitorStatus } from '$lib/domains/app/projects/application/monitor-pings';
   import { Spinner, Tooltip } from '@logdash/hyper-ui/presentational';
   import type { Snippet } from 'svelte';
@@ -20,7 +23,7 @@
   const {
     label,
     host,
-    status = 'unknown',
+    status,
     pending = false,
     active = false,
     disabled = false,
@@ -30,10 +33,10 @@
   }: Props = $props();
 </script>
 
-<SidebarMenuItem {onclick} isActive={active} {disabled} class="pl-5">
+<SidebarMenuItem {onclick} isActive={active} {disabled} nested>
   <span class="flex size-4 shrink-0 items-center justify-center">
     {#if pending}
-      <Spinner class="text-neutral-500 size-3" />
+      <Spinner class="text-fg-muted size-3" />
     {:else if tooltip}
       <Tooltip content={tooltip} placement="bottom">
         {@render dot()}
@@ -49,13 +52,30 @@
     <span class="truncate">{label}</span>
   {/if}
 
-  {#if host}
-    <span class="text-neutral-600 ml-auto min-w-6 shrink-[4] truncate text-xs">
+  {#if status}
+    {#if status !== 'up'}
+      <span
+        class={[
+          'ml-auto shrink-0 text-[13px]',
+          {
+            'text-fg-muted': status === 'unknown',
+            'text-warning': status === 'degraded',
+            'text-error': status === 'down',
+          },
+        ]}
+      >
+        {SERVICE_STATUS_LABEL[status]}
+      </span>
+    {/if}
+  {:else if host}
+    <span class="text-fg-faint ml-auto min-w-6 shrink-[4] truncate text-[13px]">
       {host}
     </span>
   {/if}
 </SidebarMenuItem>
 
 {#snippet dot()}
-  <span class={['size-1.5 rounded-full', SERVICE_STATUS_DOT[status]]}></span>
+  <span
+    class={['size-1.5 rounded-full', SERVICE_STATUS_DOT[status ?? 'unknown']]}
+  ></span>
 {/snippet}

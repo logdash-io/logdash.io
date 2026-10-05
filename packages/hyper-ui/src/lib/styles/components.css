@@ -1,18 +1,14 @@
 #root {
-  * {
-    @apply outline-neutral-300;
-  }
-
   .fcc {
     @apply flex items-center justify-center;
   }
 
   .code-snippet > .hljs {
-    @apply bg-surface-root border-border-default rounded-xl border;
+    @apply bg-surface-root-bg border-surface-root-border rounded-xl border;
   }
 
   .ld-input {
-    @apply selection:bg-neutral-700 border-neutral-700 hover:border-neutral-600 focus:border-brand h-full w-full rounded-xl border bg-transparent text-sm outline-0 transition-ink duration-250;
+    @apply selection:bg-surface-200-bg border-surface-input-border hover:border-surface-input-hover-border focus:border-brand h-full w-full rounded-xl border bg-transparent text-sm outline-0 transition-ink duration-250;
   }
 
   .ld-input:focus {
@@ -37,19 +33,19 @@
   }
 
   .primary-card {
-    @apply bg-neutral-800 border-neutral-700 border;
+    @apply bg-surface-150-bg border-surface-150-border border;
   }
 
   .ld-card-base,
   .ld-card-bg,
   .ld-card {
-    @apply bg-surface-elevated;
+    @apply bg-surface-100-bg;
   }
 
   .ld-card-base,
   .ld-card,
   .ld-card-border {
-    @apply border-hairline border;
+    @apply border-surface-100-border border;
   }
 
   .ld-card,
@@ -62,11 +58,11 @@
   }
 
   .ld-page-bg {
-    @apply bg-surface-root;
+    @apply bg-surface-root-bg;
   }
 
   .ld-modal {
-    @apply bg-surface-elevated border-border-default rounded-xl border p-6;
+    @apply bg-surface-elevated-bg border-surface-elevated-border rounded-xl border p-6;
   }
 }
 
@@ -78,7 +74,7 @@
 .ld-hairline-dashed-l {
   background-image: repeating-linear-gradient(
     to bottom,
-    var(--color-hairline) 0 4px,
+    var(--surface-root-border) 0 4px,
     transparent 4px 10px
   );
   background-size: 1px 100%;
@@ -93,7 +89,7 @@
 .ld-hatch {
   background-image: repeating-linear-gradient(
     225deg,
-    var(--color-hairline) 0 1px,
+    var(--surface-root-border) 0 1px,
     transparent 0 50%
   );
   background-size: 8px 8px;

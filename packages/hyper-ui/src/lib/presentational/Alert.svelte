@@ -33,9 +33,9 @@
       gap: 1rem;
       padding-block: 0.75rem;
       padding-inline: 1rem;
-      border: 1px solid var(--surface-elevated);
+      border: 1px solid var(--surface-elevated-border);
       border-radius: 0.75rem;
-      background-color: var(--surface-elevated);
+      background-color: var(--surface-elevated-bg);
       color: var(--fg-default);
       font-size: 0.875rem;
       line-height: 1.25rem;

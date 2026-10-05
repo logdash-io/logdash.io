@@ -8,23 +8,33 @@
     name: string;
     color?: string;
     expanded: boolean;
+    online?: number;
+    down?: number;
     ariaExpanded?: boolean;
     onclick?: () => void;
     children?: Snippet;
   };
 
-  const { name, color, expanded, ariaExpanded, onclick, children }: Props =
-    $props();
+  const {
+    name,
+    color,
+    expanded,
+    online = 0,
+    down = 0,
+    ariaExpanded,
+    onclick,
+    children,
+  }: Props = $props();
 
   const ROW_CLASS =
-    'text-neutral-400 flex h-7 w-full shrink-0 items-center gap-2 rounded-lg px-2 text-[13px] select-none pointer-coarse:h-9';
+    'text-fg-tertiary flex h-7.5 w-full shrink-0 items-center gap-1.5 rounded-lg px-2 text-sm font-medium select-none pointer-coarse:h-9';
 </script>
 
 {#if onclick}
   <button
     class={[
       ROW_CLASS,
-      'group hover:bg-surface-hover hover:text-fg-default cursor-pointer',
+      'group hover:bg-surface-root-hover-bg hover:text-fg-default cursor-pointer',
     ]}
     aria-expanded={ariaExpanded}
     {onclick}
@@ -46,11 +56,28 @@
   {/if}
   {#if expanded}
     <ChevronDownIcon
-      class="text-neutral-600 group-hover:text-neutral-400 size-3 shrink-0"
+      class="text-fg-faint group-hover:text-fg-tertiary size-3.5 shrink-0"
     />
   {:else}
     <ChevronRightIcon
-      class="text-neutral-600 group-hover:text-neutral-400 size-3 shrink-0"
+      class="text-fg-faint group-hover:text-fg-tertiary size-3.5 shrink-0"
     />
+  {/if}
+  {#if down}
+    <span
+      class="text-error ml-auto flex shrink-0 items-center gap-1.5 pl-1 text-[13px] tabular-nums"
+      title="{down} {down === 1 ? 'service' : 'services'} down"
+    >
+      <span class="bg-error size-1.5 rounded-full"></span>
+      {down} down
+    </span>
+  {:else if online}
+    <span
+      class="text-fg-tertiary ml-auto flex shrink-0 items-center gap-1.5 pl-1 text-[13px] tabular-nums"
+      title="{online} {online === 1 ? 'visitor' : 'visitors'} online now"
+    >
+      <span class="bg-success size-1.5 rounded-full"></span>
+      {online}
+    </span>
   {/if}
 {/snippet}

@@ -112,7 +112,7 @@
 >
   {#if setupOpen && projectId}
     <div class="flex flex-col items-start gap-3 p-4">
-      <span class="text-neutral-500 text-sm">
+      <span class="text-fg-muted text-sm">
         Copy the prompt into your AI assistant to start sending metrics.
       </span>
       <SdkSetupPrompt {projectId} feature={Feature.METRICS} />
@@ -120,7 +120,7 @@
   {/if}
 
   {#if atLimit}
-    <div class="text-neutral-500 p-4 text-sm">
+    <div class="text-fg-muted p-4 text-sm">
       {#if userState.canUpgrade}
         This service tracks as many metrics as your plan allows.
         <UpgradeElement

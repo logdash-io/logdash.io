@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
@@ -122,12 +123,18 @@
     rangeLabel = label;
   }
 
-  function onDelete(): void {
+  async function onDelete(): Promise<void> {
     if (!clusterId || !projectId || !metric) {
       return;
     }
 
-    if (!confirm(`Delete the ${metric.name} metric?`)) {
+    const confirmed = await confirmDialog.ask({
+      title: 'Delete metric',
+      description: `${metric.name} and its history will be deleted. This cannot be undone.`,
+      confirmLabel: 'Delete metric',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -156,7 +163,7 @@
     />
 
     {#if metric}
-      <span class="bg-hairline h-4 w-px"></span>
+      <span class="bg-surface-50-border h-4 w-px"></span>
       <IconButton
         label="Delete metric"
         danger
@@ -170,7 +177,7 @@
   </PaneHeader>
 
   <div class="flex flex-col gap-0.5 px-4 pt-4">
-    <span class="text-neutral-500 text-xs">Now</span>
+    <span class="text-fg-muted text-xs">Now</span>
     <span class="font-figure h-8 truncate text-2xl">
       {metric ? format(metric.value) : ''}
     </span>

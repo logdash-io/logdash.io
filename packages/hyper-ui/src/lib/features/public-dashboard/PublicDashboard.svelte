@@ -24,27 +24,27 @@
   }: Props = $props();
 
   const COLUMN =
-    "border-hairline mx-auto w-full max-w-3xl px-5 @xl:px-10 @min-[52rem]:border-x";
+    "border-surface-root-border mx-auto w-full max-w-3xl px-5 @xl:px-10 @min-[52rem]:border-x";
 
   const updatedAt = $derived(lastUpdated ?? new Date(page.updatedAt));
 </script>
 
 <div class={["@container flex flex-col", className]} aria-busy={isRefreshing}>
-  <header class="border-hairline border-b">
+  <header class="border-surface-root-border border-b">
     <div class={[COLUMN, "pt-16 pb-12 @xl:pt-24 @xl:pb-16"]}>
       <SystemStatusHeader name={page.name} status={page.status} {updatedAt} />
     </div>
   </header>
 
   {#each page.monitors as monitor (monitor.id)}
-    <section class="border-hairline border-b">
+    <section class="border-surface-root-border border-b">
       <div class={[COLUMN, "py-10 @xl:py-12"]}>
         <MonitorCard {monitor} />
       </div>
     </section>
   {:else}
-    <section class="border-hairline border-b">
-      <p class={[COLUMN, "text-neutral-500 py-10 text-sm"]}>
+    <section class="border-surface-root-border border-b">
+      <p class={[COLUMN, "text-fg-muted py-10 text-sm"]}>
         No monitors on this page yet.
       </p>
     </section>

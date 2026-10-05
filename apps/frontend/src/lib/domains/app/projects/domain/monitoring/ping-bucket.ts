@@ -21,6 +21,22 @@ const UNIT_MS: Record<BucketUnit, number> = {
   day: 86_400_000,
 };
 
+export function bucketUptime(buckets: (PingBucket | null)[]): number | null {
+  let success = 0;
+  let total = 0;
+
+  for (const bucket of buckets) {
+    if (!bucket) {
+      continue;
+    }
+
+    success += bucket.successCount;
+    total += bucket.successCount + bucket.failureCount;
+  }
+
+  return total ? (success / total) * 100 : null;
+}
+
 export function fillEmptySlots(
   buckets: (PingBucket | null)[],
   unit: BucketUnit,

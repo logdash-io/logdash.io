@@ -106,7 +106,7 @@
 
     <div class="flex flex-col items-start">
       <h3 class="text-xl font-medium">Set up a webhook channel</h3>
-      <p class="text-neutral-400 text-sm">
+      <p class="text-fg-tertiary text-sm">
         Add it with a memorable name to your domain.
       </p>
     </div>
@@ -130,7 +130,7 @@
         interactive
         class="absolute left-0 top-0.5 z-10"
       >
-        <Button variant="transparent" size="sm">{method}</Button>
+        <Button variant="ghost" size="sm">{method}</Button>
       </Tooltip>
 
       <Input
@@ -195,7 +195,6 @@
         class="w-full"
       >
         <Button
-          variant="neutral"
           block
           class="gap-2"
           onclick={() => {
@@ -228,7 +227,7 @@
   </div>
 
   <div class="flex gap-3">
-    <Button variant="soft" class="flex-1" onclick={onCancel}>Back</Button>
+    <Button class="flex-1" onclick={onCancel}>Back</Button>
     <Button
       variant="primary"
       class="flex-1"
@@ -242,7 +241,9 @@
 </div>
 
 {#snippet methodSelect(close: () => void)}
-  <Menu class="ld-card-base rounded-xl">
+  <Menu
+    class="bg-surface-elevated-bg border-surface-elevated-border rounded-xl border"
+  >
     {#each ALLOWED_METHODS as _method (_method)}
       <li>
         <UpgradeElement

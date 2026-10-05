@@ -53,11 +53,11 @@
 
 <div class="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
   <div class="flex w-full max-w-md flex-col items-center gap-3 text-center">
-    <div class="bg-surface-100 rounded-lg p-3">
+    <div class="bg-surface-150-bg rounded-lg p-3">
       <KeyIcon class="text-brand size-6 stroke-1" />
     </div>
     <h1 class="text-xl font-medium">Authorize CLI access</h1>
-    <p class="text-neutral-400 text-sm">
+    <p class="text-fg-tertiary text-sm">
       Type the code shown in your terminal. We never fill it in for you. If
       someone sent you a link with a code already in it, close this page.
     </p>

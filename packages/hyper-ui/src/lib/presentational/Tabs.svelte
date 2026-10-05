@@ -67,7 +67,7 @@
       --tab-font-size: 0.875rem;
       display: flex;
       flex-wrap: wrap;
-      border-radius: 0.75rem;
+      border-radius: calc(infinity * 1px);
     }
 
     .ld-tabs[data-size="sm"] {
@@ -83,7 +83,11 @@
 
     .ld-tabs[data-boxed] {
       padding: 0.25rem;
-      background-color: var(--surface-100);
+      background-color: var(--surface-150-bg);
+    }
+
+    .ld-tabs[data-boxed] :global(.ld-tab[aria-selected="true"]) {
+      background-color: var(--surface-200-bg);
     }
   }
 </style>

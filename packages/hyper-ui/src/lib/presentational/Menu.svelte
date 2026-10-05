@@ -72,7 +72,7 @@
         top: 0.75rem;
         bottom: 0.75rem;
         width: 1px;
-        background-color: var(--border-default);
+        background-color: var(--surface-elevated-border);
       }
 
       li > :not(ul, details, .ld-button),
@@ -94,19 +94,19 @@
       li > :not(ul, details, .ld-button):hover,
       li > details > summary:hover {
         cursor: pointer;
-        background-color: var(--surface-100);
+        background-color: var(--surface-elevated-hover-bg);
       }
 
       li > :not(ul, details, .ld-button):focus-visible,
       li > details > summary:focus-visible {
         outline: none;
-        background-color: var(--surface-100);
+        background-color: var(--surface-elevated-hover-bg);
         box-shadow: var(--focus-ring);
       }
 
       li > :not(ul, details, .ld-button):active,
       li > details > summary:active {
-        background-color: var(--surface-100);
+        background-color: var(--surface-elevated-hover-bg);
         color: var(--fg-default);
       }
 

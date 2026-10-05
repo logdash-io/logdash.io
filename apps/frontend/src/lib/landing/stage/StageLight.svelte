@@ -46,18 +46,13 @@
     background:
       radial-gradient(
         56% 70% at var(--stage-spot),
-        color-mix(in srgb, var(--color-fg-default) 18%, transparent),
+        color-mix(in srgb, var(--fg-default) 18%, transparent),
         transparent
       ),
       linear-gradient(
         var(--stage-floor),
-        var(--color-surface-root) 8%,
-        color-mix(
-            in srgb,
-            var(--color-fg-default) 10%,
-            var(--color-surface-root)
-          )
-          100%
+        var(--surface-root-bg) 8%,
+        color-mix(in srgb, var(--fg-default) 10%, var(--surface-root-bg)) 100%
       );
   }
 

@@ -2,21 +2,25 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
+  import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
-  import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
+  import { domainLiveState } from '$lib/domains/app/clusters/application/domain-live.state.svelte.js';
   import SidebarClusterNav from './SidebarClusterNav.svelte';
   import SidebarDomainRow from './SidebarDomainRow.svelte';
   import SidebarServicesList from './SidebarServicesList.svelte';
 
   let collapsedClusterId = $state<string | null>(null);
 
-  const isWizardMode = $derived(wizardState.isActive);
-  const openClusterId = $derived(
-    isWizardMode ? wizardState.tempClusterId : page.params.cluster_id,
-  );
+  const openClusterId = $derived(page.params.cluster_id);
 
   function isExpanded(clusterId: string): boolean {
     return clusterId === openClusterId && clusterId !== collapsedClusterId;
+  }
+
+  function downCount(clusterId: string): number {
+    return clusterHealthState
+      .getMonitors(clusterId)
+      .filter(({ lastStatus }) => lastStatus === 'down').length;
   }
 
   function onProjectClick(clusterId: string): void {
@@ -35,6 +39,8 @@
     name={cluster.name}
     color={cluster.color}
     {expanded}
+    online={domainLiveState.online(cluster.id)}
+    down={downCount(cluster.id)}
     ariaExpanded={cluster.id === openClusterId ? expanded : undefined}
     onclick={() => onProjectClick(cluster.id)}
   />

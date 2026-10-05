@@ -209,7 +209,7 @@
         onpointercancel={onPointerCancel}
       >
         <div
-          class="page-card ring-hairline absolute overflow-hidden rounded-xl shadow-[0_24px_48px_-16px_rgba(0,0,0,0.7)] ring-1"
+          class="page-card ring-surface-root-border absolute overflow-hidden rounded-xl shadow-[0_24px_48px_-16px_rgba(0,0,0,0.7)] ring-1"
         >
           <LensPage page={demo} />
 
@@ -265,7 +265,7 @@
               onclick={() => onDot(index)}
             >
               <span
-                class="dot h-2 rounded-full [--rest:var(--color-neutral-700)] group-hover:[--rest:var(--color-neutral-500)]"
+                class="dot h-2 rounded-full [--rest:var(--fg-disabled)] group-hover:[--rest:var(--fg-muted)]"
                 style:--i={index}
                 style:--accent={option.accent}
               ></span>
@@ -282,19 +282,19 @@
 <LandingSection>
   <div class="grid grid-cols-1 xl:grid-cols-12">
     <div
-      class="border-hairline flex flex-col px-4 py-10 sm:px-6 lg:px-10 lg:py-12 xl:col-span-5 xl:border-r"
+      class="border-surface-root-border flex flex-col px-4 py-10 sm:px-6 lg:px-10 lg:py-12 xl:col-span-5 xl:border-r"
     >
       <h2 class="text-2xl font-medium tracking-[-0.02em]">
         {copy.install.title}
       </h2>
 
-      <p class="text-neutral-400 mt-3 max-w-md leading-relaxed text-pretty">
+      <p class="text-fg-tertiary mt-3 max-w-md leading-relaxed text-pretty">
         {copy.install.body}
       </p>
 
       <a
         href={resolve('/docs/status-pages')}
-        class="text-fg-default hover:text-neutral-400 mt-5 inline-flex w-fit items-center gap-1.5 text-sm font-medium transition-ink duration-150"
+        class="text-fg-default hover:text-fg-tertiary mt-5 inline-flex w-fit items-center gap-1.5 text-sm font-medium transition-ink duration-150"
         data-posthog-id="feature-monitoring-status-page-docs"
       >
         Read the status page docs
@@ -303,11 +303,11 @@
     </div>
 
     <div
-      class="border-hairline border-t px-4 py-10 sm:px-6 lg:px-10 lg:py-12 xl:col-span-7 xl:border-t-0"
+      class="border-surface-root-border border-t px-4 py-10 sm:px-6 lg:px-10 lg:py-12 xl:col-span-7 xl:border-t-0"
     >
       <div class="flex flex-col gap-4">
         {#each INSTALL as command (command.title)}
-          <div class="bg-surface-elevated rounded-xl">
+          <div class="bg-surface-100-bg rounded-xl">
             <CodeBlock
               code={command.code}
               language="bash"
@@ -331,7 +331,7 @@
     type="button"
     aria-label={label}
     class={[
-      'arrow bg-surface-inverse text-surface-root hover:bg-surface-inverse-hover flex size-12 shrink-0 items-center justify-center rounded-full shadow-[0_8px_24px_-6px_rgba(0,0,0,0.6)] transition-[scale] duration-100 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-90 lg:size-14',
+      'arrow bg-surface-inverse-bg text-fg-inverse hover:bg-surface-inverse-hover-bg flex size-12 shrink-0 items-center justify-center rounded-full shadow-[0_8px_24px_-6px_rgba(0,0,0,0.6)] transition-[scale] duration-100 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-90 lg:size-14',
       position,
     ]}
     {onclick}

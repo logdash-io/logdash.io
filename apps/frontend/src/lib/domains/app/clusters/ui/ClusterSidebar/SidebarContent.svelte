@@ -3,16 +3,15 @@
   import { page } from '$app/state';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
+  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
+  import SidebarFooter from './SidebarFooter.svelte';
   import SidebarLayout from './SidebarLayout.svelte';
   import SidebarProjects from './SidebarProjects.svelte';
   import SidebarUserProfile from './SidebarUserProfile.svelte';
 
-  type Props = {
-    showLogo?: boolean;
-  };
-  const { showLogo = true }: Props = $props();
-
   const LIST_FADE_PX = 24;
+
+  const planLabel = $derived(capitalize(userState.tier.replaceAll('-', ' ')));
 
   let list = $state<HTMLElement | null>(null);
 
@@ -23,6 +22,10 @@
       revealActiveRow(list);
     }
   });
+
+  function capitalize(text: string): string {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
 
   function revealActiveRow(element: HTMLElement): void {
     const row = element.querySelector('[aria-current="page"]');
@@ -46,7 +49,6 @@
 <SidebarLayout
   homeHref={resolve('/app/domains')}
   homeActive={page.url.pathname === '/app/domains'}
-  {showLogo}
   addDomainHref={clustersState.canAddDomain
     ? resolve('/app/domains/new')
     : undefined}
@@ -55,7 +57,11 @@
 >
   <SidebarProjects />
 
-  {#snippet footer()}
+  {#snippet header()}
     <SidebarUserProfile />
+  {/snippet}
+
+  {#snippet footer()}
+    <SidebarFooter plan={planLabel} />
   {/snippet}
 </SidebarLayout>

@@ -143,7 +143,7 @@
       <CardTitle class="mb-2 text-3xl font-bold">
         {heading}
       </CardTitle>
-      <p class="text-neutral-400 mb-6 text-balance">
+      <p class="text-fg-tertiary mb-6 text-balance">
         {subheading}
       </p>
 
@@ -214,7 +214,7 @@
         <a
           href={`${resolve('/')}#${HERO_URL_INPUT_ID}`}
           data-posthog-id="auth-continue-anonymous-cta"
-          class="text-neutral-500 hover:text-neutral-300 mt-6 text-sm transition-ink"
+          class="text-fg-muted hover:text-fg-secondary mt-6 text-sm transition-ink"
         >
           New here? Start with your website URL
         </a>

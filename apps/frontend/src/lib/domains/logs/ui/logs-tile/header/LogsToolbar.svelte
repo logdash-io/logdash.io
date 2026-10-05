@@ -46,7 +46,7 @@
   }: Props = $props();
 
   const CHIP_CLASS =
-    'ring-hairline text-neutral-400 flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs ring-1 ring-inset';
+    'text-fg-tertiary flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm edge';
   const CHIP_BUTTON_CLASS = [
     CHIP_CLASS,
     'hover:text-fg-default transition-ink focus-visible:outline-brand cursor-pointer focus-visible:outline-2',
@@ -67,22 +67,22 @@
   aria-hidden={interactive ? undefined : 'true'}
 >
   <label
-    class="ring-hairline bg-neutral-950 focus-within:ring-neutral-700 flex h-8 min-w-24 flex-1 items-center gap-2 rounded-lg px-2.5 text-sm ring-1 ring-inset"
+    class="bg-surface-50-bg focus-within:ring-surface-input-border flex h-8 min-w-24 flex-1 items-center gap-2 rounded-lg px-2.5 text-sm edge"
   >
-    <SearchIcon class="text-neutral-600 size-3.5 shrink-0" />
+    <SearchIcon class="text-fg-faint size-3.5 shrink-0" />
     <input
       type="text"
       value={search}
       placeholder="Search logs"
       aria-label="Search logs"
-      class="placeholder:text-neutral-600 h-full min-w-0 flex-1 bg-transparent outline-none"
+      class="placeholder:text-fg-faint h-full min-w-0 flex-1 bg-transparent outline-none"
       oninput={(event) => onSearchInput?.(event.currentTarget.value)}
     />
     {#if search}
       <button
         type="button"
         aria-label="Clear search"
-        class="text-neutral-500 hover:text-fg-default transition-ink -mr-1 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md"
+        class="text-fg-muted hover:text-fg-default transition-ink -mr-1 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md"
         onclick={onSearchClear}
       >
         <CloseIcon class="size-3.5" />
@@ -139,7 +139,7 @@
     <div class="flex basis-full flex-wrap items-center gap-2">
       {#each filters as filter (filter.key)}
         <span class={[CHIP_CLASS, 'pr-1']}>
-          <span class="text-neutral-500 whitespace-nowrap">
+          <span class="text-fg-muted whitespace-nowrap">
             {filter.label}
             {filter.operator}
           </span>
@@ -171,7 +171,7 @@
             <button
               type="button"
               aria-label="Clear {filter.label.toLowerCase()} filter"
-              class="text-neutral-500 hover:bg-surface-100 hover:text-fg-default flex size-6 cursor-pointer items-center justify-center rounded-full"
+              class="text-fg-muted hover:bg-surface-50-hover-bg hover:text-fg-default flex size-6 cursor-pointer items-center justify-center rounded-full"
               onclick={filter.onClear}
             >
               <CloseIcon class="size-3.5" />
@@ -200,7 +200,7 @@
       {#each filter.dots as dot, index (index)}
         <span
           class={[
-            'ring-surface-elevated size-1.5 rounded-full ring-2',
+            'ring-surface-50-bg size-1.5 rounded-full ring-2',
             { '-ml-0.5': index > 0 },
             dot,
           ]}

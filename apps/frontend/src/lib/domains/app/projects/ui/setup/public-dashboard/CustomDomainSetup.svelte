@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
   import { customDomainsState } from '$lib/domains/app/projects/application/public-dashboards/custom-domains.state.svelte.js';
   import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { CheckIcon, CloseIcon, DangerIcon } from '@logdash/hyper-ui/icons';
@@ -19,7 +20,7 @@
   const { dashboardId, canSetup }: Props = $props();
 
   const FIELD_CLASS =
-    'border-hairline bg-neutral-950 h-8 w-full rounded-lg px-2.5 text-sm';
+    'border-surface-50-border bg-surface-50-bg h-8 w-full rounded-lg px-2.5 text-sm';
   const DNS_TARGET = 'statuspage.logdash.io';
 
   let domainInput = $state('');
@@ -87,9 +88,11 @@
   const onDeleteDomain = async (): Promise<void> => {
     if (!customDomain) return;
 
-    const confirmed = confirm(
-      `Are you sure you want to delete the custom domain "${customDomain.domain}"? This action cannot be undone.`,
-    );
+    const confirmed = await confirmDialog.ask({
+      title: 'Delete custom domain',
+      description: `${customDomain.domain} stops serving this status page. This cannot be undone.`,
+      confirmLabel: 'Delete domain',
+    });
     if (!confirmed) return;
 
     try {
@@ -110,11 +113,7 @@
 </script>
 
 {#if !canSetup}
-  <UpgradeButton
-    variant="neutral"
-    source="custom-statuspage-domain"
-    class="self-start"
-  >
+  <UpgradeButton source="custom-statuspage-domain" class="self-start">
     Available in Pro plan
   </UpgradeButton>
 {:else}
@@ -168,12 +167,12 @@
     </li>
 
     <li class="flex flex-col gap-2">
-      <span class={['text-sm', { 'text-neutral-600': !customDomain }]}>
+      <span class={['text-sm', { 'text-fg-faint': !customDomain }]}>
         2. Configure DNS records
       </span>
 
       {#if customDomain}
-        <p class="text-sm text-neutral-500">
+        <p class="text-sm text-fg-muted">
           Add this record in your DNS provider, for example Cloudflare or AWS
           Route 53.
         </p>
@@ -213,7 +212,7 @@
     </li>
 
     <li class="flex flex-col gap-2">
-      <span class={['text-sm', { 'text-neutral-600': !customDomain }]}>
+      <span class={['text-sm', { 'text-fg-faint': !customDomain }]}>
         3. Verify your configuration
       </span>
 
@@ -223,12 +222,7 @@
             <Spinner class="size-3.5 shrink-0" aria-hidden="true" />
             Domain is pending verification
           </span>
-          <Button
-            variant="neutral"
-            size="sm"
-            loading={isLoading}
-            onclick={onManualCheck}
-          >
+          <Button size="sm" loading={isLoading} onclick={onManualCheck}>
             Check
           </Button>
         </div>

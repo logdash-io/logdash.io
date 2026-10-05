@@ -3,6 +3,7 @@ import { UserLoggedInEvent } from './definitions/user-logged-in.event';
 import { EventEmitter2 as EventEmitter } from '@nestjs/event-emitter';
 import { UserRegisteredEvent } from './definitions/user-registered.event';
 import { AuthEvents } from './auth-events.enum';
+import { AccountClaimedEvent } from './definitions/account-claimed.event';
 
 @Injectable()
 export class AuthEventEmitter {
@@ -14,5 +15,9 @@ export class AuthEventEmitter {
 
   public emitUserRegisteredEvent(payload: UserRegisteredEvent): void {
     this.eventEmitter.emit(AuthEvents.UserRegistered, payload);
+  }
+
+  public emitAccountClaimedEvent(payload: AccountClaimedEvent): void {
+    this.eventEmitter.emit(AuthEvents.AccountClaimed, payload);
   }
 }

@@ -2,8 +2,6 @@
   import SidebarContent from './SidebarContent.svelte';
 </script>
 
-<aside
-  class="border-hairline bg-surface-root hidden h-full w-64 shrink-0 flex-col border-r lg:flex"
->
+<aside class="hidden h-full w-67 shrink-0 flex-col lg:flex">
   <SidebarContent />
 </aside>

@@ -258,7 +258,7 @@
     {#if createdValue}
       <div class="flex flex-col gap-4">
         <div class="flex items-center gap-3">
-          <div class="bg-surface-100 rounded-lg p-2.5">
+          <div class="bg-surface-150-bg rounded-lg p-2.5">
             <KeyIcon class="text-brand size-5 stroke-[1.2]" />
           </div>
           <h2 class="text-lg font-medium">Personal API key created</h2>
@@ -270,7 +270,7 @@
 
         <div class="flex items-center gap-2">
           <code
-            class="ph-no-capture bg-surface-100 border-border-default min-w-0 flex-1 rounded-lg border p-3 font-mono text-sm break-all"
+            class="ph-no-capture bg-surface-150-bg border-surface-150-border min-w-0 flex-1 rounded-lg border p-3 font-mono text-sm break-all"
           >
             {createdValue}
           </code>
@@ -288,7 +288,7 @@
       <div class="flex flex-col items-center gap-3 py-6 text-center">
         <CheckIcon class="text-success size-9 stroke-[0.67]" />
         <h2 class="text-lg font-medium">Approved</h2>
-        <p class="text-neutral-400 text-sm">
+        <p class="text-fg-tertiary text-sm">
           Return to your terminal to continue.
         </p>
         <Button variant="ghost" class="mt-2" onclick={close}>Close</Button>
@@ -297,14 +297,14 @@
       <div class="flex flex-col items-center gap-3 py-6 text-center">
         <CloseIcon class="text-error size-9 stroke-[0.67]" />
         <h2 class="text-lg font-medium">Request denied</h2>
-        <p class="text-neutral-400 text-sm">
+        <p class="text-fg-tertiary text-sm">
           The CLI authorization request was denied.
         </p>
         <Button variant="ghost" class="mt-2" onclick={close}>Close</Button>
       </div>
     {:else}
       <div class="flex items-center gap-3">
-        <div class="bg-surface-100 rounded-lg p-2.5">
+        <div class="bg-surface-150-bg rounded-lg p-2.5">
           <KeyIcon class="text-brand size-5 stroke-[1.2]" />
         </div>
         <h2 class="text-lg font-medium">
@@ -314,16 +314,16 @@
 
       {#if mode === 'cli' && cliRequest}
         <div
-          class="border-neutral-500 bg-surface-100 flex flex-col gap-2 rounded-lg border p-3 text-sm"
+          class="border-surface-150-border bg-surface-150-bg flex flex-col gap-2 rounded-lg border p-3 text-sm"
         >
-          <p class="text-neutral-400">
+          <p class="text-fg-tertiary">
             A CLI on
             <span class="text-fg-default font-mono font-medium">
               {cliRequest.clientIp || 'an unknown address'}
             </span>
             is requesting access to your account.
           </p>
-          <dl class="text-neutral-400 flex flex-col gap-1 text-xs">
+          <dl class="text-fg-tertiary flex flex-col gap-1 text-xs">
             <div class="flex justify-between gap-3">
               <dt>Code</dt>
               <dd class="text-fg-default font-mono font-medium">
@@ -343,7 +343,7 @@
               </dd>
             </div>
           </dl>
-          <p class="text-neutral-400 text-xs">
+          <p class="text-fg-tertiary text-xs">
             If you did not just run <span class="font-mono">ld login</span>
             on that machine, deny this request.
           </p>
@@ -389,7 +389,7 @@
 
         <div class="flex flex-col gap-2">
           <span class="text-sm font-medium">Access</span>
-          <p class="text-neutral-400 -mt-1 text-xs">
+          <p class="text-fg-tertiary -mt-1 text-xs">
             Everything, or only the domains or services you pick.
           </p>
           <SegmentedControl
@@ -401,10 +401,10 @@
 
           {#if accessKind === 'clusters'}
             <div
-              class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
+              class="border-surface-elevated-border mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
             >
               {#if clusters.length === 0}
-                <p class="text-neutral-400 p-1 text-sm">No domains yet.</p>
+                <p class="text-fg-tertiary p-1 text-sm">No domains yet.</p>
               {/if}
               {#each clusters as cluster (cluster.id)}
                 <label class="flex items-center gap-2 p-1 text-sm">
@@ -418,13 +418,13 @@
             </div>
           {:else if accessKind === 'projects'}
             <div
-              class="border-border-default mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
+              class="border-surface-elevated-border mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
             >
               {#if clustersWithProjects.length === 0}
-                <p class="text-neutral-400 p-1 text-sm">No services yet.</p>
+                <p class="text-fg-tertiary p-1 text-sm">No services yet.</p>
               {/if}
               {#each clustersWithProjects as cluster (cluster.id)}
-                <p class="text-neutral-500 px-1 pt-1 text-xs">
+                <p class="text-fg-muted px-1 pt-1 text-xs">
                   {cluster.name}
                 </p>
                 {#each cluster.projects ?? [] as project (project.id)}
@@ -453,7 +453,7 @@
         {:else}
           <div class="flex flex-col gap-1.5">
             <span class="text-sm font-medium">Expiry</span>
-            <p class="text-neutral-400 text-xs">
+            <p class="text-fg-tertiary text-xs">
               CLI keys always expire after 30 days. You can revoke this one
               sooner from Account → API keys.
             </p>

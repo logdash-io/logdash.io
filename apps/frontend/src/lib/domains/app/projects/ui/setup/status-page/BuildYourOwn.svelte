@@ -46,10 +46,10 @@ export function Status() {
   {@render copyRow('Install command', INSTALL_COMMAND)}
 
   <div class="flex flex-col gap-1.5">
-    <span class="text-xs text-neutral-500">React hook</span>
+    <span class="text-xs text-fg-muted">React hook</span>
     <div class="relative">
       <Highlight
-        class="border-hairline selection:bg-surface-100 rounded-lg border bg-neutral-950 text-sm [&>code]:pr-12!"
+        class="selection:bg-surface-50-selected-bg rounded-lg edge bg-surface-50-bg text-sm [&>code]:pr-12!"
         code={hookExample}
         language={typescript}
       />
@@ -60,14 +60,13 @@ export function Status() {
   </div>
 
   <div class="flex flex-wrap items-center gap-2">
-    <Button href={resolve('/docs/status-pages')} variant="neutral" size="sm">
+    <Button href={resolve('/docs/status-pages')} size="sm">
       Read the docs
     </Button>
     <Button
       href={STARTER_URL}
       target="_blank"
       rel="noopener noreferrer"
-      variant="neutral"
       size="sm"
     >
       Next.js starter
@@ -78,10 +77,10 @@ export function Status() {
 
 {#snippet copyRow(label: string, value: string)}
   <div class="flex flex-col gap-1.5">
-    <span class="text-xs text-neutral-500">{label}</span>
+    <span class="text-xs text-fg-muted">{label}</span>
     <div class="flex items-center gap-2">
       <code
-        class="border-hairline flex h-8 min-w-0 flex-1 items-center rounded-lg border bg-neutral-950 px-2.5 font-mono text-sm"
+        class="flex h-8 min-w-0 flex-1 items-center rounded-lg edge bg-surface-50-bg px-2.5 font-mono text-sm"
       >
         <span class="truncate">{value}</span>
       </code>

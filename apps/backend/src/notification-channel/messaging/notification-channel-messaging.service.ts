@@ -8,12 +8,14 @@ import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { NOTIFICATIONS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { SendHttpMonitorAlertMessageDto } from './dto/send-http-monitor-alert-message.dto';
 import { WebhookNotificationChannelProvider } from './providers/webhook.notification-channel-provider';
+import { EmailNotificationChannelProvider } from './providers/email.notification-channel-provider';
 
 @Injectable()
 export class NotificationChannelMessagingService {
   constructor(
     private readonly telegramMessagingProvider: TelegramNotificationChannelProvider,
     private readonly webhookMessagingProvider: WebhookNotificationChannelProvider,
+    private readonly emailMessagingProvider: EmailNotificationChannelProvider,
     private readonly notificationChannelReadService: NotificationChannelReadService,
     @Inject(NOTIFICATIONS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
@@ -56,6 +58,10 @@ export class NotificationChannelMessagingService {
 
     if (target === NotificationChannelType.Webhook) {
       return this.webhookMessagingProvider;
+    }
+
+    if (target === NotificationChannelType.Email) {
+      return this.emailMessagingProvider;
     }
 
     this.logger.error('No provider found for notification target', {

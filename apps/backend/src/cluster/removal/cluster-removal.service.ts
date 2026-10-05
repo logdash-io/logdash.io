@@ -5,6 +5,7 @@ import { ProjectRemovalService } from '../../project/removal/project-removal.ser
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { CLUSTERS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { PublicDashboardRemovalService } from '../../public-dashboard/removal/public-dashboard-removal.service';
+import { WebAnalyticsWriteService } from '../../web-analytics/write/web-analytics-write.service';
 
 @Injectable()
 export class ClusterRemovalService {
@@ -14,6 +15,7 @@ export class ClusterRemovalService {
     private readonly projectRemovalService: ProjectRemovalService,
     @Inject(CLUSTERS_LOGGER) private readonly logger: LogdashLogger,
     private readonly publicDashboardRemovalService: PublicDashboardRemovalService,
+    private readonly webAnalyticsWriteService: WebAnalyticsWriteService,
   ) {}
 
   public async deleteClustersByCreatorId(creatorId: string): Promise<void> {
@@ -21,6 +23,7 @@ export class ClusterRemovalService {
 
     for (const cluster of clusters) {
       this.logger.log(`Deleting cluster...`, { clusterId: cluster.id });
+      await this.webAnalyticsWriteService.deleteByClusterId(cluster.id);
       await this.clusterWriteService.delete(cluster.id);
 
       await this.projectRemovalService.deleteProjectsByClusterId(cluster.id);
@@ -34,6 +37,7 @@ export class ClusterRemovalService {
       throw new NotFoundException('Domain not found');
     }
 
+    await this.webAnalyticsWriteService.deleteByClusterId(clusterId);
     await this.clusterWriteService.delete(clusterId, actorUserId);
 
     await this.projectRemovalService.deleteProjectsByClusterId(clusterId, actorUserId);

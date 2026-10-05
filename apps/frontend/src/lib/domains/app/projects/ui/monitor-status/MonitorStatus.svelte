@@ -80,7 +80,7 @@
 
 {#if monitor && content}
   <div
-    class="bg-surface-elevated border-border-default w-96 rounded-xl border shadow-[0_16px_40px_-8px_rgba(0,0,0,0.9)]"
+    class="bg-surface-elevated-bg border-surface-elevated-border w-96 rounded-xl border shadow-[0_16px_40px_-8px_rgba(0,0,0,0.9)]"
   >
     <MonitorPanel
       {...content}

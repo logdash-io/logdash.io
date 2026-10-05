@@ -24,8 +24,8 @@
   >
     {#each ASSURANCES as assurance (assurance)}
       <li class="flex items-start gap-2.5 text-sm sm:items-center">
-        <CheckIcon class="text-neutral-500 mt-0.5 size-4 shrink-0 sm:mt-0" />
-        <span class="text-neutral-300">{assurance}</span>
+        <CheckIcon class="text-fg-muted mt-0.5 size-4 shrink-0 sm:mt-0" />
+        <span class="text-fg-secondary">{assurance}</span>
       </li>
     {/each}
   </ul>
@@ -43,7 +43,7 @@
       </div>
 
       <div
-        class="to-surface-elevated pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent"
+        class="to-surface-100-bg pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent"
       ></div>
     </StagePanel>
   </div>

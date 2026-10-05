@@ -16,7 +16,7 @@
       operational: { label: "All systems operational", dot: "bg-success" },
       degraded: { label: "Partial outage", dot: "bg-warning" },
       outage: { label: "Major outage", dot: "bg-error" },
-      unknown: { label: "Status unknown", dot: "bg-neutral-600" },
+      unknown: { label: "Status unknown", dot: "bg-idle" },
     };
 
   let now = $state<Date | null>(null);
@@ -31,7 +31,7 @@
   });
 </script>
 
-<h1 class="text-neutral-400 text-base break-words">{name}</h1>
+<h1 class="text-fg-tertiary text-base break-words">{name}</h1>
 
 <p
   class="mt-3 flex items-start gap-3 text-3xl leading-[1.15] font-medium tracking-[-0.03em] text-balance @xl:text-4xl"
@@ -42,6 +42,6 @@
   {headline.label}
 </p>
 
-<p class="text-neutral-500 mt-4 text-sm tabular-nums">
+<p class="text-fg-muted mt-4 text-sm tabular-nums">
   {now ? `Updated ${formatAge(updatedAt, now)}` : "\u00a0"}
 </p>

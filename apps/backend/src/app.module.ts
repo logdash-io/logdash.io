@@ -34,6 +34,8 @@ import { OverviewCoreModule } from './overview/core/overview-core.module';
 import { CliAuthModule } from './cli-auth/core/cli-auth.module';
 import { BadgeCoreModule } from './badge/core/badge-core.module';
 import { StatusPageCoreModule } from './status-page/core/status-page-core.module';
+import { WebAnalyticsCoreModule } from './web-analytics/core/web-analytics-core.module';
+import { FaviconCoreModule } from './favicon/core/favicon-core.module';
 
 @Module({
   imports: [
@@ -75,6 +77,8 @@ import { StatusPageCoreModule } from './status-page/core/status-page-core.module
     CliAuthModule,
     BadgeCoreModule,
     StatusPageCoreModule,
+    WebAnalyticsCoreModule,
+    FaviconCoreModule,
   ],
 })
 export class AppModule {}

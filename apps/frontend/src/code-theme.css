@@ -10,7 +10,7 @@ pre code.hljs {
 }
 
 .hljs {
-  color: var(--color-neutral-200);
+  color: var(--fg-default);
 }
 
 .hljs-keyword,
@@ -58,5 +58,5 @@ pre code.hljs {
 
 .hljs-comment,
 .hljs-quote {
-  color: var(--color-neutral-400);
+  color: var(--fg-tertiary);
 }

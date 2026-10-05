@@ -47,7 +47,7 @@
       height: 1.25rem;
       border: none;
       border-radius: 0;
-      background-color: var(--surface-150);
+      background-color: var(--surface-200-bg);
       cursor: pointer;
       appearance: none;
       mask: url("data:image/svg+xml,%3csvg width='192' height='180' xmlns='http://www.w3.org/2000/svg'%3e%3cpath fill='black' d='m96 153.044-58.779 26.243 7.02-63.513L.894 68.481l63.117-13.01L96 0l31.989 55.472 63.117 13.01-43.347 47.292 7.02 63.513z' fill-rule='evenodd'/%3e%3c/svg%3e")

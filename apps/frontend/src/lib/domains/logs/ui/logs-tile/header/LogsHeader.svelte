@@ -148,7 +148,9 @@
 
 {#snippet levelMenu(close: () => void)}
   {@render menuBackdrop(close)}
-  <div class="ld-card-base rounded-xl p-1 shadow-lg">
+  <div
+    class="bg-surface-elevated-bg border-surface-elevated-border rounded-xl border p-1 shadow-lg"
+  >
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Level</div>
     <ul class="p-0">
       {#each LOG_LEVELS as level (level.value)}
@@ -156,8 +158,8 @@
         <li>
           <label
             class={[
-              'hover:bg-surface-100 flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-sm',
-              { 'bg-surface-100': isSelected },
+              'hover:bg-surface-elevated-hover-bg flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-sm',
+              { 'bg-surface-elevated-selected-bg': isSelected },
             ]}
           >
             <Checkbox
@@ -176,7 +178,9 @@
 
 {#snippet namespaceMenu(close: () => void)}
   {@render menuBackdrop(close)}
-  <div class="ld-card-base rounded-xl p-1 shadow-lg">
+  <div
+    class="bg-surface-elevated-bg border-surface-elevated-border rounded-xl border p-1 shadow-lg"
+  >
     <div class="mb-1 px-3 py-1.5 text-sm font-medium">Namespace</div>
     <ul class="p-0">
       {#each namespacesState.namespaces as { namespace } (namespace)}
@@ -184,8 +188,8 @@
         <li>
           <label
             class={[
-              'hover:bg-surface-100 flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-sm',
-              { 'bg-surface-100': isSelected },
+              'hover:bg-surface-elevated-hover-bg flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-sm',
+              { 'bg-surface-elevated-selected-bg': isSelected },
             ]}
           >
             <Checkbox

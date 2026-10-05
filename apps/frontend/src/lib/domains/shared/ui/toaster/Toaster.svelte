@@ -56,7 +56,7 @@
         animate:flip={{ duration: 200 }}
       >
         <Alert
-          class="border-hairline relative flex w-80 max-w-[320px] overflow-hidden rounded-xl px-3 pr-10 shadow-lg"
+          class="border-surface-elevated-border relative flex w-80 max-w-[320px] overflow-hidden rounded-xl px-3 pr-10 shadow-lg"
         >
           <div class="flex w-full shrink-0 items-start justify-start gap-4">
             <div
@@ -67,7 +67,7 @@
             ></div>
 
             <div class="flex flex-col justify-start gap-0.5 py-0.5">
-              <span class="text-neutral-300 flex-1 whitespace-pre-wrap">
+              <span class="text-fg-secondary flex-1 whitespace-pre-wrap">
                 {_toast.message}
               </span>
             </div>

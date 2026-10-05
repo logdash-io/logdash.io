@@ -25,12 +25,12 @@
 <section
   {id}
   class={[
-    'border-hairline w-full',
+    'border-surface-root-border w-full',
     { 'border-b': divider, 'border-t': dividerTop, 'scroll-mt-16': id },
   ]}
 >
   <div class="mx-auto w-full max-w-landing lg:px-10">
-    <div class={['border-hairline w-full lg:border-x', className]}>
+    <div class={['border-surface-root-border w-full lg:border-x', className]}>
       {@render children?.()}
     </div>
   </div>

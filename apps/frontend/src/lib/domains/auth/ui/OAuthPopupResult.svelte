@@ -17,7 +17,7 @@
 </script>
 
 <div class="flex min-h-dvh w-full items-center justify-center p-8">
-  <p class="text-neutral-400 max-w-xs text-center text-sm text-balance">
+  <p class="text-fg-tertiary max-w-xs text-center text-sm text-balance">
     {#if message.status === 'ok'}
       You're signed in. You can close this window.
     {:else}

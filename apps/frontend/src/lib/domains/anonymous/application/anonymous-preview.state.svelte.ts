@@ -9,11 +9,13 @@ import { createLogger } from '$lib/domains/shared/logger';
 import { posthog } from 'posthog-js';
 import {
   AnonymousStartError,
-  clusterNameFromUrl,
-  previewNameFromUrl,
   type AnonymousPreview,
   type AnonymousStartStep,
 } from '../domain/anonymous-preview';
+import {
+  clusterNameFromUrl,
+  previewNameFromUrl,
+} from '$lib/domains/shared/utils/address-names';
 import { watchHistory, type WatchHistory } from '../domain/watch-history';
 import { anonymousSessionService } from '../infrastructure/anonymous-session.service';
 import { writePreviewAddress } from './preview-address';

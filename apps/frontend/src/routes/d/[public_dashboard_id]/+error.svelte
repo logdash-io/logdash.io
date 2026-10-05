@@ -9,7 +9,7 @@
 <div
   class="flex min-h-dvh flex-col items-center justify-center gap-3 px-5 text-center"
 >
-  <p class="text-neutral-500 font-mono text-xs">{page.status}</p>
+  <p class="text-fg-muted font-mono text-xs">{page.status}</p>
   <h1 class="text-2xl font-medium tracking-[-0.02em] text-balance">
     {page.error?.message}
   </h1>

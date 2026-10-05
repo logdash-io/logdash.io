@@ -133,11 +133,11 @@
     <div
       in:fade={{ duration: 200, easing: cubicInOut }}
       out:fade={{ delay: 300, duration: 200, easing: cubicInOut }}
-      class="bg-surface-root/40 absolute top-0 left-0 z-20 h-full w-full backdrop-blur-xs"
+      class="bg-surface-root-bg/40 absolute top-0 left-0 z-20 h-full w-full backdrop-blur-xs"
     ></div>
 
     <div
-      class="bg-surface-inverse text-surface-root fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-2 shadow-lg md:bottom-8"
+      class="bg-surface-inverse-bg text-fg-inverse fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-2 shadow-lg md:bottom-8"
       in:fly={{ duration: 200, easing: cubicInOut, y: 50 }}
       out:fly={{ delay: 300, duration: 200, easing: cubicInOut, y: 50 }}
     >

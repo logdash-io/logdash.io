@@ -25,6 +25,8 @@
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import {
     SETTINGS_INPUT_CLASS,
+    SETTINGS_PAGE_CLASS,
+    SETTINGS_PANEL_CLASS,
     SettingsCardHeader,
   } from '$lib/domains/shared/ui/components/settings-card/index.js';
   import { untrack } from 'svelte';
@@ -161,16 +163,15 @@
   }
 </script>
 
-<form
-  class="border-hairline flex flex-col border-b lg:flex-row"
-  onsubmit={onSubmit}
->
+<form class={[SETTINGS_PAGE_CLASS, 'gap-3!']} onsubmit={onSubmit}>
   <SettingsCardHeader
     title="Set up monitoring"
     description="Check that this service is up and get alerted when it goes down."
   />
 
-  <div class="flex min-w-0 flex-1 flex-col items-start gap-5 p-4 lg:max-w-2xl">
+  <div
+    class={['flex min-w-0 flex-col items-start gap-5', SETTINGS_PANEL_CLASS]}
+  >
     <Tabs size="sm" class="w-fit">
       <Tab
         class="px-4"
@@ -213,13 +214,13 @@
           inputClass={SETTINGS_INPUT_CLASS}
           autofocus
         />
-        <p class="text-neutral-500 text-xs">
+        <p class="text-fg-muted text-xs">
           Checked every 5 minutes on the free plan, every 15 seconds on Pro.
         </p>
       </div>
 
       <div class="flex w-full flex-col gap-2">
-        <Label class="text-xs text-neutral-500" for="monitor-name-pull">
+        <Label class="text-xs text-fg-muted" for="monitor-name-pull">
           Monitor name
         </Label>
         <Input
@@ -233,7 +234,7 @@
       </div>
     {:else}
       <div class="flex w-full flex-col gap-2">
-        <Label class="text-xs text-neutral-500" for="monitor-name-push">
+        <Label class="text-xs text-fg-muted" for="monitor-name-push">
           Monitor name
         </Label>
         <Input
@@ -245,22 +246,22 @@
           placeholder="My backend service"
           {@attach fromAction(autoFocus, () => ({ delay: 100 }))}
         />
-        <p class="text-neutral-500 text-xs">
+        <p class="text-fg-muted text-xs">
           Your service will send heartbeat pings to our endpoint.
         </p>
       </div>
 
       {#if isCreatingPushMonitor}
-        <div class="text-neutral-500 flex items-center gap-2 text-sm">
+        <div class="text-fg-muted flex items-center gap-2 text-sm">
           <Spinner size="xs" aria-hidden="true" />
           Generating endpoint
         </div>
       {:else if pushEndpoint}
         <div class="flex w-full flex-col gap-2">
-          <span class="text-neutral-500 text-xs">Ping endpoint</span>
+          <span class="text-fg-muted text-xs">Ping endpoint</span>
           <div class="flex items-center gap-2">
             <code
-              class="ring-hairline bg-neutral-950 flex h-8 min-w-0 flex-1 items-center truncate rounded-lg px-2.5 font-mono text-sm ring-1 ring-inset"
+              class="bg-surface-50-bg flex h-8 min-w-0 flex-1 items-center truncate rounded-lg px-2.5 font-mono text-sm edge"
             >
               {pushEndpoint}
             </code>
@@ -268,7 +269,7 @@
               <CopyIcon class="size-4" />
             </IconButton>
           </div>
-          <p class="text-neutral-500 text-xs">
+          <p class="text-fg-muted text-xs">
             Send a POST request to this URL from your service.
           </p>
         </div>

@@ -1,7 +1,16 @@
 @layer base {
   :root {
-    background-color: var(--surface-root);
+    background-color: var(--surface-root-bg);
     color: var(--fg-default);
+  }
+
+  *,
+  ::before,
+  ::after,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--edge-color);
+    outline-color: var(--brand);
   }
 }
 
@@ -28,46 +37,44 @@ body {
     "Roboto Mono", "Source Code Pro", monospace;
 
   /* general */
-  --sdt-bg-main: var(--color-surface-elevated); /** wrap background color */
-  --sdt-shadow-color: var(--color-surface-100); /** wrap shadow color */
+  --sdt-bg-main: var(--surface-elevated-bg); /** wrap background color */
+  --sdt-shadow-color: var(--surface-elevated-hover-bg); /** wrap shadow color */
   --sdt-wrap-shadow: 0 1px 0px 0px var(--sdt-shadow-color); /** wrap shadow settings */
   --sdt-radius: var(--radius-lg);
   --sdt-color: var(
-    --color-fg-default
+    --fg-default
   ); /** data to select(e.g date/time) text color (except header & buttons) */
   --sdt-color-selected: #fff; /** selected data(e.g date/time) text color */
   --sdt-header-color: var(
-    --color-fg-default
+    --fg-default
   ); /** header items color (e.g. text & buttons) */
   --sdt-header-btn-bg-hover: var(
-    --color-surface-elevated
+    --surface-elevated-bg
   ); /** header items hover background color */
   --sdt-bg-selected: var(
-    --color-brand
+    --brand
   ); /** selected data(e.g date/time) background color */
 
   /* action buttons */
   --sdt-today-bg: var(
-    --color-brand
+    --brand
   ); /** date picker today button hover background color */
   --sdt-today-color: var(
-    --color-fg-default
+    --fg-default
   ); /** date picker today button text & border color */
-  --sdt-clear-color: var(--color-error); /** clear button text & border color */
+  --sdt-clear-color: var(--error); /** clear button text & border color */
   --sdt-clear-bg: transparent; /** clear button background color */
   --sdt-clear-hover-color: var(
-    --color-fg-default
+    --fg-default
   ); /** clear button hover text color */
-  --sdt-clear-hover-bg: var(
-    --color-error
-  ); /** clear button hover background color */
+  --sdt-clear-hover-bg: var(--error); /** clear button hover background color */
 
   /* time picker */
   --sdt-clock-selected-bg: var(
     --sdt-bg-selected
   ); /** selected time background color */
   --sdt-clock-bg: var(
-    --color-surface-elevated
+    --surface-elevated-bg
   ); /** time picker inner circle background color */
   --sdt-clock-color: var(
     --sdt-color
@@ -86,14 +93,14 @@ body {
   ); /** selected date background color */
   --sdt-table-disabled-date: #b22222; /** disabled dates text color */
   --sdt-table-disabled-date-bg: var(
-    --color-surface-elevated
+    --surface-elevated-bg
   ); /** disabled dates background color */
   --sdt-table-bg: transparent; /** date picker inner table background color */
   --sdt-table-data-bg-hover: var(
-    --color-surface-100
+    --surface-elevated-hover-bg
   ); /** table selection data hover background color */
   --sdt-table-today-indicator: var(
-    --color-brand
+    --brand
   ); /** date picker current day marker color */
 
   @apply overflow-hidden scroll-smooth;

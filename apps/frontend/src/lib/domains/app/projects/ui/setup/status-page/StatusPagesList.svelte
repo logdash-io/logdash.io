@@ -120,7 +120,7 @@
 </PaneHeader>
 
 {#if dashboards.length > 0}
-  <ul class="divide-hairline border-hairline divide-y border-b">
+  <ul class="edge-between edge-b">
     {#each dashboards as dashboard (dashboard.id)}
       <StatusPageRow
         {clusterId}
@@ -151,7 +151,7 @@
         Create status page
       </Button>
     {:else}
-      <UpgradeButton variant="neutral" source="status-page-limit">
+      <UpgradeButton source="status-page-limit">
         Upgrade to create more status pages
       </UpgradeButton>
     {/if}

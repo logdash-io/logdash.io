@@ -2,12 +2,18 @@ import { Global, Module } from '@nestjs/common';
 import { createClient, ClickHouseClient } from '@clickhouse/client';
 import { ClickHouseContainer, StartedClickHouseContainer } from '@testcontainers/clickhouse';
 import * as path from 'path';
+import { createHash } from 'node:crypto';
+import { readdirSync, readFileSync } from 'node:fs';
 
 type ClickHouseClientOptions = ReturnType<StartedClickHouseContainer['getClientOptions']>;
 
 export const createClickHouseTestContainer = async (): Promise<void> => {
   const migrationsPath = path.resolve(__dirname, '../../clickhouse-migrations');
   const logsPath = path.resolve(__dirname, '../../logs');
+  const migrationsHash = createHash('sha256');
+  for (const file of readdirSync(migrationsPath).sort()) {
+    migrationsHash.update(file).update(readFileSync(path.join(migrationsPath, file)));
+  }
 
   const clickhouseContainer = await new ClickHouseContainer('clickhouse/clickhouse-server:latest')
     .withDatabase('default')
@@ -25,6 +31,7 @@ export const createClickHouseTestContainer = async (): Promise<void> => {
         mode: 'rw',
       },
     ])
+    .withLabels({ 'io.logdash.clickhouse-migrations': migrationsHash.digest('hex') })
     .withReuse()
     .start();
 

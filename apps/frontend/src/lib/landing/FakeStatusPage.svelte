@@ -24,7 +24,7 @@
 
 <div class="flex h-full w-full flex-col gap-5 sm:gap-6">
   <div class="flex flex-col gap-0.5">
-    <span class="text-neutral-500 text-xs">Acme status</span>
+    <span class="text-fg-muted text-xs">Acme status</span>
     <span class="flex items-center gap-2.5 text-2xl font-medium">
       <span class="bg-success size-2 shrink-0 rounded-full"></span>
       All systems operational
@@ -40,8 +40,8 @@
         ]}
       >
         <div class="flex items-center justify-between gap-3 text-sm">
-          <span class="text-neutral-300">{service.name}</span>
-          <span class="text-neutral-500 font-figure">{service.uptime}</span>
+          <span class="text-fg-secondary">{service.name}</span>
+          <span class="text-fg-muted font-figure">{service.uptime}</span>
         </div>
 
         <div class="flex h-7 gap-px sm:gap-0.5" aria-hidden="true">
@@ -50,7 +50,7 @@
               class={[
                 'min-w-0 flex-1 rounded-[1px]',
                 {
-                  'bg-neutral-700': !service.incidents[day],
+                  'bg-surface-200-bg': !service.incidents[day],
                   'bg-warning': service.incidents[day] === 'degraded',
                   'bg-error': service.incidents[day] === 'down',
                 },
@@ -63,7 +63,7 @@
   </div>
 
   <div
-    class="text-neutral-600 flex items-center justify-between font-mono text-xs"
+    class="text-fg-faint flex items-center justify-between font-mono text-xs"
   >
     <span>90 days ago</span>
     <span>Today</span>

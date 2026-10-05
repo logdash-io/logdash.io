@@ -38,7 +38,11 @@ export const UserPlanConfigs: UserPlanConfigs = {
       maxNumberOfPublicDashboards: 1,
     },
     notificationChannels: {
-      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
+      allowedTypes: [
+        NotificationChannelType.Telegram,
+        NotificationChannelType.Webhook,
+        NotificationChannelType.Email,
+      ],
     },
   },
   [UserTier.EarlyUser]: {
@@ -49,7 +53,11 @@ export const UserPlanConfigs: UserPlanConfigs = {
       maxNumberOfPublicDashboards: 1,
     },
     notificationChannels: {
-      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
+      allowedTypes: [
+        NotificationChannelType.Telegram,
+        NotificationChannelType.Webhook,
+        NotificationChannelType.Email,
+      ],
     },
   },
 
@@ -62,7 +70,11 @@ export const UserPlanConfigs: UserPlanConfigs = {
       maxNumberOfPublicDashboards: 5,
     },
     notificationChannels: {
-      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
+      allowedTypes: [
+        NotificationChannelType.Telegram,
+        NotificationChannelType.Webhook,
+        NotificationChannelType.Email,
+      ],
     },
   },
   [UserTier.Builder]: {
@@ -73,7 +85,11 @@ export const UserPlanConfigs: UserPlanConfigs = {
       maxNumberOfPublicDashboards: 5,
     },
     notificationChannels: {
-      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
+      allowedTypes: [
+        NotificationChannelType.Telegram,
+        NotificationChannelType.Webhook,
+        NotificationChannelType.Email,
+      ],
     },
   },
   [UserTier.Pro]: {
@@ -84,7 +100,11 @@ export const UserPlanConfigs: UserPlanConfigs = {
       maxNumberOfPublicDashboards: 15,
     },
     notificationChannels: {
-      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
+      allowedTypes: [
+        NotificationChannelType.Telegram,
+        NotificationChannelType.Webhook,
+        NotificationChannelType.Email,
+      ],
     },
   },
 
@@ -97,7 +117,11 @@ export const UserPlanConfigs: UserPlanConfigs = {
       maxNumberOfPublicDashboards: 5,
     },
     notificationChannels: {
-      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
+      allowedTypes: [
+        NotificationChannelType.Telegram,
+        NotificationChannelType.Webhook,
+        NotificationChannelType.Email,
+      ],
     },
   },
   [UserTier.Admin]: {
@@ -108,7 +132,11 @@ export const UserPlanConfigs: UserPlanConfigs = {
       maxNumberOfPublicDashboards: 100,
     },
     notificationChannels: {
-      allowedTypes: [NotificationChannelType.Telegram, NotificationChannelType.Webhook],
+      allowedTypes: [
+        NotificationChannelType.Telegram,
+        NotificationChannelType.Webhook,
+        NotificationChannelType.Email,
+      ],
     },
   },
 };

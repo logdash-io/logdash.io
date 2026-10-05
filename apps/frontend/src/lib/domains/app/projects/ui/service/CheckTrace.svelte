@@ -62,7 +62,7 @@
   <path
     d="M0 {BASELINE_Y} H{width}"
     fill="none"
-    stroke="var(--color-neutral-800)"
+    stroke="var(--edge-color)"
     stroke-width="1"
     vector-effect="non-scaling-stroke"
   />
@@ -70,7 +70,7 @@
   <path
     d={trace}
     fill="none"
-    stroke="var(--color-neutral-500)"
+    stroke="var(--fg-muted)"
     stroke-width="1.5"
     stroke-linecap="round"
     stroke-linejoin="round"

@@ -177,7 +177,7 @@
 
 <div bind:this={root} class="flex h-full w-full flex-col gap-5">
   <div class="flex flex-col gap-0.5">
-    <span class="text-neutral-500 text-xs">
+    <span class="text-fg-muted text-xs">
       <RollingNumber value={unanswered} />
       unanswered pings
     </span>
@@ -190,9 +190,7 @@
       >
         <span class="bg-error size-2 rounded-full"></span>
         Down
-        <span
-          class="text-neutral-500 font-mono text-xs font-normal tabular-nums"
-        >
+        <span class="text-fg-muted font-mono text-xs font-normal tabular-nums">
           {downFor}
         </span>
       </span>
@@ -205,15 +203,15 @@
     </filter>
   </svg>
 
-  <div class="border-hairline border-t" aria-hidden="true">
+  <div class="border-surface-100-border border-t" aria-hidden="true">
     <div
       class="overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_0.75rem)]"
     >
       <div bind:this={list} class="will-change-transform">
         {#each rows as mention (mention.key)}
-          <div class="border-hairline flex gap-3 border-b py-3.5">
+          <div class="border-surface-100-border flex gap-3 border-b py-3.5">
             <img
-              class="bg-surface-100 size-8 shrink-0 rounded-full object-cover grayscale"
+              class="bg-surface-150-bg size-8 shrink-0 rounded-full object-cover grayscale"
               src={mention.avatar}
               alt=""
               width="32"
@@ -226,20 +224,18 @@
               <div class="flex items-baseline gap-2">
                 <span class="truncate text-sm font-medium">{mention.name}</span>
 
-                <span
-                  class="text-neutral-600 hidden truncate text-sm sm:inline"
-                >
+                <span class="text-fg-faint hidden truncate text-sm sm:inline">
                   {mention.handle}
                 </span>
 
                 <span
-                  class="text-neutral-600 ml-auto shrink-0 text-xs tabular-nums"
+                  class="text-fg-faint ml-auto shrink-0 text-xs tabular-nums"
                 >
                   {ago(mention.at)}
                 </span>
               </div>
 
-              <p class="text-neutral-400 text-sm text-pretty">
+              <p class="text-fg-tertiary text-sm text-pretty">
                 {#each emphasized(mention) as part, index (index)}
                   <span
                     class={{

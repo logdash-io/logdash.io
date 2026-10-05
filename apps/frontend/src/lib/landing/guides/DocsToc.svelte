@@ -83,7 +83,7 @@
               'flex min-h-8 items-center rounded-lg px-2.5 text-sm leading-5 transition-ink duration-150',
               activeId === entry.id
                 ? 'text-fg-default'
-                : 'text-neutral-400 hover:text-fg-default',
+                : 'text-fg-tertiary hover:text-fg-default',
             ]}
             aria-current={activeId === entry.id ? 'location' : undefined}
           >

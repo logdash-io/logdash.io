@@ -39,7 +39,7 @@
   >
     One last thing
   </h2>
-  <p class="text-neutral-400 mt-1.5 text-sm text-pretty">
+  <p class="text-fg-tertiary mt-1.5 text-sm text-pretty">
     Confirm the terms to finish setting up your account.
   </p>
 
@@ -47,17 +47,17 @@
     <label class="flex cursor-pointer items-start gap-3 text-sm">
       <Checkbox
         variant="primary"
-        class="border-neutral-600 checked:border-brand"
+        class="border-surface-input-border checked:border-brand"
         required
         bind:checked={termsAccepted}
       />
-      <span class="text-neutral-300">
+      <span class="text-fg-secondary">
         I agree to the
         <a
           href={resolve('/terms-of-service')}
           target="_blank"
           rel="noopener"
-          class="text-neutral-100 whitespace-nowrap underline decoration-neutral-600 underline-offset-2 transition-ink hover:decoration-neutral-300"
+          class="text-fg-default whitespace-nowrap underline decoration-fg-faint underline-offset-2 transition-ink hover:decoration-fg-secondary"
         >
           Terms of Service
         </a>
@@ -66,7 +66,7 @@
           href={resolve('/privacy-policy')}
           target="_blank"
           rel="noopener"
-          class="text-neutral-100 whitespace-nowrap underline decoration-neutral-600 underline-offset-2 transition-ink hover:decoration-neutral-300"
+          class="text-fg-default whitespace-nowrap underline decoration-fg-faint underline-offset-2 transition-ink hover:decoration-fg-secondary"
         >
           Privacy Policy
         </a>
@@ -76,10 +76,10 @@
     <label class="flex cursor-pointer items-start gap-3 text-sm">
       <Checkbox
         variant="primary"
-        class="border-neutral-600 checked:border-brand"
+        class="border-surface-input-border checked:border-brand"
         bind:checked={marketingConsent}
       />
-      <span class="text-neutral-300">
+      <span class="text-fg-secondary">
         Send me product updates. Rarely, no spam.
       </span>
     </label>

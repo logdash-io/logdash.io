@@ -21,8 +21,8 @@
   const segments = $derived(groupPingsByStatus(pings));
 
   const statusColors = {
-    healthy: "bg-green-600",
-    unhealthy: "bg-red-700",
+    healthy: "bg-success",
+    unhealthy: "bg-error",
   };
 
   function getTooltipContent(segment: StatusSegment): string {
@@ -41,7 +41,7 @@
   >
     {#if segments.length === 0}
       <div
-        class="w-full flex-shrink-0 rounded-sm bg-surface-100"
+        class="w-full flex-shrink-0 rounded-sm bg-surface-150-bg"
         style="height: {height}px;"
         title="No pings available"
       ></div>

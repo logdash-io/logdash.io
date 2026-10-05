@@ -38,7 +38,7 @@
       : local.toFormat('HH:mm:ss'),
   );
   const dotColor = $derived(
-    LOG_LEVELS_MAP[level as LogLevel]?.color ?? 'bg-neutral-600',
+    LOG_LEVELS_MAP[level as LogLevel]?.color ?? 'bg-idle',
   );
 
   $effect(() => {
@@ -62,7 +62,9 @@
     type="button"
     class={[
       'focus-visible:outline-brand focus-visible:-outline-offset-2 focus-visible:outline-2 flex h-7 w-full min-w-0 cursor-pointer items-center gap-2.5 px-4 text-left font-mono text-sm',
-      selected ? 'bg-surface-100 hover:bg-surface-150' : 'hover:bg-surface-100',
+      selected
+        ? 'bg-surface-50-selected-bg hover:bg-surface-150-hover-bg'
+        : 'hover:bg-surface-50-hover-bg',
     ]}
     aria-pressed={selected}
     {onclick}
@@ -78,12 +80,12 @@
 {#snippet content()}
   <span class={['size-2 shrink-0 rounded-full', dotColor]}></span>
 
-  <span class="text-neutral-400 shrink-0 whitespace-nowrap tabular-nums">
+  <span class="text-fg-tertiary shrink-0 whitespace-nowrap tabular-nums">
     [{#if day}<span class="max-sm:hidden">{day}&nbsp;</span>{/if}{time}]
   </span>
 
   {#if namespace}
-    <span class="text-neutral-500 max-w-32 shrink-0 truncate">{namespace}</span>
+    <span class="text-fg-muted max-w-32 shrink-0 truncate">{namespace}</span>
   {/if}
 
   <span class="min-w-0 flex-1 truncate">{message}</span>

@@ -24,7 +24,7 @@
     isLoading = false,
     failed = false,
     data,
-    color = '#f4f4f4',
+    color = 'var(--fg-default)',
     height = 200,
     format = 'minute',
     timeRange = 'small',
@@ -33,8 +33,8 @@
   let chartContainer: HTMLElement;
   let tooltip: HTMLElement;
   const MARGIN = { top: 12, right: 8, bottom: 20, left: 44 };
-  const AXIS_COLOR = '#7f7f86';
-  const AXIS_LINE_COLOR = '#222225';
+  const AXIS_COLOR = 'var(--fg-muted)';
+  const AXIS_LINE_COLOR = 'var(--surface-50-border)';
   function createChart() {
     if (!chartContainer || !data || data.length === 0) {
       d3.select(chartContainer).selectAll('*').remove();
@@ -209,13 +209,13 @@
   {#if isLoading}
     <Spinner
       size="sm"
-      class="text-neutral-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+      class="text-fg-muted absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
     />
   {/if}
 
   {#if !isLoading && data.length === 0}
     <div
-      class="text-neutral-500 absolute inset-0 flex items-center justify-center gap-2 text-sm"
+      class="text-fg-muted absolute inset-0 flex items-center justify-center gap-2 text-sm"
     >
       {#if failed}
         <DangerIcon class="size-4" />
@@ -236,7 +236,7 @@
   .point-tooltip {
     position: absolute;
     visibility: hidden;
-    background-color: var(--surface-100);
+    background-color: var(--surface-elevated-bg);
     color: var(--fg-default);
     padding: 6px 10px;
     border-radius: 8px;

@@ -36,23 +36,23 @@
   const shownBucket = $derived(shown === null ? null : buckets[shown]);
 
   const barColors: Record<BucketStatus, string> = $derived({
-    up: "bg-neutral-700",
+    up: "bg-surface-200-bg",
     degraded: "bg-warning",
     down: "bg-error",
-    unknown: raised ? "bg-neutral-800" : "bg-neutral-900",
+    unknown: raised ? "bg-surface-150-bg" : "bg-surface-100-bg",
   });
 
   const activeBarColors: Record<BucketStatus, string> = $derived({
     ...barColors,
-    up: "bg-neutral-400",
-    unknown: "bg-neutral-600",
+    up: "bg-current text-fg-tertiary",
+    unknown: "bg-idle",
   });
 
   const dotColors: Record<BucketStatus, string> = {
     up: "bg-success",
     degraded: "bg-warning",
     down: "bg-error",
-    unknown: "bg-neutral-600",
+    unknown: "bg-idle",
   };
 
   function describe(bucket: Bucket): string {
@@ -162,23 +162,23 @@
     {@const uptime = getUptimeFromBucket(shownBucket)}
     <div
       aria-hidden="true"
-      class="bg-surface-elevated ring-neutral-800 pointer-events-none absolute bottom-full z-10 mb-2 flex flex-col gap-1 rounded-lg px-3 py-2.5 ring-1"
+      class="bg-surface-elevated-bg ring-surface-elevated-border pointer-events-none absolute bottom-full z-10 mb-2 flex flex-col gap-1 rounded-lg px-3 py-2.5 ring-1"
       style:width="{TOOLTIP_WIDTH_REM}rem"
       style:left={tooltipLeft(shown)}
     >
       <span class="text-sm font-medium">
         {formatSlot(shownBucket)}
-        <span class="text-neutral-400 font-mono text-xs font-normal">UTC</span>
+        <span class="text-fg-tertiary font-mono text-xs font-normal">UTC</span>
       </span>
       {#if uptime === null}
-        <span class="text-neutral-400 text-xs">No checks this {unit}</span>
+        <span class="text-fg-tertiary text-xs">No checks this {unit}</span>
       {:else}
-        <span class="text-neutral-300 flex items-center gap-2 text-xs tabular-nums">
+        <span class="text-fg-secondary flex items-center gap-2 text-xs tabular-nums">
           <span class={["size-1.5 shrink-0 rounded-full", dotColors[status]]}
           ></span>
           {formatUptime(uptime)} uptime
         </span>
-        <span class="text-neutral-400 text-xs tabular-nums">
+        <span class="text-fg-tertiary text-xs tabular-nums">
           {details(shownBucket, " · ")}
         </span>
       {/if}
@@ -186,7 +186,7 @@
   {/if}
 
   <div
-    class="text-neutral-500 mt-2 flex items-center justify-between font-mono text-xs"
+    class="text-fg-muted mt-2 flex items-center justify-between font-mono text-xs"
   >
     <span>
       {buckets.length === 0 ? "No data yet" : `${buckets.length} ${unit}s ago`}

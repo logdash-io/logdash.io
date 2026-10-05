@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
   import { goto, invalidateAll } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
@@ -15,6 +16,8 @@
   import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
   import LoadingLine from '$lib/domains/shared/ui/components/LoadingLine.svelte';
   import {
+    SETTINGS_PAGE_CLASS,
+    SETTINGS_PANEL_CLASS,
     SettingsCard,
     SettingsCardHeader,
     SettingsCardItem,
@@ -34,7 +37,7 @@
   const { clusterId, dashboardId }: Props = $props();
 
   const FIELD_CLASS =
-    'border-hairline bg-neutral-950 h-8 w-full rounded-lg px-2.5 text-sm';
+    'border-surface-50-border bg-surface-50-bg h-8 w-full rounded-lg px-2.5 text-sm';
 
   let dashboardName = $state('');
   let isUpdating = $state(false);
@@ -131,9 +134,11 @@
   }
 
   async function onDelete(): Promise<void> {
-    const confirmed = confirm(
-      'Delete this status page? Its link and badges stop working. This cannot be undone.',
-    );
+    const confirmed = await confirmDialog.ask({
+      title: 'Delete status page',
+      description: 'Its link and badges stop working. This cannot be undone.',
+      confirmLabel: 'Delete status page',
+    });
 
     if (!confirmed || isDeleting) return;
     isDeleting = true;
@@ -172,7 +177,7 @@
       <span
         class={[
           'size-1.5 rounded-full',
-          isPublished ? 'bg-success' : 'bg-neutral-600',
+          isPublished ? 'bg-success' : 'bg-idle',
         ]}
       ></span>
       {isPublished ? 'Published' : 'Draft'}
@@ -204,9 +209,7 @@
     title="Could not load this status page"
     description="Check your connection and try again."
   >
-    <Button variant="neutral" size="sm" onclick={loadDashboard}>
-      Try again
-    </Button>
+    <Button size="sm" onclick={loadDashboard}>Try again</Button>
   </EmptyState>
 {:else if !dashboard}
   <EmptyState
@@ -218,77 +221,78 @@
       href={resolve('/app/domains/[cluster_id]/status-pages', {
         cluster_id: clusterId,
       })}
-      variant="neutral"
       size="sm"
     >
       Back to status pages
     </Button>
   </EmptyState>
 {:else}
-  {@render section(
-    'Name',
-    'Shown in the header of your status page.',
-    nameField,
-  )}
-  {@render section(
-    'Monitors',
-    'Pick the monitors your status page shows.',
-    monitorsField,
-  )}
-  {@render section(
-    'Visibility',
-    'Once published, anyone with the link can view your status page.',
-    visibilityField,
-  )}
-  {@render section(
-    'Custom domain',
-    'Serve your status page from a domain you own, like status.example.com.',
-    customDomainField,
-  )}
-
-  {#if isPublished}
+  <div class={SETTINGS_PAGE_CLASS}>
     {@render section(
-      'README badges',
-      'Show your uptime in a README or on your website.',
-      badgesField,
+      'Name',
+      'Shown in the header of your status page.',
+      nameField,
     )}
     {@render section(
-      'Build your own',
-      'Build a status page in your own design with the public status page API, or start from the Next.js starter.',
-      buildYourOwnField,
+      'Monitors',
+      'Pick the monitors your status page shows.',
+      monitorsField,
     )}
-  {/if}
+    {@render section(
+      'Visibility',
+      'Once published, anyone with the link can view your status page.',
+      visibilityField,
+    )}
+    {@render section(
+      'Custom domain',
+      'Serve your status page from a domain you own, like status.example.com.',
+      customDomainField,
+    )}
 
-  <SettingsCard
-    title="Danger zone"
-    description="Actions that cannot be undone."
-    variant="danger"
-  >
-    <SettingsCardItem>
-      <p>Delete status page</p>
-      <p class="text-neutral-500">
-        Removes this status page. Its link and badges stop working.
-      </p>
+    {#if isPublished}
+      {@render section(
+        'README badges',
+        'Show your uptime in a README or on your website.',
+        badgesField,
+      )}
+      {@render section(
+        'Build your own',
+        'Build a status page in your own design with the public status page API, or start from the Next.js starter.',
+        buildYourOwnField,
+      )}
+    {/if}
 
-      {#snippet action()}
-        <Button
-          variant="danger"
-          size="sm"
-          loading={isDeleting}
-          onclick={onDelete}
-        >
-          Delete
-        </Button>
-      {/snippet}
-    </SettingsCardItem>
-  </SettingsCard>
+    <SettingsCard
+      title="Danger zone"
+      description="Actions that cannot be undone."
+      variant="danger"
+    >
+      <SettingsCardItem>
+        <p>Delete status page</p>
+        <p class="text-fg-muted">
+          Removes this status page. Its link and badges stop working.
+        </p>
+
+        {#snippet action()}
+          <Button
+            variant="danger"
+            size="sm"
+            loading={isDeleting}
+            onclick={onDelete}
+          >
+            Delete
+          </Button>
+        {/snippet}
+      </SettingsCardItem>
+    </SettingsCard>
+  </div>
 {/if}
 
 {#snippet section(title: string, description: string, field: Snippet)}
-  <section class="border-hairline flex flex-col border-b lg:flex-row">
+  <section class="flex flex-col gap-3">
     <SettingsCardHeader {title} {description} />
 
-    <div class="min-w-0 flex-1 p-4 lg:max-w-2xl">
+    <div class={['min-w-0', SETTINGS_PANEL_CLASS]}>
       {@render field()}
     </div>
   </section>
@@ -312,23 +316,20 @@
       description="Add a monitor to one of your services, then pick it here."
     >
       <Button
-        href={resolve('/app/domains/[cluster_id]', {
+        href={resolve('/app/domains/[cluster_id]/services', {
           cluster_id: clusterId,
         })}
-        variant="neutral"
         size="sm"
       >
         Go to your services
       </Button>
     </EmptyState>
   {:else}
-    <ul
-      class="border-hairline divide-hairline divide-y overflow-hidden rounded-lg border"
-    >
+    <ul class="edge-between overflow-hidden rounded-lg edge">
       {#each monitors as monitor (monitor.id)}
         <li>
           <label
-            class="hover:bg-surface-100 flex h-10 cursor-pointer items-center gap-3 px-3 text-sm select-none"
+            class="hover:bg-surface-100-hover-bg flex h-10 cursor-pointer items-center gap-3 px-3 text-sm select-none"
           >
             <Checkbox
               size="xs"
@@ -341,7 +342,7 @@
               {monitor.name || stripProtocol(monitor.url ?? '')}
             </span>
             {#if monitor.url}
-              <span class="text-neutral-500 ml-auto min-w-0 truncate pl-2">
+              <span class="text-fg-muted ml-auto min-w-0 truncate pl-2">
                 {displayUrl(monitor.url)}
               </span>
             {/if}
@@ -381,7 +382,7 @@
     </div>
   {:else}
     <div class="flex flex-col items-start gap-3">
-      <p class="text-sm text-neutral-500">
+      <p class="text-sm text-fg-muted">
         Your status page stays private until you publish it.
       </p>
       <Button
@@ -405,7 +406,7 @@
 
 {#snippet badgesField()}
   {#if badgeMonitors.length === 0}
-    <p class="text-sm text-neutral-500">
+    <p class="text-sm text-fg-muted">
       Pick monitors above to get their badges.
     </p>
   {:else}

@@ -15,7 +15,7 @@
     >
       Logdash vs PostHog
     </h1>
-    <p class="text-neutral-400 mx-auto max-w-2xl text-xl leading-relaxed">
+    <p class="text-fg-tertiary mx-auto max-w-2xl text-xl leading-relaxed">
       PostHog is great, we use it at Logdash too. It’s the most powerful
       analytics tool on the market. But despite some features overlap, it's a
       fundamentally different tool. Let's break it down.
@@ -41,22 +41,22 @@
       <h2 class="text-3xl font-semibold">Who is who and what is what?</h2>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-hairline">
+    <div class="overflow-hidden rounded-xl border border-surface-root-border">
       <table class="w-full border-collapse">
         <thead>
           <tr>
             <th
-              class="border-b border-r border-hairline bg-neutral-900 px-6 py-5 text-left text-base font-medium"
+              class="border-b border-r border-surface-100-border bg-surface-100-bg px-6 py-5 text-left text-base font-medium"
             >
               Feature
             </th>
             <th
-              class="border-b border-r border-hairline bg-neutral-900 px-6 py-5 text-left text-base font-medium"
+              class="border-b border-r border-surface-100-border bg-surface-100-bg px-6 py-5 text-left text-base font-medium"
             >
               PostHog
             </th>
             <th
-              class="border-b border-hairline bg-neutral-900 px-6 py-5 text-left text-base font-medium"
+              class="border-b border-surface-100-border bg-surface-100-bg px-6 py-5 text-left text-base font-medium"
             >
               Logdash
             </th>
@@ -67,7 +67,7 @@
             <tr>
               <td
                 class={[
-                  'border-r border-hairline px-6 py-5 font-medium',
+                  'border-r border-surface-root-border px-6 py-5 font-medium',
                   { 'border-b': i < posthogComparisonData.length - 1 },
                 ]}
               >
@@ -75,7 +75,7 @@
               </td>
               <td
                 class={[
-                  'border-r border-hairline px-6 py-5',
+                  'border-r border-surface-root-border px-6 py-5',
                   { 'border-b': i < posthogComparisonData.length - 1 },
                 ]}
               >
@@ -88,7 +88,7 @@
                 class={[
                   'px-6 py-5',
                   {
-                    'border-b border-hairline':
+                    'border-b border-surface-root-border':
                       i < posthogComparisonData.length - 1,
                   },
                 ]}
@@ -108,7 +108,7 @@
   <section class="flex flex-col gap-8">
     <div class="text-center">
       <h2 class="text-3xl font-semibold">The "No-Nonsense" Comparison</h2>
-      <p class="text-neutral-400 mx-auto mt-4 max-w-2xl text-lg">
+      <p class="text-fg-tertiary mx-auto mt-4 max-w-2xl text-lg">
         Same Engine, Different Philosophy. Both tools are built on ClickHouse,
         giving you the same enterprise-grade reliability and speed. We don’t
         optimize for feature count - they have more. We optimize for clarity.
@@ -117,13 +117,13 @@
 
     <div class="ld-card-base ld-card-rounding overflow-hidden p-2 sm:p-4">
       <div class="grid md:grid-cols-2">
-        <div class="bg-neutral-900 p-6 sm:p-8">
+        <div class="bg-surface-100-bg p-6 sm:p-8">
           <div class="mb-2 font-semibold uppercase tracking-wide">
             The "PostHog" Path
             <br />
             (Maximum Control)
           </div>
-          <ol class="text-neutral-300 mt-4 list-decimal space-y-2 pl-5">
+          <ol class="text-fg-secondary mt-4 list-decimal space-y-2 pl-5">
             <li>You install the SDK.</li>
             <li>Then you manually build insights.</li>
             <li>Then you configure ingestion pipelines.</li>
@@ -136,7 +136,7 @@
         </div>
 
         <div
-          class="bg-neutral-800 p-6 sm:p-8 flex flex-col justify-between rounded-2xl"
+          class="bg-surface-150-bg p-6 sm:p-8 flex flex-col justify-between rounded-2xl"
         >
           <div class="flex flex-col">
             <div class="text-brand mb-2 font-semibold uppercase tracking-wide">
@@ -145,12 +145,12 @@
               (Maximum Speed)
             </div>
             <ol
-              class="text-neutral-300 mt-4 list-decimal space-y-2 pl-5 font-medium"
+              class="text-fg-secondary mt-4 list-decimal space-y-2 pl-5 font-medium"
             >
               <li>Your LLM integrates the SDK.</li>
             </ol>
           </div>
-          <div class="border-neutral-500 mt-6 border-l-2 pl-4">
+          <div class="border-surface-200-border mt-6 border-l-2 pl-4">
             <div class="text-sm font-semibold">Result:</div>
             <div class="text-lg font-semibold">
               You see your logs, errors, and KPIs instantly.
@@ -160,7 +160,7 @@
       </div>
     </div>
 
-    <p class="text-neutral-300 italic text-center px-3 sm:pb-0">
+    <p class="text-fg-secondary italic text-center px-3 sm:pb-0">
       Logdash removes the "Tax of Complexity" from your observability.
     </p>
   </section>
@@ -170,22 +170,22 @@
       <h2 class="text-3xl font-semibold">Feature Comparison Table</h2>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-hairline">
+    <div class="overflow-hidden rounded-xl border border-surface-root-border">
       <table class="w-full border-collapse">
         <thead>
           <tr>
             <th
-              class="border-b border-r border-hairline bg-neutral-900 px-6 py-5 text-left text-base font-medium"
+              class="border-b border-r border-surface-100-border bg-surface-100-bg px-6 py-5 text-left text-base font-medium"
             >
               Feature
             </th>
             <th
-              class="border-b border-r border-hairline bg-neutral-900 px-6 py-5 text-left text-base font-medium"
+              class="border-b border-r border-surface-100-border bg-surface-100-bg px-6 py-5 text-left text-base font-medium"
             >
               PostHog
             </th>
             <th
-              class="border-b border-hairline bg-neutral-900 px-6 py-5 text-left text-base font-medium"
+              class="border-b border-surface-100-border bg-surface-100-bg px-6 py-5 text-left text-base font-medium"
             >
               Logdash
             </th>
@@ -196,7 +196,7 @@
             <tr>
               <td
                 class={[
-                  'border-r border-hairline px-6 py-5 font-medium',
+                  'border-r border-surface-root-border px-6 py-5 font-medium',
                   { 'border-b': i < featureComparisonData.length - 1 },
                 ]}
               >
@@ -204,7 +204,7 @@
               </td>
               <td
                 class={[
-                  'border-r border-hairline px-6 py-5',
+                  'border-r border-surface-root-border px-6 py-5',
                   { 'border-b': i < featureComparisonData.length - 1 },
                 ]}
               >
@@ -217,7 +217,7 @@
                 class={[
                   'px-6 py-5',
                   {
-                    'border-b border-hairline':
+                    'border-b border-surface-root-border':
                       i < featureComparisonData.length - 1,
                   },
                 ]}
@@ -240,29 +240,29 @@
     </div>
 
     <div class="grid gap-8 md:grid-cols-2">
-      <div class="ld-card bg-neutral-900 p-8">
+      <div class="ld-card p-8">
         <h3 class="mb-4 text-xl font-semibold">PostHog is like Photoshop.</h3>
-        <p class="text-neutral-300 text-lg leading-relaxed">
+        <p class="text-fg-secondary text-lg leading-relaxed">
           You can do almost anything with it, but you need to learn layers,
           masks, and filters. It’s designed for experts who need total control.
         </p>
       </div>
 
-      <div class="ld-card border-neutral-700 p-8 border">
+      <div class="ld-card border-surface-150-border p-8 border">
         <h3 class="mb-4 text-xl font-semibold">
-          <span class="bg-neutral-800 text-brand rounded-lg px-2 py-1">
+          <span class="bg-surface-150-bg text-brand rounded-lg px-2 py-1">
             Logdash
           </span>
           is like Instagram Filters.
         </h3>
-        <p class="text-neutral-300 text-lg leading-relaxed">
+        <p class="text-fg-secondary text-lg leading-relaxed">
           You press a button, and it looks perfect immediately. It’s designed
           for founders who need to move fast.
         </p>
       </div>
     </div>
 
-    <p class="text-center text-neutral-300 text-lg">
+    <p class="text-center text-fg-secondary text-lg">
       Do you want to configure the tool, or do you want to get the juice (fast)?
     </p>
   </section>
@@ -274,7 +274,7 @@
       <br />
       Use Logdash for the daily drive.
     </h2>
-    <p class="text-neutral-400 mx-auto mb-8 max-w-2xl text-xl">
+    <p class="text-fg-tertiary mx-auto mb-8 max-w-2xl text-xl">
       You don't have to replace PostHog to enjoy Logdash.
       <br />
       Just don't use a quantum computer to check your pulse.

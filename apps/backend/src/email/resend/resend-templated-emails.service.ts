@@ -104,6 +104,46 @@ P.S. I’d love to know — what made you decide to give Logdash a try?`;
     }
   }
 
+  public async sendHttpMonitorAlertEmail(
+    to: string,
+    alert: {
+      name: string;
+      url: string;
+      up: boolean;
+      statusCode?: string;
+      errorMessage?: string;
+      dashboardUrl: string;
+    },
+  ): Promise<void> {
+    const name = escapeHtml(alert.name);
+    const subject = alert.up ? `🟢 ${alert.name} is up` : `🔴 ${alert.name} is down`;
+    const details = alert.up
+      ? `<b>${name}</b> is responding again.`
+      : `<b>${name}</b> is not responding.<br/><br/>
+<b>Status code:</b> ${escapeHtml(alert.statusCode ?? 'N/A')}<br/>
+<b>Error:</b> ${escapeHtml(alert.errorMessage ?? 'N/A')}`;
+
+    const { error } = await this.resend.emails.send({
+      from: 'Logdash Alerts <alerts@updates.logdash.io>',
+      to,
+      subject,
+      html: getBasicTemplate({
+        header: subject,
+        body: `${details}<br/><br/><b>Address:</b> ${escapeHtml(alert.url)}`,
+        button: { text: 'Open dashboard', url: alert.dashboardUrl },
+      }),
+      headers: {
+        'X-Entity-Ref-ID': `alert-${Date.now()}`,
+      },
+    });
+
+    if (error) {
+      this.logger.error(`Failed to send alert email`, {
+        errorMessage: error.message,
+      });
+    }
+  }
+
   public async sendPersonalApiKeyCreatedEmail(
     to: string,
     key: PersonalApiKeyCreatedEvent,

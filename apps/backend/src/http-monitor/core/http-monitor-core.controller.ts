@@ -46,6 +46,8 @@ import {
 import { HttpMonitorProbeService } from '../probe/http-monitor-probe.service';
 import { ProbeHttpMonitorUrlBody } from './dto/probe-http-monitor-url.body';
 import { ProbeHttpMonitorUrlResponse } from './dto/probe-http-monitor-url.response';
+import { SuggestHttpMonitorUrlsResponse } from './dto/suggest-http-monitor-urls.response';
+import { NotificationChannelDefaultsService } from '../../notification-channel/defaults/notification-channel-defaults.service';
 
 @ApiBearerAuth()
 @ApiTags('Http Monitors')
@@ -63,6 +65,7 @@ export class HttpMonitorCoreController {
     private readonly notificationChannelReadService: NotificationChannelReadService,
     private readonly httpMonitorWatchlistService: HttpMonitorWatchlistService,
     private readonly httpMonitorProbeService: HttpMonitorProbeService,
+    private readonly notificationChannelDefaultsService: NotificationChannelDefaultsService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -112,6 +115,16 @@ export class HttpMonitorCoreController {
   @ApiResponse({ type: ProbeHttpMonitorUrlResponse })
   async probe(@Body() dto: ProbeHttpMonitorUrlBody): Promise<ProbeHttpMonitorUrlResponse> {
     return this.httpMonitorProbeService.probe(dto.url);
+  }
+
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Read)
+  @ThrottleMonitorProbe()
+  @HttpCode(200)
+  @Post('clusters/:clusterId/http_monitors/suggestions')
+  @ApiResponse({ type: SuggestHttpMonitorUrlsResponse })
+  async suggest(@Body() dto: ProbeHttpMonitorUrlBody): Promise<SuggestHttpMonitorUrlsResponse> {
+    return { urls: await this.httpMonitorProbeService.suggest(dto.url) };
   }
 
   @UseGuards(ClusterMemberGuard)
@@ -262,7 +275,10 @@ export class HttpMonitorCoreController {
   @UseGuards(ClusterMemberGuard)
   @RequireScope(Resource.Monitors, Action.Write)
   @Post('/http_monitors/:httpMonitorId/claim')
-  async claim(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
+  async claim(
+    @Param('httpMonitorId') httpMonitorId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<void> {
     const { projectId, claimed } = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
 
     if (claimed) {
@@ -277,5 +293,6 @@ export class HttpMonitorCoreController {
     }
 
     await this.httpMonitorWriteService.claim(httpMonitorId);
+    await this.notificationChannelDefaultsService.attachOwnerEmail(httpMonitorId, userId);
   }
 }

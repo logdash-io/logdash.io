@@ -27,10 +27,10 @@
       height: var(--kbd-size);
       min-width: var(--kbd-size);
       padding-inline: 0.5em;
-      border: 1px solid var(--border-strong);
+      border: 1px solid var(--surface-150-border);
       border-bottom-width: 2px;
       border-radius: 0.75rem;
-      background-color: var(--surface-elevated);
+      background-color: var(--surface-150-bg);
       font-size: 0.875rem;
       vertical-align: middle;
     }

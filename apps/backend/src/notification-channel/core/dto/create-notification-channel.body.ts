@@ -3,9 +3,10 @@ import { IsEnum, IsObject, IsString, MaxLength, ValidateNested } from 'class-val
 import { NotificationChannelType } from '../enums/notification-target.enum';
 import { TelegramOptionsValidator } from '../types/telegram-options.type';
 import { WebhookOptionsValidator } from '../types/webhook-options.type';
+import { EmailOptionsValidator } from '../types/email-options.type';
 import { Transform } from 'class-transformer';
 
-@ApiExtraModels(TelegramOptionsValidator, WebhookOptionsValidator)
+@ApiExtraModels(TelegramOptionsValidator, WebhookOptionsValidator, EmailOptionsValidator)
 export class CreateNotificationChannelBody {
   @ApiProperty({ enum: NotificationChannelType })
   @IsEnum(NotificationChannelType)
@@ -20,6 +21,7 @@ export class CreateNotificationChannelBody {
     oneOf: [
       { $ref: getSchemaPath(TelegramOptionsValidator) },
       { $ref: getSchemaPath(WebhookOptionsValidator) },
+      { $ref: getSchemaPath(EmailOptionsValidator) },
     ],
   })
   @ValidateNested()
@@ -30,8 +32,11 @@ export class CreateNotificationChannelBody {
     if (obj.type === NotificationChannelType.Webhook) {
       return Object.assign(new WebhookOptionsValidator(), value);
     }
+    if (obj.type === NotificationChannelType.Email) {
+      return Object.assign(new EmailOptionsValidator(), value);
+    }
     return value;
   })
   @IsObject()
-  public options: TelegramOptionsValidator | WebhookOptionsValidator;
+  public options: TelegramOptionsValidator | WebhookOptionsValidator | EmailOptionsValidator;
 }

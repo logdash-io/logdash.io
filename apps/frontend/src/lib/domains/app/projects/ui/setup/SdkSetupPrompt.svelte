@@ -98,7 +98,7 @@
   >
     <button
       type="button"
-      class="ring-hairline text-neutral-400 hover:text-fg-default transition-ink flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs ring-1 ring-inset"
+      class="text-fg-tertiary hover:text-fg-default transition-ink flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm edge"
       aria-label="SDK: {selectedSDK.name}"
       data-posthog-id="sdk-selection-button"
     >
@@ -116,7 +116,9 @@
     role="button"
     tabindex="-1"
   ></div>
-  <ul class="ld-card-base relative z-20 rounded-xl p-1.5 shadow-sm">
+  <ul
+    class="bg-surface-elevated-bg border-surface-elevated-border relative z-20 rounded-xl border p-1.5 shadow-sm"
+  >
     {#each SDK_LIST as sdk, index (sdk.name)}
       <li>
         <button
@@ -126,8 +128,10 @@
             onSelectSDK(index, close);
           }}
           class={[
-            'hover:bg-surface-100 flex w-full cursor-pointer items-center gap-2 rounded-md p-1.5 text-xs select-none',
-            { 'bg-surface-100': index === sdkSelectionState.selectedIndex },
+            'flex w-full cursor-pointer items-center gap-2 rounded-md p-1.5 text-xs select-none',
+            index === sdkSelectionState.selectedIndex
+              ? 'bg-surface-elevated-selected-bg'
+              : 'hover:bg-surface-elevated-hover-bg',
           ]}
         >
           <sdk.icon class="size-4 shrink-0" />

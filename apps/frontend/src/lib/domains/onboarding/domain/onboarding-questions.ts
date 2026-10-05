@@ -1,5 +1,3 @@
-export type OnboardingStep = 'consents' | 'questions';
-
 export const ROLE_OPTIONS = [
   { value: 'solo-founder', label: 'Solo founder or indie hacker' },
   { value: 'startup-developer', label: 'Developer at a startup' },

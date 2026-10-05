@@ -13,7 +13,7 @@
 <LandingSection>
   <div class="grid grid-cols-1 lg:grid-cols-12">
     <div
-      class="border-hairline flex flex-col px-4 py-10 sm:px-6 lg:col-span-5 lg:border-r lg:px-10 lg:py-12"
+      class="border-surface-root-border flex flex-col px-4 py-10 sm:px-6 lg:col-span-5 lg:border-r lg:px-10 lg:py-12"
     >
       <h2 class="text-2xl font-medium tracking-[-0.02em]">A note from us</h2>
 
@@ -21,11 +21,11 @@
     </div>
 
     <div
-      class="border-hairline flex flex-col gap-4 border-t px-4 py-10 sm:px-6 lg:col-span-7 lg:border-t-0 lg:px-10 lg:py-12"
+      class="border-surface-root-border flex flex-col gap-4 border-t px-4 py-10 sm:px-6 lg:col-span-7 lg:border-t-0 lg:px-10 lg:py-12"
     >
       {#each PARAGRAPHS as paragraph (paragraph)}
         <p
-          class="text-neutral-400 max-w-2xl text-lg leading-relaxed text-pretty"
+          class="text-fg-tertiary max-w-2xl text-lg leading-relaxed text-pretty"
         >
           {paragraph}
         </p>

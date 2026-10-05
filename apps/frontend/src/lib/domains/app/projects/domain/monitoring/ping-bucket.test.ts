@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { fillEmptySlots } from './ping-bucket';
+import { bucketUptime, fillEmptySlots } from './ping-bucket';
 
 const bucket = (timestamp: string) => ({
   timestamp,
@@ -34,4 +34,19 @@ test('steps by days and returns nothing when no slot has data', () => {
       ?.timestamp,
   ).toBe('2026-09-29T00:00:00.000Z');
   expect(fillEmptySlots([null, null], 'day')).toEqual([]);
+});
+
+test('shares healthy checks across buckets and has no uptime without checks', () => {
+  expect(
+    bucketUptime([
+      null,
+      { ...bucket('2026-09-30T10:00:00.000Z'), successCount: 3 },
+      {
+        ...bucket('2026-09-30T11:00:00.000Z'),
+        successCount: 0,
+        failureCount: 1,
+      },
+    ]),
+  ).toBe(75);
+  expect(bucketUptime([null, null])).toBeNull();
 });

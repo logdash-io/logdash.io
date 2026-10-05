@@ -44,14 +44,14 @@
 <div class="space-y-6">
   <div class="flex items-center justify-start gap-4">
     <div
-      class="bg-surface-root border-border-default text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
+      class="bg-surface-50-bg border-surface-50-border text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
     >
       <SendIcon class="size-6 stroke-1" />
     </div>
 
     <div class="flex flex-col items-start">
       <h3 class="text-xl font-medium">Set up a Telegram channel</h3>
-      <p class="text-neutral-400 text-sm">
+      <p class="text-fg-tertiary text-sm">
         This is the hard part, so we made it easy!
       </p>
     </div>
@@ -59,7 +59,7 @@
 
   <div class="text-fg-default mb-6 text-sm">
     <h4 class="text-lg font-medium">Step 1</h4>
-    <p class="text-neutral-400 mb-4 select-none">
+    <p class="text-fg-tertiary mb-4 select-none">
       Add the bot
       <button
         type="button"
@@ -73,7 +73,7 @@
     </p>
 
     <h4 class="text-lg font-medium">Step 2</h4>
-    <p class="text-neutral-400">
+    <p class="text-fg-tertiary">
       Copy the passphrase below and send it as a message in that chat.
     </p>
   </div>
@@ -92,7 +92,7 @@
       />
 
       <Button
-        variant="transparent"
+        variant="ghost"
         class="absolute right-0 z-10"
         aria-label="Copy passphrase"
         onclick={copyToClipboard}
@@ -107,7 +107,7 @@
   </div>
 
   <div class="flex gap-3">
-    <Button variant="soft" class="flex-1" onclick={onCancel}>Back</Button>
+    <Button class="flex-1" onclick={onCancel}>Back</Button>
     <Button variant="primary" class="flex-1" onclick={onNext}>
       Message sent!
     </Button>

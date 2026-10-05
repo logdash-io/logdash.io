@@ -13,7 +13,7 @@
 
 <div class="flex min-h-screen w-full overflow-hidden">
   <div
-    class="relative flex w-full flex-col bg-neutral-900 p-8 lg:w-2/5 lg:border-r lg:border-border-default"
+    class="relative flex w-full flex-col bg-surface-100-bg p-8 lg:w-2/5 lg:border-r lg:border-surface-100-border"
   >
     <div class="absolute left-8 top-8">
       <a href={resolve('/')} class="flex">

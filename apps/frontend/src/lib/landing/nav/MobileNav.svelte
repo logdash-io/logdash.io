@@ -13,7 +13,7 @@
   } from './nav.data';
 
   function linkClass(current: boolean): string {
-    return current ? 'text-fg-default' : 'text-neutral-400';
+    return current ? 'text-fg-default' : 'text-fg-tertiary';
   }
 
   function menuEntries(key: NavMenuKey): (NavTarget & { title: string })[] {
@@ -26,7 +26,7 @@
   {#snippet trigger(attrs)}
     <Button
       {...attrs}
-      variant="transparent"
+      variant="ghost"
       shape="square"
       size="sm"
       class="ml-auto lg:hidden"
@@ -101,10 +101,8 @@
       <Button
         href={resolve('/app/auth')}
         draggable="false"
-        variant="subtle"
         size="sm"
         block
-        class="font-medium"
         data-posthog-id="nav-login-cta"
       >
         Log in

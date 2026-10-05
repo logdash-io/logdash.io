@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
   import { invalidateAll } from '$app/navigation';
   import PaneHeader, {
     PANE_HEADER_ACTION_CLASS,
@@ -36,9 +37,11 @@
   }
 
   async function onRevoke(key: PersonalApiKey): Promise<void> {
-    const confirmed = confirm(
-      `Revoke the API key "${key.label}"? Anything using it stops working right away.`,
-    );
+    const confirmed = await confirmDialog.ask({
+      title: 'Revoke API key',
+      description: `Anything using ${key.label} stops working right away. This cannot be undone.`,
+      confirmLabel: 'Revoke key',
+    });
 
     if (!confirmed) {
       return;
@@ -150,19 +153,19 @@
       </Button>
     </EmptyState>
   {:else}
-    <ul class="divide-hairline border-hairline flex flex-col divide-y border-b">
+    <ul class="flex flex-col edge-between edge-b">
       {#each apiKeys as key (key.id)}
         <li class="flex items-center gap-4 px-4 py-4">
           <div class="flex min-w-0 flex-1 flex-col gap-1">
             <div class="flex min-w-0 items-baseline gap-2">
               <span class="truncate text-sm">{key.label}</span>
-              <span class="text-neutral-500 shrink-0 font-mono text-xs">
+              <span class="text-fg-muted shrink-0 font-mono text-xs">
                 {key.prefix}…
               </span>
             </div>
-            <span class="text-neutral-400 text-sm">{scopeSummary(key)}</span>
+            <span class="text-fg-tertiary text-sm">{scopeSummary(key)}</span>
             <span
-              class="text-neutral-500 flex flex-wrap gap-x-2 font-mono text-xs"
+              class="text-fg-muted flex flex-wrap gap-x-2 font-mono text-xs"
             >
               <span>{accessSummary(key)}</span>
               <span aria-hidden="true">·</span>

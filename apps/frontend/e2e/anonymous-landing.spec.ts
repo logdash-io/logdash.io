@@ -55,6 +55,10 @@ async function readStoredPreview(page: Page): Promise<StoredPreview | null> {
   }, PREVIEW_STORAGE_KEY);
 }
 
+function startsWithName(name: string): RegExp {
+  return new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}( |$)`);
+}
+
 async function startMonitoring(page: Page, url: string): Promise<void> {
   // A click before hydration falls back to a native form GET, so wait for the
   // client to take over before driving the form.
@@ -90,7 +94,7 @@ async function expectFullScreen(
   await expect(sidebar).toBeVisible();
   await expect(sidebar).toHaveText(
     new RegExp(
-      `^\\s*All domains\\s*Domains\\s*${cluster[0]}\\s*${cluster}\\s*Home\\s*Status pages\\s*Settings\\s*${host}[\\s\\S]*New service\\s*Anonymous\\s*Free\\s*$`,
+      `^\\s*All domains\\s*Domains\\s*${cluster[0]}\\s*${cluster}\\s*Analytics\\s*Status pages\\s*Settings\\s*${host}[\\s\\S]*New service\\s*Free plan\\s*$`,
     ),
   );
 }
@@ -334,7 +338,7 @@ test.describe('anonymous landing flow', () => {
     expect(stored?.clusterId).toBeTruthy();
   });
 
-  test('check 11: the claim card signs in and onboards inside the dashboard, then opens it', async () => {
+  test('check 11: the claim card signs in, takes the terms, then opens the domain with its setup', async () => {
     await page.goto('/');
 
     const stored = await readStoredPreview(page);
@@ -352,11 +356,7 @@ test.describe('anonymous landing flow', () => {
     );
     await page.route('**/app/api/onboarding/**', (route) =>
       route.fulfill({
-        json: {
-          ...CLAIMED_USER,
-          termsAcceptedAt: new Date().toISOString(),
-          onboardingCompletedAt: new Date().toISOString(),
-        },
+        json: { ...CLAIMED_USER, termsAcceptedAt: new Date().toISOString() },
       }),
     );
 
@@ -371,21 +371,39 @@ test.describe('anonymous landing flow', () => {
 
     await card.getByLabel(/I agree to the/).check();
     await card.getByRole('button', { name: 'Continue', exact: true }).click();
-    await expect(card.getByText('Welcome to Logdash')).toBeVisible();
 
-    for (const select of await card.getByRole('combobox').all()) {
-      await select.selectOption({ index: 1 });
-    }
-
-    await card.getByRole('button', { name: 'Take me to my dashboard' }).click();
-
-    await page.waitForURL(MONITORING_PATH, { timeout: 30_000 });
+    await page.waitForURL(`**/app/domains/${stored!.clusterId}`, {
+      timeout: 30_000,
+    });
     await page.unrouteAll({ behavior: 'ignoreErrors' });
 
-    expect(page.url()).toContain(
-      `/app/domains/${stored!.clusterId}/${stored!.projectId}/monitoring`,
-    );
+    await expect(page.getByText('Monitor more')).toBeVisible();
+    await expect(
+      page
+        .getByRole('region', { name: 'Monitoring' })
+        .getByText('example.org', { exact: true }),
+    ).toBeVisible();
     expect(await readStoredPreview(page)).toBeNull();
+  });
+
+  test('check 17: adding a domain takes one address and shows its first check', async () => {
+    await page.goto('/app/domains/new');
+    await page.getByLabel('Website address').fill('example.net');
+    await page.getByRole('button', { name: 'Start monitoring' }).click();
+
+    await page.waitForURL(/\/app\/domains\/[a-f0-9]{24}$/, { timeout: 30_000 });
+
+    const setup = page.getByRole('region', { name: 'Monitoring' });
+
+    await expect(setup.getByText('Monitor more')).toBeVisible();
+    await expect(setup.getByText(/^Up( · \d+ ms)?$/)).toBeVisible({
+      timeout: 30_000,
+    });
+
+    await setup.getByRole('button', { name: 'Done' }).click();
+    await expect(setup).toBeHidden();
+    await page.reload();
+    await expect(setup).toBeHidden();
   });
 
   test('check 14: submitting from a feature page opens the full-screen preview on home', async () => {
@@ -489,10 +507,10 @@ test.describe('first check and the way in', () => {
     await page.waitForURL(MONITORING_PATH, { timeout: 30_000 });
 
     await expect(
-      page.getByRole('button', { name: domain, exact: true }),
+      page.getByRole('button', { name: startsWithName(domain) }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(
-      page.getByRole('button', { name: service, exact: true }),
+      page.getByRole('button', { name: startsWithName(service) }),
     ).toBeVisible();
   });
 

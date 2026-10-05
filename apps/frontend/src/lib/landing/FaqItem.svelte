@@ -15,14 +15,14 @@
 <Collapse
   class="rounded-none select-none"
   titleClass="group/question flex items-center justify-between gap-6 px-0 py-5 text-base font-medium text-pretty"
-  contentClass="text-neutral-400 px-0 pr-10 text-base"
+  contentClass="text-fg-tertiary px-0 pr-10 text-base"
   {open}
 >
   {#snippet title()}
     {question}
 
     <PlusMinusIcon
-      class="text-neutral-500 group-hover/question:text-fg-default in-open:text-fg-default transition-ink mr-1 size-4 shrink-0"
+      class="text-fg-muted group-hover/question:text-fg-default in-open:text-fg-default transition-ink mr-1 size-4 shrink-0"
     />
   {/snippet}
 

@@ -6,10 +6,10 @@
   import { planHref } from './plan-href';
 </script>
 
-<ul class="bg-hairline grid grid-cols-1 gap-px lg:grid-cols-3">
+<ul class="bg-surface-root-border grid grid-cols-1 gap-px lg:grid-cols-3">
   {#each PAYMENT_PLANS as plan (plan.tier)}
     <li
-      class="bg-surface-root flex flex-col px-4 py-10 sm:px-6 lg:px-10 lg:py-12"
+      class="bg-surface-root-bg flex flex-col px-4 py-10 sm:px-6 lg:px-10 lg:py-12"
     >
       <div class="flex flex-wrap items-center gap-2">
         <h2 class="mr-auto text-lg font-medium tracking-[-0.01em]">
@@ -18,14 +18,14 @@
 
         {#if plan.popular}
           <span
-            class="bg-surface-inverse text-surface-root rounded-full px-2.5 py-0.5 text-xs font-medium"
+            class="bg-surface-inverse-bg text-fg-inverse rounded-full px-2.5 py-0.5 text-xs font-medium"
           >
             Most popular
           </span>
         {/if}
 
         <span
-          class="ring-hairline text-neutral-400 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
+          class="ring-surface-root-border text-fg-tertiary rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
         >
           {plan.badge.text}
         </span>
@@ -35,33 +35,33 @@
         <Price price={plan.price} />
       </p>
 
-      <p class="text-neutral-400 mt-3 leading-relaxed text-pretty lg:min-h-13">
+      <p class="text-fg-tertiary mt-3 leading-relaxed text-pretty lg:min-h-13">
         {plan.description}
       </p>
 
       <Button
-        variant={plan.popular ? 'primary' : 'subtle'}
+        variant={plan.popular ? 'primary' : 'secondary'}
         block
-        class="mt-8 h-11 font-medium"
+        class="mt-8"
         href={planHref(plan.tier)}
       >
         {plan.buttonText}
       </Button>
 
-      <p class="text-neutral-500 mt-3 text-center text-sm">
+      <p class="text-fg-muted mt-3 text-center text-sm">
         {plan.guarantee}
       </p>
 
       <ul
-        class="border-hairline mt-8 flex flex-col gap-3 border-t pt-8 text-sm"
+        class="border-surface-root-border mt-8 flex flex-col gap-3 border-t pt-8 text-sm"
       >
         {#each plan.features as feature (feature.name)}
           {#if feature.name.endsWith(':')}
-            <li class="text-neutral-500 font-medium">{feature.name}</li>
+            <li class="text-fg-muted font-medium">{feature.name}</li>
           {:else}
             <li class="flex items-start gap-3">
-              <CheckIcon class="text-neutral-500 mt-0.5 size-4 shrink-0" />
-              <span class="text-neutral-300">{feature.name}</span>
+              <CheckIcon class="text-fg-muted mt-0.5 size-4 shrink-0" />
+              <span class="text-fg-secondary">{feature.name}</span>
             </li>
           {/if}
         {/each}

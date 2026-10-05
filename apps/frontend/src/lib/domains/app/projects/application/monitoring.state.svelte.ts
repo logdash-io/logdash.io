@@ -17,9 +17,10 @@ import {
   type CreateMonitorDto,
   type UpdateMonitorDto,
 } from '$lib/domains/app/projects/infrastructure/monitoring.service';
-import type {
-  PingBucket,
-  PingBucketPeriod,
+import {
+  bucketUptime,
+  type PingBucket,
+  type PingBucketPeriod,
 } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 
 const logger = createLogger('monitoring.state', false);
@@ -247,10 +248,6 @@ class MonitoringState {
     return this._getSortedPings(this._monitorPings[monitorId]);
   }
 
-  isHealthy(monitorId: string): boolean {
-    return this._checkHealthStatus(monitorId);
-  }
-
   getMonitorById(monitorId: string): Monitor | undefined {
     return this._monitors[monitorId];
   }
@@ -299,25 +296,7 @@ class MonitoringState {
   }
 
   calculateUptime(monitorId: string): number | null {
-    const validBuckets = this.getPingBuckets(monitorId).filter(
-      (bucket): bucket is PingBucket => bucket !== null,
-    );
-
-    const totalSuccess = validBuckets.reduce(
-      (sum, bucket) => sum + bucket.successCount,
-      0,
-    );
-    const totalFailure = validBuckets.reduce(
-      (sum, bucket) => sum + bucket.failureCount,
-      0,
-    );
-    const totalPings = totalSuccess + totalFailure;
-
-    if (totalPings === 0) {
-      return null;
-    }
-
-    return (totalSuccess / totalPings) * 100;
+    return bucketUptime(this.getPingBuckets(monitorId));
   }
 
   async deleteMonitor(monitorId: string): Promise<void> {
@@ -355,16 +334,6 @@ class MonitoringState {
       }
       return 0;
     });
-  }
-
-  private _checkHealthStatus(monitorId: string): boolean {
-    const code = this._monitors[monitorId]?.lastStatusCode;
-
-    if (code === undefined) {
-      logger.warn(`Monitor ${monitorId} has no last status code`);
-      return false;
-    }
-    return code >= 200 && code < 400;
   }
 
   private async _syncClusterMonitors(clusterId: string): Promise<void> {

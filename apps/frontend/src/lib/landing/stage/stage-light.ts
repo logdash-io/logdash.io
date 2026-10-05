@@ -67,8 +67,8 @@ export const stageLight: Action<HTMLCanvasElement, StageLightOptions> = (
       canvas.width,
       canvas.height,
       current.lighting,
-      toRgb(style.getPropertyValue('--color-surface-root')),
-      toRgb(style.getPropertyValue('--color-fg-default')),
+      toRgb(style.getPropertyValue('--surface-root-bg')),
+      toRgb(style.getPropertyValue('--fg-default')),
     );
     target.drawImage(shared.source, 0, 0);
     current.onReady(true);

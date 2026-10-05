@@ -27,22 +27,22 @@
   const accountName = $derived(
     userState.isAnonymous ? 'Anonymous' : userState.user?.email || 'Account',
   );
-  const planLabel = $derived(capitalize(userState.tier.replaceAll('-', ' ')));
-
-  function capitalize(text: string): string {
-    return text.charAt(0).toUpperCase() + text.slice(1);
-  }
 </script>
 
 <SidebarAccountRow
   name={accountName}
-  plan={planLabel}
   avatar={userState.avatar}
   menu={userProfileMenu}
 />
 
 {#snippet userProfileMenu(close: () => void)}
-  <Menu class="ld-card-base z-1 w-56 rounded-xl">
+  <Menu
+    class="bg-surface-elevated-bg border-surface-elevated-border border z-1 w-56 rounded-xl"
+  >
+    <li class="text-fg-muted truncate px-3 pt-1 pb-1.5 text-xs">
+      {accountName}
+    </li>
+
     {#if userState.canUpgrade}
       <li>
         <UpgradeButton

@@ -14,7 +14,7 @@
   <div class="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-24 sm:px-8">
     <div class="text-center">
       <h1 class="mb-4 text-4xl font-semibold">Use Cases</h1>
-      <p class="text-neutral-400 mx-auto max-w-2xl text-lg">
+      <p class="text-fg-tertiary mx-auto max-w-2xl text-lg">
         Coming soon. We're working on documenting real-world use cases to help
         you get the most out of Logdash.
       </p>
