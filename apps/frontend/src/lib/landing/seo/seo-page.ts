@@ -19,7 +19,7 @@ export type SeoFamilyKey =
   | 'learn'
   | 'monitoring'
   | 'alerts'
-  | 'for';
+  | 'use-cases';
 
 /** The feature page each family points at. Exactly one link per page. */
 export type FeaturePath =
@@ -51,6 +51,17 @@ export type SeoFamily = {
   };
 };
 
+export type SeoTool =
+  | { kind: 'site-check' }
+  | { kind: 'uptime-calculator'; percent?: number }
+  | { kind: 'sla-calculator' }
+  | { kind: 'downtime-cost' }
+  | {
+      kind: 'cron-expression';
+      dialect?: 'standard' | 'seconds' | 'quartz' | 'aws';
+    }
+  | { kind: 'badge-generator' };
+
 export type SeoPage = {
   slug: string;
   /** Equals the search phrasing, verbatim. */
@@ -65,6 +76,7 @@ export type SeoPage = {
   faq: DocFaqItem[];
   /** ISO date, feeds sitemap lastmod. */
   updatedAt: string;
+  tool?: SeoTool;
 };
 
 export type SeoFamilyData = {

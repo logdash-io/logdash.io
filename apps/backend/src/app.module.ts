@@ -36,6 +36,7 @@ import { BadgeCoreModule } from './badge/core/badge-core.module';
 import { StatusPageCoreModule } from './status-page/core/status-page-core.module';
 import { WebAnalyticsCoreModule } from './web-analytics/core/web-analytics-core.module';
 import { FaviconCoreModule } from './favicon/core/favicon-core.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { FaviconCoreModule } from './favicon/core/favicon-core.module';
     StatusPageCoreModule,
     WebAnalyticsCoreModule,
     FaviconCoreModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

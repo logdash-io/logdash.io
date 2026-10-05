@@ -304,6 +304,9 @@
     >
       {#each menu.columns as column, columnIndex (columnIndex)}
         <div class="flex flex-col p-2">
+          {#if column.label}
+            {@render label(column.label)}
+          {/if}
           {#each column.items as item (item.title)}
             <a
               {...anchorAttrs(item)}
@@ -329,6 +332,9 @@
         </div>
       {/each}
       <div class="flex flex-col p-2 pt-2.5">
+        {#if menu.linksLabel}
+          {@render label(menu.linksLabel, true)}
+        {/if}
         {#each menu.links as link (link.title)}
           <a
             {...anchorAttrs(link)}
@@ -371,6 +377,17 @@
 {/snippet}
 
 <!-- eslint-enable svelte/no-navigation-without-resolve -->
+
+{#snippet label(text: string, links = false)}
+  <span
+    class={[
+      'text-fg-muted px-3.5 pb-1 text-[13px] leading-5 font-medium',
+      links ? 'pt-1.5' : 'pt-2',
+    ]}
+  >
+    {text}
+  </span>
+{/snippet}
 
 <style>
   .nav-panel-positioner {

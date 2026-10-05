@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { RecordMetricDto } from '../ingestion/dto/record-metric.dto';
 import { MetricIngestionService } from '../ingestion/metric-ingestion.service';
 import { MetricAggregationService } from './metric-aggregation.service';
 
 @Injectable()
-export class MetricQueueingService {
+export class MetricQueueingService implements OnApplicationShutdown {
   constructor(
     private readonly metricIngestionService: MetricIngestionService,
     private readonly metricAggregationService: MetricAggregationService,
@@ -19,6 +19,10 @@ export class MetricQueueingService {
     for (const dto of dtos) {
       this.queueMetric(dto);
     }
+  }
+
+  public async onApplicationShutdown(): Promise<void> {
+    await this.processQueue();
   }
 
   @Cron(CronExpression.EVERY_SECOND)

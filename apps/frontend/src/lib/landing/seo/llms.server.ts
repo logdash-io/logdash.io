@@ -32,10 +32,22 @@ const NOT_CONTENT = [
 
 /** First path segment to llms.txt section, in the order they are listed. */
 const SECTIONS: [title: string, segments: string[]][] = [
-  ['Product', ['', 'features', 'pricing']],
+  ['Product', ['', 'features', 'pricing', 'use-cases']],
   ['Docs', ['docs']],
   ['Comparisons', ['vs', 'alternatives']],
-  ['Guides', ['health-check']],
+  [
+    'Guides',
+    [
+      'health-check',
+      'status-page',
+      'cron-monitoring',
+      'monitor',
+      'monitoring',
+      'alerts',
+    ],
+  ],
+  ['Tools', ['tools']],
+  ['Learn', ['learn']],
   ['More', []],
   // llmstxt.org: an agent short on context may skip the Optional section.
   ['Optional', ['terms-of-service', 'privacy-policy', 'cookies-policy']],
@@ -126,14 +138,15 @@ export async function renderMarkdownTwin(
 }
 
 /**
- * Twins are fetched by their `.md` URL, which makes the prerenderer write each
- * one to disk as well. Every link in llms.txt is therefore a file that exists.
+ * Twins are rendered here rather than fetched from their `.md` URL: fetching an
+ * endpoint during prerendering races inside SvelteKit and can fail the build.
+ * The crawler writes each `.md` file from the alternate link on its page.
  */
 export function loadTwins(fetch: Fetch): Promise<Twin[]> {
   return Promise.all(
     sitemapEntries().map(async ({ path }) => ({
       path,
-      markdown: await fetchText(fetch, markdownPath(path)),
+      markdown: await renderMarkdownTwin(fetch, path),
     })),
   );
 }

@@ -39,6 +39,7 @@ import { BlogCoreModule } from '../../src/blog/core/blog-core.module';
 import { CustomDomainCoreModule } from '../../src/custom-domain/core/custom-domain-core.module';
 import { BadgeCoreModule } from '../../src/badge/core/badge-core.module';
 import { StatusPageCoreModule } from '../../src/status-page/core/status-page-core.module';
+import { HealthModule } from '../../src/health/health.module';
 import { CustomDomainEntity } from '../../src/custom-domain/core/entities/custom-domain.entity';
 import { CustomDomainDnsService } from '../../src/custom-domain/dns/custom-domain-dns.service';
 import { CustomDomainDnsServiceMock } from '../../src/custom-domain/dns/custom-domain-dns.service.mock';
@@ -122,6 +123,7 @@ export async function createTestApp() {
       CustomDomainCoreModule,
       BadgeCoreModule,
       StatusPageCoreModule,
+      HealthModule,
       BlogCoreModule,
       StripeModule,
       SubscriptionCoreModule,

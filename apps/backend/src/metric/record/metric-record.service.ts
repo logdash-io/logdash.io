@@ -7,6 +7,7 @@ import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { METRICS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 import { errorMessage } from '../../shared/utils/error-message';
+import { RedisService } from '../../shared/redis/redis.service';
 
 @Injectable()
 export class MetricRecordService {
@@ -15,10 +16,15 @@ export class MetricRecordService {
     private readonly metricWriteClickhouseService: MetricWriteClickhouseService,
     @Inject(METRICS_LOGGER) private readonly logger: LogdashLogger,
     private readonly averageRecorder: AverageRecorder,
+    private readonly redisService: RedisService,
   ) {}
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   private async runCron(): Promise<void> {
+    if (!(await this.redisService.claimCronTick('metric-record', 4_000))) {
+      return;
+    }
+
     try {
       await this.recordMetrics();
     } catch (error) {

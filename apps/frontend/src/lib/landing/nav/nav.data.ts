@@ -4,7 +4,11 @@ import { HERO_ID, HERO_URL_INPUT_ID } from '$lib/landing/hero/hero-anchors';
 
 export type NavMenuKey = 'product' | 'resources';
 
-/** Only pages the chrome links to: resolve() needs literal paths, not the whole Pathname union. */
+/**
+ * Only pages the chrome links to: resolve() needs literal paths, not the whole
+ * Pathname union. Keep it at 25 members or fewer: past that TypeScript stops
+ * matching a union argument against resolve()'s per-route overloads.
+ */
 export type NavPath =
   | '/'
   | '/features/monitoring'
@@ -16,6 +20,7 @@ export type NavPath =
   | '/docs/self-hosting'
   | '/alternatives'
   | '/health-check'
+  | '/status-page'
   | '/terms-of-service'
   | '/privacy-policy'
   | '/cookies-policy'
@@ -40,13 +45,17 @@ export type PanelItem = NavTarget & { title: string; description: string };
 export type PanelLink = NavTarget & { title: string };
 
 /** A column of title + description items inside the lined card. */
-export type PanelColumn = { items: PanelItem[] };
+export type PanelColumn = {
+  label?: string;
+  items: PanelItem[];
+};
 
 export type NavPanel = {
   /** Two columns of title + description items, inside the lined card. */
   columns: [PanelColumn, PanelColumn];
   /** Plain links in the third column. */
   links: PanelLink[];
+  linksLabel?: string;
   /** Optional row under the card: a badge, a line of text and a link. */
   footer?: {
     badge: string;
@@ -80,7 +89,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     kind: 'menu',
     key: 'product',
     name: 'Product',
-    activePrefixes: ['/features'],
+    activePrefixes: ['/features', '/status-page'],
   },
   {
     kind: 'menu',
@@ -96,39 +105,44 @@ export const NAV_PANELS: Record<NavMenuKey, NavPanel> = {
   product: {
     columns: [
       {
+        label: 'Know it went down',
         items: [
           {
             ...to('/features/monitoring'),
-            title: 'Monitoring',
+            title: 'Uptime monitoring',
             description:
-              'HTTP checks and status pages, with alerts that reach you before users notice',
+              'Checks as often as every 15\u00a0s, alerts on Telegram or webhook',
           },
           {
-            ...to('/features/logging'),
-            title: 'Logging',
+            ...to('/status-page'),
+            title: 'Status pages',
             description:
-              'Stream and search logs from every service in real time',
+              'Hosted by us, or built by you on the public status page API',
           },
         ],
       },
       {
+        label: 'Know why it went down',
         items: [
           {
-            ...to('/features/metrics'),
-            title: 'Metrics',
+            ...to('/features/logging'),
+            title: 'Error logs',
             description:
-              'Track counters and gauges for the numbers that matter',
+              'Errors from every service in one live stream you can search',
           },
           {
-            ...LIVE_DEMO,
-            title: 'Live demo',
-            description: 'Watch our dashboard live, then point it at your URL',
+            ...to('/features/metrics'),
+            title: 'Response time and metrics',
+            description:
+              'Response time on every check, plus any number from your code',
           },
         ],
       },
     ],
+    linksLabel: 'More',
     links: [
-      { ...out(LINKS.statusPage), title: 'Status page' },
+      { ...LIVE_DEMO, title: 'Live demo' },
+      { ...out(LINKS.statusPage), title: 'Our status page' },
       { ...out(LINKS.roadmap), title: 'Roadmap' },
     ],
     footer: {

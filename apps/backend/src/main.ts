@@ -15,7 +15,10 @@ import { withRequestContext } from './shared/request-context/request-context';
 const BODY_SIZE_LIMIT = '2mb';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+    forceCloseConnections: true,
+  });
 
   app.enableShutdownHooks();
   app.enableCors({ origin: '*' });

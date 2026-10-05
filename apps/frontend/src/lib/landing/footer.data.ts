@@ -12,7 +12,23 @@ import DiscordIcon from '$lib/domains/shared/icons/DiscordIcon.svelte';
 import GitHubIcon from '$lib/domains/shared/icons/GitHubIcon.svelte';
 import XIcon from '$lib/domains/shared/icons/XIcon.svelte';
 
-export type FooterLink = NavTarget & { title: string };
+export type HubPath =
+  | '/alternatives'
+  | '/health-check'
+  | '/status-page'
+  | '/cron-monitoring'
+  | '/monitor'
+  | '/monitoring'
+  | '/alerts'
+  | '/tools'
+  | '/learn'
+  | '/use-cases';
+
+export type FooterLink = (NavTarget | { kind: 'hub'; path: HubPath }) & {
+  title: string;
+};
+
+const hub = (path: HubPath) => ({ kind: 'hub', path }) as const;
 
 export type FooterColumn = {
   title: string;
@@ -33,9 +49,9 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
   {
     title: 'Product',
     links: [
-      { ...to('/features/monitoring'), title: 'Monitoring' },
-      { ...to('/features/logging'), title: 'Logging' },
-      { ...to('/features/metrics'), title: 'Metrics' },
+      { ...to('/features/monitoring'), title: 'Uptime monitoring' },
+      { ...to('/features/logging'), title: 'Error logs' },
+      { ...to('/features/metrics'), title: 'Response time' },
       { ...LIVE_DEMO, title: 'Live demo' },
       { ...to('/pricing'), title: 'Pricing' },
     ],
@@ -46,8 +62,21 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
       { ...to('/docs'), title: 'Docs' },
       { ...to('/docs/sdks'), title: 'SDKs' },
       { ...to('/docs/self-hosting'), title: 'Self-hosting' },
-      { ...to('/alternatives'), title: 'Alternatives' },
-      { ...to('/health-check'), title: 'Health checks' },
+    ],
+  },
+  {
+    title: 'Guides',
+    links: [
+      { ...hub('/status-page'), title: 'Status pages' },
+      { ...hub('/cron-monitoring'), title: 'Cron monitoring' },
+      { ...hub('/health-check'), title: 'Health checks' },
+      { ...hub('/monitoring'), title: 'What to monitor' },
+      { ...hub('/monitor'), title: 'Platforms' },
+      { ...hub('/alerts'), title: 'Alert channels' },
+      { ...hub('/tools'), title: 'Free tools' },
+      { ...hub('/learn'), title: 'Learn' },
+      { ...hub('/use-cases'), title: 'Who it’s for' },
+      { ...hub('/alternatives'), title: 'Alternatives' },
     ],
   },
   {

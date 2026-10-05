@@ -11,6 +11,7 @@ import { getEnvConfig } from '../../shared/configs/env-configs';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { CUSTOM_DNS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { errorMessage } from '../../shared/utils/error-message';
+import { RedisService } from '../../shared/redis/redis.service';
 
 const MAX_ATTEMPTS = 60;
 
@@ -22,9 +23,18 @@ export class CustomDomainRegistrationService {
     private readonly customDomainDnsService: CustomDomainDnsService,
     private readonly auditLog: AuditLog,
     @Inject(CUSTOM_DNS_LOGGER) private readonly logger: LogdashLogger,
+    private readonly redisService: RedisService,
   ) {}
 
   @Cron(CronExpression.EVERY_5_SECONDS)
+  public async runCron(): Promise<void> {
+    if (!(await this.redisService.claimCronTick('custom-domain-verification', 4_000))) {
+      return;
+    }
+
+    await this.verifyDomains();
+  }
+
   public async verifyDomains(): Promise<void> {
     const domainsToVerify = await this.customDomainReadService.readDomainsToVerify();
 
