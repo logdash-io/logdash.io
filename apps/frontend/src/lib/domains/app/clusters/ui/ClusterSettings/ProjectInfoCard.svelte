@@ -1,6 +1,7 @@
 <script lang="ts">
+  import GlobeIcon from '$lib/domains/shared/icons/GlobeIcon.svelte';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
-  import ColorPalette from '$lib/domains/app/clusters/ui/ClusterWizard/ColorPalette.svelte';
+  import ColorPalette from './ColorPalette.svelte';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
   import {
@@ -103,10 +104,14 @@
   }
 </script>
 
-<SettingsCard title="Domain" description="Its name, color and ID.">
+<SettingsCard
+  title="Domain"
+  description="Its name, color and ID."
+  icon={GlobeIcon}
+>
   <SettingsCardItem>
     <div class="flex min-w-0 items-center gap-3">
-      <span class="text-neutral-500 w-16 shrink-0">Name</span>
+      <span class="text-fg-muted w-16 shrink-0">Name</span>
       {#if isEditingName}
         <Input
           bind:value={newName}
@@ -141,16 +146,14 @@
           Save
         </Button>
       {:else if canEdit}
-        <Button variant="neutral" size="sm" onclick={onStartRenaming}>
-          Rename
-        </Button>
+        <Button size="sm" onclick={onStartRenaming}>Rename</Button>
       {/if}
     {/snippet}
   </SettingsCardItem>
 
   <SettingsCardItem>
     <div class="flex min-w-0 items-center gap-3">
-      <span class="text-neutral-500 w-16 shrink-0">Color</span>
+      <span class="text-fg-muted w-16 shrink-0">Color</span>
       {#if isEditingColor}
         <ColorPalette
           selectedColor={cluster?.color ?? ''}
@@ -165,7 +168,7 @@
           <span class="truncate font-mono">{cluster.color}</span>
         </span>
       {:else}
-        <span class="text-neutral-500 truncate">None</span>
+        <span class="text-fg-muted truncate">None</span>
       {/if}
     </div>
 
@@ -188,16 +191,14 @@
           Save
         </Button>
       {:else if canEdit}
-        <Button variant="neutral" size="sm" onclick={onStartEditingColor}>
-          Change
-        </Button>
+        <Button size="sm" onclick={onStartEditingColor}>Change</Button>
       {/if}
     {/snippet}
   </SettingsCardItem>
 
   <SettingsCardItem>
     <div class="flex min-w-0 items-center gap-3">
-      <span class="text-neutral-500 w-16 shrink-0">ID</span>
+      <span class="text-fg-muted w-16 shrink-0">ID</span>
       <span class="truncate font-mono">{clusterId}</span>
     </div>
 

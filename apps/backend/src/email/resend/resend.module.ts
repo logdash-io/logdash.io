@@ -7,5 +7,6 @@ import { UserReadModule } from '../../user/read/user-read.module';
 @Module({
   imports: [LogdashModule, UserReadModule],
   providers: [ResendService, ResendTemplatedEmailsService],
+  exports: [ResendTemplatedEmailsService],
 })
 export class ResendModule {}

@@ -12,4 +12,4 @@
   robots="noindex, nofollow"
 />
 
-<OnboardingPage user={data.user} nextUrl={data.nextUrl} />
+<OnboardingPage nextUrl={data.nextUrl} />

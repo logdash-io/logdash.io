@@ -96,8 +96,8 @@
   .ld-wordmark {
     background: linear-gradient(
       to bottom,
-      var(--color-neutral-600),
-      var(--color-neutral-950)
+      var(--fg-faint),
+      var(--surface-root-bg)
     );
     -webkit-background-clip: text;
     background-clip: text;

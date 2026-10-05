@@ -1,6 +1,7 @@
 <script lang="ts">
+  import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
+  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import GridIcon from '$lib/domains/shared/icons/GridIcon.svelte';
-  import Logotype from '$lib/domains/shared/icons/Logotype.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import type { Snippet } from 'svelte';
   import SidebarMenuItem from './SidebarMenuItem.svelte';
@@ -8,38 +9,39 @@
   type Props = {
     homeHref?: string;
     homeActive?: boolean;
-    showLogo?: boolean;
     addDomainHref?: string;
     onAddDomain?: () => void;
     list?: HTMLElement | null;
     children: Snippet;
+    header?: Snippet;
     footer: Snippet;
   };
 
   let {
     homeHref,
     homeActive = false,
-    showLogo = true,
     addDomainHref,
     onAddDomain,
     list = $bindable(null),
     children,
+    header,
     footer,
   }: Props = $props();
 
+  let domainsOpen = $state(true);
+
   const ADD_DOMAIN_CLASS =
-    'hover:bg-surface-hover hover:text-fg-default flex size-5 cursor-pointer items-center justify-center rounded-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100';
+    'hover:bg-surface-root-hover-bg hover:text-fg-default flex size-5.5 cursor-pointer items-center justify-center rounded-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100';
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
-  {#if showLogo}
-    <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href is supplied by the caller -->
-    <a href={homeHref} class="flex h-14 shrink-0 items-center px-4">
-      <Logotype class="text-[17px]" />
-    </a>
+  {#if header}
+    <div class="flex h-14 shrink-0 items-center px-3 pt-2">
+      {@render header()}
+    </div>
   {/if}
 
-  <div class="flex min-h-0 flex-1 flex-col gap-4 px-2 pt-1">
+  <div class="flex min-h-0 flex-1 flex-col gap-4 px-3 pt-1">
     <SidebarMenuItem href={homeHref} isActive={homeActive}>
       <GridIcon class="size-4 shrink-0" />
       <span class="truncate">All domains</span>
@@ -47,13 +49,25 @@
 
     <nav
       bind:this={list}
-      class="flex min-h-0 flex-col gap-px overflow-y-auto pb-6 [mask-image:linear-gradient(to_bottom,black_calc(100%_-_1.5rem),transparent)]"
+      class="flex min-h-0 flex-col gap-0.5 overflow-y-auto pb-6 [mask-image:linear-gradient(to_bottom,black_calc(100%_-_1.5rem),transparent)]"
       aria-label="Domains"
     >
       <div
-        class="group text-neutral-500 flex h-7 shrink-0 items-center justify-between px-2 text-xs"
+        class="group text-fg-tertiary flex h-7.5 shrink-0 items-center justify-between pr-2 text-[13px] font-medium"
       >
-        <span>Domains</span>
+        <button
+          type="button"
+          class="hover:bg-surface-root-hover-bg hover:text-fg-default transition-ink flex h-6.5 cursor-pointer items-center gap-1 rounded-md px-2"
+          aria-expanded={domainsOpen}
+          onclick={() => (domainsOpen = !domainsOpen)}
+        >
+          Domains
+          {#if domainsOpen}
+            <ChevronDownIcon class="size-3.5" />
+          {:else}
+            <ChevronRightIcon class="size-3.5" />
+          {/if}
+        </button>
         {#if addDomainHref}
           <!-- eslint-disable svelte/no-navigation-without-resolve -- href is supplied by the caller -->
           <a
@@ -62,7 +76,7 @@
             aria-label="Add domain"
             title="Add domain"
           >
-            <PlusIcon class="size-3.5" />
+            <PlusIcon class="size-4" />
           </a>
           <!-- eslint-enable svelte/no-navigation-without-resolve -->
         {:else if onAddDomain}
@@ -73,12 +87,14 @@
             title="Add domain"
             onclick={onAddDomain}
           >
-            <PlusIcon class="size-3.5" />
+            <PlusIcon class="size-4" />
           </button>
         {/if}
       </div>
 
-      {@render children()}
+      {#if domainsOpen}
+        {@render children()}
+      {/if}
     </nav>
   </div>
 

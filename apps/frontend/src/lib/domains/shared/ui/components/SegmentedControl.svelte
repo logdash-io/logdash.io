@@ -121,7 +121,8 @@
     width: fit-content;
     padding: 2px;
     border-radius: 9px;
-    background-color: var(--surface-root);
+    background-color: var(--surface-50-bg);
+    box-shadow: inset 0 0 0 1px var(--surface-50-border);
     isolation: isolate;
   }
 
@@ -132,8 +133,10 @@
     left: 0;
     z-index: -1;
     border-radius: 7px;
-    background-color: var(--surface-100);
-    box-shadow: inset 0 0 0 0.5px var(--border-strong);
+    background-color: var(--surface-150-bg);
+    box-shadow:
+      inset 0 0 0 0.5px var(--surface-150-border),
+      0 1px 2px rgb(0 0 0 / 0.08);
     transition:
       transform 0.32s cubic-bezier(0.32, 0.72, 0, 1),
       width 0.32s cubic-bezier(0.32, 0.72, 0, 1);

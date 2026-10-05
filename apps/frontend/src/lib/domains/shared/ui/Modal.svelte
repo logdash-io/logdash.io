@@ -10,7 +10,9 @@
     onClose: () => void;
     dismissible?: boolean;
     class?: ClassValue;
+    role?: 'dialog' | 'alertdialog';
     'aria-labelledby'?: string;
+    'aria-describedby'?: string;
     children: Snippet;
   };
 
@@ -19,7 +21,9 @@
     onClose,
     dismissible = true,
     class: className = 'w-xl p-5',
+    role,
     'aria-labelledby': labelledBy,
+    'aria-describedby': describedBy,
     children,
   }: Props = $props();
 
@@ -73,7 +77,9 @@
   <dialog
     bind:this={dialog}
     class="fixed inset-0 z-999 m-0 flex h-full max-h-none w-full max-w-none overflow-y-auto border-0 bg-transparent p-4 backdrop:bg-transparent"
+    {role}
     aria-labelledby={labelledBy}
+    aria-describedby={describedBy}
     oncancel={onCancel}
     onclose={onNativeClose}
   >
@@ -84,7 +90,7 @@
         start: 0.95,
       }}
       class={[
-        'ld-card-base ld-card-rounding relative z-10 m-auto max-w-full',
+        'bg-surface-elevated-bg border border-surface-elevated-border ld-card-rounding relative z-10 m-auto max-w-full',
         className,
       ]}
     >
@@ -92,7 +98,7 @@
     </div>
     <div
       transition:fade={{ duration: 200, easing: quadInOut }}
-      class="bg-surface-root/60 fixed inset-0"
+      class="bg-surface-root-bg/60 fixed inset-0"
       aria-hidden="true"
       onclick={onDismiss}
     ></div>

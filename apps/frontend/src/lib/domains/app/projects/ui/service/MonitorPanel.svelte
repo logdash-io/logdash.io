@@ -61,13 +61,13 @@
         href={eyebrowHref}
         target="_blank"
         rel="noopener noreferrer"
-        class="text-neutral-500 hover:text-neutral-300 focus-visible:text-neutral-300 focus-visible:outline-brand transition-ink max-w-full self-start truncate rounded-sm text-xs focus-visible:outline-2 focus-visible:outline-offset-2"
+        class="text-fg-muted hover:text-fg-secondary focus-visible:text-fg-secondary focus-visible:outline-brand transition-ink max-w-full self-start truncate rounded-sm text-xs focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         {eyebrow}
       </a>
       <!-- eslint-enable svelte/no-navigation-without-resolve -->
     {:else}
-      <span class="text-neutral-500 truncate text-xs">{eyebrow}</span>
+      <span class="text-fg-muted truncate text-xs">{eyebrow}</span>
     {/if}
 
     <div class="flex items-center justify-between gap-3">
@@ -76,7 +76,7 @@
           <!-- eslint-disable svelte/no-navigation-without-resolve -- href is supplied by the caller -->
           <a
             {href}
-            class="hover:text-neutral-300 focus-visible:outline-brand transition-ink rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+            class="hover:text-fg-secondary focus-visible:outline-brand transition-ink rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {title}
           </a>
@@ -96,7 +96,7 @@
     <div class="flex flex-wrap gap-x-10 gap-y-3 sm:gap-x-14">
       {#each stats as stat (stat.label)}
         <div class="flex min-w-0 flex-col gap-0.5">
-          <span class="text-neutral-500 text-xs">{stat.label}</span>
+          <span class="text-fg-muted text-xs">{stat.label}</span>
           <span class="font-figure truncate text-2xl">
             {stat.value}
           </span>
@@ -142,7 +142,7 @@
 
       {#if hasFooter}
         <div
-          class="text-neutral-500 flex items-center justify-between gap-3 font-mono text-xs"
+          class="text-fg-muted flex items-center justify-between gap-3 font-mono text-xs"
         >
           <span
             class={['truncate', { 'text-error': notice }]}

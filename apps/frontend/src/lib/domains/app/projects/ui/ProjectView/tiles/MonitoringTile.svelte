@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { SETTINGS_PAGE_CLASS } from '$lib/domains/shared/ui/components/settings-card';
   import { resolve } from '$app/paths';
   import { getStatusFromMonitor } from '$lib/domains/app/clusters/application/get-status-from-monitor.js';
   import { toChartPings } from '$lib/domains/app/projects/application/monitor-pings.js';
@@ -112,7 +113,7 @@
 </script>
 
 {#if monitor && content}
-  <div class="border-hairline shrink-0 border-b">
+  <div class="shrink-0 edge-b">
     <MonitorPanel
       {...content}
       status={getStatusFromMonitor(monitor)}
@@ -130,15 +131,17 @@
       {onTimeRangeChange}
     />
 
-    <NotificationChannelsSection {monitorId} />
+    <div class={SETTINGS_PAGE_CLASS}>
+      <NotificationChannelsSection {monitorId} />
 
-    <MonitorSettingsSection
-      {monitor}
-      {clusterId}
-      {projectId}
-      {onEdit}
-      onGetBadge={() => (isBadgeModalOpen = true)}
-    />
+      <MonitorSettingsSection
+        {monitor}
+        {clusterId}
+        {projectId}
+        {onEdit}
+        onGetBadge={() => (isBadgeModalOpen = true)}
+      />
+    </div>
   {/if}
 
   <MonitorBadgeModal

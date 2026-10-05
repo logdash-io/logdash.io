@@ -1,35 +1,83 @@
 :root {
-  --surface-root: var(--color-neutral-950);
-  --surface-elevated: var(--color-neutral-900);
-  --surface-100: var(--color-neutral-800);
-  --surface-150: var(--color-neutral-700);
-  --surface-well: var(--color-neutral-950);
-  --surface-hover: var(--color-neutral-900);
-  --surface-inverse: var(--color-neutral-100);
-  --surface-inverse-hover: var(--color-neutral-200);
+  --surface-root-bg: var(--color-neutral-950);
+  --surface-root-hover-bg: var(--color-neutral-900);
+  --surface-root-selected-bg: var(--color-neutral-800);
+  --surface-root-border: var(--color-neutral-850);
+
+  --surface-25-bg: var(--color-neutral-960);
+  --surface-25-hover-bg: var(--color-neutral-950);
+  --surface-25-selected-bg: var(--color-neutral-900);
+  --surface-25-border: var(--color-neutral-850);
+
+  --surface-50-bg: var(--color-neutral-950);
+  --surface-50-hover-bg: var(--color-neutral-900);
+  --surface-50-selected-bg: var(--color-neutral-800);
+  --surface-50-border: var(--color-neutral-850);
+
+  --surface-100-bg: var(--color-neutral-900);
+  --surface-100-hover-bg: var(--color-neutral-800);
+  --surface-100-selected-bg: var(--color-neutral-700);
+  --surface-100-border: var(--color-neutral-800);
+
+  --surface-150-bg: var(--color-neutral-800);
+  --surface-150-hover-bg: var(--color-neutral-700);
+  --surface-150-selected-bg: var(--color-neutral-600);
+  --surface-150-border: var(--color-neutral-700);
+
+  --surface-200-bg: var(--color-neutral-700);
+  --surface-200-hover-bg: var(--color-neutral-600);
+  --surface-200-border: var(--color-neutral-600);
+
+  --surface-elevated-bg: var(--color-neutral-900);
+  --surface-elevated-hover-bg: var(--color-neutral-800);
+  --surface-elevated-selected-bg: var(--color-neutral-700);
+  --surface-elevated-border: var(--color-neutral-800);
+
+  --surface-input-bg: var(--color-neutral-800);
+  --surface-input-border: var(--color-neutral-700);
+  --surface-input-hover-border: var(--color-neutral-600);
+
+  --surface-inverse-bg: var(--color-neutral-100);
+  --surface-inverse-hover-bg: var(--color-neutral-200);
 
   --fg-default: var(--color-neutral-100);
-  --fg-secondary: var(--color-neutral-400);
+  --fg-secondary: var(--color-neutral-300);
+  --fg-tertiary: var(--color-neutral-400);
   --fg-muted: var(--color-neutral-500);
   --fg-faint: var(--color-neutral-600);
-
-  --border-subtle: var(--color-hairline-dark);
-  --border-default: var(--color-neutral-800);
-  --border-strong: var(--color-neutral-700);
-  --hairline: var(--border-subtle);
+  --fg-disabled: var(--color-neutral-700);
+  --fg-inverse: var(--color-neutral-950);
 
   --brand: var(--color-neutral-100);
 
   --error: var(--color-red-600);
   --error-bg: oklch(from var(--error) l c h / 0.15);
-  --error-bg-hover: oklch(from var(--error) l c h / 0.25);
+  --error-hover-bg: oklch(from var(--error) l c h / 0.25);
   --success: var(--color-green-600);
   --warning: var(--color-amber-500);
   --info: var(--color-blue-600);
+  --idle: var(--color-neutral-600);
+
+  --chart-1: var(--color-neutral-100);
+  --chart-2: var(--color-sky-400);
+  --chart-3: var(--color-emerald-400);
+  --chart-4: var(--color-amber-400);
+  --chart-5: var(--color-rose-400);
+
+  --heat-0: var(--color-neutral-800);
+  --heat-1: var(--color-neutral-700);
+  --heat-2: var(--color-neutral-600);
+  --heat-3: var(--color-neutral-500);
+
+  --edge-color: var(--surface-root-border);
 
   --focus-ring: 0 0 0 3px color-mix(in oklab, var(--brand) 15%, transparent);
   --focus-ring-error: 0 0 0 3px
     color-mix(in oklab, var(--error) 20%, transparent);
 
   color-scheme: dark;
+}
+
+:root:has([data-app-shell]) {
+  --surface-root-bg: var(--color-neutral-975);
 }

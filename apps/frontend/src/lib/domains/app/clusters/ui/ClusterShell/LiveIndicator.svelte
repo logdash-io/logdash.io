@@ -16,12 +16,12 @@
   const DOT_CLASS: Record<LiveDot, string> = {
     success: 'bg-success',
     error: 'bg-error',
-    neutral: 'bg-neutral-600',
+    neutral: 'bg-idle',
   };
 </script>
 
 <span
-  class="text-neutral-400 ml-auto flex shrink-0 items-center gap-1.5 pl-3 text-xs"
+  class="text-fg-tertiary ml-auto flex shrink-0 items-center gap-1.5 pl-3 text-xs"
 >
   {#if pending}
     <Spinner class="size-3" aria-hidden="true" />

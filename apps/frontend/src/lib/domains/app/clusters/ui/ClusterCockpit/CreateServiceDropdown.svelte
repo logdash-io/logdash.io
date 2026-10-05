@@ -139,7 +139,7 @@
 
 <div
   role="presentation"
-  class="absolute left-0 right-0 top-full z-50 mt-2 flex flex-col gap-3 rounded-xl ld-card-border ld-card-bg p-4 shadow-xl min-w-52"
+  class="absolute left-0 right-0 top-full z-50 mt-2 flex flex-col gap-3 rounded-xl border border-surface-elevated-border bg-surface-elevated-bg p-4 shadow-xl min-w-52"
   in:scale={{ duration: 150, start: 0.95, easing: cubicOut }}
   onkeydown={onFormKeyDown}
 >
@@ -168,12 +168,12 @@
   />
 
   <div class="flex flex-col gap-1">
-    <span class="text-xs text-neutral-400">Features (optional)</span>
+    <span class="text-xs text-fg-tertiary">Features (optional)</span>
     <div class="flex flex-col gap-0.5">
       {#each featureConfig as { feature, label, icon: Icon } (feature)}
         <label
           class={[
-            'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
+            'flex items-center gap-2 p-1.5 rounded cursor-pointer text-[13px] hover:bg-surface-elevated-hover-bg',
             { 'text-brand': isFeatureEnabled(feature) },
           ]}
         >

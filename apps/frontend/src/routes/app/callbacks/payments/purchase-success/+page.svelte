@@ -22,12 +22,12 @@
     start: 1.1,
     easing: cubicInOut,
   }}
-  class="bg-surface-root flex min-h-screen w-full items-center justify-center"
+  class="bg-surface-root-bg flex min-h-screen w-full items-center justify-center"
 >
   <Card class="ld-card-base w-96">
     <CardBody class="items-center gap-4 p-6 text-center">
       <CardTitle class="text-3xl font-bold">Success 🎉</CardTitle>
-      <p class="text-neutral-400">
+      <p class="text-fg-tertiary">
         Thank you for your trust in our service. We'll be in touch shortly.
       </p>
 

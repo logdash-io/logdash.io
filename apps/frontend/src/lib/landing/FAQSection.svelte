@@ -23,7 +23,7 @@
         {title}
       </h2>
 
-      <p class="text-neutral-400 text-lg text-pretty">
+      <p class="text-fg-tertiary text-lg text-pretty">
         Have a different question?
         <a
           href="https://discord.gg/naftPW4Hxe"

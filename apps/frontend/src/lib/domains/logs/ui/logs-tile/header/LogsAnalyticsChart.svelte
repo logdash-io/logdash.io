@@ -24,13 +24,17 @@
 
   const CHART_HEIGHT = 72;
   const MARGIN = { top: 4, right: 0, bottom: 20, left: 0 };
-  const AXIS_COLOR = '#7f7f86';
-  const AXIS_LINE_COLOR = '#222225';
-  const SELECTION_COLOR = '#2c2c2e';
+  const AXIS_COLOR = 'var(--fg-muted)';
+  const AXIS_LINE_COLOR = 'var(--surface-50-border)';
+  const SELECTION_COLOR = 'var(--surface-50-selected-bg)';
   const TIME_FORMAT: Intl.DateTimeFormatOptions = {
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
+  };
+  const DATE_FORMAT: Intl.DateTimeFormatOptions = {
+    day: 'numeric',
+    month: 'short',
   };
   const LOG_TYPES: LogLevel[] = [
     'error',
@@ -44,11 +48,11 @@
   const LOG_COLORS = [
     '#e7000b',
     '#fe9a00',
-    '#414145',
-    '#414145',
-    '#414145',
-    '#414145',
-    '#414145',
+    'var(--surface-200-bg)',
+    'var(--surface-200-bg)',
+    'var(--surface-200-bg)',
+    'var(--surface-200-bg)',
+    'var(--surface-200-bg)',
   ];
 
   const analyticsData = $derived(logAnalyticsState.analyticsData);
@@ -159,7 +163,12 @@
           .tickSize(0)
           .tickPadding(8)
           .ticks(Math.max(2, Math.min(6, Math.floor(innerWidth / 90))))
-          .tickFormat((d: Date) => d.toLocaleTimeString([], TIME_FORMAT)),
+          .tickFormat((d: Date) =>
+            timeRangeToUse.end.getTime() - timeRangeToUse.start.getTime() >
+            2 * 86_400_000
+              ? d.toLocaleDateString([], DATE_FORMAT)
+              : d.toLocaleTimeString([], TIME_FORMAT),
+          ),
       )
       .attr('color', AXIS_COLOR);
 
@@ -335,7 +344,7 @@
           `
             : '';
         }).join('')}
-        <div class="mt-2 pt-1 border-t border-neutral-600 font-medium font-mono">
+        <div class="mt-2 pt-1 border-t border-surface-elevated-border font-medium font-mono">
           Total: ${bucket.countTotal}
         </div>
       `);
@@ -356,7 +365,7 @@
   function renderEmptyState(container: HTMLElement) {
     d3.select(container)
       .append('div')
-      .attr('class', 'flex items-center text-xs text-neutral-500')
+      .attr('class', 'flex items-center text-xs text-fg-muted')
       .style('height', `${CHART_HEIGHT}px`)
       .text('No logs in this range');
   }
@@ -365,11 +374,14 @@
     tooltip = d3
       .select(document.body)
       .append('div')
-      .attr('class', 'chart-tooltip ld-card-base rounded-xl')
+      .attr(
+        'class',
+        'chart-tooltip bg-surface-elevated-bg border-surface-elevated-border rounded-xl border',
+      )
       .style('display', 'none')
       .style('position', 'absolute')
       .style('padding', '10px')
-      .style('color', 'var(--color-fg-default)')
+      .style('color', 'var(--fg-default)')
       .style('pointer-events', 'none')
       .style('z-index', '99999')
       .style('max-width', '300px')
@@ -407,7 +419,7 @@
   {#if isLoading}
     <div
       transition:fade={{ duration: 200, easing: cubicOut }}
-      class="bg-surface-elevated text-neutral-500 absolute inset-0 flex items-center gap-2 text-xs"
+      class="bg-surface-50-bg text-fg-muted absolute inset-0 flex items-center gap-2 text-xs"
       style="height: {CHART_HEIGHT}px"
     >
       <Spinner size="xs" aria-hidden="true" />
@@ -415,7 +427,7 @@
     </div>
   {:else if error}
     <div
-      class="bg-surface-elevated text-neutral-500 absolute inset-0 flex items-center gap-2 text-xs"
+      class="bg-surface-50-bg text-fg-muted absolute inset-0 flex items-center gap-2 text-xs"
       style="height: {CHART_HEIGHT}px"
     >
       <DangerIcon class="size-4" />

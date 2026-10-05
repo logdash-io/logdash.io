@@ -9,7 +9,7 @@
   const { onclick }: Props = $props();
 </script>
 
-<SidebarMenuItem {onclick} class="pl-5 text-neutral-500">
+<SidebarMenuItem {onclick} nested>
   <PlusIcon class="size-4 shrink-0" />
   <span class="truncate">New service</span>
 </SidebarMenuItem>

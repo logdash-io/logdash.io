@@ -1,9 +1,10 @@
 import type { Log } from '$lib/domains/logs/domain/log.js';
 import type { Metric } from '$lib/domains/app/projects/domain/metric.js';
+import type { Project } from '$lib/domains/app/projects/domain/project.js';
 import { InitialLogsDataPreloader } from '$lib/domains/logs/infrastructure/initial-logs.data-preloader.js';
 import { InitialMetricsDataPreloader } from '$lib/domains/app/projects/infrastructure/data-preloaders/initial-metrics.data-preloader.js';
 import { resolve_data_preloader } from '$lib/domains/shared/data-preloader/resolve-data-preloader.js';
-import type { ServerLoadEvent } from '@sveltejs/kit';
+import { error, type ServerLoadEvent } from '@sveltejs/kit';
 
 export const load = async (
   event: ServerLoadEvent,
@@ -11,8 +12,18 @@ export const load = async (
   initialLogs: Log[];
   initialMetrics: Metric[];
 }> => {
-  return {
-    ...(await resolve_data_preloader(InitialLogsDataPreloader)(event)),
-    ...(await resolve_data_preloader(InitialMetricsDataPreloader)(event)),
-  };
+  try {
+    return {
+      ...(await resolve_data_preloader(InitialLogsDataPreloader)(event)),
+      ...(await resolve_data_preloader(InitialMetricsDataPreloader)(event)),
+    };
+  } catch (cause) {
+    const { projects } = (await event.parent()) as { projects: Project[] };
+
+    if (!projects.some(({ id }) => id === event.params.project_id)) {
+      error(404, 'Service not found');
+    }
+
+    throw cause;
+  }
 };

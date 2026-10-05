@@ -58,7 +58,7 @@
     class="mx-auto flex w-full max-w-landing flex-col items-start px-4 pt-12 pb-12 sm:px-6 lg:px-10 lg:pt-16 lg:pb-16"
   >
     <nav aria-label="Breadcrumb">
-      <ol class="text-neutral-500 flex items-center gap-2 text-sm">
+      <ol class="text-fg-muted flex items-center gap-2 text-sm">
         <li>
           <a
             href={resolve('/')}
@@ -68,9 +68,9 @@
           </a>
         </li>
         <li aria-hidden="true">
-          <ChevronRightIcon class="text-neutral-600 size-3.5" />
+          <ChevronRightIcon class="text-fg-faint size-3.5" />
         </li>
-        <li aria-current="page" class="text-neutral-300">{page.name}</li>
+        <li aria-current="page" class="text-fg-secondary">{page.name}</li>
       </ol>
     </nav>
 
@@ -78,10 +78,10 @@
       class="mt-6 max-w-5xl text-[32px] leading-[1.04] font-medium tracking-[-0.03em] text-balance sm:text-[40px] lg:text-[56px]"
     >
       {page.h1}
-      <span class="text-neutral-600 block">{page.h1Quiet}</span>
+      <span class="text-fg-faint block">{page.h1Quiet}</span>
     </h1>
 
-    <p class="text-neutral-400 mt-6 max-w-2xl text-lg text-pretty sm:text-xl">
+    <p class="text-fg-tertiary mt-6 max-w-2xl text-lg text-pretty sm:text-xl">
       {page.intro}
     </p>
 
@@ -89,12 +89,12 @@
       <HeroUrlForm source="feature" />
     </div>
 
-    <p class="text-neutral-600 mt-4 text-sm">
+    <p class="text-fg-faint mt-4 text-sm">
       No signup · No credit card ·
       <!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus the hero hash -->
       <a
         href={`${resolve('/')}#${HERO_ID}`}
-        class="text-neutral-400 hover:text-fg-default transition-ink duration-150"
+        class="text-fg-tertiary hover:text-fg-default transition-ink duration-150"
         data-posthog-id={`feature-${page.slug}-demo-cta`}
       >
         See the live demo
@@ -134,14 +134,14 @@
 
   <LandingSection>
     <ul
-      class="bg-hairline grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-3"
+      class="bg-surface-root-border grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-3"
     >
       {#each page.capabilities as capability (capability.title)}
-        <li class="bg-surface-root px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
+        <li class="bg-surface-root-bg px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
           <h3 class="text-lg font-medium tracking-[-0.01em]">
             {capability.title}
           </h3>
-          <p class="text-neutral-400 mt-2 leading-relaxed text-pretty">
+          <p class="text-fg-tertiary mt-2 leading-relaxed text-pretty">
             {capability.body}
           </p>
         </li>
@@ -155,17 +155,17 @@
   />
 
   <LandingSection>
-    <ol class="bg-hairline grid grid-cols-1 gap-px lg:grid-cols-3">
+    <ol class="bg-surface-root-border grid grid-cols-1 gap-px lg:grid-cols-3">
       {#each page.steps.items as step, index (step.title)}
-        <li class="bg-surface-root px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
+        <li class="bg-surface-root-bg px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
           <!-- The <ol> already numbers the steps for screen readers. -->
-          <span aria-hidden="true" class="text-neutral-600 font-mono text-sm">
+          <span aria-hidden="true" class="text-fg-faint font-mono text-sm">
             {String(index + 1).padStart(2, '0')}
           </span>
           <h3 class="mt-4 text-lg font-medium tracking-[-0.01em]">
             {step.title}
           </h3>
-          <p class="text-neutral-400 mt-2 leading-relaxed text-pretty">
+          <p class="text-fg-tertiary mt-2 leading-relaxed text-pretty">
             {step.body}
           </p>
         </li>
@@ -181,19 +181,19 @@
     <LandingSection>
       <div class="grid grid-cols-1 lg:grid-cols-12">
         <div
-          class="border-hairline flex flex-col px-4 py-10 sm:px-6 lg:col-span-5 lg:border-r lg:px-10 lg:py-12"
+          class="border-surface-root-border flex flex-col px-4 py-10 sm:px-6 lg:col-span-5 lg:border-r lg:px-10 lg:py-12"
         >
           <h2 class="text-2xl font-medium tracking-[-0.02em]">
             {page.sdk.title}
           </h2>
 
-          <p class="text-neutral-400 mt-3 max-w-md leading-relaxed text-pretty">
+          <p class="text-fg-tertiary mt-3 max-w-md leading-relaxed text-pretty">
             {page.sdk.body}
           </p>
 
           <a
             href={resolve('/docs/sdks')}
-            class="text-fg-default hover:text-neutral-400 mt-5 inline-flex w-fit items-center gap-1.5 text-sm font-medium transition-ink duration-150"
+            class="text-fg-default hover:text-fg-tertiary mt-5 inline-flex w-fit items-center gap-1.5 text-sm font-medium transition-ink duration-150"
             data-posthog-id={`feature-${page.slug}-sdk-docs`}
           >
             Browse all SDKs
@@ -202,11 +202,11 @@
         </div>
 
         <div
-          class="border-hairline relative overflow-hidden border-t px-4 py-10 sm:px-6 lg:col-span-7 lg:border-t-0 lg:px-10 lg:py-12"
+          class="border-surface-root-border relative overflow-hidden border-t px-4 py-10 sm:px-6 lg:col-span-7 lg:border-t-0 lg:px-10 lg:py-12"
         >
           <StageLight preset="bottom-left" class="absolute inset-0" />
 
-          <div class="bg-surface-elevated relative">
+          <div class="bg-surface-100-bg relative">
             <CodeBlock
               code={page.sdk.code}
               language={page.sdk.language}
@@ -225,13 +225,13 @@
   <LandingSection>
     <nav aria-label="Keep exploring" class="grid grid-cols-1 lg:grid-cols-12">
       <h2
-        class="border-hairline px-4 py-10 text-2xl font-medium tracking-[-0.02em] sm:px-6 lg:col-span-4 lg:border-r lg:px-10 lg:py-12"
+        class="border-surface-root-border px-4 py-10 text-2xl font-medium tracking-[-0.02em] sm:px-6 lg:col-span-4 lg:border-r lg:px-10 lg:py-12"
       >
         Keep exploring
       </h2>
 
       <ul
-        class="divide-hairline border-hairline divide-y border-t lg:col-span-8 lg:border-t-0"
+        class="divide-surface-root-border border-surface-root-border divide-y border-t lg:col-span-8 lg:border-t-0"
       >
         <!-- eslint-disable svelte/no-navigation-without-resolve -- every href is resolved inline -->
         {#each links as link (link.href)}
@@ -243,13 +243,13 @@
               <span class="flex min-w-0 flex-col gap-0.5">
                 <span class="font-medium">{link.title}</span>
                 <span
-                  class="text-neutral-400 group-hover:text-neutral-300 line-clamp-2 text-sm transition-ink duration-150"
+                  class="text-fg-tertiary group-hover:text-fg-secondary line-clamp-2 text-sm transition-ink duration-150"
                 >
                   {link.description}
                 </span>
               </span>
               <ChevronRightIcon
-                class="text-neutral-600 group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
+                class="text-fg-faint group-hover:text-fg-default ml-auto size-4 shrink-0 transition-ink duration-150"
               />
             </a>
           </li>
@@ -269,13 +269,13 @@
 {#snippet demoHeader()}
   {#if page.slug === 'monitoring'}
     <span class="font-medium">api.acme.com</span>
-    <span class="text-neutral-500 text-xs">Every 15 s</span>
+    <span class="text-fg-muted text-xs">Every 15 s</span>
   {:else}
     <span class="font-medium">CPU usage</span>
-    <span class="text-neutral-500 text-xs">Last 60 s</span>
+    <span class="text-fg-muted text-xs">Last 60 s</span>
   {/if}
   <span
-    class="text-neutral-400 ml-auto flex shrink-0 items-center gap-1.5 text-xs"
+    class="text-fg-tertiary ml-auto flex shrink-0 items-center gap-1.5 text-xs"
   >
     <span class="bg-success size-1.5 rounded-full"></span>
     Live

@@ -28,6 +28,7 @@ import {
   STRIPE_LOGGER,
   SUBSCRIPTIONS_LOGGER,
   USERS_LOGGER,
+  WEB_ANALYTICS_LOGGER,
 } from './logdash-tokens';
 
 const mainLogdash = new Logdash(getEnvConfig().logdash.apiKey);
@@ -71,6 +72,7 @@ function createNamespacedLoggerProvider(token: symbol) {
     createNamespacedLoggerProvider(AUDIT_LOGS_LOGGER),
     createNamespacedLoggerProvider(API_KEYS_LOGGER),
     createNamespacedLoggerProvider(REDIS_LOGGER),
+    createNamespacedLoggerProvider(WEB_ANALYTICS_LOGGER),
     {
       provide: LOGDASH_METRICS,
       useFactory: () => {

@@ -1,8 +1,5 @@
 import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error';
-import { displayUrl, urlHost } from '$lib/domains/shared/utils/url';
 import { match } from 'ts-pattern';
-
-const MAX_NAME_LENGTH = 64;
 
 export type AnonymousPreview = {
   token: string;
@@ -90,20 +87,3 @@ export class AnonymousStartError extends Error {
       );
   }
 }
-
-export const previewNameFromUrl = (url: string): string =>
-  displayUrl(url).slice(0, MAX_NAME_LENGTH).replace(/\/+$/, '');
-
-export const clusterNameFromUrl = async (url: string): Promise<string> => {
-  const host = urlHost(url) ?? url;
-
-  try {
-    const { registrableDomain } = await import(
-      '$lib/domains/shared/utils/registrable-domain'
-    );
-
-    return registrableDomain(host).slice(0, MAX_NAME_LENGTH);
-  } catch {
-    return host.slice(0, MAX_NAME_LENGTH);
-  }
-};

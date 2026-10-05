@@ -8,10 +8,19 @@
   --color-neutral-600: #5c5c62;
   --color-neutral-700: #414145;
   --color-neutral-800: #2c2c2e;
+  --color-neutral-850: #222225;
   --color-neutral-900: #1c1c1e;
   --color-neutral-950: #101012;
+  --color-neutral-960: #0d0d0f;
+  --color-neutral-975: #0a0a0b;
 }
 
-:root {
-  --color-hairline-dark: #222225;
+:root:has([data-app-shell]) {
+  --color-neutral-700: #3b3b41;
+  --color-neutral-800: #2c2c31;
+  --color-neutral-850: #26262b;
+  --color-neutral-900: #222226;
+  --color-neutral-950: #19191c;
+  --color-neutral-960: #161619;
+  --color-neutral-975: #131315;
 }

@@ -10,14 +10,14 @@
   const { title, code, language }: Props = $props();
 </script>
 
-<div class="border-hairline overflow-hidden rounded-xl border">
+<div class="border-surface-root-border overflow-hidden rounded-xl border">
   <div
-    class="border-hairline flex h-9 items-center justify-between border-b pr-1 pl-4"
+    class="border-surface-root-border flex h-9 items-center justify-between border-b pr-1 pl-4"
   >
-    <span class="text-neutral-500 text-xs font-medium">{title}</span>
+    <span class="text-fg-muted text-xs font-medium">{title}</span>
     <CopyButton text={code} label="Copy {title}" class="size-7 rounded-md" />
   </div>
   <pre
     data-language={language}
-    class="text-neutral-300 overflow-x-auto p-4 font-mono text-[13px] leading-relaxed break-all whitespace-pre-wrap"><code>{code}</code></pre>
+    class="text-fg-secondary overflow-x-auto p-4 font-mono text-[13px] leading-relaxed break-all whitespace-pre-wrap"><code>{code}</code></pre>
 </div>

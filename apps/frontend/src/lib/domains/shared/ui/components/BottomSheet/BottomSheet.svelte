@@ -155,7 +155,7 @@
   <div
     bind:this={sheetElement}
     class={[
-      'absolute inset-x-0 bottom-0 flex flex-col ld-card-bg rounded-t-3xl ld-card-border shadow-2xl pointer-events-auto',
+      'absolute inset-x-0 bottom-0 flex flex-col bg-surface-elevated-bg rounded-t-3xl border border-surface-elevated-border shadow-2xl pointer-events-auto',
       { 'transition-transform duration-300 ease-out': !isDragging },
     ]}
     style="height: 85dvh; {sheetStyle}"
@@ -171,7 +171,7 @@
       onclick={onPeekClick}
       aria-label={bottomSheetState.isOpen ? 'Close menu' : 'Open menu'}
     >
-      <div class="h-1 w-10 rounded-full bg-neutral-700"></div>
+      <div class="h-1 w-10 rounded-full bg-surface-200-bg"></div>
       <div
         class={[
           'grid w-full',

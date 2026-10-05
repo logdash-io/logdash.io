@@ -26,7 +26,7 @@
   closeOnOutsideTooltipClick={true}
 >
   <button
-    class="text-neutral-400 hover:bg-surface-hover hover:text-fg-default flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md"
+    class="text-fg-tertiary hover:bg-surface-root-hover-bg hover:text-fg-default flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md"
     aria-label="Suggest improvement"
     title="Suggest improvement"
     data-posthog-id="share-feedback-button"
@@ -36,7 +36,9 @@
 </Tooltip>
 
 {#snippet feedbackForm(close: () => void)}
-  <div class="ld-card-base flex h-52 w-72 flex-col rounded-xl shadow-lg">
+  <div
+    class="bg-surface-elevated-bg border border-surface-elevated-border flex h-52 w-72 flex-col rounded-xl shadow-lg"
+  >
     <textarea
       {@attach (node: HTMLTextAreaElement) => node.focus()}
       class="h-full w-full resize-none rounded-xl border-none p-4 text-base outline-0"

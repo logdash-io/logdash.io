@@ -29,7 +29,7 @@
   <StatusHistoryBar pings={displayPings} height={6} />
 
   <div
-    class="text-neutral-400 flex items-center justify-between font-mono text-xs"
+    class="text-fg-tertiary flex items-center justify-between font-mono text-xs"
   >
     <span>
       {#if pingsCount === 0}

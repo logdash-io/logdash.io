@@ -30,12 +30,12 @@
     >
       <span class={{ 'sm:block': quiet }}>{title}</span>
       {#if quiet}
-        <span class="text-neutral-600 sm:block">{quiet}</span>
+        <span class="text-fg-faint sm:block">{quiet}</span>
       {/if}
     </h2>
 
     {#if description}
-      <p class="text-neutral-400 mt-5 max-w-2xl text-lg text-pretty">
+      <p class="text-fg-tertiary mt-5 max-w-2xl text-lg text-pretty">
         {description}
       </p>
     {/if}

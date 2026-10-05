@@ -2,10 +2,10 @@ import { Feature } from '$lib/domains/shared/types';
 import { tryPrependProtocol } from '$lib/domains/shared/utils/url';
 import {
   AnonymousStartError,
-  previewNameFromUrl,
   type AnonymousPreview,
   type AnonymousStartStep,
 } from '../domain/anonymous-preview';
+import { previewNameFromUrl } from '$lib/domains/shared/utils/address-names';
 import { anonymousSessionService } from '../infrastructure/anonymous-session.service';
 import { ensureAnonymousSession } from './create-anonymous-session';
 

@@ -153,4 +153,4 @@ async function checkCnameRecord(domain: string) {
   }
 }
 
-checkCnameRecord('dupa-romana.ablaszkiewicz.pl');
+checkCnameRecord('status.example.com');

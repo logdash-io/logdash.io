@@ -18,7 +18,10 @@ export function getStatusFromMonitor(
     return getStatusFromPings(pings);
   }
 
-  if (monitor.lastStatusCode === undefined) {
+  if (
+    monitor.lastStatus === 'unknown' ||
+    monitor.lastStatusCode === undefined
+  ) {
     return 'unknown';
   }
 

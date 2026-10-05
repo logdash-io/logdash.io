@@ -25,7 +25,7 @@
   const unit = $derived(timeRange === '90d' ? 'day' : 'hour');
 </script>
 
-<section class="border-hairline border-b">
+<section class="edge-b">
   <PaneHeader title="Uptime history">
     <TimeRangeSelector
       label="Uptime range"

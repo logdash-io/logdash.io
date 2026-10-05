@@ -83,7 +83,7 @@
 
 {#snippet liveStatus()}
   <span
-    class="text-neutral-400 ml-auto flex shrink-0 items-center gap-1.5 text-xs"
+    class="text-fg-tertiary ml-auto flex shrink-0 items-center gap-1.5 text-xs"
   >
     <span class="bg-success size-1.5 rounded-full"></span>
     Live
@@ -92,7 +92,7 @@
 
 {#snippet monitoringHeader()}
   <span class="font-medium">api.acme.com</span>
-  <span class="text-neutral-500 text-xs">Every 15 s</span>
+  <span class="text-fg-muted text-xs">Every 15 s</span>
   {@render liveStatus()}
 {/snippet}
 
@@ -103,7 +103,7 @@
 {/snippet}
 
 {#snippet statusPageHeader()}
-  <span class="text-neutral-500">status.acme.com</span>
+  <span class="text-fg-muted">status.acme.com</span>
   {@render liveStatus()}
 {/snippet}
 
@@ -119,7 +119,7 @@
 
 {#snippet metricsHeader()}
   <span class="font-medium">CPU usage</span>
-  <span class="text-neutral-500 text-xs">Last 60 s</span>
+  <span class="text-fg-muted text-xs">Last 60 s</span>
   {@render liveStatus()}
 {/snippet}
 

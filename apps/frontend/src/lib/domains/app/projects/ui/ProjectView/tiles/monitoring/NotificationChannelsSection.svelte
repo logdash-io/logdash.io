@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { notificationChannelSetupState } from '$lib/domains/app/projects/application/notification-channels/notification-channel-setup.state.svelte.js';
   import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
@@ -16,6 +17,7 @@
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import { Button, Checkbox } from '@logdash/hyper-ui/presentational';
+  import { match } from 'ts-pattern';
 
   type Props = {
     monitorId: string;
@@ -34,9 +36,11 @@
   }
 
   async function onDeleteChannel(channel: NotificationChannel): Promise<void> {
-    const confirmed = confirm(
-      `Are you sure you want to delete ${getChannelDisplayName(channel)} notification channel?`,
-    );
+    const confirmed = await confirmDialog.ask({
+      title: 'Delete notification channel',
+      description: `${getChannelDisplayName(channel)} stops receiving alerts from every monitor. This cannot be undone.`,
+      confirmLabel: 'Delete channel',
+    });
 
     if (!confirmed) {
       return;
@@ -50,10 +54,14 @@
   }
 
   function channelDetails(channel: NotificationChannel): string {
-    const target =
-      channel.target === 'telegram'
-        ? channel.options.chatId && `id: ${channel.options.chatId}`
-        : channel.options.url;
+    const target = match(channel)
+      .with(
+        { target: 'telegram' },
+        ({ options }) => options.chatId && `id: ${options.chatId}`,
+      )
+      .with({ target: 'webhook' }, ({ options }) => options.url)
+      .with({ target: 'email' }, () => null)
+      .exhaustive();
 
     return [getChannelTypeLabel(channel), target].filter(Boolean).join(' · ');
   }
@@ -75,7 +83,7 @@
 
         <span class="flex min-w-0 flex-col">
           <span class="truncate">{getChannelDisplayName(channel)}</span>
-          <span class="ph-no-capture text-neutral-500 truncate">
+          <span class="ph-no-capture text-fg-muted truncate">
             {channelDetails(channel)}
           </span>
         </span>
@@ -96,10 +104,10 @@
   {/each}
 
   <SettingsCardItem>
-    <p class="text-neutral-500">Telegram or any webhook.</p>
+    <p class="text-fg-muted">Telegram or any webhook.</p>
 
     {#snippet action()}
-      <Button variant="neutral" size="sm" onclick={onAddChannel}>
+      <Button size="sm" onclick={onAddChannel}>
         <PlusIcon class="size-4" />
         Add channel
       </Button>

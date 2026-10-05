@@ -28,7 +28,7 @@
   const HIDDEN_SCALE = 0.96;
   const FADE_SPAN = 0.6;
   const WINDOW_BUTTON_CLASS =
-    'text-neutral-400 hover:text-fg-default hover:bg-surface-100 focus-visible:outline-neutral-500 -mr-1.5 flex size-7 shrink-0 items-center justify-center rounded-md transition-ink duration-150 focus-visible:outline-2';
+    'text-fg-tertiary hover:text-fg-default hover:bg-surface-100-hover-bg focus-visible:outline-brand -mr-1.5 flex size-7 shrink-0 items-center justify-center rounded-md transition-ink duration-150 focus-visible:outline-2';
   const FULL_FRAME: FrameStyle = {
     inset: '0px',
     borderRadius: '0px',
@@ -367,7 +367,7 @@
       aria-label="Your dashboard"
       tabindex="-1"
       class={[
-        'ring-hairline bg-surface-elevated text-fg-default flex h-auto max-h-none max-w-none shadow-[0_32px_64px_-24px_rgba(0,0,0,0.7)] ring-1 outline-none backdrop:right-auto backdrop:w-screen backdrop:bg-surface-root',
+        'ring-surface-100-border bg-surface-100-bg text-fg-default flex h-auto max-h-none max-w-none shadow-[0_32px_64px_-24px_rgba(0,0,0,0.7)] ring-1 outline-none backdrop:right-auto backdrop:w-screen backdrop:bg-surface-root-bg',
         full
           ? 'fixed inset-0 mr-[calc(100%-100vw)] w-auto rounded-none overscroll-contain'
           : 'relative w-full rounded-xl lg:aspect-video',
@@ -419,11 +419,11 @@
 
 {#snippet backHint()}
   <span
-    class="bg-surface-100 flex items-center gap-2 rounded-lg py-1 pr-1.5 pl-3 text-sm whitespace-nowrap text-white shadow"
+    class="bg-surface-elevated-bg edge flex items-center gap-2 rounded-lg py-1 pr-1.5 pl-3 text-sm whitespace-nowrap text-fg-default shadow"
   >
     Back to site
     <kbd
-      class="border-hairline text-neutral-400 rounded border px-1.5 font-sans text-[11px] leading-4"
+      class="border-surface-elevated-border text-fg-tertiary rounded border px-1.5 font-sans text-[11px] leading-4"
     >
       Esc
     </kbd>

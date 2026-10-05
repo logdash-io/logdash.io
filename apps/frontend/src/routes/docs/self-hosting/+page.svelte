@@ -17,14 +17,14 @@
 <DocArticle page={selfHostingPage} />
 
 <footer class="mt-10 w-full max-w-2xl">
-  <p class="text-neutral-500 text-sm leading-6">
+  <p class="text-fg-muted text-sm leading-6">
     Self-hosting progress is tracked in the open.
     <!-- eslint-disable svelte/no-navigation-without-resolve -- issue tracker lives on GitHub -->
     <a
       href={selfHostingIssueUrl}
       target="_blank"
       rel="noopener noreferrer"
-      class="text-neutral-400 hover:text-fg-default underline underline-offset-2 transition-ink duration-150"
+      class="text-fg-tertiary hover:text-fg-default underline underline-offset-2 transition-ink duration-150"
     >
       <!-- eslint-enable svelte/no-navigation-without-resolve -->
       Follow the issues on GitHub

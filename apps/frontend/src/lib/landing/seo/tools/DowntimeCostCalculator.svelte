@@ -75,7 +75,7 @@
       Use plain numbers, like 500 or 1,250.50.
     </p>
   {:else}
-    <p role="status" class="text-neutral-400 text-[15px] leading-7">
+    <p role="status" class="text-fg-tertiary text-[15px] leading-7">
       Cost of this outage:
       <strong class="text-fg-default font-medium">
         {formatMoney(lostRevenue + staffCost)}
@@ -83,16 +83,16 @@
     </p>
     <table class="w-full text-sm">
       <thead>
-        <tr class="border-hairline border-b">
-          <th class="text-neutral-500 pb-2.5 text-left font-medium">Cost</th>
-          <th class="text-neutral-500 pb-2.5 text-right font-medium">Amount</th>
+        <tr class="border-surface-root-border border-b">
+          <th class="text-fg-muted pb-2.5 text-left font-medium">Cost</th>
+          <th class="text-fg-muted pb-2.5 text-right font-medium">Amount</th>
         </tr>
       </thead>
-      <tbody class="divide-hairline divide-y">
+      <tbody class="divide-surface-root-border divide-y">
         <tr>
-          <td class="text-neutral-400 py-2.5">
+          <td class="text-fg-tertiary py-2.5">
             Lost revenue
-            <span class="text-neutral-600 tabular-nums">
+            <span class="text-fg-faint tabular-nums">
               {formatMoney(revenuePerHour ?? 0)}/h × {formatHours(hours)}
             </span>
           </td>
@@ -101,9 +101,9 @@
           </td>
         </tr>
         <tr>
-          <td class="text-neutral-400 py-2.5">
+          <td class="text-fg-tertiary py-2.5">
             Staff time
-            <span class="text-neutral-600 tabular-nums">
+            <span class="text-fg-faint tabular-nums">
               {staff} × {formatMoney(staffRate ?? 0)}/h × {formatHours(hours)}
             </span>
           </td>

@@ -255,7 +255,7 @@
 <div class="relative flex min-h-96 flex-1 flex-col">
   {#if scrolledFromTop}
     <div
-      class="from-surface-elevated pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b to-transparent"
+      class="from-surface-50-bg pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b to-transparent"
     ></div>
   {/if}
 
@@ -272,13 +272,7 @@
             title="Could not load logs"
             description="Check your connection and try again."
           >
-            <Button
-              variant="neutral"
-              size="sm"
-              onclick={() => logsState.retry()}
-            >
-              Retry
-            </Button>
+            <Button size="sm" onclick={() => logsState.retry()}>Retry</Button>
           </EmptyState>
         {:else if filtered}
           <EmptyState
@@ -286,11 +280,7 @@
             title="No matching logs"
             description="Nothing matches this search and these filters."
           >
-            <Button
-              variant="neutral"
-              size="sm"
-              onclick={() => filtersStore.reset()}
-            >
+            <Button size="sm" onclick={() => filtersStore.reset()}>
               Reset filters
             </Button>
           </EmptyState>
@@ -343,7 +333,7 @@
   </div>
 
   <div
-    class="from-surface-elevated pointer-events-none absolute inset-x-0 bottom-0 z-10 h-6 bg-gradient-to-t to-transparent"
+    class="from-surface-50-bg pointer-events-none absolute inset-x-0 bottom-0 z-10 h-6 bg-gradient-to-t to-transparent"
   ></div>
 
   <LogPreviewDrawer />

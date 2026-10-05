@@ -2,6 +2,10 @@ import { ClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
 
 export interface ClusterPlanConfig {
   maxClusterMembers: number;
+  webAnalytics: {
+    rateLimitPerHour: number;
+    retentionDays: number;
+  };
   customDomains: {
     canCreate: boolean;
   };
@@ -29,6 +33,7 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
   // free
   [ClusterTier.Free]: {
     maxClusterMembers: 2,
+    webAnalytics: { rateLimitPerHour: 10_000, retentionDays: 90 },
     customDomains: {
       canCreate: false,
     },
@@ -38,6 +43,7 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
   },
   [ClusterTier.EarlyUser]: {
     maxClusterMembers: 2,
+    webAnalytics: { rateLimitPerHour: 10_000, retentionDays: 90 },
     customDomains: {
       canCreate: false,
     },
@@ -49,6 +55,7 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
   // paid
   [ClusterTier.EarlyBird]: {
     maxClusterMembers: 3,
+    webAnalytics: { rateLimitPerHour: 50_000, retentionDays: 365 },
     customDomains: {
       canCreate: false,
     },
@@ -58,6 +65,7 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
   },
   [ClusterTier.Builder]: {
     maxClusterMembers: 3,
+    webAnalytics: { rateLimitPerHour: 25_000, retentionDays: 180 },
     customDomains: {
       canCreate: false,
     },
@@ -67,6 +75,7 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
   },
   [ClusterTier.Pro]: {
     maxClusterMembers: 4,
+    webAnalytics: { rateLimitPerHour: 50_000, retentionDays: 365 },
     customDomains: {
       canCreate: true,
     },
@@ -78,6 +87,7 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
   // special
   [ClusterTier.Contributor]: {
     maxClusterMembers: 2,
+    webAnalytics: { rateLimitPerHour: 50_000, retentionDays: 180 },
     customDomains: {
       canCreate: false,
     },
@@ -87,6 +97,7 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
   },
   [ClusterTier.Admin]: {
     maxClusterMembers: 100,
+    webAnalytics: { rateLimitPerHour: 50_000, retentionDays: 365 },
     customDomains: {
       canCreate: true,
     },

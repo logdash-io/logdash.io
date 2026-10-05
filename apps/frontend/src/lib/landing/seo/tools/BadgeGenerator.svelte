@@ -87,11 +87,13 @@
     <div
       class={[
         'flex min-h-24 items-center justify-center overflow-hidden rounded-lg p-4',
-        themed && theme === 'light' ? 'bg-white' : 'border-hairline border',
+        themed && theme === 'light'
+          ? 'bg-surface-inverse-bg'
+          : 'bg-surface-root-bg border',
       ]}
     >
       {#if failedSrc === src}
-        <p role="status" class="text-neutral-500 text-sm">
+        <p role="status" class="text-fg-muted text-sm">
           No badge for this status page and monitor key. The page must be
           published and the monitor on it.
         </p>

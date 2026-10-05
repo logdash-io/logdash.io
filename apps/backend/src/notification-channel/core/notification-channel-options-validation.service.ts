@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
+import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import { NotificationChannelOptions } from './entities/notification-channel.entity';
 import { NotificationChannelType } from './enums/notification-target.enum';
@@ -13,12 +13,23 @@ import { NotificationChannelReadService } from '../read/notification-channel-rea
 import { UserTier } from '../../user/core/enum/user-tier.enum';
 import { TelegramSetupService } from '../setup/telegram/telegram-setup.service';
 import { getEnvConfig } from '../../shared/configs/env-configs';
+import { EmailOptions, EmailOptionsValidator } from './types/email-options.type';
+import { ClusterReadService } from '../../cluster/read/cluster-read.service';
+import { UserReadService } from '../../user/read/user-read.service';
+
+const OPTIONS_VALIDATORS: Record<NotificationChannelType, ClassConstructor<object>> = {
+  [NotificationChannelType.Telegram]: TelegramOptionsValidator,
+  [NotificationChannelType.Webhook]: WebhookOptionsValidator,
+  [NotificationChannelType.Email]: EmailOptionsValidator,
+};
 
 @Injectable()
 export class NotificationChannelOptionsValidationService {
   constructor(
     private readonly notificationChannelReadService: NotificationChannelReadService,
     private readonly telegramSetupService: TelegramSetupService,
+    private readonly clusterReadService: ClusterReadService,
+    private readonly userReadService: UserReadService,
   ) {}
 
   public async validateOptions(
@@ -43,6 +54,14 @@ export class NotificationChannelOptionsValidationService {
     if (target === NotificationChannelType.Webhook) {
       this.validateWebhookOptions(options as WebhookOptions, userTier);
     }
+
+    if (target === NotificationChannelType.Email) {
+      await this.validateEmailOptions(
+        options as EmailOptions,
+        clusterId,
+        excludeNotificationChannelId,
+      );
+    }
   }
 
   /**
@@ -54,10 +73,7 @@ export class NotificationChannelOptionsValidationService {
     options: NotificationChannelOptions,
     target: NotificationChannelType,
   ): void {
-    const instance =
-      target === NotificationChannelType.Telegram
-        ? plainToInstance(TelegramOptionsValidator, options)
-        : plainToInstance(WebhookOptionsValidator, options);
+    const instance = plainToInstance(OPTIONS_VALIDATORS[target], options);
 
     const errors = validateSync(instance);
 
@@ -103,6 +119,30 @@ export class NotificationChannelOptionsValidationService {
       throw new BadRequestException(
         'Send the setup passphrase in this chat before connecting it to the logdash bot',
       );
+    }
+  }
+
+  private async validateEmailOptions(
+    options: EmailOptions,
+    clusterId: string,
+    excludeNotificationChannelId?: string,
+  ): Promise<void> {
+    const members = await this.clusterReadService.readMembers(clusterId);
+    const memberEmails = await Promise.all(
+      members.map(async (member) => (await this.userReadService.readByIdOrThrow(member.id)).email),
+    );
+
+    if (!memberEmails.some((email) => email?.toLowerCase() === options.email.toLowerCase())) {
+      throw new BadRequestException('Email alerts can only go to a member of this domain');
+    }
+
+    const existingChannel = await this.notificationChannelReadService.readEmailChannel(
+      clusterId,
+      options.email,
+    );
+
+    if (existingChannel && existingChannel.id !== excludeNotificationChannelId) {
+      throw new BadRequestException('Channel with this email already exists');
     }
   }
 

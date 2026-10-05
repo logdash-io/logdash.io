@@ -7,7 +7,7 @@
 </script>
 
 <nav
-  class="border-hairline bg-surface-root sticky top-0 z-50 w-full shrink-0 border-b"
+  class="border-surface-root-border bg-surface-root-bg sticky top-0 z-50 w-full shrink-0 border-b"
 >
   <!-- `relative` anchors the desktop menu panel to this bar. -->
   <div
@@ -22,16 +22,14 @@
     <!-- -ml-3 cancels the last link's inner padding so the rule sits 20px from text and button alike -->
     <div
       aria-hidden="true"
-      class="bg-hairline -ml-3 hidden h-4 w-px lg:block"
+      class="bg-surface-root-border -ml-3 hidden h-4 w-px lg:block"
     ></div>
 
     <div class="hidden items-center gap-2 lg:flex">
       <Button
         href={resolve('/app/auth')}
         draggable="false"
-        variant="subtle"
         size="sm"
-        class="px-4 font-medium"
         data-posthog-id="nav-login-cta"
       >
         Log in

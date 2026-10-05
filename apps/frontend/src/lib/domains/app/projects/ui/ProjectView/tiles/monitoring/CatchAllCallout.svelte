@@ -96,7 +96,7 @@
         <p class="text-warning">
           This host answers every path with the same page
         </p>
-        <p class="text-neutral-500 text-pretty">
+        <p class="text-fg-muted text-pretty">
           A check here only proves the host is up, not that your app works.
           {#if probe.healthPaths.length === 0}
             Point it at a health endpoint if your app has one.
@@ -107,7 +107,6 @@
       <div class="flex flex-wrap gap-2">
         {#each probe.healthPaths as path (path)}
           <Button
-            variant="neutral"
             size="sm"
             loading={savingPath === path}
             disabled={savingPath !== null && savingPath !== path}
@@ -116,9 +115,7 @@
             Use <span class="font-mono">{path}</span>
           </Button>
         {:else}
-          <Button variant="neutral" size="sm" onclick={onEdit}>
-            Edit monitor
-          </Button>
+          <Button size="sm" onclick={onEdit}>Edit monitor</Button>
         {/each}
       </div>
     </div>
@@ -127,7 +124,7 @@
       variant="ghost"
       size="xs"
       shape="square"
-      class="text-neutral-500 -mt-1 -mr-1"
+      class="-mt-1 -mr-1"
       aria-label="Dismiss"
       onclick={onDismiss}
     >

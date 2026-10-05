@@ -102,7 +102,7 @@
 <div class="flex h-full w-full flex-col gap-5">
   <div class="relative flex gap-x-10 sm:gap-x-14">
     <div class="flex min-w-24 flex-col gap-0.5">
-      <span class="text-neutral-500 text-xs">Response</span>
+      <span class="text-fg-muted text-xs">Response</span>
       {#if isDown(current)}
         <span class="text-error font-figure text-2xl">Down</span>
       {:else}
@@ -111,7 +111,7 @@
     </div>
 
     <div class="hidden flex-col gap-0.5 sm:flex">
-      <span class="text-neutral-500 text-xs">30 d uptime</span>
+      <span class="text-fg-muted text-xs">30 d uptime</span>
       <span class="font-figure text-2xl">99.97%</span>
     </div>
 
@@ -150,7 +150,7 @@
   </div>
 
   <div
-    class="text-neutral-600 flex items-center justify-between font-mono text-xs"
+    class="text-fg-faint flex items-center justify-between font-mono text-xs"
   >
     <span>15 min ago</span>
     <span>Now</span>

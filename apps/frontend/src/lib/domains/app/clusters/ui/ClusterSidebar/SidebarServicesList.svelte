@@ -7,7 +7,6 @@
   import { page } from '$app/state';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { serviceEntries } from '$lib/domains/app/clusters/application/service-entries.js';
-  import { wizardState } from '$lib/domains/app/clusters/application/wizard.state.svelte.js';
   import {
     listServices,
     type ServiceItem,
@@ -33,19 +32,11 @@
   let serviceName = $state('');
   let selectedFeatures = $state<Feature[]>([]);
 
-  const isWizardMode = $derived(wizardState.isActive);
-
-  const currentCluster = $derived(
-    isWizardMode
-      ? clustersState.get(wizardState.tempClusterId)
-      : clustersState.get(page.params.cluster_id),
-  );
+  const currentCluster = $derived(clustersState.get(page.params.cluster_id));
   const activeProjectId = $derived(
     page.params.project_id || page.url.searchParams.get('project_id'),
   );
-  const clusterId = $derived(
-    isWizardMode ? wizardState.tempClusterId : page.params.cluster_id,
-  );
+  const clusterId = $derived(page.params.cluster_id);
   const items = $derived.by((): ServiceItem[] => {
     const { services, dependencies } = listServices(
       serviceEntries(currentCluster),
@@ -57,7 +48,7 @@
   const featureConfig = [
     {
       feature: Feature.LOGGING,
-      label: 'Logging',
+      label: 'Logs',
       icon: LogsIcon,
     },
     {
@@ -75,10 +66,6 @@
   const canCreate = $derived(serviceName.length >= 1);
 
   function onServiceSelect(projectId: string): void {
-    if (isWizardMode) {
-      wizardState.scrollToSection(`service-${projectId}`);
-      return;
-    }
     if (!clusterId) {
       return;
     }
@@ -173,26 +160,18 @@
   {@render serviceRow(item)}
 {/each}
 
-{#if isWizardMode && items.length === 0}
-  <span class="pl-5 py-1 text-[13px] text-neutral-600 italic">
-    No services yet
-  </span>
-{/if}
-
-{#if !isWizardMode && clusterId}
+{#if clusterId}
   {@render newService()}
 {/if}
 
 {#snippet serviceRow(item: ServiceItem)}
-  {@const monitor = isWizardMode
-    ? undefined
-    : monitoringState.getMonitorByProjectId(item.id)}
+  {@const monitor = monitoringState.getMonitorByProjectId(item.id)}
   <SidebarServiceRow
     label={item.label || 'New service'}
     host={item.host}
-    status={monitor ? getStatusFromMonitor(monitor) : 'unknown'}
+    status={monitor ? getStatusFromMonitor(monitor) : undefined}
     tooltip={monitor ? monitorTooltip : undefined}
-    active={!isWizardMode && item.id === activeProjectId}
+    active={item.id === activeProjectId}
     disabled={!clusterId}
     onclick={() => onServiceSelect(item.id)}
   />
@@ -228,7 +207,7 @@
           {#each featureConfig as { feature, label, icon: Icon } (feature)}
             <label
               class={[
-                'flex items-center gap-2 p-1.5 rounded cursor-pointer text-xs hover:bg-neutral-800',
+                'flex items-center gap-2 p-1.5 rounded cursor-pointer text-[13px] hover:bg-surface-100-hover-bg',
                 { 'text-brand': isFeatureEnabled(feature) },
               ]}
             >

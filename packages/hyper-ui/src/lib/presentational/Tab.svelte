@@ -32,7 +32,7 @@
       justify-content: center;
       height: var(--tab-height, 2.5rem);
       padding-inline: var(--tab-padding, 0.75rem);
-      border-radius: 0.5rem;
+      border-radius: calc(infinity * 1px);
       color: var(--fg-muted);
       font-size: var(--tab-font-size, 0.875rem);
       text-align: center;
@@ -42,7 +42,7 @@
     }
 
     .ld-tab[aria-selected="true"] {
-      background-color: var(--surface-100);
+      background-color: var(--surface-150-bg);
       color: var(--fg-default);
     }
 

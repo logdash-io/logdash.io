@@ -16,7 +16,7 @@
   <span class="text-sm">{title}</span>
 
   {#if description}
-    <span class="text-neutral-500 text-sm">{description}</span>
+    <span class="text-fg-muted text-sm">{description}</span>
   {/if}
 
   {#if children}

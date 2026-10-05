@@ -34,13 +34,13 @@
 
 {#if userInvitationsState.hasPendingInvitations}
   <ul
-    class="border-hairline divide-hairline flex shrink-0 flex-col divide-y border-b"
+    class="flex shrink-0 flex-col edge-between edge-b"
     aria-label="Pending invitations"
   >
     {#each invitations as invitation (invitation.id)}
       <li class="flex flex-wrap items-center gap-x-4 gap-y-3 p-4">
         <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span class="text-neutral-500 text-xs">
+          <span class="text-fg-muted text-xs">
             Invited {formatDate(invitation.createdAt)} ·
             {invitation.role === ClusterRole.CREATOR ? 'Admin' : 'Write'} access
           </span>

@@ -64,7 +64,7 @@
 
     const timeout = setTimeout(() => {
       copied = false;
-    }, 1500);
+    }, 2000);
 
     return () => {
       clearTimeout(timeout);
@@ -82,14 +82,14 @@
   pre/code before any JavaScript loads. The copy button is the only part
   that needs the browser, and its absence costs nothing.
 -->
-<div class="doc-code border-hairline overflow-hidden rounded-xl border">
+<div
+  class="doc-code border-surface-root-border overflow-hidden rounded-xl border"
+>
   {#if title}
     <div
-      class="border-hairline flex h-9 items-center justify-between border-b pr-1 pl-4"
+      class="border-surface-root-border flex h-9 items-center justify-between border-b pr-1 pl-4"
     >
-      <span
-        class="text-neutral-500 flex items-center gap-2 text-xs font-medium"
-      >
+      <span class="text-fg-muted flex items-center gap-2 text-xs font-medium">
         {#if Icon}
           <Icon class="size-3.5 shrink-0" />
         {/if}
@@ -119,7 +119,7 @@
     type="button"
     onclick={onCopy}
     aria-label={copied ? 'Copied' : 'Copy code'}
-    class="text-neutral-600 hover:text-fg-default bg-surface-root flex size-7 items-center justify-center rounded-md transition-ink duration-150"
+    class="text-fg-faint hover:text-fg-default bg-surface-root-bg flex size-7 items-center justify-center rounded-md transition-ink duration-150"
   >
     {#if copied}
       <CheckIcon class="size-3.5" />
@@ -127,6 +127,7 @@
       <CopyIcon class="size-3.5" />
     {/if}
   </button>
+  <span class="sr-only" aria-live="polite">{copied ? 'Copied' : ''}</span>
 {/snippet}
 
 <style>

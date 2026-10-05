@@ -21,7 +21,7 @@
 
     <div class="flex flex-col items-start">
       <h3 class="text-xl font-medium">Telegram setup failed</h3>
-      <p class="text-neutral-400 text-sm">
+      <p class="text-fg-tertiary text-sm">
         Please check your connection and try again.
       </p>
     </div>

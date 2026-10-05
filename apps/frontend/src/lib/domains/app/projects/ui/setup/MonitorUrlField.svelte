@@ -99,10 +99,7 @@
 </script>
 
 <div class="flex flex-col gap-2">
-  <Label
-    class={size === 'sm' ? 'text-xs text-neutral-500' : 'text-sm'}
-    for={id}
-  >
+  <Label class={size === 'sm' ? 'text-xs text-fg-muted' : 'text-sm'} for={id}>
     URL to monitor
   </Label>
 
@@ -128,7 +125,7 @@
     {#if isProbing}
       <Spinner
         size="xs"
-        class="text-neutral-500 absolute top-1/2 right-3 -translate-y-1/2"
+        class="text-fg-muted absolute top-1/2 right-3 -translate-y-1/2"
         aria-label="Checking the URL"
       />
     {/if}
@@ -148,7 +145,7 @@
             hint.healthPaths,
           )}
         {:else}
-          <p class="text-neutral-400 text-pretty">
+          <p class="text-fg-tertiary text-pretty">
             Point it at a health endpoint like /health if your app has one.
           </p>
         {/if}
@@ -157,7 +154,7 @@
   {:else if hint.kind === 'health-paths'}
     {@render healthPathChips('Found a health check:', hint.healthPaths)}
   {:else if hint.kind === 'suggest-health'}
-    <p class="text-neutral-500 text-xs text-pretty">
+    <p class="text-fg-muted text-xs text-pretty">
       A health endpoint like /health, /api/health or /up catches more failures
       than the home page.
     </p>
@@ -165,13 +162,12 @@
 </div>
 
 {#snippet healthPathChips(label: string, paths: string[])}
-  <div class="text-neutral-400 flex flex-wrap items-center gap-1.5 text-xs">
+  <div class="text-fg-tertiary flex flex-wrap items-center gap-1.5 text-xs">
     <span>{label}</span>
     {#each paths as path (path)}
       <Button
-        variant="neutral"
         size="xs"
-        class="font-mono font-medium"
+        class="font-mono"
         aria-label={`Use ${path}`}
         onclick={() => onUseHealthPath(path)}
       >

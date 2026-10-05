@@ -36,9 +36,8 @@
         href={link.href}
         target="_blank"
         rel="noopener noreferrer"
-        variant="subtle"
         size="sm"
-        class="gap-2 px-4 font-medium"
+        class="gap-2"
         data-posthog-id={link.posthogId}
       >
         <link.icon class="size-4" />

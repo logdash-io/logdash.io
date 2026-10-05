@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
-  import ClustersList from '$lib/domains/app/clusters/ui/ClustersList/ClustersList.svelte';
+  import DomainsHome from '$lib/domains/app/clusters/ui/DomainsHome/DomainsHome.svelte';
 </script>
 
 <svelte:head>
   <title>Domains | Logdash</title>
 </svelte:head>
 
-<ClustersList canCreate={clustersState.canAddDomain} />
+<DomainsHome />

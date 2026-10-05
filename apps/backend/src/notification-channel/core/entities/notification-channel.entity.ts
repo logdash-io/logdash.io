@@ -3,8 +3,9 @@ import { HydratedDocument, Types } from 'mongoose';
 import { NotificationChannelType } from '../enums/notification-target.enum';
 import { TelegramOptions } from '../types/telegram-options.type';
 import { WebhookOptions } from '../types/webhook-options.type';
+import { EmailOptions } from '../types/email-options.type';
 
-export type NotificationChannelOptions = TelegramOptions | WebhookOptions;
+export type NotificationChannelOptions = TelegramOptions | WebhookOptions | EmailOptions;
 
 @Schema({ collection: 'notificationChannels', timestamps: true })
 export class NotificationChannelEntity {

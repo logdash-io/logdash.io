@@ -34,12 +34,12 @@
     type="button"
     aria-pressed={selected === option.value}
     class={[
-      'transition-ink focus-visible:outline-brand flex h-7 cursor-pointer items-center rounded-md px-2 text-xs tabular-nums focus-visible:outline-2',
+      'transition-ink focus-visible:outline-brand flex h-7 cursor-pointer items-center rounded-md px-2 text-[13px] tabular-nums focus-visible:outline-2',
       {
-        'bg-surface-100 text-fg-default': selected === option.value,
-        'text-neutral-500 hover:text-fg-default':
+        'bg-surface-150-bg text-fg-default': selected === option.value,
+        'text-fg-muted hover:text-fg-default':
           selected !== option.value && !option.locked,
-        'text-neutral-600 hover:text-neutral-400': option.locked,
+        'text-fg-faint hover:text-fg-tertiary': option.locked,
       },
     ]}
     onclick={() => onSelect(option.value)}

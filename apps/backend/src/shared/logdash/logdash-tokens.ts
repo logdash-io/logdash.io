@@ -18,6 +18,7 @@ export const STATUS_PAGES_LOGGER = Symbol('STATUS_PAGES_LOGGER');
 export const AUDIT_LOGS_LOGGER = Symbol('AUDIT_LOGS_LOGGER');
 export const API_KEYS_LOGGER = Symbol('API_KEYS_LOGGER');
 export const REDIS_LOGGER = Symbol('REDIS_LOGGER');
+export const WEB_ANALYTICS_LOGGER = Symbol('WEB_ANALYTICS_LOGGER');
 
 export const LOGDASH_METRICS = Symbol('LOGDASH_METRICS');
 
@@ -42,6 +43,7 @@ export const ALL_LOGGER_TOKENS = [
   AUDIT_LOGS_LOGGER,
   API_KEYS_LOGGER,
   REDIS_LOGGER,
+  WEB_ANALYTICS_LOGGER,
 ];
 
 export const NAMESPACE_MAP: Record<symbol, string> = {
@@ -65,4 +67,5 @@ export const NAMESPACE_MAP: Record<symbol, string> = {
   [AUDIT_LOGS_LOGGER]: 'audit-logs',
   [API_KEYS_LOGGER]: 'api-keys',
   [REDIS_LOGGER]: 'redis',
+  [WEB_ANALYTICS_LOGGER]: 'web-analytics',
 };

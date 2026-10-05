@@ -143,8 +143,8 @@
       <p class="text-fg-default text-lg font-medium tracking-[-0.01em]">
         {result.meaning}
       </p>
-      <p class="text-neutral-500 text-sm">
-        <code class="text-neutral-300 font-mono">{result.expression}</code>
+      <p class="text-fg-muted text-sm">
+        <code class="text-fg-secondary font-mono">{result.expression}</code>
         in {DIALECT_NAMES[dialect]}
       </p>
     </div>

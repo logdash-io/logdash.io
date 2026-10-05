@@ -1,4 +1,9 @@
 <script lang="ts">
+  import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
+  import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
+  import PlusCircleIcon from '$lib/domains/shared/icons/PlusCircleIcon.svelte';
+  import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
@@ -7,8 +12,10 @@
   import { Feature } from '$lib/domains/shared/types.js';
   import {
     SETTINGS_INPUT_CLASS,
+    SETTINGS_PAGE_CLASS,
     SettingsCard,
     SettingsCardItem,
+    SettingsToc,
   } from '$lib/domains/shared/ui/components/settings-card/index.js';
   import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
@@ -83,9 +90,12 @@
   }
 
   async function onDeleteService(): Promise<void> {
-    const confirmed = confirm(
-      'Delete this service? Its logs, metrics and monitors will be deleted. This cannot be undone.',
-    );
+    const confirmed = await confirmDialog.ask({
+      title: 'Delete service',
+      description:
+        'Its logs, metrics and monitors will be deleted. This cannot be undone.',
+      confirmLabel: 'Delete service',
+    });
 
     if (!confirmed) {
       return;
@@ -95,7 +105,9 @@
       await projectsState.deleteProject(projectId);
       await clustersState.load();
       void goto(
-        resolve('/app/domains/[cluster_id]', { cluster_id: clusterId }),
+        resolve('/app/domains/[cluster_id]/services', {
+          cluster_id: clusterId,
+        }),
       );
       toast.success('Service deleted', 5000);
     } catch (error) {
@@ -183,19 +195,24 @@
   }
 </script>
 
-<div class="flex w-full flex-col">
-  <SettingsCard title="API key" description="Your app sends data with it.">
+<div class={SETTINGS_PAGE_CLASS}>
+  <SettingsToc />
+
+  <SettingsCard
+    title="API key"
+    description="Your app sends data with it."
+    icon={KeyIcon}
+  >
     <SettingsCardItem>
       <div class="flex min-w-0 items-center gap-3">
-        <span class="text-neutral-500 w-16 shrink-0">Key</span>
-        <span class="text-neutral-500 truncate font-mono" aria-hidden="true">
+        <span class="text-fg-muted w-16 shrink-0">Key</span>
+        <span class="text-fg-muted truncate font-mono" aria-hidden="true">
           ••••••••••••••••
         </span>
       </div>
 
       {#snippet action()}
         <Button
-          variant="neutral"
           size="sm"
           onclick={onCopyApiKey}
           loading={projectsState.isLoadingApiKey(projectId)}
@@ -207,10 +224,10 @@
     </SettingsCardItem>
   </SettingsCard>
 
-  <SettingsCard title="Service" description="Its name and ID.">
+  <SettingsCard title="Service" description="Its name and ID." icon={CubeIcon}>
     <SettingsCardItem>
       <div class="flex min-w-0 items-center gap-3">
-        <span class="text-neutral-500 w-16 shrink-0">Name</span>
+        <span class="text-fg-muted w-16 shrink-0">Name</span>
         {#if isEditingName}
           <Input
             bind:value={newName}
@@ -245,16 +262,14 @@
             Save
           </Button>
         {:else}
-          <Button variant="neutral" size="sm" onclick={onStartRenaming}>
-            Rename
-          </Button>
+          <Button size="sm" onclick={onStartRenaming}>Rename</Button>
         {/if}
       {/snippet}
     </SettingsCardItem>
 
     <SettingsCardItem>
       <div class="flex min-w-0 items-center gap-3">
-        <span class="text-neutral-500 w-16 shrink-0">ID</span>
+        <span class="text-fg-muted w-16 shrink-0">ID</span>
         <span class="truncate font-mono">{projectId}</span>
       </div>
 
@@ -271,15 +286,18 @@
   </SettingsCard>
 
   {#if availableFeatures.length > 0}
-    <SettingsCard title="Features" description="Add more to this service.">
+    <SettingsCard
+      title="Features"
+      description="Add more to this service."
+      icon={PlusCircleIcon}
+    >
       {#each availableFeatures as feature (feature.id)}
         <SettingsCardItem>
           <p>{feature.label}</p>
-          <p class="text-neutral-500">{feature.description}</p>
+          <p class="text-fg-muted">{feature.description}</p>
 
           {#snippet action()}
             <Button
-              variant="neutral"
               size="sm"
               onclick={() => onAddFeature(feature.id, feature.route)}
               disabled={addingFeature !== null}
@@ -297,12 +315,13 @@
 
   <SettingsCard
     title="Danger zone"
+    icon={TrashIcon}
     description="Actions that cannot be undone."
     variant="danger"
   >
     <SettingsCardItem>
       <p>Delete service</p>
-      <p class="text-neutral-500">
+      <p class="text-fg-muted">
         Removes this service with all its logs, metrics and monitors.
       </p>
 

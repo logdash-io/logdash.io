@@ -18,14 +18,11 @@ class ClustersState {
   private _requestStatus = $state<'deleting' | 'updating' | null>(null);
 
   private _clusters = $state<Record<Cluster['id'], Cluster>>({});
-  private _draft = $state<Cluster | null>(null);
 
   get clusters(): Cluster[] {
-    const clusters = Object.values(this._clusters).sort((a, b) => {
+    return Object.values(this._clusters).sort((a, b) => {
       return a.id > b.id ? 1 : -1;
     });
-
-    return this._draft ? [...clusters, this._draft] : clusters;
   }
 
   get isUpdating(): boolean {
@@ -74,7 +71,7 @@ class ClustersState {
       return undefined;
     }
 
-    return this._draft?.id === id ? this._draft : this._clusters[id];
+    return this._clusters[id];
   }
 
   clusterName(id: string): string {
@@ -104,10 +101,6 @@ class ClustersState {
   set(clusters: Cluster[]): void {
     this._clusters = arrayToObject(clusters, 'id');
     this._initialized = true;
-  }
-
-  setDraft(cluster: Cluster | null): void {
-    this._draft = cluster;
   }
 
   async update(

@@ -43,7 +43,7 @@
     <div class="flex flex-col gap-2">
       <div
         aria-hidden="true"
-        class="text-neutral-400 flex gap-2 pr-12 text-[13px]"
+        class="text-fg-tertiary flex gap-2 pr-12 text-[13px]"
       >
         <span class="flex-1">Dependency</span>
         <span class="w-28 shrink-0">SLA</span>
@@ -72,7 +72,7 @@
             aria-label="Remove dependency {index + 1}"
             disabled={dependencies.length === 1}
             onclick={() => onRemove(dependency.id)}
-            class="text-neutral-500 hover:text-fg-default disabled:text-neutral-700 flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-ink duration-150 outline-none focus-visible:shadow-(--focus-ring) disabled:cursor-default motion-reduce:transition-none"
+            class="text-fg-muted hover:text-fg-default disabled:text-fg-disabled flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-ink duration-150 outline-none focus-visible:shadow-(--focus-ring) disabled:cursor-default motion-reduce:transition-none"
           >
             <CloseIcon class="size-4" />
           </button>
@@ -83,7 +83,7 @@
       <button
         type="button"
         onclick={onAdd}
-        class="text-neutral-400 hover:text-fg-default flex w-fit cursor-pointer items-center gap-1.5 rounded-md text-[13px] font-medium transition-ink duration-150 outline-none focus-visible:shadow-(--focus-ring) motion-reduce:transition-none"
+        class="text-fg-tertiary hover:text-fg-default flex w-fit cursor-pointer items-center gap-1.5 rounded-md text-[13px] font-medium transition-ink duration-150 outline-none focus-visible:shadow-(--focus-ring) motion-reduce:transition-none"
       >
         <PlusIcon class="size-3.5" />
         Add dependency
@@ -97,13 +97,13 @@
     </p>
   {:else}
     <div class="flex flex-col gap-1">
-      <p role="status" class="text-neutral-400 text-[15px] leading-7">
+      <p role="status" class="text-fg-tertiary text-[15px] leading-7">
         Composite SLA:
         <strong class="text-fg-default font-medium">
           {formatPercent(composite)}
         </strong>
       </p>
-      <p class="text-neutral-500 font-mono text-[13px]">
+      <p class="text-fg-muted font-mono text-[13px]">
         {values.map(formatPercent).join(' × ')} = {formatPercent(composite)}
       </p>
     </div>

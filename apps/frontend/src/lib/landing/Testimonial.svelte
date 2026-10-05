@@ -16,7 +16,7 @@
 
 <div class="flex h-full flex-col gap-6">
   <blockquote
-    class="text-neutral-400 group-hover:text-fg-default text-base leading-relaxed text-pretty transition-ink duration-150"
+    class="text-fg-tertiary group-hover:text-fg-default text-base leading-relaxed text-pretty transition-ink duration-150"
   >
     “{quote}”
   </blockquote>
@@ -31,7 +31,7 @@
     ]}
   >
     <img
-      class="ring-border-default size-10 shrink-0 rounded-full object-cover grayscale ring-1"
+      class="ring-surface-root-border size-10 shrink-0 rounded-full object-cover grayscale ring-1"
       src={img}
       alt={person}
       loading="lazy"
@@ -40,7 +40,7 @@
     <div class="flex flex-col text-left">
       <span class="text-sm font-medium">{person}</span>
 
-      <span class="text-neutral-500 text-sm">
+      <span class="text-fg-muted text-sm">
         {company.who}
         {#if company.name}
           at

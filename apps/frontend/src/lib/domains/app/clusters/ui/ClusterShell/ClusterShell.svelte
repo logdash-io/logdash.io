@@ -2,7 +2,10 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { userInvitationsState } from '$lib/domains/app/clusters/application/user-invitations.state.svelte.js';
+  import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
+  import { domainLiveState } from '$lib/domains/app/clusters/application/domain-live.state.svelte.js';
+  import { topBarState } from '$lib/domains/app/clusters/application/top-bar.state.svelte.js';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { serviceEntries } from '$lib/domains/app/clusters/application/service-entries.js';
   import { domainLabel } from '$lib/domains/app/clusters/domain/service-groups.js';
@@ -22,7 +25,7 @@
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { ScrollArea } from '@logdash/hyper-ui/presentational';
   import type { Snippet } from 'svelte';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { match } from 'ts-pattern';
 
   type Props = {
@@ -47,11 +50,17 @@
   const clusterPath = $derived(
     clusterId ? (`/app/domains/${clusterId}` as const) : undefined,
   );
+  const serviceName = $derived(
+    currentCluster?.projects?.find(({ id }) => id === projectId)?.name,
+  );
   const statusPageName = $derived(
     publicDashboardManagerState.getDashboard(page.params.status_page_id ?? '')
       ?.name,
   );
   const crumbs = $derived(crumbsFor(page.route.id));
+  const clusterIds = $derived(
+    clustersState.clusters.map(({ id }) => id).join(','),
+  );
 
   type Crumb = {
     label: string;
@@ -70,7 +79,11 @@
         { label: clusterName },
         { label: 'API keys' },
       ])
-      .with('/app/domains/[cluster_id]', () => [domain, { label: 'Home' }])
+      .with('/app/domains/[cluster_id]', () => [domain, { label: 'Analytics' }])
+      .with('/app/domains/[cluster_id]/services', () => [
+        domain,
+        { label: 'Services' },
+      ])
       .with('/app/domains/[cluster_id]/settings', () => [
         domain,
         { label: 'Settings' },
@@ -87,6 +100,17 @@
         },
         ...(statusPageName ? [{ label: statusPageName }] : []),
       ])
+      .when(
+        (id) => id?.startsWith('/app/domains/[cluster_id]/[project_id]'),
+        () => [
+          domain,
+          {
+            label: 'Services',
+            path: clusterPath && `${clusterPath}/services`,
+          },
+          { label: serviceName ?? 'Service' },
+        ],
+      )
       .otherwise(() => [{ label: clusterName }]);
   }
 
@@ -94,54 +118,78 @@
     const cleanup = userInvitationsState.startPollingInvitations();
     return () => cleanup();
   });
+
+  $effect(() => {
+    const ids = clusterIds ? clusterIds.split(',') : [];
+
+    return untrack(() => {
+      const stopLive = domainLiveState.startPolling(ids);
+      const stopHealth = clusterHealthState.startPolling(ids);
+
+      return () => {
+        stopLive();
+        stopHealth();
+      };
+    });
+  });
 </script>
 
-<div class="bg-surface-root flex h-dvh w-full flex-col lg:flex-row">
+<div
+  data-app-shell
+  class="bg-surface-root-bg max-lg:bg-surface-50-bg flex h-dvh w-full flex-col tracking-normal lg:flex-row"
+>
   <ClusterSidebar />
 
-  <div class="bg-surface-elevated flex min-h-0 min-w-0 flex-1 flex-col">
+  <div
+    class="bg-surface-50-bg lg:edge-over flex min-h-0 min-w-0 flex-1 flex-col lg:my-2 lg:mr-2 lg:overflow-hidden lg:rounded-xl"
+  >
     <TopBar>
       <div class="flex min-w-0 flex-1 items-center">
-        {#if clusterId && projectId}
-          <ServiceTabsNav {clusterId} {projectId} />
-          <LiveIndicator
-            label={logsState.streamPaused ? 'Paused' : 'Live'}
-            dot={logsState.streamPaused ? 'neutral' : 'success'}
-          />
-        {:else}
-          <nav aria-label="Breadcrumb" class="min-w-0">
-            <ol class="flex min-w-0 items-center gap-2 text-sm">
-              {#each crumbs as crumb, index (index)}
-                {@const isCurrent = index === crumbs.length - 1}
-                <li class="flex min-w-0 items-center gap-2">
-                  {#if index > 0}
-                    <span class="text-neutral-700" aria-hidden="true">/</span>
-                  {/if}
-                  {#if crumb.path && !isCurrent}
-                    <a
-                      href={resolve(crumb.path)}
-                      class="hover:text-fg-default transition-ink focus-visible:outline-brand -mx-1 -my-1 block truncate rounded-md px-1 py-1 text-neutral-500 focus-visible:outline-2"
-                    >
-                      {crumb.label}
-                    </a>
-                  {:else}
-                    <span
-                      class={[
-                        'truncate',
-                        isCurrent ? 'font-medium' : 'text-neutral-500',
-                      ]}
-                      aria-current={isCurrent ? 'page' : undefined}
-                    >
-                      {crumb.label}
-                    </span>
-                  {/if}
-                </li>
-              {/each}
-            </ol>
-          </nav>
-        {/if}
+        <nav aria-label="Breadcrumb" class="min-w-0">
+          <ol class="flex min-w-0 items-center gap-2 text-[13px] font-medium">
+            {#each crumbs as crumb, index (index)}
+              {@const isCurrent = index === crumbs.length - 1}
+              <li class="flex min-w-0 items-center gap-2">
+                {#if index > 0}
+                  <span class="text-fg-disabled" aria-hidden="true">/</span>
+                {/if}
+                {#if crumb.path && !isCurrent}
+                  <a
+                    href={resolve(crumb.path)}
+                    class="hover:text-fg-default transition-ink focus-visible:outline-brand -mx-1 -my-1 block truncate rounded-md px-1 py-1 text-fg-muted focus-visible:outline-2"
+                  >
+                    {crumb.label}
+                  </a>
+                {:else}
+                  <span
+                    class={['truncate', { 'text-fg-muted': !isCurrent }]}
+                    aria-current={isCurrent ? 'page' : undefined}
+                  >
+                    {crumb.label}
+                  </span>
+                {/if}
+              </li>
+            {/each}
+          </ol>
+        </nav>
       </div>
+
+      {#if topBarState.actions}
+        <div class="flex min-w-0 items-center gap-2 max-sm:w-full">
+          {@render topBarState.actions()}
+        </div>
+      {/if}
     </TopBar>
+
+    {#if clusterId && projectId}
+      <div class="flex h-12 shrink-0 items-center px-2">
+        <ServiceTabsNav {clusterId} {projectId} />
+        <LiveIndicator
+          label={logsState.streamPaused ? 'Paused' : 'Live'}
+          dot={logsState.streamPaused ? 'neutral' : 'success'}
+        />
+      </div>
+    {/if}
 
     <ScrollArea class="relative flex min-h-0 w-full flex-1 flex-col">
       <div class="flex min-h-full flex-col">
@@ -164,7 +212,7 @@
 </div>
 
 <BottomSheet {peekContent}>
-  <SidebarContent showLogo={false} />
+  <SidebarContent />
 </BottomSheet>
 
 {#snippet peekContent()}
@@ -178,12 +226,12 @@
         />
       {:else}
         <span
-          class="bg-surface-150 flex size-8 shrink-0 items-center justify-center rounded-lg"
+          class="bg-surface-200-bg flex size-8 shrink-0 items-center justify-center rounded-lg"
         >
           {#if isAccount}
-            <UserIcon class="text-neutral-300 size-4" />
+            <UserIcon class="text-fg-secondary size-4" />
           {:else}
-            <GridIcon class="text-neutral-300 size-4" />
+            <GridIcon class="text-fg-secondary size-4" />
           {/if}
         </span>
       {/if}
@@ -192,7 +240,7 @@
           {clusterName}
         </span>
         {#if clusterDomain}
-          <span class="text-neutral-500 truncate text-xs">{clusterDomain}</span>
+          <span class="text-fg-muted truncate text-xs">{clusterDomain}</span>
         {/if}
       </span>
     </div>

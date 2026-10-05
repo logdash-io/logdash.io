@@ -8,7 +8,7 @@
   import { planHref } from './plan-href';
 
   const LABEL_CELL =
-    'bg-surface-root px-4 text-left max-md:sticky max-md:left-0 max-md:z-10 max-md:shadow-[inset_-1px_0_0_var(--color-hairline)] sm:px-6 lg:px-10';
+    'bg-surface-root-bg px-4 text-left max-md:sticky max-md:left-0 max-md:z-10 max-md:shadow-[inset_-1px_0_0_var(--surface-root-border)] sm:px-6 lg:px-10';
 </script>
 
 <div class="relative overflow-x-auto">
@@ -28,18 +28,18 @@
         {#each PAYMENT_PLANS as plan (plan.tier)}
           <th
             scope="col"
-            class="border-hairline border-l px-4 py-8 text-left align-top font-normal lg:px-6"
+            class="border-surface-root-border border-l px-4 py-8 text-left align-top font-normal lg:px-6"
           >
             <span class="block text-base font-medium">{plan.name}</span>
-            <span class="text-neutral-400 mt-1 block">
+            <span class="text-fg-tertiary mt-1 block">
               <Price price={plan.price} />
             </span>
             <Button
               href={planHref(plan.tier)}
-              variant={plan.popular ? 'primary' : 'subtle'}
+              variant={plan.popular ? 'primary' : 'secondary'}
               size="sm"
               block
-              class="mt-5 font-medium"
+              class="mt-5"
             >
               {plan.buttonText}
             </Button>
@@ -50,37 +50,37 @@
 
     {#each FEATURES_COMPARISON.sections as section (section.name)}
       <tbody>
-        <tr class="border-hairline border-t">
+        <tr class="border-surface-root-border border-t">
           <th
             scope="colgroup"
-            class={[LABEL_CELL, 'text-neutral-500 pt-8 pb-3 font-medium']}
+            class={[LABEL_CELL, 'text-fg-muted pt-8 pb-3 font-medium']}
           >
             {section.name}
           </th>
           {#each PAYMENT_PLANS as plan (plan.tier)}
-            <td class="border-hairline border-l"></td>
+            <td class="border-surface-root-border border-l"></td>
           {/each}
         </tr>
 
         {#each section.features as feature (feature.name)}
-          <tr class="border-hairline border-t">
+          <tr class="border-surface-root-border border-t">
             <th
               scope="row"
-              class={[LABEL_CELL, 'text-neutral-300 py-3 font-normal']}
+              class={[LABEL_CELL, 'text-fg-secondary py-3 font-normal']}
             >
               {feature.name}
             </th>
             {#each PAYMENT_PLANS as plan (plan.tier)}
               {@const value = feature[plan.tier]}
-              <td class="border-hairline border-l px-4 py-3 lg:px-6">
+              <td class="border-surface-root-border border-l px-4 py-3 lg:px-6">
                 {#if value === true}
                   <CheckIcon class="text-fg-default size-4" />
                   <span class="sr-only">Included</span>
                 {:else if value === false}
-                  <MinusIcon class="text-neutral-700 size-4" />
+                  <MinusIcon class="text-fg-disabled size-4" />
                   <span class="sr-only">Not included</span>
                 {:else}
-                  <span class="text-neutral-300">{value}</span>
+                  <span class="text-fg-secondary">{value}</span>
                 {/if}
               </td>
             {/each}

@@ -18,7 +18,7 @@ const ROOTS = [
   path.resolve(here, '../../../packages/hyper-ui/src'),
 ];
 
-const GREY = String.raw`(?:surface-(?:root|elevated|100|150|well|hover|inverse(?:-hover)?)|fg-(?:default|secondary|muted|faint)|border-(?:subtle|default|strong)|brand|neutral(?:-\d+)?|white|black|hairline)`;
+const GREY = String.raw`(?:surface-[\w-]+|fg-[\w-]+|brand|neutral(?:-\d+)?|white|black)`;
 const UTILITY = String.raw`(?:text|bg|border(?:-[trblxyse])?|fill|stroke|ring|inset-ring|divide|outline|from|to|via|decoration|accent|caret)`;
 const CHECKS = [
   {
@@ -42,23 +42,22 @@ const CHECKS = [
   {
     // Shadows are excepted: a blurred drop can only be translucent.
     name: 'translucent grey in CSS',
-    re: /(?:rgba?\(\s*(?:255[\s,]+255[\s,]+255|0[\s,]+0[\s,]+0|(\d+)[\s,]+\1[\s,]+\1)\s*[,/]\s*0?\.\d+\s*\)|color-mix\([^)]*var\(--(?:color-)?(?:surface-[\w-]+|fg-[\w-]+|border-(?:subtle|default|strong)|hairline|neutral(?:-\d+)?)\)[^)]*\btransparent\b[^)]*\))/g,
+    re: /(?:rgba?\(\s*(?:255[\s,]+255[\s,]+255|0[\s,]+0[\s,]+0|(\d+)[\s,]+\1[\s,]+\1)\s*[,/]\s*0?\.\d+\s*\)|color-mix\([^)]*var\(--(?:color-)?(?:surface-[\w-]+|fg-[\w-]+|neutral(?:-\d+)?)\)[^)]*\btransparent\b[^)]*\))/g,
     skipDeclaration: /shadow/,
   },
 ];
 
 /** file path substring -> tokens that may stay translucent there */
 const ALLOW = {
-  'domains/shared/ui/Modal.svelte': ['bg-surface-root/60'],
-  'domains/shared/upgrade/UpgradeModal.svelte': ['bg-black/60'],
-  'ProjectView/ProjectSync.svelte': ['bg-surface-root/40'],
+  'domains/shared/ui/Modal.svelte': ['bg-surface-root-bg/60'],
+  'ProjectView/ProjectSync.svelte': ['bg-surface-root-bg/40'],
   'logs-tile/LogPreviewDrawer.svelte': [
-    'from-surface-root/80',
-    'via-surface-root/80',
+    'from-surface-50-bg/80',
+    'via-surface-50-bg/80',
   ],
-  'landing/hero/HeroClaimCard.svelte': ['bg-surface-root/70'],
+  'landing/hero/HeroClaimCard.svelte': ['bg-surface-root-bg/70'],
   'landing/stage/StageLight.svelte': [
-    'color-mix(in srgb, var(--color-fg-default) 18%, transparent)',
+    'color-mix(in srgb, var(--fg-default) 18%, transparent)',
   ],
 };
 
@@ -96,6 +95,7 @@ if (findings.length) {
   console.error(
     `${findings.length} translucent grey(s), see .agents/frontend.md:\n${findings.join('\n')}`,
   );
-  process.exit(1);
+  process.exitCode = 1;
+} else {
+  console.log('solid colours: ok');
 }
-console.log('solid colours: ok');

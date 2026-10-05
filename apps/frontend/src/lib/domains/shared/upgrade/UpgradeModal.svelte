@@ -100,7 +100,7 @@
     <h1 id="upgrade-modal-title" class="mb-2 text-3xl font-semibold">
       Upgrade your plan
     </h1>
-    <p class="text-neutral-300">Get the one that fits your needs best</p>
+    <p class="text-fg-secondary">Get the one that fits your needs best</p>
   </div>
 
   <div class="grid gap-6 md:grid-cols-3">
@@ -114,7 +114,7 @@
             {
               'border-brand': plan.popular,
               'border-success': isCurrentPlan(plan.tier),
-              'border-border-default':
+              'border-surface-100-border':
                 !plan.popular && !isCurrentPlan(plan.tier),
             },
           ]}
@@ -150,7 +150,7 @@
                 <Price price={plan.price} />
               </span>
 
-              <p class="text-neutral-300 mt-3 h-10 text-sm">
+              <p class="text-fg-secondary mt-3 h-10 text-sm">
                 {plan.description}
               </p>
             </div>
@@ -159,7 +159,6 @@
               <Button
                 variant="primary"
                 block
-                class="font-medium"
                 onclick={() => onSelectPlan(plan.tier)}
                 disabled={isButtonDisabled(plan)}
               >
@@ -218,7 +217,7 @@
   </div>
 
   <div class="mt-6 text-center">
-    <p class="text-neutral-300 text-xs">
+    <p class="text-fg-secondary text-xs">
       30-day trial. Full refund if you cancel within 30 days.
     </p>
   </div>

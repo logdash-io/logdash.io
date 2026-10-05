@@ -72,10 +72,10 @@
 <div class="flex flex-col gap-4">
   {#if monitors.length > 1}
     <label class="flex flex-col gap-1.5">
-      <span class="text-xs text-neutral-500">Monitor</span>
+      <span class="text-xs text-fg-muted">Monitor</span>
       <Select
         size="sm"
-        class="border-hairline w-full rounded-lg bg-neutral-950 pl-2.5 text-sm [&::picker(select)]:bg-surface-100"
+        class="border-surface-50-border w-full rounded-lg bg-surface-50-bg pl-2.5 text-sm [&::picker(select)]:bg-surface-elevated-bg"
         bind:value={selectedMonitorId}
       >
         {#each monitors as option (option.id)}
@@ -125,7 +125,7 @@
       />
     </div>
     <div
-      class="border-hairline flex min-h-20 items-center justify-center overflow-hidden rounded-lg border bg-neutral-950 p-4"
+      class="flex min-h-20 items-center justify-center overflow-hidden rounded-lg edge bg-surface-50-bg p-4"
     >
       <img
         class="max-w-full"
@@ -143,13 +143,13 @@
   {/if}
 
   <div class="flex flex-col gap-2">
-    <p class="text-sm text-neutral-500">
+    <p class="text-sm text-fg-muted">
       Paste this into your README. The badge links to your status page.
     </p>
 
     <div class="relative">
       <Highlight
-        class="border-hairline selection:bg-surface-100 rounded-lg border bg-neutral-950 text-sm break-all whitespace-pre-wrap [&>code]:pr-12!"
+        class="selection:bg-surface-50-selected-bg rounded-lg edge bg-surface-50-bg text-sm break-all whitespace-pre-wrap [&>code]:pr-12!"
         code={snippet}
         language={isHtmlSnippet ? xml : markdown}
       />

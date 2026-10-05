@@ -47,7 +47,7 @@
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-1">
       <h3 class="text-lg font-medium">README badge</h3>
-      <p class="text-sm text-neutral-400">
+      <p class="text-sm text-fg-tertiary">
         Show the uptime of {monitor.name || stripProtocol(monitor.url ?? '')} in
         a README or on your website.
       </p>
@@ -57,9 +57,9 @@
       <Spinner size="sm" />
     {:else if !dashboard}
       <div
-        class="border-border-default flex flex-col gap-3 rounded-xl border p-4"
+        class="border-surface-elevated-border flex flex-col gap-3 rounded-xl border p-4"
       >
-        <p class="text-sm text-neutral-300">
+        <p class="text-sm text-fg-secondary">
           Badges show the data of a published status page and link back to it.
           Add this monitor to a status page and publish it to get its badge.
         </p>
@@ -77,7 +77,7 @@
     {:else}
       {#if publishedDashboards.length > 1}
         <label class="flex flex-col gap-1.5 text-sm">
-          <span class="text-neutral-400">Status page</span>
+          <span class="text-fg-tertiary">Status page</span>
           <Select size="sm" class="w-full" bind:value={selectedDashboardId}>
             {#each publishedDashboards as option (option.id)}
               <option value={option.id}>{option.name}</option>

@@ -12,7 +12,7 @@
 <div class="flex min-h-dvh w-full flex-col items-center justify-center px-4">
   <div class="flex max-w-96 flex-col gap-4 text-center">
     <h1 class="text-2xl font-medium">Oh snap!</h1>
-    <p class="text-neutral-400 text-center">
+    <p class="text-fg-tertiary text-center">
       We are sorry, something went wrong on our end. Please try again later.
     </p>
     <Button

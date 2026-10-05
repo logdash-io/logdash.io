@@ -52,7 +52,7 @@
 <LandingSection id="testimonials">
   <div class="flex flex-col pb-8 lg:pb-12">
     <h2
-      class="text-neutral-500 px-4 pt-8 pb-6 text-center text-base font-medium text-balance sm:px-6 lg:pt-12 lg:pb-8"
+      class="text-fg-muted px-4 pt-8 pb-6 text-center text-base font-medium text-balance sm:px-6 lg:pt-12 lg:pb-8"
     >
       {#each TRUSTED_BY as part (part.text)}
         {#if part.strong}
@@ -64,7 +64,7 @@
     </h2>
 
     <div
-      class="border-hairline divide-hairline grid grid-cols-1 divide-y border-y lg:grid-cols-3 lg:divide-x lg:divide-y-0"
+      class="border-surface-root-border divide-surface-root-border grid grid-cols-1 divide-y border-y lg:grid-cols-3 lg:divide-x lg:divide-y-0"
     >
       {#each REVIEWS as review (review.person)}
         <figure class="group px-4 py-8 sm:px-6 lg:px-10 lg:py-10">

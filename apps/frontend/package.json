@@ -12,8 +12,9 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
-    "lint": "prettier --check . && eslint . --max-warnings 0 && node scripts/check-solid-colours.mjs && node scripts/check-background-transitions.mjs && node scripts/check-no-daisyui.mjs",
+    "lint": "prettier --check . && eslint . --max-warnings 0 && node scripts/check-solid-colours.mjs && node scripts/check-design-tokens.test.mjs && node scripts/check-design-tokens.mjs && node scripts/check-background-transitions.mjs && node scripts/check-no-daisyui.mjs",
     "check:colours": "node scripts/check-solid-colours.mjs",
+    "check:tokens": "node scripts/check-design-tokens.test.mjs && node scripts/check-design-tokens.mjs",
     "check:transitions": "node scripts/check-background-transitions.mjs",
     "check:daisyui": "node scripts/check-no-daisyui.mjs",
     "test:e2e": "playwright test"

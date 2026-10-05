@@ -84,6 +84,10 @@ import { CastErrorFilter } from '../../src/shared/filters/cast-error.filter';
 import { withRequestContext } from '../../src/shared/request-context/request-context';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/pinger/http-ping-pinger.service';
 import { ALL_LOGGER_TOKENS, LOGDASH_METRICS } from '../../src/shared/logdash/logdash-tokens';
+import { WebAnalyticsCoreModule } from '../../src/web-analytics/core/web-analytics-core.module';
+import { WebAnalyticsSiteEntity } from '../../src/web-analytics/core/entities/web-analytics-site.entity';
+import { ExposedConfigModule } from '../../src/exposed-config/exposed-config.module';
+import { FaviconCoreModule } from '../../src/favicon/core/favicon-core.module';
 
 export async function createTestApp() {
   getEnvConfig().resend.enabled = false;
@@ -100,6 +104,9 @@ export async function createTestApp() {
       PersonalApiKeyCoreModule,
       CliAuthModule,
       OverviewCoreModule,
+      WebAnalyticsCoreModule,
+      ExposedConfigModule,
+      FaviconCoreModule,
       ProjectCoreModule,
       ScheduleModule.forRoot(),
       MetricCoreModule,
@@ -197,6 +204,9 @@ export async function createTestApp() {
   const blogPostModel: Model<BlogPostEntity> = module.get(getModelToken(BlogPostEntity.name));
 
   const redisService: RedisService = module.get(RedisService);
+  const webAnalyticsSiteModel: Model<WebAnalyticsSiteEntity> = module.get(
+    getModelToken(WebAnalyticsSiteEntity.name),
+  );
 
   const clickhouseClient = app.get(ClickHouseClient);
 
@@ -232,6 +242,7 @@ export async function createTestApp() {
       customDomainModel.deleteMany({}),
       subscriptionModel.deleteMany({}),
       blogPostModel.deleteMany({}),
+      webAnalyticsSiteModel.deleteMany({}),
       redisService.flushAll(),
       // `command()` rather than `query()`: query() leaves the response stream
       // undrained, so the TRUNCATE can land *after* the next test has started
@@ -241,6 +252,7 @@ export async function createTestApp() {
       clickhouseClient.command({ query: `TRUNCATE TABLE http_ping_buckets` }),
       clickhouseClient.command({ query: `TRUNCATE TABLE audit_logs` }),
       clickhouseClient.command({ query: `TRUNCATE TABLE metrics` }),
+      clickhouseClient.command({ query: 'TRUNCATE TABLE web_events' }),
     ]);
   };
 
@@ -277,6 +289,7 @@ export async function createTestApp() {
       customDomainModel,
       subscriptionModel,
       blogPostModel,
+      webAnalyticsSiteModel,
     },
     utils: {
       projectUtils: new ProjectUtils(app),

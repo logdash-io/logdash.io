@@ -57,12 +57,10 @@
       class="mt-6 text-[32px] leading-[1.04] font-medium tracking-[-0.03em] text-balance sm:text-[40px] lg:text-[56px] xl:text-[64px]"
     >
       <span class="whitespace-nowrap">Know your app broke.</span>
-      <span class="text-neutral-600 whitespace-nowrap">
-        Before your users do.
-      </span>
+      <span class="text-fg-faint whitespace-nowrap">Before your users do.</span>
     </h1>
 
-    <p class="text-neutral-400 mt-6 max-w-3xl text-lg text-pretty sm:text-xl">
+    <p class="text-fg-tertiary mt-6 max-w-3xl text-lg text-pretty sm:text-xl">
       Uptime monitoring for builders.
       <br class="lg:hidden" />
       Live in 30 seconds, no account needed.
@@ -72,7 +70,7 @@
       <HeroUrlForm source="hero" />
 
       {#if trialName}
-        <p class="text-neutral-400 mt-3 pl-5 text-sm text-pretty">
+        <p class="text-fg-tertiary mt-3 pl-5 text-sm text-pretty">
           Add your website first. Your {trialName} trial starts when you claim the
           dashboard.
         </p>

@@ -27,7 +27,7 @@
 </script>
 
 <li
-  class="hover:bg-surface-100 has-[a:focus-visible]:bg-surface-100 relative flex h-11 items-center gap-4 px-4 text-sm"
+  class="hover:bg-surface-50-hover-bg has-[a:focus-visible]:bg-surface-50-hover-bg relative flex h-11 items-center gap-4 px-4 text-sm"
 >
   <a
     href={resolve('/app/domains/[cluster_id]/status-pages/[status_page_id]', {
@@ -39,11 +39,11 @@
     {name}
   </a>
 
-  <span class="text-neutral-500 min-w-0 flex-1 truncate max-sm:hidden">
+  <span class="text-fg-muted min-w-0 flex-1 truncate max-sm:hidden">
     {stripProtocol(url)}
   </span>
 
-  <span class="text-neutral-500 w-24 shrink-0 tabular-nums max-md:hidden">
+  <span class="text-fg-muted w-24 shrink-0 tabular-nums max-md:hidden">
     {monitorsCount}
     {monitorsCount === 1 ? 'monitor' : 'monitors'}
   </span>
@@ -52,10 +52,10 @@
     <span
       class={[
         'size-1.5 shrink-0 rounded-full',
-        isPublished ? 'bg-success' : 'bg-neutral-600',
+        isPublished ? 'bg-success' : 'bg-idle',
       ]}
     ></span>
-    <span class={{ 'text-neutral-500': !isPublished }}>
+    <span class={{ 'text-fg-muted': !isPublished }}>
       {isPublished ? 'Published' : 'Draft'}
     </span>
   </span>

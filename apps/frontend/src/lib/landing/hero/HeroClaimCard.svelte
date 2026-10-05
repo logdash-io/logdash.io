@@ -2,7 +2,7 @@
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings';
   import type { OAuthProvider } from '$lib/domains/auth/domain/oauth-provider';
-  import OnboardingFlow from '$lib/domains/onboarding/ui/OnboardingFlow.svelte';
+  import OnboardingConsentStep from '$lib/domains/onboarding/ui/OnboardingConsentStep.svelte';
   import GitHubIcon from '$lib/domains/shared/icons/GitHubIcon.svelte';
   import GoogleIcon from '$lib/domains/shared/icons/GoogleIcon.svelte';
   import { Button, Spinner } from '@logdash/hyper-ui/presentational';
@@ -36,7 +36,7 @@
   const STEP_OUT_MS = 140;
   const REDUCED_MS = 180;
   const LINK_CLASS =
-    'focus-visible:outline-neutral-500 rounded-md px-1 text-sm transition-ink duration-150 focus-visible:outline-2';
+    'focus-visible:outline-brand rounded-md px-1 text-sm transition-ink duration-150 focus-visible:outline-2';
 
   let returnFocus: HTMLElement | null = null;
 
@@ -81,7 +81,7 @@
 
     if (!last) {
       return {
-        dotClass: 'bg-neutral-600',
+        dotClass: 'bg-idle',
         text: 'Waiting for the first check',
       };
     }
@@ -226,14 +226,14 @@
 {#if visible}
   <div class="fixed inset-0 z-10 flex overflow-y-auto overscroll-contain p-4">
     <div
-      class="bg-surface-root/70 fixed inset-0"
+      class="bg-surface-root-bg/70 fixed inset-0"
       aria-hidden="true"
       in:fade={{ duration: SCRIM_IN_MS, easing: cubicOut }}
       out:fade={{ duration: SCRIM_OUT_MS, easing: cubicOut }}
     ></div>
 
     <div
-      class="bg-surface-elevated relative m-auto w-full max-w-md overflow-hidden rounded-2xl shadow-[0_12px_24px_-16px_rgba(0,0,0,0.6)] ring-1 ring-neutral-800 outline-none transition-[height] duration-320 ease-[cubic-bezier(0.25,1,0.5,1)] motion-reduce:transition-none"
+      class="bg-surface-elevated-bg relative m-auto w-full max-w-md overflow-hidden rounded-2xl shadow-[0_12px_24px_-16px_rgba(0,0,0,0.6)] ring-1 ring-surface-elevated-border outline-none transition-[height] duration-320 ease-[cubic-bezier(0.25,1,0.5,1)] motion-reduce:transition-none"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -267,11 +267,7 @@
     {@render waiting(current.provider)}
   {:else if current.kind === 'onboarding'}
     <div class="p-6">
-      <OnboardingFlow
-        user={current.user}
-        submitLabel="Take me to my dashboard"
-        oncomplete={onOnboarded}
-      />
+      <OnboardingConsentStep oncomplete={onOnboarded} />
     </div>
   {:else if current.kind === 'busy'}
     {@render busy(current.label)}
@@ -281,7 +277,7 @@
 {#snippet intro()}
   <div class="flex flex-col gap-6 p-6">
     <div class="flex flex-col gap-2">
-      <span class="text-neutral-400 flex items-center gap-2 text-xs">
+      <span class="text-fg-tertiary flex items-center gap-2 text-xs">
         <span class={['size-1.5 shrink-0 rounded-full', live.dotClass]}></span>
         <span class="truncate tabular-nums">{live.text}</span>
       </span>
@@ -292,7 +288,7 @@
         {title}
       </h2>
 
-      <p class="text-neutral-400 text-sm leading-relaxed text-pretty">
+      <p class="text-fg-tertiary text-sm leading-relaxed text-pretty">
         {claimLine} We keep checking it and tell you the moment {alertMoment}.
       </p>
     </div>
@@ -307,7 +303,7 @@
       <Button
         variant="primary"
         block
-        class="gap-2 font-medium"
+        class="gap-2"
         data-posthog-id="hero-claim-github-cta"
         onclick={() => onContinue('github')}
       >
@@ -316,9 +312,8 @@
       </Button>
 
       <Button
-        variant="subtle"
         block
-        class="gap-2 font-medium"
+        class="gap-2"
         data-posthog-id="hero-claim-google-cta"
         onclick={() => onContinue('google')}
       >
@@ -330,7 +325,7 @@
         type="button"
         class={[
           LINK_CLASS,
-          'text-neutral-500 hover:text-neutral-300 mx-auto mt-2 py-1',
+          'text-fg-muted hover:text-fg-secondary mx-auto mt-2 py-1',
         ]}
         data-posthog-id="hero-claim-dismiss"
         onclick={onNotNow}
@@ -343,26 +338,26 @@
 
 {#snippet waiting(provider: OAuthProvider)}
   <div class="flex flex-col items-center gap-5 px-6 py-8 text-center">
-    <Spinner size="sm" class="text-neutral-400" aria-hidden="true" />
+    <Spinner size="sm" class="text-fg-tertiary" aria-hidden="true" />
 
     <div class="flex flex-col gap-1.5">
       <h2 class="text-base font-medium text-balance">
         Finish signing in with {providerName(provider)} in the window that opened
       </h2>
-      <p class="text-neutral-400 text-sm">Your dashboard stays right here.</p>
+      <p class="text-fg-tertiary text-sm">Your dashboard stays right here.</p>
     </div>
 
     <div class="flex items-center gap-4">
       <button
         type="button"
-        class={[LINK_CLASS, 'text-neutral-300 hover:text-fg-default']}
+        class={[LINK_CLASS, 'text-fg-secondary hover:text-fg-default']}
         onclick={onReopenWindow}
       >
         Open the window again
       </button>
       <button
         type="button"
-        class={[LINK_CLASS, 'text-neutral-500 hover:text-neutral-300']}
+        class={[LINK_CLASS, 'text-fg-muted hover:text-fg-secondary']}
         onclick={onCancel}
       >
         Cancel
@@ -376,7 +371,7 @@
     class="flex flex-col items-center gap-5 px-6 py-8 text-center"
     role="status"
   >
-    <Spinner size="sm" class="text-neutral-400" aria-hidden="true" />
+    <Spinner size="sm" class="text-fg-tertiary" aria-hidden="true" />
     <h2 class="text-base font-medium">{label}</h2>
   </div>
 {/snippet}

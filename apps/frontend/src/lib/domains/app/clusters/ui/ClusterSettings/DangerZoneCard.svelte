@@ -1,4 +1,6 @@
 <script lang="ts">
+  import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
@@ -17,9 +19,12 @@
   const { clusterId }: Props = $props();
 
   async function onDeleteCluster(): Promise<void> {
-    const confirmed = confirm(
-      'Delete this domain from Logdash? All its services and their data will be deleted. This cannot be undone. Your registered domain is not affected.',
-    );
+    const confirmed = await confirmDialog.ask({
+      title: 'Delete domain',
+      description:
+        'All its services and their data will be deleted. This cannot be undone. Your registered domain is not affected.',
+      confirmLabel: 'Delete domain',
+    });
 
     if (!confirmed) return;
 
@@ -40,14 +45,15 @@
 
 <SettingsCard
   title="Danger zone"
+  icon={TrashIcon}
   description="Actions that cannot be undone."
   variant="danger"
 >
   <SettingsCardItem>
     <p>Delete domain</p>
-    <p class="text-neutral-500">
-      Removes this domain and its services from Logdash. Your registered domain
-      is not affected.
+    <p class="text-fg-muted">
+      Removes this domain, its services and its analytics from Logdash. Your
+      registered domain is not affected.
     </p>
 
     {#snippet action()}

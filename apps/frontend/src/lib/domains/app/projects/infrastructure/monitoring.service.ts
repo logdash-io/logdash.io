@@ -73,6 +73,13 @@ export class MonitoringService {
     return httpClient.post<void>(`/http_monitors/${httpMonitorId}/claim`, {});
   }
 
+  suggestUrls(clusterId: string, url: string): Promise<{ urls: string[] }> {
+    return httpClient.post<{ urls: string[] }>(
+      `/clusters/${clusterId}/http_monitors/suggestions`,
+      { url },
+    );
+  }
+
   updateMonitor(monitorId: string, dto: UpdateMonitorDto): Promise<Monitor> {
     return httpClient.put<Monitor>(`/http_monitors/${monitorId}`, dto);
   }

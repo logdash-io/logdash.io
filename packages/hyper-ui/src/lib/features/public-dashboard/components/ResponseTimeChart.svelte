@@ -128,14 +128,14 @@
   </svg>
 
   <div
-    class="text-neutral-500 mt-2 flex items-center justify-between font-mono text-xs"
+    class="text-fg-muted mt-2 flex items-center justify-between font-mono text-xs"
   >
     <span>{pings.length} checks ago</span>
     <span>Now</span>
   </div>
 {:else}
   <div
-    class="border-hairline text-neutral-500 flex h-16 items-center justify-center border-y border-dashed text-xs"
+    class="border-surface-root-border text-fg-muted flex h-16 items-center justify-center border-y border-dashed text-xs"
   >
     {pings.length ? "Waiting for more checks" : "No checks yet"}
   </div>

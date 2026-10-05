@@ -42,8 +42,8 @@
     return [
       'flex min-h-8 items-center gap-2.5 rounded-lg px-2.5 text-sm leading-5 transition-ink duration-150',
       current
-        ? 'bg-surface-100 text-fg-default'
-        : 'text-neutral-400 hover:bg-surface-hover hover:text-fg-default',
+        ? 'bg-surface-root-selected-bg text-fg-default'
+        : 'text-fg-tertiary hover:bg-surface-root-hover-bg hover:text-fg-default',
     ];
   }
 </script>
@@ -57,9 +57,11 @@
   names the current page.
 -->
 <div class="mx-auto w-full max-w-landing px-4 sm:px-6 lg:px-10">
-  <div class="border-hairline flex w-full flex-col border-x md:flex-row">
+  <div
+    class="border-surface-root-border flex w-full flex-col border-x md:flex-row"
+  >
     <aside
-      class="border-hairline hidden w-60 shrink-0 border-r md:block lg:w-64"
+      class="border-surface-root-border hidden w-60 shrink-0 border-r md:block lg:w-64"
     >
       <nav
         aria-label="Docs"
@@ -69,7 +71,7 @@
       </nav>
     </aside>
 
-    <div class="border-hairline border-b md:hidden">
+    <div class="border-surface-root-border border-b md:hidden">
       <button
         type="button"
         class="flex w-full items-center justify-between px-4 py-3 text-sm font-medium sm:px-6"
@@ -77,13 +79,13 @@
         onclick={() => (mobileOpen = !mobileOpen)}
       >
         <span class="flex items-center gap-2">
-          <span class="text-neutral-500">Docs</span>
-          <span class="text-neutral-600">/</span>
+          <span class="text-fg-muted">Docs</span>
+          <span class="text-fg-faint">/</span>
           <span>{currentTitle}</span>
         </span>
         <ChevronDownIcon
           class={[
-            'text-neutral-500 size-4 transition-transform duration-200 ease-out',
+            'text-fg-muted size-4 transition-transform duration-200 ease-out',
             { 'rotate-180': mobileOpen },
           ]}
         />
@@ -91,7 +93,7 @@
       {#if mobileOpen}
         <nav
           aria-label="Docs"
-          class="border-hairline border-t px-4 py-5 sm:px-6"
+          class="border-surface-root-border border-t px-4 py-5 sm:px-6"
         >
           {@render groups()}
         </nav>
@@ -149,7 +151,7 @@
         <Icon class="size-4 shrink-0" />
       {/if}
       <span>{item.title}</span>
-      <OpenIcon class="text-neutral-600 ml-auto size-3 shrink-0" />
+      <OpenIcon class="text-fg-faint ml-auto size-3 shrink-0" />
     </a>
   {:else}
     <a

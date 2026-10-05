@@ -26,7 +26,7 @@ Props: `checked` (bindable, default `false`), `size: "xs" | "sm"` (default `"sm"
 | `checkbox-primary`, `checkbox-secondary` | `variant="primary"` (both looked identical) |
 
 `checked={x}` with `onchange` keeps working; `bind:checked` works too.
-Extra utilities such as `border-neutral-600 checked:border-primary` stay on `class`.
+Extra utilities such as `border-surface-input-hover-border checked:border-brand` stay on `class`.
 
 ### Input
 
@@ -57,7 +57,7 @@ Props: `value` (bindable, `string | number | null`), `size: "sm" | "md"` (defaul
 | `select select-sm` | `<Select size="sm">` |
 
 The open list uses the customizable `base-select` picker where the browser supports it, styled as before.
-In the onboarding select keep `border-neutral-700 hover:border-neutral-600` and the fill utility; drop `focus:outline-none focus-visible:border-primary`.
+In the onboarding select keep `border-surface-input-border hover:border-surface-input-hover-border` and the fill utility; drop `focus:outline-none focus-visible:border-primary`.
 
 ### Label
 
@@ -190,18 +190,16 @@ Stars are 20px radio inputs labelled "1 star" to "5 star"; give the group an `ar
 
 daisyUI drew several of these parts with translucent colours; they are now the nearest solid step over the surface they sit on.
 
-- Text field and select border, 20% over their own fill: `--fg-faint` (neutral-600, was #545455).
-- Default checkbox border, 20% over a card: `--border-strong` (neutral-700, was #474749).
-- Label text, 60%: `--fg-secondary` (neutral-400, was #989899).
+- Text field and select border, 20% over their own fill: `--surface-input-border` (neutral-700), `--surface-input-hover-border` (neutral-600, was #545455) on hover.
+- Default checkbox border, 20% over a card: `--surface-input-border` (neutral-700, was #474749).
+- Label text, 60%: `--fg-tertiary` (neutral-400, was #989899).
 - Unselected tab text, 50%: `--fg-muted` (neutral-500, was #828283 on the page, #8e8e8f on the boxed track).
-- Menu item hover and focus, 10% over a card: `--surface-100` (neutral-800, was #323233).
-- Nested menu guide line, 10% over a card: `--border-default` (neutral-800, was #323233).
-- Option hover in an open select, 10% over its fill: `--surface-150` (neutral-700).
-- Divider lines, 10% over the page: `--hairline` (was #272729).
-- Unselected rating star, 20% over a card: `--surface-150` (neutral-700, was #474749).
+- Menu item hover and focus, 10% over a card: `--surface-elevated-hover-bg` (neutral-800, was #323233).
+- Nested menu guide line, 10% over a card: `--surface-elevated-border` (neutral-800, was #323233).
+- Option hover in an open select, 10% over its fill: `--surface-elevated-hover-bg` (neutral-800).
+- Divider lines, 10% over the page: `--edge-color`, the border of the surface the divider sits on (was #272729).
+- Unselected rating star, 20% over a card: `--surface-200-bg` (neutral-700, was #474749).
 - Disabled text field text, 40%: `--fg-muted`.
-
-`semantic.css` has no border token for neutral-600, so the text field and select border and the outline field's hover border read `--fg-faint`.
 
 ### Not built
 
@@ -250,7 +248,7 @@ Focus keeps today's 2px `--brand` outline with a 2px offset, not the `--focus-ri
 | `<div class="btn …" role="button" tabindex="0">`  | `<Button>` (a real button)                                              |
 | `{#if busy}<span class="loading …">{/if}` + label | `loading={busy}` (keep a `<Spinner>` child only if the label must show) |
 
-Everything else stays on `class` and wins over the component: `gap-2`, `px-5`, `h-11`, `font-medium`, `justify-between`, `text-neutral-400`, `hover:text-error`, `bg-…`, margins and flex utilities.
+Everything else stays on `class` and wins over the component: `gap-2`, `px-5`, `h-11`, `font-medium`, `justify-between`, `text-fg-tertiary`, `hover:text-error`, `bg-…`, margins and flex utilities.
 Classes applied through props of other components (`UpgradeElement class={['btn …']}`) need the markup changed to wrap a `<Button>`.
 
 ### Spinner
@@ -270,8 +268,9 @@ It renders `role="status"` with `aria-label="Loading"`; pass `aria-hidden="true"
 
 ### Badge
 
-Props: `variant: "neutral" | "inverse" | "success" | "error" | "warning"` (default `"neutral"`), `size: "xs" | "sm" | "md" | "lg"` (default `"md"`), `class`, `children`, rest onto the `<span>`.
-Every variant but `inverse` is the soft look: tone text on an 8% tint of `--surface-100`.
+Props: `variant: "neutral" | "outline" | "inverse" | "success" | "error" | "warning"` (default `"neutral"`), `size: "xs" | "sm" | "md" | "lg"` (default `"md"`), `class`, `children`, rest onto the `<span>`.
+Every variant but `outline` and `inverse` is the soft look: tone text on an 8% tint of `--surface-150-bg`.
+`outline` is a quiet chip for metadata in list rows: 12px tertiary text in a ring drawn in `--edge-color`, the border of the surface the badge sits on, with no fill.
 
 | daisyUI                                                                      | Component                                   |
 | ---------------------------------------------------------------------------- | ------------------------------------------- |
@@ -294,7 +293,7 @@ Pass `role="alert"` or `role="status"` as the call site does today.
 | `alert alert-warning bg-warning/10 border-warning/30 rounded-xl text-left text-sm` | `<Alert variant="warning">`                               |
 | `rounded-lg` on an alert                                                           | keep on `class`                                           |
 | `alert error-card`                                                                 | `<Alert variant="error" class="text-error">`              |
-| `alert ld-card-base …` (toaster)                                                   | `<Alert class="border-hairline …">` (keep layout classes) |
+| `alert ld-card-base …` (toaster)                                                   | `<Alert class="border-surface-elevated-border …">` (keep layout classes) |
 | `alertClass: 'alert-info' \| …` in the toaster                                     | drop, it was never rendered                               |
 
 ### Kbd
@@ -337,10 +336,10 @@ A badge as the item: `<Badge size="xs" class="absolute top-0 right-0 z-1 …">PR
 
 ### Colours that changed (actions and feedback)
 
-- Disabled button fill, 10% over the page: `--surface-100` (neutral-800, was #272729).
+- Disabled button fill, 10% over the page: `--surface-150-bg` (neutral-800, was #272729).
 - Disabled button label, 20% over that fill: `--fg-faint` (neutral-600, was #505051).
-- Disabled `ghost`, `transparent` and `link` label, 20% over the page: `--border-strong` (neutral-700, was #3e3e3f); no text token sits at that step.
-- Kbd border, 20% over its own fill: `--border-strong` (neutral-700, was #474749).
+- Disabled `ghost`, `transparent` and `link` label, 20% over the page: `--fg-disabled` (neutral-700, was #3e3e3f).
+- Kbd border, 20% over its own fill: `--surface-150-border` (neutral-700, was #474749), on a `--surface-150-bg` key.
 
 ### Behaviour that changed
 

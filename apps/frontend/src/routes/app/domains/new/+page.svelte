@@ -1,9 +1,9 @@
 <script lang="ts">
-  import ClusterWizard from '$lib/domains/app/clusters/ui/ClusterWizard/ClusterWizard.svelte';
+  import NewDomainForm from '$lib/domains/app/clusters/ui/DomainSetup/NewDomainForm.svelte';
 </script>
 
 <svelte:head>
   <title>Add domain | Logdash</title>
 </svelte:head>
 
-<ClusterWizard />
+<NewDomainForm />

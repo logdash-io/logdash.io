@@ -11,6 +11,7 @@ import { HttpMonitorRemovalModule } from '../removal/http-monitor-removal.module
 import { HttpMonitorTtlModule } from '../ttl/http-monitor-ttl.module';
 import { HttpMonitorWatchlistModule } from '../watchlist/http-monitor-watchlist.module';
 import { HttpMonitorProbeModule } from '../probe/http-monitor-probe.module';
+import { NotificationChannelDefaultsModule } from '../../notification-channel/defaults/notification-channel-defaults.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { HttpMonitorProbeModule } from '../probe/http-monitor-probe.module';
     HttpMonitorTtlModule,
     HttpMonitorWatchlistModule,
     HttpMonitorProbeModule,
+    NotificationChannelDefaultsModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [HttpMonitorCoreController],

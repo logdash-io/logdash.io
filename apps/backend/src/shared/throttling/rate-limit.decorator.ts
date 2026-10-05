@@ -13,6 +13,7 @@ export const OauthExchangeRateLimit = { limit: 300, ttl: seconds(60) };
 export const MonitorCreationRateLimit = { limit: 20, ttl: seconds(60) };
 export const MonitorProbeRateLimit = { limit: 30, ttl: seconds(60) };
 export const PushPingRateLimit = { limit: 300, ttl: seconds(60) };
+export const FaviconRateLimit = { limit: 300, ttl: seconds(60) };
 
 function rateLimit(options: { limit: number; ttl: number }) {
   return applyDecorators(UseGuards(ThrottlerGuard), Throttle({ default: options }));
@@ -78,4 +79,14 @@ export function ThrottleMonitorProbe() {
  */
 export function ThrottlePushPing() {
   return rateLimit(PushPingRateLimit);
+}
+
+/**
+ * 300 requests per minute per IP. For the public favicon route, which the app
+ * loads straight from the browser for every domain and referrer it lists. The
+ * browser caches answers for a day, so a person stays far below it, while one
+ * address cannot make us crawl hundreds of sites a minute.
+ */
+export function ThrottleFavicon() {
+  return rateLimit(FaviconRateLimit);
 }

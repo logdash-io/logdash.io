@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { NotificationChannelEntity } from '../core/entities/notification-channel.entity';
 import { NotificationChannelNormalized } from '../core/entities/notification-channel.interface';
 import { NotificationChannelSerializer } from '../core/entities/notification-channel.serializer';
+import { NotificationChannelType } from '../core/enums/notification-target.enum';
+import { EmailOptions } from '../core/types/email-options.type';
 
 @Injectable()
 export class NotificationChannelReadService {
@@ -59,6 +61,21 @@ export class NotificationChannelReadService {
     return notificationChannel
       ? NotificationChannelSerializer.normalize(notificationChannel)
       : null;
+  }
+
+  public async readEmailChannel(
+    clusterId: string,
+    email: string,
+  ): Promise<NotificationChannelNormalized | null> {
+    const channels = await this.notificationChannelModel
+      .find({ clusterId, target: NotificationChannelType.Email })
+      .lean<NotificationChannelEntity[]>()
+      .exec();
+    const channel = channels.find(
+      (entry) => (entry.options as EmailOptions).email.toLowerCase() === email.toLowerCase(),
+    );
+
+    return channel ? NotificationChannelSerializer.normalize(channel) : null;
   }
 
   public async belongToCluster(

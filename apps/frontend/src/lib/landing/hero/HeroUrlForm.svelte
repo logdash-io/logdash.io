@@ -210,10 +210,10 @@
   <div
     bind:this={composer}
     class={[
-      'inset-ring-border-default bg-surface-root flex w-full cursor-text items-center gap-2 rounded-full p-2 inset-ring',
+      'inset-ring-surface-root-border bg-surface-root-bg flex w-full cursor-text items-center gap-2 rounded-full p-2 inset-ring',
       'transition-shadow duration-150',
-      'hover:not-focus-within:inset-ring-neutral-700',
-      'focus-within:inset-ring-neutral-600 focus-within:shadow-(--focus-ring)',
+      'hover:not-focus-within:inset-ring-surface-input-border',
+      'focus-within:inset-ring-surface-input-hover-border focus-within:shadow-(--focus-ring)',
       {
         'inset-ring-error/60! focus-within:shadow-(--focus-ring-error)!':
           isInvalid,
@@ -226,7 +226,7 @@
       <input
         bind:this={input}
         class={[
-          'peer selection:bg-neutral-700 w-full scroll-mt-[100vh] bg-transparent pr-2 pl-3 outline-none placeholder:text-transparent disabled:opacity-60',
+          'peer selection:bg-surface-200-bg w-full scroll-mt-[100vh] bg-transparent pr-2 pl-3 outline-none placeholder:text-transparent disabled:opacity-60',
           compact ? 'h-9 text-base' : 'h-11 text-base sm:text-lg',
         ]}
         id={compact ? undefined : HERO_URL_INPUT_ID}
@@ -248,7 +248,7 @@
       <span
         aria-hidden="true"
         class={[
-          'text-neutral-600 pointer-events-none absolute inset-y-0 left-3 right-2 hidden items-center peer-placeholder-shown:flex',
+          'text-fg-faint pointer-events-none absolute inset-y-0 left-3 right-2 hidden items-center peer-placeholder-shown:flex',
           compact ? 'text-base' : 'text-base sm:text-lg',
         ]}
       >
@@ -262,7 +262,7 @@
       variant="primary"
       size="sm"
       class={[
-        'shrink-0 font-medium',
+        'shrink-0',
         compact ? 'h-9 px-4' : 'h-11 px-5 text-sm sm:text-base',
       ]}
       data-posthog-id={submitPosthogId}

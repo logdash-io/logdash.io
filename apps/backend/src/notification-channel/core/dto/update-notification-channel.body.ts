@@ -4,8 +4,9 @@ import { IsEnum, IsObject, IsOptional, ValidateIf, ValidateNested } from 'class-
 import { NotificationChannelType } from '../enums/notification-target.enum';
 import { TelegramOptionsValidator } from '../types/telegram-options.type';
 import { WebhookOptionsValidator } from '../types/webhook-options.type';
+import { EmailOptionsValidator } from '../types/email-options.type';
 
-@ApiExtraModels(TelegramOptionsValidator, WebhookOptionsValidator)
+@ApiExtraModels(TelegramOptionsValidator, WebhookOptionsValidator, EmailOptionsValidator)
 export class UpdateNotificationChannelBody {
   @ApiPropertyOptional({ enum: NotificationChannelType })
   @IsEnum(NotificationChannelType)
@@ -16,6 +17,7 @@ export class UpdateNotificationChannelBody {
     oneOf: [
       { $ref: getSchemaPath(TelegramOptionsValidator) },
       { $ref: getSchemaPath(WebhookOptionsValidator) },
+      { $ref: getSchemaPath(EmailOptionsValidator) },
     ],
   })
   @IsOptional()
@@ -30,8 +32,11 @@ export class UpdateNotificationChannelBody {
     if (obj.type === NotificationChannelType.Webhook) {
       return Object.assign(new WebhookOptionsValidator(), value);
     }
+    if (obj.type === NotificationChannelType.Email) {
+      return Object.assign(new EmailOptionsValidator(), value);
+    }
     return value;
   })
   @IsObject()
-  public options?: TelegramOptionsValidator | WebhookOptionsValidator;
+  public options?: TelegramOptionsValidator | WebhookOptionsValidator | EmailOptionsValidator;
 }

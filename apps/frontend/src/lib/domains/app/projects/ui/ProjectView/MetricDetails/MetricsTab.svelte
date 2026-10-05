@@ -45,9 +45,7 @@
       <MetricDetails />
     </div>
 
-    <div
-      class="border-hairline flex shrink-0 flex-col max-lg:border-t lg:w-64 lg:border-l xl:w-72"
-    >
+    <div class="flex shrink-0 flex-col max-lg:edge-t lg:w-64 lg:edge-l xl:w-72">
       <MetricsTiles />
     </div>
   </div>

@@ -13,5 +13,9 @@ export function getChannelTypeLabel(channel: NotificationChannel): string {
     return 'Webhook';
   }
 
+  if (channel.target === 'email') {
+    return 'Email';
+  }
+
   return 'Channel';
 }

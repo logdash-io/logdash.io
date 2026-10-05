@@ -13,20 +13,7 @@
     HTMLButtonAttributes & HTMLAnchorAttributes,
     "class" | "children" | "type" | "disabled"
   > & {
-    variant?:
-      | "primary"
-      | "secondary"
-      | "subtle"
-      | "neutral"
-      | "ghost"
-      | "transparent"
-      | "outline"
-      | "soft"
-      | "danger"
-      | "danger-ghost"
-      | "danger-soft"
-      | "success-soft"
-      | "link";
+    variant?: "primary" | "secondary" | "ghost" | "danger" | "danger-ghost";
     size?: "xs" | "sm" | "md" | "lg";
     shape?: "pill" | "square" | "circle";
     block?: boolean;
@@ -90,11 +77,12 @@
 
   @layer components {
     .ld-button {
-      --button-tint: var(--surface-elevated);
-      --button-bg: var(--button-tint);
-      --button-border: var(--button-bg);
+      --button-bg: var(--surface-150-bg);
+      --button-hover-bg: var(--surface-150-hover-bg);
+      --button-ring: var(--surface-150-border);
       --button-fg: var(--fg-default);
-      --button-hover-fg: var(--button-fg);
+      --button-hover-fg: var(--fg-default);
+      --button-focus: var(--brand);
       --button-size: 2.5rem;
       position: relative;
       display: inline-flex;
@@ -105,12 +93,15 @@
       gap: 0.375rem;
       height: var(--button-size);
       padding-inline: 1rem;
-      border: 1px solid var(--button-border);
+      border: 0;
       border-radius: calc(infinity * 1px);
       background-color: var(--button-bg);
+      box-shadow: inset 0 0 0 1px var(--button-ring);
       color: var(--button-fg);
-      font-size: 0.875rem;
+      font-size: 0.9375rem;
       font-weight: 500;
+      /* Own the line-height so the label sits the same in every context. */
+      line-height: 1;
       text-align: center;
       text-decoration: none;
       white-space: nowrap;
@@ -119,20 +110,19 @@
       -webkit-user-select: none;
       user-select: none;
       touch-action: manipulation;
-      outline-offset: 2px;
       transition: color 0.2s cubic-bezier(0, 0, 0.2, 1);
     }
 
     .ld-button[data-size="xs"] {
       --button-size: 1.5rem;
       padding-inline: 0.5rem;
-      font-size: 0.6875rem;
+      font-size: 0.8125rem;
     }
 
     .ld-button[data-size="sm"] {
       --button-size: 2rem;
       padding-inline: 0.75rem;
-      font-size: 0.75rem;
+      font-size: 0.875rem;
     }
 
     .ld-button[data-size="lg"] {
@@ -156,175 +146,72 @@
     }
 
     .ld-button[data-variant="primary"] {
-      --button-tint: var(--surface-inverse);
-      --button-fg: var(--surface-root);
-    }
-
-    .ld-button[data-variant="subtle"] {
-      --button-ring: var(--border-default);
-      --button-border: transparent;
-      box-shadow:
-        0 0 0 1px var(--button-ring),
-        0 1px 1px rgb(0 0 0 / 0.24),
-        0 2px 4px rgb(0 0 0 / 0.24);
-    }
-
-    .ld-button[data-variant="neutral"] {
-      --button-tint: var(--surface-100);
-      --button-border: var(--hairline);
+      --button-bg: var(--surface-inverse-bg);
+      --button-hover-bg: var(--surface-inverse-hover-bg);
+      --button-ring: transparent;
+      --button-fg: var(--fg-inverse);
+      --button-hover-fg: var(--fg-inverse);
     }
 
     .ld-button[data-variant="ghost"] {
       --button-bg: transparent;
-      --button-fg: currentColor;
-      --button-hover-fg: var(--fg-default);
-    }
-
-    .ld-button[data-variant="transparent"],
-    .ld-button[data-variant="danger"],
-    .ld-button[data-variant="danger-ghost"],
-    .ld-button[data-variant="danger-soft"] {
-      border-width: 0;
-    }
-
-    .ld-button[data-variant="transparent"] {
-      --button-bg: transparent;
-    }
-
-    .ld-button[data-variant="outline"] {
-      --button-tint: var(--surface-inverse);
-      --button-bg: transparent;
-      --button-border: var(--surface-inverse);
-      --button-hover-fg: var(--surface-root);
-    }
-
-    .ld-button[data-variant="soft"] {
-      --button-tint: var(--surface-inverse);
-      --button-bg: color-mix(
-        in oklab,
-        var(--fg-default) 8%,
-        var(--surface-100)
-      );
-      --button-border: color-mix(
-        in oklab,
-        var(--fg-default) 10%,
-        var(--surface-100)
-      );
-      --button-hover-fg: var(--surface-root);
+      --button-ring: transparent;
+      --button-fg: var(--fg-secondary);
     }
 
     .ld-button[data-variant="danger"],
-    .ld-button[data-variant="danger-ghost"],
-    .ld-button[data-variant="danger-soft"] {
-      --button-tint: var(--error-bg-hover);
-      --button-bg: var(--error-bg);
+    .ld-button[data-variant="danger-ghost"] {
+      --button-hover-bg: color-mix(in oklab, var(--error) 28%, var(--surface-150-bg));
+      --button-ring: transparent;
       --button-fg: var(--error);
+      --button-hover-fg: var(--error);
+      --button-focus: var(--error);
+    }
+
+    .ld-button[data-variant="danger"] {
+      --button-bg: color-mix(in oklab, var(--error) 18%, var(--surface-150-bg));
     }
 
     .ld-button[data-variant="danger-ghost"] {
       --button-bg: transparent;
     }
 
-    .ld-button[data-variant="danger-soft"] {
-      --button-bg: color-mix(in oklab, var(--error-bg) 8%, var(--surface-100));
-    }
-
-    .ld-button[data-variant="success-soft"] {
-      --button-tint: var(--success);
-      --button-bg: color-mix(in oklab, var(--success) 8%, var(--surface-100));
-      --button-border: color-mix(
-        in oklab,
-        var(--success) 10%,
-        var(--surface-100)
-      );
-      --button-fg: var(--success);
-      --button-hover-fg: oklch(37% 0.077 168.94);
-    }
-
-    .ld-button[data-variant="link"] {
-      --button-bg: transparent;
-      --button-border: transparent;
-      text-decoration-line: underline;
-    }
-
     @media (hover: hover) {
       .ld-button:hover {
-        --button-bg: color-mix(in oklab, var(--button-tint), #000 7%);
+        background-color: var(--button-hover-bg);
         color: var(--button-hover-fg);
       }
     }
 
     .ld-button:active {
-      --button-bg: color-mix(in oklab, var(--button-tint), #000 5%);
+      background-color: var(--button-hover-bg);
       color: var(--button-hover-fg);
     }
 
     .ld-button:focus-visible {
-      outline: 2px solid var(--brand);
-      outline-offset: 2px;
+      outline: none;
+      box-shadow:
+        inset 0 0 0 1px var(--button-ring),
+        0 0 0 1px var(--button-focus),
+        0 0 0 4px color-mix(in oklab, var(--button-focus) 20%, transparent);
       isolation: isolate;
-    }
-
-    @media (hover: hover) {
-      .ld-button[data-variant="outline"]:hover,
-      .ld-button[data-variant="soft"]:hover,
-      .ld-button[data-variant="success-soft"]:hover {
-        --button-border: var(--button-bg);
-      }
-
-      .ld-button[data-variant="subtle"]:hover {
-        --button-bg: var(--surface-100);
-        --button-ring: var(--border-strong);
-        --button-border: transparent;
-      }
-    }
-
-    .ld-button[data-variant="outline"]:active,
-    .ld-button[data-variant="soft"]:active,
-    .ld-button[data-variant="success-soft"]:active {
-      --button-border: var(--button-bg);
-    }
-
-    .ld-button[data-variant="subtle"]:active {
-      --button-bg: var(--surface-100);
-      --button-ring: var(--border-strong);
-      --button-border: transparent;
-    }
-
-    .ld-button[data-variant="transparent"]:is(:hover, :active),
-    .ld-button[data-variant="link"]:is(:hover, :active) {
-      --button-bg: transparent;
-      --button-border: transparent;
     }
 
     .ld-button:disabled,
     .ld-button[aria-disabled="true"] {
-      --button-bg: var(--surface-100);
-      --button-border: transparent;
-      color: var(--fg-faint);
-      box-shadow: none;
+      --button-bg: var(--surface-150-bg);
+      --button-hover-bg: var(--surface-150-bg);
+      --button-ring: var(--surface-150-border);
+      --button-fg: var(--fg-faint);
+      --button-hover-fg: var(--fg-faint);
       pointer-events: none;
     }
 
-    .ld-button[data-variant="ghost"]:disabled,
-    .ld-button[data-variant="ghost"][aria-disabled="true"],
-    .ld-button[data-variant="transparent"]:disabled,
-    .ld-button[data-variant="transparent"][aria-disabled="true"],
-    .ld-button[data-variant="link"]:disabled,
-    .ld-button[data-variant="link"][aria-disabled="true"] {
+    .ld-button[data-variant="ghost"]:is(:disabled, [aria-disabled="true"]),
+    .ld-button[data-variant="danger-ghost"]:is(:disabled, [aria-disabled="true"]) {
       --button-bg: transparent;
-      color: var(--border-strong);
-    }
-
-    .ld-button[data-variant="neutral"]:disabled,
-    .ld-button[data-variant="neutral"][aria-disabled="true"] {
-      --button-border: var(--hairline);
-    }
-
-    .ld-button[data-variant="subtle"]:disabled,
-    .ld-button[data-variant="subtle"][aria-disabled="true"] {
-      color: var(--fg-default);
-      box-shadow: 0 0 0 1px var(--hairline);
+      --button-hover-bg: transparent;
+      --button-ring: transparent;
     }
 
     .ld-button-content {

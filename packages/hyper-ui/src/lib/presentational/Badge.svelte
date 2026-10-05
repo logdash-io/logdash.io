@@ -3,7 +3,7 @@
   import type { ClassValue, HTMLAttributes } from "svelte/elements";
 
   type Props = Omit<HTMLAttributes<HTMLSpanElement>, "class" | "children"> & {
-    variant?: "neutral" | "inverse" | "success" | "error" | "warning";
+    variant?: "neutral" | "outline" | "inverse" | "success" | "error" | "warning";
     size?: "xs" | "sm" | "md" | "lg";
     class?: ClassValue;
     children: Snippet;
@@ -42,12 +42,12 @@
       height: var(--badge-size);
       padding-inline: calc(var(--badge-size) / 2 - 1px);
       border: 1px solid
-        color-mix(in oklab, var(--badge-tone) 10%, var(--surface-100));
+        color-mix(in oklab, var(--badge-tone) 10%, var(--surface-150-bg));
       border-radius: calc(infinity * 1px);
       background-color: color-mix(
         in oklab,
         var(--badge-tone) 8%,
-        var(--surface-100)
+        var(--surface-150-bg)
       );
       color: var(--badge-tone);
       font-size: 0.875rem;
@@ -81,10 +81,18 @@
       --badge-tone: var(--warning);
     }
 
+    .ld-badge[data-variant="outline"] {
+      border-color: var(--edge-color);
+      background-color: transparent;
+      color: var(--fg-tertiary);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
     .ld-badge[data-variant="inverse"] {
-      border-color: var(--surface-inverse);
-      background-color: var(--surface-inverse);
-      color: var(--surface-root);
+      border-color: var(--surface-inverse-bg);
+      background-color: var(--surface-inverse-bg);
+      color: var(--fg-inverse);
     }
   }
 </style>

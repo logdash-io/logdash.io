@@ -7,4 +7,6 @@
   const clusterId = $derived(params.cluster_id);
 </script>
 
-<ClusterSettings {clusterId} />
+{#key clusterId}
+  <ClusterSettings {clusterId} />
+{/key}

@@ -37,7 +37,7 @@
       flex-grow: 1;
       width: 100%;
       height: 0.125rem;
-      background-color: var(--hairline);
+      background-color: var(--edge-color);
     }
   }
 </style>

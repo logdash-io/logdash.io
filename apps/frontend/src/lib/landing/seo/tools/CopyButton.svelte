@@ -29,7 +29,7 @@
   onclick={onCopy}
   aria-label={copied ? 'Copied' : label}
   class={[
-    'text-neutral-500 hover:text-fg-default bg-surface-root flex shrink-0 cursor-pointer items-center justify-center transition-ink duration-150 outline-none focus-visible:shadow-(--focus-ring) motion-reduce:transition-none',
+    'text-fg-muted hover:text-fg-default bg-surface-root-bg flex shrink-0 cursor-pointer items-center justify-center transition-ink duration-150 outline-none focus-visible:shadow-(--focus-ring) motion-reduce:transition-none',
     className,
   ]}
 >

@@ -43,7 +43,7 @@
       Enter a percentage from 0 to 100, like 99.9.
     </p>
   {:else}
-    <p role="status" class="text-neutral-400 text-[15px] leading-7">
+    <p role="status" class="text-fg-tertiary text-[15px] leading-7">
       <strong class="text-fg-default font-medium">
         {formatPercent(percent)}
       </strong>

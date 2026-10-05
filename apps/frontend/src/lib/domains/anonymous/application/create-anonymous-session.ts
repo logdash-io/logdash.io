@@ -1,7 +1,5 @@
-import {
-  AnonymousStartError,
-  clusterNameFromUrl,
-} from '../domain/anonymous-preview';
+import { AnonymousStartError } from '../domain/anonymous-preview';
+import { clusterNameFromUrl } from '$lib/domains/shared/utils/address-names';
 import { anonymousSessionService } from '../infrastructure/anonymous-session.service';
 import { sessionService } from '../infrastructure/session.service';
 

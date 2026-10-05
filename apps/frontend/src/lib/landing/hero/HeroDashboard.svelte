@@ -1,6 +1,6 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
-  import SidebarAccountRow from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarAccountRow.svelte';
+  import SidebarFooter from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarFooter.svelte';
   import SidebarDomainNav from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarDomainNav.svelte';
   import SidebarDomainRow from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarDomainRow.svelte';
   import SidebarLayout from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarLayout.svelte';
@@ -92,11 +92,11 @@
 </script>
 
 <aside
-  class="border-hairline bg-surface-root hidden w-64 shrink-0 flex-col border-r pt-1.5 lg:flex"
+  class="border-surface-root-border bg-surface-root-bg hidden w-64 shrink-0 flex-col border-r pt-1.5 lg:flex"
   aria-hidden="true"
   inert
 >
-  <SidebarLayout showLogo={false}>
+  <SidebarLayout>
     <SidebarDomainRow name={domainName} expanded={true}>
       {#key domainName}
         <span
@@ -126,7 +126,7 @@
     <SidebarNewServiceRow />
 
     {#snippet footer()}
-      <SidebarAccountRow name="Anonymous" plan="Free" />
+      <SidebarFooter plan="Free" />
     {/snippet}
   </SidebarLayout>
 </aside>
@@ -149,7 +149,7 @@
 
   <div class="flex min-h-0 flex-1">
     <div class="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div class="border-hairline shrink-0 border-b">
+      <div class="border-surface-100-border shrink-0 border-b">
         <HeroMonitor />
       </div>
 
@@ -188,7 +188,7 @@
     </div>
 
     <div
-      class="border-hairline hidden w-64 shrink-0 overflow-hidden border-l lg:flex xl:w-72"
+      class="border-surface-100-border hidden w-64 shrink-0 overflow-hidden border-l lg:flex xl:w-72"
       aria-hidden="true"
     >
       {#key visitor}

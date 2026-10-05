@@ -56,9 +56,9 @@
       width: clamp(3rem, 20rem, 100%);
       height: 2.5rem;
       padding-inline: 0.75rem;
-      border: 1px solid var(--fg-faint);
+      border: 1px solid var(--surface-input-border);
       border-radius: 0.75rem;
-      background-color: var(--surface-100);
+      background-color: var(--surface-input-bg);
       font-size: 0.875rem;
       white-space: nowrap;
       vertical-align: middle;
@@ -76,19 +76,19 @@
       width: 100%;
       height: 100%;
       padding: 0.375rem 0.75rem;
-      border-color: var(--border-strong);
+      border-color: var(--surface-input-border);
       background-color: transparent;
       transition-property: color, border-color;
       transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
       transition-duration: 250ms;
     }
 
-    .ld-text-input[data-variant="outline"]:hover {
-      border-color: var(--fg-faint);
+    .ld-text-input:hover {
+      border-color: var(--surface-input-hover-border);
     }
 
     .ld-text-input[data-variant="outline"]::selection {
-      background-color: var(--surface-150);
+      background-color: var(--surface-200-bg);
     }
 
     .ld-text-input > input {
@@ -120,13 +120,13 @@
     .ld-text-input:disabled,
     .ld-text-input:has(> input:disabled) {
       cursor: not-allowed;
-      border-color: var(--surface-elevated);
-      background-color: var(--surface-elevated);
+      border-color: transparent;
+      background-color: var(--surface-100-bg);
       color: var(--fg-muted);
     }
 
     .ld-text-input[data-variant="outline"]:disabled {
-      border-color: var(--border-strong);
+      border-color: var(--surface-input-border);
       background-color: transparent;
     }
 

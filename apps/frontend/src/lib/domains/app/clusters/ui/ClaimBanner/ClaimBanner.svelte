@@ -51,7 +51,7 @@
 
 <aside
   aria-label="Temporary dashboard"
-  class="claim-bar bg-surface-elevated border-border-strong sticky bottom-19 z-10 mx-4 mt-auto mb-19 flex items-center gap-3 rounded-xl border py-3 pr-3 pl-4 shadow-[0_2px_4px_rgba(0,0,0,0.4),0_16px_40px_-8px_rgba(0,0,0,0.9)] transition-[opacity,translate] duration-300 ease-out motion-reduce:transition-none starting:translate-y-2 starting:opacity-0 sm:w-[calc(100%-4rem)] sm:max-w-160 sm:self-center lg:bottom-4 lg:mb-4"
+  class="claim-bar bg-surface-elevated-bg border-surface-elevated-border sticky bottom-19 z-10 mx-4 mt-auto mb-19 flex items-center gap-3 rounded-xl border py-3 pr-3 pl-4 shadow-[0_2px_4px_rgba(0,0,0,0.4),0_16px_40px_-8px_rgba(0,0,0,0.9)] transition-[opacity,translate] duration-300 ease-out motion-reduce:transition-none starting:translate-y-2 starting:opacity-0 sm:w-[calc(100%-4rem)] sm:max-w-160 sm:self-center lg:bottom-4 lg:mb-4"
 >
   <span class="flex h-5 shrink-0 items-center self-start">
     <StatusDot variant="warning" />
@@ -67,14 +67,14 @@
         { invisible: remainingMs === null },
       ]}
     >
-      <span class="text-neutral-600 max-md:hidden" aria-hidden="true">·</span>
+      <span class="text-fg-faint max-md:hidden" aria-hidden="true">·</span>
       <span
-        class="text-fg-secondary md:text-fg-default tabular-nums md:font-medium"
+        class="text-fg-tertiary md:text-fg-default tabular-nums md:font-medium"
       >
         {timeLeft} left
       </span>
     </span>
-    <span class="text-fg-secondary basis-full truncate max-md:hidden">
+    <span class="text-fg-tertiary basis-full truncate max-md:hidden">
       Claim it to keep your monitors, logs and metrics.
     </span>
   </div>

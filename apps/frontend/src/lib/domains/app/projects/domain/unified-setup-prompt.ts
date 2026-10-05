@@ -1,5 +1,5 @@
 import { LogdashSDKName } from '$lib/domains/shared/types.js';
-import { INSTALL_COMMANDS } from '$lib/domains/logs/domain/sdk-config.js';
+import { INSTALL_COMMANDS } from '$lib/domains/logs/domain/sdk-install-commands.js';
 import { getCodeSnippet } from '$lib/domains/logs/domain/setup-prompt.js';
 import { getMetricsCodeSnippet } from './metrics-setup-prompt.js';
 import { PromptBuilder } from './prompt-builder.js';
@@ -9,6 +9,7 @@ export function generateUnifiedSetupPrompt(
   apiKey: string,
   needsLogging: boolean,
   needsMetrics: boolean,
+  automatic = false,
 ): string {
   if (isNodeEcosystem(sdkName)) {
     return buildNodeEcosystemPrompt(
@@ -16,10 +17,17 @@ export function generateUnifiedSetupPrompt(
       apiKey,
       needsLogging,
       needsMetrics,
+      automatic,
     );
   }
 
-  return buildStandardPrompt(sdkName, apiKey, needsLogging, needsMetrics);
+  return buildStandardPrompt(
+    sdkName,
+    apiKey,
+    needsLogging,
+    needsMetrics,
+    automatic,
+  );
 }
 
 function buildNodeEcosystemPrompt(
@@ -27,6 +35,7 @@ function buildNodeEcosystemPrompt(
   apiKey: string,
   needsLogging: boolean,
   needsMetrics: boolean,
+  automatic = false,
 ): string {
   const builder = new PromptBuilder();
   const installCommand = INSTALL_COMMANDS[sdkName];
@@ -81,12 +90,14 @@ function buildNodeEcosystemPrompt(
   }
 
   builder.addParagraph(
-    `Save that preference to the project settings and your memory. Act like a CLI setup assistant and ask me about my preferred level of integration:
+    automatic
+      ? `Complete the recommended integration throughout the application, including critical paths and error handling.`
+      : `Save that preference to the project settings and your memory. Act like a CLI setup assistant and ask me about my preferred level of integration:
 - recommended (comprehensive integration with logging/metrics throughout the app)
 - minimal (only critical paths and error handling)`,
   );
 
-  if (sdkName === LogdashSDKName.NODE_JS) {
+  if (sdkName === LogdashSDKName.NODE_JS && !automatic) {
     builder.addParagraph(`Ask me if I would like to monkey patch the default console object and if yes, create a monkey patch function that will send the log to Logdash. Like:
 
 function monkeyPatchConsole(): void {
@@ -115,6 +126,7 @@ function buildStandardPrompt(
   apiKey: string,
   needsLogging: boolean,
   needsMetrics: boolean,
+  automatic = false,
 ): string {
   const builder = new PromptBuilder();
   const installCommand = INSTALL_COMMANDS[sdkName];
@@ -147,7 +159,9 @@ function buildStandardPrompt(
   }
 
   builder.addParagraph(
-    `Save that preference to the project settings and your memory. Help me integrate ${featuresText} into my application.`,
+    automatic
+      ? `Complete the recommended ${featuresText} integration throughout the application.`
+      : `Save that preference to the project settings and your memory. Help me integrate ${featuresText} into my application.`,
   );
 
   return builder.build();

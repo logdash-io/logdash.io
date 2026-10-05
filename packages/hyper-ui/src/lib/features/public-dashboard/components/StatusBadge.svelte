@@ -11,24 +11,24 @@
 
   const statusConfig = {
     up: {
-      color: "bg-green-600",
+      color: "bg-success",
       text: "Operational",
-      textColor: "text-green-600",
+      textColor: "text-fg-secondary",
     },
     down: {
-      color: "bg-red-600",
+      color: "bg-error",
       text: "Down",
-      textColor: "text-red-600",
+      textColor: "text-error",
     },
     degraded: {
-      color: "bg-yellow-600",
+      color: "bg-warning",
       text: "Degraded",
-      textColor: "text-yellow-600",
+      textColor: "text-warning",
     },
     unknown: {
-      color: "bg-neutral-400",
+      color: "bg-idle",
       text: "Unknown",
-      textColor: "text-neutral-600",
+      textColor: "text-fg-muted",
     },
   };
 
@@ -45,7 +45,7 @@
 <div class="flex items-center gap-2">
   <div class={`rounded-full ${config.color} ${sizeClass}`}></div>
   {#if showText}
-    <span class={`text-sm font-medium ${config.textColor}`}>
+    <span class={`text-[13px] font-medium ${config.textColor}`}>
       {config.text}
     </span>
   {/if}

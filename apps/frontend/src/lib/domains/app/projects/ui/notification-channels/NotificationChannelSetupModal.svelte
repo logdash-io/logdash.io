@@ -112,14 +112,14 @@
   <div class="space-y-6">
     <div class="flex items-center justify-start gap-4">
       <div
-        class="bg-surface-root border-border-default text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
+        class="bg-surface-50-bg border-surface-50-border text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
       >
         <BellIcon class="size-6 stroke-1" />
       </div>
 
       <div class="flex flex-col items-start">
         <h3 class="text-xl font-medium">Add a notification channel</h3>
-        <p class="text-neutral-400 text-sm">
+        <p class="text-fg-tertiary text-sm">
           Choose where alerts for this monitor go.
         </p>
       </div>
@@ -134,7 +134,7 @@
         >
           <button
             type="button"
-            class="hover:bg-neutral-800 focus-visible:bg-neutral-800 flex w-full cursor-pointer items-center justify-start gap-4 rounded-xl px-4 py-3 text-left outline-none select-none"
+            class="hover:bg-surface-elevated-hover-bg focus-visible:bg-surface-elevated-hover-bg flex w-full cursor-pointer items-center justify-start gap-4 rounded-xl px-4 py-3 text-left outline-none select-none"
             onclick={() => {
               if (!allowedNotificationChannels.includes(channel.id)) {
                 return;
@@ -168,7 +168,7 @@
     </div>
 
     <div class="flex gap-3">
-      <Button variant="soft" class="flex-1" onclick={closeModal}>Cancel</Button>
+      <Button class="flex-1" onclick={closeModal}>Cancel</Button>
     </div>
   </div>
 {/snippet}

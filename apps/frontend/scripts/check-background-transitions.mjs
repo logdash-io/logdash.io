@@ -60,6 +60,7 @@ if (findings.length) {
   console.error(
     `${findings.length} background transition(s), see .agents/frontend.md:\n${findings.join('\n')}`,
   );
-  process.exit(1);
+  process.exitCode = 1;
+} else {
+  console.log('background transitions: ok');
 }
-console.log('background transitions: ok');

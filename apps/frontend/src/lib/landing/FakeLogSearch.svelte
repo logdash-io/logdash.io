@@ -162,24 +162,24 @@
 
 <div class="flex h-full w-full flex-col">
   <div
-    class="border-hairline flex h-11 shrink-0 items-center gap-3 border-b px-4 text-sm"
+    class="border-surface-100-border flex h-11 shrink-0 items-center gap-3 border-b px-4 text-sm"
   >
-    <SearchIcon class="text-neutral-600 size-3.5 shrink-0" />
+    <SearchIcon class="text-fg-faint size-3.5 shrink-0" />
 
     <span class="flex min-w-0 items-center">
       {#if query}
         <span class="text-fg-default">{query}</span>
       {:else if !searching}
-        <span class="text-neutral-500">Search logs</span>
+        <span class="text-fg-muted">Search logs</span>
       {/if}
 
       {#if searching}
-        <span class="bg-surface-inverse ml-px h-4 w-px animate-pulse"></span>
+        <span class="bg-surface-inverse-bg ml-px h-4 w-px animate-pulse"></span>
       {/if}
     </span>
 
     <span
-      class="text-neutral-400 ml-auto flex shrink-0 items-center gap-1.5 text-xs"
+      class="text-fg-tertiary ml-auto flex shrink-0 items-center gap-1.5 text-xs"
     >
       <span class="bg-success size-1.5 rounded-full"></span>
       Live
@@ -189,14 +189,14 @@
   <div class="flex min-h-0 flex-1 flex-col gap-5 p-5">
     <div class="flex gap-x-10 sm:gap-x-14">
       <div class="flex flex-col gap-0.5">
-        <span class="text-neutral-500 text-xs">Last hour</span>
+        <span class="text-fg-muted text-xs">Last hour</span>
         <span class="font-figure text-2xl">
           {linesLastHour.toLocaleString('en-US')} lines
         </span>
       </div>
 
       <div class="flex flex-col gap-0.5">
-        <span class="text-neutral-500 text-xs">Errors</span>
+        <span class="text-fg-muted text-xs">Errors</span>
         <span class="font-figure text-2xl">{errorsLastHour}</span>
       </div>
     </div>
@@ -220,12 +220,12 @@
             >
               {@render columnSpacers()}
               <div
-                class="ring-hairline bg-surface-root flex min-w-0 flex-1 flex-col gap-1 rounded-md px-3 py-2.5 font-mono text-xs ring-1"
+                class="ring-surface-50-border bg-surface-50-bg flex min-w-0 flex-1 flex-col gap-1 rounded-md px-3 py-2.5 font-mono text-xs ring-1"
               >
                 {#each FAILURE_DETAIL as [key, value] (key)}
                   <div class="flex gap-3">
-                    <span class="text-neutral-500 w-20 shrink-0">{key}</span>
-                    <span class="text-neutral-300 truncate">{value}</span>
+                    <span class="text-fg-muted w-20 shrink-0">{key}</span>
+                    <span class="text-fg-secondary truncate">{value}</span>
                   </div>
                 {/each}
               </div>
@@ -241,10 +241,10 @@
   <div
     class={[
       'flex items-center gap-3 rounded-md px-2 py-0.5 font-mono text-[13px]',
-      { 'bg-surface-100': row.key === openedKey },
+      { 'bg-surface-150-bg': row.key === openedKey },
     ]}
   >
-    <span class="text-neutral-600 w-16 shrink-0 tabular-nums max-sm:hidden">
+    <span class="text-fg-faint w-16 shrink-0 tabular-nums max-sm:hidden">
       {toTime(row.at)}
     </span>
     <span
@@ -253,12 +253,12 @@
         {
           'bg-error': row.level === 'error',
           'bg-warning': row.level === 'warning',
-          'bg-neutral-600': row.level !== 'error' && row.level !== 'warning',
+          'bg-idle': row.level !== 'error' && row.level !== 'warning',
         },
       ]}
     ></span>
-    <span class="text-neutral-500 w-12 shrink-0">{row.namespace}</span>
-    <span class="text-neutral-200 flex min-w-0">
+    <span class="text-fg-muted w-12 shrink-0">{row.namespace}</span>
+    <span class="text-fg-default flex min-w-0">
       {@render highlighted(row.message)}
     </span>
   </div>
@@ -272,7 +272,7 @@
   {:else}
     <span class="flex min-w-0 whitespace-pre">
       <span class="shrink-0">{message.slice(0, start)}</span>
-      <mark class="bg-neutral-700 text-fg-default shrink-0 rounded-[2px]">
+      <mark class="bg-surface-200-bg text-fg-default shrink-0 rounded-[2px]">
         {message.slice(start, start + filter.length)}
       </mark>
       <span class="min-w-0 overflow-hidden text-ellipsis">

@@ -64,19 +64,21 @@ export class GoogleAuthClaimService {
 
     const existingTempUserById = await this.userReadService.readByIdOrThrow(userId);
 
-    if (userWithThisEmail) {
-      return this.claimExistingUser(existingTempUserById.id, userWithThisEmail.id);
-    } else {
-      return this.claimNewUser({
-        avatar,
-        email,
-        emailAccepted: dto.emailAccepted,
-        existingTempUserById,
-        termsAccepted: dto.termsAccepted,
-        tokenPayload,
-        userId,
-      });
-    }
+    const response = userWithThisEmail
+      ? await this.claimExistingUser(existingTempUserById.id, userWithThisEmail.id)
+      : await this.claimNewUser({
+          avatar,
+          email,
+          emailAccepted: dto.emailAccepted,
+          existingTempUserById,
+          termsAccepted: dto.termsAccepted,
+          tokenPayload,
+          userId,
+        });
+
+    this.emitter.emitAccountClaimedEvent({ userId: userWithThisEmail?.id ?? userId });
+
+    return response;
   }
 
   private async claimExistingUser(
