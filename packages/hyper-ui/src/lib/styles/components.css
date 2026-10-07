@@ -43,10 +43,6 @@
   .ld-page-bg {
     @apply bg-surface-root-bg;
   }
-
-  .ld-modal {
-    @apply bg-surface-elevated-bg border-surface-elevated-border rounded-xl border p-6;
-  }
 }
 
 /*
