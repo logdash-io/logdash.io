@@ -8,6 +8,7 @@ import { waitFor } from '../utils/wait-for';
 import request from 'supertest';
 import { ErrorResponse } from '../utils/error-response';
 import { ChangePaidPlanBody } from '../../src/payments/stripe/dto/upgrade-subscription.body';
+import { TelegramSendMessageBody } from '../utils/telegram-utils';
 
 describe('StripeController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -75,6 +76,55 @@ describe('StripeController (writes)', () => {
       expect(subscription.endsAt).toBeNull();
 
       expect(userAfterUpdate!.paymentsMetadata?.trialUsed).toBe(true);
+    });
+
+    it('tells the team chat about the upgrade without the full email', async () => {
+      // given
+      const { user } = await bootstrap.utils.generalUtils.setupClaimed({
+        email: 'john.doe@gmail.com',
+        userTier: UserTier.Free,
+      });
+      const originalBotToken = getEnvConfig().internal.telegram.botToken;
+      getEnvConfig().internal.telegram.botToken = 'internal-token';
+      const messages: TelegramSendMessageBody[] = [];
+      bootstrap.utils.telegramUtils.setUpTelegramSendMessageListener({
+        botId: 'internal-token',
+        onMessage: (body) => messages.push(body),
+      });
+
+      const event = {
+        type: 'invoice.payment_succeeded',
+        data: {
+          object: {
+            customer: 'mock-customer-id',
+            customer_email: user.email,
+            lines: {
+              data: [
+                {
+                  pricing: {
+                    price_details: {
+                      price: { id: getEnvConfig().stripe.builderPriceId },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      } as unknown as Stripe.PaymentIntentSucceededEvent;
+
+      // when
+      await bootstrap.app.get(StripePaymentSucceededHandler).handle(event);
+      await waitFor(
+        () => Promise.resolve(messages.length),
+        (count) => count > 0,
+      );
+      getEnvConfig().internal.telegram.botToken = originalBotToken;
+
+      // then
+      expect(messages[0].text).toBe(
+        '🎉🎉🎉 User jo\\*\\*\\*@gm\\*\\*\\*\\.com got upgraded to builder 🎉🎉🎉',
+      );
     });
 
     it('upgrades user tier to builder', async () => {

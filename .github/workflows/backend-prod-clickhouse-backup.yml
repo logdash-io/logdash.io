@@ -32,6 +32,16 @@ jobs:
           sudo ./clickhouse install
         shell: bash
 
+      - name: Open ClickHouse tunnel
+        uses: './.github/templates/clickhouse-tunnel'
+        with:
+          ssh-host: ${{ secrets.BACKEND_PROD_SSH_HOST }}
+          ssh-port: ${{ secrets.BACKEND_PROD_SSH_PORT }}
+          ssh-user: ${{ secrets.BACKEND_PROD_SSH_USER }}
+          ssh-private-key: ${{ secrets.BACKEND_PROD_SSH_KEY }}
+          clickhouse-host: ${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}
+          ports: ${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }}
+
       - name: Create ClickHouse Backup
         run: |
           # Create backup directory
@@ -41,10 +51,8 @@ jobs:
           TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
           BACKUP_NAME="clickhouse_backup_prod_${TIMESTAMP}"
 
-          # Strip http:// prefix from host if present
-          CLICKHOUSE_HOST="${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}"
-          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
-          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+          # Through the SSH tunnel opened above
+          CLICKHOUSE_HOST=127.0.0.1
 
           echo "Trying to connect to clickhouse..."
 

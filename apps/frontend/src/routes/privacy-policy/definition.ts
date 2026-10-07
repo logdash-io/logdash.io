@@ -101,7 +101,7 @@ export const PPdefinition: LegalDocumentDefinition = [
       'The IP address is used only to compute this identifier and is never stored. Of the User-Agent, only the device type, browser and operating system are stored, and of the time zone, only the country it belongs to.',
       'When a User is signed in to the Platform, the Website Analytics also records a pseudonymous user identifier for product analytics, such as how often Users return: a SHA-256 hash of the site ID and the User&#39;s account ID, computed in the User&#39;s browser. The account ID itself is not sent to the Website Analytics.',
       'Visits are grouped into sessions on the server. A session ends after 30 minutes without activity or after 24 hours. Website Analytics data is deleted automatically after at most 365 days.',
-      'Feedback the User sends from the Platform is stored with the Controller&#39;s own application logs in Logdash, together with the rating the User gives.',
+      'Feedback the User sends from the Platform is sent to the Controller&#39;s internal Telegram chat, together with the rating the User gives and the User&#39;s e-mail address with most of it hidden (for example jo***@gm***.com).',
       'The legal basis for this processing is the Controller&#39;s legitimate interest in understanding how the Service is used and improving it (Article 6 section 1 letter f) of the GDPR).',
       'The User may object to this processing at any time. The Website Analytics does not run in a browser that sends the Global Privacy Control or Do Not Track signal, so turning on either setting in the browser stops it. The User may also object by e-mail to support@logdash.io.',
     ],

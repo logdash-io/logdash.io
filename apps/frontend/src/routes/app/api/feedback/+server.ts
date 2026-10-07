@@ -1,10 +1,12 @@
-import { bffLogger } from '$lib/domains/shared/bff-logger.server';
 import { parseFeedback } from '$lib/domains/shared/feedback/domain/feedback';
+import { postFeedback } from '$lib/domains/shared/feedback/infrastructure/feedback-api.server';
 import { get_access_token } from '$lib/domains/shared/utils/cookies.utils';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
-  if (!get_access_token(cookies)) {
+  const token = get_access_token(cookies);
+
+  if (!token) {
     return new Response(null, { status: 401 });
   }
 
@@ -14,7 +16,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     return new Response(null, { status: 400 });
   }
 
-  bffLogger().info(`feedback ${feedback.rating}/5: ${feedback.message}`);
+  const response = await postFeedback({ token, feedback }).catch(() => null);
 
-  return new Response(null, { status: 204 });
+  return new Response(null, { status: response?.status ?? 503 });
 };
