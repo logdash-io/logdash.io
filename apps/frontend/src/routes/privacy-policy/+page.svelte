@@ -7,4 +7,5 @@
   definition={PPdefinition}
   title="Privacy policy"
   description="How Logdash collects, stores and uses the data you send us, and what we never do with it."
+  updated="7 October 2026"
 />

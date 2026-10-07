@@ -23,7 +23,7 @@ export const PPdefinition: LegalDocumentDefinition = [
         title:
           'The User provides the Controller with the following personal data:',
         list: [
-          'the User&#39;s account information (login, password and contact details provided when creating the User&#39;s account);',
+          "the User's account information (login, password and contact details provided when creating the User's account);",
           'User-generated content (all content posted on the Platform, in particular logs, insights, and analytics);',
           'payment information (information necessary to make a payment);',
           'information on the actions performed by the User (for example: creating dashboards, setting up alerts, etc.);',
@@ -39,7 +39,7 @@ export const PPdefinition: LegalDocumentDefinition = [
         title:
           'The Controller processes the following personal data using automated data processing:',
         list: [
-          'information about the User&#39;s device (IP address, operating system information, browser information and information about device settings);',
+          "information about the User's device (IP address, operating system information, browser information and information about device settings);",
           'information about the use of the Platform (log information related to how and when the services are used - such as pages, servers and channels visited, activities performed or content interacted with);',
           'other information collected by automated means (for example: clicks on advertisements or referral links);',
           'cookies information (described in detail within the Cookies Policy).',
@@ -56,7 +56,7 @@ export const PPdefinition: LegalDocumentDefinition = [
     list: [
       {
         title:
-          'The User&#39;s personal data will be processed for the following purposes:',
+          "The User's personal data will be processed for the following purposes:",
         list: [
           {
             title:
@@ -69,11 +69,11 @@ export const PPdefinition: LegalDocumentDefinition = [
           },
           {
             title:
-              'for the purpose of the Controller&#39;s legitimate interests, including:',
+              "for the purpose of the Controller's legitimate interests, including:",
             list: [
               'to protect the Platform - in particular to ensure security, prevent abuse and enforce compliance with the Terms and Conditions;',
               'to report on the results obtained within the Platform by the Controller - in particular for the purposes of tracking activity indicators and preparing financial reports;',
-              'to personalise the Platform - in particular regarding information on other Users&#39; activities, events and new features;',
+              "to personalise the Platform - in particular regarding information on other Users' activities, events and new features;",
               'to improve the Platform - in particular, to gain insight into how Users interact with the Platform and how its reception can be improved;',
               'to advertise the Platform - in particular to inform about the services and functions offered, and to verify the effectiveness of advertising;',
               'to be able to contact the User - in particular for the purpose of sending marketing communications;',
@@ -95,14 +95,14 @@ export const PPdefinition: LegalDocumentDefinition = [
   {
     title: 'Website analytics and feedback',
     paragraphs: [
-      'The Controller measures how the Service is used with Logdash web analytics, its own product (the "Website Analytics"). The Website Analytics sets no cookies and stores nothing in the User&#39;s browser to recognise the User.',
-      'For each page view or other event, the Website Analytics collects the address of the page without its query string or fragment, the name of the event, the host name of the referring website, campaign (UTM) tags, the name of an advertising click identifier parameter (never its value), the browser&#39;s time zone, the User&#39;s IP address and the browser&#39;s User-Agent.',
-      'From the IP address and the User-Agent, the Controller&#39;s server computes a pseudonymous visitor identifier: a SHA-256 hash of a random salt, the site, the IP address and the User-Agent. The salt is 32 random bytes created for each UTC day, held only in Redis and deleted 30 minutes after that day ends. Because the salt changes every day, so does the identifier, and once the salt is deleted nobody, the Controller included, can recompute it.',
+      'The Controller measures how the Service is used with Logdash web analytics, its own product (the "Website Analytics"). The Website Analytics sets no cookies and stores nothing in the User\'s browser to recognise the User.',
+      "For each page view or other event, the Website Analytics collects the address of the page without its query string or fragment, the name of the event, the host name of the referring website, campaign (UTM) tags, the name of an advertising click identifier parameter (never its value), the browser's time zone, the User's IP address and the browser's User-Agent.",
+      "From the IP address and the User-Agent, the Controller's server computes a pseudonymous visitor identifier: a SHA-256 hash of a random salt, the site, the IP address and the User-Agent. The salt is 32 random bytes created for each UTC day, held only in Redis and deleted 30 minutes after that day ends. Because the salt changes every day, so does the identifier, and once the salt is deleted nobody, the Controller included, can recompute it.",
       'The IP address is used only to compute this identifier and is never stored. Of the User-Agent, only the device type, browser and operating system are stored, and of the time zone, only the country it belongs to.',
-      'When a User is signed in to the Platform, the Website Analytics also records a pseudonymous user identifier for product analytics, such as how often Users return: a SHA-256 hash of the site ID and the User&#39;s account ID, computed in the User&#39;s browser. The account ID itself is not sent to the Website Analytics.',
+      "When a User is signed in to the Platform, the Website Analytics also records a pseudonymous user identifier for product analytics, such as how often Users return: a SHA-256 hash of the site ID and the User's account ID, computed in the User's browser. The account ID itself is not sent to the Website Analytics.",
       'Visits are grouped into sessions on the server. A session ends after 30 minutes without activity or after 24 hours. Website Analytics data is deleted automatically after at most 365 days.',
-      'Feedback the User sends from the Platform is sent to the Controller&#39;s internal Telegram chat, together with the rating the User gives and the User&#39;s e-mail address with most of it hidden (for example jo***@gm***.com).',
-      'The legal basis for this processing is the Controller&#39;s legitimate interest in understanding how the Service is used and improving it (Article 6 section 1 letter f) of the GDPR).',
+      "Feedback the User sends from the Platform is sent to the Controller's internal Telegram chat, together with the rating the User gives and the User's e-mail address with most of it hidden (for example jo***@gm***.com).",
+      "The legal basis for this processing is the Controller's legitimate interest in understanding how the Service is used and improving it (Article 6 section 1 letter f) of the GDPR).",
       'The User may object to this processing at any time. The Website Analytics does not run in a browser that sends the Global Privacy Control or Do Not Track signal, so turning on either setting in the browser stops it. The User may also object by e-mail to support@logdash.io.',
     ],
   },
@@ -112,10 +112,10 @@ export const PPdefinition: LegalDocumentDefinition = [
       {
         title: 'The recipients of your personal data are:',
         list: [
-          'entities ensuring the operation and maintenance of the Controller&#39;s IT systems;',
-          'the Controller&#39;s associates to whom access to your personal data is necessary to ensure the proper functioning of the Platform;',
+          "entities ensuring the operation and maintenance of the Controller's IT systems;",
+          "the Controller's associates to whom access to your personal data is necessary to ensure the proper functioning of the Platform;",
           'entities whose services the Controller uses in connection with ensuring the correct functioning of the Platform, for example: couriers and law firms;',
-          'the providers that run the Service for the Controller: Hetzner Online GmbH (servers in Germany), Cloudflare (the logdash.io web application, including the AI model that answers questions on the home page), Stripe (payments), Resend (e-mail), GitHub (sign-in and encrypted backups), Google (sign-in) and Telegram (alerts the User sets up and the Controller&#39;s internal notifications).',
+          "the providers that run the Service for the Controller: Hetzner Online GmbH (servers in Germany), Cloudflare (the logdash.io web application, including the AI model that answers questions on the home page), Stripe (payments), Resend (e-mail), GitHub (sign-in and encrypted backups), Google (sign-in) and Telegram (alerts the User sets up and the Controller's internal notifications).",
         ],
       },
       {
@@ -146,11 +146,11 @@ export const PPdefinition: LegalDocumentDefinition = [
   {
     title: 'Transfer of personal data outside of the EEA',
     paragraphs: [
-      'Some of our service providers may store User data outside the European Economic Area. In such cases, Users&#39; data may be stored in countries that provide an adequate level of protection for personal data, or in countries that do not provide such a level. In the latter case, the Controller secures Users&#39; data by concluding agreements with Controller&#39;s service providers containing the so-called Standard Contractual Clauses approved by the European Commission, which provide a guarantee of adequate protection for Users&#39; personal data in third countries, or uses other bases for the transfer of personal data. For more information in this regard, please contact us.',
+      "Some of our service providers may store User data outside the European Economic Area. In such cases, Users' data may be stored in countries that provide an adequate level of protection for personal data, or in countries that do not provide such a level. In the latter case, the Controller secures Users' data by concluding agreements with Controller's service providers containing the so-called Standard Contractual Clauses approved by the European Commission, which provide a guarantee of adequate protection for Users' personal data in third countries, or uses other bases for the transfer of personal data. For more information in this regard, please contact us.",
     ],
   },
   {
-    title: 'User&#39;s rights',
+    title: "User's rights",
     list: [
       {
         title:
@@ -175,8 +175,7 @@ export const PPdefinition: LegalDocumentDefinition = [
         ],
       },
       {
-        title:
-          'A request for the exercise of the User&#39;s rights can be made:',
+        title: "A request for the exercise of the User's rights can be made:",
         list: [
           'in writing, by sending a letter to the address: Aleksander Błaszkiewicz, ul. Rakoczego 19 lok. 4, 80-288 Gdańsk;',
           'by sending an e-mail to an electronic mail address: support@logdash.io.',
@@ -203,7 +202,7 @@ export const PPdefinition: LegalDocumentDefinition = [
       },
       {
         title:
-          'The response will be sent to the e-mail address from which the request was sent and, with regard to requests sent to the Controller&#39;s correspondence address, by post to the address indicated on the request, unless it is clear from the content of the letter that a response to the e-mail address is preferred and if such an e-mail address is specified in the request.',
+          "The response will be sent to the e-mail address from which the request was sent and, with regard to requests sent to the Controller's correspondence address, by post to the address indicated on the request, unless it is clear from the content of the letter that a response to the e-mail address is preferred and if such an e-mail address is specified in the request.",
         list: [],
       },
       {
@@ -223,7 +222,7 @@ export const PPdefinition: LegalDocumentDefinition = [
       },
       {
         title:
-          'The Controller undertakes all necessary measures to ensure that the Controller&#39;s subcontractors and other contracted entities guarantee the application of adequate security measures whenever they process personal data on the Controller&#39;s behalf.',
+          "The Controller undertakes all necessary measures to ensure that the Controller's subcontractors and other contracted entities guarantee the application of adequate security measures whenever they process personal data on the Controller's behalf.",
         list: [],
       },
     ],
@@ -242,9 +241,5 @@ export const PPdefinition: LegalDocumentDefinition = [
         list: [],
       },
     ],
-  },
-  {
-    title: 'Last updated: 7 October 2026',
-    list: [],
   },
 ];

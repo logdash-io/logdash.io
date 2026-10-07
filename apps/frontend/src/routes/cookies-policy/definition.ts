@@ -23,7 +23,7 @@ export const cookiesPolicyDefinition: LegalDocumentDefinition = [
       },
       {
         title:
-          'Besides Cookies, the Platform keeps the following in the browser&#39;s storage. Nothing in it is sent to the Controller automatically:',
+          "Besides Cookies, the Platform keeps the following in the browser's storage. Nothing in it is sent to the Controller automatically:",
         list: [
           'logdash_anonymous_preview_v0 (session storage) - holds the token of an anonymous account started from the home page, until the browser tab is closed;',
           'logdash-oauth-popup (session storage) - marks the window that signing in with GitHub or Google opens, until the sign-in finishes;',
@@ -53,9 +53,5 @@ export const cookiesPolicyDefinition: LegalDocumentDefinition = [
           'Blocking or deleting logdash_access_token_v0 signs the User out of the Platform, and blocking it prevents signing in.',
       },
     ],
-  },
-  {
-    title: 'Last updated: 7 October 2026',
-    list: [],
   },
 ];

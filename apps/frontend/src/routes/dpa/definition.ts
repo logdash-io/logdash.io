@@ -6,8 +6,8 @@ export const DPAdefinition: LegalDocumentDefinition = [
     paragraphs: [
       'This Data Processing Agreement (the "DPA") supplements the Terms of Service (the "Terms") and forms part of the Agreement between Logdash and the Client. Terms defined in the Terms have the same meaning in this DPA.',
       'Logdash is Aleksander Błaszkiewicz NIP 9571167927 REGON 527410431, ul. Rakoczego 19 lok. 4, 80-288 Gdańsk, Poland, e-mail: support@logdash.io.',
-      'This DPA applies whenever Logdash processes personal data on behalf of the Client while providing the Platform, in particular web analytics about visitors of the Client&#39;s websites and logs sent from the Client&#39;s applications (the "Client Personal Data"). For this processing the Client is the controller and Logdash is the processor within the meaning of Regulation (EU) 2016/679 (the "GDPR").',
-      'Logdash processes the personal data of Users&#39; accounts, of billing and of visitors of its own website as a controller. That processing is described in the Privacy Policy and is not covered by this DPA.',
+      'This DPA applies whenever Logdash processes personal data on behalf of the Client while providing the Platform, in particular web analytics about visitors of the Client\'s websites and logs sent from the Client\'s applications (the "Client Personal Data"). For this processing the Client is the controller and Logdash is the processor within the meaning of Regulation (EU) 2016/679 (the "GDPR").',
+      "Logdash processes the personal data of Users' accounts, of billing and of visitors of its own website as a controller. That processing is described in the Privacy Policy and is not covered by this DPA.",
       'If this DPA and the Terms conflict on the protection of personal data, this DPA prevails.',
     ],
   },
@@ -38,8 +38,8 @@ export const DPAdefinition: LegalDocumentDefinition = [
       {
         title: 'The data subjects are:',
         list: [
-          'visitors of the Client&#39;s websites and web applications that load the Logdash web analytics script;',
-          'users of the Client&#39;s applications whom the Client identifies to the web analytics;',
+          "visitors of the Client's websites and web applications that load the Logdash web analytics script;",
+          "users of the Client's applications whom the Client identifies to the web analytics;",
           'any other person whose personal data the Client includes in logs, metrics, monitors or status pages;',
           'recipients of alerts named by the Client.',
         ],
@@ -47,11 +47,11 @@ export const DPAdefinition: LegalDocumentDefinition = [
       {
         title: 'For web analytics, Logdash stores:',
         list: [
-          'a pseudonymous visitor identifier: a SHA-256 hash of a random daily salt, the site, the visitor&#39;s IP address and the browser&#39;s User-Agent, computed on the Logdash server;',
+          "a pseudonymous visitor identifier: a SHA-256 hash of a random daily salt, the site, the visitor's IP address and the browser's User-Agent, computed on the Logdash server;",
           'a session identifier assigned by the Logdash server;',
-          'where the Client calls identify, a pseudonymous user identifier: a SHA-256 hash of the site ID and the Client&#39;s user ID, computed in the visitor&#39;s browser, so the user ID itself never leaves the browser;',
+          "where the Client calls identify, a pseudonymous user identifier: a SHA-256 hash of the site ID and the Client's user ID, computed in the visitor's browser, so the user ID itself never leaves the browser;",
           'page paths without query strings or fragments, event names, the host name of the referring website, campaign (UTM) tags and the name of an advertising click identifier parameter, never its value;',
-          'the device type, browser and operating system, derived from the User-Agent, and a country, derived from the browser&#39;s time zone;',
+          "the device type, browser and operating system, derived from the User-Agent, and a country, derived from the browser's time zone;",
           'the time of each event.',
         ],
       },
@@ -74,7 +74,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
       },
       {
         title:
-          'The Terms, this DPA and the settings the Client chooses in the Platform are the Client&#39;s documented instructions. The Client may send further instructions to support@logdash.io.',
+          "The Terms, this DPA and the settings the Client chooses in the Platform are the Client's documented instructions. The Client may send further instructions to support@logdash.io.",
       },
       {
         title:
@@ -146,7 +146,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
       },
       {
         title:
-          'Logdash informs the Client of any intended addition or replacement of a sub-processor before it takes effect, by e-mail to the address of the Client&#39;s Account and by updating this list. The Client may object on reasonable grounds by e-mail to support@logdash.io. If the objection cannot be resolved, the Client may terminate the Agreement.',
+          "Logdash informs the Client of any intended addition or replacement of a sub-processor before it takes effect, by e-mail to the address of the Client's Account and by updating this list. The Client may object on reasonable grounds by e-mail to support@logdash.io. If the objection cannot be resolved, the Client may terminate the Agreement.",
       },
       {
         title:
@@ -154,7 +154,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
       },
       {
         title:
-          'When the Client connects a Telegram chat or a webhook as a notification channel, Logdash sends alert content to that destination on the Client&#39;s instruction. The Client chooses that destination, and its provider is not a sub-processor of Logdash.',
+          "When the Client connects a Telegram chat or a webhook as a notification channel, Logdash sends alert content to that destination on the Client's instruction. The Client chooses that destination, and its provider is not a sub-processor of Logdash.",
       },
     ],
   },
@@ -186,7 +186,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
     list: [
       {
         title:
-          'Logdash notifies the Client without undue delay after becoming aware of a personal data breach affecting Client Personal Data, by e-mail to the address of the Client&#39;s Account.',
+          "Logdash notifies the Client without undue delay after becoming aware of a personal data breach affecting Client Personal Data, by e-mail to the address of the Client's Account.",
       },
       {
         title:
@@ -203,7 +203,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
       },
       {
         title:
-          'Web analytics events are deleted automatically once the retention period of the Client&#39;s plan, as it was when each event was received, has passed. Logs are deleted 32 days after the day they were received.',
+          "Web analytics events are deleted automatically once the retention period of the Client's plan, as it was when each event was received, has passed. Logs are deleted 32 days after the day they were received.",
       },
       {
         title:
@@ -239,9 +239,5 @@ export const DPAdefinition: LegalDocumentDefinition = [
           'Logdash may amend this DPA under the rules that apply to amendments of the Terms.',
       },
     ],
-  },
-  {
-    title: 'Last updated: 7 October 2026',
-    list: [],
   },
 ];

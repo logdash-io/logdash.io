@@ -7,4 +7,5 @@
   definition={TOSdefinition}
   title="Terms of service"
   description="The terms you agree to when you use Logdash, written to be read rather than skipped."
+  updated="7 October 2026"
 />

@@ -21,11 +21,10 @@
   let activeId: string | null = $state(null);
 
   function update(): void {
-    const content = container?.lastElementChild ?? container;
     const ended =
       window.scrollY > 0 &&
-      (content?.getBoundingClientRect().bottom ?? Infinity) <=
-        window.innerHeight;
+      window.scrollY + window.innerHeight >=
+        document.documentElement.scrollHeight - 1;
     const line = ended ? window.innerHeight : REACHED_LINE_PX;
     let current = entries[0]?.id ?? null;
     for (const entry of entries) {
