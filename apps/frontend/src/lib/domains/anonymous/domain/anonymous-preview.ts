@@ -5,14 +5,13 @@ export type AnonymousPreview = {
   token: string;
   clusterId: string;
   clusterName: string;
-  projectId: string;
   monitorId: string;
   url: string;
   createdAt: number;
   anonymous: boolean;
 };
 
-export type AnonymousStartStep = 'account' | 'project' | 'check';
+export type AnonymousStartStep = 'account' | 'check';
 
 export type AnonymousStartErrorKind =
   | 'rate-limited'

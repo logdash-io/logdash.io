@@ -1,221 +1,150 @@
 <script lang="ts">
   import { DangerIcon } from '@logdash/hyper-ui/icons';
-  import { Spinner } from '@logdash/hyper-ui/presentational';
   import * as d3 from 'd3';
-  import { onMount } from 'svelte';
   import { match } from 'ts-pattern';
-  import { thinTicks } from './data.utils.js';
+  import { thinTicks, type GraphReadyPoint } from './data.utils.js';
 
   type Format = 'minute' | 'hour' | 'day';
-  type DataPoint = {
-    x: number | string | Date;
-    y: number | null;
-  };
   type Props = {
-    data: DataPoint[];
+    data: GraphReadyPoint[];
+    label: string;
     isLoading?: boolean;
     failed?: boolean;
-    color?: string;
-    height?: number;
     format?: Format;
     timeRange: 'small' | 'large';
   };
+
   const {
+    data,
+    label,
     isLoading = false,
     failed = false,
-    data,
-    color = 'var(--fg-default)',
-    height = 200,
     format = 'minute',
-    timeRange = 'small',
+    timeRange,
   }: Props = $props();
 
-  let chartContainer: HTMLElement;
-  let tooltip: HTMLElement;
-  const MARGIN = { top: 12, right: 8, bottom: 20, left: 44 };
-  const AXIS_COLOR = 'var(--fg-muted)';
-  const AXIS_LINE_COLOR = 'var(--surface-50-border)';
-  function createChart() {
-    if (!chartContainer || !data || data.length === 0) {
-      d3.select(chartContainer).selectAll('*').remove();
-      return;
-    }
-    d3.select(chartContainer).selectAll('*').remove();
-    const width = chartContainer.clientWidth;
-    const innerWidth = width - MARGIN.left - MARGIN.right;
-    const innerHeight = height - MARGIN.top - MARGIN.bottom;
-    const svg = d3
-      .select(chartContainer)
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .attr('viewBox', [0, 0, width, height])
-      .attr('style', 'max-width: 100%; height: auto;');
-    const chart = svg
-      .append('g')
-      .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
-    const xScale = d3
-      .scaleBand()
-      .domain(data.map((d) => String(d.x)))
-      .range([0, innerWidth])
-      .padding(0.1);
-    const yScale = d3
+  const MARGIN = { top: 12, right: 12, bottom: 28, left: 44 };
+  const LINE_COLOR = 'var(--fg-default)';
+  const SURFACE = 'var(--chart-surface, var(--surface-50-bg))';
+  const gradientId = $props.id();
+  const compact = new Intl.NumberFormat('en', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  });
+  const exact = new Intl.NumberFormat('en', { maximumFractionDigits: 2 });
+
+  let width = $state(0);
+  let height = $state(0);
+  let hovered = $state<number | null>(null);
+
+  const values = $derived(
+    data.flatMap((point) => (point.y === null ? [] : [point.y])),
+  );
+  const x = $derived(
+    d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.y) || 0])
-      .range([innerHeight, 0]);
-    const xCenter = (d: DataPoint): number =>
-      xScale(String(d.x))! + xScale.bandwidth() / 2;
-
-    function getTickLabelForDisplay(
-      value: string,
-      currentFormat: Format,
-      currentTimeRange: 'small' | 'large',
-    ): string {
-      return match(currentFormat)
-        .with('minute', () => {
-          const minute = parseInt(value.split(':')[1], 10);
-          if (currentTimeRange === 'small') {
-            return minute % 5 === 0 ? value : '';
-          }
-          return minute === 0 || minute === 30 ? value : '';
-        })
-        .with('hour', () => {
-          const hour = parseInt(value.split(' ')[1].split(':')[0], 10);
-          if (currentTimeRange === 'small') {
-            return value;
-          }
-          return hour === 0 || hour === 12 ? value : '';
-        })
-        .with('day', () => value)
-        .exhaustive();
-    }
-
-    const tickValues = thinTicks(
-      xScale
-        .domain()
-        .filter(
-          (tick) => getTickLabelForDisplay(tick, format, timeRange) !== '',
-        ),
-      innerWidth,
+      .domain([0, Math.max(1, data.length - 1)])
+      .range([MARGIN.left, Math.max(MARGIN.left, width - MARGIN.right)]),
+  );
+  const y = $derived(
+    d3
+      .scaleLinear()
+      .domain([Math.min(0, d3.min(values) ?? 0), d3.max(values) || 1])
+      .nice(4)
+      .range([Math.max(MARGIN.top, height - MARGIN.bottom), MARGIN.top]),
+  );
+  const line = $derived(
+    d3
+      .line<GraphReadyPoint>()
+      .defined((point) => point.y !== null)
+      .x((_, index) => x(index))
+      .y((point) => y(point.y ?? 0))
+      .curve(d3.curveMonotoneX),
+  );
+  const area = $derived(
+    d3
+      .area<GraphReadyPoint>()
+      .defined((point) => point.y !== null)
+      .x((_, index) => x(index))
+      .y0(y(0))
+      .y1((point) => y(point.y ?? 0))
+      .curve(d3.curveMonotoneX),
+  );
+  const ticks = $derived(y.ticks(4));
+  const labelIndexes = $derived.by((): number[] => {
+    const candidates = data.flatMap((point, index) =>
+      showsLabel(point.x) ? [index] : [],
     );
+    const shown = new Set(
+      thinTicks(
+        candidates.map((index) => data[index].x),
+        width - MARGIN.left - MARGIN.right,
+      ),
+    );
+    return candidates.filter((index) => shown.has(data[index].x));
+  });
+  const isolated = $derived(
+    data.flatMap((point, index) =>
+      point.y !== null &&
+      (data[index - 1]?.y ?? null) === null &&
+      (data[index + 1]?.y ?? null) === null
+        ? [index]
+        : [],
+    ),
+  );
+  const hoveredValue = $derived(
+    hovered === null ? null : (data[hovered]?.y ?? null),
+  );
 
-    const xAxis = chart
-      .append('g')
-      .attr('transform', `translate(0,${innerHeight})`)
-      .call(
-        d3
-          .axisBottom(xScale)
-          .tickValues(tickValues)
-          .tickSize(0)
-          .tickPadding(8)
-          .tickFormat((tick) =>
-            getTickLabelForDisplay(tick, format, timeRange),
-          ),
-      )
-      .attr('color', AXIS_COLOR);
-
-    xAxis.selectAll('path, line').attr('stroke', AXIS_LINE_COLOR);
-    xAxis
-      .selectAll('text')
-      .style('font-size', '10px')
-      .style('font-family', 'var(--font-mono)');
-
-    chart
-      .append('g')
-      .call(d3.axisLeft(yScale).ticks(5).tickSize(0).tickPadding(8))
-      .attr('color', AXIS_COLOR)
-      .call((g) => g.select('.domain').remove())
-      .call((g) =>
-        g
-          .selectAll('text')
-          .style('font-size', '10px')
-          .style('font-family', 'var(--font-mono)'),
-      );
-    const line = d3
-      .line<DataPoint>()
-      .defined((d) => d.y !== null)
-      .x((d) => xCenter(d))
-      .y((d) => yScale(d.y!))
-      .curve(d3.curveMonotoneX);
-    chart
-      .append('path')
-      .datum(data)
-      .attr('fill', 'none')
-      .attr('stroke', color)
-      .attr('stroke-width', 2)
-      .attr('d', line);
-    chart
-      .selectAll('.data-point')
-      .data(data.filter((d) => d.y !== null))
-      .join('circle')
-      .attr('class', 'data-point')
-      .attr('cx', (d) => xCenter(d))
-      .attr('cy', (d) => yScale(d.y!))
-      .attr('r', 2.5)
-      .attr('fill', color);
-    chart
-      .append('rect')
-      .attr('width', innerWidth)
-      .attr('height', innerHeight)
-      .attr('fill', 'transparent')
-      .style('pointer-events', 'all')
-      .on('mousemove', function (event) {
-        const [mouseX, mouseY] = d3.pointer(event, chartContainer);
-        const xPositions = data.map((d) => xCenter(d));
-        const index = d3.bisectCenter(xPositions, mouseX - MARGIN.left);
-
-        if (index >= 0 && index < data.length) {
-          const d = data[index];
-          if (d.y !== null) {
-            d3.select(tooltip)
-              .style('visibility', 'visible')
-              .style('left', `${mouseX}px`)
-              .style('top', `${mouseY - 20}px`)
-              .style('position', 'absolute')
-              .html(
-                `<strong>Date:</strong> ${String(d.x)}<br><strong>Value:</strong> ${d.y}`,
-              );
-          } else {
-            d3.select(tooltip).style('visibility', 'hidden');
-          }
-        }
+  function showsLabel(value: string): boolean {
+    return match(format)
+      .with('minute', () => {
+        const minute = parseInt(value.split(':')[1], 10);
+        return timeRange === 'small'
+          ? minute % 5 === 0
+          : minute === 0 || minute === 30;
       })
-      .on('mouseout', function () {
-        d3.select(tooltip).style('visibility', 'hidden');
-      });
-
-    d3.select(tooltip).style('position', 'absolute');
+      .with('hour', () => {
+        const hour = parseInt(value.split(' ')[1].split(':')[0], 10);
+        return timeRange === 'small' || hour === 0 || hour === 12;
+      })
+      .with('day', () => true)
+      .exhaustive();
   }
-  onMount(() => {
-    createChart();
-    const resizeObserver = new ResizeObserver(() => {
-      createChart();
-    });
-    if (chartContainer) {
-      resizeObserver.observe(chartContainer);
-    }
-    return () => {
-      resizeObserver.disconnect();
-    };
-  });
-  $effect(() => {
-    if (data && chartContainer) {
-      createChart();
-    }
-  });
+
+  function onPointerMove(event: PointerEvent): void {
+    const bounds = (event.currentTarget as SVGElement).getBoundingClientRect();
+    const index = Math.round(x.invert(event.clientX - bounds.left));
+    hovered = Math.min(data.length - 1, Math.max(0, index));
+  }
+
+  function onPointerLeave(): void {
+    hovered = null;
+  }
+
+  function onKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const step = event.key === 'ArrowRight' ? 1 : -1;
+    const start = hovered ?? (step > 0 ? -1 : data.length);
+    hovered = Math.min(data.length - 1, Math.max(0, start + step));
+  }
 </script>
 
-<div class="chart-wrapper relative h-full">
+<div
+  class="relative h-full w-full"
+  bind:clientWidth={width}
+  bind:clientHeight={height}
+>
   {#if isLoading}
-    <Spinner
-      size="sm"
-      class="text-fg-muted absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-    />
-  {/if}
-
-  {#if !isLoading && data.length === 0}
     <div
-      class="text-fg-muted absolute inset-0 flex items-center justify-center gap-2 text-sm"
+      class="bg-surface-150-bg h-full rounded-xl"
+      role="status"
+      aria-label="Loading {label}"
+    ></div>
+  {:else if data.length === 0}
+    <p
+      class="text-fg-muted flex h-full items-center justify-center gap-2 text-sm"
     >
       {#if failed}
         <DangerIcon class="size-4" />
@@ -223,28 +152,122 @@
       {:else}
         No data in this range
       {/if}
-    </div>
-  {/if}
-  <div class="chart-container w-full" bind:this={chartContainer}></div>
-  <div class="point-tooltip" bind:this={tooltip}></div>
-</div>
+    </p>
+  {:else if width && height}
+    <svg
+      {width}
+      {height}
+      class="focus-visible:outline-brand block touch-pan-y rounded-lg outline-none focus-visible:outline-2"
+      role="img"
+      tabindex="0"
+      aria-label="{label} over time. Use the arrow keys to read each point."
+      onpointermove={onPointerMove}
+      onpointerleave={onPointerLeave}
+      onkeydown={onKeydown}
+      onblur={onPointerLeave}
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color={LINE_COLOR} stop-opacity="0.16" />
+          <stop offset="100%" stop-color={LINE_COLOR} stop-opacity="0" />
+        </linearGradient>
+      </defs>
 
-<style>
-  .chart-container {
-    position: relative;
-  }
-  .point-tooltip {
-    position: absolute;
-    visibility: hidden;
-    background-color: var(--surface-elevated-bg);
-    color: var(--fg-default);
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    pointer-events: none;
-    z-index: 10;
-    transform: translate(-50%, -100%);
-    white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-</style>
+      {#each ticks as tick (tick)}
+        <line
+          x1={MARGIN.left}
+          x2={width - MARGIN.right}
+          y1={y(tick)}
+          y2={y(tick)}
+          stroke="var(--surface-25-border)"
+          stroke-dasharray={tick === 0 ? undefined : '3 4'}
+        />
+        <text
+          x={0}
+          y={y(tick)}
+          dy="0.32em"
+          class="fill-fg-muted text-[11px] tabular-nums"
+        >
+          {compact.format(tick)}
+        </text>
+      {/each}
+
+      {#each labelIndexes as index (index)}
+        <text
+          x={x(index)}
+          y={height - 8}
+          text-anchor={index === 0
+            ? 'start'
+            : index === data.length - 1
+              ? 'end'
+              : 'middle'}
+          class="fill-fg-muted text-[11px] tabular-nums"
+        >
+          {data[index].x}
+        </text>
+      {/each}
+
+      <path d={area(data)} fill="url(#{gradientId})" />
+      <path
+        d={line(data)}
+        fill="none"
+        stroke={LINE_COLOR}
+        stroke-width="2"
+        stroke-linejoin="round"
+      />
+
+      {#each isolated as index (index)}
+        <circle
+          cx={x(index)}
+          cy={y(data[index].y ?? 0)}
+          r="2.5"
+          fill={LINE_COLOR}
+        />
+      {/each}
+
+      {#if hovered !== null && hoveredValue !== null}
+        <line
+          x1={x(hovered)}
+          x2={x(hovered)}
+          y1={MARGIN.top}
+          y2={height - MARGIN.bottom}
+          stroke="var(--fg-disabled)"
+        />
+        <circle
+          cx={x(hovered)}
+          cy={y(hoveredValue)}
+          r="4"
+          fill={LINE_COLOR}
+          stroke={SURFACE}
+          stroke-width="2"
+        />
+      {/if}
+    </svg>
+
+    {#if hovered !== null && hoveredValue !== null}
+      <div
+        class={[
+          'border-surface-elevated-border bg-surface-elevated-bg pointer-events-none absolute top-2 z-10 min-w-44 rounded-xl border px-3 py-2.5 text-sm shadow-lg',
+          x(hovered) > width / 2
+            ? '-translate-x-[calc(100%+12px)]'
+            : 'translate-x-3',
+        ]}
+        style:left="{x(hovered)}px"
+      >
+        <p class="text-fg-muted text-xs">{data[hovered].x}</p>
+        <p class="mt-1.5 flex items-center justify-between gap-4">
+          <span class="flex min-w-0 items-center gap-2">
+            <span
+              class="size-2 shrink-0 rounded-full"
+              style:background-color={LINE_COLOR}
+            ></span>
+            <span class="truncate">{label}</span>
+          </span>
+          <span class="font-medium tabular-nums">
+            {exact.format(hoveredValue)}
+          </span>
+        </p>
+      </div>
+    {/if}
+  {/if}
+</div>

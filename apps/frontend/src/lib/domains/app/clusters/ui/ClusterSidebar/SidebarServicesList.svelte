@@ -11,15 +11,8 @@
     listServices,
     type ServiceItem,
   } from '$lib/domains/app/clusters/domain/service-groups.js';
-  import { getStatusFromMonitor } from '$lib/domains/app/clusters/application/get-status-from-monitor.js';
-  import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
-  import MonitorStatus from '$lib/domains/app/projects/ui/monitor-status/MonitorStatus.svelte';
-  import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
-  import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
-  import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
-  import { Feature } from '$lib/domains/shared/types.js';
-  import { Button, Checkbox, Input } from '@logdash/hyper-ui/presentational';
+  import { Button, Input } from '@logdash/hyper-ui/presentational';
   import { tick } from 'svelte';
   import { fly } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
@@ -30,7 +23,6 @@
   let newServiceSlot: HTMLDivElement | null = null;
   let isCreating = $state(false);
   let serviceName = $state('');
-  let selectedFeatures = $state<Feature[]>([]);
 
   const currentCluster = $derived(clustersState.get(page.params.cluster_id));
   const activeProjectId = $derived(
@@ -44,24 +36,6 @@
 
     return [...services, ...dependencies];
   });
-
-  const featureConfig = [
-    {
-      feature: Feature.LOGGING,
-      label: 'Logs',
-      icon: LogsIcon,
-    },
-    {
-      feature: Feature.METRICS,
-      label: 'Metrics',
-      icon: MetricsIcon,
-    },
-    {
-      feature: Feature.MONITORING,
-      label: 'Monitoring',
-      icon: MonitoringIcon,
-    },
-  ];
 
   const canCreate = $derived(serviceName.length >= 1);
 
@@ -81,7 +55,6 @@
   function onOpenForm(): void {
     isFormOpen = true;
     serviceName = '';
-    selectedFeatures = [];
     setTimeout(() => {
       document.getElementById('new-service-name-input')?.focus();
     }, 50);
@@ -91,23 +64,10 @@
     const hadFocus = newServiceSlot?.contains(document.activeElement) ?? false;
     isFormOpen = false;
     serviceName = '';
-    selectedFeatures = [];
 
     if (!hadFocus) return;
     await tick();
     newServiceSlot?.querySelector('button')?.focus();
-  }
-
-  function onToggleFeature(feature: Feature): void {
-    if (selectedFeatures.includes(feature)) {
-      selectedFeatures = selectedFeatures.filter((f) => f !== feature);
-    } else {
-      selectedFeatures = [...selectedFeatures, feature];
-    }
-  }
-
-  function isFeatureEnabled(feature: Feature): boolean {
-    return selectedFeatures.includes(feature);
   }
 
   async function onCreateService(): Promise<void> {
@@ -117,8 +77,6 @@
     try {
       const result = await ProjectsService.createProject(clusterId, {
         name: serviceName,
-        selectedFeatures:
-          selectedFeatures.length > 0 ? selectedFeatures : undefined,
       });
 
       void onCloseForm();
@@ -165,22 +123,12 @@
 {/if}
 
 {#snippet serviceRow(item: ServiceItem)}
-  {@const monitor = monitoringState.getMonitorByProjectId(item.id)}
   <SidebarServiceRow
     label={item.label || 'New service'}
-    host={item.host}
-    status={monitor ? getStatusFromMonitor(monitor) : undefined}
-    tooltip={monitor ? monitorTooltip : undefined}
     active={item.id === activeProjectId}
     disabled={!clusterId}
     onclick={() => onServiceSelect(item.id)}
   />
-
-  {#snippet monitorTooltip()}
-    <MonitorStatus projectId={item.id}>
-      {null}
-    </MonitorStatus>
-  {/snippet}
 {/snippet}
 
 {#snippet newService()}
@@ -188,7 +136,7 @@
     {#if isFormOpen}
       <div
         role="presentation"
-        class="ld-card-bg ld-card-border mt-1 ml-3 flex shrink-0 flex-col gap-2 rounded-lg p-2"
+        class="bg-surface-100-bg edge mt-1 ml-3 flex shrink-0 flex-col gap-2 rounded-lg p-2"
         in:fly={{ y: -5, duration: 200, easing: cubicOut }}
         onkeydown={onFormKeyDown}
       >
@@ -203,27 +151,7 @@
           maxlength={64}
         />
 
-        <div class="flex flex-col gap-0.5">
-          {#each featureConfig as { feature, label, icon: Icon } (feature)}
-            <label
-              class={[
-                'flex items-center gap-2 p-1.5 rounded cursor-pointer text-[13px] hover:bg-surface-100-hover-bg',
-                { 'text-brand': isFeatureEnabled(feature) },
-              ]}
-            >
-              <Checkbox
-                size="xs"
-                variant="primary"
-                checked={isFeatureEnabled(feature)}
-                onchange={() => onToggleFeature(feature)}
-              />
-              <Icon class="size-3.5 shrink-0" />
-              <span>{label}</span>
-            </label>
-          {/each}
-        </div>
-
-        <div class="flex items-center gap-1.5 mt-1">
+        <div class="flex items-center gap-1.5">
           <Button
             variant="primary"
             size="xs"

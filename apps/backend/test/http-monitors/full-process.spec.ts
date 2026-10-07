@@ -4,7 +4,7 @@ import { createTestApp } from '../utils/bootstrap';
 import { waitFor } from '../utils/wait-for';
 import { TelegramSendMessageBody } from '../utils/telegram-utils';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
-import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
+import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 
 describe('Http monitor full process', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -60,15 +60,15 @@ describe('Http monitor full process', () => {
     // at first the status is unknown
     // unknown -> up
     nock('https://chess.com').get('/').reply(200, 'ok');
-    await service.tryPingMonitors([ProjectTier.Free]);
+    await service.tryPingMonitors([ClusterTier.Free]);
 
     // up -> down
     nock('https://chess.com').get('/').reply(500, { error: 'some funny error' });
-    await service.tryPingMonitors([ProjectTier.Free]);
+    await service.tryPingMonitors([ClusterTier.Free]);
 
     // down -> up
     nock('https://chess.com').get('/').reply(200, 'ok');
-    await service.tryPingMonitors([ProjectTier.Free]);
+    await service.tryPingMonitors([ClusterTier.Free]);
 
     await waitFor(
       () => Promise.resolve(telegramPostedDtos.length),

@@ -3,7 +3,7 @@ import nock from 'nock';
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
-import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
+import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
 import { HttpPingNormalized } from '../../src/http-ping/core/entities/http-ping.interface';
@@ -47,8 +47,8 @@ describe('Http Ping (writes)', () => {
     });
 
     // when
-    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
-    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ClusterTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ClusterTier.EarlyBird]);
 
     // then
     const pingsA = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -77,39 +77,30 @@ describe('Http Ping (writes)', () => {
     }
 
     // when
-    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ClusterTier.EarlyBird]);
 
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
     expect(allPings.length).toBe(1000);
   }, 30000);
 
-  it('handles pings for large number of projects and monitors', async () => {
+  it('handles pings for large number of monitors', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous({
       userTier: UserTier.EarlyBird,
     });
 
-    const projects = await Promise.all(
-      Array.from({ length: 1000 }, () =>
-        bootstrap.utils.projectUtils.createDefaultProject({
-          userId: setup.user.id,
-          tier: ProjectTier.EarlyBird,
-        }),
-      ),
-    );
-
     await Promise.all(
-      projects.map((project) =>
+      Array.from({ length: 1000 }, () =>
         bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
-          projectId: project.id,
+          clusterId: setup.cluster.id,
           claimed: true,
         }),
       ),
     );
 
     // when
-    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ClusterTier.EarlyBird]);
 
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
@@ -134,7 +125,7 @@ describe('Http Ping (writes)', () => {
     nock(anotherUrl).persist().get('/').delay(10).reply(403);
 
     // when
-    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ClusterTier.EarlyBird]);
 
     // then
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -166,7 +157,7 @@ describe('Http Ping (writes)', () => {
     });
 
     // when
-    await schedulerService.tryPingMonitors([ProjectTier.Free]);
+    await schedulerService.tryPingMonitors([ClusterTier.Free]);
 
     // then
     const pingsA = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -206,7 +197,6 @@ describe('Http Ping (writes)', () => {
     const otherProject = await bootstrap.utils.projectUtils.createDefaultProject({
       userId: setup.user.id,
       clusterId: setup.cluster.id,
-      tier: ProjectTier.Free,
     });
 
     const unclaimedPullMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
@@ -298,7 +288,7 @@ describe('Http Ping (writes)', () => {
     });
 
     // when
-    await schedulerService.tryPingMonitors([ProjectTier.EarlyBird]);
+    await schedulerService.tryPingMonitors([ClusterTier.EarlyBird]);
 
     // then
     const claimedMonitorPings = await bootstrap.utils.httpPingUtils.getMonitorPings({

@@ -21,9 +21,15 @@
   let activeId: string | null = $state(null);
 
   function update(): void {
+    const content = container?.lastElementChild ?? container;
+    const ended =
+      window.scrollY > 0 &&
+      (content?.getBoundingClientRect().bottom ?? Infinity) <=
+        window.innerHeight;
+    const line = ended ? window.innerHeight : REACHED_LINE_PX;
     let current = entries[0]?.id ?? null;
     for (const entry of entries) {
-      if (entry.element.getBoundingClientRect().top > REACHED_LINE_PX) break;
+      if (entry.element.getBoundingClientRect().top > line) break;
       current = entry.id;
     }
     activeId = current;
@@ -80,7 +86,7 @@
           <a
             href="#{entry.id}"
             class={[
-              'flex min-h-8 items-center rounded-lg px-2.5 text-sm leading-5 transition-ink duration-150',
+              'flex min-h-8 items-center rounded-lg px-2.5 py-1.5 text-sm leading-5 transition-ink duration-150',
               activeId === entry.id
                 ? 'text-fg-default'
                 : 'text-fg-tertiary hover:text-fg-default',

@@ -9,7 +9,6 @@
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { cubicInOut } from 'svelte/easing';
   import { fade, fly } from 'svelte/transition';
-  import { monitoringState } from '../../application/monitoring.state.svelte.js';
 
   type Props = {
     children: Snippet;
@@ -35,22 +34,20 @@
     typeof document === 'undefined' ? true : !document.hidden,
   );
 
-  const handleVisibilityChange = () => {
+  function onVisibilityChange(): void {
     const newVisibility = !document.hidden;
-    let timeout;
     if (isPageVisible !== newVisibility) {
       if (newVisibility) {
         logger.info('Page became visible. Data sync will resume.');
         void resumeSync();
       } else {
-        clearTimeout(timeout);
         logger.info('Page became hidden. Data sync will be paused.');
         logsState.pauseSync();
         metricsState.pauseSync();
         isPageVisible = newVisibility;
       }
     }
-  };
+  }
 
   async function resumeSync(): Promise<void> {
     const projectId = projectIdToSync;
@@ -64,7 +61,6 @@
         projectId && previewedMetricId
           ? metricsState.previewMetric(projectId, previewedMetricId)
           : Promise.resolve(),
-        monitoringState.reloadAllPingBuckets(),
       ]);
       isPageVisible = true;
     } catch (error) {
@@ -77,12 +73,11 @@
       return;
     }
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    // Ensure the initial state is correctly set after client-side hydration
+    document.addEventListener('visibilitychange', onVisibilityChange);
     isPageVisible = !document.hidden;
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   });
 
@@ -113,7 +108,6 @@
       logger.error('Synchronization failed due to missing tabId');
     }
 
-    // todo check if project has enabled features before syncing
     logger.info(
       `Syncing data for project ${projectIdToSync} on tab ${tabId}. Page is visible.`,
     );
@@ -136,14 +130,19 @@
       class="bg-surface-root-bg/40 absolute top-0 left-0 z-20 h-full w-full backdrop-blur-xs"
     ></div>
 
-    <div
-      class="bg-surface-inverse-bg text-fg-inverse fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-2 shadow-lg md:bottom-8"
-      in:fly={{ duration: 200, easing: cubicInOut, y: 50 }}
-      out:fly={{ delay: 300, duration: 200, easing: cubicInOut, y: 50 }}
-    >
-      <div class="flex items-center gap-2 text-sm font-medium">
-        <Spinner size="xs" aria-hidden="true" />
-        <span>Updating</span>
+    <div class="pointer-events-none absolute inset-0 z-30">
+      <div
+        class="sticky top-6 flex justify-center"
+        in:fly={{ duration: 200, easing: cubicInOut, y: -16 }}
+        out:fly={{ delay: 300, duration: 200, easing: cubicInOut, y: -16 }}
+      >
+        <span
+          class="bg-surface-inverse-bg text-fg-inverse flex h-8 items-center gap-2 rounded-full px-3 text-sm font-medium shadow-lg"
+          role="status"
+        >
+          <Spinner size="xs" aria-hidden="true" />
+          Updating
+        </span>
       </div>
     </div>
   {/if}

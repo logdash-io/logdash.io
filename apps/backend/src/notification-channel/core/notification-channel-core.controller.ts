@@ -1,3 +1,4 @@
+import { HttpMonitorWriteService } from '../../http-monitor/write/http-monitor-write.service';
 import {
   BadRequestException,
   Body,
@@ -36,6 +37,7 @@ export class NotificationChannelCoreController {
     private readonly notificationChannelMessagingService: NotificationChannelMessagingService,
     private readonly userReadCachedService: UserReadCachedService,
     private readonly notificationChannelTierValidationService: NotificationChannelTierValidationService,
+    private readonly httpMonitorWriteService: HttpMonitorWriteService,
   ) {}
 
   @UseGuards(ClusterMemberGuard)
@@ -89,6 +91,10 @@ export class NotificationChannelCoreController {
       userId,
     );
 
+    await this.httpMonitorWriteService.addNotificationChannelToClusterMonitors(
+      clusterId,
+      channel.id,
+    );
     await this.notificationChannelMessagingService.sendWelcomeMessage(channel.id);
 
     return NotificationChannelSerializer.serialize(channel);
@@ -140,6 +146,7 @@ export class NotificationChannelCoreController {
     @CurrentUserId() userId: string,
   ): Promise<SuccessResponse> {
     await this.notificationChannelWriteService.delete(id, userId);
+    await this.httpMonitorWriteService.removeNotificationChannelFromAllMonitors(id);
 
     return new SuccessResponse();
   }

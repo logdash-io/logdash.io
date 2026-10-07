@@ -36,7 +36,7 @@ export const finishOAuthCallback = async (dto: {
   const state = consume_oauth_state(cookies, url.searchParams.get('state'));
 
   if (!state) {
-    bffLogger.error(
+    bffLogger().error(
       `${provider} oauth callback with missing or mismatched state`,
     );
 
@@ -86,26 +86,26 @@ const exchangeCode = async (dto: {
   }
 
   if (!code) {
-    bffLogger.error(`${provider} login callback without a provider code`);
+    bffLogger().error(`${provider} login callback without a provider code`);
 
     return { kind: 'failed', reason: 'login-failed', flow: 'login' };
   }
 
   try {
-    bffLogger.info(`logging in with ${provider}...`);
+    bffLogger().info(`logging in with ${provider}...`);
 
     const { token } = await loginWithOAuth(provider, code);
     const maxAge = tokenMaxAge(token);
 
     if (!maxAge) {
-      bffLogger.error(`${provider} login returned an unusable token`);
+      bffLogger().error(`${provider} login returned an unusable token`);
 
       return { kind: 'failed', reason: 'login-failed', flow: 'login' };
     }
 
     save_access_token(cookies, token, { maxAge });
 
-    bffLogger.info(`${provider} login success`);
+    bffLogger().info(`${provider} login success`);
 
     return {
       kind: 'signed-in',
@@ -113,7 +113,7 @@ const exchangeCode = async (dto: {
       nextUrl: safe_redirect_path(state.next_url, SIGNED_IN_URL),
     };
   } catch (error) {
-    bffLogger.error(`${provider} login failed ${String(error)}`);
+    bffLogger().error(`${provider} login failed ${String(error)}`);
 
     return { kind: 'failed', reason: 'login-failed', flow: 'login' };
   }

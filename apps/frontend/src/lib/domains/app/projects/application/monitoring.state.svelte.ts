@@ -1,3 +1,4 @@
+import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import { createLogger } from '$lib/domains/shared/logger';
 import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils.js';
@@ -26,6 +27,7 @@ import {
 const logger = createLogger('monitoring.state', false);
 
 const MONITORING_TIME_RANGE_KEY = 'monitoring_time_range';
+const BUCKETS_REFRESH_MS = 60_000;
 
 // todo: divide api calls responsibility from state
 class MonitoringState {
@@ -36,6 +38,7 @@ class MonitoringState {
     {},
   );
   private _timeRange = $state<PingBucketPeriod>('90d');
+  private _bucketsRefreshedAt: Record<Monitor['id'], number> = {};
   private syncConnection: EventSource | null = null;
   private _streamGeneration = 0;
   private _unsubscribe: (() => void) | null = null;
@@ -49,7 +52,7 @@ class MonitoringState {
     return this._timeRange;
   }
 
-  setTimeRange(period: PingBucketPeriod): void {
+  public setTimeRange(period: PingBucketPeriod): void {
     this._timeRange = period;
     this._saveTimeRangePreference(period);
     void this.reloadAllPingBuckets();
@@ -76,7 +79,7 @@ class MonitoringState {
     localStorage.setItem(MONITORING_TIME_RANGE_KEY, period);
   }
 
-  hasNotificationChannel(monitorId: string, channelId: string): boolean {
+  public hasNotificationChannel(monitorId: string, channelId: string): boolean {
     const monitor = this._monitors[monitorId];
     if (!monitor) {
       return false;
@@ -87,7 +90,7 @@ class MonitoringState {
     );
   }
 
-  async addNotificationChannel(
+  public async addNotificationChannel(
     monitorId: string,
     channelId: string,
   ): Promise<void> {
@@ -118,7 +121,7 @@ class MonitoringState {
     }
   }
 
-  async removeNotificationChannel(
+  public async removeNotificationChannel(
     monitorId: string,
     channelId: string,
   ): Promise<void> {
@@ -195,7 +198,7 @@ class MonitoringState {
       : others;
   }
 
-  toggleNotificationChannel(
+  public toggleNotificationChannel(
     monitorId: string,
     channelId: string,
   ): Promise<void> {
@@ -212,15 +215,15 @@ class MonitoringState {
     }
   }
 
-  getMonitorByProjectId(projectId: string): Monitor | undefined {
-    return this.monitors.find((monitor) => monitor.projectId === projectId);
+  public monitorsOf(clusterId: string): Monitor[] {
+    return this.monitors.filter((monitor) => monitor.clusterId === clusterId);
   }
 
-  set(monitors: Monitor[]): void {
+  public set(monitors: Monitor[]): void {
     this._monitors = arrayToObject(monitors, 'id');
   }
 
-  async sync(clusterId: string): Promise<void> {
+  public async sync(clusterId: string): Promise<void> {
     try {
       await Promise.all([
         this._syncClusterMonitors(clusterId),
@@ -231,49 +234,49 @@ class MonitoringState {
     }
   }
 
-  unsync(): void {
+  public unsync(): void {
     logger.debug('unsyncing monitors...');
     this._stopMonitorsSync();
   }
 
-  pauseSync(): void {
+  public pauseSync(): void {
     this._pauseMonitorSync();
   }
 
-  async resumeSync(clusterId: string): Promise<void> {
+  public async resumeSync(clusterId: string): Promise<void> {
     return this._resumeMonitorSync(clusterId);
   }
 
-  monitoringPings(monitorId: string): HttpPing[] {
+  public monitoringPings(monitorId: string): HttpPing[] {
     return this._getSortedPings(this._monitorPings[monitorId]);
   }
 
-  getMonitorById(monitorId: string): Monitor | undefined {
+  public getMonitorById(monitorId: string): Monitor | undefined {
     return this._monitors[monitorId];
   }
 
-  getMonitorByUrl(url: string): Monitor | undefined {
+  public getMonitorByUrl(url: string): Monitor | undefined {
     return this.monitors.find((monitor) => monitor.url === url);
   }
 
-  async load(clusterId: string): Promise<void> {
+  public async load(clusterId: string): Promise<void> {
     logger.debug('loading monitors...');
     await this._fetchMonitors(clusterId).catch(() => undefined);
   }
 
-  loadMonitorPings(
-    projectId: string,
+  public loadMonitorPings(
+    clusterId: string,
     monitorId: string,
     limit: number = 60,
   ): Promise<boolean> {
-    return this._fetchPings(projectId, monitorId, limit);
+    return this._fetchPings(clusterId, monitorId, limit);
   }
 
-  getPingBuckets(monitorId: string): (PingBucket | null)[] {
+  public getPingBuckets(monitorId: string): (PingBucket | null)[] {
     return this._pingBuckets[monitorId] || [];
   }
 
-  async loadPingBuckets(monitorId: string): Promise<void> {
+  public async loadPingBuckets(monitorId: string): Promise<void> {
     this._timeRange = this._loadTimeRangePreference();
     try {
       const response = await monitoringService.getPingBuckets(
@@ -286,7 +289,18 @@ class MonitoringState {
     }
   }
 
-  async reloadAllPingBuckets(): Promise<void> {
+  private _refreshPingBuckets(monitorId: string): void {
+    const now = Date.now();
+
+    if (now - (this._bucketsRefreshedAt[monitorId] ?? 0) < BUCKETS_REFRESH_MS) {
+      return;
+    }
+
+    this._bucketsRefreshedAt[monitorId] = now;
+    void this.loadPingBuckets(monitorId);
+  }
+
+  public async reloadAllPingBuckets(): Promise<void> {
     const monitorIds = Object.keys(this._monitors);
     const promises = monitorIds.map((monitorId) =>
       this.loadPingBuckets(monitorId),
@@ -295,11 +309,11 @@ class MonitoringState {
     await Promise.allSettled(promises);
   }
 
-  calculateUptime(monitorId: string): number | null {
+  public calculateUptime(monitorId: string): number | null {
     return bucketUptime(this.getPingBuckets(monitorId));
   }
 
-  async deleteMonitor(monitorId: string): Promise<void> {
+  public async deleteMonitor(monitorId: string): Promise<void> {
     if (!monitorId) {
       throw new Error('Monitor ID is required');
     }
@@ -313,6 +327,7 @@ class MonitoringState {
 
     delete this._monitors[monitorId];
     delete this._monitorPings[monitorId];
+    clusterHealthState.removeMonitor(monitor.clusterId, monitorId);
   }
 
   private _getSortedMonitors(): Monitor[] {
@@ -369,12 +384,12 @@ class MonitoringState {
     await this.sync(clusterId);
   }
 
-  async createMonitor(
-    projectId: string,
+  public async createMonitor(
+    clusterId: string,
     dto: CreateMonitorDto,
   ): Promise<string> {
     const createdMonitor = await monitoringService.createMonitor(
-      projectId,
+      clusterId,
       dto,
     );
 
@@ -384,11 +399,11 @@ class MonitoringState {
     return createdMonitor.id;
   }
 
-  getUnclaimedMonitor(monitorId: string): Monitor | undefined {
+  public getUnclaimedMonitor(monitorId: string): Monitor | undefined {
     return this._unclaimedMonitors[monitorId];
   }
 
-  hasSuccessfulPing(monitorId: string): boolean {
+  public hasSuccessfulPing(monitorId: string): boolean {
     const pings = this._monitorPings[monitorId];
     if (!pings || pings.length === 0) {
       return false;
@@ -399,13 +414,14 @@ class MonitoringState {
     );
   }
 
-  async claimMonitor(httpMonitorId: string): Promise<Monitor> {
+  public async claimMonitor(httpMonitorId: string): Promise<Monitor> {
     await monitoringService.claimMonitor(httpMonitorId);
 
     const claimedMonitor = await this._readClaimedMonitor(httpMonitorId);
 
     this._monitors[httpMonitorId] = claimedMonitor;
     delete this._unclaimedMonitors[httpMonitorId];
+    clusterHealthState.setMonitor(claimedMonitor);
 
     if (!this._monitorPings[httpMonitorId]) {
       this._monitorPings[httpMonitorId] = [];
@@ -417,18 +433,14 @@ class MonitoringState {
   private async _readClaimedMonitor(httpMonitorId: string): Promise<Monitor> {
     const cachedMonitor =
       this._unclaimedMonitors[httpMonitorId] ?? this._monitors[httpMonitorId];
-    const projectId = cachedMonitor?.projectId;
-
-    if (!projectId) {
-      return cachedMonitor;
-    }
 
     try {
-      const projectMonitors =
-        await monitoringService.getMonitorsByProject(projectId);
+      const clusterMonitors = await monitoringService.getMonitors(
+        cachedMonitor.clusterId,
+      );
 
       return (
-        projectMonitors.find((monitor) => monitor.id === httpMonitorId) ??
+        clusterMonitors.find((monitor) => monitor.id === httpMonitorId) ??
         cachedMonitor
       );
     } catch (error) {
@@ -438,7 +450,7 @@ class MonitoringState {
     }
   }
 
-  async updateMonitor(
+  public async updateMonitor(
     monitorId: string,
     dto: UpdateMonitorDto,
   ): Promise<Monitor> {
@@ -512,10 +524,8 @@ class MonitoringState {
             createdAt: new Date(pingData.createdAt),
           });
 
-          if (this._monitors[pingData.httpMonitorId]) {
-            this._monitors[pingData.httpMonitorId].lastStatusCode =
-              pingData.statusCode;
-          }
+          this._recordMonitorStatus(pingData);
+          this._refreshPingBuckets(pingData.httpMonitorId);
 
           logger.debug('added ping:', pingData);
         } catch (e) {
@@ -549,15 +559,31 @@ class MonitoringState {
     });
   }
 
+  private _recordMonitorStatus(ping: HttpPingCreatedEvent): void {
+    const monitor = this._monitors[ping.httpMonitorId];
+
+    if (!monitor) {
+      return;
+    }
+
+    monitor.lastStatusCode = ping.statusCode;
+    monitor.lastStatus =
+      ping.statusCode >= 200 && ping.statusCode < 400 ? 'up' : 'down';
+    clusterHealthState.setMonitor($state.snapshot(monitor));
+  }
+
   private async _fetchMonitors(clusterId: string): Promise<void> {
     try {
       const data = await monitoringService.getMonitors(clusterId);
-      const newMonitors = arrayToObject<Monitor>(data, 'id');
 
-      for (const [id, monitor] of Object.entries(newMonitors)) {
-        if (!this._monitors[id]) {
-          this._monitors[id] = monitor;
+      for (const monitor of Object.values(this._monitors)) {
+        if (monitor.clusterId === clusterId) {
+          delete this._monitors[monitor.id];
         }
+      }
+
+      for (const monitor of data) {
+        this._monitors[monitor.id] = monitor;
       }
 
       for (const monitor of data) {
@@ -572,7 +598,7 @@ class MonitoringState {
   }
 
   private async _fetchPings(
-    projectId: string,
+    clusterId: string,
     monitorId: string,
     limit: number = 60,
   ): Promise<boolean> {
@@ -586,7 +612,7 @@ class MonitoringState {
 
     try {
       const data = await monitoringService.getMonitorPings({
-        projectId,
+        clusterId,
         monitorId,
         limit,
         signal: controller.signal,

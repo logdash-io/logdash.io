@@ -25,9 +25,9 @@
       aria-label="Color {color}"
       aria-pressed={isSelected}
       class={[
-        'flex size-3.5 cursor-pointer items-center justify-center rounded-xl transition-[scale,box-shadow] duration-200',
+        'flex size-3.5 cursor-pointer items-center justify-center rounded-xl transition-[scale] duration-200',
         isSelected
-          ? 'ring-offset-surface-elevated ring-2 ring-offset-2'
+          ? 'outline-brand outline-2 outline-offset-2'
           : 'hover:scale-110',
       ]}
       style:background-color={color}
@@ -37,9 +37,9 @@
 
   <label
     class={[
-      'relative flex size-3.5 cursor-pointer items-center justify-center rounded-xl transition-[scale,box-shadow] duration-200 hover:scale-110',
+      'relative flex size-3.5 cursor-pointer items-center justify-center rounded-xl transition-[scale] duration-200 hover:scale-110',
       {
-        'ring-offset-surface-elevated ring-2 ring-offset-2': isCustomColor,
+        'outline-brand outline-2 outline-offset-2': isCustomColor,
       },
     ]}
     style={isCustomColor

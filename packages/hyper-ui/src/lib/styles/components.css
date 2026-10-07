@@ -19,23 +19,6 @@
     @apply px-3 py-1.5;
   }
 
-  .success-card {
-    @apply text-success;
-  }
-
-  .success-card,
-  .success-card-bg {
-    @apply bg-success/10 border-success/20 border;
-  }
-
-  .error-card {
-    @apply bg-error/10 text-error border border-error/30;
-  }
-
-  .primary-card {
-    @apply bg-surface-150-bg border-surface-150-border border;
-  }
-
   .ld-card-base,
   .ld-card-bg,
   .ld-card {

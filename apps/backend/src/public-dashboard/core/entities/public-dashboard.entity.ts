@@ -16,6 +16,9 @@ export class PublicDashboardEntity {
 
   @Prop({ default: false })
   isPublic: boolean;
+
+  @Prop({ default: false })
+  autoAddMonitors: boolean;
 }
 
 export type PublicDashboardDocument = HydratedDocument<PublicDashboardEntity>;

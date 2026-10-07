@@ -89,12 +89,12 @@ describe('Overview (aggregation verdict)', () => {
 
   // make a claimed monitor with a known status for a project
   const seedMonitor = async (
-    projectId: string,
+    owner: { clusterId: string; projectId: string },
     name: string,
     status: HttpMonitorStatus,
   ): Promise<string> => {
     const created = await bootstrap.models.httpMonitorModel.create({
-      projectId,
+      ...owner,
       name,
       url: 'https://example.com',
       mode: HttpMonitorMode.Pull,
@@ -119,12 +119,16 @@ describe('Overview (aggregation verdict)', () => {
 
   describe('project overview', () => {
     it('returns error counts, monitor status and dataFlow for a single project', async () => {
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       await seedErrorLogs(project.id, 3);
       await seedInfoLog(project.id); // must not be counted
       await seedMetric(project.id);
-      await seedMonitor(project.id, 'api', HttpMonitorStatus.Down);
+      await seedMonitor(
+        { clusterId: cluster.id, projectId: project.id },
+        'api',
+        HttpMonitorStatus.Down,
+      );
 
       const response = await request(server())
         .get(`/projects/${project.id}/overview`)
@@ -138,7 +142,11 @@ describe('Overview (aggregation verdict)', () => {
       expect(body.errors[0].errorCount).toBe(3);
 
       expect(body.monitors).toHaveLength(1);
-      expect(body.monitors[0].status).toBe(HttpMonitorStatus.Down);
+      expect(body.monitors[0]).toMatchObject({
+        clusterId: cluster.id,
+        projectId: project.id,
+        status: HttpMonitorStatus.Down,
+      });
       expect(body.monitorsDown).toBe(1);
 
       expect(body.dataFlow).toHaveLength(1);

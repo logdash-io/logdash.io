@@ -5,4 +5,8 @@
   const { data }: PageProps = $props();
 </script>
 
+<svelte:head>
+  <title>API keys | Logdash</title>
+</svelte:head>
+
 <PersonalApiKeys apiKeys={data.apiKeys} />

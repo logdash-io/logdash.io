@@ -6,5 +6,6 @@ export type PublicDashboard = {
   httpMonitorsIds: string[];
   name: string;
   isPublic: boolean;
+  autoAddMonitors: boolean;
   customDomain?: CustomDomain;
 };

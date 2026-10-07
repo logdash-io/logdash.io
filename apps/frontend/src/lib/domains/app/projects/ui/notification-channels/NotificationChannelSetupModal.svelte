@@ -7,6 +7,7 @@
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import BellIcon from '$lib/domains/shared/icons/BellIcon.svelte';
+  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import LinkIcon from '$lib/domains/shared/icons/LinkIcon.svelte';
   import SendIcon from '$lib/domains/shared/icons/SendIcon.svelte';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
@@ -15,7 +16,6 @@
   import TelegramAlertingSetup from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/TelegramAlertingSetup.svelte';
   import WebhookSetupStep from '$lib/domains/app/projects/ui/notification-channels/webhook-setup/WebhookSetupStep.svelte';
   import type { WebhookSetupDTO } from '$lib/domains/app/projects/domain/notification-channels/notification-channels.types.js';
-  import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { Badge, Button } from '@logdash/hyper-ui/presentational';
 
   type Props = {
@@ -32,32 +32,17 @@
     {
       id: NotificationChannelType.TELEGRAM,
       name: 'Telegram',
-      onclick: () => {
-        const monitorId = notificationChannelSetupState.state.monitorId;
-        telegramSetupState.startSetup(monitorId);
-      },
+      onclick: () => telegramSetupState.startSetup(),
       icon: SendIcon,
     },
     {
       id: NotificationChannelType.WEBHOOK,
       name: 'Webhook',
-      onclick: () => {
-        // notificationChannelSetupState.startWebhookSetup();
-      },
+      onclick: () => undefined,
       icon: LinkIcon,
     },
   ]);
   const selectedChannel = $derived(notificationChannelSetupState.channel);
-
-  const monitorName = $derived.by(() => {
-    const monitorId = notificationChannelSetupState.state.monitorId;
-
-    if (!monitorId) {
-      return '';
-    }
-
-    return monitoringState.getMonitorById(monitorId)?.name || '';
-  });
 
   function closeModal(): void {
     notificationChannelSetupState.close();
@@ -86,46 +71,29 @@
       return;
     }
 
-    const monitorId = notificationChannelSetupState.state.monitorId;
-
-    if (dto.withAssignment && monitorId) {
-      void assignChannelToMonitor(monitorId, createdChannelId);
-    }
-
     closeModal();
     void notificationChannelsState.loadChannels(clusterId);
-  }
-
-  async function assignChannelToMonitor(
-    monitorId: string,
-    channelId: string,
-  ): Promise<void> {
-    try {
-      await monitoringState.addNotificationChannel(monitorId, channelId);
-    } catch {
-      toast.error('Failed to add notification channel to monitor');
-    }
+    void monitoringState.load(clusterId);
   }
 </script>
 
 {#snippet base()}
-  <div class="space-y-6">
-    <div class="flex items-center justify-start gap-4">
+  <div class="flex flex-col gap-5">
+    <div class="flex items-center gap-4">
       <div
-        class="bg-surface-50-bg border-surface-50-border text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
+        class="bg-surface-150-bg flex size-9 shrink-0 items-center justify-center rounded-lg"
       >
-        <BellIcon class="size-6 stroke-1" />
+        <BellIcon class="size-4.5" />
       </div>
-
-      <div class="flex flex-col items-start">
-        <h3 class="text-xl font-medium">Add a notification channel</h3>
+      <div class="flex min-w-0 flex-col gap-0.5">
+        <h2 class="text-base font-semibold">Add a notification channel</h2>
         <p class="text-fg-tertiary text-sm">
-          Choose where alerts for this monitor go.
+          Every monitor on this domain alerts it.
         </p>
       </div>
     </div>
 
-    <div class="flex flex-col">
+    <div class="flex flex-col gap-0.5">
       {#each availableChannels as channel (channel.id)}
         <UpgradeElement
           class="w-full"
@@ -134,7 +102,7 @@
         >
           <button
             type="button"
-            class="hover:bg-surface-elevated-hover-bg focus-visible:bg-surface-elevated-hover-bg flex w-full cursor-pointer items-center justify-start gap-4 rounded-xl px-4 py-3 text-left outline-none select-none"
+            class="hover:bg-surface-elevated-hover-bg focus-visible:bg-surface-elevated-hover-bg flex h-10 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-left text-sm outline-none select-none"
             onclick={() => {
               if (!allowedNotificationChannels.includes(channel.id)) {
                 return;
@@ -144,7 +112,7 @@
               channel.onclick?.();
             }}
           >
-            <channel.icon class="text-fg-default ml-2 inline h-4 w-4" />
+            <channel.icon class="text-fg-secondary size-4 shrink-0" />
             <span>{channel.name}</span>
 
             {#if !allowedNotificationChannels.includes(channel.id)}
@@ -161,14 +129,16 @@
               <Badge size="sm" class="ml-auto">
                 {@render upgradeText()}
               </Badge>
+            {:else}
+              <ChevronRightIcon class="text-fg-muted ml-auto size-3.5" />
             {/if}
           </button>
         </UpgradeElement>
       {/each}
     </div>
 
-    <div class="flex gap-3">
-      <Button class="flex-1" onclick={closeModal}>Cancel</Button>
+    <div class="flex justify-end">
+      <Button variant="ghost" onclick={closeModal}>Cancel</Button>
     </div>
   </div>
 {/snippet}
@@ -189,7 +159,6 @@
   {#if selectedChannel === NotificationChannelType.WEBHOOK}
     <WebhookSetupStep
       clusterName={clustersState.clusterName(clusterId)}
-      {monitorName}
       onSubmit={onWebhookSubmit}
       onCancel={onBackToChannels}
     />

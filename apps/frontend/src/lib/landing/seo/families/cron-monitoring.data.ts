@@ -40,7 +40,7 @@ export const cronMonitoringFamily: SeoFamily = {
       { type: 'heading', text: 'How Logdash watches a job' },
       {
         type: 'paragraph',
-        text: 'Logdash does this with push monitors. Push monitors are on the Pro plan, $15 a month, one per service and up to 50 services. Each one is checked every 15 seconds. A ping inside the window keeps it up, an empty window flips it to down and sends the alert, and the next ping flips it back and sends another. There is no per-job schedule and no grace setting. So a nightly job that pings once when it finishes reads as down 15 to 30 seconds later and stays down all day. Every guide here uses one of three patterns that fit the model instead:',
+        text: 'Logdash does this with push monitors. Push monitors are on the Pro plan, $15 a month, up to 50 of them. Each one is checked every 15 seconds. A ping inside the window keeps it up, an empty window flips it to down and sends the alert, and the next ping flips it back and sends another. There is no per-job schedule and no grace setting. So a nightly job that pings once when it finishes reads as down 15 to 30 seconds later and stays down all day. Every guide here uses one of three patterns that fit the model instead:',
       },
       {
         type: 'list',
@@ -68,7 +68,7 @@ curl -fsS -o /dev/null -w '%{http_code}\\n' -X POST \\
         items: [
           {
             title: 'Create a push monitor',
-            text: 'On Pro, add a service named after the job, set its monitor to push and copy the ping URL. The name is what the alert will say.',
+            text: 'On Pro, add a monitor named after the job, choose "You send heartbeats" and copy the ping URL. The name is what the alert will say.',
           },
           {
             title: 'Wire up the heartbeat',
@@ -145,7 +145,7 @@ curl -fsS -o /dev/null -w '%{http_code}\\n' -X POST \\
       {
         question: 'Is there cron job monitoring free of charge?',
         answer:
-          "Yes. Healthchecks.io watches 20 jobs free, Cronitor 5 monitors and Dead Man's Snitch one. Logdash push monitors start at Pro, $15 a month, but the freshness-route pattern runs on free HTTP monitors: five services, checked every 5 minutes.",
+          "Yes. Healthchecks.io watches 20 jobs free, Cronitor 5 monitors and Dead Man's Snitch one. Logdash push monitors start at Pro, $15 a month, but the freshness-route pattern runs on free HTTP monitors: five of them, checked every 5 minutes.",
       },
       {
         question: 'Is there open source cron job monitoring?',
@@ -219,7 +219,7 @@ export const cronMonitoringPages: SeoPage[] = [
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service on Pro, set its monitor to push and copy the ping URL. A service holds one monitor, so each task gets its own service and its own name in the alert, up to 50 on Pro.',
+            text: 'On Pro, add a monitor, choose "You send heartbeats" and copy the ping URL. Each task gets its own monitor and its own name in the alert, up to 50 on Pro.',
           },
           {
             title: 'Paste both lines',
@@ -380,7 +380,7 @@ export const cronMonitoringPages: SeoPage[] = [
         items: [
           {
             title: 'Create a push monitor',
-            text: 'On Pro, add a service, set its monitor to push and copy the ping URL into the heartbeat line.',
+            text: 'On Pro, add a monitor, choose "You send heartbeats" and copy the ping URL into the heartbeat line.',
           },
           {
             title: 'Hold the handle',
@@ -530,7 +530,7 @@ touch /var/lib/heartbeat/pg-backup`,
         items: [
           {
             title: 'Create a push monitor',
-            text: 'On Pro, add a service per backup, set its monitor to push and copy the ping URL into the heartbeat line.',
+            text: 'On Pro, add a monitor per backup, choose "You send heartbeats" and copy the ping URL into the heartbeat line.',
           },
           {
             title: 'Run the backup once by hand',
@@ -669,7 +669,7 @@ restic backup /srv /etc --exclude-caches \\
         items: [
           {
             title: 'Create a push monitor',
-            text: 'On Pro, add a service named after the repository, set its monitor to push and copy the ping URL into the heartbeat line.',
+            text: 'On Pro, add a monitor named after the repository, choose "You send heartbeats" and copy the ping URL into the heartbeat line.',
           },
           {
             title: 'Run the script once by hand',
@@ -843,7 +843,7 @@ SQL`,
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service in Logdash on Pro, set the monitor to push and copy the monitor id from the ping URL. Name it after the job, since the alert shows the name.',
+            text: 'On Pro, add a monitor in Logdash, choose "You send heartbeats" and copy the monitor id from the ping URL. Name it after the job, since the alert shows the name.',
           },
           {
             title: 'Schedule the heartbeat',
@@ -880,7 +880,7 @@ SQL`,
           },
           {
             feature: 'HTTP uptime checks and logs in the same tool',
-            logdash: 'Same service, same timeline',
+            logdash: 'Same dashboard, same timeline',
             them: 'Jobs only',
             winner: 'logdash',
           },
@@ -1002,7 +1002,7 @@ Schedule::call(function () {
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service in Logdash on Pro, set the monitor to push and copy the monitor id from the ping URL. Name it after the task, since the alert shows the name.',
+            text: 'On Pro, add a monitor in Logdash, choose "You send heartbeats" and copy the monitor id from the ping URL. Name it after the task, since the alert shows the name.',
           },
           {
             title: 'Add the two tasks',
@@ -1167,7 +1167,7 @@ def heartbeat():
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service on Pro, set the monitor to push and paste the id from its ping URL into PING_URL.',
+            text: 'On Pro, add a monitor, choose "You send heartbeats" and paste the id from its ping URL into PING_URL.',
           },
           {
             title: 'Deploy beat and a worker',
@@ -1326,7 +1326,7 @@ end`,
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service on Pro, set the monitor to push and copy the id from the ping URL into PING_URL.',
+            text: 'On Pro, add a monitor, choose "You send heartbeats" and copy the id from the ping URL into PING_URL.',
           },
           {
             title: 'Deploy and watch it turn up',
@@ -1363,7 +1363,7 @@ end`,
           },
           {
             feature: 'Logs from the Rails app',
-            logdash: 'Ruby SDK into the same service',
+            logdash: 'Ruby SDK into the same dashboard',
             them: 'Job events, not application logs',
             winner: 'logdash',
           },
@@ -1482,7 +1482,7 @@ new Worker(
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service on Pro, set the monitor to push and copy the id from the ping URL into PING_URL.',
+            text: 'On Pro, add a monitor, choose "You send heartbeats" and copy the id from the ping URL into PING_URL.',
           },
           {
             title: 'Deploy the worker',
@@ -1659,7 +1659,7 @@ spec:
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service in Logdash on Pro, set the monitor to push and copy the monitor id from the ping URL. Name it after the CronJob, since the alert shows the name.',
+            text: 'On Pro, add a monitor in Logdash, choose "You send heartbeats" and copy the monitor id from the ping URL. Name it after the CronJob, since the alert shows the name.',
           },
           {
             title: 'Apply the watcher',
@@ -1747,7 +1747,7 @@ spec:
         question:
           'Does Kubernetes CronJob monitoring need a Pro plan in Logdash?',
         answer:
-          'Yes. Push monitors are a Pro feature at $15 a month, which covers 50 services with one monitor each. HTTP uptime checks are on every plan, including the free one.',
+          'Yes. Push monitors are a Pro feature at $15 a month, which covers 50 monitors. HTTP uptime checks are on every plan, including the free one.',
       },
     ],
     updatedAt: '2026-10-02',
@@ -1854,7 +1854,7 @@ app.listen(3000);`,
           },
           {
             title: 'Point a monitor at it',
-            text: 'Create a service in Logdash with an HTTP monitor on /health/nightly-sync and connect a Telegram channel. Checks run every 5 minutes on the free plan and every minute on Builder.',
+            text: 'Add an HTTP monitor in Logdash on /health/nightly-sync and connect a Telegram channel. Checks run every 5 minutes on the free plan and every minute on Builder.',
           },
           {
             title: 'Let it go stale',
@@ -1887,13 +1887,13 @@ app.listen(3000);`,
           },
           {
             feature: 'HTTP checks on the app the workflow feeds',
-            logdash: 'Same service, with response time',
+            logdash: 'Yes, with response time',
             them: 'Not offered, it only listens for pings',
             winner: 'logdash',
           },
           {
             feature: 'Free plan',
-            logdash: 'Five services, checks every 5 minutes',
+            logdash: 'Five monitors, checks every 5 minutes',
             them: '20 checks',
             winner: 'them',
           },
@@ -2015,7 +2015,7 @@ Start-ScheduledTask -TaskName 'Logdash watch'`,
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service in Logdash on Pro, set the monitor to push and copy the monitor id from the ping URL. Name it after the task, since the alert shows the name.',
+            text: 'On Pro, add a monitor in Logdash, choose "You send heartbeats" and copy the monitor id from the ping URL. Name it after the task, since the alert shows the name.',
           },
           {
             title: 'Install the watcher',

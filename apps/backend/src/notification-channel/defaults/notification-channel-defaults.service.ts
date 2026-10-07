@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { HttpMonitorWriteService } from '../../http-monitor/write/http-monitor-write.service';
-import { ProjectReadService } from '../../project/read/project-read.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { UserReadService } from '../../user/read/user-read.service';
 import { AccountClaimStatus } from '../../user/core/enum/account-claim-status.enum';
@@ -20,7 +19,6 @@ export class NotificationChannelDefaultsService {
   constructor(
     private readonly httpMonitorReadService: HttpMonitorReadService,
     private readonly httpMonitorWriteService: HttpMonitorWriteService,
-    private readonly projectReadService: ProjectReadService,
     private readonly clusterReadService: ClusterReadService,
     private readonly userReadService: UserReadService,
     private readonly notificationChannelReadService: NotificationChannelReadService,
@@ -28,38 +26,34 @@ export class NotificationChannelDefaultsService {
     @Inject(NOTIFICATIONS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
-  public async attachOwnerEmail(httpMonitorId: string, userId: string): Promise<void> {
+  public async attachDomainChannels(httpMonitorId: string, userId: string): Promise<void> {
     const monitor = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
 
     if (monitor.notificationChannelsIds.length > 0) {
       return;
     }
 
-    const user = await this.userReadService.readByIdOrThrow(userId);
+    const channels = await this.notificationChannelReadService.readByClusterId(monitor.clusterId);
+    const channelsIds =
+      channels.length > 0
+        ? channels.map((channel) => channel.id)
+        : await this.ownerEmailChannelIds(monitor.clusterId, userId);
 
-    if (user.accountClaimStatus !== AccountClaimStatus.Claimed || !user.email) {
-      return;
+    for (const channelId of channelsIds) {
+      await this.httpMonitorWriteService.addNotificationChannel(httpMonitorId, channelId, userId);
     }
-
-    const project = await this.projectReadService.readByIdOrThrow(monitor.projectId);
-    const channelId = await this.findOrCreateEmailChannel(project.clusterId, user.email, userId);
-
-    await this.httpMonitorWriteService.addNotificationChannel(httpMonitorId, channelId, userId);
   }
 
   @OnEvent(AuthEvents.AccountClaimed)
   public async onAccountClaimed(event: AccountClaimedEvent): Promise<void> {
     try {
       const clusters = await this.clusterReadService.readByCreatorId(event.userId);
-      const projects = await this.projectReadService.readByClusterIds(
+      const monitors = await this.httpMonitorReadService.readClaimedByClusterIds(
         clusters.map((cluster) => cluster.id),
-      );
-      const monitors = await this.httpMonitorReadService.readClaimedByProjectIds(
-        projects.map((project) => project.id),
       );
 
       for (const monitor of monitors) {
-        await this.attachOwnerEmail(monitor.id, event.userId);
+        await this.attachDomainChannels(monitor.id, event.userId);
       }
     } catch (error) {
       this.logger.error('Failed to turn on email alerts for a claimed account', {
@@ -67,6 +61,16 @@ export class NotificationChannelDefaultsService {
         error: errorMessage(error),
       });
     }
+  }
+
+  private async ownerEmailChannelIds(clusterId: string, userId: string): Promise<string[]> {
+    const user = await this.userReadService.readByIdOrThrow(userId);
+
+    if (user.accountClaimStatus !== AccountClaimStatus.Claimed || !user.email) {
+      return [];
+    }
+
+    return [await this.findOrCreateEmailChannel(clusterId, user.email, userId)];
   }
 
   private async findOrCreateEmailChannel(

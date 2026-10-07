@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { createTestApp } from '../utils/bootstrap';
-import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-configs';
+import { getUserPlanConfig } from '../../src/shared/configs/user-plan-configs';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { CreateHttpMonitorBody } from '../../src/http-monitor/core/dto/create-http-monitor.body';
 import { Types } from 'mongoose';
 import { UpdateHttpMonitorBody } from '../../src/http-monitor/core/dto/update-http-monitor.body';
@@ -40,12 +41,12 @@ describe('HttpMonitorCoreController (writes)', () => {
     await bootstrap.methods.afterAll();
   });
 
-  describe('POST /projects/:projectId/http_monitors', () => {
-    it('denies creating push monitor for non-Pro project', async () => {
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+  describe('POST /clusters/:clusterId/http_monitors', () => {
+    it('denies creating push monitor for non-Pro domain', async () => {
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/projects/${project.id}/http_monitors`)
+        .post(`/clusters/${cluster.id}/http_monitors`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'push monitor', mode: HttpMonitorMode.Push });
 
@@ -55,13 +56,13 @@ describe('HttpMonitorCoreController (writes)', () => {
       );
     });
 
-    it('creates new monitor', async () => {
+    it('creates new monitor owned by the domain', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const notificationChannel =
         await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
-          clusterId: project.clusterId,
+          clusterId: cluster.id,
           token,
           options: { botToken: '123456:valid-bot-token' },
         });
@@ -75,27 +76,26 @@ describe('HttpMonitorCoreController (writes)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/projects/${project.id}/http_monitors`)
+        .post(`/clusters/${cluster.id}/http_monitors`)
         .set('Authorization', `Bearer ${token}`)
         .send(dto);
 
       // then
-      const entity = await bootstrap.models.httpMonitorModel.findOne();
+      const entity = await bootstrap.models.httpMonitorModel.findOne().lean();
       expect(response.status).toBe(201);
-      expect(entity).toMatchObject({
-        ...dto,
-        projectId: project.id,
-      });
+      expect(entity).toMatchObject({ ...dto, clusterId: cluster.id });
+      expect(entity?.projectId).toBeUndefined();
+      expect(response.body).toMatchObject({ clusterId: cluster.id });
     });
 
     it('throws error for invalid url', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
       const dtoStub = { name: 'Test Monitor', url: 'https://example.com/<>' };
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/projects/${project.id}/http_monitors`)
+        .post(`/clusters/${cluster.id}/http_monitors`)
         .set('Authorization', `Bearer ${token}`)
         .send(dtoStub);
 
@@ -103,13 +103,13 @@ describe('HttpMonitorCoreController (writes)', () => {
       expect(response.status).toBe(400);
     });
 
-    it('throws error when project already holds the unclaimed monitor budget', async () => {
+    it('throws error when domain already holds the unclaimed monitor budget', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
       const createMonitor = () =>
         request(bootstrap.app.getHttpServer())
-          .post(`/projects/${project.id}/http_monitors`)
+          .post(`/clusters/${cluster.id}/http_monitors`)
           .set('Authorization', `Bearer ${token}`)
           .send({ name: 'Unclaimed monitor', url: 'https://example.com' });
 
@@ -123,34 +123,32 @@ describe('HttpMonitorCoreController (writes)', () => {
       // then
       expect(response.status).toBe(409);
       expect((response.body as ErrorResponse).message).toBe(
-        'You have reached the maximum number of monitors for this service',
+        'You have reached the maximum number of monitors on your plan',
       );
       expect(await bootstrap.models.httpMonitorModel.countDocuments({ claimed: false })).toBe(3);
     });
 
     it('refuses the 21st monitor creation from one address within a minute', async () => {
       // given
-      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
-      // the budget is per address, so spreading the creates over fresh projects,
-      // each with its own unclaimed monitor budget, does not buy any more of them
-      const projects = await Promise.all(
-        Array.from({ length: 21 }, () =>
-          bootstrap.utils.projectUtils.createDefaultProject({
-            userId: setup.user.id,
-            clusterId: setup.cluster.id,
-          }),
-        ),
-      );
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Admin,
+      });
 
       // when
       const statuses: number[] = [];
-      for (const project of projects) {
+      for (let index = 0; index < 21; index++) {
         const response = await request(bootstrap.app.getHttpServer())
-          .post(`/projects/${project.id}/http_monitors`)
-          .set('Authorization', `Bearer ${setup.token}`)
+          .post(`/clusters/${cluster.id}/http_monitors`)
+          .set('Authorization', `Bearer ${token}`)
           .send({ name: 'Monitor', url: 'https://example.com' });
 
         statuses.push(response.status);
+
+        if (response.status === 201) {
+          await request(bootstrap.app.getHttpServer())
+            .post(`/http_monitors/${(response.body as HttpMonitorSerialized).id}/claim`)
+            .set('Authorization', `Bearer ${token}`);
+        }
       }
 
       // then
@@ -158,35 +156,35 @@ describe('HttpMonitorCoreController (writes)', () => {
       expect(statuses[20]).toBe(429);
     });
 
-    it('throws error when cluster has reached monitor limit', async () => {
+    it('counts the plan limit across every domain of the owner', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const maxMonitors = getProjectPlanConfig(project.tier).httpMonitors.maxNumberOfMonitors;
+      const { token, cluster, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const otherCluster = await bootstrap.utils.projectGroupUtils.storeCluster({
+        creatorId: user.id,
+      });
+      const maxMonitors = getUserPlanConfig(user.tier).httpMonitors.maxNumberOfMonitors;
 
-      // Create monitors up to the limit
-      for (let i = 0; i < maxMonitors; i++) {
-        await bootstrap.models.httpMonitorModel.create({
-          projectId: project.id,
-          name: `Monitor ${i}`,
-          url: 'https://example.com',
+      for (let index = 0; index < maxMonitors; index++) {
+        await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+          clusterId: index % 2 === 0 ? cluster.id : otherCluster.id,
           claimed: true,
         });
       }
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/projects/${project.id}/http_monitors`)
+        .post(`/clusters/${cluster.id}/http_monitors`)
         .set('Authorization', `Bearer ${token}`)
         .send({ name: 'One More Monitor', url: 'https://example.com' });
 
       // then
       expect(response.status).toBe(409);
       expect((response.body as ErrorResponse).message).toBe(
-        'You have reached the maximum number of monitors for this service',
+        'You have reached the maximum number of monitors on your plan',
       );
     });
 
-    it('throws error when notification channels do not belong to the same cluster', async () => {
+    it('throws error when notification channels do not belong to the same domain', async () => {
       // given
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();
       const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -203,7 +201,7 @@ describe('HttpMonitorCoreController (writes)', () => {
 
       // when
       const response = await request(bootstrap.app.getHttpServer())
-        .post(`/projects/${setupA.project.id}/http_monitors`)
+        .post(`/clusters/${setupA.cluster.id}/http_monitors`)
         .set('Authorization', `Bearer ${setupA.token}`)
         .send({
           name: 'Test Monitor',
@@ -220,6 +218,60 @@ describe('HttpMonitorCoreController (writes)', () => {
 
     it('denies access for non-cluster member', async () => {
       // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/http_monitors`)
+        .set('Authorization', `Bearer ${otherUserToken}`)
+        .send({ name: 'Test Monitor', url: 'https://example.com' });
+
+      // then
+      expect(response.status).toBe(403);
+    });
+
+    it('creates audit log when monitor is created', async () => {
+      // given
+      const { token, cluster, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/http_monitors`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'some name', url: 'https://google.com' });
+
+      // then
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: user.id,
+        action: AuditLogEntityAction.Create,
+        relatedDomain: RelatedDomain.HttpMonitor,
+        relatedEntityId: (response.body as HttpMonitorSerialized).id,
+      });
+    });
+  });
+
+  describe('POST /projects/:projectId/http_monitors', () => {
+    it('creates a monitor on the service domain, linked to the service', async () => {
+      // given
+      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/projects/${project.id}/http_monitors`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'some name', url: 'https://google.com' });
+
+      // then
+      expect(response.status).toBe(201);
+      expect(await bootstrap.models.httpMonitorModel.findOne().lean()).toMatchObject({
+        clusterId: project.clusterId,
+        projectId: project.id,
+      });
+    });
+
+    it('denies access for non-cluster member', async () => {
+      // given
       const { project } = await bootstrap.utils.generalUtils.setupAnonymous();
       const { token: otherUserToken } = await bootstrap.utils.generalUtils.setupAnonymous();
 
@@ -232,43 +284,10 @@ describe('HttpMonitorCoreController (writes)', () => {
       // then
       expect(response.status).toBe(403);
     });
-
-    it('creates audit log when monitor is created', async () => {
-      // given
-      const { token, project, user } = await bootstrap.utils.generalUtils.setupAnonymous();
-
-      const notificationChannel =
-        await bootstrap.utils.notificationChannelUtils.createTelegramNotificationChannel({
-          clusterId: project.clusterId,
-          token,
-          options: { botToken: '123456:valid-bot-token' },
-        });
-
-      const dto: CreateHttpMonitorBody = {
-        name: 'some name',
-        url: 'https://google.com',
-        notificationChannelsIds: [notificationChannel.id],
-        mode: HttpMonitorMode.Pull,
-      };
-
-      // when
-      const response = await request(bootstrap.app.getHttpServer())
-        .post(`/projects/${project.id}/http_monitors`)
-        .set('Authorization', `Bearer ${token}`)
-        .send(dto);
-
-      // then
-      await bootstrap.utils.auditLogUtils.assertAuditLog({
-        userId: user.id,
-        action: AuditLogEntityAction.Create,
-        relatedDomain: RelatedDomain.HttpMonitor,
-        relatedEntityId: (response.body as HttpMonitorSerialized).id,
-      });
-    });
   });
 
   describe('PUT /http_monitors/:httpMonitorId', () => {
-    it('denies switching a monitor to push mode for non-Pro project', async () => {
+    it('denies switching a monitor to push mode for non-Pro domain', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
@@ -702,7 +721,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       expect(entity?.claimed).toBe(true);
     });
 
-    it('claims a monitor while the project sits at the unclaimed monitor budget', async () => {
+    it('claims a monitor while the domain sits at the unclaimed monitor budget', async () => {
       // given
       const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
 
@@ -730,17 +749,14 @@ describe('HttpMonitorCoreController (writes)', () => {
 
     it('treats claiming an already claimed monitor as done', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const maxMonitors = getProjectPlanConfig(project.tier).httpMonitors.maxNumberOfMonitors;
+      const { token, cluster, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const maxMonitors = getUserPlanConfig(user.tier).httpMonitors.maxNumberOfMonitors;
 
       const claimedMonitors = await Promise.all(
-        Array.from({ length: maxMonitors }, (_, index) =>
-          bootstrap.models.httpMonitorModel.create({
-            projectId: project.id,
-            name: `Monitor ${index}`,
-            url: 'https://example.com',
+        Array.from({ length: maxMonitors }, () =>
+          bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+            clusterId: cluster.id,
             claimed: true,
-            notificationChannelsIds: [],
           }),
         ),
       );
@@ -757,27 +773,21 @@ describe('HttpMonitorCoreController (writes)', () => {
       expect(entity?.claimed).toBe(true);
     });
 
-    it('throws error when project has reached monitor limit', async () => {
+    it('throws error when the owner has reached the monitor limit', async () => {
       // given
-      const { token, project } = await bootstrap.utils.generalUtils.setupAnonymous();
-      const maxMonitors = getProjectPlanConfig(project.tier).httpMonitors.maxNumberOfMonitors;
+      const { token, cluster, user } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const maxMonitors = getUserPlanConfig(user.tier).httpMonitors.maxNumberOfMonitors;
 
-      // Create claimed monitors up to the limit
       for (let i = 0; i < maxMonitors; i++) {
-        await bootstrap.models.httpMonitorModel.create({
-          projectId: project.id,
-          name: `Monitor ${i}`,
-          url: 'https://example.com',
+        await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+          clusterId: cluster.id,
           claimed: true,
-          notificationChannelsIds: [],
         });
       }
 
-      // Create an unclaimed monitor to try to claim
       const unclaimedMonitor = await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
-        projectId: project.id,
+        clusterId: cluster.id,
         name: 'Unclaimed Monitor',
-        url: 'https://example.com',
       });
 
       // when
@@ -788,7 +798,7 @@ describe('HttpMonitorCoreController (writes)', () => {
       // then
       expect(response.status).toBe(409);
       expect((response.body as ErrorResponse).message).toBe(
-        'You have reached the maximum number of monitors for this service',
+        'You have reached the maximum number of monitors on your plan',
       );
 
       // Verify monitor remains unclaimed

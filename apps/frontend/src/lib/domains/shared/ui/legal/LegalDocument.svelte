@@ -4,7 +4,7 @@
   const { definition }: { definition: LegalDocumentDefinition } = $props();
 </script>
 
-<div style="word-break: break-all; white-space: normal;">
+<div class="wrap-break-word">
   {#each definition as section, index (index)}
     <h5 class="mt-2 mb-5 text-center md:mt-6">
       §{index + 1}

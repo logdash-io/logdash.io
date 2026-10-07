@@ -1,7 +1,10 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
   import { getStatusFromPings } from '$lib/domains/app/projects/application/get-status-from-pings';
-  import type { OAuthProvider } from '$lib/domains/auth/domain/oauth-provider';
+  import {
+    oauthProviderName,
+    type OAuthProvider,
+  } from '$lib/domains/auth/domain/oauth-provider';
   import OnboardingConsentStep from '$lib/domains/onboarding/ui/OnboardingConsentStep.svelte';
   import GitHubIcon from '$lib/domains/shared/icons/GitHubIcon.svelte';
   import GoogleIcon from '$lib/domains/shared/icons/GoogleIcon.svelte';
@@ -10,11 +13,7 @@
   import { prefersReducedMotion } from 'svelte/motion';
   import { fade, type TransitionConfig } from 'svelte/transition';
   import { match } from 'ts-pattern';
-  import {
-    heroClaim,
-    providerName,
-    type HeroClaimStep,
-  } from './hero-claim.svelte';
+  import { heroClaim, type HeroClaimStep } from './hero-claim.svelte';
   import { toChartPings } from '$lib/domains/app/projects/application/monitor-pings';
 
   type LiveStatus = {
@@ -62,7 +61,7 @@
       return null;
     }
 
-    return preview.projectId;
+    return preview.monitorId;
   });
 
   const pings = $derived(toChartPings(anonymousPreviewState.pings));
@@ -342,7 +341,7 @@
 
     <div class="flex flex-col gap-1.5">
       <h2 class="text-base font-medium text-balance">
-        Finish signing in with {providerName(provider)} in the window that opened
+        Finish signing in with {oauthProviderName(provider)} in the window that opened
       </h2>
       <p class="text-fg-tertiary text-sm">Your dashboard stays right here.</p>
     </div>

@@ -3,21 +3,27 @@ import type {
   AnonymousPreviewPhase,
 } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
-import type { Log } from '$lib/domains/logs/domain/log';
+import {
+  bucketUptime,
+  type PingBucket,
+} from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
+import { uptimeStat } from '$lib/domains/app/projects/ui/service/monitor-panel-content';
 import { match } from 'ts-pattern';
 import { getStatusFromPings } from '../../domains/app/projects/application/get-status-from-pings';
 import {
   checkIntervalLabel,
+  checkingLabel,
   lastCheckLabel,
   monitorStats,
   noResponseReason,
   responseTimes,
   statusFromHttpPings,
   toChartPings,
-  uptimeLabel,
   type MonitorStat,
   type MonitorStatus,
 } from '../../domains/app/projects/application/monitor-pings';
+
+const PLACEHOLDER_HOST = 'yourapp.com';
 
 export type HeroLive = {
   label: string;
@@ -25,24 +31,11 @@ export type HeroLive = {
   pending: boolean;
 };
 
-export type HeroService = {
+export type HeroMonitor = {
   name: string;
+  url: string | null;
   status: MonitorStatus;
   pending: boolean;
-};
-
-export type HeroMetric = {
-  id: string;
-  name: string;
-  value: number;
-  samples: number[];
-};
-
-export type HeroLogRow = {
-  key: number;
-  at: Date;
-  level: string;
-  message: string;
 };
 
 export type HeroReading = {
@@ -54,12 +47,13 @@ export type HeroReading = {
   lastCheckLabel: string;
 };
 
-type ServiceSource = {
+type MonitorSource = {
   phase: AnonymousPreviewPhase;
   previewHost: string | null;
+  previewUrl: string | null;
   hasPreview: boolean;
   pings: HttpPing[];
-  demo: Pick<AnonymousPreviewDemo, 'monitor' | 'pings'>;
+  demo: Pick<AnonymousPreviewDemo, 'monitor' | 'pings' | 'loaded'>;
 };
 
 export function heroLive(phase: AnonymousPreviewPhase): HeroLive {
@@ -87,16 +81,18 @@ export function heroLive(phase: AnonymousPreviewPhase): HeroLive {
     .exhaustive();
 }
 
-export function heroService({
+export function heroMonitor({
   phase,
   previewHost,
+  previewUrl,
   hasPreview,
   pings,
   demo,
-}: ServiceSource): HeroService {
+}: MonitorSource): HeroMonitor {
   if (phase === 'creating') {
     return {
       name: previewHost ?? 'Setting up',
+      url: previewUrl,
       status: 'unknown',
       pending: true,
     };
@@ -104,7 +100,8 @@ export function heroService({
 
   if (phase === 'idle' || !hasPreview || !previewHost) {
     return {
-      name: demo.monitor?.name ?? '',
+      name: demoName(demo),
+      url: demo.monitor?.url ?? null,
       status: statusFromHttpPings(demo.pings),
       pending: !demo.pings.length,
     };
@@ -112,6 +109,7 @@ export function heroService({
 
   return {
     name: previewHost,
+    url: previewUrl,
     status: phase === 'previewing' ? statusFromHttpPings(pings) : 'unknown',
     pending: false,
   };
@@ -119,41 +117,27 @@ export function heroService({
 
 export function heroReading(
   pings: HttpPing[],
+  hours: (PingBucket | null)[],
   now: number,
   waitingLabel: string,
 ): HeroReading {
   const chartPings = toChartPings(pings);
-  const interval = checkIntervalLabel(chartPings);
 
   return {
     status: getStatusFromPings(chartPings),
     notice: noResponseReason(chartPings.at(-1)),
-    stats: monitorStats(chartPings, {
-      label: 'Uptime',
-      value: uptimeLabel(chartPings) ?? '--',
-    }),
+    stats: monitorStats(
+      chartPings,
+      uptimeStat(chartPings, bucketUptime(hours), '90h'),
+    ),
     responseTimes: responseTimes(chartPings),
-    checkingLabel: interval ? `Checking every ${interval}` : 'Checking',
+    checkingLabel: checkingLabel(checkIntervalLabel(chartPings)),
     lastCheckLabel: lastCheckLabel(chartPings, now) ?? waitingLabel,
   };
 }
 
-export function heroLogRows(logs: Log[]): HeroLogRow[] {
-  return logs.map((log) => ({
-    key: parseInt(log.id.slice(-12), 16),
-    at: new Date(log.createdAt),
-    level: log.level,
-    message: log.message,
-  }));
-}
-
-export function heroMetrics(
-  metrics: AnonymousPreviewDemo['metrics'],
-): HeroMetric[] {
-  return (metrics ?? []).map((metric) => ({
-    id: metric.id,
-    name: metric.name,
-    value: metric.value,
-    samples: [...metric.history, metric.value],
-  }));
+export function demoName(
+  demo: Pick<AnonymousPreviewDemo, 'monitor' | 'loaded'>,
+): string {
+  return demo.monitor?.name ?? (demo.loaded ? PLACEHOLDER_HOST : '');
 }

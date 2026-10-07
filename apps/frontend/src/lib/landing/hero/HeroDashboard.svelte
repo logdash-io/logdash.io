@@ -1,98 +1,95 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
-  import SidebarFooter from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarFooter.svelte';
-  import SidebarDomainNav from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarDomainNav.svelte';
-  import SidebarDomainRow from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarDomainRow.svelte';
-  import SidebarLayout from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarLayout.svelte';
-  import SidebarNewServiceRow from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarNewServiceRow.svelte';
-  import SidebarServiceRow from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarServiceRow.svelte';
+  import type { WatchHistory } from '$lib/domains/anonymous/domain/watch-history';
+  import Breadcrumbs from '$lib/domains/app/clusters/ui/ClusterShell/Breadcrumbs.svelte';
   import LiveIndicator from '$lib/domains/app/clusters/ui/ClusterShell/LiveIndicator.svelte';
   import TopBar from '$lib/domains/app/clusters/ui/ClusterShell/TopBar.svelte';
-  import ServiceTabs from '$lib/domains/app/clusters/ui/ServiceTabs.svelte';
-  import { SERVICE_TAB_ITEMS } from '$lib/domains/app/clusters/ui/service-tabs';
-  import MetricsColumn from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsColumn.svelte';
-  import LogsToolbar from '$lib/domains/logs/ui/logs-tile/header/LogsToolbar.svelte';
-  import LogRow from '$lib/domains/logs/ui/logs-tile/log-row/LogRow.svelte';
-  import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
-  import LoadingLine from '$lib/domains/shared/ui/components/LoadingLine.svelte';
-  import RollingFeed from '$lib/landing/RollingFeed.svelte';
+  import SidebarAccountRow from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarAccountRow.svelte';
+  import SidebarDomainNav from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarDomainNav.svelte';
+  import SidebarDomainRow from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarDomainRow.svelte';
+  import SidebarFooter from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarFooter.svelte';
+  import SidebarLayout from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarLayout.svelte';
+  import SidebarNewServiceRow from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarNewServiceRow.svelte';
+  import { fillEmptySlots } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
+  import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
+  import {
+    SettingsCard,
+    SettingsCardItem,
+  } from '$lib/domains/shared/ui/components/settings-card';
+  import {
+    TOOLBAR_GROUP,
+    TOOLBAR_GROUP_OPTION,
+  } from '$lib/domains/shared/ui/components/toolbar';
+  import Well from '$lib/domains/shared/ui/components/Well.svelte';
+  import { UptimeBars } from '@logdash/hyper-ui/features';
+  import { Button } from '@logdash/hyper-ui/presentational';
   import type { Snippet } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import { prefersReducedMotion } from 'svelte/motion';
   import { blur } from 'svelte/transition';
+  import { match } from 'ts-pattern';
   import HeroMonitor from './HeroMonitor.svelte';
-  import {
-    heroLive,
-    heroLogRows,
-    heroMetrics,
-    heroService,
-    type HeroLogRow,
-  } from './hero-dashboard';
-  import {
-    showcaseClusterName,
-    showcaseSwap,
-    showsVisitorAccount,
-  } from './hero-showcase';
+  import { heroLive, heroMonitor } from './hero-dashboard';
+  import { showcaseClusterName } from './hero-showcase';
   import TypewriterText from './TypewriterText.svelte';
 
   type Props = {
-    fit: boolean;
     covered: boolean;
     toggle: Snippet;
   };
 
-  const { fit, covered, toggle }: Props = $props();
+  const { covered, toggle }: Props = $props();
 
-  const TABS = SERVICE_TAB_ITEMS.map((tab) => ({
-    ...tab,
-    active: tab.id === 'overview',
-  }));
-  const LOG_ROWS = 6;
-  const ROW_PX = 28;
-  const FEED_GAP_PX = 8;
-  const MIN_ROWS = 3;
-  const LOGS_SWAP_DELAY_MS = 100;
-  const METRICS_SWAP_DELAY_MS = 150;
   const DOMAIN_SWAP_MS = 240;
   const DOMAIN_SWAP_BLUR_PX = 4;
-
-  let listHeight = $state(0);
+  const HISTORY_HOURS = 90;
 
   const phase = $derived(anonymousPreviewState.phase);
-  const visitor = $derived(showsVisitorAccount(phase));
   const domainName = $derived(
     showcaseClusterName(phase, anonymousPreviewState.clusterName),
   );
-  const service = $derived(
-    heroService({
+  const monitor = $derived(
+    heroMonitor({
       phase,
       previewHost: anonymousPreviewState.previewHost,
+      previewUrl: anonymousPreviewState.previewUrl,
       hasPreview: anonymousPreviewState.preview !== null,
       pings: anonymousPreviewState.pings,
       demo: anonymousPreviewState.demo,
     }),
   );
   const live = $derived(heroLive(phase));
-  const logs = $derived(anonymousPreviewState.demo.logs);
-  const tail = $derived(heroLogRows(logs ?? []));
-  const visibleRows = $derived(
-    fit && listHeight > 0
-      ? Math.max(MIN_ROWS, Math.floor((listHeight + FEED_GAP_PX) / ROW_PX))
-      : LOG_ROWS,
+  const watched = $derived(anonymousPreviewState.watchHistory);
+  const hours = $derived(
+    phase === 'idle'
+      ? anonymousPreviewState.demo.hours
+      : anonymousPreviewState.previewHours,
   );
-  const metrics = $derived(
-    visitor ? [] : heroMetrics(anonymousPreviewState.demo.metrics),
+  const history = $derived(
+    fillEmptySlots(
+      hours.length ? hours : Array.from({ length: HISTORY_HOURS }, () => null),
+      'hour',
+    ),
   );
-  const metricsLoading = $derived(
-    !visitor && anonymousPreviewState.demo.metrics === null,
-  );
-  const tracked = $derived(
-    visitor ? 0 : anonymousPreviewState.demo.metricsTracked,
-  );
+
+  function watchedLabel(history: WatchHistory): string {
+    const since = history.since.toLocaleDateString('en', {
+      month: 'short',
+      day: 'numeric',
+    });
+    const outages = match(history.outages)
+      .with(0, () => 'no outages')
+      .with(1, () => '1 outage')
+      .otherwise((count) => `${count} outages`);
+
+    return `Watched since ${since} · ${outages}`;
+  }
 </script>
 
 <aside
-  class="border-surface-root-border bg-surface-root-bg hidden w-64 shrink-0 flex-col border-r pt-1.5 lg:flex"
+  class="bg-surface-root-bg hidden w-67 shrink-0 flex-col lg:flex"
   aria-hidden="true"
   inert
 >
@@ -112,18 +109,16 @@
       {/key}
     </SidebarDomainRow>
 
-    <SidebarDomainNav />
-
-    <SidebarServiceRow
-      label={service.name}
-      status={service.status}
-      pending={service.pending}
-      active={true}
-    >
-      <TypewriterText text={service.name} />
-    </SidebarServiceRow>
+    <SidebarDomainNav
+      active="uptime"
+      down={monitor.status === 'down' ? 1 : 0}
+    />
 
     <SidebarNewServiceRow />
+
+    {#snippet header()}
+      <SidebarAccountRow name="Anonymous" />
+    {/snippet}
 
     {#snippet footer()}
       <SidebarFooter plan="Free" />
@@ -131,74 +126,124 @@
   </SidebarLayout>
 </aside>
 
-<div class="flex min-w-0 flex-1 flex-col" inert={covered}>
+<div
+  class="bg-surface-50-bg lg:edge-over @container flex min-w-0 flex-1 flex-col lg:my-2 lg:mr-2 lg:overflow-hidden lg:rounded-xl"
+  inert={covered}
+>
   <TopBar>
     <div class="flex min-w-0 flex-1 items-center">
-      <div
-        class="flex min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(to_right,black_calc(100%_-_1.5rem),transparent)]"
-        aria-hidden="true"
-      >
-        <ServiceTabs tabs={TABS} />
-      </div>
-
-      <LiveIndicator label={live.label} dot={live.dot} pending={live.pending} />
+      {#if monitor.name}
+        <Breadcrumbs
+          crumbs={[
+            { label: domainName },
+            { label: 'Uptime' },
+            { label: monitor.name },
+          ]}
+        >
+          {#snippet current()}
+            <TypewriterText text={monitor.name} />
+          {/snippet}
+        </Breadcrumbs>
+      {:else}
+        <Breadcrumbs crumbs={[{ label: domainName }, { label: 'Uptime' }]} />
+      {/if}
     </div>
 
-    {@render toggle()}
+    <div class="flex items-center gap-3">
+      <LiveIndicator label={live.label} dot={live.dot} pending={live.pending} />
+      <div class={[TOOLBAR_GROUP, 'max-sm:hidden']} aria-hidden="true">
+        <span
+          class={[TOOLBAR_GROUP_OPTION, 'bg-surface-150-bg text-fg-default']}
+        >
+          90 hours
+        </span>
+        <span class={[TOOLBAR_GROUP_OPTION, 'text-fg-tertiary']}>90 days</span>
+      </div>
+      {@render toggle()}
+    </div>
   </TopBar>
 
-  <div class="flex min-h-0 flex-1">
-    <div class="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div class="border-surface-100-border shrink-0 border-b">
-        <HeroMonitor />
+  <div class="flex min-h-0 flex-1 flex-col gap-2 p-2">
+    <HeroMonitor />
+
+    <Well label="Uptime history" title="Uptime history">
+      {#snippet actions()}
+        {#if watched}
+          <span class="text-fg-muted px-3 text-xs">
+            {watchedLabel(watched)}
+          </span>
+        {/if}
+      {/snippet}
+
+      <div class="px-3 pb-2">
+        <UptimeBars buckets={history} label={monitor.name} unit="hour" raised />
       </div>
+    </Well>
 
-      <div class="flex min-h-0 flex-1 flex-col">
-        <div class="shrink-0 p-4">
-          <LogsToolbar interactive={false} />
-        </div>
+    <div class="grid items-start gap-2 @4xl:grid-cols-2" aria-hidden="true">
+      <SettingsCard
+        title="Alerts"
+        description="Where its down and recovery alerts go. New channels alert every monitor on this domain."
+      >
+        <SettingsCardItem>
+          <p class="text-fg-muted">Telegram or any webhook.</p>
 
-        <div
-          class="min-h-0 flex-1 overflow-hidden px-4 pb-4 lg:pb-0"
-          bind:clientHeight={listHeight}
-        >
-          {#if visitor}
-            <div in:showcaseSwap={{ delay: LOGS_SWAP_DELAY_MS }}>
-              <EmptyState
-                title="No logs yet"
-                description="Your app's logs land here once you add the SDK."
-              />
-            </div>
-          {:else if logs}
-            <RollingFeed items={tail} visible={visibleRows}>
-              {#snippet row(log: HeroLogRow)}
-                <LogRow
-                  prefix="short"
-                  date={log.at}
-                  level={log.level}
-                  message={log.message}
-                />
-              {/snippet}
-            </RollingFeed>
-          {:else}
-            <LoadingLine label="Loading logs" />
-          {/if}
-        </div>
-      </div>
-    </div>
+          {#snippet action()}
+            <Button size="sm" tabindex={-1}>
+              <PlusIcon class="size-4" />
+              Add channel
+            </Button>
+          {/snippet}
+        </SettingsCardItem>
+      </SettingsCard>
 
-    <div
-      class="border-surface-100-border hidden w-64 shrink-0 overflow-hidden border-l lg:flex xl:w-72"
-      aria-hidden="true"
-    >
-      {#key visitor}
-        <div
-          class="flex w-full"
-          in:showcaseSwap={{ delay: METRICS_SWAP_DELAY_MS }}
-        >
-          <MetricsColumn {metrics} {tracked} loading={metricsLoading} />
-        </div>
-      {/key}
+      <SettingsCard title="Monitor" description="Its name, URL and badge.">
+        {#snippet actions()}
+          <span
+            class="text-fg-muted -mr-1.5 flex size-7 items-center justify-center"
+          >
+            <TrashIcon class="size-4" />
+          </span>
+        {/snippet}
+
+        <SettingsCardItem>
+          {@render field('Name', monitor.name)}
+
+          {#snippet action()}
+            <Button size="sm" tabindex={-1}>Edit</Button>
+          {/snippet}
+        </SettingsCardItem>
+        {#if monitor.url}
+          <SettingsCardItem>
+            {@render field('URL', monitor.url)}
+
+            {#snippet action()}
+              <Button size="sm" tabindex={-1}>Edit</Button>
+            {/snippet}
+          </SettingsCardItem>
+        {/if}
+        <SettingsCardItem>
+          {@render field(
+            'Badge',
+            'Its uptime in a README, linked to your status page.',
+            true,
+          )}
+
+          {#snippet action()}
+            <Button size="sm" tabindex={-1}>
+              <ShieldCheckIcon class="size-4" />
+              Get badge
+            </Button>
+          {/snippet}
+        </SettingsCardItem>
+      </SettingsCard>
     </div>
   </div>
 </div>
+
+{#snippet field(label: string, value: string, muted = false)}
+  <div class="flex min-w-0 items-center gap-3">
+    <span class="text-fg-muted w-16 shrink-0">{label}</span>
+    <span class={['truncate', { 'text-fg-muted': muted }]}>{value}</span>
+  </div>
+{/snippet}

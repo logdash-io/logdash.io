@@ -107,7 +107,7 @@ export const learnPages: SeoPage[] = [
           },
           {
             feature: 'Cost',
-            logdash: 'Free for 5 services',
+            logdash: 'Free for 5 monitors',
             them: 'Free, plus the box it runs on',
             winner: 'tie',
           },
@@ -127,7 +127,7 @@ export const learnPages: SeoPage[] = [
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and paste the address of your health endpoint, or your homepage if the site is static. The first check runs straight away, so a wrong path shows up in seconds rather than during an incident.',
+            text: 'Add a monitor in Logdash and paste the address of your health endpoint, or your homepage if the site is static. The first check runs straight away, so a wrong path shows up in seconds rather than during an incident.',
           },
           {
             title: 'Pick the interval',
@@ -243,7 +243,7 @@ export const learnPages: SeoPage[] = [
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and paste the address of your health endpoint, or your homepage if the site is static. The first check runs straight away, so a wrong path shows up in seconds rather than during an incident.',
+            text: 'Add a monitor in Logdash and paste the address of your health endpoint, or your homepage if the site is static. The first check runs straight away, so a wrong path shows up in seconds rather than during an incident.',
           },
           {
             title: 'Pick the interval',
@@ -357,7 +357,7 @@ print(f"{uptime:.3f}% uptime, {credit(uptime)}% credit")
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and paste the address of your health endpoint, or your homepage if the site is static. The first check runs straight away, so a wrong path shows up in seconds rather than during an incident.',
+            text: 'Add a monitor in Logdash and paste the address of your health endpoint, or your homepage if the site is static. The first check runs straight away, so a wrong path shows up in seconds rather than during an incident.',
           },
           {
             title: 'Pick the interval',
@@ -490,7 +490,7 @@ awk '{ n++; if ($2 >= 200 && $2 < 400) up++ }
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and paste the address of your health endpoint, or your homepage if the site is static. The first check runs straight away, so a wrong path shows up in seconds rather than during an incident.',
+            text: 'Add a monitor in Logdash and paste the address of your health endpoint, or your homepage if the site is static. The first check runs straight away, so a wrong path shows up in seconds rather than during an incident.',
           },
           {
             title: 'Pick the interval',
@@ -638,7 +638,7 @@ onLCP(send);`,
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and paste the address of your health endpoint, or your homepage if the site is static. The first check runs straight away, so a wrong path shows up in seconds rather than during an incident.',
+            text: 'Add a monitor in Logdash and paste the address of your health endpoint, or your homepage if the site is static. The first check runs straight away, so a wrong path shows up in seconds rather than during an incident.',
           },
           {
             title: 'Pick the interval',
@@ -787,7 +787,7 @@ done`,
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Push monitors are on the Pro plan. Add a service in Logdash, switch its monitor to push, and copy the id from the ping URL.',
+            text: 'Push monitors are on the Pro plan. Open the Uptime page of your domain in Logdash, add a monitor, choose "You send heartbeats", and copy the id from the heartbeat endpoint.',
           },
           {
             title: 'Ping after the work',
@@ -900,7 +900,7 @@ http
           },
           {
             title: 'Add an HTTP monitor',
-            text: 'Create a service in Logdash and give it that URL. Checks run every 5 minutes on the free plan, every minute on Builder and every 15 seconds on Pro, and each one records the status code and response time.',
+            text: 'Add a monitor in Logdash and give it that URL. Checks run every 5 minutes on the free plan, every minute on Builder and every 15 seconds on Pro, and each one records the status code and response time.',
           },
           {
             title: 'Break the job',
@@ -928,7 +928,7 @@ http
           },
           {
             feature: 'Free plan',
-            logdash: 'Five services, HTTP checks every 5 minutes',
+            logdash: 'Five monitors, HTTP checks every 5 minutes',
             them: '20 jobs, 100 log entries each',
             winner: 'them',
           },
@@ -940,7 +940,7 @@ http
           },
           {
             feature: 'Uptime checks on the app itself',
-            logdash: 'Same service, same dashboard',
+            logdash: 'Yes, same dashboard',
             them: 'Not built, it only listens for pings',
             winner: 'logdash',
           },
@@ -1074,7 +1074,7 @@ dig +short example.com @1.1.1.1`,
           },
           {
             feature: 'Setup',
-            logdash: 'One form, free for 5 services',
+            logdash: 'One form, free for 5 monitors',
             them: 'Nothing, curl is already installed',
             winner: 'them',
           },
@@ -1094,7 +1094,7 @@ dig +short example.com @1.1.1.1`,
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and give it the address. The free plan covers five services checked every 5 minutes, Builder checks every minute and Pro every 15 seconds. Every check stores the status code and response time.',
+            text: 'Add a monitor in Logdash and give it the address. The free plan covers five monitors checked every 5 minutes, Builder checks every minute and Pro every 15 seconds. Every check stores the status code and response time.',
           },
           {
             title: 'Connect Telegram',
@@ -1202,7 +1202,7 @@ fi`,
         items: [
           {
             title: 'Add the monitor',
-            text: 'Create a service in Logdash and give it the URL your users load, or better, a health route that also checks the database.',
+            text: 'Add a monitor in Logdash and give it the URL your users load, or better, a health route that also checks the database.',
           },
           {
             title: 'Connect Telegram',
@@ -1251,7 +1251,7 @@ fi`,
           },
           {
             feature: 'Free monitors',
-            logdash: 'Five services',
+            logdash: 'Five monitors',
             them: '50 monitors',
             winner: 'them',
           },
@@ -1272,7 +1272,7 @@ fi`,
       {
         question: 'How to get notified when a website is down for free?',
         answer:
-          'Add the URL to a free uptime monitor and connect a channel. Logdash checks five services every 5 minutes on the free plan and alerts through Telegram or a webhook. UptimeRobot checks 50 monitors every 5 minutes for free and alerts by email.',
+          'Add the URL to a free uptime monitor and connect a channel. Logdash checks five monitors every 5 minutes on the free plan and alerts through Telegram or a webhook. UptimeRobot checks 50 monitors every 5 minutes for free and alerts by email.',
       },
       {
         question: 'How do I get notified when a website is back up?',
@@ -1358,7 +1358,7 @@ whois "$SITE" | grep -i 'expir'`,
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and point it at the site or its health route. Every 5 minutes on the free plan, every minute on Builder, every 15 seconds on Pro.',
+            text: 'Add a monitor in Logdash and point it at the site or its health route. Every 5 minutes on the free plan, every minute on Builder, every 15 seconds on Pro.',
           },
           {
             title: 'Connect Telegram',
@@ -1666,7 +1666,7 @@ endpoints:
           },
           {
             feature: 'Logs and metrics beside the checks',
-            logdash: 'Eight SDKs into the same service',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Uptime only, by design',
             winner: 'logdash',
           },
@@ -1704,7 +1704,7 @@ endpoints:
         question:
           'Is website uptime monitoring open source software really free?',
         answer:
-          'The software is. The server, its backups and the hours spent patching it are not, and the monitor is only as reliable as the box it runs on. The Logdash free plan covers 5 services at a 5-minute interval if you would rather run nothing.',
+          'The software is. The server, its backups and the hours spent patching it are not, and the monitor is only as reliable as the box it runs on. The Logdash free plan covers 5 monitors at a 5-minute interval if you would rather run nothing.',
       },
     ],
     updatedAt: '2026-10-02',
@@ -1794,7 +1794,7 @@ endpoints:
           },
           {
             feature: 'Logs and metrics',
-            logdash: 'Eight SDKs into the same service',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Not what Kuma is for',
             winner: 'logdash',
           },
@@ -1814,7 +1814,7 @@ endpoints:
         items: [
           {
             title: 'Add the URL',
-            text: 'If you would rather skip the server, paste your health URL into Logdash. The free plan covers 5 services with a check every 5 minutes.',
+            text: 'If you would rather skip the server, paste your health URL into Logdash. The free plan covers 5 monitors with a check every 5 minutes.',
           },
           {
             title: 'Connect Telegram',
@@ -1936,7 +1936,7 @@ endpoints:
           },
           {
             feature: 'Cost',
-            logdash: 'Free for 5 services',
+            logdash: 'Free for 5 monitors',
             them: 'Free, no account',
             winner: 'tie',
           },

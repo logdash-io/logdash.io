@@ -468,6 +468,9 @@ importers:
       '@logdash/hyper-ui':
         specifier: workspace:*
         version: link:../../packages/hyper-ui
+      '@logdash/node':
+        specifier: ^1.0.0
+        version: 1.0.2
       '@logdash/status':
         specifier: workspace:*
         version: link:../../packages/status

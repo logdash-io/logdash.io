@@ -10,17 +10,15 @@ export class TelegramSetupState {
     chatName: '',
     chatId: '',
     errorMessage: '',
-    monitorId: null,
   });
 
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
 
-  startSetup(monitorId: string | null): void {
+  startSetup(): void {
     this.state.isOpen = true;
     this.state.currentStep = 'setup';
     this.state.passphrase = PassphraseGenerator.generate();
     this.state.errorMessage = '';
-    this.state.monitorId = monitorId;
   }
 
   close(): void {
@@ -31,7 +29,6 @@ export class TelegramSetupState {
     this.state.chatName = '';
     this.state.chatId = '';
     this.state.errorMessage = '';
-    this.state.monitorId = null;
   }
 
   startWaiting(): void {

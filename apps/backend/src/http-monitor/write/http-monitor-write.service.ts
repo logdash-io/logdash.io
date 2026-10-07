@@ -23,13 +23,14 @@ export class HttpMonitorWriteService {
     private readonly auditLog: AuditLog,
   ) {}
 
-  async create(
-    projectId: string,
+  public async create(
+    owner: { clusterId: string; projectId?: string },
     dto: CreateHttpMonitorBody,
     actorUserId?: string,
   ): Promise<HttpMonitorNormalized> {
     const entity = await this.httpMonitorModel.create({
-      projectId,
+      clusterId: owner.clusterId,
+      projectId: owner.projectId,
       name: dto.name,
       url: dto.url,
       notificationChannelsIds: dto.notificationChannelsIds,
@@ -70,8 +71,12 @@ export class HttpMonitorWriteService {
     return HttpMonitorSerializer.normalize(entity);
   }
 
-  public async deleteByProjectId(projectId: string, actorUserId?: string): Promise<void> {
-    const monitors = await this.httpMonitorModel.find({ projectId });
+  public async unlinkProject(projectId: string): Promise<void> {
+    await this.httpMonitorModel.updateMany({ projectId }, { $unset: { projectId: 1 } });
+  }
+
+  public async deleteByClusterId(clusterId: string, actorUserId?: string): Promise<void> {
+    const monitors = await this.httpMonitorModel.find({ clusterId }, { _id: 1 }).lean();
 
     monitors.forEach((monitor) => {
       void this.auditLog.create({
@@ -80,11 +85,30 @@ export class HttpMonitorWriteService {
         action: AuditLogEntityAction.Delete,
         relatedDomain: RelatedDomain.HttpMonitor,
         relatedEntityId: monitor._id.toString(),
-        description: `Deleted due to project deletion`,
+        description: `Deleted due to domain deletion`,
       });
     });
 
-    await this.httpMonitorModel.deleteMany({ projectId });
+    await this.httpMonitorModel.deleteMany({ clusterId });
+  }
+
+  public async addNotificationChannelToClusterMonitors(
+    clusterId: string,
+    notificationChannelId: string,
+  ): Promise<void> {
+    await this.httpMonitorModel.updateMany(
+      { clusterId, claimed: true },
+      { $addToSet: { notificationChannelsIds: notificationChannelId } },
+    );
+  }
+
+  public async removeNotificationChannelFromAllMonitors(
+    notificationChannelId: string,
+  ): Promise<void> {
+    await this.httpMonitorModel.updateMany(
+      { notificationChannelsIds: notificationChannelId },
+      { $pull: { notificationChannelsIds: notificationChannelId } },
+    );
   }
 
   public async update(

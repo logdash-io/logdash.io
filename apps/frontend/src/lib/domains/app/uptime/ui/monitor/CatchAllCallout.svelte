@@ -56,7 +56,7 @@
 
   async function loadProbe(url: string): Promise<void> {
     try {
-      probed = { url, probe: await probeUrl(monitor.projectId, url) };
+      probed = { url, probe: await probeUrl(monitor.clusterId, url) };
     } catch (error) {
       logger.debug('URL probe failed', error);
     }

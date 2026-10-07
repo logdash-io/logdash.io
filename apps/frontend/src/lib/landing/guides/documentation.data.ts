@@ -37,7 +37,8 @@ export type CodeLanguage =
   | 'json'
   | 'html'
   | 'powershell'
-  | 'svelte';
+  | 'svelte'
+  | 'text';
 
 export type DocFaqItem = { question: string; answer: string };
 
@@ -127,7 +128,12 @@ const featureCards: DocCard[] = [
 ];
 
 export const docPages: Record<
-  'introduction' | 'logging' | 'metrics' | 'monitoring' | 'statusPages',
+  | 'introduction'
+  | 'logging'
+  | 'metrics'
+  | 'monitoring'
+  | 'statusPages'
+  | 'webAnalyticsPrivacy',
   DocPage
 > = {
   introduction: {
@@ -569,6 +575,163 @@ export async function load() {
       },
     ],
   },
+  webAnalyticsPrivacy: {
+    path: '/docs/web-analytics-privacy',
+    title: 'Web analytics and privacy',
+    description:
+      'How Logdash counts visitors without cookies, what it stores and for how long, and what to tell your visitors.',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'The Logdash tracker sets no cookies and keeps nothing in the browser to recognise a visitor. Anonymous visitors are counted on the server with an ID that changes every day, IP addresses are never stored, and signed-in users are recognised only by a hash computed in their browser. This page describes exactly what happens, so you can describe it to your visitors.',
+      },
+      { type: 'heading', text: 'How visitors are counted' },
+      {
+        type: 'paragraph',
+        text: 'For every event, the Logdash server computes the visitor ID as a SHA-256 hash in hex:',
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        code: "sha256(dailySalt + ':' + siteId + ':' + clientIp + ':' + userAgent)",
+      },
+      {
+        type: 'list',
+        items: [
+          'The daily salt is 32 random bytes, created for each UTC day. It is held only in Redis and expires 30 minutes after that day ends.',
+          "Once the salt is gone, nobody can recompute that day's visitor IDs, Logdash included. The same visitor gets a new ID every day.",
+          'The IP address is used only to compute the hash and is never stored.',
+          'The User-Agent goes into the hash and is reduced to device type, browser and operating system. The full string is not stored.',
+          "Behind a first-party proxy, the proxy passes the visitor's IP address in the `x-logdash-client-ip` header, so the hash uses the visitor's address rather than your server's. The proxy forwards `Origin`, `User-Agent` and `x-logdash-client-ip`, never cookies, authorization headers or ingest keys.",
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: "Sessions live on the server too. A session ends after 30 minutes without events or after 24 hours, and the next event starts a new one. During the first 30 minutes of a UTC day, a visitor whose session started the day before continues that session and keeps the previous day's visitor ID.",
+      },
+      {
+        type: 'paragraph',
+        text: 'Because the ID changes every day, an anonymous visitor who comes back the next day counts as a new visitor. Retention, stickiness and comebacks are measured for identified users only.',
+      },
+      { type: 'heading', text: 'Identify signed-in users' },
+      {
+        type: 'paragraph',
+        text: 'Once your app knows who is signed in, pass their user ID to `identify`. The identity lives in memory only, so call it on every page load, and call it with `null` when the user signs out.',
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        title: 'On every page load, once the user is known',
+        code: 'window.logdash?.identify(user.id);',
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        title: 'On sign-out',
+        code: 'window.logdash?.identify(null);',
+      },
+      {
+        type: 'paragraph',
+        text: "The tracker hashes the ID in the browser before anything is sent: `sha256(siteId + ':' + id)`, in lowercase hex. The raw ID never leaves the browser. Because the site ID is part of the hash, the same user ID gives a different hash on every site.",
+      },
+      {
+        type: 'list',
+        items: [
+          '`id` is a string or a number. `null`, `undefined` or an empty string clears the identity, and events tracked after that are sent without a user ID.',
+          'A value that contains `@` or is longer than 256 characters is ignored with a console warning and leaves the identity as it was, so an email address is never sent by mistake.',
+          'Hashing needs `crypto.subtle`, which browsers offer only in secure contexts such as HTTPS pages. Without it, `identify` does nothing.',
+          'Events of the page load that are still waiting to be sent when the hash is ready get the user ID too, so the first pageview is attributed when `identify` follows within about a second.',
+          'The server never copies a user ID onto an event sent without one, so events after sign-out are not attributed to the previous user.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Pass a stable internal ID, never an email address or a name. The hash is pseudonymous, not anonymous: your site ID is public in the script tag, so anyone can hash guessable IDs, such as small sequential numbers, and compare.',
+      },
+      { type: 'heading', text: 'Let visitors opt out' },
+      {
+        type: 'paragraph',
+        text: 'The tracker does not start in browsers that send Do Not Track or Global Privacy Control, or in automated browsers that set `navigator.webdriver`.',
+      },
+      {
+        type: 'paragraph',
+        text: 'If your site has privacy settings, add an analytics toggle that calls `optOut` and `optIn`:',
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        code: `window.logdash?.optOut();
+window.logdash?.optIn();`,
+      },
+      {
+        type: 'list',
+        items: [
+          "`optOut()` stops tracking at once: it drops queued events and removes its timers, listeners and history hooks. It writes `localStorage['logdash:opt-out'] = '1'` so the choice survives reloads.",
+          '`optIn()` removes that flag and starts tracking again with a fresh pageview. `window.logdash` exists while a visitor is opted out, so `optIn()` stays reachable.',
+          '`stop()` still works as an alias of `optOut()`.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Apart from that flag, written only when a visitor opts out, the tracker sets no cookies and writes nothing to `localStorage` or `sessionStorage`. On load it deletes the `ldv_` and `lds_` cookies that earlier versions of the tracker set.',
+      },
+      { type: 'heading', text: 'What Logdash stores' },
+      {
+        type: 'paragraph',
+        text: 'Each event is stored with:',
+      },
+      {
+        type: 'list',
+        items: [
+          'the event name: `pageview`, `pageleave`, `browser_error` or one of your custom events. `browser_error` carries no error message or stack trace.',
+          'the host name and path of the page, without query string or fragment. Path segments that contain `@` become `:redacted`, and segments that look like database IDs, UUIDs or numbers of four or more digits become `:id`.',
+          'the host name of the referring site, UTM source, medium, campaign and term, and the name of an ad click ID parameter such as `gclid`, never its value. They come from the first event of the session.',
+          'device type, browser and operating system, derived from the User-Agent.',
+          "a country, derived from the browser's time zone rather than the IP address.",
+          'the time of the event.',
+          'the visitor ID, a random session ID and, for identified users, the user hash.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: "While a session is live, its ID, start time and attribution are held in Redis. They expire 30 minutes after the session's last event.",
+      },
+      { type: 'heading', text: 'How long data is kept' },
+      {
+        type: 'paragraph',
+        text: 'Events are deleted automatically when the retention period of your plan has passed, counted from the time of each event. The retention that applies is the one of the plan you had when the event arrived.',
+      },
+      { type: 'table', key: 'webAnalyticsRetention' },
+      {
+        type: 'paragraph',
+        text: 'Deleting a domain in Logdash deletes all of its web analytics events. Copies in encrypted backups are deleted when the backups expire, 14 days after they were made.',
+      },
+      { type: 'heading', text: 'Consent' },
+      {
+        type: 'paragraph',
+        text: 'Whether your site needs consent for analytics depends on the law that applies to you and your visitors, and on how you use the data. You decide that, not Logdash. This page and the data processing agreement describe the processing precisely, so you can make that decision and explain it to your visitors. If you decide you need consent, load the script only after the visitor agrees.',
+      },
+      { type: 'heading', text: 'Text for your privacy policy' },
+      {
+        type: 'paragraph',
+        text: 'Adapt this text to your site: fill in the parts in square brackets, remove the bracketed sentences that do not apply, and change the legal basis if you rely on consent.',
+      },
+      {
+        type: 'code',
+        language: 'text',
+        code: `We measure how this website is used with Logdash web analytics. It sets no cookies and stores nothing in your browser to recognise you. To count visits, Logdash computes a pseudonymous visitor ID on its server: a SHA-256 hash of your IP address, your browser's User-Agent, our site ID and a random value that changes every day and is deleted 30 minutes after the day ends (UTC). Your IP address is not stored, and anonymous visits on different days are not linked to each other.
+
+For each page you visit, we collect the page address without query parameters, the domain of the website that referred you, campaign tags, your device type, browser and operating system, and a country derived from your time zone. [When you are signed in, your visits are also linked to a pseudonymous hash of your account ID, computed in your browser. Your account ID itself is not sent.]
+
+Logdash processes this data on our behalf as a processor and deletes it after [retention period]. We process it on the basis of our legitimate interest in understanding how our website is used and improving it (Art. 6(1)(f) GDPR). The analytics does not run if your browser sends Global Privacy Control or Do Not Track. [You can also turn analytics off in our privacy settings.] To object or to ask about your data, contact [contact address].`,
+      },
+      { type: 'heading', text: 'Data processing agreement' },
+      {
+        type: 'paragraph',
+        text: 'When you use Logdash for web analytics or logs, Logdash processes personal data on your behalf as a processor. The data processing agreement covers the subject and duration of the processing, the categories of data, the security measures, the sub-processors, breach notification and deletion.',
+      },
+    ],
+  },
 };
 
 export type DocsSidebarItem =
@@ -613,6 +776,11 @@ export const docsSidebar: DocsSidebarGroup[] = [
     title: 'More',
     items: [
       { title: 'Self-hosting', href: '/docs/self-hosting', external: false },
+      {
+        title: 'Web analytics privacy',
+        href: '/docs/web-analytics-privacy',
+        external: false,
+      },
     ],
   },
 ];

@@ -32,18 +32,21 @@ export class WebEventBody {
   @IsUUID('4')
   id: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ deprecated: true, description: 'Sent by old trackers, ignored' })
+  @IsOptional()
   @IsUUID('4')
-  visitorId: string;
+  visitorId?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ deprecated: true, description: 'Sent by old trackers, ignored' })
+  @IsOptional()
   @IsUUID('4')
-  sessionId: string;
+  sessionId?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ deprecated: true, description: 'Sent by old trackers, ignored' })
+  @IsOptional()
   @IsISO8601({ strict: true })
   @MaxLength(30)
-  visitorStartedAt: string;
+  visitorStartedAt?: string;
 
   @ApiProperty()
   @IsISO8601({ strict: true })
@@ -100,6 +103,13 @@ export class WebEventBody {
   @IsString()
   @MaxLength(64)
   timezone?: string;
+
+  @ApiPropertyOptional({
+    description: 'sha256(siteId:userId) as lowercase hex, hashed in the browser',
+  })
+  @IsOptional()
+  @Matches(/^[a-f0-9]{64}$/)
+  userId?: string;
 }
 
 export class CollectWebEventsBody {

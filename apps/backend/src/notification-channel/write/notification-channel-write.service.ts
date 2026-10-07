@@ -75,6 +75,10 @@ export class NotificationChannelWriteService {
     return NotificationChannelSerializer.normalize(notificationChannel);
   }
 
+  public async deleteByClusterId(clusterId: string): Promise<void> {
+    await this.notificationChannelModel.deleteMany({ clusterId });
+  }
+
   public async delete(id: string, actorUserId?: string): Promise<void> {
     await this.auditLog.create({
       userId: actorUserId,

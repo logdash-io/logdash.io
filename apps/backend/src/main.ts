@@ -9,10 +9,17 @@ import helmet from 'helmet';
 import { NextFunction, Request, Response } from 'express';
 import { swaggerDarkModeCSS } from './swagger/swagger-dark-mode.js';
 import { CastErrorFilter } from './shared/filters/cast-error.filter';
+import { UnhandledErrorFilter } from './shared/filters/unhandled-error.filter';
+import { LogdashLogger } from './shared/logdash/aggregate-logger';
+import { LogdashMetrics } from './shared/logdash/aggregate-metrics';
+import { APP_LOGGER, LOGDASH_METRICS } from './shared/logdash/logdash-tokens';
+import { errorMessage } from './shared/utils/error-message';
 import { withRequestContext } from './shared/request-context/request-context';
 
 // Documented batch maximum is 100 logs x 4096 chars, plus JSON overhead.
 const BODY_SIZE_LIMIT = '2mb';
+
+let appLogger: LogdashLogger | undefined;
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -21,6 +28,7 @@ async function bootstrap(): Promise<void> {
   });
 
   app.enableShutdownHooks();
+  appLogger = app.get<LogdashLogger>(APP_LOGGER);
   app.enableCors({ origin: '*' });
   app.use(withRequestContext);
 
@@ -91,10 +99,18 @@ async function bootstrap(): Promise<void> {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
-  app.useGlobalFilters(new CastErrorFilter(app.getHttpAdapter()));
+  app.useGlobalFilters(
+    new UnhandledErrorFilter(
+      appLogger,
+      app.get<LogdashMetrics>(LOGDASH_METRICS),
+      app.getHttpAdapter(),
+    ),
+    new CastErrorFilter(app.getHttpAdapter()),
+  );
 
   await app.init();
   await app.listen(process.env.PORT ?? 3000);
+  appLogger.info('Backend started');
 }
 
 bootstrap().catch((error: unknown) => {
@@ -104,10 +120,12 @@ bootstrap().catch((error: unknown) => {
 
 process.on('uncaughtException', (error) => {
   console.error(error);
+  appLogger?.error('Uncaught exception', { error: errorMessage(error) });
 });
 
 process.on('unhandledRejection', (error) => {
   console.error(error);
+  appLogger?.error('Unhandled rejection', { error: errorMessage(error) });
 });
 
 process.on('uncaughtExceptionMonitor', (error) => {

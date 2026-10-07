@@ -10,7 +10,7 @@ export const POST: RequestHandler = async ({ cookies, url }) => {
   const tier = url.searchParams.get('tier') || 'builder';
 
   // Log the upgrade source for analytics
-  bffLogger.info(`[UPGRADE] User initiated upgrade from source: ${source}`);
+  bffLogger().info(`[UPGRADE] User initiated upgrade from source: ${source}`);
 
   if (!Object.values(UserTier).includes(tier as UserTier)) {
     return new Response('Invalid tier', { status: 400 });

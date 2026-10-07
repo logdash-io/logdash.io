@@ -1,3 +1,4 @@
+import { PublicDashboardMonitorsService } from '../../public-dashboard/monitors/public-dashboard-monitors.service';
 import {
   Body,
   Controller,
@@ -44,6 +45,7 @@ export class ClusterCoreController {
     private readonly clusterFeaturesService: ClusterFeaturesService,
     private readonly clusterRemovalService: ClusterRemovalService,
     private readonly publicDashboardReadService: PublicDashboardReadService,
+    private readonly publicDashboardMonitorsService: PublicDashboardMonitorsService,
   ) {}
 
   @ApiBearerAuth()
@@ -72,6 +74,8 @@ export class ClusterCoreController {
       },
       color: body.color,
     });
+
+    await this.publicDashboardMonitorsService.createDefaultDashboard(cluster.id);
 
     return ClusterSerializer.serialize(cluster);
   }

@@ -13,7 +13,7 @@ export const checkoutUrl = async (
   try {
     return (await logdashAPI.stripe_checkout(token, tier)).checkoutUrl;
   } catch (error) {
-    bffLogger.error(`checkout for ${tier} failed ${String(error)}`);
+    bffLogger().error(`checkout for ${tier} failed ${String(error)}`);
 
     return null;
   }

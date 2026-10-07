@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import {
   checkIntervalLabel,
+  checkingLabel,
+  cronIntervalLabel,
   lastCheckLabel,
   monitorStats,
   responseTimes,
@@ -44,6 +46,16 @@ test('the check interval skips the gap after the first check', () => {
   expect(checkIntervalLabel([ping(0), ping(5), ping(305), ping(605)])).toBe(
     '5 min',
   );
+});
+
+test('the plan cron reads as a check interval', () => {
+  expect(cronIntervalLabel('*/15 * * * * *')).toBe('15 s');
+  expect(cronIntervalLabel('*/1 * * * *')).toBe('1 min');
+  expect(cronIntervalLabel('*/5 * * * *')).toBe('5 min');
+  expect(cronIntervalLabel('0 * * * *')).toBeNull();
+  expect(cronIntervalLabel(null)).toBeNull();
+  expect(checkingLabel('5 min')).toBe('Checking every 5 min');
+  expect(checkingLabel(null)).toBe('Scheduled checks');
 });
 
 test('the last check reads relative to now', () => {

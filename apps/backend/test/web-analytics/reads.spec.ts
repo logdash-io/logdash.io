@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { advanceTo } from 'jest-date-mock';
 import { createTestApp } from '../utils/bootstrap';
 import {
@@ -14,6 +14,7 @@ import {
 } from '../../src/web-analytics/core/dto/web-analytics.response';
 import { WebEventClickhouseEntity } from '../../src/web-analytics/core/entities/web-event.clickhouse-entity';
 import { WebAnalyticsSiteSerialized } from '../../src/web-analytics/core/entities/web-analytics-site.interface';
+import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 
 describe('Web analytics (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -79,6 +80,20 @@ describe('Web analytics (reads)', () => {
     expect(status.body).toEqual({ lastWebEventAt: null, lastLogAt: null });
     const site = await get(setup.cluster.id, setup.token, '/site');
     expect(site.body).toEqual({ site: null });
+  });
+
+  it('keeps monthly buckets inside the range', async () => {
+    const setup = await bootstrap.utils.generalUtils.setupClaimed({ userTier: UserTier.Pro });
+    const response = await get(
+      setup.cluster.id,
+      setup.token,
+      '?from=2025-10-02T12:00:00.000Z&to=2026-10-02T12:00:00.000Z&granularity=month',
+    );
+    expect(response.status).toBe(200);
+    const data = response.body as WebAnalyticsResponse;
+    expect(data.series[0].time).toBe(Date.parse('2025-10-01T00:00:00Z'));
+    expect(data.series.at(-1)?.time).toBe(Date.parse('2026-10-01T00:00:00Z'));
+    expect(data.series).toHaveLength(13);
   });
 
   it('rejects invalid time zones, filters and ranges too fine for the granularity', async () => {
@@ -234,7 +249,6 @@ describe('Web analytics (reads)', () => {
       id: randomUUID(),
       visitor_id: id.repeat(64),
       session_id: session.repeat(64),
-      visitor_started_at: '2026-09-27 10:00:00.000',
       created_at: at,
       path,
       name,
@@ -242,8 +256,11 @@ describe('Web analytics (reads)', () => {
     await insert([
       visitor('a', '1', '2026-09-27 10:00:00.000', '/'),
       visitor('a', '1', '2026-09-27 10:01:00.000', '/pricing'),
-      visitor('a', '2', '2026-09-28 10:00:00.000', '/'),
-      visitor('a', '2', '2026-09-28 10:01:00.000', '/', 'signup_completed'),
+      { ...visitor('a', '2', '2026-09-28 10:00:00.000', '/'), utm_source: 'newsletter' },
+      {
+        ...visitor('a', '2', '2026-09-28 10:01:00.000', '/', 'signup_completed'),
+        utm_source: 'newsletter',
+      },
       visitor('b', '3', '2026-09-27 12:00:00.000', '/'),
       visitor('b', '3', '2026-09-27 12:01:00.000', '/pricing'),
       visitor('c', '4', '2026-09-27 13:00:00.000', '/docs'),
@@ -253,10 +270,13 @@ describe('Web analytics (reads)', () => {
     expect(list.total).toBe(3);
     expect(list.visitors[0]).toMatchObject({
       id: 'a'.repeat(64),
+      identified: false,
+      firstSeen: '2026-09-27T10:00:00.000Z',
       sessions: 2,
       pageviews: 3,
       activeDays: ['2026-09-27', '2026-09-28'],
       lastSeen: '2026-09-28T10:01:00.000Z',
+      source: 'Direct',
     });
     const detail = (await get(setup.cluster.id, setup.token, `/visitors/${'a'.repeat(64)}`))
       .body as WebAnalyticsVisitorResponse;
@@ -266,6 +286,12 @@ describe('Web analytics (reads)', () => {
       'pageview',
       'pageview',
       'pageview',
+    ]);
+    expect(detail.events.map((event) => event.source)).toEqual([
+      'newsletter',
+      'newsletter',
+      'Direct',
+      'Direct',
     ]);
     const journeys = (await get(setup.cluster.id, setup.token, `/journeys?${week}`))
       .body as WebAnalyticsJourneysResponse;
@@ -280,9 +306,15 @@ describe('Web analytics (reads)', () => {
     expect(funnel.steps.map((step) => step.visitors)).toEqual([2, 2, 1]);
     const retention = (await get(setup.cluster.id, setup.token, `/retention?${week}`))
       .body as WebAnalyticsRetentionResponse;
-    expect(retention.cohorts).toEqual([
-      { date: '2026-09-27', visitors: 3, day1: (1 / 3) * 100, day7: null, day30: null },
-    ]);
+    expect(retention).toEqual({
+      cohorts: [],
+      stickiness: { dailyActive: 0, monthlyActive: 0, ratio: null },
+      comebacks: [
+        { minDays: 30, users: 0 },
+        { minDays: 60, users: 0 },
+        { minDays: 90, users: 0 },
+      ],
+    });
   });
 
   it('attributes sessions to their start, counts engaged sessions as non-bounces and ignores page leaves', async () => {
@@ -362,6 +394,117 @@ describe('Web analytics (reads)', () => {
     expect(timeline.events.map((item) => item.name)).toEqual(['pageview']);
   });
 
+  it('counts an identified user once across daily visitor ids in visitors, profiles, funnels and goal filters', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const site = await configure(setup.cluster.id, setup.token);
+    const base = row(setup.cluster.id, site.id);
+    const user = 'd'.repeat(64);
+    const event = (visitor: string, userId: string, at: string, name = 'pageview') => ({
+      ...base,
+      id: randomUUID(),
+      visitor_id: visitor.repeat(64),
+      session_id: visitor.repeat(64),
+      user_id: userId,
+      created_at: at,
+      name,
+    });
+    await insert([
+      event('a', user, '2026-09-27 10:00:00.000'),
+      event('b', user, '2026-09-28 10:00:00.000'),
+      event('b', user, '2026-09-28 10:01:00.000', 'signup_completed'),
+      event('c', '', '2026-09-28 11:00:00.000'),
+    ]);
+
+    // when
+    const report = (await get(setup.cluster.id, setup.token, `?${week}`))
+      .body as WebAnalyticsResponse;
+    const list = (await get(setup.cluster.id, setup.token, `/visitors?${week}`))
+      .body as WebAnalyticsVisitorsResponse;
+    const profile = (await get(setup.cluster.id, setup.token, `/visitors/${user}`))
+      .body as WebAnalyticsVisitorResponse;
+    const funnel = (
+      await get(
+        setup.cluster.id,
+        setup.token,
+        `/funnel?${week}&step=page:/&step=goal:signup_completed`,
+      )
+    ).body as WebAnalyticsFunnelResponse;
+    const converted = (
+      await get(setup.cluster.id, setup.token, `?${week}&filter=goal:signup_completed`)
+    ).body as WebAnalyticsResponse;
+
+    // then
+    expect(report.summary).toMatchObject({ visitors: 2, sessions: 3 });
+    expect(list.total).toBe(2);
+    expect(list.visitors).toMatchObject([
+      { id: 'c'.repeat(64), identified: false, sessions: 1 },
+      {
+        id: user,
+        identified: true,
+        sessions: 2,
+        pageviews: 2,
+        firstSeen: '2026-09-27T10:00:00.000Z',
+        activeDays: ['2026-09-27', '2026-09-28'],
+      },
+    ]);
+    expect(profile.visitor).toMatchObject({ id: user, identified: true, sessions: 2 });
+    expect(profile.events).toHaveLength(3);
+    expect(funnel.steps.map((step) => step.visitors)).toEqual([2, 1]);
+    expect(converted.summary).toMatchObject({ visitors: 1, pageviews: 2 });
+  });
+
+  it('reports identified-user cohorts, stickiness and comebacks within the plan retention', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupClaimed({ userTier: UserTier.Pro });
+    const site = await configure(setup.cluster.id, setup.token);
+    const base = row(setup.cluster.id, site.id);
+    const active = (user: string, ...days: string[]) =>
+      days.map((day) => ({
+        ...base,
+        id: randomUUID(),
+        visitor_id: randomBytes(32).toString('hex'),
+        user_id: user.repeat(64),
+        created_at: `${day} 10:00:00.000`,
+      }));
+    await insert([
+      ...active('1', '2026-09-01', '2026-09-02', '2026-09-08', '2026-10-01'),
+      ...active('2', '2026-09-01'),
+      ...active('3', '2026-09-30', '2026-10-01'),
+      ...active('4', '2026-07-01', '2026-09-05'),
+      ...active('5', '2026-05-01', '2026-09-10'),
+      ...active('6', '2026-08-25', '2026-09-02'),
+      {
+        ...base,
+        id: randomUUID(),
+        visitor_id: 'e'.repeat(64),
+        created_at: '2026-09-15 10:00:00.000',
+      },
+    ]);
+
+    // when
+    const response = await get(
+      setup.cluster.id,
+      setup.token,
+      '/retention?from=2026-09-01T00:00:00.000Z&to=2026-10-03T00:00:00.000Z',
+    );
+
+    // then
+    expect(response.status).toBe(200);
+    expect(response.body as WebAnalyticsRetentionResponse).toEqual({
+      cohorts: [
+        { date: '2026-09-30', users: 1, day1: 100, day7: null, day30: null, day90: null },
+        { date: '2026-09-01', users: 2, day1: 50, day7: 50, day30: 50, day90: null },
+      ],
+      stickiness: { dailyActive: 10 / 32, monthlyActive: 4, ratio: (10 / 32 / 4) * 100 },
+      comebacks: [
+        { minDays: 30, users: 2 },
+        { minDays: 60, users: 2 },
+        { minDays: 90, users: 1 },
+      ],
+    });
+  });
+
   async function configure(clusterId: string, token: string): Promise<WebAnalyticsSiteSerialized> {
     const response = await request(bootstrap.app.getHttpServer())
       .put(`/clusters/${clusterId}/web_analytics/site`)
@@ -387,7 +530,7 @@ describe('Web analytics (reads)', () => {
       site_id: siteId,
       visitor_id: 'f'.repeat(64),
       session_id: '9'.repeat(64),
-      visitor_started_at: '2026-09-01 10:00:00.000',
+      user_id: '',
       created_at: '2026-10-02 10:00:00.000',
       received_at: '2026-10-02 11:00:00.000',
       expires_at: '2027-10-02 00:00:00',

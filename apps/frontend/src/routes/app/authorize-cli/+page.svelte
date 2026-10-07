@@ -51,6 +51,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Authorize CLI | Logdash</title>
+</svelte:head>
+
 <div class="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
   <div class="flex w-full max-w-md flex-col items-center gap-3 text-center">
     <div class="bg-surface-150-bg rounded-lg p-3">

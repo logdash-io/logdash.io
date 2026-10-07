@@ -41,10 +41,37 @@ It does not run the apps - you run those from source so you get hot reload.
 ### 3. Configure the backend
 
 ```bash
-cp apps/backend/.env.example apps/backend/.env
+cat > apps/backend/.env <<'EOF'
+OUR_ENV=local
+PORT=3000
+MONGO_URL=mongodb://localhost:27017/test
+MIGRATIONS_MONGO_URL=mongodb://localhost:27017
+REDIS_URL=redis://localhost:6379
+CLICKHOUSE_HOST=http://localhost:8123
+CLICKHOUSE_USER=logdash
+CLICKHOUSE_PASSWORD=logdash
+CLICKHOUSE_DATABASE=logdash
+CH_MIGRATIONS_HOST=http://localhost:8123
+CH_MIGRATIONS_USER=logdash
+CH_MIGRATIONS_PASSWORD=logdash
+CH_MIGRATIONS_DB=logdash
+AUTH_JWT_SECRET=local
+PERSONAL_API_KEY_HMAC_SECRET=local
+TELEGRAM_UPTIME_BOT_TOKEN=local
+TELEGRAM_UPTIME_BOT_SECRET=local
+STRIPE_EARLY_BIRD_PRICE_ID=local
+STRIPE_BUILDER_PRICE_ID=local
+STRIPE_PRO_PRICE_ID=local
+STRIPE_API_KEY_SECRET=local
+STRIPE_SIGNATURE=local
+ADMIN_SUPER_SECRET_ADMIN_KEY=local
+RESEND_API_KEY=re_local
+SWAGGER_PASSWORD=local
+EOF
 ```
 
-The defaults in that file point at the containers you just started, and every value that would otherwise crash the boot already has a working placeholder.
+The backend has no committed env file, not even an example, so the block above writes one.
+It points at the containers you just started, and every value that would otherwise crash the boot has a working placeholder.
 The backend loads `apps/backend/.env` automatically, so there is nothing else to wire up.
 
 Two things worth knowing about the config, because they look like typos and are not:
@@ -75,7 +102,7 @@ pnpm --filter backend migrate-up
 pnpm --filter backend migrate-clickhouse
 ```
 
-`migrate-up` is `migrate-mongo` over the 28 files in `apps/backend/migrations`.
+`migrate-up` is `migrate-mongo` over the files in `apps/backend/migrations`.
 It is not a declared dependency, so the first run pulls it through `npx`.
 `migrate-clickhouse` is `clickhouse-migrations` over `apps/backend/clickhouse-migrations`, and it creates the database itself if it is missing.
 Both read `apps/backend/.env`, so step 3 has to come first.

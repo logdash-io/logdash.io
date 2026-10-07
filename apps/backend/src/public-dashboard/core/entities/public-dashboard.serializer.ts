@@ -10,6 +10,7 @@ export class PublicDashboardSerializer {
       httpMonitorsIds: entity.httpMonitorsIds || [],
       name: entity.name,
       isPublic: entity.isPublic,
+      autoAddMonitors: entity.autoAddMonitors ?? false,
     };
   }
 
@@ -25,6 +26,7 @@ export class PublicDashboardSerializer {
       httpMonitorsIds: normalized.httpMonitorsIds,
       name: normalized.name,
       isPublic: normalized.isPublic,
+      autoAddMonitors: normalized.autoAddMonitors,
       customDomain: params?.customDomain,
     };
   }

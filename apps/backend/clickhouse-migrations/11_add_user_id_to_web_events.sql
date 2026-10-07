@@ -1,0 +1,2 @@
+ALTER TABLE web_events
+ADD COLUMN IF NOT EXISTS user_id String DEFAULT '' CODEC (ZSTD);

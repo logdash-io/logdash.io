@@ -45,12 +45,12 @@
 <svg
   viewBox="0 0 {WIDTH} {HEIGHT}"
   preserveAspectRatio="none"
-  class="h-20 w-full overflow-visible"
+  class="h-16 w-full overflow-visible"
   aria-hidden="true"
 >
   <defs>
     <linearGradient id="{id}-fill" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="var(--fg-default)" stop-opacity="0.14" />
+      <stop offset="0" stop-color="var(--fg-default)" stop-opacity="0.16" />
       <stop offset="1" stop-color="var(--fg-default)" stop-opacity="0" />
     </linearGradient>
   </defs>

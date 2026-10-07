@@ -32,6 +32,7 @@
       {@render actions?.()}
       {#if onexpand}
         <IconButton
+          well
           label={expandLabel ?? `Show all ${label.toLowerCase()}`}
           tooltip="Details"
           onclick={onexpand}

@@ -22,7 +22,10 @@ export class MonitorStatusEntry {
   monitorName: string;
 
   @ApiProperty()
-  projectId: string;
+  clusterId: string;
+
+  @ApiPropertyOptional()
+  projectId?: string;
 
   @ApiProperty({ enum: HttpMonitorStatus })
   status: HttpMonitorStatus;

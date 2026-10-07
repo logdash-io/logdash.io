@@ -287,7 +287,10 @@
   {#each text.split('`') as part, index (index)}
     {#if index % 2}
       <code
-        class="bg-surface-100-bg text-fg-secondary rounded px-1 py-0.5 font-mono text-[0.875em]"
+        class={[
+          'bg-surface-100-bg text-fg-secondary rounded px-1 py-0.5 font-mono text-[0.875em]',
+          { 'whitespace-nowrap': !part.includes(' ') },
+        ]}
       >
         {part}
       </code>

@@ -6,8 +6,8 @@ import type { SeoFamily, SeoFamilyData, SeoPage } from '../seo-page';
  * phrasings and the FAQ holds the questions this reader actually asks.
  *
  * Plan numbers come from the backend plan configs: Hobby is free with 5
- * services at 5-minute checks and 1 status page, Builder is $9 with 20
- * services at 1 minute and 5 status pages, Pro is $15 with 50 services at 15
+ * monitors at 5-minute checks and 1 status page, Builder is $9 with 20
+ * monitors at 1 minute and 5 status pages, Pro is $15 with 50 monitors at 15
  * seconds, 15 status pages and custom domains.
  */
 export const useCasesFamily: SeoFamily = {
@@ -30,7 +30,7 @@ export const useCasesPages: SeoPage[] = [
     meta: {
       title: 'Uptime monitoring for solo founders | Logdash',
       description:
-        'Five services checked every 5 minutes for free, Telegram alerts and a public status page, then 15-second checks for $15 a month once the product earns it.',
+        'Five monitors checked every 5 minutes for free, Telegram alerts and a public status page, then 15-second checks for $15 a month once the product earns it.',
     },
     blocks: [
       {
@@ -39,7 +39,7 @@ export const useCasesPages: SeoPage[] = [
       },
       {
         type: 'paragraph',
-        text: 'The free Hobby plan covers 5 services with one HTTP monitor each, checked every 5 minutes, plus 1 public status page and alerts on Telegram or a webhook. For most one-person products that is the entire surface. Nothing to install, and it runs on infrastructure that is not yours, so it keeps watching on the night your server does not.',
+        text: 'The free Hobby plan covers 5 HTTP monitors, checked every 5 minutes, plus 1 public status page and alerts on Telegram or a webhook. For most one-person products that is the entire surface. Nothing to install, and it runs on infrastructure that is not yours, so it keeps watching on the night your server does not.',
       },
       { type: 'heading', text: 'What to put the 5 monitors on' },
       {
@@ -69,7 +69,7 @@ export const useCasesPages: SeoPage[] = [
         items: [
           {
             title: 'Add your URLs',
-            text: 'Create a service per URL and paste the address. The first check runs a second after you save, so a typo shows up now rather than during an outage.',
+            text: 'Add a monitor per URL and paste the address. The first check runs a second after you save, so a typo shows up now rather than during an outage.',
           },
           {
             title: 'Connect Telegram',
@@ -88,7 +88,7 @@ export const useCasesPages: SeoPage[] = [
         rows: [
           {
             feature: 'Free monitors',
-            logdash: '5 services, one monitor each',
+            logdash: '5 HTTP monitors',
             them: '50 monitors',
             winner: 'them',
           },
@@ -118,7 +118,7 @@ export const useCasesPages: SeoPage[] = [
           },
           {
             feature: 'App logs and metrics',
-            logdash: 'Same service, eight SDKs',
+            logdash: 'Same dashboard, eight SDKs',
             them: 'Not part of the product',
             winner: 'logdash',
           },
@@ -136,7 +136,7 @@ export const useCasesPages: SeoPage[] = [
       { type: 'heading', text: 'When to pay' },
       {
         type: 'paragraph',
-        text: 'Builder is $9 a month for 20 services checked every minute. Pro is $15 a month for 50 services checked every 15 seconds, 15 status pages and a custom domain on them. The rule of thumb: pay when 5 minutes of downtime costs you more than $15. For a product with its first paying users, that day comes sooner than you think. Plans are priced per account, not per seat.',
+        text: 'Builder is $9 a month for 20 monitors checked every minute. Pro is $15 a month for 50 monitors checked every 15 seconds, 15 status pages and a custom domain on them. The rule of thumb: pay when 5 minutes of downtime costs you more than $15. For a product with its first paying users, that day comes sooner than you think. Plans are priced per account, not per seat.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -145,12 +145,12 @@ export const useCasesPages: SeoPage[] = [
         question:
           'What is the cheapest way to monitor uptime as a solo founder?',
         answer:
-          'A hosted free plan. Logdash Hobby watches 5 services every 5 minutes with Telegram alerts for $0, and a monitor on someone else’s infrastructure costs less than the evening you would spend running your own.',
+          'A hosted free plan. Logdash Hobby checks 5 monitors every 5 minutes with Telegram alerts for $0, and a monitor on someone else’s infrastructure costs less than the evening you would spend running your own.',
       },
       {
         question: 'How many sites can I monitor for free?',
         answer:
-          '5 services on the Hobby plan, with one HTTP monitor each. Builder raises that to 20 for $9 a month and Pro to 50 for $15.',
+          '5 on the Hobby plan, one HTTP monitor per site. Builder raises that to 20 for $9 a month and Pro to 50 for $15.',
       },
       {
         question:
@@ -187,7 +187,7 @@ export const useCasesPages: SeoPage[] = [
       },
       {
         type: 'paragraph',
-        text: 'Logdash runs the checks from outside your stack. The free plan covers 5 services every 5 minutes, enough for the projects that earn. Pro at $15 a month covers 50 services every 15 seconds, which is the whole graveyard plus room for the next ten ideas.',
+        text: 'Logdash runs the checks from outside your stack. The free plan covers 5 monitors every 5 minutes, enough for the projects that earn. Pro at $15 a month covers 50 monitors every 15 seconds, which is the whole graveyard plus room for the next ten ideas.',
       },
       { type: 'heading', text: 'Show your uptime while you build in public' },
       {
@@ -222,8 +222,8 @@ export async function statusLine(): Promise<string> {
         type: 'steps',
         items: [
           {
-            title: 'One service per project',
-            text: 'Add each project as a service and paste its health URL. The status code and response time of every check are kept, so you see which project got slow after last week’s deploy.',
+            title: 'One monitor per project',
+            text: 'Add a monitor for each project and paste its health URL. The status code and response time of every check are kept, so you see which project got slow after last week’s deploy.',
           },
           {
             title: 'Connect Telegram, publish the page',
@@ -290,11 +290,11 @@ export async function statusLine(): Promise<string> {
       { type: 'heading', text: 'What to do with dead projects' },
       {
         type: 'paragraph',
-        text: 'Keep a monitor on a dead project only while its domain still points at something. The day you let the domain lapse, delete the service. It frees the slot for the next idea, and a monitor that has been red for a month teaches you to ignore red.',
+        text: 'Keep a monitor on a dead project only while its domain still points at something. The day you let the domain lapse, delete the monitor. It frees the slot for the next idea, and a monitor that has been red for a month teaches you to ignore red.',
       },
       {
         type: 'paragraph',
-        text: 'When a live project does break, the same service also takes logs and metrics from the app through eight SDKs, kept for 24 hours on the free plan, so the 2am alert sits next to the log line that explains it.',
+        text: 'When a live project does break, Logdash also takes logs and metrics from the app through eight SDKs, kept for 24 hours on the free plan, so the 2am alert sits next to the log line that explains it.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -302,7 +302,7 @@ export async function statusLine(): Promise<string> {
       {
         question: 'Can I monitor all my side projects for free?',
         answer:
-          'Five of them. Hobby covers 5 services checked every 5 minutes. Past that, Builder is $9 a month for 20 and Pro is $15 for 50.',
+          'Five of them. Hobby covers 5 monitors checked every 5 minutes. Past that, Builder is $9 a month for 20 and Pro is $15 for 50.',
       },
       {
         question: 'Should I just run Uptime Kuma on my VPS?',
@@ -409,7 +409,7 @@ add_action('rest_api_init', function () {
       },
       {
         type: 'paragraph',
-        text: 'That is 3 services, so the free Hobby plan covers them with checks every 5 minutes. A store that takes orders at night is worth Builder at $9 a month for 1-minute checks, or Pro at $15 for every 15 seconds. Each check is also an uncached PHP request, which nudges wp-cron on a quiet site. If the route still reports cron behind, something blocks the loopback.',
+        text: 'That is 3 monitors, so the free Hobby plan covers them with checks every 5 minutes. A store that takes orders at night is worth Builder at $9 a month for 1-minute checks, or Pro at $15 for every 15 seconds. Each check is also an uncached PHP request, which nudges wp-cron on a quiet site. If the route still reports cron behind, something blocks the loopback.',
       },
       {
         type: 'paragraph',
@@ -424,7 +424,7 @@ add_action('rest_api_init', function () {
           },
           {
             title: 'Add three monitors and Telegram',
-            text: 'Create a service each for the health route, the Store API and the homepage. Add @logdash_uptime_bot to a Telegram chat, send it the passphrase and tick that chat on all three.',
+            text: 'Add a monitor each for the health route, the Store API and the homepage. Add @logdash_uptime_bot to a Telegram chat, send it the passphrase and tick that chat on all three.',
           },
           {
             title: 'Switch WooCommerce off on staging',
@@ -439,7 +439,7 @@ add_action('rest_api_init', function () {
         rows: [
           {
             feature: 'Free monitors',
-            logdash: '5 services',
+            logdash: '5 monitors',
             them: '50 monitors',
             winner: 'them',
           },
@@ -451,7 +451,7 @@ add_action('rest_api_init', function () {
           },
           {
             feature: '1-minute checks',
-            logdash: '$9 a month on Builder, 20 services',
+            logdash: '$9 a month on Builder, 20 monitors',
             them: '€10 a month on Solo, 10 monitors',
             winner: 'logdash',
           },
@@ -506,7 +506,7 @@ add_action('rest_api_init', function () {
       {
         question: 'How often should I check my WooCommerce store?',
         answer:
-          'Every minute once it takes orders while you sleep. Builder does that for $9 a month across 20 services, and the free plan checks every 5 minutes.',
+          'Every minute once it takes orders while you sleep. Builder does that for $9 a month across 20 monitors, and the free plan checks every 5 minutes.',
       },
     ],
     updatedAt: '2026-10-02',
@@ -519,7 +519,7 @@ add_action('rest_api_init', function () {
     meta: {
       title: 'Uptime monitoring for SaaS | Logdash',
       description:
-        '15-second checks on 50 services, Telegram and webhook alerts, a status page on your own domain and a status API, for $15 a month with no per-seat pricing.',
+        '15-second checks on 50 monitors, Telegram and webhook alerts, a status page on your own domain and a status API, for $15 a month with no per-seat pricing.',
     },
     blocks: [
       {
@@ -528,7 +528,7 @@ add_action('rest_api_init', function () {
       },
       {
         type: 'paragraph',
-        text: 'Logdash Pro checks up to 50 services every 15 seconds for $15 a month, with no per-seat pricing. Every check records the status code and the response time, and hourly averages stay for 90 days, so the slow week before an outage is on the same chart as the outage. Status pages take your own domain, and every page is also public JSON for building it into your app.',
+        text: 'Logdash Pro checks up to 50 monitors every 15 seconds for $15 a month, with no per-seat pricing. Every check records the status code and the response time, and hourly averages stay for 90 days, so the slow week before an outage is on the same chart as the outage. Status pages take your own domain, and every page is also public JSON for building it into your app.',
       },
       { type: 'heading', text: 'What to monitor' },
       {
@@ -583,7 +583,7 @@ app.listen(3000);`,
         items: [
           {
             title: 'Add the four monitors',
-            text: 'One service per surface from the list above. The first check runs a second after you save.',
+            text: 'One monitor per surface from the list above. The first check runs a second after you save.',
           },
           {
             title: 'Connect Telegram and the webhook',
@@ -612,7 +612,7 @@ app.listen(3000);`,
         rows: [
           {
             feature: 'Free tier',
-            logdash: '5 services at 5 minutes',
+            logdash: '5 monitors at 5 minutes',
             them: '10 monitors at 3 minutes',
             winner: 'them',
           },
@@ -642,7 +642,7 @@ app.listen(3000);`,
           },
           {
             feature: 'App logs and metrics',
-            logdash: 'Same service, eight SDKs',
+            logdash: 'Same dashboard, eight SDKs',
             them: 'Separate log and metrics products',
             winner: 'tie',
           },

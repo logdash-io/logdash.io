@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { DateTime } from 'luxon';
 import { allowedGranularities, analyticsWindow } from './analytics-period';
 import { analyticsSearch, parseAnalyticsQuery } from './analytics-query';
-import { formatDuration, visitorName } from './analytics-format';
+import { formatDuration, shortDay, visitorName } from './analytics-format';
 
 const now = DateTime.fromISO('2026-10-02T15:30:00', { zone: 'Europe/Warsaw' });
 
@@ -71,5 +71,13 @@ test('durations read like a clock and visitor names are stable', () => {
   expect(formatDuration(475)).toBe('7m 55s');
   expect(formatDuration(3720)).toBe('1h 2m');
   expect(visitorName('a'.repeat(64))).toBe(visitorName('a'.repeat(64)));
-  expect(visitorName('a'.repeat(64))).toMatch(/^[a-z]+ [a-z]+$/);
+  expect(visitorName('a'.repeat(64))).toMatch(/^[a-z]+ [a-z]+ [1-9]\d\d$/);
+  expect(visitorName(`00000000${'0'.repeat(56)}`)).not.toBe(
+    visitorName(`00000400${'0'.repeat(56)}`),
+  );
+  expect(shortDay(DateTime.local().toISO() ?? '')).toMatch(/\d:\d\d/);
+  expect(shortDay(DateTime.local().minus({ days: 1 }).toISO() ?? '')).toBe(
+    'Yesterday',
+  );
+  expect(shortDay('2026-03-04T12:00:00')).toBe('4 Mar');
 });

@@ -1,10 +1,8 @@
 import { resolve } from '$app/paths';
-import type { SimplifiedMetric } from '$lib/domains/app/projects/domain/metric';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor';
 import type { PingBucket } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error';
-import type { Log } from '$lib/domains/logs/domain/log';
 import { createLogger } from '$lib/domains/shared/logger';
 import { posthog } from 'posthog-js';
 import {
@@ -28,16 +26,6 @@ const PREVIEW_POLL_INTERVAL_MS = 5_000;
 const FIRST_CHECK_POLL_INTERVAL_MS = 1_000;
 const HISTORY_POLL_EVERY = 12;
 const DEMO_POLL_INTERVAL_MS = 5_000;
-/** Metric history moves by the minute, so every 12th poll is enough. */
-const DEMO_SLOW_POLL_EVERY = 12;
-/** Metrics the showcase column leads with, when the project has them. */
-const DEMO_METRIC_ORDER = [
-  'logsCreated',
-  'pingsMade',
-  'projectsCreated',
-  'clustersCreated',
-];
-const DEMO_METRICS_SHOWN = 4;
 
 export type AnonymousPreviewPhase =
   | 'idle'
@@ -53,23 +41,15 @@ export type AnonymousPreviewSource =
   | 'feature'
   | 'link';
 
-export type DemoMetric = SimplifiedMetric & {
-  /** The last hour, one value per minute, oldest first. */
-  history: number[];
-};
-
 export type AnonymousPreviewDemo = {
   monitor: Monitor | null;
   pings: HttpPing[];
-  /** Newest first. Null until the first read lands. */
-  logs: Log[] | null;
-  metrics: DemoMetric[] | null;
-  /** How many metrics the project tracks, of which `metrics` shows a few. */
-  metricsTracked: number;
+  hours: (PingBucket | null)[];
+  loaded: boolean;
 };
 
 type DemoTarget = {
-  projectId: string;
+  clusterId: string;
   monitorId: string | null;
 };
 
@@ -95,9 +75,8 @@ class AnonymousPreviewState {
   private _demo = $state<AnonymousPreviewDemo>({
     monitor: null,
     pings: [],
-    logs: null,
-    metrics: null,
-    metricsTracked: 0,
+    hours: [],
+    loaded: false,
   });
   private _demoPolls = 0;
   private _demoTarget: DemoTarget | null = null;
@@ -129,12 +108,20 @@ class AnonymousPreviewState {
     return null;
   }
 
+  public get previewUrl(): string | null {
+    return this._preview?.url ?? this._submittedUrl;
+  }
+
   public get clusterName(): string | null {
     return this._clusterName;
   }
 
   public get pings(): HttpPing[] {
     return this._pings;
+  }
+
+  public get previewHours(): (PingBucket | null)[] {
+    return this._history.hours;
   }
 
   public get watchHistory(): WatchHistory | null {
@@ -237,6 +224,7 @@ class AnonymousPreviewState {
     this._persistPreview(preview);
 
     posthog.capture('anonymous_dashboard_created', { source });
+    window.logdash?.track('preview_dashboard_created');
 
     this._startPreviewPolling();
   }
@@ -251,9 +239,7 @@ class AnonymousPreviewState {
     posthog.capture('anonymous_dashboard_opened');
 
     window.location.assign(
-      resolve(
-        `/app/domains/${claimed.clusterId}/${claimed.projectId}/monitoring`,
-      ),
+      resolve(`/app/domains/${claimed.clusterId}/uptime/${claimed.monitorId}`),
     );
   }
 
@@ -319,7 +305,7 @@ class AnonymousPreviewState {
       }
 
       const monitor = await anonymousSessionService.createMonitor(
-        preview.projectId,
+        preview.clusterId,
         { name: previewNameFromUrl(preview.url), url: preview.url },
         preview.token,
       );
@@ -435,7 +421,7 @@ class AnonymousPreviewState {
 
     try {
       const pings = await anonymousSessionService.readPings(
-        preview.projectId,
+        preview.clusterId,
         preview.monitorId,
         preview.token,
       );
@@ -501,66 +487,29 @@ class AnonymousPreviewState {
       await this._loadDemoTarget();
     }
 
-    const target = this._demoTarget;
-
-    if (!target) {
-      return;
-    }
-
-    const slow = this._demoPolls % DEMO_SLOW_POLL_EVERY === 0;
+    const withHistory = this._demoPolls % HISTORY_POLL_EVERY === 0;
     this._demoPolls += 1;
 
     await Promise.all([
       this._refreshDemoPings(),
-      this._refreshDemoLogs(target.projectId),
-      this._refreshDemoMetrics(target.projectId, slow),
+      withHistory ? this._refreshDemoHistory() : Promise.resolve(),
     ]);
   }
 
-  private async _refreshDemoLogs(projectId: string): Promise<void> {
-    try {
-      this._demo.logs = await anonymousSessionService.readDemoLogs(projectId);
-    } catch (error) {
-      logger.debug('Failed to refresh the demo logs', error);
+  private async _refreshDemoHistory(): Promise<void> {
+    const target = this._demoTarget;
+
+    if (!target?.monitorId) {
+      return;
     }
-  }
 
-  /** Values every poll; the hour behind each one only on slow polls. */
-  private async _refreshDemoMetrics(
-    projectId: string,
-    withHistory: boolean,
-  ): Promise<void> {
     try {
-      const all = await anonymousSessionService.readDemoMetrics(projectId);
-      const rank = (name: string): number => {
-        const index = DEMO_METRIC_ORDER.indexOf(name);
-        return index === -1 ? DEMO_METRIC_ORDER.length : index;
-      };
-      const shown = [...all]
-        .sort((a, b) => rank(a.name) - rank(b.name))
-        .slice(0, DEMO_METRICS_SHOWN);
-      const previous = new Map(
-        (this._demo.metrics ?? []).map((metric) => [metric.id, metric.history]),
+      this._demo.hours = await anonymousSessionService.readDemoHistory(
+        target.clusterId,
+        target.monitorId,
       );
-
-      const histories = await Promise.all(
-        shown.map((metric) =>
-          withHistory || !previous.has(metric.id)
-            ? anonymousSessionService.readDemoMetricHistory(
-                projectId,
-                metric.metricRegisterEntryId,
-              )
-            : Promise.resolve(previous.get(metric.id) ?? []),
-        ),
-      );
-
-      this._demo.metricsTracked = all.length;
-      this._demo.metrics = shown.map((metric, index) => ({
-        ...metric,
-        history: histories[index],
-      }));
     } catch (error) {
-      logger.debug('Failed to refresh the demo metrics', error);
+      logger.debug('Failed to refresh the demo history', error);
     }
   }
 
@@ -573,15 +522,19 @@ class AnonymousPreviewState {
       const monitor =
         monitors.find(
           (candidate) => candidate.projectId === target.projectId,
-        ) ?? null;
+        ) ??
+        monitors[0] ??
+        null;
 
       this._demoTarget = {
-        projectId: target.projectId,
+        clusterId: target.clusterId,
         monitorId: monitor?.id ?? null,
       };
       this._demo.monitor = monitor;
     } catch (error) {
       logger.debug('Failed to load the demo showcase', error);
+    } finally {
+      this._demo.loaded = true;
     }
   }
 
@@ -594,7 +547,7 @@ class AnonymousPreviewState {
 
     try {
       this._demo.pings = await anonymousSessionService.readDemoPings(
-        target.projectId,
+        target.clusterId,
         target.monitorId,
       );
     } catch (error) {

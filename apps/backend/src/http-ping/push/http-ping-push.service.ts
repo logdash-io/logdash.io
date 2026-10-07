@@ -10,9 +10,9 @@ import { HttpPingEventEmitter } from '../events/http-ping-event.emitter';
 import { CreateHttpPingDto } from '../write/dto/create-http-ping.dto';
 import { HttpPingPingerDataService } from '../pinger/http-ping-pinger.data-service';
 import { HttpPingCron } from '../core/enums/http-ping-cron.enum';
-import { ProjectTier } from 'src/project/core/enums/project-tier.enum';
-import { ProjectReadService } from 'src/project/read/project-read.service';
-import { ProjectPlanConfigs } from '../../shared/configs/project-plan-configs';
+import { ClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
+import { ClusterReadService } from '../../cluster/read/cluster-read.service';
+import { ClusterPlanConfigs } from '../../shared/configs/cluster-plan-configs';
 import { errorMessage } from '../../shared/utils/error-message';
 
 const PUSH_RECORD_TTL_SECONDS = 300; // 5 minutes
@@ -25,7 +25,7 @@ export class HttpPingPushService {
     private readonly httpPingWriteService: HttpPingWriteService,
     private readonly httpPingEventEmitter: HttpPingEventEmitter,
     private readonly httpPingPingerDataService: HttpPingPingerDataService,
-    private readonly projectReadService: ProjectReadService,
+    private readonly clusterReadService: ClusterReadService,
     @Inject(HTTP_PINGS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
@@ -93,27 +93,25 @@ export class HttpPingPushService {
     await this.tryCheckPushMonitors(tiers);
   }
 
-  private getTiersWithFrequency(frequency: HttpPingCron): ProjectTier[] {
-    return Object.values(ProjectTier).filter(
-      (tier) => ProjectPlanConfigs[tier].httpMonitors.pingFrequency === frequency,
+  private getTiersWithFrequency(frequency: HttpPingCron): ClusterTier[] {
+    return Object.values(ClusterTier).filter(
+      (tier) => ClusterPlanConfigs[tier].httpMonitors.pingFrequency === frequency,
     );
   }
 
-  public async tryCheckPushMonitors(projectTiers: ProjectTier[]): Promise<void> {
+  public async tryCheckPushMonitors(clusterTiers: ClusterTier[]): Promise<void> {
     try {
-      await this.checkPushMonitors(projectTiers);
+      await this.checkPushMonitors(clusterTiers);
     } catch (error) {
       this.logger.error('Error processing push monitors:', { errorMessage: errorMessage(error) });
     }
   }
 
-  public async checkPushMonitors(projectTiers: ProjectTier[]): Promise<void> {
-    const projectsIds = (await this.projectReadService.readManyByTiers(projectTiers)).map(
-      (p) => p.id,
-    );
+  public async checkPushMonitors(clusterTiers: ClusterTier[]): Promise<void> {
+    const clustersIds = await this.clusterReadService.readIdsByTiers(clusterTiers);
 
-    const pushMonitors = await this.httpMonitorReadService.readManyByProjectIdsAndMode(
-      projectsIds,
+    const pushMonitors = await this.httpMonitorReadService.readManyByClusterIdsAndMode(
+      clustersIds,
       HttpMonitorMode.Push,
     );
 

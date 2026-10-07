@@ -27,14 +27,14 @@
 </script>
 
 <li
-  class="hover:bg-surface-50-hover-bg has-[a:focus-visible]:bg-surface-50-hover-bg relative flex h-11 items-center gap-4 px-4 text-sm"
+  class="hover:bg-surface-25-hover-bg has-[a:focus-visible]:bg-surface-25-hover-bg relative flex h-12 items-center gap-4 rounded-lg px-3 text-sm"
 >
   <a
     href={resolve('/app/domains/[cluster_id]/status-pages/[status_page_id]', {
       cluster_id: clusterId,
       status_page_id: statusPageId,
     })}
-    class="min-w-0 flex-1 truncate font-medium outline-none after:absolute after:inset-0 focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-brand sm:w-48 sm:flex-none lg:w-64"
+    class="min-w-0 flex-1 truncate font-medium outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-brand sm:w-48 sm:flex-none lg:w-64"
   >
     {name}
   </a>
@@ -65,12 +65,12 @@
       <IconButton
         label="Copy the URL of {name}"
         tooltip="Copy URL"
-        raised
+        well
         onclick={onCopyUrl}
       >
         <CopyIcon class="size-4" />
       </IconButton>
-      <IconButton label="Open {name}" tooltip="Open" href={url} raised>
+      <IconButton label="Open {name}" tooltip="Open" href={url} well>
         <OpenIcon class="size-4" />
       </IconButton>
     </span>

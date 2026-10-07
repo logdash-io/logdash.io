@@ -90,7 +90,7 @@ app.listen(3000);`,
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service and paste the health URL. Logdash checks it every 5 minutes on Hobby, every minute on Builder ($9/month) and every 15 seconds on Pro ($15/month).',
+            text: 'Add a monitor and paste the health URL. Logdash checks it every 5 minutes on Hobby, every minute on Builder ($9/month) and every 15 seconds on Pro ($15/month).',
           },
           {
             title: 'Connect Telegram',
@@ -168,7 +168,7 @@ app.listen(3000);`,
       {
         question: 'Is there a Telegram uptime monitoring bot?',
         answer:
-          'Yes. @logdash_uptime_bot posts down and up alerts for your Logdash monitors into any private chat or group you connect with a passphrase. It is free on the Hobby plan, which watches 5 services every 5 minutes.',
+          'Yes. @logdash_uptime_bot posts down and up alerts for your Logdash monitors into any private chat or group you connect with a passphrase. It is free on the Hobby plan, which checks 5 monitors every 5 minutes.',
       },
       {
         question: 'Do I need to create my own website monitoring Telegram bot?',
@@ -336,7 +336,7 @@ export default {
           },
           {
             feature: 'App logs and metrics',
-            logdash: 'Same service view, eight SDKs',
+            logdash: 'Same dashboard, eight SDKs',
             them: 'Not what Kuma is for',
             winner: 'logdash',
           },
@@ -523,7 +523,7 @@ export default {
           },
           {
             feature: 'App logs and metrics',
-            logdash: 'Same service view, eight SDKs',
+            logdash: 'Same dashboard, eight SDKs',
             them: 'Not offered',
             winner: 'logdash',
           },
@@ -709,7 +709,7 @@ export default {
           },
           {
             feature: 'App logs and metrics',
-            logdash: 'Same service view, eight SDKs',
+            logdash: 'Same dashboard, eight SDKs',
             them: 'Not offered',
             winner: 'logdash',
           },
@@ -740,7 +740,7 @@ export default {
       {
         question: 'Which uptime monitoring email alerts are free?',
         answer:
-          'UptimeRobot sends email alerts on its free plan, 5-minute checks included. Logdash does not, but its free Hobby plan sends Telegram alerts for 5 services at the same 5-minute interval.',
+          'UptimeRobot sends email alerts on its free plan, 5-minute checks included. Logdash does not, but its free Hobby plan sends Telegram alerts for 5 monitors at the same 5-minute interval.',
       },
       {
         question: 'How fast does a website down email alert arrive?',

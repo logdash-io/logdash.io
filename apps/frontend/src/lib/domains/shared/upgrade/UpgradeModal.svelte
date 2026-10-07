@@ -36,6 +36,10 @@
   };
 
   const currentDisplayTier = $derived(getDisplayTier(userState.tier));
+  const requiredTier = $derived(upgradeState.requiredTier);
+  const highlightedTier = $derived(
+    requiredTier ?? PAYMENT_PLANS.find((plan) => plan.popular)?.tier,
+  );
 
   const isCurrentPlan = (planTier: UserTier): boolean => {
     return planTier === currentDisplayTier;
@@ -44,7 +48,14 @@
   const canUpgradeTo = (planTier: UserTier): boolean => {
     const currentIndex = TIER_ORDER.indexOf(currentDisplayTier);
     const targetIndex = TIER_ORDER.indexOf(planTier);
-    return targetIndex > currentIndex;
+    return targetIndex > currentIndex && includesRequiredFeature(planTier);
+  };
+
+  const includesRequiredFeature = (planTier: UserTier): boolean => {
+    return (
+      !requiredTier ||
+      TIER_ORDER.indexOf(planTier) >= TIER_ORDER.indexOf(requiredTier)
+    );
   };
 
   const getButtonText = (plan: (typeof PAYMENT_PLANS)[number]): string => {
@@ -53,6 +64,9 @@
     }
     if (canUpgradeTo(plan.tier)) {
       return `Upgrade to ${plan.name}`;
+    }
+    if (!includesRequiredFeature(plan.tier)) {
+      return 'Feature not included';
     }
     return plan.buttonText;
   };
@@ -74,6 +88,7 @@
       timestamp: new Date().toISOString(),
       tier,
     });
+    window.logdash?.track('checkout_started');
 
     userState.upgrade(source, tier);
   };
@@ -110,21 +125,21 @@
 
         <Card
           class={[
-            'ld-card-bg border flex-1 overflow-visible ld-card-rounding p-6',
+            'bg-surface-100-bg border flex-1 overflow-visible rounded-xl p-6',
             {
-              'border-brand': plan.popular,
+              'border-brand': plan.tier === highlightedTier,
               'border-success': isCurrentPlan(plan.tier),
               'border-surface-100-border':
-                !plan.popular && !isCurrentPlan(plan.tier),
+                plan.tier !== highlightedTier && !isCurrentPlan(plan.tier),
             },
           ]}
         >
-          {#if plan.popular && !isCurrentPlan(plan.tier)}
+          {#if plan.tier === highlightedTier && !isCurrentPlan(plan.tier)}
             <Badge
               variant="inverse"
-              class="absolute -top-3 left-1/2 -translate-x-1/2 font-semibold"
+              class="absolute -top-3 left-1/2 -translate-x-1/2 font-semibold whitespace-nowrap"
             >
-              Most popular
+              {requiredTier ? 'Unlocks this feature' : 'Most popular'}
             </Badge>
           {/if}
 
@@ -190,7 +205,9 @@
               {#if plan.features.length > 6}
                 {@const remainingFeatures = plan.features.slice(6)}
                 {#snippet tooltipContent()}
-                  <ul class="space-y-1.5 p-1 ld-card">
+                  <ul
+                    class="bg-surface-elevated-bg edge space-y-1.5 rounded-xl p-3 text-sm shadow-lg"
+                  >
                     {#each remainingFeatures as feature (feature.name)}
                       <li class="flex items-center gap-2">
                         <CheckIcon class="text-success size-4 flex-shrink-0" />

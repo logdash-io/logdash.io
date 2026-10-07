@@ -11,9 +11,7 @@
 
 <script lang="ts">
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
-  import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
-  import LoadingLine from '$lib/domains/shared/ui/components/LoadingLine.svelte';
-  import PaneHeader from '$lib/domains/shared/ui/components/PaneHeader.svelte';
+  import Well from '$lib/domains/shared/ui/components/Well.svelte';
   import type { Snippet } from 'svelte';
 
   type Props = {
@@ -35,6 +33,7 @@
   const SPARK_WIDTH = 200;
   const SPARK_HEIGHT = 36;
   const SPARK_PAD = 2;
+  const TILE_CLASS = 'flex min-w-0 flex-col gap-1.5 rounded-lg p-3';
 
   const integer = new Intl.NumberFormat('en-US');
   const decimal = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
@@ -66,81 +65,94 @@
   }
 </script>
 
-<div class="flex w-full flex-col">
-  <PaneHeader title="Metrics">
-    {#if !loading}
-      <span class="tabular-nums">{tracked} tracked</span>
-    {/if}
-  </PaneHeader>
-
-  <div class="flex flex-col edge-between">
-    {#if loading}
-      <div class="flex h-11 items-center px-4">
-        <LoadingLine label="Loading metrics" />
+<Well
+  label="Metrics"
+  title="Metrics"
+  class="@container min-h-0 flex-1 overflow-y-auto"
+  actions={loading ? undefined : count}
+>
+  {#if loading}
+    <div class="grid gap-2" role="status" aria-label="Loading metrics">
+      {#each ['w-24', 'w-32', 'w-20'] as width (width)}
+        <div class={TILE_CLASS} aria-hidden="true">
+          <span class={['bg-surface-150-bg h-4 rounded-md', width]}></span>
+          <span class="bg-surface-150-bg h-8 w-16 rounded-md"></span>
+          <span class="h-9"></span>
+        </div>
+      {/each}
+    </div>
+  {:else}
+    {#if metrics.length}
+      <div class="grid gap-2 @md:grid-cols-2 @3xl:grid-cols-4">
+        {#each metrics as metric (metric.id)}
+          {#if metric.href}
+            <!-- eslint-disable svelte/no-navigation-without-resolve -- href is supplied by the caller -->
+            <a
+              href={metric.href}
+              class={[
+                TILE_CLASS,
+                'focus-visible:outline-brand focus-visible:outline-2 focus-visible:-outline-offset-2',
+                metric.active
+                  ? 'bg-surface-25-selected-bg'
+                  : 'hover:bg-surface-25-hover-bg',
+              ]}
+              aria-current={metric.active ? 'page' : undefined}
+            >
+              {@render tile(metric)}
+            </a>
+            <!-- eslint-enable svelte/no-navigation-without-resolve -->
+          {:else}
+            <div class={TILE_CLASS}>
+              {@render tile(metric)}
+            </div>
+          {/if}
+        {/each}
       </div>
     {:else}
-      {#each metrics as metric (metric.id)}
-        {#if metric.href}
-          <!-- eslint-disable svelte/no-navigation-without-resolve -- href is supplied by the caller -->
-          <a
-            href={metric.href}
-            class={[
-              'focus-visible:outline-brand focus-visible:-outline-offset-2 focus-visible:outline-2 flex flex-col gap-2 p-4',
-              metric.active
-                ? 'bg-surface-50-selected-bg'
-                : 'hover:bg-surface-50-hover-bg',
-            ]}
-            aria-current={metric.active ? 'page' : undefined}
-          >
-            {@render tile(metric)}
-          </a>
-          <!-- eslint-enable svelte/no-navigation-without-resolve -->
-        {:else}
-          <div class="flex flex-col gap-2 p-4">
-            {@render tile(metric)}
-          </div>
-        {/if}
-      {:else}
-        <EmptyState
-          class="p-4"
-          title="No metrics yet"
-          description="Counters you send from your app show up here."
-        />
-      {/each}
-
-      {#if onNewMetric}
-        <button
-          type="button"
-          class="text-fg-muted hover:bg-surface-50-hover-bg focus-visible:outline-brand focus-visible:-outline-offset-2 focus-visible:outline-2 flex h-11 cursor-pointer items-center gap-2 px-4 text-left text-sm"
-          onclick={onNewMetric}
-        >
-          {@render newMetric()}
-        </button>
-      {:else}
-        <div class="text-fg-muted flex h-11 items-center gap-2 px-4 text-sm">
-          {@render newMetric()}
-        </div>
-      {/if}
-
-      {@render children?.()}
+      <div
+        class="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center"
+      >
+        <p class="font-medium">No metrics yet</p>
+        <p class="text-fg-tertiary max-w-sm text-sm text-balance">
+          Counters you send from your app show up here.
+        </p>
+      </div>
     {/if}
-  </div>
-</div>
+
+    {#if onNewMetric}
+      <button
+        type="button"
+        class="text-fg-muted hover:bg-surface-25-hover-bg hover:text-fg-default transition-ink focus-visible:outline-brand flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-lg px-3 text-left text-sm focus-visible:outline-2 focus-visible:-outline-offset-2"
+        onclick={onNewMetric}
+      >
+        {@render newMetric()}
+      </button>
+    {:else}
+      <div class="text-fg-muted flex h-9 items-center gap-2 px-3 text-sm">
+        {@render newMetric()}
+      </div>
+    {/if}
+
+    {@render children?.()}
+  {/if}
+</Well>
+
+{#snippet count()}
+  <span class="text-fg-muted px-3 text-xs tabular-nums">{tracked} tracked</span>
+{/snippet}
 
 {#snippet tile(metric: MetricsColumnItem)}
-  <div class="flex min-w-0 flex-col gap-0.5">
-    <span
-      class={[
-        'truncate text-xs',
-        metric.active ? 'text-fg-secondary' : 'text-fg-muted',
-      ]}
-    >
-      {metric.name}
-    </span>
-    <span class="font-figure truncate text-2xl">
-      {format(metric.value)}
-    </span>
-  </div>
+  <span
+    class={[
+      'truncate text-xs',
+      metric.active ? 'text-fg-default' : 'text-fg-muted',
+    ]}
+  >
+    {metric.name}
+  </span>
+  <span class="truncate font-mono text-2xl tabular-nums">
+    {format(metric.value)}
+  </span>
 
   <svg
     class={['h-9 w-full', metric.active ? 'text-fg-tertiary' : 'text-fg-muted']}
@@ -163,6 +175,6 @@
 {/snippet}
 
 {#snippet newMetric()}
-  <PlusIcon class="size-4 shrink-0 text-fg-faint" />
+  <PlusIcon class="text-fg-faint size-4 shrink-0" />
   <span>New metric</span>
 {/snippet}

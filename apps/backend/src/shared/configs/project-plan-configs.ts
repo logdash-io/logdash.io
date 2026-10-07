@@ -1,4 +1,3 @@
-import { HttpPingCron } from '../../http-ping/core/enums/http-ping-cron.enum';
 import { MetricGranularity } from '../../metric-shared/enums/metric-granularity.enum';
 import { ProjectTier } from '../../project/core/enums/project-tier.enum';
 
@@ -14,11 +13,6 @@ export interface ProjectPlanConfig {
       [MetricGranularity.Hour]: number;
       [MetricGranularity.Day]: number;
     };
-  };
-  httpMonitors: {
-    maxNumberOfMonitors: number;
-    pingFrequency: HttpPingCron;
-    canCreatePushMonitors: boolean;
   };
 }
 
@@ -52,11 +46,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
         [MetricGranularity.Day]: 0, // 0 hours
       },
     },
-    httpMonitors: {
-      maxNumberOfMonitors: 1,
-      pingFrequency: HttpPingCron.Every5Minutes,
-      canCreatePushMonitors: false,
-    },
   },
   [ProjectTier.EarlyUser]: {
     logs: {
@@ -70,11 +59,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
         [MetricGranularity.Hour]: 12, // 12 hours
         [MetricGranularity.Day]: 7 * 24, // 7 days
       },
-    },
-    httpMonitors: {
-      maxNumberOfMonitors: 1,
-      pingFrequency: HttpPingCron.Every5Minutes,
-      canCreatePushMonitors: false,
     },
   },
 
@@ -92,11 +76,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
         [MetricGranularity.Day]: 30 * 24, // 1 month
       },
     },
-    httpMonitors: {
-      maxNumberOfMonitors: 1,
-      pingFrequency: HttpPingCron.Every5Minutes,
-      canCreatePushMonitors: false,
-    },
   },
   [ProjectTier.Builder]: {
     logs: {
@@ -111,11 +90,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
         [MetricGranularity.Day]: 7 * 24, // 7 days
       },
     },
-    httpMonitors: {
-      maxNumberOfMonitors: 1,
-      pingFrequency: HttpPingCron.EveryMinute,
-      canCreatePushMonitors: false,
-    },
   },
   [ProjectTier.Pro]: {
     logs: {
@@ -129,11 +103,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
         [MetricGranularity.Hour]: 7 * 24, // 7 days
         [MetricGranularity.Day]: 30 * 24, // 30 days
       },
-    },
-    httpMonitors: {
-      maxNumberOfMonitors: 1,
-      pingFrequency: HttpPingCron.Every15Seconds,
-      canCreatePushMonitors: true,
     },
   },
 
@@ -152,11 +121,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
         [MetricGranularity.Day]: 30 * 24, // 30 days
       },
     },
-    httpMonitors: {
-      maxNumberOfMonitors: 1,
-      pingFrequency: HttpPingCron.Every5Minutes,
-      canCreatePushMonitors: false,
-    },
   },
   [ProjectTier.Admin]: {
     logs: {
@@ -170,11 +134,6 @@ export const ProjectPlanConfigs: ProjectPlanConfigs = {
         [MetricGranularity.Hour]: 7 * 24, // 7 days
         [MetricGranularity.Day]: 30 * 24, // 1 month
       },
-    },
-    httpMonitors: {
-      maxNumberOfMonitors: 100,
-      pingFrequency: HttpPingCron.EveryMinute,
-      canCreatePushMonitors: true,
     },
   },
 };

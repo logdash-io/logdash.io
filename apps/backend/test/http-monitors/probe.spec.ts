@@ -305,4 +305,56 @@ describe('HttpMonitorCoreController (probe)', () => {
       expect(statuses[30]).toBe(429);
     });
   });
+
+  describe('POST /clusters/:clusterId/http_monitors/probe', () => {
+    const probeInCluster = (token: string, clusterId: string, url: string): request.Test => {
+      const body: ProbeHttpMonitorUrlBody = { url };
+
+      return request(server())
+        .post(`/clusters/${clusterId}/http_monitors/probe`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(body);
+    };
+
+    it('probes a url for the domain', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      mockHost({
+        madeUp: [404, 'Not found'],
+        paths: {
+          '/': [200, 'Home'],
+          '/health': [200, 'ok'],
+          '/api/health': [404, 'Not found'],
+          '/up': [404, 'Not found'],
+        },
+      });
+
+      // when
+      const response = await probeInCluster(token, cluster.id, ORIGIN);
+
+      // then
+      expect(response.status).toBe(200);
+      expect(response.body as ProbeHttpMonitorUrlResponse).toEqual({
+        catchAll: false,
+        healthPaths: ['/health'],
+      });
+    });
+
+    it('forbids a user from another cluster and a monitors read key', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const setupB = await bootstrap.utils.generalUtils.setupAnonymous();
+      const readKey = await createKey(token, [
+        { resource: Resource.Monitors, action: Action.Read },
+      ]);
+
+      // when
+      const otherCluster = await probeInCluster(setupB.token, cluster.id, ORIGIN);
+      const deniedRead = await probeInCluster(readKey, cluster.id, ORIGIN);
+
+      // then
+      expect(otherCluster.status).toBe(403);
+      expect(deniedRead.status).toBe(403);
+    });
+  });
 });

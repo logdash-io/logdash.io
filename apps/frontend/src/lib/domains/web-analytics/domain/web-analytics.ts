@@ -97,6 +97,7 @@ export interface WebAnalyticsVisitor {
   sessions: number;
   pageviews: number;
   activeDays: string[];
+  identified: boolean;
 }
 
 export interface WebAnalyticsVisitorEvent {
@@ -120,10 +121,28 @@ export interface WebAnalyticsFunnelStep {
 
 export interface WebAnalyticsCohort {
   date: string;
-  visitors: number;
+  users: number;
   day1: number | null;
   day7: number | null;
   day30: number | null;
+  day90: number | null;
+}
+
+export interface WebAnalyticsStickiness {
+  dailyActive: number;
+  monthlyActive: number;
+  ratio: number | null;
+}
+
+export interface WebAnalyticsComeback {
+  minDays: 30 | 60 | 90;
+  users: number;
+}
+
+export interface WebAnalyticsRetention {
+  cohorts: WebAnalyticsCohort[];
+  stickiness: WebAnalyticsStickiness;
+  comebacks: WebAnalyticsComeback[];
 }
 
 export interface WebAnalyticsRange {

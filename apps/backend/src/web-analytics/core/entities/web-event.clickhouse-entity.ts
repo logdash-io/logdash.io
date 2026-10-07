@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { ClickhouseUtils } from '../../../clickhouse/clickhouse.utils';
 import { CLICK_IDS, WebEventBody } from '../dto/collect-web-events.body';
 import { WebAnalyticsSiteNormalized } from './web-analytics-site.interface';
@@ -10,7 +9,7 @@ export class WebEventClickhouseEntity {
   site_id: string;
   visitor_id: string;
   session_id: string;
-  visitor_started_at: string;
+  user_id: string;
   created_at: string;
   received_at: string;
   expires_at: string;
@@ -38,24 +37,18 @@ export class WebEventClickhouseEntity {
     now: Date,
   ): WebEventClickhouseEntity | null {
     const age = Math.max(0, sentAt.getTime() - Date.parse(event.timestamp));
-    const startedAt = Date.parse(event.visitorStartedAt) + now.getTime() - sentAt.getTime();
     const path = this.normalizePath(event.path);
-    if (!(age <= 5 * 60_000) || Number.isNaN(startedAt) || path === null) return null;
+    if (!(age <= 5 * 60_000) || path === null) return null;
     const createdAt = new Date(now.getTime() - age);
-    const visitorStartedAt = new Date(
-      Math.min(Math.max(startedAt, Date.UTC(2020, 0, 1)), createdAt.getTime()),
-    );
-    const hash = (value: string): string =>
-      createHash('sha256').update(`${site.id}:${value}`).digest('hex');
     const campaign = (value?: string): string =>
       !value || /[@\p{Cc}]/u.test(value) ? '' : Array.from(value.trim()).slice(0, 100).join('');
     return {
       id: event.id,
       cluster_id: site.clusterId,
       site_id: site.id,
-      visitor_id: hash(event.visitorId),
-      session_id: hash(event.sessionId),
-      visitor_started_at: ClickhouseUtils.jsDateToClickhouseDate(visitorStartedAt),
+      visitor_id: '',
+      session_id: '',
+      user_id: event.userId ?? '',
       created_at: ClickhouseUtils.jsDateToClickhouseDate(createdAt),
       received_at: ClickhouseUtils.jsDateToClickhouseDate(now),
       expires_at: ClickhouseUtils.jsDateToClickhouseDate(

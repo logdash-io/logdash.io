@@ -1,38 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import { HttpMonitorReadService } from '../read/http-monitor-read.service';
-import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
-import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
+import { ClusterReadService } from '../../cluster/read/cluster-read.service';
+import { UserReadCachedService } from '../../user/read/user-read-cached.service';
+import { getUserPlanConfig } from '../../shared/configs/user-plan-configs';
 
-const MAX_UNCLAIMED_MONITORS_PER_PROJECT = 3;
+const MAX_UNCLAIMED_MONITORS_PER_CLUSTER = 3;
 
 @Injectable()
 export class HttpMonitorLimitService {
   constructor(
     private readonly httpMonitorReadService: HttpMonitorReadService,
-    private readonly projectReadCachedService: ProjectReadCachedService,
+    private readonly clusterReadService: ClusterReadService,
+    private readonly userReadCachedService: UserReadCachedService,
   ) {}
 
-  public async hasCapacity(projectId: string): Promise<boolean> {
+  public async hasCapacity(clusterId: string): Promise<boolean> {
     const notClaimedMonitorsCount =
-      await this.httpMonitorReadService.countNotClaimedByProjectId(projectId);
+      await this.httpMonitorReadService.countNotClaimedByClusterId(clusterId);
 
-    if (notClaimedMonitorsCount + 1 > MAX_UNCLAIMED_MONITORS_PER_PROJECT) {
+    if (notClaimedMonitorsCount + 1 > MAX_UNCLAIMED_MONITORS_PER_CLUSTER) {
       return false;
     }
 
-    return this.hasClaimedCapacity(projectId);
+    return this.hasClaimedCapacity(clusterId);
   }
 
-  public async hasClaimedCapacity(projectId: string): Promise<boolean> {
-    const claimedMonitorsCount =
-      await this.httpMonitorReadService.countClaimedByProjectId(projectId);
-    const project = await this.projectReadCachedService.readProject(projectId);
+  public async hasClaimedCapacity(clusterId: string): Promise<boolean> {
+    const cluster = await this.clusterReadService.readById(clusterId);
 
-    if (!project) {
+    if (!cluster) {
       return false;
     }
 
-    const allowedCount = getProjectPlanConfig(project.tier).httpMonitors.maxNumberOfMonitors;
+    const tier = await this.userReadCachedService.readTier(cluster.creatorId);
+    const allowedCount = getUserPlanConfig(tier).httpMonitors.maxNumberOfMonitors;
+    const ownerClusters = await this.clusterReadService.readByCreatorId(cluster.creatorId);
+    const claimedMonitorsCount = await this.httpMonitorReadService.countClaimedByClusterIds(
+      ownerClusters.map((ownerCluster) => ownerCluster.id),
+    );
 
     return claimedMonitorsCount + 1 <= allowedCount;
   }

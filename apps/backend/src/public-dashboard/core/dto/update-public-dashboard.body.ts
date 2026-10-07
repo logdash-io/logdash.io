@@ -14,4 +14,10 @@ export class UpdatePublicDashboardBody {
   @NoImplicitConversion()
   @IsBoolean()
   isPublic?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @NoImplicitConversion()
+  @IsBoolean()
+  autoAddMonitors?: boolean;
 }

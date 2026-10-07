@@ -7,6 +7,7 @@
   import {
     SETTINGS_INPUT_CLASS,
     SettingsCard,
+    SettingsCardItem,
   } from '$lib/domains/shared/ui/components/settings-card';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
   import AtIcon from '$lib/domains/shared/icons/AtIcon.svelte';
@@ -88,9 +89,9 @@
   icon={UsersIcon}
 >
   {#if clusterInvitesState.isLoading || !capacity}
-    <div class="min-h-39.5 px-4 py-4">
+    <div class="min-h-36 px-3 py-2.5 text-[13px]">
       {#if clusterInvitesState.loadFailed && !clusterInvitesState.isLoading}
-        <div class="text-fg-muted flex items-center gap-2 text-sm">
+        <div class="text-fg-muted flex items-center gap-2">
           <DangerIcon class="size-4 shrink-0" />
           Could not load members. Retrying in a few seconds.
         </div>
@@ -99,64 +100,78 @@
       {/if}
     </div>
   {:else}
-    <div class="flex items-center gap-3 px-4 py-4 text-[13px]">
-      <span class="text-fg-muted w-16 shrink-0">Seats</span>
-      <span class="tabular-nums">
-        {memberCount} of {capacity.maxMembers} used
-      </span>
-    </div>
-
-    {#each capacity.members as member (member.email)}
-      <div class="flex items-center gap-3 px-4 py-4 text-[13px]">
-        <span class="text-fg-muted w-16 shrink-0">
-          {roleLabel(member.role)}
-        </span>
-        <span
-          class="bg-surface-150-bg flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full"
-        >
-          {#if member.avatarUrl}
-            <img src={member.avatarUrl} alt="" class="size-full object-cover" />
-          {:else}
-            <UserIcon class="text-fg-tertiary size-3" />
-          {/if}
-        </span>
-        <span class="min-w-0 flex-1 truncate">
-          {member.email || 'Anonymous'}
+    <SettingsCardItem>
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="text-fg-muted w-16 shrink-0">Seats</span>
+        <span class="tabular-nums">
+          {memberCount} of {capacity.maxMembers} used
         </span>
       </div>
+    </SettingsCardItem>
+
+    {#each capacity.members as member (member.email)}
+      <SettingsCardItem>
+        <div class="flex min-w-0 items-center gap-3">
+          <span class="text-fg-muted w-16 shrink-0">
+            {roleLabel(member.role)}
+          </span>
+          <span
+            class="bg-surface-150-bg flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full"
+          >
+            {#if member.avatarUrl}
+              <img
+                src={member.avatarUrl}
+                alt=""
+                class="size-full object-cover"
+              />
+            {:else}
+              <UserIcon class="text-fg-tertiary size-3" />
+            {/if}
+          </span>
+          <span class="min-w-0 flex-1 truncate">
+            {member.email || 'Anonymous'}
+          </span>
+        </div>
+      </SettingsCardItem>
     {/each}
 
     {#each clusterInvitesState.invites as invite (invite.id)}
-      <div class="flex items-center gap-3 px-4 py-4 text-[13px]">
-        <span class="text-fg-muted w-16 shrink-0">Invited</span>
-        <span
-          class="border-surface-200-border size-5 shrink-0 rounded-full border border-dashed"
-        ></span>
-        <span class="min-w-0 flex-1 truncate">{invite.invitedUserEmail}</span>
-        <span class="text-fg-muted shrink-0 font-mono text-xs max-sm:hidden">
-          {formatDate(invite.createdAt)}
-        </span>
-        <IconButton
-          label="Cancel the invite to {invite.invitedUserEmail}"
-          tooltip="Cancel invite"
-          danger
-          class="-my-1.5 -mr-1.5"
-          disabled={clusterInvitesState.isDeleting}
-          onclick={() => onDeleteInvite(invite.id)}
-        >
-          <TrashIcon class="size-4" />
-        </IconButton>
-      </div>
+      <SettingsCardItem>
+        <div class="flex min-w-0 items-center gap-3">
+          <span class="text-fg-muted w-16 shrink-0">Invited</span>
+          <span
+            class="border-surface-150-border size-5 shrink-0 rounded-full border border-dashed"
+          ></span>
+          <span class="min-w-0 flex-1 truncate">{invite.invitedUserEmail}</span>
+          <span class="text-fg-muted shrink-0 font-mono text-xs max-sm:hidden">
+            {formatDate(invite.createdAt)}
+          </span>
+        </div>
+
+        {#snippet action()}
+          <IconButton
+            label="Cancel the invite to {invite.invitedUserEmail}"
+            tooltip="Cancel invite"
+            danger
+            well
+            class="-mr-1.5"
+            disabled={clusterInvitesState.isDeleting}
+            onclick={() => onDeleteInvite(invite.id)}
+          >
+            <TrashIcon class="size-4" />
+          </IconButton>
+        {/snippet}
+      </SettingsCardItem>
     {/each}
 
     {#if clusterInvitesState.canInviteMore}
-      <div class="flex flex-col gap-2 px-4 py-2.5 text-[13px]">
-        <div class="flex items-center gap-3">
+      <SettingsCardItem>
+        <div class="flex min-w-0 items-center gap-3">
           <span class="text-fg-muted w-16 shrink-0">Invite</span>
           <Input
             type="email"
             size="sm"
-            class={['min-w-0 flex-1', SETTINGS_INPUT_CLASS]}
+            class={['-my-1.5 min-w-0 flex-1', SETTINGS_INPUT_CLASS]}
             placeholder="name@company.com"
             aria-label="Email of the person to invite"
             error={!!emailError && !!emailInput.trim()}
@@ -171,6 +186,7 @@
           <Button
             variant="primary"
             size="sm"
+            class="-my-1.5"
             onclick={onInviteUser}
             disabled={!isEmailValid}
             loading={clusterInvitesState.isCreating}
@@ -179,13 +195,13 @@
           </Button>
         </div>
         {#if emailError && emailInput.trim()}
-          <p class="text-error pl-19">{emailError}</p>
+          <p class="text-error mt-2.5 pl-19">{emailError}</p>
         {/if}
-      </div>
+      </SettingsCardItem>
     {:else}
       <UpgradeElement
         source="cluster-invite-limit"
-        class="hover:bg-surface-100-hover-bg flex items-center gap-3 px-4 py-4 text-[13px]"
+        class="hover:bg-surface-25-hover-bg flex min-h-12 items-center gap-3 rounded-lg px-3 py-2.5 text-[13px]"
       >
         <span class="text-fg-muted w-16 shrink-0">Invite</span>
         <span class="min-w-0 flex-1">

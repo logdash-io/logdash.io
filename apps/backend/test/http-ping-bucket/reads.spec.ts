@@ -521,4 +521,60 @@ describe('Http Ping Bucket(reads)', () => {
   }): Promise<void> {
     await bootstrap.utils.httpPingUtils.createHttpPing(params);
   }
+
+  describe('GET /clusters/:clusterId/monitors/:monitorId/http_ping_buckets', () => {
+    it('reads buckets of a domain monitor', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupClaimed();
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+        token: setup.token,
+        clusterId: setup.cluster.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${setup.cluster.id}/monitors/${monitor.id}/http_ping_buckets?period=90h`)
+        .set('Authorization', `Bearer ${setup.token}`);
+
+      // then
+      expect(response.status).toBe(200);
+      expect((response.body as BucketsResponse).buckets).toHaveLength(90);
+    });
+
+    it('hides a monitor of another domain', async () => {
+      // given
+      const setupA = await bootstrap.utils.generalUtils.setupClaimed();
+      const setupB = await bootstrap.utils.generalUtils.setupClaimed();
+      const monitorB = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+        token: setupB.token,
+        clusterId: setupB.cluster.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${setupA.cluster.id}/monitors/${monitorB.id}/http_ping_buckets?period=90h`)
+        .set('Authorization', `Bearer ${setupA.token}`);
+
+      // then
+      expect(response.status).toBe(404);
+    });
+
+    it('denies access for non-cluster member', async () => {
+      // given
+      const setupA = await bootstrap.utils.generalUtils.setupClaimed();
+      const setupB = await bootstrap.utils.generalUtils.setupClaimed();
+      const monitor = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+        token: setupA.token,
+        clusterId: setupA.cluster.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${setupA.cluster.id}/monitors/${monitor.id}/http_ping_buckets?period=90h`)
+        .set('Authorization', `Bearer ${setupB.token}`);
+
+      // then
+      expect(response.status).toBe(403);
+    });
+  });
 });

@@ -120,7 +120,7 @@ export const statusPagesFamily: SeoFamily = {
         items: [
           {
             title: 'Add your monitors',
-            text: 'Create one Logdash service per thing customers can tell apart, such as the app and the API, and point each HTTP monitor at a health URL.',
+            text: 'Add one Logdash HTTP monitor per thing customers can tell apart, such as the app and the API, and point each at a health URL.',
           },
           {
             title: 'Publish the page',
@@ -533,7 +533,7 @@ export default function Page() {
       },
       {
         type: 'paragraph',
-        text: 'With Logdash you self-host the page and leave the checks hosted. The free plan covers 5 services with an HTTP check every 5 minutes, 1 published status page and Telegram alerts. The page reads that status page from a public JSON API with no key, so it runs on any box you own. A custom domain on the hosted page needs Pro. A self-hosted page on `status.yourdomain.com` does not, because the domain points at your server, not ours.',
+        text: 'With Logdash you self-host the page and leave the checks hosted. The free plan covers 5 HTTP monitors checked every 5 minutes, 1 published status page and Telegram alerts. The page reads that status page from a public JSON API with no key, so it runs on any box you own. A custom domain on the hosted page needs Pro. A self-hosted page on `status.yourdomain.com` does not, because the domain points at your server, not ours.',
       },
       { type: 'heading', text: 'Status page self hosted with Docker' },
       {
@@ -584,7 +584,7 @@ cd status-page`,
         items: [
           {
             title: 'Publish a status page',
-            text: 'Create a service per app in Logdash, point each HTTP monitor at a health URL, add the monitors to a status page and publish it. Copy the id from the Build your own section.',
+            text: 'Add an HTTP monitor per app in Logdash, point each at a health URL, add the monitors to a status page and publish it. Copy the id from the Build your own section.',
           },
           {
             title: 'Start the container',
@@ -654,7 +654,7 @@ cd status-page`,
       {
         question: 'Can I get a free status page self hosted?',
         answer:
-          'Yes. The starter is MIT and costs nothing to run beyond the server. The data comes from a Logdash status page, and the free plan includes one with 5 services checked every 5 minutes.',
+          'Yes. The starter is MIT and costs nothing to run beyond the server. The data comes from a Logdash status page, and the free plan includes one with 5 monitors checked every 5 minutes.',
       },
       {
         question: 'What is the best self hosted status page?',
@@ -689,7 +689,7 @@ cd status-page`,
         type: 'list',
         items: [
           'One public status page at `logdash.io/d/<id>`, with overall status, uptime per monitor over 24 hours, 7, 30 and 90 days, 90 daily history bars and a response time chart.',
-          '5 HTTP monitors, one per service, checked every 5 minutes. Any 2xx or 3xx answer counts as up.',
+          '5 HTTP monitors, checked every 5 minutes. Any 2xx or 3xx answer counts as up.',
           'Telegram and webhook alerts when a monitor goes down.',
           'Uptime badges in classic, status and card styles, light and dark, for your site or README.',
           'The public status page API and the `@logdash/status` client, so you can build the page yourself in your own design.',
@@ -786,7 +786,7 @@ cd status-page`,
         items: [
           {
             title: 'Add up to 5 monitors',
-            text: 'One per service, each pointed at a health URL. Checks run every 5 minutes and store status code and response time.',
+            text: 'One per app, each pointed at a health URL. Checks run every 5 minutes and store status code and response time.',
           },
           {
             title: 'Publish the page',
@@ -1691,7 +1691,7 @@ curl -s https://api.logdash.io/v1/status_pages/status.logdash.io | jq -r '.statu
         items: [
           {
             title: 'Monitor what you will list',
-            text: 'Create one Logdash service per component you plan to show, and point its HTTP monitor at a health URL.',
+            text: 'Add one Logdash HTTP monitor per component you plan to show, and point it at a health URL.',
           },
           {
             title: 'Publish the page',
@@ -1840,7 +1840,7 @@ curl -s https://api.logdash.io/v1/status_pages/status.logdash.io | jq -r '.statu
         items: [
           {
             title: 'Monitor each component',
-            text: 'Create a Logdash service per row you plan to show and point its HTTP monitor at a health URL.',
+            text: 'Add a Logdash HTTP monitor per row you plan to show and point it at a health URL.',
           },
           {
             title: 'Publish on its own host',

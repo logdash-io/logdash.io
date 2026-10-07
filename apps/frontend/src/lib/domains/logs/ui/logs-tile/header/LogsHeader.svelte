@@ -125,7 +125,7 @@
   }
 </script>
 
-<div class="flex shrink-0 flex-col gap-4 p-4">
+<div class="flex shrink-0 flex-col gap-2">
   <LogsToolbar
     {search}
     {filters}
@@ -138,7 +138,9 @@
   />
 
   {#if volume && projectId}
-    <LogsAnalyticsChart {onDateRangeChange} />
+    <div class="px-3 pt-2">
+      <LogsAnalyticsChart {onDateRangeChange} />
+    </div>
   {/if}
 </div>
 

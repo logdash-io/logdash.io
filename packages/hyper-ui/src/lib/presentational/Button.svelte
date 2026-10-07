@@ -163,8 +163,8 @@
     .ld-button[data-variant="danger-ghost"] {
       --button-hover-bg: color-mix(in oklab, var(--error) 28%, var(--surface-150-bg));
       --button-ring: transparent;
-      --button-fg: var(--error);
-      --button-hover-fg: var(--error);
+      --button-fg: var(--error-fg);
+      --button-hover-fg: var(--error-fg);
       --button-focus: var(--error);
     }
 

@@ -1,25 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
-import { ProjectReadService } from '../../project/read/project-read.service';
 
 @Injectable()
 export class HttpPingPingerDataService {
-  constructor(
-    private readonly httpMonitorReadService: HttpMonitorReadService,
-    private readonly projectReadService: ProjectReadService,
-  ) {}
+  constructor(private readonly httpMonitorReadService: HttpMonitorReadService) {}
 
   public async readClusterIdsByMonitorIds(monitorIds: string[]): Promise<Record<string, string>> {
     const monitors = await this.httpMonitorReadService.readManyByIds(monitorIds);
-    const projectsIds = [...new Set(monitors.map((monitor) => monitor.projectId))];
-    const projects = await this.projectReadService.readManyByIds(projectsIds);
 
-    const clustersIds = Object.fromEntries(
-      projects.map((project) => [project.id, project.clusterId]),
-    );
-
-    return Object.fromEntries(
-      monitors.map((monitor) => [monitor.id, clustersIds[monitor.projectId]]),
-    );
+    return Object.fromEntries(monitors.map((monitor) => [monitor.id, monitor.clusterId]));
   }
 }

@@ -29,6 +29,13 @@ export class PublicDashboardReadService {
     return entities.map((entity) => PublicDashboardSerializer.normalize(entity));
   }
 
+  public async readByHttpMonitorId(httpMonitorId: string): Promise<PublicDashboardNormalized[]> {
+    const entities = await this.publicDashboardModel
+      .find({ httpMonitorsIds: httpMonitorId })
+      .exec();
+    return entities.map((entity) => PublicDashboardSerializer.normalize(entity));
+  }
+
   public async readById(id: string): Promise<PublicDashboardNormalized | null> {
     const entity = await this.publicDashboardModel.findById(id).exec();
     if (!entity) {

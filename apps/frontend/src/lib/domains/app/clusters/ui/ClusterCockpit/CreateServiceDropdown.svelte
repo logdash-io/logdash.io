@@ -1,23 +1,13 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
+  import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
   import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
-  import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
-  import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
-  import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
-  import { CloseIcon } from '@logdash/hyper-ui/icons';
-  import {
-    Button,
-    Checkbox,
-    Input,
-    Spinner,
-  } from '@logdash/hyper-ui/presentational';
-  import { Feature } from '$lib/domains/shared/types.js';
-  import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
-  import { goto } from '$app/navigation';
-  import { resolve } from '$app/paths';
-  import { scale } from 'svelte/transition';
+  import { Button, Input } from '@logdash/hyper-ui/presentational';
   import { cubicOut } from 'svelte/easing';
+  import { scale } from 'svelte/transition';
 
   type Props = {
     clusterId: string;
@@ -33,49 +23,32 @@
 
   let isCreating = $state(false);
   let serviceName = $state('');
-  let selectedFeatures = $state<Feature[]>([]);
 
   const canCreate = $derived(serviceName.trim().length > 0 && !isCreating);
 
-  const featureConfig = [
-    {
-      feature: Feature.LOGGING,
-      label: 'Logs',
-      icon: LogsIcon,
-    },
-    {
-      feature: Feature.METRICS,
-      label: 'Metrics',
-      icon: MetricsIcon,
-    },
-    {
-      feature: Feature.MONITORING,
-      label: 'Monitoring',
-      icon: MonitoringIcon,
-    },
-  ];
+  $effect(() => {
+    const opener = document.activeElement;
+    setTimeout(() => document.getElementById(inputId)?.focus(), 50);
 
-  function onToggleFeature(feature: Feature): void {
-    if (selectedFeatures.includes(feature)) {
-      selectedFeatures = selectedFeatures.filter((f) => f !== feature);
-    } else {
-      selectedFeatures = [...selectedFeatures, feature];
+    return () => {
+      if (opener instanceof HTMLElement) {
+        opener.focus();
+      }
+    };
+  });
+
+  async function onSubmit(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+
+    if (!canCreate) {
+      return;
     }
-  }
-
-  function isFeatureEnabled(feature: Feature): boolean {
-    return selectedFeatures.includes(feature);
-  }
-
-  async function onCreateService(): Promise<void> {
-    if (!canCreate) return;
 
     isCreating = true;
+
     try {
       const result = await ProjectsService.createProject(clusterId, {
-        name: serviceName,
-        selectedFeatures:
-          selectedFeatures.length > 0 ? selectedFeatures : undefined,
+        name: serviceName.trim(),
       });
 
       onClose();
@@ -99,112 +72,51 @@
     }
   }
 
-  function onKeyDown(e: KeyboardEvent): void {
-    if (e.key === 'Enter' && canCreate) {
-      void onCreateService();
-    }
-  }
-
-  function onFormKeyDown(e: KeyboardEvent): void {
-    if (e.key === 'Escape') {
-      e.preventDefault();
+  function onKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
       onClose();
     }
   }
-
-  function onBackdropClick(): void {
-    onClose();
-  }
-
-  $effect(() => {
-    const opener = document.activeElement;
-    setTimeout(() => {
-      document.getElementById(inputId)?.focus();
-    }, 50);
-
-    return () => {
-      if (opener instanceof HTMLElement) {
-        opener.focus();
-      }
-    };
-  });
 </script>
 
 <button
-  class="fixed inset-0 z-40"
-  onclick={onBackdropClick}
+  class="fixed inset-0 z-40 cursor-default"
+  onclick={onClose}
   aria-label="Close form"
   tabindex="-1"
 ></button>
 
-<div
-  role="presentation"
-  class="absolute left-0 right-0 top-full z-50 mt-2 flex flex-col gap-3 rounded-xl border border-surface-elevated-border bg-surface-elevated-bg p-4 shadow-xl min-w-52"
+<form
+  class="bg-surface-elevated-bg edge absolute top-full right-0 z-50 mt-2 flex w-80 flex-col gap-3 rounded-xl p-4 shadow-xl"
   in:scale={{ duration: 150, start: 0.95, easing: cubicOut }}
-  onkeydown={onFormKeyDown}
+  onsubmit={onSubmit}
+  onkeydown={onKeydown}
 >
-  <div class="flex items-center justify-between">
-    <h3 class="font-medium text-sm">New service</h3>
-    <Button
-      variant="ghost"
-      size="xs"
-      shape="circle"
-      aria-label="Close"
-      onclick={onClose}
-    >
-      <CloseIcon class="size-4" />
-    </Button>
+  <div class="flex flex-col gap-1">
+    <h3 class="text-sm font-medium">New service</h3>
+    <p class="text-fg-muted text-[13px]">
+      A backend, worker or app that sends logs and metrics from its code.
+    </p>
   </div>
 
   <Input
     id={inputId}
     type="text"
-    placeholder="Service name"
+    placeholder="api, worker, mobile app"
     size="sm"
     class="w-full"
     bind:value={serviceName}
-    onkeydown={onKeyDown}
     maxlength={64}
   />
 
-  <div class="flex flex-col gap-1">
-    <span class="text-xs text-fg-tertiary">Features (optional)</span>
-    <div class="flex flex-col gap-0.5">
-      {#each featureConfig as { feature, label, icon: Icon } (feature)}
-        <label
-          class={[
-            'flex items-center gap-2 p-1.5 rounded cursor-pointer text-[13px] hover:bg-surface-elevated-hover-bg',
-            { 'text-brand': isFeatureEnabled(feature) },
-          ]}
-        >
-          <Checkbox
-            size="xs"
-            variant="primary"
-            checked={isFeatureEnabled(feature)}
-            onchange={() => onToggleFeature(feature)}
-          />
-          <Icon class="size-3.5 shrink-0" />
-          <span>{label}</span>
-        </label>
-      {/each}
-    </div>
-  </div>
-
-  <div class="flex items-center gap-1.5">
-    <Button
-      variant="primary"
-      size="sm"
-      class="flex-1"
-      onclick={onCreateService}
-      disabled={!canCreate}
-    >
-      {#if isCreating}
-        <Spinner size="xs" aria-hidden="true" />
-        Creating
-      {:else}
-        Create
-      {/if}
-    </Button>
-    <Button variant="ghost" size="sm" onclick={onClose}>Cancel</Button>
-  </div>
-</div>
+  <Button
+    type="submit"
+    variant="primary"
+    size="sm"
+    disabled={!canCreate}
+    loading={isCreating}
+  >
+    Create service
+  </Button>
+</form>

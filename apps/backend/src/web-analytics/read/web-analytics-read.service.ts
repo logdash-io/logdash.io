@@ -8,6 +8,7 @@ import { WebAnalyticsSiteSerializer } from '../core/entities/web-analytics-site.
 import {
   WebAnalyticsBreakdownRow,
   WebAnalyticsBreakdowns,
+  WebAnalyticsCohort,
   WebAnalyticsFunnelResponse,
   WebAnalyticsJourneysResponse,
   WebAnalyticsOverviewResponse,
@@ -34,6 +35,10 @@ import { ProjectReadService } from '../../project/read/project-read.service';
 import { WEB_ANALYTICS_CHANNEL as CHANNEL } from './web-analytics-channel';
 
 const REFERRER = `if(referrer != '', referrer, 'Direct')`;
+
+const SOURCE = `if(utm_source != '', utm_source, ${REFERRER})`;
+
+const PERSON = `if(user_id != '', user_id, visitor_id)`;
 
 const FILTER_COLUMNS: Record<Exclude<WebAnalyticsFilterDimension, 'page' | 'goal'>, string> = {
   channel: CHANNEL,
@@ -78,6 +83,10 @@ const BUCKETS: Record<WebAnalyticsGranularity, { start: string; add: string; ms:
 
 const MAX_BUCKETS = 1000;
 
+const RETENTION_DAYS = [1, 7, 30, 90] as const;
+
+const COMEBACK_DAYS = [30, 60, 90] as const;
+
 type Scope = {
   where: string;
   filter: string;
@@ -85,12 +94,14 @@ type Scope = {
   previousParams: Record<string, unknown>;
   bucket: (column: string) => string;
   addBuckets: string;
+  buckets: number;
   from: Date;
   to: Date;
 };
 
 type VisitorRow = {
   id: string;
+  identified: number;
   first_seen: string;
   last_seen: string;
   last_country: string;
@@ -202,7 +213,7 @@ export class WebAnalyticsReadService {
     const scope = this.scope(clusterId, query, retentionDays);
     const [visitors, series, online] = await Promise.all([
       this.query<{ visitors: string }>(
-        `SELECT uniqExact(visitor_id) AS visitors FROM web_events FINAL WHERE ${scope.where}`,
+        `SELECT uniqExact(${PERSON}) AS visitors FROM web_events FINAL WHERE ${scope.where}`,
         scope.params,
       ),
       this.readSeries(scope, scope.params),
@@ -213,7 +224,7 @@ export class WebAnalyticsReadService {
 
   private async readOnline(clusterId: string): Promise<number> {
     const rows = await this.query<{ online: string }>(
-      `SELECT uniqExact(visitor_id) AS online FROM web_events FINAL
+      `SELECT uniqExact(${PERSON}) AS online FROM web_events FINAL
       WHERE cluster_id = {clusterId:FixedString(24)} AND created_at >= {since:DateTime64(3)} AND expires_at > now()
         AND name != 'pageleave'`,
       {
@@ -244,7 +255,7 @@ export class WebAnalyticsReadService {
     const rows = await this.query<VisitorRow>(
       `${this.visitorSelect()}, count() OVER () AS total
       FROM web_events FINAL WHERE ${scope.where}
-      GROUP BY visitor_id ORDER BY last_seen DESC, id LIMIT 50 OFFSET {offset:UInt32}`,
+      GROUP BY id ORDER BY last_seen DESC, id LIMIT 50 OFFSET {offset:UInt32}`,
       { ...scope.params, offset },
     );
     return {
@@ -259,11 +270,10 @@ export class WebAnalyticsReadService {
     tz: string,
   ): Promise<WebAnalyticsVisitorResponse> {
     const params = { clusterId, visitorId, tz };
-    const where =
-      'cluster_id = {clusterId:FixedString(24)} AND visitor_id = {visitorId:FixedString(64)} AND expires_at > now()';
+    const where = `cluster_id = {clusterId:FixedString(24)} AND ${PERSON} = {visitorId:String} AND expires_at > now()`;
     const [profile, events] = await Promise.all([
       this.query<VisitorRow>(
-        `${this.visitorSelect()} FROM web_events FINAL WHERE ${where} GROUP BY visitor_id`,
+        `${this.visitorSelect()} FROM web_events FINAL WHERE ${where} GROUP BY id`,
         params,
       ),
       this.query<{
@@ -274,7 +284,7 @@ export class WebAnalyticsReadService {
         session_id: string;
         source: string;
       }>(
-        `SELECT created_at AS time, name, path, hostname, session_id, ${REFERRER} AS source
+        `SELECT created_at AS time, name, path, hostname, session_id, ${SOURCE} AS source
         FROM web_events FINAL WHERE ${where} AND name != 'pageleave' ORDER BY created_at DESC LIMIT 300`,
         params,
       ),
@@ -328,7 +338,7 @@ export class WebAnalyticsReadService {
     const rows = await this.query<{ level: number; visitors: string }>(
       `SELECT level, count() AS visitors FROM (
         SELECT windowFunnel({window:UInt64})(toDateTime(created_at), ${conditions.join(', ')}) AS level
-        FROM web_events FINAL WHERE ${scope.where} GROUP BY visitor_id
+        FROM web_events FINAL WHERE ${scope.where} GROUP BY ${PERSON}
       ) GROUP BY level`,
       params,
     );
@@ -353,29 +363,52 @@ export class WebAnalyticsReadService {
       historyStart: ClickhouseUtils.jsDateToClickhouseDate(
         new Date(Date.now() - retentionDays * 86_400_000),
       ),
+      now: ClickhouseUtils.jsDateToClickhouseDate(new Date()),
     };
-    const rows = await this.query<{
-      date: string;
-      visitors: string;
-      day1: number | null;
-      day7: number | null;
-      day30: number | null;
-    }>(
-      `SELECT toString(cohort) AS date, count() AS visitors,
-        if(cohort + 1 < toDate({to:DateTime64(3)}, {tz:String}), countIf(has(active_days, cohort + 1)) / count() * 100, NULL) AS day1,
-        if(cohort + 7 < toDate({to:DateTime64(3)}, {tz:String}), countIf(has(active_days, cohort + 7)) / count() * 100, NULL) AS day7,
-        if(cohort + 30 < toDate({to:DateTime64(3)}, {tz:String}), countIf(has(active_days, cohort + 30)) / count() * 100, NULL) AS day30
-      FROM (
-        SELECT visitor_id, toDate(min(visitor_started_at), {tz:String}) AS cohort,
-          groupUniqArray(toDate(created_at, {tz:String})) AS active_days
-        FROM web_events FINAL
-        WHERE cluster_id = {clusterId:FixedString(24)} AND created_at >= {historyStart:DateTime64(3)}
-          AND created_at < {to:DateTime64(3)} AND expires_at > now()
-        GROUP BY visitor_id HAVING cohort >= toDate({from:DateTime64(3)}, {tz:String})
-      ) GROUP BY cohort ORDER BY cohort DESC`,
-      params,
-    );
-    return { cohorts: rows.map((row) => ({ ...row, visitors: Number(row.visitors) })) };
+    const day = (column: string): string => `toDate(${column}, {tz:String})`;
+    const inRange = 'created_at >= {from:DateTime64(3)} AND created_at < {to:DateTime64(3)}';
+    const users = `SELECT min(created_at) AS first_seen, ${day('first_seen')} AS cohort,
+        groupUniqArray(${day('created_at')}) AS active_days,
+        uniqExactIf(${day('created_at')}, ${inRange}) AS days_in_range,
+        countIf(created_at >= subtractDays({to:DateTime64(3)}, 30) AND created_at < {to:DateTime64(3)}) > 0 AS monthly,
+        days_in_range > 0 AND countIf(created_at < {from:DateTime64(3)}) > 0 AS returning,
+        dateDiff('day', ${day('maxIf(created_at, created_at < {from:DateTime64(3)})')}, ${day(`minIf(created_at, ${inRange})`)}) AS gap
+      FROM web_events FINAL
+      WHERE cluster_id = {clusterId:FixedString(24)} AND user_id != '' AND expires_at > now()
+        AND created_at >= {historyStart:DateTime64(3)}
+      GROUP BY user_id`;
+    const [cohorts, totals] = await Promise.all([
+      this.query<Omit<WebAnalyticsCohort, 'users'> & { users: string }>(
+        `SELECT toString(cohort) AS date, count() AS users, ${RETENTION_DAYS.map(
+          (offset) =>
+            `if(cohort + ${offset} < ${day('{now:DateTime64(3)}')}, countIf(has(active_days, cohort + ${offset})) / count() * 100, NULL) AS day${offset}`,
+        ).join(', ')}
+        FROM (${users}) WHERE first_seen >= {from:DateTime64(3)} AND first_seen < {to:DateTime64(3)}
+        GROUP BY cohort ORDER BY cohort DESC`,
+        params,
+      ),
+      this.query<Record<string, string>>(
+        `SELECT dateDiff('day', ${day('{from:DateTime64(3)}')}, ${day('subtractMilliseconds({to:DateTime64(3)}, 1)')}) + 1 AS days,
+          sum(days_in_range) AS active, countIf(monthly) AS monthly,
+          ${COMEBACK_DAYS.map((minDays) => `countIf(returning AND gap >= ${minDays}) AS comeback${minDays}`).join(', ')}
+        FROM (${users})`,
+        params,
+      ),
+    ]);
+    const dailyActive = Number(totals[0].active) / Number(totals[0].days);
+    const monthlyActive = Number(totals[0].monthly);
+    return {
+      cohorts: cohorts.map((row) => ({ ...row, users: Number(row.users) })),
+      stickiness: {
+        dailyActive,
+        monthlyActive,
+        ratio: monthlyActive ? (dailyActive / monthlyActive) * 100 : null,
+      },
+      comebacks: COMEBACK_DAYS.map((minDays) => ({
+        minDays,
+        users: Number(totals[0][`comeback${minDays}`]),
+      })),
+    };
   }
 
   private scope(clusterId: string, query: ReadWebAnalyticsQuery, retentionDays: number): Scope {
@@ -397,7 +430,7 @@ export class WebAnalyticsReadService {
       if (dimension === 'page')
         return `session_id IN (SELECT session_id FROM web_events WHERE ${window} AND name = 'pageview' AND path = ${value})`;
       if (dimension === 'goal')
-        return `visitor_id IN (SELECT visitor_id FROM web_events WHERE ${window} AND name = ${value} AND name NOT IN ${NOT_A_GOAL})`;
+        return `${PERSON} IN (SELECT ${PERSON} FROM web_events WHERE ${window} AND name = ${value} AND name NOT IN ${NOT_A_GOAL})`;
       return `${FILTER_COLUMNS[dimension]} = ${value}`;
     });
     const span = to.getTime() - from.getTime();
@@ -418,6 +451,7 @@ export class WebAnalyticsReadService {
       },
       bucket: (column) => `toDateTime(${bucket.start}(${column}, {tz:String}), {tz:String})`,
       addBuckets: bucket.add,
+      buckets: Math.ceil((to.getTime() - from.getTime()) / bucket.ms) + 1,
       from,
       to,
     };
@@ -429,8 +463,8 @@ export class WebAnalyticsReadService {
   ): Promise<WebAnalyticsSummary> {
     const [events, sessions] = await Promise.all([
       this.query<{ visitors: string; pageviews: string; converted: string }>(
-        `SELECT uniqExact(visitor_id) AS visitors, countIf(name = 'pageview') AS pageviews,
-          uniqExactIf(visitor_id, name NOT IN ${NOT_A_GOAL}) AS converted
+        `SELECT uniqExact(${PERSON}) AS visitors, countIf(name = 'pageview') AS pageviews,
+          uniqExactIf(${PERSON}, name NOT IN ${NOT_A_GOAL}) AS converted
         FROM web_events FINAL WHERE ${scope.where}`,
         params,
       ),
@@ -460,13 +494,13 @@ export class WebAnalyticsReadService {
     const [buckets, rows] = await Promise.all([
       this.query<{ time: string }>(
         `SELECT toUnixTimestamp(${add}(${scope.bucket('{from:DateTime64(3)}')}, number)) * 1000 AS time
-        FROM numbers(${MAX_BUCKETS + 1})
+        FROM numbers(${scope.buckets})
         WHERE ${add}(${scope.bucket('{from:DateTime64(3)}')}, number) < {to:DateTime64(3)}`,
         params,
       ),
       this.query<{ time: string; visitors: string; pageviews: string }>(
         `SELECT toUnixTimestamp(${scope.bucket('created_at')}) * 1000 AS time,
-          uniqExact(visitor_id) AS visitors, countIf(name = 'pageview') AS pageviews
+          uniqExact(${PERSON}) AS visitors, countIf(name = 'pageview') AS pageviews
         FROM web_events FINAL WHERE ${scope.where} GROUP BY time`,
         params,
       ),
@@ -520,7 +554,7 @@ export class WebAnalyticsReadService {
     const [rows, sessionRows] = await Promise.all([
       entries.length
         ? this.query<{ dimension: string; label: string; visitors: string; count: string }>(
-            `SELECT entry.1 AS dimension, entry.2 AS label, uniqExact(visitor_id) AS visitors, count() AS count
+            `SELECT entry.1 AS dimension, entry.2 AS label, uniqExact(${PERSON}) AS visitors, count() AS count
             FROM web_events FINAL ARRAY JOIN [${entries.join(', ')}] AS entry
             WHERE ${scope.where} AND entry.2 != ''
             GROUP BY dimension, label ORDER BY visitors DESC, count DESC, label ASC LIMIT {limit:UInt32} BY dimension`,
@@ -565,7 +599,7 @@ export class WebAnalyticsReadService {
 
   // ponytail: sessions are rebuilt from raw events scanned with a 24 h pad on both sides of the range, upgrade to a sessions table fed by a materialized view when that scan gets slow
   private sessions(scope: Scope): string {
-    return `SELECT any(visitor_id) AS visitor, min(created_at) AS started_at,
+    return `SELECT any(${PERSON}) AS visitor, min(created_at) AS started_at,
         countIf(name = 'pageview') AS pageviews,
         dateDiff('millisecond', started_at, max(created_at)) / 1000 AS duration,
         NOT (pageviews > 1 OR countIf(name NOT IN ${NOT_A_GOAL}) > 0 OR duration >= 10) AS bounce,
@@ -581,10 +615,11 @@ export class WebAnalyticsReadService {
   }
 
   private visitorSelect(): string {
-    return `SELECT visitor_id AS id, min(visitor_started_at) AS first_seen, max(created_at) AS last_seen,
+    return `SELECT ${PERSON} AS id, any(user_id != '') AS identified,
+      min(created_at) AS first_seen, max(created_at) AS last_seen,
       argMax(country, created_at) AS last_country, argMax(device, created_at) AS last_device,
       argMax(os, created_at) AS last_os, argMax(browser, created_at) AS last_browser,
-      argMin(if(utm_source != '', utm_source, ${REFERRER}), created_at) AS source,
+      argMin(${SOURCE}, created_at) AS source,
       uniqExact(session_id) AS sessions, countIf(name = 'pageview') AS pageviews,
       arraySort(groupUniqArray(toString(toDate(created_at, {tz:String})))) AS active_days`;
   }
@@ -592,6 +627,7 @@ export class WebAnalyticsReadService {
   private toVisitor(row: VisitorRow): WebAnalyticsVisitor {
     return {
       id: row.id,
+      identified: row.identified === 1,
       firstSeen: ClickhouseUtils.clickhouseDateToJsDate(row.first_seen).toISOString(),
       lastSeen: ClickhouseUtils.clickhouseDateToJsDate(row.last_seen).toISOString(),
       country: row.last_country,

@@ -7,6 +7,7 @@ export class PublicDashboardNormalized {
   httpMonitorsIds: string[];
   name: string;
   isPublic: boolean;
+  autoAddMonitors: boolean;
 }
 
 export class PublicDashboardSerialized {
@@ -24,6 +25,9 @@ export class PublicDashboardSerialized {
 
   @ApiProperty()
   isPublic: boolean;
+
+  @ApiProperty()
+  autoAddMonitors: boolean;
 
   @ApiProperty({ type: CustomDomainSerialized })
   customDomain?: CustomDomainSerialized;

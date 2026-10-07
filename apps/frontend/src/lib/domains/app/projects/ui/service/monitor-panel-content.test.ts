@@ -13,7 +13,7 @@ function monitor(changes: Partial<Monitor>): Monitor {
     id: 'm1',
     name: 'API',
     url: 'https://api.acme.com/health',
-    projectId: 'p1',
+    clusterId: 'c1',
     notificationChannelsIds: [],
     lastStatusCode: 200,
     lastStatus: 'up',
@@ -86,4 +86,19 @@ test('with no checks the footer says whether they loaded', () => {
   expect(empty(false, false)).toBe('Loading checks');
   expect(empty(true, false)).toBe('Waiting for the first check');
   expect(empty(true, true)).toBe('Could not load checks');
+});
+
+test('the plan interval wins over the gaps between past checks', () => {
+  expect(read(monitor({})).checkingLabel).toBe('Scheduled checks');
+  expect(
+    monitorPanelContent({
+      monitor: monitor({}),
+      pings: [],
+      bucketUptime: null,
+      range: '90d',
+      now: NOW,
+      loaded: true,
+      planInterval: '5 min',
+    }).checkingLabel,
+  ).toBe('Checking every 5 min');
 });

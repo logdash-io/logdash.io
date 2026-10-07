@@ -25,11 +25,11 @@ export const alternativesPages: SeoPage[] = [
     slug: 'uptimerobot',
     h1: 'UptimeRobot alternative for founders stuck on the 5-minute free tier',
     answer:
-      'Logdash checks HTTP endpoints every 5 minutes on the free plan and every 15 seconds on Pro, and puts the logs and metrics from the same service on the same page, so upgrading buys you more than a shorter gap between pings.',
+      'Logdash checks HTTP endpoints every 5 minutes on the free plan and every 15 seconds on Pro, and puts the logs and metrics from the same app in the same dashboard, so upgrading buys you more than a shorter gap between pings.',
     meta: {
       title: 'UptimeRobot alternative for founders | Logdash',
       description:
-        'HTTP checks every 5 minutes free, 15 seconds on Pro, Telegram and webhook alerts, a status page, and your app logs and metrics on the same service.',
+        'HTTP checks every 5 minutes free, 15 seconds on Pro, Telegram and webhook alerts, a status page, and your app logs and metrics in the same dashboard.',
     },
     blocks: [
       {
@@ -42,7 +42,7 @@ export const alternativesPages: SeoPage[] = [
       },
       {
         type: 'paragraph',
-        text: 'Logdash also checks every 5 minutes on the free plan. That part is a tie and pretending otherwise would be a lie. What changes is what sits next to the check: the uptime history, the response time chart, the log lines from the same second the check failed, and any metric registered from your own code. One service, one page. Pro drops the interval to 15 seconds, and the free plan covers five services rather than one.',
+        text: 'Logdash also checks every 5 minutes on the free plan. That part is a tie and pretending otherwise would be a lie. What changes is what sits next to the check: the uptime history, the response time chart, the log lines from the same second the check failed, and any metric registered from your own code. One domain, one dashboard. Pro drops the interval to 15 seconds, and the free plan covers five monitors.',
       },
       { type: 'heading', text: 'A health endpoint worth checking' },
       {
@@ -63,7 +63,7 @@ export const alternativesPages: SeoPage[] = [
         type: 'steps',
         items: [
           {
-            title: 'Add the service',
+            title: 'Add the monitor',
             text: 'Point a monitor at https://yourapp.com/health. Logdash stores the status code and the response time on every check, so the latency chart builds itself.',
           },
           {
@@ -107,7 +107,7 @@ export const alternativesPages: SeoPage[] = [
           },
           {
             feature: 'App logs and custom metrics',
-            logdash: 'Eight SDKs into the same service view',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Not part of the product',
             winner: 'logdash',
           },
@@ -131,7 +131,7 @@ export const alternativesPages: SeoPage[] = [
       { type: 'heading', text: 'What moving actually costs' },
       {
         type: 'paragraph',
-        text: 'About an hour for five services, and there is no importer. Create a service per app, paste the URL, add the Telegram channel once. The slow part is not the monitors, it is dropping an SDK into each app so the logs land beside them, and that is an install and a token per service. Keep both running for a week. If they disagree about an outage, the one you should trust is whichever one is not hosted next to the thing it watches.',
+        text: 'About an hour for five services, and there is no importer. Add a monitor per app, paste the URL, add the Telegram channel once. The slow part is not the monitors, it is dropping an SDK into each app so the logs land beside them, and that is an install and a token per service. Keep both running for a week. If they disagree about an outage, the one you should trust is whichever one is not hosted next to the thing it watches.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -139,7 +139,7 @@ export const alternativesPages: SeoPage[] = [
       {
         question: 'Is there a free UptimeRobot alternative?',
         answer:
-          'Yes. The Logdash free plan covers five services with a 5-minute check on each, one public status page, and Telegram or webhook alerts. Same interval UptimeRobot gives away, with logs and metrics attached to the same service.',
+          'Yes. The Logdash free plan covers five HTTP monitors with a 5-minute check on each, one public status page, and Telegram or webhook alerts. Same interval UptimeRobot gives away, with logs and metrics in the same dashboard.',
       },
       {
         question: 'Is there a self hosted UptimeRobot alternative?',
@@ -200,8 +200,8 @@ async def health():
         type: 'steps',
         items: [
           {
-            title: 'Create the service',
-            text: 'Add the app and paste the health URL. The first check runs straight away, so you find out the URL is wrong now rather than during an incident.',
+            title: 'Create the monitor',
+            text: 'Add a monitor and paste the health URL. The first check runs straight away, so you find out the URL is wrong now rather than during an incident.',
           },
           {
             title: 'Move the heartbeats',
@@ -261,7 +261,7 @@ curl -o uptime.svg \\
           },
           {
             feature: 'App logs and custom metrics',
-            logdash: 'Eight SDKs into the same service view',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Not what Kuma is for',
             winner: 'logdash',
           },
@@ -316,7 +316,7 @@ curl -o uptime.svg \\
       {
         question: 'Is there a free alternative to Uptime Kuma?',
         answer:
-          'Logdash has a free plan with five services checked every 5 minutes, a public status page and Telegram alerts. Kuma is free too, so the real comparison is a hosted free tier against your time plus a server bill.',
+          'Logdash has a free plan with five monitors checked every 5 minutes, a public status page and Telegram alerts. Kuma is free too, so the real comparison is a hosted free tier against your time plus a server bill.',
       },
       {
         question: 'Is Logdash open source like Uptime Kuma?',
@@ -352,7 +352,7 @@ curl -o uptime.svg \\
       },
       {
         type: 'paragraph',
-        text: 'Logdash is sized for the four-service case. The free plan covers five services with a check every 5 minutes each, one public status page, and alerts on Telegram or a webhook. Pro takes the interval to 15 seconds and puts the status page on your own domain. What you do not get is real user monitoring or scripted browser transactions, and if either of those is why the Pingdom invoice exists, stop reading here.',
+        text: 'Logdash is sized for the four-service case. The free plan covers five monitors with a check every 5 minutes each, one public status page, and alerts on Telegram or a webhook. Pro takes the interval to 15 seconds and puts the status page on your own domain. What you do not get is real user monitoring or scripted browser transactions, and if either of those is why the Pingdom invoice exists, stop reading here.',
       },
       { type: 'heading', text: 'The endpoint Logdash will call' },
       {
@@ -376,12 +376,12 @@ curl -o uptime.svg \\
         type: 'steps',
         items: [
           {
-            title: 'Add the four services',
+            title: 'Add the four monitors',
             text: 'Four URLs, four monitors. Every check records the status code and the response time, so the latency history exists without you configuring a thing.',
           },
           {
             title: 'Publish the status page',
-            text: 'Make a service public and you have a status page carrying its uptime history. A custom domain is a Pro setting, so the URL customers bookmarked can stay the same after a DNS change.',
+            text: 'Publish a status page with the four monitors and it carries their uptime history. A custom domain is a Pro setting, so the URL customers bookmarked can stay the same after a DNS change.',
           },
           {
             title: 'Point a monitor at a broken URL',
@@ -420,7 +420,7 @@ curl -o uptime.svg \\
           },
           {
             feature: 'App logs and custom metrics',
-            logdash: 'Eight SDKs into the same service view',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'A separate SolarWinds product',
             winner: 'logdash',
           },
@@ -451,7 +451,7 @@ curl -o uptime.svg \\
       { type: 'heading', text: 'What the move looks like' },
       {
         type: 'paragraph',
-        text: 'Half an hour, most of it spent finding URLs. There is nothing to export and nothing to import. Add the services, set the Telegram channel once, and keep Pingdom until the renewal date so you run both for a month. The one real loss is the historical uptime record, so if you publish an annual figure, take the numbers out of Pingdom before the account lapses.',
+        text: 'Half an hour, most of it spent finding URLs. There is nothing to export and nothing to import. Add the monitors, set the Telegram channel once, and keep Pingdom until the renewal date so you run both for a month. The one real loss is the historical uptime record, so if you publish an annual figure, take the numbers out of Pingdom before the account lapses.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -459,7 +459,7 @@ curl -o uptime.svg \\
       {
         question: 'Is there a free Pingdom alternative?',
         answer:
-          'Yes. Logdash has a free plan with five services, a 5-minute check on each, a public status page and Telegram alerts. Pingdom sells a trial rather than a permanent free tier.',
+          'Yes. Logdash has a free plan with five monitors, a 5-minute check on each, a public status page and Telegram alerts. Pingdom sells a trial rather than a permanent free tier.',
       },
       {
         question: 'Is there an open source Pingdom alternative?',
@@ -522,11 +522,11 @@ curl -o uptime.svg \\
         items: [
           {
             title: 'Recreate the monitors',
-            text: 'One service per app, one URL each. Every check keeps the status code and the response time, and the uptime history is drawn from those rather than a separate counter.',
+            text: 'One monitor per app, one URL each. Every check keeps the status code and the response time, and the uptime history is drawn from those rather than a separate counter.',
           },
           {
             title: 'Move the status page',
-            text: 'Make the service public and repoint the DNS record your customers already use. Custom domains are a Pro setting, so the address on your support docs does not need editing.',
+            text: 'Publish a status page and repoint the DNS record your customers already use. Custom domains are a Pro setting, so the address on your support docs does not need editing.',
           },
           {
             title: 'Retire the escalation policy',
@@ -583,7 +583,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
           },
           {
             feature: 'Cost at four services and one person',
-            logdash: 'Free plan covers five services',
+            logdash: 'Free plan covers five monitors',
             them: 'Priced as an incident platform',
             winner: 'logdash',
           },
@@ -622,7 +622,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
       {
         question: 'What is a cheaper alternative to Better Stack?',
         answer:
-          'Logdash covers uptime, status pages and alerts on a free plan that includes five services. It is cheaper because it does less: no on-call schedules, no escalation policies, no acknowledgement tracking.',
+          'Logdash covers uptime, status pages and alerts on a free plan that includes five monitors. It is cheaper because it does less: no on-call schedules, no escalation policies, no acknowledgement tracking.',
       },
       {
         question: 'Is there an open source Better Stack alternative?',
@@ -651,7 +651,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
     slug: 'cronitor',
     h1: 'Cronitor alternative for cron jobs and uptime in one tool',
     answer:
-      'Logdash watches background jobs with push heartbeats and HTTP endpoints with scheduled checks on the same service, alerting to the same Telegram channel when either one goes quiet.',
+      'Logdash watches background jobs with push heartbeats and HTTP endpoints with scheduled checks in the same dashboard, alerting to the same Telegram channel when either one goes quiet.',
     meta: {
       title: 'Cronitor alternative for jobs and uptime | Logdash',
       description:
@@ -668,7 +668,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
       },
       {
         type: 'paragraph',
-        text: 'Logdash puts them on one service: a push monitor for the job, an HTTP monitor for the API, and logs and metrics from the same app through an SDK. The ping is a plain POST with no auth header and no body. Know the catch up front. Push monitors are on Pro and expect a ping in every 15-second window, with no schedule and no grace setting, so a job that pings once per run, even every minute, reads as down between runs. A scheduled job leaves a stamp when it succeeds, and a heartbeat line pings every 5 seconds while the stamp is fresh.',
+        text: 'Logdash puts them in one dashboard: a push monitor for the job, an HTTP monitor for the API, and logs and metrics from the same app through an SDK. The ping is a plain POST with no auth header and no body. Know the catch up front. Push monitors are on Pro and expect a ping in every 15-second window, with no schedule and no grace setting, so a job that pings once per run, even every minute, reads as down between runs. A scheduled job leaves a stamp when it succeeds, and a heartbeat line pings every 5 seconds while the stamp is fresh.',
       },
       { type: 'heading', text: 'A stamp and a heartbeat in the crontab' },
       {
@@ -688,7 +688,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
         items: [
           {
             title: 'Create a push monitor',
-            text: 'On Pro, add a service, switch the monitor to push, and copy the ping URL. The id in that URL is the only thing the endpoint needs.',
+            text: 'On Pro, add a monitor, choose "You send heartbeats", and copy the ping URL. The id in that URL is the only thing the endpoint needs.',
           },
           {
             title: 'Paste both lines',
@@ -725,13 +725,13 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
           },
           {
             feature: 'HTTP uptime checks in the same tool',
-            logdash: 'Same service, same dashboard',
+            logdash: 'Yes, same dashboard',
             them: 'Also included',
             winner: 'tie',
           },
           {
             feature: 'Application logs and custom metrics',
-            logdash: 'Eight SDKs into the same service view',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Job output, not application logging',
             winner: 'logdash',
           },
@@ -775,12 +775,12 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
       {
         question: 'Is there a free Cronitor alternative?',
         answer:
-          'Logdash has a free plan covering five services with HTTP checks every 5 minutes. Push monitors are a Pro feature. On free, a job can record its last success in your app, and an HTTP monitor checks a route that returns 503 once that gets too old.',
+          'Logdash has a free plan covering five HTTP monitors checked every 5 minutes. Push monitors are a Pro feature. On free, a job can record its last success in your app, and an HTTP monitor checks a route that returns 503 once that gets too old.',
       },
       {
         question: 'Can Logdash monitor cron jobs and websites together?',
         answer:
-          'Yes. A push monitor for the job and an HTTP monitor for the site, on the same service, alerting through the same Telegram channel.',
+          'Yes. A push monitor for the job and an HTTP monitor for the site, in the same dashboard, alerting through the same Telegram channel.',
       },
       {
         question: 'What is the Logdash heartbeat URL?',
@@ -832,7 +832,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
         items: [
           {
             title: 'Create a push monitor',
-            text: 'On Pro, add a service, set the monitor to push mode and copy the monitor id out of the ping URL.',
+            text: 'On Pro, add a monitor, choose "You send heartbeats" and copy the monitor id out of the ping URL.',
           },
           {
             title: 'Stamp the job, ping from a heartbeat',
@@ -875,7 +875,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
           },
           {
             feature: 'Logs and metrics beside the monitor',
-            logdash: 'Eight SDKs, same service, same timeline',
+            logdash: 'Eight SDKs, same dashboard, same timeline',
             them: 'Not part of the product',
             winner: 'logdash',
           },
@@ -988,7 +988,7 @@ app.get('/health', async (_req, res) => {
           },
           {
             title: 'Point a monitor at it',
-            text: 'Add a service in Logdash, paste the URL, and it starts recording status codes and response times on your plan interval.',
+            text: 'Add a monitor in Logdash, paste the URL, and it starts recording status codes and response times on your plan interval.',
           },
           {
             title: 'Attach Telegram',
@@ -1027,7 +1027,7 @@ app.get('/health', async (_req, res) => {
           },
           {
             feature: 'Logs and metrics from your own app',
-            logdash: 'Eight SDKs into the same service',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Not what the product is for',
             winner: 'logdash',
           },
@@ -1058,7 +1058,7 @@ app.get('/health', async (_req, res) => {
       { type: 'heading', text: 'What migrating means here' },
       {
         type: 'paragraph',
-        text: 'If your Checkly account is API checks on a handful of URLs, this is an afternoon: one service per URL, paste the URL, attach Telegram. If it is browser checks, do not migrate them, because there is nowhere for them to land. The split most teams settle on is Playwright for the two or three flows that make money and a plain HTTP monitor for everything else, and the second half should not cost what the first half costs. Before you cancel anything, look at which Checkly checks actually paged you in the last quarter. Usually it is the health endpoints, and the browser suite has been failing on selectors.',
+        text: 'If your Checkly account is API checks on a handful of URLs, this is an afternoon: one monitor per URL, paste the URL, attach Telegram. If it is browser checks, do not migrate them, because there is nowhere for them to land. The split most teams settle on is Playwright for the two or three flows that make money and a plain HTTP monitor for everything else, and the second half should not cost what the first half costs. Before you cancel anything, look at which Checkly checks actually paged you in the last quarter. Usually it is the health endpoints, and the browser suite has been failing on selectors.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -1090,11 +1090,11 @@ app.get('/health', async (_req, res) => {
     slug: 'statuscake',
     h1: 'StatusCake alternative for free uptime monitoring',
     answer:
-      'The Logdash free plan gives every service one HTTP monitor checked every five minutes, Telegram and webhook alerts and a public status page, and it says plainly which parts are paid.',
+      'The Logdash free plan gives you five HTTP monitors checked every five minutes, Telegram and webhook alerts and a public status page, and it says plainly which parts are paid.',
     meta: {
       title: 'StatusCake alternative, free tier | Logdash',
       description:
-        'The Logdash free plan: one HTTP monitor per service, five minute checks, Telegram and webhook alerts, a public status page. And where StatusCake wins.',
+        'The Logdash free plan: five HTTP monitors, five minute checks, Telegram and webhook alerts, a public status page. And where StatusCake wins.',
     },
     blocks: [
       {
@@ -1107,7 +1107,7 @@ app.get('/health', async (_req, res) => {
       },
       {
         type: 'paragraph',
-        text: 'Here is the Logdash free plan without the marketing. Each service gets one HTTP monitor, checked every five minutes, recording status code and response time. Alerts go to Telegram or a webhook, both free, though the free webhook is a bare GET with no body or custom headers. Your dashboard can be made public as a status page on a logdash.io URL, and a custom domain is on Pro. Logs and metrics arrive from the same SDK into the same service, with a day of log retention on free. Push monitors for cron jobs and faster check intervals are paid, and there is no free path to them.',
+        text: 'Here is the Logdash free plan without the marketing. You get five HTTP monitors, each checked every five minutes, recording status code and response time. Alerts go to Telegram or a webhook, both free, though the free webhook is a bare GET with no body or custom headers. Your dashboard can be made public as a status page on a logdash.io URL, and a custom domain is on Pro. Logs and metrics arrive from the same SDK into the same service, with a day of log retention on free. Push monitors for cron jobs and faster check intervals are paid, and there is no free path to them.',
       },
       { type: 'heading', text: 'The endpoint the monitor will hit' },
       {
@@ -1128,8 +1128,8 @@ async def health():
         type: 'steps',
         items: [
           {
-            title: 'Add the service',
-            text: 'Create a service in Logdash and give its monitor your health URL. The free plan checks it every five minutes.',
+            title: 'Add the monitor',
+            text: 'Add a monitor in Logdash and give it your health URL. The free plan checks it every five minutes.',
           },
           {
             title: 'Publish the status page',
@@ -1148,7 +1148,7 @@ async def health():
         rows: [
           {
             feature: 'Free HTTP monitoring',
-            logdash: 'One monitor per service, five minute checks',
+            logdash: 'Five monitors, five minute checks',
             them: 'A real free uptime plan, limits set by StatusCake',
             winner: 'tie',
           },
@@ -1216,7 +1216,7 @@ async def health():
       {
         question: 'Is Logdash actually free?',
         answer:
-          'There is a free plan: one HTTP monitor per service, five minute checks, Telegram and webhook alerts, a public status page and a day of log retention. Faster checks, longer retention and push monitors are paid.',
+          'There is a free plan: five HTTP monitors, five minute checks, Telegram and webhook alerts, a public status page and a day of log retention. Faster checks, longer retention and push monitors are paid.',
       },
       {
         question: 'Are alerts included on the free plan?',
@@ -1252,7 +1252,7 @@ async def health():
       },
       {
         type: 'paragraph',
-        text: 'Logdash has one shape. A service has a URL, the monitor hits it on a schedule, and it records the status code and the response time. Anything without a URL gets a push monitor on Pro, pinged every few seconds from a loop next to the work. Alerts go to Telegram or a webhook. Logs and metrics come from the same SDK into the same service, and the dashboard can be made public as a status page. Each service carries one monitor, so four checks means four services, which is how you would have grouped them anyway. There is no agent and nothing to size.',
+        text: 'Logdash has one shape. A monitor has a URL, hits it on a schedule, and records the status code and the response time. Anything without a URL gets a push monitor on Pro, pinged every few seconds from a loop next to the work. Alerts go to Telegram or a webhook. Logs and metrics come from the same SDK into the same service, and the dashboard can be made public as a status page. Four checks means four monitors, which is how you would have grouped them anyway. There is no agent and nothing to size.',
       },
       { type: 'heading', text: 'What the monitor needs from your app' },
       {
@@ -1274,7 +1274,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
         type: 'steps',
         items: [
           {
-            title: 'Create one service per thing you watch',
+            title: 'Create one monitor per thing you watch',
             text: 'api, web, admin, worker. Anything with a URL gets a pull monitor. The worker gets a push monitor instead.',
           },
           {
@@ -1318,7 +1318,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
           },
           {
             feature: 'Logs and metrics from your code',
-            logdash: 'Eight SDKs into the same service',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Log management and APM as their own modules',
             winner: 'tie',
           },
@@ -1349,7 +1349,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
       { type: 'heading', text: 'What moving looks like' },
       {
         type: 'paragraph',
-        text: 'There is nothing to export. Uptime history does not transfer between vendors, and pretending otherwise is how people end up running two dashboards for a month. Create the services, paste the URLs, attach Telegram, and leave Site24x7 running in parallel until Logdash has caught something real. Then cancel. If you spend that month missing three of the monitor types, that is your answer and you should stay. The month in parallel is also the cheapest way to find out how many of your Site24x7 monitors were watching something that no longer exists.',
+        text: 'There is nothing to export. Uptime history does not transfer between vendors, and pretending otherwise is how people end up running two dashboards for a month. Create the monitors, paste the URLs, attach Telegram, and leave Site24x7 running in parallel until Logdash has caught something real. Then cancel. If you spend that month missing three of the monitor types, that is your answer and you should stay. The month in parallel is also the cheapest way to find out how many of your Site24x7 monitors were watching something that no longer exists.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -1357,7 +1357,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
       {
         question: 'Is there a free Site24x7 alternative?',
         answer:
-          'Logdash has a free plan: one HTTP monitor per service, five minute checks, Telegram and webhook alerts and a public status page. Faster checks and push monitors for cron jobs are paid.',
+          'Logdash has a free plan: five HTTP monitors, five minute checks, Telegram and webhook alerts and a public status page. Faster checks and push monitors for cron jobs are paid.',
       },
       {
         question: 'Is there an open source Site24x7 alternative?',
@@ -1398,7 +1398,7 @@ http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
       },
       {
         type: 'paragraph',
-        text: 'What Logdash has that Freshping never did is the rest of the picture. The monitor, the application logs and the custom metrics all live under the same service, so a red check is one click from the log lines written in that minute instead of a second tool and a manual timestamp hunt. It is AGPL-3.0 licensed and the source is on GitHub.',
+        text: 'What Logdash has that Freshping never did is the rest of the picture. The monitor, the application logs and the custom metrics all live under the same domain, so a red check is one click from the log lines written in that minute instead of a second tool and a manual timestamp hunt. It is AGPL-3.0 licensed and the source is on GitHub.',
       },
       { type: 'heading', text: 'A health endpoint worth checking' },
       {
@@ -1483,7 +1483,7 @@ app.listen(3000);`,
           },
           {
             feature: 'Logs and metrics beside the check',
-            logdash: 'Eight SDKs into the same service view',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Uptime only',
             winner: 'logdash',
           },
@@ -1534,7 +1534,7 @@ app.listen(3000);`,
     slug: 'hyperping',
     h1: 'Hyperping alternative for logs and uptime in one place',
     answer:
-      'Hyperping is a well built uptime and status page product, and Logdash is the alternative when you want the logs and metrics from the failing service on the same screen as the failed check, starting at $9 a month instead of $29.',
+      'Hyperping is a well built uptime and status page product, and Logdash is the alternative when you want the logs and metrics from the failing service in the same dashboard as the failed check, starting at $9 a month instead of $29.',
     meta: {
       title: 'Hyperping alternative with logs and metrics | Logdash',
       description:
@@ -1551,7 +1551,7 @@ app.listen(3000);`,
       },
       {
         type: 'paragraph',
-        text: 'Logdash puts both in one service view. The monitor with its status codes and response times, the application logs streaming in from the SDK, and any counters you register, all under the same service. The price shape is different too. Hyperping is free for 20 monitors at 5 minute checks, then $29 a month for 30 second checks and a status page on your own domain. Logdash is $9 for one minute checks and $15 for 15 second checks with a custom domain.',
+        text: 'Logdash puts both in one dashboard. The monitor with its status codes and response times, the application logs streaming in from the SDK, and any counters you register, all under the same domain. The price shape is different too. Hyperping is free for 20 monitors at 5 minute checks, then $29 a month for 30 second checks and a status page on your own domain. Logdash is $9 for one minute checks and $15 for 15 second checks with a custom domain.',
       },
       { type: 'heading', text: 'A health endpoint the check can hit' },
       {
@@ -1587,7 +1587,7 @@ func main() {
         items: [
           {
             title: 'Create the monitor',
-            text: 'Add an HTTP monitor on the /health URL inside the service it belongs to. Logdash stores the status code and response time for every check.',
+            text: 'On the Uptime page, add an HTTP monitor on the /health URL. Logdash stores the status code and response time for every check.',
           },
           {
             title: 'Send logs from the same service',
@@ -1595,7 +1595,7 @@ func main() {
           },
           {
             title: 'Wire up Telegram',
-            text: 'Attach a Telegram channel to the monitor and take the service down on purpose. The alert lands in Telegram, and the logs from that same minute are already in the service view when you tap through.',
+            text: 'Attach a Telegram channel to the monitor and take the service down on purpose. The alert lands in Telegram, and the logs from that same minute are already in the dashboard when you tap through.',
           },
         ],
       },
@@ -1641,7 +1641,7 @@ func main() {
           },
           {
             feature: 'Application logs for the monitored service',
-            logdash: 'Eight SDKs into the same service view',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Not offered',
             winner: 'logdash',
           },
@@ -1720,7 +1720,7 @@ func main() {
       },
       {
         type: 'paragraph',
-        text: 'Logdash keeps the check and the evidence together. The HTTP monitor, the application logs and the counters you register all sit under one service, so the alert and the stack trace are two seconds apart instead of two tools apart. SDKs exist for Node, Python, Ruby, Java, .NET, Go, Rust and PHP. The whole thing is AGPL-3.0 licensed.',
+        text: 'Logdash keeps the check and the evidence together. The HTTP monitor, the application logs and the counters you register all sit under one domain, so the alert and the stack trace are two seconds apart instead of two tools apart. SDKs exist for Node, Python, Ruby, Java, .NET, Go, Rust and PHP. The whole thing is AGPL-3.0 licensed.',
       },
       { type: 'heading', text: 'A health endpoint the monitor can hit' },
       {
@@ -1750,7 +1750,7 @@ async def health(response: Response):
         items: [
           {
             title: 'Add the HTTP monitor',
-            text: 'Create a monitor on /health inside the service it belongs to. Status code and response time are recorded on every run, at 5 minutes on the free plan and down to 15 seconds on Pro.',
+            text: 'On the Uptime page, create a monitor on /health. Status code and response time are recorded on every run, at 5 minutes on the free plan and down to 15 seconds on Pro.',
           },
           {
             title: 'Cover the jobs updown.io pulses',
@@ -1758,7 +1758,7 @@ async def health(response: Response):
           },
           {
             title: 'Add Telegram and break something',
-            text: 'Attach a Telegram channel, then stop the service or skip a cron run. The alert reaches Telegram on the next interval, and the logs from that minute are already sitting under the same service.',
+            text: 'Attach a Telegram channel, then stop the service or skip a cron run. The alert reaches Telegram on the next interval, and the logs from that minute are already sitting under the same domain.',
           },
         ],
       },
@@ -1792,7 +1792,7 @@ async def health(response: Response):
           },
           {
             feature: 'Application logs from the failing service',
-            logdash: 'Eight SDKs into the same service view',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Not offered',
             winner: 'logdash',
           },
@@ -1872,7 +1872,7 @@ async def health(response: Response):
       },
       {
         type: 'paragraph',
-        text: 'Logdash is worth the swap for that group because the check is not the product. Application logs and custom metrics from the same service sit next to the monitor, so the alert and the reason for the alert are on one screen. Cron jobs get push heartbeats. It is AGPL-3.0 licensed, and the source is on GitHub if you want to read what is actually running.',
+        text: 'Logdash is worth the swap for that group because the check is not the product. Application logs and custom metrics from the same app sit in the same dashboard as the monitor, so the alert and the reason for the alert are one click apart. Cron jobs get push heartbeats. It is AGPL-3.0 licensed, and the source is on GitHub if you want to read what is actually running.',
       },
       { type: 'heading', text: 'A health endpoint the monitor can hit' },
       {
@@ -1911,7 +1911,7 @@ try {
           },
           {
             title: 'Point the alerts at Telegram',
-            text: 'Attach a Telegram channel to each monitor, then take one service offline. The alert arrives in Telegram naming the monitor and the status code, and the logs from that minute are already under the same service.',
+            text: 'Attach a Telegram channel to each monitor, then take one service offline. The alert arrives in Telegram naming the monitor and the status code, and the logs from that minute are already under the same domain.',
           },
         ],
       },
@@ -1951,7 +1951,7 @@ try {
           },
           {
             feature: 'Application logs and custom metrics',
-            logdash: 'Eight SDKs into the same service view',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Host stats only, nothing from your code',
             winner: 'logdash',
           },

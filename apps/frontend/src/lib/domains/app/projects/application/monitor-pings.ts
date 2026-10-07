@@ -63,13 +63,6 @@ export function lastCheckLabel(pings: ChartPing[], now: number): string | null {
     : `${Math.floor(seconds / 60)} min ago`;
 }
 
-/** Share of healthy checks, e.g. "100%" or "96.7%". Null before the first check. */
-export function uptimeLabel(pings: ChartPing[]): string | null {
-  const share = uptimePercent(pings);
-
-  return share === null ? null : `${Number(share.toFixed(1))}%`;
-}
-
 export function uptimePercent(pings: ChartPing[]): number | null {
   if (!pings.length) {
     return null;
@@ -97,6 +90,21 @@ export function checkIntervalLabel(pings: ChartPing[]): string | null {
   const seconds = Math.round(gaps[Math.floor(gaps.length / 2)] / 1_000);
 
   return seconds < 60 ? `${seconds} s` : `${Math.round(seconds / 60)} min`;
+}
+
+export function cronIntervalLabel(cron: string | null): string | null {
+  const fields = cron?.trim().split(/\s+/) ?? [];
+  const step = /^\*\/(\d+)$/.exec(fields[0] ?? '')?.[1];
+
+  if (!step) {
+    return null;
+  }
+
+  return fields.length === 6 ? `${Number(step)} s` : `${Number(step)} min`;
+}
+
+export function checkingLabel(interval: string | null): string {
+  return interval ? `Checking every ${interval}` : 'Scheduled checks';
 }
 
 export type MonitorStat = {

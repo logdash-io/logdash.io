@@ -8,6 +8,7 @@ import { TelegramSetupModule } from '../setup/telegram/telegram-setup.module';
 import { NotificationChannelOptionsEnrichmentService } from './notification-channel-options-enrichment.service';
 import { NotificationChannelOptionsValidationService } from './notification-channel-options-validation.service';
 import { UserReadModule } from '../../user/read/user-read.module';
+import { HttpMonitorWriteModule } from '../../http-monitor/write/http-monitor-write.module';
 import { NotificationChannelTierValidationService } from './notification-channel-tier-validation.service';
 
 @Module({
@@ -17,6 +18,7 @@ import { NotificationChannelTierValidationService } from './notification-channel
     NotificationChannelMessagingModule,
     TelegramSetupModule,
     UserReadModule,
+    HttpMonitorWriteModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [NotificationChannelCoreController],

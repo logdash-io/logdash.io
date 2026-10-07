@@ -7,6 +7,7 @@ import { AverageRecorder } from './average-metric-recorder.service';
 import {
   ALL_LOGGER_TOKENS,
   API_KEYS_LOGGER,
+  APP_LOGGER,
   AUDIT_LOGS_LOGGER,
   AUTH_LOGGER,
   BLOG_LOGGER,
@@ -52,6 +53,7 @@ function createNamespacedLoggerProvider(token: symbol) {
 @Global()
 @Module({
   providers: [
+    createNamespacedLoggerProvider(APP_LOGGER),
     createNamespacedLoggerProvider(AUTH_LOGGER),
     createNamespacedLoggerProvider(USERS_LOGGER),
     createNamespacedLoggerProvider(CLUSTERS_LOGGER),

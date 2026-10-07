@@ -7,7 +7,7 @@
 #   docker compose -f docker-compose.dev.yml up -d --wait
 #
 # The credentials below are deliberately trivial and are duplicated in
-# apps/backend/.env.example. Nothing here is meant to leave a laptop.
+# the backend env block in CONTRIBUTING.md. Nothing here is meant to leave a laptop.
 
 services:
   mongo:

@@ -4,7 +4,8 @@ import { HttpMonitorMode } from '../enums/http-monitor-mode.enum';
 
 export class HttpMonitorNormalized {
   id: string;
-  projectId: string;
+  clusterId: string;
+  projectId?: string;
   name: string;
   url?: string;
   notificationChannelsIds: string[];
@@ -19,7 +20,10 @@ export class HttpMonitorSerialized {
   id: string;
 
   @ApiProperty()
-  projectId: string;
+  clusterId: string;
+
+  @ApiPropertyOptional()
+  projectId?: string;
 
   @ApiProperty()
   name: string;

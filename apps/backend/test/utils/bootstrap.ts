@@ -81,9 +81,14 @@ import { ResendModule } from '../../src/email/resend/resend.module';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { UserUtils } from './user.utils';
 import { CastErrorFilter } from '../../src/shared/filters/cast-error.filter';
+import { UnhandledErrorFilter } from '../../src/shared/filters/unhandled-error.filter';
 import { withRequestContext } from '../../src/shared/request-context/request-context';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/pinger/http-ping-pinger.service';
-import { ALL_LOGGER_TOKENS, LOGDASH_METRICS } from '../../src/shared/logdash/logdash-tokens';
+import {
+  ALL_LOGGER_TOKENS,
+  APP_LOGGER,
+  LOGDASH_METRICS,
+} from '../../src/shared/logdash/logdash-tokens';
 import { WebAnalyticsCoreModule } from '../../src/web-analytics/core/web-analytics-core.module';
 import { WebAnalyticsSiteEntity } from '../../src/web-analytics/core/entities/web-analytics-site.entity';
 import { ExposedConfigModule } from '../../src/exposed-config/exposed-config.module';
@@ -162,7 +167,10 @@ export async function createTestApp() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
-  app.useGlobalFilters(new CastErrorFilter(app.getHttpAdapter()));
+  app.useGlobalFilters(
+    new UnhandledErrorFilter(app.get(APP_LOGGER), app.get(LOGDASH_METRICS), app.getHttpAdapter()),
+    new CastErrorFilter(app.getHttpAdapter()),
+  );
   app.use(withRequestContext);
   await app.listen(0, '127.0.0.1');
 

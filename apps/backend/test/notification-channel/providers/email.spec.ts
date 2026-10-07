@@ -67,7 +67,7 @@ describe('Email notification channel', () => {
       up: false,
       statusCode: '503',
       errorMessage: 'Request failed',
-      dashboardUrl: `${getEnvConfig().app.url}/app/domains/${channel.clusterId}`,
+      dashboardUrl: `${getEnvConfig().app.url}/app/domains/${channel.clusterId}/uptime/some-http-monitor-id`,
     });
   });
 

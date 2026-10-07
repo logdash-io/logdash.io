@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { isbot } from 'isbot';
+import { createHash, randomBytes } from 'node:crypto';
 import { CollectWebEventsBody } from '../core/dto/collect-web-events.body';
 import { WebEventClickhouseEntity } from '../core/entities/web-event.clickhouse-entity';
 import { WebAnalyticsReadService } from '../read/web-analytics-read.service';
@@ -22,9 +23,24 @@ import { RedisService, TtlOverwriteStrategy } from '../../shared/redis/redis.ser
 import { WEB_ANALYTICS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { errorMessage } from '../../shared/utils/error-message';
+import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 
 const QUEUE_KEY = 'web-analytics:queue';
 // ponytail: One flush lock processes up to 1,000 events per second; shard queues by domain above that rate.
+
+const DAY_MS = 86_400_000;
+const SESSION_IDLE_SECONDS = 1800;
+
+type Session = {
+  id: string;
+  startedAt: string;
+  referrer: string;
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+  utmTerm: string;
+  clickId: string;
+};
 
 @Injectable()
 export class WebAnalyticsIngestionService implements OnApplicationShutdown {
@@ -40,6 +56,7 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
     body: CollectWebEventsBody,
     origin: string | undefined,
     userAgent: string,
+    ip: string,
   ): Promise<void> {
     const site = await this.read.readSiteCached(body.siteId);
     if (!site) throw new ForbiddenException('Unknown site');
@@ -49,17 +66,23 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
     const config = getClusterPlanConfig(await this.clusters.readTier(site.clusterId)).webAnalytics;
     const now = new Date();
     const sentAt = new Date(body.sentAt);
-    const rows = body.events.flatMap(
-      (event) =>
-        WebEventClickhouseEntity.fromNormalized(
-          event,
-          site,
-          origin,
-          userAgent,
-          config.retentionDays,
-          sentAt,
-          now,
-        ) ?? [],
+    const { rows, sessionKey, session } = await this.sessionize(
+      site.id,
+      ip,
+      userAgent,
+      now,
+      body.events.flatMap(
+        (event) =>
+          WebEventClickhouseEntity.fromNormalized(
+            event,
+            site,
+            origin,
+            userAgent,
+            config.retentionDays,
+            sentAt,
+            now,
+          ) ?? [],
+      ),
     );
     if (!rows.length) return;
     const hour = now.toISOString().slice(0, 13);
@@ -81,6 +104,84 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
       );
     if (!accepted)
       throw new ServiceUnavailableException('Web analytics is busy. Try again shortly');
+    await this.redis.set(sessionKey, JSON.stringify(session), SESSION_IDLE_SECONDS);
+  }
+
+  private async sessionize(
+    siteId: string,
+    ip: string,
+    userAgent: string,
+    now: Date,
+    events: WebEventClickhouseEntity[],
+  ): Promise<{ rows: WebEventClickhouseEntity[]; sessionKey: string; session: Session | null }> {
+    const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    const saltKey = (day: number): string =>
+      `web-analytics:salt:${new Date(day).toISOString().slice(0, 10)}`;
+    const client = this.redis.getClient();
+    const candidate = randomBytes(32).toString('hex');
+    const [, salt, yesterdaySalt] = await client
+      .multi()
+      .set(saltKey(today), candidate, {
+        condition: 'NX',
+        expiration: {
+          type: 'EX',
+          value: Math.ceil((today + DAY_MS + 30 * 60_000 - now.getTime()) / 1000),
+        },
+      })
+      .get(saltKey(today))
+      .get(saltKey(today - DAY_MS))
+      .execTyped();
+    const hash = (daySalt: string): string =>
+      createHash('sha256').update(`${daySalt}:${siteId}:${ip}:${userAgent}`).digest('hex');
+    const visitorIds = [hash(salt ?? candidate)];
+    if (yesterdaySalt && now.getTime() - today < 30 * 60_000) visitorIds.push(hash(yesterdaySalt));
+    const keys = visitorIds.map((id) => `web-analytics:session:${siteId}:${id}`);
+    const stored = await client.mGet(keys);
+    const live = stored[1] ? 1 : 0;
+    let session = stored[live] ? (JSON.parse(stored[live]) as Session) : null;
+    const rows: WebEventClickhouseEntity[] = [];
+    for (const event of events) {
+      const at = ClickhouseUtils.clickhouseDateToJsDate(event.created_at);
+      if (!session || at.getTime() - Date.parse(session.startedAt) >= DAY_MS) {
+        if (event.name === 'pageleave') continue;
+        const fresh: Session = {
+          id: session
+            ? createHash('sha256').update(session.id).digest('hex')
+            : randomBytes(32).toString('hex'),
+          startedAt: at.toISOString(),
+          referrer: event.referrer,
+          utmSource: event.utm_source,
+          utmMedium: event.utm_medium,
+          utmCampaign: event.utm_campaign,
+          utmTerm: event.utm_term,
+          clickId: event.click_id,
+        };
+        if (session) session = fresh;
+        else {
+          const [, claimed] = await client
+            .multi()
+            .set(keys[live], JSON.stringify(fresh), {
+              condition: 'NX',
+              expiration: { type: 'EX', value: SESSION_IDLE_SECONDS },
+            })
+            .get(keys[live])
+            .execTyped();
+          session = claimed ? (JSON.parse(claimed) as Session) : fresh;
+        }
+      }
+      rows.push({
+        ...event,
+        visitor_id: visitorIds[live],
+        session_id: session.id,
+        referrer: session.referrer,
+        utm_source: session.utmSource,
+        utm_medium: session.utmMedium,
+        utm_campaign: session.utmCampaign,
+        utm_term: session.utmTerm,
+        click_id: session.clickId,
+      });
+    }
+    return { rows, sessionKey: keys[live], session };
   }
 
   @Cron(CronExpression.EVERY_SECOND, { waitForCompletion: true })

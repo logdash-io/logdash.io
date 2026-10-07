@@ -3,4 +3,5 @@ export class CreatePublicDashboardDto {
   httpMonitorsIds?: string[];
   name: string;
   isPublic: boolean;
+  autoAddMonitors?: boolean;
 }

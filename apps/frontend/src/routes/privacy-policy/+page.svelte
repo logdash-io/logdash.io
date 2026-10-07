@@ -5,6 +5,6 @@
 
 <LegalPage
   definition={PPdefinition}
-  title="Privacy Policy"
+  title="Privacy policy"
   description="How Logdash collects, stores and uses the data you send us, and what we never do with it."
 />

@@ -6,7 +6,6 @@ import { PublicDashboardReadModule } from '../read/public-dashboard-read.module'
 import { PublicDashboardWriteModule } from '../write/public-dashboard-write.module';
 import { PublicDashboardRemovalModule } from '../removal/public-dashboard-removal.module';
 import { HttpMonitorReadModule } from '../../http-monitor/read/http-monitor-read.module';
-import { ProjectReadModule } from '../../project/read/project-read.module';
 import { PublicDashboardCompositionModule } from '../composition/public-dashboard-composition.module';
 import { PublicDashboardLimitModule } from '../limit/public-dashboard-limit.module';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
@@ -21,7 +20,6 @@ import { StatusPageCompositionModule } from '../../status-page/composition/statu
     PublicDashboardWriteModule,
     PublicDashboardRemovalModule,
     HttpMonitorReadModule,
-    ProjectReadModule,
     PublicDashboardCompositionModule,
     PublicDashboardLimitModule,
     StatusPageCompositionModule,

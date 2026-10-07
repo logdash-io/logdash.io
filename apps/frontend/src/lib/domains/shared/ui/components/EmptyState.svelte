@@ -5,22 +5,49 @@
   type Props = {
     title: string;
     description?: string;
+    centered?: boolean;
     class?: ClassValue;
     children?: Snippet;
   };
 
-  const { title, description, class: className, children }: Props = $props();
+  const {
+    title,
+    description,
+    centered = false,
+    class: className,
+    children,
+  }: Props = $props();
 </script>
 
-<div class={['flex flex-col items-start gap-1', className]}>
-  <span class="text-sm">{title}</span>
+<div
+  class={[
+    'flex flex-col',
+    centered
+      ? 'items-center justify-center gap-2 px-6 py-10 text-center'
+      : 'items-start gap-1',
+    className,
+  ]}
+>
+  <span class={centered ? 'font-medium' : 'text-sm'}>{title}</span>
 
   {#if description}
-    <span class="text-fg-muted text-sm">{description}</span>
+    <span
+      class={[
+        'text-sm',
+        centered ? 'text-fg-tertiary max-w-sm' : 'text-fg-muted',
+      ]}
+    >
+      {description}
+    </span>
   {/if}
 
   {#if children}
-    <div class="mt-3 flex flex-col items-start">
+    <div
+      class={[
+        'flex flex-col',
+        centered ? 'mt-2 items-center' : 'mt-3 items-start',
+      ]}
+    >
       {@render children()}
     </div>
   {/if}

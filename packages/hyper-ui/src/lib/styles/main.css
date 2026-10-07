@@ -5,7 +5,7 @@
 @import "./components.css";
 @import "./scrollbar.css";
 
-@theme {
+@theme inline {
   --background-color-surface-root-bg: var(--surface-root-bg);
   --background-color-surface-root-hover-bg: var(--surface-root-hover-bg);
   --background-color-surface-root-selected-bg: var(--surface-root-selected-bg);

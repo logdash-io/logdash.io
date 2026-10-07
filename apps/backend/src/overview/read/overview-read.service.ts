@@ -14,6 +14,8 @@ import {
   ProjectErrorCount,
 } from '../core/dto/overview.response';
 
+type MonitorsScope = { clusterIds: string[] } | { projectIds: string[] };
+
 // "error/fatal" maps to the single error level the platform records today.
 const ERROR_LEVELS = [LogLevel.Error];
 
@@ -34,14 +36,14 @@ export class OverviewReadService {
    */
   public async buildForProjects(dto: {
     projects: ProjectNormalized[];
+    monitorsScope: MonitorsScope;
     since: Date;
   }): Promise<OverviewResponse> {
     const { projects, since } = dto;
-    const projectIds = projects.map((p) => p.id);
 
     const [errors, monitors, dataFlow] = await Promise.all([
       this.buildErrors(projects, since),
-      this.buildMonitors(projectIds),
+      this.buildMonitors(dto.monitorsScope),
       this.buildDataFlow(projects),
     ]);
 
@@ -76,12 +78,11 @@ export class OverviewReadService {
     return counts.sort((a, b) => b.errorCount - a.errorCount);
   }
 
-  private async buildMonitors(projectIds: string[]): Promise<MonitorStatusEntry[]> {
-    if (projectIds.length === 0) {
-      return [];
-    }
-
-    const monitors = await this.httpMonitorReadService.readClaimedByProjectIds(projectIds);
+  private async buildMonitors(scope: MonitorsScope): Promise<MonitorStatusEntry[]> {
+    const monitors =
+      'clusterIds' in scope
+        ? await this.httpMonitorReadService.readClaimedByClusterIds(scope.clusterIds)
+        : await this.httpMonitorReadService.readClaimedByProjectIds(scope.projectIds);
 
     if (monitors.length === 0) {
       return [];
@@ -92,6 +93,7 @@ export class OverviewReadService {
     const entries: MonitorStatusEntry[] = monitors.map((monitor) => ({
       monitorId: monitor.id,
       monitorName: monitor.name,
+      clusterId: monitor.clusterId,
       projectId: monitor.projectId,
       status: statuses[monitor.id]?.status ?? HttpMonitorStatus.Unknown,
     }));

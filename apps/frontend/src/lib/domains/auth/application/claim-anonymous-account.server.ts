@@ -37,7 +37,7 @@ export const claimAnonymousAccount = async (dto: {
   const { cookies, provider, code, state } = dto;
 
   if (!code) {
-    bffLogger.error(`claim callback without a provider code`);
+    bffLogger().error(`claim callback without a provider code`);
 
     return failedClaim(cookies, 'claim-failed');
   }
@@ -45,7 +45,7 @@ export const claimAnonymousAccount = async (dto: {
   const accessToken = get_access_token(cookies);
 
   if (!accessToken) {
-    bffLogger.info(`claim callback without a session, falling back to login`);
+    bffLogger().info(`claim callback without a session, falling back to login`);
 
     return { kind: 'login' };
   }
@@ -53,7 +53,7 @@ export const claimAnonymousAccount = async (dto: {
   const session = await readSessionUser(accessToken);
 
   if (session.kind === 'unavailable') {
-    bffLogger.error(
+    bffLogger().error(
       `claim callback could not verify the session, leaving it untouched`,
     );
 
@@ -61,7 +61,7 @@ export const claimAnonymousAccount = async (dto: {
   }
 
   if (session.kind !== 'ok') {
-    bffLogger.info(
+    bffLogger().info(
       `claim callback with an ${session.kind} session, falling back to login`,
     );
 
@@ -69,14 +69,14 @@ export const claimAnonymousAccount = async (dto: {
   }
 
   if (session.user.accountClaimStatus !== 'anonymous') {
-    bffLogger.info(
+    bffLogger().info(
       `claim callback for an already claimed session, falling back to login`,
     );
 
     return { kind: 'login' };
   }
 
-  bffLogger.info(`claiming ${provider} account...`);
+  bffLogger().info(`claiming ${provider} account...`);
 
   return runClaim({ cookies, provider, code, accessToken, state });
 };
@@ -96,14 +96,14 @@ const runClaim = async (dto: {
     const maxAge = tokenMaxAge(token);
 
     if (!maxAge) {
-      bffLogger.error(`${provider} claim returned an unusable token`);
+      bffLogger().error(`${provider} claim returned an unusable token`);
 
       return failedClaim(cookies, 'claim-failed');
     }
 
     save_access_token(cookies, token, { maxAge });
 
-    bffLogger.info(`${provider} claim success`);
+    bffLogger().info(`${provider} claim success`);
 
     return {
       kind: 'claimed',
@@ -112,14 +112,14 @@ const runClaim = async (dto: {
     };
   } catch (error) {
     if (error instanceof OAuthExchangeError && error.status === 409) {
-      bffLogger.error(
+      bffLogger().error(
         `${provider} claim rejected, target account is at its project limit`,
       );
 
       return failedClaim(cookies, 'project-limit');
     }
 
-    bffLogger.error(`${provider} claim failed ${String(error)}`);
+    bffLogger().error(`${provider} claim failed ${String(error)}`);
 
     return failedClaim(cookies, 'claim-failed');
   }

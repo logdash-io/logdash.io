@@ -6,12 +6,9 @@
     readHttpErrorMessage,
     readHttpErrorStatus,
   } from '$lib/domains/shared/http/http-error';
-  import {
-    SETTINGS_PAGE_CLASS,
-    SETTINGS_PANEL_CLASS,
-    SettingsCardHeader,
-  } from '$lib/domains/shared/ui/components/settings-card';
+  import { SETTINGS_INPUT_CLASS } from '$lib/domains/shared/ui/components/settings-card';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
+  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { isValidUrl } from '$lib/domains/shared/utils/url';
   import { Button, Input } from '@logdash/hyper-ui/presentational';
   import { match } from 'ts-pattern';
@@ -21,6 +18,10 @@
   let address = $state('');
   let submitting = $state(false);
   let error = $state<string | null>(null);
+
+  const canEmail = $derived(
+    !userState.isAnonymous && Boolean(userState.user?.email),
+  );
 
   async function onSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
@@ -33,7 +34,7 @@
     try {
       const clusterId = await createDomain(address);
       await goto(
-        resolve('/app/domains/[cluster_id]', { cluster_id: clusterId }),
+        resolve('/app/domains/[cluster_id]/uptime', { cluster_id: clusterId }),
         {
           invalidateAll: true,
         },
@@ -59,18 +60,21 @@
   }
 </script>
 
-<div class={SETTINGS_PAGE_CLASS}>
-  <section class="flex flex-col gap-3">
-    <SettingsCardHeader
-      title="Add a domain"
-      description="We check it right away and email you when it goes down."
-    />
-    <form
-      onsubmit={onSubmit}
-      class={['flex flex-col gap-2', SETTINGS_PANEL_CLASS]}
-      novalidate
-    >
-      <label for="{id}-address" class="text-sm text-fg-tertiary">
+<div class="mx-auto flex w-full max-w-168 flex-col p-2">
+  <section
+    class="bg-surface-25-bg flex flex-col gap-4 rounded-2xl p-5"
+    aria-labelledby="{id}-title"
+  >
+    <div class="flex flex-col gap-1">
+      <h1 id="{id}-title" class="text-[15px] font-medium">Add a domain</h1>
+      <p class="text-fg-muted text-[13px]">
+        We check it right away and {canEmail ? 'email you' : 'show you here'} when
+        it goes down.
+      </p>
+    </div>
+
+    <form onsubmit={onSubmit} class="flex flex-col gap-2" novalidate>
+      <label for="{id}-address" class="text-fg-muted text-xs">
         Website address
       </label>
       <div class="flex gap-2">
@@ -82,7 +86,8 @@
           autocomplete="url"
           maxlength={1024}
           placeholder="example.com"
-          class="min-w-0 flex-1"
+          size="sm"
+          class={['min-w-0 flex-1', SETTINGS_INPUT_CLASS]}
           error={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
           oninput={() => (error = null)}
@@ -91,6 +96,7 @@
         <Button
           type="submit"
           variant="primary"
+          size="sm"
           loading={submitting}
           disabled={!address.trim()}
         >
@@ -98,7 +104,7 @@
         </Button>
       </div>
       {#if error}
-        <p id="{id}-error" class="text-sm text-error" role="alert">{error}</p>
+        <p id="{id}-error" class="text-error text-xs" role="alert">{error}</p>
       {/if}
     </form>
   </section>

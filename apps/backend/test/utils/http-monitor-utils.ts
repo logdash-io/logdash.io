@@ -11,23 +11,30 @@ import {
 } from '../../src/http-monitor/core/entities/http-monitor.interface';
 import { HttpMonitorSerializer } from '../../src/http-monitor/core/entities/http-monitor.serializer';
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
+import { ProjectEntity } from '../../src/project/core/entities/project.entity';
 export const URL_STUB = 'https://example.com';
 
 export class HttpMonitorUtils {
   private httpMonitorModel: Model<HttpMonitorEntity>;
+  private projectModel: Model<ProjectEntity>;
 
   constructor(private readonly app: INestApplication<App>) {
     this.httpMonitorModel = this.app.get(getModelToken(HttpMonitorEntity.name));
+    this.projectModel = this.app.get(getModelToken(ProjectEntity.name));
   }
 
   public async createClaimedHttpMonitor(
-    dto: Partial<CreateHttpMonitorBody> & { token: string; projectId: string },
+    dto: Partial<CreateHttpMonitorBody> & {
+      token: string;
+      clusterId?: string;
+      projectId?: string;
+    },
   ): Promise<HttpMonitorSerialized> {
     this.tryFillDto(dto);
 
     // The global ValidationPipe runs with `forbidNonWhitelisted`, so only the
     // properties declared on CreateHttpMonitorBody may go into the request body.
-    // `token` and `projectId` are transport details, not part of the payload.
+    // `token`, `clusterId` and `projectId` are transport details, not part of the payload.
     const body: CreateHttpMonitorBody = {
       name: dto.name!,
       url: dto.url,
@@ -36,7 +43,11 @@ export class HttpMonitorUtils {
     };
 
     const response = await request(this.app.getHttpServer())
-      .post(`/projects/${dto.projectId}/http_monitors`)
+      .post(
+        dto.clusterId
+          ? `/clusters/${dto.clusterId}/http_monitors`
+          : `/projects/${dto.projectId}/http_monitors`,
+      )
       .set('Authorization', `Bearer ${dto.token}`)
       .send(body);
 
@@ -59,13 +70,25 @@ export class HttpMonitorUtils {
   public async storeHttpMonitor(
     dto: Partial<CreateHttpMonitorBody> & {
       token?: string;
-      projectId: string;
+      clusterId?: string;
+      projectId?: string;
       claimed?: boolean;
     },
   ): Promise<HttpMonitorNormalized> {
     this.tryFillDto(dto);
-    const monitor = await this.httpMonitorModel.create(dto);
+    const clusterId = dto.clusterId ?? (await this.readClusterIdOfProject(dto.projectId!));
+    const monitor = await this.httpMonitorModel.create({ ...dto, clusterId });
     return HttpMonitorSerializer.normalize(monitor);
+  }
+
+  private async readClusterIdOfProject(projectId: string): Promise<string> {
+    const project = await this.projectModel.findById(projectId).lean<ProjectEntity>().exec();
+
+    if (!project) {
+      throw new Error(`Project ${projectId} not found`);
+    }
+
+    return project.clusterId;
   }
 
   private tryFillDto(dto: Partial<CreateHttpMonitorBody>): CreateHttpMonitorBody {
@@ -82,16 +105,5 @@ export class HttpMonitorUtils {
     }
 
     return dto as CreateHttpMonitorBody;
-  }
-
-  public async getHttpMonitorResponse(
-    httpMonitorId: string,
-    token: string,
-  ): Promise<HttpMonitorSerialized> {
-    const response = await request(this.app.getHttpServer())
-      .get(`/http_monitors/${httpMonitorId}`)
-      .set('Authorization', `Bearer ${token}`);
-
-    return response.body as HttpMonitorSerialized;
   }
 }

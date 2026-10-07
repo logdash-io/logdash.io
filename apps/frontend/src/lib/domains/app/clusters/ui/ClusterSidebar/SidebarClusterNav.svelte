@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import SidebarDomainNav from './SidebarDomainNav.svelte';
 
@@ -8,9 +9,13 @@
   const currentPath = $derived(page.url.pathname);
 
   const active = $derived.by(
-    (): 'analytics' | 'status-pages' | 'settings' | null => {
+    (): 'analytics' | 'uptime' | 'status-pages' | 'settings' | null => {
       if (currentPath === basePath) {
         return 'analytics';
+      }
+
+      if (currentPath.startsWith(`${basePath}/uptime`)) {
+        return 'uptime';
       }
 
       if (currentPath === `${basePath}/settings`) {
@@ -24,6 +29,11 @@
   );
 
   const cluster = $derived(clustersState.get(clusterId));
+  const down = $derived(
+    clusterHealthState
+      .getMonitors(clusterId ?? '')
+      .filter((monitor) => monitor.lastStatus === 'down').length,
+  );
   const isPublished = $derived(
     cluster?.publicDashboards?.some(({ isPublic }) => isPublic) ?? false,
   );
@@ -34,4 +44,5 @@
   {active}
   disabled={!clusterId}
   published={isPublished}
+  {down}
 />

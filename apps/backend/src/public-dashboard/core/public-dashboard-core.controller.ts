@@ -20,7 +20,6 @@ import { PublicDashboardSerializer } from './entities/public-dashboard.serialize
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { CreatePublicDashboardBody } from './dto/create-public-dashboard.body';
-import { ProjectReadService } from '../../project/read/project-read.service';
 import { Public } from '../../auth/core/decorators/is-public';
 import { PublicDashboardDataResponse } from './dto/public-dashboard-data.response';
 import { PublicDashboardCompositionService } from '../composition/public-dashboard-composition.service';
@@ -39,7 +38,6 @@ export class PublicDashboardCoreController {
     private readonly publicDashboardWriteService: PublicDashboardWriteService,
     private readonly publicDashboardRemovalService: PublicDashboardRemovalService,
     private readonly httpMonitorReadService: HttpMonitorReadService,
-    private readonly projectReadService: ProjectReadService,
     private readonly publicDashboardCompositionService: PublicDashboardCompositionService,
     private readonly publicDashboardLimitService: PublicDashboardLimitService,
     private readonly customDomainReadService: CustomDomainReadService,
@@ -61,18 +59,16 @@ export class PublicDashboardCoreController {
       );
     }
 
-    const httpMonitorsIds = body.httpMonitorsIds ?? [];
+    const httpMonitorsIds =
+      body.httpMonitorsIds ??
+      (body.autoAddMonitors === false
+        ? []
+        : (await this.httpMonitorReadService.readClaimedByClusterId(clusterId)).map(
+            (monitor) => monitor.id,
+          ));
     const monitors = await this.httpMonitorReadService.readManyByIds(httpMonitorsIds);
-    const projects = await this.projectReadService.readManyByIds(
-      monitors.map((monitor) => monitor.projectId),
-    );
-    const clusterProjectIds = new Set(
-      projects.filter((project) => project.clusterId === clusterId).map((project) => project.id),
-    );
     const clusterMonitorIds = new Set(
-      monitors
-        .filter((monitor) => clusterProjectIds.has(monitor.projectId))
-        .map((monitor) => monitor.id),
+      monitors.filter((monitor) => monitor.clusterId === clusterId).map((monitor) => monitor.id),
     );
 
     // Checked before the write: a stored dashboard with another cluster's monitor ids would
@@ -86,6 +82,7 @@ export class PublicDashboardCoreController {
       httpMonitorsIds,
       name: body.name,
       isPublic: body.isPublic,
+      autoAddMonitors: body.autoAddMonitors ?? body.httpMonitorsIds === undefined,
     });
 
     return PublicDashboardSerializer.serialize(dashboard);
@@ -102,6 +99,7 @@ export class PublicDashboardCoreController {
       id: publicDashboardId,
       name: body.name,
       isPublic: body.isPublic,
+      autoAddMonitors: body.autoAddMonitors,
     });
 
     await this.publicDashboardCompositionService.invalidateCache(publicDashboardId);
@@ -215,9 +213,7 @@ export class PublicDashboardCoreController {
       throw new NotFoundException('Http monitor not found');
     }
 
-    const project = await this.projectReadService.readById(monitor.projectId);
-
-    if (project?.clusterId !== dashboard.clusterId) {
+    if (monitor.clusterId !== dashboard.clusterId) {
       throw new NotFoundException('Monitor does not belong to the same domain');
     }
 
@@ -258,9 +254,7 @@ export class PublicDashboardCoreController {
       throw new NotFoundException('Http monitor not found');
     }
 
-    const project = await this.projectReadService.readById(monitor.projectId);
-
-    if (project?.clusterId !== dashboard.clusterId) {
+    if (monitor.clusterId !== dashboard.clusterId) {
       throw new NotFoundException('Monitor does not belong to the same domain');
     }
 

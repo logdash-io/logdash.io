@@ -4,6 +4,7 @@ import type { PingBucketPeriod } from '$lib/domains/app/projects/domain/monitori
 import { displayUrl, isNameFromUrl } from '../../../../shared/utils/url';
 import {
   checkIntervalLabel,
+  checkingLabel,
   lastCheckLabel,
   monitorStats,
   noResponseReason,
@@ -33,6 +34,7 @@ type MonitorReading = {
   now: number;
   loaded: boolean;
   failed?: boolean;
+  planInterval?: string | null;
 };
 
 export function monitorPanelContent({
@@ -43,24 +45,33 @@ export function monitorPanelContent({
   now,
   loaded,
   failed = false,
+  planInterval = null,
 }: MonitorReading): MonitorPanelContent {
   const url = checkedUrl(monitor);
-  const uptime = bucketUptime ?? uptimePercent(pings);
-  const interval = checkIntervalLabel(pings);
 
   return {
-    eyebrow: url ? displayUrl(url) : modeLabel(monitor.mode),
+    eyebrow: monitorEyebrow(monitor),
     eyebrowHref: url,
     title: monitor.name,
     notice: noResponseReason(pings.at(-1)),
-    stats: monitorStats(pings, {
-      label: uptimeLabel(bucketUptime, range),
-      value: uptime === null ? '--' : formatUptime(uptime),
-    }),
+    stats: monitorStats(pings, uptimeStat(pings, bucketUptime, range)),
     responseTimes: responseTimes(pings),
-    checkingLabel: interval ? `Checking every ${interval}` : 'Checking',
+    checkingLabel: checkingLabel(planInterval ?? checkIntervalLabel(pings)),
     lastCheckLabel:
       lastCheckLabel(pings, now) ?? emptyCheckLabel(loaded, failed),
+  };
+}
+
+export function uptimeStat(
+  pings: ChartPing[],
+  bucketUptime: number | null,
+  range: PingBucketPeriod,
+): MonitorStat {
+  const uptime = bucketUptime ?? uptimePercent(pings);
+
+  return {
+    label: uptimeLabel(bucketUptime, range),
+    value: uptime === null ? '--' : formatUptime(uptime),
   };
 }
 
@@ -81,6 +92,12 @@ function emptyCheckLabel(loaded: boolean, failed: boolean): string {
   }
 
   return loaded ? 'Waiting for the first check' : 'Loading checks';
+}
+
+export function monitorEyebrow(monitor: Monitor): string {
+  const url = checkedUrl(monitor);
+
+  return url ? displayUrl(url) : modeLabel(monitor.mode);
 }
 
 function checkedUrl(monitor: Monitor): string | undefined {

@@ -3,6 +3,8 @@
   import { browser } from '$app/environment';
   import { page } from '$app/state';
   import { isDev, uuid } from '$lib';
+  import { isLive } from '$lib/domains/shared/utils/is-dev.util';
+  import { SITE_ANALYTICS_ID } from '$lib/domains/site-analytics/domain/site-analytics';
   import FooterEnding from '$lib/landing/FooterEnding.svelte';
   import Nav from '$lib/landing/Nav.svelte';
   import PageView from '$lib/landing/PageView.svelte';
@@ -18,9 +20,10 @@
   import Toaster from '$lib/domains/shared/ui/toaster/Toaster.svelte';
   import ConfirmDialog from '$lib/domains/shared/ui/confirm/ConfirmDialog.svelte';
   import { envConfig } from '$lib/domains/shared/utils/env-config';
+  import type { User } from '$lib/domains/shared/user/domain/user';
   import { dropThirdPartyExceptions } from '$lib/domains/shared/posthog/drop-third-party-exceptions';
   import posthog, { type PostHogInterface } from 'posthog-js';
-  import { getContext, setContext, type Snippet } from 'svelte';
+  import { getContext, setContext, untrack, type Snippet } from 'svelte';
   import '@fontsource-variable/inter/opsz.css';
   import '@fontsource-variable/geist-mono';
   import '../code-theme.css';
@@ -77,7 +80,12 @@
       posthog.init(envConfig.posthog.key, {
         api_host: envConfig.posthog.proxy,
         ui_host: envConfig.posthog.host,
-        person_profiles: 'always',
+        person_profiles: 'identified_only',
+        persistence: 'memory',
+        bootstrap: {
+          distinctID: untrack(() => (page.data.user as User | undefined)?.id),
+          isIdentifiedID: true,
+        },
         disable_session_recording: true,
         before_send: dropThirdPartyExceptions,
         loaded(ph) {
@@ -115,6 +123,17 @@
 
   $effect(syncExposedConfig);
 </script>
+
+<svelte:head>
+  {#if isLive()}
+    <script
+      defer
+      src="/_ld/script.js"
+      data-site={SITE_ANALYTICS_ID}
+      data-endpoint="/_ld/events"
+    ></script>
+  {/if}
+</svelte:head>
 
 <svelte:boundary onerror={(error) => console.log('💥', error)}>
   <Toaster />

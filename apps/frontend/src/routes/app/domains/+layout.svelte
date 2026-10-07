@@ -3,6 +3,7 @@
   import { afterNavigate, invalidateAll, replaceState } from '$app/navigation';
   import { page } from '$app/state';
   import { isDev } from '$lib';
+  import { identifySiteVisitor } from '$lib/domains/site-analytics/application/identify-site-visitor';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
@@ -44,6 +45,8 @@
   $effect(syncMonitors);
 
   $effect(() => {
+    identifySiteVisitor(data.user.id);
+
     if (browser && !isDev()) {
       posthog.identify(data.user.id, {
         email: data.user.email,

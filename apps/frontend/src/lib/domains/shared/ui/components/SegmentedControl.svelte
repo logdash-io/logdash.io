@@ -1,4 +1,5 @@
 <script lang="ts" generics="T extends string">
+  import { Badge } from '@logdash/hyper-ui/presentational';
   import { press } from '@logdash/hyper-ui/utils/press';
   import { fromAction } from 'svelte/attachments';
   import { match } from 'ts-pattern';
@@ -6,6 +7,7 @@
   type Option = {
     value: T;
     label: string;
+    badge?: string;
   };
 
   type Props = {
@@ -108,6 +110,9 @@
       {@attach fromAction(press)}
     >
       {option.label}
+      {#if option.badge}
+        <Badge size="xs">{option.badge}</Badge>
+      {/if}
     </button>
   {/each}
 </div>
@@ -146,6 +151,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     height: 28px;
     padding: 0 10px;
     border-radius: 7px;

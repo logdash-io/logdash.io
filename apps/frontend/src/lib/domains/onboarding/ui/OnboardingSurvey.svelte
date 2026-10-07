@@ -5,6 +5,7 @@
     type OnboardingAnswersDto,
   } from '$lib/domains/onboarding/domain/onboarding-dtos';
   import { ONBOARDING_QUESTIONS } from '$lib/domains/onboarding/domain/onboarding-questions';
+  import { SETTINGS_INPUT_CLASS } from '$lib/domains/shared/ui/components/settings-card';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { Button, Select } from '@logdash/hyper-ui/presentational';
 
@@ -61,11 +62,13 @@
   <div class="grid gap-3 sm:grid-cols-2">
     {#each ONBOARDING_QUESTIONS as question (question.key)}
       <label class="flex min-w-0 flex-col gap-1.5">
-        <span class="text-sm text-fg-tertiary">{question.label}</span>
+        <span class="text-xs text-fg-muted">{question.label}</span>
         <Select
           bind:value={answers[question.key]}
+          size="sm"
           class={[
-            'w-full border-surface-input-border bg-surface-input-bg transition-ink hover:border-surface-input-hover-border focus:border-brand',
+            'w-full',
+            SETTINGS_INPUT_CLASS,
             { 'text-fg-muted': !answers[question.key] },
           ]}
         >

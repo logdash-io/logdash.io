@@ -82,7 +82,7 @@ export async function GET() {
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and give its monitor https://yourapp.com/api/health. Five services fit in the free plan, and every check records the status code and the response time.',
+            text: 'Add a monitor in Logdash and give it https://yourapp.com/api/health. Five monitors fit in the free plan, and every check records the status code and the response time.',
           },
           {
             title: 'Pick the interval',
@@ -118,13 +118,13 @@ export async function GET() {
           },
           {
             feature: 'Coverage across routes',
-            logdash: 'One monitored URL per service',
+            logdash: 'One URL per monitor',
             them: 'Every route, 5xx by default, 4xx optional',
             winner: 'them',
           },
           {
             feature: 'Plan needed',
-            logdash: 'Free plan, five services',
+            logdash: 'Free plan, five monitors',
             them: 'Pro with Observability Plus',
             winner: 'logdash',
           },
@@ -256,7 +256,7 @@ app.listen(process.env.PORT || 3000, '0.0.0.0');`,
         items: [
           {
             title: 'Add the public domain',
-            text: 'Create a service in Logdash and give its monitor https://yourapp.up.railway.app/health, or your custom domain. Private network addresses are not reachable from outside, so it has to be the public one.',
+            text: 'Add a monitor in Logdash and give it https://yourapp.up.railway.app/health, or your custom domain. Private network addresses are not reachable from outside, so it has to be the public one.',
           },
           {
             title: 'Pick the interval',
@@ -423,7 +423,7 @@ app.listen(process.env.PORT || 10000);`,
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and give its monitor https://yourapp.onrender.com/health, or your custom domain. Five services fit in the free plan.',
+            text: 'Add a monitor in Logdash and give it https://yourapp.onrender.com/health, or your custom domain. Five monitors fit in the free plan.',
           },
           {
             title: 'Pick the interval',
@@ -442,7 +442,7 @@ app.listen(process.env.PORT || 10000);`,
         rows: [
           {
             feature: 'Free monitors',
-            logdash: 'Five services, one monitor each',
+            logdash: 'Five HTTP monitors',
             them: '50, commercial use allowed',
             winner: 'them',
           },
@@ -472,7 +472,7 @@ app.listen(process.env.PORT || 10000);`,
           },
           {
             feature: 'App logs and metrics',
-            logdash: 'Eight SDKs into the same service',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Not part of the product',
             winner: 'logdash',
           },
@@ -584,7 +584,7 @@ curl -s -o /dev/null -w '%{http_code} in %{time_total}s\\n' \\
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and point its HTTP monitor at https://your-app.fly.dev/health, or the custom domain your users type. Every check stores the status code and response time.',
+            text: 'Add an HTTP monitor in Logdash and point it at https://your-app.fly.dev/health, or the custom domain your users type. Every check stores the status code and response time.',
           },
           {
             title: 'Pick the interval',
@@ -633,7 +633,7 @@ curl -s -o /dev/null -w '%{http_code} in %{time_total}s\\n' \\
           },
           {
             feature: 'Price',
-            logdash: 'Free for 5 services',
+            logdash: 'Free for 5 monitors',
             them: 'Included with the app',
             winner: 'tie',
           },
@@ -744,7 +744,7 @@ export default {
         items: [
           {
             title: 'Add the public URL',
-            text: 'Create a service in Logdash and paste https://example.com/health, the hostname users hit, not the origin IP. Logdash sends a GET every 5 minutes on the free plan, every minute on Builder at $9 and every 15 seconds on Pro at $15.',
+            text: 'Add a monitor in Logdash and paste https://example.com/health, the hostname users hit, not the origin IP. Logdash sends a GET every 5 minutes on the free plan, every minute on Builder at $9 and every 15 seconds on Pro at $15.',
           },
           {
             title: 'Connect Telegram',
@@ -763,7 +763,7 @@ export default {
         rows: [
           {
             feature: 'Free plan',
-            logdash: '5 services, 5-minute checks',
+            logdash: '5 monitors, 5-minute checks',
             them: 'Not available, Pro and up',
             winner: 'logdash',
           },
@@ -900,7 +900,7 @@ curl -i https://<project-ref>.supabase.co/functions/v1/health`,
         items: [
           {
             title: 'Add the function URL',
-            text: 'Create a service in Logdash and paste https://<project-ref>.supabase.co/functions/v1/health. It checks every 5 minutes on the free plan, every minute on Builder at $9 a month and every 15 seconds on Pro at $15.',
+            text: 'Add a monitor in Logdash and paste https://<project-ref>.supabase.co/functions/v1/health. It checks every 5 minutes on the free plan, every minute on Builder at $9 a month and every 15 seconds on Pro at $15.',
           },
           {
             title: 'Connect Telegram',
@@ -943,7 +943,7 @@ curl -i https://<project-ref>.supabase.co/functions/v1/health`,
           },
           {
             feature: 'Cost',
-            logdash: 'Free for 5 services',
+            logdash: 'Free for 5 monitors',
             them: 'Included',
             winner: 'tie',
           },
@@ -1049,7 +1049,7 @@ curl -i https://<project-ref>.supabase.co/functions/v1/health`,
         items: [
           {
             title: 'Add the URLs',
-            text: 'Create a service in Logdash for each app, pointed at its public /health route, and one for https://coolify.example.com/api/health. Five fit in the free plan. Logdash only reaches public addresses, so apps behind a VPN or on a private network are out of reach.',
+            text: 'Add a monitor in Logdash for each app, pointed at its public /health route, and one for https://coolify.example.com/api/health. Five fit in the free plan. Logdash only reaches public addresses, so apps behind a VPN or on a private network are out of reach.',
           },
           {
             title: 'Pick the interval',
@@ -1204,7 +1204,7 @@ curl -sS -o /dev/null -w '%{http_code} in %{time_total}s\\n' \\
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and paste https://example.com/health, the same path the load balancer checks. The first check runs straight away, so a wrong path shows up now.',
+            text: 'Add a monitor in Logdash and paste https://example.com/health, the same path the load balancer checks. The first check runs straight away, so a wrong path shows up now.',
           },
           {
             title: 'Connect Telegram',
@@ -1247,7 +1247,7 @@ curl -sS -o /dev/null -w '%{http_code} in %{time_total}s\\n' \\
           },
           {
             feature: 'Cost',
-            logdash: 'Free for 5 services at 5-minute checks',
+            logdash: 'Free for 5 monitors at 5-minute checks',
             them: 'Included with the server',
             winner: 'tie',
           },
@@ -1273,7 +1273,7 @@ curl -sS -o /dev/null -w '%{http_code} in %{time_total}s\\n' \\
       {
         question: 'What is the simplest Hetzner VPS monitoring setup?',
         answer:
-          'A health path in your app, one HTTP monitor pointed at it from outside Hetzner, and a Telegram channel. On the Logdash free plan that covers 5 services at a 5-minute interval. Add node_exporter later if you want memory and disk graphs.',
+          'A health path in your app, one HTTP monitor pointed at it from outside Hetzner, and a Telegram channel. On the Logdash free plan that covers 5 monitors at a 5-minute interval. Add node_exporter later if you want memory and disk graphs.',
       },
       {
         question: 'What does Hetzner Cloud monitoring show?',
@@ -1349,7 +1349,7 @@ curl -sS -o /dev/null -w '%{http_code} in %{time_total}s\\n' \\
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and paste the health URL you just tested with curl. The first check runs straight away.',
+            text: 'Add a monitor in Logdash and paste the health URL you just tested with curl. The first check runs straight away.',
           },
           {
             title: 'Connect Telegram',
@@ -1450,7 +1450,7 @@ curl -sS -o /dev/null -w '%{http_code} in %{time_total}s\\n' \\
       { type: 'heading', text: 'VPS uptime monitoring from outside' },
       {
         type: 'paragraph',
-        text: 'Put an HTTP monitor on a public URL of your app, ideally a health route that runs one database query. The Logdash free plan covers five services checked every 5 minutes, Builder checks every minute for $9 a month, Pro every 15 seconds for $15. Every check records the status code and response time. Anything outside 200 to 399, or no answer within 10 seconds, counts as down.',
+        text: 'Put an HTTP monitor on a public URL of your app, ideally a health route that runs one database query. The Logdash free plan covers five monitors checked every 5 minutes, Builder checks every minute for $9 a month, Pro every 15 seconds for $15. Every check records the status code and response time. Anything outside 200 to 399, or no answer within 10 seconds, counts as down.',
       },
       { type: 'heading', text: 'A heartbeat from inside the box' },
       {
@@ -1489,7 +1489,7 @@ done
         items: [
           {
             title: 'Watch it from outside',
-            text: 'Create a service in Logdash and point an HTTP monitor at https://yourapp.com/health. This part runs on the free plan.',
+            text: 'Add an HTTP monitor in Logdash and point it at https://yourapp.com/health. This part runs on the free plan.',
           },
           {
             title: 'Add the heartbeat',
@@ -1619,7 +1619,7 @@ done
       },
       {
         type: 'paragraph',
-        text: 'Push monitors are a Pro feature, $15 a month for up to 50 services, and on Pro Logdash expects a heartbeat in every 15-second window. Cron runs at most once a minute, so the script loops six times with 2-second timeouts, which keeps every gap under 15 seconds. One missed window is an alert, so run it on a box with a wired connection. A flaky Wi-Fi link turns into pairs of down and up messages.',
+        text: 'Push monitors are a Pro feature, $15 a month for up to 50 monitors, and on Pro Logdash expects a heartbeat in every 15-second window. Cron runs at most once a minute, so the script loops six times with 2-second timeouts, which keeps every gap under 15 seconds. One missed window is an alert, so run it on a box with a wired connection. A flaky Wi-Fi link turns into pairs of down and up messages.',
       },
       {
         type: 'heading',
@@ -1639,7 +1639,7 @@ done
         items: [
           {
             title: 'Create the push monitors',
-            text: 'One service per thing you care about, monitor mode set to push. Copy each id into its crontab line.',
+            text: 'One monitor per thing you care about, each set to "You send heartbeats". Copy each id into its crontab line.',
           },
           {
             title: 'Install the script',
@@ -1772,7 +1772,7 @@ done
         items: [
           {
             title: 'Create a push monitor',
-            text: 'Add a service in Logdash, switch the monitor to push and copy the ping URL. The id at the end is the only thing the line above needs.',
+            text: 'Add a monitor in Logdash, choose "You send heartbeats" and copy the ping URL. The id at the end is the only thing the line above needs.',
           },
           {
             title: 'Install the line',
@@ -1911,14 +1911,14 @@ add_action('rest_api_init', function () {
       },
       {
         type: 'paragraph',
-        text: 'Create the mu-plugins folder if it does not exist. Must-use plugins load on every request with no activation step, and nobody can switch them off from the dashboard by accident. On plain permalinks the URL is /?rest_route=/health/v1/check. If your cache plugin caches REST responses, exclude this path. The route skips the theme, so a fatal error inside a template only shows on real pages. On an uncached site the homepage is the better URL; on a cached one, watch both as two services.',
+        text: 'Create the mu-plugins folder if it does not exist. Must-use plugins load on every request with no activation step, and nobody can switch them off from the dashboard by accident. On plain permalinks the URL is /?rest_route=/health/v1/check. If your cache plugin caches REST responses, exclude this path. The route skips the theme, so a fatal error inside a template only shows on real pages. On an uncached site the homepage is the better URL; on a cached one, watch both as two monitors.',
       },
       {
         type: 'steps',
         items: [
           {
             title: 'Add the monitor',
-            text: 'Create a service in Logdash and paste the health URL, or the homepage if you skipped the file. The free plan covers five sites checked every 5 minutes, Builder checks every minute for $9 a month, Pro every 15 seconds for $15.',
+            text: 'Add a monitor in Logdash and paste the health URL, or the homepage if you skipped the file. The free plan covers five sites checked every 5 minutes, Builder checks every minute for $9 a month, Pro every 15 seconds for $15.',
           },
           {
             title: 'Connect Telegram',
@@ -2096,11 +2096,11 @@ export async function loader() {
         items: [
           {
             title: 'Add the storefront',
-            text: 'Create a service in Logdash and point its HTTP monitor at your primary domain. Each check records the status code and the response time, so slow theme days show up next to outages.',
+            text: 'Add an HTTP monitor in Logdash and point it at your primary domain. Each check records the status code and the response time, so slow theme days show up next to outages.',
           },
           {
             title: 'Add the app',
-            text: 'Create a second service for https://your-app.example.com/healthz. That is 2 of the 5 services on the free plan, each checked every 5 minutes. Builder checks every minute, Pro every 15 seconds.',
+            text: 'Add a second monitor for https://your-app.example.com/healthz. That is 2 of the 5 monitors on the free plan, each checked every 5 minutes. Builder checks every minute, Pro every 15 seconds.',
           },
           {
             title: 'Break it on purpose',
@@ -2145,7 +2145,7 @@ export async function loader() {
           },
           {
             feature: 'Price',
-            logdash: 'Free for 5 services',
+            logdash: 'Free for 5 monitors',
             them: 'Free',
             winner: 'tie',
           },

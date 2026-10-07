@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { userInvitationsState } from '$lib/domains/app/clusters/application/user-invitations.state.svelte.js';
   import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
@@ -7,13 +6,13 @@
   import { domainLiveState } from '$lib/domains/app/clusters/application/domain-live.state.svelte.js';
   import { topBarState } from '$lib/domains/app/clusters/application/top-bar.state.svelte.js';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
-  import { serviceEntries } from '$lib/domains/app/clusters/application/service-entries.js';
   import { domainLabel } from '$lib/domains/app/clusters/domain/service-groups.js';
   import ClaimBanner from '$lib/domains/app/clusters/ui/ClaimBanner/ClaimBanner.svelte';
   import ClusterSidebar from '$lib/domains/app/clusters/ui/ClusterSidebar/ClusterSidebar.svelte';
   import SidebarContent from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarContent.svelte';
   import PendingInvitations from '$lib/domains/app/clusters/ui/PendingInvitations.svelte';
   import ServiceTabsNav from '$lib/domains/app/clusters/ui/ServiceTabsNav.svelte';
+  import Breadcrumbs, { type Crumb } from './Breadcrumbs.svelte';
   import LiveIndicator from './LiveIndicator.svelte';
   import TopBar from './TopBar.svelte';
   import BottomSheet from '$lib/domains/shared/ui/components/BottomSheet/BottomSheet.svelte';
@@ -23,6 +22,7 @@
   import LogoMark from '$lib/domains/shared/icons/LogoMark.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
+  import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { ScrollArea } from '@logdash/hyper-ui/presentational';
   import type { Snippet } from 'svelte';
   import { onMount, untrack } from 'svelte';
@@ -42,7 +42,9 @@
   const clusterDomain = $derived(
     domainLabel(
       clusterName,
-      serviceEntries(currentCluster).map((entry) => entry.url),
+      monitoringState
+        .monitorsOf(page.params.cluster_id ?? '')
+        .map((monitor) => monitor.url),
     ),
   );
   const clusterId = $derived(page.params.cluster_id);
@@ -57,15 +59,17 @@
     publicDashboardManagerState.getDashboard(page.params.status_page_id ?? '')
       ?.name,
   );
+  const monitorName = $derived(
+    monitoringState.getMonitorById(page.params.monitor_id ?? '')?.name,
+  );
+  const showLive = $derived(
+    page.route.id === '/app/domains/[cluster_id]/[project_id]' ||
+      page.route.id === '/app/domains/[cluster_id]/[project_id]/logs',
+  );
   const crumbs = $derived(crumbsFor(page.route.id));
   const clusterIds = $derived(
     clustersState.clusters.map(({ id }) => id).join(','),
   );
-
-  type Crumb = {
-    label: string;
-    path?: '/app/domains' | `/app/domains/${string}`;
-  };
 
   function crumbsFor(routeId: string | null): Crumb[] {
     const domain = { label: clusterName, path: clusterPath };
@@ -83,6 +87,20 @@
       .with('/app/domains/[cluster_id]/services', () => [
         domain,
         { label: 'Services' },
+      ])
+      .with('/app/domains/[cluster_id]/uptime', () => [
+        domain,
+        { label: 'Uptime' },
+      ])
+      .with('/app/domains/[cluster_id]/uptime/new', () => [
+        domain,
+        { label: 'Uptime', path: clusterPath && `${clusterPath}/uptime` },
+        { label: 'Add monitor' },
+      ])
+      .with('/app/domains/[cluster_id]/uptime/[monitor_id]', () => [
+        domain,
+        { label: 'Uptime', path: clusterPath && `${clusterPath}/uptime` },
+        ...(monitorName ? [{ label: monitorName }] : []),
       ])
       .with('/app/domains/[cluster_id]/settings', () => [
         domain,
@@ -145,34 +163,20 @@
   >
     <TopBar>
       <div class="flex min-w-0 flex-1 items-center">
-        <nav aria-label="Breadcrumb" class="min-w-0">
-          <ol class="flex min-w-0 items-center gap-2 text-[13px] font-medium">
-            {#each crumbs as crumb, index (index)}
-              {@const isCurrent = index === crumbs.length - 1}
-              <li class="flex min-w-0 items-center gap-2">
-                {#if index > 0}
-                  <span class="text-fg-disabled" aria-hidden="true">/</span>
-                {/if}
-                {#if crumb.path && !isCurrent}
-                  <a
-                    href={resolve(crumb.path)}
-                    class="hover:text-fg-default transition-ink focus-visible:outline-brand -mx-1 -my-1 block truncate rounded-md px-1 py-1 text-fg-muted focus-visible:outline-2"
-                  >
-                    {crumb.label}
-                  </a>
-                {:else}
-                  <span
-                    class={['truncate', { 'text-fg-muted': !isCurrent }]}
-                    aria-current={isCurrent ? 'page' : undefined}
-                  >
-                    {crumb.label}
-                  </span>
-                {/if}
-              </li>
-            {/each}
-          </ol>
-        </nav>
+        <Breadcrumbs {crumbs} />
       </div>
+
+      {#if clusterId && projectId}
+        <div class="flex min-w-0 items-center gap-3 max-sm:w-full">
+          {#if showLive}
+            <LiveIndicator
+              label={logsState.streamPaused ? 'Paused' : 'Live'}
+              dot={logsState.streamPaused ? 'neutral' : 'success'}
+            />
+          {/if}
+          <ServiceTabsNav {clusterId} {projectId} />
+        </div>
+      {/if}
 
       {#if topBarState.actions}
         <div class="flex min-w-0 items-center gap-2 max-sm:w-full">
@@ -180,16 +184,6 @@
         </div>
       {/if}
     </TopBar>
-
-    {#if clusterId && projectId}
-      <div class="flex h-12 shrink-0 items-center px-2">
-        <ServiceTabsNav {clusterId} {projectId} />
-        <LiveIndicator
-          label={logsState.streamPaused ? 'Paused' : 'Live'}
-          dot={logsState.streamPaused ? 'neutral' : 'success'}
-        />
-      </div>
-    {/if}
 
     <ScrollArea class="relative flex min-h-0 w-full flex-1 flex-col">
       <div class="flex min-h-full flex-col">

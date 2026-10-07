@@ -50,7 +50,7 @@ const SECTIONS: [title: string, segments: string[]][] = [
   ['Learn', ['learn']],
   ['More', []],
   // llmstxt.org: an agent short on context may skip the Optional section.
-  ['Optional', ['terms-of-service', 'privacy-policy', 'cookies-policy']],
+  ['Optional', ['terms-of-service', 'privacy-policy', 'cookies-policy', 'dpa']],
 ];
 
 const converter = new NodeHtmlMarkdown({ bulletMarker: '-' });

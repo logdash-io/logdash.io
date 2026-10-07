@@ -4,7 +4,6 @@
   import {
     Badge,
     Button,
-    Checkbox,
     Input,
     Menu,
     Tooltip,
@@ -22,29 +21,26 @@
 
   type Props = {
     clusterName: string;
-    monitorName: string;
     onCancel?: () => void;
     onSubmit: (dto: WebhookSetupDTO) => Promise<void>;
   };
 
   const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
 
-  // HTTP header validation patterns
   const HEADER_NAME_PATTERN = /^[a-zA-Z0-9-]+$/;
   const HEADER_VALUE_PATTERN = /^[\x20-\x7E]*$/;
 
-  let { monitorName, clusterName, onCancel, onSubmit }: Props = $props();
+  let { clusterName, onCancel, onSubmit }: Props = $props();
 
   let isSaving = $state(false);
 
   const canUseAdvancedMethods = $derived(!userState.isFree);
   const canUseCustomHeaders = $derived(!userState.isFree);
 
-  let assignToServiceMonitor = $state(false);
   let webhookName = $state('');
   let webhookUrl = $state('');
   let headers = $state<Header[]>([]);
-  let method = $state('GET');
+  let method = $state(userState.isFree ? 'GET' : 'POST');
 
   function isValidHeaderName(name: string): boolean {
     return name === '' || HEADER_NAME_PATTERN.test(name);
@@ -76,7 +72,6 @@
 
     try {
       await onSubmit({
-        withAssignment: assignToServiceMonitor,
         url: webhookUrl,
         name: webhookName,
         headers: headers.reduce(
@@ -96,26 +91,25 @@
   }
 </script>
 
-<div class="space-y-8 text-center">
-  <div class="flex items-center justify-start gap-4">
+<div class="flex flex-col gap-5">
+  <div class="flex items-center gap-4">
     <div
-      class="success-card flex h-14 w-14 items-center justify-center rounded-full"
+      class="bg-surface-150-bg flex size-9 shrink-0 items-center justify-center rounded-lg"
     >
-      <LinkIcon class="size-6 stroke-1" />
+      <LinkIcon class="size-4.5" />
     </div>
-
-    <div class="flex flex-col items-start">
-      <h3 class="text-xl font-medium">Set up a webhook channel</h3>
+    <div class="flex min-w-0 flex-col gap-0.5">
+      <h2 class="text-base font-semibold">Set up a webhook channel</h2>
       <p class="text-fg-tertiary text-sm">
         Add it with a memorable name to your domain.
       </p>
     </div>
   </div>
 
-  <div class="space-y-2 text-base">
+  <div class="flex flex-col gap-2">
     <Input
       bind:value={webhookName}
-      variant="outline"
+      class="w-full"
       placeholder="Memorable webhook name"
       type="text"
       {@attach fromAction(autoFocus, () => ({ selectAll: true }))}
@@ -128,15 +122,14 @@
         align="left"
         trigger="click"
         interactive
-        class="absolute left-0 top-0.5 z-10"
+        class="absolute top-1 left-1 z-10"
       >
         <Button variant="ghost" size="sm">{method}</Button>
       </Tooltip>
 
       <Input
         bind:value={webhookUrl}
-        variant="outline"
-        class="ph-no-capture py-2 pl-16 pr-3"
+        class="ph-no-capture w-full pl-16"
         placeholder="Webhook URL"
         type="text"
       />
@@ -148,8 +141,8 @@
           <div class="flex-1">
             <Input
               type="text"
+              class="w-full"
               bind:value={header.key}
-              variant="outline"
               error={!isValidHeaderName(header.key)}
               placeholder="Key"
               {@attach fromAction(autoFocus, () => ({
@@ -157,7 +150,7 @@
               }))}
             />
             {#if header.key && !isValidHeaderName(header.key)}
-              <div class="text-error mt-1 text-left text-xs">
+              <div class="text-error mt-1 text-xs">
                 Header name can only contain letters, numbers, and hyphens
               </div>
             {/if}
@@ -165,20 +158,20 @@
           <div class="flex-1">
             <Input
               type="text"
+              class="w-full"
               bind:value={header.value}
-              variant="outline"
               error={!isValidHeaderValue(header.value)}
               placeholder="Value"
             />
             {#if header.value && !isValidHeaderValue(header.value)}
-              <div class="text-error mt-1 text-left text-xs">
+              <div class="text-error mt-1 text-xs">
                 Header value contains invalid characters
               </div>
             {/if}
           </div>
           <Button
             variant="ghost"
-            size="sm"
+            shape="circle"
             aria-label="Remove header"
             onclick={() => {
               headers.splice(index, 1);
@@ -215,22 +208,10 @@
     </div>
   </div>
 
-  <div class="flex select-none items-center justify-start gap-2">
-    <Checkbox
-      id="assign-service-monitor"
-      variant="primary"
-      bind:checked={assignToServiceMonitor}
-    />
-    <label for="assign-service-monitor" class="cursor-pointer text-sm">
-      Assign to {monitorName} service monitor
-    </label>
-  </div>
-
-  <div class="flex gap-3">
-    <Button class="flex-1" onclick={onCancel}>Back</Button>
+  <div class="flex justify-end gap-2">
+    <Button variant="ghost" onclick={onCancel}>Back</Button>
     <Button
       variant="primary"
-      class="flex-1"
       disabled={!canSubmit() || isSaving}
       loading={isSaving}
       onclick={onSave}

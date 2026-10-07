@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { advanceBy, advanceTo } from 'jest-date-mock';
 import { createTestApp } from '../utils/bootstrap';
 import { WebAnalyticsIngestionService } from '../../src/web-analytics/ingestion/web-analytics-ingestion.service';
@@ -15,10 +15,12 @@ import { ClusterPlanConfigs } from '../../src/shared/configs/cluster-plan-config
 import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 import { WebEventClickhouseEntity } from '../../src/web-analytics/core/entities/web-event.clickhouse-entity';
 import { LoggerMock } from '../utils/logger-mock';
+import { removeKeysWhichWouldExpireInNextXSeconds } from '../utils/redis-test-container-server';
 
 describe('Web analytics (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
   const origin = 'https://example.com';
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0.0.0 Safari/537.36';
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
@@ -120,8 +122,10 @@ describe('Web analytics (writes)', () => {
         os: 'Windows',
         country: 'PL',
       });
-      expect(data[0].visitor_id).toHaveLength(64);
-      expect(data[0].visitor_id).not.toBe(body.events[0].visitorId);
+      const salt = await redis.get('web-analytics:salt:2026-10-02');
+      expect(data[0].visitor_id).toBe(sha256(`${salt}:${site.id}:127.0.0.1:${userAgent}`));
+      expect(data[0].session_id).toMatch(/^[0-9a-f]{64}$/);
+      expect(data[0].user_id).toBe('');
       expect(await redis.getClient().lLen('web-analytics:queue')).toBe(0);
     });
 
@@ -163,18 +167,15 @@ describe('Web analytics (writes)', () => {
       expect(malformed.status).toBe(400);
     });
 
-    it('rejects identity linking and arbitrary properties and filters bots', async () => {
+    it('rejects raw user ids and arbitrary properties and filters bots', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
       const site = await configure(setup.cluster.id, setup.token);
-      expect(
-        (
-          await collect(
-            batch(site.id, [
-              { ...event(), userId: 'user-123', properties: { email: 'alice@example.com' } },
-            ]),
-          )
-        ).status,
-      ).toBe(400);
+      for (const invalid of [
+        { userId: 'alice@example.com' },
+        { userId: 'user-123' },
+        { properties: { email: 'alice@example.com' } },
+      ])
+        expect((await collect(batch(site.id, [{ ...event(), ...invalid }]))).status).toBe(400);
       for (const bot of ['Googlebot', 'Mediapartners-Google', 'facebookexternalhit/1.1']) {
         const response = await request(bootstrap.app.getHttpServer())
           .post('/web_events')
@@ -220,23 +221,17 @@ describe('Web analytics (writes)', () => {
       const at = (offset: number): string => new Date(clientNow + offset).toISOString();
       const body = batch(
         site.id,
-        [
-          event({ timestamp: at(-10_000), visitorStartedAt: at(-3_600_000) }),
-          event({ timestamp: at(-5_000), visitorStartedAt: at(60_000) }),
-          event({ timestamp: at(-5_000), visitorStartedAt: '2010-01-01T00:00:00Z' }),
-        ],
+        [event({ timestamp: at(-10_000) }), event({ timestamp: at(-5_000) })],
         at(0),
       );
       expect((await collect(body)).status).toBe(202);
       await bootstrap.app.get(WebAnalyticsIngestionService).processQueue();
       const result = await bootstrap.clickhouseClient.query({
-        query:
-          'SELECT created_at, visitor_started_at FROM web_events FINAL ORDER BY created_at, visitor_started_at',
+        query: 'SELECT created_at FROM web_events FINAL ORDER BY created_at',
       });
       expect((await result.json<Record<string, string>>()).data).toEqual([
-        { created_at: '2026-10-02 11:59:50.000', visitor_started_at: '2026-10-02 11:00:00.000' },
-        { created_at: '2026-10-02 11:59:55.000', visitor_started_at: '2020-01-01 00:00:00.000' },
-        { created_at: '2026-10-02 11:59:55.000', visitor_started_at: '2026-10-02 11:59:55.000' },
+        { created_at: '2026-10-02 11:59:50.000' },
+        { created_at: '2026-10-02 11:59:55.000' },
       ]);
     });
 
@@ -245,19 +240,14 @@ describe('Web analytics (writes)', () => {
       const site = await configure(setup.cluster.id, setup.token);
       const stale = new Date(Date.now() - 6 * 60_000).toISOString();
       const fresh = event();
-      const response = await collect(
-        batch(site.id, [event({ timestamp: stale, visitorStartedAt: stale }), fresh]),
-      );
+      const response = await collect(batch(site.id, [event({ timestamp: stale }), fresh]));
       expect(response.status).toBe(202);
       await bootstrap.app.get(WebAnalyticsIngestionService).processQueue();
       const result = await bootstrap.clickhouseClient.query({
         query: 'SELECT toString(id) AS id FROM web_events FINAL',
       });
       expect((await result.json<{ id: string }>()).data).toEqual([{ id: fresh.id }]);
-      expect(
-        (await collect(batch(site.id, [event({ timestamp: stale, visitorStartedAt: stale })])))
-          .status,
-      ).toBe(202);
+      expect((await collect(batch(site.id, [event({ timestamp: stale })]))).status).toBe(202);
       expect(await bootstrap.app.get(RedisService).getClient().lLen('web-analytics:queue')).toBe(0);
       expect(
         await bootstrap.app
@@ -320,7 +310,9 @@ describe('Web analytics (writes)', () => {
         utmSource: 'line\nbreak',
         utmMedium: `${'x'.repeat(99)}😀tail`,
       });
-      expect((await collect(batch(site.id, [tagged, unknown]))).status).toBe(202);
+      expect((await collect(batch(site.id, [tagged]))).status).toBe(202);
+      await expireSessions();
+      expect((await collect(batch(site.id, [unknown]))).status).toBe(202);
       await bootstrap.app.get(WebAnalyticsIngestionService).processQueue();
       const result = await bootstrap.clickhouseClient.query({
         query:
@@ -429,6 +421,232 @@ describe('Web analytics (writes)', () => {
     });
   });
 
+  describe('POST /web_events identity and sessions', () => {
+    it('derives a daily visitor id from a salted hash of IP and user agent and ignores legacy cookie ids', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      const redis = bootstrap.app.get(RedisService);
+      const legacy = (visitorStartedAt: string): WebEventBody =>
+        event({ visitorId: randomUUID(), sessionId: randomUUID(), visitorStartedAt });
+
+      // when
+      const first = await collect(batch(site.id, [legacy(new Date().toISOString())]));
+      const second = await collect(batch(site.id, [legacy('2020-01-01T00:00:00Z')]));
+      await request(bootstrap.app.getHttpServer())
+        .post('/web_events')
+        .set('Origin', origin)
+        .set('User-Agent', `${userAgent} Edg/130.0`)
+        .send(batch(site.id));
+      const salt = await redis.get('web-analytics:salt:2026-10-02');
+      const saltTtl = await redis.getClient().ttl('web-analytics:salt:2026-10-02');
+      advanceTo('2026-10-03T12:00:00Z');
+      await collect(batch(site.id));
+      const rows = await queued();
+
+      // then
+      expect([first.status, second.status]).toEqual([202, 202]);
+      expect(salt).toMatch(/^[0-9a-f]{64}$/);
+      expect(saltTtl).toBeGreaterThan(12.5 * 3600 - 10);
+      expect(saltTtl).toBeLessThanOrEqual(12.5 * 3600);
+      expect(rows[0].visitor_id).toBe(sha256(`${salt}:${site.id}:127.0.0.1:${userAgent}`));
+      expect(rows[1]).toMatchObject({
+        visitor_id: rows[0].visitor_id,
+        session_id: rows[0].session_id,
+      });
+      expect(rows[2].visitor_id).not.toBe(rows[0].visitor_id);
+      expect(rows[3].visitor_id).not.toBe(rows[0].visitor_id);
+      expect(await redis.get('web-analytics:salt:2026-10-03')).not.toBe(salt);
+    });
+
+    it('uses x-logdash-client-ip when it is an IP address, otherwise the request IP, and stores neither', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      const redis = bootstrap.app.get(RedisService);
+
+      // when
+      for (const clientIp of [
+        '',
+        'not-an-ip',
+        '203.0.113.7, 10.0.0.1',
+        '203.0.113.7',
+        '2001:db8::1',
+      ]) {
+        const response = await request(bootstrap.app.getHttpServer())
+          .post('/web_events')
+          .set('Origin', origin)
+          .set('User-Agent', userAgent)
+          .set('x-logdash-client-ip', clientIp)
+          .send(batch(site.id));
+        expect(response.status).toBe(202);
+      }
+      const rows = await queued();
+
+      // then
+      const salt = await redis.get('web-analytics:salt:2026-10-02');
+      const visitor = (ip: string): string => sha256(`${salt}:${site.id}:${ip}:${userAgent}`);
+      expect(rows.map((row) => row.visitor_id)).toEqual([
+        visitor('127.0.0.1'),
+        visitor('127.0.0.1'),
+        visitor('127.0.0.1'),
+        visitor('203.0.113.7'),
+        visitor('2001:db8::1'),
+      ]);
+      const stored = JSON.stringify([rows, await redis.keys('*')]);
+      expect(stored).not.toMatch(/127\.0\.0\.1|203\.0\.113\.7|2001:db8/);
+    });
+
+    it('keeps the first attribution of a session and starts a new one after 30 idle minutes', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+
+      // when
+      await collect(
+        batch(site.id, [
+          event({ referrer: 'news.example', utmSource: 'newsletter', clickId: 'gclid' }),
+        ]),
+      );
+      advanceBy(20 * 60_000);
+      await collect(batch(site.id, [event({ referrer: 'other.example', path: '/pricing' })]));
+      advanceBy(31 * 60_000);
+      await expireSessions();
+      await collect(batch(site.id, [event({ referrer: 'other.example' })]));
+      const rows = await queued();
+
+      // then
+      expect(rows[0]).toMatchObject({
+        referrer: 'news.example',
+        utm_source: 'newsletter',
+        click_id: 'gclid',
+      });
+      expect(rows[1]).toMatchObject({
+        visitor_id: rows[0].visitor_id,
+        session_id: rows[0].session_id,
+        path: '/pricing',
+        referrer: 'news.example',
+        utm_source: 'newsletter',
+        click_id: 'gclid',
+      });
+      expect(rows[2]).toMatchObject({
+        visitor_id: rows[0].visitor_id,
+        referrer: 'other.example',
+        utm_source: '',
+        click_id: '',
+      });
+      expect(rows[2].session_id).not.toBe(rows[0].session_id);
+    });
+
+    it("continues yesterday's session in the first 30 minutes of a UTC day and ends sessions after 24 hours", async () => {
+      // given
+      advanceTo('2026-10-01T00:05:00Z');
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      const send = async (at: string, agent = userAgent): Promise<void> => {
+        advanceTo(at);
+        const response = await request(bootstrap.app.getHttpServer())
+          .post('/web_events')
+          .set('Origin', origin)
+          .set('User-Agent', agent)
+          .send(batch(site.id));
+        expect(response.status).toBe(202);
+      };
+
+      // when
+      await send('2026-10-01T00:05:00Z');
+      await send('2026-10-02T00:02:00Z');
+      await send('2026-10-02T00:03:00Z', `${userAgent} Edg/130.0`);
+      await send('2026-10-02T00:06:00Z');
+      await send('2026-10-02T00:31:00Z');
+      const [started, continued, newcomer, rolled, today] = await queued();
+
+      // then
+      const salt = await bootstrap.app.get(RedisService).get('web-analytics:salt:2026-10-02');
+      expect(continued).toMatchObject({
+        visitor_id: started.visitor_id,
+        session_id: started.session_id,
+      });
+      expect(newcomer.visitor_id).toBe(
+        sha256(`${salt}:${site.id}:127.0.0.1:${userAgent} Edg/130.0`),
+      );
+      expect(rolled.visitor_id).toBe(started.visitor_id);
+      expect(rolled.session_id).not.toBe(started.session_id);
+      expect(today.visitor_id).toBe(sha256(`${salt}:${site.id}:127.0.0.1:${userAgent}`));
+      expect(today.session_id).not.toBe(rolled.session_id);
+    });
+
+    it('converges concurrent first requests of one visitor on a single session', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+
+      // when
+      const responses = await Promise.all([
+        collect(batch(site.id, [event({ referrer: 'news.example' })])),
+        collect(batch(site.id, [event({ name: 'signup_completed' })])),
+      ]);
+      const rows = await queued();
+
+      // then
+      expect(responses.map((response) => response.status)).toEqual([202, 202]);
+      expect(rows).toHaveLength(2);
+      expect(new Set(rows.map((row) => row.session_id)).size).toBe(1);
+      expect(new Set(rows.map((row) => row.visitor_id)).size).toBe(1);
+    });
+
+    it('drops a pageleave that has no live session', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      const view = event();
+      const leave = event({ name: 'pageleave' });
+
+      // when
+      const orphan = await collect(batch(site.id, [event({ name: 'pageleave' })]));
+      const queuedOrphans = await queued();
+      await collect(batch(site.id, [event({ name: 'pageleave' }), view, leave]));
+      const rows = await queued();
+
+      // then
+      expect(orphan.status).toBe(202);
+      expect(queuedOrphans).toEqual([]);
+      expect(rows.map((row) => row.id)).toEqual([view.id, leave.id]);
+      expect(rows[1].session_id).toBe(rows[0].session_id);
+    });
+
+    it("stores each event's own hashed user id and never copies it onto anonymous events", async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      const alice = 'a'.repeat(64);
+
+      // when
+      await collect(batch(site.id, [event({ userId: alice })]));
+      await collect(batch(site.id, [event()]));
+      const rows = await queued();
+      await bootstrap.app.get(WebAnalyticsIngestionService).processQueue();
+      const result = await bootstrap.clickhouseClient.query({
+        query: 'SELECT toString(id) AS id, user_id FROM web_events FINAL',
+      });
+      const userIds = new Map(
+        (await result.json<{ id: string; user_id: string }>()).data.map((row) => [
+          row.id,
+          row.user_id,
+        ]),
+      );
+
+      // then
+      expect(rows[1].session_id).toBe(rows[0].session_id);
+      expect(rows.map((row) => userIds.get(row.id))).toEqual([alice, '']);
+      const [session] = await bootstrap.app
+        .get(RedisService)
+        .getClient()
+        .mGet([`web-analytics:session:${site.id}:${rows[0].visitor_id}`]);
+      expect(session).not.toContain(alice);
+    });
+  });
+
   async function configure(clusterId: string, token: string): Promise<WebAnalyticsSiteSerialized> {
     const response = await request(bootstrap.app.getHttpServer())
       .put(`/clusters/${clusterId}/web_analytics/site`)
@@ -449,9 +667,6 @@ describe('Web analytics (writes)', () => {
   function event(overrides: Partial<WebEventBody> = {}): WebEventBody {
     return {
       id: randomUUID(),
-      visitorId: randomUUID(),
-      sessionId: randomUUID(),
-      visitorStartedAt: new Date().toISOString(),
       timestamp: new Date().toISOString(),
       name: 'pageview',
       path: '/',
@@ -463,7 +678,26 @@ describe('Web analytics (writes)', () => {
     return request(bootstrap.app.getHttpServer())
       .post('/web_events')
       .set('Origin', from)
-      .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0.0.0 Safari/537.36')
+      .set('User-Agent', userAgent)
       .send(body);
+  }
+
+  async function queued(): Promise<WebEventClickhouseEntity[]> {
+    const entries = await bootstrap.app
+      .get(RedisService)
+      .getClient()
+      .lRange('web-analytics:queue', 0, -1);
+    return entries.map((entry) => JSON.parse(entry) as WebEventClickhouseEntity);
+  }
+
+  async function expireSessions(): Promise<void> {
+    await removeKeysWhichWouldExpireInNextXSeconds(
+      bootstrap.app.get(RedisService).getClient(),
+      1800,
+    );
+  }
+
+  function sha256(value: string): string {
+    return createHash('sha256').update(value).digest('hex');
   }
 });

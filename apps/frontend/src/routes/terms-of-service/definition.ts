@@ -268,6 +268,11 @@ export const TOSdefinition = [
           'Detailed rules for the processing of Clients&#39; personal data are specified in the Privacy Policy.',
         list: [],
       },
+      {
+        title:
+          'Where Logdash processes personal data on behalf of the Client through the Platform, the Data Processing Agreement published at logdash.io/dpa forms part of these Terms of Service.',
+        list: [],
+      },
     ],
   },
   {
@@ -355,7 +360,7 @@ export const TOSdefinition = [
       },
       {
         title:
-          'The Terms shall enter into force on 3 March 2025. Last updated: 3 March 2025.',
+          'The Terms shall enter into force on 3 March 2025. Last updated: 7 October 2026.',
         list: [],
       },
     ],

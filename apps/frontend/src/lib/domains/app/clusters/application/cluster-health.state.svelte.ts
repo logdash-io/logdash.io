@@ -22,12 +22,20 @@ class ClusterHealthState {
     return this._state.monitorsByClusterId[clusterId] ?? [];
   }
 
-  public getMonitorByProjectId(
-    clusterId: string,
-    projectId: string,
-  ): Monitor | undefined {
-    const monitors = this.getMonitors(clusterId);
-    return monitors.find((m) => m.projectId === projectId);
+  public setMonitor(monitor: Monitor): void {
+    this._setMonitors(monitor.clusterId, [
+      ...this.getMonitors(monitor.clusterId).filter(
+        ({ id }) => id !== monitor.id,
+      ),
+      monitor,
+    ]);
+  }
+
+  public removeMonitor(clusterId: string, monitorId: string): void {
+    this._setMonitors(
+      clusterId,
+      this.getMonitors(clusterId).filter(({ id }) => id !== monitorId),
+    );
   }
 
   public isLoading(clusterId: string): boolean {
@@ -82,10 +90,7 @@ class ClusterHealthState {
 
     try {
       const monitors = await ClusterHealthService.getClusterMonitors(clusterId);
-      this._state.monitorsByClusterId = {
-        ...this._state.monitorsByClusterId,
-        [clusterId]: monitors,
-      };
+      this._setMonitors(clusterId, monitors);
     } catch (error) {
       console.error(
         `Failed to load health data for cluster ${clusterId}:`,
@@ -98,6 +103,13 @@ class ClusterHealthState {
         this._state.loadingClusterIds = newLoadingSet;
       }
     }
+  }
+
+  private _setMonitors(clusterId: string, monitors: Monitor[]): void {
+    this._state.monitorsByClusterId = {
+      ...this._state.monitorsByClusterId,
+      [clusterId]: monitors,
+    };
   }
 
   public reset(): void {

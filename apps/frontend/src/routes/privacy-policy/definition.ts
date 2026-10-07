@@ -7,7 +7,7 @@ export const PPdefinition: LegalDocumentDefinition = [
       'This Privacy Policy specifies the rules for the protection and processing of personal data of users of the service in the form of a system observability platform for busy builders (the "Platform"), accessible under https://logdash.io (the "Service"), by the personal data controller - the operator of the Platform, which is Aleksander Błaszkiewicz NIP 9571167927 REGON 527410431 (the "Controller").',
       'A User is any individual using the Platform or the Service (the "User"). Where this Privacy Policy refers to Users, it shall also be understood to mean contractors who have entered into an agreement with the Controller, or any individuals representing or working with or employed by them, unless specified otherwise.',
       'The legal basis for the adoption of this document are the personal data protection regulations, in particular, the Regulation (EU) 2016/679 of the European Parliament and of the Council of 27 April 2016 on the protection of natural persons with regard to the processing of personal data and on the movement of such data, and repealing Directive 95/46/EC (the "GDPR").',
-      'The Service uses cookies. Please refer to the cookies policy for details.',
+      'The Service uses cookies only to sign Users in and to make the Platform work. Its website analytics and product analytics use no cookies. Please refer to the cookies policy for details.',
     ],
   },
   {
@@ -93,14 +93,29 @@ export const PPdefinition: LegalDocumentDefinition = [
     ],
   },
   {
-    title: 'Transfer of personal data – recipients',
+    title: 'Website and product analytics',
+    paragraphs: [
+      'The Controller measures how the Service is used with Logdash web analytics, its own product (the "Website Analytics"). The Website Analytics sets no cookies and stores nothing in the User&#39;s browser to recognise the User.',
+      'For each page view or other event, the Website Analytics collects the address of the page without its query string or fragment, the name of the event, the host name of the referring website, campaign (UTM) tags, the name of an advertising click identifier parameter (never its value), the browser&#39;s time zone, the User&#39;s IP address and the browser&#39;s User-Agent.',
+      'From the IP address and the User-Agent, the Controller&#39;s server computes a pseudonymous visitor identifier: a SHA-256 hash of a random salt, the site, the IP address and the User-Agent. The salt is 32 random bytes created for each UTC day, held only in Redis and deleted 30 minutes after that day ends. Because the salt changes every day, so does the identifier, and once the salt is deleted nobody, the Controller included, can recompute it.',
+      'The IP address is used only to compute this identifier and is never stored. Of the User-Agent, only the device type, browser and operating system are stored, and of the time zone, only the country it belongs to.',
+      'When a User is signed in to the Platform, the Website Analytics also records a pseudonymous user identifier for product analytics, such as how often Users return: a SHA-256 hash of the site ID and the User&#39;s account ID, computed in the User&#39;s browser. The account ID itself is not sent to the Website Analytics.',
+      'Visits are grouped into sessions on the server. A session ends after 30 minutes without activity or after 24 hours. Website Analytics data is deleted automatically after at most 365 days.',
+      'In addition, the Controller uses a product analytics service (PostHog, at its EU endpoint) to understand how the Platform is used and to find errors in it. It sets no cookies. It receives the addresses of the pages visited, the elements clicked, the device, browser and operating system, the IP address, errors in the page, and the feedback and onboarding answers the User submits. For signed-in Users it also receives the account ID, the e-mail address and the plan. On the home page and the pricing page it also records how the page is used, such as clicks, scrolling and mouse movements.',
+      'The legal basis for this processing is the Controller&#39;s legitimate interest in understanding how the Service is used and improving it (Article 6 section 1 letter f) of the GDPR).',
+      'The User may object to this processing at any time. The Website Analytics does not run in a browser that sends the Global Privacy Control or Do Not Track signal, so turning on either setting in the browser stops it. PostHog does not check these signals. The User may object to either by e-mail to support@logdash.io.',
+    ],
+  },
+  {
+    title: 'Transfer of personal data - recipients',
     list: [
       {
         title: 'The recipients of your personal data are:',
         list: [
           'entities ensuring the operation and maintenance of the Controller&#39;s IT systems;',
           'the Controller&#39;s associates to whom access to your personal data is necessary to ensure the proper functioning of the Platform;',
-          'entities whose services the Controller uses in connection with ensuring the correct functioning of the Platform, for example: couriers and law firms.',
+          'entities whose services the Controller uses in connection with ensuring the correct functioning of the Platform, for example: couriers and law firms;',
+          'the providers that run the Service for the Controller: Hetzner Online GmbH (servers in Germany), Cloudflare (the logdash.io web application, including the AI model that answers questions on the home page), Stripe (payments), Resend (e-mail), PostHog (product analytics), GitHub (sign-in and encrypted backups), Google (sign-in) and Telegram (alerts the User sets up and the Controller&#39;s internal notifications).',
         ],
       },
       {
@@ -171,7 +186,7 @@ export const PPdefinition: LegalDocumentDefinition = [
         title:
           'The request specified in section 2 should indicate as precisely as possible what the request involves, in particular:',
         list: [
-          'which of the rights specified in §7 section 1 above the User is seeking to exercise;',
+          'which of the rights specified in §9 section 1 above the User is seeking to exercise;',
           'what personal data processing process is the subject of the request (for example: receipt of a newsletter);',
           'which purposes of the personal data processing the request regards (for example: analytical purposes).',
         ],
@@ -193,7 +208,7 @@ export const PPdefinition: LegalDocumentDefinition = [
       },
       {
         title:
-          'You have the right to file a complaint to the President of the Data Protection Authority if you consider that the processing of your personal data is unlawful.',
+          'You have the right to file a complaint to the President of the Personal Data Protection Office (Prezes Urzędu Ochrony Danych Osobowych) if you consider that the processing of your personal data is unlawful.',
         list: [],
       },
     ],
@@ -229,7 +244,7 @@ export const PPdefinition: LegalDocumentDefinition = [
     ],
   },
   {
-    title: 'Last updated: 3 March 2025',
+    title: 'Last updated: 7 October 2026',
     list: [],
   },
 ];

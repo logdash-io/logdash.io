@@ -8,8 +8,8 @@ import { safeHttpRequest } from '../../shared/ssrf/safe-http-request';
 import { UnsafeUrlError } from '../../shared/ssrf/safe-url';
 import { HttpMonitorNormalized } from 'src/http-monitor/core/entities/http-monitor.interface';
 import { HttpMonitorMode } from 'src/http-monitor/core/enums/http-monitor-mode.enum';
-import { ProjectTier } from 'src/project/core/enums/project-tier.enum';
-import { ProjectReadService } from 'src/project/read/project-read.service';
+import { ClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
+import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { HttpMonitorReadService } from '../../http-monitor/read/http-monitor-read.service';
 import { AverageRecorder } from '../../shared/logdash/average-metric-recorder.service';
 import { HttpPingEventEmitter } from '../events/http-ping-event.emitter';
@@ -17,7 +17,7 @@ import { CreateHttpPingDto } from '../write/dto/create-http-ping.dto';
 import { HttpPingWriteService } from '../write/http-ping-write.service';
 import { HttpPingPingerDataService } from './http-ping-pinger.data-service';
 import { HttpPingCron } from '../core/enums/http-ping-cron.enum';
-import { ProjectPlanConfigs } from '../../shared/configs/project-plan-configs';
+import { ClusterPlanConfigs } from '../../shared/configs/cluster-plan-configs';
 import { errorMessage } from '../../shared/utils/error-message';
 import { isRecord } from '../../shared/utils/is-record';
 import { RedisService } from '../../shared/redis/redis.service';
@@ -55,7 +55,7 @@ export class HttpPingPingerService {
     @Inject(MAX_CONCURRENT_REQUESTS_TOKEN)
     private readonly maxConcurrentRequests: number,
     private readonly httpPingPingerDataService: HttpPingPingerDataService,
-    private readonly projectReadService: ProjectReadService,
+    private readonly clusterReadService: ClusterReadService,
     private readonly redisService: RedisService,
   ) {}
 
@@ -114,15 +114,15 @@ export class HttpPingPingerService {
     await this.tryPingUnclaimedMonitors();
   }
 
-  private getTiersWithFrequency(frequency: HttpPingCron): ProjectTier[] {
-    return Object.values(ProjectTier).filter(
-      (tier) => ProjectPlanConfigs[tier].httpMonitors.pingFrequency === frequency,
+  private getTiersWithFrequency(frequency: HttpPingCron): ClusterTier[] {
+    return Object.values(ClusterTier).filter(
+      (tier) => ClusterPlanConfigs[tier].httpMonitors.pingFrequency === frequency,
     );
   }
 
-  public async tryPingMonitors(projectTiers: ProjectTier[]): Promise<void> {
+  public async tryPingMonitors(clusterTiers: ClusterTier[]): Promise<void> {
     try {
-      await this.pingClaimedMonitors(projectTiers);
+      await this.pingClaimedMonitors(clusterTiers);
     } catch (error) {
       this.logger.error('Error processing HTTP pings:', { errorMessage: errorMessage(error) });
     }
@@ -138,18 +138,16 @@ export class HttpPingPingerService {
     }
   }
 
-  private async pingClaimedMonitors(projectTiers: ProjectTier[]): Promise<void> {
+  private async pingClaimedMonitors(clusterTiers: ClusterTier[]): Promise<void> {
     const startTime = Date.now();
     const queue: QueueItem[] = [];
     const results: CreateHttpPingDto[] = [];
 
-    const projectsIds = (await this.projectReadService.readManyByTiers(projectTiers)).map(
-      (p) => p.id,
-    );
+    const clustersIds = await this.clusterReadService.readIdsByTiers(clusterTiers);
 
     // Only fetch monitors with 'pull' mode
-    for await (const monitor of this.httpMonitorReadService.readManyClaimedByProjectIdsCursorWithMode(
-      projectsIds,
+    for await (const monitor of this.httpMonitorReadService.readManyClaimedByClusterIdsCursorWithMode(
+      clustersIds,
       HttpMonitorMode.Pull,
     )) {
       if (queue.length >= this.maxConcurrentRequests) {

@@ -90,7 +90,7 @@
         start: 0.95,
       }}
       class={[
-        'bg-surface-elevated-bg border border-surface-elevated-border ld-card-rounding relative z-10 m-auto max-w-full',
+        'bg-surface-elevated-bg border border-surface-elevated-border rounded-xl relative z-10 m-auto max-w-full',
         className,
       ]}
     >

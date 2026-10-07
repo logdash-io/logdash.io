@@ -7,6 +7,9 @@ declare global {
     // interface PageData {}
     // interface PageState {}
     interface Platform {
+      ctx?: {
+        waitUntil(promise: Promise<unknown>): void;
+      };
       env: {
         AI: {
           run(model: string, input: Record<string, unknown>): Promise<unknown>;
@@ -16,6 +19,16 @@ declare global {
         };
       };
     }
+  }
+
+  interface Window {
+    logdash?: {
+      track(name: string): void;
+      identify(id: string | number | null): void;
+      optOut(): void;
+      optIn(): void;
+      stop(): void;
+    };
   }
 
   interface ImportMetaEnv {

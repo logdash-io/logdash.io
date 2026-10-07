@@ -1,7 +1,8 @@
 <script lang="ts">
+  import UserIcon from '$lib/domains/shared/icons/UserIcon.svelte';
   import Modal from '$lib/domains/shared/ui/Modal.svelte';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
-  import { Spinner } from '@logdash/hyper-ui/presentational';
+  import { Badge, Spinner } from '@logdash/hyper-ui/presentational';
   import { DateTime } from 'luxon';
   import { untrack } from 'svelte';
   import { WebAnalyticsVisitorState } from '../../application/web-analytics-dashboard.state.svelte';
@@ -64,9 +65,17 @@
     <header class="flex items-start gap-4 px-5 pt-5 pb-4">
       <VisitorAvatar id={profile.id} size="lg" />
       <div class="min-w-0 flex-1">
-        <h2 id={titleId} class="text-base font-semibold">
-          {visitorName(profile.id)}
-        </h2>
+        <div class="flex min-w-0 items-center gap-2">
+          <h2 id={titleId} class="truncate text-base font-semibold">
+            {visitorName(profile.id)}
+          </h2>
+          {#if profile.identified}
+            <Badge variant="outline" size="sm" class="shrink-0 gap-1">
+              <UserIcon class="size-3" />
+              Signed in
+            </Badge>
+          {/if}
+        </div>
         <VisitorTraits visitor={profile} />
       </div>
       <button

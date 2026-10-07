@@ -2,14 +2,12 @@ import type { NotificationChannelType } from '$lib/domains/shared/exposed-config
 
 type Props = {
   isOpen: boolean;
-  monitorId: string | null;
   channel: NotificationChannelType | null;
 };
 
 export class NotificationChannelSetupState {
   state = $state<Props>({
     isOpen: false,
-    monitorId: null,
     channel: null,
   });
 
@@ -21,9 +19,8 @@ export class NotificationChannelSetupState {
     return this.state.channel;
   }
 
-  public open(monitorId: string): void {
+  public open(): void {
     this.state.isOpen = true;
-    this.state.monitorId = monitorId;
     this.state.channel = null;
   }
 

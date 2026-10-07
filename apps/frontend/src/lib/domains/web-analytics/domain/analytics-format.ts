@@ -100,7 +100,9 @@ const ANIMALS = [
 ];
 
 export function formatCount(value: number): string {
-  return value < 10_000 ? value.toLocaleString('en') : COMPACT.format(value);
+  return value < 10_000
+    ? value.toLocaleString('en', { maximumFractionDigits: 1 })
+    : COMPACT.format(value);
 }
 
 export function formatPercent(value: number): string {
@@ -148,7 +150,8 @@ export function countryFlag(code: string): string {
 
 export function visitorName(id: string): string {
   const seed = parseInt(id.slice(0, 8), 16) || 0;
-  return `${ADJECTIVES[seed % ADJECTIVES.length]} ${ANIMALS[Math.floor(seed / ADJECTIVES.length) % ANIMALS.length]}`;
+  const words = ADJECTIVES.length * ANIMALS.length;
+  return `${ADJECTIVES[seed % ADJECTIVES.length]} ${ANIMALS[Math.floor(seed / ADJECTIVES.length) % ANIMALS.length]} ${100 + (Math.floor(seed / words) % 900)}`;
 }
 
 export function visitorHue(id: string): number {
@@ -178,11 +181,23 @@ export function bucketTitle(
 
 export function relativeDay(iso: string): string {
   const date = DateTime.fromISO(iso);
-  const days = Math.floor(
-    DateTime.local().startOf('day').diff(date.startOf('day'), 'days').days,
-  );
+  const days = daysAgo(date);
   const time = date.toFormat('h:mm a');
   if (days === 0) return `Today at ${time}`;
   if (days === 1) return `Yesterday at ${time}`;
   return date.toFormat("d LLL 'at' h:mm a");
+}
+
+export function shortDay(iso: string): string {
+  const date = DateTime.fromISO(iso);
+  const days = daysAgo(date);
+  if (days === 0) return date.toFormat('h:mm a');
+  if (days === 1) return 'Yesterday';
+  return date.toFormat('d LLL');
+}
+
+function daysAgo(date: DateTime): number {
+  return Math.floor(
+    DateTime.local().startOf('day').diff(date.startOf('day'), 'days').days,
+  );
 }

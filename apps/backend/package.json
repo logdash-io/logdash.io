@@ -20,7 +20,7 @@
     "test:debug": "node --no-sparkplug --inspect-brk node_modules/jest/bin/jest.js --runInBand",
     "stripe": "stripe listen --forward-to localhost:3000/payments/stripe/webhook",
     "migrate-up": "npx migrate-mongo up",
-    "migrate-clickhouse": "dotenv -e .env -- clickhouse-migrations migrate",
+    "migrate-clickhouse": "dotenv -e .env -- clickhouse-migrations migrate --migrations-home clickhouse-migrations",
     "openapi:export": "nest build && OUR_ENV=local node dist/swagger/export-status-page-openapi.js"
   },
   "dependencies": {

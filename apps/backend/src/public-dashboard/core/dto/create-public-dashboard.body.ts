@@ -25,4 +25,10 @@ export class CreatePublicDashboardBody {
   @NoImplicitConversion()
   @IsBoolean()
   isPublic: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @NoImplicitConversion()
+  @IsBoolean()
+  autoAddMonitors?: boolean;
 }

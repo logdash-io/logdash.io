@@ -54,22 +54,28 @@ type HostedEntry = {
   host: string | null;
 };
 
-export function listServices(entries: ServiceEntry[]): ServiceList {
+export function listServices(
+  entries: ServiceEntry[],
+  ownDomain?: string,
+): ServiceList {
   const hosted: HostedEntry[] = entries.map((entry) => ({
     entry,
     host: entry.url ? urlHost(entry.url) : null,
   }));
+  const own = ownDomain?.trim().toLowerCase();
   const isDependency = ({ host }: HostedEntry): boolean =>
-    host !== null && isDependencyHost(host);
-  const own = hosted.filter((item) => !isDependency(item));
+    host !== null &&
+    isDependencyHost(host) &&
+    registrableDomain(host.replace(/:\d+$/, '')) !== own;
+  const owned = hosted.filter((item) => !isDependency(item));
   const hosts = orderHosts([
-    ...new Set(own.flatMap(({ host }) => (host ? [host] : []))),
+    ...new Set(owned.flatMap(({ host }) => (host ? [host] : []))),
   ]);
   const rank = ({ host }: HostedEntry): number =>
     host ? hosts.indexOf(host) : hosts.length;
 
   return {
-    services: toItems(own.sort((a, b) => rank(a) - rank(b))),
+    services: toItems(owned.sort((a, b) => rank(a) - rank(b))),
     dependencies: toItems(hosted.filter(isDependency)),
   };
 }

@@ -61,10 +61,8 @@
   <button
     type="button"
     class={[
-      'focus-visible:outline-brand focus-visible:-outline-offset-2 focus-visible:outline-2 flex h-7 w-full min-w-0 cursor-pointer items-center gap-2.5 px-4 text-left font-mono text-sm',
-      selected
-        ? 'bg-surface-50-selected-bg hover:bg-surface-150-hover-bg'
-        : 'hover:bg-surface-50-hover-bg',
+      'focus-visible:outline-brand focus-visible:-outline-offset-2 focus-visible:outline-2 flex h-7 w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-lg px-3 text-left font-mono text-sm',
+      selected ? 'bg-surface-25-selected-bg' : 'hover:bg-surface-25-hover-bg',
     ]}
     aria-pressed={selected}
     {onclick}

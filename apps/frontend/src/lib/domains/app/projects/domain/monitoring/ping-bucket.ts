@@ -40,15 +40,14 @@ export function bucketUptime(buckets: (PingBucket | null)[]): number | null {
 export function fillEmptySlots(
   buckets: (PingBucket | null)[],
   unit: BucketUnit,
+  now: number = Date.now(),
 ): Bucket[] {
-  const anchor = buckets.findIndex((bucket) => bucket !== null);
-  const known = buckets[anchor];
-
-  if (!known) {
-    return [];
-  }
-
-  const anchorMs = Date.parse(known.timestamp);
+  const known = buckets.findIndex((bucket) => bucket !== null);
+  const anchor = known === -1 ? buckets.length - 1 : known;
+  const anchorMs =
+    known === -1
+      ? Math.floor(now / UNIT_MS[unit]) * UNIT_MS[unit]
+      : Date.parse(buckets[known]!.timestamp);
 
   return buckets.map(
     (bucket, index) =>

@@ -34,7 +34,7 @@ export class EmailNotificationChannelProvider implements NotificationChannelProv
         up: dto.newStatus === HttpMonitorStatus.Up,
         statusCode: dto.statusCode,
         errorMessage: dto.errorMessage,
-        dashboardUrl: `${getEnvConfig().app.url}/app/domains/${dto.notificationChannel.clusterId}`,
+        dashboardUrl: `${getEnvConfig().app.url}/app/domains/${dto.notificationChannel.clusterId}/uptime/${dto.httpMonitorId}`,
       });
     } catch (error) {
       this.logger.error('Failed to send alert email', { error: errorMessage(error) });

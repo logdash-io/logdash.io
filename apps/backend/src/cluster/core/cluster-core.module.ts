@@ -1,3 +1,4 @@
+import { PublicDashboardMonitorsModule } from '../../public-dashboard/monitors/public-dashboard-monitors.module';
 import { Module } from '@nestjs/common';
 import { ClusterCoreController } from './cluster-core.controller';
 import { ClusterReadModule } from '../read/cluster-read.module';
@@ -15,6 +16,7 @@ import { ClusterCoreService } from './cluster-core.service';
     UserReadModule,
     ClusterFeaturesModule,
     ClusterRemovalModule,
+    PublicDashboardMonitorsModule,
     ...ClusterMemberGuardImports,
   ],
   providers: [ClusterCoreService],

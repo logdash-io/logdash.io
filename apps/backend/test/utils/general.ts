@@ -1,3 +1,5 @@
+import { PublicDashboardEntity } from '../../src/public-dashboard/core/entities/public-dashboard.entity';
+import { clusterTierFromUserTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 import { App } from 'supertest/types';
 import { INestApplication } from '@nestjs/common';
 import { ClusterSerialized } from '../../src/cluster/core/entities/cluster.interface';
@@ -19,19 +21,25 @@ import Stripe from 'stripe';
 import { waitFor } from './wait-for';
 import { ClusterEntity } from '../../src/cluster/core/entities/cluster.entity';
 import { ProjectEntity } from '../../src/project/core/entities/project.entity';
+import { RedisService } from '../../src/shared/redis/redis.service';
 
 export class GeneralUtils {
   private readonly userModel: Model<UserEntity>;
   private readonly clusterModel: Model<ClusterEntity>;
   private readonly projectModel: Model<ProjectEntity>;
+  private readonly publicDashboardModel: Model<PublicDashboardEntity>;
 
   constructor(private readonly app: INestApplication<App>) {
     this.userModel = this.app.get(getModelToken(UserEntity.name));
     this.clusterModel = this.app.get(getModelToken(ClusterEntity.name));
     this.projectModel = this.app.get(getModelToken(ProjectEntity.name));
+    this.publicDashboardModel = this.app.get(getModelToken(PublicDashboardEntity.name));
   }
 
-  public async setupAnonymous(dto?: { userTier?: UserTier }): Promise<{
+  public async setupAnonymous(dto?: {
+    userTier?: UserTier;
+    keepDefaultStatusPage?: boolean;
+  }): Promise<{
     token: string;
     user: UserSerialized;
     cluster: ClusterSerialized;
@@ -60,6 +68,7 @@ export class GeneralUtils {
           tier: dto.userTier,
         },
       );
+      await this.app.get(RedisService).del(`user:${user.id}:tier`);
     }
 
     // cluster
@@ -68,6 +77,18 @@ export class GeneralUtils {
       .set('Authorization', `Bearer ${token}`);
 
     const [cluster] = clusterResponse.body as ClusterSerialized[];
+
+    if (!dto?.keepDefaultStatusPage) {
+      await this.publicDashboardModel.deleteMany({ clusterId: cluster.id });
+    }
+
+    if (dto?.userTier) {
+      await this.clusterModel.updateOne(
+        { _id: new Types.ObjectId(cluster.id) },
+        { tier: clusterTierFromUserTier(dto.userTier) },
+      );
+      cluster.tier = clusterTierFromUserTier(dto.userTier);
+    }
 
     // project
     const createProjectBody: CreateProjectBody = {
@@ -97,7 +118,11 @@ export class GeneralUtils {
     };
   }
 
-  public async setupClaimed(dto?: { email?: string; userTier?: UserTier }): Promise<{
+  public async setupClaimed(dto?: {
+    email?: string;
+    userTier?: UserTier;
+    keepDefaultStatusPage?: boolean;
+  }): Promise<{
     token: string;
     user: UserSerialized;
     cluster: ClusterSerialized;

@@ -10,6 +10,8 @@ export type UpgradeSource =
   | 'metrics-limit'
   | 'cluster-limit'
   | 'project-limit'
+  | 'monitor-limit'
+  | 'push-monitors'
   | 'public-dashboard-limit'
   | 'status-page-limit'
   | 'webhook-method-restriction'

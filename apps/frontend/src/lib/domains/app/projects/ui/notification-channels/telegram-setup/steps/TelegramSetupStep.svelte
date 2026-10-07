@@ -41,75 +41,74 @@
   }
 </script>
 
-<div class="space-y-6">
-  <div class="flex items-center justify-start gap-4">
+<div class="flex flex-col gap-5">
+  <div class="flex items-center gap-4">
     <div
-      class="bg-surface-50-bg border-surface-50-border text-fg-default flex h-14 w-14 items-center justify-center rounded-full border"
+      class="bg-surface-150-bg flex size-9 shrink-0 items-center justify-center rounded-lg"
     >
-      <SendIcon class="size-6 stroke-1" />
+      <SendIcon class="size-4.5" />
     </div>
-
-    <div class="flex flex-col items-start">
-      <h3 class="text-xl font-medium">Set up a Telegram channel</h3>
+    <div class="flex min-w-0 flex-col gap-0.5">
+      <h2 class="text-base font-semibold">Set up a Telegram channel</h2>
       <p class="text-fg-tertiary text-sm">
         This is the hard part, so we made it easy!
       </p>
     </div>
   </div>
 
-  <div class="text-fg-default mb-6 text-sm">
-    <h4 class="text-lg font-medium">Step 1</h4>
-    <p class="text-fg-tertiary mb-4 select-none">
-      Add the bot
-      <button
-        type="button"
-        class="cursor-pointer"
-        onclick={copyBotName}
-        title="Click to copy bot name"
-      >
-        <Kbd size="sm">@logdash_uptime_bot</Kbd>
-      </button>
-      to your Telegram group or chat.
-    </p>
+  <ol class="flex flex-col gap-3 text-sm">
+    <li class="flex flex-col gap-1">
+      <h3 class="font-medium">Step 1</h3>
+      <p class="text-fg-tertiary select-none">
+        Add the bot
+        <button
+          type="button"
+          class="cursor-pointer"
+          onclick={copyBotName}
+          title="Click to copy bot name"
+        >
+          <Kbd size="sm">@logdash_uptime_bot</Kbd>
+        </button>
+        to your Telegram group or chat.
+      </p>
+    </li>
+    <li class="flex flex-col gap-1">
+      <h3 class="font-medium">Step 2</h3>
+      <p class="text-fg-tertiary">
+        Copy the passphrase below and send it as a message in that chat.
+      </p>
+    </li>
+  </ol>
 
-    <h4 class="text-lg font-medium">Step 2</h4>
-    <p class="text-fg-tertiary">
-      Copy the passphrase below and send it as a message in that chat.
-    </p>
-  </div>
-
-  <div class="mb-6">
-    <Label for="telegram-passphrase">
-      <span class="font-medium">Passphrase</span>
+  <div class="flex flex-col gap-1.5">
+    <Label for="telegram-passphrase" class="text-sm font-medium">
+      Passphrase
     </Label>
-    <div class="relative">
+    <div class="flex items-center gap-2">
       <Input
         id="telegram-passphrase"
         type="text"
         value={passphrase}
         readonly
-        class="w-full flex-1"
+        class="min-w-0 flex-1 font-mono"
       />
-
       <Button
         variant="ghost"
-        class="absolute right-0 z-10"
+        shape="circle"
         aria-label="Copy passphrase"
         onclick={copyToClipboard}
       >
         {#if copied}
-          <CheckIcon class="text-success h-4 w-4" />
+          <CheckIcon class="text-success size-4" />
         {:else}
-          <CopyIcon class="h-4 w-4" />
+          <CopyIcon class="size-4" />
         {/if}
       </Button>
     </div>
   </div>
 
-  <div class="flex gap-3">
-    <Button class="flex-1" onclick={onCancel}>Back</Button>
-    <Button variant="primary" class="flex-1" onclick={onNext}>
-      Message sent!
-    </Button>
+  <div class="flex justify-end gap-2">
+    <Button variant="ghost" onclick={onCancel}>Back</Button>
+    <Button variant="primary" onclick={onNext}>Message sent!</Button>
   </div>
 </div>

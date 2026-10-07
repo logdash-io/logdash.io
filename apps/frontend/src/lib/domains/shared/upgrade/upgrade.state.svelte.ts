@@ -1,8 +1,10 @@
+import type { UserTier } from '../types.js';
 import type { UpgradeSource } from './start-tier-upgrade.util.js';
 
 class UpgradeState {
   private _modalVisible = $state(false);
   private _source = $state<UpgradeSource>('unknown');
+  private _requiredTier = $state<UserTier | null>(null);
 
   get modalOpen(): boolean {
     return this._modalVisible;
@@ -12,12 +14,20 @@ class UpgradeState {
     return this._source;
   }
 
-  openModal(source: UpgradeSource = 'unknown'): void {
+  get requiredTier(): UserTier | null {
+    return this._requiredTier;
+  }
+
+  public openModal(
+    source: UpgradeSource = 'unknown',
+    requiredTier: UserTier | null = null,
+  ): void {
     this._source = source;
+    this._requiredTier = requiredTier;
     this._modalVisible = true;
   }
 
-  hideModal(): void {
+  public hideModal(): void {
     this._modalVisible = false;
   }
 }

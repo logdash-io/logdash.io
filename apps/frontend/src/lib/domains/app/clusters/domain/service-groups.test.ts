@@ -128,3 +128,17 @@ test('ports keep hosts apart without splitting the domain', () => {
   expect(primaryDomain(['https://acme.com:8443/health'])).toBe('acme.com');
   expect(primaryDomain(['http://203.0.113.7:3000'])).toBe('203.0.113.7');
 });
+
+test('a third-party host is the domain itself when the domain is that provider', () => {
+  const entries = [
+    { id: '1', name: 'GitHub', url: 'https://github.com' },
+    { id: '2', name: 'Payments', url: 'https://api.stripe.com/healthcheck' },
+  ];
+
+  const { services, dependencies } = listServices(entries, 'github.com');
+
+  expect(text(services)).toEqual(['GitHub | github.com | github.com']);
+  expect(text(dependencies)).toEqual([
+    'Payments | api.stripe.com | api.stripe.com/healthcheck',
+  ]);
+});
