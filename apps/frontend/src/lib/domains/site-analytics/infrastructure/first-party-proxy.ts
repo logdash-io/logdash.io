@@ -1,6 +1,5 @@
 import { neutralPath, SITE_ANALYTICS_ID } from '../domain/site-analytics';
 
-const SCRIPT_URL = 'https://logdash.io/sdk/web.js';
 const EVENTS_URL = 'https://api.logdash.io/web_events';
 const MAX_BODY_BYTES = 32 * 1024;
 const MAX_BATCH_EVENTS = 20;
@@ -10,22 +9,13 @@ type Batch = Record<string, unknown> & {
   events: Record<string, unknown>[];
 };
 
-export async function proxyTrackerScript(): Promise<Response> {
-  try {
-    const upstream = await fetch(SCRIPT_URL);
-    if (!upstream.ok) {
-      return reply(502);
-    }
-
-    return new Response(upstream.body, {
-      headers: {
-        'content-type': 'application/javascript; charset=utf-8',
-        'cache-control': 'public, max-age=3600',
-      },
-    });
-  } catch {
-    return reply(502);
-  }
+export function trackerScriptResponse(source: string): Response {
+  return new Response(source, {
+    headers: {
+      'content-type': 'application/javascript; charset=utf-8',
+      'cache-control': 'public, max-age=3600',
+    },
+  });
 }
 
 export async function proxyWebEvents(
