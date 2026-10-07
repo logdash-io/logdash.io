@@ -26,7 +26,7 @@
       class="ld-rating-star"
       name={name ?? id}
       value={star}
-      aria-label="{star} star"
+      aria-label="{star} {star === 1 ? 'star' : 'stars'}"
       bind:group={value}
     />
   {/each}
