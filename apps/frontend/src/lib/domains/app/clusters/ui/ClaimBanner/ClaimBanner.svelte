@@ -116,7 +116,6 @@
             {variant}
             class="max-md:px-0 max-md:aspect-square"
             aria-label="Keep with {oauthProviderName(provider)}"
-            data-posthog-id="claim-banner-{provider}-cta"
             onclick={() => onClaim(provider)}
           >
             {#if provider === 'github'}

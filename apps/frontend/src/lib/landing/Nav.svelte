@@ -26,12 +26,7 @@
     ></div>
 
     <div class="hidden items-center gap-2 lg:flex">
-      <Button
-        href={resolve('/app/auth')}
-        draggable="false"
-        size="sm"
-        data-posthog-id="nav-login-cta"
-      >
+      <Button href={resolve('/app/auth')} draggable="false" size="sm">
         Log in
       </Button>
     </div>

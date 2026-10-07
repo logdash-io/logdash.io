@@ -1,8 +1,6 @@
 <script lang="ts">
-  import { browser } from '$app/environment';
   import { afterNavigate, invalidateAll, replaceState } from '$app/navigation';
   import { page } from '$app/state';
-  import { isDev } from '$lib';
   import { identifySiteVisitor } from '$lib/domains/site-analytics/application/identify-site-visitor';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
@@ -12,8 +10,7 @@
   import UpgradeModal from '$lib/domains/shared/upgrade/UpgradeModal.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import type { User } from '$lib/domains/shared/user/domain/user';
-  import type { PostHog } from 'posthog-js';
-  import { getContext, type Snippet } from 'svelte';
+  import type { Snippet } from 'svelte';
 
   type Props = {
     data: {
@@ -23,7 +20,6 @@
     children: Snippet;
   };
   const { data, children }: Props = $props();
-  const posthog = getContext<PostHog>('posthog');
   const isClustersRoot = $derived(page.url.pathname === '/app/domains');
   const initialMonitors = $derived(
     (page.data.initialMonitors as Monitor[] | undefined) ?? [],
@@ -46,13 +42,6 @@
 
   $effect(() => {
     identifySiteVisitor(data.user.id);
-
-    if (browser && !isDev()) {
-      posthog.identify(data.user.id, {
-        email: data.user.email,
-        tier: data.user.tier,
-      });
-    }
   });
 
   $effect(() => {
@@ -69,7 +58,7 @@
     }
 
     claimedCaptured = true;
-    posthog.capture('account_claimed');
+    window.logdash?.track('account_claimed');
 
     const url = new URL(page.url);
     url.searchParams.delete('claimed');

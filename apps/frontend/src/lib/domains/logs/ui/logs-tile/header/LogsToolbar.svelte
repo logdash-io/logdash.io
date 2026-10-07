@@ -184,11 +184,7 @@
 </div>
 
 {#snippet filterChip()}
-  <button
-    type="button"
-    class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
-    data-posthog-id="logs-filter-dropdown"
-  >
+  <button type="button" class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}>
     <FilterIcon class="size-3.5 shrink-0" />
     Filter
   </button>

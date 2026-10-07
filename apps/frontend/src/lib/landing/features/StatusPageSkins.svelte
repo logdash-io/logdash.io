@@ -295,7 +295,6 @@
       <a
         href={resolve('/docs/status-pages')}
         class="text-fg-default hover:text-fg-tertiary mt-5 inline-flex w-fit items-center gap-1.5 text-sm font-medium transition-ink duration-150"
-        data-posthog-id="feature-monitoring-status-page-docs"
       >
         Read the status page docs
         <ArrowRightIcon class="size-4" />

@@ -15,7 +15,6 @@ import {
 } from '$lib/domains/shared/utils/address-names';
 import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils.js';
 import { tryPrependProtocol } from '$lib/domains/shared/utils/url';
-import { posthog } from 'posthog-js';
 
 export async function createDomain(address: string): Promise<string> {
   const url = tryPrependProtocol(address.trim());
@@ -33,7 +32,6 @@ export async function createDomain(address: string): Promise<string> {
   }
 
   startDomainSetup(cluster.id);
-  posthog.capture('domain_created', { source: 'new-domain' });
   window.logdash?.track('domain_created');
 
   return cluster.id;

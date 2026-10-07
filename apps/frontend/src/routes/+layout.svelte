@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onNavigate } from '$app/navigation';
-  import { browser } from '$app/environment';
   import { page } from '$app/state';
-  import { isDev, uuid } from '$lib';
+  import { uuid } from '$lib';
   import { isLive } from '$lib/domains/shared/utils/is-dev.util';
   import { SITE_ANALYTICS_ID } from '$lib/domains/site-analytics/domain/site-analytics';
   import FooterEnding from '$lib/landing/FooterEnding.svelte';
@@ -19,11 +18,7 @@
   import NavigationLoadingBar from '$lib/domains/shared/ui/components/NavigationLoadingBar.svelte';
   import Toaster from '$lib/domains/shared/ui/toaster/Toaster.svelte';
   import ConfirmDialog from '$lib/domains/shared/ui/confirm/ConfirmDialog.svelte';
-  import { envConfig } from '$lib/domains/shared/utils/env-config';
-  import type { User } from '$lib/domains/shared/user/domain/user';
-  import { dropThirdPartyExceptions } from '$lib/domains/shared/posthog/drop-third-party-exceptions';
-  import posthog, { type PostHogInterface } from 'posthog-js';
-  import { getContext, setContext, untrack, type Snippet } from 'svelte';
+  import { getContext, setContext, type Snippet } from 'svelte';
   import '@fontsource-variable/inter/opsz.css';
   import '@fontsource-variable/geist-mono';
   import '../code-theme.css';
@@ -41,16 +36,6 @@
   const isAppPath = (pathname: string) => pathname.includes('/app');
   const isLandingPath = (pathname: string) =>
     !isPublicDashboardPath(pathname) && !isAppPath(pathname);
-
-  const RECORDED_ROUTES = ['/', '/pricing'];
-  const shouldRecordRoute = $derived(
-    RECORDED_ROUTES.some((path) =>
-      path === '/'
-        ? page.url.pathname === path
-        : page.url.pathname.startsWith(path),
-    ),
-  );
-  let loadedPosthogInstance: PostHogInterface | null = $state(null);
 
   $effect(() => installPressFeedback(document));
 
@@ -73,46 +58,8 @@
   });
 
   $effect.pre(() => {
-    if (!browser) {
-      return;
-    }
-    if (!isDev()) {
-      posthog.init(envConfig.posthog.key, {
-        api_host: envConfig.posthog.proxy,
-        ui_host: envConfig.posthog.host,
-        person_profiles: 'identified_only',
-        persistence: 'memory',
-        bootstrap: {
-          distinctID: untrack(() => (page.data.user as User | undefined)?.id),
-          isIdentifiedID: true,
-        },
-        disable_session_recording: true,
-        before_send: dropThirdPartyExceptions,
-        loaded(ph) {
-          loadedPosthogInstance = ph;
-        },
-      });
-    }
-
-    setContext('posthog', posthog);
-  });
-  $effect.pre(() => {
     setContext('tabId', `tab-${uuid()}`);
     logger.debug('Tab ID:', getContext('tabId'));
-  });
-
-  $effect(() => {
-    if (!loadedPosthogInstance) {
-      return;
-    }
-
-    if (shouldRecordRoute && !isDev()) {
-      logger.info('Starting session recording');
-      loadedPosthogInstance.startSessionRecording();
-    } else {
-      logger.info('Not starting session recording for route');
-      loadedPosthogInstance.stopSessionRecording();
-    }
   });
 
   function syncExposedConfig(): void {

@@ -213,7 +213,7 @@ Variants and sizes are `data-*` attributes on an `ld-*` root, so none of these c
 
 ### Button
 
-Props: `variant` (default `"secondary"`), `size: "xs" | "sm" | "md" | "lg"` (default `"md"`), `shape: "pill" | "square" | "circle"` (default `"pill"`), `block`, `loading`, `href` (renders `<a>`), `as: "button" | "span"` (default `"button"`), `type` (default `"button"`), `disabled`, `class`, `children`, rest (`onclick`, `data-posthog-id`, `aria-*`, `popovertarget`, …) onto the root.
+Props: `variant` (default `"secondary"`), `size: "xs" | "sm" | "md" | "lg"` (default `"md"`), `shape: "pill" | "square" | "circle"` (default `"pill"`), `block`, `loading`, `href` (renders `<a>`), `as: "button" | "span"` (default `"button"`), `type` (default `"button"`), `disabled`, `class`, `children`, rest (`onclick`, `aria-*`, `popovertarget`, …) onto the root.
 Variants: `primary`, `secondary`, `subtle`, `neutral`, `ghost`, `transparent`, `outline`, `soft`, `danger`, `danger-ghost`, `danger-soft`, `success-soft`, `link`.
 Buttons are pills by default, the one intended change from today; `square` and `circle` keep their shapes.
 `loading` disables the button, hides the label without changing the width and centres a spinner; the label stays the accessible name and `aria-busy` is set.

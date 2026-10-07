@@ -6,7 +6,7 @@ export const cookiesPolicyDefinition: LegalDocumentDefinition = [
     paragraphs: [
       'This Cookies Policy is directed to Users and defines the use of cookies (the "Cookies") by the Controller identified in the Privacy Policy.',
       "Cookies are informational data, in particular text files, which are stored on the User's end device. In general, they contain the name of the website they come from, a value and the duration of storage on the User's end device.",
-      'The Controller uses Cookies only to sign the User in and to make the Platform work. The website analytics and the product analytics of the Service set no Cookies.',
+      'The Controller uses Cookies only to sign the User in and to make the Platform work. The website analytics of the Service sets no Cookies.',
     ],
   },
   {
@@ -28,7 +28,6 @@ export const cookiesPolicyDefinition: LegalDocumentDefinition = [
           'logdash_anonymous_preview_v0 (session storage) - holds the token of an anonymous account started from the home page, until the browser tab is closed;',
           'logdash-oauth-popup (session storage) - marks the window that signing in with GitHub or Google opens, until the sign-in finishes;',
           'display preferences the User picks in the Platform (local and session storage), such as time ranges, sort order, time format, the selected SDK, funnels and dismissed hints, until the User clears them;',
-          'logdash_first_ping_captured (local storage) - remembers which domains have already reported their first successful check to the product analytics, so that it is reported only once;',
           'logdash:opt-out (local storage) - written only when the User opts out of the website analytics, to remember that choice.',
         ],
       },

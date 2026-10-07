@@ -5,7 +5,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
     title: 'Subject and parties',
     paragraphs: [
       'This Data Processing Agreement (the "DPA") supplements the Terms of Service (the "Terms") and forms part of the Agreement between Logdash and the Client. Terms defined in the Terms have the same meaning in this DPA.',
-      'Logdash is Aleksander Błaszkiewicz NIP 9571167927 REGON 527410431, Smocza 6/9, 00-000 Gdańsk, Poland, e-mail: support@logdash.io.',
+      'Logdash is Aleksander Błaszkiewicz NIP 9571167927 REGON 527410431, ul. Rakoczego 19 lok. 4, 80-288 Gdańsk, Poland, e-mail: support@logdash.io.',
       'This DPA applies whenever Logdash processes personal data on behalf of the Client while providing the Platform, in particular web analytics about visitors of the Client&#39;s websites and logs sent from the Client&#39;s applications (the "Client Personal Data"). For this processing the Client is the controller and Logdash is the processor within the meaning of Regulation (EU) 2016/679 (the "GDPR").',
       'Logdash processes the personal data of Users&#39; accounts, of billing and of visitors of its own website as a controller. That processing is described in the Privacy Policy and is not covered by this DPA.',
       'If this DPA and the Terms conflict on the protection of personal data, this DPA prevails.',
@@ -141,8 +141,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
           'Hetzner Online GmbH: hosts the servers that run the Logdash API (api.logdash.io) in Falkenstein, Germany;',
           'Cloudflare: runs the logdash.io web application on Cloudflare Workers, through which Client Personal Data can pass when it is shown in the Platform;',
           'Resend: delivers alert e-mails to the recipients the Client sets up;',
-          'GitHub: runs the backup jobs on GitHub-hosted runners, which read the databases and encrypt the dumps, and stores the encrypted backups described in §7;',
-          'PostHog: product analytics of how Users use the Platform, received at its EU endpoint (eu.i.posthog.com). Events about what a User views or clicks in the Platform can contain Client Personal Data shown there.',
+          'GitHub: runs the backup jobs on GitHub-hosted runners, which read the databases and encrypt the dumps, and stores the encrypted backups described in §7.',
         ],
       },
       {

@@ -5,7 +5,6 @@
   import { fade, scale } from 'svelte/transition';
   import { onMount } from 'svelte';
   import { match } from 'ts-pattern';
-  import { posthog } from 'posthog-js';
   import { startOAuthLogin } from '$lib/domains/auth/application/start-oauth-login';
   import { reportOAuthPopupFailure } from '$lib/domains/auth/application/start-oauth-popup';
   import type { OAuthProvider } from '$lib/domains/auth/domain/oauth-provider';
@@ -79,12 +78,6 @@
       .with('login', () => 'Continue')
       .exhaustive(),
   );
-  const githubButtonId = $derived(
-    mode === 'claim' ? 'auth-claim-github-button' : undefined,
-  );
-  const googleButtonId = $derived(
-    mode === 'claim' ? 'auth-claim-google-button' : undefined,
-  );
 
   let loggingInProvider = $state<OAuthProvider | null>(null);
   let loginError = $state<string | null>(null);
@@ -96,7 +89,7 @@
     loginError = null;
 
     if (mode === 'claim') {
-      posthog.capture('account_claim_started', { provider });
+      window.logdash?.track('account_claim_started');
     }
 
     try {
@@ -165,7 +158,6 @@
           block
           class="gap-2"
           disabled={isButtonDisabled}
-          data-posthog-id={githubButtonId}
           onclick={() => onLogin('github')}
         >
           {#if loggingInProvider === 'github'}
@@ -186,7 +178,6 @@
           block
           class="gap-2"
           disabled={isButtonDisabled}
-          data-posthog-id={googleButtonId}
           onclick={() => onLogin('google')}
         >
           {#if loggingInProvider === 'google'}
@@ -213,7 +204,6 @@
         <!-- eslint-disable svelte/no-navigation-without-resolve -- resolve() plus the hero hash -->
         <a
           href={`${resolve('/')}#${HERO_URL_INPUT_ID}`}
-          data-posthog-id="auth-continue-anonymous-cta"
           class="text-fg-muted hover:text-fg-secondary mt-6 text-sm transition-ink"
         >
           New here? Start with your website URL

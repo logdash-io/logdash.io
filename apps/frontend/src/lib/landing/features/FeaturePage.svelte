@@ -95,7 +95,6 @@
       <a
         href={`${resolve('/')}#${HERO_ID}`}
         class="text-fg-tertiary hover:text-fg-default transition-ink duration-150"
-        data-posthog-id={`feature-${page.slug}-demo-cta`}
       >
         See the live demo
       </a>
@@ -194,7 +193,6 @@
           <a
             href={resolve('/docs/sdks')}
             class="text-fg-default hover:text-fg-tertiary mt-5 inline-flex w-fit items-center gap-1.5 text-sm font-medium transition-ink duration-150"
-            data-posthog-id={`feature-${page.slug}-sdk-docs`}
           >
             Browse all SDKs
             <ArrowRightIcon class="size-4" />

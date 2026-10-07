@@ -8,14 +8,10 @@
   import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
   import LogoutIcon from '$lib/domains/shared/icons/LogoutIcon.svelte';
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
-  import type { PostHog } from 'posthog-js';
-  import { getContext } from 'svelte';
   import SidebarAccountRow from './SidebarAccountRow.svelte';
 
-  const posthog = getContext<PostHog>('posthog');
-
   async function onLogout(): Promise<void> {
-    posthog.reset();
+    window.logdash?.identify(null);
 
     try {
       await logout();

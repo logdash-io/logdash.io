@@ -82,7 +82,6 @@
     size="sm"
     onclick={onCopyPrompt}
     loading={isLoading}
-    data-posthog-id="copy-setup-prompt-button"
   >
     {@render copyIcon()}
     Copy prompt
@@ -99,7 +98,6 @@
       type="button"
       class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
       aria-label="SDK: {selectedSDK.name}"
-      data-posthog-id="sdk-selection-button"
     >
       <selectedSDK.icon class="size-3.5 shrink-0" />
       {selectedSDK.name}
