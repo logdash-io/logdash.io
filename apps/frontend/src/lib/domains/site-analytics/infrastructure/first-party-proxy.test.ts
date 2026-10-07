@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { SITE_ANALYTICS_ID } from '../domain/site-analytics';
-import { proxyTrackerScript, proxyWebEvents } from './first-party-proxy';
+import { proxyWebEvents, trackerScriptResponse } from './first-party-proxy';
 
 type Call = { url: string; init?: RequestInit };
 type SentBatch = { sentAt: string; events: { path: string }[] };
@@ -115,26 +115,14 @@ test('preserves upstream errors and rejects bad requests without calling upstrea
   expect(calls).toHaveLength(0);
 });
 
-test('serves the tracker as cached JavaScript without forwarding browser headers', async () => {
-  const calls = stubFetch(
-    () =>
-      new Response('(function(){})()', {
-        headers: { 'content-type': 'text/javascript', 'set-cookie': 'a=b' },
-      }),
-  );
-  const script = await proxyTrackerScript();
-  expect(calls).toEqual([
-    { url: 'https://logdash.io/sdk/web.js', init: undefined },
-  ]);
+test('serves the bundled tracker as cached JavaScript without a network call', async () => {
+  const calls = stubFetch(() => new Response(null, { status: 500 }));
+  const script = trackerScriptResponse('(function(){})()');
+  expect(calls).toHaveLength(0);
+  expect(script.status).toBe(200);
   expect(script.headers.get('content-type')).toBe(
     'application/javascript; charset=utf-8',
   );
   expect(script.headers.get('cache-control')).toBe('public, max-age=3600');
-  expect(script.headers.get('set-cookie')).toBeNull();
   expect(await script.text()).toBe('(function(){})()');
-
-  stubFetch(() => new Response('gone', { status: 500 }));
-  const failed = await proxyTrackerScript();
-  expect(failed.status).toBe(502);
-  expect(failed.headers.get('cache-control')).toBe('no-store');
 });
