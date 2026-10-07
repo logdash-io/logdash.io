@@ -1,6 +1,7 @@
 import { SDK_LIST } from '$lib/domains/logs/domain/sdk-config';
 import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
 import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
+import AnalyticsIcon from '$lib/domains/shared/icons/AnalyticsIcon.svelte';
 import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
 import { LogdashSDKName } from '$lib/domains/shared/types';
 import { sdkPath } from '$lib/landing/docs/sdk-doc';
@@ -125,6 +126,12 @@ const featureCards: DocCard[] = [
     href: '/docs/monitoring',
     icon: MonitoringIcon,
   },
+  {
+    title: 'Web analytics',
+    description: 'Visitors, sources and custom events, without cookies.',
+    href: '/docs/web-analytics',
+    icon: AnalyticsIcon,
+  },
 ];
 
 export const docPages: Record<
@@ -133,6 +140,7 @@ export const docPages: Record<
   | 'metrics'
   | 'monitoring'
   | 'statusPages'
+  | 'webAnalytics'
   | 'webAnalyticsPrivacy',
   DocPage
 > = {
@@ -140,13 +148,13 @@ export const docPages: Record<
     path: '/docs',
     title: 'Introduction',
     description:
-      'Logdash is logging, metrics and uptime monitoring in one place, with nothing to configure.',
+      'Logdash is logging, metrics, uptime monitoring and web analytics in one place, with nothing to configure.',
     blocks: [
       {
         type: 'paragraph',
         text: 'Install an SDK, paste your API key and your first logs appear in the dashboard moments later. Depending on your location, a log reaches the dashboard in under 100 ms.',
       },
-      { type: 'heading', text: 'Three pillars' },
+      { type: 'heading', text: 'Features' },
       { type: 'cards', items: featureCards },
       { type: 'heading', text: 'SDKs' },
       {
@@ -575,6 +583,174 @@ export async function load() {
       },
     ],
   },
+  webAnalytics: {
+    path: '/docs/web-analytics',
+    title: 'Web analytics',
+    description:
+      'Count visitors without cookies, track custom events with properties and see which signed-in users come back, with one script tag.',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: 'The Logdash tracker counts visitors, pageviews and sessions, where visitors come from and what they browse with, without cookies. Track the actions that matter as custom events, break them down by properties, and identify signed-in users to see who comes back.',
+      },
+      { type: 'heading', text: 'Add the script' },
+      {
+        type: 'paragraph',
+        text: 'In Logdash, open your domain, go to Analytics, enter your website address and press Start tracking. Paste the snippet it shows into the `<head>` of every page. The site ID in it is public and safe to ship in your HTML.',
+      },
+      {
+        type: 'code',
+        language: 'html',
+        code: `<script
+  defer
+  src="https://logdash.io/sdk/web.js"
+  data-site="your-site-id"
+  data-endpoint="https://api.logdash.io/web_events"
+></script>`,
+      },
+      { type: 'paragraph', text: 'From then on, the tracker sends:' },
+      {
+        type: 'list',
+        items: [
+          'a `pageview` on load and whenever the path changes through `pushState`, `replaceState`, back and forward, or a page restored from the back-forward cache. Single-page apps need no extra code.',
+          'a `pageleave` when the visitor leaves the page, for session time and exit pages.',
+          'a `browser_error` for uncaught errors and unhandled promise rejections, without the error message or stack trace.',
+          'the custom events you track, described below.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Events are sent in small batches about a second after they happen, and right away when the page is hidden. The tracker exposes its API as `window.logdash`. Call it with `?.`, because the object does not exist before the deferred script has loaded or in browsers where the tracker does not start.',
+      },
+      { type: 'heading', text: 'Serve it from your own domain' },
+      {
+        type: 'paragraph',
+        text: 'Ad blockers often block analytics served from another domain. Serve the script and the events from your own domain instead, with two routes that forward to Logdash:',
+      },
+      {
+        type: 'list',
+        items: [
+          '`GET /_ld/script.js` forwards to `https://logdash.io/sdk/web.js`. Serve it as `application/javascript` and cache successful responses.',
+          '`POST /_ld/events` forwards to `https://api.logdash.io/web_events` and passes the status code back. Accept JSON bodies of up to 32 KB, and do not cache the responses.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: "On the events route, forward the browser's `Origin` and `User-Agent` headers, and set `x-logdash-client-ip` to the visitor's IP address. Without an `Origin` the API answers 403. Without the IP address every visitor shares your server's address, and visitors are undercounted. Never forward cookies, authorization headers or ingest keys on either route, and keep the target URLs fixed so the routes cannot become an open proxy.",
+      },
+      {
+        type: 'code',
+        language: 'html',
+        code: `<script
+  defer
+  src="/_ld/script.js"
+  data-site="your-site-id"
+  data-endpoint="/_ld/events"
+></script>`,
+      },
+      {
+        type: 'paragraph',
+        text: 'Prefer not to write the routes yourself? The AI prompt tab of the setup gives your coding agent a prompt that adds both routes and the script tag to your codebase, and checks them end to end.',
+      },
+      { type: 'heading', text: 'Track custom events' },
+      {
+        type: 'paragraph',
+        text: 'Call `track` for the actions you want to count, such as `signup_completed`. Event names match `[a-z][a-z0-9_]{0,63}`. To break an event down in the dashboard, pass a flat object of properties as the second argument.',
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        code: `window.logdash?.track('video_played', {
+  quality: '1080p',
+  autoplay: true,
+  chapter: 2,
+});`,
+      },
+      {
+        type: 'list',
+        items: [
+          'An event carries at most 10 properties. Keys match `[a-z][a-z0-9_]{0,39}`.',
+          'Values are strings, numbers or booleans. They are stored as strings, trimmed and cut to 100 characters, so `2` and `true` become `"2"` and `"true"`.',
+          'A value that contains `@` or a control character is dropped, so an email address is never stored by mistake.',
+          'Invalid properties are dropped with one console warning per page load, and the event is still sent. The API checks every request against the same rules.',
+          'Only custom events carry properties. `pageview`, `pageleave` and `browser_error` never do.',
+          'Each property keeps up to 500 distinct values per site within your retention period, and later values are counted as `(other)`. A site can use up to 50 property keys, and properties with further keys are dropped.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Never put emails, names, user IDs, purchase details or other personal data in event names or properties. Properties describe what happened, such as a quality, a theme or a variant, never who did it. Use `identify` for the signed-in user.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Custom events appear in the Goals card of the dashboard. Open one to see its trend and a breakdown by each property, with the same date range and filters as the other reports. Clicking a value keeps only the events with that value, and narrows the other reports to the visitors who sent it.',
+      },
+      { type: 'heading', text: 'Identify signed-in users' },
+      {
+        type: 'paragraph',
+        text: 'Anonymous visitors get a new ID every day, so retention and returning visitors are measured for identified users only. Once your app knows who is signed in, pass their user ID to `identify`. The identity lives in memory only, so call it on every page load, and call it with `null` when the user signs out.',
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        title: 'On every page load, once the user is known',
+        code: 'window.logdash?.identify(user.id);',
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        title: 'On sign-out',
+        code: 'window.logdash?.identify(null);',
+      },
+      {
+        type: 'paragraph',
+        text: 'The script is deferred, so your app can know the user before it has loaded. If `window.logdash` is still undefined at that point, call `identify` from the `load` event of the script element.',
+      },
+      {
+        type: 'list',
+        items: [
+          '`id` is a string or a number. `null`, `undefined` or an empty string clears the identity, and events tracked after that are sent without a user ID.',
+          'A value that contains `@` or is longer than 256 characters is ignored with a console warning and leaves the identity as it was, so an email address is never sent by mistake.',
+          'The tracker hashes the ID in the browser, so the raw ID never leaves it. Hashing needs `crypto.subtle`, which browsers offer only in secure contexts such as HTTPS pages. Without it, `identify` does nothing.',
+          'Events of the page load that are still waiting to be sent when the hash is ready get the user ID too, so the first pageview is attributed when `identify` follows within about a second.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Pass a stable internal ID, never an email address or a name.',
+      },
+      { type: 'heading', text: 'Let visitors opt out' },
+      {
+        type: 'paragraph',
+        text: 'The tracker does not start in browsers that send Do Not Track or Global Privacy Control, or in automated browsers that set `navigator.webdriver`. If your site has privacy settings, add an analytics toggle that calls `optOut` and `optIn`:',
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        code: `window.logdash?.optOut();
+window.logdash?.optIn();`,
+      },
+      {
+        type: 'list',
+        items: [
+          "`optOut()` stops tracking at once: it drops queued events and removes its timers, listeners and history hooks. It writes `localStorage['logdash:opt-out'] = '1'` so the choice survives reloads.",
+          '`optIn()` removes that flag and starts tracking again with a fresh pageview. `window.logdash` exists while a visitor is opted out, so `optIn()` stays reachable.',
+          '`stop()` still works as an alias of `optOut()`.',
+        ],
+      },
+      { type: 'heading', text: 'Plan limits' },
+      {
+        type: 'paragraph',
+        text: 'Your plan sets how long events are kept, counted from the time of each event.',
+      },
+      { type: 'table', key: 'webAnalyticsRetention' },
+      { type: 'heading', text: 'Privacy' },
+      {
+        type: 'paragraph',
+        text: 'The tracker sets no cookies, IP addresses are never stored, and anonymous visitors are counted with an ID that changes every day. [Web analytics privacy](/docs/web-analytics-privacy) describes what Logdash stores and for how long, and gives you text for your privacy policy.',
+      },
+    ],
+  },
   webAnalyticsPrivacy: {
     path: '/docs/web-analytics-privacy',
     title: 'Web analytics and privacy',
@@ -584,6 +760,10 @@ export async function load() {
       {
         type: 'paragraph',
         text: 'The Logdash tracker sets no cookies and keeps nothing in the browser to recognise a visitor. Anonymous visitors are counted on the server with an ID that changes every day, IP addresses are never stored, and signed-in users are recognised only by a hash computed in their browser. This page describes exactly what happens, so you can describe it to your visitors.',
+      },
+      {
+        type: 'paragraph',
+        text: 'To install the tracker and use its API, see [Web analytics](/docs/web-analytics).',
       },
       { type: 'heading', text: 'How visitors are counted' },
       {
@@ -613,34 +793,16 @@ export async function load() {
         type: 'paragraph',
         text: 'Because the ID changes every day, an anonymous visitor who comes back the next day counts as a new visitor. Retention, stickiness and comebacks are measured for identified users only.',
       },
-      { type: 'heading', text: 'Identify signed-in users' },
+      { type: 'heading', text: 'Signed-in users' },
       {
         type: 'paragraph',
-        text: 'Once your app knows who is signed in, pass their user ID to `identify`. The identity lives in memory only, so call it on every page load, and call it with `null` when the user signs out.',
-      },
-      {
-        type: 'code',
-        language: 'javascript',
-        title: 'On every page load, once the user is known',
-        code: 'window.logdash?.identify(user.id);',
-      },
-      {
-        type: 'code',
-        language: 'javascript',
-        title: 'On sign-out',
-        code: 'window.logdash?.identify(null);',
-      },
-      {
-        type: 'paragraph',
-        text: "The tracker hashes the ID in the browser before anything is sent: `sha256(siteId + ':' + id)`, in lowercase hex. The raw ID never leaves the browser. Because the site ID is part of the hash, the same user ID gives a different hash on every site.",
+        text: "When your app passes the signed-in user's ID to `identify`, the tracker hashes it in the browser before anything is sent: `sha256(siteId + ':' + id)`, in lowercase hex. The raw ID never leaves the browser. Because the site ID is part of the hash, the same user ID gives a different hash on every site.",
       },
       {
         type: 'list',
         items: [
-          '`id` is a string or a number. `null`, `undefined` or an empty string clears the identity, and events tracked after that are sent without a user ID.',
-          'A value that contains `@` or is longer than 256 characters is ignored with a console warning and leaves the identity as it was, so an email address is never sent by mistake.',
-          'Hashing needs `crypto.subtle`, which browsers offer only in secure contexts such as HTTPS pages. Without it, `identify` does nothing.',
-          'Events of the page load that are still waiting to be sent when the hash is ready get the user ID too, so the first pageview is attributed when `identify` follows within about a second.',
+          'A value that contains `@` or is longer than 256 characters is ignored, so an email address is never sent by mistake.',
+          'The identity lives in memory only, and `identify(null)` clears it when the user signs out.',
           'The server never copies a user ID onto an event sent without one, so events after sign-out are not attributed to the previous user.',
         ],
       },
@@ -648,61 +810,23 @@ export async function load() {
         type: 'paragraph',
         text: 'Pass a stable internal ID, never an email address or a name. The hash is pseudonymous, not anonymous: your site ID is public in the script tag, so anyone can hash guessable IDs, such as small sequential numbers, and compare.',
       },
-      { type: 'heading', text: 'Track custom events' },
+      { type: 'heading', text: 'Custom event properties' },
       {
         type: 'paragraph',
-        text: 'Call `track` for the actions you want to count, such as `signup_completed`. Event names match `[a-z][a-z0-9_]{0,63}`. To break an event down in the dashboard, pass a flat object of properties as the second argument.',
-      },
-      {
-        type: 'code',
-        language: 'javascript',
-        code: "window.logdash?.track('video_played', { quality: '1080p', autoplay: true, chapter: 2 });",
-      },
-      {
-        type: 'list',
-        items: [
-          'An event carries at most 10 properties. Keys match `[a-z][a-z0-9_]{0,39}`.',
-          'Values are strings, numbers or booleans. They are stored as strings, trimmed and cut to 100 characters, so `2` and `true` become `"2"` and `"true"`.',
-          'A value that contains `@` or a control character is dropped, so an email address is never stored by mistake.',
-          'Invalid properties are dropped with one console warning per page load, and the event is still sent. The API checks every request against the same rules.',
-          'Only custom events carry properties. `pageview`, `pageleave` and `browser_error` never do.',
-          'Each property keeps up to 500 distinct values per site within your retention period, and later values are counted as `(other)`. A site can use up to 50 property keys, and properties with further keys are dropped.',
-        ],
+        text: 'A custom event can carry up to 10 properties, such as a quality, a theme or a variant. A value that contains `@` or a control character is dropped, so an email address is never stored by mistake.',
       },
       {
         type: 'paragraph',
-        text: 'Never put emails, names, user IDs, purchase details or other personal data in event names or properties. Properties describe what happened, such as a quality, a theme or a variant, never who did it. Use `identify` for the signed-in user.',
+        text: 'Never put emails, names, user IDs, purchase details or other personal data in event names or properties. Properties describe what happened, never who did it.',
+      },
+      { type: 'heading', text: 'Opt-out and browser storage' },
+      {
+        type: 'paragraph',
+        text: 'The tracker does not start in browsers that send Do Not Track or Global Privacy Control, or in automated browsers that set `navigator.webdriver`. Your site can also let visitors opt out with `optOut`, described in [Web analytics](/docs/web-analytics).',
       },
       {
         type: 'paragraph',
-        text: 'In the dashboard, open an event from the Goals card to see its trend and a breakdown by each property, with the same date range and filters as the other reports. Clicking a value keeps only the events with that value, and narrows the other reports to the visitors who sent it.',
-      },
-      { type: 'heading', text: 'Let visitors opt out' },
-      {
-        type: 'paragraph',
-        text: 'The tracker does not start in browsers that send Do Not Track or Global Privacy Control, or in automated browsers that set `navigator.webdriver`.',
-      },
-      {
-        type: 'paragraph',
-        text: 'If your site has privacy settings, add an analytics toggle that calls `optOut` and `optIn`:',
-      },
-      {
-        type: 'code',
-        language: 'javascript',
-        code: `window.logdash?.optOut();
-window.logdash?.optIn();`,
-      },
-      {
-        type: 'list',
-        items: [
-          "`optOut()` stops tracking at once: it drops queued events and removes its timers, listeners and history hooks. It writes `localStorage['logdash:opt-out'] = '1'` so the choice survives reloads.",
-          '`optIn()` removes that flag and starts tracking again with a fresh pageview. `window.logdash` exists while a visitor is opted out, so `optIn()` stays reachable.',
-          '`stop()` still works as an alias of `optOut()`.',
-        ],
-      },
-      {
-        type: 'paragraph',
-        text: 'Apart from that flag, written only when a visitor opts out, the tracker sets no cookies and writes nothing to `localStorage` or `sessionStorage`. On load it deletes the `ldv_` and `lds_` cookies that earlier versions of the tracker set.',
+        text: "The tracker sets no cookies and writes nothing to `localStorage` or `sessionStorage`, except `localStorage['logdash:opt-out'] = '1'` when a visitor opts out, so the choice survives reloads. On load it deletes the `ldv_` and `lds_` cookies that earlier versions of the tracker set.",
       },
       { type: 'heading', text: 'What Logdash stores' },
       {
@@ -782,6 +906,7 @@ export const docsSidebar: DocsSidebarGroup[] = [
       { title: 'Metrics', href: '/docs/metrics', external: false },
       { title: 'Monitoring', href: '/docs/monitoring', external: false },
       { title: 'Status pages', href: '/docs/status-pages', external: false },
+      { title: 'Web analytics', href: '/docs/web-analytics', external: false },
     ],
   },
   {

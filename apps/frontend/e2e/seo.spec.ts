@@ -229,6 +229,16 @@ test.describe('llms.txt and the markdown twins', () => {
     }
   });
 
+  test('docs prose links to other docs pages', async ({ request }) => {
+    const response = await request.get(
+      markdownPath('/docs/web-analytics-privacy'),
+    );
+
+    expect(await response.text()).toContain(
+      `[Web analytics](${SITE_ORIGIN}/docs/web-analytics)`,
+    );
+  });
+
   sitemapPaths.forEach((path, index) => {
     const twin = markdownPath(path);
 
