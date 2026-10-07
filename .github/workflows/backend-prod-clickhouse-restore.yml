@@ -122,11 +122,13 @@ jobs:
         run: |
           echo "🔗 Testing ClickHouse connection..."
 
-          # Through the SSH tunnel opened above
+          # Through the SSH tunnel opened above. clickhouse client skips compression for
+          # localhost, so every call turns it back on to keep the tunnel fast.
           CLICKHOUSE_HOST=127.0.0.1
 
           ./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
+            --compression=1 \
             --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
             --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
@@ -140,7 +142,8 @@ jobs:
           echo "🔄 Starting table restoration..."
           cd restore
 
-          # Through the SSH tunnel opened above
+          # Through the SSH tunnel opened above. clickhouse client skips compression for
+          # localhost, so every call turns it back on to keep the tunnel fast.
           CLICKHOUSE_HOST=127.0.0.1
 
           # Restore tables from backup
@@ -152,6 +155,7 @@ jobs:
                 echo "Creating schema for table: $table"
                 ../clickhouse client \
                   --host="${CLICKHOUSE_HOST}" \
+                  --compression=1 \
                   --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
                   --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
                   --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
@@ -166,6 +170,7 @@ jobs:
                 echo "Restoring data for table: $table"
                 ../clickhouse client \
                   --host="${CLICKHOUSE_HOST}" \
+                  --compression=1 \
                   --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
                   --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
                   --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
@@ -184,12 +189,14 @@ jobs:
         run: |
           echo "🔍 Verifying restoration..."
 
-          # Through the SSH tunnel opened above
+          # Through the SSH tunnel opened above. clickhouse client skips compression for
+          # localhost, so every call turns it back on to keep the tunnel fast.
           CLICKHOUSE_HOST=127.0.0.1
 
           # Get restored tables count
           RESTORED_TABLES=$(./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
+            --compression=1 \
             --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
             --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
@@ -202,6 +209,7 @@ jobs:
           echo "📋 Restored tables with row counts:"
           ./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
+            --compression=1 \
             --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
             --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
