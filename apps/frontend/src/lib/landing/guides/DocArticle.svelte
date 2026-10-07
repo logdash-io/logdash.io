@@ -9,6 +9,7 @@
     type ComparisonWinner,
     type DocBlock,
     type DocPage,
+    type DocsPath,
   } from './documentation.data';
   import { tableTitles, type Table, type TableType } from './plan-limits';
 
@@ -21,8 +22,15 @@
 
   const { page, tables, afterHeader }: Props = $props();
 
+  const INLINE_MARKUP = /(`[^`]*`|\[[^\]]+\]\(\/docs[^)]*\))/;
+
   function anchor(text: string): string {
     return text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  }
+
+  function docLink(markup: string): { label: string; href: DocsPath } {
+    const [, label, href] = markup.match(/^\[(.+)\]\((.+)\)$/) ?? [];
+    return { label, href: href as DocsPath };
   }
 
   /**
@@ -229,7 +237,7 @@
           </div>
         {:else if block.type === 'cards'}
           <div
-            class="bg-surface-root-border border-surface-root-border grid grid-cols-1 gap-px overflow-hidden rounded-xl border sm:grid-cols-3"
+            class="bg-surface-root-border border-surface-root-border grid grid-cols-1 gap-px overflow-hidden rounded-xl border sm:grid-cols-2"
           >
             {#each block.items as card (card.href)}
               {@const Icon = card.icon}
@@ -284,18 +292,26 @@
 </article>
 
 {#snippet inline(text: string)}
-  {#each text.split('`') as part, index (index)}
-    {#if index % 2}
+  {#each text.split(INLINE_MARKUP) as part, index (index)}
+    {#if index % 2 === 0}
+      {part}
+    {:else if part.startsWith('`')}
       <code
         class={[
           'bg-surface-100-bg text-fg-secondary rounded px-1 py-0.5 font-mono text-[0.875em]',
           { 'whitespace-nowrap': !part.includes(' ') },
         ]}
       >
-        {part}
+        {part.slice(1, -1)}
       </code>
     {:else}
-      {part}
+      {@const link = docLink(part)}
+      <a
+        href={resolve(link.href)}
+        class="text-fg-secondary hover:text-fg-default underline underline-offset-2 transition-ink duration-150"
+      >
+        {link.label}
+      </a>
     {/if}
   {/each}
 {/snippet}
