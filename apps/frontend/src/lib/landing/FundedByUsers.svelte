@@ -11,13 +11,11 @@
       label: 'Star on GitHub',
       href: LINKS.github,
       icon: GitHubIcon,
-      posthogId: 'funded-github-cta',
     },
     {
       label: 'Join the Discord',
       href: LINKS.discord,
       icon: DiscordIcon,
-      posthogId: 'funded-discord-cta',
     },
   ];
 </script>
@@ -38,7 +36,6 @@
         rel="noopener noreferrer"
         size="sm"
         class="gap-2"
-        data-posthog-id={link.posthogId}
       >
         <link.icon class="size-4" />
         {link.label}

@@ -1,9 +1,4 @@
 export interface EnvironmentConfig {
-  posthog: {
-    key: string;
-    proxy: string;
-    host: string;
-  };
   github: {
     clientId: string;
   };
@@ -16,11 +11,6 @@ export interface EnvironmentConfig {
 
 export function getEnvironmentConfig(): EnvironmentConfig {
   return {
-    posthog: {
-      key: import.meta.env.VITE_POSTHOG_KEY,
-      proxy: import.meta.env.VITE_POSTHOG_PROXY,
-      host: import.meta.env.VITE_POSTHOG_HOST,
-    },
     github: {
       clientId: import.meta.env.VITE_GITHUB_CLIENT_ID,
     },

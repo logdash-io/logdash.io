@@ -4,7 +4,6 @@ import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monito
 import type { PingBucket } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error';
 import { createLogger } from '$lib/domains/shared/logger';
-import { posthog } from 'posthog-js';
 import {
   AnonymousStartError,
   type AnonymousPreview,
@@ -176,10 +175,7 @@ class AnonymousPreviewState {
     this._stopDemoPolling();
   }
 
-  public async submit(
-    url: string,
-    source: AnonymousPreviewSource,
-  ): Promise<void> {
+  public async submit(url: string): Promise<void> {
     if (this._phase === 'creating') {
       return;
     }
@@ -223,7 +219,6 @@ class AnonymousPreviewState {
     this._phase = 'previewing';
     this._persistPreview(preview);
 
-    posthog.capture('anonymous_dashboard_created', { source });
     window.logdash?.track('preview_dashboard_created');
 
     this._startPreviewPolling();
@@ -235,8 +230,6 @@ class AnonymousPreviewState {
     if (!claimed) {
       return;
     }
-
-    posthog.capture('anonymous_dashboard_opened');
 
     window.location.assign(
       resolve(`/app/domains/${claimed.clusterId}/uptime/${claimed.monitorId}`),

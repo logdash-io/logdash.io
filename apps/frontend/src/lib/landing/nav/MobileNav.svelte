@@ -98,13 +98,7 @@
       {/if}
     {/each}
     <li class="mt-3">
-      <Button
-        href={resolve('/app/auth')}
-        draggable="false"
-        size="sm"
-        block
-        data-posthog-id="nav-login-cta"
-      >
+      <Button href={resolve('/app/auth')} draggable="false" size="sm" block>
         Log in
       </Button>
     </li>

@@ -86,7 +86,6 @@
   );
   const message = $derived(validationMessage ?? submitError);
   const statusId = $derived(`${source}-url-status`);
-  const submitPosthogId = $derived(`${source}-monitor-url-submit-cta`);
   const statusSwapMs = $derived(
     prefersReducedMotion.current ? 0 : STATUS_SWAP_MS,
   );
@@ -101,7 +100,7 @@
     }
 
     const hasShowcase = document.getElementById(HERO_SHOWCASE_ID) !== null;
-    const submitting = start(value, source, hasShowcase);
+    const submitting = start(value, hasShowcase);
 
     if (hasShowcase) {
       writePreviewAddress(value);
@@ -130,7 +129,7 @@
     }
 
     writePreviewAddress(address);
-    void start(address, 'link', true);
+    void start(address, true);
   }
 
   function validate(value: string): boolean {
@@ -148,17 +147,13 @@
     return true;
   }
 
-  function start(
-    value: string,
-    runSource: AnonymousPreviewSource,
-    hasShowcase: boolean,
-  ): Promise<void> {
+  function start(value: string, hasShowcase: boolean): Promise<void> {
     errorSource = hasShowcase ? source : 'hero';
     heroTakeover.expand(
       hasShowcase ? (composer?.getBoundingClientRect() ?? null) : null,
     );
 
-    return anonymousPreviewState.submit(tryPrependProtocol(value), runSource);
+    return anonymousPreviewState.submit(tryPrependProtocol(value));
   }
 
   function reject(message: string): void {
@@ -265,7 +260,6 @@
         'shrink-0',
         compact ? 'h-9 px-4' : 'h-11 px-5 text-sm sm:text-base',
       ]}
-      data-posthog-id={submitPosthogId}
       disabled={isCreating}
     >
       Start monitoring

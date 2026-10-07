@@ -19,7 +19,6 @@
   body="Paste a URL and checks start right away. When something stops answering, you hear about it before your users do."
   href="/features/monitoring"
   linkLabel="Explore monitoring"
-  posthogId="features-monitoring-cta"
   checks={[
     'Checks as often as every 15 seconds',
     'Alerts on Telegram or any webhook',
@@ -37,7 +36,6 @@
   href="/features/monitoring"
   hash="status-pages"
   linkLabel="Explore status pages"
-  posthogId="features-status-pages-cta"
   checks={[
     'Uptime history your customers can check themselves',
     'Your own domain on Pro, or your own page on the API',
@@ -56,7 +54,6 @@
   body="Every service in one searchable tail. Filter to errors and find the line that broke it."
   href="/features/logging"
   linkLabel="Explore error logs"
-  posthogId="features-logs-cta"
   checks={[
     'Logs from every service in one place',
     'Search and filter while they stream in',
@@ -72,7 +69,6 @@
   body="Every check records how long your server took to answer. Add sign-ups, payments or queue depth with one line of code."
   href="/features/metrics"
   linkLabel="Explore response time"
-  posthogId="features-metrics-cta"
   checks={[
     'Response time on every uptime check',
     'One line of code per custom metric',

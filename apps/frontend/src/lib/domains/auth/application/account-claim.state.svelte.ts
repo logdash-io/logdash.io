@@ -13,7 +13,6 @@ import {
 import { needsOnboarding } from '$lib/domains/onboarding/application/needs-onboarding';
 import { createLogger } from '$lib/domains/shared/logger';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-import { posthog } from 'posthog-js';
 import { match } from 'ts-pattern';
 
 export type AccountClaimStep =
@@ -46,7 +45,7 @@ class AccountClaimState {
     this._nextUrl = nextUrl;
     this._step = { kind: 'waiting', provider };
 
-    posthog.capture('account_claim_started', { provider, surface: 'app' });
+    window.logdash?.track('account_claim_started');
 
     void this._settle(provider, handle);
   }

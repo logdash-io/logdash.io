@@ -17,8 +17,6 @@
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { Spinner } from '@logdash/hyper-ui/presentational';
-  import type { PostHog } from 'posthog-js';
-  import { getContext } from 'svelte';
   import StatusPageRow from './StatusPageRow.svelte';
 
   type Props = {
@@ -27,8 +25,6 @@
   };
 
   const { clusterId, dashboards }: Props = $props();
-
-  const posthog = getContext<PostHog | undefined>('posthog');
 
   let isCreating = $state(false);
 
@@ -74,10 +70,7 @@
   }
 
   function onUpgrade(): void {
-    posthog?.capture('upgrade_button_clicked', {
-      source: 'status-page-limit',
-      timestamp: new Date().toISOString(),
-    });
+    window.logdash?.track('upgrade_button_clicked');
     upgradeState.openModal('status-page-limit');
   }
 
@@ -123,7 +116,6 @@
       class={TOOLBAR_PRIMARY}
       disabled={isCreating}
       onclick={onCreate}
-      data-posthog-id="create-status-page-button"
     >
       {#if isCreating}
         <Spinner class="size-3.5 shrink-0" aria-hidden="true" />

@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { getContext, type Snippet } from 'svelte';
+  import type { Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import type { UpgradeSource } from '$lib/domains/shared/upgrade/start-tier-upgrade.util.js';
-  import type { PostHog } from 'posthog-js';
 
   type Props = {
     class?: ClassValue;
@@ -25,8 +24,6 @@
   const CONTROLS =
     'a[href], button, input, select, textarea, [tabindex], [contenteditable]';
 
-  const posthog = getContext<PostHog>('posthog');
-
   let wrapsControl = $state(false);
 
   const buttonAttributes = $derived(
@@ -47,10 +44,7 @@
 
     onClick?.();
     if (enabled) {
-      posthog?.capture('upgrade_button_clicked', {
-        source,
-        timestamp: new Date().toISOString(),
-      });
+      window.logdash?.track('upgrade_button_clicked');
       upgradeState.openModal(source);
     }
   }

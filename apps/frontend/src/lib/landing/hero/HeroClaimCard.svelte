@@ -303,19 +303,13 @@
         variant="primary"
         block
         class="gap-2"
-        data-posthog-id="hero-claim-github-cta"
         onclick={() => onContinue('github')}
       >
         <GitHubIcon class="size-4" />
         Continue with GitHub
       </Button>
 
-      <Button
-        block
-        class="gap-2"
-        data-posthog-id="hero-claim-google-cta"
-        onclick={() => onContinue('google')}
-      >
+      <Button block class="gap-2" onclick={() => onContinue('google')}>
         <GoogleIcon class="size-4" />
         Continue with Google
       </Button>
@@ -326,7 +320,6 @@
           LINK_CLASS,
           'text-fg-muted hover:text-fg-secondary mx-auto mt-2 py-1',
         ]}
-        data-posthog-id="hero-claim-dismiss"
         onclick={onNotNow}
       >
         Not now

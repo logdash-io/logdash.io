@@ -71,7 +71,6 @@
     type="submit"
     class="text-fg-faint enabled:text-fg-default enabled:hover:bg-surface-root-hover-bg transition-ink -mr-1 grid size-8 shrink-0 cursor-pointer place-items-center rounded-lg outline-none focus-visible:shadow-(--focus-ring) disabled:cursor-default"
     aria-label="Send question"
-    data-posthog-id="faq-ask-submit"
     disabled={!canSend}
   >
     <ArrowRightIcon class="size-4" />

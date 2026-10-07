@@ -135,7 +135,6 @@
           href={resolve(
             `/app/auth?flow=claim&next_url=${encodeURIComponent(`${page.url.pathname}?claimed=1`)}`,
           )}
-          data-posthog-id="metrics-tiles-claim-cta"
         >
           Claim your dashboard
         </a>

@@ -18,7 +18,6 @@
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { displayUrl, isValidUrl } from '$lib/domains/shared/utils/url';
   import { Button, Input } from '@logdash/hyper-ui/presentational';
-  import { posthog } from 'posthog-js';
   import { untrack } from 'svelte';
   import { match } from 'ts-pattern';
 
@@ -27,7 +26,6 @@
   };
 
   const PING_POLL_MS = 2_000;
-  const FIRST_PING_KEY = 'logdash_first_ping_captured';
 
   const { clusterId }: Props = $props();
   const id = $props.id();
@@ -96,14 +94,6 @@
   });
 
   $effect(() => {
-    if (!firstPingLanded) {
-      return;
-    }
-
-    untrack(captureFirstPing);
-  });
-
-  $effect(() => {
     const url = monitors[0]?.url;
 
     if (!url) {
@@ -112,17 +102,6 @@
 
     untrack(() => void loadSuggestions(url));
   });
-
-  function captureFirstPing(): void {
-    const captured = (localStorage.getItem(FIRST_PING_KEY) ?? '').split(',');
-
-    if (captured.includes(clusterId)) {
-      return;
-    }
-
-    localStorage.setItem(FIRST_PING_KEY, [...captured, clusterId].join(','));
-    posthog.capture('first_ping_received', { clusterId });
-  }
 
   async function loadSuggestions(url: string): Promise<void> {
     try {

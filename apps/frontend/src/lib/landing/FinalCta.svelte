@@ -62,7 +62,6 @@
       <a
         href={`${resolve('/')}#${HERO_ID}`}
         class="text-fg-default hover:text-fg-tertiary focus-visible:outline-brand mt-10 inline-flex items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 lg:mt-auto"
-        data-posthog-id="final-cta-demo-cta"
       >
         Or watch the live demo
         <ArrowUpIcon class="size-4" />

@@ -7,13 +7,13 @@ export const PPdefinition: LegalDocumentDefinition = [
       'This Privacy Policy specifies the rules for the protection and processing of personal data of users of the service in the form of a system observability platform for busy builders (the "Platform"), accessible under https://logdash.io (the "Service"), by the personal data controller - the operator of the Platform, which is Aleksander Błaszkiewicz NIP 9571167927 REGON 527410431 (the "Controller").',
       'A User is any individual using the Platform or the Service (the "User"). Where this Privacy Policy refers to Users, it shall also be understood to mean contractors who have entered into an agreement with the Controller, or any individuals representing or working with or employed by them, unless specified otherwise.',
       'The legal basis for the adoption of this document are the personal data protection regulations, in particular, the Regulation (EU) 2016/679 of the European Parliament and of the Council of 27 April 2016 on the protection of natural persons with regard to the processing of personal data and on the movement of such data, and repealing Directive 95/46/EC (the "GDPR").',
-      'The Service uses cookies only to sign Users in and to make the Platform work. Its website analytics and product analytics use no cookies. Please refer to the cookies policy for details.',
+      'The Service uses cookies only to sign Users in and to make the Platform work. Its website analytics uses no cookies. Please refer to the cookies policy for details.',
     ],
   },
   {
     title: 'Personal data Controller',
     paragraphs: [
-      'The controller of your personal data is Aleksander Błaszkiewicz NIP 9571167927 REGON 527410431 with its registered office in Gdańsk (00-000) at ul. Smocza 6/9. The controller can be contacted by e-mail at: support@logdash.io or by letter to: Smocza 6/9, 00-000 Gdańsk.',
+      'The controller of your personal data is Aleksander Błaszkiewicz NIP 9571167927 REGON 527410431 with its registered office at ul. Rakoczego 19 lok. 4, 80-288 Gdańsk. The controller can be contacted by e-mail at: support@logdash.io or by letter to: ul. Rakoczego 19 lok. 4, 80-288 Gdańsk.',
     ],
   },
   {
@@ -93,7 +93,7 @@ export const PPdefinition: LegalDocumentDefinition = [
     ],
   },
   {
-    title: 'Website and product analytics',
+    title: 'Website analytics and feedback',
     paragraphs: [
       'The Controller measures how the Service is used with Logdash web analytics, its own product (the "Website Analytics"). The Website Analytics sets no cookies and stores nothing in the User&#39;s browser to recognise the User.',
       'For each page view or other event, the Website Analytics collects the address of the page without its query string or fragment, the name of the event, the host name of the referring website, campaign (UTM) tags, the name of an advertising click identifier parameter (never its value), the browser&#39;s time zone, the User&#39;s IP address and the browser&#39;s User-Agent.',
@@ -101,9 +101,9 @@ export const PPdefinition: LegalDocumentDefinition = [
       'The IP address is used only to compute this identifier and is never stored. Of the User-Agent, only the device type, browser and operating system are stored, and of the time zone, only the country it belongs to.',
       'When a User is signed in to the Platform, the Website Analytics also records a pseudonymous user identifier for product analytics, such as how often Users return: a SHA-256 hash of the site ID and the User&#39;s account ID, computed in the User&#39;s browser. The account ID itself is not sent to the Website Analytics.',
       'Visits are grouped into sessions on the server. A session ends after 30 minutes without activity or after 24 hours. Website Analytics data is deleted automatically after at most 365 days.',
-      'In addition, the Controller uses a product analytics service (PostHog, at its EU endpoint) to understand how the Platform is used and to find errors in it. It sets no cookies. It receives the addresses of the pages visited, the elements clicked, the device, browser and operating system, the IP address, errors in the page, and the feedback and onboarding answers the User submits. For signed-in Users it also receives the account ID, the e-mail address and the plan. On the home page and the pricing page it also records how the page is used, such as clicks, scrolling and mouse movements.',
+      'Feedback the User sends from the Platform is stored with the Controller&#39;s own application logs in Logdash, together with the rating the User gives.',
       'The legal basis for this processing is the Controller&#39;s legitimate interest in understanding how the Service is used and improving it (Article 6 section 1 letter f) of the GDPR).',
-      'The User may object to this processing at any time. The Website Analytics does not run in a browser that sends the Global Privacy Control or Do Not Track signal, so turning on either setting in the browser stops it. PostHog does not check these signals. The User may object to either by e-mail to support@logdash.io.',
+      'The User may object to this processing at any time. The Website Analytics does not run in a browser that sends the Global Privacy Control or Do Not Track signal, so turning on either setting in the browser stops it. The User may also object by e-mail to support@logdash.io.',
     ],
   },
   {
@@ -115,7 +115,7 @@ export const PPdefinition: LegalDocumentDefinition = [
           'entities ensuring the operation and maintenance of the Controller&#39;s IT systems;',
           'the Controller&#39;s associates to whom access to your personal data is necessary to ensure the proper functioning of the Platform;',
           'entities whose services the Controller uses in connection with ensuring the correct functioning of the Platform, for example: couriers and law firms;',
-          'the providers that run the Service for the Controller: Hetzner Online GmbH (servers in Germany), Cloudflare (the logdash.io web application, including the AI model that answers questions on the home page), Stripe (payments), Resend (e-mail), PostHog (product analytics), GitHub (sign-in and encrypted backups), Google (sign-in) and Telegram (alerts the User sets up and the Controller&#39;s internal notifications).',
+          'the providers that run the Service for the Controller: Hetzner Online GmbH (servers in Germany), Cloudflare (the logdash.io web application, including the AI model that answers questions on the home page), Stripe (payments), Resend (e-mail), GitHub (sign-in and encrypted backups), Google (sign-in) and Telegram (alerts the User sets up and the Controller&#39;s internal notifications).',
         ],
       },
       {
@@ -178,7 +178,7 @@ export const PPdefinition: LegalDocumentDefinition = [
         title:
           'A request for the exercise of the User&#39;s rights can be made:',
         list: [
-          'in writing, by sending a letter to the address: Aleksander Błaszkiewicz, Smocza 6/9, 00-000 Gdańsk;',
+          'in writing, by sending a letter to the address: Aleksander Błaszkiewicz, ul. Rakoczego 19 lok. 4, 80-288 Gdańsk;',
           'by sending an e-mail to an electronic mail address: support@logdash.io.',
         ],
       },

@@ -191,13 +191,7 @@
 {/snippet}
 
 {#snippet deleteAction()}
-  <IconButton
-    well
-    danger
-    label="Delete metric"
-    data-posthog-id="delete-metric-button"
-    onclick={onDelete}
-  >
+  <IconButton well danger label="Delete metric" onclick={onDelete}>
     <TrashIcon class="size-3.5" />
   </IconButton>
 {/snippet}

@@ -5,7 +5,7 @@ export const TOSdefinition = [
       '&quot;Price&quot; means the subscription price for the Platform in the selected payment option. The price is quoted in USD and includes VAT.',
       '&quot;Business Day&quot; means any day from Monday to Friday between 9:00 a.m. and 5:00 p.m., excluding public holidays within the meaning of the Act of 18 January 1951 on Public Holidays.',
       '&quot;Order Form&quot; means the service provided by Logdash in the course of placing an Order, consisting of providing an interactive form. Placing an Order is considered acceptance of these Terms, which form an integral part of the Agreement.',
-      '&quot;Logdash&quot; means Aleksander Błaszkiewicz NIP 9571167927 REGON 527410431, with its registered office in Smocza 6/9, 00-000 Gdańsk, Poland, and email address: support@logdash.io.',
+      '&quot;Logdash&quot; means Aleksander Błaszkiewicz NIP 9571167927 REGON 527410431, with its registered office at ul. Rakoczego 19 lok. 4, 80-288 Gdańsk, Poland, and email address: support@logdash.io.',
       '&quot;Client&quot; means an individual concluding an agreement with Logdash both as a consumer within the meaning of Article 22 1 of the Civil Code and as an entrepreneur within the meaning of Article 43 1 of the Civil Code, including an Entrepreneur With Consumer Rights.',
       '&quot;Consumer&quot; means the Client who is a consumer within the meaning of Article 22 1 of the Civil Code.',
       '&quot;Account&quot; means the Client&#39;s online profile, which is a separate element of the Platform made available to the Client after authorisation. Authorisation is granted by providing an identifier and password, defined by the Client when creating a profile on the Platform. The Account is necessary to manage the Client&#39;s information and to perform all legal or factual actions attributable to the Client which can be performed through the Account, in particular those involving the placement of an Order.',
@@ -183,7 +183,7 @@ export const TOSdefinition = [
         title:
           'In the event that the Consumer does not agree to the commencement of the Services before the expiry of the 14-day period (for withdrawal from an Agreement concluded at a distance), the Consumer may withdraw from the Agreement within 14 calendar days without stating a reason, in which case Logdash will reimburse the Consumer for the cost of the Subscription. It is sufficient to meet the deadline by sending the withdrawal declaration before its expiry. The withdrawal declaration may be made:',
         list: [
-          'in writing to the following address: Aleksander Błaszkiewicz, ul. Smocza 6/9, 00-000 Gdańsk, Poland;',
+          'in writing to the following address: Aleksander Błaszkiewicz, ul. Rakoczego 19 lok. 4, 80-288 Gdańsk, Poland;',
           'in an electronic form via e-mail to: support@logdash.io.',
         ],
       },
@@ -226,7 +226,7 @@ export const TOSdefinition = [
           {
             title: 'A complaint may be lodged by the Client:',
             list: [
-              'in writing to the following address: Aleksander Błaszkiewicz, Smocza 6/9, 00-000 Gdańsk, Poland;',
+              'in writing to the following address: Aleksander Błaszkiewicz, ul. Rakoczego 19 lok. 4, 80-288 Gdańsk, Poland;',
               'in an electronic form via e-mail to: support@logdash.io.',
             ],
           },

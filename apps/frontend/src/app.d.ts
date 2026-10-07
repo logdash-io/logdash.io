@@ -32,9 +32,6 @@ declare global {
   }
 
   interface ImportMetaEnv {
-    readonly VITE_POSTHOG_KEY: string;
-    readonly VITE_POSTHOG_PROXY: string;
-    readonly VITE_POSTHOG_HOST: string;
     readonly VITE_GITHUB_CLIENT_ID: string;
     readonly VITE_GOOGLE_CLIENT_ID: string;
     readonly VITE_API_BASE_URL: string;

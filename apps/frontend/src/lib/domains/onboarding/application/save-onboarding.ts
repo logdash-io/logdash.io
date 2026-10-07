@@ -1,6 +1,5 @@
 import type { OnboardingAnswersDto } from '$lib/domains/onboarding/domain/onboarding-dtos';
 import { OnboardingService } from '$lib/domains/onboarding/infrastructure/onboarding.service';
-import { posthog } from 'posthog-js';
 
 export const acceptConsents = async (marketing: boolean): Promise<void> => {
   await OnboardingService.acceptConsents({
@@ -8,7 +7,6 @@ export const acceptConsents = async (marketing: boolean): Promise<void> => {
     marketingConsent: marketing,
   });
 
-  posthog.capture('consents_accepted', { marketing });
   window.logdash?.track('signup_completed');
 };
 
@@ -17,6 +15,5 @@ export const saveOnboardingAnswers = async (
 ): Promise<void> => {
   await OnboardingService.saveAnswers(answers);
 
-  posthog.capture('onboarding_completed', answers);
   window.logdash?.track('onboarding_completed');
 };

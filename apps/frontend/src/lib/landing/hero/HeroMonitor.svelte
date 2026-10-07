@@ -79,7 +79,7 @@
       heroTakeover.expand(null);
     }
 
-    heroClaim.show('alerts');
+    heroClaim.show();
   }
 
   function onRetry(): void {
@@ -121,7 +121,7 @@
           {previewHost}.
         </p>
 
-        {@render retryButton('Start over', 'hero-preview-restart-cta')}
+        {@render retryButton('Start over')}
       </MonitorPanel>
     {:else if phase === 'error'}
       <MonitorPanel
@@ -133,7 +133,7 @@
           {anonymousPreviewState.error?.message}
         </p>
 
-        {@render retryButton('Try again', 'hero-preview-retry-cta')}
+        {@render retryButton('Try again')}
       </MonitorPanel>
     {/if}
   </div>
@@ -182,7 +182,6 @@
       <Button
         variant="primary"
         size="sm"
-        data-posthog-id="hero-setup-alerts-cta"
         disabled={isOpening}
         onclick={onSetUpAlerts}
       >
@@ -193,12 +192,7 @@
     {:else}
       {@render openDashboardButton('primary')}
 
-      <Button
-        size="sm"
-        data-posthog-id="hero-setup-alerts-cta"
-        disabled={isOpening}
-        onclick={onOpenDashboard}
-      >
+      <Button size="sm" disabled={isOpening} onclick={onOpenDashboard}>
         Set up alerts
       </Button>
     {/if}
@@ -206,13 +200,7 @@
 {/snippet}
 
 {#snippet openDashboardButton(variant: 'primary' | 'secondary')}
-  <Button
-    {variant}
-    size="sm"
-    data-posthog-id="hero-open-dashboard-cta"
-    disabled={isOpening}
-    onclick={onOpenDashboard}
-  >
+  <Button {variant} size="sm" disabled={isOpening} onclick={onOpenDashboard}>
     {#if isOpening}
       <Spinner class="size-3.5" aria-hidden="true" />
     {/if}
@@ -221,14 +209,9 @@
   </Button>
 {/snippet}
 
-{#snippet retryButton(label: string, posthogId: string)}
+{#snippet retryButton(label: string)}
   <div>
-    <Button
-      variant="primary"
-      size="sm"
-      data-posthog-id={posthogId}
-      onclick={onRetry}
-    >
+    <Button variant="primary" size="sm" onclick={onRetry}>
       {label}
     </Button>
   </div>

@@ -3,9 +3,8 @@
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
   import { Button } from '@logdash/hyper-ui/presentational';
-  import { getContext, type Snippet } from 'svelte';
+  import type { Snippet } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
-  import type { PostHog } from 'posthog-js';
 
   type Props = {
     class?: ClassValue;
@@ -20,14 +19,9 @@
     onclick: onClickProp,
   }: Props = $props();
 
-  const posthog = getContext<PostHog>('posthog');
-
   const onClick = (): void => {
     onClickProp?.();
-    posthog?.capture('upgrade_button_clicked', {
-      source,
-      timestamp: new Date().toISOString(),
-    });
+    window.logdash?.track('upgrade_button_clicked');
     upgradeState.openModal(source);
   };
 </script>

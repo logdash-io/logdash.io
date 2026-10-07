@@ -19,10 +19,7 @@
   import { PAYMENT_PLANS } from '$lib/domains/shared/payment-plans.const.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { match } from 'ts-pattern';
-  import type { PostHog } from 'posthog-js';
-  import { getContext } from 'svelte';
 
-  const posthog = getContext<PostHog>('posthog');
   let upgrading = $state(false);
 
   const TIER_ORDER = [UserTier.FREE, UserTier.BUILDER, UserTier.PRO];
@@ -83,11 +80,6 @@
     upgrading = true;
     const source = upgradeState.source;
 
-    posthog?.capture('upgrade_plan_selected', {
-      source,
-      timestamp: new Date().toISOString(),
-      tier,
-    });
     window.logdash?.track('checkout_started');
 
     userState.upgrade(source, tier);

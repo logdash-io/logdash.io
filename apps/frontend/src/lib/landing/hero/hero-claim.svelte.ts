@@ -26,7 +26,6 @@ import {
   trialTier,
 } from '$lib/domains/shared/payment-plans.const';
 import type { UserTier } from '$lib/domains/shared/types';
-import { posthog } from 'posthog-js';
 import { match } from 'ts-pattern';
 
 export type HeroClaimStep =
@@ -34,8 +33,6 @@ export type HeroClaimStep =
   | { kind: 'waiting'; provider: OAuthProvider }
   | { kind: 'onboarding' }
   | { kind: 'busy'; label: string };
-
-export type HeroClaimTrigger = 'nudge' | 'alerts';
 
 const logger = createLogger('hero-claim.state', false);
 
@@ -85,16 +82,15 @@ class HeroClaimState {
     }
 
     this._nudged.add(key);
-    this.show('nudge');
+    this.show();
   }
 
-  public show(trigger: HeroClaimTrigger): void {
+  public show(): void {
     if (this._open || !this.eligible) {
       return;
     }
 
     this._open = true;
-    posthog.capture('anonymous_claim_card_shown', { trigger });
   }
 
   public hide(): void {
@@ -125,7 +121,7 @@ class HeroClaimState {
     this._error = null;
     this._step = { kind: 'waiting', provider };
 
-    posthog.capture('account_claim_started', { provider, surface: 'hero' });
+    window.logdash?.track('account_claim_started');
 
     void this._settle(provider, handle);
   }

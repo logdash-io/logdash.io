@@ -18,7 +18,6 @@
     href: FeatureRoute;
     hash?: string;
     linkLabel: string;
-    posthogId: string;
     checks: string[];
     mirrored?: boolean;
     panelHeader?: Snippet;
@@ -31,7 +30,6 @@
     href,
     hash,
     linkLabel,
-    posthogId,
     checks,
     mirrored = false,
     panelHeader,
@@ -57,7 +55,6 @@
       <a
         href={hash ? `${resolve(href)}#${hash}` : resolve(href)}
         class="text-fg-default hover:text-fg-tertiary focus-visible:outline-brand mt-5 inline-flex w-fit items-center gap-1.5 rounded-full text-sm font-medium transition-ink duration-150 focus-visible:outline-2 focus-visible:outline-offset-4"
-        data-posthog-id={posthogId}
       >
         {linkLabel}
         <ArrowRightIcon class="size-4" />
