@@ -7,4 +7,5 @@
   definition={cookiesPolicyDefinition}
   title="Cookies policy"
   description="Which cookies Logdash sets, what each one is for and how long it lives in your browser."
+  updated="7 October 2026"
 />

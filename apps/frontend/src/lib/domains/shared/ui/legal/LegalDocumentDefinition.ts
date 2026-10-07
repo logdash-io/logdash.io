@@ -1,9 +1,11 @@
+export type LegalListItem = string | { title: string; list?: string[] };
+
 type LegalDocumentSection = {
   title: string;
   paragraphs?: string[];
   list?: {
     title?: string;
-    list?: (string | { title: string; list?: string[] })[];
+    list?: LegalListItem[];
   }[];
 };
 

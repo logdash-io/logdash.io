@@ -1,40 +1,76 @@
 <script lang="ts">
-  import LogoMark from '$lib/domains/shared/icons/LogoMark.svelte';
+  import { resolve } from '$app/paths';
+  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import LegalDocument from '$lib/domains/shared/ui/legal/LegalDocument.svelte';
   import type { LegalDocumentDefinition } from '$lib/domains/shared/ui/legal/LegalDocumentDefinition';
-  import Footer from '$lib/landing/Footer.svelte';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
+  import Footer from '$lib/landing/Footer.svelte';
+  import DocsToc from '$lib/landing/guides/DocsToc.svelte';
+  import LandingSection from '$lib/landing/LandingSection.svelte';
 
   type Props = {
     definition: LegalDocumentDefinition;
     title: string;
-    /** One sentence, so the page has a description in the sitemap listing. */
     description: string;
+    updated?: string;
   };
-  const { definition, title, description }: Props = $props();
+  const { definition, title, description, updated }: Props = $props();
+
+  let article: HTMLElement | undefined = $state();
 </script>
 
-<!--
-  These three pages are in the sitemap, so they need the same head as every
-  other indexable page. A bare <title> left them with no canonical and no
-  description.
--->
 <SeoMeta title="{title} | Logdash" {description} />
 
-<div class="mx-auto flex w-full max-w-landing flex-col">
-  <div class="py-16">
-    <div class="ld-modal relative mx-auto flex max-w-4xl flex-col gap-4">
-      <div class="flex items-center justify-center gap-4">
-        <LogoMark class="size-10" />
+<div class="flex w-full flex-col">
+  <header
+    class="mx-auto flex w-full max-w-landing flex-col items-start px-4 pt-12 pb-12 sm:px-6 lg:px-10 lg:pt-16 lg:pb-16"
+  >
+    <nav aria-label="Breadcrumb">
+      <ol class="text-fg-muted flex items-center gap-2 text-sm">
+        <li>
+          <a
+            href={resolve('/')}
+            class="hover:text-fg-default transition-ink duration-150"
+          >
+            Home
+          </a>
+        </li>
+        <li aria-hidden="true">
+          <ChevronRightIcon class="text-fg-faint size-3.5" />
+        </li>
+        <li aria-current="page" class="text-fg-secondary">{title}</li>
+      </ol>
+    </nav>
 
-        <h1 class="text-center text-2xl font-semibold lg:text-3xl">
-          {title}
-        </h1>
-      </div>
+    <h1
+      class="mt-6 max-w-5xl text-[32px] leading-[1.04] font-medium tracking-[-0.03em] text-balance sm:text-[40px] lg:text-[56px]"
+    >
+      {title}
+    </h1>
 
-      <LegalDocument {definition} />
+    <p class="text-fg-tertiary mt-6 max-w-2xl text-lg text-pretty sm:text-xl">
+      {description}
+    </p>
+  </header>
+
+  <LandingSection dividerTop>
+    <div class="grid grid-cols-1 lg:grid-cols-5">
+      <aside
+        class="border-surface-root-border hidden border-r lg:col-span-2 lg:block"
+      >
+        <DocsToc container={article} />
+      </aside>
+
+      <article
+        bind:this={article}
+        class="min-w-0 px-4 py-10 sm:px-6 lg:col-span-3 lg:px-10"
+      >
+        <LegalDocument {definition} {updated} />
+      </article>
     </div>
-  </div>
-</div>
+  </LandingSection>
 
-<Footer />
+  <LandingSection divider={false} class="h-12 lg:h-16" />
+
+  <Footer />
+</div>

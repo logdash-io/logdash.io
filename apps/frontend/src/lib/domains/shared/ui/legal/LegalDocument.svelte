@@ -1,68 +1,101 @@
 <script lang="ts">
-  import type { LegalDocumentDefinition } from '$lib/domains/shared/ui/legal/LegalDocumentDefinition';
+  import type {
+    LegalDocumentDefinition,
+    LegalListItem,
+  } from '$lib/domains/shared/ui/legal/LegalDocumentDefinition';
 
-  const { definition }: { definition: LegalDocumentDefinition } = $props();
+  type Props = {
+    definition: LegalDocumentDefinition;
+    updated?: string;
+  };
+  const { definition, updated }: Props = $props();
+
+  function anchor(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function textOf(item: LegalListItem): string {
+    return typeof item === 'string' ? item : item.title;
+  }
+
+  function leavesOf(item: LegalListItem): string[] {
+    return typeof item === 'string' ? [] : (item.list ?? []);
+  }
 </script>
 
-<div class="wrap-break-word">
+<div
+  class="text-fg-tertiary flex max-w-2xl flex-col gap-11 text-[15px] leading-7 wrap-break-word"
+>
   {#each definition as section, index (index)}
-    <h5 class="mt-2 mb-5 text-center md:mt-6">
-      §{index + 1}
-      <br />
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
-      <span>{@html section.title}</span>
-    </h5>
+    <section class="flex flex-col gap-4">
+      <h2
+        id={anchor(section.title)}
+        class="text-fg-default flex scroll-mt-24 gap-2 text-xl font-medium tracking-[-0.02em]"
+      >
+        <span class="text-fg-muted tabular-nums">§{index + 1}</span>
+        {section.title}
+      </h2>
 
-    {#if section.paragraphs}
-      {#each section.paragraphs as paragraph, paragraphIndex (paragraphIndex)}
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
-        <p class="mb-3">{@html paragraph}</p>
+      {#each section.paragraphs ?? [] as paragraph, paragraphIndex (paragraphIndex)}
+        <p>{paragraph}</p>
       {/each}
-    {:else}
-      <div class="w-full overflow-hidden pl-0">
-        <div class="flex flex-col">
-          {#each section.list as listItem, listItemIndex (listItemIndex)}
-            <div class="mb-3">
-              <span class="mb-1 block">
-                {listItemIndex + 1}.&nbsp;
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
-                <span>{@html listItem.title || ''}</span>
-              </span>
-              <div class="flex flex-col pl-4">
-                {#each listItem.list as item, itemIndex (itemIndex)}
-                  {#if typeof item === 'string'}
-                    <div class="mb-1">
-                      {listItemIndex + 1}.{itemIndex + 1}.&nbsp;
-                      <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
-                      <span>{@html item}</span>
-                    </div>
-                  {:else}
-                    <div class="mb-1">
-                      <span class="mb-1 block">
-                        {listItemIndex + 1}.{itemIndex + 1}.&nbsp;
-                        <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
-                        <span>{@html item.title}</span>
-                      </span>
-                      <div class="flex flex-col pl-4">
-                        {#each item.list as subItem, subItemIndex (subItemIndex)}
-                          <div class="mb-1">
-                            {listItemIndex + 1}.{itemIndex + 1}.{subItemIndex +
-                              1}.&nbsp;
-                            <span>
-                              <!-- eslint-disable-next-line svelte/no-at-html-tags -- static legal copy from our own data -->
-                              {@html subItem}
-                            </span>
-                          </div>
-                        {/each}
-                      </div>
-                    </div>
-                  {/if}
-                {/each}
+
+      {#if section.list?.length}
+        <ol class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-4">
+          {#each section.list as item, itemIndex (itemIndex)}
+            {@const number = `${itemIndex + 1}.`}
+            <li class="col-span-2 grid grid-cols-subgrid">
+              {@render numeral(number)}
+              <div class="flex min-w-0 flex-col gap-2">
+                {#if item.title}
+                  <p>{item.title}</p>
+                {/if}
+
+                {#if item.list?.length}
+                  <ol class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2">
+                    {#each item.list as subItem, subItemIndex (subItemIndex)}
+                      {@const subNumber = `${number}${subItemIndex + 1}.`}
+                      {@const leaves = leavesOf(subItem)}
+                      <li class="col-span-2 grid grid-cols-subgrid">
+                        {@render numeral(subNumber)}
+                        <div class="flex min-w-0 flex-col gap-2">
+                          <p>{textOf(subItem)}</p>
+
+                          {#if leaves.length}
+                            <ol
+                              class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2"
+                            >
+                              {#each leaves as leaf, leafIndex (leafIndex)}
+                                <li class="col-span-2 grid grid-cols-subgrid">
+                                  {@render numeral(
+                                    `${subNumber}${leafIndex + 1}.`,
+                                  )}
+                                  <p>{leaf}</p>
+                                </li>
+                              {/each}
+                            </ol>
+                          {/if}
+                        </div>
+                      </li>
+                    {/each}
+                  </ol>
+                {/if}
               </div>
-            </div>
+            </li>
           {/each}
-        </div>
-      </div>
-    {/if}
+        </ol>
+      {/if}
+    </section>
   {/each}
+
+  {#if updated}
+    <p class="text-fg-muted text-sm">Last updated {updated}</p>
+  {/if}
 </div>
+
+{#snippet numeral(value: string)}
+  <span class="text-fg-muted tabular-nums">{value}</span>
+{/snippet}
