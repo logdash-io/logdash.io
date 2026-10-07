@@ -44,6 +44,18 @@ test('one prompt configures fixed first-party routes, cookieless tracking, ident
   );
   expect(prompt).toContain('document.cookie holds no ldv_ or lds_ cookies');
   expect(prompt).toContain('Keep the upstream URL fixed');
+  expect(prompt).not.toContain('event names only');
+  expect(prompt).toContain(
+    "window.logdash?.track('video_played', { quality: '1080p', autoplay: true })",
+  );
+  expect(prompt).toContain(
+    'at most 10 properties with keys matching [a-z][a-z0-9_]{0,39}',
+  );
+  expect(prompt).toContain('stored as strings of up to 100 characters');
+  expect(prompt).toContain(
+    'Never put emails, names, user IDs, purchase details or other personal data in event names or properties.',
+  );
+  expect(prompt).toContain('trigger a custom event with properties');
   expect(prompt).not.toContain('ask me about my preferred level');
   expect(prompt.match(/server-only-key/g)).toHaveLength(1);
   expect(prompt).toContain(

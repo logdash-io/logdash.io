@@ -105,7 +105,8 @@ export class ReadWebAnalyticsQuery {
   @ApiPropertyOptional({
     type: String,
     isArray: true,
-    description: 'dimension:value, for example page:/pricing or country:PL',
+    description:
+      'dimension:value, for example page:/pricing or country:PL, or prop.<key>:value for events with that property value, and for events without the key, visitors who sent it',
   })
   @IsOptional()
   @Transform(toArray)
@@ -113,7 +114,13 @@ export class ReadWebAnalyticsQuery {
   @ArrayMaxSize(10)
   @IsString({ each: true })
   @MaxLength(1100, { each: true })
-  @Matches(new RegExp(`^(${WEB_ANALYTICS_FILTER_DIMENSIONS.join('|')}):.+$`, 's'), { each: true })
+  @Matches(
+    new RegExp(
+      `^(${WEB_ANALYTICS_FILTER_DIMENSIONS.join('|')}|prop\\.[a-z][a-z0-9_]{0,39}):.+$`,
+      's',
+    ),
+    { each: true },
+  )
   filter: string[] = [];
 
   @ApiPropertyOptional({ default: false })

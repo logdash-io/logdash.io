@@ -23,7 +23,7 @@ import { WebAnalyticsReadService } from '../read/web-analytics-read.service';
 import { WebAnalyticsWriteService } from '../write/web-analytics-write.service';
 import { WebAnalyticsIngestionService } from '../ingestion/web-analytics-ingestion.service';
 import { ConfigureWebAnalyticsBody } from './dto/configure-web-analytics.body';
-import { CollectWebEventsBody } from './dto/collect-web-events.body';
+import { CollectWebEventsBody, EVENT_NAME, PROP_KEY } from './dto/collect-web-events.body';
 import {
   ReadWebAnalyticsBreakdownQuery,
   ReadWebAnalyticsFunnelQuery,
@@ -33,6 +33,7 @@ import {
 } from './dto/read-web-analytics.query';
 import {
   WebAnalyticsBreakdownResponse,
+  WebAnalyticsEventResponse,
   WebAnalyticsFunnelResponse,
   WebAnalyticsJourneysResponse,
   WebAnalyticsOverviewResponse,
@@ -124,6 +125,42 @@ export class WebAnalyticsCoreController {
         clusterId,
         query,
         query.dimension,
+        await this.retentionDays(clusterId),
+      ),
+    };
+  }
+
+  @Get('clusters/:clusterId/web_analytics/events/:name')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @ApiResponse({ type: WebAnalyticsEventResponse })
+  public async event(
+    @Param('clusterId') clusterId: string,
+    @Param('name') name: string,
+    @Query() query: ReadWebAnalyticsQuery,
+  ): Promise<WebAnalyticsEventResponse> {
+    if (!EVENT_NAME.test(name)) throw new BadRequestException('Invalid event name');
+    return this.read.readEvent(clusterId, name, query, await this.retentionDays(clusterId));
+  }
+
+  @Get('clusters/:clusterId/web_analytics/events/:name/properties/:key')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @ApiResponse({ type: WebAnalyticsBreakdownResponse })
+  public async eventProperty(
+    @Param('clusterId') clusterId: string,
+    @Param('name') name: string,
+    @Param('key') key: string,
+    @Query() query: ReadWebAnalyticsQuery,
+  ): Promise<WebAnalyticsBreakdownResponse> {
+    if (!EVENT_NAME.test(name)) throw new BadRequestException('Invalid event name');
+    if (!PROP_KEY.test(key)) throw new BadRequestException('Invalid property key');
+    return {
+      rows: await this.read.readEventProperty(
+        clusterId,
+        name,
+        key,
+        query,
         await this.retentionDays(clusterId),
       ),
     };

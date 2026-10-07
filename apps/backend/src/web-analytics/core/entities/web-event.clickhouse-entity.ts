@@ -1,5 +1,5 @@
 import { ClickhouseUtils } from '../../../clickhouse/clickhouse.utils';
-import { CLICK_IDS, WebEventBody } from '../dto/collect-web-events.body';
+import { BUILT_IN_EVENTS, CLICK_IDS, PROP_KEY, WebEventBody } from '../dto/collect-web-events.body';
 import { WebAnalyticsSiteNormalized } from './web-analytics-site.interface';
 import { TIMEZONE_COUNTRIES } from './timezone-countries';
 
@@ -26,6 +26,7 @@ export class WebEventClickhouseEntity {
   browser: string;
   os: string;
   country: string;
+  props: Record<string, string>;
 
   public static fromNormalized(
     event: WebEventBody,
@@ -76,7 +77,25 @@ export class WebEventClickhouseEntity {
       browser: this.browser(userAgent),
       os: this.os(userAgent),
       country: TIMEZONE_COUNTRIES[event.timezone ?? ''] ?? '',
+      props: BUILT_IN_EVENTS.includes(event.name) ? {} : this.cleanProps(event.props),
     };
+  }
+
+  private static cleanProps(input: unknown): Record<string, string> {
+    const props: Record<string, string> = {};
+    if (typeof input !== 'object' || input === null || Array.isArray(input)) return props;
+    for (const [key, raw] of Object.entries(input)) {
+      if (
+        !PROP_KEY.test(key) ||
+        !['string', 'number', 'boolean'].includes(typeof raw) ||
+        (typeof raw === 'number' && !Number.isFinite(raw))
+      )
+        continue;
+      const text = String(raw);
+      const value = Array.from(text.trim()).slice(0, 100).join('');
+      if (value && !/[@\p{Cc}]/u.test(text) && Object.keys(props).length < 10) props[key] = value;
+    }
+    return props;
   }
 
   private static browser(userAgent: string): string {

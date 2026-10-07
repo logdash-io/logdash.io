@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 import type {
   WebAnalyticsBreakdownName,
   WebAnalyticsFilterDimension,
+  WebAnalyticsFilterKey,
   WebAnalyticsGranularity,
 } from './web-analytics';
 
@@ -135,7 +136,7 @@ export function countryName(code: string): string {
 }
 
 export function filterValueLabel(
-  dimension: WebAnalyticsFilterDimension,
+  dimension: WebAnalyticsFilterKey,
   value: string,
 ): string {
   return dimension === 'country' ? countryName(value) : value;

@@ -193,6 +193,128 @@ describe('Web analytics (writes)', () => {
       expect(await bootstrap.app.get(RedisService).getClient().lLen('web-analytics:queue')).toBe(1);
     });
 
+    it('stores custom event props within every limit and keeps events whose props break the rules', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      const start = event({
+        name: 'start',
+        props: {
+          mode: 'zen',
+          Bad: 'uppercase key',
+          ['k'.repeat(41)]: 'key too long',
+          '1st': 'starts with a digit',
+          scale: 2,
+          stream: true,
+          email: 'alice@example.com',
+          line: 'line\nbreak',
+          nested: { a: 1 },
+          list: ['yes'],
+          missing: null,
+          blank: '   ',
+          padded: '  tv  ',
+          long: 'x'.repeat(150),
+          emoji: `${'x'.repeat(99)}😀tail`,
+          k7: '7',
+          k8: '8',
+          k9: '9',
+          k10: '10',
+          k11: 'eleventh valid key',
+        },
+      });
+      const pageview = event({ props: { mode: 'zen' } });
+      const text = event({ name: 'listen', props: 'remote=yes' });
+      const list = event({ name: 'listen', props: ['yes'] });
+      const legacy = event({ name: 'legacy' });
+      expect((await collect(batch(site.id, [pageview, start, text, list, legacy]))).status).toBe(
+        202,
+      );
+      await bootstrap.app.get(WebAnalyticsIngestionService).processQueue();
+      const result = await bootstrap.clickhouseClient.query({
+        query: 'SELECT toString(id) AS id, props FROM web_events FINAL',
+      });
+      const props = new Map(
+        (await result.json<{ id: string; props: Record<string, string> }>()).data.map((row) => [
+          row.id,
+          row.props,
+        ]),
+      );
+      expect(props.get(start.id)).toEqual({
+        mode: 'zen',
+        scale: '2',
+        stream: 'true',
+        padded: 'tv',
+        long: 'x'.repeat(100),
+        emoji: `${'x'.repeat(99)}😀`,
+        k7: '7',
+        k8: '8',
+        k9: '9',
+        k10: '10',
+      });
+      for (const plain of [pageview, text, list, legacy]) expect(props.get(plain.id)).toEqual({});
+    });
+
+    it('counts property values past 500 per key as (other) and drops keys past 50 per site, within the retention', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      const start = (props: Record<string, string>): WebEventBody =>
+        event({ name: 'start', props });
+      for (let page = 0; page < 25; page++)
+        expect(
+          (
+            await collect(
+              batch(
+                site.id,
+                Array.from({ length: 20 }, (_, index) => start({ mode: `m${page * 20 + index}` })),
+              ),
+            )
+          ).status,
+        ).toBe(202);
+      const keys = Array.from({ length: 49 }, (_, index) => `k${index}`);
+      for (let index = 0; index < keys.length; index += 10)
+        await collect(
+          batch(site.id, [
+            start(Object.fromEntries(keys.slice(index, index + 10).map((key) => [key, 'v']))),
+          ]),
+        );
+      await collect(
+        batch(site.id, [start({ mode: 'm500', k0: 'v', extra: 'v' }), start({ mode: 'm0' })]),
+      );
+      advanceBy(91 * 86_400_000);
+      await collect(batch(site.id, [start({ mode: 'm501', extra: 'v' })]));
+      const rows = (await queued()).slice(-3);
+      expect(rows.map((row) => row.props)).toEqual([
+        { mode: '(other)', k0: 'v' },
+        { mode: 'm0' },
+        { mode: 'm501', extra: 'v' },
+      ]);
+    });
+
+    it('accepts 20 events with full props, rejects bigger batches and plain-text bodies over 32 KB', async () => {
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      const props = Object.fromEntries(
+        Array.from({ length: 10 }, (_, index) => [`k${index}${'x'.repeat(37)}`, '漢'.repeat(100)]),
+      );
+      const full = (count: number): CollectWebEventsBody =>
+        batch(
+          site.id,
+          Array.from({ length: count }, () => event({ name: 'start', props })),
+        );
+      expect((await collect(full(20))).status).toBe(202);
+      const [queuedRow] = await queued();
+      expect(queuedRow.props).toEqual(props);
+      expect((await collect(full(21))).status).toBe(400);
+      const oversized = await request(bootstrap.app.getHttpServer())
+        .post('/web_events')
+        .set('Origin', origin)
+        .set('Content-Type', 'text/plain')
+        .send(JSON.stringify(full(20)));
+      expect(oversized.status).toBe(413);
+      expect(await bootstrap.app.get(RedisService).getClient().lLen('web-analytics:queue')).toBe(
+        20,
+      );
+    });
+
     it('keeps the queue on a storage failure and deduplicates an insertion retry', async () => {
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
       const site = await configure(setup.cluster.id, setup.token);

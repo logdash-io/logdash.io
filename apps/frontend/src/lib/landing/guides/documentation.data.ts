@@ -648,6 +648,35 @@ export async function load() {
         type: 'paragraph',
         text: 'Pass a stable internal ID, never an email address or a name. The hash is pseudonymous, not anonymous: your site ID is public in the script tag, so anyone can hash guessable IDs, such as small sequential numbers, and compare.',
       },
+      { type: 'heading', text: 'Track custom events' },
+      {
+        type: 'paragraph',
+        text: 'Call `track` for the actions you want to count, such as `signup_completed`. Event names match `[a-z][a-z0-9_]{0,63}`. To break an event down in the dashboard, pass a flat object of properties as the second argument.',
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        code: "window.logdash?.track('video_played', { quality: '1080p', autoplay: true, chapter: 2 });",
+      },
+      {
+        type: 'list',
+        items: [
+          'An event carries at most 10 properties. Keys match `[a-z][a-z0-9_]{0,39}`.',
+          'Values are strings, numbers or booleans. They are stored as strings, trimmed and cut to 100 characters, so `2` and `true` become `"2"` and `"true"`.',
+          'A value that contains `@` or a control character is dropped, so an email address is never stored by mistake.',
+          'Invalid properties are dropped with one console warning per page load, and the event is still sent. The API checks every request against the same rules.',
+          'Only custom events carry properties. `pageview`, `pageleave` and `browser_error` never do.',
+          'Each property keeps up to 500 distinct values per site within your retention period, and later values are counted as `(other)`. A site can use up to 50 property keys, and properties with further keys are dropped.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Never put emails, names, user IDs, purchase details or other personal data in event names or properties. Properties describe what happened, such as a quality, a theme or a variant, never who did it. Use `identify` for the signed-in user.',
+      },
+      {
+        type: 'paragraph',
+        text: 'In the dashboard, open an event from the Goals card to see its trend and a breakdown by each property, with the same date range and filters as the other reports. Clicking a value keeps only the events with that value, and narrows the other reports to the visitors who sent it.',
+      },
       { type: 'heading', text: 'Let visitors opt out' },
       {
         type: 'paragraph',
@@ -684,6 +713,7 @@ window.logdash?.optIn();`,
         type: 'list',
         items: [
           'the event name: `pageview`, `pageleave`, `browser_error` or one of your custom events. `browser_error` carries no error message or stack trace.',
+          'for custom events, the properties you pass to `track`, after the checks described above.',
           'the host name and path of the page, without query string or fragment. Path segments that contain `@` become `:redacted`, and segments that look like database IDs, UUIDs or numbers of four or more digits become `:id`.',
           'the host name of the referring site, UTM source, medium, campaign and term, and the name of an ad click ID parameter such as `gclid`, never its value. They come from the first event of the session.',
           'device type, browser and operating system, derived from the User-Agent.',
@@ -721,7 +751,7 @@ window.logdash?.optIn();`,
         language: 'text',
         code: `We measure how this website is used with Logdash web analytics. It sets no cookies and stores nothing in your browser to recognise you. To count visits, Logdash computes a pseudonymous visitor ID on its server: a SHA-256 hash of your IP address, your browser's User-Agent, our site ID and a random value that changes every day and is deleted 30 minutes after the day ends (UTC). Your IP address is not stored, and anonymous visits on different days are not linked to each other.
 
-For each page you visit, we collect the page address without query parameters, the domain of the website that referred you, campaign tags, your device type, browser and operating system, and a country derived from your time zone. [When you are signed in, your visits are also linked to a pseudonymous hash of your account ID, computed in your browser. Your account ID itself is not sent.]
+For each page you visit, we collect the page address without query parameters, the domain of the website that referred you, campaign tags, your device type, browser and operating system, and a country derived from your time zone. [When you are signed in, your visits are also linked to a pseudonymous hash of your account ID, computed in your browser. Your account ID itself is not sent.] [For some actions, such as [actions], we also record the options you chose, never personal data.]
 
 Logdash processes this data on our behalf as a processor and deletes it after [retention period]. We process it on the basis of our legitimate interest in understanding how our website is used and improving it (Art. 6(1)(f) GDPR). The analytics does not run if your browser sends Global Privacy Control or Do Not Track. [You can also turn analytics off in our privacy settings.] To object or to ask about your data, contact [contact address].`,
       },

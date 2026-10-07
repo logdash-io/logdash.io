@@ -27,18 +27,19 @@ export class WebAnalyticsCoreModule implements NestModule {
 
 function parsePlainTextJson(request: Request, response: Response, next: NextFunction): void {
   if (!request.is('text/plain')) return next();
-  let body = '';
-  request.setEncoding('utf8');
-  request.on('data', (chunk: string) => {
-    body += chunk;
-    if (body.length > 32_768) {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  request.on('data', (chunk: Buffer) => {
+    size += chunk.length;
+    chunks.push(chunk);
+    if (size > 32_768) {
       response.status(413).end();
       request.destroy();
     }
   });
   request.on('end', () => {
     try {
-      request.body = JSON.parse(body) as unknown;
+      request.body = JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown;
     } catch {
       request.body = {};
     }

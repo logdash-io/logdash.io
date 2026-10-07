@@ -143,6 +143,55 @@ export class WebAnalyticsBreakdownResponse {
   rows: WebAnalyticsBreakdownRow[];
 }
 
+export class WebAnalyticsEventSummary {
+  @ApiProperty({ description: 'Times the event was sent' })
+  count: number;
+
+  @ApiProperty({ description: 'Visitors who sent the event' })
+  visitors: number;
+
+  @ApiProperty({ description: 'Share of visitors who sent the event, 0 to 100' })
+  conversionRate: number;
+}
+
+export class WebAnalyticsEventPoint {
+  @ApiProperty({ description: 'Bucket start, Unix milliseconds' })
+  time: number;
+
+  @ApiProperty()
+  count: number;
+}
+
+export class WebAnalyticsEventResponse {
+  @ApiProperty()
+  from: string;
+
+  @ApiProperty()
+  to: string;
+
+  @ApiProperty({ enum: WebAnalyticsGranularity })
+  granularity: WebAnalyticsGranularity;
+
+  @ApiProperty({ type: WebAnalyticsEventSummary })
+  summary: WebAnalyticsEventSummary;
+
+  @ApiProperty({ type: WebAnalyticsEventSummary })
+  previous: WebAnalyticsEventSummary;
+
+  @ApiProperty({ type: WebAnalyticsEventPoint, isArray: true })
+  series: WebAnalyticsEventPoint[];
+
+  @ApiPropertyOptional({ type: WebAnalyticsEventPoint, isArray: true })
+  previousSeries?: WebAnalyticsEventPoint[];
+
+  @ApiProperty({
+    type: WebAnalyticsBreakdownRow,
+    isArray: true,
+    description: 'Property keys sent with the event, most used first',
+  })
+  properties: WebAnalyticsBreakdownRow[];
+}
+
 export class WebAnalyticsVisitor {
   @ApiProperty({ description: 'Hashed user id when identified, otherwise the daily visitor hash' })
   id: string;

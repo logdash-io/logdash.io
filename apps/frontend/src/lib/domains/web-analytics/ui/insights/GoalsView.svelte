@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
+  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import { formatCount, formatPercent } from '../../domain/analytics-format';
   import { endsInProgress } from '../../domain/analytics-period';
   import type {
@@ -13,10 +15,11 @@
   type Props = {
     report: WebAnalyticsReport | null;
     limit?: number;
+    eventPath: (name: string) => `/app/domains/${string}`;
     onfilter: (filter: WebAnalyticsFilter) => void;
   };
 
-  const { report, limit, onfilter }: Props = $props();
+  const { report, limit, eventPath, onfilter }: Props = $props();
 
   const COLORS = [
     'var(--chart-1)',
@@ -75,7 +78,7 @@
   {/if}
   <div class={CARD_COLUMNS}>
     <span>Goal</span>
-    <span class="flex gap-6">
+    <span class="flex gap-6 pr-8.5">
       <span class="w-16 text-right">Completions</span>
       <span class="w-16 text-right">Conversion</span>
     </span>
@@ -83,10 +86,10 @@
   <ul class="flex flex-col gap-0.5">
     {#each visible as goal (goal.name)}
       {@const color = limit ? undefined : colorOf(goal.name)}
-      <li>
+      <li class="flex items-center gap-0.5">
         <button
           type="button"
-          class="group focus-visible:outline-brand relative flex h-8 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-left text-sm focus-visible:outline-2"
+          class="group focus-visible:outline-brand relative flex h-8 min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg px-3 text-left text-sm focus-visible:outline-2"
           title="Filter by visitors who completed {goal.name}"
           onclick={() => onSelect(goal)}
         >
@@ -115,6 +118,14 @@
             </span>
           </span>
         </button>
+        <a
+          href={resolve(eventPath(goal.name))}
+          class="hover:bg-surface-150-bg hover:text-fg-default transition-ink focus-visible:outline-brand flex size-8 shrink-0 items-center justify-center rounded-lg text-fg-muted focus-visible:outline-2"
+          aria-label="Open {goal.name}"
+          title="Trend and properties of {goal.name}"
+        >
+          <ChevronRightIcon class="size-3.5" />
+        </a>
       </li>
     {/each}
   </ul>

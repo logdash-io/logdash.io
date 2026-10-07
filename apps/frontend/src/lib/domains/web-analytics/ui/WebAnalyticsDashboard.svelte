@@ -8,16 +8,14 @@
   import { onMount, untrack } from 'svelte';
   import { WebAnalyticsDashboardState } from '../application/web-analytics-dashboard.state.svelte';
   import {
+    analyticsRange,
     analyticsSearch,
     parseAnalyticsQuery,
     queryWindow,
     withFilter,
     type AnalyticsQuery,
   } from '../domain/analytics-query';
-  import type {
-    WebAnalyticsFilter,
-    WebAnalyticsRange,
-  } from '../domain/web-analytics';
+  import type { WebAnalyticsFilter } from '../domain/web-analytics';
   import AnalyticsToolbar from './AnalyticsToolbar.svelte';
   import ActiveFilters from './ActiveFilters.svelte';
   import MetricsCard from './MetricsCard.svelte';
@@ -34,7 +32,7 @@
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const query = $derived(parseAnalyticsQuery(page.url.searchParams));
   const timeWindow = $derived(queryWindow(query));
-  const range = $derived(rangeOf(query));
+  const range = $derived(analyticsRange(query, tz));
   const report = $derived(analytics.report);
 
   $effect(() => topBarState.show(toolbar));
@@ -48,23 +46,11 @@
     void analytics.loadSite();
     const timer = setInterval(() => {
       if (document.hidden || analytics.loading) return;
-      void analytics.load(rangeOf(query));
+      void analytics.load(analyticsRange(query, tz));
       if (analytics.waitingForData) void analytics.loadSite();
     }, 60_000);
     return () => clearInterval(timer);
   });
-
-  function rangeOf(current: AnalyticsQuery): WebAnalyticsRange {
-    const { from, to } = queryWindow(current);
-    return {
-      from,
-      to,
-      granularity: current.granularity,
-      tz,
-      filters: current.filters,
-      compare: current.compare,
-    };
-  }
 
   function onQueryChange(next: AnalyticsQuery): void {
     void goto(resolve(`/app/domains/${clusterId}${analyticsSearch(next)}`), {
@@ -78,8 +64,12 @@
     onQueryChange(withFilter(query, filter));
   }
 
+  function eventPath(name: string): `/app/domains/${string}` {
+    return `/app/domains/${clusterId}/events/${name}${analyticsSearch(query)}`;
+  }
+
   function onRefresh(): void {
-    void analytics.load(rangeOf(query));
+    void analytics.load(analyticsRange(query, tz));
     void analytics.loadSite();
   }
 </script>
@@ -156,7 +146,7 @@
           ]}
           onfilter={onFilter}
         />
-        <GoalsCard {report} onfilter={onFilter} />
+        <GoalsCard {report} {eventPath} onfilter={onFilter} />
         <BreakdownCard
           {clusterId}
           {report}

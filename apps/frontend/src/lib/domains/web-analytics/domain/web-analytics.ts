@@ -24,8 +24,12 @@ export type WebAnalyticsFilterDimension =
   | 'device'
   | 'goal';
 
+export type WebAnalyticsFilterKey =
+  | WebAnalyticsFilterDimension
+  | `prop.${string}`;
+
 export interface WebAnalyticsFilter {
-  dimension: WebAnalyticsFilterDimension;
+  dimension: WebAnalyticsFilterKey;
   value: string;
 }
 
@@ -77,6 +81,28 @@ export interface WebAnalyticsReport {
   goalSeries: { name: string; counts: number[] }[];
   online: number;
   breakdowns: Record<WebAnalyticsBreakdownName, WebAnalyticsBreakdownRow[]>;
+}
+
+export interface WebAnalyticsEventSummary {
+  count: number;
+  visitors: number;
+  conversionRate: number;
+}
+
+export interface WebAnalyticsEventPoint {
+  time: number;
+  count: number;
+}
+
+export interface WebAnalyticsEvent {
+  from: string;
+  to: string;
+  granularity: WebAnalyticsGranularity;
+  summary: WebAnalyticsEventSummary;
+  previous: WebAnalyticsEventSummary;
+  series: WebAnalyticsEventPoint[];
+  previousSeries?: WebAnalyticsEventPoint[];
+  properties: WebAnalyticsBreakdownRow[];
 }
 
 export interface WebAnalyticsOverview {

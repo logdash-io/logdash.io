@@ -9,7 +9,9 @@ import {
 import type {
   WebAnalyticsFilter,
   WebAnalyticsFilterDimension,
+  WebAnalyticsFilterKey,
   WebAnalyticsGranularity,
+  WebAnalyticsRange,
 } from './web-analytics';
 
 export interface AnalyticsQuery {
@@ -78,13 +80,16 @@ export function parseAnalyticsQuery(params: URLSearchParams): AnalyticsQuery {
       .map((entry) => {
         const separator = entry.indexOf(':');
         return {
-          dimension: entry.slice(0, separator) as WebAnalyticsFilterDimension,
+          dimension: entry.slice(0, separator) as WebAnalyticsFilterKey,
           value: entry.slice(separator + 1),
         };
       })
       .filter(
         (filter, index, all) =>
-          DIMENSIONS.includes(filter.dimension) &&
+          (DIMENSIONS.includes(
+            filter.dimension as WebAnalyticsFilterDimension,
+          ) ||
+            /^prop\.[a-z][a-z0-9_]{0,39}$/.test(filter.dimension)) &&
           filter.value.length > 0 &&
           all.findIndex((other) => other.dimension === filter.dimension) ===
             index,
@@ -115,6 +120,27 @@ export function withFilter(
       ...query.filters.filter((entry) => entry.dimension !== filter.dimension),
       filter,
     ],
+  };
+}
+
+export function filterLabel(dimension: WebAnalyticsFilterKey): string {
+  return dimension.startsWith('prop.')
+    ? dimension.slice(5)
+    : FILTER_LABELS[dimension as WebAnalyticsFilterDimension];
+}
+
+export function analyticsRange(
+  query: AnalyticsQuery,
+  tz: string,
+): WebAnalyticsRange {
+  const { from, to } = queryWindow(query);
+  return {
+    from,
+    to,
+    granularity: query.granularity,
+    tz,
+    filters: query.filters,
+    compare: query.compare,
   };
 }
 

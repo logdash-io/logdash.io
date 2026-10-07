@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  Allow,
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
@@ -26,6 +27,12 @@ export const CLICK_IDS = [
   'twclid',
   'li_fat_id',
 ];
+
+export const BUILT_IN_EVENTS = ['pageview', 'pageleave', 'browser_error'];
+
+export const EVENT_NAME = /^[a-z][a-z0-9_]{0,63}$/;
+
+export const PROP_KEY = /^[a-z][a-z0-9_]{0,39}$/;
 
 export class WebEventBody {
   @ApiProperty()
@@ -54,7 +61,7 @@ export class WebEventBody {
   timestamp: string;
 
   @ApiProperty({ example: 'pageview' })
-  @Matches(/^[a-z][a-z0-9_]{0,63}$/)
+  @Matches(EVENT_NAME)
   name: string;
 
   @ApiProperty({ example: '/pricing' })
@@ -110,6 +117,16 @@ export class WebEventBody {
   @IsOptional()
   @Matches(/^[a-f0-9]{64}$/)
   userId?: string;
+
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: { oneOf: [{ type: 'string' }, { type: 'number' }, { type: 'boolean' }] },
+    example: { mode: 'zen', stream: 'tv' },
+    description:
+      'Custom events only. Up to 10 keys matching [a-z][a-z0-9_]{0,39} with string, number or boolean values, stored as strings of up to 100 characters. Invalid entries and values containing @ or control characters are dropped, never the event.',
+  })
+  @Allow()
+  props?: unknown;
 }
 
 export class CollectWebEventsBody {
