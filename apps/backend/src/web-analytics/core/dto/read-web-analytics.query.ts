@@ -106,7 +106,7 @@ export class ReadWebAnalyticsQuery {
     type: String,
     isArray: true,
     description:
-      'dimension:value, for example page:/pricing or country:PL, or prop.<key>:value for visitors who sent a custom event with that property value',
+      'dimension:value, for example page:/pricing or country:PL, or prop.<key>:value for events with that property value, and for events without the key, visitors who sent it',
   })
   @IsOptional()
   @Transform(toArray)

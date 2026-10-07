@@ -551,6 +551,11 @@ describe('Web analytics (reads)', () => {
       setup.token,
       `/events/start/properties/theme?${week}&filter=prop.mode:classic`,
     );
+    const zenModes = await get(
+      setup.cluster.id,
+      setup.token,
+      `/events/start/properties/mode?${week}&filter=prop.mode:zen`,
+    );
     const remote = await get(setup.cluster.id, setup.token, `?${week}&filter=prop.remote:yes`);
     const remoteStarts = await get(
       setup.cluster.id,
@@ -574,7 +579,10 @@ describe('Web analytics (reads)', () => {
       { name: 'classic', visitors: 1, count: 1 },
     ]);
     expect((classicThemes.body as WebAnalyticsBreakdownResponse).rows).toEqual([
-      { name: 'dark', visitors: 1, count: 2 },
+      { name: 'dark', visitors: 1, count: 1 },
+    ]);
+    expect((zenModes.body as WebAnalyticsBreakdownResponse).rows).toEqual([
+      { name: 'zen', visitors: 2, count: 2 },
     ]);
     expect((remote.body as WebAnalyticsResponse).summary.visitors).toBe(1);
     expect((remoteStarts.body as WebAnalyticsEventResponse).summary).toEqual({

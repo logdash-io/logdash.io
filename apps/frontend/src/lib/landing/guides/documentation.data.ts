@@ -675,7 +675,7 @@ export async function load() {
       },
       {
         type: 'paragraph',
-        text: 'In the dashboard, open an event from the Goals card to see its trend and a breakdown by each property, with the same date range and filters as the other reports. Clicking a value filters every report to the visitors who sent it.',
+        text: 'In the dashboard, open an event from the Goals card to see its trend and a breakdown by each property, with the same date range and filters as the other reports. Clicking a value keeps only the events with that value, and narrows the other reports to the visitors who sent it.',
       },
       { type: 'heading', text: 'Let visitors opt out' },
       {

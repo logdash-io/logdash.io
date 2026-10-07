@@ -527,7 +527,9 @@ export class WebAnalyticsReadService {
       const value = `{filter${index}:String}`;
       if (dimension.startsWith('prop.')) {
         filters.set(`filterKey${index}`, dimension.slice(5));
-        return `${PERSON} IN (SELECT ${PERSON} FROM web_events WHERE ${window} AND props[{filterKey${index}:String}] = ${value})`;
+        const key = `{filterKey${index}:String}`;
+        // Events that carry the key must match it, so a breakdown shows only that value; other events follow their visitor.
+        return `if(mapContains(props, ${key}), props[${key}] = ${value}, ${PERSON} IN (SELECT ${PERSON} FROM web_events WHERE ${window} AND props[${key}] = ${value}))`;
       }
       if (dimension === 'page')
         return `session_id IN (SELECT session_id FROM web_events WHERE ${window} AND name = 'pageview' AND path = ${value})`;
