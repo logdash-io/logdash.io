@@ -3,7 +3,10 @@ import { SITE_ANALYTICS_ID } from '../domain/site-analytics';
 import { proxyWebEvents, trackerScriptResponse } from './first-party-proxy';
 
 type Call = { url: string; init?: RequestInit };
-type SentBatch = { sentAt: string; events: { path: string }[] };
+type SentBatch = {
+  sentAt: string;
+  events: { path: string; props?: Record<string, string> }[];
+};
 
 function stubFetch(response: () => Response): Call[] {
   const calls: Call[] = [];
@@ -39,7 +42,7 @@ const event = (path: string): { name: string; path: string } => ({
 });
 const CLIENT_IP = '203.0.113.7';
 
-test('forwards a batch to the fixed upstream with neutral paths, Origin, User-Agent and the real client IP', async () => {
+test('forwards a batch to the fixed upstream with neutral paths, props, Origin, User-Agent and the real client IP', async () => {
   const calls = stubFetch(() => new Response(null, { status: 202 }));
   const response = await proxyWebEvents(
     eventsRequest({
@@ -50,7 +53,7 @@ test('forwards a batch to the fixed upstream with neutral paths, Origin, User-Ag
           '/app/domains/0123456789abcdef01234567/89abcdef0123456789abcdef/metrics',
         ),
         event('/for/acme.com/shop'),
-        event('/pricing'),
+        { name: 'start', path: '/pricing', props: { mode: 'zen' } },
       ],
     }),
     CLIENT_IP,
@@ -75,6 +78,7 @@ test('forwards a batch to the fixed upstream with neutral paths, Origin, User-Ag
   expect(
     sent.events.map((sentEvent: { path: string }) => sentEvent.path),
   ).toEqual(['/app/domains/[id]/[id]/metrics', '/for/[address]', '/pricing']);
+  expect(sent.events[2].props).toEqual({ mode: 'zen' });
 });
 
 test('preserves upstream errors and rejects bad requests without calling upstream', async () => {

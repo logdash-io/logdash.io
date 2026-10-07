@@ -84,6 +84,14 @@
         { label: 'API keys' },
       ])
       .with('/app/domains/[cluster_id]', () => [domain, { label: 'Analytics' }])
+      .with('/app/domains/[cluster_id]/events/[event_name]', () => [
+        domain,
+        {
+          label: 'Analytics',
+          path: clusterPath && `${clusterPath}${page.url.search}`,
+        },
+        { label: page.params.event_name ?? 'Event' },
+      ])
       .with('/app/domains/[cluster_id]/services', () => [
         domain,
         { label: 'Services' },

@@ -10,10 +10,11 @@
 
   type Props = {
     report: WebAnalyticsReport | null;
+    eventPath: (name: string) => `/app/domains/${string}`;
     onfilter: (filter: WebAnalyticsFilter) => void;
   };
 
-  const { report, onfilter }: Props = $props();
+  const { report, eventPath, onfilter }: Props = $props();
 
   let detailsOpen = $state(false);
 
@@ -36,7 +37,7 @@
   expandLabel="Show all goals"
   onexpand={report?.breakdowns.goals.length ? onDetails : undefined}
 >
-  <GoalsView {report} limit={CARD_ROWS} {onfilter} />
+  <GoalsView {report} limit={CARD_ROWS} {eventPath} {onfilter} />
 </DashboardCard>
 
 <DetailsDialog
@@ -46,6 +47,6 @@
   onclose={onDetailsClose}
 >
   <div class="min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-5">
-    <GoalsView {report} onfilter={onDetailsFilter} />
+    <GoalsView {report} {eventPath} onfilter={onDetailsFilter} />
   </div>
 </DetailsDialog>

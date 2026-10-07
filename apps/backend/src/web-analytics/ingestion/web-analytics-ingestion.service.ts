@@ -31,6 +31,23 @@ const QUEUE_KEY = 'web-analytics:queue';
 const DAY_MS = 86_400_000;
 const SESSION_IDLE_SECONDS = 1800;
 
+const PROP_OTHER = '(other)';
+
+const LIMIT_PROPS = `
+local now, ttl = tonumber(ARGV[1]), tonumber(ARGV[2])
+local function admit(key, member, limit)
+  redis.call('ZREMRANGEBYSCORE', key, '-inf', now - ttl)
+  if not redis.call('ZSCORE', key, member) and redis.call('ZCARD', key) >= limit then return false end
+  redis.call('ZADD', key, now, member)
+  redis.call('EXPIRE', key, ttl)
+  return true
+end
+local kept = {}
+for i = 2, #KEYS do
+  kept[i - 1] = admit(KEYS[1], ARGV[2 * i - 1], 50) and (admit(KEYS[i], ARGV[2 * i], 500) and 2 or 1) or 0
+end
+return kept`;
+
 type Session = {
   id: string;
   startedAt: string;
@@ -96,6 +113,7 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
         'Web analytics event limit reached for this hour',
         HttpStatus.TOO_MANY_REQUESTS,
       );
+    await this.limitProps(site.id, rows, config.retentionDays, now);
     const accepted = await this.redis
       .getClient()
       .eval(
@@ -105,6 +123,31 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
     if (!accepted)
       throw new ServiceUnavailableException('Web analytics is busy. Try again shortly');
     await this.redis.set(sessionKey, JSON.stringify(session), SESSION_IDLE_SECONDS);
+  }
+
+  private async limitProps(
+    siteId: string,
+    rows: WebEventClickhouseEntity[],
+    retentionDays: number,
+    now: Date,
+  ): Promise<void> {
+    const entries = rows.flatMap((row) => Object.keys(row.props).map((key) => ({ row, key })));
+    if (!entries.length) return;
+    const kept = (await this.redis.getClient().eval(LIMIT_PROPS, {
+      keys: [
+        `web-analytics:prop-keys:${siteId}`,
+        ...entries.map(({ key }) => `web-analytics:prop-values:${siteId}:${key}`),
+      ],
+      arguments: [
+        String(Math.floor(now.getTime() / 1000)),
+        String(retentionDays * 86_400),
+        ...entries.flatMap(({ row, key }) => [key, row.props[key]]),
+      ],
+    })) as number[];
+    entries.forEach(({ row, key }, index) => {
+      if (kept[index] === 0) delete row.props[key];
+      if (kept[index] === 1) row.props[key] = PROP_OTHER;
+    });
   }
 
   private async sessionize(

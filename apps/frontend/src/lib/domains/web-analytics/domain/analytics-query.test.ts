@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { DateTime } from 'luxon';
 import { allowedGranularities, analyticsWindow } from './analytics-period';
-import { analyticsSearch, parseAnalyticsQuery } from './analytics-query';
+import {
+  analyticsSearch,
+  filterLabel,
+  parseAnalyticsQuery,
+} from './analytics-query';
 import { formatDuration, shortDay, visitorName } from './analytics-format';
 
 const now = DateTime.fromISO('2026-10-02T15:30:00', { zone: 'Europe/Warsaw' });
@@ -64,6 +68,27 @@ test('the URL keeps period, granularity, comparison and one filter per dimension
     parseAnalyticsQuery(new URLSearchParams('period=12m&granularity=hour'))
       .granularity,
   ).toBe('month');
+});
+
+test('property filters keep one value per key and reject invalid keys', () => {
+  const query = parseAnalyticsQuery(
+    new URLSearchParams(
+      'filter=prop.mode:zen&filter=prop.mode:classic&filter=prop.theme:dark mode&filter=prop.Mode:x&filter=prop.:x&filter=goal:start',
+    ),
+  );
+  expect(query.filters).toEqual([
+    { dimension: 'prop.mode', value: 'zen' },
+    { dimension: 'prop.theme', value: 'dark mode' },
+    { dimension: 'goal', value: 'start' },
+  ]);
+  expect(query.filters.map((filter) => filterLabel(filter.dimension))).toEqual([
+    'mode',
+    'theme',
+    'Goal',
+  ]);
+  expect(analyticsSearch(query)).toBe(
+    '?filter=prop.mode%3Azen&filter=prop.theme%3Adark+mode&filter=goal%3Astart',
+  );
 });
 
 test('durations read like a clock and visitor names are stable', () => {

@@ -2,6 +2,7 @@ import { httpClient } from '$lib/domains/shared/http/http-client';
 import type {
   WebAnalyticsBreakdownName,
   WebAnalyticsBreakdownRow,
+  WebAnalyticsEvent,
   WebAnalyticsFunnelStep,
   WebAnalyticsJourney,
   WebAnalyticsOverview,
@@ -69,6 +70,30 @@ export class WebAnalyticsService {
       rows: WebAnalyticsBreakdownRow[];
     }>(
       `/clusters/${clusterId}/web_analytics/breakdown?${query(range, { dimension })}`,
+    );
+    return response.rows;
+  }
+
+  public static async readEvent(
+    clusterId: string,
+    name: string,
+    range: WebAnalyticsRange,
+  ): Promise<WebAnalyticsEvent> {
+    return httpClient.get<WebAnalyticsEvent>(
+      `/clusters/${clusterId}/web_analytics/events/${encodeURIComponent(name)}?${query(range)}`,
+    );
+  }
+
+  public static async readEventProperty(
+    clusterId: string,
+    name: string,
+    key: string,
+    range: WebAnalyticsRange,
+  ): Promise<WebAnalyticsBreakdownRow[]> {
+    const response = await httpClient.get<{
+      rows: WebAnalyticsBreakdownRow[];
+    }>(
+      `/clusters/${clusterId}/web_analytics/events/${encodeURIComponent(name)}/properties/${encodeURIComponent(key)}?${query(range)}`,
     );
     return response.rows;
   }

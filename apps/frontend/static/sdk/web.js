@@ -37,6 +37,7 @@
   let lastPath;
   let userId;
   let identifyCalls = 0;
+  let warnedProps = false;
   let restoreHistory = [];
   const listeners = [
     [window, 'popstate', pageview],
@@ -50,7 +51,7 @@
   window.logdash = { track, identify, optOut, optIn, stop: optOut };
   if (!optedOut()) start();
 
-  function track(name) {
+  function track(name, props) {
     if (active && optedOut()) halt();
     if (!active || !/^[a-z][a-z0-9_]{0,63}$/.test(name)) return;
     try {
@@ -62,12 +63,52 @@
         ...attribution,
         timezone,
         userId,
+        props: cleanProps(name, props),
       });
       queue = queue.slice(-100);
       schedule(1000);
     } catch {
       halt();
     }
+  }
+
+  function cleanProps(name, input) {
+    if (input === undefined || input === null) return;
+    const props = {};
+    let dropped =
+      ['pageview', 'pageleave', 'browser_error'].includes(name) ||
+      typeof input !== 'object' ||
+      Array.isArray(input);
+    try {
+      for (const [key, raw] of dropped ? [] : Object.entries(input)) {
+        if (raw === null || raw === undefined) continue;
+        const scalar =
+          typeof raw === 'string' ||
+          typeof raw === 'boolean' ||
+          (typeof raw === 'number' && isFinite(raw));
+        const text = scalar ? String(raw) : '';
+        if (
+          !scalar ||
+          !/^[a-z][a-z0-9_]{0,39}$/.test(key) ||
+          /[@\p{Cc}]/u.test(text) ||
+          Object.keys(props).length === 10
+        ) {
+          dropped = true;
+          continue;
+        }
+        const value = Array.from(text.trim()).slice(0, 100).join('');
+        if (value) props[key] = value;
+      }
+    } catch {
+      dropped = true;
+    }
+    if (dropped && !warnedProps) {
+      warnedProps = true;
+      console.warn(
+        'logdash.track() props take up to 10 keys matching [a-z][a-z0-9_]{0,39} with string, number or boolean values, never emails or control characters, on custom events only. Invalid props were dropped and the event was sent.',
+      );
+    }
+    return Object.keys(props).length ? props : undefined;
   }
 
   async function identify(id) {
@@ -159,7 +200,15 @@
     queue = queue.filter(
       (event) => Date.now() - Date.parse(event.timestamp) < 4 * 60000,
     );
-    const events = queue.splice(0, 20);
+    const encoder = new TextEncoder();
+    let count = 0;
+    let bytes = 100;
+    while (count < Math.min(queue.length, 20)) {
+      bytes += encoder.encode(JSON.stringify(queue[count])).length + 1;
+      if (count && bytes > 32768) break;
+      count++;
+    }
+    const events = queue.splice(0, count);
     if (!events.length) return;
     const body = JSON.stringify({
       siteId,

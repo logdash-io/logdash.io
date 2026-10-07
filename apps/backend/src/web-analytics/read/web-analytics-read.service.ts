@@ -9,6 +9,9 @@ import {
   WebAnalyticsBreakdownRow,
   WebAnalyticsBreakdowns,
   WebAnalyticsCohort,
+  WebAnalyticsEventPoint,
+  WebAnalyticsEventResponse,
+  WebAnalyticsEventSummary,
   WebAnalyticsFunnelResponse,
   WebAnalyticsJourneysResponse,
   WebAnalyticsOverviewResponse,
@@ -411,6 +414,101 @@ export class WebAnalyticsReadService {
     };
   }
 
+  public async readEvent(
+    clusterId: string,
+    name: string,
+    query: ReadWebAnalyticsQuery,
+    retentionDays: number,
+  ): Promise<WebAnalyticsEventResponse> {
+    const scope = this.scope(clusterId, query, retentionDays);
+    const [summary, previous, series, previousSeries, properties] = await Promise.all([
+      this.readEventSummary(scope, scope.params, name),
+      this.readEventSummary(scope, scope.previousParams, name),
+      this.readEventSeries(scope, scope.params, name),
+      query.compare ? this.readEventSeries(scope, scope.previousParams, name) : undefined,
+      this.query<{ label: string; visitors: string; count: string }>(
+        `SELECT key AS label, uniqExact(${PERSON}) AS visitors, count() AS count
+        FROM web_events FINAL ARRAY JOIN mapKeys(props) AS key
+        WHERE ${scope.where} AND name = {event:String}
+        GROUP BY label ORDER BY count DESC, label ASC LIMIT 50`,
+        { ...scope.params, event: name },
+      ),
+    ]);
+    return {
+      from: scope.from.toISOString(),
+      to: scope.to.toISOString(),
+      granularity: query.granularity,
+      summary,
+      previous,
+      series,
+      previousSeries,
+      properties: properties.map((row) => ({
+        name: row.label,
+        visitors: Number(row.visitors),
+        count: Number(row.count),
+      })),
+    };
+  }
+
+  public async readEventProperty(
+    clusterId: string,
+    name: string,
+    key: string,
+    query: ReadWebAnalyticsQuery,
+    retentionDays: number,
+  ): Promise<WebAnalyticsBreakdownRow[]> {
+    const scope = this.scope(clusterId, query, retentionDays);
+    const rows = await this.query<{ label: string; visitors: string; count: string }>(
+      `SELECT props[{key:String}] AS label, uniqExact(${PERSON}) AS visitors, count() AS count
+      FROM web_events FINAL
+      WHERE ${scope.where} AND name = {event:String} AND mapContains(props, {key:String})
+      GROUP BY label ORDER BY count DESC, visitors DESC, label ASC LIMIT 501`,
+      { ...scope.params, event: name, key },
+    );
+    return rows.map((row) => ({
+      name: row.label,
+      visitors: Number(row.visitors),
+      count: Number(row.count),
+    }));
+  }
+
+  private async readEventSummary(
+    scope: Scope,
+    params: Record<string, unknown>,
+    name: string,
+  ): Promise<WebAnalyticsEventSummary> {
+    const rows = await this.query<{ count: string; visitors: string; total: string }>(
+      `SELECT countIf(name = {event:String}) AS count,
+        uniqExactIf(${PERSON}, name = {event:String}) AS visitors, uniqExact(${PERSON}) AS total
+      FROM web_events FINAL WHERE ${scope.where}`,
+      { ...params, event: name },
+    );
+    const visitors = Number(rows[0]?.visitors ?? 0);
+    const total = Number(rows[0]?.total ?? 0);
+    return {
+      count: Number(rows[0]?.count ?? 0),
+      visitors,
+      conversionRate: total ? (visitors / total) * 100 : 0,
+    };
+  }
+
+  private async readEventSeries(
+    scope: Scope,
+    params: Record<string, unknown>,
+    name: string,
+  ): Promise<WebAnalyticsEventPoint[]> {
+    const [buckets, rows] = await Promise.all([
+      this.readBuckets(scope, params),
+      this.query<{ time: string; count: string }>(
+        `SELECT toUnixTimestamp(${scope.bucket('created_at')}) * 1000 AS time, count() AS count
+        FROM web_events FINAL WHERE ${scope.where} AND name = {event:String} GROUP BY time`,
+        { ...params, event: name },
+      ),
+    ]);
+    const counts = new Map(rows.map((row) => [Number(row.time), Number(row.count)]));
+    return buckets.map((time) => ({ time, count: counts.get(time) ?? 0 }));
+  }
+
   private scope(clusterId: string, query: ReadWebAnalyticsQuery, retentionDays: number): Scope {
     const now = Date.now();
     const to = new Date(Math.min(query.to.getTime(), now));
@@ -427,6 +525,10 @@ export class WebAnalyticsReadService {
       const dimension = filter.slice(0, separator) as WebAnalyticsFilterDimension;
       filters.set(`filter${index}`, filter.slice(separator + 1));
       const value = `{filter${index}:String}`;
+      if (dimension.startsWith('prop.')) {
+        filters.set(`filterKey${index}`, dimension.slice(5));
+        return `${PERSON} IN (SELECT ${PERSON} FROM web_events WHERE ${window} AND props[{filterKey${index}:String}] = ${value})`;
+      }
       if (dimension === 'page')
         return `session_id IN (SELECT session_id FROM web_events WHERE ${window} AND name = 'pageview' AND path = ${value})`;
       if (dimension === 'goal')
@@ -490,14 +592,8 @@ export class WebAnalyticsReadService {
     scope: Scope,
     params: Record<string, unknown>,
   ): Promise<WebAnalyticsPoint[]> {
-    const add = scope.addBuckets;
     const [buckets, rows] = await Promise.all([
-      this.query<{ time: string }>(
-        `SELECT toUnixTimestamp(${add}(${scope.bucket('{from:DateTime64(3)}')}, number)) * 1000 AS time
-        FROM numbers(${scope.buckets})
-        WHERE ${add}(${scope.bucket('{from:DateTime64(3)}')}, number) < {to:DateTime64(3)}`,
-        params,
-      ),
+      this.readBuckets(scope, params),
       this.query<{ time: string; visitors: string; pageviews: string }>(
         `SELECT toUnixTimestamp(${scope.bucket('created_at')}) * 1000 AS time,
           uniqExact(${PERSON}) AS visitors, countIf(name = 'pageview') AS pageviews
@@ -506,14 +602,25 @@ export class WebAnalyticsReadService {
       ),
     ]);
     const byTime = new Map(rows.map((row) => [Number(row.time), row]));
-    return buckets.map(({ time }) => {
-      const row = byTime.get(Number(time));
+    return buckets.map((time) => {
+      const row = byTime.get(time);
       return {
-        time: Number(time),
+        time,
         visitors: Number(row?.visitors ?? 0),
         pageviews: Number(row?.pageviews ?? 0),
       };
     });
+  }
+
+  private async readBuckets(scope: Scope, params: Record<string, unknown>): Promise<number[]> {
+    const add = scope.addBuckets;
+    const rows = await this.query<{ time: string }>(
+      `SELECT toUnixTimestamp(${add}(${scope.bucket('{from:DateTime64(3)}')}, number)) * 1000 AS time
+      FROM numbers(${scope.buckets})
+      WHERE ${add}(${scope.bucket('{from:DateTime64(3)}')}, number) < {to:DateTime64(3)}`,
+      params,
+    );
+    return rows.map((row) => Number(row.time));
   }
 
   private async readGoalSeries(

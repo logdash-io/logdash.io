@@ -3,6 +3,8 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { advanceTo } from 'jest-date-mock';
 import { createTestApp } from '../utils/bootstrap';
 import {
+  WebAnalyticsBreakdownResponse,
+  WebAnalyticsEventResponse,
   WebAnalyticsFunnelResponse,
   WebAnalyticsJourneysResponse,
   WebAnalyticsOverviewResponse,
@@ -43,6 +45,8 @@ describe('Web analytics (reads)', () => {
       `/journeys?${week}`,
       `/funnel?${week}&step=page:/&step=goal:signup`,
       `/retention?${week}`,
+      `/events/start?${week}`,
+      `/events/start/properties/mode?${week}`,
       '/site',
       '/status',
     ]) {
@@ -101,6 +105,10 @@ describe('Web analytics (reads)', () => {
     for (const query of [
       `?${week}&tz=Mars/Base`,
       `?${week}&filter=email:alice`,
+      `?${week}&filter=prop.Mode:zen`,
+      `?${week}&filter=prop.:zen`,
+      `/events/Start?${week}`,
+      `/events/start/properties/Mode?${week}`,
       `?from=2025-10-03T00:00:00.000Z&to=2026-10-03T00:00:00.000Z&granularity=hour`,
       `?from=2026-10-03T00:00:00.000Z&to=2026-10-02T00:00:00.000Z`,
     ]) {
@@ -505,6 +513,77 @@ describe('Web analytics (reads)', () => {
     });
   });
 
+  it('breaks a custom event down by property values and filters every report by a property value', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const stranger = await bootstrap.utils.generalUtils.setupAnonymous();
+    const site = await configure(setup.cluster.id, setup.token);
+    const base = row(setup.cluster.id, site.id);
+    const visitor = (id: string): WebEventClickhouseEntity => ({
+      ...base,
+      visitor_id: id.repeat(64),
+      session_id: id.repeat(64),
+    });
+    const at = (
+      who: WebEventClickhouseEntity,
+      name: string,
+      props: Record<string, string> = {},
+    ): WebEventClickhouseEntity => ({ ...who, id: randomUUID(), name, props });
+    const [alice, bob, carol] = [visitor('a'), visitor('b'), visitor('c')];
+    await insert([
+      at(alice, 'pageview'),
+      at(alice, 'start', { mode: 'zen', theme: 'dark' }),
+      at(alice, 'start', { mode: 'classic', theme: 'dark' }),
+      at(bob, 'pageview'),
+      at(bob, 'start', { mode: 'zen', theme: 'light' }),
+      at(bob, 'listen', { remote: 'yes' }),
+      at(carol, 'pageview'),
+      at({ ...row(stranger.cluster.id, site.id), visitor_id: 'd'.repeat(64) }, 'start', {
+        mode: 'zen',
+      }),
+    ]);
+
+    // when
+    const event = await get(setup.cluster.id, setup.token, `/events/start?${week}&compare=true`);
+    const modes = await get(setup.cluster.id, setup.token, `/events/start/properties/mode?${week}`);
+    const classicThemes = await get(
+      setup.cluster.id,
+      setup.token,
+      `/events/start/properties/theme?${week}&filter=prop.mode:classic`,
+    );
+    const remote = await get(setup.cluster.id, setup.token, `?${week}&filter=prop.remote:yes`);
+    const remoteStarts = await get(
+      setup.cluster.id,
+      setup.token,
+      `/events/start?${week}&filter=prop.remote:yes`,
+    );
+
+    // then
+    const data = event.body as WebAnalyticsEventResponse;
+    expect(data.summary).toEqual({ count: 3, visitors: 2, conversionRate: (2 / 3) * 100 });
+    expect(data.previous).toEqual({ count: 0, visitors: 0, conversionRate: 0 });
+    expect(data.series).toHaveLength(7);
+    expect(data.series.reduce((sum, point) => sum + point.count, 0)).toBe(3);
+    expect(data.previousSeries).toHaveLength(7);
+    expect(data.properties).toEqual([
+      { name: 'mode', visitors: 2, count: 3 },
+      { name: 'theme', visitors: 2, count: 3 },
+    ]);
+    expect((modes.body as WebAnalyticsBreakdownResponse).rows).toEqual([
+      { name: 'zen', visitors: 2, count: 2 },
+      { name: 'classic', visitors: 1, count: 1 },
+    ]);
+    expect((classicThemes.body as WebAnalyticsBreakdownResponse).rows).toEqual([
+      { name: 'dark', visitors: 1, count: 2 },
+    ]);
+    expect((remote.body as WebAnalyticsResponse).summary.visitors).toBe(1);
+    expect((remoteStarts.body as WebAnalyticsEventResponse).summary).toEqual({
+      count: 1,
+      visitors: 1,
+      conversionRate: 100,
+    });
+  });
+
   async function configure(clusterId: string, token: string): Promise<WebAnalyticsSiteSerialized> {
     const response = await request(bootstrap.app.getHttpServer())
       .put(`/clusters/${clusterId}/web_analytics/site`)
@@ -547,6 +626,7 @@ describe('Web analytics (reads)', () => {
       browser: 'Chrome',
       os: 'Windows',
       country: '',
+      props: {},
     };
   }
 });

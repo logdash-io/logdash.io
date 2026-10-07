@@ -20,10 +20,11 @@ type Event = {
   clickId: string;
   timezone: string;
   userId?: string;
+  props?: Record<string, string>;
 };
 type Batch = { siteId: string; sentAt: string; events: Event[] };
 type Api = {
-  track: (name: string) => void;
+  track: (name: string, props?: unknown) => void;
   identify: (id: unknown) => Promise<void>;
   optOut: () => void;
   optIn: () => void;
@@ -194,7 +195,7 @@ test('sends a page leave on page hide and a fresh pageview after a back-forward 
   ]);
 });
 
-test('tracks SPA navigation once per path and sends event names without properties', async ({
+test('tracks SPA navigation once per path and ignores invalid event names', async ({
   page,
 }) => {
   const batches = await install(page);
@@ -224,6 +225,132 @@ test('tracks SPA navigation once per path and sends event names without properti
       Object.keys((window as unknown as { logdash: Api }).logdash),
     ),
   ).toEqual(['track', 'identify', 'optOut', 'optIn', 'stop']);
+});
+
+test('sends custom event props as strings within the limits and warns once when it drops invalid ones', async ({
+  page,
+}) => {
+  await page.clock.install();
+  const warnings: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'warning') warnings.push(message.text());
+  });
+  const batches = await install(page);
+  await page.goto('https://app.example/');
+  await page.evaluate(() => {
+    const api = (window as unknown as { logdash: Api }).logdash;
+    api.track('start', {
+      mode: 'zen',
+      scale: 2,
+      stream: true,
+      padded: '  tv  ',
+      long: 'x'.repeat(150),
+      emoji: `${'x'.repeat(99)}😀tail`,
+      blank: '   ',
+      missing: null,
+      skipped: undefined,
+    });
+    api.track('plain');
+    api.track('bad_keys', {
+      Mode: 'zen',
+      ['k'.repeat(41)]: 'too long',
+      '1st': 'digit',
+      ok: 'yes',
+    });
+    api.track('private_values', {
+      email: 'alice@example.com',
+      line: 'line\nbreak',
+      ok: 'yes',
+    });
+    api.track('not_scalars', {
+      list: ['zen'],
+      nested: { mode: 'zen' },
+      fn: () => 'zen',
+      nan: NaN,
+      infinite: Infinity,
+      ok: 'yes',
+    });
+    api.track(
+      'eleven_keys',
+      Object.fromEntries(
+        Array.from({ length: 11 }, (_, index) => [`k${index}`, index]),
+      ),
+    );
+    api.track('not_an_object', 'mode=zen');
+    api.track('array', ['zen']);
+    api.track('pageview', { mode: 'zen' });
+  });
+  await page.clock.runFor(1100);
+  await expect.poll(() => events(batches).length).toBe(10);
+  expect(
+    events(batches).map((event) => [event.name, event.props ?? null]),
+  ).toEqual([
+    ['pageview', null],
+    [
+      'start',
+      {
+        mode: 'zen',
+        scale: '2',
+        stream: 'true',
+        padded: 'tv',
+        long: 'x'.repeat(100),
+        emoji: `${'x'.repeat(99)}😀`,
+      },
+    ],
+    ['plain', null],
+    ['bad_keys', { ok: 'yes' }],
+    ['private_values', { ok: 'yes' }],
+    ['not_scalars', { ok: 'yes' }],
+    [
+      'eleven_keys',
+      Object.fromEntries(
+        Array.from({ length: 10 }, (_, index) => [`k${index}`, `${index}`]),
+      ),
+    ],
+    ['not_an_object', null],
+    ['array', null],
+    ['pageview', null],
+  ]);
+  expect(named(batches, 'plain')[0]).not.toHaveProperty('props');
+  expect(JSON.stringify(batches)).not.toContain('alice');
+  expect(warnings).toHaveLength(1);
+  expect(warnings[0]).toContain('Invalid props were dropped');
+});
+
+test('splits events with full props into batches of at most 32 KB and 20 events', async ({
+  page,
+}) => {
+  await page.clock.install();
+  const sizes: number[] = [];
+  const batches = await install(page, { sizes });
+  await page.goto('https://app.example/');
+  await page.evaluate(() => {
+    const api = (window as unknown as { logdash: Api }).logdash;
+    const props = Object.fromEntries(
+      Array.from({ length: 10 }, (_, index) => [
+        `k${index}${'x'.repeat(38)}`,
+        '漢'.repeat(100),
+      ]),
+    );
+    for (let index = 0; index < 40; index++) api.track('full_props', props);
+    for (let index = 0; index < 30; index++) api.track('no_props');
+  });
+  await expect
+    .poll(async () => {
+      await page.clock.runFor(5100);
+      return events(batches).length;
+    })
+    .toBe(71);
+  expect(named(batches, 'full_props')).toHaveLength(40);
+  expect(
+    named(batches, 'full_props').every(
+      (event) => Object.keys(event.props ?? {}).length === 10,
+    ),
+  ).toBe(true);
+  expect(Math.max(...sizes)).toBeLessThanOrEqual(32 * 1024);
+  expect(Math.max(...sizes)).toBeGreaterThan(28 * 1024);
+  expect(batches.every((batch) => batch.events.length <= 20)).toBe(true);
+  expect(batches.at(-1)?.events.length).toBeGreaterThan(1);
 });
 
 test('hashes the identified user id in the browser and back-fills queued events', async ({
@@ -520,12 +647,14 @@ async function install(
     endpoint = '/_ld/events',
     origin = 'https://app.example',
     automated = false,
+    sizes = [],
   }: {
     failFirst?: boolean;
     holdFirst?: Promise<void>;
     endpoint?: string;
     origin?: string;
     automated?: boolean;
+    sizes?: number[];
   } = {},
 ): Promise<Batch[]> {
   const batches: Batch[] = [];
@@ -558,6 +687,7 @@ async function install(
       return;
     }
     if (url.pathname === '/_ld/events') {
+      sizes.push(route.request().postDataBuffer()?.length ?? 0);
       batches.push(route.request().postDataJSON() as Batch);
       const first = batches.length === 1;
       if (first && holdFirst) await holdFirst;
