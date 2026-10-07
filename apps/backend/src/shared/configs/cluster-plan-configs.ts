@@ -1,3 +1,4 @@
+import { HttpPingCron } from '../../http-ping/core/enums/http-ping-cron.enum';
 import { ClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
 
 export interface ClusterPlanConfig {
@@ -11,6 +12,10 @@ export interface ClusterPlanConfig {
   };
   publicDashboard: {
     hasBuckets: boolean;
+  };
+  httpMonitors: {
+    pingFrequency: HttpPingCron;
+    canCreatePushMonitors: boolean;
   };
 }
 
@@ -40,6 +45,10 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
     publicDashboard: {
       hasBuckets: false,
     },
+    httpMonitors: {
+      pingFrequency: HttpPingCron.Every5Minutes,
+      canCreatePushMonitors: false,
+    },
   },
   [ClusterTier.EarlyUser]: {
     maxClusterMembers: 2,
@@ -49,6 +58,10 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
     },
     publicDashboard: {
       hasBuckets: false,
+    },
+    httpMonitors: {
+      pingFrequency: HttpPingCron.Every5Minutes,
+      canCreatePushMonitors: false,
     },
   },
 
@@ -62,6 +75,10 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
     publicDashboard: {
       hasBuckets: true,
     },
+    httpMonitors: {
+      pingFrequency: HttpPingCron.Every5Minutes,
+      canCreatePushMonitors: false,
+    },
   },
   [ClusterTier.Builder]: {
     maxClusterMembers: 3,
@@ -72,6 +89,10 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
     publicDashboard: {
       hasBuckets: true,
     },
+    httpMonitors: {
+      pingFrequency: HttpPingCron.EveryMinute,
+      canCreatePushMonitors: false,
+    },
   },
   [ClusterTier.Pro]: {
     maxClusterMembers: 4,
@@ -81,6 +102,10 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
     },
     publicDashboard: {
       hasBuckets: true,
+    },
+    httpMonitors: {
+      pingFrequency: HttpPingCron.Every15Seconds,
+      canCreatePushMonitors: true,
     },
   },
 
@@ -94,6 +119,10 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
     publicDashboard: {
       hasBuckets: true,
     },
+    httpMonitors: {
+      pingFrequency: HttpPingCron.Every5Minutes,
+      canCreatePushMonitors: false,
+    },
   },
   [ClusterTier.Admin]: {
     maxClusterMembers: 100,
@@ -103,6 +132,10 @@ export const ClusterPlanConfigs: ClusterPlanConfigs = {
     },
     publicDashboard: {
       hasBuckets: true,
+    },
+    httpMonitors: {
+      pingFrequency: HttpPingCron.EveryMinute,
+      canCreatePushMonitors: true,
     },
   },
 };

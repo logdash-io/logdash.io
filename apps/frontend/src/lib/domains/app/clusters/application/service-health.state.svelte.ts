@@ -1,21 +1,17 @@
 import { ServiceHealthService } from '$lib/domains/app/clusters/infrastructure/service-health.service.js';
 
-export type ServiceHealthTarget = {
-  projectId: string;
-  monitorId?: string;
-};
-
 export class ServiceHealthState {
   public uptime = $state<Record<string, number | null>>({});
   public errors = $state<Record<string, number>>({});
 
-  public async load(targets: ServiceHealthTarget[]): Promise<void> {
-    await Promise.all(
-      targets.flatMap((target) => [
-        this.loadErrors(target.projectId),
-        this.loadUptime(target),
-      ]),
-    );
+  public async load(dto: {
+    projectIds: string[];
+    monitorIds: string[];
+  }): Promise<void> {
+    await Promise.all([
+      ...dto.projectIds.map((projectId) => this.loadErrors(projectId)),
+      ...dto.monitorIds.map((monitorId) => this.loadUptime(monitorId)),
+    ]);
   }
 
   private async loadErrors(projectId: string): Promise<void> {
@@ -27,20 +23,12 @@ export class ServiceHealthState {
     }
   }
 
-  private async loadUptime({
-    projectId,
-    monitorId,
-  }: ServiceHealthTarget): Promise<void> {
-    if (!monitorId) {
-      delete this.uptime[projectId];
-      return;
-    }
-
+  private async loadUptime(monitorId: string): Promise<void> {
     try {
-      this.uptime[projectId] =
+      this.uptime[monitorId] =
         await ServiceHealthService.readUptimeLastDay(monitorId);
     } catch {
-      delete this.uptime[projectId];
+      delete this.uptime[monitorId];
     }
   }
 }

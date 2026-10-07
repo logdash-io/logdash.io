@@ -8,7 +8,10 @@ export class HttpMonitorEntity {
   _id: Types.ObjectId;
 
   @Prop({ required: true })
-  projectId: string;
+  clusterId: string;
+
+  @Prop({ required: false })
+  projectId?: string;
 
   @Prop({ required: true })
   name: string;
@@ -37,3 +40,4 @@ export type HttpMonitorDocument = HydratedDocument<HttpMonitorEntity>;
 export const HttpMonitorSchema = SchemaFactory.createForClass(HttpMonitorEntity);
 
 HttpMonitorSchema.index({ claimed: 1, createdAt: -1 });
+HttpMonitorSchema.index({ clusterId: 1 });

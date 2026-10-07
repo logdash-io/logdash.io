@@ -27,15 +27,10 @@ type ProjectPlanMetricsConfig = {
   keepGranularitiesForHours: GranularityHours;
 };
 
-type ProjectPlanHttpMonitorsConfig = {
-  maxNumberOfMonitors: number;
-};
-
 type ProjectPlan = {
   logs: ProjectPlanLogConfig;
   logMetrics: ProjectPlanLogMetricsConfig;
   metrics: ProjectPlanMetricsConfig;
-  httpMonitors: ProjectPlanHttpMonitorsConfig;
 };
 
 type UserPlanProjectsConfig = {
@@ -56,7 +51,13 @@ type UserPlan = {
   notificationChannels: UserPlanNotificationChannelsConfig;
 };
 
+type ClusterPlan = {
+  webAnalytics: { retentionDays: number };
+  httpMonitors: { pingFrequency: string; canCreatePushMonitors: boolean };
+};
+
 export type ExposedConfig = {
   projectPlanConfigs: Record<UserTier, ProjectPlan>;
   userPlanConfigs: Record<UserTier, UserPlan>;
+  clusterPlanConfigs: Record<string, ClusterPlan>;
 };

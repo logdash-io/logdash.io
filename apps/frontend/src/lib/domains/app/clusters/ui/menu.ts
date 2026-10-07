@@ -2,7 +2,7 @@ export const MENU_PANEL =
   'bg-surface-elevated-bg border-surface-elevated-border border mt-2 flex flex-col rounded-xl p-1.5 shadow-lg';
 
 export const MENU_ROW =
-  'hover:bg-surface-elevated-hover-bg focus-visible:bg-surface-elevated-hover-bg flex h-9 w-full min-w-0 shrink-0 cursor-pointer items-center gap-2.5 rounded-lg px-2.5 text-left text-sm outline-none';
+  'hover:bg-surface-elevated-hover-bg focus-visible:bg-surface-elevated-hover-bg flex h-8 w-full min-w-0 shrink-0 cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left text-sm outline-none';
 
 export function onMenuArrowKeys(
   event: KeyboardEvent & { currentTarget: HTMLElement },

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
-  import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import {
     addMonitoredAddress,
     finishDomainSetup,
@@ -14,11 +13,7 @@
   import OnboardingSurvey from '$lib/domains/onboarding/ui/OnboardingSurvey.svelte';
   import { readHttpErrorStatus } from '$lib/domains/shared/http/http-error';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
-  import {
-    SETTINGS_PAGE_CLASS,
-    SETTINGS_PANEL_CLASS,
-    SettingsCardHeader,
-  } from '$lib/domains/shared/ui/components/settings-card';
+  import { SETTINGS_INPUT_CLASS } from '$lib/domains/shared/ui/components/settings-card';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { displayUrl, isValidUrl } from '$lib/domains/shared/utils/url';
@@ -42,12 +37,9 @@
   let adding = $state<string | null>(null);
   let error = $state<string | null>(null);
 
-  const projectIds = $derived(
-    (clustersState.get(clusterId)?.projects ?? []).map(({ id }) => id),
-  );
   const monitors = $derived(
-    monitoringState.monitors
-      .filter(({ projectId }) => projectIds.includes(projectId))
+    monitoringState
+      .monitorsOf(clusterId)
       .sort((a, b) => a.id.localeCompare(b.id)),
   );
   const rows = $derived(
@@ -93,7 +85,7 @@
 
     const load = (): void => {
       for (const monitor of waiting) {
-        void monitoringState.loadMonitorPings(monitor.projectId, monitor.id, 1);
+        void monitoringState.loadMonitorPings(clusterId, monitor.id, 1);
       }
     };
 
@@ -173,7 +165,7 @@
   function readError(cause: unknown): string | null {
     return match(readHttpErrorStatus(cause))
       .with(409, () => {
-        upgradeState.openModal('project-limit');
+        upgradeState.openModal('monitor-limit');
         return null;
       })
       .with(400, () => 'Enter a public address, like api.example.com.')
@@ -182,101 +174,73 @@
 </script>
 
 <section
-  class={[SETTINGS_PAGE_CLASS, 'gap-3! edge-b']}
-  aria-labelledby="monitoring"
+  class="bg-surface-25-bg flex min-w-0 flex-col gap-5 rounded-2xl p-5"
+  aria-labelledby="{id}-title"
 >
-  <SettingsCardHeader
-    title="Monitoring"
-    description="We check these addresses around the clock."
-  />
-
-  <div class={['flex min-w-0 flex-col gap-5', SETTINGS_PANEL_CLASS]}>
-    <ul class="flex flex-col gap-2.5" aria-live="polite">
-      {#each rows as { monitor, line } (monitor.id)}
-        <li class="flex min-w-0 items-center gap-2.5 text-sm">
-          <span
-            class={[
-              'size-2 shrink-0 rounded-full',
-              {
-                'bg-success': line.tone === 'up',
-                'bg-error': line.tone === 'down',
-                'bg-idle motion-safe:animate-pulse': line.tone === 'idle',
-              },
-            ]}
-          ></span>
-          <span class="min-w-0 truncate text-fg-default">
-            {displayUrl(monitor.url ?? monitor.name)}
-          </span>
-          <span class="ml-auto shrink-0 text-fg-tertiary tabular-nums">
-            {line.text}
-          </span>
-        </li>
-      {/each}
-    </ul>
-
+  <div class="flex flex-col gap-1">
+    <h2 id="{id}-title" class="text-[15px] font-medium">Finish setting up</h2>
+    <p class="text-fg-muted text-[13px]">
+      Watch the other addresses your users open.
+    </p>
     {#if email}
-      <p class="text-[13px] text-fg-muted">
+      <p class="text-fg-muted text-[13px]">
         Alerts go to <span class="text-fg-secondary">{email}</span>
       </p>
     {/if}
+  </div>
 
-    <form
-      onsubmit={onSubmit}
-      class="flex flex-col gap-2 edge-t pt-4"
-      novalidate
-    >
-      <label for="{id}-address" class="text-sm text-fg-tertiary">
-        Monitor more
-      </label>
-      {#if offered.length}
-        <div class="flex flex-wrap gap-1.5">
-          {#each offered as url (url)}
-            <Button
-              size="xs"
-              loading={adding === url}
-              disabled={adding !== null}
-              onclick={() => onAdd(url)}
-            >
-              <PlusIcon class="size-3" />
-              {displayUrl(url)}
-            </Button>
-          {/each}
-        </div>
-      {/if}
-      <div class="flex gap-2">
-        <Input
-          id="{id}-address"
-          bind:value={address}
-          type="url"
-          inputmode="url"
-          maxlength={1024}
-          placeholder="api.example.com"
-          class="min-w-0 flex-1"
-          error={Boolean(error)}
-          aria-describedby={error ? `${id}-error` : undefined}
-          oninput={() => (error = null)}
-        />
-        <Button
-          type="submit"
-          loading={adding === address && address !== ''}
-          disabled={!address.trim() || adding !== null}
-        >
-          Add
-        </Button>
-      </div>
-      {#if error}
-        <p id="{id}-error" class="text-sm text-error" role="alert">{error}</p>
-      {/if}
-    </form>
-
-    {#if surveyOpen}
-      <div class="edge-t pt-4">
-        <OnboardingSurvey />
+  <form onsubmit={onSubmit} class="flex flex-col gap-2" novalidate>
+    <label for="{id}-address" class="text-fg-muted text-xs">Monitor more</label>
+    {#if offered.length}
+      <div class="flex flex-wrap gap-1.5">
+        {#each offered as url (url)}
+          <Button
+            size="xs"
+            loading={adding === url}
+            disabled={adding !== null}
+            onclick={() => onAdd(url)}
+          >
+            <PlusIcon class="size-3" />
+            {displayUrl(url)}
+          </Button>
+        {/each}
       </div>
     {/if}
-
-    <div class="flex justify-end">
-      <Button variant="primary" size="sm" onclick={onDone}>Done</Button>
+    <div class="flex gap-2">
+      <Input
+        id="{id}-address"
+        bind:value={address}
+        type="url"
+        inputmode="url"
+        maxlength={1024}
+        placeholder="api.example.com"
+        size="sm"
+        class={['min-w-0 flex-1', SETTINGS_INPUT_CLASS]}
+        error={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
+        oninput={() => (error = null)}
+      />
+      <Button
+        type="submit"
+        size="sm"
+        loading={adding === address && address !== ''}
+        disabled={!address.trim() || adding !== null}
+      >
+        Add
+      </Button>
     </div>
+    {#if error}
+      <p id="{id}-error" class="text-error text-xs" role="alert">{error}</p>
+    {/if}
+  </form>
+
+  {#if surveyOpen}
+    <div class="edge-t pt-5">
+      <OnboardingSurvey />
+    </div>
+  {/if}
+
+  <div class="flex justify-end">
+    <Button variant="primary" size="sm" onclick={onDone}>Done</Button>
   </div>
 </section>

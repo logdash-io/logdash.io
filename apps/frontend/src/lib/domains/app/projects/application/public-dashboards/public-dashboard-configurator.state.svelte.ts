@@ -34,6 +34,7 @@ export class PublicDashboardManagerState {
     dto: Partial<{
       name: string;
       isPublic: boolean;
+      autoAddMonitors: boolean;
     }>,
   ): Promise<void> {
     try {

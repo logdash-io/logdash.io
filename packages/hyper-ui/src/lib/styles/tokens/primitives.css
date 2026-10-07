@@ -15,7 +15,8 @@
   --color-neutral-975: #0a0a0b;
 }
 
-:root:has([data-app-shell]) {
+:root:has([data-app-shell]),
+[data-app-frame] {
   --color-neutral-700: #3b3b41;
   --color-neutral-800: #2c2c31;
   --color-neutral-850: #26262b;

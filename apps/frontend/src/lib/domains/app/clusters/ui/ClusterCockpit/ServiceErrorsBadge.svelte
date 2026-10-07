@@ -6,7 +6,7 @@
   import { LogsService } from '$lib/domains/logs/infrastructure/logs.service.js';
   import { filtersStore } from '$lib/domains/logs/infrastructure/filters.store.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
-  import { Badge } from '@logdash/hyper-ui/presentational';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     projectId: string;
@@ -74,18 +74,14 @@
 </script>
 
 {#if !loading && !failed && errorCount > 0}
-  <button
-    type="button"
-    onclick={onBadgeClick}
-    class="relative cursor-pointer"
-    title="Show errors from the last hour"
-  >
-    <Badge
-      variant="outline"
-      class="hover:border-surface-150-border tabular-nums"
+  <Tooltip content="Show errors from the last hour" placement="bottom">
+    <button
+      type="button"
+      onclick={onBadgeClick}
+      class="hover:text-fg-default transition-ink focus-visible:outline-brand relative flex h-7 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-[13px] text-fg-secondary tabular-nums edge focus-visible:outline-2"
     >
       <span class="bg-error size-1.5 shrink-0 rounded-full"></span>
       {errorLabel}
-    </Badge>
-  </button>
+    </button>
+  </Tooltip>
 {/if}

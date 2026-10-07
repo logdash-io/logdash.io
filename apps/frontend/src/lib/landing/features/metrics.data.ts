@@ -42,8 +42,8 @@ export const metricsPage: FeaturePageData = {
       body: 'Zoom from per-minute detail for the last hour to daily points. Your plan sets how far back you can look, up to 30 days.',
     },
     {
-      title: 'Next to your logs and uptime',
-      body: 'Metric tiles sit on the same screen as your logs and monitors, so a spike and the error behind it are side by side.',
+      title: 'Next to your logs',
+      body: 'Metric tiles sit on the same screen as your logs, so a spike and the error behind it are side by side.',
     },
   ],
   steps: {

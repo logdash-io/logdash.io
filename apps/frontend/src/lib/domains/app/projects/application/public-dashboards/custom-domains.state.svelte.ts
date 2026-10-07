@@ -46,7 +46,7 @@ export class CustomDomainsState {
       this._customDomains[publicDashboardId] = customDomain;
     } catch (error) {
       this._setError(
-        readHttpErrorMessage(error) ?? 'Failed to load custom domain',
+        readHttpErrorMessage(error) ?? 'Failed to load custom URL',
       );
       console.error('Failed to load custom domain:', error);
     } finally {
@@ -69,7 +69,7 @@ export class CustomDomainsState {
       this._customDomains[publicDashboardId] = customDomain;
     } catch (error) {
       this._setError(
-        readHttpErrorMessage(error) ?? 'Failed to create custom domain',
+        readHttpErrorMessage(error) ?? 'Failed to create custom URL',
       );
       console.error('Failed to create custom domain:', error);
       throw error;
@@ -90,7 +90,7 @@ export class CustomDomainsState {
       this._customDomains[publicDashboardId] = null;
     } catch (error) {
       this._setError(
-        readHttpErrorMessage(error) ?? 'Failed to delete custom domain',
+        readHttpErrorMessage(error) ?? 'Failed to delete custom URL',
       );
       console.error('Failed to delete custom domain:', error);
       throw error;

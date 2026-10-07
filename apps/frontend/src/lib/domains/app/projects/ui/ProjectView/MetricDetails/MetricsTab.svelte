@@ -5,8 +5,7 @@
   import MetricsTiles from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsTiles.svelte';
   import SdkSetupPrompt from '$lib/domains/app/projects/ui/setup/SdkSetupPrompt.svelte';
   import { Feature } from '$lib/domains/shared/types.js';
-  import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
-  import PaneHeader from '$lib/domains/shared/ui/components/PaneHeader.svelte';
+  import Well from '$lib/domains/shared/ui/components/Well.svelte';
 
   const projectId = $derived(page.params.project_id);
   const metricId = $derived(page.params.metric_id);
@@ -26,27 +25,29 @@
 </script>
 
 {#if empty && projectId}
-  <div class="flex flex-1 flex-col">
-    <PaneHeader title="Metrics">
-      <span class="tabular-nums">0 tracked</span>
-    </PaneHeader>
-
-    <EmptyState
-      class="p-4"
-      title="No metrics yet"
-      description="Counters you send from your app show up here."
-    >
-      <SdkSetupPrompt {projectId} feature={Feature.METRICS} />
-    </EmptyState>
+  <div class="flex flex-1 flex-col p-2">
+    <Well label="Metrics">
+      <div
+        class="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center"
+      >
+        <p class="font-medium">No metrics yet</p>
+        <p class="text-fg-tertiary max-w-sm text-sm text-balance">
+          Counters you send from your app show up here.
+        </p>
+        <div class="mt-2">
+          <SdkSetupPrompt {projectId} feature={Feature.METRICS} />
+        </div>
+      </div>
+    </Well>
   </div>
 {:else}
-  <div class="flex flex-1 flex-col lg:flex-row">
-    <div class="flex min-w-0 flex-1 flex-col">
+  <div class="@container flex flex-1 flex-col">
+    <div class="flex flex-1 flex-col gap-2 p-2 @4xl:flex-row">
       <MetricDetails />
-    </div>
 
-    <div class="flex shrink-0 flex-col max-lg:edge-t lg:w-64 lg:edge-l xl:w-72">
-      <MetricsTiles />
+      <div class="flex min-h-0 shrink-0 flex-col @4xl:w-72 @6xl:w-80">
+        <MetricsTiles />
+      </div>
     </div>
   </div>
 {/if}

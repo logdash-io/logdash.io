@@ -25,6 +25,7 @@ export class FaviconCoreController {
       : null;
 
     if (!favicon) {
+      response.set('Cache-Control', 'public, max-age=3600');
       throw new NotFoundException('Favicon not found');
     }
 

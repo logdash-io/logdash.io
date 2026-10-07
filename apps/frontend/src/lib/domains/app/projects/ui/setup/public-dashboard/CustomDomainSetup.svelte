@@ -89,9 +89,9 @@
     if (!customDomain) return;
 
     const confirmed = await confirmDialog.ask({
-      title: 'Delete custom domain',
+      title: 'Delete custom URL',
       description: `${customDomain.domain} stops serving this status page. This cannot be undone.`,
-      confirmLabel: 'Delete domain',
+      confirmLabel: 'Delete custom URL',
     });
     if (!confirmed) return;
 
@@ -119,12 +119,12 @@
 {:else}
   <ol class="flex flex-col gap-6">
     <li class="flex flex-col gap-2">
-      <span class="text-sm">1. Add your custom domain</span>
+      <span class="text-sm">1. Add your custom URL</span>
 
       {#if !customDomain}
         <div class="flex gap-2">
           <Input
-            aria-label="Custom domain"
+            aria-label="Custom URL"
             bind:value={domainInput}
             class={FIELD_CLASS}
             placeholder="status.example.com"
@@ -220,7 +220,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
           <span class="text-warning flex items-center gap-2 text-sm">
             <Spinner class="size-3.5 shrink-0" aria-hidden="true" />
-            Domain is pending verification
+            Waiting for your DNS record
           </span>
           <Button size="sm" loading={isLoading} onclick={onManualCheck}>
             Check
@@ -229,12 +229,12 @@
       {:else if customDomain?.status === 'verified'}
         <span class="text-success flex items-center gap-2 text-sm">
           <CheckIcon class="size-4 shrink-0" />
-          Domain is verified
+          Custom URL is live
         </span>
       {:else if customDomain}
         <span class="text-error flex items-center gap-2 text-sm">
           <CloseIcon class="size-4 shrink-0" />
-          Domain verification failed
+          We could not verify your DNS record
         </span>
       {/if}
     </li>

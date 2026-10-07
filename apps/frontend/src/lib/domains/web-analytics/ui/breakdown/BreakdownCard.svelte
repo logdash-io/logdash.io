@@ -133,6 +133,7 @@
 
 {#snippet chartToggle()}
   <IconButton
+    well
     label={donut ? 'Show as list' : 'Show as chart'}
     onclick={onChartToggle}
   >

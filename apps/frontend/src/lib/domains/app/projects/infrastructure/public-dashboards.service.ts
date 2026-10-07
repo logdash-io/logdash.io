@@ -23,7 +23,11 @@ export class PublicDashboardsService {
 
   updatePublicDashboard(
     dashboardId: string,
-    update: Partial<{ name: string; isPublic: boolean }>,
+    update: Partial<{
+      name: string;
+      isPublic: boolean;
+      autoAddMonitors: boolean;
+    }>,
   ): Promise<PublicDashboard> {
     return httpClient.put<PublicDashboard>(
       `/public_dashboards/${dashboardId}`,

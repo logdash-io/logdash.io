@@ -6,7 +6,7 @@ import { MetricRegisterWriteService } from '../../metric-register/write/metric-r
 import { MetricWriteService } from '../../metric/write/metric-write.service';
 import { ProjectReadService } from '../read/project-read.service';
 import { ProjectWriteService } from '../write/project-write.service';
-import { HttpMonitorRemovalService } from '../../http-monitor/removal/http-monitor-removal.service';
+import { HttpMonitorWriteService } from '../../http-monitor/write/http-monitor-write.service';
 import { ApiKeyWriteService } from '../../api-key/write/api-key-write.service';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class ProjectRemovalService {
     private readonly metricWriteService: MetricWriteService,
     private readonly metricRegisterWriteService: MetricRegisterWriteService,
     @Inject(PROJECTS_LOGGER) private readonly logger: LogdashLogger,
-    private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
+    private readonly httpMonitorWriteService: HttpMonitorWriteService,
     private readonly apiKeyWriteService: ApiKeyWriteService,
   ) {}
 
@@ -51,10 +51,7 @@ export class ProjectRemovalService {
     });
     await this.metricRegisterWriteService.deleteBelongingToProject(projectId, actorUserId);
 
-    this.logger.log(`Deleting HTTP monitors for project...`, {
-      projectId,
-    });
-    await this.httpMonitorRemovalService.deleteByProjectId(projectId, actorUserId);
+    await this.httpMonitorWriteService.unlinkProject(projectId);
 
     this.logger.log(`Deleting API keys for project...`, {
       projectId,

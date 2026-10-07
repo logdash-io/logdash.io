@@ -5,7 +5,6 @@
 import type { NotificationChannel } from '$lib/domains/app/projects/domain/telegram/telegram.types';
 
 export type WebhookSetupDTO = {
-  withAssignment: boolean;
   url: string;
   headers: Record<string, string>;
   method: string;

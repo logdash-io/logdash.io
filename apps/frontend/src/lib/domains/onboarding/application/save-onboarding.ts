@@ -9,6 +9,7 @@ export const acceptConsents = async (marketing: boolean): Promise<void> => {
   });
 
   posthog.capture('consents_accepted', { marketing });
+  window.logdash?.track('signup_completed');
 };
 
 export const saveOnboardingAnswers = async (
@@ -17,4 +18,5 @@ export const saveOnboardingAnswers = async (
   await OnboardingService.saveAnswers(answers);
 
   posthog.capture('onboarding_completed', answers);
+  window.logdash?.track('onboarding_completed');
 };

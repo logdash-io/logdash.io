@@ -50,7 +50,7 @@
   }
 
   function onAddChannel(): void {
-    notificationChannelSetupState.open(monitorId);
+    notificationChannelSetupState.open();
   }
 
   function channelDetails(channel: NotificationChannel): string {
@@ -67,7 +67,10 @@
   }
 </script>
 
-<SettingsCard title="Alerts" description="Where down and recovery alerts go.">
+<SettingsCard
+  title="Alerts"
+  description="Where its down and recovery alerts go. New channels alert every monitor on this domain."
+>
   {#each channels as channel (channel.id)}
     <SettingsCardItem>
       <label class="flex min-w-0 cursor-pointer items-center gap-3">

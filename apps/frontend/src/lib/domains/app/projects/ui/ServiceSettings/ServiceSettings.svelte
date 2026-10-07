@@ -1,7 +1,6 @@
 <script lang="ts">
   import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
   import KeyIcon from '$lib/domains/shared/icons/KeyIcon.svelte';
-  import PlusCircleIcon from '$lib/domains/shared/icons/PlusCircleIcon.svelte';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
   import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
   import { goto } from '$app/navigation';
@@ -9,7 +8,6 @@
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-  import { Feature } from '$lib/domains/shared/types.js';
   import {
     SETTINGS_INPUT_CLASS,
     SETTINGS_PAGE_CLASS,
@@ -21,17 +19,11 @@
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import { Button, Input } from '@logdash/hyper-ui/presentational';
-  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
 
   type Props = {
     clusterId: string;
     projectId: string;
   };
-
-  type FeatureRoute =
-    | '/app/domains/[cluster_id]/[project_id]/logs'
-    | '/app/domains/[cluster_id]/[project_id]/metrics'
-    | '/app/domains/[cluster_id]/[project_id]/monitoring';
 
   const { clusterId, projectId }: Props = $props();
 
@@ -93,7 +85,7 @@
     const confirmed = await confirmDialog.ask({
       title: 'Delete service',
       description:
-        'Its logs, metrics and monitors will be deleted. This cannot be undone.',
+        'Its logs, metrics and API keys will be deleted. Monitors stay on the domain. This cannot be undone.',
       confirmLabel: 'Delete service',
     });
 
@@ -123,74 +115,6 @@
 
     if (e.key === 'Escape') {
       onCancelRenaming();
-    }
-  }
-
-  const hasLogging = $derived(
-    projectsState.hasFeature(projectId, Feature.LOGGING),
-  );
-  const hasMetrics = $derived(
-    projectsState.hasFeature(projectId, Feature.METRICS),
-  );
-  const hasMonitoring = $derived(
-    projectsState.hasFeature(projectId, Feature.MONITORING),
-  );
-
-  const availableFeatures = $derived.by(() => {
-    const features: Array<{
-      id: Feature;
-      label: string;
-      description: string;
-      route: FeatureRoute;
-    }> = [];
-
-    if (!hasLogging) {
-      features.push({
-        id: Feature.LOGGING,
-        label: 'Logging',
-        description: 'Collect and search the logs your app writes.',
-        route: '/app/domains/[cluster_id]/[project_id]/logs',
-      });
-    }
-
-    if (!hasMetrics) {
-      features.push({
-        id: Feature.METRICS,
-        label: 'Metrics',
-        description: 'Track the numbers your app reports.',
-        route: '/app/domains/[cluster_id]/[project_id]/metrics',
-      });
-    }
-
-    if (!hasMonitoring) {
-      features.push({
-        id: Feature.MONITORING,
-        label: 'Monitoring',
-        description: 'Check that your site is up.',
-        route: '/app/domains/[cluster_id]/[project_id]/monitoring',
-      });
-    }
-
-    return features;
-  });
-
-  let addingFeature = $state<Feature | null>(null);
-
-  async function onAddFeature(
-    feature: Feature,
-    route: FeatureRoute,
-  ): Promise<void> {
-    addingFeature = feature;
-
-    try {
-      await projectsState.addFeature(projectId, feature);
-      void goto(
-        resolve(route, { cluster_id: clusterId, project_id: projectId }),
-      );
-    } catch {
-      return;
-    } finally {
-      addingFeature = null;
     }
   }
 </script>
@@ -285,34 +209,6 @@
     </SettingsCardItem>
   </SettingsCard>
 
-  {#if availableFeatures.length > 0}
-    <SettingsCard
-      title="Features"
-      description="Add more to this service."
-      icon={PlusCircleIcon}
-    >
-      {#each availableFeatures as feature (feature.id)}
-        <SettingsCardItem>
-          <p>{feature.label}</p>
-          <p class="text-fg-muted">{feature.description}</p>
-
-          {#snippet action()}
-            <Button
-              size="sm"
-              onclick={() => onAddFeature(feature.id, feature.route)}
-              disabled={addingFeature !== null}
-              loading={addingFeature === feature.id}
-              data-posthog-id="add-feature-settings-button"
-            >
-              <PlusIcon class="size-4" />
-              Add
-            </Button>
-          {/snippet}
-        </SettingsCardItem>
-      {/each}
-    </SettingsCard>
-  {/if}
-
   <SettingsCard
     title="Danger zone"
     icon={TrashIcon}
@@ -322,7 +218,7 @@
     <SettingsCardItem>
       <p>Delete service</p>
       <p class="text-fg-muted">
-        Removes this service with all its logs, metrics and monitors.
+        Removes its logs, metrics and API keys. Monitors stay on the domain.
       </p>
 
       {#snippet action()}

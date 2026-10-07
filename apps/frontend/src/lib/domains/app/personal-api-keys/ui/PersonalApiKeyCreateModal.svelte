@@ -254,14 +254,12 @@
 </script>
 
 <Modal {isOpen} onClose={close} dismissible={!createdValue}>
-  <div class="flex flex-col gap-5 sm:p-6">
+  <div class="flex flex-col gap-5">
     {#if createdValue}
       <div class="flex flex-col gap-4">
-        <div class="flex items-center gap-3">
-          <div class="bg-surface-150-bg rounded-lg p-2.5">
-            <KeyIcon class="text-brand size-5 stroke-[1.2]" />
-          </div>
-          <h2 class="text-lg font-medium">Personal API key created</h2>
+        <div class="flex items-center gap-4">
+          {@render keyTile()}
+          <h2 class="text-base font-semibold">Personal API key created</h2>
         </div>
 
         <p class="text-warning text-sm">
@@ -270,7 +268,7 @@
 
         <div class="flex items-center gap-2">
           <code
-            class="ph-no-capture bg-surface-150-bg border-surface-150-border min-w-0 flex-1 rounded-lg border p-3 font-mono text-sm break-all"
+            class="ph-no-capture bg-surface-50-bg edge min-w-0 flex-1 rounded-lg p-3 font-mono text-sm break-all"
           >
             {createdValue}
           </code>
@@ -286,8 +284,12 @@
       </div>
     {:else if cliResult === 'approved'}
       <div class="flex flex-col items-center gap-3 py-6 text-center">
-        <CheckIcon class="text-success size-9 stroke-[0.67]" />
-        <h2 class="text-lg font-medium">Approved</h2>
+        <div
+          class="bg-surface-150-bg text-success flex size-9 items-center justify-center rounded-lg"
+        >
+          <CheckIcon class="size-4.5" />
+        </div>
+        <h2 class="text-base font-semibold">Approved</h2>
         <p class="text-fg-tertiary text-sm">
           Return to your terminal to continue.
         </p>
@@ -295,26 +297,28 @@
       </div>
     {:else if cliResult === 'denied'}
       <div class="flex flex-col items-center gap-3 py-6 text-center">
-        <CloseIcon class="text-error size-9 stroke-[0.67]" />
-        <h2 class="text-lg font-medium">Request denied</h2>
+        <div
+          class="bg-surface-150-bg text-error flex size-9 items-center justify-center rounded-lg"
+        >
+          <CloseIcon class="size-4.5" />
+        </div>
+        <h2 class="text-base font-semibold">Request denied</h2>
         <p class="text-fg-tertiary text-sm">
           The CLI authorization request was denied.
         </p>
         <Button variant="ghost" class="mt-2" onclick={close}>Close</Button>
       </div>
     {:else}
-      <div class="flex items-center gap-3">
-        <div class="bg-surface-150-bg rounded-lg p-2.5">
-          <KeyIcon class="text-brand size-5 stroke-[1.2]" />
-        </div>
-        <h2 class="text-lg font-medium">
+      <div class="flex items-center gap-4">
+        {@render keyTile()}
+        <h2 class="text-base font-semibold">
           {mode === 'cli' ? 'Authorize CLI access' : 'Create personal API key'}
         </h2>
       </div>
 
       {#if mode === 'cli' && cliRequest}
         <div
-          class="border-surface-150-border bg-surface-150-bg flex flex-col gap-2 rounded-lg border p-3 text-sm"
+          class="bg-surface-50-bg edge flex flex-col gap-2 rounded-lg p-3 text-sm"
         >
           <p class="text-fg-tertiary">
             A CLI on
@@ -401,7 +405,7 @@
 
           {#if accessKind === 'clusters'}
             <div
-              class="border-surface-elevated-border mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
+              class="bg-surface-50-bg edge mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg p-2"
             >
               {#if clusters.length === 0}
                 <p class="text-fg-tertiary p-1 text-sm">No domains yet.</p>
@@ -418,7 +422,7 @@
             </div>
           {:else if accessKind === 'projects'}
             <div
-              class="border-surface-elevated-border mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-2"
+              class="bg-surface-50-bg edge mt-1 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg p-2"
             >
               {#if clustersWithProjects.length === 0}
                 <p class="text-fg-tertiary p-1 text-sm">No services yet.</p>
@@ -481,3 +485,11 @@
     {/if}
   </div>
 </Modal>
+
+{#snippet keyTile()}
+  <div
+    class="bg-surface-150-bg flex size-9 shrink-0 items-center justify-center rounded-lg"
+  >
+    <KeyIcon class="size-4.5" />
+  </div>
+{/snippet}

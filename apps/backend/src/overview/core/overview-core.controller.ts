@@ -38,7 +38,11 @@ export class OverviewCoreController {
     const since = parseSince(query.since ?? DEFAULT_SINCE);
     const project = await this.projectReadService.readByIdOrThrow(projectId);
 
-    return this.overviewReadService.buildForProjects({ projects: [project], since });
+    return this.overviewReadService.buildForProjects({
+      projects: [project],
+      monitorsScope: { projectIds: [project.id] },
+      since,
+    });
   }
 
   @ApiBearerAuth()
@@ -53,7 +57,11 @@ export class OverviewCoreController {
     const since = parseSince(query.since ?? DEFAULT_SINCE);
     const projects = await this.projectReadService.readByClusterId(clusterId);
 
-    return this.overviewReadService.buildForProjects({ projects, since });
+    return this.overviewReadService.buildForProjects({
+      projects,
+      monitorsScope: { clusterIds: [clusterId] },
+      since,
+    });
   }
 
   /**
@@ -77,43 +85,48 @@ export class OverviewCoreController {
 
     const access = request.user?.access;
 
-    const projects = await this.resolveReachableProjects(userId, access);
+    const reach = await this.resolveReach(userId, access);
 
-    return this.overviewReadService.buildForProjects({ projects, since });
+    return this.overviewReadService.buildForProjects({ ...reach, since });
   }
 
   /**
-   * Projects the credential can reach right now. Starts from the user's live
+   * Projects and monitors the credential can reach right now. Starts from the user's live
    * cluster memberships (mirrors GET /users/me/clusters), then narrows by the
    * personal key's access restriction. Never grants beyond membership.
    */
-  private async resolveReachableProjects(
+  private async resolveReach(
     userId: string,
     access: AccessRestriction | undefined,
-  ): Promise<ProjectNormalized[]> {
+  ): Promise<{
+    projects: ProjectNormalized[];
+    monitorsScope: { clusterIds: string[] } | { projectIds: string[] };
+  }> {
     const clusters = await this.clusterReadService.readWhereUserHasAnyRole(userId);
     const memberClusterIds = clusters.map((cluster) => cluster.id);
-
-    if (memberClusterIds.length === 0) {
-      return [];
-    }
-
-    const allProjects = await this.projectReadService.readByClusterIds(memberClusterIds);
+    const allProjects =
+      memberClusterIds.length === 0
+        ? []
+        : await this.projectReadService.readByClusterIds(memberClusterIds);
 
     if (!access || access.kind === 'all') {
-      return allProjects;
+      return { projects: allProjects, monitorsScope: { clusterIds: memberClusterIds } };
     }
 
     if (access.kind === 'clusters') {
       const allowed = new Set(access.ids);
-      return allProjects.filter((project) => allowed.has(project.clusterId));
+      return {
+        projects: allProjects.filter((project) => allowed.has(project.clusterId)),
+        monitorsScope: { clusterIds: memberClusterIds.filter((id) => allowed.has(id)) },
+      };
     }
 
     if (access.kind === 'projects') {
       const allowed = new Set(access.ids);
-      return allProjects.filter((project) => allowed.has(project.id));
+      const projects = allProjects.filter((project) => allowed.has(project.id));
+      return { projects, monitorsScope: { projectIds: projects.map((project) => project.id) } };
     }
 
-    return [];
+    return { projects: [], monitorsScope: { projectIds: [] } };
   }
 }

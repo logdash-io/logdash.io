@@ -11,30 +11,29 @@
   let { errorMessage, onCancel, onRetry }: Props = $props();
 </script>
 
-<div class="space-y-6 text-center">
-  <div class="flex items-center justify-start gap-4">
+<div class="flex flex-col gap-5">
+  <div class="flex items-center gap-4">
     <div
-      class="error-card flex h-14 w-14 items-center justify-center rounded-full"
+      class="bg-surface-150-bg text-error flex size-9 shrink-0 items-center justify-center rounded-lg"
     >
-      <DangerIcon class="size-6 stroke-1" />
+      <DangerIcon class="size-4.5" />
     </div>
-
-    <div class="flex flex-col items-start">
-      <h3 class="text-xl font-medium">Telegram setup failed</h3>
+    <div class="flex min-w-0 flex-col gap-0.5">
+      <h2 class="text-base font-semibold">Telegram setup failed</h2>
       <p class="text-fg-tertiary text-sm">
         Please check your connection and try again.
       </p>
     </div>
   </div>
 
-  <span class="block truncate text-left font-mono text-lg">
+  <p
+    class="bg-surface-50-bg edge text-fg-secondary rounded-lg px-3 py-2.5 font-mono text-sm break-words"
+  >
     Error: {errorMessage}
-  </span>
+  </p>
 
-  <div class="flex gap-3">
-    <Button variant="primary" class="flex-1" onclick={onCancel}>Cancel</Button>
-    <Button variant="primary" class="flex-1" onclick={onRetry}>
-      Try Again
-    </Button>
+  <div class="flex justify-end gap-2">
+    <Button variant="ghost" onclick={onCancel}>Cancel</Button>
+    <Button variant="primary" onclick={onRetry}>Try Again</Button>
   </div>
 </div>

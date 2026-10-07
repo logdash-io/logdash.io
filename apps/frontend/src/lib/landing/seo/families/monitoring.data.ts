@@ -101,7 +101,7 @@ app.listen(process.env.PORT ?? 3000);`,
         items: [
           {
             title: 'Add the health URL',
-            text: 'Create a service in Logdash and paste https://api.yourapp.com/health. The first check runs straight away, so a wrong path shows up in seconds, not during an incident.',
+            text: 'Add a monitor in Logdash and paste https://api.yourapp.com/health. The first check runs straight away, so a wrong path shows up in seconds, not during an incident.',
           },
           {
             title: 'Pick the interval',
@@ -132,7 +132,7 @@ app.listen(process.env.PORT ?? 3000);`,
           },
           {
             feature: 'Free plan volume',
-            logdash: '5 services every 5 minutes, about 43,000 checks a month',
+            logdash: '5 monitors every 5 minutes, about 43,000 checks a month',
             them: '10,000 API check runs a month',
             winner: 'logdash',
           },
@@ -180,7 +180,7 @@ app.listen(process.env.PORT ?? 3000);`,
       {
         question: 'Is there a free API uptime checker?',
         answer:
-          'Yes. Logdash checks 5 services every 5 minutes for free, with Telegram alerts and one public status page. If the check needs a token or a JSON body assertion, the free Checkly Hobby plan gives 10,000 API check runs a month.',
+          'Yes. Logdash checks 5 monitors every 5 minutes for free, with Telegram alerts and one public status page. If the check needs a token or a JSON body assertion, the free Checkly Hobby plan gives 10,000 API check runs a month.',
       },
     ],
     updatedAt: '2026-10-02',
@@ -235,14 +235,14 @@ done`,
       { type: 'heading', text: 'REST API monitoring free tools, honestly' },
       {
         type: 'paragraph',
-        text: 'Four hosted options check a REST endpoint at no cost. Better Stack gives 10 monitors at 3-minute checks. Checkly gives 10,000 API check runs a month with body and header assertions. UptimeRobot gives 50 monitors at 5 minutes. Logdash gives 5 services at 5 minutes, with Telegram alerts, a public status page, and the logs from the same API on the same screen if you add an SDK. None of the four is a bad pick. The table puts Logdash next to the one people most often start with.',
+        text: 'Four hosted options check a REST endpoint at no cost. Better Stack gives 10 monitors at 3-minute checks. Checkly gives 10,000 API check runs a month with body and header assertions. UptimeRobot gives 50 monitors at 5 minutes. Logdash gives 5 monitors at 5 minutes, with Telegram alerts, a public status page, and the logs from the same API in the same dashboard if you add an SDK. None of the four is a bad pick. The table puts Logdash next to the one people most often start with.',
       },
       {
         type: 'steps',
         items: [
           {
-            title: 'Add the service',
-            text: 'Create a service in Logdash and paste the health URL. The first check runs immediately and records the status code and response time.',
+            title: 'Add the monitor',
+            text: 'Add a monitor in Logdash and paste the health URL. The first check runs immediately and records the status code and response time.',
           },
           {
             title: 'Connect Telegram once',
@@ -261,7 +261,7 @@ done`,
         rows: [
           {
             feature: 'Free monitors',
-            logdash: '5 services, one HTTP monitor each',
+            logdash: '5 HTTP monitors',
             them: '50 monitors',
             winner: 'them',
           },
@@ -291,7 +291,7 @@ done`,
           },
           {
             feature: 'Logs and metrics from the API itself',
-            logdash: 'Eight SDKs into the same service view',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Not part of the product',
             winner: 'logdash',
           },
@@ -318,7 +318,7 @@ done`,
         question:
           'Are there REST API monitoring free tools that work for production?',
         answer:
-          'Yes. The Logdash free plan checks 5 services every 5 minutes with Telegram alerts and a status page. UptimeRobot checks 50 monitors every 5 minutes. A 5-minute gap is the price of free; Logdash Builder drops it to 1 minute for $9 a month.',
+          'Yes. The Logdash free plan checks 5 monitors every 5 minutes with Telegram alerts and a status page. UptimeRobot checks 50 monitors every 5 minutes. A 5-minute gap is the price of free; Logdash Builder drops it to 1 minute for $9 a month.',
       },
       {
         question: 'What should REST API monitoring check?',
@@ -557,7 +557,7 @@ done`,
           },
           {
             title: 'Create the monitors',
-            text: 'Add a monitor with that URL. It checks every 5 minutes on the free plan, every minute on Builder and every 15 seconds on Pro. A service holds one monitor, so on Pro add a second service with a push monitor for the worker and paste its id into the loop.',
+            text: 'Add a monitor with that URL. It checks every 5 minutes on the free plan, every minute on Builder and every 15 seconds on Pro. On Pro, add a second monitor with "You send heartbeats" for the worker and paste its id into the loop.',
           },
           {
             title: 'Break it on purpose',

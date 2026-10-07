@@ -5,6 +5,8 @@ import { ProjectRemovalModule } from '../../project/removal/project-removal.modu
 import { ClusterRemovalService } from './cluster-removal.service';
 import { PublicDashboardRemovalModule } from '../../public-dashboard/removal/public-dashboard-removal.module';
 import { WebAnalyticsWriteModule } from '../../web-analytics/write/web-analytics-write.module';
+import { HttpMonitorRemovalModule } from '../../http-monitor/removal/http-monitor-removal.module';
+import { NotificationChannelWriteModule } from '../../notification-channel/write/notification-channel-write.module';
 
 @Module({
   imports: [
@@ -13,6 +15,8 @@ import { WebAnalyticsWriteModule } from '../../web-analytics/write/web-analytics
     ProjectRemovalModule,
     PublicDashboardRemovalModule,
     WebAnalyticsWriteModule,
+    HttpMonitorRemovalModule,
+    NotificationChannelWriteModule,
   ],
   providers: [ClusterRemovalService],
   exports: [ClusterRemovalService],

@@ -10,6 +10,7 @@
   import { WebAnalyticsSetupState } from '$lib/domains/web-analytics/application/web-analytics-setup.state.svelte';
   import WebAnalyticsSetup from '$lib/domains/web-analytics/ui/WebAnalyticsSetup.svelte';
   import DangerZoneCard from './DangerZoneCard.svelte';
+  import DomainAlertsCard from './DomainAlertsCard.svelte';
   import ProjectInfoCard from './ProjectInfoCard.svelte';
   import TeamManagementCard from './TeamManagementCard.svelte';
 
@@ -36,10 +37,12 @@
     icon={CodeIcon}
     description="Counts visitors on your website. Add it once, it sends every page view."
   >
-    <div class="p-4">
+    <div class="px-3 pt-2 pb-3">
       <WebAnalyticsSetup {clusterId} {connection} />
     </div>
   </SettingsCard>
+
+  <DomainAlertsCard {clusterId} />
 
   <ProjectInfoCard {clusterId} canEdit={isCreator} />
 

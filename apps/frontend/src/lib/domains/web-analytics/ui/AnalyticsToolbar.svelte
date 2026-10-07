@@ -1,4 +1,8 @@
 <script lang="ts">
+  import {
+    TOOLBAR_CONTROL,
+    TOOLBAR_ICON_CONTROL,
+  } from '$lib/domains/shared/ui/components/toolbar.js';
   import { Dropdown, Menu, Tooltip } from '@logdash/hyper-ui/presentational';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
   import ChevronLeftIcon from '$lib/domains/shared/icons/ChevronLeftIcon.svelte';
@@ -41,10 +45,6 @@
 
   const { query, span, report, loading, onchange, onrefresh }: Props = $props();
 
-  const CONTROL =
-    'hover:text-fg-default transition-ink focus-visible:outline-brand flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm edge focus-visible:outline-2';
-  const ICON_CONTROL =
-    'text-fg-tertiary hover:text-fg-default transition-ink focus-visible:outline-brand flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full edge focus-visible:outline-2';
   const STEP_CONTROL =
     'hover:text-fg-default transition-ink focus-visible:outline-brand flex h-full w-8 cursor-pointer items-center justify-center text-fg-tertiary focus-visible:-outline-offset-2 focus-visible:outline-2 disabled:cursor-default disabled:text-fg-disabled';
   const MENU_ROW =
@@ -189,7 +189,7 @@
   <button
     type="button"
     class={[
-      CONTROL,
+      TOOLBAR_CONTROL,
       query.compare ? 'bg-surface-150-bg text-fg-default' : 'text-fg-tertiary',
     ]}
     aria-pressed={query.compare}
@@ -204,7 +204,7 @@
       <button
         {...attrs}
         type="button"
-        class={[CONTROL, 'text-fg-tertiary']}
+        class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
         aria-label="Granularity: {granularityLabel}"
       >
         {granularityLabel}
@@ -242,7 +242,7 @@
         <button
           {...attrs}
           type="button"
-          class={ICON_CONTROL}
+          class={TOOLBAR_ICON_CONTROL}
           aria-label="Add filter"
         >
           <FilterIcon class="size-3.5" />
@@ -325,7 +325,7 @@
   <Tooltip content="Refresh" placement="bottom">
     <button
       type="button"
-      class={ICON_CONTROL}
+      class={TOOLBAR_ICON_CONTROL}
       aria-label="Refresh"
       onclick={onrefresh}
     >

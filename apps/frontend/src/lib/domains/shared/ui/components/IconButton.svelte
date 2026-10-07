@@ -9,6 +9,7 @@
     href?: string;
     danger?: boolean;
     raised?: boolean;
+    well?: boolean;
     disabled?: boolean;
     class?: ClassValue;
     onclick?: () => void;
@@ -22,6 +23,7 @@
     href,
     danger = false,
     raised = false,
+    well = false,
     disabled = false,
     class: className,
     onclick,
@@ -31,7 +33,11 @@
 
   const buttonClass = $derived([
     'text-fg-muted focus-visible:outline-brand transition-ink relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md focus-visible:outline-2 disabled:pointer-events-none disabled:text-fg-disabled',
-    raised ? 'hover:bg-surface-150-hover-bg' : 'hover:bg-surface-100-hover-bg',
+    raised
+      ? 'hover:bg-surface-150-hover-bg'
+      : well
+        ? 'hover:bg-surface-25-hover-bg'
+        : 'hover:bg-surface-100-hover-bg',
     danger ? 'hover:text-error' : 'hover:text-fg-default',
     className,
   ]);

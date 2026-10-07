@@ -10,13 +10,15 @@ export type TableType =
   | 'logsRetention'
   | 'logsRateLimits'
   | 'metricsPerService'
-  | 'metricsRetention';
+  | 'metricsRetention'
+  | 'webAnalyticsRetention';
 
 export const tableTitles: Record<TableType, string> = {
   logsRetention: 'Logs retention',
   logsRateLimits: 'Rate limit per hour',
   metricsPerService: 'Metrics per service',
   metricsRetention: 'Metrics retention',
+  webAnalyticsRetention: 'Web analytics retention',
 };
 
 const PLAN_TIERS = [UserTier.FREE, UserTier.BUILDER, UserTier.PRO] as const;
@@ -117,6 +119,16 @@ export function buildTablesFromConfig(
             granularities?.day ?? 0,
           );
           return formatRetentionHours(maxRetention || undefined);
+        }),
+      ],
+    },
+    webAnalyticsRetention: {
+      headers,
+      rows: [
+        availableTiers.map((tier) => {
+          const days =
+            config?.clusterPlanConfigs?.[tier]?.webAnalytics?.retentionDays;
+          return formatRetentionHours(days && days * 24);
         }),
       ],
     },

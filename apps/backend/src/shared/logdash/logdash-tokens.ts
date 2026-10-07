@@ -1,3 +1,4 @@
+export const APP_LOGGER = Symbol('APP_LOGGER');
 export const AUTH_LOGGER = Symbol('AUTH_LOGGER');
 export const USERS_LOGGER = Symbol('USERS_LOGGER');
 export const CLUSTERS_LOGGER = Symbol('CLUSTERS_LOGGER');
@@ -23,6 +24,7 @@ export const WEB_ANALYTICS_LOGGER = Symbol('WEB_ANALYTICS_LOGGER');
 export const LOGDASH_METRICS = Symbol('LOGDASH_METRICS');
 
 export const ALL_LOGGER_TOKENS = [
+  APP_LOGGER,
   AUTH_LOGGER,
   USERS_LOGGER,
   CLUSTERS_LOGGER,
@@ -47,6 +49,7 @@ export const ALL_LOGGER_TOKENS = [
 ];
 
 export const NAMESPACE_MAP: Record<symbol, string> = {
+  [APP_LOGGER]: 'app',
   [AUTH_LOGGER]: 'auth',
   [USERS_LOGGER]: 'users',
   [CLUSTERS_LOGGER]: 'clusters',

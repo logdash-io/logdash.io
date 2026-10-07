@@ -23,7 +23,7 @@
 
   type Props = {
     id: string;
-    projectId: string;
+    clusterId: string;
     value: string;
     autofocus?: boolean;
     size?: 'sm' | 'md';
@@ -32,7 +32,7 @@
 
   let {
     id,
-    projectId,
+    clusterId,
     value = $bindable(),
     autofocus = false,
     size = 'md',
@@ -76,7 +76,7 @@
     );
 
     try {
-      const result = await probeUrl(projectId, url);
+      const result = await probeUrl(clusterId, url);
 
       if (url === probeTarget) {
         probed = { url, probe: result };

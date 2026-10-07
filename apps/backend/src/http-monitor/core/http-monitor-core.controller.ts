@@ -30,13 +30,15 @@ import { ProjectReadService } from '../../project/read/project-read.service';
 import { HttpMonitorStatusService } from '../status/http-monitor-status.service';
 import { HttpPingPingerService } from '../../http-ping/pinger/http-ping-pinger.service';
 import { HttpPingPushService } from '../../http-ping/push/http-ping-push.service';
-import { DemoEndpoint } from 'src/demo/decorators/demo-endpoint.decorator';
+import { DemoEndpoint } from '../../demo/decorators/demo-endpoint.decorator';
 import { DemoCacheInterceptor } from '../../demo/interceptors/demo-cache.interceptor';
 import { HttpMonitorRemovalService } from '../removal/http-monitor-removal.service';
 import { HttpMonitorWatchlistService } from '../watchlist/http-monitor-watchlist.service';
 import { NotificationChannelReadService } from '../../notification-channel/read/notification-channel-read.service';
 import { Public } from '../../auth/core/decorators/is-public';
-import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
+import { getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
+import { ClusterReadCachedService } from '../../cluster/read/cluster-read-cached.service';
+import { PublicDashboardMonitorsService } from '../../public-dashboard/monitors/public-dashboard-monitors.service';
 import { HttpMonitorMode } from './enums/http-monitor-mode.enum';
 import {
   ThrottleMonitorCreation,
@@ -66,45 +68,46 @@ export class HttpMonitorCoreController {
     private readonly httpMonitorWatchlistService: HttpMonitorWatchlistService,
     private readonly httpMonitorProbeService: HttpMonitorProbeService,
     private readonly notificationChannelDefaultsService: NotificationChannelDefaultsService,
+    private readonly clusterReadCachedService: ClusterReadCachedService,
+    private readonly publicDashboardMonitorsService: PublicDashboardMonitorsService,
   ) {}
+
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Write)
+  @ThrottleMonitorCreation()
+  @Post('clusters/:clusterId/http_monitors')
+  @ApiResponse({ type: HttpMonitorSerialized })
+  public async create(
+    @Param('clusterId') clusterId: string,
+    @Body() dto: CreateHttpMonitorBody,
+    @CurrentUserId() userId: string,
+  ): Promise<HttpMonitorSerialized> {
+    return this.createMonitor({ clusterId }, dto, userId);
+  }
 
   @UseGuards(ClusterMemberGuard)
   @RequireScope(Resource.Monitors, Action.Write)
   @ThrottleMonitorCreation()
   @Post('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized })
-  async create(
+  public async createInProject(
     @Param('projectId') projectId: string,
     @Body() dto: CreateHttpMonitorBody,
     @CurrentUserId() userId: string,
   ): Promise<HttpMonitorSerialized> {
-    if (dto.mode === HttpMonitorMode.Push) {
-      await this.assertPushMonitorsAllowed(projectId);
-    }
+    const { clusterId } = await this.projectReadService.readByIdOrThrow(projectId);
 
-    const hasCapacity = await this.httpMonitorLimitService.hasCapacity(projectId);
-    if (!hasCapacity) {
-      throw new ConflictException(
-        'You have reached the maximum number of monitors for this service',
-      );
-    }
+    return this.createMonitor({ clusterId, projectId }, dto, userId);
+  }
 
-    await this.validateNotificationChannels({
-      notificationChannelsIds: dto.notificationChannelsIds,
-      projectId,
-    });
-
-    const httpMonitor = await this.httpMonitorWriteService.create(projectId, dto, userId);
-    await this.httpMonitorWatchlistService.inheritHistory(httpMonitor);
-    const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
-
-    if (process.env.NODE_ENV !== 'test') {
-      setTimeout(() => {
-        void this.httpPingPingerService.pingSingleMonitor(httpMonitor.id);
-      }, 1_000);
-    }
-
-    return HttpMonitorSerializer.serialize(httpMonitor, status);
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Monitors, Action.Write)
+  @ThrottleMonitorProbe()
+  @HttpCode(200)
+  @Post('clusters/:clusterId/http_monitors/probe')
+  @ApiResponse({ type: ProbeHttpMonitorUrlResponse })
+  public async probe(@Body() dto: ProbeHttpMonitorUrlBody): Promise<ProbeHttpMonitorUrlResponse> {
+    return this.httpMonitorProbeService.probe(dto.url);
   }
 
   @UseGuards(ClusterMemberGuard)
@@ -113,7 +116,9 @@ export class HttpMonitorCoreController {
   @HttpCode(200)
   @Post('projects/:projectId/http_monitors/probe')
   @ApiResponse({ type: ProbeHttpMonitorUrlResponse })
-  async probe(@Body() dto: ProbeHttpMonitorUrlBody): Promise<ProbeHttpMonitorUrlResponse> {
+  public async probeInProject(
+    @Body() dto: ProbeHttpMonitorUrlBody,
+  ): Promise<ProbeHttpMonitorUrlResponse> {
     return this.httpMonitorProbeService.probe(dto.url);
   }
 
@@ -123,7 +128,9 @@ export class HttpMonitorCoreController {
   @HttpCode(200)
   @Post('clusters/:clusterId/http_monitors/suggestions')
   @ApiResponse({ type: SuggestHttpMonitorUrlsResponse })
-  async suggest(@Body() dto: ProbeHttpMonitorUrlBody): Promise<SuggestHttpMonitorUrlsResponse> {
+  public async suggest(
+    @Body() dto: ProbeHttpMonitorUrlBody,
+  ): Promise<SuggestHttpMonitorUrlsResponse> {
     return { urls: await this.httpMonitorProbeService.suggest(dto.url) };
   }
 
@@ -131,7 +138,9 @@ export class HttpMonitorCoreController {
   @RequireScope(Resource.Monitors, Action.Read)
   @Get('projects/:projectId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
-  async readByProjectId(@Param('projectId') projectId: string): Promise<HttpMonitorSerialized[]> {
+  public async readByProjectId(
+    @Param('projectId') projectId: string,
+  ): Promise<HttpMonitorSerialized[]> {
     const httpMonitors = await this.httpMonitorReadService.readClaimedByProjectId(projectId);
     const statuses = await this.httpMonitorStatusService.getStatuses(
       httpMonitors.map((httpMonitor) => httpMonitor.id),
@@ -146,12 +155,10 @@ export class HttpMonitorCoreController {
   @RequireScope(Resource.Monitors, Action.Read)
   @Get('/clusters/:clusterId/http_monitors')
   @ApiResponse({ type: HttpMonitorSerialized, isArray: true })
-  async readByClusterId(@Param('clusterId') clusterId: string): Promise<HttpMonitorSerialized[]> {
-    const projectsIdsInCluster = await this.projectReadService.readByClusterId(clusterId);
-
-    const httpMonitors = await this.httpMonitorReadService.readClaimedByProjectIds(
-      projectsIdsInCluster.map((project) => project.id),
-    );
+  public async readByClusterId(
+    @Param('clusterId') clusterId: string,
+  ): Promise<HttpMonitorSerialized[]> {
+    const httpMonitors = await this.httpMonitorReadService.readClaimedByClusterId(clusterId);
 
     const statuses = await this.httpMonitorStatusService.getStatuses(
       httpMonitors.map((httpMonitor) => httpMonitor.id),
@@ -164,23 +171,23 @@ export class HttpMonitorCoreController {
   @RequireScope(Resource.Monitors, Action.Write)
   @Put('/http_monitors/:httpMonitorId')
   @ApiResponse({ type: HttpMonitorSerialized })
-  async update(
+  public async update(
     @Param('httpMonitorId') httpMonitorId: string,
     @Body() dto: UpdateHttpMonitorBody,
     @CurrentUserId() userId: string,
   ): Promise<HttpMonitorSerialized> {
-    const { projectId, notificationChannelsIds, mode } =
+    const { clusterId, notificationChannelsIds, mode } =
       await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
 
     if (dto.mode === HttpMonitorMode.Push && mode !== HttpMonitorMode.Push) {
-      await this.assertPushMonitorsAllowed(projectId);
+      await this.assertPushMonitorsAllowed(clusterId);
     }
 
     await this.validateNotificationChannels({
       notificationChannelsIds: dto.notificationChannelsIds?.filter(
         (notificationChannelId) => !notificationChannelsIds.includes(notificationChannelId),
       ),
-      projectId,
+      clusterId,
     });
 
     const httpMonitor = await this.httpMonitorWriteService.update(httpMonitorId, dto, userId);
@@ -193,7 +200,7 @@ export class HttpMonitorCoreController {
   @UseGuards(ClusterMemberGuard)
   @RequireScope(Resource.Monitors, Action.Delete)
   @Delete('/http_monitors/:httpMonitorId')
-  async delete(
+  public async delete(
     @Param('httpMonitorId') httpMonitorId: string,
     @CurrentUserId() userId: string,
   ): Promise<void> {
@@ -203,14 +210,14 @@ export class HttpMonitorCoreController {
   @UseGuards(ClusterMemberGuard)
   @RequireScope(Resource.Monitors, Action.Write)
   @Post('/http_monitors/:httpMonitorId/notification_channels/:notificationChannelId')
-  async addNotificationChannel(
+  public async addNotificationChannel(
     @Param('httpMonitorId') httpMonitorId: string,
     @Param('notificationChannelId') notificationChannelId: string,
     @CurrentUserId() userId: string,
   ): Promise<void> {
     await this.validateNotificationChannels({
       notificationChannelsIds: [notificationChannelId],
-      projectId: (await this.httpMonitorReadService.readById(httpMonitorId))!.projectId,
+      clusterId: (await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId)).clusterId,
     });
 
     await this.httpMonitorWriteService.addNotificationChannel(
@@ -223,14 +230,14 @@ export class HttpMonitorCoreController {
   @UseGuards(ClusterMemberGuard)
   @RequireScope(Resource.Monitors, Action.Write)
   @Delete('/http_monitors/:httpMonitorId/notification_channels/:notificationChannelId')
-  async removeNotificationChannel(
+  public async removeNotificationChannel(
     @Param('httpMonitorId') httpMonitorId: string,
     @Param('notificationChannelId') notificationChannelId: string,
     @CurrentUserId() userId: string,
   ): Promise<void> {
     await this.validateNotificationChannels({
       notificationChannelsIds: [notificationChannelId],
-      projectId: (await this.httpMonitorReadService.readById(httpMonitorId))!.projectId,
+      clusterId: (await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId)).clusterId,
     });
 
     await this.httpMonitorWriteService.removeNotificationChannel(
@@ -243,29 +250,59 @@ export class HttpMonitorCoreController {
   @Public()
   @ThrottlePushPing()
   @Post('/ping/:httpMonitorId')
-  async recordPing(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
+  public async recordPing(@Param('httpMonitorId') httpMonitorId: string): Promise<void> {
     await this.httpPingPushService.record(httpMonitorId);
   }
 
-  private async assertPushMonitorsAllowed(projectId: string): Promise<void> {
-    const project = await this.projectReadService.readByIdOrThrow(projectId);
+  private async createMonitor(
+    owner: { clusterId: string; projectId?: string },
+    dto: CreateHttpMonitorBody,
+    userId: string,
+  ): Promise<HttpMonitorSerialized> {
+    if (dto.mode === HttpMonitorMode.Push) {
+      await this.assertPushMonitorsAllowed(owner.clusterId);
+    }
 
-    if (!getProjectPlanConfig(project.tier).httpMonitors.canCreatePushMonitors) {
+    const hasCapacity = await this.httpMonitorLimitService.hasCapacity(owner.clusterId);
+    if (!hasCapacity) {
+      throw new ConflictException('You have reached the maximum number of monitors on your plan');
+    }
+
+    await this.validateNotificationChannels({
+      notificationChannelsIds: dto.notificationChannelsIds,
+      clusterId: owner.clusterId,
+    });
+
+    const httpMonitor = await this.httpMonitorWriteService.create(owner, dto, userId);
+    await this.httpMonitorWatchlistService.inheritHistory(httpMonitor);
+    const status = await this.httpMonitorStatusService.getStatus(httpMonitor.id);
+
+    if (process.env.NODE_ENV !== 'test') {
+      setTimeout(() => {
+        void this.httpPingPingerService.pingSingleMonitor(httpMonitor.id);
+      }, 1_000);
+    }
+
+    return HttpMonitorSerializer.serialize(httpMonitor, status);
+  }
+
+  private async assertPushMonitorsAllowed(clusterId: string): Promise<void> {
+    const tier = await this.clusterReadCachedService.readTier(clusterId);
+
+    if (!getClusterPlanConfig(tier).httpMonitors.canCreatePushMonitors) {
       throw new ForbiddenException('Push monitors are not available on your plan');
     }
   }
 
   private async validateNotificationChannels(params: {
     notificationChannelsIds?: string[];
-    projectId: string;
+    clusterId: string;
   }): Promise<void> {
-    const clusterId = (await this.projectReadService.readById(params.projectId))!.clusterId;
-
     if (
       params.notificationChannelsIds &&
       !(await this.notificationChannelReadService.belongToCluster(
         params.notificationChannelsIds,
-        clusterId,
+        params.clusterId,
       ))
     ) {
       throw new BadRequestException('Notification channels must belong to the same domain');
@@ -275,24 +312,23 @@ export class HttpMonitorCoreController {
   @UseGuards(ClusterMemberGuard)
   @RequireScope(Resource.Monitors, Action.Write)
   @Post('/http_monitors/:httpMonitorId/claim')
-  async claim(
+  public async claim(
     @Param('httpMonitorId') httpMonitorId: string,
     @CurrentUserId() userId: string,
   ): Promise<void> {
-    const { projectId, claimed } = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
+    const monitor = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
 
-    if (claimed) {
+    if (monitor.claimed) {
       return;
     }
 
-    const hasCapacity = await this.httpMonitorLimitService.hasClaimedCapacity(projectId);
+    const hasCapacity = await this.httpMonitorLimitService.hasClaimedCapacity(monitor.clusterId);
     if (!hasCapacity) {
-      throw new ConflictException(
-        'You have reached the maximum number of monitors for this service',
-      );
+      throw new ConflictException('You have reached the maximum number of monitors on your plan');
     }
 
     await this.httpMonitorWriteService.claim(httpMonitorId);
-    await this.notificationChannelDefaultsService.attachOwnerEmail(httpMonitorId, userId);
+    await this.notificationChannelDefaultsService.attachDomainChannels(httpMonitorId, userId);
+    await this.publicDashboardMonitorsService.addClaimedMonitor(monitor);
   }
 }

@@ -6,6 +6,7 @@ export class HttpMonitorSerializer {
   public static normalize(entity: HttpMonitorEntity): HttpMonitorNormalized {
     return {
       id: entity._id.toString(),
+      clusterId: entity.clusterId,
       projectId: entity.projectId,
       name: entity.name,
       url: entity.url,
@@ -27,6 +28,7 @@ export class HttpMonitorSerializer {
   ): HttpMonitorSerialized {
     return {
       id: normalized.id,
+      clusterId: normalized.clusterId,
       projectId: normalized.projectId,
       name: normalized.name,
       url: normalized.url,

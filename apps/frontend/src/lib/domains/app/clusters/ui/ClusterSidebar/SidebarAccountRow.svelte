@@ -35,6 +35,7 @@
 {:else}
   <span class="flex h-7.5 min-w-0 items-center gap-2 px-1.5">
     {@render profile()}
+    <ChevronDownIcon class="text-fg-muted size-3.5 shrink-0" />
   </span>
 {/if}
 

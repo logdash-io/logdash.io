@@ -1,5 +1,6 @@
 <script lang="ts">
   import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
+  import { topBarState } from '$lib/domains/app/clusters/application/top-bar.state.svelte.js';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
@@ -9,8 +10,8 @@
   import MetricBreakdownChart from '$lib/domains/app/projects/ui/ProjectView/MetricDetails/MetricBreakdownChart.svelte';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
-  import PaneHeader from '$lib/domains/shared/ui/components/PaneHeader.svelte';
   import TimeRangeSelector from '$lib/domains/shared/ui/components/TimeRangeSelector.svelte';
+  import Well from '$lib/domains/shared/ui/components/Well.svelte';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 
@@ -46,8 +47,6 @@
     { label: '7d', granularity: MetricGranularity.DAY, points: 7, pro: false },
     { label: '30d', granularity: MetricGranularity.DAY, points: 30, pro: true },
   ];
-  const CHART_INSET_PX = 32;
-
   const integer = new Intl.NumberFormat('en-US');
   const decimal = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 
@@ -60,7 +59,6 @@
   const isPaid = $derived(userState.isPaid);
 
   let rangeLabel = $state(RANGES[0].label);
-  let chartHeight = $state(0);
 
   const range = $derived(
     RANGES.find(({ label }) => label === rangeLabel) ?? RANGES[0],
@@ -101,6 +99,8 @@
       [MetricGranularity.DAY]: points.dayData,
     }[range.granularity];
   });
+
+  $effect(() => topBarState.show(toolbar));
 
   $effect(() => {
     if (!projectId || !metricId) {
@@ -154,47 +154,50 @@
   }
 </script>
 
-<div class="flex min-h-0 flex-1 flex-col">
-  <PaneHeader title={metric?.name ?? 'Metric'}>
-    <TimeRangeSelector
-      {options}
-      selected={rangeLabel}
-      onSelect={onRangeSelect}
-    />
-
-    {#if metric}
-      <span class="bg-surface-50-border h-4 w-px"></span>
-      <IconButton
-        label="Delete metric"
-        danger
-        class="-mr-1.5"
-        data-posthog-id="delete-metric-button"
-        onclick={onDelete}
-      >
-        <TrashIcon class="size-4" />
-      </IconButton>
-    {/if}
-  </PaneHeader>
-
-  <div class="flex flex-col gap-0.5 px-4 pt-4">
+<Well
+  label={metric?.name ?? 'Metric'}
+  title={metric?.name ?? 'Metric'}
+  class="min-h-0 flex-1 [--chart-surface:var(--surface-25-bg)]"
+  actions={metric ? deleteAction : undefined}
+>
+  <div class="flex min-w-0 flex-col gap-1.5 p-3">
     <span class="text-fg-muted text-xs">Now</span>
-    <span class="font-figure h-8 truncate text-2xl">
+    <span class="h-8 truncate font-mono text-2xl tabular-nums">
       {metric ? format(metric.value) : ''}
     </span>
   </div>
 
-  <div class="relative min-h-72 flex-1" bind:clientHeight={chartHeight}>
-    <div class="absolute inset-0 p-4">
-      {#if chartHeight > 0}
-        <MetricBreakdownChart
-          {data}
-          format={range.granularity}
-          height={chartHeight - CHART_INSET_PX}
-          isLoading={metricsState.metricDetailsLoading && data.length === 0}
-          failed={metricsState.metricDetailsFailed && data.length === 0}
-          timeRange={range.pro ? 'large' : 'small'}
-        />
-      {/if}
+  <div class="relative min-h-72 flex-1">
+    <div class="absolute inset-0 pt-2 pb-1.5 pl-3">
+      <MetricBreakdownChart
+        {data}
+        label={metric?.name ?? 'Metric'}
+        format={range.granularity}
+        isLoading={metricsState.metricDetailsLoading && data.length === 0}
+        failed={metricsState.metricDetailsFailed && data.length === 0}
+        timeRange={range.pro ? 'large' : 'small'}
+      />
     </div>
   </div>
-</div>
+</Well>
+
+{#snippet toolbar()}
+  <TimeRangeSelector
+    {options}
+    selected={rangeLabel}
+    label="Metric range"
+    onSelect={onRangeSelect}
+  />
+{/snippet}
+
+{#snippet deleteAction()}
+  <IconButton
+    well
+    danger
+    label="Delete metric"
+    data-posthog-id="delete-metric-button"
+    onclick={onDelete}
+  >
+    <TrashIcon class="size-3.5" />
+  </IconButton>
+{/snippet}

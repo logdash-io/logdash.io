@@ -6,6 +6,8 @@ import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { CLUSTERS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { PublicDashboardRemovalService } from '../../public-dashboard/removal/public-dashboard-removal.service';
 import { WebAnalyticsWriteService } from '../../web-analytics/write/web-analytics-write.service';
+import { HttpMonitorRemovalService } from '../../http-monitor/removal/http-monitor-removal.service';
+import { NotificationChannelWriteService } from '../../notification-channel/write/notification-channel-write.service';
 
 @Injectable()
 export class ClusterRemovalService {
@@ -16,6 +18,8 @@ export class ClusterRemovalService {
     @Inject(CLUSTERS_LOGGER) private readonly logger: LogdashLogger,
     private readonly publicDashboardRemovalService: PublicDashboardRemovalService,
     private readonly webAnalyticsWriteService: WebAnalyticsWriteService,
+    private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
+    private readonly notificationChannelWriteService: NotificationChannelWriteService,
   ) {}
 
   public async deleteClustersByCreatorId(creatorId: string): Promise<void> {
@@ -23,10 +27,7 @@ export class ClusterRemovalService {
 
     for (const cluster of clusters) {
       this.logger.log(`Deleting cluster...`, { clusterId: cluster.id });
-      await this.webAnalyticsWriteService.deleteByClusterId(cluster.id);
-      await this.clusterWriteService.delete(cluster.id);
-
-      await this.projectRemovalService.deleteProjectsByClusterId(cluster.id);
+      await this.deleteClusterData(cluster.id);
     }
   }
 
@@ -37,11 +38,15 @@ export class ClusterRemovalService {
       throw new NotFoundException('Domain not found');
     }
 
+    await this.deleteClusterData(clusterId, actorUserId);
+  }
+
+  private async deleteClusterData(clusterId: string, actorUserId?: string): Promise<void> {
     await this.webAnalyticsWriteService.deleteByClusterId(clusterId);
     await this.clusterWriteService.delete(clusterId, actorUserId);
-
     await this.projectRemovalService.deleteProjectsByClusterId(clusterId, actorUserId);
-
+    await this.httpMonitorRemovalService.deleteByClusterId(clusterId, actorUserId);
     await this.publicDashboardRemovalService.deletePublicDashboardsByClusterId(clusterId);
+    await this.notificationChannelWriteService.deleteByClusterId(clusterId);
   }
 }

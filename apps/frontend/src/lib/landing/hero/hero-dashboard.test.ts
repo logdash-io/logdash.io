@@ -1,13 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { HttpPing } from '$lib/domains/app/projects/domain/monitoring/http-ping';
-import type { Log } from '$lib/domains/logs/domain/log';
-import {
-  heroLive,
-  heroLogRows,
-  heroMetrics,
-  heroReading,
-  heroService,
-} from './hero-dashboard';
+import { demoName, heroLive, heroMonitor, heroReading } from './hero-dashboard';
 
 const NOW = Date.parse('2026-01-01T00:01:00Z');
 
@@ -20,8 +13,9 @@ function ping(second: number, statusCode = 200): HttpPing {
 }
 
 const demo = {
-  monitor: { name: 'api.logdash.io' } as never,
+  monitor: { name: 'api.logdash.io', url: 'https://api.logdash.io' } as never,
   pings: [ping(45), ping(30), ping(15)],
+  loaded: true,
 };
 
 test('the live indicator names every phase', () => {
@@ -36,34 +30,43 @@ test('the live indicator names every phase', () => {
   expect(heroLive('error')).toMatchObject({ label: 'Stopped', dot: 'error' });
 });
 
-test('the service row follows the demo until the visitor has a preview', () => {
+test('the monitor follows the demo until the visitor has a preview', () => {
   const base = {
     previewHost: 'example.com',
+    previewUrl: 'https://example.com',
     hasPreview: true,
     pings: [],
     demo,
   };
 
-  expect(heroService({ ...base, phase: 'idle' })).toEqual({
+  expect(heroMonitor({ ...base, phase: 'idle' })).toEqual({
     name: 'api.logdash.io',
+    url: 'https://api.logdash.io',
     status: 'up',
     pending: false,
   });
-  expect(heroService({ ...base, phase: 'creating' })).toEqual({
+  expect(heroMonitor({ ...base, phase: 'creating' })).toEqual({
     name: 'example.com',
+    url: 'https://example.com',
     status: 'unknown',
     pending: true,
   });
   expect(
-    heroService({ ...base, phase: 'previewing', pings: [ping(50, 0)] }),
+    heroMonitor({ ...base, phase: 'previewing', pings: [ping(50, 0)] }),
   ).toMatchObject({ name: 'example.com', status: 'down' });
-  expect(heroService({ ...base, phase: 'error', hasPreview: false }).name).toBe(
+  expect(heroMonitor({ ...base, phase: 'error', hasPreview: false }).name).toBe(
     'api.logdash.io',
   );
 });
 
+test('a demo with no monitor reads as a placeholder once it loaded', () => {
+  expect(demoName({ monitor: null, loaded: false })).toBe('');
+  expect(demoName({ monitor: null, loaded: true })).toBe('yourapp.com');
+  expect(demoName(demo)).toBe('api.logdash.io');
+});
+
 test('a reading sorts pings and reports the latest one', () => {
-  const reading = heroReading(demo.pings, NOW, 'Waiting');
+  const reading = heroReading(demo.pings, [], NOW, 'Waiting');
 
   expect(reading.stats.map((stat) => stat.value)).toEqual([
     '145 ms',
@@ -72,27 +75,22 @@ test('a reading sorts pings and reports the latest one', () => {
   ]);
   expect(reading.checkingLabel).toBe('Checking every 15 s');
   expect(reading.lastCheckLabel).toBe('15 s ago');
-  expect(heroReading([], NOW, 'Waiting').lastCheckLabel).toBe('Waiting');
+  expect(heroReading([], [], NOW, 'Waiting').lastCheckLabel).toBe('Waiting');
 });
 
-test('log rows keep a stable numeric key and metrics end on their value', () => {
-  const log = {
-    id: '6abb1a69d1593e90809c2685',
-    message: 'hi',
-    level: 'info',
-    createdAt: new Date(NOW),
-  } as Log;
+test('the uptime stat reads like the app', () => {
+  const hour = {
+    timestamp: '2026-01-01T00:00:00Z',
+    successCount: 199,
+    failureCount: 1,
+    averageLatencyMs: 120,
+  };
 
-  expect(heroLogRows([log])[0].key).toBe(0x3e90809c2685);
+  expect(heroReading(demo.pings, [], NOW, 'Waiting').stats[2]).toEqual({
+    label: 'Recent uptime',
+    value: '100%',
+  });
   expect(
-    heroMetrics([
-      {
-        id: 'm',
-        metricRegisterEntryId: 'r',
-        name: 'pings',
-        value: 3,
-        history: [1, 2],
-      },
-    ])[0].samples,
-  ).toEqual([1, 2, 3]);
+    heroReading(demo.pings, [null, hour], NOW, 'Waiting').stats[2],
+  ).toEqual({ label: '90-hour uptime', value: '99.50%' });
 });

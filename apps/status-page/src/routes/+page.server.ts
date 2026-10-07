@@ -2,6 +2,7 @@ import { dev } from '$app/environment';
 import { envConfig } from '@logdash/hyper-ui';
 import { fetchStatusPage, StatusPageError } from '@logdash/status';
 import { error } from '@sveltejs/kit';
+import { logger } from '$lib/server/logger';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url }) => {
@@ -24,7 +25,10 @@ export const load: PageServerLoad = async ({ url }) => {
 			error(403, 'This status page is private');
 		}
 
-		console.error('Failed to load status page:', err);
+		logger().error(
+			`failed to load status page ${statusPageId}: ${err instanceof Error ? err.message : String(err)}`
+		);
+		logger().mutateMetric('statusPageLoadFailures', 1);
 		error(503, 'Status page is temporarily unavailable');
 	}
 };

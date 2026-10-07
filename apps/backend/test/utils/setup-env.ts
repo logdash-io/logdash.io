@@ -1,7 +1,7 @@
 /**
  * Test-run environment defaults.
  *
- * `OUR_ENV` and `PERSONAL_API_KEY_HMAC_SECRET` are required at runtime - the
+ * `OUR_ENV`, `PERSONAL_API_KEY_HMAC_SECRET` and `LOGDASH_API_KEY` are required at runtime - the
  * config layer deliberately throws when they are missing rather than falling
  * back to a hardcoded pepper. These defaults keep `pnpm test` working without
  * a local `.env`, and mirror the values the CI test action already sets.
@@ -20,6 +20,7 @@ const TEST_ENV_DEFAULTS: Record<string, string> = {
   STRIPE_API_KEY_SECRET: 'test-api-key-secret',
   ADMIN_SUPER_SECRET_ADMIN_KEY: 'test',
   RESEND_API_KEY: 're_test',
+  LOGDASH_API_KEY: 'test',
 };
 
 for (const [name, value] of Object.entries(TEST_ENV_DEFAULTS)) {

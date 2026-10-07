@@ -336,14 +336,8 @@ export class ClusterMemberGuard implements CanActivate {
       throw new ForbiddenException('Http monitor not found');
     }
 
-    const project = await this.projectReadCachedService.readProject(httpMonitor.projectId);
-
-    if (!project) {
-      throw new ForbiddenException('Service not found');
-    }
-
     const role = await this.clusterReadCachedService.readUserRole({
-      clusterId: project.clusterId,
+      clusterId: httpMonitor.clusterId,
       userId: dto.userId,
     });
 
@@ -358,7 +352,7 @@ export class ClusterMemberGuard implements CanActivate {
     this.assertAccessAllows({
       access: dto.access,
       viaPersonalKey: dto.viaPersonalKey,
-      clusterId: project.clusterId,
+      clusterId: httpMonitor.clusterId,
       projectId: httpMonitor.projectId,
     });
 

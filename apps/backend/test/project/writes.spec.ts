@@ -214,9 +214,10 @@ describe('ProjectCoreController (writes)', () => {
   });
 
   describe('DELETE /projects/:projectId', () => {
-    it('deletes project and all related data', async () => {
+    it('deletes project data and keeps its monitors in the domain', async () => {
       // given
-      const { project, apiKey, token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const { project, cluster, apiKey, token } =
+        await bootstrap.utils.generalUtils.setupAnonymous();
 
       await bootstrap.utils.logUtils.createLog({
         apiKey: apiKey.value,
@@ -292,6 +293,7 @@ describe('ProjectCoreController (writes)', () => {
       const httpMonitorsAfterRemoval = await bootstrap.models.httpMonitorModel.find({
         projectId: project.id,
       });
+      const unlinkedMonitor = await bootstrap.models.httpMonitorModel.findById(monitor.id).lean();
       const httpPingsAfterRemoval = await bootstrap.utils.httpPingUtils.getMonitorPings({
         httpMonitorId: monitor.id,
       });
@@ -317,8 +319,10 @@ describe('ProjectCoreController (writes)', () => {
       expect(projectsAfterRemoval).toHaveLength(0);
       expect(apiKeysAfterRemoval).toHaveLength(0);
       expect(httpMonitorsAfterRemoval).toHaveLength(0);
-      expect(httpPingsAfterRemoval).toHaveLength(0);
-      expect(httpPingBucketsAfterRemoval).toHaveLength(0);
+      expect(unlinkedMonitor).toMatchObject({ clusterId: cluster.id });
+      expect(unlinkedMonitor?.projectId).toBeUndefined();
+      expect(httpPingsAfterRemoval).toHaveLength(1);
+      expect(httpPingBucketsAfterRemoval).toHaveLength(1);
     });
 
     it('does not let user delete project if he is not a member of cluster', async () => {

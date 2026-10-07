@@ -41,6 +41,7 @@ jobs:
           application-port: 3000
           image-name: ablaszkiewicz/logdash-status-page-prod
           container-name: logdash-status-page-prod
+          logdash-api-key: ${{ secrets.BACKEND_PROD_LOGDASH_API_KEY }}
       - name: Prune
         uses: "./.github/templates/prune"
         with:

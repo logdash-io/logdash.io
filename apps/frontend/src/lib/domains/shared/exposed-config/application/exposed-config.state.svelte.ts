@@ -51,16 +51,6 @@ class ExposedConfigState {
     );
   }
 
-  maxNumberOfHttpMonitors(tier: UserTier): number {
-    if (!this.config) {
-      return 0;
-    }
-
-    return (
-      this.config.projectPlanConfigs[tier].httpMonitors.maxNumberOfMonitors ?? 0
-    );
-  }
-
   allowedNotificationChannels(tier: UserTier): NotificationChannelType[] {
     if (!this.config) {
       return [];
@@ -91,6 +81,33 @@ class ExposedConfigState {
     }
 
     return null;
+  }
+
+  public canCreatePushMonitors(clusterTier: string | undefined): boolean {
+    return Boolean(
+      clusterTier &&
+        this.config?.clusterPlanConfigs[clusterTier]?.httpMonitors
+          .canCreatePushMonitors,
+    );
+  }
+
+  public firstTierWithPushMonitors(): UserTier | null {
+    return (
+      [UserTier.BUILDER, UserTier.PRO].find((tier) =>
+        this.canCreatePushMonitors(tier),
+      ) ?? null
+    );
+  }
+
+  public pingFrequency(clusterTier: string | undefined): string | null {
+    if (!clusterTier) {
+      return null;
+    }
+
+    return (
+      this.config?.clusterPlanConfigs[clusterTier]?.httpMonitors
+        .pingFrequency ?? null
+    );
   }
 
   logRetentionHours(tier: UserTier): number {

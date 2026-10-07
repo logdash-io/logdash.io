@@ -4,5 +4,7 @@
 </script>
 
 <ProjectSync>
-  <LogsTile volume />
+  <div class="flex flex-1 flex-col p-2">
+    <LogsTile volume />
+  </div>
 </ProjectSync>

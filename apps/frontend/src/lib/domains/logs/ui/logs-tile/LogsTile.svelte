@@ -12,7 +12,7 @@
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import SdkSetupPrompt from '$lib/domains/app/projects/ui/setup/SdkSetupPrompt.svelte';
-  import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
+  import Well from '$lib/domains/shared/ui/components/Well.svelte';
   import { Feature } from '$lib/domains/shared/types.js';
 
   type Props = {
@@ -93,18 +93,22 @@
   });
 </script>
 
-<div class="flex min-h-0 flex-1 flex-col">
+<Well label="Logs" class="min-h-0 flex-1">
   <LogsHeader {projectId} volume={volume && configured} />
 
   {#if configured}
     <LogsVirtualList logs={logsState.logs} {rendered} />
   {:else if projectId}
-    <EmptyState
-      class="px-4 pb-4"
-      title="No logs yet"
-      description="Your app's logs land here once you add the SDK."
+    <div
+      class="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center"
     >
-      <SdkSetupPrompt {projectId} feature={Feature.LOGGING} />
-    </EmptyState>
+      <p class="font-medium">No logs yet</p>
+      <p class="text-fg-tertiary max-w-sm text-sm text-balance">
+        Your app's logs land here once you add the SDK.
+      </p>
+      <div class="mt-2">
+        <SdkSetupPrompt {projectId} feature={Feature.LOGGING} />
+      </div>
+    </div>
   {/if}
-</div>
+</Well>

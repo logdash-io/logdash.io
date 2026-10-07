@@ -4,7 +4,12 @@ import {
   clear_access_token,
   get_access_token,
 } from '$lib/domains/shared/utils/cookies.utils';
-import { isRedirect, redirect, type ServerLoadEvent } from '@sveltejs/kit';
+import {
+  isHttpError,
+  isRedirect,
+  redirect,
+  type ServerLoadEvent,
+} from '@sveltejs/kit';
 import type { User } from '$lib/domains/shared/user/domain/user';
 
 const EXPIRED_SESSION_STATUSES = [401, 404];
@@ -14,16 +19,11 @@ const isExpiredSession = (error: unknown): boolean => {
     return true;
   }
 
-  if (!(error instanceof Error)) {
-    return false;
+  if (isHttpError(error)) {
+    return EXPIRED_SESSION_STATUSES.includes(error.status);
   }
 
-  return (
-    error.message.startsWith('Unauthorized') ||
-    EXPIRED_SESSION_STATUSES.some((status) =>
-      error.message.includes(`HTTP error ${status}`),
-    )
-  );
+  return error instanceof Error && error.message.startsWith('Unauthorized');
 };
 
 export class UserDataPreloader implements DataPreloader<{ user: User }> {

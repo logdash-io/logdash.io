@@ -27,9 +27,13 @@ export class DemoCacheInterceptor implements NestInterceptor {
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    const projectId = request.params.projectId;
+    const { demo } = getEnvConfig();
+    const { projectId, clusterId } = request.params;
+    const isDemoRequest =
+      (projectId !== undefined && projectId === demo.projectId) ||
+      (clusterId !== undefined && clusterId === demo.clusterId);
 
-    if (projectId !== getEnvConfig().demo.projectId) {
+    if (!isDemoRequest) {
       return next.handle();
     }
 

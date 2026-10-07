@@ -20,16 +20,16 @@
 
 <a
   href={resolve('/app/domains/[cluster_id]', { cluster_id: cluster.id })}
-  class="bg-surface-100-bg edge hover:bg-surface-100-hover-bg focus-visible:outline-brand flex w-full flex-col rounded-xl p-5 focus-visible:outline-2 focus-visible:-outline-offset-2"
+  class="bg-surface-25-bg hover:bg-surface-25-hover-bg focus-visible:outline-brand flex w-full min-w-0 flex-col gap-2 rounded-2xl p-2 focus-visible:outline-2 focus-visible:-outline-offset-2"
 >
-  <div class="flex min-w-0 items-center gap-2.5">
+  <div class="flex h-7 min-w-0 items-center gap-2.5 px-3">
     <ProjectTile
       name={cluster.name}
       color={cluster.color}
       class="size-5 rounded-md text-[11px]"
     />
 
-    <span class="min-w-0 truncate font-medium">{cluster.name}</span>
+    <span class="min-w-0 truncate text-[13px] font-medium">{cluster.name}</span>
 
     {#if down}
       <span
@@ -40,7 +40,7 @@
       </span>
     {:else if online}
       <span
-        class="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-fg-tertiary tabular-nums"
+        class="text-fg-tertiary ml-auto flex shrink-0 items-center gap-1.5 text-xs tabular-nums"
       >
         <span class="bg-success size-1.5 rounded-full"></span>
         {online} online
@@ -48,25 +48,30 @@
     {/if}
   </div>
 
-  <div class="mt-4 flex flex-col gap-3 pl-7.5">
-    {#if visitors.status === 'ready'}
-      <VisitorsSparkline
-        values={visitors.overview.series.map((point) => point.visitors)}
-      />
-      <span class="text-fg-tertiary text-sm">
-        <span class="text-fg-default font-mono tabular-nums">
+  <div class="flex min-w-0 flex-col gap-3 p-3">
+    <div class="flex flex-col gap-1.5">
+      <span class="text-fg-muted text-xs">Visitors</span>
+      <span class="flex h-8 items-center font-mono text-2xl tabular-nums">
+        {#if visitors.status === 'ready'}
           {formatCount(visitors.overview.visitors)}
-        </span>
-        {visitors.overview.visitors === 1 ? 'visitor' : 'visitors'}
+        {:else if visitors.status === 'error'}
+          <span class="text-fg-muted font-sans text-sm">
+            Could not load visitors
+          </span>
+        {:else}
+          <span class="bg-surface-150-bg h-8 w-16 rounded-md"></span>
+        {/if}
       </span>
-    {:else if visitors.status === 'error'}
-      <VisitorsSparkline values={[]} />
-      <span class="text-fg-muted text-sm">Could not load visitors</span>
+    </div>
+
+    {#if visitors.status === 'loading'}
+      <div class="bg-surface-150-bg h-16 rounded-lg"></div>
     {:else}
-      <div class="bg-surface-150-bg h-20 rounded-lg"></div>
-      <span class="flex h-5 items-center">
-        <span class="bg-surface-150-bg h-3.5 w-20 rounded"></span>
-      </span>
+      <VisitorsSparkline
+        values={visitors.status === 'ready'
+          ? visitors.overview.series.map((point) => point.visitors)
+          : []}
+      />
     {/if}
   </div>
 </a>

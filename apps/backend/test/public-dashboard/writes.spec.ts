@@ -53,6 +53,96 @@ describe('PublicDashboardCoreController (writes)', () => {
       expect(createdDashboard?.isPublic).toEqual(false);
     });
 
+    it('starts with every claimed monitor of the domain when no monitors are given', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const stranger = await bootstrap.utils.generalUtils.setupAnonymous();
+      const claimed = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+        token,
+        clusterId: cluster.id,
+      });
+      await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        clusterId: cluster.id,
+        claimed: false,
+      });
+      await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+        clusterId: stranger.cluster.id,
+        claimed: true,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/public_dashboards`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'all monitors', isPublic: false });
+
+      // then
+      expect(response.status).toBe(201);
+      expect((response.body as PublicDashboardSerialized).httpMonitorsIds).toEqual([claimed.id]);
+      expect(
+        (
+          await bootstrap.models.publicDashboardModel.findById(
+            (response.body as PublicDashboardSerialized).id,
+          )
+        )?.httpMonitorsIds,
+      ).toEqual([claimed.id]);
+    });
+
+    it('starts empty when it does not take new monitors', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+        token,
+        clusterId: cluster.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/public_dashboards`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'curated', isPublic: false, autoAddMonitors: false });
+
+      // then
+      expect(response.status).toBe(201);
+      expect(
+        (
+          await bootstrap.models.publicDashboardModel.findById(
+            (response.body as PublicDashboardSerialized).id,
+          )
+        )?.httpMonitorsIds,
+      ).toEqual([]);
+    });
+
+    it('keeps a hand-picked list closed to new monitors', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const picked = await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+        token,
+        clusterId: cluster.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/public_dashboards`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'picked', isPublic: false, httpMonitorsIds: [picked.id] });
+      await bootstrap.utils.httpMonitorsUtils.createClaimedHttpMonitor({
+        token,
+        clusterId: cluster.id,
+      });
+
+      // then
+      expect(response.status).toBe(201);
+      expect((response.body as PublicDashboardSerialized).autoAddMonitors).toBe(false);
+      expect(
+        (
+          await bootstrap.models.publicDashboardModel.findById(
+            (response.body as PublicDashboardSerialized).id,
+          )
+        )?.httpMonitorsIds,
+      ).toEqual([picked.id]);
+    });
+
     it('does not create public dashboard if http monitors do not belong to the same cluster', async () => {
       // given
       const setupA = await bootstrap.utils.generalUtils.setupAnonymous();

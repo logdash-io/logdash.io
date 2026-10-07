@@ -11,6 +11,11 @@ export const OAUTH_FAILURE_REASONS = [
 
 export type OAuthFailureReason = (typeof OAUTH_FAILURE_REASONS)[number];
 
+export const claimFailureMessage = (reason: OAuthFailureReason): string =>
+  reason === 'project-limit'
+    ? 'That account has reached its service limit. Free a slot there, then try again.'
+    : 'Signing in did not go through. Your dashboard is untouched. Try again.';
+
 export type OAuthPopupMessage =
   | { type: typeof OAUTH_POPUP_MESSAGE_TYPE; status: 'ok'; reason: null }
   | {

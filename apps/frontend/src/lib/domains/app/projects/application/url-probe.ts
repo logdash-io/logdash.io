@@ -3,14 +3,14 @@ import type { UrlProbe } from '$lib/domains/app/projects/domain/monitoring/url-h
 
 const probes = new Map<string, Promise<UrlProbe>>();
 
-export function probeUrl(projectId: string, url: string): Promise<UrlProbe> {
+export function probeUrl(clusterId: string, url: string): Promise<UrlProbe> {
   const cached = probes.get(url);
 
   if (cached) {
     return cached;
   }
 
-  const probe = requestProbe(projectId, url);
+  const probe = requestProbe(clusterId, url);
   probes.set(url, probe);
 
   return probe;
@@ -28,9 +28,9 @@ export function dismissCatchAllWarning(monitorId: string): void {
   localStorage.setItem(catchAllDismissedKey(monitorId), '1');
 }
 
-async function requestProbe(projectId: string, url: string): Promise<UrlProbe> {
+async function requestProbe(clusterId: string, url: string): Promise<UrlProbe> {
   try {
-    return await monitoringService.probeUrl(projectId, url);
+    return await monitoringService.probeUrl(clusterId, url);
   } catch (error) {
     probes.delete(url);
     throw error;

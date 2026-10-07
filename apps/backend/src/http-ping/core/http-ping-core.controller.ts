@@ -49,7 +49,7 @@ export class HttpPingCoreController {
   @RequireScope(Resource.Monitors, Action.Read)
   @Get('projects/:projectId/monitors/:monitorId/http_pings')
   @ApiResponse({ type: HttpPingSerialized, isArray: true })
-  async readByMonitorIdQuery(
+  public async readByMonitorIdQuery(
     @Param('projectId') projectId: string,
     @Param('monitorId') monitorId: string,
     @Query() query: ReadByMonitorIdQuery,
@@ -61,6 +61,27 @@ export class HttpPingCoreController {
 
     if (monitor.projectId !== projectId) {
       throw new NotFoundException('Monitor not found in this service');
+    }
+
+    const pings = await this.httpPingReadService.readByMonitorId(monitorId, query.limit);
+
+    return HttpPingSerializer.serializeMany(pings);
+  }
+
+  @UseInterceptors(DemoCacheInterceptor)
+  @DemoEndpoint()
+  @RequireScope(Resource.Monitors, Action.Read)
+  @Get('clusters/:clusterId/monitors/:monitorId/http_pings')
+  @ApiResponse({ type: HttpPingSerialized, isArray: true })
+  public async readByClusterMonitorId(
+    @Param('clusterId') clusterId: string,
+    @Param('monitorId') monitorId: string,
+    @Query() query: ReadByMonitorIdQuery,
+  ): Promise<HttpPingSerialized[]> {
+    const monitor = await this.httpMonitorReadService.readById(monitorId);
+
+    if (!monitor || monitor.clusterId !== clusterId) {
+      throw new NotFoundException('Monitor not found in this domain');
     }
 
     const pings = await this.httpPingReadService.readByMonitorId(monitorId, query.limit);

@@ -83,6 +83,7 @@ describe('UserTtlService', () => {
     }
 
     const httpMonitor = await bootstrap.models.httpMonitorModel.create({
+      clusterId: cluster._id.toString(),
       projectId: project._id.toString(),
       name: 'Test Monitor',
       url: 'https://example.com',

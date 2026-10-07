@@ -6,6 +6,7 @@
   import type { MonitorStatus } from '$lib/domains/app/projects/application/monitor-pings';
   import { Spinner, Tooltip } from '@logdash/hyper-ui/presentational';
   import type { Snippet } from 'svelte';
+  import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
   import SidebarMenuItem from './SidebarMenuItem.svelte';
 
   type Props = {
@@ -37,6 +38,8 @@
   <span class="flex size-4 shrink-0 items-center justify-center">
     {#if pending}
       <Spinner class="text-fg-muted size-3" />
+    {:else if !status}
+      <CubeIcon class="text-fg-muted size-3.5" />
     {:else if tooltip}
       <Tooltip content={tooltip} placement="bottom">
         {@render dot()}

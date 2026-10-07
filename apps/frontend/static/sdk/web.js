@@ -4,6 +4,11 @@
   const script = document.currentScript;
   const siteId = script && script.getAttribute('data-site');
   if (!siteId || !/^[a-f0-9]{24}$/.test(siteId) || window.logdash) return;
+  try {
+    expireLegacyCookies();
+  } catch {
+    return;
+  }
   if (
     navigator.webdriver ||
     navigator.globalPrivacyControl ||
@@ -22,157 +27,123 @@
   } catch {
     timezone = '';
   }
-  const visitorCookie = 'ldv_' + siteId;
-  const sessionCookie = 'lds_' + siteId;
-  const uuidPattern =
-    /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
-  let cookieDomain;
-  try {
-    cookieDomain = findCookieDomain();
-  } catch {
-    return;
-  }
-  let active = true;
+  const attribution = readAttribution();
+  const optOutKey = 'logdash:opt-out';
+  let active = false;
   // ponytail: Keep 100 pending events for at most four minutes; use persistent storage for offline analytics.
   let queue = [];
   let timer;
   let sending = false;
   let lastPath;
+  let userId;
+  let identifyCalls = 0;
+  let restoreHistory = [];
+  const listeners = [
+    [window, 'popstate', pageview],
+    [window, 'pageshow', onPageShow],
+    [window, 'pagehide', onPageHide],
+    [document, 'visibilitychange', onVisibilityChange],
+    [window, 'error', onError],
+    [window, 'unhandledrejection', onError],
+  ];
 
-  window.logdash = { track, stop };
-  const originalPush = history.pushState;
-  const originalReplace = history.replaceState;
-  const push = function () {
-    originalPush.apply(this, arguments);
-    pageview();
-  };
-  const replace = function () {
-    originalReplace.apply(this, arguments);
-    pageview();
-  };
-  history.pushState = push;
-  history.replaceState = replace;
-  window.addEventListener('popstate', pageview);
-  window.addEventListener('pageshow', onPageShow);
-  window.addEventListener('pagehide', onPageHide);
-  document.addEventListener('visibilitychange', onVisibilityChange);
-  window.addEventListener('error', onError);
-  window.addEventListener('unhandledrejection', onError);
-  pageview();
+  window.logdash = { track, identify, optOut, optIn, stop: optOut };
+  if (!optedOut()) start();
 
   function track(name) {
+    if (active && optedOut()) halt();
     if (!active || !/^[a-z][a-z0-9_]{0,63}$/.test(name)) return;
     try {
-      const now = Date.now();
-      const session =
-        readSession(now) || (name !== 'pageleave' && newSession(now));
-      if (!session) return;
-      let visitor = readCookie(visitorCookie).split('.');
-      if (
-        !uuidPattern.test(visitor[0]) ||
-        !Number.isFinite(Number(visitor[1])) ||
-        Number(visitor[1]) > now ||
-        Number(visitor[1]) < Date.UTC(2020, 0, 1) ||
-        now - Number(visitor[1]) >= 365 * 86400000
-      ) {
-        visitor = [crypto.randomUUID(), String(now)];
-      }
-      writeCookie(
-        visitorCookie,
-        visitor.join('.'),
-        Math.max(
-          1,
-          Math.floor((Number(visitor[1]) + 365 * 86400000 - now) / 1000),
-        ),
-      );
-      if (readCookie(visitorCookie) !== visitor.join('.')) return;
-      writeCookie(sessionCookie, JSON.stringify(session), 1800);
       queue.push({
         id: crypto.randomUUID(),
-        visitorId: visitor[0],
-        sessionId: session.id,
-        visitorStartedAt: new Date(Number(visitor[1])).toISOString(),
-        timestamp: new Date(now).toISOString(),
+        timestamp: new Date().toISOString(),
         name,
         path: location.pathname.slice(0, 1024),
-        referrer: session.referrer,
-        utmSource: session.source,
-        utmMedium: session.medium,
-        utmCampaign: session.campaign,
-        utmTerm: session.term,
-        clickId: session.clickId,
+        ...attribution,
         timezone,
+        userId,
       });
       queue = queue.slice(-100);
       schedule(1000);
     } catch {
-      stop();
+      halt();
     }
+  }
+
+  async function identify(id) {
+    const value = id === null || id === undefined ? '' : id;
+    const text = String(value);
+    if (
+      !['string', 'number'].includes(typeof value) ||
+      text.includes('@') ||
+      text.length > 256
+    ) {
+      console.warn(
+        'logdash.identify() takes an opaque user ID (string or number, up to 256 characters), never an email. The call was ignored.',
+      );
+      return;
+    }
+    if (!crypto.subtle) return;
+    const call = ++identifyCalls;
+    userId = undefined;
+    if (!text.trim()) return;
+    const digest = await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(siteId + ':' + text),
+    );
+    if (call !== identifyCalls) return;
+    userId = Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, '0'),
+    ).join('');
+    for (const event of queue) event.userId = event.userId || userId;
+  }
+
+  function optOut() {
+    halt();
+    saveOptOut(true);
+  }
+
+  function optIn() {
+    saveOptOut(false);
+    start();
+  }
+
+  function start() {
+    if (active) return;
+    active = true;
+    lastPath = undefined;
+    restoreHistory = ['pushState', 'replaceState'].map(patchHistory);
+    for (const [target, type, listener] of listeners)
+      target.addEventListener(type, listener);
+    pageview();
+  }
+
+  function halt() {
+    active = false;
+    queue = [];
+    clearTimeout(timer);
+    timer = undefined;
+    for (const restore of restoreHistory) restore();
+    for (const [target, type, listener] of listeners)
+      target.removeEventListener(type, listener);
+  }
+
+  function patchHistory(method) {
+    const original = history[method];
+    const patched = function () {
+      original.apply(this, arguments);
+      pageview();
+    };
+    history[method] = patched;
+    return () => {
+      if (history[method] === patched) history[method] = original;
+    };
   }
 
   function pageview() {
     if (!active || lastPath === location.pathname) return;
     lastPath = location.pathname;
     track('pageview');
-  }
-
-  function readSession(now) {
-    try {
-      const session = JSON.parse(readCookie(sessionCookie));
-      return uuidPattern.test(session.id) &&
-        Number.isFinite(session.startedAt) &&
-        session.startedAt <= now &&
-        now - session.startedAt < 86400000 &&
-        ['source', 'medium', 'campaign', 'term', 'referrer', 'clickId'].every(
-          (key) =>
-            typeof session[key] === 'string' && session[key].length <= 255,
-        )
-        ? session
-        : null;
-    } catch {
-      return null;
-    }
-  }
-
-  function newSession(now) {
-    const query = new URLSearchParams(location.search);
-    // ponytail: Values are cut to 300 encoded bytes so the session cookie stays under 4 KB; long non-ASCII campaigns lose their tail.
-    const campaign = (key) => {
-      const value = (query.get(key) || '').trim();
-      if (/[@\p{Cc}]/u.test(value)) return '';
-      const chars = Array.from(value).slice(0, 100);
-      while (encodeURIComponent(chars.join('')).length > 300) chars.pop();
-      return chars.join('');
-    };
-    let referrer = '';
-    try {
-      const host = new URL(document.referrer).hostname;
-      if (host !== location.hostname) referrer = host;
-    } catch {
-      referrer = '';
-    }
-    return {
-      id: crypto.randomUUID(),
-      startedAt: now,
-      source: campaign('utm_source'),
-      medium: campaign('utm_medium'),
-      campaign: campaign('utm_campaign'),
-      term: campaign('utm_term'),
-      clickId:
-        [
-          'gclid',
-          'gbraid',
-          'wbraid',
-          'gad_source',
-          'dclid',
-          'msclkid',
-          'fbclid',
-          'ttclid',
-          'twclid',
-          'li_fat_id',
-        ].find((key) => query.get(key)) || '',
-      referrer,
-    };
   }
 
   function schedule(delay) {
@@ -226,38 +197,70 @@
     }
   }
 
-  function readCookie(name) {
-    const item = document.cookie
-      .split('; ')
-      .find((cookie) => cookie.startsWith(name + '='));
-    return item ? decodeURIComponent(item.slice(name.length + 1)) : '';
-  }
-
-  function writeCookie(name, value, age) {
-    document.cookie =
-      name +
-      '=' +
-      encodeURIComponent(value) +
-      '; Path=/; SameSite=Lax; Max-Age=' +
-      age +
-      (cookieDomain ? '; Domain=' + cookieDomain : '') +
-      (location.protocol === 'https:' ? '; Secure' : '');
-  }
-
-  function findCookieDomain() {
-    const host = location.hostname;
-    if (!host.includes('.') || /^[\d.]+$|:/.test(host)) return '';
-    const probe = 'ldp_' + Math.random().toString(36).slice(2);
-    const labels = host.split('.');
-    for (let index = labels.length - 2; index >= 0; index--) {
-      const domain = labels.slice(index).join('.');
-      document.cookie = probe + '=1; Path=/; Max-Age=10; Domain=' + domain;
-      if (readCookie(probe) === '1') {
-        document.cookie = probe + '=; Path=/; Max-Age=0; Domain=' + domain;
-        return domain;
-      }
+  function readAttribution() {
+    const query = new URLSearchParams(location.search);
+    // ponytail: Values are cut to 300 encoded bytes to keep 20-event batches small; long non-ASCII campaigns lose their tail.
+    const campaign = (key) => {
+      const value = (query.get(key) || '').trim();
+      if (/[@\p{Cc}]/u.test(value)) return '';
+      const chars = Array.from(value).slice(0, 100);
+      while (encodeURIComponent(chars.join('')).length > 300) chars.pop();
+      return chars.join('');
+    };
+    let referrer = '';
+    try {
+      const host = new URL(document.referrer).hostname;
+      if (host !== location.hostname) referrer = host;
+    } catch {
+      referrer = '';
     }
-    return '';
+    return {
+      referrer,
+      utmSource: campaign('utm_source'),
+      utmMedium: campaign('utm_medium'),
+      utmCampaign: campaign('utm_campaign'),
+      utmTerm: campaign('utm_term'),
+      clickId:
+        [
+          'gclid',
+          'gbraid',
+          'wbraid',
+          'gad_source',
+          'dclid',
+          'msclkid',
+          'fbclid',
+          'ttclid',
+          'twclid',
+          'li_fat_id',
+        ].find((key) => query.get(key)) || '',
+    };
+  }
+
+  function expireLegacyCookies() {
+    const labels = location.hostname.split('.');
+    const domains = labels.map(
+      (_, index) => '; Domain=' + labels.slice(index).join('.'),
+    );
+    for (const name of ['ldv_', 'lds_'])
+      for (const domain of domains.concat(''))
+        document.cookie = name + siteId + '=; Path=/; Max-Age=0' + domain;
+  }
+
+  function optedOut() {
+    try {
+      return localStorage.getItem(optOutKey) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  function saveOptOut(value) {
+    try {
+      if (value) localStorage.setItem(optOutKey, '1');
+      else localStorage.removeItem(optOutKey);
+    } catch {
+      return;
+    }
   }
 
   function onPageHide() {
@@ -278,22 +281,5 @@
 
   function onError() {
     track('browser_error');
-  }
-
-  function stop() {
-    active = false;
-    queue = [];
-    clearTimeout(timer);
-    writeCookie(visitorCookie, '', 0);
-    writeCookie(sessionCookie, '', 0);
-    if (history.pushState === push) history.pushState = originalPush;
-    if (history.replaceState === replace)
-      history.replaceState = originalReplace;
-    window.removeEventListener('popstate', pageview);
-    window.removeEventListener('pageshow', onPageShow);
-    window.removeEventListener('pagehide', onPageHide);
-    document.removeEventListener('visibilitychange', onVisibilityChange);
-    window.removeEventListener('error', onError);
-    window.removeEventListener('unhandledrejection', onError);
   }
 })();

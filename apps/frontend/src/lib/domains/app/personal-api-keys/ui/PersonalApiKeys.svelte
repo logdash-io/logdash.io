@@ -1,13 +1,14 @@
 <script lang="ts">
   import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
   import { invalidateAll } from '$app/navigation';
-  import PaneHeader, {
-    PANE_HEADER_ACTION_CLASS,
-  } from '$lib/domains/shared/ui/components/PaneHeader.svelte';
+  import { topBarState } from '$lib/domains/app/clusters/application/top-bar.state.svelte.js';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
   import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
+  import { TOOLBAR_PRIMARY } from '$lib/domains/shared/ui/components/toolbar.js';
+  import Well from '$lib/domains/shared/ui/components/Well.svelte';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-  import { Button } from '@logdash/hyper-ui/presentational';
   import {
     ACTION_LABELS,
     RESOURCES,
@@ -23,6 +24,8 @@
 
   let createModalOpen = $state(false);
   let revokingId = $state<string | null>(null);
+
+  $effect(() => topBarState.show(toolbar));
 
   function onOpenCreate(): void {
     createModalOpen = true;
@@ -126,72 +129,63 @@
   }
 </script>
 
-<div class="flex w-full flex-col">
-  <PaneHeader title="API keys">
-    <span class="tabular-nums">{plural(apiKeys.length, 'key')}</span>
-    {#if apiKeys.length > 0}
-      <button
-        type="button"
-        class={PANE_HEADER_ACTION_CLASS}
-        onclick={onOpenCreate}
-      >
-        <PlusIcon class="size-3.5 shrink-0" />
-        New key
-      </button>
-    {/if}
-  </PaneHeader>
+<div class="flex w-full flex-col gap-2 p-2">
+  <Well label="API keys" title="API keys">
+    {#snippet actions()}
+      <span class="text-fg-muted px-3 text-xs tabular-nums">
+        {plural(apiKeys.length, 'key')}
+      </span>
+    {/snippet}
 
-  {#if apiKeys.length === 0}
-    <EmptyState
-      class="p-4"
-      title="No API keys yet"
-      description="Create one for the CLI, an MCP server or any tool that acts on your behalf."
-    >
-      <Button variant="primary" size="sm" onclick={onOpenCreate}>
-        <PlusIcon class="size-4" />
-        Create API key
-      </Button>
-    </EmptyState>
-  {:else}
-    <ul class="flex flex-col edge-between edge-b">
-      {#each apiKeys as key (key.id)}
-        <li class="flex items-center gap-4 px-4 py-4">
-          <div class="flex min-w-0 flex-1 flex-col gap-1">
-            <div class="flex min-w-0 items-baseline gap-2">
-              <span class="truncate text-sm">{key.label}</span>
-              <span class="text-fg-muted shrink-0 font-mono text-xs">
-                {key.prefix}…
+    {#if apiKeys.length === 0}
+      <EmptyState
+        centered
+        title="No API keys yet"
+        description="Create one for the CLI, an MCP server or any tool that acts on your behalf."
+      />
+    {:else}
+      <ul class="edge-between flex flex-col">
+        {#each apiKeys as key (key.id)}
+          <li class="flex items-center gap-4 px-3 py-3">
+            <div class="flex min-w-0 flex-1 flex-col gap-1">
+              <div class="flex min-w-0 items-baseline gap-2">
+                <span class="truncate text-sm font-medium">{key.label}</span>
+                <span class="text-fg-muted shrink-0 font-mono text-xs">
+                  {key.prefix}…
+                </span>
+              </div>
+              <span class="text-fg-tertiary text-[13px]">
+                {scopeSummary(key)}
+              </span>
+              <span class="text-fg-muted flex flex-wrap gap-x-2 text-xs">
+                <span>{accessSummary(key)}</span>
+                <span aria-hidden="true">·</span>
+                <span>{lastUsedSummary(key)}</span>
+                <span aria-hidden="true">·</span>
+                <span>Created {formatDate(key.createdAt)}</span>
+                <span aria-hidden="true">·</span>
+                <span class={{ 'text-error': isExpired(key) }}>
+                  {expirySummary(key)}
+                </span>
               </span>
             </div>
-            <span class="text-fg-tertiary text-sm">{scopeSummary(key)}</span>
-            <span
-              class="text-fg-muted flex flex-wrap gap-x-2 font-mono text-xs"
-            >
-              <span>{accessSummary(key)}</span>
-              <span aria-hidden="true">·</span>
-              <span>{lastUsedSummary(key)}</span>
-              <span aria-hidden="true">·</span>
-              <span>Created {formatDate(key.createdAt)}</span>
-              <span aria-hidden="true">·</span>
-              <span class={{ 'text-error': isExpired(key) }}>
-                {expirySummary(key)}
-              </span>
-            </span>
-          </div>
 
-          <Button
-            variant="danger-ghost"
-            size="sm"
-            class="-mr-3"
-            loading={revokingId === key.id}
-            onclick={() => onRevoke(key)}
-          >
-            Revoke
-          </Button>
-        </li>
-      {/each}
-    </ul>
-  {/if}
+            <IconButton
+              label="Revoke {key.label}"
+              tooltip="Revoke key"
+              danger
+              well
+              class="-mr-1.5"
+              disabled={revokingId !== null}
+              onclick={() => onRevoke(key)}
+            >
+              <TrashIcon class="size-4" />
+            </IconButton>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </Well>
 </div>
 
 <PersonalApiKeyCreateModal
@@ -200,3 +194,10 @@
   onClose={onCloseCreate}
   {onCreated}
 />
+
+{#snippet toolbar()}
+  <button type="button" class={TOOLBAR_PRIMARY} onclick={onOpenCreate}>
+    <PlusIcon class="size-4" />
+    New key
+  </button>
+{/snippet}

@@ -12,6 +12,11 @@
 </script>
 
 <script lang="ts">
+  import {
+    TOOLBAR_GROUP,
+    TOOLBAR_GROUP_OPTION,
+  } from '$lib/domains/shared/ui/components/toolbar.js';
+
   type Props = {
     tabs: ServiceTab[];
   };
@@ -19,14 +24,15 @@
   const { tabs }: Props = $props();
 
   const tabClass = (tab: ServiceTab): ClassValue => [
-    'flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium',
+    TOOLBAR_GROUP_OPTION,
+    'gap-1.5',
     tab.active
-      ? 'bg-surface-150-bg border-transparent text-fg-default'
-      : 'border-surface-50-border text-fg-tertiary transition-ink hover:text-fg-default',
+      ? 'bg-surface-150-bg text-fg-default'
+      : 'text-fg-tertiary hover:text-fg-default',
   ];
 </script>
 
-<nav class="flex items-center gap-1.5" aria-label="Service">
+<nav class={TOOLBAR_GROUP} aria-label="Service">
   {#each tabs as tab (tab.id)}
     {#if tab.href}
       <!-- eslint-disable svelte/no-navigation-without-resolve -- href is supplied by the caller -->

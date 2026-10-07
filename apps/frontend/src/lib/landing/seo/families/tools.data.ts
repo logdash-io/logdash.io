@@ -120,7 +120,7 @@ curl -sS -o /dev/null -L --max-redirs 5 -m 10 \\
         items: [
           {
             title: 'Claim the check',
-            text: 'Sign in with a free account and the dashboard you just watched becomes yours. Five services on the free plan, one HTTP monitor each.',
+            text: 'Sign in with a free account and the dashboard you just watched becomes yours. Five HTTP monitors on the free plan.',
           },
           {
             title: 'Pick the interval',
@@ -414,7 +414,7 @@ status   %{http_code}
         items: [
           {
             title: 'Claim the check',
-            text: 'Sign in with a free account and the response time chart you just watched keeps filling in. Five services on the free plan.',
+            text: 'Sign in with a free account and the response time chart you just watched keeps filling in. Five monitors on the free plan.',
           },
           {
             title: 'Pick the interval',
@@ -522,7 +522,7 @@ curl -sS -o /dev/null -L --max-redirs 5 -m 10 \\
           },
           {
             feature: 'Free monitors',
-            logdash: '5 services, one HTTP monitor each',
+            logdash: '5 HTTP monitors',
             them: '50',
             winner: 'them',
           },
@@ -534,7 +534,7 @@ curl -sS -o /dev/null -L --max-redirs 5 -m 10 \\
           },
           {
             feature: 'App logs and metrics beside the check',
-            logdash: 'Eight SDKs into the same service',
+            logdash: 'Eight SDKs into the same dashboard',
             them: 'Not part of the product',
             winner: 'logdash',
           },
@@ -573,7 +573,7 @@ curl -sS -o /dev/null -L --max-redirs 5 -m 10 \\
       {
         question: 'Is there a free ping monitor?',
         answer:
-          'For websites, the Logdash free plan checks five services over HTTP every 5 minutes with Telegram alerts. For real ICMP ping on routers or servers, UptimeRobot includes it free with 50 monitors.',
+          'For websites, the Logdash free plan checks five HTTP monitors every 5 minutes with Telegram alerts. For real ICMP ping on routers or servers, UptimeRobot includes it free with 50 monitors.',
       },
       {
         question: 'What is an online ping monitor?',
@@ -676,7 +676,7 @@ console.log(uptime(3600)); // one hour down this month: 99.863`,
         items: [
           {
             title: 'Point a monitor at your app',
-            text: 'Create a service in Logdash and give the monitor the URL your users hit, or a health route that touches the database. The free plan checks every 5 minutes, Builder every minute, Pro every 15 seconds.',
+            text: 'Add a monitor in Logdash and give it the URL your users hit, or a health route that touches the database. The free plan checks every 5 minutes, Builder every minute, Pro every 15 seconds.',
           },
           {
             title: 'Connect Telegram',
@@ -824,7 +824,7 @@ for (const interval of [300, 60, 15]) {
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and give the monitor your public URL or health route. The first check runs straight away and records the status code and response time.',
+            text: 'Add a monitor in Logdash and give it your public URL or health route. The first check runs straight away and records the status code and response time.',
           },
           {
             title: 'Pick an interval that can see 43 minutes',
@@ -849,7 +849,7 @@ for (const interval of [300, 60, 15]) {
           },
           {
             feature: 'Monitors on the free plan',
-            logdash: '5 services',
+            logdash: '5 monitors',
             them: '50 monitors',
             winner: 'them',
           },
@@ -976,7 +976,7 @@ for month in (2, 4, 1):  # 28, 30 and 31 days in 2026
         items: [
           {
             title: 'Point a monitor at the app',
-            text: 'Create a service in Logdash and give it your public URL or a health route. The first check runs immediately and records the status code and response time.',
+            text: 'Add a monitor in Logdash and give it your public URL or a health route. The first check runs immediately and records the status code and response time.',
           },
           {
             title: 'Pick 1 minute or faster',
@@ -995,7 +995,7 @@ for month in (2, 4, 1):  # 28, 30 and 31 days in 2026
         rows: [
           {
             feature: 'Free plan',
-            logdash: '5 services, checked every 5 minutes',
+            logdash: '5 monitors, checked every 5 minutes',
             them: '20 monitors, checked every 5 minutes',
             winner: 'them',
           },
@@ -1123,7 +1123,7 @@ awk -v p=99.99 'BEGIN {
         items: [
           {
             title: 'Monitor what users hit',
-            text: 'Create a service in Logdash and point the monitor at your public URL or at a health route that runs one database query. Each check stores the status code and the response time.',
+            text: 'Add a monitor in Logdash and point it at your public URL or at a health route that runs one database query. Each check stores the status code and the response time.',
           },
           {
             title: 'Use the 15-second interval',
@@ -1345,7 +1345,7 @@ console.log(allowedDowntime(99.5));
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and give its monitor your health endpoint. Every check stores the status code and response time, and uptime is the share of checks that came back 200-399.',
+            text: 'Add a monitor in Logdash and give it your health endpoint. Every check stores the status code and response time, and uptime is the share of checks that came back 200-399.',
           },
           {
             title: 'Pick the interval',
@@ -1500,7 +1500,7 @@ console.log(parallel(99.9, 99.9).toFixed(4) + '%'); // 99.9999%`,
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and point its monitor at your health endpoint. Uptime is the share of checks that answered 200-399.',
+            text: 'Add a monitor in Logdash and point it at your health endpoint. Uptime is the share of checks that answered 200-399.',
           },
           {
             title: 'Match the interval to the SLA',
@@ -1678,7 +1678,7 @@ console.log(
         items: [
           {
             title: 'Add the URL',
-            text: 'Create a service in Logdash and point its monitor at the page that makes you money: checkout, login or the API.',
+            text: 'Add a monitor in Logdash and point it at the page that makes you money: checkout, login or the API.',
           },
           {
             title: 'Set the interval to your cost',
@@ -1825,7 +1825,7 @@ EOF`,
         rows: [
           {
             feature: 'Price',
-            logdash: 'Free template, monitoring free for 5 services',
+            logdash: 'Free template, 5 free monitors',
             them: 'Basic free, Team $19 per user a month',
             winner: 'tie',
           },
@@ -1951,7 +1951,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
         items: [
           {
             title: 'Add the monitor',
-            text: 'Paste your health URL into a new service. It is checked every 5 minutes on the free plan, every minute on Builder and every 15 seconds on Pro, and the first check runs straight away.',
+            text: 'Paste your health URL into a new monitor. It is checked every 5 minutes on the free plan, every minute on Builder and every 15 seconds on Pro, and the first check runs straight away.',
           },
           {
             title: 'Publish the page',
@@ -1970,7 +1970,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
         rows: [
           {
             feature: 'Monitors on the free plan',
-            logdash: '5 services, checked every 5 minutes',
+            logdash: '5 monitors, checked every 5 minutes',
             them: '15 monitors, checked every 2 minutes',
             winner: 'them',
           },
@@ -2022,7 +2022,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
       {
         question: 'Is there a free status page generator?',
         answer:
-          'Yes. The free Logdash plan covers 5 services checked every 5 minutes, one hosted status page and Telegram alerts. The Next.js starter, the shadcn component and @logdash/status are MIT licensed and free to run anywhere. Only a custom domain on the hosted page needs Pro.',
+          'Yes. The free Logdash plan covers 5 monitors checked every 5 minutes, one hosted status page and Telegram alerts. The Next.js starter, the shadcn component and @logdash/status are MIT licensed and free to run anywhere. Only a custom domain on the hosted page needs Pro.',
       },
       {
         question: 'Which status page maker works with Next.js?',
@@ -2357,7 +2357,7 @@ cron.schedule('*/10 * * * * *', async () => {
         items: [
           {
             title: 'Create a push monitor',
-            text: 'On Pro, add a push monitor to the service and copy its id. The ping URL is public: no auth header, no body.',
+            text: 'On Pro, add a push monitor and copy its id. The ping URL is public: no auth header, no body.',
           },
           {
             title: 'Start the heartbeat',

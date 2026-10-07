@@ -1,4 +1,5 @@
-:root {
+:root,
+[data-app-frame] {
   --surface-root-bg: var(--color-neutral-950);
   --surface-root-hover-bg: var(--color-neutral-900);
   --surface-root-selected-bg: var(--color-neutral-800);
@@ -53,6 +54,7 @@
   --error: var(--color-red-600);
   --error-bg: oklch(from var(--error) l c h / 0.15);
   --error-hover-bg: oklch(from var(--error) l c h / 0.25);
+  --error-fg: var(--color-red-400);
   --success: var(--color-green-600);
   --warning: var(--color-amber-500);
   --info: var(--color-blue-600);
@@ -67,7 +69,7 @@
   --heat-0: var(--color-neutral-800);
   --heat-1: var(--color-neutral-700);
   --heat-2: var(--color-neutral-600);
-  --heat-3: var(--color-neutral-500);
+  --heat-3: var(--color-neutral-400);
 
   --edge-color: var(--surface-root-border);
 
@@ -78,6 +80,7 @@
   color-scheme: dark;
 }
 
-:root:has([data-app-shell]) {
+:root:has([data-app-shell]),
+[data-app-frame] {
   --surface-root-bg: var(--color-neutral-975);
 }

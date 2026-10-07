@@ -1,4 +1,3 @@
-import { Feature } from '$lib/domains/shared/types';
 import { tryPrependProtocol } from '$lib/domains/shared/utils/url';
 import {
   AnonymousStartError,
@@ -23,17 +22,9 @@ export const startAnonymousMonitoring = async (dto: {
       await ensureAnonymousSession(url);
     dto.onClusterName?.(clusterName);
 
-    dto.onStep?.('project');
-    const { projectId } = await anonymousSessionService.createProject(
-      clusterId,
-      name,
-      [Feature.MONITORING],
-      token,
-    );
-
     dto.onStep?.('check');
     const monitor = await anonymousSessionService.createMonitor(
-      projectId,
+      clusterId,
       { name, url },
       token,
     );
@@ -43,7 +34,6 @@ export const startAnonymousMonitoring = async (dto: {
       token,
       clusterId,
       clusterName,
-      projectId,
       monitorId: monitor.id,
       url,
       createdAt: Date.now(),

@@ -1,56 +1,40 @@
 <script lang="ts">
   import { CheckIcon } from '@logdash/hyper-ui/icons';
-  import { Button, Checkbox } from '@logdash/hyper-ui/presentational';
+  import { Button } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     chatName: string;
     clusterName: string;
-    monitorName: string;
-    onSubmit: (withAssignment: boolean) => void;
+    onSubmit: () => void;
   };
 
-  let { chatName, monitorName, clusterName, onSubmit }: Props = $props();
-  let assignToServiceMonitor = $state(false);
+  let { chatName, clusterName, onSubmit }: Props = $props();
 </script>
 
-<div class="space-y-8 text-center">
-  <div class="flex items-center justify-start gap-4">
+<div class="flex flex-col gap-5">
+  <div class="flex items-center gap-4">
     <div
-      class="success-card flex h-14 w-14 items-center justify-center rounded-full"
+      class="bg-surface-150-bg text-success flex size-9 shrink-0 items-center justify-center rounded-lg"
     >
-      <CheckIcon class="size-6 stroke-1" />
+      <CheckIcon class="size-4.5" />
     </div>
-
-    <div class="flex flex-col items-start">
-      <h3 class="text-xl font-medium">Telegram channel found</h3>
+    <div class="flex min-w-0 flex-col gap-0.5">
+      <h2 class="text-base font-semibold">Telegram channel found</h2>
       <p class="text-fg-tertiary text-sm">
-        You can now save it to your domain.
+        Save it and every monitor on this domain alerts it.
       </p>
     </div>
   </div>
 
   <p
-    class="ld-card-base mx-auto w-fit truncate rounded-xl p-4 px-6 font-mono text-3xl font-medium uppercase"
+    class="bg-surface-50-bg edge truncate rounded-lg px-4 py-3 text-center font-mono text-lg font-medium"
   >
     {chatName}
   </p>
 
-  <div class="flex items-center justify-start gap-2">
-    <Checkbox
-      id="assign-service-monitor"
-      variant="primary"
-      bind:checked={assignToServiceMonitor}
-    />
-    <label for="assign-service-monitor" class="cursor-pointer text-sm">
-      Assign to {monitorName} service monitor
-    </label>
+  <div class="flex justify-end">
+    <Button variant="primary" onclick={onSubmit}>
+      Save channel to {clusterName}
+    </Button>
   </div>
-
-  <Button
-    variant="primary"
-    block
-    onclick={() => onSubmit(assignToServiceMonitor)}
-  >
-    Save channel to {clusterName}
-  </Button>
 </div>

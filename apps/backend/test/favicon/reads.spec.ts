@@ -120,7 +120,10 @@ describe('FaviconCoreController (reads)', () => {
       .query({ domain: 'empty.dev', sz: '64' })
       .reply(404, PNG);
 
-    expect((await readFavicon('empty.dev')).status).toBe(404);
+    const first = await readFavicon('empty.dev');
+
+    expect(first.status).toBe(404);
+    expect(first.headers['cache-control']).toBe('public, max-age=3600');
     expect((await readFavicon('empty.dev')).status).toBe(404);
     expect(nock.isDone()).toBe(true);
   });

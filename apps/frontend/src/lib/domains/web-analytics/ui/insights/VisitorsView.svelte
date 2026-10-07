@@ -1,9 +1,14 @@
 <script lang="ts">
-  import { Button, Spinner } from '@logdash/hyper-ui/presentational';
+  import UserIcon from '$lib/domains/shared/icons/UserIcon.svelte';
+  import { Badge, Button, Spinner } from '@logdash/hyper-ui/presentational';
   import { DateTime } from 'luxon';
   import { untrack } from 'svelte';
   import { WebAnalyticsVisitorsState } from '../../application/web-analytics-dashboard.state.svelte';
-  import { relativeDay, visitorName } from '../../domain/analytics-format';
+  import {
+    relativeDay,
+    shortDay,
+    visitorName,
+  } from '../../domain/analytics-format';
   import type {
     WebAnalyticsRange,
     WebAnalyticsVisitor,
@@ -78,7 +83,12 @@
           >
             Source
           </th>
-          <th scope="col" class="h-6 w-40 px-3 font-normal">Last seen</th>
+          <th
+            scope="col"
+            class="hidden h-6 w-40 px-3 font-normal @md:table-cell"
+          >
+            Last seen
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -91,18 +101,40 @@
                 : 'hover:bg-surface-elevated-hover-bg',
             ]}
           >
-            <td class="rounded-l-lg px-3 py-2">
+            <td class="rounded-lg px-3 py-2 @md:rounded-r-none">
               <div class="flex min-w-0 items-center gap-3">
                 <VisitorAvatar id={visitor.id} />
-                <div class="min-w-0">
-                  <button
-                    type="button"
-                    class="focus-visible:outline-brand block max-w-full cursor-pointer truncate text-left font-medium outline-none after:absolute after:inset-0 group-hover:underline focus-visible:after:rounded-lg focus-visible:after:outline-2 focus-visible:after:-outline-offset-2"
-                    onclick={() => onOpen(visitor)}
-                  >
-                    {visitorName(visitor.id)}
-                  </button>
-                  <VisitorTraits {visitor} />
+                <div class="min-w-0 flex-1">
+                  <div class="flex min-w-0 items-center gap-2">
+                    <button
+                      type="button"
+                      class="focus-visible:outline-brand block min-w-0 cursor-pointer truncate text-left font-medium outline-none after:absolute after:inset-0 group-hover:underline focus-visible:after:rounded-lg focus-visible:after:outline-2 focus-visible:after:-outline-offset-2"
+                      onclick={() => onOpen(visitor)}
+                    >
+                      {visitorName(visitor.id)}
+                    </button>
+                    {#if visitor.identified}
+                      <Badge
+                        variant="outline"
+                        size="sm"
+                        class="shrink-0 gap-1 @max-xl:w-5 @max-xl:px-0"
+                      >
+                        <UserIcon class="size-3" />
+                        <span class="sr-only @xl:not-sr-only">Signed in</span>
+                      </Badge>
+                    {/if}
+                    <span
+                      class="text-fg-tertiary ml-auto shrink-0 pl-1 text-xs whitespace-nowrap @md:hidden"
+                    >
+                      {shortDay(visitor.lastSeen)}
+                    </span>
+                  </div>
+                  <div class="flex min-w-0 items-center gap-2">
+                    <VisitorTraits {visitor} />
+                    <div class="ml-auto shrink-0 pl-1 @md:hidden">
+                      {@render activeDays(visitor)}
+                    </div>
+                  </div>
                 </div>
               </div>
             </td>
@@ -111,21 +143,9 @@
                 <BreakdownLabel dimension="referrers" name={visitor.source} />
               </span>
             </td>
-            <td class="rounded-r-lg px-3 py-2">
+            <td class="hidden rounded-r-lg px-3 py-2 @md:table-cell">
               <p class="whitespace-nowrap">{relativeDay(visitor.lastSeen)}</p>
-              <p class="mt-1.5 flex gap-1" aria-label="Active days this week">
-                {#each recentDays as day (day)}
-                  <span
-                    class={[
-                      'size-1.5 rounded-full',
-                      visitor.activeDays.includes(day ?? '')
-                        ? 'bg-surface-inverse-bg'
-                        : 'bg-current text-fg-disabled',
-                    ]}
-                    title={day}
-                  ></span>
-                {/each}
-              </p>
+              <div class="mt-1.5">{@render activeDays(visitor)}</div>
             </td>
           </tr>
         {/each}
@@ -142,3 +162,19 @@
 {/if}
 
 <VisitorDialog {clusterId} visitor={opened} onclose={onClose} />
+
+{#snippet activeDays(visitor: WebAnalyticsVisitor)}
+  <p class="flex gap-1" aria-label="Active days this week">
+    {#each recentDays as day (day)}
+      <span
+        class={[
+          'size-1.5 rounded-full',
+          visitor.activeDays.includes(day ?? '')
+            ? 'bg-surface-inverse-bg'
+            : 'bg-current text-fg-disabled',
+        ]}
+        title={day}
+      ></span>
+    {/each}
+  </p>
+{/snippet}

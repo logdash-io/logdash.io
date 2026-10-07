@@ -40,7 +40,7 @@
 
   function linkClass(current: boolean): string[] {
     return [
-      'flex min-h-8 items-center gap-2.5 rounded-lg px-2.5 text-sm leading-5 transition-ink duration-150',
+      'flex min-h-8 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm leading-5 transition-ink duration-150',
       current
         ? 'bg-surface-root-selected-bg text-fg-default'
         : 'text-fg-tertiary hover:bg-surface-root-hover-bg hover:text-fg-default',

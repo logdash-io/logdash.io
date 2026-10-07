@@ -5,7 +5,7 @@ import { HttpPingCoreController } from '../../src/http-ping/core/http-ping-core.
 import { createTestApp } from '../utils/bootstrap';
 import { URL_STUB } from '../utils/http-monitor-utils';
 import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-pinger.service';
-import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
+import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { HttpPingEvent } from '../../src/http-ping/events/http-ping-event.enum';
 
@@ -68,7 +68,7 @@ describe('Http Ping (SSE)', () => {
       const stream = controller.streamHttpMonitorPings(setupA.cluster.id);
       const resultsPromise = firstValueFrom(stream.pipe(take(1)));
 
-      await pingerService.tryPingMonitors([ProjectTier.Free]);
+      await pingerService.tryPingMonitors([ClusterTier.Free]);
 
       // then
       const results = await resultsPromise;
@@ -102,9 +102,9 @@ describe('Http Ping (SSE)', () => {
       const resultsPromise = firstValueFrom(stream.pipe(take(2), toArray()));
 
       nock(URL_STUB).get('/').times(2).delay(10).reply(200);
-      await pingerService.tryPingMonitors([ProjectTier.Free]);
+      await pingerService.tryPingMonitors([ClusterTier.Free]);
       nock(URL_STUB).get('/').times(2).delay(10).reply(404);
-      await pingerService.tryPingMonitors([ProjectTier.Free]);
+      await pingerService.tryPingMonitors([ClusterTier.Free]);
 
       // then
       const results = await resultsPromise;

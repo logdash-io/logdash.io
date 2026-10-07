@@ -138,7 +138,9 @@ export const EnvConfigs: EnvConfigs = {
       whitelistedEmails: (process.env.WHITELISTED_EMAILS ?? '').split(','),
     },
     logdash: {
-      apiKey: process.env.LOGDASH_API_KEY!,
+      get apiKey(): string {
+        return requireEnv('LOGDASH_API_KEY');
+      },
     },
     telegram: {
       token: process.env.TELEGRAM_TOKEN!,
@@ -253,7 +255,7 @@ export const EnvConfigs: EnvConfigs = {
       whitelistedEmails: (process.env.WHITELISTED_EMAILS ?? '').split(','),
     },
     logdash: {
-      apiKey: process.env.LOGDASH_API_KEY!,
+      apiKey: process.env.LOGDASH_API_KEY ?? '',
     },
     telegram: {
       token: process.env.TELEGRAM_TOKEN!,

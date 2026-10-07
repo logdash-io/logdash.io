@@ -7,28 +7,14 @@ import type {
 } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
 import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor';
-import {
-  MetricGranularity,
-  type Metric,
-  type SimplifiedMetric,
-} from '$lib/domains/app/projects/domain/metric';
-import type { Log } from '$lib/domains/logs/domain/log';
 import { httpClient } from '$lib/domains/shared/http/http-client';
-import type { Feature } from '$lib/domains/shared/types';
 
 const PINGS_LIMIT = 30;
-const DEMO_LOGS_LIMIT = 20;
-const DEMO_METRIC_HISTORY_LIMIT = 60;
 
 export type AnonymousUserDto = {
   token: string;
   clusterId: string;
   clusterName: string;
-};
-
-export type CreatedProjectDto = {
-  projectId: string;
-  apiKey: string;
 };
 
 export type DemoTargetDto = {
@@ -39,11 +25,6 @@ export type DemoTargetDto = {
 type CreateAnonymousUserResponseDto = {
   token: string;
   cluster: { id: string; name: string };
-};
-
-type CreateProjectResponseDto = {
-  project: { id: string };
-  apiKey: string;
 };
 
 export class AnonymousSessionService {
@@ -63,28 +44,13 @@ export class AnonymousSessionService {
     };
   }
 
-  public async createProject(
-    clusterId: string,
-    name: string,
-    features: Feature[],
-    token: string,
-  ): Promise<CreatedProjectDto> {
-    const response = await httpClient.post<CreateProjectResponseDto>(
-      `/clusters/${clusterId}/projects`,
-      { name, selectedFeatures: features },
-      { requireAuth: false, customToken: token },
-    );
-
-    return { projectId: response.project.id, apiKey: response.apiKey };
-  }
-
   public createMonitor(
-    projectId: string,
+    clusterId: string,
     dto: { name: string; url: string },
     token: string,
   ): Promise<Monitor> {
     return httpClient.post<Monitor>(
-      `/projects/${projectId}/http_monitors`,
+      `/clusters/${clusterId}/http_monitors`,
       { name: dto.name, url: dto.url, mode: MonitorMode.PULL },
       { requireAuth: false, customToken: token },
     );
@@ -99,12 +65,12 @@ export class AnonymousSessionService {
   }
 
   public readPings(
-    projectId: string,
+    clusterId: string,
     monitorId: string,
     token: string,
   ): Promise<HttpPing[]> {
     return httpClient.get<HttpPing[]>(
-      `/projects/${projectId}/monitors/${monitorId}/http_pings`,
+      `/clusters/${clusterId}/monitors/${monitorId}/http_pings`,
       {
         params: { limit: PINGS_LIMIT },
         requireAuth: false,
@@ -147,53 +113,26 @@ export class AnonymousSessionService {
     });
   }
 
+  public async readDemoHistory(
+    clusterId: string,
+    monitorId: string,
+  ): Promise<(PingBucket | null)[]> {
+    const response = await httpClient.get<PingBucketsResponse>(
+      `/clusters/${clusterId}/monitors/${monitorId}/http_ping_buckets`,
+      { params: { period: '90h' }, requireAuth: false },
+    );
+
+    return response.buckets.reverse();
+  }
+
   public readDemoPings(
-    projectId: string,
+    clusterId: string,
     monitorId: string,
   ): Promise<HttpPing[]> {
     return httpClient.get<HttpPing[]>(
-      `/projects/${projectId}/monitors/${monitorId}/http_pings`,
+      `/clusters/${clusterId}/monitors/${monitorId}/http_pings`,
       { params: { limit: PINGS_LIMIT }, requireAuth: false },
     );
-  }
-
-  public readDemoLogs(projectId: string): Promise<Log[]> {
-    return httpClient.get<Log[]>(`/projects/${projectId}/logs/v2`, {
-      params: { limit: DEMO_LOGS_LIMIT },
-      requireAuth: false,
-    });
-  }
-
-  public readDemoMetrics(projectId: string): Promise<SimplifiedMetric[]> {
-    return httpClient.get<SimplifiedMetric[]>(
-      `/projects/${projectId}/metrics`,
-      {
-        requireAuth: false,
-      },
-    );
-  }
-
-  /** The last hour, one value per minute, oldest first. */
-  public async readDemoMetricHistory(
-    projectId: string,
-    metricRegisterEntryId: string,
-  ): Promise<number[]> {
-    const entries = await httpClient.get<Metric[]>(
-      `/projects/${projectId}/metrics/${metricRegisterEntryId}`,
-      {
-        params: {
-          granularity: MetricGranularity.MINUTE,
-          limit: DEMO_METRIC_HISTORY_LIMIT,
-        },
-        requireAuth: false,
-      },
-    );
-
-    return entries
-      .filter((entry) => entry.granularity === MetricGranularity.MINUTE)
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-DEMO_METRIC_HISTORY_LIMIT)
-      .map((entry) => entry.value);
   }
 }
 

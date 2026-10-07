@@ -12,7 +12,7 @@
   } from '$lib/domains/shared/utils/url.js';
   import { Button, Input, Label } from '@logdash/hyper-ui/presentational';
   import { fromAction } from 'svelte/attachments';
-  import MonitorUrlField from '../../../setup/MonitorUrlField.svelte';
+  import MonitorUrlField from '$lib/domains/app/projects/ui/setup/MonitorUrlField.svelte';
 
   type Props = {
     isOpen: boolean;
@@ -98,7 +98,7 @@
     {#if isPull}
       <MonitorUrlField
         id="edit-monitor-url"
-        projectId={monitor.projectId}
+        clusterId={monitor.clusterId}
         bind:value={url}
       />
     {/if}

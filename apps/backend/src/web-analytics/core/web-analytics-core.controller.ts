@@ -5,6 +5,7 @@ import {
   Get,
   Headers,
   HttpCode,
+  Ip,
   Param,
   Put,
   Post,
@@ -12,6 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { isIP } from 'node:net';
 import { Public } from '../../auth/core/decorators/is-public';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
@@ -197,8 +199,10 @@ export class WebAnalyticsCoreController {
     @Body() body: CollectWebEventsBody,
     @Headers('origin') origin: string | undefined,
     @Headers('user-agent') userAgent: string = '',
+    @Headers('x-logdash-client-ip') clientIp: string = '',
+    @Ip() requestIp: string,
   ): Promise<void> {
-    await this.ingestion.collect(body, origin, userAgent);
+    await this.ingestion.collect(body, origin, userAgent, isIP(clientIp) ? clientIp : requestIp);
   }
 
   private async retentionDays(clusterId: string): Promise<number> {

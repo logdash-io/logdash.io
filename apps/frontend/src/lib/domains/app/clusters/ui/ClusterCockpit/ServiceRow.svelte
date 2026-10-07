@@ -1,50 +1,33 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import {
-    SERVICE_STATUS_DOT,
-    SERVICE_STATUS_LABEL,
-    type ServiceStatus,
-  } from '$lib/domains/app/clusters/domain/service-status.js';
-  import { Badge } from '@logdash/hyper-ui/presentational';
+  import CubeIcon from '$lib/domains/shared/icons/CubeIcon.svelte';
   import type { Snippet } from 'svelte';
 
   type Props = {
     name: string;
-    url: string | null;
-    status: ServiceStatus;
     clusterId: string;
     projectId: string;
     children?: Snippet;
   };
 
-  const { name, url, status, clusterId, projectId, children }: Props = $props();
+  const { name, clusterId, projectId, children }: Props = $props();
 </script>
 
-<div
-  class="hover:bg-surface-50-hover-bg relative flex h-11 items-center gap-3 rounded-lg px-3 text-[13px]"
+<li
+  class="hover:bg-surface-25-hover-bg relative flex h-12 items-center gap-3 rounded-lg px-3 text-sm"
 >
+  <CubeIcon class="text-fg-muted size-4 shrink-0" />
   <a
     href={resolve('/app/domains/[cluster_id]/[project_id]', {
       cluster_id: clusterId,
       project_id: projectId,
     })}
-    class="focus-visible:after:outline-brand shrink-0 truncate font-medium outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:-outline-offset-2 focus-visible:after:outline-2"
+    class="focus-visible:after:outline-brand min-w-0 truncate font-medium outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:-outline-offset-2 focus-visible:after:outline-2"
   >
     {name}
   </a>
 
-  {#if url}
-    <span class="text-fg-muted min-w-0 truncate max-sm:hidden">{url}</span>
-  {/if}
-
   <span class="ml-auto flex shrink-0 items-center gap-2">
     {@render children?.()}
-
-    <Badge variant="outline">
-      <span
-        class={['size-1.5 shrink-0 rounded-full', SERVICE_STATUS_DOT[status]]}
-      ></span>
-      {SERVICE_STATUS_LABEL[status]}
-    </Badge>
   </span>
-</div>
+</li>

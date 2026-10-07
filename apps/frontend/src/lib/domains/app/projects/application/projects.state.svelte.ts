@@ -2,7 +2,6 @@ import { Feature } from '$lib/domains/shared/types.js';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import type { Project } from '$lib/domains/app/projects/domain/project';
 import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
-import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
 import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
 
 // todo: divide api calls responsibility from state
@@ -43,18 +42,6 @@ class ProjectsState {
   set(projects: Project[]): void {
     this._projects = arrayToObject(projects, 'id');
     this._initialized = true;
-  }
-
-  hasFeature(projectId: string, feature: Feature): boolean {
-    const project = this._projects[projectId];
-    if (!project) {
-      return false;
-    }
-
-    return (
-      project.selectedFeatures?.includes(feature) ||
-      project.features.includes(feature)
-    );
   }
 
   hasConfiguredFeature(projectId: string, feature: Feature): boolean {
@@ -123,39 +110,6 @@ class ProjectsState {
       delete this._loadingApiKey[projectId];
     } finally {
       delete this._deletingProject[projectId];
-    }
-  }
-
-  async addFeature(projectId: string, feature: Feature): Promise<void> {
-    const project = this._projects[projectId];
-    if (!project) {
-      return;
-    }
-
-    if (project.selectedFeatures?.includes(feature)) {
-      return;
-    }
-
-    const previousFeatures = project.selectedFeatures || [];
-    const updatedFeatures = [...previousFeatures, feature];
-
-    this._projects[projectId] = {
-      ...project,
-      selectedFeatures: updatedFeatures,
-    };
-
-    try {
-      await ProjectsService.updateProject(projectId, {
-        selectedFeatures: updatedFeatures,
-      });
-    } catch (error) {
-      this._projects[projectId] = {
-        ...project,
-        selectedFeatures: previousFeatures,
-      };
-
-      toast.error('Failed to add feature to service');
-      throw error;
     }
   }
 }

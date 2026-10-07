@@ -79,10 +79,10 @@ export const FEATURES_COMPARISON = {
       icon: '🔍',
       features: [
         {
-          name: 'Number of monitors per service',
-          [UserTier.FREE]: '1 (5 in total)',
-          [UserTier.BUILDER]: '1 (20 in total)',
-          [UserTier.PRO]: '1 (50 in total)',
+          name: 'Number of monitors',
+          [UserTier.FREE]: '5',
+          [UserTier.BUILDER]: '20',
+          [UserTier.PRO]: '50',
         },
         {
           name: 'Monitors ping frequency',
@@ -97,7 +97,7 @@ export const FEATURES_COMPARISON = {
           [UserTier.PRO]: true,
         },
         {
-          name: 'Custom status page domain',
+          name: 'Custom status page URL',
           [UserTier.FREE]: false,
           [UserTier.BUILDER]: false,
           [UserTier.PRO]: true,

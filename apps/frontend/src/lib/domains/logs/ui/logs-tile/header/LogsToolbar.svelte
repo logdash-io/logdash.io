@@ -18,6 +18,10 @@
   import { LOG_LEVELS_MAP } from '$lib/domains/logs/domain/log-level-metadata.js';
   import FilterIcon from '$lib/domains/shared/icons/FilterIcon.svelte';
   import SearchIcon from '$lib/domains/shared/icons/SearchIcon.svelte';
+  import {
+    TOOLBAR_CONTROL,
+    TOOLBAR_ICON_CONTROL,
+  } from '$lib/domains/shared/ui/components/toolbar.js';
   import { ClockIcon, CloseIcon } from '@logdash/hyper-ui/icons';
   import { Tooltip } from '@logdash/hyper-ui/presentational';
 
@@ -47,10 +51,6 @@
 
   const CHIP_CLASS =
     'text-fg-tertiary flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm edge';
-  const CHIP_BUTTON_CLASS = [
-    CHIP_CLASS,
-    'hover:text-fg-default transition-ink focus-visible:outline-brand cursor-pointer focus-visible:outline-2',
-  ];
   const QUICK_LEVELS: {
     level: LogsQuickLevel;
     label: string;
@@ -67,7 +67,7 @@
   aria-hidden={interactive ? undefined : 'true'}
 >
   <label
-    class="bg-surface-50-bg focus-within:ring-surface-input-border flex h-8 min-w-24 flex-1 items-center gap-2 rounded-lg px-2.5 text-sm edge"
+    class="focus-within:inset-ring-surface-input-hover-border flex h-8 min-w-24 flex-1 items-center gap-2 rounded-full px-3 text-sm edge focus-within:inset-ring"
   >
     <SearchIcon class="text-fg-faint size-3.5 shrink-0" />
     <input
@@ -82,7 +82,7 @@
       <button
         type="button"
         aria-label="Clear search"
-        class="text-fg-muted hover:text-fg-default transition-ink -mr-1 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md"
+        class="text-fg-muted hover:text-fg-default transition-ink focus-visible:outline-brand -mr-2 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2"
         onclick={onSearchClear}
       >
         <CloseIcon class="size-3.5" />
@@ -108,7 +108,7 @@
     {#each QUICK_LEVELS as quick (quick.level)}
       <button
         type="button"
-        class={[CHIP_BUTTON_CLASS, quick.class]}
+        class={[TOOLBAR_CONTROL, 'text-fg-tertiary', quick.class]}
         onclick={() => onQuickLevel?.(quick.level)}
       >
         <span
@@ -127,7 +127,7 @@
       <button
         type="button"
         aria-label={relativeTime ? 'Show exact times' : 'Show relative times'}
-        class={[CHIP_BUTTON_CLASS, 'w-8 justify-center px-0']}
+        class={TOOLBAR_ICON_CONTROL}
         onclick={onTimeToggle}
       >
         <ClockIcon class="size-3.5 shrink-0" />
@@ -171,7 +171,7 @@
             <button
               type="button"
               aria-label="Clear {filter.label.toLowerCase()} filter"
-              class="text-fg-muted hover:bg-surface-50-hover-bg hover:text-fg-default flex size-6 cursor-pointer items-center justify-center rounded-full"
+              class="text-fg-muted hover:bg-surface-25-hover-bg hover:text-fg-default focus-visible:outline-brand flex size-6 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2"
               onclick={filter.onClear}
             >
               <CloseIcon class="size-3.5" />
@@ -186,7 +186,7 @@
 {#snippet filterChip()}
   <button
     type="button"
-    class={CHIP_BUTTON_CLASS}
+    class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
     data-posthog-id="logs-filter-dropdown"
   >
     <FilterIcon class="size-3.5 shrink-0" />
@@ -200,7 +200,7 @@
       {#each filter.dots as dot, index (index)}
         <span
           class={[
-            'ring-surface-50-bg size-1.5 rounded-full ring-2',
+            'ring-surface-25-bg size-1.5 rounded-full ring-2',
             { '-ml-0.5': index > 0 },
             dot,
           ]}

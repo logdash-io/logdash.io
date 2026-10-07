@@ -29,6 +29,7 @@ export class PublicDashboardWriteService {
       httpMonitorsIds: dto.httpMonitorsIds || [],
       name: dto.name,
       isPublic: dto.isPublic,
+      autoAddMonitors: dto.autoAddMonitors ?? true,
     });
 
     await this.auditLog.create({
@@ -47,11 +48,14 @@ export class PublicDashboardWriteService {
     if (dto.name) {
       updateQuery.name = dto.name;
     }
-    if (dto.isPublic) {
+    if (dto.isPublic !== undefined) {
       updateQuery.isPublic = dto.isPublic;
     }
+    if (dto.autoAddMonitors !== undefined) {
+      updateQuery.autoAddMonitors = dto.autoAddMonitors;
+    }
 
-    const entity = await this.publicDashboardModel.findByIdAndUpdate(dto.id, dto, {
+    const entity = await this.publicDashboardModel.findByIdAndUpdate(dto.id, updateQuery, {
       returnDocument: 'after',
     });
 
@@ -73,6 +77,23 @@ export class PublicDashboardWriteService {
     await this.publicDashboardModel.updateOne(
       { _id: dto.publicDashboardId },
       { $pull: { httpMonitorsIds: dto.httpMonitorId } },
+    );
+  }
+
+  public async addMonitorToAutoAddDashboards(
+    clusterId: string,
+    httpMonitorId: string,
+  ): Promise<void> {
+    await this.publicDashboardModel.updateMany(
+      { clusterId, autoAddMonitors: true },
+      { $addToSet: { httpMonitorsIds: httpMonitorId } },
+    );
+  }
+
+  public async removeMonitorFromAllDashboards(httpMonitorId: string): Promise<void> {
+    await this.publicDashboardModel.updateMany(
+      { httpMonitorsIds: httpMonitorId },
+      { $pull: { httpMonitorsIds: httpMonitorId } },
     );
   }
 

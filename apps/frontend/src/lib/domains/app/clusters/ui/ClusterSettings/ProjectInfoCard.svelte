@@ -205,6 +205,7 @@
     {#snippet action()}
       <IconButton
         label="Copy domain ID"
+        well
         class="-mr-1.5"
         onclick={onCopyClusterId}
       >

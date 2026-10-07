@@ -9,7 +9,6 @@ import type { Monitor } from '../domain/monitoring/monitor.js';
 import type { UrlProbe } from '../domain/monitoring/url-hint.js';
 
 export type CreateMonitorDto = {
-  projectId: string;
   name: string;
   mode: MonitorMode;
   url?: string;
@@ -40,18 +39,14 @@ export class MonitoringService {
     return httpClient.get<Monitor[]>(`/clusters/${clusterId}/http_monitors`);
   }
 
-  getMonitorsByProject(projectId: string): Promise<Monitor[]> {
-    return httpClient.get<Monitor[]>(`/projects/${projectId}/http_monitors`);
-  }
-
   getMonitorPings(dto: {
-    projectId: string;
+    clusterId: string;
     monitorId: string;
     limit: number;
     signal?: AbortSignal;
   }): Promise<HttpPing[]> {
     return httpClient.get<HttpPing[]>(
-      `/projects/${dto.projectId}/monitors/${dto.monitorId}/http_pings`,
+      `/clusters/${dto.clusterId}/monitors/${dto.monitorId}/http_pings`,
       {
         params: {
           limit: dto.limit,
@@ -61,8 +56,8 @@ export class MonitoringService {
     );
   }
 
-  createMonitor(projectId: string, dto: CreateMonitorDto): Promise<Monitor> {
-    return httpClient.post<Monitor>(`/projects/${projectId}/http_monitors`, {
+  createMonitor(clusterId: string, dto: CreateMonitorDto): Promise<Monitor> {
+    return httpClient.post<Monitor>(`/clusters/${clusterId}/http_monitors`, {
       name: dto.name,
       mode: dto.mode,
       url: dto.url,
@@ -84,9 +79,9 @@ export class MonitoringService {
     return httpClient.put<Monitor>(`/http_monitors/${monitorId}`, dto);
   }
 
-  probeUrl(projectId: string, url: string): Promise<UrlProbe> {
+  probeUrl(clusterId: string, url: string): Promise<UrlProbe> {
     return httpClient.post<UrlProbe>(
-      `/projects/${projectId}/http_monitors/probe`,
+      `/clusters/${clusterId}/http_monitors/probe`,
       { url },
     );
   }

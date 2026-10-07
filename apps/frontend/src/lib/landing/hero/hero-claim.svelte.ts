@@ -11,8 +11,14 @@ import {
   type OAuthPopupOutcome,
 } from '$lib/domains/auth/application/start-oauth-popup';
 import { startOAuthLogin } from '$lib/domains/auth/application/start-oauth-login';
-import type { OAuthFailureReason } from '$lib/domains/auth/domain/oauth-popup-message';
-import type { OAuthProvider } from '$lib/domains/auth/domain/oauth-provider';
+import {
+  claimFailureMessage,
+  type OAuthFailureReason,
+} from '$lib/domains/auth/domain/oauth-popup-message';
+import {
+  oauthProviderName,
+  type OAuthProvider,
+} from '$lib/domains/auth/domain/oauth-provider';
 import { needsOnboarding } from '$lib/domains/onboarding/application/needs-onboarding';
 import { createLogger } from '$lib/domains/shared/logger';
 import {
@@ -32,11 +38,6 @@ export type HeroClaimStep =
 export type HeroClaimTrigger = 'nudge' | 'alerts';
 
 const logger = createLogger('hero-claim.state', false);
-
-const PROJECT_LIMIT_MESSAGE =
-  'That account has reached its service limit. Free a slot there, then try again.';
-const FAILED_MESSAGE =
-  'Signing in did not go through. Your dashboard is untouched. Try again.';
 
 class HeroClaimState {
   private _open = $state(false);
@@ -214,8 +215,7 @@ class HeroClaimState {
   }
 
   private _fail(reason: OAuthFailureReason): void {
-    this._error =
-      reason === 'project-limit' ? PROJECT_LIMIT_MESSAGE : FAILED_MESSAGE;
+    this._error = claimFailureMessage(reason);
     this._step = { kind: 'intro' };
   }
 
@@ -229,7 +229,7 @@ class HeroClaimState {
 
     this._step = {
       kind: 'busy',
-      label: `Taking you to ${providerName(provider)}`,
+      label: `Taking you to ${oauthProviderName(provider)}`,
     };
 
     try {
@@ -237,7 +237,7 @@ class HeroClaimState {
         provider,
         flow: 'claim',
         tier: this.trialTier,
-        next_url: `/app/domains/${preview.clusterId}?claimed=1`,
+        next_url: `/app/domains/${preview.clusterId}/uptime?claimed=1`,
       });
       anonymousPreviewState.handOffPreview();
     } catch (error) {
@@ -258,16 +258,9 @@ class HeroClaimState {
     }
 
     window.location.assign(
-      resolve(`/app/domains/${preview.clusterId}?claimed=1`),
+      resolve(`/app/domains/${preview.clusterId}/uptime?claimed=1`),
     );
   }
-}
-
-export function providerName(provider: OAuthProvider): string {
-  return match(provider)
-    .with('github', () => 'GitHub')
-    .with('google', () => 'Google')
-    .exhaustive();
 }
 
 export const heroClaim = new HeroClaimState();

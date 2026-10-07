@@ -2,12 +2,12 @@ import { httpClient } from '$lib/domains/shared/http/http-client';
 import type {
   WebAnalyticsBreakdownName,
   WebAnalyticsBreakdownRow,
-  WebAnalyticsCohort,
   WebAnalyticsFunnelStep,
   WebAnalyticsJourney,
   WebAnalyticsOverview,
   WebAnalyticsRange,
   WebAnalyticsReport,
+  WebAnalyticsRetention,
   WebAnalyticsSite,
   WebAnalyticsStatus,
   WebAnalyticsVisitor,
@@ -122,11 +122,10 @@ export class WebAnalyticsService {
   public static async readRetention(
     clusterId: string,
     range: WebAnalyticsRange,
-  ): Promise<WebAnalyticsCohort[]> {
-    const response = await httpClient.get<{ cohorts: WebAnalyticsCohort[] }>(
+  ): Promise<WebAnalyticsRetention> {
+    return httpClient.get<WebAnalyticsRetention>(
       `/clusters/${clusterId}/web_analytics/retention?${query(range)}`,
     );
-    return response.cohorts;
   }
 }
 

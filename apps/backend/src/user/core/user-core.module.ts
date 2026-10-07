@@ -8,6 +8,7 @@ import { UserTtlModule } from '../ttl/user-ttl.module';
 import { CustomJwtModule } from '../../auth/custom-jwt/custom-jwt.module';
 import { ClusterWriteModule } from '../../cluster/write/cluster-write.module';
 import { UserCoreService } from './user-core.service';
+import { PublicDashboardMonitorsModule } from '../../public-dashboard/monitors/public-dashboard-monitors.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UserCoreService } from './user-core.service';
     UserTtlModule,
     CustomJwtModule,
     ClusterWriteModule,
+    PublicDashboardMonitorsModule,
   ],
   providers: [UserCoreEventController, UserCoreService],
   controllers: [UserCoreController],

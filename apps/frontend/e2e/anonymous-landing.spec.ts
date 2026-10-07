@@ -8,7 +8,7 @@ import {
 
 const ACCESS_TOKEN_COOKIE = 'logdash_access_token_v0';
 const PREVIEW_STORAGE_KEY = 'logdash_anonymous_preview_v0';
-const MONITORING_PATH = /\/app\/domains\/[^/]+\/[^/]+\/monitoring/;
+const UPTIME_PATH = /\/app\/domains\/[^/]+\/uptime\/[^/?]+/;
 const CLAIMED_USER = {
   id: '000000000000000000000001',
   tier: 'free',
@@ -19,7 +19,6 @@ const CLAIMED_USER = {
 
 type StoredPreview = {
   clusterId: string;
-  projectId: string;
   monitorId: string;
   url: string;
 };
@@ -94,9 +93,13 @@ async function expectFullScreen(
   await expect(sidebar).toBeVisible();
   await expect(sidebar).toHaveText(
     new RegExp(
-      `^\\s*All domains\\s*Domains\\s*${cluster[0]}\\s*${cluster}\\s*Analytics\\s*Status pages\\s*Settings\\s*${host}[\\s\\S]*New service\\s*Free plan\\s*$`,
+      `^\\s*Anonymous\\s*All domains\\s*Domains\\s*${cluster[0]}\\s*${cluster}\\s*Analytics\\s*Uptime[\\s\\S]*Status pages\\s*Settings\\s*New service\\s*Free plan\\s*$`,
     ),
   );
+}
+
+function claimBar(page: Page): Locator {
+  return page.getByRole('complementary', { name: 'Temporary dashboard' });
 }
 
 function claimCard(page: Page): Locator {
@@ -234,10 +237,9 @@ test.describe('anonymous landing flow', () => {
     const after = await readStoredPreview(page);
 
     expect(after?.monitorId).toBe(before?.monitorId);
-    expect(after?.projectId).toBe(before?.projectId);
   });
 
-  test('check 4: opening the dashboard lands on monitoring with a claim banner and no upgrade', async () => {
+  test('check 4: opening the dashboard lands on the monitor with a claim banner and no upgrade', async () => {
     const stored = await readStoredPreview(page);
 
     expect(stored, 'no preview to open').toBeTruthy();
@@ -250,19 +252,25 @@ test.describe('anonymous landing flow', () => {
       .first()
       .click();
 
-    await page.waitForURL(MONITORING_PATH, { timeout: 30_000 });
+    await page.waitForURL(UPTIME_PATH, { timeout: 30_000 });
 
     expect(page.url()).toContain(
-      `/app/domains/${stored!.clusterId}/${stored!.projectId}/monitoring`,
+      `/app/domains/${stored!.clusterId}/uptime/${stored!.monitorId}`,
     );
     dashboardPath = new URL(page.url()).pathname;
 
-    const claimBanner = page.getByText('Temporary dashboard');
+    const claimBanner = claimBar(page);
 
     await expect(claimBanner).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText(/^\d+(?:d \d+h|h \d+m) left$/)).toBeVisible();
+    await expect(claimBanner.getByText('Keep this dashboard')).toBeVisible();
     await expect(
-      page.getByRole('link', { name: 'Claim with GitHub or Google' }),
+      claimBanner.getByText(/^\d+(?:d \d+h|h \d+m) left$/),
+    ).toBeVisible();
+    await expect(
+      claimBanner.getByRole('button', { name: 'Keep with GitHub' }),
+    ).toBeVisible();
+    await expect(
+      claimBanner.getByRole('button', { name: 'Keep with Google' }),
     ).toBeVisible();
 
     // The monitor carried over with its pings.
@@ -311,6 +319,49 @@ test.describe('anonymous landing flow', () => {
     await page.keyboard.press('Escape');
     await expect(apiKeys).toHaveCount(0);
     await expect(profile).toBeFocused();
+  });
+
+  test('check 4c: the claim banner signs in and takes the terms without leaving the page', async () => {
+    expect(dashboardPath, 'the dashboard was never opened').toBeTruthy();
+
+    await page.goto(dashboardPath);
+    await page.route('**/app/api/auth/oauth-start', (route) =>
+      route.fulfill({ json: { url: '/app/auth/popup?status=ok' } }),
+    );
+    await page.route('**/app/api/auth/session', (route) =>
+      route.fulfill({ json: { user: CLAIMED_USER, token: 'claimed' } }),
+    );
+    await page.route('**/app/api/onboarding/**', (route) =>
+      route.fulfill({
+        json: { ...CLAIMED_USER, termsAcceptedAt: new Date().toISOString() },
+      }),
+    );
+
+    const popup = page.waitForEvent('popup');
+
+    await claimBar(page)
+      .getByRole('button', { name: 'Keep with GitHub' })
+      .click();
+    await (await popup).waitForEvent('close');
+
+    const consent = page
+      .getByRole('dialog')
+      .filter({ hasText: 'One last thing' });
+
+    await expect(consent).toBeVisible();
+    expect(new URL(page.url()).pathname).toBe(dashboardPath);
+
+    const reload = page.waitForEvent('load');
+
+    await consent.getByLabel(/I agree to the/).check();
+    await consent
+      .getByRole('button', { name: 'Continue', exact: true })
+      .click();
+    await reload;
+    await page.unrouteAll({ behavior: 'ignoreErrors' });
+
+    expect(new URL(page.url()).pathname).toBe(dashboardPath);
+    await expect(claimBar(page)).toBeVisible();
   });
 
   test('check 5: a second URL reuses the same anonymous account', async () => {
@@ -372,16 +423,19 @@ test.describe('anonymous landing flow', () => {
     await card.getByLabel(/I agree to the/).check();
     await card.getByRole('button', { name: 'Continue', exact: true }).click();
 
-    await page.waitForURL(`**/app/domains/${stored!.clusterId}`, {
-      timeout: 30_000,
-    });
+    await page.waitForURL(
+      new RegExp(`/app/domains/${stored!.clusterId}/uptime(\\?|$)`),
+      { timeout: 30_000 },
+    );
     await page.unrouteAll({ behavior: 'ignoreErrors' });
 
-    await expect(page.getByText('Monitor more')).toBeVisible();
     await expect(
       page
-        .getByRole('region', { name: 'Monitoring' })
-        .getByText('example.org', { exact: true }),
+        .getByRole('region', { name: 'Finish setting up' })
+        .getByText('Monitor more'),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: startsWithName('example.org') }).first(),
     ).toBeVisible();
     expect(await readStoredPreview(page)).toBeNull();
   });
@@ -391,14 +445,16 @@ test.describe('anonymous landing flow', () => {
     await page.getByLabel('Website address').fill('example.net');
     await page.getByRole('button', { name: 'Start monitoring' }).click();
 
-    await page.waitForURL(/\/app\/domains\/[a-f0-9]{24}$/, { timeout: 30_000 });
-
-    const setup = page.getByRole('region', { name: 'Monitoring' });
-
-    await expect(setup.getByText('Monitor more')).toBeVisible();
-    await expect(setup.getByText(/^Up( · \d+ ms)?$/)).toBeVisible({
+    await page.waitForURL(/\/app\/domains\/[a-f0-9]{24}\/uptime$/, {
       timeout: 30_000,
     });
+
+    const setup = page.getByRole('region', { name: 'Finish setting up' });
+
+    await expect(setup.getByText('Monitor more')).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: startsWithName('example.net') }).first(),
+    ).toBeVisible({ timeout: 30_000 });
 
     await setup.getByRole('button', { name: 'Done' }).click();
     await expect(setup).toBeHidden();
@@ -489,7 +545,7 @@ test.describe('first check and the way in', () => {
     await expect(card).toContainText('tell you the moment it is back up.');
   });
 
-  test('check 15: a subdomain URL with a path names the project after its domain and the service after the URL', async ({
+  test('check 15: a subdomain URL with a path names the domain after its domain and the monitor after the URL', async ({
     page,
   }) => {
     const domain = 'logdash-e2e.co.uk';
@@ -504,13 +560,13 @@ test.describe('first check and the way in', () => {
       .getByRole('button', { name: 'Open your dashboard' })
       .first()
       .click();
-    await page.waitForURL(MONITORING_PATH, { timeout: 30_000 });
+    await page.waitForURL(UPTIME_PATH, { timeout: 30_000 });
 
     await expect(
       page.getByRole('button', { name: startsWithName(domain) }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(
-      page.getByRole('button', { name: startsWithName(service) }),
+      page.getByRole('heading', { name: service, exact: true }),
     ).toBeVisible();
   });
 

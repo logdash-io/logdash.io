@@ -56,9 +56,7 @@
           : gutter >= TICKS_SPACE
             ? 'ticks'
             : null;
-      const firstCard = root
-        .querySelector('h2[id]')
-        ?.closest('section')?.lastElementChild;
+      const firstCard = root.querySelector('h2[id]')?.closest('section');
       namesTop = firstCard
         ? firstCard.getBoundingClientRect().top -
           root.getBoundingClientRect().top
@@ -177,7 +175,7 @@
 </script>
 
 <div
-  class={['sticky -mb-10 h-0', { 'top-1/2': mode !== 'names' }]}
+  class={['sticky -mb-2 h-0', { 'top-1/2': mode !== 'names' }]}
   style:top={mode === 'names' ? `${namesTop}px` : undefined}
   {@attach track}
 >

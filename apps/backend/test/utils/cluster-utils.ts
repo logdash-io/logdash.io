@@ -7,6 +7,9 @@ import { ClusterRole } from '../../src/cluster/core/enums/cluster-role.enum';
 import { Model, Types } from 'mongoose';
 import { getModelToken } from '@nestjs/mongoose';
 import { CreateClusterBody } from '../../src/cluster/core/dto/create-cluster.body';
+import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
+import { ClusterSerializer } from '../../src/cluster/core/entities/cluster.serializer';
+import { ClusterNormalized } from '../../src/cluster/core/entities/cluster.interface';
 
 export class ClusterUtils {
   private readonly clusterModel: Model<ClusterEntity>;
@@ -33,6 +36,21 @@ export class ClusterUtils {
       .send(body);
 
     return response.body as ClusterSerialized;
+  }
+
+  public async storeCluster(dto: {
+    creatorId: string;
+    name?: string;
+    tier?: ClusterTier;
+  }): Promise<ClusterNormalized> {
+    const cluster = await this.clusterModel.create({
+      name: dto.name ?? 'Second domain',
+      creatorId: dto.creatorId,
+      tier: dto.tier ?? ClusterTier.Free,
+      roles: { [dto.creatorId]: ClusterRole.Creator },
+    });
+
+    return ClusterSerializer.normalize(cluster);
   }
 
   public async addRole(dto: {

@@ -1,4 +1,10 @@
-import type { Handle } from '@sveltejs/kit';
+import {
+  assertLogdashApiKey,
+  bffLogger,
+  flushBffLogger,
+} from '$lib/domains/shared/bff-logger.server';
+import type { Handle, HandleServerError, ServerInit } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 
 const SECURITY_HEADERS = {
   'Content-Security-Policy': "frame-ancestors 'none'",
@@ -6,8 +12,37 @@ const SECURITY_HEADERS = {
   'Referrer-Policy': 'strict-origin-when-cross-origin',
 };
 
-export const handle: Handle = async ({ event, resolve }) => {
+export const init: ServerInit = assertLogdashApiKey;
+
+export const handleError: HandleServerError = ({ error, event, status }) => {
+  if (status < 500) {
+    return;
+  }
+
+  bffLogger().error(
+    `unhandled error on ${event.route.id ?? 'an unknown route'}: ${error instanceof Error ? error.message : String(error)}`,
+  );
+  bffLogger().mutateMetric('unhandledErrors', 1);
+  event.platform?.ctx?.waitUntil(flushBffLogger());
+};
+
+const flushLogs: Handle = async ({ event, resolve }) => {
+  try {
+    return await resolve(event);
+  } finally {
+    event.platform?.ctx?.waitUntil(flushBffLogger());
+  }
+};
+
+const routeRequest: Handle = async ({ event, resolve }) => {
   const { pathname } = event.url;
+
+  if (pathname === '/app' || pathname === '/app/') {
+    return new Response(null, {
+      status: 308,
+      headers: { location: `/app/domains${event.url.search}` },
+    });
+  }
 
   if (pathname === '/app/clusters' || pathname.startsWith('/app/clusters/')) {
     return new Response(null, {
@@ -76,3 +111,5 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   return response;
 };
+
+export const handle = sequence(flushLogs, routeRequest);

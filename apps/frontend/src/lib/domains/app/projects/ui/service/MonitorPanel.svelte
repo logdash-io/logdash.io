@@ -46,15 +46,23 @@
   }: Props = $props();
 
   const CHART_SWAP_MS = 240;
+  const MIN_CHART_SLOTS = 20;
+  const CHART_HEADROOM = 1.25;
 
   const times = $derived(responseTimes ?? []);
+  const step = $derived(
+    CHART_WIDTH / (Math.max(times.length, MIN_CHART_SLOTS) - 1),
+  );
   const hasFooter = $derived(
     Boolean(notice || checkingLabel || lastCheckLabel),
   );
 </script>
 
-<div class="flex w-full flex-col gap-4 p-4">
-  <div class="flex flex-col gap-0.5">
+<section
+  class="bg-surface-25-bg flex w-full min-w-0 flex-col gap-2 rounded-2xl p-2 [--chart-surface:var(--surface-25-bg)]"
+  aria-label={title}
+>
+  <div class="flex flex-col gap-0.5 px-3 pt-1.5">
     {#if eyebrowHref}
       <!-- eslint-disable svelte/no-navigation-without-resolve -- the monitored URL is external -->
       <a
@@ -93,20 +101,22 @@
   </div>
 
   {#if stats}
-    <div class="flex flex-wrap gap-x-10 gap-y-3 sm:gap-x-14">
+    <dl
+      class="grid grid-flow-col grid-cols-3 grid-rows-[auto_auto] gap-x-2 gap-y-1.5 py-3"
+    >
       {#each stats as stat (stat.label)}
-        <div class="flex min-w-0 flex-col gap-0.5">
-          <span class="text-fg-muted text-xs">{stat.label}</span>
-          <span class="font-figure truncate text-2xl">
+        <div class="contents">
+          <dt class="text-fg-muted min-w-0 px-3 text-xs">{stat.label}</dt>
+          <dd class="min-w-0 truncate px-3 font-mono text-2xl tabular-nums">
             {stat.value}
-          </span>
+          </dd>
         </div>
       {/each}
-    </div>
+    </dl>
   {/if}
 
   {#if chart || responseTimes}
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2 px-3 pb-1.5">
       <div class="grid">
         {#if chart}
           <div
@@ -123,12 +133,22 @@
             aria-hidden="true"
             in:fade={{ duration: CHART_SWAP_MS, easing: cubicOut }}
           >
-            <ResponseTimePlot
-              responseTimes={times}
-              step={CHART_WIDTH / (times.length - 1)}
-              height={CHART_HEIGHT}
-              maxMs={Math.max(1, ...times)}
+            <path
+              d="M0 {CHART_HEIGHT - 0.5} H{CHART_WIDTH}"
+              stroke="var(--edge-color)"
+              stroke-width="1"
+              vector-effect="non-scaling-stroke"
             />
+            <g
+              transform="translate({CHART_WIDTH - (times.length - 1) * step} 0)"
+            >
+              <ResponseTimePlot
+                responseTimes={times}
+                {step}
+                height={CHART_HEIGHT}
+                maxMs={Math.max(1, ...times) * CHART_HEADROOM}
+              />
+            </g>
           </svg>
         {:else}
           <div
@@ -157,5 +177,9 @@
     </div>
   {/if}
 
-  {@render children?.()}
-</div>
+  {#if children}
+    <div class="px-3 pb-1.5 empty:hidden">
+      {@render children()}
+    </div>
+  {/if}
+</section>

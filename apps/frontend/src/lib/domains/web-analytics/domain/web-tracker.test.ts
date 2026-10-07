@@ -1,4 +1,5 @@
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 const source = readFileSync(
@@ -8,8 +9,7 @@ const source = readFileSync(
 const siteId = '0123456789abcdef01234567';
 type Event = {
   id: string;
-  visitorId: string;
-  sessionId: string;
+  timestamp: string;
   name: string;
   path: string;
   referrer: string;
@@ -19,122 +19,119 @@ type Event = {
   utmTerm: string;
   clickId: string;
   timezone: string;
+  userId?: string;
 };
 type Batch = { siteId: string; sentAt: string; events: Event[] };
+type Api = {
+  track: (name: string) => void;
+  identify: (id: unknown) => Promise<void>;
+  optOut: () => void;
+  optIn: () => void;
+  stop: () => void;
+};
 
-test('keeps anonymous visitors across reloads and starts a new session after inactivity', async ({
-  page,
-  context,
-}) => {
-  const batches = await install(page);
-  await page.goto(
-    'https://app.example/?utm_source=newsletter&email=alice@example.com',
-  );
-  await expect.poll(() => batches.length).toBe(1);
-  const first = batches[0].events[0];
-  expect(first.name).toBe('pageview');
-  expect(first.path).toBe('/');
-  expect(first.utmSource).toBe('newsletter');
-  expect(JSON.stringify(batches)).not.toContain('alice');
-  const cookies = await context.cookies();
-  const visitor = cookies.find((cookie) => cookie.name === `ldv_${siteId}`);
-  expect(visitor?.sameSite).toBe('Lax');
-  expect(visitor?.secure).toBe(true);
-  expect(visitor?.expires).toBeGreaterThan(Date.now() / 1000 + 360 * 86400);
-  await page.reload();
-  await expect.poll(() => named(batches, 'pageview').length).toBe(2);
-  expect(named(batches, 'pageview')[1].visitorId).toBe(first.visitorId);
-  expect(named(batches, 'pageview')[1].sessionId).toBe(first.sessionId);
-  await context.clearCookies({ name: `lds_${siteId}` });
-  await page.reload();
-  await expect.poll(() => named(batches, 'pageview').length).toBe(3);
-  expect(named(batches, 'pageview')[2].visitorId).toBe(first.visitorId);
-  expect(named(batches, 'pageview')[2].sessionId).not.toBe(first.sessionId);
-});
-
-test('starts a new session 24 hours after the session started even with continuous activity', async ({
-  page,
-  context,
-}) => {
-  await page.clock.install();
-  const batches = await install(page);
-  await page.goto('https://app.example/');
-  const startedAt = await page.evaluate(() => Date.now());
-  const first = await sessionCookie(context);
-  for (let minutes = 20; minutes < 24 * 60; minutes += 20) {
-    await page.clock.setSystemTime(startedAt + minutes * 60000);
-    await track(page, 'heartbeat');
-    expect(await sessionCookie(context)).toBe(first);
-  }
-  await page.clock.setSystemTime(startedAt + 24 * 3600000);
-  await track(page, 'heartbeat');
-  const second = await sessionCookie(context);
-  expect(second).not.toBe(first);
-  await page.clock.runFor(1100);
-  await expect
-    .poll(() => named(batches, 'heartbeat').at(-1)?.sessionId)
-    .toBe(second);
-});
-
-test('sends a page leave on page hide only while a session is active', async ({
-  page,
-  context,
-}) => {
-  const batches = await install(page);
-  await page.goto('https://app.example/pricing');
-  await expect.poll(() => batches.length).toBe(1);
-  const pageview = batches[0].events[0];
-  await page.evaluate(() => {
-    window.dispatchEvent(new Event('pagehide'));
-    history.replaceState({}, '', '/pricing');
+for (const [origin, domain] of [
+  ['https://www.shop.example.com', '.example.com'],
+  ['https://www.example.co.uk', '.example.co.uk'],
+  ['http://localhost:4173', 'localhost'],
+]) {
+  test(`sets no cookies or storage and expires legacy ${domain} cookies on ${origin}`, async ({
+    page,
+    context,
+  }) => {
+    const { hostname, protocol } = new URL(origin);
+    await context.addCookies([
+      ...[domain, hostname].flatMap((cookieDomain) =>
+        ['ldv_', 'lds_'].map((prefix) => ({
+          name: prefix + siteId,
+          value: 'legacy',
+          domain: cookieDomain,
+          path: '/',
+          secure: protocol === 'https:',
+          sameSite: 'Lax' as const,
+        })),
+      ),
+      { name: 'theme', value: 'dark', domain: hostname, path: '/' },
+    ]);
+    const batches = await install(page, { origin });
+    await page.goto(`${origin}/`);
+    await expect.poll(() => batches.length).toBe(1);
+    await call(page, 'track', 'signup_completed');
+    await page.evaluate(() => history.pushState({}, '', '/pricing'));
+    await expect.poll(() => events(batches).length).toBe(3);
+    expect((await context.cookies()).map((cookie) => cookie.name)).toEqual([
+      'theme',
+    ]);
+    const writes = await page.evaluate(
+      () => (window as unknown as { cookieWrites: string[] }).cookieWrites,
+    );
+    expect(writes.length).toBeGreaterThan(0);
+    for (const write of writes)
+      expect(write).toMatch(
+        new RegExp(`^ld[vs]_${siteId}=; Path=/; Max-Age=0(; Domain=[^;]+)?$`),
+      );
+    expect(
+      await page.evaluate(() => [localStorage.length, sessionStorage.length]),
+    ).toEqual([0, 0]);
+    for (const event of events(batches))
+      expect(Object.keys(event).sort()).toEqual([
+        'clickId',
+        'id',
+        'name',
+        'path',
+        'referrer',
+        'timestamp',
+        'timezone',
+        'utmCampaign',
+        'utmMedium',
+        'utmSource',
+        'utmTerm',
+      ]);
   });
-  await expect.poll(() => batches.length).toBe(2);
-  expect(batches[1].events).toEqual([
-    expect.objectContaining({
-      name: 'pageleave',
-      path: '/pricing',
-      visitorId: pageview.visitorId,
-      sessionId: pageview.sessionId,
-    }),
-  ]);
-  await context.clearCookies({ name: `lds_${siteId}` });
-  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
-  expect(await sessionCookie(context)).toBeUndefined();
-  await page.evaluate(() => history.pushState({}, '', '/signup'));
-  await expect.poll(() => batches.length).toBe(3);
-  expect(
-    batches.flatMap((batch) => batch.events).map((event) => event.name),
-  ).toEqual(['pageview', 'pageleave', 'pageview']);
-  expect(batches[2].events[0].sessionId).not.toBe(pageview.sessionId);
-});
+}
 
-test('keeps the ad click id parameter name, never its value, for the whole session', async ({
+test('sends the attribution of the page load on every event of that page load', async ({
   page,
-  context,
 }) => {
   const batches = await install(page);
   await page.goto(
     'https://app.example/?fbclid=secret-facebook&gclid=secret-google&utm_source=ads',
+    { referer: 'https://news.example/item?id=secret' },
   );
   await expect.poll(() => batches.length).toBe(1);
-  await page.evaluate(() => history.pushState({}, '', '/pricing'));
-  await expect.poll(() => batches.length).toBe(2);
-  await page.goto('https://app.example/signup');
-  await expect.poll(() => named(batches, 'pageview').length).toBe(3);
+  await page.evaluate(() => {
+    history.pushState({}, '', '/pricing');
+    (window as unknown as { logdash: Api }).logdash.track('signup_started');
+    window.dispatchEvent(new Event('pagehide'));
+  });
+  await expect.poll(() => events(batches).length).toBe(4);
   expect(
-    named(batches, 'pageview').map((event) => [event.path, event.clickId]),
+    events(batches).map((event) => [
+      event.name,
+      event.path,
+      event.referrer,
+      event.utmSource,
+      event.clickId,
+    ]),
   ).toEqual([
-    ['/', 'gclid'],
-    ['/pricing', 'gclid'],
-    ['/signup', 'gclid'],
+    ['pageview', '/', 'news.example', 'ads', 'gclid'],
+    ['pageview', '/pricing', 'news.example', 'ads', 'gclid'],
+    ['signup_started', '/pricing', 'news.example', 'ads', 'gclid'],
+    ['pageleave', '/pricing', 'news.example', 'ads', 'gclid'],
   ]);
   expect(JSON.stringify(batches)).not.toContain('secret');
-  expect(JSON.stringify(await context.cookies())).not.toContain('secret');
+  await page.goto('https://app.example/signup');
+  await expect.poll(() => named(batches, 'pageview').length).toBe(3);
+  expect(named(batches, 'pageview')[2]).toMatchObject({
+    path: '/signup',
+    referrer: '',
+    utmSource: '',
+    clickId: '',
+  });
 });
 
 test('keeps UTM values with any characters, trimmed to 100, and drops emails and control characters', async ({
   page,
-  context,
 }) => {
   const batches = await install(page);
   await page.goto(
@@ -147,63 +144,57 @@ test('keeps UTM values with any characters, trimmed to 100, and drops emails and
     utmCampaign: 'über',
     utmTerm: '',
   });
-  await context.clearCookies({ name: `lds_${siteId}` });
   await page.goto(
     `https://app.example/next?utm_source=${'x'.repeat(150)}&utm_medium=%20%20email%20%20&utm_campaign=line%0Abreak`,
   );
-  await expect.poll(() => batches.length).toBe(2);
-  expect(batches[1].events[0]).toMatchObject({
+  await expect.poll(() => named(batches, 'pageview').length).toBe(2);
+  expect(named(batches, 'pageview')[1]).toMatchObject({
     utmSource: 'x'.repeat(100),
     utmMedium: 'email',
     utmCampaign: '',
   });
-  await context.clearCookies({ name: `lds_${siteId}` });
   await page.goto(
     `https://app.example/emoji?utm_source=${'x'.repeat(99)}%F0%9F%98%80tail`,
   );
-  await expect.poll(() => batches.length).toBe(3);
-  expect(batches[2].events[0].utmSource).toBe(`${'x'.repeat(99)}😀`);
-  await context.clearCookies({ name: `lds_${siteId}` });
+  await expect.poll(() => named(batches, 'pageview').length).toBe(3);
+  expect(named(batches, 'pageview')[2].utmSource).toBe(`${'x'.repeat(99)}😀`);
   const wide = encodeURIComponent('漢'.repeat(100));
   await page.goto(
     `https://app.example/wide?utm_source=${wide}&utm_medium=${wide}&utm_campaign=${wide}&utm_term=${wide}`,
   );
-  await expect.poll(() => batches.length).toBe(4);
-  const wideEvent = batches[3].events[0];
-  expect(wideEvent.utmCampaign).toBe('漢'.repeat(33));
+  await expect.poll(() => named(batches, 'pageview').length).toBe(4);
+  expect(named(batches, 'pageview')[3].utmCampaign).toBe('漢'.repeat(33));
   await page.evaluate(() => history.pushState({}, '', '/wide/next'));
-  await expect.poll(() => batches.length).toBe(5);
-  expect(batches[4].events[0].sessionId).toBe(wideEvent.sessionId);
+  await expect.poll(() => named(batches, 'pageview').length).toBe(5);
+  expect(named(batches, 'pageview')[4].utmCampaign).toBe('漢'.repeat(33));
 });
 
-for (const [origin, domain] of [
-  ['https://www.shop.example.com', '.example.com'],
-  ['https://www.example.co.uk', '.example.co.uk'],
-  ['http://localhost:4173', 'localhost'],
-]) {
-  test(`stores cookies for ${domain} when served from ${origin} and removes them on stop`, async ({
-    page,
-    context,
-  }) => {
-    const batches = await install(page, { origin });
-    await page.goto(`${origin}/`);
-    await expect.poll(() => batches.length).toBe(1);
-    expect(
-      (await context.cookies())
-        .map((cookie) => [cookie.name, cookie.domain])
-        .sort(),
-    ).toEqual([
-      [`lds_${siteId}`, domain],
-      [`ldv_${siteId}`, domain],
-    ]);
-    await page.evaluate(() =>
-      (window as unknown as { logdash: { stop: () => void } }).logdash.stop(),
-    );
-    expect(await context.cookies()).toEqual([]);
+test('sends a page leave on page hide and a fresh pageview after a back-forward cache restore', async ({
+  page,
+}) => {
+  const batches = await install(page);
+  await page.goto('https://app.example/pricing');
+  await expect.poll(() => batches.length).toBe(1);
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('pagehide'));
+    history.replaceState({}, '', '/pricing');
   });
-}
+  await expect.poll(() => batches.length).toBe(2);
+  expect(batches[1].events).toEqual([
+    expect.objectContaining({ name: 'pageleave', path: '/pricing' }),
+  ]);
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new PageTransitionEvent('pageshow', { persisted: true }),
+    ),
+  );
+  await expect.poll(() => batches.length).toBe(3);
+  expect(batches[2].events).toEqual([
+    expect.objectContaining({ name: 'pageview', path: '/pricing' }),
+  ]);
+});
 
-test('tracks SPA navigation once per path and sends event names without identity or properties', async ({
+test('tracks SPA navigation once per path and sends event names without properties', async ({
   page,
 }) => {
   const batches = await install(page);
@@ -213,72 +204,195 @@ test('tracks SPA navigation once per path and sends event names without identity
     history.pushState({}, '', '/pricing?email=alice@example.com#secret');
     history.replaceState({}, '', '/pricing?token=secret');
     history.pushState({}, '', '/signup');
-    const api = (
-      window as unknown as { logdash: { track: (name: string) => void } }
-    ).logdash;
+    const api = (window as unknown as { logdash: Api }).logdash;
     api.track('signup_completed');
     api.track('alice@example.com');
   });
-  await expect
-    .poll(() => batches.flatMap((batch) => batch.events).length)
-    .toBe(4);
-  expect(
-    batches
-      .flatMap((batch) => batch.events)
-      .map((event) => [event.name, event.path]),
-  ).toEqual([
+  await expect.poll(() => events(batches).length).toBe(4);
+  expect(events(batches).map((event) => [event.name, event.path])).toEqual([
     ['pageview', '/'],
     ['pageview', '/pricing'],
     ['pageview', '/signup'],
     ['signup_completed', '/signup'],
   ]);
   await page.goBack();
-  await expect
-    .poll(() => batches.flatMap((batch) => batch.events).length)
-    .toBe(5);
+  await expect.poll(() => events(batches).length).toBe(5);
   expect(batches.at(-1)?.events[0].path).toBe('/pricing');
   expect(JSON.stringify(batches)).not.toContain('alice');
   expect(
     await page.evaluate(() =>
-      Object.keys((window as unknown as { logdash: object }).logdash),
+      Object.keys((window as unknown as { logdash: Api }).logdash),
     ),
-  ).toEqual(['track', 'stop']);
+  ).toEqual(['track', 'identify', 'optOut', 'optIn', 'stop']);
 });
 
-test('stops tracking and removes cookies when consent is withdrawn', async ({
+test('hashes the identified user id in the browser and back-fills queued events', async ({
   page,
-  context,
+}) => {
+  await page.clock.install();
+  const batches = await install(page);
+  await page.goto('https://app.example/');
+  await call(page, 'identify', 'user-42');
+  await call(page, 'track', 'signed_in');
+  await page.clock.runFor(1100);
+  await expect.poll(() => batches.length).toBe(1);
+  expect(batches[0].events.map((event) => [event.name, event.userId])).toEqual([
+    ['pageview', hash('user-42')],
+    ['signed_in', hash('user-42')],
+  ]);
+  expect(JSON.stringify(batches)).not.toContain('user-42');
+  await call(page, 'identify', 42);
+  await call(page, 'track', 'numeric_id');
+  await page.clock.runFor(1100);
+  await expect.poll(() => batches.length).toBe(2);
+  expect(batches[1].events[0].userId).toBe(hash('42'));
+  expect(
+    await page.evaluate(() => [localStorage.length, sessionStorage.length]),
+  ).toEqual([0, 0]);
+});
+
+test('clears the identity on identify(null) and ignores emails, long and non-scalar ids with a warning', async ({
+  page,
+}) => {
+  await page.clock.install();
+  const warnings: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'warning') warnings.push(message.text());
+  });
+  const batches = await install(page);
+  await page.goto('https://app.example/');
+  await call(page, 'identify', 'user-1');
+  await call(page, 'identify', 'alice@example.com');
+  await call(page, 'identify', 'x'.repeat(257));
+  await call(page, 'identify', { id: 1 });
+  await call(page, 'track', 'still_user_one');
+  await expect.poll(() => warnings.length).toBe(3);
+  await page.clock.runFor(1100);
+  await expect.poll(() => batches.length).toBe(1);
+  await call(page, 'identify', '   ');
+  await call(page, 'track', 'blank_cleared');
+  await page.clock.runFor(1100);
+  await expect.poll(() => batches.length).toBe(2);
+  await call(page, 'identify', 'user-1');
+  await call(page, 'identify', null);
+  await call(page, 'track', 'signed_out');
+  await page.evaluate(() => {
+    const api = (window as unknown as { logdash: Api }).logdash;
+    void api.identify('user-2');
+    return api.identify(undefined);
+  });
+  await call(page, 'track', 'still_anonymous');
+  await page.clock.runFor(1100);
+  await expect.poll(() => batches.length).toBe(3);
+  expect(events(batches).map((event) => [event.name, event.userId])).toEqual([
+    ['pageview', hash('user-1')],
+    ['still_user_one', hash('user-1')],
+    ['blank_cleared', undefined],
+    ['signed_out', undefined],
+    ['still_anonymous', undefined],
+  ]);
+  expect(JSON.stringify(batches)).not.toContain('alice');
+});
+
+test('opts out across page loads and opts back in with a fresh pageview', async ({
+  page,
 }) => {
   const batches = await install(page);
   await page.goto('https://app.example/');
   await expect.poll(() => batches.length).toBe(1);
   await page.evaluate(() => {
-    const api = (
-      window as unknown as {
-        logdash: { track: (name: string) => void; stop: () => void };
-      }
-    ).logdash;
+    const api = (window as unknown as { logdash: Api }).logdash;
     api.track('pending_event');
-    api.stop();
-    api.track('after_stop');
-    history.pushState({}, '', '/after-stop');
+    api.optOut();
+    api.track('after_opt_out');
+    history.pushState({}, '', '/after-opt-out');
   });
   expect(
-    (await context.cookies()).filter((cookie) => cookie.name.startsWith('ld')),
-  ).toEqual([]);
+    await page.evaluate(() => [
+      localStorage.getItem('logdash:opt-out'),
+      history.pushState.toString().includes('[native code]'),
+    ]),
+  ).toEqual(['1', true]);
   await page.reload();
-  await expect.poll(() => batches.length).toBe(2);
+  await page.evaluate(() => history.pushState({}, '', '/still-out'));
+  await call(page, 'optIn');
   expect(
-    batches
-      .flatMap((batch) => batch.events)
-      .every((event) => event.name === 'pageview'),
-  ).toBe(true);
+    await page.evaluate(() => localStorage.getItem('logdash:opt-out')),
+  ).toBeNull();
+  await expect.poll(() => batches.length).toBe(2);
+  expect(batches[1].events.map((event) => [event.name, event.path])).toEqual([
+    ['pageview', '/still-out'],
+  ]);
+  await call(page, 'optIn');
+  await page.evaluate(() => history.pushState({}, '', '/back-in'));
+  await expect.poll(() => batches.length).toBe(3);
+  expect(events(batches).map((event) => [event.name, event.path])).toEqual([
+    ['pageview', '/'],
+    ['pageview', '/still-out'],
+    ['pageview', '/back-in'],
+  ]);
 });
 
-test('honors privacy signals before creating cookies or sending events', async ({
+test('stops a page restored from the back-forward cache after an opt-out elsewhere', async ({
+  page,
+}) => {
+  await page.clock.install();
+  const batches = await install(page);
+  await page.goto('https://app.example/pricing');
+  await page.clock.runFor(1100);
+  await expect.poll(() => batches.length).toBe(1);
+  await page.evaluate(() => {
+    localStorage.setItem('logdash:opt-out', '1');
+    window.dispatchEvent(
+      new PageTransitionEvent('pageshow', { persisted: true }),
+    );
+    (window as unknown as { logdash: Api }).logdash.track('after_opt_out');
+  });
+  expect(
+    await page.evaluate(() =>
+      history.pushState.toString().includes('[native code]'),
+    ),
+  ).toBe(true);
+  await page.clock.runFor(6000);
+  expect(batches).toHaveLength(1);
+});
+
+test('keeps stop() as an alias of optOut() and restarts on the same page with optIn()', async ({
+  page,
+}) => {
+  const batches = await install(page);
+  await page.goto('https://app.example/');
+  await expect.poll(() => batches.length).toBe(1);
+  await page.evaluate(() => {
+    const api = (window as unknown as { logdash: Api }).logdash;
+    api.track('pending_event');
+    api.stop();
+  });
+  expect(
+    await page.evaluate(() => localStorage.getItem('logdash:opt-out')),
+  ).toBe('1');
+  await call(page, 'optIn');
+  await page.evaluate(() => history.pushState({}, '', '/again'));
+  await expect.poll(() => events(batches).length).toBe(3);
+  expect(events(batches).map((event) => [event.name, event.path])).toEqual([
+    ['pageview', '/'],
+    ['pageview', '/'],
+    ['pageview', '/again'],
+  ]);
+});
+
+test('honors privacy signals and still expires legacy cookies', async ({
   page,
   context,
 }) => {
+  await context.addCookies([
+    {
+      name: `ldv_${siteId}`,
+      value: 'legacy',
+      domain: '.app.example',
+      path: '/',
+    },
+  ]);
   const batches = await install(page);
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'globalPrivacyControl', { value: true });
@@ -289,15 +403,11 @@ test('honors privacy signals before creating cookies or sending events', async (
   expect(batches).toEqual([]);
 });
 
-test('ignores automated browsers before creating cookies or sending events', async ({
-  page,
-  context,
-}) => {
+test('ignores automated browsers', async ({ page }) => {
   const batches = await install(page, { automated: true });
   await page.goto('https://app.example/');
   expect(await page.evaluate(() => navigator.webdriver)).toBe(true);
   expect(await page.evaluate(() => 'logdash' in window)).toBe(false);
-  expect(await context.cookies()).toEqual([]);
   expect(batches).toEqual([]);
 });
 
@@ -320,17 +430,11 @@ test('sends fresh events when an expired batch is at the front of the queue', as
   const batches = await install(page);
   await page.goto('https://app.example/');
   await page.evaluate(() => {
-    const api = (
-      window as unknown as { logdash: { track: (name: string) => void } }
-    ).logdash;
+    const api = (window as unknown as { logdash: Api }).logdash;
     for (let index = 0; index < 20; index++) api.track('old_event');
   });
   await page.clock.setSystemTime(new Date(Date.now() + 5 * 60000));
-  await page.evaluate(() => {
-    (
-      window as unknown as { logdash: { track: (name: string) => void } }
-    ).logdash.track('fresh_event');
-  });
+  await call(page, 'track', 'fresh_event');
   await page.clock.runFor(1100);
   await expect.poll(() => batches.length).toBe(1);
   expect(batches[0].events.map((event) => event.name)).toEqual(['fresh_event']);
@@ -342,15 +446,11 @@ test('flushes all pending batches when the page is hidden', async ({
   const batches = await install(page);
   await page.goto('https://app.example/');
   await page.evaluate(() => {
-    const api = (
-      window as unknown as { logdash: { track: (name: string) => void } }
-    ).logdash;
+    const api = (window as unknown as { logdash: Api }).logdash;
     for (let index = 0; index < 60; index++) api.track('queued_event');
     window.dispatchEvent(new Event('pagehide'));
   });
-  await expect
-    .poll(() => batches.flatMap((batch) => batch.events).length)
-    .toBe(62);
+  await expect.poll(() => events(batches).length).toBe(62);
   expect(batches.every((batch) => batch.events.length <= 20)).toBe(true);
   expect(
     batches.every(
@@ -371,9 +471,7 @@ test('flushes new events on page hide while an earlier request is in flight', as
     await page.goto('https://app.example/');
     await expect.poll(() => batches.length).toBe(1);
     await page.evaluate(() => {
-      (
-        window as unknown as { logdash: { track: (name: string) => void } }
-      ).logdash.track('late_event');
+      (window as unknown as { logdash: Api }).logdash.track('late_event');
       window.dispatchEvent(new Event('pagehide'));
     });
     await expect.poll(() => batches.length).toBe(2);
@@ -435,6 +533,21 @@ async function install(
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'webdriver', { value: false });
     });
+  await page.addInitScript(() => {
+    const cookie = Object.getOwnPropertyDescriptor(
+      Document.prototype,
+      'cookie',
+    );
+    const writes: string[] = [];
+    Object.defineProperty(window, 'cookieWrites', { value: writes });
+    Object.defineProperty(document, 'cookie', {
+      get: (): unknown => cookie?.get?.call(document),
+      set: (value: string): void => {
+        writes.push(value);
+        cookie?.set?.call(document, value);
+      },
+    });
+  });
   await page.route(`${origin}/**`, async (route) => {
     const url = new URL(route.request().url());
     if (url.pathname === '/_ld/script.js') {
@@ -462,30 +575,30 @@ async function install(
   return batches;
 }
 
+function events(batches: Batch[]): Event[] {
+  return batches.flatMap((batch) => batch.events);
+}
+
 function named(batches: Batch[], name: string): Event[] {
-  return batches
-    .flatMap((batch) => batch.events)
-    .filter((event) => event.name === name);
+  return events(batches).filter((event) => event.name === name);
 }
 
-async function track(page: Page, name: string): Promise<void> {
+function hash(id: string): string {
+  return createHash('sha256').update(`${siteId}:${id}`).digest('hex');
+}
+
+async function call(
+  page: Page,
+  method: keyof Api,
+  argument?: unknown,
+): Promise<void> {
   await page.evaluate(
-    (event) =>
+    ([method, argument]) =>
       (
-        window as unknown as { logdash: { track: (name: string) => void } }
-      ).logdash.track(event),
-    name,
-  );
-}
-
-async function sessionCookie(
-  context: BrowserContext,
-): Promise<string | undefined> {
-  const cookie = (await context.cookies()).find(
-    (item) => item.name === `lds_${siteId}`,
-  );
-  return (
-    cookie &&
-    (JSON.parse(decodeURIComponent(cookie.value)) as { id: string }).id
+        window as unknown as {
+          logdash: Record<string, (argument: unknown) => unknown>;
+        }
+      ).logdash[method](argument),
+    [method, argument] as const,
   );
 }

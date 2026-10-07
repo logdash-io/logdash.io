@@ -39,7 +39,6 @@
     overview: basePath,
     logs: `${basePath}/logs`,
     metrics: metricsPath,
-    monitoring: `${basePath}/monitoring`,
     settings: `${basePath}/settings`,
   });
 

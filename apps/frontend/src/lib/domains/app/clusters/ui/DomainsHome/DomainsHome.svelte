@@ -13,6 +13,11 @@
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import SortIcon from '$lib/domains/shared/icons/SortIcon.svelte';
   import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
+  import {
+    TOOLBAR_CONTROL,
+    TOOLBAR_PRIMARY,
+  } from '$lib/domains/shared/ui/components/toolbar.js';
+  import Well from '$lib/domains/shared/ui/components/Well.svelte';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { formatCount } from '$lib/domains/web-analytics/domain/analytics-format.js';
@@ -24,7 +29,7 @@
   } from '$lib/domains/web-analytics/domain/analytics-period.js';
   import { WebAnalyticsService } from '$lib/domains/web-analytics/infrastructure/web-analytics.service.js';
   import { CheckIcon } from '@logdash/hyper-ui/icons';
-  import { Button, Dropdown } from '@logdash/hyper-ui/presentational';
+  import { Dropdown } from '@logdash/hyper-ui/presentational';
   import { onMount } from 'svelte';
   import { match } from 'ts-pattern';
   import DomainCard from './DomainCard.svelte';
@@ -64,11 +69,15 @@
   const total = $derived(
     clusters.reduce((sum, { id }) => sum + countOf(visitors[id]), 0),
   );
-  const periodLabel = $derived(
-    PERIODS.find(({ id }) => id === period)?.label.toLowerCase() ?? '',
+  const periodName = $derived(
+    PERIODS.find(({ id }) => id === period)?.label ?? '',
+  );
+  const periodLabel = $derived(periodName.toLowerCase());
+  const orderName = $derived(
+    ORDERS.find(({ id }) => id === order)?.label ?? '',
   );
 
-  $effect(() => topBarState.show(actions));
+  $effect(() => topBarState.show(toolbar));
 
   onMount(() => {
     period = readStored(PERIOD_KEY, PERIOD_IDS) ?? period;
@@ -170,33 +179,33 @@
   }
 </script>
 
-<div class="flex w-full flex-col">
-  <div class="px-4 py-8 sm:px-6 sm:py-10">
-    <div class="text-fg-tertiary text-xl leading-9 tracking-tight sm:text-2xl">
-      Hey {greetingName}, you got
-      {#if isLoading}
-        <span
-          class="bg-surface-150-bg inline-block h-6 w-12 rounded align-middle"
-          aria-label="Loading"
-        ></span>
-      {:else}
-        <span class="text-fg-default font-mono tabular-nums">
-          {formatCount(total)}
-        </span>
-      {/if}
-      {total === 1 && !isLoading ? 'visitor' : 'visitors'}
-      {period === 'today' ? '' : 'in the'}
-      {@render periodPicker()}
-    </div>
-  </div>
+<div class="@container flex w-full flex-col gap-2 p-2">
+  <p
+    class="text-fg-tertiary px-5 pt-6 pb-4 text-xl leading-9 tracking-tight @2xl:pt-8 @2xl:text-2xl"
+  >
+    Hey {greetingName}, you got
+    {#if isLoading}
+      <span
+        class="bg-surface-150-bg inline-block h-6 w-12 rounded-md align-middle"
+        aria-label="Loading"
+      ></span>
+    {:else}
+      <span class="text-fg-default font-mono tabular-nums">
+        {formatCount(total)}
+      </span>
+    {/if}
+    {total === 1 && !isLoading ? 'visitor' : 'visitors'}
+    {period === 'today' ? '' : 'in the'}
+    {periodLabel}
+  </p>
 
   {#if sorted.length}
     <ul
-      class="grid gap-2 px-2 pb-2 sm:grid-cols-2 xl:grid-cols-3"
+      class="grid grid-cols-1 gap-2 @2xl:grid-cols-2 @min-[68.75rem]:grid-cols-3"
       aria-label="Domains"
     >
       {#each sorted as cluster (cluster.id)}
-        <li class="flex">
+        <li class="flex min-w-0">
           <DomainCard
             {cluster}
             visitors={visitors[cluster.id] ?? { status: 'loading' }}
@@ -206,44 +215,50 @@
       {/each}
     </ul>
   {:else}
-    <EmptyState
-      class="p-10"
-      title="No domains yet"
-      description="Add your website to see its visitors here."
-    />
+    <Well label="Domains">
+      <EmptyState
+        centered
+        title="No domains yet"
+        description="Add your website to see its visitors here."
+      />
+    </Well>
   {/if}
 </div>
 
-{#snippet actions()}
-  {@render orderPicker()}
+{#snippet toolbar()}
+  <div class="flex flex-wrap items-center gap-2">
+    {@render periodPicker()}
+    {@render orderPicker()}
 
-  {#if clustersState.canAddDomain}
-    <Button href={resolve('/app/domains/new')} variant="primary" size="sm">
-      <PlusIcon class="size-4" />
-      Domain
-    </Button>
-  {:else}
-    <Button
-      variant="primary"
-      size="sm"
-      onclick={() => upgradeState.openModal('cluster-limit')}
-    >
-      <PlusIcon class="size-4" />
-      Domain
-    </Button>
-  {/if}
+    {#if clustersState.canAddDomain}
+      <a href={resolve('/app/domains/new')} class={TOOLBAR_PRIMARY}>
+        <PlusIcon class="size-4" />
+        Domain
+      </a>
+    {:else}
+      <button
+        type="button"
+        class={TOOLBAR_PRIMARY}
+        onclick={() => upgradeState.openModal('cluster-limit')}
+      >
+        <PlusIcon class="size-4" />
+        Domain
+      </button>
+    {/if}
+  </div>
 {/snippet}
 
 {#snippet periodPicker()}
-  <Dropdown>
+  <Dropdown align="end">
     {#snippet trigger(attrs)}
       <button
         {...attrs}
         type="button"
-        class="text-fg-default focus-visible:outline-brand inline-flex cursor-pointer items-center gap-1 rounded-sm underline decoration-fg-faint decoration-dashed underline-offset-[6px] focus-visible:outline-2"
+        class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
         aria-haspopup="menu"
+        aria-label="Period: {periodName}"
       >
-        {periodLabel}
+        {periodName}
         <ChevronDownIcon class="size-3.5 text-fg-muted" />
       </button>
     {/snippet}
@@ -267,10 +282,16 @@
 {#snippet orderPicker()}
   <Dropdown align="end">
     {#snippet trigger(attrs)}
-      <Button {...attrs} variant="ghost" size="sm" aria-haspopup="menu">
-        <SortIcon class="size-4" />
-        Order
-      </Button>
+      <button
+        {...attrs}
+        type="button"
+        class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
+        aria-haspopup="menu"
+        aria-label="Order: {orderName}"
+      >
+        <SortIcon class="size-3.5" />
+        <span class="max-sm:hidden">{orderName}</span>
+      </button>
     {/snippet}
 
     <div

@@ -22,6 +22,8 @@ inputs:
     required: true
   api-base-url:
     required: false
+  logdash-api-key:
+    required: true
 
 runs:
   using: 'composite'
@@ -34,11 +36,22 @@ runs:
         PORT: ${{ inputs.port }}
         KEY: ${{ inputs.ssh-private-key }}
         script: |
+          set -e
+          umask 077
+          mkdir -p ~/logdash
+          ENV_FILE=~/logdash/${{ inputs.container-name }}.env
+          cat > "$ENV_FILE" <<'EOF'
+          VITE_API_BASE_URL=${{ inputs.api-base-url }}
+          LOGDASH_API_KEY=${{ inputs.logdash-api-key }}
+          SHUTDOWN_TIMEOUT=5
+          EOF
           docker pull ${{ inputs.image-name }}
-          docker rm -f ${{ inputs.container-name }}
+          # SIGTERM first, so the server flushes its queued logs before it exits.
+          docker stop -t 10 ${{ inputs.container-name }} || true
+          docker rm -f ${{ inputs.container-name }} || true
           docker run -d \
           -p ${{ inputs.server-port }}:${{ inputs.application-port }} \
           --restart=always \
           --name ${{ inputs.container-name }} \
-          -e VITE_API_BASE_URL=${{ inputs.api-base-url }} \
+          --env-file "$ENV_FILE" \
           ${{ inputs.image-name }}

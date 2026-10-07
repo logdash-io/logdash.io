@@ -11,6 +11,7 @@
   import { CheckIcon } from '@logdash/hyper-ui/icons';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
+  import { TOOLBAR_CONTROL } from '$lib/domains/shared/ui/components/toolbar.js';
   import { scale } from 'svelte/transition';
   import { elasticOut } from 'svelte/easing';
   import { Feature } from '$lib/domains/shared/types.js';
@@ -30,14 +31,12 @@
 
   const needsLogging = $derived(
     feature === Feature.LOGGING ||
-      (projectsState.hasFeature(projectId, Feature.LOGGING) &&
-        !projectsState.hasConfiguredFeature(projectId, Feature.LOGGING) &&
+      (!projectsState.hasConfiguredFeature(projectId, Feature.LOGGING) &&
         logsState.logs.length === 0),
   );
   const needsMetrics = $derived(
     feature === Feature.METRICS ||
-      (projectsState.hasFeature(projectId, Feature.METRICS) &&
-        !projectsState.hasConfiguredFeature(projectId, Feature.METRICS) &&
+      (!projectsState.hasConfiguredFeature(projectId, Feature.METRICS) &&
         metricsState.simplifiedMetrics.length === 0),
   );
 
@@ -77,7 +76,7 @@
   }
 </script>
 
-<div class="flex flex-wrap items-center gap-2">
+<div class="flex flex-wrap items-center justify-center gap-2">
   <Button
     variant="primary"
     size="sm"
@@ -98,7 +97,7 @@
   >
     <button
       type="button"
-      class="text-fg-tertiary hover:text-fg-default transition-ink flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm edge"
+      class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
       aria-label="SDK: {selectedSDK.name}"
       data-posthog-id="sdk-selection-button"
     >
@@ -117,7 +116,7 @@
     tabindex="-1"
   ></div>
   <ul
-    class="bg-surface-elevated-bg border-surface-elevated-border relative z-20 rounded-xl border p-1.5 shadow-sm"
+    class="bg-surface-elevated-bg border-surface-elevated-border relative z-20 w-48 rounded-xl border p-1.5 shadow-lg"
   >
     {#each SDK_LIST as sdk, index (sdk.name)}
       <li>
@@ -128,13 +127,13 @@
             onSelectSDK(index, close);
           }}
           class={[
-            'flex w-full cursor-pointer items-center gap-2 rounded-md p-1.5 text-xs select-none',
+            'flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 text-left text-sm select-none',
             index === sdkSelectionState.selectedIndex
               ? 'bg-surface-elevated-selected-bg'
               : 'hover:bg-surface-elevated-hover-bg',
           ]}
         >
-          <sdk.icon class="size-4 shrink-0" />
+          <sdk.icon class="size-3.5 shrink-0" />
           <span>{sdk.name}</span>
         </button>
       </li>

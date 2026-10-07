@@ -4,7 +4,6 @@
   import { Maximize2Icon, Minimize2Icon } from 'lucide-svelte';
   import { flushSync } from 'svelte';
   import { prefersReducedMotion } from 'svelte/motion';
-  import { MediaQuery } from 'svelte/reactivity';
   import { HERO_SHOWCASE_ID } from './hero-anchors';
   import HeroClaimCard from './HeroClaimCard.svelte';
   import HeroDashboard from './HeroDashboard.svelte';
@@ -17,8 +16,6 @@
     opacity: string;
     scale: string;
   };
-
-  const largeFrame = new MediaQuery('(min-width: 1024px)');
 
   const EXPAND_MS = 550;
   const COLLAPSE_MS = 400;
@@ -350,9 +347,8 @@
   frame sits on the nav's x, not the frame's ring. Simon: "left aligned content
   should be matching topbar's content width, always".
 
-  From lg the frame keeps a 16:9 ratio and its panels share the height the way
-  a service page does in the app: sidebar, then the monitor over the log tail,
-  with the metrics column beside them.
+  From lg the frame keeps a 16:9 ratio and mirrors the app's monitor page:
+  sidebar, then the monitor, its uptime history and its settings.
 
   The frame is a mock of the app, so snippets and markdown twins skip it.
 -->
@@ -364,10 +360,11 @@
     <dialog
       bind:this={dialog}
       id={HERO_SHOWCASE_ID}
+      data-app-frame
       aria-label="Your dashboard"
       tabindex="-1"
       class={[
-        'ring-surface-100-border bg-surface-100-bg text-fg-default flex h-auto max-h-none max-w-none shadow-[0_32px_64px_-24px_rgba(0,0,0,0.7)] ring-1 outline-none backdrop:right-auto backdrop:w-screen backdrop:bg-surface-root-bg',
+        'ring-surface-100-border bg-surface-root-bg text-fg-default flex tracking-normal h-auto max-h-none max-w-none shadow-[0_32px_64px_-24px_rgba(0,0,0,0.7)] ring-1 outline-none backdrop:right-auto backdrop:w-screen backdrop:bg-surface-root-bg',
         full
           ? 'fixed inset-0 mr-[calc(100%-100vw)] w-auto rounded-none overscroll-contain'
           : 'relative w-full rounded-xl lg:aspect-video',
@@ -376,7 +373,7 @@
       oncancel={onCancel}
       onclose={onClose}
     >
-      <HeroDashboard fit={full || largeFrame.current} covered={claimShown}>
+      <HeroDashboard covered={claimShown}>
         {#snippet toggle()}
           {#if expanded}
             <Tooltip content={backHint} placement="bottom" align="right">

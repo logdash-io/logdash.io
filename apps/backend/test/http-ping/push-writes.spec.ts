@@ -5,7 +5,7 @@ import { HttpPingPingerService } from '../../src/http-ping/pinger/http-ping-ping
 import { HttpMonitorMode } from '../../src/http-monitor/core/enums/http-monitor-mode.enum';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { HttpMonitorNormalized } from '../../src/http-monitor/core/entities/http-monitor.interface';
-import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
+import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 import request from 'supertest';
 import { Types } from 'mongoose';
 import { PushPingRateLimit } from '../../src/shared/throttling/rate-limit.decorator';
@@ -40,7 +40,7 @@ describe('Http Ping Push (writes)', () => {
 
     // when
     await request(bootstrap.app.getHttpServer()).post(`/ping/${monitor.id}`);
-    await pushService.checkPushMonitors(Object.values(ProjectTier));
+    await pushService.checkPushMonitors(Object.values(ClusterTier));
 
     // then
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -87,7 +87,7 @@ describe('Http Ping Push (writes)', () => {
     });
 
     // when
-    await pushService.checkPushMonitors(Object.values(ProjectTier));
+    await pushService.checkPushMonitors(Object.values(ClusterTier));
 
     // then
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -122,7 +122,7 @@ describe('Http Ping Push (writes)', () => {
 
     // when
     await request(bootstrap.app.getHttpServer()).post(`/ping/${monitorA.id}`);
-    await pushService.checkPushMonitors(Object.values(ProjectTier));
+    await pushService.checkPushMonitors(Object.values(ClusterTier));
 
     // then
     const pingsA = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -150,7 +150,7 @@ describe('Http Ping Push (writes)', () => {
 
     // when
     await request(bootstrap.app.getHttpServer()).post(`/ping/${monitor.id}`);
-    await pushService.checkPushMonitors(Object.values(ProjectTier));
+    await pushService.checkPushMonitors(Object.values(ClusterTier));
 
     // then
     const pings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -184,7 +184,7 @@ describe('Http Ping Push (writes)', () => {
     }
 
     // when
-    await pushService.checkPushMonitors(Object.values(ProjectTier));
+    await pushService.checkPushMonitors(Object.values(ClusterTier));
 
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
@@ -213,7 +213,7 @@ describe('Http Ping Push (writes)', () => {
 
     // when
     await request(bootstrap.app.getHttpServer()).post(`/ping/${pushMonitor.id}`);
-    await pushService.checkPushMonitors(Object.values(ProjectTier));
+    await pushService.checkPushMonitors(Object.values(ClusterTier));
 
     // then
     const pushPings = await bootstrap.utils.httpPingUtils.getMonitorPings({
@@ -228,7 +228,7 @@ describe('Http Ping Push (writes)', () => {
 
   it('handles empty push monitor list gracefully', async () => {
     // when
-    await pushService.checkPushMonitors(Object.values(ProjectTier));
+    await pushService.checkPushMonitors(Object.values(ClusterTier));
 
     // then
     const allPings = await bootstrap.utils.httpPingUtils.getAllPings();

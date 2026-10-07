@@ -89,17 +89,17 @@
 
 {#if logPreviewState.isOpen && log}
   <button
-    class="from-surface-50-bg/80 via-surface-50-bg/80 to-surface-elevated-bg absolute inset-0 z-10 bg-gradient-to-t via-95%"
+    class="from-surface-50-bg/80 via-surface-50-bg/80 absolute inset-0 z-10 bg-gradient-to-t to-transparent"
     onclick={onBackdropClick}
     transition:fade={{ duration: 150 }}
     aria-label="Close preview"
   ></button>
 
   <div
-    class="bg-surface-elevated-bg absolute inset-x-0 bottom-0 z-20 flex max-h-[60%] flex-col edge-t"
+    class="bg-surface-elevated-bg border-surface-elevated-border absolute inset-x-0 bottom-0 z-20 flex max-h-[60%] flex-col overflow-hidden rounded-xl border shadow-lg"
     transition:fly={{ y: 200, duration: 200 }}
   >
-    <div class="flex h-12 shrink-0 items-center gap-3 edge-b px-4">
+    <div class="flex h-12 shrink-0 items-center gap-3 edge-b pr-2 pl-4">
       <span class="flex min-w-0 items-center gap-2 text-xs">
         <span class={['size-2 shrink-0 rounded-full', levelColor]}></span>
         <span class="text-fg-tertiary">{levelLabel}</span>
@@ -144,7 +144,7 @@
 
         <span class="bg-surface-elevated-border mx-1 h-4 w-px"></span>
 
-        <IconButton label="Close" class="-mr-1.5" onclick={onClose}>
+        <IconButton label="Close" onclick={onClose}>
           <CloseIcon class="size-4" />
         </IconButton>
       </div>

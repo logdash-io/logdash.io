@@ -4,6 +4,7 @@
   import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
   import LoadingLine from '$lib/domains/shared/ui/components/LoadingLine.svelte';
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
+  import { SETTINGS_INPUT_CLASS } from '$lib/domains/shared/ui/components/settings-card';
   import { envConfig } from '$lib/domains/shared/utils/env-config';
   import CodeBlock from '$lib/landing/guides/blocks/CodeBlock.svelte';
   import { Button, Input } from '@logdash/hyper-ui/presentational';
@@ -133,13 +134,14 @@
     <div class="flex gap-2">
       <Input
         id="{id}-url"
+        size="sm"
         bind:value={websiteUrl}
         type="url"
         inputmode="url"
         autocomplete="url"
         maxlength={255}
         placeholder="https://your-website.com"
-        class="min-w-0 flex-1"
+        class={['min-w-0 flex-1', SETTINGS_INPUT_CLASS]}
         error={Boolean(startError)}
         aria-describedby={startError ? `${id}-start-error` : undefined}
         oninput={() => (startError = null)}
@@ -147,6 +149,7 @@
       <Button
         type="submit"
         variant="primary"
+        size="sm"
         loading={starting}
         disabled={!websiteUrl.trim()}
       >
@@ -172,7 +175,9 @@
   <div class="flex min-w-0 flex-col gap-3 text-sm text-fg-tertiary">
     {#if tab === 'script'}
       <p>
-        Paste this snippet in the <code class="font-mono text-fg-default">
+        Paste this snippet in the <code
+          class="font-mono whitespace-nowrap text-fg-default"
+        >
           &lt;head&gt;
         </code>
         of your website.
@@ -180,6 +185,7 @@
       <div class="rounded-xl edge bg-surface-50-bg">
         <CodeBlock code={scriptTag} language="svelte" />
       </div>
+      {@render identify()}
       <p class="text-xs text-fg-muted">
         Ad blockers can block the default address.
         <button
@@ -206,10 +212,36 @@
         )}
         {@render route('POST', '/_ld/events', `${apiBase}/web_events`)}
       </ul>
+      <p>On the events route:</p>
+      <ul class="flex list-disc flex-col gap-1 pl-5 marker:text-fg-faint">
+        <li>
+          Forward the browser's
+          <code class="font-mono whitespace-nowrap text-fg-default">
+            Origin
+          </code>
+          and
+          <code class="font-mono whitespace-nowrap text-fg-default">
+            User-Agent
+          </code>
+          headers. Without an Origin the API answers 403.
+        </li>
+        <li>
+          Set
+          <code class="font-mono whitespace-nowrap text-fg-default">
+            x-logdash-client-ip
+          </code>
+          to the visitor's IP address so visitors are counted apart.
+        </li>
+        <li>
+          Never forward cookies, authorization headers or ingest keys, on either
+          route.
+        </li>
+      </ul>
       <p>Then load the script from your domain:</p>
       <div class="rounded-xl edge bg-surface-50-bg">
         <CodeBlock code={proxyTag} language="svelte" />
       </div>
+      {@render identify()}
       <p class="text-xs text-fg-muted">
         Prefer not to write the routes yourself?
         <button
@@ -222,8 +254,9 @@
       </p>
     {:else}
       <p>
-        One prompt sets up the proxy, backend logging and metrics in your
-        codebase.
+        {serviceList.length
+          ? 'One prompt sets up the proxy, backend logging and metrics in your codebase.'
+          : 'One prompt sets up the proxy and the tracking script in your codebase.'}
       </p>
       <WebAnalyticsPromptForm {connection} services={serviceList} />
     {/if}
@@ -235,12 +268,32 @@
     </div>
     {#if !compact}
       <p class="text-xs leading-relaxed text-fg-muted">
-        Visitors are counted with an anonymous first-party cookie. Do Not Track
-        and Global Privacy Control are respected, and no personal data is
-        collected.
+        No cookies or browser storage: visitors are counted with a pseudonymous
+        hash that changes every day. IP addresses are not stored, and Do Not
+        Track and Global Privacy Control are respected.
       </p>
     {/if}
   </div>
+{/snippet}
+
+{#snippet identify()}
+  <p>
+    For retention, call
+    <code class="font-mono whitespace-nowrap text-fg-default">
+      window.logdash?.identify(user.id)
+    </code>
+    on each page load once the user is signed in, and
+    <code class="font-mono whitespace-nowrap text-fg-default">
+      identify(null)
+    </code>
+    on sign-out. If
+    <code class="font-mono whitespace-nowrap text-fg-default">
+      window.logdash
+    </code>
+    is not defined yet, call it from the script's
+    <code class="font-mono whitespace-nowrap text-fg-default">load</code>
+    event.
+  </p>
 {/snippet}
 
 {#snippet trackingStatus()}

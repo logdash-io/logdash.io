@@ -9,8 +9,6 @@ import { PROJECT_COLORS } from '$lib/domains/app/clusters/domain/project-colors'
 import { ClustersService } from '$lib/domains/app/clusters/infrastructure/clusters.service.js';
 import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
 import { MonitorMode } from '$lib/domains/app/projects/domain/monitoring/monitor-mode.js';
-import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service.js';
-import { Feature } from '$lib/domains/shared/types.js';
 import {
   clusterNameFromUrl,
   previewNameFromUrl,
@@ -36,6 +34,7 @@ export async function createDomain(address: string): Promise<string> {
 
   startDomainSetup(cluster.id);
   posthog.capture('domain_created', { source: 'new-domain' });
+  window.logdash?.track('domain_created');
 
   return cluster.id;
 }
@@ -43,26 +42,16 @@ export async function createDomain(address: string): Promise<string> {
 export async function addMonitoredAddress(
   clusterId: string,
   address: string,
-): Promise<void> {
+): Promise<string> {
   const url = tryPrependProtocol(address.trim());
-  const name = previewNameFromUrl(url);
-  const { project } = await ProjectsService.createProject(clusterId, {
-    name,
-    selectedFeatures: [Feature.MONITORING],
+  const monitorId = await monitoringState.createMonitor(clusterId, {
+    name: previewNameFromUrl(url),
+    mode: MonitorMode.PULL,
+    url,
   });
+  await monitoringState.claimMonitor(monitorId);
 
-  try {
-    const monitorId = await monitoringState.createMonitor(project.id, {
-      projectId: project.id,
-      name,
-      mode: MonitorMode.PULL,
-      url,
-    });
-    await monitoringState.claimMonitor(monitorId);
-  } catch (error) {
-    await ProjectsService.deleteProject(project.id).catch(() => undefined);
-    throw error;
-  }
+  return monitorId;
 }
 
 export function startDomainSetup(clusterId: string): void {

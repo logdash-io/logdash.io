@@ -24,6 +24,7 @@ export type NavPath =
   | '/terms-of-service'
   | '/privacy-policy'
   | '/cookies-policy'
+  | '/dpa'
   | Extract<Pathname, `/vs/${string}`>;
 
 export type NavTarget =

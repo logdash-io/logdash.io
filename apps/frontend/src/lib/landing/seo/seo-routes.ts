@@ -40,6 +40,7 @@ const staticPaths: string[] = [
   '/terms-of-service',
   '/privacy-policy',
   '/cookies-policy',
+  '/dpa',
 ];
 
 /**

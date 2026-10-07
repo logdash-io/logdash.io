@@ -144,8 +144,11 @@ export class WebAnalyticsBreakdownResponse {
 }
 
 export class WebAnalyticsVisitor {
-  @ApiProperty()
+  @ApiProperty({ description: 'Hashed user id when identified, otherwise the daily visitor hash' })
   id: string;
+
+  @ApiProperty({ description: 'Whether the site identified this person with logdash.identify' })
+  identified: boolean;
 
   @ApiProperty()
   firstSeen: string;
@@ -241,13 +244,13 @@ export class WebAnalyticsFunnelResponse {
 }
 
 export class WebAnalyticsCohort {
-  @ApiProperty()
+  @ApiProperty({ description: 'Day the identified users were first seen, YYYY-MM-DD' })
   date: string;
 
   @ApiProperty()
-  visitors: number;
+  users: number;
 
-  @ApiProperty({ type: Number, nullable: true })
+  @ApiProperty({ type: Number, nullable: true, description: 'Share active on day 1, 0 to 100' })
   day1: number | null;
 
   @ApiProperty({ type: Number, nullable: true })
@@ -255,11 +258,39 @@ export class WebAnalyticsCohort {
 
   @ApiProperty({ type: Number, nullable: true })
   day30: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  day90: number | null;
+}
+
+export class WebAnalyticsStickiness {
+  @ApiProperty({ description: 'Average identified users active per day in the range' })
+  dailyActive: number;
+
+  @ApiProperty({ description: 'Identified users active in the 30 days ending at the range end' })
+  monthlyActive: number;
+
+  @ApiProperty({ type: Number, nullable: true, description: 'dailyActive / monthlyActive * 100' })
+  ratio: number | null;
+}
+
+export class WebAnalyticsComeback {
+  @ApiProperty({ enum: [30, 60, 90] })
+  minDays: 30 | 60 | 90;
+
+  @ApiProperty({ description: 'Identified users back after at least minDays without activity' })
+  users: number;
 }
 
 export class WebAnalyticsRetentionResponse {
   @ApiProperty({ type: WebAnalyticsCohort, isArray: true })
   cohorts: WebAnalyticsCohort[];
+
+  @ApiProperty({ type: WebAnalyticsStickiness })
+  stickiness: WebAnalyticsStickiness;
+
+  @ApiProperty({ type: WebAnalyticsComeback, isArray: true })
+  comebacks: WebAnalyticsComeback[];
 }
 
 export class WebAnalyticsStatusResponse {

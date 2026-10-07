@@ -57,6 +57,7 @@ instead of naming function in the UI handleSomething, use onSomething instead
 Every colour comes from a semantic token in `packages/hyper-ui/src/lib/styles/tokens`.
 `primitives.css` holds the raw neutral scale, and only `semantic.css` may read it.
 The app shell (`data-app-shell`) lifts the scale a step, so the same tokens are lighter inside the app than on the landing.
+The landing's mock of the app (`data-app-frame`) gets the same lift, so it renders in the app's colours.
 The app is dark only; a light theme would override the same variables under its own selector.
 
 Surfaces are a depth ladder.

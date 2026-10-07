@@ -8,6 +8,9 @@ interface UserPlanConfig {
   publicDashboards: {
     maxNumberOfPublicDashboards: number;
   };
+  httpMonitors: {
+    maxNumberOfMonitors: number;
+  };
   notificationChannels: {
     allowedTypes: NotificationChannelType[];
   };
@@ -34,6 +37,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     projects: {
       maxNumberOfProjects: 5,
     },
+    httpMonitors: {
+      maxNumberOfMonitors: 5,
+    },
     publicDashboards: {
       maxNumberOfPublicDashboards: 1,
     },
@@ -48,6 +54,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
   [UserTier.EarlyUser]: {
     projects: {
       maxNumberOfProjects: 5,
+    },
+    httpMonitors: {
+      maxNumberOfMonitors: 5,
     },
     publicDashboards: {
       maxNumberOfPublicDashboards: 1,
@@ -66,6 +75,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     projects: {
       maxNumberOfProjects: 20,
     },
+    httpMonitors: {
+      maxNumberOfMonitors: 20,
+    },
     publicDashboards: {
       maxNumberOfPublicDashboards: 5,
     },
@@ -81,6 +93,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     projects: {
       maxNumberOfProjects: 20,
     },
+    httpMonitors: {
+      maxNumberOfMonitors: 20,
+    },
     publicDashboards: {
       maxNumberOfPublicDashboards: 5,
     },
@@ -95,6 +110,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
   [UserTier.Pro]: {
     projects: {
       maxNumberOfProjects: 50,
+    },
+    httpMonitors: {
+      maxNumberOfMonitors: 50,
     },
     publicDashboards: {
       maxNumberOfPublicDashboards: 15,
@@ -113,6 +131,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
     projects: {
       maxNumberOfProjects: 10,
     },
+    httpMonitors: {
+      maxNumberOfMonitors: 10,
+    },
     publicDashboards: {
       maxNumberOfPublicDashboards: 5,
     },
@@ -127,6 +148,9 @@ export const UserPlanConfigs: UserPlanConfigs = {
   [UserTier.Admin]: {
     projects: {
       maxNumberOfProjects: 100,
+    },
+    httpMonitors: {
+      maxNumberOfMonitors: 100,
     },
     publicDashboards: {
       maxNumberOfPublicDashboards: 100,

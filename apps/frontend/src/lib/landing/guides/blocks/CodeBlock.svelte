@@ -12,6 +12,7 @@
     javascript,
     json,
     php,
+    plaintext,
     powershell,
     python,
     ruby,
@@ -34,7 +35,7 @@
   const { code, language, title, icon: Icon }: Props = $props();
 
   /**
-   * Grammars are named one by one so highlight.js ships sixteen languages
+   * Grammars are named one by one so highlight.js ships seventeen languages
    * rather than the whole two hundred the barrel export can reach.
    */
   const grammars: Record<CodeLanguage, LanguageType<string>> = {
@@ -54,6 +55,7 @@
     html: { name: 'html', register: xml.register },
     powershell,
     svelte: { name: 'svelte', register: xml.register },
+    text: plaintext,
   };
 
   let copied = $state(false);
@@ -104,10 +106,10 @@
       The right padding is a gutter the code never scrolls into, so a long
       first line clips against empty space instead of sliding under the button.
     -->
-    <div class="relative pr-12">
+    <div class="corner relative sm:pr-12">
       <Highlight class="font-mono" {code} language={grammars[language]} />
 
-      <div class="absolute top-3 right-3">
+      <div class="absolute top-2 right-2 sm:top-3 sm:right-3">
         {@render copyButton()}
       </div>
     </div>
@@ -153,5 +155,15 @@
       keeps a Go handler inside the column instead of scrolling it.
     */
     tab-size: 2;
+  }
+
+  .doc-code :global(pre[data-language='plaintext'] code.hljs) {
+    white-space: pre-wrap;
+  }
+
+  @media (width < 40rem) {
+    .doc-code .corner :global(pre code.hljs) {
+      padding-top: 2.75rem;
+    }
   }
 </style>

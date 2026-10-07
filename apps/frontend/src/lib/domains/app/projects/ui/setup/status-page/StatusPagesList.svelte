@@ -8,14 +8,15 @@
   import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import RocketIcon from '$lib/domains/shared/icons/RocketIcon.svelte';
-  import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
-  import PaneHeader, {
-    PANE_HEADER_ACTION_CLASS,
-  } from '$lib/domains/shared/ui/components/PaneHeader.svelte';
+  import { topBarState } from '$lib/domains/app/clusters/application/top-bar.state.svelte.js';
+  import Well from '$lib/domains/shared/ui/components/Well.svelte';
+  import {
+    TOOLBAR_CONTROL,
+    TOOLBAR_PRIMARY,
+  } from '$lib/domains/shared/ui/components/toolbar.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-  import UpgradeButton from '$lib/domains/shared/upgrade/UpgradeButton.svelte';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
-  import { Button, Spinner } from '@logdash/hyper-ui/presentational';
+  import { Spinner } from '@logdash/hyper-ui/presentational';
   import type { PostHog } from 'posthog-js';
   import { getContext } from 'svelte';
   import StatusPageRow from './StatusPageRow.svelte';
@@ -32,6 +33,8 @@
   let isCreating = $state(false);
 
   const canCreate = $derived(clustersState.canCreateStatusPage(clusterId));
+
+  $effect(() => topBarState.show(toolbar));
 
   function publicUrl(dashboard: PublicDashboard): string {
     if (dashboard.customDomain?.status === 'verified') {
@@ -84,76 +87,55 @@
   }
 </script>
 
-<PaneHeader title="Status pages">
-  <span class="tabular-nums">
-    {dashboards.length}
-    {dashboards.length === 1 ? 'page' : 'pages'}
-  </span>
-
-  {#if dashboards.length > 0}
-    {#if canCreate}
-      <button
-        type="button"
-        class={PANE_HEADER_ACTION_CLASS}
-        disabled={isCreating}
-        onclick={onCreate}
-        data-posthog-id="create-status-page-button"
-      >
-        {#if isCreating}
-          <Spinner class="size-3.5 shrink-0" aria-hidden="true" />
-        {:else}
-          <PlusIcon class="size-3.5 shrink-0" />
-        {/if}
-        New status page
-      </button>
+<div class="flex w-full flex-col gap-2 p-2">
+  <Well label="Status pages" title="Status pages">
+    {#if dashboards.length > 0}
+      <ul class="flex flex-col gap-0.5">
+        {#each dashboards as dashboard (dashboard.id)}
+          <StatusPageRow
+            {clusterId}
+            statusPageId={dashboard.id}
+            name={dashboard.name}
+            url={publicUrl(dashboard)}
+            monitorsCount={dashboard.httpMonitorsIds.length}
+            isPublished={dashboard.isPublic}
+            onCopyUrl={() => onCopyUrl(dashboard)}
+          />
+        {/each}
+      </ul>
     {:else}
-      <button
-        type="button"
-        class={PANE_HEADER_ACTION_CLASS}
-        onclick={onUpgrade}
+      <div
+        class="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center"
       >
-        <RocketIcon class="size-3.5 shrink-0" />
-        Upgrade for more
-      </button>
+        <p class="font-medium">No status pages yet</p>
+        <p class="text-fg-tertiary max-w-sm text-sm">
+          Share the status of your domain so your users know what is going on.
+        </p>
+      </div>
     {/if}
+  </Well>
+</div>
+
+{#snippet toolbar()}
+  {#if canCreate}
+    <button
+      type="button"
+      class={TOOLBAR_PRIMARY}
+      disabled={isCreating}
+      onclick={onCreate}
+      data-posthog-id="create-status-page-button"
+    >
+      {#if isCreating}
+        <Spinner class="size-3.5 shrink-0" aria-hidden="true" />
+      {:else}
+        <PlusIcon class="size-4 shrink-0" />
+      {/if}
+      New status page
+    </button>
+  {:else}
+    <button type="button" class={TOOLBAR_CONTROL} onclick={onUpgrade}>
+      <RocketIcon class="size-3.5 shrink-0" />
+      Upgrade for more
+    </button>
   {/if}
-</PaneHeader>
-
-{#if dashboards.length > 0}
-  <ul class="edge-between edge-b">
-    {#each dashboards as dashboard (dashboard.id)}
-      <StatusPageRow
-        {clusterId}
-        statusPageId={dashboard.id}
-        name={dashboard.name}
-        url={publicUrl(dashboard)}
-        monitorsCount={dashboard.httpMonitorsIds.length}
-        isPublished={dashboard.isPublic}
-        onCopyUrl={() => onCopyUrl(dashboard)}
-      />
-    {/each}
-  </ul>
-{:else}
-  <EmptyState
-    class="p-4"
-    title="No status pages yet"
-    description="Share the status of your services with everyone so they know what's going on."
-  >
-    {#if canCreate}
-      <Button
-        variant="primary"
-        size="sm"
-        loading={isCreating}
-        onclick={onCreate}
-        data-posthog-id="create-status-page-button"
-      >
-        <PlusIcon class="size-4" />
-        Create status page
-      </Button>
-    {:else}
-      <UpgradeButton source="status-page-limit">
-        Upgrade to create more status pages
-      </UpgradeButton>
-    {/if}
-  </EmptyState>
-{/if}
+{/snippet}

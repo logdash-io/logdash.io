@@ -99,9 +99,10 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
   {
     title: 'Legal',
     links: [
-      { ...to('/terms-of-service'), title: 'Terms of use' },
+      { ...to('/terms-of-service'), title: 'Terms of service' },
       { ...to('/privacy-policy'), title: 'Privacy policy' },
       { ...to('/cookies-policy'), title: 'Cookies policy' },
+      { ...to('/dpa'), title: 'DPA' },
     ],
   },
 ];

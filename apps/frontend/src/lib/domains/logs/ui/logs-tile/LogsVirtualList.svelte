@@ -7,13 +7,8 @@
   import { timeDisplayState } from '../../infrastructure/time-display.state.svelte.js';
   import LogRow from './log-row/LogRow.svelte';
   import LogPreviewDrawer from './LogPreviewDrawer.svelte';
-  import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
-  import LoadingLine from '$lib/domains/shared/ui/components/LoadingLine.svelte';
-  import {
-    Button,
-    ScrollArea,
-    Spinner,
-  } from '@logdash/hyper-ui/presentational';
+  import { Button, ScrollArea } from '@logdash/hyper-ui/presentational';
+  import type { Snippet } from 'svelte';
   import { fade } from 'svelte/transition';
 
   type Props = {
@@ -37,6 +32,14 @@
 
   const ROW_HEIGHT = 28;
   const BUFFER_COUNT = 15;
+  const SKELETON_WIDTHS = [
+    'w-3/4',
+    'w-1/2',
+    'w-2/3',
+    'w-2/5',
+    'w-3/5',
+    'w-1/3',
+  ];
 
   let visibleStartIndex = $state(0);
   let visibleEndIndex = $state(50);
@@ -255,7 +258,7 @@
 <div class="relative flex min-h-96 flex-1 flex-col">
   {#if scrolledFromTop}
     <div
-      class="from-surface-50-bg pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b to-transparent"
+      class="from-surface-25-bg pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b to-transparent"
     ></div>
   {/if}
 
@@ -263,33 +266,24 @@
     <ScrollArea class="h-full" onscroll={onScroll} bind:viewportRef>
       {#if logs.length === 0}
         {#if loading}
-          <div class="px-4 pb-4">
-            <LoadingLine label="Loading logs" />
-          </div>
+          {@render skeleton(SKELETON_WIDTHS.length * 2)}
         {:else if logsState.fetchFailed}
-          <EmptyState
-            class="px-4 pb-4"
-            title="Could not load logs"
-            description="Check your connection and try again."
-          >
-            <Button size="sm" onclick={() => logsState.retry()}>Retry</Button>
-          </EmptyState>
+          {@render emptyState(
+            'Could not load logs',
+            'Check your connection and try again.',
+            retry,
+          )}
         {:else if filtered}
-          <EmptyState
-            class="px-4 pb-4"
-            title="No matching logs"
-            description="Nothing matches this search and these filters."
-          >
-            <Button size="sm" onclick={() => filtersStore.reset()}>
-              Reset filters
-            </Button>
-          </EmptyState>
+          {@render emptyState(
+            'No matching logs',
+            'Nothing matches this search and these filters.',
+            reset,
+          )}
         {:else}
-          <EmptyState
-            class="px-4 pb-4"
-            title="No logs yet"
-            description="New logs show up here as your app sends them."
-          />
+          {@render emptyState(
+            'No logs yet',
+            'New logs show up here as your app sends them.',
+          )}
         {/if}
       {/if}
 
@@ -325,16 +319,49 @@
       </div>
 
       {#if logs.length > 0 && logsState.pageIsLoading}
-        <div class="flex h-12 shrink-0 items-center px-4">
-          <Spinner size="sm" aria-hidden="true" />
-        </div>
+        {@render skeleton(3)}
       {/if}
     </ScrollArea>
   </div>
 
   <div
-    class="from-surface-50-bg pointer-events-none absolute inset-x-0 bottom-0 z-10 h-6 bg-gradient-to-t to-transparent"
+    class="from-surface-25-bg pointer-events-none absolute inset-x-0 bottom-0 z-10 h-6 bg-gradient-to-t to-transparent"
   ></div>
 
   <LogPreviewDrawer />
 </div>
+
+{#snippet skeleton(rows: number)}
+  <div class="flex flex-col" role="status" aria-label="Loading logs">
+    {#each { length: rows }, index (index)}
+      <div class="flex h-7 items-center px-3" aria-hidden="true">
+        <span
+          class={[
+            'bg-surface-150-bg h-3.5 rounded-md',
+            SKELETON_WIDTHS[index % SKELETON_WIDTHS.length],
+          ]}
+        ></span>
+      </div>
+    {/each}
+  </div>
+{/snippet}
+
+{#snippet emptyState(title: string, description: string, action?: Snippet)}
+  <div
+    class="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center"
+  >
+    <p class="font-medium">{title}</p>
+    <p class="text-fg-tertiary max-w-sm text-sm text-balance">{description}</p>
+    {#if action}
+      <div class="mt-2">{@render action()}</div>
+    {/if}
+  </div>
+{/snippet}
+
+{#snippet retry()}
+  <Button size="sm" onclick={() => logsState.retry()}>Retry</Button>
+{/snippet}
+
+{#snippet reset()}
+  <Button size="sm" onclick={() => filtersStore.reset()}>Reset filters</Button>
+{/snippet}

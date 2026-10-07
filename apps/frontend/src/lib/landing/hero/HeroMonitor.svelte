@@ -1,31 +1,23 @@
 <script lang="ts">
   import { anonymousPreviewState } from '$lib/domains/anonymous/application/anonymous-preview.state.svelte';
   import type { AnonymousStartStep } from '$lib/domains/anonymous/domain/anonymous-preview';
-  import type { WatchHistory } from '$lib/domains/anonymous/domain/watch-history';
-  import { fillEmptySlots } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
   import CheckTrace from '$lib/domains/app/projects/ui/service/CheckTrace.svelte';
   import MonitorPanel, {
     CHART_HEIGHT,
     CHART_WIDTH,
   } from '$lib/domains/app/projects/ui/service/MonitorPanel.svelte';
-  import { UptimeBars } from '@logdash/hyper-ui/features';
+  import { monitorEyebrow } from '$lib/domains/app/projects/ui/service/monitor-panel-content';
   import { Button, Spinner } from '@logdash/hyper-ui/presentational';
   import { ArrowRightIcon } from 'lucide-svelte';
-  import { cubicOut } from 'svelte/easing';
-  import { prefersReducedMotion } from 'svelte/motion';
-  import { slide } from 'svelte/transition';
-  import { match } from 'ts-pattern';
   import { heroClaim } from './hero-claim.svelte';
-  import { heroReading } from './hero-dashboard';
+  import { demoName, heroReading } from './hero-dashboard';
   import { showcaseSwap } from './hero-showcase';
   import { heroTakeover } from './hero-takeover.svelte';
 
   const CLOCK_TICK_MS = 1_000;
-  const HISTORY_REVEAL_MS = 240;
 
   const CREATING_STEPS: { key: AnonymousStartStep; label: string }[] = [
     { key: 'account', label: 'Creating your account' },
-    { key: 'project', label: 'Setting up your service' },
     { key: 'check', label: 'Running the first check' },
   ];
 
@@ -37,18 +29,22 @@
   const preview = $derived(
     heroReading(
       anonymousPreviewState.pings,
+      anonymousPreviewState.previewHours,
       now,
       'Waiting for the first check',
     ),
   );
   const demo = $derived(
-    heroReading(anonymousPreviewState.demo.pings, now, 'Loading checks'),
+    heroReading(
+      anonymousPreviewState.demo.pings,
+      anonymousPreviewState.demo.hours,
+      now,
+      anonymousPreviewState.demo.loaded && !anonymousPreviewState.demo.monitor
+        ? 'Waiting for your URL'
+        : 'Loading checks',
+    ),
   );
-  const demoHost = $derived(anonymousPreviewState.demo.monitor?.name ?? '');
-  const history = $derived(anonymousPreviewState.watchHistory);
-  const historyRevealMs = $derived(
-    prefersReducedMotion.current ? 0 : HISTORY_REVEAL_MS,
-  );
+  const demoMonitor = $derived(anonymousPreviewState.demo.monitor);
   const claimable = $derived(heroClaim.eligible);
   const activeStepIndex = $derived(
     CREATING_STEPS.findIndex(
@@ -63,19 +59,6 @@
 
     return () => clearInterval(timer);
   });
-
-  function watchedLabel(watched: WatchHistory): string {
-    const since = watched.since.toLocaleDateString('en', {
-      month: 'short',
-      day: 'numeric',
-    });
-    const outages = match(watched.outages)
-      .with(0, () => 'no outages')
-      .with(1, () => '1 outage')
-      .otherwise((count) => `${count} outages`);
-
-    return `Watched since ${since} · ${outages}`;
-  }
 
   async function onOpenDashboard(): Promise<void> {
     if (isOpening) {
@@ -107,7 +90,11 @@
 {#key phase}
   <div in:showcaseSwap>
     {#if phase === 'idle'}
-      <MonitorPanel eyebrow="Live monitor" title={demoHost} {...demo} />
+      <MonitorPanel
+        eyebrow={demoMonitor ? monitorEyebrow(demoMonitor) : 'Live monitor'}
+        title={demoName(anonymousPreviewState.demo)}
+        {...demo}
+      />
     {:else if phase === 'creating'}
       <MonitorPanel
         eyebrow="Setting up"
@@ -121,15 +108,7 @@
         title={previewHost}
         {...preview}
       >
-        <div class="flex flex-col">
-          {#if history}
-            <div in:slide={{ duration: historyRevealMs, easing: cubicOut }}>
-              {@render watchedHistory(history)}
-            </div>
-          {/if}
-
-          {@render previewActions()}
-        </div>
+        {@render previewActions()}
       </MonitorPanel>
     {:else if phase === 'ended'}
       <MonitorPanel
@@ -194,19 +173,6 @@
     </ol>
 
     <CheckTrace width={CHART_WIDTH} height={CHART_HEIGHT} />
-  </div>
-{/snippet}
-
-{#snippet watchedHistory(watched: WatchHistory)}
-  <div class="flex flex-col gap-2 pb-4">
-    <p class="text-fg-tertiary text-xs">{watchedLabel(watched)}</p>
-
-    <UptimeBars
-      buckets={fillEmptySlots(watched.hours, 'hour')}
-      label={previewHost}
-      unit="hour"
-      raised
-    />
   </div>
 {/snippet}
 

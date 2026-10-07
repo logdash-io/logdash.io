@@ -1,3 +1,4 @@
+import { PublicDashboardMonitorsService } from '../../public-dashboard/monitors/public-dashboard-monitors.service';
 import { Body, Controller, ForbiddenException, Get, Post, Put } from '@nestjs/common';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
 import { UserReadService } from '../read/user-read.service';
@@ -34,6 +35,7 @@ export class UserCoreController {
     private readonly jwtService: CustomJwtService,
     private readonly clusterWriteService: ClusterWriteService,
     private readonly userEventEmitter: UserEventEmitter,
+    private readonly publicDashboardMonitorsService: PublicDashboardMonitorsService,
   ) {}
 
   @Get('me')
@@ -124,6 +126,8 @@ export class UserCoreController {
         [user.id]: ClusterRole.Creator,
       },
     });
+
+    await this.publicDashboardMonitorsService.createDefaultDashboard(cluster.id);
 
     return {
       user: UserSerializer.serialize(user),

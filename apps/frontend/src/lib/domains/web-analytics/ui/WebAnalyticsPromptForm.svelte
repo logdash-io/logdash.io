@@ -25,13 +25,13 @@
     !connection.site
       ? 'Start tracking your website first.'
       : services.length === 0
-        ? 'Add a service to this domain to set up backend logging.'
+        ? 'Add a service to this domain to include backend logging.'
         : null,
   );
 
   async function onCopy(event: SubmitEvent): Promise<void> {
     event.preventDefault();
-    if (services.length === 0) return;
+    if (!connection.site) return;
     copying = true;
     error = null;
     try {
@@ -53,7 +53,7 @@
     <Button
       type="submit"
       loading={copying}
-      disabled={Boolean(hint)}
+      disabled={!connection.site}
       aria-describedby={hint ? `${id}-hint` : undefined}
       class="group gap-2 pr-3.5 pl-2"
     >

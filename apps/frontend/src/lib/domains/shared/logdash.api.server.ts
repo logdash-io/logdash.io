@@ -7,7 +7,7 @@ import type { PublicDashboard } from '$lib/domains/app/projects/domain/public-da
 import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/exposed-config';
 import type { User } from '$lib/domains/shared/user/domain/user';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import queryString from 'query-string';
 import type { UserTier } from './types.js';
 
@@ -309,12 +309,14 @@ class LogdashAPI {
     }
 
     if (!response.ok) {
-      const p: unknown = await response.json();
-      throw new Error(
-        `HTTP error ${response.status}: ${response.statusText}${
-          response.body ? ` {${JSON.stringify(p)}}` : ''
-        }`,
-      );
+      const body = (await response.json().catch(() => null)) as {
+        message?: string | string[];
+      } | null;
+      const message = Array.isArray(body?.message)
+        ? body.message.join(', ')
+        : body?.message || response.statusText;
+
+      error(response.status, message);
     }
 
     if (response.headers.get('content-type')?.includes('application/json')) {

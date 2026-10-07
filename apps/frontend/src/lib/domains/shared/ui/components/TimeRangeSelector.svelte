@@ -1,5 +1,6 @@
 <script lang="ts" generics="T extends string">
   import { Tooltip } from '@logdash/hyper-ui/presentational';
+  import { TOOLBAR_GROUP, TOOLBAR_GROUP_OPTION } from './toolbar.js';
 
   type Option = {
     value: T;
@@ -17,7 +18,7 @@
   const { options, selected, label = 'Time range', onSelect }: Props = $props();
 </script>
 
-<div class="flex items-center gap-0.5" role="group" aria-label={label}>
+<div class={TOOLBAR_GROUP} role="radiogroup" aria-label={label}>
   {#each options as option (option.value)}
     {#if option.locked}
       <Tooltip content="Upgrade to see {option.label}" placement="bottom">
@@ -32,12 +33,14 @@
 {#snippet rangeButton(option: Option)}
   <button
     type="button"
-    aria-pressed={selected === option.value}
+    role="radio"
+    aria-checked={selected === option.value}
     class={[
-      'transition-ink focus-visible:outline-brand flex h-7 cursor-pointer items-center rounded-md px-2 text-[13px] tabular-nums focus-visible:outline-2',
+      TOOLBAR_GROUP_OPTION,
+      'tabular-nums',
       {
         'bg-surface-150-bg text-fg-default': selected === option.value,
-        'text-fg-muted hover:text-fg-default':
+        'text-fg-tertiary hover:text-fg-default':
           selected !== option.value && !option.locked,
         'text-fg-faint hover:text-fg-tertiary': option.locked,
       },

@@ -9,17 +9,14 @@
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { debounce } from '$lib/domains/shared/utils/debounce.js';
   import { displayUrl, stripProtocol } from '$lib/domains/shared/utils/url.js';
-  import PaneHeader, {
-    PANE_HEADER_ACTION_CLASS,
-  } from '$lib/domains/shared/ui/components/PaneHeader.svelte';
+  import { topBarState } from '$lib/domains/app/clusters/application/top-bar.state.svelte.js';
+  import { TOOLBAR_CONTROL } from '$lib/domains/shared/ui/components/toolbar.js';
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
   import LoadingLine from '$lib/domains/shared/ui/components/LoadingLine.svelte';
   import {
     SETTINGS_PAGE_CLASS,
-    SETTINGS_PANEL_CLASS,
     SettingsCard,
-    SettingsCardHeader,
     SettingsCardItem,
   } from '$lib/domains/shared/ui/components/settings-card';
   import CustomDomainSetup from '../public-dashboard/CustomDomainSetup.svelte';
@@ -63,10 +60,12 @@
   const statusPageUrl = $derived(
     publicDashboardManagerState.getStatusPageUrl(dashboardId),
   );
-  const monitors = $derived(monitoringState.monitors);
+  const monitors = $derived(monitoringState.monitorsOf(clusterId));
   const badgeMonitors = $derived(
     monitors.filter((monitor) => dashboardMonitors.includes(monitor.id)),
   );
+
+  $effect(() => topBarState.show(toolbar));
 
   onMount(() => {
     void monitoringState.load(clusterId);
@@ -88,6 +87,16 @@
     if (!name.trim()) return;
 
     debouncedNameUpdate(name);
+  }
+
+  async function onToggleAutoAdd(): Promise<void> {
+    try {
+      await publicDashboardManagerState.update(dashboardId, {
+        autoAddMonitors: !dashboard?.autoAddMonitors,
+      });
+    } catch (error) {
+      toast.error(failureMessage('Failed to update monitors', error));
+    }
   }
 
   async function onToggleMonitor(monitorId: string): Promise<void> {
@@ -171,36 +180,8 @@
   }
 </script>
 
-<PaneHeader title="Status page">
-  {#if dashboard}
-    <span class="flex items-center gap-1.5">
-      <span
-        class={[
-          'size-1.5 rounded-full',
-          isPublished ? 'bg-success' : 'bg-idle',
-        ]}
-      ></span>
-      {isPublished ? 'Published' : 'Draft'}
-    </span>
-
-    {#if isPublished}
-      <!-- eslint-disable svelte/no-navigation-without-resolve -- the public URL can be a custom domain -->
-      <a
-        href={statusPageUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        class={PANE_HEADER_ACTION_CLASS}
-      >
-        Open
-        <OpenIcon class="size-3.5 shrink-0" />
-      </a>
-      <!-- eslint-enable svelte/no-navigation-without-resolve -->
-    {/if}
-  {/if}
-</PaneHeader>
-
 {#if !hasInitialized}
-  <div class="flex h-11 items-center px-4">
+  <div class="flex h-11 items-center px-5 py-2">
     <LoadingLine label="Loading status page" />
   </div>
 {:else if !dashboard && loadFailed}
@@ -235,7 +216,7 @@
     )}
     {@render section(
       'Monitors',
-      'Pick the monitors your status page shows.',
+      'The monitors your status page shows.',
       monitorsField,
     )}
     {@render section(
@@ -244,8 +225,8 @@
       visibilityField,
     )}
     {@render section(
-      'Custom domain',
-      'Serve your status page from a domain you own, like status.example.com.',
+      'Custom URL',
+      'Serve your status page from your own address, like status.example.com.',
       customDomainField,
     )}
 
@@ -289,13 +270,11 @@
 {/if}
 
 {#snippet section(title: string, description: string, field: Snippet)}
-  <section class="flex flex-col gap-3">
-    <SettingsCardHeader {title} {description} />
-
-    <div class={['min-w-0', SETTINGS_PANEL_CLASS]}>
+  <SettingsCard {title} {description}>
+    <div class="min-w-0 px-3 pt-2 pb-3">
       {@render field()}
     </div>
-  </section>
+  </SettingsCard>
 {/snippet}
 
 {#snippet nameField()}
@@ -310,47 +289,65 @@
 {/snippet}
 
 {#snippet monitorsField()}
-  {#if monitors.length === 0}
-    <EmptyState
-      title="No monitors yet"
-      description="Add a monitor to one of your services, then pick it here."
-    >
-      <Button
-        href={resolve('/app/domains/[cluster_id]/services', {
-          cluster_id: clusterId,
-        })}
-        size="sm"
-      >
-        Go to your services
-      </Button>
-    </EmptyState>
-  {:else}
-    <ul class="edge-between overflow-hidden rounded-lg edge">
-      {#each monitors as monitor (monitor.id)}
-        <li>
-          <label
-            class="hover:bg-surface-100-hover-bg flex h-10 cursor-pointer items-center gap-3 px-3 text-sm select-none"
-          >
-            <Checkbox
-              size="xs"
-              variant="primary"
-              checked={dashboardMonitors.includes(monitor.id)}
-              disabled={isUpdating}
-              onchange={() => onToggleMonitor(monitor.id)}
-            />
-            <span class="min-w-0 truncate">
-              {monitor.name || stripProtocol(monitor.url ?? '')}
-            </span>
-            {#if monitor.url}
-              <span class="text-fg-muted ml-auto min-w-0 truncate pl-2">
-                {displayUrl(monitor.url)}
+  <div class="flex flex-col gap-3">
+    <label class="flex cursor-pointer items-start gap-3 text-sm select-none">
+      <Checkbox
+        size="xs"
+        variant="primary"
+        class="mt-0.5"
+        checked={dashboard?.autoAddMonitors ?? false}
+        onchange={onToggleAutoAdd}
+      />
+      <span class="flex flex-col gap-0.5">
+        <span>Add new monitors automatically</span>
+        <span class="text-fg-muted text-[13px]">
+          Every monitor you add to this domain shows up here.
+        </span>
+      </span>
+    </label>
+
+    {#if monitors.length === 0}
+      <div class="flex flex-col items-start gap-2">
+        <p class="text-fg-muted text-sm">
+          No monitors yet. Add one in Uptime and it shows up here.
+        </p>
+        <Button
+          href={resolve('/app/domains/[cluster_id]/uptime/new', {
+            cluster_id: clusterId,
+          })}
+          size="sm"
+        >
+          Add a monitor
+        </Button>
+      </div>
+    {:else}
+      <ul class="edge-between overflow-hidden rounded-lg edge">
+        {#each monitors as monitor (monitor.id)}
+          <li>
+            <label
+              class="hover:bg-surface-25-hover-bg flex h-10 cursor-pointer items-center gap-3 px-3 text-sm select-none"
+            >
+              <Checkbox
+                size="xs"
+                variant="primary"
+                checked={dashboardMonitors.includes(monitor.id)}
+                disabled={isUpdating}
+                onchange={() => onToggleMonitor(monitor.id)}
+              />
+              <span class="min-w-0 truncate">
+                {monitor.name || stripProtocol(monitor.url ?? '')}
               </span>
-            {/if}
-          </label>
-        </li>
-      {/each}
-    </ul>
-  {/if}
+              {#if monitor.url}
+                <span class="text-fg-muted ml-auto min-w-0 truncate pl-2">
+                  {displayUrl(monitor.url)}
+                </span>
+              {/if}
+            </label>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
 {/snippet}
 
 {#snippet visibilityField()}
@@ -416,4 +413,36 @@
 
 {#snippet buildYourOwnField()}
   <BuildYourOwn {dashboardId} />
+{/snippet}
+
+{#snippet toolbar()}
+  {#if dashboard}
+    <div class="flex flex-wrap items-center gap-2">
+      <span
+        class="bg-surface-100-bg text-fg-secondary flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[13px]"
+      >
+        <span
+          class={[
+            'size-1.5 rounded-full',
+            isPublished ? 'bg-success' : 'bg-idle',
+          ]}
+        ></span>
+        {isPublished ? 'Published' : 'Draft'}
+      </span>
+
+      {#if isPublished}
+        <!-- eslint-disable svelte/no-navigation-without-resolve -- the public URL can be a custom domain -->
+        <a
+          href={statusPageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class={TOOLBAR_CONTROL}
+        >
+          Open
+          <OpenIcon class="size-3.5 shrink-0" />
+        </a>
+        <!-- eslint-enable svelte/no-navigation-without-resolve -->
+      {/if}
+    </div>
+  {/if}
 {/snippet}

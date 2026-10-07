@@ -5,6 +5,7 @@ import { ClusterEntity } from '../core/entities/cluster.entity';
 import { ClusterNormalized } from '../core/entities/cluster.interface';
 import { ClusterSerializer } from '../core/entities/cluster.serializer';
 import { ClusterRole } from '../core/enums/cluster-role.enum';
+import { ClusterTier } from '../core/enums/cluster-tier.enum';
 
 @Injectable()
 export class ClusterReadService {
@@ -54,6 +55,15 @@ export class ClusterReadService {
     const clusters = await this.model.find({ creatorId }).lean<ClusterEntity[]>().exec();
 
     return ClusterSerializer.normalizeMany(clusters);
+  }
+
+  public async readIdsByTiers(tiers: ClusterTier[]): Promise<string[]> {
+    const clusters = await this.model
+      .find({ tier: { $in: tiers } }, { _id: 1 })
+      .lean<Pick<ClusterEntity, '_id'>[]>()
+      .exec();
+
+    return clusters.map((cluster) => cluster._id.toString());
   }
 
   public async countByCreatorId(creatorId: string): Promise<number> {
