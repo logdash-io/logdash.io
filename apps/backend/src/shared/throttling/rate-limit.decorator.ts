@@ -14,6 +14,7 @@ export const MonitorCreationRateLimit = { limit: 20, ttl: seconds(60) };
 export const MonitorProbeRateLimit = { limit: 30, ttl: seconds(60) };
 export const PushPingRateLimit = { limit: 300, ttl: seconds(60) };
 export const FaviconRateLimit = { limit: 300, ttl: seconds(60) };
+export const FeedbackRateLimit = { limit: 20, ttl: seconds(60) };
 
 function rateLimit(options: { limit: number; ttl: number }) {
   return applyDecorators(UseGuards(ThrottlerGuard), Throttle({ default: options }));
@@ -89,4 +90,16 @@ export function ThrottlePushPing() {
  */
 export function ThrottleFavicon() {
   return rateLimit(FaviconRateLimit);
+}
+
+/**
+ * 20 requests per minute, in practice service wide: the app sends feedback
+ * through the SvelteKit BFF, so every user shares its egress IP. Each request
+ * posts to the team Telegram chat, which accepts about 20 messages a minute.
+ *
+ * ponytail: one shared budget, so a single noisy user can block feedback for a
+ * minute. Track per user if that ever happens.
+ */
+export function ThrottleFeedback() {
+  return rateLimit(FeedbackRateLimit);
 }

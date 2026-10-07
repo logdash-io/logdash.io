@@ -1,4 +1,5 @@
 name: 'Apply clickhouse migrations'
+description: 'Applies the ClickHouse migrations in migrations-home to the given database'
 
 inputs:
   host:

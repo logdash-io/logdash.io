@@ -45,6 +45,16 @@ jobs:
           sudo ./clickhouse install
         shell: bash
 
+      - name: Open ClickHouse tunnel
+        uses: './.github/templates/clickhouse-tunnel'
+        with:
+          ssh-host: ${{ secrets.BACKEND_PROD_SSH_HOST }}
+          ssh-port: ${{ secrets.BACKEND_PROD_SSH_PORT }}
+          ssh-user: ${{ secrets.BACKEND_PROD_SSH_USER }}
+          ssh-private-key: ${{ secrets.BACKEND_PROD_SSH_KEY }}
+          clickhouse-host: ${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}
+          ports: ${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }}
+
       - name: Download Backup Artifact
         uses: actions/download-artifact@v4
         with:
@@ -112,13 +122,13 @@ jobs:
         run: |
           echo "🔗 Testing ClickHouse connection..."
 
-          # Strip http:// prefix from host if present
-          CLICKHOUSE_HOST="${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}"
-          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
-          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+          # Through the SSH tunnel opened above. clickhouse client skips compression for
+          # localhost, so every call turns it back on to keep the tunnel fast.
+          CLICKHOUSE_HOST=127.0.0.1
 
           ./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
+            --compression=1 \
             --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
             --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
@@ -132,10 +142,9 @@ jobs:
           echo "🔄 Starting table restoration..."
           cd restore
 
-          # Strip http:// prefix from host if present
-          CLICKHOUSE_HOST="${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}"
-          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
-          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+          # Through the SSH tunnel opened above. clickhouse client skips compression for
+          # localhost, so every call turns it back on to keep the tunnel fast.
+          CLICKHOUSE_HOST=127.0.0.1
 
           # Restore tables from backup
           while IFS=$'\t' read -r database table engine; do
@@ -146,6 +155,7 @@ jobs:
                 echo "Creating schema for table: $table"
                 ../clickhouse client \
                   --host="${CLICKHOUSE_HOST}" \
+                  --compression=1 \
                   --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
                   --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
                   --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
@@ -160,6 +170,7 @@ jobs:
                 echo "Restoring data for table: $table"
                 ../clickhouse client \
                   --host="${CLICKHOUSE_HOST}" \
+                  --compression=1 \
                   --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
                   --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
                   --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
@@ -178,14 +189,14 @@ jobs:
         run: |
           echo "🔍 Verifying restoration..."
 
-                    # Strip http:// prefix from host if present
-          CLICKHOUSE_HOST="${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}"
-          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
-          CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+          # Through the SSH tunnel opened above. clickhouse client skips compression for
+          # localhost, so every call turns it back on to keep the tunnel fast.
+          CLICKHOUSE_HOST=127.0.0.1
 
           # Get restored tables count
           RESTORED_TABLES=$(./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
+            --compression=1 \
             --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
             --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \
@@ -198,6 +209,7 @@ jobs:
           echo "📋 Restored tables with row counts:"
           ./clickhouse client \
             --host="${CLICKHOUSE_HOST}" \
+            --compression=1 \
             --port=${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT_TCP }} \
             --user="${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}" \
             --password="${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}" \

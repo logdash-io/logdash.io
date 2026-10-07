@@ -1,0 +1,54 @@
+name: 'ClickHouse SSH tunnel'
+description: >
+  Forwards 127.0.0.1:<port> on the runner to the same port on the ClickHouse host through
+  the prod SSH server, so credentials and data never cross the internet in plain text.
+
+inputs:
+  ssh-host:
+    required: true
+  ssh-port:
+    required: true
+  ssh-user:
+    required: true
+  ssh-private-key:
+    required: true
+  clickhouse-host:
+    required: true
+  ports:
+    description: 'Space separated ClickHouse ports to forward'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Open tunnel
+      env:
+        SSH_HOST: ${{ inputs.ssh-host }}
+        SSH_PORT: ${{ inputs.ssh-port }}
+        SSH_USER: ${{ inputs.ssh-user }}
+        SSH_KEY: ${{ inputs.ssh-private-key }}
+        CLICKHOUSE_HOST: ${{ inputs.clickhouse-host }}
+        PORTS: ${{ inputs.ports }}
+      run: |
+        mkdir -p ~/.ssh
+        install -m 600 /dev/null ~/.ssh/clickhouse_tunnel_key
+        printf '%s\n' "$SSH_KEY" > ~/.ssh/clickhouse_tunnel_key
+
+        CLICKHOUSE_HOST="${CLICKHOUSE_HOST#http://}"
+        CLICKHOUSE_HOST="${CLICKHOUSE_HOST#https://}"
+
+        FORWARDS=()
+        for PORT in $PORTS; do
+          FORWARDS+=(-L "127.0.0.1:${PORT}:${CLICKHOUSE_HOST}:${PORT}")
+        done
+
+        # ponytail: trusts the host key on first use, like appleboy/ssh-action in the deploy. Pin it with a known_hosts secret to stop a MITM on the runner's network path.
+        ssh -f -N \
+          -o ExitOnForwardFailure=yes \
+          -o StrictHostKeyChecking=accept-new \
+          -o ServerAliveInterval=30 \
+          -i ~/.ssh/clickhouse_tunnel_key \
+          -p "$SSH_PORT" \
+          "${FORWARDS[@]}" \
+          "${SSH_USER}@${SSH_HOST}"
+      shell: bash

@@ -7,6 +7,7 @@ on:
     paths:
       - 'apps/backend/clickhouse-migrations/**'
       - '.github/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,10 +19,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Open ClickHouse tunnel
+        uses: './.github/templates/clickhouse-tunnel'
+        with:
+          ssh-host: ${{ secrets.BACKEND_PROD_SSH_HOST }}
+          ssh-port: ${{ secrets.BACKEND_PROD_SSH_PORT }}
+          ssh-user: ${{ secrets.BACKEND_PROD_SSH_USER }}
+          ssh-private-key: ${{ secrets.BACKEND_PROD_SSH_KEY }}
+          clickhouse-host: ${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}
+          ports: ${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT }}
+
       - name: Apply migrations
         uses: './.github/templates/apply-clickhouse-migrations'
         with:
-          host: ${{ secrets.BACKEND_PROD_CLICKHOUSE_EXTERNAL_HOST }}:${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT }}
+          host: http://127.0.0.1:${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT }}
           user: ${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}
           password: ${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}
           db: default

@@ -93,6 +93,7 @@ import { WebAnalyticsCoreModule } from '../../src/web-analytics/core/web-analyti
 import { WebAnalyticsSiteEntity } from '../../src/web-analytics/core/entities/web-analytics-site.entity';
 import { ExposedConfigModule } from '../../src/exposed-config/exposed-config.module';
 import { FaviconCoreModule } from '../../src/favicon/core/favicon-core.module';
+import { InternalModule } from '../../src/internal/internal.module';
 
 export async function createTestApp() {
   getEnvConfig().resend.enabled = false;
@@ -134,6 +135,7 @@ export async function createTestApp() {
       SubscriptionCoreModule,
       AuditLogCreationModule,
       ResendModule,
+      InternalModule,
       RedisModule.forRoot({
         url: getRedisTestContainerUrl(),
       }),
