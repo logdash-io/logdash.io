@@ -307,6 +307,66 @@ describe('Http Ping (writes)', () => {
     expect(allPings[0].httpMonitorId).toBe(claimedMonitor.id);
   });
 
+  describe('when many monitors get no response at once', () => {
+    async function storeMonitors(dto: {
+      clusterId: string;
+      answering: number;
+      unanswered: number;
+    }): Promise<void> {
+      for (let i = 0; i < dto.unanswered; i++) {
+        const url = `https://example.org/unanswered-${i}`;
+        nock('https://example.org')
+          .get(`/unanswered-${i}`)
+          .replyWithError(Object.assign(new Error('connect ETIMEDOUT'), { code: 'ETIMEDOUT' }));
+        await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+          clusterId: dto.clusterId,
+          url,
+          claimed: true,
+        });
+      }
+
+      for (let i = 0; i < dto.answering; i++) {
+        await bootstrap.utils.httpMonitorsUtils.storeHttpMonitor({
+          clusterId: dto.clusterId,
+          url: URL_STUB,
+          claimed: true,
+        });
+      }
+    }
+
+    it('drops the unanswered pings when most monitors fail, since the outage is ours', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous({
+        userTier: UserTier.EarlyBird,
+      });
+      await storeMonitors({ clusterId: cluster.id, unanswered: 6, answering: 2 });
+
+      // when
+      await schedulerService.tryPingMonitors([ClusterTier.EarlyBird]);
+
+      // then
+      const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
+      expect(allPings.length).toBe(2);
+      expect(allPings.every((ping) => ping.statusCode === 200)).toBe(true);
+    });
+
+    it('keeps the unanswered pings when most monitors answer', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous({
+        userTier: UserTier.EarlyBird,
+      });
+      await storeMonitors({ clusterId: cluster.id, unanswered: 5, answering: 6 });
+
+      // when
+      await schedulerService.tryPingMonitors([ClusterTier.EarlyBird]);
+
+      // then
+      const allPings = await bootstrap.utils.httpPingUtils.getAllPings();
+      expect(allPings.length).toBe(11);
+      expect(allPings.filter((ping) => ping.statusCode === 0).length).toBe(5);
+    });
+  });
+
   describe('when the request never gets a response', () => {
     async function pingOnce(url: string): Promise<HttpPingNormalized> {
       const { project } = await bootstrap.utils.generalUtils.setupAnonymous();

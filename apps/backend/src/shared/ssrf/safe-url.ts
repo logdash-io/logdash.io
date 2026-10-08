@@ -1,7 +1,15 @@
-import { lookup } from 'node:dns/promises';
+import { Resolver } from 'node:dns/promises';
 import { isIP } from 'node:net';
 
 const ALLOWED_PROTOCOLS = ['http:', 'https:'];
+
+/**
+ * User supplied hostnames go through c-ares instead of `dns.lookup`. `lookup`
+ * runs getaddrinfo on libuv's small shared threadpool, so slow dns - a degraded
+ * resolver or a hostile domain - would block every other lookup and file read
+ * in the process, our own database connections included.
+ */
+const resolver = new Resolver({ timeout: 2_000, tries: 2 });
 
 /**
  * Hostnames that must never be reachable from a user supplied url, regardless
@@ -151,13 +159,9 @@ export async function assertPublicUrl(rawUrl: string): Promise<VettedUrl> {
     return { url, addresses: [{ address: hostname, family: version === 6 ? 6 : 4 }] };
   }
 
-  const resolved = await lookup(hostname, { all: true, verbatim: true });
+  const addresses = await resolveHostname(hostname);
 
-  if (resolved.length === 0) {
-    throw new UnsafeUrlError(`Blocked request to ${hostname}: hostname did not resolve`);
-  }
-
-  for (const { address } of resolved) {
+  for (const { address } of addresses) {
     if (isBlockedIp(address)) {
       throw new UnsafeUrlError(
         `Blocked request to ${hostname}: resolves to private address ${address}`,
@@ -165,11 +169,31 @@ export async function assertPublicUrl(rawUrl: string): Promise<VettedUrl> {
     }
   }
 
-  return {
-    url,
-    addresses: resolved.map(({ address, family }) => ({
+  return { url, addresses };
+}
+
+async function resolveHostname(hostname: string): Promise<VettedAddress[]> {
+  const [ipv4, ipv6] = await Promise.allSettled([
+    resolver.resolve4(hostname),
+    resolver.resolve6(hostname),
+  ]);
+
+  const addresses: VettedAddress[] = [
+    ...(ipv4.status === 'fulfilled' ? ipv4.value : []).map((address) => ({
       address,
-      family: family === 6 ? 6 : 4,
+      family: 4 as const,
     })),
-  };
+    ...(ipv6.status === 'fulfilled' ? ipv6.value : []).map((address) => ({
+      address,
+      family: 6 as const,
+    })),
+  ];
+
+  if (addresses.length === 0) {
+    throw ipv4.status === 'rejected'
+      ? ipv4.reason
+      : new UnsafeUrlError(`Blocked request to ${hostname}: hostname did not resolve`);
+  }
+
+  return addresses;
 }
