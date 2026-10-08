@@ -28,8 +28,14 @@ const isExpiredSession = (error: unknown): boolean => {
 
 export class UserDataPreloader implements DataPreloader<{ user: User }> {
   async preload({ cookies }: ServerLoadEvent): Promise<{ user: User }> {
+    const access_token = get_access_token(cookies);
+
+    if (!access_token) {
+      return redirect(302, '/app/auth');
+    }
+
     try {
-      const user = await logdashAPI.get_me(get_access_token(cookies));
+      const user = await logdashAPI.get_me(access_token);
 
       return { user };
     } catch (error) {
