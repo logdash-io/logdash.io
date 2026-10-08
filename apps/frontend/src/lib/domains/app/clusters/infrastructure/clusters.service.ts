@@ -1,5 +1,8 @@
 import { httpClient } from '$lib/domains/shared/http/http-client.js';
-import type { Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
+import type {
+  Cluster,
+  ClusterPulse,
+} from '$lib/domains/app/clusters/domain/cluster.js';
 
 export interface CreateClusterDto {
   name: string;
@@ -14,6 +17,10 @@ export interface UpdateClusterDto {
 export class ClustersService {
   static async getClusters(): Promise<Cluster[]> {
     return httpClient.get<Cluster[]>('/users/me/clusters');
+  }
+
+  static async getPulses(): Promise<ClusterPulse[]> {
+    return httpClient.get<ClusterPulse[]>('/users/me/clusters/pulse');
   }
 
   static async createCluster(dto: CreateClusterDto): Promise<Cluster> {

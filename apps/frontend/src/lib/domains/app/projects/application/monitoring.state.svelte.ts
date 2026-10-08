@@ -1,4 +1,4 @@
-import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
+import { clusterPulseState } from '$lib/domains/app/clusters/application/cluster-pulse.state.svelte.js';
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import { createLogger } from '$lib/domains/shared/logger';
 import { getCookieValue } from '$lib/domains/shared/utils/client-cookies.utils.js';
@@ -327,7 +327,7 @@ class MonitoringState {
 
     delete this._monitors[monitorId];
     delete this._monitorPings[monitorId];
-    clusterHealthState.removeMonitor(monitor.clusterId, monitorId);
+    clusterPulseState.setMonitorDown(monitor.clusterId, monitorId, false);
   }
 
   private _getSortedMonitors(): Monitor[] {
@@ -421,7 +421,11 @@ class MonitoringState {
 
     this._monitors[httpMonitorId] = claimedMonitor;
     delete this._unclaimedMonitors[httpMonitorId];
-    clusterHealthState.setMonitor(claimedMonitor);
+    clusterPulseState.setMonitorDown(
+      claimedMonitor.clusterId,
+      claimedMonitor.id,
+      claimedMonitor.lastStatus === 'down',
+    );
 
     if (!this._monitorPings[httpMonitorId]) {
       this._monitorPings[httpMonitorId] = [];
@@ -569,7 +573,11 @@ class MonitoringState {
     monitor.lastStatusCode = ping.statusCode;
     monitor.lastStatus =
       ping.statusCode >= 200 && ping.statusCode < 400 ? 'up' : 'down';
-    clusterHealthState.setMonitor($state.snapshot(monitor));
+    clusterPulseState.setMonitorDown(
+      monitor.clusterId,
+      monitor.id,
+      monitor.lastStatus === 'down',
+    );
   }
 
   private async _fetchMonitors(clusterId: string): Promise<void> {

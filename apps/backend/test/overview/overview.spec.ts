@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { randomUUID } from 'node:crypto';
 import { Types } from 'mongoose';
 import { createTestApp } from '../utils/bootstrap';
 import { Action } from '../../src/personal-api-key/core/enums/action.enum';
@@ -14,7 +15,11 @@ import { RedisService } from '../../src/shared/redis/redis.service';
 import { CreatePersonalApiKeyResponse } from '../../src/personal-api-key/core/dto/create-personal-api-key.response';
 import { CreateProjectResponse } from '../../src/project/core/dto/create-project.response';
 import { ClusterSerialized } from '../../src/cluster/core/entities/cluster.interface';
-import { OverviewResponse } from '../../src/overview/core/dto/overview.response';
+import {
+  ClusterPulseResponse,
+  OverviewResponse,
+} from '../../src/overview/core/dto/overview.response';
+import { WebEventClickhouseEntity } from '../../src/web-analytics/core/entities/web-event.clickhouse-entity';
 
 describe('Overview (aggregation verdict)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -337,6 +342,106 @@ describe('Overview (aggregation verdict)', () => {
         .set('Authorization', `Bearer ${key}`);
 
       expect(response.status).toBe(403);
+    });
+  });
+
+  describe('cluster pulse', () => {
+    const seedVisit = async (clusterId: string, visitorId: string, minutesAgo: number) => {
+      const at = new Date(Date.now() - minutesAgo * 60_000)
+        .toISOString()
+        .replace('T', ' ')
+        .replace('Z', '');
+      const row: WebEventClickhouseEntity = {
+        id: randomUUID(),
+        cluster_id: clusterId,
+        site_id: new Types.ObjectId().toString(),
+        visitor_id: visitorId.repeat(64),
+        session_id: visitorId.repeat(64),
+        user_id: '',
+        created_at: at,
+        received_at: at,
+        expires_at: '2099-01-01 00:00:00',
+        name: 'pageview',
+        hostname: 'example.com',
+        path: '/',
+        referrer: '',
+        utm_source: '',
+        utm_medium: '',
+        utm_campaign: '',
+        utm_term: '',
+        click_id: '',
+        device: 'Desktop',
+        browser: 'Chrome',
+        os: 'Windows',
+        country: '',
+        props: {},
+      };
+      await bootstrap.clickhouseClient.insert({
+        table: 'web_events',
+        values: [row],
+        format: 'JSONEachRow',
+      });
+    };
+
+    it('returns online visitors and down monitors for every cluster of the user only', async () => {
+      const { token, cluster, project } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const stranger = await bootstrap.utils.generalUtils.setupAnonymous();
+      const second = (
+        await request(server())
+          .post('/users/me/clusters')
+          .set('Authorization', `Bearer ${token}`)
+          .send({ name: 'second' })
+      ).body as ClusterSerialized;
+
+      const down = await seedMonitor(
+        { clusterId: cluster.id, projectId: project.id },
+        'api',
+        HttpMonitorStatus.Down,
+      );
+      await seedMonitor(
+        { clusterId: cluster.id, projectId: project.id },
+        'web',
+        HttpMonitorStatus.Up,
+      );
+      await seedMonitor(
+        { clusterId: stranger.cluster.id, projectId: stranger.project.id },
+        'foreign',
+        HttpMonitorStatus.Down,
+      );
+      await seedVisit(cluster.id, 'a', 1);
+      await seedVisit(cluster.id, 'b', 2);
+      await seedVisit(cluster.id, 'c', 30);
+      await seedVisit(stranger.cluster.id, 'd', 1);
+
+      const response = await request(server())
+        .get('/users/me/clusters/pulse')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body as ClusterPulseResponse[]).toEqual(
+        expect.arrayContaining([
+          { clusterId: cluster.id, online: 2, downMonitorIds: [down] },
+          { clusterId: second.id, online: 0, downMonitorIds: [] },
+        ]),
+      );
+      expect(response.body).toHaveLength(2);
+    });
+
+    it('is session only', async () => {
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const key = await createKey(token, [{ resource: Resource.Clusters, action: Action.Read }], {
+        kind: 'all',
+      });
+      await redisService.flushAll();
+
+      expect((await request(server()).get('/users/me/clusters/pulse')).status).toBe(401);
+      expect(
+        (
+          await request(server())
+            .get('/users/me/clusters/pulse')
+            .set('Authorization', `Bearer ${key}`)
+        ).status,
+      ).toBe(403);
     });
   });
 });

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { domainLiveState } from '$lib/domains/app/clusters/application/domain-live.state.svelte.js';
+  import { clusterPulseState } from '$lib/domains/app/clusters/application/cluster-pulse.state.svelte.js';
   import type { Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
   import ProjectTile from '$lib/domains/app/clusters/ui/ClusterSidebar/ProjectTile.svelte';
   import { formatCount } from '$lib/domains/web-analytics/domain/analytics-format.js';
@@ -15,7 +15,7 @@
 
   const { cluster, visitors, down }: Props = $props();
 
-  const online = $derived(domainLiveState.online(cluster.id));
+  const online = $derived(clusterPulseState.online(cluster.id));
 </script>
 
 <a

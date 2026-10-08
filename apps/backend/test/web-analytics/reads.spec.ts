@@ -239,7 +239,6 @@ describe('Web analytics (reads)', () => {
       )
     ).body as WebAnalyticsOverviewResponse;
     expect(warsaw.visitors).toBe(2);
-    expect(warsaw.online).toBe(1);
     expect(warsaw.series).toHaveLength(14);
     expect(warsaw.series[0].time).toBe(Date.parse('2026-10-01T22:00:00Z'));
 

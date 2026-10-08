@@ -133,9 +133,6 @@ export class WebAnalyticsOverviewResponse {
 
   @ApiProperty({ type: WebAnalyticsPoint, isArray: true })
   series: WebAnalyticsPoint[];
-
-  @ApiProperty({ description: 'Visitors with an event in the last five minutes' })
-  online: number;
 }
 
 export class WebAnalyticsBreakdownResponse {

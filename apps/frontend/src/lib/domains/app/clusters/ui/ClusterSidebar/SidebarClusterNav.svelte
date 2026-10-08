@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
+  import { clusterPulseState } from '$lib/domains/app/clusters/application/cluster-pulse.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import SidebarDomainNav from './SidebarDomainNav.svelte';
 
@@ -29,11 +29,7 @@
   );
 
   const cluster = $derived(clustersState.get(clusterId));
-  const down = $derived(
-    clusterHealthState
-      .getMonitors(clusterId ?? '')
-      .filter((monitor) => monitor.lastStatus === 'down').length,
-  );
+  const down = $derived(clusterPulseState.down(clusterId ?? ''));
   const isPublished = $derived(
     cluster?.publicDashboards?.some(({ isPublic }) => isPublic) ?? false,
   );

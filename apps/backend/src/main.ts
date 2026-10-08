@@ -29,7 +29,7 @@ async function bootstrap(): Promise<void> {
 
   app.enableShutdownHooks();
   appLogger = app.get<LogdashLogger>(APP_LOGGER);
-  app.enableCors({ origin: '*' });
+  app.enableCors({ origin: '*', maxAge: 7200 });
   app.use(withRequestContext);
 
   // Deployed behind a single reverse proxy, so req.ip has to come from the last

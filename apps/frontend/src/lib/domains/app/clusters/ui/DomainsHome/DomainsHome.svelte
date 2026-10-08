@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
+  import { clusterPulseState } from '$lib/domains/app/clusters/application/cluster-pulse.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { topBarState } from '$lib/domains/app/clusters/application/top-bar.state.svelte.js';
   import type { Cluster } from '$lib/domains/app/clusters/domain/cluster.js';
@@ -157,12 +157,6 @@
     return entry?.status === 'ready' ? entry.overview.visitors : 0;
   }
 
-  function downCount(clusterId: string): number {
-    return clusterHealthState
-      .getMonitors(clusterId)
-      .filter(({ lastStatus }) => lastStatus === 'down').length;
-  }
-
   function onPeriodSelect(id: AnalyticsPeriod): void {
     period = id;
     localStorage.setItem(PERIOD_KEY, id);
@@ -209,7 +203,7 @@
           <DomainCard
             {cluster}
             visitors={visitors[cluster.id] ?? { status: 'loading' }}
-            down={downCount(cluster.id)}
+            down={clusterPulseState.down(cluster.id)}
           />
         </li>
       {/each}

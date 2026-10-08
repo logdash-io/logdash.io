@@ -7,7 +7,9 @@ import { HttpMonitorStatus } from '../../http-monitor/status/enum/http-monitor-s
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { ProjectReadService } from '../../project/read/project-read.service';
 import { ProjectNormalized } from '../../project/core/entities/project.interface';
+import { WebAnalyticsReadService } from '../../web-analytics/read/web-analytics-read.service';
 import {
+  ClusterPulseResponse,
   MonitorStatusEntry,
   OverviewResponse,
   ProjectDataFlow,
@@ -27,6 +29,7 @@ export class OverviewReadService {
     private readonly httpMonitorStatusService: HttpMonitorStatusService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly projectReadService: ProjectReadService,
+    private readonly webAnalyticsReadService: WebAnalyticsReadService,
   ) {}
 
   /**
@@ -56,6 +59,25 @@ export class OverviewReadService {
       monitorsDown,
       dataFlow,
     };
+  }
+
+  public async buildPulse(clusterIds: string[]): Promise<ClusterPulseResponse[]> {
+    if (clusterIds.length === 0) {
+      return [];
+    }
+
+    const [online, monitors] = await Promise.all([
+      this.webAnalyticsReadService.readOnline(clusterIds),
+      this.buildMonitors({ clusterIds }),
+    ]);
+
+    return clusterIds.map((clusterId) => ({
+      clusterId,
+      online: online[clusterId] ?? 0,
+      downMonitorIds: monitors
+        .filter((m) => m.clusterId === clusterId && m.status === HttpMonitorStatus.Down)
+        .map((m) => m.monitorId),
+    }));
   }
 
   private async buildErrors(

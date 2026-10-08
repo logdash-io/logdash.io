@@ -12,7 +12,7 @@ import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ProjectNormalized } from '../../project/core/entities/project.interface';
 import { OverviewReadService } from '../read/overview-read.service';
 import { OverviewQuery } from './dto/overview.query';
-import { OverviewResponse } from './dto/overview.response';
+import { ClusterPulseResponse, OverviewResponse } from './dto/overview.response';
 import { parseSince } from './since.util';
 
 const DEFAULT_SINCE = '1h';
@@ -88,6 +88,15 @@ export class OverviewCoreController {
     const reach = await this.resolveReach(userId, access);
 
     return this.overviewReadService.buildForProjects({ ...reach, since });
+  }
+
+  @ApiBearerAuth()
+  @Get('users/me/clusters/pulse')
+  @ApiResponse({ type: ClusterPulseResponse, isArray: true })
+  public async clusterPulse(@CurrentUserId() userId: string): Promise<ClusterPulseResponse[]> {
+    const clusters = await this.clusterReadService.readWhereUserHasAnyRole(userId);
+
+    return this.overviewReadService.buildPulse(clusters.map((cluster) => cluster.id));
   }
 
   /**
