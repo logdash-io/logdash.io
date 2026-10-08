@@ -89,3 +89,14 @@ export class OverviewResponse {
   })
   dataFlow: ProjectDataFlow[];
 }
+
+export class ClusterPulseResponse {
+  @ApiProperty()
+  clusterId: string;
+
+  @ApiProperty({ description: 'Visitors with an event in the last five minutes.' })
+  online: number;
+
+  @ApiProperty({ type: String, isArray: true, description: 'Monitors currently reporting down.' })
+  downMonitorIds: string[];
+}

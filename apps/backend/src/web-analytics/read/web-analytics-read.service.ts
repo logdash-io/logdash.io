@@ -186,7 +186,7 @@ export class WebAnalyticsReadService {
       this.readSummary(scope, scope.previousParams),
       this.readSeries(scope, scope.params),
       query.compare ? this.readSeries(scope, scope.previousParams) : undefined,
-      this.readOnline(clusterId),
+      this.readOnline([clusterId]),
       this.readBreakdowns(scope, 10),
     ]);
     return {
@@ -203,7 +203,7 @@ export class WebAnalyticsReadService {
         series,
         breakdowns.goals.slice(0, 5).map((goal) => goal.name),
       ),
-      online,
+      online: online[clusterId] ?? 0,
       breakdowns,
     };
   }
@@ -214,28 +214,28 @@ export class WebAnalyticsReadService {
     retentionDays: number,
   ): Promise<WebAnalyticsOverviewResponse> {
     const scope = this.scope(clusterId, query, retentionDays);
-    const [visitors, series, online] = await Promise.all([
+    const [visitors, series] = await Promise.all([
       this.query<{ visitors: string }>(
         `SELECT uniqExact(${PERSON}) AS visitors FROM web_events FINAL WHERE ${scope.where}`,
         scope.params,
       ),
       this.readSeries(scope, scope.params),
-      this.readOnline(clusterId),
     ]);
-    return { visitors: Number(visitors[0]?.visitors ?? 0), series, online };
+    return { visitors: Number(visitors[0]?.visitors ?? 0), series };
   }
 
-  private async readOnline(clusterId: string): Promise<number> {
-    const rows = await this.query<{ online: string }>(
-      `SELECT uniqExact(${PERSON}) AS online FROM web_events FINAL
-      WHERE cluster_id = {clusterId:FixedString(24)} AND created_at >= {since:DateTime64(3)} AND expires_at > now()
-        AND name != 'pageleave'`,
+  public async readOnline(clusterIds: string[]): Promise<Record<string, number>> {
+    const rows = await this.query<{ cluster_id: string; online: string }>(
+      `SELECT cluster_id, uniqExact(${PERSON}) AS online FROM web_events FINAL
+      WHERE cluster_id IN {clusterIds:Array(FixedString(24))} AND created_at >= {since:DateTime64(3)}
+        AND expires_at > now() AND name != 'pageleave'
+      GROUP BY cluster_id`,
       {
-        clusterId,
+        clusterIds,
         since: ClickhouseUtils.jsDateToClickhouseDate(new Date(Date.now() - 5 * 60_000)),
       },
     );
-    return Number(rows[0]?.online ?? 0);
+    return Object.fromEntries(rows.map((row) => [row.cluster_id, Number(row.online)]));
   }
 
   public async readBreakdown(

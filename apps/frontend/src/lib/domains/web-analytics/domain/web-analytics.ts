@@ -108,7 +108,6 @@ export interface WebAnalyticsEvent {
 export interface WebAnalyticsOverview {
   visitors: number;
   series: WebAnalyticsPoint[];
-  online: number;
 }
 
 export interface WebAnalyticsVisitor {

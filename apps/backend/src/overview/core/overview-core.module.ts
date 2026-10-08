@@ -7,6 +7,7 @@ import { HttpMonitorStatusModule } from '../../http-monitor/status/http-monitor-
 import { MetricRegisterReadModule } from '../../metric-register/read/metric-register-read.module';
 import { ProjectReadModule } from '../../project/read/project-read.module';
 import { ClusterReadModule } from '../../cluster/read/cluster-read.module';
+import { WebAnalyticsReadModule } from '../../web-analytics/read/web-analytics-read.module';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
 
 @Module({
@@ -17,6 +18,7 @@ import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/c
     MetricRegisterReadModule,
     ProjectReadModule,
     ClusterReadModule,
+    WebAnalyticsReadModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [OverviewCoreController],

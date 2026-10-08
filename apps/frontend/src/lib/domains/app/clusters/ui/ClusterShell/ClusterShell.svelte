@@ -1,9 +1,8 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { userInvitationsState } from '$lib/domains/app/clusters/application/user-invitations.state.svelte.js';
-  import { clusterHealthState } from '$lib/domains/app/clusters/application/cluster-health.state.svelte.js';
+  import { clusterPulseState } from '$lib/domains/app/clusters/application/cluster-pulse.state.svelte.js';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
-  import { domainLiveState } from '$lib/domains/app/clusters/application/domain-live.state.svelte.js';
   import { topBarState } from '$lib/domains/app/clusters/application/top-bar.state.svelte.js';
   import { publicDashboardManagerState } from '$lib/domains/app/projects/application/public-dashboards/public-dashboard-configurator.state.svelte.js';
   import { domainLabel } from '$lib/domains/app/clusters/domain/service-groups.js';
@@ -25,7 +24,7 @@
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { ScrollArea } from '@logdash/hyper-ui/presentational';
   import type { Snippet } from 'svelte';
-  import { onMount, untrack } from 'svelte';
+  import { onMount } from 'svelte';
   import { match } from 'ts-pattern';
 
   type Props = {
@@ -67,9 +66,6 @@
       page.route.id === '/app/domains/[cluster_id]/[project_id]/logs',
   );
   const crumbs = $derived(crumbsFor(page.route.id));
-  const clusterIds = $derived(
-    clustersState.clusters.map(({ id }) => id).join(','),
-  );
 
   function crumbsFor(routeId: string | null): Crumb[] {
     const domain = { label: clusterName, path: clusterPath };
@@ -141,22 +137,13 @@
   }
 
   onMount(() => {
-    const cleanup = userInvitationsState.startPollingInvitations();
-    return () => cleanup();
-  });
+    const stopInvitations = userInvitationsState.startPollingInvitations();
+    const stopPulse = clusterPulseState.startPolling();
 
-  $effect(() => {
-    const ids = clusterIds ? clusterIds.split(',') : [];
-
-    return untrack(() => {
-      const stopLive = domainLiveState.startPolling(ids);
-      const stopHealth = clusterHealthState.startPolling(ids);
-
-      return () => {
-        stopLive();
-        stopHealth();
-      };
-    });
+    return () => {
+      stopInvitations();
+      stopPulse();
+    };
   });
 </script>
 

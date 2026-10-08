@@ -14,3 +14,9 @@ export type Cluster = {
   }[];
   color?: string;
 };
+
+export type ClusterPulse = {
+  clusterId: string;
+  online: number;
+  downMonitorIds: string[];
+};
