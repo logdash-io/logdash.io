@@ -22,7 +22,7 @@ describe('ProjectReadCachedService', () => {
             set: (key: string, value: string) => Promise.resolve(void cache.set(key, value)),
           },
         },
-        { provide: PROJECTS_LOGGER, useValue: { error: jest.fn() } },
+        { provide: PROJECTS_LOGGER, useValue: { warn: jest.fn() } },
       ],
     }).compile();
 

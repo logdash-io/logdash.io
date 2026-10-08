@@ -48,10 +48,10 @@ export class AuditLog {
     if (dto.userId || dto.relatedEntityId) {
       const isWithinRateLimit = await this.isWithinRateLimit((dto.userId || dto.relatedEntityId)!);
       if (!isWithinRateLimit) {
-        this.logger.error('Tried to create audit log but limit exceeded', {
+        this.logger.warn('Tried to create audit log but limit exceeded', {
           dto,
         });
-        throw new Error('Rate limit exceeded');
+        return;
       }
     }
 

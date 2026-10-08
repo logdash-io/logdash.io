@@ -24,8 +24,10 @@ describe('Http monitor full process', () => {
     await bootstrap.methods.afterAll();
   });
 
-  it('creates a monitor, pings it and sends status change message', async () => {
-    // given
+  const setupMonitorWithTelegram = async (): Promise<{
+    service: HttpPingPingerService;
+    telegramPostedDtos: TelegramSendMessageBody[];
+  }> => {
     const { token, project, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
 
     const channel =
@@ -54,21 +56,34 @@ describe('Http monitor full process', () => {
       },
     });
 
+    return { service: bootstrap.app.get(HttpPingPingerService), telegramPostedDtos };
+  };
+
+  const ping = async (service: HttpPingPingerService, status: number): Promise<void> => {
+    nock('https://chess.com')
+      .get('/')
+      .reply(status, status === 200 ? 'ok' : { error: 'some funny error' });
+    await service.tryPingMonitors([ClusterTier.Free]);
+  };
+
+  const codeBlock = '```';
+  const upMessage = `🟢  *some name* is up`;
+  const downMessage = `🔴  *some name* is down
+${codeBlock}
+Status code: 500
+Error: \\{"error":"some funny error"\\}
+${codeBlock}`;
+
+  it('sends status change messages once a failure is confirmed by the next ping', async () => {
+    // given
+    const { service, telegramPostedDtos } = await setupMonitorWithTelegram();
+
     // when
-    const service = bootstrap.app.get(HttpPingPingerService);
-
-    // at first the status is unknown
-    // unknown -> up
-    nock('https://chess.com').get('/').reply(200, 'ok');
-    await service.tryPingMonitors([ClusterTier.Free]);
-
-    // up -> down
-    nock('https://chess.com').get('/').reply(500, { error: 'some funny error' });
-    await service.tryPingMonitors([ClusterTier.Free]);
-
-    // down -> up
-    nock('https://chess.com').get('/').reply(200, 'ok');
-    await service.tryPingMonitors([ClusterTier.Free]);
+    await ping(service, 200);
+    await ping(service, 500);
+    await ping(service, 500);
+    await ping(service, 500);
+    await ping(service, 200);
 
     await waitFor(
       () => Promise.resolve(telegramPostedDtos.length),
@@ -76,14 +91,26 @@ describe('Http monitor full process', () => {
     );
 
     // then
-    const codeBlock = '```';
+    expect(telegramPostedDtos.map((dto) => dto.text)).toEqual([upMessage, downMessage, upMessage]);
+  });
 
-    expect(telegramPostedDtos[0].text).toBe(`🟢  *some name* is up`);
-    expect(telegramPostedDtos[1].text).toBe(`🔴  *some name* is down
-${codeBlock}
-Status code: 500
-Error: \\{"error":"some funny error"\\}
-${codeBlock}`);
-    expect(telegramPostedDtos[2].text).toBe(`🟢  *some name* is up`);
+  it('does not alert on a single failed ping', async () => {
+    // given
+    const { service, telegramPostedDtos } = await setupMonitorWithTelegram();
+
+    // when
+    await ping(service, 200);
+    await ping(service, 500);
+    await ping(service, 200);
+    await ping(service, 500);
+    await ping(service, 500);
+
+    await waitFor(
+      () => Promise.resolve(telegramPostedDtos.length),
+      (count) => count >= 2,
+    );
+
+    // then
+    expect(telegramPostedDtos.map((dto) => dto.text)).toEqual([upMessage, downMessage]);
   });
 });

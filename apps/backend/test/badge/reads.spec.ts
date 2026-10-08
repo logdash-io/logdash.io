@@ -209,10 +209,14 @@ describe('BadgeCoreController (reads)', () => {
       expect(readTitle(response)).toBe('Acme API: Degraded');
     });
 
-    it('renders the status badge as down when the latest ping failed', async () => {
+    it('renders the status badge as down when the two latest pings failed', async () => {
       // given
       const setup = await setupBadge();
 
+      await bootstrap.utils.httpPingUtils.createHttpPing({
+        httpMonitorId: setup.monitor.id,
+        statusCode: 500,
+      });
       await bootstrap.utils.httpPingUtils.createHttpPing({
         httpMonitorId: setup.monitor.id,
         statusCode: 503,

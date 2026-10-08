@@ -28,7 +28,7 @@ export class BlogReadCachedService {
     const blogPostJson = await this.redisService.get(cacheKey);
 
     if (blogPostJson === 'null') {
-      throw Error('Blog post not found. You have to wait 5 minutes before trying again');
+      return null;
     }
 
     if (blogPostJson !== null) {
@@ -46,7 +46,7 @@ export class BlogReadCachedService {
 
     if (!blogPost) {
       await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
-      this.logger.error(`Blog post not found`, {
+      this.logger.warn(`Blog post not found`, {
         blogPostId,
       });
       return null;

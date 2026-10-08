@@ -121,7 +121,7 @@ export class WebhookNotificationChannelProvider implements NotificationChannelPr
     } catch (error) {
       // never log the full url, header values or bodies here - all three are
       // user supplied and routinely carry credentials for the receiver
-      this.logger.error('Failed to send message to webhook', {
+      this.logger.warn('Failed to send message to webhook', {
         origin: redactUrl(dto.url),
         method: dto.method,
         headerNames: headerNames(dto.headers),
