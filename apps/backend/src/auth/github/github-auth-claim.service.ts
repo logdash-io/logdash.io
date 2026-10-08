@@ -54,7 +54,7 @@ export class GithubAuthClaimService {
     const tokenPayload = await this.jwtService.getTokenPayload(dto.accessToken);
 
     if (!tokenPayload) {
-      this.logger.error('Invalid access token');
+      this.logger.warn('Invalid access token');
       throw new UnauthorizedException('Invalid access token');
     }
 
@@ -101,7 +101,7 @@ export class GithubAuthClaimService {
       await this.projectLimitService.newProjectWouldBeWithinLimit(existingUserId);
 
     if (!isWithinLimit) {
-      this.logger.error(`User has reached the service limit`, {
+      this.logger.warn(`User has reached the service limit`, {
         userId: existingUserId,
       });
       throw new ConflictException('User has reached the service limit');

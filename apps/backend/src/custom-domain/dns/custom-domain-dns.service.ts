@@ -20,7 +20,7 @@ export class CustomDomainDnsService {
       }
       return null;
     } catch (error) {
-      this.logger.error('Error resolving CNAME record', {
+      this.logger.warn('Error resolving CNAME record', {
         domain,
         error: errorMessage(error),
       });

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { CLUSTERS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { RedisService } from '../../shared/redis/redis.service';
@@ -22,7 +22,7 @@ export class ClusterReadCachedService {
     const clusterJson = await this.redisService.get(cacheKey);
 
     if (clusterJson === 'null') {
-      throw Error('Domain not found. You have to wait 5 seconds before trying again');
+      return null;
     }
 
     if (clusterJson !== null) {
@@ -33,7 +33,7 @@ export class ClusterReadCachedService {
 
     if (!cluster) {
       await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
-      this.logger.error(`Cluster not found`, { clusterId });
+      this.logger.warn(`Cluster not found`, { clusterId });
       return null;
     }
 
@@ -49,7 +49,7 @@ export class ClusterReadCachedService {
     const tier = await this.redisService.get(cacheKey);
 
     if (tier === 'null') {
-      throw Error('Domain not found. You have to wait 5 seconds before trying again');
+      throw new NotFoundException('Domain not found');
     }
 
     if (tier !== null) {
@@ -60,8 +60,8 @@ export class ClusterReadCachedService {
 
     if (!cluster) {
       await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
-      this.logger.error(`Cluster not found`, { clusterId });
-      throw Error('Domain not found');
+      this.logger.warn(`Cluster not found`, { clusterId });
+      throw new NotFoundException('Domain not found');
     }
 
     await this.redisService.set(cacheKey, cluster.tier, cacheTtlSeconds);
@@ -117,7 +117,7 @@ export class ClusterReadCachedService {
 
     if (!cluster) {
       await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
-      this.logger.error(`Cluster not found`, { clusterId: dto.clusterId });
+      this.logger.warn(`Cluster not found`, { clusterId: dto.clusterId });
       return null;
     }
 

@@ -36,11 +36,6 @@ export class GoogleAuthLoginService {
 
     const { email, avatar } = await this.authGoogleDataService.getGoogleEmailAndAvatar(accessToken);
 
-    if (email.length === 0 || !email) {
-      this.logger.error('Email not found in google response');
-      throw Error('Email not found in google response');
-    }
-
     const user = await this.userReadService.readByEmail(email);
 
     this.logger.log(`After reading user by email`, { email, userId: user?.id });

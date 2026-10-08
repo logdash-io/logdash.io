@@ -36,11 +36,6 @@ export class GithubAuthLoginService {
 
     const email = await this.authGithubDataService.getGithubEmail(accessToken);
 
-    if (email.length === 0 || !email) {
-      this.logger.error('Email not found in github response');
-      throw Error('Email not found in github response');
-    }
-
     const user = await this.userReadService.readByEmail(email);
 
     this.logger.log(`After reading user by email`, { email, userId: user?.id });

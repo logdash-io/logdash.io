@@ -31,7 +31,7 @@ export class ProjectReadCachedService {
 
     if (!project) {
       await this.redisService.set(cacheKey, 'null', cacheTtlSeconds);
-      this.logger.error(`Project not found`, {
+      this.logger.warn(`Project not found`, {
         projectId,
       });
       return null;

@@ -40,7 +40,7 @@ export class ApiKeyReadCachedService {
 
     if (!apiKey) {
       await this.redisService.set(cacheKey, NON_EXISTENT, cacheTtlSeconds);
-      this.logger.error(`API key not found`, { apiKeyPrefix: apiKeyValue.slice(0, 8) });
+      this.logger.warn(`API key not found`, { apiKeyPrefix: apiKeyValue.slice(0, 8) });
       return null;
     }
 

@@ -111,7 +111,11 @@ ${codeBlock}`;
         text: dto.message,
       });
     } catch (error) {
-      this.logger.error('Failed to send message to Telegram', {
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+      const isUserMisconfiguration = status !== undefined && status < 500 && status !== 429;
+
+      this.logger[isUserMisconfiguration ? 'warn' : 'error']('Failed to send message to Telegram', {
+        status,
         error: axios.isAxiosError<unknown>(error)
           ? error.response?.data || error.message
           : errorMessage(error),

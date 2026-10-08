@@ -125,7 +125,7 @@ export class CustomDomainRegistrationService {
     try {
       await fetch(`https://${domain}`);
     } catch (error) {
-      this.logger.error('Pinging domain failed', {
+      this.logger.warn('Pinging domain failed', {
         domain,
         error: errorMessage(error),
       });

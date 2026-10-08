@@ -86,18 +86,23 @@ describe('BlogCoreController (reads)', () => {
       expect(result.updatedAt).toBeDefined();
     });
 
-    it('returns 404 when blog post does not exist', async () => {
+    it('returns 404 when blog post does not exist, also while the miss is cached', async () => {
       // given
       const nonExistentId = '507f1f77bcf86cd799439011';
 
       // when
-      const response = await request(bootstrap.app.getHttpServer()).get(
+      const first = await request(bootstrap.app.getHttpServer()).get(
+        `/blog_posts/${nonExistentId}`,
+      );
+      const second = await request(bootstrap.app.getHttpServer()).get(
         `/blog_posts/${nonExistentId}`,
       );
 
       // then
-      expect(response.status).toBe(404);
-      expect((response.body as ErrorResponse).message).toBe('Blog post not found');
+      for (const response of [first, second]) {
+        expect(response.status).toBe(404);
+        expect((response.body as ErrorResponse).message).toBe('Blog post not found');
+      }
     });
   });
 });
