@@ -7,6 +7,8 @@ const HTTP_MONITOR_STATUS_TTL_SECONDS = 360;
 export interface HttpMonitorStatusDto {
   status: HttpMonitorStatus;
   statusCode: string;
+  consecutiveFailures?: number;
+  notifiedStatus?: HttpMonitorStatus;
 }
 
 @Injectable()

@@ -271,7 +271,27 @@ describe('StatusPageCoreController (reads)', () => {
       });
     });
 
-    it('reports a monitor as down when its latest ping failed', async () => {
+    it('reports a monitor as down when its two latest pings failed', async () => {
+      // given
+      const setup = await setupStatusPage();
+
+      await createPings(setup.monitors[0].id, [
+        { minutesAgo: 3, statusCode: 200 },
+        { minutesAgo: 2, statusCode: 500 },
+        { minutesAgo: 1, statusCode: 503 },
+      ]);
+
+      // when
+      const response = await readStatusPage(setup.publicDashboard.id);
+
+      // then
+      const statusPage = response.body as StatusPageDto;
+
+      expect(statusPage.monitors[0].status).toBe('down');
+      expect(statusPage.status).toBe('outage');
+    });
+
+    it('reports a monitor as degraded when only its latest ping failed', async () => {
       // given
       const setup = await setupStatusPage();
 
@@ -286,8 +306,8 @@ describe('StatusPageCoreController (reads)', () => {
       // then
       const statusPage = response.body as StatusPageDto;
 
-      expect(statusPage.monitors[0].status).toBe('down');
-      expect(statusPage.status).toBe('outage');
+      expect(statusPage.monitors[0].status).toBe('degraded');
+      expect(statusPage.status).toBe('degraded');
     });
 
     it('reports a monitor as degraded when one of its 10 latest pings failed', async () => {
@@ -329,7 +349,10 @@ describe('StatusPageCoreController (reads)', () => {
       // given
       const setup = await setupStatusPage({ monitorNames: ['A', 'B'] });
 
-      await createPings(setup.monitors[0].id, [{ minutesAgo: 1, statusCode: 500 }]);
+      await createPings(setup.monitors[0].id, [
+        { minutesAgo: 2, statusCode: 500 },
+        { minutesAgo: 1, statusCode: 500 },
+      ]);
 
       // when
       const response = await readStatusPage(setup.publicDashboard.id);
@@ -345,7 +368,10 @@ describe('StatusPageCoreController (reads)', () => {
       // given
       const setup = await setupStatusPage({ monitorNames: ['A', 'B'] });
 
-      await createPings(setup.monitors[0].id, [{ minutesAgo: 1, statusCode: 500 }]);
+      await createPings(setup.monitors[0].id, [
+        { minutesAgo: 2, statusCode: 500 },
+        { minutesAgo: 1, statusCode: 500 },
+      ]);
       await createPings(setup.monitors[1].id, [{ minutesAgo: 1, statusCode: 200 }]);
 
       // when
