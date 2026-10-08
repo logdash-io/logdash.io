@@ -31,12 +31,18 @@ export const MAX_CONCURRENT_REQUESTS_TOKEN = 'MAX_CONCURRENT_REQUESTS_TOKEN';
 
 const PING_TIMEOUT_MS = 10_000;
 
+const PROBE_OUTAGE_MIN_UNANSWERED = 5;
+const PROBE_OUTAGE_UNANSWERED_SHARE = 0.5;
+
 const UNREACHABLE_HOST_MESSAGE = 'Hostname does not resolve to a public address';
 const TIMED_OUT_MESSAGE = `Timed out after ${PING_TIMEOUT_MS / 1000}s`;
 
 const FAILURE_MESSAGES: Record<string, string> = {
   ENOTFOUND: UNREACHABLE_HOST_MESSAGE,
+  ENODATA: UNREACHABLE_HOST_MESSAGE,
+  ESERVFAIL: UNREACHABLE_HOST_MESSAGE,
   EAI_AGAIN: UNREACHABLE_HOST_MESSAGE,
+  ETIMEOUT: 'DNS lookup timed out',
   ETIMEDOUT: TIMED_OUT_MESSAGE,
   ECONNABORTED: TIMED_OUT_MESSAGE,
   ECONNREFUSED: 'Connection refused',
@@ -289,7 +295,27 @@ export class HttpPingPingerService {
     return Number((Date.now() - startTime).toFixed(2));
   }
 
-  private async saveCompletedPings(pings: CreateHttpPingDto[]): Promise<void> {
+  private dropProbeOutage(pings: CreateHttpPingDto[]): CreateHttpPingDto[] {
+    const unanswered = pings.filter((ping) => ping.statusCode === 0).length;
+
+    if (
+      unanswered < PROBE_OUTAGE_MIN_UNANSWERED ||
+      unanswered < pings.length * PROBE_OUTAGE_UNANSWERED_SHARE
+    ) {
+      return pings;
+    }
+
+    this.logger.error('Most monitors got no response at once, dropping them as our own outage', {
+      pings: pings.length,
+      unanswered,
+    });
+
+    return pings.filter((ping) => ping.statusCode !== 0);
+  }
+
+  private async saveCompletedPings(completedPings: CreateHttpPingDto[]): Promise<void> {
+    const pings = this.dropProbeOutage(completedPings);
+
     if (pings.length === 0) return;
 
     const savedPings = await this.httpPingWriteService.createMany(pings);
