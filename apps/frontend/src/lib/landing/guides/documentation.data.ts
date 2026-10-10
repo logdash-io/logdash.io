@@ -722,7 +722,7 @@ export async function load() {
       { type: 'heading', text: 'Let visitors opt out' },
       {
         type: 'paragraph',
-        text: 'The tracker does not start in browsers that send Do Not Track or Global Privacy Control, or in automated browsers that set `navigator.webdriver`. If your site has privacy settings, add an analytics toggle that calls `optOut` and `optIn`:',
+        text: 'The tracker does not start in automated browsers that set `navigator.webdriver`. If your site has privacy settings, add an analytics toggle that calls `optOut` and `optIn`:',
       },
       {
         type: 'code',
@@ -737,6 +737,21 @@ window.logdash?.optIn();`,
           '`optIn()` removes that flag and starts tracking again with a fresh pageview. `window.logdash` exists while a visitor is opted out, so `optIn()` stays reachable.',
           '`stop()` still works as an alias of `optOut()`.',
         ],
+      },
+      {
+        type: 'paragraph',
+        text: 'The tracker counts browsers that send Do Not Track or Global Privacy Control like any other. To keep it from starting in them, add `data-respect-dnt` to the script tag:',
+      },
+      {
+        type: 'code',
+        language: 'html',
+        code: `<script
+  defer
+  src="/_ld/script.js"
+  data-site="your-site-id"
+  data-endpoint="/_ld/events"
+  data-respect-dnt
+></script>`,
       },
       { type: 'heading', text: 'Plan limits' },
       {
@@ -822,7 +837,7 @@ window.logdash?.optIn();`,
       { type: 'heading', text: 'Opt-out and browser storage' },
       {
         type: 'paragraph',
-        text: 'The tracker does not start in browsers that send Do Not Track or Global Privacy Control, or in automated browsers that set `navigator.webdriver`. Your site can also let visitors opt out with `optOut`, described in [Web analytics](/docs/web-analytics).',
+        text: 'The tracker does not start in automated browsers that set `navigator.webdriver`. It counts browsers that send Do Not Track or Global Privacy Control like any other, unless the script tag has `data-respect-dnt`. Your site can let visitors opt out with `optOut`, both described in [Web analytics](/docs/web-analytics).',
       },
       {
         type: 'paragraph',
@@ -877,7 +892,7 @@ window.logdash?.optIn();`,
 
 For each page you visit, we collect the page address without query parameters, the domain of the website that referred you, campaign tags, your device type, browser and operating system, and a country derived from your time zone. [When you are signed in, your visits are also linked to a pseudonymous hash of your account ID, computed in your browser. Your account ID itself is not sent.] [For some actions, such as [actions], we also record the options you chose, never personal data.]
 
-Logdash processes this data on our behalf as a processor and deletes it after [retention period]. We process it on the basis of our legitimate interest in understanding how our website is used and improving it (Art. 6(1)(f) GDPR). The analytics does not run if your browser sends Global Privacy Control or Do Not Track. [You can also turn analytics off in our privacy settings.] To object or to ask about your data, contact [contact address].`,
+Logdash processes this data on our behalf as a processor and deletes it after [retention period]. We process it on the basis of our legitimate interest in understanding how our website is used and improving it (Art. 6(1)(f) GDPR). [The analytics does not run if your browser sends Global Privacy Control or Do Not Track.] [You can turn analytics off in our privacy settings.] To object or to ask about your data, contact [contact address].`,
       },
       { type: 'heading', text: 'Data processing agreement' },
       {

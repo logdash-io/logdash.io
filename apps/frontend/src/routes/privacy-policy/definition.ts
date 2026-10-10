@@ -103,7 +103,7 @@ export const PPdefinition: LegalDocumentDefinition = [
       'Visits are grouped into sessions on the server. A session ends after 30 minutes without activity or after 24 hours. Website Analytics data is deleted automatically after at most 365 days.',
       "Feedback the User sends from the Platform is sent to the Controller's internal Telegram chat, together with the rating the User gives and the User's e-mail address with most of it hidden (for example jo***@gm***.com).",
       "The legal basis for this processing is the Controller's legitimate interest in understanding how the Service is used and improving it (Article 6 section 1 letter f) of the GDPR).",
-      'The User may object to this processing at any time. The Website Analytics does not run in a browser that sends the Global Privacy Control or Do Not Track signal, so turning on either setting in the browser stops it. The User may also object by e-mail to support@logdash.io.',
+      'The User may object to this processing at any time, either with the analytics opt-out at the end of this Privacy Policy, which turns the Website Analytics off in that browser and remembers the choice in its local storage, or by e-mail to support@logdash.io.',
     ],
   },
   {

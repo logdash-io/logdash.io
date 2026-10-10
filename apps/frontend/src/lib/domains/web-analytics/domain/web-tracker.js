@@ -1,3 +1,6 @@
+// Plain browser script, served minified by /sdk/web.js and /_ld/script.js.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 (function () {
   'use strict';
 
@@ -11,8 +14,8 @@
   }
   if (
     navigator.webdriver ||
-    navigator.globalPrivacyControl ||
-    navigator.doNotTrack === '1'
+    (script.hasAttribute('data-respect-dnt') &&
+      (navigator.globalPrivacyControl || navigator.doNotTrack === '1'))
   )
     return;
 
