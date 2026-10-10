@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import type {
     LegalDocumentDefinition,
     LegalListItem,
@@ -7,8 +8,9 @@
   type Props = {
     definition: LegalDocumentDefinition;
     updated?: string;
+    children?: Snippet;
   };
-  const { definition, updated }: Props = $props();
+  const { definition, updated, children }: Props = $props();
 
   function anchor(text: string): string {
     return text
@@ -90,6 +92,8 @@
       {/if}
     </section>
   {/each}
+
+  {@render children?.()}
 
   {#if updated}
     <p class="text-fg-muted text-sm">Last updated {updated}</p>

@@ -3,6 +3,7 @@
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import LegalDocument from '$lib/domains/shared/ui/legal/LegalDocument.svelte';
   import type { LegalDocumentDefinition } from '$lib/domains/shared/ui/legal/LegalDocumentDefinition';
+  import type { Snippet } from 'svelte';
   import SeoMeta from '$lib/domains/shared/ui/SeoMeta.svelte';
   import Footer from '$lib/landing/Footer.svelte';
   import DocsToc from '$lib/landing/guides/DocsToc.svelte';
@@ -13,8 +14,9 @@
     title: string;
     description: string;
     updated?: string;
+    children?: Snippet;
   };
-  const { definition, title, description, updated }: Props = $props();
+  const { definition, title, description, updated, children }: Props = $props();
 
   let article: HTMLElement | undefined = $state();
 </script>
@@ -65,7 +67,7 @@
         bind:this={article}
         class="min-w-0 px-4 py-10 sm:px-6 lg:col-span-3 lg:px-10"
       >
-        <LegalDocument {definition} {updated} />
+        <LegalDocument {definition} {updated} {children} />
       </article>
     </div>
   </LandingSection>

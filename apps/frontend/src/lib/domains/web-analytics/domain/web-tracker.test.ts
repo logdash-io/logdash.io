@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 const source = readFileSync(
-  new URL('../../../../../static/sdk/web.js', import.meta.url),
+  new URL('./web-tracker.js', import.meta.url),
   'utf8',
 );
 const siteId = '0123456789abcdef01234567';
@@ -508,27 +508,45 @@ test('keeps stop() as an alias of optOut() and restarts on the same page with op
   ]);
 });
 
-test('honors privacy signals and still expires legacy cookies', async ({
+test('ignores Do Not Track and Global Privacy Control by default', async ({
   page,
-  context,
 }) => {
-  await context.addCookies([
-    {
-      name: `ldv_${siteId}`,
-      value: 'legacy',
-      domain: '.app.example',
-      path: '/',
-    },
-  ]);
   const batches = await install(page);
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'globalPrivacyControl', { value: true });
+    Object.defineProperty(navigator, 'doNotTrack', { value: '1' });
   });
   await page.goto('https://app.example/');
-  expect(await page.evaluate(() => 'logdash' in window)).toBe(false);
-  expect(await context.cookies()).toEqual([]);
-  expect(batches).toEqual([]);
+  await expect.poll(() => named(batches, 'pageview').length).toBe(1);
 });
+
+for (const signal of ['globalPrivacyControl', 'doNotTrack'] as const) {
+  test(`honors ${signal} with data-respect-dnt and still expires legacy cookies`, async ({
+    page,
+    context,
+  }) => {
+    await context.addCookies([
+      {
+        name: `ldv_${siteId}`,
+        value: 'legacy',
+        domain: '.app.example',
+        path: '/',
+      },
+    ]);
+    const batches = await install(page, { attributes: 'data-respect-dnt' });
+    await page.addInitScript(
+      (signal) =>
+        Object.defineProperty(navigator, signal, {
+          value: signal === 'doNotTrack' ? '1' : true,
+        }),
+      signal,
+    );
+    await page.goto('https://app.example/');
+    expect(await page.evaluate(() => 'logdash' in window)).toBe(false);
+    expect(await context.cookies()).toEqual([]);
+    expect(batches).toEqual([]);
+  });
+}
 
 test('ignores automated browsers', async ({ page }) => {
   const batches = await install(page, { automated: true });
@@ -648,6 +666,7 @@ async function install(
     origin = 'https://app.example',
     automated = false,
     sizes = [],
+    attributes = '',
   }: {
     failFirst?: boolean;
     holdFirst?: Promise<void>;
@@ -655,6 +674,7 @@ async function install(
     origin?: string;
     automated?: boolean;
     sizes?: number[];
+    attributes?: string;
   } = {},
 ): Promise<Batch[]> {
   const batches: Batch[] = [];
@@ -699,7 +719,7 @@ async function install(
     }
     await route.fulfill({
       contentType: 'text/html',
-      body: `<html><body><h1>Test app</h1><script defer src="/_ld/script.js" data-site="${siteId}" data-endpoint="${endpoint}"></script></body></html>`,
+      body: `<html><body><h1>Test app</h1><script defer src="/_ld/script.js" data-site="${siteId}" data-endpoint="${endpoint}" ${attributes}></script></body></html>`,
     });
   });
   return batches;

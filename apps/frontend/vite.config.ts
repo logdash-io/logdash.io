@@ -1,5 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+import { readFile } from 'node:fs/promises';
+import { defineConfig, transformWithEsbuild } from 'vite';
 import transformLucideImports from 'vite-plugin-transform-lucide-imports';
 
 export default defineConfig({
@@ -16,6 +17,21 @@ export default defineConfig({
       },
     },
     { ...transformLucideImports(), apply: 'serve' },
+    {
+      // `import source from './file.js?minify'` inlines the file as a minified string.
+      name: 'minify-import',
+      enforce: 'pre',
+      async load(id) {
+        const [file, query] = id.split('?');
+        if (query !== 'minify') return;
+        const { code } = await transformWithEsbuild(
+          await readFile(file, 'utf8'),
+          file,
+          { minify: true, target: 'es2019' },
+        );
+        return `export default ${JSON.stringify(code.trim())};`;
+      },
+    },
   ],
   /*
     transformLucideImports rewrites icon imports to deep paths after the dep

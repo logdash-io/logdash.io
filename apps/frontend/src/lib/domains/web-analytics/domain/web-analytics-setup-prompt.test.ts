@@ -27,6 +27,7 @@ test('one prompt configures fixed first-party routes, cookieless tracking, ident
   );
   expect(prompt).not.toContain('Reject requests with an Origin');
   expect(prompt).toContain('ignores automated browsers');
+  expect(prompt).toContain('add data-respect-dnt to the script tag');
   expect(prompt).toContain(
     "set x-logdash-client-ip to the browser's IP address, read with the framework's client address helper",
   );
