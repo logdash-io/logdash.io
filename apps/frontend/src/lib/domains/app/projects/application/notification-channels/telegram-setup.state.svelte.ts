@@ -4,47 +4,43 @@ import { PassphraseGenerator } from '$lib/domains/app/projects/application/notif
 
 export class TelegramSetupState {
   state = $state<TelegramSetupStateProps>({
-    isOpen: false,
     currentStep: 'setup',
     passphrase: '',
     chatName: '',
     chatId: '',
-    errorMessage: '',
   });
 
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
 
-  startSetup(): void {
-    this.state.isOpen = true;
+  public startSetup(): void {
+    this.stopPolling();
     this.state.currentStep = 'setup';
     this.state.passphrase = PassphraseGenerator.generate();
-    this.state.errorMessage = '';
+    this.state.chatName = '';
+    this.state.chatId = '';
   }
 
-  close(): void {
+  public close(): void {
     this.stopPolling();
-    this.state.isOpen = false;
     this.state.currentStep = 'setup';
     this.state.passphrase = '';
     this.state.chatName = '';
     this.state.chatId = '';
-    this.state.errorMessage = '';
   }
 
-  startWaiting(): void {
+  public startWaiting(): void {
     this.state.currentStep = 'waiting';
     this.startPolling();
   }
 
-  goBackToSetup(): void {
+  public goBackToSetup(): void {
+    if (this.state.currentStep === 'success') {
+      this.startSetup();
+      return;
+    }
+
     this.stopPolling();
     this.state.currentStep = 'setup';
-  }
-
-  retry(): void {
-    this.state.passphrase = PassphraseGenerator.generate();
-    this.state.currentStep = 'setup';
-    this.state.errorMessage = '';
   }
 
   private startPolling(): void {

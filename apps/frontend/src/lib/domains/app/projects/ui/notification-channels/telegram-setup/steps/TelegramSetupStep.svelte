@@ -1,104 +1,68 @@
 <script lang="ts">
   import { CheckIcon } from '@logdash/hyper-ui/icons';
-  import SendIcon from '$lib/domains/shared/icons/SendIcon.svelte';
   import CopyIcon from '$lib/domains/shared/icons/CopyIcon.svelte';
-  import { browser } from '$app/environment';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
-  import { Button, Input, Kbd, Label } from '@logdash/hyper-ui/presentational';
+  import ChannelSetupStep from '$lib/domains/app/projects/ui/notification-channels/ChannelSetupStep.svelte';
+  import { Button, Input, Label } from '@logdash/hyper-ui/presentational';
 
-  interface Props {
+  type Props = {
     passphrase: string;
-    onCancel: () => void;
+    onBack: () => void;
     onNext: () => void;
-  }
+  };
 
-  let { passphrase, onCancel, onNext }: Props = $props();
+  const BOT_NAME = '@logdash_uptime_bot';
 
-  let copied = $state(false);
+  const { passphrase, onBack, onNext }: Props = $props();
 
-  async function copyToClipboard() {
-    if (!browser) return;
+  let copiedValue = $state<string | null>(null);
 
+  async function onCopy(value: string, label: string): Promise<void> {
     try {
-      await navigator.clipboard.writeText(passphrase);
-      copied = true;
-      toast.success('Passphrase copied to clipboard!');
-      setTimeout(() => (copied = false), 2000);
-    } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
-    }
-  }
-
-  async function copyBotName() {
-    if (!browser) return;
-
-    try {
-      await navigator.clipboard.writeText('@logdash_uptime_bot');
-      toast.success('Bot name copied to clipboard!');
-    } catch (err) {
-      toast.error(`Failed to copy bot name: ${String(err)}`);
+      await navigator.clipboard.writeText(value);
+      copiedValue = value;
+      toast.success(`${label} copied to clipboard!`);
+      setTimeout(() => {
+        if (copiedValue === value) {
+          copiedValue = null;
+        }
+      }, 2000);
+    } catch (error) {
+      toast.error(`Failed to copy ${label.toLowerCase()}: ${String(error)}`);
     }
   }
 </script>
 
-<div class="flex flex-col gap-5">
-  <div class="flex items-center gap-4">
-    <div
-      class="bg-surface-150-bg flex size-9 shrink-0 items-center justify-center rounded-lg"
-    >
-      <SendIcon class="size-4.5" />
-    </div>
-    <div class="flex min-w-0 flex-col gap-0.5">
-      <h2 class="text-base font-semibold">Set up a Telegram channel</h2>
-      <p class="text-fg-tertiary text-sm">
-        This is the hard part, so we made it easy!
-      </p>
-    </div>
+<ChannelSetupStep
+  title="Connect Telegram"
+  description="Add the bot to a group or chat, then send the passphrase there as a message."
+  {onBack}
+  onSubmit={onNext}
+>
+  <div class="flex flex-col gap-4">
+    {@render copyField('telegram-bot', 'Bot', BOT_NAME)}
+    {@render copyField('telegram-passphrase', 'Passphrase', passphrase)}
   </div>
 
-  <ol class="flex flex-col gap-3 text-sm">
-    <li class="flex flex-col gap-1">
-      <h3 class="font-medium">Step 1</h3>
-      <p class="text-fg-tertiary select-none">
-        Add the bot
-        <button
-          type="button"
-          class="cursor-pointer"
-          onclick={copyBotName}
-          title="Click to copy bot name"
-        >
-          <Kbd size="sm">@logdash_uptime_bot</Kbd>
-        </button>
-        to your Telegram group or chat.
-      </p>
-    </li>
-    <li class="flex flex-col gap-1">
-      <h3 class="font-medium">Step 2</h3>
-      <p class="text-fg-tertiary">
-        Copy the passphrase below and send it as a message in that chat.
-      </p>
-    </li>
-  </ol>
+  {#snippet action()}
+    <Button type="submit" variant="primary">Message sent</Button>
+  {/snippet}
+</ChannelSetupStep>
 
+{#snippet copyField(id: string, label: string, value: string)}
   <div class="flex flex-col gap-1.5">
-    <Label for="telegram-passphrase" class="text-sm font-medium">
-      Passphrase
-    </Label>
-    <div class="flex items-center gap-2">
-      <Input
-        id="telegram-passphrase"
-        type="text"
-        value={passphrase}
-        readonly
-        class="min-w-0 flex-1 font-mono"
-      />
+    <Label for={id} class="text-fg-muted text-sm">{label}</Label>
+    <div class="relative flex w-full">
+      <Input {id} type="text" {value} readonly class="w-full pr-11 font-mono" />
       <Button
         variant="ghost"
+        size="sm"
         shape="circle"
-        aria-label="Copy passphrase"
-        onclick={copyToClipboard}
+        class="absolute top-1 right-1"
+        aria-label={`Copy ${label.toLowerCase()}`}
+        onclick={() => onCopy(value, label)}
       >
-        {#if copied}
+        {#if copiedValue === value}
           <CheckIcon class="text-success size-4" />
         {:else}
           <CopyIcon class="size-4" />
@@ -106,9 +70,4 @@
       </Button>
     </div>
   </div>
-
-  <div class="flex justify-end gap-2">
-    <Button variant="ghost" onclick={onCancel}>Back</Button>
-    <Button variant="primary" onclick={onNext}>Message sent!</Button>
-  </div>
-</div>
+{/snippet}

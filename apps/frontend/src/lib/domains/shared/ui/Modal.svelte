@@ -98,7 +98,7 @@
     </div>
     <div
       transition:fade={{ duration: 200, easing: quadInOut }}
-      class="bg-surface-root-bg/60 fixed inset-0"
+      class="bg-surface-root-bg/60 fixed inset-0 backdrop-blur-[2px]"
       aria-hidden="true"
       onclick={onDismiss}
     ></div>

@@ -3,6 +3,7 @@
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import GridIcon from '$lib/domains/shared/icons/GridIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import { Tooltip } from '@logdash/hyper-ui/presentational';
   import type { Snippet } from 'svelte';
   import SidebarMenuItem from './SidebarMenuItem.svelte';
 
@@ -69,31 +70,39 @@
           {/if}
         </button>
         {#if addDomainHref}
-          <!-- eslint-disable svelte/no-navigation-without-resolve -- href is supplied by the caller -->
-          <a
-            href={addDomainHref}
-            class={ADD_DOMAIN_CLASS}
-            aria-label="Add domain"
-            title="Add domain"
-          >
-            <PlusIcon class="size-4" />
-          </a>
-          <!-- eslint-enable svelte/no-navigation-without-resolve -->
+          <Tooltip content="Add domain" placement="right">
+            <!-- eslint-disable svelte/no-navigation-without-resolve -- href is supplied by the caller -->
+            <a
+              href={addDomainHref}
+              class={ADD_DOMAIN_CLASS}
+              aria-label="Add domain"
+            >
+              <PlusIcon class="size-4" />
+            </a>
+            <!-- eslint-enable svelte/no-navigation-without-resolve -->
+          </Tooltip>
         {:else if onAddDomain}
-          <button
-            type="button"
-            class={ADD_DOMAIN_CLASS}
-            aria-label="Add domain"
-            title="Add domain"
-            onclick={onAddDomain}
-          >
-            <PlusIcon class="size-4" />
-          </button>
+          <Tooltip content="Add domain" placement="right">
+            <button
+              type="button"
+              class={ADD_DOMAIN_CLASS}
+              aria-label="Add domain"
+              onclick={onAddDomain}
+            >
+              <PlusIcon class="size-4" />
+            </button>
+          </Tooltip>
         {/if}
       </div>
 
       {#if domainsOpen}
         {@render children()}
+        {#if addDomainHref || onAddDomain}
+          <SidebarMenuItem href={addDomainHref} onclick={onAddDomain}>
+            <PlusIcon class="size-4 shrink-0" />
+            <span class="truncate">Add domain</span>
+          </SidebarMenuItem>
+        {/if}
       {/if}
     </nav>
   </div>

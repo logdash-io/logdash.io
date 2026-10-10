@@ -1,36 +1,21 @@
 <script lang="ts">
-  import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { monitoringState } from '$lib/domains/app/projects/application/monitoring.state.svelte.js';
   import { notificationChannelsState } from '$lib/domains/app/projects/application/notification-channels/notification-channels.state.svelte.js';
   import { telegramSetupState } from '$lib/domains/app/projects/application/notification-channels/telegram-setup.state.svelte.js';
-  import TelegramErrorStep from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramErrorStep.svelte';
+  import TelegramChatStep from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramChatStep.svelte';
   import TelegramSetupStep from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramSetupStep.svelte';
-  import TelegramSuccessStep from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramSuccessStep.svelte';
-  import TelegramWaitingStep from '$lib/domains/app/projects/ui/notification-channels/telegram-setup/steps/TelegramWaitingStep.svelte';
 
   type Props = {
     clusterId: string;
-    onCancel?: () => void;
+    onCancel: () => void;
     onDone: () => void;
   };
 
   const { clusterId, onCancel, onDone }: Props = $props();
 
-  function closeModal() {
-    onCancel?.();
+  function onBackToChannels(): void {
+    onCancel();
     telegramSetupState.close();
-  }
-
-  function startWaiting() {
-    telegramSetupState.startWaiting();
-  }
-
-  function goBackToSetup() {
-    telegramSetupState.goBackToSetup();
-  }
-
-  function retry() {
-    telegramSetupState.retry();
   }
 
   async function onChannelSetupSubmit(): Promise<void> {
@@ -58,25 +43,15 @@
 {#if telegramSetupState.state.currentStep === 'setup'}
   <TelegramSetupStep
     passphrase={telegramSetupState.state.passphrase}
-    onCancel={closeModal}
-    onNext={startWaiting}
+    onBack={onBackToChannels}
+    onNext={() => telegramSetupState.startWaiting()}
   />
-{:else if telegramSetupState.state.currentStep === 'waiting'}
-  <TelegramWaitingStep
+{:else}
+  <TelegramChatStep
     passphrase={telegramSetupState.state.passphrase}
-    onCancel={closeModal}
-    onBack={goBackToSetup}
-  />
-{:else if telegramSetupState.state.currentStep === 'success'}
-  <TelegramSuccessStep
-    clusterName={clustersState.clusterName(clusterId)}
     chatName={telegramSetupState.state.chatName}
+    found={telegramSetupState.state.currentStep === 'success'}
+    onBack={() => telegramSetupState.goBackToSetup()}
     onSubmit={onChannelSetupSubmit}
-  />
-{:else if telegramSetupState.state.currentStep === 'error'}
-  <TelegramErrorStep
-    errorMessage={telegramSetupState.state.errorMessage}
-    onCancel={closeModal}
-    onRetry={retry}
   />
 {/if}
