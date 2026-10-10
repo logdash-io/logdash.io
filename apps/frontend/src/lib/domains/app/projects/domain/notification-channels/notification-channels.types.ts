@@ -11,6 +11,8 @@ export type WebhookSetupDTO = {
   name: string;
 };
 
+export type WebhookStep = 'endpoint' | 'headers';
+
 export interface NotificationChannelsState {
   channels: NotificationChannel[];
   isLoading: boolean;

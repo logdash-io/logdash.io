@@ -5,13 +5,18 @@
     Badge,
     Button,
     Input,
+    Label,
     Menu,
     Tooltip,
   } from '@logdash/hyper-ui/presentational';
   import UpgradeElement from '$lib/domains/shared/upgrade/UpgradeElement.svelte';
-  import type { WebhookSetupDTO } from '$lib/domains/app/projects/domain/notification-channels/notification-channels.types.js';
+  import type {
+    WebhookSetupDTO,
+    WebhookStep,
+  } from '$lib/domains/app/projects/domain/notification-channels/notification-channels.types.js';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
-  import LinkIcon from '$lib/domains/shared/icons/LinkIcon.svelte';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import ChannelSetupStep from '$lib/domains/app/projects/ui/notification-channels/ChannelSetupStep.svelte';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 
   type Header = {
@@ -20,8 +25,8 @@
   };
 
   type Props = {
-    clusterName: string;
-    onCancel?: () => void;
+    step: WebhookStep;
+    onCancel: () => void;
     onSubmit: (dto: WebhookSetupDTO) => Promise<void>;
   };
 
@@ -30,7 +35,7 @@
   const HEADER_NAME_PATTERN = /^[a-zA-Z0-9-]+$/;
   const HEADER_VALUE_PATTERN = /^[\x20-\x7E]*$/;
 
-  let { clusterName, onCancel, onSubmit }: Props = $props();
+  let { step = $bindable(), onCancel, onSubmit }: Props = $props();
 
   let isSaving = $state(false);
 
@@ -41,6 +46,10 @@
   let webhookUrl = $state('');
   let headers = $state<Header[]>([]);
   let method = $state(userState.isFree ? 'GET' : 'POST');
+
+  const canContinue = $derived(
+    webhookName.trim() !== '' && webhookUrl.trim() !== '',
+  );
 
   function isValidHeaderName(name: string): boolean {
     return name === '' || HEADER_NAME_PATTERN.test(name);
@@ -57,14 +66,14 @@
     );
   }
 
-  function canSubmit(): boolean {
-    return (
-      webhookName.trim() !== '' && webhookUrl.trim() !== '' && hasValidHeaders()
-    );
+  function onContinue(): void {
+    if (canContinue) {
+      step = 'headers';
+    }
   }
 
   async function onSave(): Promise<void> {
-    if (isSaving) {
+    if (isSaving || !canContinue || !hasValidHeaders()) {
       return;
     }
 
@@ -91,50 +100,64 @@
   }
 </script>
 
-<div class="flex flex-col gap-5">
-  <div class="flex items-center gap-4">
-    <div
-      class="bg-surface-150-bg flex size-9 shrink-0 items-center justify-center rounded-lg"
-    >
-      <LinkIcon class="size-4.5" />
+{#if step === 'endpoint'}
+  <ChannelSetupStep
+    title="Set up a webhook"
+    description="Every alert is sent as a request to this URL."
+    onBack={onCancel}
+    onSubmit={onContinue}
+  >
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1.5">
+        <Label for="webhook-name" class="text-fg-muted text-sm">Name</Label>
+        <Input
+          id="webhook-name"
+          bind:value={webhookName}
+          class="w-full"
+          placeholder="Memorable webhook name"
+          type="text"
+          {@attach fromAction(autoFocus, () => ({ selectAll: true }))}
+        />
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <Label for="webhook-url" class="text-fg-muted text-sm">URL</Label>
+        <div class="relative flex w-full">
+          <Tooltip
+            content={methodSelect}
+            placement="bottom"
+            align="left"
+            trigger="click"
+            interactive
+            class="absolute top-1 left-1 z-10"
+          >
+            <Button variant="ghost" size="sm">{method}</Button>
+          </Tooltip>
+
+          <Input
+            id="webhook-url"
+            bind:value={webhookUrl}
+            class="ph-no-capture w-full pl-16"
+            placeholder="https://example.com/alerts"
+            type="text"
+          />
+        </div>
+      </div>
     </div>
-    <div class="flex min-w-0 flex-col gap-0.5">
-      <h2 class="text-base font-semibold">Set up a webhook channel</h2>
-      <p class="text-fg-tertiary text-sm">
-        Add it with a memorable name to your domain.
-      </p>
-    </div>
-  </div>
 
-  <div class="flex flex-col gap-2">
-    <Input
-      bind:value={webhookName}
-      class="w-full"
-      placeholder="Memorable webhook name"
-      type="text"
-      {@attach fromAction(autoFocus, () => ({ selectAll: true }))}
-    />
-
-    <div class="relative flex w-full">
-      <Tooltip
-        content={methodSelect}
-        placement="bottom"
-        align="left"
-        trigger="click"
-        interactive
-        class="absolute top-1 left-1 z-10"
-      >
-        <Button variant="ghost" size="sm">{method}</Button>
-      </Tooltip>
-
-      <Input
-        bind:value={webhookUrl}
-        class="ph-no-capture w-full pl-16"
-        placeholder="Webhook URL"
-        type="text"
-      />
-    </div>
-
+    {#snippet action()}
+      <Button type="submit" variant="primary" disabled={!canContinue}>
+        Continue
+      </Button>
+    {/snippet}
+  </ChannelSetupStep>
+{:else}
+  <ChannelSetupStep
+    title="Add headers"
+    description="Optional. Sent with every alert request."
+    onBack={() => (step = 'endpoint')}
+    onSubmit={onSave}
+  >
     <div class="flex flex-col gap-2">
       {#each headers as header, index (index)}
         <div class="ph-no-capture flex items-start gap-2">
@@ -145,13 +168,14 @@
               bind:value={header.key}
               error={!isValidHeaderName(header.key)}
               placeholder="Key"
+              aria-label="Header name"
               {@attach fromAction(autoFocus, () => ({
                 enabled: index === headers.length - 1,
               }))}
             />
             {#if header.key && !isValidHeaderName(header.key)}
               <div class="text-error mt-1 text-xs">
-                Header name can only contain letters, numbers, and hyphens
+                Letters, numbers and hyphens only
               </div>
             {/if}
           </div>
@@ -162,11 +186,10 @@
               bind:value={header.value}
               error={!isValidHeaderValue(header.value)}
               placeholder="Value"
+              aria-label="Header value"
             />
             {#if header.value && !isValidHeaderValue(header.value)}
-              <div class="text-error mt-1 text-xs">
-                Header value contains invalid characters
-              </div>
+              <div class="text-error mt-1 text-xs">Printable ASCII only</div>
             {/if}
           </div>
           <Button
@@ -185,11 +208,10 @@
       <UpgradeElement
         enabled={!canUseCustomHeaders}
         source="webhook-headers-restriction"
-        class="w-full"
+        class="self-start"
       >
         <Button
-          block
-          class="gap-2"
+          size="sm"
           onclick={() => {
             if (canUseCustomHeaders) {
               headers.push({
@@ -199,6 +221,7 @@
             }
           }}
         >
+          <PlusIcon class="size-3.5" />
           <span>Add header</span>
           {#if !canUseCustomHeaders}
             <Badge variant="inverse" size="sm">Builder plan</Badge>
@@ -206,20 +229,19 @@
         </Button>
       </UpgradeElement>
     </div>
-  </div>
 
-  <div class="flex justify-end gap-2">
-    <Button variant="ghost" onclick={onCancel}>Back</Button>
-    <Button
-      variant="primary"
-      disabled={!canSubmit() || isSaving}
-      loading={isSaving}
-      onclick={onSave}
-    >
-      Save channel to {clusterName}
-    </Button>
-  </div>
-</div>
+    {#snippet action()}
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={!hasValidHeaders() || isSaving}
+        loading={isSaving}
+      >
+        Save channel
+      </Button>
+    {/snippet}
+  </ChannelSetupStep>
+{/if}
 
 {#snippet methodSelect(close: () => void)}
   <Menu

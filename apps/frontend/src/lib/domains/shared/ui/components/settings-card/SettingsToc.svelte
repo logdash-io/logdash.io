@@ -38,7 +38,9 @@
     }
     scroller = scrollParent(root);
     const collect = (): void => {
-      items = [...root.querySelectorAll<HTMLElement>('h2[id]')].map((el) => ({
+      items = [
+        ...root.querySelectorAll<HTMLElement>('h2[id]:not(dialog h2)'),
+      ].map((el) => ({
         id: el.id,
         text: el.textContent?.trim() ?? '',
         icon: el.querySelector('[data-toc-icon]')?.innerHTML ?? '',

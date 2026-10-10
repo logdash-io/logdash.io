@@ -69,13 +69,11 @@ export type CreateNotificationChannelDTO =
   | CreateTelegramNotificationChannelDTO
   | CreateWebhookNotificationChannelDTO;
 
-export type TelegramSetupStep = 'setup' | 'waiting' | 'success' | 'error';
+export type TelegramSetupStep = 'setup' | 'waiting' | 'success';
 
 export interface TelegramSetupStateProps {
-  isOpen: boolean;
   currentStep: TelegramSetupStep;
   passphrase: string;
   chatName: string;
   chatId: string;
-  errorMessage: string;
 }
