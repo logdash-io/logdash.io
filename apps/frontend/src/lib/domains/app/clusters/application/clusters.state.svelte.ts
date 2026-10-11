@@ -1,6 +1,7 @@
 import { arrayToObject } from '$lib/domains/shared/utils/array-to-object';
 import { type Source } from 'sveltekit-sse';
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
+import type { ClusterRole } from '$lib/domains/app/clusters/domain/cluster-invite';
 import {
   ownedUsage,
   type OwnedUsage,
@@ -58,8 +59,8 @@ class ClustersState {
     return this._initialized;
   }
 
-  isUserClusterCreator(userId: string, clusterId: string): boolean {
-    return this.get(clusterId)?.creatorId === userId;
+  userRole(clusterId: string): ClusterRole | undefined {
+    return userState.id ? this.get(clusterId)?.roles[userState.id] : undefined;
   }
 
   canSetupCustomDomain(clusterId: string): boolean {

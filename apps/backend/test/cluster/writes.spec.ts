@@ -156,6 +156,55 @@ describe('ClusterCoreController (writes)', () => {
       });
     });
 
+    it('lets an admin rename the domain', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const adminSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+        userId: adminSetup.user.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/clusters/${cluster.id}`)
+        .set('Authorization', `Bearer ${adminSetup.token}`)
+        .send({ name: 'Renamed by admin' });
+
+      // then
+      expect(response.statusCode).toBe(200);
+
+      const updatedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
+      expect(updatedCluster?.name).toBe('Renamed by admin');
+    });
+
+    it('throws 403 error when a member tries to rename the domain', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const memberSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Write,
+        userId: memberSetup.user.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/clusters/${cluster.id}`)
+        .set('Authorization', `Bearer ${memberSetup.token}`)
+        .send({ name: 'Renamed by member' });
+
+      // then
+      expect(response.statusCode).toBe(403);
+      expect((response.body as ErrorResponse).message).toBe('User does not have the required role');
+
+      const unchangedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
+      expect(unchangedCluster?.name).toBe(cluster.name);
+    });
+
     it('throws error when user is not a member of the cluster', async () => {
       // given
       const { user: creator } = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -291,6 +340,28 @@ describe('ClusterCoreController (writes)', () => {
       expect(response.statusCode).toBe(403);
       expect((response.body as ErrorResponse).message).toBe('User does not have the required role');
     });
+
+    it('throws 403 error when an admin tries to delete the domain', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const adminSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+        userId: adminSetup.user.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}`)
+        .set('Authorization', `Bearer ${adminSetup.token}`);
+
+      // then
+      expect(response.statusCode).toBe(403);
+      expect((response.body as ErrorResponse).message).toBe('User does not have the required role');
+      expect(await bootstrap.models.clusterModel.findById(cluster.id)).not.toBeNull();
+    });
   });
 
   describe('DELETE /clusters/:clusterId/roles/:userId', () => {
@@ -327,6 +398,183 @@ describe('ClusterCoreController (writes)', () => {
         relatedDomain: RelatedDomain.User,
         relatedEntityId: cluster.id,
       });
+    });
+
+    it('lets an admin remove a member', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const adminSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const memberSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+        userId: adminSetup.user.id,
+      });
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Write,
+        userId: memberSetup.user.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}/roles/${memberSetup.user.id}`)
+        .set('Authorization', `Bearer ${adminSetup.token}`);
+
+      // then
+      expect(response.statusCode).toBe(200);
+
+      const clusterAfterRemoval = await bootstrap.models.clusterModel.findById(cluster.id);
+      expect(clusterAfterRemoval?.roles[memberSetup.user.id]).toBeUndefined();
+
+      await bootstrap.utils.auditLogUtils.assertAuditLog({
+        userId: adminSetup.user.id,
+        action: AuditLogClusterAction.RevokedRole,
+        relatedDomain: RelatedDomain.Cluster,
+        relatedEntityId: cluster.id,
+      });
+    });
+
+    it('lets an admin remove another admin', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const adminSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const otherAdminSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+        userId: adminSetup.user.id,
+      });
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+        userId: otherAdminSetup.user.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}/roles/${otherAdminSetup.user.id}`)
+        .set('Authorization', `Bearer ${adminSetup.token}`);
+
+      // then
+      expect(response.statusCode).toBe(200);
+
+      const clusterAfterRemoval = await bootstrap.models.clusterModel.findById(cluster.id);
+      expect(clusterAfterRemoval?.roles[otherAdminSetup.user.id]).toBeUndefined();
+      expect(clusterAfterRemoval?.roles[adminSetup.user.id]).toBe(ClusterRole.Admin);
+    });
+
+    it('lets an admin remove themselves and revokes their access immediately', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const adminSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+        userId: adminSetup.user.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}/roles/${adminSetup.user.id}`)
+        .set('Authorization', `Bearer ${adminSetup.token}`);
+
+      // then
+      expect(response.statusCode).toBe(200);
+
+      const clusterAfterRemoval = await bootstrap.models.clusterModel.findById(cluster.id);
+      expect(clusterAfterRemoval?.roles[adminSetup.user.id]).toBeUndefined();
+
+      const followUpResponse = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites`)
+        .set('Authorization', `Bearer ${adminSetup.token}`);
+
+      expect(followUpResponse.statusCode).toBe(403);
+      expect((followUpResponse.body as ErrorResponse).message).toBe(
+        'User is not a member of this domain',
+      );
+    });
+
+    it('throws error when an admin tries to remove the creator', async () => {
+      // given
+      const { user: creator, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const adminSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+        userId: adminSetup.user.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}/roles/${creator.id}`)
+        .set('Authorization', `Bearer ${adminSetup.token}`);
+
+      // then
+      expect(response.status).toBe(400);
+      expect((response.body as ErrorResponse).message).toBe(
+        'Cannot delete role. User is the creator of this domain.',
+      );
+
+      const unchangedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
+      expect(unchangedCluster?.roles[creator.id]).toBe(ClusterRole.Creator);
+    });
+
+    it('throws 403 error when user is not a member of the cluster', async () => {
+      // given
+      const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const memberSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const strangerSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Write,
+        userId: memberSetup.user.id,
+      });
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}/roles/${memberSetup.user.id}`)
+        .set('Authorization', `Bearer ${strangerSetup.token}`);
+
+      // then
+      expect(response.statusCode).toBe(403);
+      expect((response.body as ErrorResponse).message).toBe('User is not a member of this domain');
+    });
+
+    it('revokes access of the removed member immediately', async () => {
+      // given
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
+      const memberSetup = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Write,
+        userId: memberSetup.user.id,
+      });
+
+      await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites`)
+        .set('Authorization', `Bearer ${memberSetup.token}`)
+        .expect(200);
+
+      await request(bootstrap.app.getHttpServer())
+        .delete(`/clusters/${cluster.id}/roles/${memberSetup.user.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites`)
+        .set('Authorization', `Bearer ${memberSetup.token}`);
+
+      // then
+      expect(response.statusCode).toBe(403);
+      expect((response.body as ErrorResponse).message).toBe('User is not a member of this domain');
     });
 
     it('throws error when creator tries to delete his role', async () => {

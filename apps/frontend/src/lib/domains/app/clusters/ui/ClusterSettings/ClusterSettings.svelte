@@ -2,11 +2,14 @@
   import CodeIcon from '$lib/domains/shared/icons/CodeIcon.svelte';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import {
+    ClusterRole,
+    canManageTeam,
+  } from '$lib/domains/app/clusters/domain/cluster-invite';
+  import {
     SETTINGS_PAGE_CLASS,
     SettingsCard,
     SettingsToc,
   } from '$lib/domains/shared/ui/components/settings-card';
-  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { WebAnalyticsSetupState } from '$lib/domains/web-analytics/application/web-analytics-setup.state.svelte';
   import WebAnalyticsSetup from '$lib/domains/web-analytics/ui/WebAnalyticsSetup.svelte';
   import DangerZoneCard from './DangerZoneCard.svelte';
@@ -22,11 +25,8 @@
 
   const connection = new WebAnalyticsSetupState();
 
-  const isCreator = $derived(
-    userState.id
-      ? clustersState.isUserClusterCreator(userState.id, clusterId)
-      : false,
-  );
+  const role = $derived(clustersState.userRole(clusterId));
+  const canManage = $derived(canManageTeam(role));
 </script>
 
 <div class={SETTINGS_PAGE_CLASS}>
@@ -44,10 +44,13 @@
 
   <DomainAlertsCard {clusterId} />
 
-  <ProjectInfoCard {clusterId} canEdit={isCreator} />
+  <ProjectInfoCard {clusterId} canEdit={canManage} />
 
-  {#if isCreator}
+  {#if canManage}
     <TeamManagementCard {clusterId} />
+  {/if}
+
+  {#if role === ClusterRole.CREATOR}
     <DangerZoneCard {clusterId} />
   {/if}
 </div>

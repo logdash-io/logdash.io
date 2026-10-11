@@ -18,6 +18,8 @@ import {
 import { Actor } from '../../audit-log/core/enums/actor.enum';
 import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 import { ClusterRole } from '../core/enums/cluster-role.enum';
+import { ClusterReadCachedService } from '../read/cluster-read-cached.service';
+
 @Injectable()
 export class ClusterWriteService {
   constructor(
@@ -25,6 +27,7 @@ export class ClusterWriteService {
     private model: Model<ClusterEntity>,
     @Inject(LOGDASH_METRICS) private readonly metrics: LogdashMetrics,
     private readonly auditLog: AuditLog,
+    private readonly clusterReadCachedService: ClusterReadCachedService,
   ) {}
 
   public async create(dto: CreateClusterDto): Promise<ClusterNormalized> {
@@ -137,6 +140,8 @@ export class ClusterWriteService {
       { _id: new Types.ObjectId(clusterId) },
       { $unset: { [`roles.${userId}`]: 1 } },
     );
+
+    await this.clusterReadCachedService.invalidateUserRole({ clusterId, userId });
   }
 
   public async addRole(clusterId: string, userId: string, role: ClusterRole): Promise<void> {
@@ -144,6 +149,8 @@ export class ClusterWriteService {
       { _id: new Types.ObjectId(clusterId) },
       { $set: { [`roles.${userId}`]: role } },
     );
+
+    await this.clusterReadCachedService.invalidateUserRole({ clusterId, userId });
 
     void this.auditLog.create({
       userId: userId,

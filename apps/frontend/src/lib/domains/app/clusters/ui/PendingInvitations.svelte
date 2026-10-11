@@ -3,7 +3,7 @@
   import { Button } from '@logdash/hyper-ui/presentational';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { userInvitationsState } from '$lib/domains/app/clusters/application/user-invitations.state.svelte.js';
-  import { ClusterRole } from '$lib/domains/app/clusters/domain/cluster-invite.js';
+  import { CLUSTER_ROLE_LABELS } from '$lib/domains/app/clusters/domain/cluster-invite.js';
 
   async function onInvitationAccepted(inviteId: string): Promise<void> {
     try {
@@ -42,7 +42,7 @@
         <div class="flex min-w-0 flex-1 flex-col gap-0.5">
           <span class="text-fg-muted text-xs">
             Invited {formatDate(invitation.createdAt)} ·
-            {invitation.role === ClusterRole.CREATOR ? 'Admin' : 'Write'} access
+            {CLUSTER_ROLE_LABELS[invitation.role]} access
           </span>
           <p class="min-w-0 truncate text-sm">
             Join <span class="font-medium">{invitation.clusterName}</span>

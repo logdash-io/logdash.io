@@ -6,6 +6,7 @@ import type {
 import { ClusterInvitesService } from '$lib/domains/app/clusters/infrastructure/cluster-invites.service';
 import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
 import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
+import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
 
 type ClusterInvitesStateType = {
   invites: ClusterInvite[];
@@ -95,7 +96,7 @@ class ClusterInvitesState {
       if (this.clusterId !== clusterId) return;
 
       this._state.loadFailed = true;
-      toast.error('Failed to load invitations');
+      if (!silent) toast.error('Failed to load invitations');
       console.error('Failed to load cluster invites:', error);
     } finally {
       if (!silent && this.clusterId === clusterId) {
@@ -158,6 +159,36 @@ class ClusterInvitesState {
     } catch (error) {
       toast.error('Failed to remove invitation');
       console.error('Failed to delete cluster invite:', error);
+      throw error;
+    } finally {
+      this._state.isDeleting = false;
+    }
+  }
+
+  async removeMember(clusterId: string, userId: string): Promise<void> {
+    const isSelf = userId === userState.id;
+    this._state.isDeleting = true;
+    try {
+      await ClusterInvitesService.deleteClusterRole(clusterId, userId);
+
+      if (this._state.capacity) {
+        this._state.capacity = {
+          ...this._state.capacity,
+          currentUsersCount: this._state.capacity.currentUsersCount - 1,
+          members: this._state.capacity.members.filter(
+            (member) => member.id !== userId,
+          ),
+        };
+      }
+
+      toast.success(isSelf ? 'You left the domain' : 'Member removed');
+    } catch (error) {
+      const failure = isSelf
+        ? 'Failed to leave the domain'
+        : 'Failed to remove member';
+      const message = readHttpErrorMessage(error);
+      toast.error(message ? `${failure}: ${message}` : failure);
+      console.error('Failed to remove cluster member:', error);
       throw error;
     } finally {
       this._state.isDeleting = false;

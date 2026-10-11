@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Cluster } from './cluster';
+import { ClusterRole } from './cluster-invite';
 import { ownedUsage } from './owned-usage';
 
 const cluster = (
@@ -11,6 +12,7 @@ const cluster = (
   name: 'Domain',
   members: [],
   creatorId,
+  roles: { [creatorId]: ClusterRole.CREATOR },
   tier: 'free',
   projects: Array.from({ length: services }, (_, index) => ({
     id: `service-${index}`,

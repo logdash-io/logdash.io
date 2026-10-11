@@ -8,7 +8,7 @@ export class CreateClusterInviteBody {
   @IsEmail()
   email: string;
 
-  @ApiProperty({ enum: ClusterRole })
-  @IsIn([ClusterRole.Write])
+  @ApiProperty({ enum: [ClusterRole.Write, ClusterRole.Admin] })
+  @IsIn([ClusterRole.Write, ClusterRole.Admin])
   role: ClusterRole;
 }
