@@ -25,3 +25,5 @@ export class ClusterInviteEntity {
 export type ClusterInviteDocument = HydratedDocument<ClusterInviteEntity>;
 
 export const ClusterInviteSchema = SchemaFactory.createForClass(ClusterInviteEntity);
+
+ClusterInviteSchema.index({ clusterId: 1, invitedUserEmail: 1 });

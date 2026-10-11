@@ -1,7 +1,15 @@
 <script lang="ts">
   import UsersIcon from '$lib/domains/shared/icons/UsersIcon.svelte';
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { clusterInvitesState } from '$lib/domains/app/clusters/application/cluster-invites.state.svelte.js';
-  import { ClusterRole } from '$lib/domains/app/clusters/domain/cluster-invite';
+  import {
+    CLUSTER_ROLE_LABELS,
+    ClusterRole,
+    type ClusterMember,
+  } from '$lib/domains/app/clusters/domain/cluster-invite';
+  import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte.js';
+  import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { validateEmail } from '$lib/domains/shared/utils/validators.js';
   import UserIcon from '$lib/domains/shared/icons/UserIcon.svelte';
   import {
@@ -15,8 +23,7 @@
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import LoadingLine from '$lib/domains/shared/ui/components/LoadingLine.svelte';
   import { DangerIcon } from '@logdash/hyper-ui/icons';
-  import { Button, Input } from '@logdash/hyper-ui/presentational';
-  import { match } from 'ts-pattern';
+  import { Button, Input, Select } from '@logdash/hyper-ui/presentational';
 
   type Props = {
     clusterId: string;
@@ -25,6 +32,7 @@
   const { clusterId }: Props = $props();
 
   let emailInput = $state('');
+  let inviteRole = $state<ClusterRole>(ClusterRole.WRITE);
 
   const emailError = $derived(validateEmail(emailInput));
   const isEmailValid = $derived(emailInput.trim() && emailError === '');
@@ -46,9 +54,10 @@
       await clusterInvitesState.createInvite(
         clusterId,
         emailInput.trim(),
-        ClusterRole.WRITE,
+        inviteRole,
       );
       emailInput = '';
+      inviteRole = ClusterRole.WRITE;
     } catch {
       return;
     }
@@ -62,6 +71,36 @@
     }
   }
 
+  async function onRemoveMember(member: ClusterMember): Promise<void> {
+    const isSelf = member.id === userState.id;
+
+    const confirmed = await confirmDialog.ask(
+      isSelf
+        ? {
+            title: 'Leave domain',
+            description:
+              'You will lose access to this domain until someone invites you again.',
+            confirmLabel: 'Leave domain',
+          }
+        : {
+            title: 'Remove member',
+            description: `${member.email || 'This member'} will lose access to this domain until someone invites them again.`,
+            confirmLabel: 'Remove member',
+          },
+    );
+    if (!confirmed) return;
+
+    try {
+      await clusterInvitesState.removeMember(clusterId, member.id);
+    } catch {
+      return;
+    }
+
+    if (!isSelf) return;
+
+    void goto(resolve('/app/domains'), { invalidateAll: true });
+  }
+
   function onInviteKeydown(e: KeyboardEvent): void {
     if (e.key === 'Enter') void onInviteUser();
   }
@@ -72,14 +111,6 @@
       month: 'short',
       day: 'numeric',
     });
-  }
-
-  function roleLabel(role: ClusterRole): string {
-    return match(role)
-      .with(ClusterRole.CREATOR, () => 'Owner')
-      .with(ClusterRole.ADMIN, () => 'Admin')
-      .with(ClusterRole.WRITE, () => 'Member')
-      .exhaustive();
   }
 </script>
 
@@ -109,11 +140,11 @@
       </div>
     </SettingsCardItem>
 
-    {#each capacity.members as member (member.email)}
+    {#each capacity.members as member (member.id)}
       <SettingsCardItem>
         <div class="flex min-w-0 items-center gap-3">
           <span class="text-fg-muted w-16 shrink-0">
-            {roleLabel(member.role)}
+            {CLUSTER_ROLE_LABELS[member.role]}
           </span>
           <span
             class="bg-surface-150-bg flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full"
@@ -132,6 +163,25 @@
             {member.email || 'Anonymous'}
           </span>
         </div>
+
+        {#snippet action()}
+          {@const isSelf = member.id === userState.id}
+          {#if member.role !== ClusterRole.CREATOR}
+            <IconButton
+              label={isSelf
+                ? 'Leave domain'
+                : `Remove ${member.email || 'Anonymous'}`}
+              tooltip={isSelf ? 'Leave domain' : 'Remove member'}
+              danger
+              well
+              class="-mr-1.5"
+              disabled={clusterInvitesState.isDeleting}
+              onclick={() => onRemoveMember(member)}
+            >
+              <TrashIcon class="size-4" />
+            </IconButton>
+          {/if}
+        {/snippet}
       </SettingsCardItem>
     {/each}
 
@@ -143,6 +193,9 @@
             class="border-surface-150-border size-5 shrink-0 rounded-full border border-dashed"
           ></span>
           <span class="min-w-0 flex-1 truncate">{invite.invitedUserEmail}</span>
+          <span class="text-fg-muted shrink-0 text-xs">
+            {CLUSTER_ROLE_LABELS[invite.role]}
+          </span>
           <span class="text-fg-muted shrink-0 font-mono text-xs max-sm:hidden">
             {formatDate(invite.createdAt)}
           </span>
@@ -166,12 +219,17 @@
 
     {#if clusterInvitesState.canInviteMore}
       <SettingsCardItem>
-        <div class="flex min-w-0 items-center gap-3">
-          <span class="text-fg-muted w-16 shrink-0">Invite</span>
+        <div
+          class="flex min-w-0 items-center gap-3 max-sm:flex-wrap max-sm:gap-y-4"
+        >
+          <span class="text-fg-muted w-16 shrink-0 max-sm:hidden">Invite</span>
           <Input
             type="email"
             size="sm"
-            class={['-my-1.5 min-w-0 flex-1', SETTINGS_INPUT_CLASS]}
+            class={[
+              '-my-1.5 min-w-0 flex-1 max-sm:-my-0.5 max-sm:basis-full',
+              SETTINGS_INPUT_CLASS,
+            ]}
             placeholder="name@company.com"
             aria-label="Email of the person to invite"
             error={!!emailError && !!emailInput.trim()}
@@ -183,10 +241,27 @@
               <AtIcon class="text-fg-muted size-3.5 shrink-0" />
             {/snippet}
           </Input>
+          <Select
+            size="sm"
+            class={[
+              '-my-1.5 w-28 shrink-0 max-sm:-my-0.5 max-sm:flex-1',
+              SETTINGS_INPUT_CLASS,
+            ]}
+            aria-label="Role of the person to invite"
+            bind:value={inviteRole}
+            disabled={clusterInvitesState.isCreating}
+          >
+            <option value={ClusterRole.WRITE}>
+              {CLUSTER_ROLE_LABELS[ClusterRole.WRITE]}
+            </option>
+            <option value={ClusterRole.ADMIN}>
+              {CLUSTER_ROLE_LABELS[ClusterRole.ADMIN]}
+            </option>
+          </Select>
           <Button
             variant="primary"
             size="sm"
-            class="-my-1.5"
+            class="-my-1.5 max-sm:-my-0.5"
             onclick={onInviteUser}
             disabled={!isEmailValid}
             loading={clusterInvitesState.isCreating}
@@ -195,7 +270,7 @@
           </Button>
         </div>
         {#if emailError && emailInput.trim()}
-          <p class="text-error mt-2.5 pl-19">{emailError}</p>
+          <p class="text-error mt-2.5 pl-19 max-sm:pl-0">{emailError}</p>
         {/if}
       </SettingsCardItem>
     {:else}

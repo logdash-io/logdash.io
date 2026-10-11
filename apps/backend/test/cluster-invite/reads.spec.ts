@@ -6,6 +6,7 @@ import { getClusterPlanConfig } from '../../src/shared/configs/cluster-plan-conf
 import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 import { ClusterInviteSerialized } from '../../src/cluster-invite/core/entities/cluster-invite.interface';
 import { ClusterInviteCapacityResponse } from '../../src/cluster-invite/core/dto/cluster-invite-capacity.response';
+import { ErrorResponse } from '../utils/error-response';
 
 describe('ClusterInviteCoreController (reads)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -236,6 +237,65 @@ describe('ClusterInviteCoreController (reads)', () => {
       expect(body.members[1].email).toBe(otherSetup.user.email);
       expect(body.members[1].role).toBe(ClusterRole.Write);
       expect(body.currentUsersCount).toBe(2);
+    });
+
+    it('lets an admin see capacity and members', async () => {
+      const { cluster, user } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.EarlyBird,
+      });
+      const adminSetup = await bootstrap.utils.generalUtils.setupClaimed();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        userId: adminSetup.user.id,
+        role: ClusterRole.Admin,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
+        .set('Authorization', `Bearer ${adminSetup.token}`)
+        .expect(200);
+      const body = response.body as ClusterInviteCapacityResponse;
+
+      expect(body.currentUsersCount).toBe(2);
+      expect(body.members).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: user.id, role: ClusterRole.Creator }),
+          expect.objectContaining({ id: adminSetup.user.id, role: ClusterRole.Admin }),
+        ]),
+      );
+    });
+
+    it('throws 403 error when a member asks for capacity', async () => {
+      const { cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.EarlyBird,
+      });
+      const memberSetup = await bootstrap.utils.generalUtils.setupClaimed();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        userId: memberSetup.user.id,
+        role: ClusterRole.Write,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
+        .set('Authorization', `Bearer ${memberSetup.token}`);
+
+      expect(response.statusCode).toBe(403);
+      expect((response.body as ErrorResponse).message).toBe('User does not have the required role');
+    });
+
+    it('throws 403 error when user is not a member of the cluster', async () => {
+      const { cluster } = await bootstrap.utils.generalUtils.setupClaimed();
+      const { token: strangerToken } = await bootstrap.utils.generalUtils.setupClaimed();
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
+        .set('Authorization', `Bearer ${strangerToken}`);
+
+      expect(response.statusCode).toBe(403);
+      expect((response.body as ErrorResponse).message).toBe('User is not a member of this domain');
     });
   });
 });

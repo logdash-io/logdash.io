@@ -44,7 +44,7 @@
     identifySiteVisitor(data.user.id);
   });
 
-  $effect(() => {
+  afterNavigate(() => {
     if (isClustersRoot) {
       void invalidateAll();
     }

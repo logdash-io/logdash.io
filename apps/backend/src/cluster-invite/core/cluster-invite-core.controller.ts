@@ -23,6 +23,7 @@ import { SuccessResponse } from '../../shared/responses/success.response';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { ClusterWriteService } from '../../cluster/write/cluster-write.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
+import { ClusterReadCachedService } from '../../cluster/read/cluster-read-cached.service';
 import { ClusterInviteLimitService } from '../limit/cluster-invite-limit.service';
 import { ClusterInviteCapacityResponse } from './dto/cluster-invite-capacity.response';
 import { RequireRole } from '../../cluster/decorators/require-cluster-role.decorator';
@@ -37,11 +38,12 @@ export class ClusterInviteCoreController {
     private readonly clusterInviteReadService: ClusterInviteReadService,
     private readonly clusterWriteService: ClusterWriteService,
     private readonly clusterReadService: ClusterReadService,
+    private readonly clusterReadCachedService: ClusterReadCachedService,
     private readonly userReadService: UserReadService,
     private readonly clusterInviteLimitService: ClusterInviteLimitService,
   ) {}
 
-  @RequireRole(ClusterRole.Creator)
+  @RequireRole(ClusterRole.Creator, ClusterRole.Admin)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Post('clusters/:clusterId/cluster_invites')
@@ -58,6 +60,15 @@ export class ClusterInviteCoreController {
 
     if (existingInvite) {
       throw new BadRequestException('User is already invited to this domain');
+    }
+
+    const invitedUser = await this.userReadService.readByEmail(body.email);
+
+    if (
+      invitedUser &&
+      (await this.clusterReadService.userIsMember({ userId: invitedUser.id, clusterId }))
+    ) {
+      throw new BadRequestException('User is already a member of this domain');
     }
 
     const hasCapacity = await this.clusterInviteLimitService.hasCapacity(clusterId);
@@ -90,7 +101,7 @@ export class ClusterInviteCoreController {
     return ClusterInviteSerializer.serializeMany(invites, clusterNames);
   }
 
-  @RequireRole(ClusterRole.Creator)
+  @RequireRole(ClusterRole.Creator, ClusterRole.Admin)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Get('clusters/:clusterId/cluster_invites/capacity')
@@ -159,7 +170,14 @@ export class ClusterInviteCoreController {
     }
 
     if (invite.inviterUserId !== userId && invite.invitedUserEmail !== user.email) {
-      throw new ForbiddenException('You can only delete invites you have sent or received');
+      const role = await this.clusterReadCachedService.readUserRole({
+        clusterId: invite.clusterId,
+        userId,
+      });
+
+      if (role !== ClusterRole.Creator && role !== ClusterRole.Admin) {
+        throw new ForbiddenException('You can only delete invites you have sent or received');
+      }
     }
 
     await this.clusterInviteWriteService.delete(clusterInviteId, userId);
@@ -184,6 +202,12 @@ export class ClusterInviteCoreController {
 
     if (invite.invitedUserEmail !== user.email) {
       throw new ForbiddenException('You can only accept invites sent to you');
+    }
+
+    if (
+      await this.clusterReadService.userIsMember({ userId: user.id, clusterId: invite.clusterId })
+    ) {
+      throw new BadRequestException('You are already a member of this domain');
     }
 
     const numberOfClusters = await this.clusterReadService.countBeingMemberOfClusters(user.id);

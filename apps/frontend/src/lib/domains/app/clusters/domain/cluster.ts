@@ -1,3 +1,4 @@
+import type { ClusterRole } from '$lib/domains/app/clusters/domain/cluster-invite';
 import type { ClusterProjectReadModel } from '$lib/domains/app/clusters/domain/cluster-project-simple-read-model';
 
 export type Cluster = {
@@ -5,6 +6,7 @@ export type Cluster = {
   name: string;
   members: string[];
   creatorId: string;
+  roles: Record<string, ClusterRole>;
   tier: string;
   projects: ClusterProjectReadModel[];
   publicDashboards: {

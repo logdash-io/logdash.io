@@ -120,6 +120,7 @@ export class ClusterCoreController {
     });
   }
 
+  @RequireRole(ClusterRole.Creator, ClusterRole.Admin)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Put('clusters/:clusterId')
@@ -133,12 +134,6 @@ export class ClusterCoreController {
 
     if (!cluster) {
       throw new NotFoundException('Domain not found');
-    }
-
-    if (cluster.creatorId !== userId) {
-      throw new BadRequestException(
-        'Cannot update domain. User is not the creator of this domain.',
-      );
     }
 
     await this.clusterWriteService.update(
@@ -168,13 +163,14 @@ export class ClusterCoreController {
     });
   }
 
-  @RequireRole(ClusterRole.Creator)
+  @RequireRole(ClusterRole.Creator, ClusterRole.Admin)
   @UseGuards(ClusterMemberGuard)
   @ApiBearerAuth()
   @Delete('clusters/:clusterId/roles/:userId')
   public async deleteRole(
     @Param('clusterId') clusterId: string,
     @Param('userId') userId: string,
+    @CurrentUserId() actorUserId: string,
   ): Promise<SuccessResponse> {
     const cluster = await this.clusterReadService.readById(clusterId);
 
@@ -186,7 +182,7 @@ export class ClusterCoreController {
       throw new BadRequestException('Cannot delete role. User is the creator of this domain.');
     }
 
-    await this.clusterWriteService.deleteRole(clusterId, userId);
+    await this.clusterWriteService.deleteRole(clusterId, userId, actorUserId);
 
     return new SuccessResponse();
   }

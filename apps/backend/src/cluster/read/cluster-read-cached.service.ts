@@ -105,7 +105,7 @@ export class ClusterReadCachedService {
     clusterId: string;
     userId: string;
   }): Promise<ClusterRole | null> {
-    const cacheKey = `cluster:${dto.clusterId}:user:${dto.userId}:role`;
+    const cacheKey = this.getUserRoleCacheKey(dto);
     const cacheTtlSeconds = 5;
     const cachedResult = await this.redisService.get(cacheKey);
 
@@ -131,5 +131,13 @@ export class ClusterReadCachedService {
     await this.redisService.set(cacheKey, role, cacheTtlSeconds);
 
     return role;
+  }
+
+  public async invalidateUserRole(dto: { clusterId: string; userId: string }): Promise<void> {
+    await this.redisService.del(this.getUserRoleCacheKey(dto));
+  }
+
+  private getUserRoleCacheKey(dto: { clusterId: string; userId: string }): string {
+    return `cluster:${dto.clusterId}:user:${dto.userId}:role`;
   }
 }

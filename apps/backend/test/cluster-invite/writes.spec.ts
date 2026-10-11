@@ -12,6 +12,7 @@ import { UserTier } from '../../src/user/core/enum/user-tier.enum';
 import { ClusterInviteSerialized } from '../../src/cluster-invite/core/entities/cluster-invite.interface';
 import { SuccessResponse } from '../../src/shared/responses/success.response';
 import { ErrorResponse } from '../utils/error-response';
+import { CreateClusterInviteBody } from '../../src/cluster-invite/core/dto/create-invite.body';
 
 describe('ClusterInviteCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -161,6 +162,76 @@ describe('ClusterInviteCoreController (writes)', () => {
       });
     });
 
+    it('lets an admin invite another admin', async () => {
+      const { cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Admin,
+      });
+      const adminSetup = await bootstrap.utils.generalUtils.setupClaimed();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+        userId: adminSetup.user.id,
+      });
+
+      const body: CreateClusterInviteBody = { email: invitedUser.email, role: ClusterRole.Admin };
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/cluster_invites`)
+        .set('Authorization', `Bearer ${adminSetup.token}`)
+        .send(body);
+
+      expect(response.statusCode).toBe(201);
+      expect(await bootstrap.models.clusterInviteModel.findOne().lean()).toMatchObject({
+        inviterUserId: adminSetup.user.id,
+        invitedUserEmail: invitedUser.email,
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+      });
+    });
+
+    it('throws error when the invited user is already a member', async () => {
+      const { user: owner, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Admin,
+      });
+      const adminSetup = await bootstrap.utils.generalUtils.setupClaimed();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+        userId: adminSetup.user.id,
+      });
+
+      const body: CreateClusterInviteBody = { email: owner.email, role: ClusterRole.Write };
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/cluster_invites`)
+        .set('Authorization', `Bearer ${adminSetup.token}`)
+        .send(body);
+
+      expect(response.statusCode).toBe(400);
+      expect((response.body as ErrorResponse).message).toBe(
+        'User is already a member of this domain',
+      );
+      expect(await bootstrap.models.clusterInviteModel.countDocuments()).toBe(0);
+    });
+
+    it('rejects an invite with the creator role', async () => {
+      const { token, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Admin,
+      });
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed();
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .post(`/clusters/${cluster.id}/cluster_invites`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ email: invitedUser.email, role: ClusterRole.Creator });
+
+      expect(response.statusCode).toBe(400);
+      expect(await bootstrap.models.clusterInviteModel.countDocuments()).toBe(0);
+    });
+
     it('throws 403 error when user is does not have the required role', async () => {
       const { cluster } = await bootstrap.utils.generalUtils.setupAnonymous();
       const otherSetup = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -201,11 +272,13 @@ describe('ClusterInviteCoreController (writes)', () => {
           role: ClusterRole.Write,
         });
 
+        const outsiderSetup = await bootstrap.utils.generalUtils.setupClaimed();
+
         const response = await request(bootstrap.app.getHttpServer())
           .post(`/clusters/${setup.cluster.id}/cluster_invites`)
           .set('Authorization', `Bearer ${setup.token}`)
           .send({
-            email: setup.user.email,
+            email: outsiderSetup.user.email,
             role: ClusterRole.Write,
           });
 
@@ -243,11 +316,13 @@ describe('ClusterInviteCoreController (writes)', () => {
           role: ClusterRole.Write,
         });
 
+        const outsiderSetup = await bootstrap.utils.generalUtils.setupClaimed();
+
         const response = await request(bootstrap.app.getHttpServer())
           .post(`/clusters/${setup.cluster.id}/cluster_invites`)
           .set('Authorization', `Bearer ${setup.token}`)
           .send({
-            email: otherSetup.user.email,
+            email: outsiderSetup.user.email,
             role: ClusterRole.Write,
           });
 
@@ -388,6 +463,72 @@ describe('ClusterInviteCoreController (writes)', () => {
       expect(updatedCluster?.roles[invitedUser.id]).toBe(ClusterRole.Write);
     });
 
+    it('gives the invitee the admin role with immediate access', async () => {
+      const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Admin,
+      });
+      const { token: invitedUserToken, user: invitedUser } =
+        await bootstrap.utils.generalUtils.setupClaimed();
+
+      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: inviterToken,
+        clusterId: cluster.id,
+        invitedUserEmail: invitedUser.email,
+        role: ClusterRole.Admin,
+      });
+
+      await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
+        .set('Authorization', `Bearer ${invitedUserToken}`)
+        .expect(403);
+
+      await request(bootstrap.app.getHttpServer())
+        .put(`/cluster_invites/${invite.id}/accept`)
+        .set('Authorization', `Bearer ${invitedUserToken}`)
+        .expect(200);
+
+      const updatedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
+      expect(updatedCluster?.roles[invitedUser.id]).toBe(ClusterRole.Admin);
+
+      await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
+        .set('Authorization', `Bearer ${invitedUserToken}`)
+        .expect(200);
+    });
+
+    it('does not demote the owner who accepts an invite to their own domain', async () => {
+      const {
+        token: ownerToken,
+        user: owner,
+        cluster,
+      } = await bootstrap.utils.generalUtils.setupClaimed({ userTier: UserTier.Admin });
+      const adminSetup = await bootstrap.utils.generalUtils.setupClaimed();
+
+      const invite = await bootstrap.models.clusterInviteModel.create({
+        inviterUserId: adminSetup.user.id,
+        invitedUserEmail: owner.email,
+        clusterId: cluster.id,
+        role: ClusterRole.Write,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .put(`/cluster_invites/${invite._id.toString()}/accept`)
+        .set('Authorization', `Bearer ${ownerToken}`);
+
+      expect(response.statusCode).toBe(400);
+      expect((response.body as ErrorResponse).message).toBe(
+        'You are already a member of this domain',
+      );
+
+      const unchangedCluster = await bootstrap.models.clusterModel.findById(cluster.id);
+      expect(unchangedCluster?.roles[owner.id]).toBe(ClusterRole.Creator);
+
+      await request(bootstrap.app.getHttpServer())
+        .get(`/clusters/${cluster.id}/cluster_invites/capacity`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(200);
+    });
+
     it('throws error when user is a member of too many clusters', async () => {
       const { token: inviterToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
         email: 'admin@example.com',
@@ -464,6 +605,63 @@ describe('ClusterInviteCoreController (writes)', () => {
 
       expect(response.statusCode).toBe(403);
       expect((response.body as ErrorResponse).message).toBe('User is not a member of this domain');
+    });
+
+    it('lets an admin cancel an invite sent by someone else', async () => {
+      const { token: creatorToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Admin,
+      });
+      const adminSetup = await bootstrap.utils.generalUtils.setupClaimed();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Admin,
+        userId: adminSetup.user.id,
+      });
+
+      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: creatorToken,
+        clusterId: cluster.id,
+        invitedUserEmail: invitedUser.email,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/cluster_invites/${invite.id}`)
+        .set('Authorization', `Bearer ${adminSetup.token}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(await bootstrap.models.clusterInviteModel.countDocuments()).toBe(0);
+    });
+
+    it('throws 403 error when a member cancels an invite sent by someone else', async () => {
+      const { token: creatorToken, cluster } = await bootstrap.utils.generalUtils.setupClaimed({
+        userTier: UserTier.Admin,
+      });
+      const memberSetup = await bootstrap.utils.generalUtils.setupClaimed();
+      const { user: invitedUser } = await bootstrap.utils.generalUtils.setupClaimed();
+
+      await bootstrap.utils.projectGroupUtils.addRole({
+        clusterId: cluster.id,
+        role: ClusterRole.Write,
+        userId: memberSetup.user.id,
+      });
+
+      const invite = await bootstrap.utils.clusterInviteUtils.createClusterInvite({
+        token: creatorToken,
+        clusterId: cluster.id,
+        invitedUserEmail: invitedUser.email,
+      });
+
+      const response = await request(bootstrap.app.getHttpServer())
+        .delete(`/cluster_invites/${invite.id}`)
+        .set('Authorization', `Bearer ${memberSetup.token}`);
+
+      expect(response.statusCode).toBe(403);
+      expect((response.body as ErrorResponse).message).toBe(
+        'You can only delete invites you have sent or received',
+      );
+      expect(await bootstrap.models.clusterInviteModel.countDocuments()).toBe(1);
     });
 
     it('allows invited user to delete (decline) invite', async () => {
