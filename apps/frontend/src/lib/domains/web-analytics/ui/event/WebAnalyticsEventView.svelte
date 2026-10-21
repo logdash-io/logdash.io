@@ -33,7 +33,11 @@
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const query = $derived(parseAnalyticsQuery(page.url.searchParams));
   const timeWindow = $derived(queryWindow(query));
-  const range = $derived(analyticsRange(query, tz));
+  let refreshes = $state(0);
+  const range = $derived.by(() => {
+    void refreshes;
+    return analyticsRange(query, tz);
+  });
   const eventReport = new WebAnalyticsInsightState<WebAnalyticsEvent>(() =>
     WebAnalyticsService.readEvent(clusterId, name, range),
   );
@@ -69,11 +73,16 @@
     onQueryChange(withFilter(query, filter));
   }
 
+  function onVisibilityChange(): void {
+    if (!document.hidden) onRefresh();
+  }
+
   function onRefresh(): void {
-    void eventReport.load();
-    void analytics.load(range);
+    refreshes++;
   }
 </script>
+
+<svelte:document onvisibilitychange={onVisibilityChange} />
 
 <div class="@container flex w-full flex-col">
   {#if query.filters.length}

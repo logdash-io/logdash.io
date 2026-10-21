@@ -32,7 +32,11 @@
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const query = $derived(parseAnalyticsQuery(page.url.searchParams));
   const timeWindow = $derived(queryWindow(query));
-  const range = $derived(analyticsRange(query, tz));
+  let refreshes = $state(0);
+  const range = $derived.by(() => {
+    void refreshes;
+    return analyticsRange(query, tz);
+  });
   const report = $derived(analytics.report);
 
   $effect(() => topBarState.show(toolbar));
@@ -68,11 +72,17 @@
     return `/app/domains/${clusterId}/events/${name}${analyticsSearch(query)}`;
   }
 
+  function onVisibilityChange(): void {
+    if (!document.hidden) onRefresh();
+  }
+
   function onRefresh(): void {
-    void analytics.load(analyticsRange(query, tz));
+    refreshes++;
     void analytics.loadSite();
   }
 </script>
+
+<svelte:document onvisibilitychange={onVisibilityChange} />
 
 <div class="@container flex w-full flex-col">
   <ServiceHealthStrip {clusterId} />
