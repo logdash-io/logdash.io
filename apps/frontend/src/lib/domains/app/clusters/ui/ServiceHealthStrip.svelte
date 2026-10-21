@@ -41,14 +41,20 @@
       projectIds: services.map(({ id }) => id),
     }));
 
-    void health.load(targets);
-    const timer = setInterval(() => {
+    const refreshWhenVisible = (): void => {
       if (!document.hidden) {
         void health.load(targets);
       }
-    }, POLL_INTERVAL_MS);
+    };
 
-    return () => clearInterval(timer);
+    void health.load(targets);
+    const timer = setInterval(refreshWhenVisible, POLL_INTERVAL_MS);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   });
 
   function errorsLabel(count: number): string {
