@@ -30,15 +30,20 @@ class ClusterPulseState {
   }
 
   public startPolling(): () => void {
-    void this.load();
-
-    const timer = setInterval(() => {
+    const refreshWhenVisible = (): void => {
       if (!document.hidden) {
         void this.load();
       }
-    }, POLLING_INTERVAL_MS);
+    };
 
-    return () => clearInterval(timer);
+    void this.load();
+    const timer = setInterval(refreshWhenVisible, POLLING_INTERVAL_MS);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }
 
   private async load(): Promise<void> {

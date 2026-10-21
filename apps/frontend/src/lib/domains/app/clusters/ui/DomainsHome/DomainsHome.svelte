@@ -94,8 +94,27 @@
       return;
     }
 
-    void loadVisitors(clusterIds ? clusterIds.split(',') : [], period);
+    const ids = clusterIds ? clusterIds.split(',') : [];
+    visitors = Object.fromEntries(ids.map((id) => [id, { status: 'loading' }]));
+    void loadVisitors(ids, period);
   });
+
+  async function onVisibilityChange(): Promise<void> {
+    if (document.hidden) {
+      return;
+    }
+
+    void loadVisitors(
+      clusters.map(({ id }) => id),
+      period,
+    );
+
+    try {
+      await clustersState.load();
+    } catch {
+      return;
+    }
+  }
 
   async function loadVisitors(
     ids: string[],
@@ -112,15 +131,19 @@
       compare: false,
     };
 
-    visitors = Object.fromEntries(ids.map((id) => [id, { status: 'loading' }]));
-
     await Promise.all(
       ids.map(async (id) => {
         const result = await readVisitors(id, range);
 
-        if (current === generation) {
-          visitors[id] = result;
+        if (current !== generation) {
+          return;
         }
+
+        if (result.status === 'error' && visitors[id]?.status === 'ready') {
+          return;
+        }
+
+        visitors[id] = result;
       }),
     );
   }
@@ -172,6 +195,8 @@
     return allowed.find((id) => id === value) ?? null;
   }
 </script>
+
+<svelte:document onvisibilitychange={onVisibilityChange} />
 
 <div class="@container flex w-full flex-col gap-2 p-2">
   <p
