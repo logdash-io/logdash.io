@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { LogLevel } from '../enums/log-level.enum';
 import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { AppName } from '../../../shared/utils/app-name.decorator';
 
 export class CreateLogBody {
   @ApiProperty()
@@ -31,4 +32,7 @@ export class CreateLogBody {
   @IsString()
   @MaxLength(255)
   namespace?: string;
+
+  @AppName()
+  app?: string;
 }

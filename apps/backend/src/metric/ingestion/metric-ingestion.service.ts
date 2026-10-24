@@ -39,6 +39,7 @@ export class MetricIngestionService {
     const now = new Date();
 
     const upsertDtos: UpsertMetricDto[] = [];
+    const metricEvents: MetricCreatedEvent[] = [];
 
     // we get unique metrics by project id and name
     // we need that to get through the registration process
@@ -92,39 +93,33 @@ export class MetricIngestionService {
 
       const value = dto.operation === MetricOperation.Change ? dto.value + baseline : dto.value;
 
-      upsertDtos.push(
-        ...bucketedDates.map((bucket) => ({
+      for (const bucket of bucketedDates) {
+        upsertDtos.push({
           granularity: bucket.granularity,
           timeBucket: bucket.dateGranular,
           value,
-          operation: dto.operation,
           metricRegisterEntryId: dto.metricRegisterEntryId,
           projectId: dto.projectId,
-        })),
-      );
+        });
+
+        metricEvents.push({
+          metricRegisterEntryId: dto.metricRegisterEntryId,
+          date:
+            bucket.granularity === MetricGranularity.AllTime
+              ? 'all-time'
+              : parseFlexibleDate(bucket.dateGranular).toISOString(),
+          name: dto.name,
+          value,
+          granularity: bucket.granularity,
+          projectId: dto.projectId,
+          clusterId: dto.clusterId,
+          app: dto.app,
+        });
+      }
     }
 
     // save metrics
     await this.metricWriteService.upsertMany(upsertDtos);
-
-    // create a mapping from register entry ID to metric name
-    const metricRegisterIdToNameMap = new Map<string, string>();
-    for (const dto of enrichedDtos) {
-      metricRegisterIdToNameMap.set(dto.metricRegisterEntryId, dto.name);
-    }
-
-    // emit metric events directly from simplified metrics
-    const metricEvents: MetricCreatedEvent[] = upsertDtos.map((metric) => ({
-      metricRegisterEntryId: metric.metricRegisterEntryId,
-      date:
-        metric.granularity === MetricGranularity.AllTime
-          ? 'all-time'
-          : parseFlexibleDate(metric.timeBucket).toISOString(),
-      name: metricRegisterIdToNameMap.get(metric.metricRegisterEntryId) || 'unknown',
-      value: metric.value,
-      granularity: metric.granularity,
-      projectId: metric.projectId,
-    }));
 
     if (metricEvents.length > 0) {
       this.metricEventEmitter.emitMetricCreatedEvents(metricEvents);

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ApiKeyWriteModule } from '../../api-key/write/api-key-write.module';
 import { ClusterReadModule } from '../read/cluster-read.module';
 import { ClusterWriteModule } from '../write/cluster-write.module';
 import { ProjectRemovalModule } from '../../project/removal/project-removal.module';
@@ -10,6 +11,7 @@ import { NotificationChannelWriteModule } from '../../notification-channel/write
 
 @Module({
   imports: [
+    ApiKeyWriteModule,
     ClusterReadModule,
     ClusterWriteModule,
     ProjectRemovalModule,

@@ -10,6 +10,7 @@ import {
   type Metric,
   type SimplifiedMetric,
 } from '$lib/domains/app/projects/domain/metric';
+import { MetricsService } from '$lib/domains/app/projects/infrastructure/metrics.service.js';
 
 const logger = createLogger('metrics.state', true);
 
@@ -25,7 +26,7 @@ class MetricsState {
     >
   >({});
   private _initialized = $state(false);
-  private _projectId = $state<string | null>(null);
+  private _clusterId = $state<string | null>(null);
   private syncConnection: EventSource | null = null;
   private _generation = 0;
   private _metricDetailsLoading = $state(false);
@@ -59,55 +60,55 @@ class MetricsState {
     return Object.values(this._metrics[metricId]?.[granularity] ?? {}) ?? [];
   }
 
-  previewMetric(project_id: string, metric_id: string): void {
-    void this.fetchMetricDetails(project_id, metric_id);
+  previewMetric(cluster_id: string, metric_id: string): void {
+    void this.fetchMetricDetails(cluster_id, metric_id);
   }
 
-  getLastPreviewedMetricId(projectId: string): string | null {
+  getLastPreviewedMetricId(clusterId: string): string | null {
     if (typeof sessionStorage === 'undefined') {
       return null;
     }
 
-    return sessionStorage.getItem(`metrics:lastPreviewed:${projectId}`);
+    return sessionStorage.getItem(`metrics:lastPreviewed:${clusterId}`);
   }
 
-  setLastPreviewedMetricId(projectId: string, metricId: string): void {
+  setLastPreviewedMetricId(clusterId: string, metricId: string): void {
     if (typeof sessionStorage === 'undefined') {
       return;
     }
 
-    sessionStorage.setItem(`metrics:lastPreviewed:${projectId}`, metricId);
+    sessionStorage.setItem(`metrics:lastPreviewed:${clusterId}`, metricId);
   }
 
-  get projectId(): string | null {
-    return this._projectId;
+  get clusterId(): string | null {
+    return this._clusterId;
   }
 
-  set(projectId: string, metrics: SimplifiedMetric[]): void {
-    this._projectId = projectId;
+  set(clusterId: string, metrics: SimplifiedMetric[]): void {
+    this._clusterId = clusterId;
     this._simplifiedMetrics = arrayToObject(metrics, 'id');
     this._initialized = true;
   }
 
-  async sync(project_id: string, tabId: string): Promise<void> {
+  async sync(cluster_id: string, tabId: string): Promise<void> {
     this.unsync();
     const generation = this._generation;
     this._metrics = {};
 
-    if (project_id !== this._projectId) {
-      this._projectId = project_id;
+    if (cluster_id !== this._clusterId) {
+      this._clusterId = cluster_id;
       this._simplifiedMetrics = {};
       this._initialized = false;
     }
 
-    logger.debug(`syncing metrics for project ${project_id}...`);
+    logger.debug(`syncing metrics for domain ${cluster_id}...`);
 
-    void this.fetchMetrics(project_id, generation);
-    await this._openMetricsStream(project_id, tabId, generation);
+    void this.fetchMetrics(cluster_id, generation);
+    await this._openMetricsStream(cluster_id, tabId, generation);
   }
 
   private _openMetricsStream(
-    project_id: string,
+    cluster_id: string,
     tabId: string,
     generation: number,
   ): Promise<void> {
@@ -115,7 +116,7 @@ class MetricsState {
       this._unsubscribe?.();
 
       this.syncConnection = new EventSource(
-        `${envConfig.apiBaseUrl}/projects/${project_id}/metrics/sse?tab_id=${tabId}`,
+        `${envConfig.apiBaseUrl}/clusters/${cluster_id}/metrics/sse?tab_id=${tabId}`,
         {
           fetch: (input, init) =>
             fetch(input, {
@@ -140,7 +141,7 @@ class MetricsState {
         logger.debug('Attempting to reconnect in 3 seconds...');
         setTimeout(() => {
           if (generation === this._generation) {
-            void this._openMetricsStream(project_id, tabId, generation);
+            void this._openMetricsStream(cluster_id, tabId, generation);
           }
         }, 3000);
 
@@ -170,6 +171,8 @@ class MetricsState {
               id: metricId,
               name: metric.name,
               value: metric.value,
+              app: metric.app ?? '',
+              projectId: metric.projectId ?? '',
             };
             logger.debug(
               `added all time metric ${metric.name} with the value ${metric.value}`,
@@ -211,10 +214,10 @@ class MetricsState {
     });
   }
 
-  async resumeSync(project_id: string, tabId: string): Promise<void> {
+  async resumeSync(cluster_id: string, tabId: string): Promise<void> {
     this.unsync();
     logger.debug('resuming metrics...');
-    await this.sync(project_id, tabId);
+    await this.sync(cluster_id, tabId);
   }
 
   pauseSync(): void {
@@ -230,27 +233,19 @@ class MetricsState {
     this.syncConnection = null;
   }
 
-  async delete(projectId: string, metricId: string): Promise<void> {
+  async delete(metricId: string): Promise<void> {
     const metric = this._simplifiedMetrics[metricId];
 
-    if (this._simplifiedMetrics[metricId]) {
-      delete this._simplifiedMetrics[metricId];
-    } else {
+    if (!metric) {
       logger.warn(`Metric with id ${metricId} does not exist`);
+      return;
     }
 
+    delete this._simplifiedMetrics[metricId];
+
     try {
-      const response = await fetch(
-        `/app/api/metrics?project_id=${projectId}&metric_id=${metricId}`,
-        { method: 'DELETE' },
-      );
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
+      await MetricsService.delete(metric.projectId, metricId);
       toast.success(`Deleted metric ${metric.name}`);
-      logger.debug(`Deleted metric with id ${metricId}`);
     } catch (error) {
       toast.error(`Failed to delete metric ${metric.name}. Please try again.`);
       logger.error('Error deleting metric:', error);
@@ -259,25 +254,17 @@ class MetricsState {
   }
 
   private async fetchMetrics(
-    project_id: string,
+    cluster_id: string,
     generation: number,
   ): Promise<void> {
-    const url = `/app/api/projects/${project_id}/metrics`;
-
     try {
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const { data } = (await response.json()) as { data: SimplifiedMetric[] };
+      const metrics = await MetricsService.readCurrent(cluster_id);
 
       if (generation === this._generation) {
-        this.set(project_id, data);
+        this.set(cluster_id, metrics);
       }
     } catch (error) {
-      console.error('Error fetching metrics:', error);
+      logger.error('Error fetching metrics:', error);
     }
   }
 
@@ -299,26 +286,19 @@ class MetricsState {
   }
 
   private async fetchMetricDetails(
-    project_id: string,
+    cluster_id: string,
     metric_id: string,
   ): Promise<void> {
     this._metricDetailsLoading = true;
     this._metricDetailsFailed = false;
-    const url = `/app/api/projects/${project_id}/metrics/details?metric_id=${metric_id}`;
 
     try {
-      const response = await fetch(url);
+      const metrics = await MetricsService.readHistory(cluster_id, metric_id);
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const { data } = (await response.json()) as { data: Metric[] };
-
-      data.forEach((metric) => this.store(metric));
+      metrics.forEach((metric) => this.store(metric));
     } catch (error) {
       this._metricDetailsFailed = true;
-      console.error('Error fetching metrics:', error);
+      logger.error('Error fetching metric details:', error);
     } finally {
       this._metricDetailsLoading = false;
     }

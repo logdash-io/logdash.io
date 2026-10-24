@@ -8,6 +8,7 @@ import { PublicDashboardRemovalService } from '../../public-dashboard/removal/pu
 import { WebAnalyticsWriteService } from '../../web-analytics/write/web-analytics-write.service';
 import { HttpMonitorRemovalService } from '../../http-monitor/removal/http-monitor-removal.service';
 import { NotificationChannelWriteService } from '../../notification-channel/write/notification-channel-write.service';
+import { ApiKeyWriteService } from '../../api-key/write/api-key-write.service';
 
 @Injectable()
 export class ClusterRemovalService {
@@ -20,6 +21,7 @@ export class ClusterRemovalService {
     private readonly webAnalyticsWriteService: WebAnalyticsWriteService,
     private readonly httpMonitorRemovalService: HttpMonitorRemovalService,
     private readonly notificationChannelWriteService: NotificationChannelWriteService,
+    private readonly apiKeyWriteService: ApiKeyWriteService,
   ) {}
 
   public async deleteClustersByCreatorId(creatorId: string): Promise<void> {
@@ -48,5 +50,7 @@ export class ClusterRemovalService {
     await this.httpMonitorRemovalService.deleteByClusterId(clusterId, actorUserId);
     await this.publicDashboardRemovalService.deletePublicDashboardsByClusterId(clusterId);
     await this.notificationChannelWriteService.deleteByClusterId(clusterId);
+    await this.apiKeyWriteService.deleteByClusterId(clusterId);
+    await this.webAnalyticsWriteService.deleteByClusterId(clusterId);
   }
 }

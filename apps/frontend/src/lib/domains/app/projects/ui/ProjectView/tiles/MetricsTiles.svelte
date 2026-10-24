@@ -2,7 +2,8 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
-  import { MetricHistoryService } from '$lib/domains/app/projects/infrastructure/metric-history.service.js';
+  import { MetricsService } from '$lib/domains/app/projects/infrastructure/metrics.service.js';
+  import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import MetricsColumn, {
     type MetricsColumnItem,
   } from '$lib/domains/app/projects/ui/ProjectView/tiles/MetricsColumn.svelte';
@@ -16,8 +17,8 @@
   const HISTORY_REFRESH_MS = 60_000;
 
   const clusterId = $derived(page.params.cluster_id);
-  const projectId = $derived(page.params.project_id);
   const activeMetricId = $derived(page.params.metric_id);
+  const showApp = $derived(projectsState.appNames.length > 1);
 
   let setupOpen = $state(false);
   let histories = $state<Record<string, number[]>>({});
@@ -30,25 +31,20 @@
     metricsState.simplifiedMetrics.map((metric) => ({
       id: metric.id,
       name: metric.name,
+      app: showApp ? metric.app : undefined,
       value: metric.value,
       samples: [...(histories[metric.id] ?? []), metric.value],
-      href:
-        clusterId && projectId
-          ? resolve(
-              '/app/domains/[cluster_id]/[project_id]/metrics/[metric_id]',
-              {
-                cluster_id: clusterId,
-                project_id: projectId,
-                metric_id: metric.id,
-              },
-            )
-          : undefined,
+      href: clusterId
+        ? resolve('/app/domains/[cluster_id]/metrics/[metric_id]', {
+            cluster_id: clusterId,
+            metric_id: metric.id,
+          })
+        : undefined,
       active: metric.id === activeMetricId,
     })),
   );
-  const atLimit = $derived(
-    metrics.length > 0 &&
-      metrics.length >= exposedConfigState.maxRegisteredMetrics(userState.tier),
+  const fullApps = $derived(
+    appsAtLimit(exposedConfigState.maxRegisteredMetrics(userState.tier)),
   );
   const upgradeMultiplier = $derived(
     exposedConfigState.maxRegisteredMetrics(UserTier.EARLY_BIRD) /
@@ -57,7 +53,7 @@
 
   $effect(() => {
     const ids = metricIds ? metricIds.split(',') : [];
-    const id = metricsState.projectId;
+    const id = metricsState.clusterId;
 
     if (!id || ids.length === 0 || visibilityState === 'hidden') {
       return;
@@ -71,7 +67,7 @@
           try {
             return [
               metricId,
-              await MetricHistoryService.readRecentMinutes(
+              await MetricsService.readRecentMinutes(
                 id,
                 metricId,
                 HISTORY_MINUTES,
@@ -100,6 +96,16 @@
   function onNewMetric(): void {
     setupOpen = !setupOpen;
   }
+
+  function appsAtLimit(limit: number): string[] {
+    const counts: Record<string, number> = {};
+
+    for (const { app } of metricsState.simplifiedMetrics) {
+      counts[app] = (counts[app] ?? 0) + 1;
+    }
+
+    return Object.keys(counts).filter((app) => counts[app] >= limit);
+  }
 </script>
 
 <svelte:document bind:visibilityState />
@@ -110,19 +116,20 @@
   loading={!metricsState.ready}
   {onNewMetric}
 >
-  {#if setupOpen && projectId}
+  {#if setupOpen && clusterId}
     <div class="flex flex-col items-start gap-3 px-3 pt-1 pb-2">
       <span class="text-fg-tertiary text-sm">
         Copy the prompt into your AI assistant to start sending metrics.
       </span>
-      <SdkSetupPrompt {projectId} feature={Feature.METRICS} />
+      <SdkSetupPrompt {clusterId} feature={Feature.METRICS} />
     </div>
   {/if}
 
-  {#if atLimit}
+  {#if fullApps.length}
     <div class="text-fg-muted px-3 pb-2 text-sm">
+      {showApp ? fullApps.join(', ') : 'This app'}
+      {fullApps.length === 1 ? 'tracks' : 'track'} as many metrics as your plan allows.
       {#if userState.canUpgrade}
-        This service tracks as many metrics as your plan allows.
         <UpgradeElement
           source="metrics-limit"
           class="text-fg-default inline underline underline-offset-2"
@@ -146,7 +153,7 @@
         >
           Contact us
         </a>
-        to track more metrics in this service.
+        to track more metrics in one app.
       {/if}
     </div>
   {/if}

@@ -6,6 +6,8 @@ export interface LogCreatedEvent {
   message: string;
   level: LogLevel;
   projectId: string;
+  clusterId: string;
+  app: string;
   sequenceNumber?: number;
   namespace?: string;
 }

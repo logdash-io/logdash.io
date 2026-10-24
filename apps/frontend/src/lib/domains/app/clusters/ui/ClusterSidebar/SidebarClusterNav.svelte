@@ -9,13 +9,28 @@
   const currentPath = $derived(page.url.pathname);
 
   const active = $derived.by(
-    (): 'analytics' | 'uptime' | 'status-pages' | 'settings' | null => {
+    ():
+      | 'analytics'
+      | 'uptime'
+      | 'logs'
+      | 'metrics'
+      | 'status-pages'
+      | 'settings'
+      | null => {
       if (currentPath === basePath) {
         return 'analytics';
       }
 
       if (currentPath.startsWith(`${basePath}/uptime`)) {
         return 'uptime';
+      }
+
+      if (currentPath === `${basePath}/logs`) {
+        return 'logs';
+      }
+
+      if (currentPath.startsWith(`${basePath}/metrics`)) {
+        return 'metrics';
       }
 
       if (currentPath === `${basePath}/settings`) {

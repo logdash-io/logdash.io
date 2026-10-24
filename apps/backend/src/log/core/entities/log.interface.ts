@@ -60,3 +60,8 @@ export class LogClickhouseSerialized {
   @ApiProperty({ required: false })
   namespace?: string;
 }
+
+export class ClusterLogSerialized extends LogClickhouseSerialized {
+  @ApiProperty({ description: 'The app that sent the log.' })
+  app: string;
+}

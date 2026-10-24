@@ -7,6 +7,7 @@ import { ApiResponse } from '@nestjs/swagger';
 import { AddTestLogRateLimitService } from './add-test-log-rate-limit.service';
 import { DemoEndpoint } from '../../demo/decorators/demo-endpoint.decorator';
 import { LogEventEmitter } from '../events/log-event.emitter';
+import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
 
 @Controller('')
 export class AddTestLogController {
@@ -14,6 +15,7 @@ export class AddTestLogController {
     private readonly logQueueingService: LogQueueingService,
     private readonly addTestLogRateLimitService: AddTestLogRateLimitService,
     private readonly logEventEmitter: LogEventEmitter,
+    private readonly projectReadCachedService: ProjectReadCachedService,
   ) {}
 
   @DemoEndpoint()
@@ -24,6 +26,8 @@ export class AddTestLogController {
   @Post('projects/:projectId/test-log')
   public async addTestLog(@Ip() ip: string, @Param('projectId') projectId: string) {
     await this.addTestLogRateLimitService.checkAndIncrement(projectId, ip);
+
+    const project = await this.projectReadCachedService.readProjectOrThrow(projectId);
 
     const animal = await this.addTestLogRateLimitService.getAnimal(ip);
 
@@ -40,6 +44,8 @@ export class AddTestLogController {
       ...queueLogDto,
       createdAt: queueLogDto.createdAt.toISOString(),
       id: result.id,
+      clusterId: project.clusterId,
+      app: project.name,
       sequenceNumber: 1,
     });
 

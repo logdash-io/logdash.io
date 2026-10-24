@@ -8,4 +8,5 @@ export type Log = {
   index?: number;
   sequenceNumber?: number;
   namespace?: string;
+  app?: string;
 };

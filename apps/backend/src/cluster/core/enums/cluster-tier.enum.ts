@@ -47,3 +47,19 @@ export function clusterTierFromProjectTier(projectTier: ProjectTier): ClusterTie
 
   return map[projectTier];
 }
+
+export function projectTierFromClusterTier(clusterTier: ClusterTier): ProjectTier {
+  const map: Record<ClusterTier, ProjectTier> = {
+    [ClusterTier.Free]: ProjectTier.Free,
+    [ClusterTier.EarlyUser]: ProjectTier.EarlyUser,
+
+    [ClusterTier.EarlyBird]: ProjectTier.EarlyBird,
+    [ClusterTier.Builder]: ProjectTier.Builder,
+    [ClusterTier.Pro]: ProjectTier.Pro,
+
+    [ClusterTier.Contributor]: ProjectTier.Contributor,
+    [ClusterTier.Admin]: ProjectTier.Admin,
+  };
+
+  return map[clusterTier];
+}

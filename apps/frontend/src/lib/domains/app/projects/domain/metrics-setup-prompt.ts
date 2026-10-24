@@ -7,7 +7,7 @@ export function getMetricsCodeSnippet(
   const snippets: Record<LogdashSDKName, string> = {
     [LogdashSDKName.NODE_JS]: `import { Logdash } from '@logdash/node';
 
-const logdash = new Logdash("${apiKey}");
+const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 logdash.setMetric('users', 0);
 logdash.mutateMetric('users', 1);
@@ -15,7 +15,7 @@ logdash.mutateMetric('users', 1);
 logdash.flush();`,
     [LogdashSDKName.NEXT_JS]: `// lib/logdash.ts
 import { Logdash } from '@logdash/node';
-export const logdash = new Logdash("${apiKey}");
+export const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 // middleware.ts - track edge function performance
 import { logdash } from './lib/logdash';
@@ -30,7 +30,7 @@ export function middleware(request) {
 }`,
     [LogdashSDKName.SVELTE_KIT]: `// src/lib/logdash.ts
 import { Logdash } from '@logdash/node';
-export const logdash = new Logdash("${apiKey}");
+export const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 // src/hooks.server.ts - track route performance
 import { logdash } from '$lib/logdash';
@@ -123,7 +123,7 @@ ld.Shutdown(ctx)`,
     [LogdashSDKName.CURL]: `curl -X PUT "https://api.logdash.io/metrics" \\
 -H 'project-api-key: ${apiKey}' \\
 -H 'Content-Type: application/json' \\
--d '{"name": "users", "value": 0, "operation": "set"}'`,
+-d '{"name": "users", "value": 0, "operation": "set", "app": "my-app"}'`,
   };
 
   return snippets[sdkName];

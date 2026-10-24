@@ -7,7 +7,7 @@
   const { visitor }: Props = $props();
 
   const traits = $derived(
-    [visitor.device, visitor.os, visitor.browser].filter(
+    [visitor.device, visitor.os, visitor.browser, ...visitor.apps].filter(
       (trait) => trait && trait !== 'Other',
     ),
   );

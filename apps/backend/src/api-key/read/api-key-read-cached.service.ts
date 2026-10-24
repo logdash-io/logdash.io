@@ -2,9 +2,9 @@ import * as crypto from 'crypto';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
 import { API_KEYS_LOGGER } from '../../shared/logdash/logdash-tokens';
-import { Types } from 'mongoose';
 import { RedisService } from '../../shared/redis/redis.service';
 import { ApiKeyReadService } from './api-key-read.service';
+import { ApiKeyNormalized, IngestKeyTarget } from '../core/entities/api-key.interface';
 
 const NON_EXISTENT = 'non-existent';
 
@@ -16,37 +16,49 @@ export class ApiKeyReadCachedService {
     private readonly redisService: RedisService,
   ) {}
 
-  public async readProjectId(apiKeyValue: string | undefined): Promise<string | null> {
+  public async readTarget(apiKeyValue: string | undefined): Promise<IngestKeyTarget | null> {
     if (!apiKeyValue) {
       return null;
     }
 
-    const cacheKey = `api-key:${this.hashApiKeyValue(apiKeyValue)}:project-id`;
+    const cacheKey = `api-key:${this.hashApiKeyValue(apiKeyValue)}:target`;
     const cacheTtlSeconds = 60;
 
-    const projectId = await this.redisService.get(cacheKey);
+    const cached = await this.redisService.get(cacheKey);
 
-    if (projectId === NON_EXISTENT) {
+    if (cached === NON_EXISTENT) {
       throw new UnauthorizedException(
         'API key not found. You have to wait 60 seconds before trying again',
       );
     }
 
-    if (projectId !== null && Types.ObjectId.isValid(projectId)) {
-      return projectId;
+    if (cached !== null) {
+      return JSON.parse(cached) as IngestKeyTarget;
     }
 
-    const apiKey = await this.apiKeyReadService.readApiKeyByValue(apiKeyValue);
+    const target = this.targetOf(await this.apiKeyReadService.readApiKeyByValue(apiKeyValue));
 
-    if (!apiKey) {
+    if (!target) {
       await this.redisService.set(cacheKey, NON_EXISTENT, cacheTtlSeconds);
       this.logger.warn(`API key not found`, { apiKeyPrefix: apiKeyValue.slice(0, 8) });
       return null;
     }
 
-    await this.redisService.set(cacheKey, apiKey.projectId, cacheTtlSeconds);
+    await this.redisService.set(cacheKey, JSON.stringify(target), cacheTtlSeconds);
 
-    return apiKey.projectId;
+    return target;
+  }
+
+  private targetOf(apiKey: ApiKeyNormalized | null): IngestKeyTarget | null {
+    if (apiKey?.clusterId) {
+      return { clusterId: apiKey.clusterId };
+    }
+
+    if (apiKey?.projectId) {
+      return { projectId: apiKey.projectId };
+    }
+
+    return null;
   }
 
   private hashApiKeyValue(apiKeyValue: string): string {

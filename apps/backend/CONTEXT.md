@@ -17,9 +17,11 @@ credential the `ld` CLI and the future MCP server present. New in this work orde
 _Avoid_: "the API key", "token", "personal token".
 
 **Ingest Key** (new prefix `ldi_`; legacy keys have no prefix):
-A **project-scoped, write-only** credential embedded in client SDKs and sent on every
-log/metric write, via the HTTP header `project-api-key`. It identifies a *project*, not
-a person. It must **never** grant account-level access. Existing.
+A **write-only** credential embedded in client SDKs and sent on every log/metric write, via the HTTP header `project-api-key`.
+It identifies a domain or a project, never a person, and must **never** grant account-level access.
+It comes in two kinds.
+The **domain key** is one per domain (`GET /clusters/:clusterId/ingest-key`), and the `app` field of each log and metric picks the app; an app name that is new to the domain becomes a project on its first write, up to the plan's project limit.
+The **service key** is one per project, the original kind, and ignores `app`.
 _Avoid_: "the API key", "project key" (it's the *ingest* key specifically).
 
 **Session Token** (JWT):
@@ -65,7 +67,8 @@ _Avoid_: "OAuth flow" (no token exchange / consent-grant protocol), "callback fl
 ## Example dialogue
 
 > **Dev:** A customer's ingest key leaked from their mobile app. Blast radius?
-> **Domain:** Just that one project's *writes* — someone could spam logs into it.
+> **Domain:** Just *writes* — into that one project for a service key, or into any app of
+> that domain for a domain key, which can also add apps up to the plan's limit.
 > An **Ingest Key** can't read anything and can't touch the account. That's the whole
 > point of keeping it separate from a **Personal API Key**.
 >

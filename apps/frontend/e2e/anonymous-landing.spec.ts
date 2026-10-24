@@ -93,7 +93,7 @@ async function expectFullScreen(
   await expect(sidebar).toBeVisible();
   await expect(sidebar).toHaveText(
     new RegExp(
-      `^\\s*Anonymous\\s*All domains\\s*Domains\\s*${cluster[0]}\\s*${cluster}\\s*Analytics\\s*Uptime[\\s\\S]*Status pages\\s*Settings\\s*New service\\s*Free plan\\s*$`,
+      `^\\s*Anonymous\\s*All domains\\s*Domains\\s*${cluster[0]}\\s*${cluster}\\s*Analytics\\s*Uptime[\\s\\S]*Logs\\s*Metrics\\s*Status pages\\s*Settings\\s*Free plan\\s*$`,
     ),
   );
 }

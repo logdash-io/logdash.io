@@ -11,10 +11,9 @@
 
   type Props = {
     connection: WebAnalyticsSetupState;
-    services: { id: string; name: string }[];
   };
 
-  const { connection, services }: Props = $props();
+  const { connection }: Props = $props();
   const id = $props.id();
 
   let copying = $state(false);
@@ -22,11 +21,7 @@
   let error = $state<string | null>(null);
 
   const hint = $derived(
-    !connection.site
-      ? 'Start tracking your website first.'
-      : services.length === 0
-        ? 'Add a service to this domain to include backend logging.'
-        : null,
+    connection.site ? null : 'Start tracking your website first.',
   );
 
   async function onCopy(event: SubmitEvent): Promise<void> {
@@ -35,7 +30,7 @@
     copying = true;
     error = null;
     try {
-      const prompt = await connection.buildPrompt(services, page.url.origin);
+      const prompt = await connection.buildPrompt(page.url.origin);
       await navigator.clipboard.writeText(prompt);
       copied = true;
     } catch (cause) {

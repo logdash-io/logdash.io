@@ -107,6 +107,17 @@ export class MetricRegisterReadService {
     return entities.map((entity) => MetricRegisterEntrySerializer.normalize(entity));
   }
 
+  public async readBelongingToProjects(
+    projectIds: string[],
+  ): Promise<MetricRegisterEntryNormalized[]> {
+    const entities = await this.model
+      .find({ projectId: { $in: projectIds } })
+      .lean<MetricRegisterEntryEntity[]>()
+      .exec();
+
+    return entities.map((entity) => MetricRegisterEntrySerializer.normalize(entity));
+  }
+
   public async readMetricRegisterEntriesToRecord(): Promise<
     { metricRegisterEntryId: string; value: number }[]
   > {

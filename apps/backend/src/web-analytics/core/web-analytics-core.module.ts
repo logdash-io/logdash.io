@@ -6,6 +6,7 @@ import { WebAnalyticsWriteModule } from '../write/web-analytics-write.module';
 import { WebAnalyticsIngestionModule } from '../ingestion/web-analytics-ingestion.module';
 import { WebAnalyticsCoreController } from './web-analytics-core.controller';
 import { ClusterReadModule } from '../../cluster/read/cluster-read.module';
+import { IngestProjectModule } from '../../project/ingest/ingest-project.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ClusterReadModule } from '../../cluster/read/cluster-read.module';
     WebAnalyticsWriteModule,
     WebAnalyticsIngestionModule,
     ClusterReadModule,
+    IngestProjectModule,
     ...ClusterMemberGuardImports,
   ],
   controllers: [WebAnalyticsCoreController],

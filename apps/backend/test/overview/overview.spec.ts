@@ -362,6 +362,7 @@ describe('Overview (aggregation verdict)', () => {
         received_at: at,
         expires_at: '2099-01-01 00:00:00',
         name: 'pageview',
+        app: '',
         hostname: 'example.com',
         path: '/',
         referrer: '',

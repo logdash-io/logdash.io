@@ -121,7 +121,9 @@
               <span class="text-fg-tertiary font-medium">
                 {first ? day(first.time) : ''}
               </span>
-              {#if first}
+              {#if first?.app}
+                <span class="text-fg-muted truncate">{first.app}</span>
+              {:else if first}
                 <span class="text-fg-muted flex min-w-0 items-center gap-1.5">
                   <BreakdownLabel dimension="referrers" name={first.source} />
                 </span>
@@ -154,7 +156,7 @@
                       {event.name}
                     </span>
                     <span class="text-fg-muted truncate text-xs">
-                      on {event.path}
+                      {event.app ? `in ${event.app}` : `on ${event.path}`}
                     </span>
                   {/if}
                 </li>

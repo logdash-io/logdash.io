@@ -16,6 +16,7 @@ export class MetricUtils {
       name: dto.name,
       value: dto.value,
       operation: dto.operation,
+      app: dto.app,
     };
 
     await request(this.app.getHttpServer())

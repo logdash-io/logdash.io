@@ -4,6 +4,7 @@
   import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import { metricsState } from '$lib/domains/app/projects/application/metrics.state.svelte.js';
   import { sdkSelectionState } from '$lib/domains/app/projects/application/sdk-selection.state.svelte.js';
+  import { ClustersService } from '$lib/domains/app/clusters/infrastructure/clusters.service.js';
   import { logsState } from '$lib/domains/logs/application/logs.state.svelte.js';
   import { toast } from '$lib/domains/shared/ui/toaster/toast.state.svelte.js';
   import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
@@ -17,26 +18,26 @@
   import { Feature } from '$lib/domains/shared/types.js';
 
   type Props = {
-    projectId: string;
+    clusterId: string;
     feature: Feature.LOGGING | Feature.METRICS;
   };
-  const { projectId, feature }: Props = $props();
+  const { clusterId, feature }: Props = $props();
 
   const COPIED_MS = 2000;
 
   let copied = $state(false);
+  let loading = $state(false);
 
   const selectedSDK = $derived(SDK_LIST[sdkSelectionState.selectedIndex]);
-  const isLoading = $derived(projectsState.isLoadingApiKey(projectId));
 
   const needsLogging = $derived(
     feature === Feature.LOGGING ||
-      (!projectsState.hasConfiguredFeature(projectId, Feature.LOGGING) &&
+      (!projectsState.hasConfiguredFeature(Feature.LOGGING) &&
         logsState.logs.length === 0),
   );
   const needsMetrics = $derived(
     feature === Feature.METRICS ||
-      (!projectsState.hasConfiguredFeature(projectId, Feature.METRICS) &&
+      (!projectsState.hasConfiguredFeature(Feature.METRICS) &&
         metricsState.simplifiedMetrics.length === 0),
   );
 
@@ -45,8 +46,10 @@
   });
 
   async function onCopyPrompt(): Promise<void> {
+    loading = true;
+
     try {
-      const apiKey = await projectsState.getApiKey(projectId);
+      const apiKey = await ClustersService.getIngestKey(clusterId);
       const setupPrompt = generateUnifiedSetupPrompt(
         selectedSDK.name,
         apiKey,
@@ -58,6 +61,8 @@
       const message = readHttpErrorMessage(error) ?? 'Something went wrong';
       toast.error(`Failed to copy the setup prompt: ${message}`, 5000);
       return;
+    } finally {
+      loading = false;
     }
 
     copied = true;
@@ -77,12 +82,7 @@
 </script>
 
 <div class="flex flex-wrap items-center justify-center gap-2">
-  <Button
-    variant="primary"
-    size="sm"
-    onclick={onCopyPrompt}
-    loading={isLoading}
-  >
+  <Button variant="primary" size="sm" onclick={onCopyPrompt} {loading}>
     {@render copyIcon()}
     Copy prompt
   </Button>

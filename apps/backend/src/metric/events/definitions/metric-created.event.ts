@@ -7,4 +7,6 @@ export interface MetricCreatedEvent {
   value: number;
   granularity: MetricGranularity;
   projectId: string;
+  clusterId: string;
+  app: string;
 }

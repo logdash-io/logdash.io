@@ -19,7 +19,7 @@ export const FEATURES_COMPARISON = {
           [UserTier.PRO]: '50',
         },
         {
-          name: 'Services',
+          name: 'Apps',
           [UserTier.FREE]: '5',
           [UserTier.BUILDER]: '20',
           [UserTier.PRO]: '50',
@@ -32,9 +32,9 @@ export const FEATURES_COMPARISON = {
       features: [
         {
           name: 'Logs retention',
-          [UserTier.FREE]: '24 hours (240k logs per service)',
-          [UserTier.BUILDER]: '7 days (4.2M logs per service)',
-          [UserTier.PRO]: '30 days (37M logs per service)',
+          [UserTier.FREE]: '24 hours (240k logs per app)',
+          [UserTier.BUILDER]: '7 days (4.2M logs per app)',
+          [UserTier.PRO]: '30 days (37M logs per app)',
         },
         {
           name: 'Rate limit per hour',
@@ -49,7 +49,7 @@ export const FEATURES_COMPARISON = {
       icon: '📈',
       features: [
         {
-          name: 'Metrics per service',
+          name: 'Metrics per app',
           [UserTier.FREE]: '5',
           [UserTier.BUILDER]: '10',
           [UserTier.PRO]: '30',

@@ -7,7 +7,7 @@
   import { Feature } from '$lib/domains/shared/types.js';
   import Well from '$lib/domains/shared/ui/components/Well.svelte';
 
-  const projectId = $derived(page.params.project_id);
+  const clusterId = $derived(page.params.cluster_id);
   const metricId = $derived(page.params.metric_id);
   const empty = $derived(
     metricsState.ready && metricsState.simplifiedMetrics.length === 0,
@@ -15,16 +15,16 @@
 
   $effect(() => {
     if (
-      projectId &&
+      clusterId &&
       metricId &&
       metricsState.simplifiedMetrics.some(({ id }) => id === metricId)
     ) {
-      metricsState.setLastPreviewedMetricId(projectId, metricId);
+      metricsState.setLastPreviewedMetricId(clusterId, metricId);
     }
   });
 </script>
 
-{#if empty && projectId}
+{#if empty && clusterId}
   <div class="flex flex-1 flex-col p-2">
     <Well label="Metrics">
       <div
@@ -32,10 +32,10 @@
       >
         <p class="font-medium">No metrics yet</p>
         <p class="text-fg-tertiary max-w-sm text-sm text-balance">
-          Counters you send from your app show up here.
+          Counters you send from your apps show up here.
         </p>
         <div class="mt-2">
-          <SdkSetupPrompt {projectId} feature={Feature.METRICS} />
+          <SdkSetupPrompt {clusterId} feature={Feature.METRICS} />
         </div>
       </div>
     </Well>

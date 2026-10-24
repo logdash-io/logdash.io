@@ -196,9 +196,9 @@ export const docPages: Record<
       { type: 'heading', text: 'Plan limits' },
       {
         type: 'paragraph',
-        text: 'Your plan sets how many metrics each service can register and how long their history is kept.',
+        text: 'Your plan sets how many metrics each app can register and how long their history is kept.',
       },
-      { type: 'table', key: 'metricsPerService' },
+      { type: 'table', key: 'metricsPerApp' },
       { type: 'table', key: 'metricsRetention' },
     ],
   },
@@ -683,7 +683,42 @@ export async function load() {
       },
       {
         type: 'paragraph',
-        text: 'Custom events appear in the Goals card of the dashboard. Open one to see its trend and a breakdown by each property, with the same date range and filters as the other reports. Clicking a value keeps only the events with that value, and narrows the other reports to the visitors who sent it.',
+        text: 'Custom events appear in the Goals card of the dashboard. Click one to see its trend in the main chart, with completions, visits, people and a breakdown by each property, while the rest of the dashboard stays in place with the same date range and filters. Clicking a property value keeps only the events with that value, and narrows the other reports to the visitors who sent it.',
+      },
+      { type: 'heading', text: 'Track events from your apps' },
+      {
+        type: 'paragraph',
+        text: "Your apps, servers and desktop clients send events to the same dashboard with your domain's ingest key, which you copy from the domain's settings. Name the app with `app`, the same name the SDK sends with logs and metrics. App events follow the same rules for names and properties as the website, and show up in the Goals card next to them.",
+      },
+      {
+        type: 'code',
+        language: 'bash',
+        code: `curl -X POST https://api.logdash.io/events \\
+  -H "project-api-key: $LOGDASH_INGEST_KEY" \\
+  -H "content-type: application/json" \\
+  -d '{"name": "agent_run", "app": "desktop", "props": {"model": "opus"}, "userId": "42"}'`,
+      },
+      {
+        type: 'list',
+        items: [
+          "`userId` is the signed-in user's internal ID, never an email address. Logdash stores only the same hash `identify` sends from the website, so one user is one person across your website and every app.",
+          'Without `userId`, the event counts toward a visitor of that app whose ID changes every day, like an anonymous website visitor. From a server, always pass `userId`: otherwise every event from that server counts as one visitor.',
+          '`id` is an optional UUID. Send the same one when you retry a request, so the event is stored once.',
+          'The API answers 202 once the event is queued, 400 for an invalid event, 401 for an unknown key and 429 when the hourly limit of your plan is reached.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Once more than one app sends events, the Goals card gets an Apps tab with the visits and people of each app, the website by its host name. Clicking an app keeps the visitors who used it, so the Apps tab then shows how many of them also use your other apps. People who are signed in on both sides are the only ones Logdash can connect, because anonymous IDs are never shared between apps.',
+      },
+      { type: 'heading', text: 'Visits and people' },
+      {
+        type: 'paragraph',
+        text: 'Logdash forgets anonymous visitors every day, so it cannot tell whether a visitor on Monday is the same one on Tuesday. For a range within one day, the dashboard counts visitors. For longer ranges it counts visits: each visitor once per day, so someone who comes back on three days is three visits. Breakdowns, goals and conversion rates count visits the same way.',
+      },
+      {
+        type: 'paragraph',
+        text: 'People counts the signed-in users you identify, each once over the whole range, however many days they come back. To count people, call `identify` on your website and pass `userId` from your apps.',
       },
       { type: 'heading', text: 'Identify signed-in users' },
       {
@@ -806,7 +841,16 @@ window.logdash?.optIn();`,
       },
       {
         type: 'paragraph',
-        text: 'Because the ID changes every day, an anonymous visitor who comes back the next day counts as a new visitor. Retention, stickiness and comebacks are measured for identified users only.',
+        text: 'Because the ID changes every day, an anonymous visitor who comes back the next day counts as a new visit. Retention, stickiness and comebacks are measured for identified users only.',
+      },
+      {
+        type: 'paragraph',
+        text: "Events your apps send to `/events` are counted the same way, with the app's name added to the hash, so an anonymous visitor of one app is never linked to the website or another app:",
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        code: "sha256(dailySalt + ':' + siteId + ':' + clientIp + ':' + userAgent + ':' + app)",
       },
       { type: 'heading', text: 'Signed-in users' },
       {
@@ -819,6 +863,7 @@ window.logdash?.optIn();`,
           'A value that contains `@` or is longer than 256 characters is ignored, so an email address is never sent by mistake.',
           'The identity lives in memory only, and `identify(null)` clears it when the user signs out.',
           'The server never copies a user ID onto an event sent without one, so events after sign-out are not attributed to the previous user.',
+          "Your apps send the user ID with each event over HTTPS. The server computes the same `sha256(siteId + ':' + id)` on arrival and stores only the hash, never the ID, so one user is one person across the website and apps.",
         ],
       },
       {
@@ -859,6 +904,7 @@ window.logdash?.optIn();`,
           "a country, derived from the browser's time zone rather than the IP address.",
           'the time of the event.',
           'the visitor ID, a random session ID and, for identified users, the user hash.',
+          'for events from your apps, the app name instead of the page, referrer, campaign and browser details.',
         ],
       },
       {

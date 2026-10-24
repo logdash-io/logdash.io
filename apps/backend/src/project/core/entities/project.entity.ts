@@ -36,8 +36,16 @@ export class ProjectEntity {
 
   @Prop({ type: [String], default: [] })
   selectedFeatures: ProjectFeature[];
+
+  @Prop()
+  autoCreated?: boolean;
 }
 
 export type ProjectDocument = HydratedDocument<ProjectEntity>;
 
 export const ProjectSchema = SchemaFactory.createForClass(ProjectEntity);
+
+ProjectSchema.index(
+  { clusterId: 1, name: 1 },
+  { unique: true, partialFilterExpression: { autoCreated: true } },
+);

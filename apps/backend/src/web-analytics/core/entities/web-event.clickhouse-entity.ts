@@ -1,5 +1,7 @@
+import { createHash, randomUUID } from 'node:crypto';
 import { ClickhouseUtils } from '../../../clickhouse/clickhouse.utils';
 import { BUILT_IN_EVENTS, CLICK_IDS, PROP_KEY, WebEventBody } from '../dto/collect-web-events.body';
+import { TrackEventBody } from '../dto/track-event.body';
 import { WebAnalyticsSiteNormalized } from './web-analytics-site.interface';
 import { TIMEZONE_COUNTRIES } from './timezone-countries';
 
@@ -14,6 +16,7 @@ export class WebEventClickhouseEntity {
   received_at: string;
   expires_at: string;
   name: string;
+  app: string;
   hostname: string;
   path: string;
   referrer: string;
@@ -56,6 +59,7 @@ export class WebEventClickhouseEntity {
         new Date(createdAt.getTime() + retentionDays * 86_400_000),
       ).slice(0, 19),
       name: event.name,
+      app: '',
       hostname: new URL(origin).hostname,
       path,
       referrer:
@@ -78,6 +82,45 @@ export class WebEventClickhouseEntity {
       os: this.os(userAgent),
       country: TIMEZONE_COUNTRIES[event.timezone ?? ''] ?? '',
       props: BUILT_IN_EVENTS.includes(event.name) ? {} : this.cleanProps(event.props),
+    };
+  }
+
+  public static fromTracked(
+    event: TrackEventBody,
+    site: WebAnalyticsSiteNormalized,
+    app: string,
+    retentionDays: number,
+    now: Date,
+  ): WebEventClickhouseEntity {
+    return {
+      id: event.id ?? randomUUID(),
+      cluster_id: site.clusterId,
+      site_id: site.id,
+      visitor_id: '',
+      session_id: '',
+      user_id: event.userId
+        ? createHash('sha256').update(`${site.id}:${event.userId}`).digest('hex')
+        : '',
+      created_at: ClickhouseUtils.jsDateToClickhouseDate(now),
+      received_at: ClickhouseUtils.jsDateToClickhouseDate(now),
+      expires_at: ClickhouseUtils.jsDateToClickhouseDate(
+        new Date(now.getTime() + retentionDays * 86_400_000),
+      ).slice(0, 19),
+      name: event.name,
+      app,
+      hostname: '',
+      path: '',
+      referrer: '',
+      utm_source: '',
+      utm_medium: '',
+      utm_campaign: '',
+      utm_term: '',
+      click_id: '',
+      device: '',
+      browser: '',
+      os: '',
+      country: '',
+      props: this.cleanProps(event.props),
     };
   }
 

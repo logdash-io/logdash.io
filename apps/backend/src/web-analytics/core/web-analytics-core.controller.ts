@@ -12,7 +12,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { isIP } from 'node:net';
 import { Public } from '../../auth/core/decorators/is-public';
 import { CurrentUserId } from '../../auth/core/decorators/current-user-id.decorator';
@@ -22,7 +22,9 @@ import { getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs'
 import { WebAnalyticsReadService } from '../read/web-analytics-read.service';
 import { WebAnalyticsWriteService } from '../write/web-analytics-write.service';
 import { WebAnalyticsIngestionService } from '../ingestion/web-analytics-ingestion.service';
+import { IngestProjectService } from '../../project/ingest/ingest-project.service';
 import { ConfigureWebAnalyticsBody } from './dto/configure-web-analytics.body';
+import { TrackEventBody } from './dto/track-event.body';
 import { CollectWebEventsBody, EVENT_NAME, PROP_KEY } from './dto/collect-web-events.body';
 import {
   ReadWebAnalyticsBreakdownQuery,
@@ -57,6 +59,7 @@ export class WebAnalyticsCoreController {
     private readonly write: WebAnalyticsWriteService,
     private readonly ingestion: WebAnalyticsIngestionService,
     private readonly clusters: ClusterReadCachedService,
+    private readonly ingestProjects: IngestProjectService,
   ) {}
 
   @Get('clusters/:clusterId/web_analytics/site')
@@ -240,6 +243,21 @@ export class WebAnalyticsCoreController {
     @Ip() requestIp: string,
   ): Promise<void> {
     await this.ingestion.collect(body, origin, userAgent, isIP(clientIp) ? clientIp : requestIp);
+  }
+
+  @Public()
+  @Post('events')
+  @HttpCode(202)
+  @ApiSecurity('project-api-key')
+  @ApiResponse({ status: 202, description: 'Event accepted for processing' })
+  public async track(
+    @Body() body: TrackEventBody,
+    @Headers('project-api-key') apiKeyValue: string | undefined,
+    @Headers('user-agent') userAgent: string = '',
+    @Ip() ip: string,
+  ): Promise<void> {
+    const { clusterId, app } = await this.ingestProjects.resolveAppName(apiKeyValue, body.app);
+    await this.ingestion.track(body, clusterId, app, userAgent, ip);
   }
 
   private async retentionDays(clusterId: string): Promise<number> {

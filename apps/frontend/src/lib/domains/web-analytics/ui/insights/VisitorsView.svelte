@@ -140,7 +140,11 @@
             </td>
             <td class="hidden px-3 py-2 @xl:table-cell">
               <span class="flex min-w-0 items-center gap-2">
-                <BreakdownLabel dimension="referrers" name={visitor.source} />
+                {#if visitor.source}
+                  <BreakdownLabel dimension="referrers" name={visitor.source} />
+                {:else}
+                  <span class="text-fg-muted truncate">Only in apps</span>
+                {/if}
               </span>
             </td>
             <td class="hidden rounded-r-lg px-3 py-2 @md:table-cell">

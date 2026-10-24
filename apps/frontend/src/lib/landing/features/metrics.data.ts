@@ -52,8 +52,8 @@ export const metricsPage: FeaturePageData = {
       'No agent to run, no dashboard to build. Charts appear with the first value.',
     items: [
       {
-        title: 'Add a service',
-        body: 'Sign in with GitHub or Google and add a service. Each service gets its own API key and its own set of metrics.',
+        title: 'Copy your key',
+        body: "Sign in with GitHub or Google and copy your domain's ingest key from its settings. Every app on the domain sends with that one key and gets its own set of metrics.",
       },
       {
         title: 'Install the SDK',
@@ -109,12 +109,12 @@ logdash.mutateMetric('users', 1);`,
     {
       question: 'How many metrics can I track?',
       answer:
-        'Up to 5 metrics per service on Hobby, 10 on Builder and 30 on Pro. Past the limit, new metric names are not recorded while your existing metrics keep working. Delete one you no longer need to free its slot.',
+        'Up to 5 metrics per app on Hobby, 10 on Builder and 30 on Pro. Past the limit, new metric names are not recorded while your existing metrics keep working. Delete one you no longer need to free its slot.',
     },
     {
       question: 'Is there a free plan?',
       answer:
-        'Yes. Hobby is free and includes 5 metrics per service with 24 hours of history, plus logs and uptime monitoring. Builder is $9 a month and Pro is $15 a month.',
+        'Yes. Hobby is free and includes 5 metrics per app with 24 hours of history, plus logs and uptime monitoring. Builder is $9 a month and Pro is $15 a month.',
     },
     {
       question: 'Can I get an alert when a metric changes?',

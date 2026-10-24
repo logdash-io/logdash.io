@@ -9,4 +9,5 @@ export type LogsQueryFilters = {
   levels: LogLevel[];
   searchString: string;
   namespaces: string[];
+  apps: string[];
 };

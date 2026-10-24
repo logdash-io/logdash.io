@@ -1,10 +1,13 @@
 <script lang="ts">
+  import FilterIcon from '$lib/domains/shared/icons/FilterIcon.svelte';
+  import XIcon from '$lib/domains/shared/icons/XIcon.svelte';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import {
     changePercent,
     formatCount,
     formatPercent,
   } from '../../domain/analytics-format';
-  import { endsInProgress } from '../../domain/analytics-period';
+  import { endsInProgress, visitsLabel } from '../../domain/analytics-period';
   import type { AnalyticsQuery } from '../../domain/analytics-query';
   import type {
     AnalyticsChartLine,
@@ -12,34 +15,82 @@
     WebAnalyticsEventSummary,
   } from '../../domain/web-analytics';
   import AnalyticsChart from '../AnalyticsChart.svelte';
+  import StatTile from '../StatTile.svelte';
 
   type Props = {
     name: string;
     event: WebAnalyticsEvent | null;
     query: AnalyticsQuery;
     loading: boolean;
+    onfilter?: () => void;
+    onclose: () => void;
   };
+
+  type Metric = 'count' | 'visitors' | 'people';
 
   type Stat = {
-    key: keyof WebAnalyticsEventSummary;
     label: string;
+    value: (summary: WebAnalyticsEventSummary) => number;
     format: (value: number) => string;
+    hint?: string;
+    chart?: Metric;
   };
 
-  const { name, event, query, loading }: Props = $props();
+  const { name, event, query, loading, onfilter, onclose }: Props = $props();
 
-  const STATS: Stat[] = [
-    { key: 'count', label: 'Completions', format: formatCount },
-    { key: 'visitors', label: 'Visitors', format: formatCount },
-    { key: 'conversionRate', label: 'Conversion rate', format: formatPercent },
-  ];
+  const visits = $derived(
+    event ? visitsLabel(event.from, event.to) : 'Visitors',
+  );
+  const perVisit = $derived(visits === 'Visits' ? 'Per visit' : 'Per visitor');
+  const stats = $derived<Stat[]>([
+    {
+      label: 'Completions',
+      value: (summary: WebAnalyticsEventSummary) => summary.count,
+      format: formatCount,
+      chart: 'count',
+    },
+    {
+      label: visits,
+      value: (summary: WebAnalyticsEventSummary) => summary.visitors,
+      format: formatCount,
+      hint:
+        visits === 'Visits'
+          ? `Visits with ${name}: each visitor counts once per day.`
+          : undefined,
+      chart: 'visitors',
+    },
+    {
+      label: perVisit,
+      value: (summary: WebAnalyticsEventSummary) =>
+        summary.visitors ? summary.count / summary.visitors : 0,
+      format: formatCount,
+      hint: `Average completions of ${name} per ${visits === 'Visits' ? 'visit' : 'visitor'} that sent it.`,
+    },
+    {
+      label: 'People',
+      value: (summary: WebAnalyticsEventSummary) => summary.people,
+      format: formatCount,
+      hint: `Signed-in people who sent ${name}, each counted once.`,
+      chart: 'people',
+    },
+    {
+      label: 'Conversion rate',
+      value: (summary: WebAnalyticsEventSummary) => summary.conversionRate,
+      format: formatPercent,
+    },
+  ]);
 
+  let metric = $state<Metric>('count');
+
+  const metricLabel = $derived(
+    stats.find((stat) => stat.chart === metric)?.label ?? '',
+  );
   const lines = $derived.by((): AnalyticsChartLine[] => {
     if (!event) return [];
     return [
       {
-        label: 'Completions',
-        values: event.series.map((point) => point.count),
+        label: metricLabel,
+        values: event.series.map((point) => point[metric]),
         color: 'var(--fg-default)',
         area: true,
       },
@@ -49,7 +100,7 @@
               label: 'Previous period',
               values: event.previousSeries
                 .slice(0, event.series.length)
-                .map((point) => point.count),
+                .map((point) => point[metric]),
               color: 'var(--fg-faint)',
               dashed: true,
             },
@@ -63,39 +114,47 @@
   <div
     class="bg-surface-25-bg rounded-2xl p-2 [--chart-surface:var(--surface-25-bg)]"
   >
-    <dl class="grid grid-cols-3 gap-2">
-      {#each STATS as stat (stat.key)}
-        {@const value = event?.summary[stat.key] ?? 0}
-        {@const change = event
-          ? changePercent(value, event.previous[stat.key])
-          : null}
-        <div class="flex min-w-0 flex-col gap-1.5 rounded-lg p-3">
-          <dt class="text-fg-muted truncate text-xs">{stat.label}</dt>
-          <dd class="font-mono text-2xl tabular-nums">
-            {#if loading}
-              <span class="bg-surface-150-bg block h-8 w-16 rounded-md"></span>
-            {:else}
-              {stat.format(value)}
-            {/if}
-          </dd>
-          <dd class="h-4 text-xs tabular-nums">
-            {#if change !== null && !loading}
-              <span
-                class={[
-                  Math.round(change) === 0
-                    ? 'text-fg-muted'
-                    : change > 0
-                      ? 'text-success'
-                      : 'text-error',
-                ]}
-                title="Compared with the previous period"
-              >
-                {Math.round(change) === 0 ? '' : change > 0 ? '↑' : '↓'}
-                {Math.abs(Math.round(change))}%
-              </span>
-            {/if}
-          </dd>
-        </div>
+    <header class="flex h-7 items-center justify-between gap-3 pl-3">
+      <h2 class="flex min-w-0 items-center gap-2 text-[13px]">
+        <span class="text-fg-muted">Goal</span>
+        <span class="truncate font-mono font-medium">{name}</span>
+      </h2>
+      <div class="flex shrink-0 items-center gap-1">
+        {#if onfilter}
+          <IconButton
+            well
+            label="Filter by visitors who sent {name}"
+            tooltip="Filter by visitors who sent it"
+            onclick={onfilter}
+          >
+            <FilterIcon class="size-3.5" />
+          </IconButton>
+        {/if}
+        <IconButton
+          well
+          label="Close {name}"
+          tooltip="Back to traffic"
+          onclick={onclose}
+        >
+          <XIcon class="size-3.5" />
+        </IconButton>
+      </div>
+    </header>
+
+    <dl class="grid grid-cols-2 gap-2 @2xl:grid-cols-5">
+      {#each stats as stat (stat.label)}
+        {@const value = event ? stat.value(event.summary) : 0}
+        <StatTile
+          label={stat.label}
+          hint={stat.hint}
+          value={stat.format(value)}
+          change={event
+            ? changePercent(value, stat.value(event.previous))
+            : null}
+          {loading}
+          selected={!!stat.chart && metric === stat.chart}
+          onselect={stat.chart ? () => (metric = stat.chart!) : undefined}
+        />
       {/each}
     </dl>
 
@@ -106,7 +165,7 @@
           {lines}
           granularity={event.granularity}
           partial={endsInProgress(event.to)}
-          label="Completions of {name} per {event.granularity}"
+          label="{metricLabel} of {name} per {event.granularity}"
         />
       {:else}
         <div class="bg-surface-150-bg h-55 rounded-xl"></div>

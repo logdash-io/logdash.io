@@ -6,7 +6,6 @@
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import SidebarClusterNav from './SidebarClusterNav.svelte';
   import SidebarDomainRow from './SidebarDomainRow.svelte';
-  import SidebarServicesList from './SidebarServicesList.svelte';
 
   let collapsedClusterId = $state<string | null>(null);
 
@@ -40,6 +39,5 @@
 
   {#if expanded}
     <SidebarClusterNav />
-    <SidebarServicesList />
   {/if}
 {/each}

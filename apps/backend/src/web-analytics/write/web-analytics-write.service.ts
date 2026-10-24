@@ -51,6 +51,18 @@ export class WebAnalyticsWriteService {
     return normalized;
   }
 
+  public async ensureSite(clusterId: string): Promise<WebAnalyticsSiteNormalized> {
+    const site = await this.model
+      .findOneAndUpdate(
+        { clusterId },
+        { $setOnInsert: { clusterId, origins: [] } },
+        { upsert: true, returnDocument: 'after' },
+      )
+      .lean<WebAnalyticsSiteEntity>()
+      .exec();
+    return WebAnalyticsSiteSerializer.normalize(site);
+  }
+
   public async deleteByClusterId(clusterId: string): Promise<void> {
     const site = await this.model.findOne({ clusterId }).lean<WebAnalyticsSiteEntity>().exec();
     if (!site) return;
@@ -62,6 +74,7 @@ export class WebAnalyticsWriteService {
         });
         await this.model.deleteOne({ _id: site._id }).exec();
         await this.redis.del(`web-analytics:site:${site._id.toString()}`);
+        await this.redis.del(`web-analytics:cluster-site:${clusterId}`);
       });
       if (deleted) return;
       await delay(50);

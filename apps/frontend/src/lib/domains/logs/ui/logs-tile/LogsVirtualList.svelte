@@ -14,16 +14,26 @@
   type Props = {
     logs: Log[];
     rendered: boolean;
+    showApp?: boolean;
   };
 
-  const { logs, rendered }: Props = $props();
+  const { logs, rendered, showApp = false }: Props = $props();
+
+  const APP_COLUMN_MAX_CH = 14;
 
   const filtered = $derived(
     Boolean(
       filtersStore.searchString.trim() ||
         filtersStore.endDate ||
         filtersStore.levels.length > 0 ||
-        filtersStore.namespaces.length > 0,
+        filtersStore.namespaces.length > 0 ||
+        filtersStore.apps.length > 0,
+    ),
+  );
+  const appWidth = $derived(
+    Math.min(
+      APP_COLUMN_MAX_CH,
+      Math.max(0, ...logs.map((log) => log.app?.length ?? 0)),
     ),
   );
   const loading = $derived(
@@ -304,6 +314,8 @@
               level={log.level}
               message={log.message}
               namespace={log.namespace}
+              app={showApp ? log.app : undefined}
+              {appWidth}
               prefix={timeDisplayState.isRelative ? 'relative' : 'full'}
               selected={logPreviewState.selectedLog?.id === log.id}
               onclick={() => onLogClick(log)}

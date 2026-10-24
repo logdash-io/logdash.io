@@ -9,14 +9,14 @@ export type Table = {
 export type TableType =
   | 'logsRetention'
   | 'logsRateLimits'
-  | 'metricsPerService'
+  | 'metricsPerApp'
   | 'metricsRetention'
   | 'webAnalyticsRetention';
 
 export const tableTitles: Record<TableType, string> = {
   logsRetention: 'Logs retention',
   logsRateLimits: 'Rate limit per hour',
-  metricsPerService: 'Metrics per service',
+  metricsPerApp: 'Metrics per app',
   metricsRetention: 'Metrics retention',
   webAnalyticsRetention: 'Web analytics retention',
 };
@@ -60,7 +60,7 @@ function formatLogsRetention(
 ): string {
   if (!retentionHours || !rateLimitPerHour) return '-';
   const logsCapacity = retentionHours * rateLimitPerHour;
-  return `${formatRetentionHours(retentionHours)} (${formatCompactNumber(logsCapacity)} logs per service)`;
+  return `${formatRetentionHours(retentionHours)} (${formatCompactNumber(logsCapacity)} logs per app)`;
 }
 
 function getProjectPlanConfig(config: ExposedConfig, tier: UserTier) {
@@ -98,7 +98,7 @@ export function buildTablesFromConfig(
         }),
       ],
     },
-    metricsPerService: {
+    metricsPerApp: {
       headers,
       rows: [
         availableTiers.map((tier) => {

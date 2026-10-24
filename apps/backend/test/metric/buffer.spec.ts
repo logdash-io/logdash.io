@@ -51,6 +51,8 @@ describe('Metrics buffer', () => {
             projectId: setup.project.id,
             name: `metric-${i}`,
             operation: MetricOperation.Set,
+            clusterId: 'cluster-1',
+            app: 'default',
             value: 2137,
           })
           .catch(() => undefined);
@@ -84,6 +86,8 @@ describe('Metrics buffer', () => {
         projectId: setup.project.id,
         name: `metric-${randomIntegerBetweenInclusive(0, 9)}`,
         operation: MetricOperation.Change,
+        clusterId: 'cluster-1',
+        app: 'default',
         value: 1,
       });
     }
@@ -117,6 +121,8 @@ describe('Metrics buffer', () => {
       projectId: setup.project.id,
       name: `metric`,
       operation: MetricOperation.Set,
+      clusterId: 'cluster-1',
+      app: 'default',
       value: 2137,
     });
 
@@ -124,6 +130,8 @@ describe('Metrics buffer', () => {
       projectId: setup.project.id,
       name: `metric`,
       operation: MetricOperation.Change,
+      clusterId: 'cluster-1',
+      app: 'default',
       value: 1,
     });
 

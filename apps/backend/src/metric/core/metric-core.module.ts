@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MetricReadModule } from '../read/metric-read.module';
 import { MetricCoreController } from './metric-core.controller';
 import { MetricQueueingModule } from '../queueing/metric-queueing-module';
-import { ApiKeyReadModule } from '../../api-key/read/api-key-read.module';
+import { IngestProjectModule } from '../../project/ingest/ingest-project.module';
 import { MetricTtlModule } from '../ttl/metric-ttl.module';
 import { MetricRegisterReadModule } from '../../metric-register/read/metric-register-read.module';
 import { MetricEventModule } from '../events/metric-event.module';
@@ -14,8 +14,7 @@ import { MetricRecordModule } from '../record/metric-record.module';
   imports: [
     MetricReadModule,
     MetricQueueingModule,
-    ApiKeyReadModule,
-    ApiKeyReadModule,
+    IngestProjectModule,
     MetricTtlModule,
     MetricRegisterReadModule,
     MetricEventModule,

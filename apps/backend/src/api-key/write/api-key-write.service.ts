@@ -22,6 +22,19 @@ export class ApiKeyWriteService {
     return ApiKeySerializer.normalize(apiKey);
   }
 
+  public async ensureClusterKey(clusterId: string): Promise<ApiKeyNormalized> {
+    const apiKey = await this.apiKeyModel
+      .findOneAndUpdate(
+        { clusterId },
+        { $setOnInsert: { clusterId, value: this.generateApiKeyValue() } },
+        { upsert: true, returnDocument: 'after' },
+      )
+      .lean<ApiKeyEntity>()
+      .exec();
+
+    return ApiKeySerializer.normalize(apiKey);
+  }
+
   private generateApiKeyValue(): string {
     return 'ldi_' + this.base62(randomBytes(24));
   }
@@ -50,5 +63,9 @@ export class ApiKeyWriteService {
 
   public async deleteByProjectId(projectId: string): Promise<void> {
     await this.apiKeyModel.deleteMany({ projectId });
+  }
+
+  public async deleteByClusterId(clusterId: string): Promise<void> {
+    await this.apiKeyModel.deleteMany({ clusterId });
   }
 }

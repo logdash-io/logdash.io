@@ -43,3 +43,11 @@ export class SimpleMetric {
   @ApiProperty()
   metricRegisterEntryId: string;
 }
+
+export class ClusterMetric extends SimpleMetric {
+  @ApiProperty({ description: 'The app that reports the metric.' })
+  app: string;
+
+  @ApiProperty()
+  projectId: string;
+}

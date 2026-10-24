@@ -214,9 +214,9 @@ export class HttpPingPingerService {
   }
 
   public async pingSingleMonitor(httpMonitorId: string): Promise<void> {
-    const monitor = await this.httpMonitorReadService.readByIdOrThrow(httpMonitorId);
+    const monitor = await this.httpMonitorReadService.readById(httpMonitorId);
 
-    if (monitor.mode === HttpMonitorMode.Push) {
+    if (!monitor || monitor.mode === HttpMonitorMode.Push) {
       return;
     }
 

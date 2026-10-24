@@ -22,7 +22,8 @@ export type WebAnalyticsFilterDimension =
   | 'browser'
   | 'os'
   | 'device'
-  | 'goal';
+  | 'goal'
+  | 'app';
 
 export type WebAnalyticsFilterKey =
   | WebAnalyticsFilterDimension
@@ -56,6 +57,7 @@ export interface WebAnalyticsBreakdownRow {
 
 export interface WebAnalyticsSummary {
   visitors: number;
+  people: number;
   pageviews: number;
   sessions: number;
   bounceRate: number;
@@ -66,7 +68,16 @@ export interface WebAnalyticsSummary {
 export interface WebAnalyticsPoint {
   time: number;
   visitors: number;
+  people: number;
   pageviews: number;
+}
+
+export interface WebAnalyticsAppRow {
+  name: string;
+  website: boolean;
+  visitors: number;
+  people: number;
+  count: number;
 }
 
 export interface WebAnalyticsReport {
@@ -81,17 +92,21 @@ export interface WebAnalyticsReport {
   goalSeries: { name: string; counts: number[] }[];
   online: number;
   breakdowns: Record<WebAnalyticsBreakdownName, WebAnalyticsBreakdownRow[]>;
+  apps: WebAnalyticsAppRow[];
 }
 
 export interface WebAnalyticsEventSummary {
   count: number;
   visitors: number;
+  people: number;
   conversionRate: number;
 }
 
 export interface WebAnalyticsEventPoint {
   time: number;
   count: number;
+  visitors: number;
+  people: number;
 }
 
 export interface WebAnalyticsEvent {
@@ -122,6 +137,7 @@ export interface WebAnalyticsVisitor {
   sessions: number;
   pageviews: number;
   activeDays: string[];
+  apps: string[];
   identified: boolean;
 }
 
@@ -130,6 +146,7 @@ export interface WebAnalyticsVisitorEvent {
   name: string;
   path: string;
   hostname: string;
+  app: string;
   sessionId: string;
   source: string;
 }

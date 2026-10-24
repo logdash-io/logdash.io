@@ -6,7 +6,7 @@ import { LogQueueingModule } from '../queueing/log-queuing.module';
 import { LogEventModule } from '../events/log-event.module';
 import { LogTtlModule } from '../ttl/log-ttl.module';
 import { LogRateLimitModule } from '../rate-limit/log-rate-limit.module';
-import { ApiKeyReadModule } from '../../api-key/read/api-key-read.module';
+import { IngestProjectModule } from '../../project/ingest/ingest-project.module';
 import { AddTestLogModule } from '../add-test-log/add-test-log.module';
 import { ClusterMemberGuardImports } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { LogAnalyticsModule } from '../analytics/log-analytics.module';
@@ -17,7 +17,7 @@ import { LogAnalyticsModule } from '../analytics/log-analytics.module';
     LogWriteModule,
     LogQueueingModule,
     LogEventModule,
-    ApiKeyReadModule,
+    IngestProjectModule,
     LogTtlModule,
     LogRateLimitModule,
     AddTestLogModule,

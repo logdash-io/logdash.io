@@ -7,6 +7,7 @@ export class ApiKeySerializer {
       id: entity._id.toString(),
       value: entity.value,
       projectId: entity.projectId,
+      clusterId: entity.clusterId,
     };
   }
 
@@ -14,7 +15,7 @@ export class ApiKeySerializer {
     return {
       id: normalized.id,
       value: normalized.value,
-      projectId: normalized.projectId,
+      projectId: normalized.projectId ?? '',
     };
   }
 }

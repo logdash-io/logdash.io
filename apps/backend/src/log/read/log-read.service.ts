@@ -31,123 +31,70 @@ export class LogReadService {
     level?: LogLevel;
     levels?: LogLevel[];
     limit: number;
-    projectId: string;
+    projectIds: string[];
     searchString?: string;
     namespaces?: string[];
   }): Promise<LogClickhouseNormalized[]> {
-    let query: string;
-    let queryParams: Record<string, unknown>;
-
-    const effectiveLevels = dto.levels?.length ? dto.levels : dto.level ? [dto.level] : null;
-
-    if (dto.lastId && dto.direction) {
-      if (dto.direction === LogReadDirection.After) {
-        query = `
-          SELECT l.* FROM logs l
-          WHERE l.project_id = {projectId:String}
-          AND (l.created_at, l.sequence_number) > (
-            SELECT created_at, sequence_number 
-            FROM logs 
-            WHERE id = {lastId:String} AND project_id = {projectId:String}
-            LIMIT 1
-          )`;
-      } else {
-        query = `
-          SELECT l.* FROM logs l
-          WHERE l.project_id = {projectId:String}
-          AND (l.created_at, l.sequence_number) < (
-            SELECT created_at, sequence_number 
-            FROM logs 
-            WHERE id = {lastId:String} AND project_id = {projectId:String}
-            LIMIT 1
-          )`;
-      }
-
-      queryParams = {
-        projectId: dto.projectId,
-        lastId: dto.lastId,
-        limit: dto.limit,
-      };
-
-      if (dto.startDate) {
-        query += ` AND l.created_at >= {startDate:DateTime64(3)}`;
-        queryParams.startDate = ClickhouseUtils.jsDateToClickhouseDate(dto.startDate);
-      }
-
-      if (dto.endDate) {
-        query += ` AND l.created_at <= {endDate:DateTime64(3)}`;
-        queryParams.endDate = ClickhouseUtils.jsDateToClickhouseDate(dto.endDate);
-      }
-
-      if (effectiveLevels) {
-        query += ` AND l.level IN ({levels:Array(String)})`;
-        queryParams.levels = effectiveLevels;
-      }
-
-      if (dto.namespaces?.length) {
-        query += ` AND l.namespace IN ({namespaces:Array(String)})`;
-        queryParams.namespaces = dto.namespaces;
-      }
-
-      if (dto.searchString && dto.searchString.trim()) {
-        const words = dto.searchString
-          .trim()
-          .split(/\s+/)
-          .filter((word) => word.length > 0);
-        words.forEach((word, index) => {
-          query += ` AND positionCaseInsensitive(l.message, {searchWord${index}:String}) > 0`;
-          queryParams[`searchWord${index}`] = word;
-        });
-      }
-
-      if (dto.direction === LogReadDirection.After) {
-        query += ` ORDER BY l.created_at ASC, l.sequence_number ASC LIMIT {limit:UInt32}`;
-      } else {
-        query += ` ORDER BY l.created_at DESC, l.sequence_number DESC LIMIT {limit:UInt32}`;
-      }
-    } else {
-      query = `SELECT * FROM logs WHERE project_id = {projectId:String}`;
-      queryParams = {
-        projectId: dto.projectId,
-        limit: dto.limit,
-      };
-
-      if (dto.startDate) {
-        query += ` AND created_at >= {startDate:DateTime64(3)}`;
-        queryParams.startDate = ClickhouseUtils.jsDateToClickhouseDate(dto.startDate);
-      }
-
-      if (dto.endDate) {
-        query += ` AND created_at <= {endDate:DateTime64(3)}`;
-        queryParams.endDate = ClickhouseUtils.jsDateToClickhouseDate(dto.endDate);
-      }
-
-      if (effectiveLevels) {
-        query += ` AND level IN ({levels:Array(String)})`;
-        queryParams.levels = effectiveLevels;
-      }
-
-      if (dto.namespaces?.length) {
-        query += ` AND namespace IN ({namespaces:Array(String)})`;
-        queryParams.namespaces = dto.namespaces;
-      }
-
-      if (dto.searchString && dto.searchString.trim()) {
-        const words = dto.searchString
-          .trim()
-          .split(/\s+/)
-          .filter((word) => word.length > 0);
-        words.forEach((word, index) => {
-          query += ` AND positionCaseInsensitive(message, {searchWord${index}:String}) > 0`;
-          queryParams[`searchWord${index}`] = word;
-        });
-      }
-
-      query += ` ORDER BY created_at DESC, sequence_number DESC LIMIT {limit:UInt32}`;
+    if (dto.projectIds.length === 0) {
+      return [];
     }
 
+    const effectiveLevels = dto.levels?.length ? dto.levels : dto.level ? [dto.level] : null;
+    const order = dto.direction === LogReadDirection.After ? 'ASC' : 'DESC';
+    const conditions = ['l.project_id IN ({projectIds:Array(String)})'];
+    const queryParams: Record<string, unknown> = {
+      projectIds: dto.projectIds,
+      limit: dto.limit,
+    };
+
+    if (dto.lastId && dto.direction) {
+      conditions.push(`(l.created_at, l.sequence_number, l.id) ${order === 'ASC' ? '>' : '<'} (
+        SELECT created_at, sequence_number, id
+        FROM logs
+        WHERE id = {lastId:String} AND project_id IN ({projectIds:Array(String)})
+        LIMIT 1
+      )`);
+      queryParams.lastId = dto.lastId;
+    }
+
+    if (dto.startDate) {
+      conditions.push('l.created_at >= {startDate:DateTime64(3)}');
+      queryParams.startDate = ClickhouseUtils.jsDateToClickhouseDate(dto.startDate);
+    }
+
+    if (dto.endDate) {
+      conditions.push('l.created_at <= {endDate:DateTime64(3)}');
+      queryParams.endDate = ClickhouseUtils.jsDateToClickhouseDate(dto.endDate);
+    }
+
+    if (effectiveLevels) {
+      conditions.push('l.level IN ({levels:Array(String)})');
+      queryParams.levels = effectiveLevels;
+    }
+
+    if (dto.namespaces?.length) {
+      conditions.push('l.namespace IN ({namespaces:Array(String)})');
+      queryParams.namespaces = dto.namespaces;
+    }
+
+    const words =
+      dto.searchString
+        ?.trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0) ?? [];
+
+    words.forEach((word, index) => {
+      conditions.push(`positionCaseInsensitive(l.message, {searchWord${index}:String}) > 0`);
+      queryParams[`searchWord${index}`] = word;
+    });
+
     const result = await this.clickhouse.query({
-      query,
+      query: `
+        SELECT l.* FROM logs l
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY l.created_at ${order}, l.sequence_number ${order}, l.id ${order}
+        LIMIT {limit:UInt32}
+      `,
       query_params: queryParams,
     });
     const { data } = await result.json<LogClickhouseRow>();
@@ -204,18 +151,22 @@ export class LogReadService {
     return ClickhouseUtils.clickhouseDateToJsDate(data[0].last_log_at);
   }
 
-  public async getUniqueNamespaces(projectId: string): Promise<NamespaceMetadata[]> {
+  public async getUniqueNamespaces(projectIds: string[]): Promise<NamespaceMetadata[]> {
+    if (projectIds.length === 0) {
+      return [];
+    }
+
     const result = await this.clickhouse.query({
       query: `
         SELECT 
           namespace, 
           MAX(created_at) as last_log_date 
         FROM logs 
-        WHERE project_id = {projectId:String} AND namespace IS NOT NULL 
+        WHERE project_id IN ({projectIds:Array(String)}) AND namespace IS NOT NULL 
         GROUP BY namespace 
         ORDER BY last_log_date DESC
       `,
-      query_params: { projectId },
+      query_params: { projectIds },
     });
 
     const { data } = await result.json<{ namespace: string; last_log_date: string }>();

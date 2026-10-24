@@ -25,20 +25,23 @@
   const health = new ServiceHealthState();
 
   const monitors = $derived(monitoringState.monitorsOf(clusterId));
-  const services = $derived(clustersState.get(clusterId)?.projects ?? []);
-  const targetKey = $derived(
+  const apps = $derived(
     [
-      ...monitors.map(({ id }) => id),
-      '|',
-      ...services.map(({ id }) => id),
-    ].join(','),
+      ...new Set(
+        (clustersState.get(clusterId)?.projects ?? []).map(({ name }) => name),
+      ),
+    ].sort((a, b) => a.localeCompare(b)),
+  );
+  const targetKey = $derived(
+    [...monitors.map(({ id }) => id), '|', ...apps].join(','),
   );
 
   $effect(() => {
     void targetKey;
     const targets = untrack(() => ({
+      clusterId,
       monitorIds: monitors.map(({ id }) => id),
-      projectIds: services.map(({ id }) => id),
+      apps,
     }));
 
     const refreshWhenVisible = (): void => {
@@ -62,7 +65,7 @@
   }
 </script>
 
-{#if monitors.length || services.length}
+{#if monitors.length || apps.length}
   <nav
     class="flex flex-wrap items-center gap-2 edge-b px-4 py-2"
     aria-label="Domain health"
@@ -110,7 +113,7 @@
       {/each}
     {/if}
 
-    {#if services.length}
+    {#if apps.length}
       {#if monitors.length}
         <span
           class="bg-surface-50-border mx-1 h-4 w-px"
@@ -118,23 +121,22 @@
         ></span>
       {/if}
       <a
-        href={resolve('/app/domains/[cluster_id]/services', {
+        href={resolve('/app/domains/[cluster_id]/logs', {
           cluster_id: clusterId,
         })}
         class={LABEL}
       >
-        Services
+        Apps
       </a>
-      {#each services as service (service.id)}
-        {@const errors = health.errors[service.id] ?? 0}
+      {#each apps as app (app)}
+        {@const errors = health.errors[app] ?? 0}
         <a
-          href={resolve('/app/domains/[cluster_id]/[project_id]', {
-            cluster_id: clusterId,
-            project_id: service.id,
-          })}
+          href={resolve(
+            `/app/domains/${clusterId}/logs?app=${encodeURIComponent(app)}`,
+          )}
           class={CHIP}
         >
-          <span class="font-medium">{service.name}</span>
+          <span class="font-medium">{app}</span>
           {#if errors}
             <span class="text-fg-faint" aria-hidden="true">·</span>
             <span class="text-error tabular-nums">{errorsLabel(errors)}</span>

@@ -7,7 +7,7 @@ import type {
 } from './web-analytics';
 
 export const FILTER_BREAKDOWNS: Record<
-  WebAnalyticsFilterDimension,
+  Exclude<WebAnalyticsFilterDimension, 'app'>,
   WebAnalyticsBreakdownName
 > = {
   channel: 'channels',

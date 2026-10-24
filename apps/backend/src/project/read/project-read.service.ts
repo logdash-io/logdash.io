@@ -48,6 +48,15 @@ export class ProjectReadService {
     return projects.map((project) => ProjectSerializer.normalize(project));
   }
 
+  public async readOldestByClusterIdAndName(
+    clusterId: string,
+    name: string,
+  ): Promise<ProjectNormalized | null> {
+    const project = await this.model.findOne({ clusterId, name }).sort({ _id: 1 });
+
+    return project ? ProjectSerializer.normalize(project) : null;
+  }
+
   public async readByClusterIds(clusterIds: string[]): Promise<ProjectNormalized[]> {
     const projects = await this.model.find({ clusterId: { $in: clusterIds } });
 

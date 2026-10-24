@@ -19,7 +19,11 @@ export class ClusterInviteReadService {
   }
 
   public async readByClusterId(clusterId: string): Promise<ClusterInviteNormalized[]> {
-    const invites = await this.model.find({ clusterId }).lean<ClusterInviteEntity[]>().exec();
+    const invites = await this.model
+      .find({ clusterId })
+      .sort({ _id: 1 })
+      .lean<ClusterInviteEntity[]>()
+      .exec();
 
     return ClusterInviteSerializer.normalizeMany(invites);
   }
@@ -29,6 +33,7 @@ export class ClusterInviteReadService {
   ): Promise<ClusterInviteNormalized[]> {
     const invites = await this.model
       .find({ invitedUserEmail })
+      .sort({ _id: 1 })
       .lean<ClusterInviteEntity[]>()
       .exec();
     return ClusterInviteSerializer.normalizeMany(invites);

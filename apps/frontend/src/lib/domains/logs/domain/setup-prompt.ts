@@ -7,7 +7,7 @@ export function getCodeSnippet(
   const snippets: Record<LogdashSDKName, string> = {
     [LogdashSDKName.NODE_JS]: `import { Logdash } from '@logdash/node';
 
-const logdash = new Logdash("${apiKey}");
+const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 logdash.info("Application started successfully")
 logdash.error("An unexpected error occurred")
@@ -25,7 +25,7 @@ logdash.flush();
 `,
     [LogdashSDKName.NEXT_JS]: `// lib/logdash.ts
 import { Logdash } from '@logdash/node';
-export const logdash = new Logdash("${apiKey}");
+export const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 // middleware.ts
 import { logdash } from './lib/logdash';
@@ -39,7 +39,7 @@ export function middleware(request: NextRequest) {
 `,
     [LogdashSDKName.SVELTE_KIT]: `// src/lib/logdash.ts
 import { Logdash } from '@logdash/node';
-export const logdash = new Logdash("${apiKey}");
+export const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 // src/hooks.server.ts
 import { logdash } from '$lib/logdash';
@@ -144,7 +144,7 @@ ld.Shutdown(ctx)`,
     [LogdashSDKName.CURL]: `curl -X POST "https://api.logdash.io/logs" \\
 -H "project-api-key: ${apiKey}" \\
 -H "Content-Type: application/json" \\
--d '{"message": "Application started successfully", "level": "info", "createdAt": "${new Date().toISOString()}", "sequenceNumber": 0}'`,
+-d '{"message": "Application started successfully", "level": "info", "createdAt": "${new Date().toISOString()}", "sequenceNumber": 0, "app": "my-app"}'`,
   };
 
   return snippets[sdkName];

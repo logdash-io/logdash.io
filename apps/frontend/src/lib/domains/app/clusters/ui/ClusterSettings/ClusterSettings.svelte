@@ -12,6 +12,7 @@
   } from '$lib/domains/shared/ui/components/settings-card';
   import { WebAnalyticsSetupState } from '$lib/domains/web-analytics/application/web-analytics-setup.state.svelte';
   import WebAnalyticsSetup from '$lib/domains/web-analytics/ui/WebAnalyticsSetup.svelte';
+  import AppsCard from './AppsCard.svelte';
   import DangerZoneCard from './DangerZoneCard.svelte';
   import DomainAlertsCard from './DomainAlertsCard.svelte';
   import ProjectInfoCard from './ProjectInfoCard.svelte';
@@ -41,6 +42,8 @@
       <WebAnalyticsSetup {clusterId} {connection} />
     </div>
   </SettingsCard>
+
+  <AppsCard {clusterId} canEdit={canManage} />
 
   <DomainAlertsCard {clusterId} />
 

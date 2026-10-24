@@ -15,6 +15,8 @@ describe('MetricAggregationService', () => {
       projectId: 'project-1',
       value: 5,
       operation: MetricOperation.Change,
+      clusterId: 'cluster-1',
+      app: 'default',
     };
 
     service.save(dto);
@@ -30,6 +32,8 @@ describe('MetricAggregationService', () => {
       projectId: 'project-1',
       value: 5,
       operation: MetricOperation.Change,
+      clusterId: 'cluster-1',
+      app: 'default',
     };
 
     const secondDto: RecordMetricDto = {
@@ -37,6 +41,8 @@ describe('MetricAggregationService', () => {
       projectId: 'project-1',
       value: 10,
       operation: MetricOperation.Set,
+      clusterId: 'cluster-1',
+      app: 'default',
     };
 
     service.save(firstDto);
@@ -53,6 +59,8 @@ describe('MetricAggregationService', () => {
       projectId: 'project-1',
       value: 5,
       operation: MetricOperation.Change,
+      clusterId: 'cluster-1',
+      app: 'default',
     };
 
     const secondDto: RecordMetricDto = {
@@ -60,6 +68,8 @@ describe('MetricAggregationService', () => {
       projectId: 'project-1',
       value: 10,
       operation: MetricOperation.Change,
+      clusterId: 'cluster-1',
+      app: 'default',
     };
 
     service.save(firstDto);
@@ -72,6 +82,8 @@ describe('MetricAggregationService', () => {
       projectId: 'project-1',
       value: 15,
       operation: MetricOperation.Change,
+      clusterId: 'cluster-1',
+      app: 'default',
     });
   });
 
@@ -82,18 +94,24 @@ describe('MetricAggregationService', () => {
         projectId: 'project-1',
         value: 5,
         operation: MetricOperation.Change,
+        clusterId: 'cluster-1',
+        app: 'default',
       },
       {
         name: 'metric-2',
         projectId: 'project-1',
         value: 10,
         operation: MetricOperation.Change,
+        clusterId: 'cluster-1',
+        app: 'default',
       },
       {
         name: 'metric-1',
         projectId: 'project-2',
         value: 15,
         operation: MetricOperation.Change,
+        clusterId: 'cluster-1',
+        app: 'default',
       },
     ];
 
@@ -110,6 +128,8 @@ describe('MetricAggregationService', () => {
       projectId: 'project-1',
       value: 5,
       operation: MetricOperation.Change,
+      clusterId: 'cluster-1',
+      app: 'default',
     };
 
     service.save(dto);

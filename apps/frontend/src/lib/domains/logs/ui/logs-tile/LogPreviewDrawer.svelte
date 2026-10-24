@@ -105,6 +105,14 @@
         <span class="text-fg-tertiary">{levelLabel}</span>
       </span>
 
+      {#if log.app}
+        <span
+          class="text-fg-secondary flex h-6 min-w-0 items-center rounded-full px-2 text-[13px] edge"
+        >
+          <span class="truncate">{log.app}</span>
+        </span>
+      {/if}
+
       {#if log.namespace}
         <button
           type="button"

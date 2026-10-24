@@ -6,6 +6,7 @@ import { WebAnalyticsSiteEntity } from '../core/entities/web-analytics-site.enti
 import { WebAnalyticsSiteNormalized } from '../core/entities/web-analytics-site.interface';
 import { WebAnalyticsSiteSerializer } from '../core/entities/web-analytics-site.serializer';
 import {
+  WebAnalyticsAppRow,
   WebAnalyticsBreakdownRow,
   WebAnalyticsBreakdowns,
   WebAnalyticsCohort,
@@ -43,7 +44,16 @@ const SOURCE = `if(utm_source != '', utm_source, ${REFERRER})`;
 
 const PERSON = `if(user_id != '', user_id, visitor_id)`;
 
-const FILTER_COLUMNS: Record<Exclude<WebAnalyticsFilterDimension, 'page' | 'goal'>, string> = {
+const VISIT = `${PERSON}, toDate(created_at, {tz:String})`;
+
+const PEOPLE = `uniqExactIf(user_id, user_id != '')`;
+
+const APP = `if(app != '', app, hostname)`;
+
+const FILTER_COLUMNS: Record<
+  Exclude<WebAnalyticsFilterDimension, 'page' | 'goal' | 'app'>,
+  string
+> = {
   channel: CHANNEL,
   referrer: REFERRER,
   campaign: 'utm_campaign',
@@ -115,6 +125,7 @@ type VisitorRow = {
   sessions: string;
   pageviews: string;
   active_days: string[];
+  apps: string[];
   total?: string;
 };
 
@@ -181,14 +192,17 @@ export class WebAnalyticsReadService {
     retentionDays: number,
   ): Promise<WebAnalyticsResponse> {
     const scope = this.scope(clusterId, query, retentionDays);
-    const [summary, previous, series, previousSeries, online, breakdowns] = await Promise.all([
-      this.readSummary(scope, scope.params),
-      this.readSummary(scope, scope.previousParams),
-      this.readSeries(scope, scope.params),
-      query.compare ? this.readSeries(scope, scope.previousParams) : undefined,
-      this.readOnline([clusterId]),
-      this.readBreakdowns(scope, 10),
-    ]);
+    const [summary, previous, series, previousSeries, online, breakdowns, apps] = await Promise.all(
+      [
+        this.readSummary(scope, scope.params),
+        this.readSummary(scope, scope.previousParams),
+        this.readSeries(scope, scope.params),
+        query.compare ? this.readSeries(scope, scope.previousParams) : undefined,
+        this.readOnline([clusterId]),
+        this.readBreakdowns(scope, 10),
+        this.readApps(scope),
+      ],
+    );
     return {
       from: scope.from.toISOString(),
       to: scope.to.toISOString(),
@@ -205,6 +219,7 @@ export class WebAnalyticsReadService {
       ),
       online: online[clusterId] ?? 0,
       breakdowns,
+      apps,
     };
   }
 
@@ -216,7 +231,7 @@ export class WebAnalyticsReadService {
     const scope = this.scope(clusterId, query, retentionDays);
     const [visitors, series] = await Promise.all([
       this.query<{ visitors: string }>(
-        `SELECT uniqExact(${PERSON}) AS visitors FROM web_events FINAL WHERE ${scope.where}`,
+        `SELECT uniqExact(${VISIT}) AS visitors FROM web_events FINAL WHERE ${scope.where}`,
         scope.params,
       ),
       this.readSeries(scope, scope.params),
@@ -284,10 +299,11 @@ export class WebAnalyticsReadService {
         name: string;
         path: string;
         hostname: string;
+        app: string;
         session_id: string;
         source: string;
       }>(
-        `SELECT created_at AS time, name, path, hostname, session_id, ${SOURCE} AS source
+        `SELECT created_at AS time, name, path, hostname, app, session_id, ${SOURCE} AS source
         FROM web_events FINAL WHERE ${where} AND name != 'pageleave' ORDER BY created_at DESC LIMIT 300`,
         params,
       ),
@@ -299,6 +315,7 @@ export class WebAnalyticsReadService {
         name: event.name,
         path: event.path,
         hostname: event.hostname,
+        app: event.app,
         sessionId: event.session_id,
         source: event.source,
       })),
@@ -427,7 +444,7 @@ export class WebAnalyticsReadService {
       this.readEventSeries(scope, scope.params, name),
       query.compare ? this.readEventSeries(scope, scope.previousParams, name) : undefined,
       this.query<{ label: string; visitors: string; count: string }>(
-        `SELECT key AS label, uniqExact(${PERSON}) AS visitors, count() AS count
+        `SELECT key AS label, uniqExact(${VISIT}) AS visitors, count() AS count
         FROM web_events FINAL ARRAY JOIN mapKeys(props) AS key
         WHERE ${scope.where} AND name = {event:String}
         GROUP BY label ORDER BY count DESC, label ASC LIMIT 50`,
@@ -459,7 +476,7 @@ export class WebAnalyticsReadService {
   ): Promise<WebAnalyticsBreakdownRow[]> {
     const scope = this.scope(clusterId, query, retentionDays);
     const rows = await this.query<{ label: string; visitors: string; count: string }>(
-      `SELECT props[{key:String}] AS label, uniqExact(${PERSON}) AS visitors, count() AS count
+      `SELECT props[{key:String}] AS label, uniqExact(${VISIT}) AS visitors, count() AS count
       FROM web_events FINAL
       WHERE ${scope.where} AND name = {event:String} AND mapContains(props, {key:String})
       GROUP BY label ORDER BY count DESC, visitors DESC, label ASC LIMIT 501`,
@@ -477,9 +494,16 @@ export class WebAnalyticsReadService {
     params: Record<string, unknown>,
     name: string,
   ): Promise<WebAnalyticsEventSummary> {
-    const rows = await this.query<{ count: string; visitors: string; total: string }>(
+    const rows = await this.query<{
+      count: string;
+      visitors: string;
+      people: string;
+      total: string;
+    }>(
       `SELECT countIf(name = {event:String}) AS count,
-        uniqExactIf(${PERSON}, name = {event:String}) AS visitors, uniqExact(${PERSON}) AS total
+        uniqExactIf(${VISIT}, name = {event:String}) AS visitors,
+        uniqExactIf(user_id, user_id != '' AND name = {event:String}) AS people,
+        uniqExact(${VISIT}) AS total
       FROM web_events FINAL WHERE ${scope.where}`,
       { ...params, event: name },
     );
@@ -488,6 +512,7 @@ export class WebAnalyticsReadService {
     return {
       count: Number(rows[0]?.count ?? 0),
       visitors,
+      people: Number(rows[0]?.people ?? 0),
       conversionRate: total ? (visitors / total) * 100 : 0,
     };
   }
@@ -499,14 +524,23 @@ export class WebAnalyticsReadService {
   ): Promise<WebAnalyticsEventPoint[]> {
     const [buckets, rows] = await Promise.all([
       this.readBuckets(scope, params),
-      this.query<{ time: string; count: string }>(
-        `SELECT toUnixTimestamp(${scope.bucket('created_at')}) * 1000 AS time, count() AS count
+      this.query<{ time: string; count: string; visitors: string; people: string }>(
+        `SELECT toUnixTimestamp(${scope.bucket('created_at')}) * 1000 AS time, count() AS count,
+          uniqExact(${VISIT}) AS visitors, ${PEOPLE} AS people
         FROM web_events FINAL WHERE ${scope.where} AND name = {event:String} GROUP BY time`,
         { ...params, event: name },
       ),
     ]);
-    const counts = new Map(rows.map((row) => [Number(row.time), Number(row.count)]));
-    return buckets.map((time) => ({ time, count: counts.get(time) ?? 0 }));
+    const byTime = new Map(rows.map((row) => [Number(row.time), row]));
+    return buckets.map((time) => {
+      const row = byTime.get(time);
+      return {
+        time,
+        count: Number(row?.count ?? 0),
+        visitors: Number(row?.visitors ?? 0),
+        people: Number(row?.people ?? 0),
+      };
+    });
   }
 
   private scope(clusterId: string, query: ReadWebAnalyticsQuery, retentionDays: number): Scope {
@@ -535,6 +569,8 @@ export class WebAnalyticsReadService {
         return `session_id IN (SELECT session_id FROM web_events WHERE ${window} AND name = 'pageview' AND path = ${value})`;
       if (dimension === 'goal')
         return `${PERSON} IN (SELECT ${PERSON} FROM web_events WHERE ${window} AND name = ${value} AND name NOT IN ${NOT_A_GOAL})`;
+      if (dimension === 'app')
+        return `${PERSON} IN (SELECT ${PERSON} FROM web_events WHERE ${window} AND ${APP} = ${value})`;
       return `${FILTER_COLUMNS[dimension]} = ${value}`;
     });
     const span = to.getTime() - from.getTime();
@@ -566,9 +602,10 @@ export class WebAnalyticsReadService {
     params: Record<string, unknown>,
   ): Promise<WebAnalyticsSummary> {
     const [events, sessions] = await Promise.all([
-      this.query<{ visitors: string; pageviews: string; converted: string }>(
-        `SELECT uniqExact(${PERSON}) AS visitors, countIf(name = 'pageview') AS pageviews,
-          uniqExactIf(${PERSON}, name NOT IN ${NOT_A_GOAL}) AS converted
+      this.query<{ visitors: string; people: string; pageviews: string; converted: string }>(
+        `SELECT uniqExact(${VISIT}) AS visitors, ${PEOPLE} AS people,
+          countIf(name = 'pageview') AS pageviews,
+          uniqExactIf(${VISIT}, name NOT IN ${NOT_A_GOAL}) AS converted
         FROM web_events FINAL WHERE ${scope.where}`,
         params,
       ),
@@ -582,6 +619,7 @@ export class WebAnalyticsReadService {
     const sessionCount = Number(sessions[0]?.sessions ?? 0);
     return {
       visitors,
+      people: Number(events[0]?.people ?? 0),
       pageviews: Number(events[0]?.pageviews ?? 0),
       sessions: sessionCount,
       bounceRate: sessionCount ? (Number(sessions[0].bounces) / sessionCount) * 100 : 0,
@@ -596,9 +634,10 @@ export class WebAnalyticsReadService {
   ): Promise<WebAnalyticsPoint[]> {
     const [buckets, rows] = await Promise.all([
       this.readBuckets(scope, params),
-      this.query<{ time: string; visitors: string; pageviews: string }>(
+      this.query<{ time: string; visitors: string; people: string; pageviews: string }>(
         `SELECT toUnixTimestamp(${scope.bucket('created_at')}) * 1000 AS time,
-          uniqExact(${PERSON}) AS visitors, countIf(name = 'pageview') AS pageviews
+          uniqExact(${VISIT}) AS visitors, ${PEOPLE} AS people,
+          countIf(name = 'pageview') AS pageviews
         FROM web_events FINAL WHERE ${scope.where} GROUP BY time`,
         params,
       ),
@@ -609,6 +648,7 @@ export class WebAnalyticsReadService {
       return {
         time,
         visitors: Number(row?.visitors ?? 0),
+        people: Number(row?.people ?? 0),
         pageviews: Number(row?.pageviews ?? 0),
       };
     });
@@ -644,6 +684,29 @@ export class WebAnalyticsReadService {
     });
   }
 
+  private async readApps(scope: Scope): Promise<WebAnalyticsAppRow[]> {
+    const rows = await this.query<{
+      label: string;
+      website: number;
+      visitors: string;
+      people: string;
+      count: string;
+    }>(
+      `SELECT ${APP} AS label, min(app = '') AS website, uniqExact(${VISIT}) AS visitors,
+        ${PEOPLE} AS people, count() AS count
+      FROM web_events FINAL WHERE ${scope.where} AND name != 'pageleave'
+      GROUP BY label ORDER BY visitors DESC, count DESC, label ASC LIMIT 50`,
+      scope.params,
+    );
+    return rows.map((row) => ({
+      name: row.label,
+      website: Number(row.website) === 1,
+      visitors: Number(row.visitors),
+      people: Number(row.people),
+      count: Number(row.count),
+    }));
+  }
+
   private async readBreakdowns(
     scope: Scope,
     limit: number,
@@ -663,7 +726,7 @@ export class WebAnalyticsReadService {
     const [rows, sessionRows] = await Promise.all([
       entries.length
         ? this.query<{ dimension: string; label: string; visitors: string; count: string }>(
-            `SELECT entry.1 AS dimension, entry.2 AS label, uniqExact(${PERSON}) AS visitors, count() AS count
+            `SELECT entry.1 AS dimension, entry.2 AS label, uniqExact(${VISIT}) AS visitors, count() AS count
             FROM web_events FINAL ARRAY JOIN [${entries.join(', ')}] AS entry
             WHERE ${scope.where} AND entry.2 != ''
             GROUP BY dimension, label ORDER BY visitors DESC, count DESC, label ASC LIMIT {limit:UInt32} BY dimension`,
@@ -672,7 +735,8 @@ export class WebAnalyticsReadService {
         : [],
       wanted('entryPages') || wanted('exitPages')
         ? this.query<{ dimension: string; label: string; visitors: string; count: string }>(
-            `SELECT entry.1 AS dimension, entry.2 AS label, uniqExact(visitor) AS visitors, count() AS count
+            `SELECT entry.1 AS dimension, entry.2 AS label,
+              uniqExact(visitor, toDate(started_at, {tz:String})) AS visitors, count() AS count
             FROM (${this.sessions(scope)})
             ARRAY JOIN [('entryPages', entry_page), ('exitPages', exit_page)] AS entry
             GROUP BY dimension, label ORDER BY visitors DESC, count DESC, label ASC LIMIT {limit:UInt32} BY dimension`,
@@ -726,11 +790,14 @@ export class WebAnalyticsReadService {
   private visitorSelect(): string {
     return `SELECT ${PERSON} AS id, any(user_id != '') AS identified,
       min(created_at) AS first_seen, max(created_at) AS last_seen,
-      argMax(country, created_at) AS last_country, argMax(device, created_at) AS last_device,
-      argMax(os, created_at) AS last_os, argMax(browser, created_at) AS last_browser,
-      argMin(${SOURCE}, created_at) AS source,
+      argMaxIf(country, created_at, country != '') AS last_country,
+      argMaxIf(device, created_at, device != '') AS last_device,
+      argMaxIf(os, created_at, os != '') AS last_os,
+      argMaxIf(browser, created_at, browser != '') AS last_browser,
+      argMinIf(${SOURCE}, created_at, app = '') AS source,
       uniqExact(session_id) AS sessions, countIf(name = 'pageview') AS pageviews,
-      arraySort(groupUniqArray(toString(toDate(created_at, {tz:String})))) AS active_days`;
+      arraySort(groupUniqArray(toString(toDate(created_at, {tz:String})))) AS active_days,
+      arraySort(groupUniqArrayIf(app, app != '')) AS apps`;
   }
 
   private toVisitor(row: VisitorRow): WebAnalyticsVisitor {
@@ -747,6 +814,7 @@ export class WebAnalyticsReadService {
       sessions: Number(row.sessions),
       pageviews: Number(row.pageviews),
       activeDays: row.active_days,
+      apps: row.apps,
     };
   }
 

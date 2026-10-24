@@ -39,6 +39,7 @@ export const WEB_ANALYTICS_FILTER_DIMENSIONS = [
   'os',
   'device',
   'goal',
+  'app',
 ] as const;
 
 export type WebAnalyticsFilterDimension = (typeof WEB_ANALYTICS_FILTER_DIMENSIONS)[number];
@@ -106,7 +107,7 @@ export class ReadWebAnalyticsQuery {
     type: String,
     isArray: true,
     description:
-      'dimension:value, for example page:/pricing or country:PL, or prop.<key>:value for events with that property value, and for events without the key, visitors who sent it',
+      'dimension:value, for example page:/pricing or country:PL, or prop.<key>:value for events with that property value, and for events without the key, visitors who sent it. goal:<event> and app:<app or website hostname> keep the visitors who sent that event or used that app.',
   })
   @IsOptional()
   @Transform(toArray)
