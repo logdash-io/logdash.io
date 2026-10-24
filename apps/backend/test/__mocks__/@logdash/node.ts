@@ -16,4 +16,5 @@ export class Logdash {
   public mutateMetric(): void {}
 
   public async flush(): Promise<void> {}
+  public destroy(): void {}
 }

@@ -42,8 +42,6 @@ jobs:
           username: ${{ secrets.BACKEND_PROD_SSH_USER }}
           port: ${{ secrets.BACKEND_PROD_SSH_PORT }}
           ssh-private-key: ${{ secrets.BACKEND_PROD_SSH_KEY }}
-          server-port: 3000
-          application-port: 3000
           image-name: ablaszkiewicz/logdash-backend-prod
           container-name: logdash-backend-prod
           mongo-url: ${{ secrets.BACKEND_PROD_MONGO_URL }}
@@ -63,7 +61,7 @@ jobs:
           telegram-token: ${{ secrets.BACKEND_PROD_TELEGRAM_TOKEN }}
           whitelisted-emails: ${{ secrets.BACKEND_PROD_WHITELISTED_EMAILS }}
           auth-jwt-secret: ${{ secrets.BACKEND_PROD_AUTH_JWT_SECRET }}
-          personal-api-key-hmac-secret: ${{ secrets.BACKEND_PROD_PERSONAL_API_KEY_HMAC_SECRET }}
+          personal-api-key-hmac-secret: ${{ secrets.PERSONAL_API_KEY_HMAC_SECRET }}
           clickhouse-host: ${{ secrets.BACKEND_PROD_CLICKHOUSE_HOST }}:${{ secrets.BACKEND_PROD_CLICKHOUSE_PORT }}
           clickhouse-user: ${{ secrets.BACKEND_PROD_CLICKHOUSE_USER }}
           clickhouse-password: ${{ secrets.BACKEND_PROD_CLICKHOUSE_PASSWORD }}
@@ -75,6 +73,7 @@ jobs:
           internal-telegram-bot-token: ${{ secrets.BACKEND_PROD_INTERNAL_TELEGRAM_BOT_TOKEN }}
           google-oauth-client-id: ${{ secrets.BACKEND_PROD_GOOGLE_OAUTH_CLIENT_ID }}
           google-oauth-client-secret: ${{ secrets.BACKEND_PROD_GOOGLE_OAUTH_CLIENT_SECRET }}
+          # Optional and unset: only OUR_ENV=local reads the *_LOCAL OAuth apps, prod never does.
           google-oauth-client-id-local: ${{ secrets.BACKEND_PROD_GOOGLE_OAUTH_CLIENT_ID_LOCAL }}
           google-oauth-client-secret-local: ${{ secrets.BACKEND_PROD_GOOGLE_OAUTH_CLIENT_SECRET_LOCAL }}
           github-oauth-client-id-local: ${{ secrets.BACKEND_PROD_GITHUB_OAUTH_CLIENT_ID_LOCAL }}

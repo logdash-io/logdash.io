@@ -54,17 +54,19 @@ jobs:
           echo "✅ MongoDB dump completed"
 
           # Create metadata file
-          echo "backup_timestamp=${TIMESTAMP}" > backup/metadata.txt
-          echo "backup_type=mongodb" >> backup/metadata.txt
-          echo "environment=prod" >> backup/metadata.txt
-          echo "created_at=$(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/metadata.txt
+          {
+            echo "backup_timestamp=${TIMESTAMP}"
+            echo "backup_type=mongodb"
+            echo "environment=prod"
+            echo "created_at=$(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          } > backup/metadata.txt
 
           # Compress backup
           echo "🗜️ Compressing backup..."
           tar -czf "${BACKUP_NAME}.tar.gz" backup/
 
           # Set output for artifact name
-          echo "BACKUP_NAME=${BACKUP_NAME}" >> $GITHUB_ENV
+          echo "BACKUP_NAME=${BACKUP_NAME}" >> "$GITHUB_ENV"
 
           echo "✅ Backup compressed and ready for encryption"
         shell: bash

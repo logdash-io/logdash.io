@@ -1,9 +1,10 @@
 name: "Run test batch"
+description: "Runs a batch of backend specs with Jest"
 
 inputs:
   test-batch:
-    description: "Space-separated list of test files to run"
-    required: true
+    description: "Space-separated list of test files to run, every spec when empty"
+    required: false
 
 runs:
   using: "composite"

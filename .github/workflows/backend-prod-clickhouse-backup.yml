@@ -70,13 +70,15 @@ jobs:
           echo "Tables list: $(cat backup/tables_list.tsv)"
 
           # Initialize backup summary
-          echo "📊 BACKUP SUMMARY" > backup/backup_summary.txt
-          echo "=================" >> backup/backup_summary.txt
-          echo "Backup started at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/backup_summary.txt
-          echo "" >> backup/backup_summary.txt
+          {
+            echo "📊 BACKUP SUMMARY"
+            echo "================="
+            echo "Backup started at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+            echo ""
+          } > backup/backup_summary.txt
 
           # Backup all tables in default database
-          while IFS=$'\t' read -r database table engine; do
+          while IFS=$'\t' read -r database table _; do
             if [ "$database" = "default" ] && [ "$table" != "tables_list" ]; then
               echo "🔧 Backing up table: $table"
               
@@ -126,16 +128,18 @@ jobs:
           cat backup/backup_summary.txt
 
           # Create metadata file
-          echo "backup_timestamp=${TIMESTAMP}" > backup/metadata.txt
-          echo "database=default" >> backup/metadata.txt
-          echo "environment=prod" >> backup/metadata.txt
-          echo "created_at=$(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> backup/metadata.txt
+          {
+            echo "backup_timestamp=${TIMESTAMP}"
+            echo "database=default"
+            echo "environment=prod"
+            echo "created_at=$(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          } > backup/metadata.txt
 
           # Compress backup
           tar -czf "${BACKUP_NAME}.tar.gz" backup/
 
           # Set output for artifact name
-          echo "BACKUP_NAME=${BACKUP_NAME}" >> $GITHUB_ENV
+          echo "BACKUP_NAME=${BACKUP_NAME}" >> "$GITHUB_ENV"
         shell: bash
 
       - name: Encrypt Backup

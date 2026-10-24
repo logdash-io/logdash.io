@@ -147,7 +147,7 @@ jobs:
           CLICKHOUSE_HOST=127.0.0.1
 
           # Restore tables from backup
-          while IFS=$'\t' read -r database table engine; do
+          while IFS=$'\t' read -r database table _; do
             if [ "$database" = "default" ] && [ "$table" != "tables_list" ]; then
               echo "🔧 Restoring table: $table"
               # Create table schema

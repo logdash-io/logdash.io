@@ -1,4 +1,5 @@
 name: 'Apply mongo migrations'
+description: 'Applies the backend Mongo migrations to the given database'
 
 inputs:
   mongo-uri:

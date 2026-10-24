@@ -1,4 +1,5 @@
 name: Prune
+description: Removes unused Docker data on the server
 
 inputs:
   # SSH

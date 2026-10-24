@@ -88,5 +88,7 @@ function createNamespacedLoggerProvider(token: symbol) {
 export class LogdashModule implements OnApplicationShutdown {
   public async onApplicationShutdown(): Promise<void> {
     await Promise.all([mainLogdash.flush(), demoLogdash.flush()]);
+    mainLogdash.destroy();
+    demoLogdash.destroy();
   }
 }

@@ -1,4 +1,5 @@
 name: 'Find test files'
+description: 'Splits the backend specs into batches for a test matrix'
 
 inputs:
   batch-size:

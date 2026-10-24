@@ -1,4 +1,5 @@
 name: Deploy
+description: Writes the backend env file on the server and deploys the image through its zero-downtime script
 
 inputs:
   # SSH
@@ -14,11 +15,7 @@ inputs:
   # Docker
   image-name:
     required: true
-  server-port:
-    required: true
   container-name:
-    required: true
-  application-port:
     required: true
 
   # App
@@ -169,25 +166,6 @@ runs:
           EOF
 
           # The zero-downtime deploy script is installed on the server from the infrastructure repo.
-          if [ -x /usr/local/bin/logdash-deploy-backend ]; then
-            /usr/local/bin/logdash-deploy-backend ${{ inputs.container-name }} ${{ inputs.image-name }} "$ENV_FILE"
-          else
-            echo "::warning::Zero-downtime deploy script not installed, replacing the container in place"
-            docker pull ${{ inputs.image-name }}
-            # Builds with /health flush their queues on SIGTERM. Older ones keep accepting logs without
-            # flushing until Docker kills them, so they are killed right away.
-            for container in $(docker ps -q --filter "name=^${{ inputs.container-name }}"); do
-              if docker exec "$container" wget -qO /dev/null http://localhost:${{ inputs.application-port }}/health; then
-                docker stop -t 30 "$container"
-              fi
-            done
-            docker ps -aq --filter "name=^${{ inputs.container-name }}" | xargs -r docker rm -f
-            docker run -d \
-            -p ${{ inputs.server-port }}:${{ inputs.application-port }} \
-            --restart=always \
-            --add-host=host.docker.internal:host-gateway \
-            --name ${{ inputs.container-name }} \
-            -v /var/run/dragonfly:/var/run/dragonfly \
-            --env-file "$ENV_FILE" \
-            ${{ inputs.image-name }}
-          fi
+          # It starts the new container next to the old one, and if the new one never answers /health
+          # it fails the deploy and the old one keeps serving. Without the script the deploy fails too.
+          /usr/local/bin/logdash-deploy-backend ${{ inputs.container-name }} ${{ inputs.image-name }} "$ENV_FILE"
