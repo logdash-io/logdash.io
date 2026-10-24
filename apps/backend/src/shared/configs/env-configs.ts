@@ -1,4 +1,5 @@
 import { getOurEnv, OurEnv } from '../types/our-env.enum';
+import { isRecord } from '../utils/is-record';
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -366,4 +367,14 @@ export const EnvConfigs: EnvConfigs = {
 export function getEnvConfig(): EnvConfig {
   const env = getOurEnv();
   return EnvConfigs[env];
+}
+
+export function assertRequiredEnv(): void {
+  readEveryValue(getEnvConfig());
+}
+
+function readEveryValue(value: unknown): void {
+  if (isRecord(value)) {
+    Object.values(value).forEach(readEveryValue);
+  }
 }

@@ -1,4 +1,5 @@
 name: Deploy
+description: Replaces the status page container on the server
 
 inputs:
   # SSH

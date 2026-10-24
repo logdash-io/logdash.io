@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { getEnvConfig } from './shared/configs/env-configs';
+import { assertRequiredEnv, getEnvConfig } from './shared/configs/env-configs';
 import basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
 import { NextFunction, Request, Response } from 'express';
@@ -22,6 +22,8 @@ const BODY_SIZE_LIMIT = '2mb';
 let appLogger: LogdashLogger | undefined;
 
 async function bootstrap(): Promise<void> {
+  assertRequiredEnv();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
     forceCloseConnections: true,
