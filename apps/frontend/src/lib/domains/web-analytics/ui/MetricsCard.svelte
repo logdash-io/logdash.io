@@ -5,7 +5,7 @@
     formatDuration,
     formatPercent,
   } from '../domain/analytics-format';
-  import { endsInProgress, visitsLabel } from '../domain/analytics-period';
+  import { endsInProgress } from '../domain/analytics-period';
   import type { AnalyticsQuery } from '../domain/analytics-query';
   import type {
     AnalyticsChartLine,
@@ -34,17 +34,11 @@
 
   const { report, query, loading }: Props = $props();
 
-  const visits = $derived(
-    report ? visitsLabel(report.from, report.to) : 'Visitors',
-  );
-  const stats = $derived<Stat[]>([
+  const stats: Stat[] = [
     {
       key: 'visitors',
-      label: visits,
-      hint:
-        visits === 'Visits'
-          ? 'A visit is one visitor on one day. Anonymous visitors get a new ID every day, so someone who comes back on another day counts as a new visit. People counts each signed-in person once.'
-          : undefined,
+      label: 'Visitors',
+      hint: 'Anonymous visitors get a new ID every Monday at 00:00 UTC, so someone who comes back in a later week counts again.',
       format: formatCount,
       chart: 'visitors',
     },
@@ -69,7 +63,7 @@
       lowerIsBetter: true,
     },
     { key: 'sessionSeconds', label: 'Session time', format: formatDuration },
-  ]);
+  ];
 
   let metric = $state<Metric>('visitors');
 

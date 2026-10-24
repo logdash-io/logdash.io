@@ -47,7 +47,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
       {
         title: 'For web analytics, Logdash stores:',
         list: [
-          "a pseudonymous visitor identifier: a SHA-256 hash of a random daily salt, the site, the visitor's IP address and the browser's User-Agent, computed on the Logdash server;",
+          "a pseudonymous visitor identifier: a SHA-256 hash of a random weekly salt, the site, the visitor's IP address and the browser's User-Agent, computed on the Logdash server;",
           'a session identifier assigned by the Logdash server;',
           "where the Client calls identify, a pseudonymous user identifier: a SHA-256 hash of the site ID and the Client's user ID, computed in the visitor's browser, so the user ID itself never leaves the browser;",
           'page paths without query strings or fragments, event names, the host name of the referring website, campaign (UTM) tags and the name of an advertising click identifier parameter, never its value;',
@@ -57,7 +57,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
       },
       {
         title:
-          'IP addresses are used only to compute the visitor identifier and are never stored. User-Agent strings are used only to compute the visitor identifier and to derive the device type, browser and operating system, and are not stored. The daily salt is 32 random bytes created for each UTC day, held only in Redis and deleted 30 minutes after that day ends. After that, nobody, Logdash included, can recompute the visitor identifiers of that day.',
+          'IP addresses are used only to compute the visitor identifier and are never stored. User-Agent strings are used only to compute the visitor identifier and to derive the device type, browser and operating system, and are not stored. The weekly salt is 32 random bytes created for each week starting on Monday at 00:00 UTC, held only in Redis and deleted 30 minutes after that week ends. After that, nobody, Logdash included, can recompute the visitor identifiers of that week.',
       },
       {
         title:
@@ -120,7 +120,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
           'sign-in sessions expire after at most 7 days, and personal API keys are stored only as HMAC-SHA256 digests;',
           'changes to resources in the Platform are recorded in an audit log;',
           'data ingestion is rate limited per plan;',
-          'web analytics minimises data as described in §3: a daily salt, no stored IP addresses or User-Agent strings, page paths stored without query strings or fragments and with path segments that contain an @ sign replaced, and requests from known bots discarded;',
+          'web analytics minimises data as described in §3: a weekly salt, no stored IP addresses or User-Agent strings, page paths stored without query strings or fragments and with path segments that contain an @ sign replaced, and requests from known bots discarded;',
           'backups of the databases are scheduled every 15 minutes, encrypted with AES-256 using keys derived with PBKDF2-HMAC-SHA256, protected against tampering with HMAC-SHA256 and kept for 14 days;',
           'production secrets are kept outside the source code.',
         ],
@@ -173,7 +173,7 @@ export const DPAdefinition: LegalDocumentDefinition = [
       },
       {
         title:
-          'Once the salt of a day has been deleted, an anonymous visitor cannot be matched to the events of that day. For an identified user, the Client can compute the stored user identifier, the SHA-256 hash of the site ID, a colon and the user ID, and send it to support@logdash.io. Logdash then provides or deletes the matching events, as the Client asks.',
+          'Once the salt of a week has been deleted, an anonymous visitor cannot be matched to the events of that week. For an identified user, the Client can compute the stored user identifier, the SHA-256 hash of the site ID, a colon and the user ID, and send it to support@logdash.io. Logdash then provides or deletes the matching events, as the Client asks.',
       },
       {
         title:

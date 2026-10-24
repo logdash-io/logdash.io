@@ -25,7 +25,6 @@
     ANALYTICS_PERIODS,
     analyticsWindow,
     defaultGranularity,
-    visitsLabel,
     type AnalyticsPeriod,
   } from '$lib/domains/web-analytics/domain/analytics-period.js';
   import { WebAnalyticsService } from '$lib/domains/web-analytics/infrastructure/web-analytics.service.js';
@@ -74,19 +73,8 @@
     PERIODS.find(({ id }) => id === period)?.label ?? '',
   );
   const periodLabel = $derived(periodName.toLowerCase());
-  const unit = $derived.by(() => {
-    const window = analyticsWindow(period, 0);
-    return visitsLabel(window.from, window.to);
-  });
-  const orders = $derived(
-    ORDERS.map((option) =>
-      option.id === 'visitors'
-        ? { ...option, label: `Most ${unit.toLowerCase()}` }
-        : option,
-    ),
-  );
   const orderName = $derived(
-    orders.find(({ id }) => id === order)?.label ?? '',
+    ORDERS.find(({ id }) => id === order)?.label ?? '',
   );
 
   $effect(() => topBarState.show(toolbar));
@@ -225,11 +213,7 @@
         {formatCount(total)}
       </span>
     {/if}
-    {total === 1 && !isLoading
-      ? unit === 'Visits'
-        ? 'visit'
-        : 'visitor'
-      : unit.toLowerCase()}
+    {total === 1 && !isLoading ? 'visitor' : 'visitors'}
     {period === 'today' ? '' : 'in the'}
     {periodLabel}
   </p>
@@ -244,7 +228,6 @@
           <DomainCard
             {cluster}
             visitors={visitors[cluster.id] ?? { status: 'loading' }}
-            {unit}
             down={clusterPulseState.down(cluster.id)}
           />
         </li>
@@ -337,7 +320,7 @@
       aria-label="Order"
       onkeydown={onMenuArrowKeys}
     >
-      {#each orders as option (option.id)}
+      {#each ORDERS as option (option.id)}
         {@render choice(option.label, option.id === order, () =>
           onOrderSelect(option.id),
         )}

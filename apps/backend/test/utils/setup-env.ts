@@ -26,3 +26,6 @@ const TEST_ENV_DEFAULTS: Record<string, string> = {
 for (const [name, value] of Object.entries(TEST_ENV_DEFAULTS)) {
   process.env[name] ??= value;
 }
+
+// Crons and background pings stay off only under NODE_ENV=test, which Jest sets only when it is unset.
+process.env.NODE_ENV = 'test';

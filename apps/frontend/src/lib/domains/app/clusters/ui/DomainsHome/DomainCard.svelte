@@ -10,11 +10,10 @@
   type Props = {
     cluster: Cluster;
     visitors: DomainVisitors;
-    unit: string;
     down: number;
   };
 
-  const { cluster, visitors, unit, down }: Props = $props();
+  const { cluster, visitors, down }: Props = $props();
 
   const online = $derived(clusterPulseState.online(cluster.id));
 </script>
@@ -51,7 +50,7 @@
 
   <div class="flex min-w-0 flex-col gap-3 p-3">
     <div class="flex flex-col gap-1.5">
-      <span class="text-fg-muted text-xs">{unit}</span>
+      <span class="text-fg-muted text-xs">Visitors</span>
       <span class="flex h-8 items-center font-mono text-2xl tabular-nums">
         {#if visitors.status === 'ready'}
           {formatCount(visitors.overview.visitors)}

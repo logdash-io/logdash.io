@@ -56,7 +56,7 @@ export class WebAnalyticsBreakdowns {
 export class WebAnalyticsSummary {
   @ApiProperty({
     description:
-      'Visits: each visitor counts once per day in the requested time zone, because anonymous visitor IDs change every day',
+      'Unique visitors. Anonymous visitor IDs change every Monday at 00:00 UTC, so a visitor who comes back in a later week counts again',
   })
   visitors: number;
 
@@ -75,7 +75,7 @@ export class WebAnalyticsSummary {
   @ApiProperty({ description: 'Average time between the first and last event of a session' })
   sessionSeconds: number;
 
-  @ApiProperty({ description: 'Share of visits with any goal, 0 to 100' })
+  @ApiProperty({ description: 'Share of visitors who completed any goal, 0 to 100' })
   conversionRate: number;
 }
 
@@ -83,7 +83,7 @@ export class WebAnalyticsPoint {
   @ApiProperty({ description: 'Bucket start, Unix milliseconds' })
   time: number;
 
-  @ApiProperty({ description: 'Visits, each visitor once per day' })
+  @ApiProperty()
   visitors: number;
 
   @ApiProperty({ description: 'Identified people' })
@@ -100,7 +100,7 @@ export class WebAnalyticsAppRow {
   @ApiProperty({ description: 'Whether these are website events, named by hostname' })
   website: boolean;
 
-  @ApiProperty({ description: 'Visits, each visitor once per day' })
+  @ApiProperty()
   visitors: number;
 
   @ApiProperty({ description: 'Identified people' })
@@ -173,13 +173,13 @@ export class WebAnalyticsEventSummary {
   @ApiProperty({ description: 'Times the event was sent' })
   count: number;
 
-  @ApiProperty({ description: 'Visits with the event, each visitor once per day' })
+  @ApiProperty({ description: 'Visitors who sent the event' })
   visitors: number;
 
   @ApiProperty({ description: 'Identified people who sent the event' })
   people: number;
 
-  @ApiProperty({ description: 'Share of visits with the event, 0 to 100' })
+  @ApiProperty({ description: 'Share of visitors who sent the event, 0 to 100' })
   conversionRate: number;
 }
 
@@ -190,7 +190,7 @@ export class WebAnalyticsEventPoint {
   @ApiProperty()
   count: number;
 
-  @ApiProperty({ description: 'Visits with the event' })
+  @ApiProperty({ description: 'Visitors who sent the event' })
   visitors: number;
 
   @ApiProperty({ description: 'Identified people who sent the event' })
@@ -228,7 +228,9 @@ export class WebAnalyticsEventResponse {
 }
 
 export class WebAnalyticsVisitor {
-  @ApiProperty({ description: 'Hashed user id when identified, otherwise the daily visitor hash' })
+  @ApiProperty({
+    description: 'Hashed user id when identified, otherwise the weekly visitor hash',
+  })
   id: string;
 
   @ApiProperty({ description: 'Whether the site identified this person with logdash.identify' })
