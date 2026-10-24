@@ -35,7 +35,7 @@ class LogsState {
   private _loadingPage = $state(false);
   private _fetchingLogs = $state(false);
   private _fetchFailed = $state(false);
-  private _projectId: string | null = $state(null);
+  private _clusterId: string | null = $state(null);
   private _generation = 0;
 
   private _logs = $state.raw<Record<Log['id'], Log>>({});
@@ -76,6 +76,12 @@ class LogsState {
       );
     }
 
+    if (filtersStore.apps.length > 0) {
+      result = result.filter((log) =>
+        filtersStore.apps.includes(log.app ?? ''),
+      );
+    }
+
     if (filtersStore.searchString.trim()) {
       const query = filtersStore.searchString.toLowerCase();
       const queryWords = query.split(' ');
@@ -93,7 +99,8 @@ class LogsState {
         filtersStore.startDate ||
         filtersStore.endDate ||
         filtersStore.levels.length > 0 ||
-        filtersStore.namespaces.length > 0,
+        filtersStore.namespaces.length > 0 ||
+        filtersStore.apps.length > 0,
     );
   }
 
@@ -125,12 +132,12 @@ class LogsState {
 
   get streamPaused(): boolean {
     return (
-      this._projectId !== null &&
+      this._clusterId !== null &&
       (this.shouldFiltersBlockSync || logsSyncService.failed)
     );
   }
 
-  resync(project_id: string): void {
+  resync(cluster_id: string): void {
     logger.debug(
       'resyncing logs...',
       filtersStore.searchString.trim(),
@@ -140,32 +147,32 @@ class LogsState {
     );
 
     if (!this.shouldFiltersBlockSync) {
-      this.sync(project_id).catch((error: unknown) => {
+      this.sync(cluster_id).catch((error: unknown) => {
         logger.error('failed to sync logs:', error);
       });
       return;
     }
 
     this.unsync();
-    this._projectId = project_id;
+    this._clusterId = cluster_id;
     void this.fetchLogs();
   }
 
   retry(): void {
-    if (this._projectId) {
-      this.resync(this._projectId);
+    if (this._clusterId) {
+      this.resync(this._clusterId);
     }
   }
 
-  async sync(project_id: string): Promise<void> {
+  async sync(cluster_id: string): Promise<void> {
     this.unsync();
-    this._projectId = project_id;
-    logger.debug('syncing logs...', project_id);
+    this._clusterId = cluster_id;
+    logger.debug('syncing logs...', cluster_id);
 
     this._logs = {};
 
     logsSyncService.init({
-      projectId: project_id,
+      clusterId: cluster_id,
       onOpen: () => {
         logger.debug('logs sync connection opened');
       },
@@ -185,6 +192,13 @@ class LogsState {
         if (
           filtersStore.namespaces.length > 0 &&
           !filtersStore.namespaces.includes(log.namespace ?? '')
+        ) {
+          return;
+        }
+
+        if (
+          filtersStore.apps.length > 0 &&
+          !filtersStore.apps.includes(log.app ?? '')
         ) {
           return;
         }
@@ -228,7 +242,7 @@ class LogsState {
   }
 
   async resumeSync(): Promise<void> {
-    if (this.shouldFiltersBlockSync || !this.syncPaused || !this._projectId) {
+    if (this.shouldFiltersBlockSync || !this.syncPaused || !this._clusterId) {
       logger.debug(
         'not resuming logs sync...',
         this.shouldFiltersBlockSync,
@@ -238,13 +252,13 @@ class LogsState {
     }
 
     logger.debug('resuming logs sync...');
-    await this.sync(this._projectId);
+    await this.sync(this._clusterId);
   }
 
   unsync(): void {
     logger.debug('unsyncing logs...');
     this._generation++;
-    this._projectId = null;
+    this._clusterId = null;
     this._fetchingLogs = false;
     this._fetchFailed = false;
     this._loadingPage = false;
@@ -257,9 +271,9 @@ class LogsState {
   }
 
   private async fetchLogs(pagination?: { lastId: string }): Promise<void> {
-    const projectId = this._projectId;
+    const clusterId = this._clusterId;
 
-    if (!projectId) {
+    if (!clusterId) {
       return;
     }
 
@@ -268,7 +282,7 @@ class LogsState {
     this._fetchFailed = false;
 
     try {
-      const logs = await LogsService.getProjectLogs(projectId, {
+      const logs = await LogsService.getClusterLogs(clusterId, {
         ...filtersStore.filters,
         ...(pagination && { lastId: pagination.lastId, direction: 'before' }),
       });

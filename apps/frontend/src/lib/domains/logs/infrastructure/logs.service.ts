@@ -6,17 +6,11 @@ import { logger } from '$lib/domains/shared/logger/index';
 import type { NamespaceMetadata } from '../domain/namespace-metadata';
 
 export class LogsService {
-  static async getProjectLogs(
-    project_id: string,
+  static async getClusterLogs(
+    cluster_id: string,
     filters: Partial<LogsQueryFilters>,
   ): Promise<Log[]> {
-    logger.debug('getting project logs', filters);
-
-    const levels = filters.levels?.length ? filters.levels : undefined;
-
-    const namespaces = filters.namespaces?.length
-      ? filters.namespaces
-      : undefined;
+    logger.debug('getting domain logs', filters);
 
     const qs = queryString.stringify(
       {
@@ -26,20 +20,24 @@ export class LogsService {
         ...(filters.searchString && { searchString: filters.searchString }),
         ...(filters.startDate && { startDate: filters.startDate }),
         ...(filters.endDate && { endDate: filters.endDate }),
-        ...(levels && { levels }),
-        ...(namespaces && { namespaces }),
+        ...(filters.levels?.length && { levels: filters.levels }),
+        ...(filters.namespaces?.length && { namespaces: filters.namespaces }),
+        ...(filters.apps?.length && { apps: filters.apps }),
       },
       { arrayFormat: 'none' },
     );
 
-    return httpClient.get<Log[]>(`/projects/${project_id}/logs/v2?${qs}`);
+    return httpClient.get<Log[]>(`/clusters/${cluster_id}/logs?${qs}`);
   }
 
   static async getLogsNamespaces(
-    project_id: string,
+    cluster_id: string,
+    apps: string[],
   ): Promise<NamespaceMetadata[]> {
+    const qs = queryString.stringify({ apps }, { arrayFormat: 'none' });
+
     return httpClient.get<NamespaceMetadata[]>(
-      `/projects/${project_id}/logs/namespaces`,
+      `/clusters/${cluster_id}/logs/namespaces?${qs}`,
     );
   }
 }

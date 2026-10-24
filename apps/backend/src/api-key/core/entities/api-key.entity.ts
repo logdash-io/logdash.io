@@ -9,9 +9,17 @@ export class ApiKeyEntity {
   value: string;
 
   @Prop()
-  projectId: string;
+  projectId?: string;
+
+  @Prop()
+  clusterId?: string;
 }
 
 export type ApiKeyDocument = HydratedDocument<ApiKeyEntity>;
 
 export const ApiKeySchema = SchemaFactory.createForClass(ApiKeyEntity);
+
+ApiKeySchema.index(
+  { clusterId: 1 },
+  { unique: true, partialFilterExpression: { clusterId: { $exists: true } } },
+);

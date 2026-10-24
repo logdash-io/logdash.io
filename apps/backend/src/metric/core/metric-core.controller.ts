@@ -9,7 +9,6 @@ import {
   Put,
   Query,
   Sse,
-  UnauthorizedException,
   UseGuards,
   UseInterceptors,
   MessageEvent,
@@ -17,13 +16,15 @@ import {
 import { Public } from '../../auth/core/decorators/is-public';
 import { ApiBearerAuth, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { MetricReadService } from '../read/metric-read.service';
-import { MetricSerialized, SimpleMetric } from './entities/metric.normalized';
+import { ClusterMetric, MetricSerialized, SimpleMetric } from './entities/metric.normalized';
 import { SuccessResponse } from '../../shared/responses/success.response';
 import { RecordMetricBody } from './dto/record-metric.dto';
 import { ReadMetricHistoryQuery } from './dto/read-metric-history.query';
 import { MetricQueueingService } from '../queueing/metric-queueing-service';
 import { MetricSerializer } from './entities/metric.serializer';
-import { ApiKeyReadCachedService } from '../../api-key/read/api-key-read-cached.service';
+import { IngestProjectService } from '../../project/ingest/ingest-project.service';
+import { ProjectReadService } from '../../project/read/project-read.service';
+import { ProjectReadCachedService } from '../../project/read/project-read-cached.service';
 import { MetricRegisterReadService } from '../../metric-register/read/metric-register-read.service';
 import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-member.guard';
 import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
@@ -48,13 +49,21 @@ export class MetricCoreController {
     (event) => event.projectId,
   );
 
+  private readonly clusterMetricStream = new KeyedEventStream<MetricCreatedEvent>(
+    this.eventEmitter,
+    MetricEvents.MetricCreatedEvent,
+    (event) => event.clusterId,
+  );
+
   constructor(
     private readonly metricQueueingService: MetricQueueingService,
     private readonly metricReadService: MetricReadService,
-    private readonly apiKeyReadCachedService: ApiKeyReadCachedService,
+    private readonly ingestProjectService: IngestProjectService,
     private readonly metricRegisterReadService: MetricRegisterReadService,
     private readonly eventEmitter: EventEmitter2,
     private readonly newMetricQueueingService: NewMetricQueueingService,
+    private readonly projectReadService: ProjectReadService,
+    private readonly projectReadCachedService: ProjectReadCachedService,
   ) {}
 
   @Public()
@@ -65,20 +74,18 @@ export class MetricCoreController {
     @Body() dto: RecordMetricBody,
     @Headers('project-api-key') apiKeyValue: string,
   ): Promise<SuccessResponse> {
-    const projectId = await this.apiKeyReadCachedService.readProjectId(apiKeyValue);
+    const project = await this.ingestProjectService.resolve(apiKeyValue, dto.app);
+    const metric = {
+      name: dto.name,
+      value: dto.value,
+      operation: dto.operation,
+      projectId: project.id,
+      clusterId: project.clusterId,
+      app: project.name,
+    };
 
-    if (!projectId) {
-      throw new UnauthorizedException('Invalid API key');
-    }
-
-    this.metricQueueingService.queueMetric({
-      ...dto,
-      projectId,
-    });
-    await this.newMetricQueueingService.queueMetric({
-      ...dto,
-      projectId,
-    });
+    this.metricQueueingService.queueMetric(metric);
+    await this.newMetricQueueingService.queueMetric(metric);
 
     return new SuccessResponse();
   }
@@ -156,5 +163,77 @@ export class MetricCoreController {
       value: baselineValues[entry.id] || 0,
       metricRegisterEntryId: entry.id,
     }));
+  }
+
+  @DemoEndpoint()
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Metrics, Action.Read)
+  @ApiBearerAuth()
+  @Sse('clusters/:clusterId/metrics/sse')
+  public streamClusterMetrics(@Param('clusterId') clusterId: string): Observable<MessageEvent> {
+    return this.clusterMetricStream.stream(clusterId).pipe(
+      filter((data) => data.granularity !== MetricGranularity.AllTime),
+      map((data) => ({ data })),
+    );
+  }
+
+  @DemoEndpoint()
+  @UseInterceptors(DemoCacheInterceptor)
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Metrics, Action.Read)
+  @ApiBearerAuth()
+  @Get('clusters/:clusterId/metrics')
+  @ApiResponse({ type: ClusterMetric, isArray: true })
+  public async readClusterMetrics(@Param('clusterId') clusterId: string): Promise<ClusterMetric[]> {
+    const projects = await this.projectReadService.readByClusterId(clusterId);
+    const appNames = new Map(projects.map((project) => [project.id, project.name]));
+    const entries = await this.metricRegisterReadService.readBelongingToProjects([
+      ...appNames.keys(),
+    ]);
+    const baselineValues = await this.metricReadService.readBaselineValues({
+      metricRegisterEntryIds: entries.map((entry) => entry.id),
+    });
+
+    return entries.map((entry) => ({
+      id: entry.id,
+      name: entry.name,
+      value: baselineValues[entry.id] || 0,
+      metricRegisterEntryId: entry.id,
+      app: appNames.get(entry.projectId) ?? '',
+      projectId: entry.projectId,
+    }));
+  }
+
+  @DemoEndpoint()
+  @UseInterceptors(DemoCacheInterceptor)
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.Metrics, Action.Read)
+  @ApiBearerAuth()
+  @Get('clusters/:clusterId/metrics/:metricRegisterEntryId')
+  @ApiResponse({ type: MetricSerialized, isArray: true })
+  public async readBelongingToCluster(
+    @Param('clusterId') clusterId: string,
+    @Param('metricRegisterEntryId') metricRegisterEntryId: string,
+    @Query() query: ReadMetricHistoryQuery,
+  ): Promise<MetricSerialized[]> {
+    const metricRegisterEntry =
+      await this.metricRegisterReadService.readById(metricRegisterEntryId);
+
+    if (!metricRegisterEntry) {
+      throw new NotFoundException('Metric register entry not found');
+    }
+
+    const project = await this.projectReadCachedService.readProject(metricRegisterEntry.projectId);
+
+    if (project?.clusterId !== clusterId) {
+      throw new ForbiddenException('Metric does not belong to this domain');
+    }
+
+    const metrics = await this.metricReadService.readByMetricRegisterEntryId(
+      metricRegisterEntryId,
+      query,
+    );
+
+    return MetricSerializer.serializeMany(metrics, [metricRegisterEntry]);
   }
 }

@@ -196,9 +196,9 @@ export const docPages: Record<
       { type: 'heading', text: 'Plan limits' },
       {
         type: 'paragraph',
-        text: 'Your plan sets how many metrics each service can register and how long their history is kept.',
+        text: 'Your plan sets how many metrics each app can register and how long their history is kept.',
       },
-      { type: 'table', key: 'metricsPerService' },
+      { type: 'table', key: 'metricsPerApp' },
       { type: 'table', key: 'metricsRetention' },
     ],
   },

@@ -9,7 +9,6 @@
   import SidebarDomainRow from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarDomainRow.svelte';
   import SidebarFooter from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarFooter.svelte';
   import SidebarLayout from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarLayout.svelte';
-  import SidebarNewServiceRow from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarNewServiceRow.svelte';
   import { fillEmptySlots } from '$lib/domains/app/projects/domain/monitoring/ping-bucket';
   import ShieldCheckIcon from '$lib/domains/shared/icons/ShieldCheckIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
@@ -113,8 +112,6 @@
       active="uptime"
       down={monitor.status === 'down' ? 1 : 0}
     />
-
-    <SidebarNewServiceRow />
 
     {#snippet header()}
       <SidebarAccountRow name="Anonymous" />

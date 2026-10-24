@@ -5,21 +5,24 @@ export class ServiceHealthState {
   public errors = $state<Record<string, number>>({});
 
   public async load(dto: {
-    projectIds: string[];
+    clusterId: string;
+    apps: string[];
     monitorIds: string[];
   }): Promise<void> {
     await Promise.all([
-      ...dto.projectIds.map((projectId) => this.loadErrors(projectId)),
+      ...dto.apps.map((app) => this.loadErrors(dto.clusterId, app)),
       ...dto.monitorIds.map((monitorId) => this.loadUptime(monitorId)),
     ]);
   }
 
-  private async loadErrors(projectId: string): Promise<void> {
+  private async loadErrors(clusterId: string, app: string): Promise<void> {
     try {
-      this.errors[projectId] =
-        await ServiceHealthService.readErrorsLastDay(projectId);
+      this.errors[app] = await ServiceHealthService.readErrorsLastDay(
+        clusterId,
+        app,
+      );
     } catch {
-      delete this.errors[projectId];
+      delete this.errors[app];
     }
   }
 

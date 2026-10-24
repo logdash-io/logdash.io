@@ -14,6 +14,7 @@
   import Well from '$lib/domains/shared/ui/components/Well.svelte';
   import { upgradeState } from '$lib/domains/shared/upgrade/upgrade.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
+  import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
 
   type Range = {
     label: string;
@@ -51,12 +52,14 @@
   const decimal = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 
   const clusterId = $derived(page.params.cluster_id);
-  const projectId = $derived(page.params.project_id);
   const metricId = $derived(page.params.metric_id);
   const metric = $derived(
     metricId ? metricsState.getById(metricId) : undefined,
   );
   const isPaid = $derived(userState.isPaid);
+  const app = $derived(
+    projectsState.appNames.length > 1 ? metric?.app : undefined,
+  );
 
   let rangeLabel = $state(RANGES[0].label);
 
@@ -103,13 +106,13 @@
   $effect(() => topBarState.show(toolbar));
 
   $effect(() => {
-    if (!projectId || !metricId) {
+    if (!clusterId || !metricId) {
       return;
     }
 
     void rangeLabel;
 
-    metricsState.previewMetric(projectId, metricId);
+    metricsState.previewMetric(clusterId, metricId);
   });
 
   function onRangeSelect(label: string): void {
@@ -124,7 +127,7 @@
   }
 
   async function onDelete(): Promise<void> {
-    if (!clusterId || !projectId || !metric) {
+    if (!clusterId || !metric) {
       return;
     }
 
@@ -138,11 +141,10 @@
       return;
     }
 
-    void metricsState.delete(projectId, metric.id);
+    void metricsState.delete(metric.id);
     void goto(
-      resolve('/app/domains/[cluster_id]/[project_id]/metrics', {
+      resolve('/app/domains/[cluster_id]/metrics', {
         cluster_id: clusterId,
-        project_id: projectId,
       }),
     );
   }
@@ -161,7 +163,7 @@
   actions={metric ? deleteAction : undefined}
 >
   <div class="flex min-w-0 flex-col gap-1.5 p-3">
-    <span class="text-fg-muted text-xs">Now</span>
+    <span class="text-fg-muted text-xs">{app ? `Now · ${app}` : 'Now'}</span>
     <span class="h-8 truncate font-mono text-2xl tabular-nums">
       {metric ? format(metric.value) : ''}
     </span>

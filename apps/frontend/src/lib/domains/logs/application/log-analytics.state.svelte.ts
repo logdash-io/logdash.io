@@ -25,8 +25,8 @@ class LogAnalyticsState {
     return this._error;
   }
 
-  sync(project_id: string): () => void {
-    void this._fetchAnalytics(project_id);
+  sync(cluster_id: string): () => void {
+    void this._fetchAnalytics(cluster_id);
 
     const UPDATE_MS_SAFETY_BUFFER = 10;
     const now = new Date();
@@ -40,11 +40,11 @@ class LogAnalyticsState {
     logger.debug('scheduling update in ', msToNextMinute, 'ms');
     const timeout = setTimeout(() => {
       logger.debug('executing scheduler - fetching analytics');
-      void this._fetchAnalytics(project_id, { silent: true });
+      void this._fetchAnalytics(cluster_id, { silent: true });
 
       logger.debug('setting up interval');
       interval = setInterval(() => {
-        void this._fetchAnalytics(project_id, { silent: true });
+        void this._fetchAnalytics(cluster_id, { silent: true });
       }, 60000);
     }, msToNextMinute);
 
@@ -81,7 +81,7 @@ class LogAnalyticsState {
   }
 
   private async _fetchAnalytics(
-    projectId: string,
+    clusterId: string,
     options: { silent?: boolean } = {},
   ): Promise<void> {
     const startDate = filtersStore.startDate ?? filtersStore.defaultStartDate;
@@ -107,14 +107,15 @@ class LogAnalyticsState {
         ? filtersStore.searchString
         : undefined;
 
-      const data = await LogAnalyticsService.getProjectLogsAnalytics(
-        projectId,
+      const data = await LogAnalyticsService.getClusterLogsAnalytics(
+        clusterId,
         startDate,
         filtersStore.endDate || new Date().toISOString(),
         filtersStore.utcOffsetHours,
         levels,
         namespaces,
         searchString,
+        filtersStore.apps,
       );
 
       if (generation !== this._generation) {
@@ -159,6 +160,13 @@ class LogAnalyticsState {
     if (
       filtersStore.namespaces.length > 0 &&
       !filtersStore.namespaces.includes(log.namespace ?? '')
+    ) {
+      return false;
+    }
+
+    if (
+      filtersStore.apps.length > 0 &&
+      !filtersStore.apps.includes(log.app ?? '')
     ) {
       return false;
     }

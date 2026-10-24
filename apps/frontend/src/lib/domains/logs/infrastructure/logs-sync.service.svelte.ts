@@ -51,7 +51,7 @@ export class LogsSyncService {
       this._unsubscribe?.();
 
       this._syncConnection = new EventSource(
-        `${envConfig.apiBaseUrl}/projects/${config.projectId}/logs/sse`,
+        `${envConfig.apiBaseUrl}/clusters/${config.clusterId}/logs/sse`,
         {
           fetch: (input, init) =>
             fetch(input, {
@@ -140,7 +140,7 @@ export class LogsSyncService {
 export const logsSyncService = new LogsSyncService();
 
 type LogsSyncConfig = {
-  projectId: string;
+  clusterId: string;
   onOpen?: () => void;
   onError?: () => void;
   onMessage?: (log: Log) => void;

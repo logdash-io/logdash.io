@@ -21,13 +21,16 @@
 
   const { volume = false }: Props = $props();
 
-  const projectId = $derived(page.params.project_id);
+  const clusterId = $derived(page.params.cluster_id);
   const userId = $derived(userState.id);
   const configured = $derived(
-    !projectId ||
+    !clusterId ||
       !projectsState.ready ||
-      projectsState.hasConfiguredFeature(projectId, Feature.LOGGING) ||
+      projectsState.hasConfiguredFeature(Feature.LOGGING) ||
       logsState.logs.length > 0,
+  );
+  const showApp = $derived(
+    projectsState.appNames.length > 1 && filtersStore.apps.length !== 1,
   );
 
   const maxRetentionHours = $derived(
@@ -51,23 +54,30 @@
   });
 
   $effect(() => {
-    void projectId;
+    void clusterId;
     untrack(() => {
-      if (userId && projectId) {
-        filtersStore.initPersistence(userId, projectId);
+      const linkedApp = page.url.searchParams.get('app');
+
+      if (userId && clusterId) {
+        filtersStore.initPersistence(userId, clusterId);
       }
       filtersStore.setFilters({
         startDate: filtersStore.startDate || defaultStartDate.toISOString(),
         endDate: filtersStore.endDate || null,
         defaultStartDate: defaultStartDate.toISOString(),
+        ...(linkedApp && { apps: [linkedApp] }),
       });
     });
   });
 
   $effect(() => {
-    if (!projectId) return;
+    if (!clusterId) return;
 
-    void namespacesState.init(projectId);
+    void namespacesState.init(clusterId, filtersStore.apps);
+  });
+
+  $effect(() => {
+    if (!clusterId) return;
 
     return () => {
       namespacesState.reset();
@@ -77,13 +87,13 @@
 
   $effect(() => {
     void filtersStore.filters;
-    if (!projectId) {
+    if (!clusterId) {
       return;
     }
 
     const cleanup = untrack(() => {
-      logsState.resync(projectId);
-      return volume ? logAnalyticsState.sync(projectId) : undefined;
+      logsState.resync(clusterId);
+      return volume ? logAnalyticsState.sync(clusterId) : undefined;
     });
 
     return () => {
@@ -94,20 +104,21 @@
 </script>
 
 <Well label="Logs" class="min-h-0 flex-1">
-  <LogsHeader {projectId} volume={volume && configured} />
+  <LogsHeader volume={volume && configured} />
 
   {#if configured}
-    <LogsVirtualList logs={logsState.logs} {rendered} />
-  {:else if projectId}
+    <LogsVirtualList logs={logsState.logs} {rendered} {showApp} />
+  {:else if clusterId}
     <div
       class="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center"
     >
       <p class="font-medium">No logs yet</p>
       <p class="text-fg-tertiary max-w-sm text-sm text-balance">
-        Your app's logs land here once you add the SDK.
+        Every app on this domain sends its logs here with one key, named by the
+        SDK's app option.
       </p>
       <div class="mt-2">
-        <SdkSetupPrompt {projectId} feature={Feature.LOGGING} />
+        <SdkSetupPrompt {clusterId} feature={Feature.LOGGING} />
       </div>
     </div>
   {/if}

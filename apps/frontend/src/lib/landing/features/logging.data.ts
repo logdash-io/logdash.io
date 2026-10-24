@@ -39,7 +39,7 @@ export const loggingPage: FeaturePageData = {
     },
     {
       title: 'Levels and namespaces',
-      body: 'Seven log levels, from error down to silly. Split a service into auth, payments or cron with namespaces and filter by them.',
+      body: 'Seven log levels, from error down to silly. Split an app into auth, payments or cron with namespaces and filter by them.',
     },
     {
       title: 'The whole line',
@@ -91,7 +91,7 @@ authLogdash.error('Authentication failed');`,
     {
       question: 'Is there a free plan for logs?',
       answer:
-        'Yes. Hobby is free and takes up to 10,000 logs per hour for each service, kept for 24 hours. Builder at $9 a month raises that to 25,000 an hour, and Pro at $15 to 50,000.',
+        'Yes. Hobby is free and takes up to 10,000 logs per hour for each app, kept for 24 hours. Builder at $9 a month raises that to 25,000 an hour, and Pro at $15 to 50,000.',
     },
     {
       question: 'Which languages are supported?',

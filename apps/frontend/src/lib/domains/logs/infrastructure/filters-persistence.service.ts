@@ -7,37 +7,38 @@ export type FiltersPersistenceData = {
   endDate: string | null;
   searchString: string;
   namespaces?: string[];
+  apps?: string[];
 };
 
 const STORAGE_KEY_PREFIX = 'logs-filters';
 
-function getStorageKey(userId: string, projectId: string): string {
-  return `${STORAGE_KEY_PREFIX}-${userId}-${projectId}`;
+function getStorageKey(userId: string, clusterId: string): string {
+  return `${STORAGE_KEY_PREFIX}-${userId}-${clusterId}`;
 }
 
 export class FiltersPersistenceService {
   public saveFilters(
     userId: string,
-    projectId: string,
+    clusterId: string,
     filters: FiltersPersistenceData,
   ): void {
     if (!browser) {
       return;
     }
 
-    const key = getStorageKey(userId, projectId);
+    const key = getStorageKey(userId, clusterId);
     localStorage.setItem(key, JSON.stringify(filters));
   }
 
   public loadFilters(
     userId: string,
-    projectId: string,
+    clusterId: string,
   ): FiltersPersistenceData | null {
     if (!browser) {
       return null;
     }
 
-    const key = getStorageKey(userId, projectId);
+    const key = getStorageKey(userId, clusterId);
     const stored = localStorage.getItem(key);
 
     if (!stored) {
@@ -51,12 +52,12 @@ export class FiltersPersistenceService {
     }
   }
 
-  public clearFilters(userId: string, projectId: string): void {
+  public clearFilters(userId: string, clusterId: string): void {
     if (!browser) {
       return;
     }
 
-    const key = getStorageKey(userId, projectId);
+    const key = getStorageKey(userId, clusterId);
     localStorage.removeItem(key);
   }
 }

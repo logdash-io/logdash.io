@@ -7,4 +7,5 @@ export class CreateProjectDto {
   clusterId: string;
   tier: ProjectTier;
   selectedFeatures?: ProjectFeature[];
+  autoCreated?: boolean;
 }

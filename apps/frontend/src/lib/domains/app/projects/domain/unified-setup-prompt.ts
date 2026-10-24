@@ -4,6 +4,8 @@ import { getCodeSnippet } from '$lib/domains/logs/domain/setup-prompt.js';
 import { getMetricsCodeSnippet } from './metrics-setup-prompt.js';
 import { PromptBuilder } from './prompt-builder.js';
 
+const APP_NAME_GUIDANCE = `This ingest key is shared by every app on this domain. Give this app a short, stable name, such as api, web or desktop, and pass it as the SDK's app option (shown as my-app below) so Logdash keeps its logs and metrics apart from the other apps. Logs sent without it land in the app called default.`;
+
 export function generateUnifiedSetupPrompt(
   sdkName: LogdashSDKName,
   apiKey: string,
@@ -52,6 +54,7 @@ function buildNodeEcosystemPrompt(
   );
 
   builder.addInstallCommand(installCommand);
+  builder.addParagraph(APP_NAME_GUIDANCE);
 
   if (needsLogging) {
     let loggingSnippet: string;
@@ -143,6 +146,7 @@ function buildStandardPrompt(
   );
 
   builder.addInstallCommand(installCommand);
+  builder.addParagraph(APP_NAME_GUIDANCE);
 
   if (needsLogging) {
     const loggingSnippet = getCodeSnippet(sdkName, apiKey);
@@ -174,7 +178,7 @@ function isNodeEcosystem(sdkName: LogdashSDKName): boolean {
 function getNodeJsLoggingSnippet(apiKey: string): string {
   return `import { Logdash } from '@logdash/node';
 
-const logdash = new Logdash("${apiKey}");
+const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 logdash.info("Application started successfully");
 logdash.error("An unexpected error occurred");
@@ -189,7 +193,7 @@ logdash.flush();`;
 function getNodeJsMetricsSnippet(apiKey: string): string {
   return `import { Logdash } from '@logdash/node';
 
-const logdash = new Logdash("${apiKey}");
+const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 logdash.setMetric('users', 0);
 logdash.mutateMetric('users', 1);
@@ -201,7 +205,7 @@ function getNextJsLoggingSnippet(apiKey: string): string {
   return `// lib/logdash.ts - shared instance
 import { Logdash } from '@logdash/node';
 
-export const logdash = new Logdash("${apiKey}");
+export const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 // middleware.ts - log all incoming requests
 import { logdash } from './lib/logdash';
@@ -226,7 +230,7 @@ function getNextJsMetricsSnippet(apiKey: string): string {
   return `// lib/logdash.ts - shared instance
 import { Logdash } from '@logdash/node';
 
-export const logdash = new Logdash("${apiKey}");
+export const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 // middleware.ts - track edge function performance
 import { logdash } from './lib/logdash';
@@ -257,7 +261,7 @@ function getSvelteKitLoggingSnippet(apiKey: string): string {
   return `// src/lib/logdash.ts - shared instance
 import { Logdash } from '@logdash/node';
 
-export const logdash = new Logdash("${apiKey}");
+export const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 // src/hooks.server.ts - log all incoming requests
 import { logdash } from '$lib/logdash';
@@ -282,7 +286,7 @@ function getSvelteKitMetricsSnippet(apiKey: string): string {
   return `// src/lib/logdash.ts - shared instance
 import { Logdash } from '@logdash/node';
 
-export const logdash = new Logdash("${apiKey}");
+export const logdash = new Logdash("${apiKey}", { app: "my-app" });
 
 // src/hooks.server.ts - track route load performance
 import { logdash } from '$lib/logdash';

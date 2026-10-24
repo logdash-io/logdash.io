@@ -5,14 +5,20 @@ import { LogAnalyticsService } from '$lib/domains/logs/infrastructure/log-analyt
 const DAY_MS = 86_400_000;
 
 export class ServiceHealthService {
-  static async readErrorsLastDay(projectId: string): Promise<number> {
+  static async readErrorsLastDay(
+    clusterId: string,
+    app: string,
+  ): Promise<number> {
     const now = Date.now();
-    const response = await LogAnalyticsService.getProjectLogsAnalytics(
-      projectId,
+    const response = await LogAnalyticsService.getClusterLogsAnalytics(
+      clusterId,
       new Date(now - DAY_MS).toISOString(),
       new Date(now).toISOString(),
       undefined,
       ['error'],
+      undefined,
+      undefined,
+      [app],
     );
 
     return response.totalLogs;

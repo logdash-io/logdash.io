@@ -1,5 +1,7 @@
 <script lang="ts">
   import AnalyticsIcon from '$lib/domains/shared/icons/AnalyticsIcon.svelte';
+  import LogsIcon from '$lib/domains/shared/icons/LogsIcon.svelte';
+  import MetricsIcon from '$lib/domains/shared/icons/MetricsIcon.svelte';
   import MonitoringIcon from '$lib/domains/shared/icons/MonitoringIcon.svelte';
   import PublicDashboardIcon from '$lib/domains/shared/icons/PublicDashboardIcon.svelte';
   import SettingsIcon from '$lib/domains/shared/icons/SettingsIcon.svelte';
@@ -7,7 +9,14 @@
 
   type Props = {
     basePath?: string;
-    active?: 'analytics' | 'uptime' | 'status-pages' | 'settings' | null;
+    active?:
+      | 'analytics'
+      | 'uptime'
+      | 'logs'
+      | 'metrics'
+      | 'status-pages'
+      | 'settings'
+      | null;
     disabled?: boolean;
     published?: boolean;
     down?: number;
@@ -43,6 +52,26 @@
   {#if down}
     <span class="text-error ml-auto shrink-0 text-[13px]">{down} down</span>
   {/if}
+</SidebarMenuItem>
+
+<SidebarMenuItem
+  href={basePath && `${basePath}/logs`}
+  isActive={active === 'logs'}
+  {disabled}
+  nested
+>
+  <LogsIcon class="size-4 shrink-0" />
+  <span class="truncate">Logs</span>
+</SidebarMenuItem>
+
+<SidebarMenuItem
+  href={basePath && `${basePath}/metrics`}
+  isActive={active === 'metrics'}
+  {disabled}
+  nested
+>
+  <MetricsIcon class="size-4 shrink-0" />
+  <span class="truncate">Metrics</span>
 </SidebarMenuItem>
 
 <SidebarMenuItem

@@ -15,6 +15,7 @@
     isCustomRangeExceedingLimit,
   } from '$lib/domains/logs/domain/time-range';
   import { namespacesState } from '$lib/domains/logs/infrastructure/namespaces.state.svelte.js';
+  import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import { tick, type Snippet } from 'svelte';
   import { MediaQuery } from 'svelte/reactivity';
 
@@ -25,7 +26,7 @@
 
   const { maxDateRangeHours, close }: Props = $props();
 
-  type Menu = 'level' | 'time-range' | 'namespace';
+  type Menu = 'app' | 'level' | 'time-range' | 'namespace';
   type SubmenuSide = 'left' | 'right' | 'below';
   type MenuRow = {
     id: Menu;
@@ -65,6 +66,18 @@
   );
 
   const menuRows: MenuRow[] = $derived([
+    ...(projectsState.appNames.length > 1
+      ? [
+          {
+            id: 'app' as const,
+            label: 'App',
+            count: filtersStore.apps.length,
+            badgeClass: 'min-w-4',
+            submenuClass: 'w-fit p-1',
+            submenu: appSubmenu,
+          },
+        ]
+      : []),
     {
       id: 'level',
       label: 'Level',
@@ -216,6 +229,17 @@
       return;
     }
     filtersStore.setLevels([level]);
+    close();
+  }
+
+  function onAppClick(e: MouseEvent, app: string, close: () => void): void {
+    if (e.metaKey || e.shiftKey) {
+      filtersStore.toggleApp(app);
+      return;
+    }
+    const isOnlySelectedApp =
+      filtersStore.apps.length === 1 && filtersStore.hasApp(app);
+    filtersStore.setApps(isOnlySelectedApp ? [] : [app]);
     close();
   }
 
@@ -428,6 +452,34 @@
             <Badge size="xs">Upgrade</Badge>
           {/if}
         </UpgradeElement>
+      </li>
+    {/each}
+  </ul>
+{/snippet}
+
+{#snippet appSubmenu(close: () => void)}
+  <ul class="p-0">
+    {#each projectsState.appNames as app (app)}
+      {@const isSelected = filtersStore.hasApp(app)}
+      <li
+        class={[
+          SELECTABLE_ROW_CLASS,
+          { 'bg-surface-elevated-selected-bg': isSelected },
+        ]}
+      >
+        <Checkbox
+          size="xs"
+          checked={isSelected}
+          aria-label="Include {app}"
+          onchange={() => filtersStore.toggleApp(app)}
+        />
+        <button
+          type="button"
+          class="flex flex-1 cursor-pointer items-center py-1.5 pr-3 text-left outline-none"
+          onclick={(e: MouseEvent) => onAppClick(e, app, close)}
+        >
+          {app}
+        </button>
       </li>
     {/each}
   </ul>

@@ -1,6 +1,4 @@
 import type { Cluster } from '$lib/domains/app/clusters/domain/cluster';
-import type { Log } from '$lib/domains/logs/domain/log';
-import type { Metric } from '$lib/domains/app/projects/domain/metric';
 import type { Monitor } from '$lib/domains/app/projects/domain/monitoring/monitor.js';
 import type { Project } from '$lib/domains/app/projects/domain/project';
 import type { PublicDashboard } from '$lib/domains/app/projects/domain/public-dashboards/public-dashboard.js';
@@ -8,7 +6,6 @@ import type { ExposedConfig } from '$lib/domains/shared/exposed-config/domain/ex
 import type { User } from '$lib/domains/shared/user/domain/user';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
 import { error, redirect } from '@sveltejs/kit';
-import queryString from 'query-string';
 import type { UserTier } from './types.js';
 
 type UnauthorizedHandler = () => void;
@@ -28,18 +25,6 @@ class LogdashAPI {
         (h) => h !== handler,
       );
     };
-  }
-
-  create_project(
-    name: string,
-    cluster_id: string,
-    access_token: string | undefined,
-  ): Promise<{ project: Project; apiKey: string }> {
-    return this.post<{ project: Project; apiKey: string }>(
-      `${LogdashAPI.v0baseUrl}/clusters/${cluster_id}/projects`,
-      { name },
-      access_token,
-    );
   }
 
   get_personal_api_keys(access_token: string | undefined): Promise<
@@ -98,44 +83,6 @@ class LogdashAPI {
     );
   }
 
-  /**
-   * @deprecated Use LogsService instead
-   */
-  get_project_logs(
-    project_id: string,
-    access_token: string | undefined,
-    limit: number = 50,
-    before?: string,
-  ): Promise<Log[]> {
-    const qs = queryString.stringify({
-      limit,
-      lastId: before,
-      ...(before && { direction: 'before' }),
-    });
-
-    return this.get<Log[]>(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}/logs/v2?${qs}`,
-      access_token,
-    );
-  }
-
-  delete_metric(
-    project_id: string,
-    metric_id: string,
-    access_token: string | undefined,
-  ): Promise<void> {
-    return this.performFetch<void>(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}/metric-register/${metric_id}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-      access_token,
-    );
-  }
-
   async get_me(access_token: string | undefined): Promise<User> {
     return this.get<User>(`${LogdashAPI.v0baseUrl}/users/me`, access_token);
   }
@@ -167,27 +114,6 @@ class LogdashAPI {
   ): Promise<{ url: string }> {
     return this.get<{ url: string }>(
       `${LogdashAPI.v0baseUrl}/support/telegram/invite-link`,
-      access_token,
-    );
-  }
-
-  get_project_metrics(
-    project_id: string,
-    access_token: string | undefined,
-  ): Promise<Metric[]> {
-    return this.get<Metric[]>(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}/metrics`,
-      access_token,
-    );
-  }
-
-  get_metric_details(
-    project_id: string,
-    metric_id: string,
-    access_token: string | undefined,
-  ): Promise<Metric> {
-    return this.get<Metric>(
-      `${LogdashAPI.v0baseUrl}/projects/${project_id}/metrics/${metric_id}`,
       access_token,
     );
   }

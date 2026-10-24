@@ -10,6 +10,8 @@ export type SimplifiedMetric = {
   metricRegisterEntryId: string;
   name: string;
   value: number;
+  app: string;
+  projectId: string;
 };
 
 export type Metric = {
@@ -19,6 +21,8 @@ export type Metric = {
   date: string;
   name: string;
   value: number;
+  app?: string;
+  projectId?: string;
 };
 
 export type MetricDataPoint = {

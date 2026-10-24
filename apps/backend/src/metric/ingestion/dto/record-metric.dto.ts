@@ -5,4 +5,6 @@ export class RecordMetricDto {
   value: number;
   operation: MetricOperation;
   projectId: string;
+  clusterId: string;
+  app: string;
 }

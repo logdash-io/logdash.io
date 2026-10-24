@@ -108,24 +108,32 @@ describe('Metrics (writes)', () => {
         value: 100,
         projectId: apiKey.projectId,
         operation: MetricOperation.Change,
+        clusterId: 'cluster-1',
+        app: 'default',
       },
       {
         name: 'users',
         value: 100,
         projectId: apiKey.projectId,
         operation: MetricOperation.Change,
+        clusterId: 'cluster-1',
+        app: 'default',
       },
       {
         name: 'users',
         value: 100,
         projectId: apiKey.projectId,
         operation: MetricOperation.Change,
+        clusterId: 'cluster-1',
+        app: 'default',
       },
       {
         name: 'users',
         value: 10,
         projectId: apiKey.projectId,
         operation: MetricOperation.Set,
+        clusterId: 'cluster-1',
+        app: 'default',
       },
     ]);
 
@@ -136,6 +144,8 @@ describe('Metrics (writes)', () => {
       value: 1,
       projectId: apiKey.projectId,
       operation: MetricOperation.Change,
+      clusterId: 'cluster-1',
+      app: 'default',
     });
 
     await service.processQueue();

@@ -9,6 +9,8 @@
     level: string;
     message: string;
     namespace?: string;
+    app?: string;
+    appWidth?: number;
     prefix?: 'full' | 'short' | 'relative';
     selected?: boolean;
     onclick?: () => void;
@@ -19,6 +21,8 @@
     level,
     message,
     namespace,
+    app,
+    appWidth,
     prefix = 'full',
     selected = false,
     onclick,
@@ -81,6 +85,15 @@
   <span class="text-fg-tertiary shrink-0 whitespace-nowrap tabular-nums">
     [{#if day}<span class="max-sm:hidden">{day}&nbsp;</span>{/if}{time}]
   </span>
+
+  {#if app}
+    <span
+      class="text-fg-secondary shrink-0 truncate"
+      style:width={appWidth ? `${appWidth}ch` : undefined}
+    >
+      {app}
+    </span>
+  {/if}
 
   {#if namespace}
     <span class="text-fg-muted max-w-32 shrink-0 truncate">{namespace}</span>

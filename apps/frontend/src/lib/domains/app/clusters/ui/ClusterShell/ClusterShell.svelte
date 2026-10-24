@@ -10,7 +10,6 @@
   import ClusterSidebar from '$lib/domains/app/clusters/ui/ClusterSidebar/ClusterSidebar.svelte';
   import SidebarContent from '$lib/domains/app/clusters/ui/ClusterSidebar/SidebarContent.svelte';
   import PendingInvitations from '$lib/domains/app/clusters/ui/PendingInvitations.svelte';
-  import ServiceTabsNav from '$lib/domains/app/clusters/ui/ServiceTabsNav.svelte';
   import Breadcrumbs, { type Crumb } from './Breadcrumbs.svelte';
   import LiveIndicator from './LiveIndicator.svelte';
   import TopBar from './TopBar.svelte';
@@ -47,12 +46,8 @@
     ),
   );
   const clusterId = $derived(page.params.cluster_id);
-  const projectId = $derived(page.params.project_id);
   const clusterPath = $derived(
     clusterId ? (`/app/domains/${clusterId}` as const) : undefined,
-  );
-  const serviceName = $derived(
-    currentCluster?.projects?.find(({ id }) => id === projectId)?.name,
   );
   const statusPageName = $derived(
     publicDashboardManagerState.getDashboard(page.params.status_page_id ?? '')
@@ -61,10 +56,7 @@
   const monitorName = $derived(
     monitoringState.getMonitorById(page.params.monitor_id ?? '')?.name,
   );
-  const showLive = $derived(
-    page.route.id === '/app/domains/[cluster_id]/[project_id]' ||
-      page.route.id === '/app/domains/[cluster_id]/[project_id]/logs',
-  );
+  const showLive = $derived(page.route.id === '/app/domains/[cluster_id]/logs');
   const crumbs = $derived(crumbsFor(page.route.id));
 
   function crumbsFor(routeId: string | null): Crumb[] {
@@ -88,10 +80,12 @@
         },
         { label: page.params.event_name ?? 'Event' },
       ])
-      .with('/app/domains/[cluster_id]/services', () => [
-        domain,
-        { label: 'Services' },
-      ])
+      .with('/app/domains/[cluster_id]/logs', () => [domain, { label: 'Logs' }])
+      .with(
+        '/app/domains/[cluster_id]/metrics',
+        '/app/domains/[cluster_id]/metrics/[metric_id]',
+        () => [domain, { label: 'Metrics' }],
+      )
       .with('/app/domains/[cluster_id]/uptime', () => [
         domain,
         { label: 'Uptime' },
@@ -122,17 +116,6 @@
         },
         ...(statusPageName ? [{ label: statusPageName }] : []),
       ])
-      .when(
-        (id) => id?.startsWith('/app/domains/[cluster_id]/[project_id]'),
-        () => [
-          domain,
-          {
-            label: 'Services',
-            path: clusterPath && `${clusterPath}/services`,
-          },
-          { label: serviceName ?? 'Service' },
-        ],
-      )
       .otherwise(() => [{ label: clusterName }]);
   }
 
@@ -161,16 +144,11 @@
         <Breadcrumbs {crumbs} />
       </div>
 
-      {#if clusterId && projectId}
-        <div class="flex min-w-0 items-center gap-3 max-sm:w-full">
-          {#if showLive}
-            <LiveIndicator
-              label={logsState.streamPaused ? 'Paused' : 'Live'}
-              dot={logsState.streamPaused ? 'neutral' : 'success'}
-            />
-          {/if}
-          <ServiceTabsNav {clusterId} {projectId} />
-        </div>
+      {#if showLive}
+        <LiveIndicator
+          label={logsState.streamPaused ? 'Paused' : 'Live'}
+          dot={logsState.streamPaused ? 'neutral' : 'success'}
+        />
       {/if}
 
       {#if topBarState.actions}

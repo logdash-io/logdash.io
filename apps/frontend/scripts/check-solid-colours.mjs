@@ -50,7 +50,7 @@ const CHECKS = [
 /** file path substring -> tokens that may stay translucent there */
 const ALLOW = {
   'domains/shared/ui/Modal.svelte': ['bg-surface-root-bg/60'],
-  'ProjectView/ProjectSync.svelte': ['bg-surface-root-bg/40'],
+  'ProjectView/DomainSync.svelte': ['bg-surface-root-bg/40'],
   'logs-tile/LogPreviewDrawer.svelte': [
     'from-surface-50-bg/80',
     'via-surface-50-bg/80',

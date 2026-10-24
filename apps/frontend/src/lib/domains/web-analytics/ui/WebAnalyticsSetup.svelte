@@ -23,7 +23,6 @@
   type Props = {
     clusterId: string;
     initialUrl?: string;
-    services?: { id: string; name: string }[];
     connection?: WebAnalyticsSetupState;
     compact?: boolean;
   };
@@ -31,7 +30,6 @@
   const {
     clusterId,
     initialUrl = '',
-    services,
     connection = new WebAnalyticsSetupState(),
     compact = false,
   }: Props = $props();
@@ -52,9 +50,6 @@
   let starting = $state(false);
   let startError = $state<string | null>(null);
 
-  const serviceList = $derived(
-    services ?? clustersState.get(clusterId)?.projects ?? [],
-  );
   const scriptTag = $derived(
     webAnalyticsScriptTag({
       src: `${page.url.origin}/sdk/web.js`,
@@ -254,11 +249,10 @@
       </p>
     {:else}
       <p>
-        {serviceList.length
-          ? 'One prompt sets up the proxy, backend logging and metrics in your codebase.'
-          : 'One prompt sets up the proxy and the tracking script in your codebase.'}
+        One prompt sets up the proxy, backend logging and metrics in your
+        codebase.
       </p>
-      <WebAnalyticsPromptForm {connection} services={serviceList} />
+      <WebAnalyticsPromptForm {connection} />
     {/if}
   </div>
 

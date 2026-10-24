@@ -26,6 +26,7 @@ export class LogUtils {
       level: dto.level,
       sequenceNumber: dto.sequenceNumber,
       namespace: dto.namespace,
+      app: dto.app,
     };
 
     await request(this.app.getHttpServer())

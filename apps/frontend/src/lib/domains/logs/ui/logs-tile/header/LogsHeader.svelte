@@ -9,6 +9,7 @@
   import { namespacesState } from '$lib/domains/logs/infrastructure/namespaces.state.svelte.js';
   import { timeDisplayState } from '$lib/domains/logs/infrastructure/time-display.state.svelte.js';
   import { exposedConfigState } from '$lib/domains/shared/exposed-config/application/exposed-config.state.svelte.js';
+  import { projectsState } from '$lib/domains/app/projects/application/projects.state.svelte.js';
   import { userState } from '$lib/domains/shared/user/application/user.state.svelte.js';
   import { Checkbox } from '@logdash/hyper-ui/presentational';
   import { untrack } from 'svelte';
@@ -17,11 +18,10 @@
   import LogsFilterDropdown from './filters/LogsFilterDropdown.svelte';
 
   type Props = {
-    projectId?: string;
     volume?: boolean;
   };
 
-  const { projectId, volume = false }: Props = $props();
+  const { volume = false }: Props = $props();
 
   const SEARCH_DEBOUNCE_MS = 300;
 
@@ -38,7 +38,19 @@
   const filters = $derived.by((): LogsToolbarFilter[] => {
     const levels = filtersStore.levels;
     const namespaces = filtersStore.namespaces;
+    const apps = filtersStore.apps;
     const result: LogsToolbarFilter[] = [];
+
+    if (apps.length > 0) {
+      result.push({
+        key: 'app',
+        label: 'App',
+        operator: apps.length > 1 ? 'is any of' : 'is',
+        value: apps.length > 1 ? `${apps.length} apps` : apps[0],
+        menu: appMenu,
+        onClear: () => filtersStore.setApps([]),
+      });
+    }
 
     if (levels.length > 0) {
       result.push({
@@ -117,6 +129,10 @@
     filtersStore.toggleNamespace(namespace);
   }
 
+  function onAppToggle(app: string): void {
+    filtersStore.toggleApp(app);
+  }
+
   function onDateRangeChange(startDate: Date, endDate: Date): void {
     filtersStore.setFilters({
       startDate: startDate.toISOString(),
@@ -137,7 +153,7 @@
     onTimeToggle={() => timeDisplayState.toggle()}
   />
 
-  {#if volume && projectId}
+  {#if volume}
     <div class="px-3 pt-2">
       <LogsAnalyticsChart {onDateRangeChange} />
     </div>
@@ -171,6 +187,35 @@
             />
             <span class={['size-2 rounded-full', level.color]}></span>
             <span>{level.label}</span>
+          </label>
+        </li>
+      {/each}
+    </ul>
+  </div>
+{/snippet}
+
+{#snippet appMenu(close: () => void)}
+  {@render menuBackdrop(close)}
+  <div
+    class="bg-surface-elevated-bg border-surface-elevated-border rounded-xl border p-1 shadow-lg"
+  >
+    <div class="mb-1 px-3 py-1.5 text-sm font-medium">App</div>
+    <ul class="p-0">
+      {#each projectsState.appNames as app (app)}
+        {@const isSelected = filtersStore.hasApp(app)}
+        <li>
+          <label
+            class={[
+              'hover:bg-surface-elevated-hover-bg flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-sm',
+              { 'bg-surface-elevated-selected-bg': isSelected },
+            ]}
+          >
+            <Checkbox
+              size="xs"
+              checked={isSelected}
+              onchange={() => onAppToggle(app)}
+            />
+            <span>{app}</span>
           </label>
         </li>
       {/each}

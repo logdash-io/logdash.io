@@ -1,4 +1,4 @@
-import { ProjectsService } from '$lib/domains/app/projects/infrastructure/projects.service';
+import { ClustersService } from '$lib/domains/app/clusters/infrastructure/clusters.service';
 import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
 import { envConfig } from '$lib/domains/shared/utils/env-config';
 import type {
@@ -57,20 +57,11 @@ export class WebAnalyticsSetupState {
     }
   }
 
-  public async buildPrompt(
-    services: { id: string; name: string }[],
-    scriptBaseUrl: string,
-  ): Promise<string> {
+  public async buildPrompt(scriptBaseUrl: string): Promise<string> {
     if (!this.site) throw new Error('Start tracking first.');
     const { id, origins } = this.site;
-    const apiKeys = await Promise.all(
-      services.map((service) => ProjectsService.getApiKey(service.id)),
-    );
     return generateWebAnalyticsSetupPrompt({
-      services: services.map((service, index) => ({
-        name: service.name,
-        apiKey: apiKeys[index],
-      })),
+      ingestKey: await ClustersService.getIngestKey(this.clusterId),
       siteId: id,
       origins,
       apiBaseUrl: envConfig.apiBaseUrl,

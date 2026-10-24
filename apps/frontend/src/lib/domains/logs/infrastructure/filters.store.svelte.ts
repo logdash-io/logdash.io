@@ -5,13 +5,14 @@ import { filtersPersistenceService } from './filters-persistence.service.js';
 export class FiltersStore {
   private _defaultStartDate: string | null = null;
   private _userId: string | null = null;
-  private _projectId: string | null = null;
+  private _clusterId: string | null = null;
 
   searchString = $state<string>('');
   startDate = $state<string | null>(null);
   endDate = $state<string | null>(null);
   levels = $state<LogLevel[]>([]);
   namespaces = $state<string[]>([]);
+  apps = $state<string[]>([]);
   limit = $state<number>(50);
   utcOffsetHours = $state<number>(0);
 
@@ -26,27 +27,30 @@ export class FiltersStore {
       endDate: this.endDate,
       levels: this.levels,
       namespaces: this.namespaces,
+      apps: this.apps,
       limit: this.limit,
       utcOffsetHours: this.utcOffsetHours,
     };
   }
 
-  initPersistence(userId: string, projectId: string): void {
+  initPersistence(userId: string, clusterId: string): void {
     this._userId = userId;
-    this._projectId = projectId;
+    this._clusterId = clusterId;
 
     this.searchString = '';
     this.startDate = null;
     this.endDate = null;
     this.levels = [];
     this.namespaces = [];
+    this.apps = [];
     this.limit = 50;
     this.utcOffsetHours = 0;
 
-    const persisted = filtersPersistenceService.loadFilters(userId, projectId);
+    const persisted = filtersPersistenceService.loadFilters(userId, clusterId);
     if (persisted) {
       this.levels = persisted.levels || [];
       this.namespaces = persisted.namespaces || [];
+      this.apps = persisted.apps || [];
       this.startDate = persisted.startDate;
       this.endDate = persisted.endDate;
       this.searchString = persisted.searchString || '';
@@ -54,13 +58,14 @@ export class FiltersStore {
   }
 
   private persistFilters(): void {
-    if (!this._userId || !this._projectId) {
+    if (!this._userId || !this._clusterId) {
       return;
     }
 
-    filtersPersistenceService.saveFilters(this._userId, this._projectId, {
+    filtersPersistenceService.saveFilters(this._userId, this._clusterId, {
       levels: this.levels,
       namespaces: this.namespaces,
+      apps: this.apps,
       startDate: this.startDate,
       endDate: this.endDate,
       searchString: this.searchString,
@@ -108,6 +113,22 @@ export class FiltersStore {
     this.persistFilters();
   }
 
+  toggleApp(app: string): void {
+    this.apps = this.apps.includes(app)
+      ? this.apps.filter((selected) => selected !== app)
+      : [...this.apps, app];
+    this.persistFilters();
+  }
+
+  setApps(apps: string[]): void {
+    this.apps = apps;
+    this.persistFilters();
+  }
+
+  hasApp(app: string): boolean {
+    return this.apps.includes(app);
+  }
+
   setFilters(
     filters: Partial<
       LogsFilters & {
@@ -132,6 +153,9 @@ export class FiltersStore {
     if (filters.namespaces !== undefined) {
       this.namespaces = filters.namespaces;
     }
+    if (filters.apps !== undefined) {
+      this.apps = filters.apps;
+    }
     if (filters.limit !== undefined) {
       this.limit = filters.limit;
     }
@@ -150,6 +174,7 @@ export class FiltersStore {
     this.endDate = null;
     this.levels = [];
     this.namespaces = [];
+    this.apps = [];
     this.limit = 50;
     this.utcOffsetHours = 0;
     this.persistFilters();

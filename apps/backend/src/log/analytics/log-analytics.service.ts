@@ -16,7 +16,7 @@ export class LogAnalyticsService {
   ) {}
 
   public async getBucketedAnalytics(
-    projectId: string,
+    projectIds: string[],
     dto: LogAnalyticsQuery,
   ): Promise<LogAnalyticsResponse> {
     const startDate = dto.startDate;
@@ -106,7 +106,7 @@ export class LogAnalyticsService {
           ${levelCountExpressions}
         FROM logs
         WHERE 
-          project_id = {projectId:String}
+          project_id IN ({projectIds:Array(String)})
           AND created_at >= start_time 
           AND created_at < end_time
           ${levelFilterClause}
@@ -118,7 +118,7 @@ export class LogAnalyticsService {
     `;
 
     const queryParams: Record<string, unknown> = {
-      projectId,
+      projectIds,
       startDate: ClickhouseUtils.jsDateToClickhouseDate(alignedStartDate),
       endDate: ClickhouseUtils.jsDateToClickhouseDate(alignedEndDate),
       bucketMinutes,

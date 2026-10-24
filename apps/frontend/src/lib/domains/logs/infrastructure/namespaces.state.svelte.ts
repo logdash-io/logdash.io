@@ -5,7 +5,7 @@ import { LogsService } from './logs.service';
 class NamespacesState {
   private _namespaces = $state<NamespaceMetadata[]>([]);
   private _loading = $state(false);
-  private _projectId: string | null = null;
+  private _scope: string | null = null;
 
   get namespaces(): NamespaceMetadata[] {
     return this._namespaces;
@@ -15,25 +15,27 @@ class NamespacesState {
     return this._loading;
   }
 
-  async init(projectId: string): Promise<void> {
-    if (this._projectId === projectId) return;
+  async init(clusterId: string, apps: string[]): Promise<void> {
+    const scope = JSON.stringify([clusterId, apps]);
 
-    this._projectId = projectId;
+    if (this._scope === scope) return;
+
+    this._scope = scope;
     this._loading = true;
 
     try {
-      const namespaces = await LogsService.getLogsNamespaces(projectId);
+      const namespaces = await LogsService.getLogsNamespaces(clusterId, apps);
 
-      if (this._projectId === projectId) {
+      if (this._scope === scope) {
         this._namespaces = namespaces;
       }
     } catch {
-      if (this._projectId === projectId) {
+      if (this._scope === scope) {
         toast.error('Failed to load namespaces. Please try again later.');
         this._namespaces = [];
       }
     } finally {
-      if (this._projectId === projectId) {
+      if (this._scope === scope) {
         this._loading = false;
       }
     }
@@ -53,7 +55,7 @@ class NamespacesState {
 
   reset(): void {
     this._namespaces = [];
-    this._projectId = null;
+    this._scope = null;
     this._loading = false;
   }
 }

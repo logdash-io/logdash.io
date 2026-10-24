@@ -37,4 +37,12 @@ export class ClustersService {
   static async deleteCluster(id: string): Promise<void> {
     await httpClient.delete<void>(`/clusters/${id}`);
   }
+
+  static async getIngestKey(id: string): Promise<string> {
+    const { value } = await httpClient.get<{ value: string }>(
+      `/clusters/${id}/ingest-key`,
+    );
+
+    return value;
+  }
 }

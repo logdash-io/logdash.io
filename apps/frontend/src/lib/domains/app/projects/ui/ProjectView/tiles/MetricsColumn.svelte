@@ -2,6 +2,7 @@
   export type MetricsColumnItem = {
     id: string;
     name: string;
+    app?: string;
     value: number;
     samples: number[];
     href?: string;
@@ -142,13 +143,15 @@
 {/snippet}
 
 {#snippet tile(metric: MetricsColumnItem)}
-  <span
-    class={[
-      'truncate text-xs',
-      metric.active ? 'text-fg-default' : 'text-fg-muted',
-    ]}
-  >
-    {metric.name}
+  <span class="flex min-w-0 items-baseline gap-1.5 text-xs">
+    <span
+      class={['truncate', metric.active ? 'text-fg-default' : 'text-fg-muted']}
+    >
+      {metric.name}
+    </span>
+    {#if metric.app}
+      <span class="text-fg-faint ml-auto shrink-0 truncate">{metric.app}</span>
+    {/if}
   </span>
   <span class="truncate font-mono text-2xl tabular-nums">
     {format(metric.value)}
