@@ -1,7 +1,6 @@
 <script lang="ts">
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
   import { formatCount } from '../../domain/analytics-format';
-  import { visitsLabel } from '../../domain/analytics-period';
   import type {
     WebAnalyticsAppRow,
     WebAnalyticsFilter,
@@ -68,9 +67,7 @@
     <div class={CARD_COLUMNS}>
       <span>App</span>
       <span class="flex gap-6">
-        <span class="w-16 text-right">
-          {report ? visitsLabel(report.from, report.to) : 'Visitors'}
-        </span>
+        <span class="w-16 text-right">Visitors</span>
         <span class="w-16 text-right">People</span>
       </span>
     </div>

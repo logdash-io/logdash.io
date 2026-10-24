@@ -197,27 +197,35 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
     now: Date,
     events: WebEventClickhouseEntity[],
   ): Promise<{ rows: WebEventClickhouseEntity[]; sessionKey: string; session: Session | null }> {
-    const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    const saltKey = (day: number): string =>
-      `web-analytics:salt:${new Date(day).toISOString().slice(0, 10)}`;
+    // Weeks start on Monday at 00:00 UTC.
+    const week = (offset: number): number =>
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - ((now.getUTCDay() + 6) % 7) + offset * 7,
+      );
+    const saltKey = (start: number): string =>
+      `web-analytics:salt:week:${new Date(start).toISOString().slice(0, 10)}`;
     const client = this.redis.getClient();
     const candidate = randomBytes(32).toString('hex');
-    const [, salt, yesterdaySalt] = await client
+    // ponytail: the week's salt lives only in Redis, so losing Redis mid-week gives every visitor a new ID
+    // for the rest of that week; keep it in Mongo with a TTL index if that ever bites.
+    const [, salt, lastWeekSalt] = await client
       .multi()
-      .set(saltKey(today), candidate, {
+      .set(saltKey(week(0)), candidate, {
         condition: 'NX',
         expiration: {
           type: 'EX',
-          value: Math.ceil((today + DAY_MS + 30 * 60_000 - now.getTime()) / 1000),
+          value: Math.ceil((week(1) + 30 * 60_000 - now.getTime()) / 1000),
         },
       })
-      .get(saltKey(today))
-      .get(saltKey(today - DAY_MS))
+      .get(saltKey(week(0)))
+      .get(saltKey(week(-1)))
       .execTyped();
-    const hash = (daySalt: string): string =>
-      createHash('sha256').update(`${daySalt}:${siteId}:${visitor}`).digest('hex');
+    const hash = (weekSalt: string): string =>
+      createHash('sha256').update(`${weekSalt}:${siteId}:${visitor}`).digest('hex');
     const visitorIds = [hash(salt ?? candidate)];
-    if (yesterdaySalt && now.getTime() - today < 30 * 60_000) visitorIds.push(hash(yesterdaySalt));
+    if (lastWeekSalt && now.getTime() - week(0) < 30 * 60_000) visitorIds.push(hash(lastWeekSalt));
     const keys = visitorIds.map((id) => `web-analytics:session:${siteId}:${id}`);
     const stored = await client.mGet(keys);
     const live = stored[1] ? 1 : 0;

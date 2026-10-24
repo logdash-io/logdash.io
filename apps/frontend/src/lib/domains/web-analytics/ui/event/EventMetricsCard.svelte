@@ -7,7 +7,7 @@
     formatCount,
     formatPercent,
   } from '../../domain/analytics-format';
-  import { endsInProgress, visitsLabel } from '../../domain/analytics-period';
+  import { endsInProgress } from '../../domain/analytics-period';
   import type { AnalyticsQuery } from '../../domain/analytics-query';
   import type {
     AnalyticsChartLine,
@@ -38,10 +38,6 @@
 
   const { name, event, query, loading, onfilter, onclose }: Props = $props();
 
-  const visits = $derived(
-    event ? visitsLabel(event.from, event.to) : 'Visitors',
-  );
-  const perVisit = $derived(visits === 'Visits' ? 'Per visit' : 'Per visitor');
   const stats = $derived<Stat[]>([
     {
       label: 'Completions',
@@ -50,21 +46,17 @@
       chart: 'count',
     },
     {
-      label: visits,
+      label: 'Visitors',
       value: (summary: WebAnalyticsEventSummary) => summary.visitors,
       format: formatCount,
-      hint:
-        visits === 'Visits'
-          ? `Visits with ${name}: each visitor counts once per day.`
-          : undefined,
       chart: 'visitors',
     },
     {
-      label: perVisit,
+      label: 'Per visitor',
       value: (summary: WebAnalyticsEventSummary) =>
         summary.visitors ? summary.count / summary.visitors : 0,
       format: formatCount,
-      hint: `Average completions of ${name} per ${visits === 'Visits' ? 'visit' : 'visitor'} that sent it.`,
+      hint: `Average completions of ${name} per visitor that sent it.`,
     },
     {
       label: 'People',

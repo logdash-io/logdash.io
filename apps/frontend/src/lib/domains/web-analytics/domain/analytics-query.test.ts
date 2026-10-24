@@ -1,10 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { DateTime } from 'luxon';
-import {
-  allowedGranularities,
-  analyticsWindow,
-  visitsLabel,
-} from './analytics-period';
+import { allowedGranularities, analyticsWindow } from './analytics-period';
 import {
   analyticsSearch,
   filterLabel,
@@ -107,17 +103,6 @@ test('the URL keeps the open event and an app filter', () => {
   expect(
     parseAnalyticsQuery(new URLSearchParams('event=Agent run')).event,
   ).toBeNull();
-});
-
-test('a range within one day counts visitors and a longer one counts visits', () => {
-  const today = analyticsWindow('today', 0);
-  const yesterday = analyticsWindow('yesterday', 0);
-  const week = analyticsWindow('7d', 0);
-  expect(visitsLabel(today.from, today.to)).toBe('Visitors');
-  expect(
-    visitsLabel(yesterday.from.toISOString(), yesterday.to.toISOString()),
-  ).toBe('Visitors');
-  expect(visitsLabel(week.from, week.to)).toBe('Visits');
 });
 
 test('durations read like a clock and visitor names are stable', () => {

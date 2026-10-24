@@ -3,7 +3,6 @@
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
   import MenuIcon from '$lib/domains/shared/icons/MenuIcon.svelte';
   import PieChartIcon from '$lib/domains/shared/icons/PieChartIcon.svelte';
-  import { visitsLabel } from '../../domain/analytics-period';
   import type {
     WebAnalyticsBreakdownName,
     WebAnalyticsBreakdownRow,
@@ -48,9 +47,6 @@
   );
   const title = $derived(tab.title ?? tab.label);
   const rows = $derived(report?.breakdowns[tab.id] ?? []);
-  const unit = $derived(
-    report ? visitsLabel(report.from, report.to) : 'Visitors',
-  );
 
   function onSelect(row: WebAnalyticsBreakdownRow): void {
     onfilter({ dimension: tab.filter, value: row.name });
@@ -100,12 +96,12 @@
     </p>
   {:else if tab.chart === 'donut' && donut}
     <div class="flex flex-1 items-center">
-      <ChannelDonut {rows} {unit} onselect={onSelect} />
+      <ChannelDonut {rows} onselect={onSelect} />
     </div>
   {:else}
     <div class={CARD_COLUMNS}>
       <span>{title}</span>
-      <span>{unit}</span>
+      <span>Visitors</span>
     </div>
     <BreakdownList
       rows={rows.slice(0, CARD_ROWS)}
