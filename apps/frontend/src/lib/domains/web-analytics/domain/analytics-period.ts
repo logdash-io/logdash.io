@@ -172,6 +172,15 @@ function rangeLabel(
     : `${start.toFormat('d LLL yyyy')} – ${end.toFormat('d LLL yyyy')}`;
 }
 
+export function visitsLabel(
+  from: Date | string,
+  to: Date | string,
+): 'Visitors' | 'Visits' {
+  const start = DateTime.fromJSDate(new Date(from));
+  const end = DateTime.fromJSDate(new Date(to)).minus({ milliseconds: 1 });
+  return start.hasSame(end, 'day') ? 'Visitors' : 'Visits';
+}
+
 export function endsInProgress(to: string, now = Date.now()): boolean {
   return Date.parse(to) >= now - 5 * 60_000;
 }

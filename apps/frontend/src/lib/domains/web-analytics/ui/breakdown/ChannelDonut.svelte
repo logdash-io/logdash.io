@@ -5,10 +5,11 @@
 
   type Props = {
     rows: WebAnalyticsBreakdownRow[];
+    unit: string;
     onselect: (row: WebAnalyticsBreakdownRow) => void;
   };
 
-  const { rows, onselect }: Props = $props();
+  const { rows, unit, onselect }: Props = $props();
 
   const FILLS = [
     'var(--fg-default)',
@@ -83,7 +84,7 @@
       {height}
       class="block"
       role="group"
-      aria-label="Visitors by channel"
+      aria-label="{unit} by channel"
     >
       <g transform="translate({width / 2},{height / 2})">
         {#each arcs as datum, index (datum.data.name)}
@@ -98,7 +99,7 @@
             role="button"
             tabindex="0"
             aria-label="{datum.data.name}: {datum.data
-              .visitors} visitors. Filter by this channel"
+              .visitors} {unit.toLowerCase()}. Filter by this channel"
             onpointerenter={() => (hovered = datum.data.name)}
             onpointerleave={() => (hovered = null)}
             onfocus={() => (hovered = datum.data.name)}
@@ -144,7 +145,8 @@
           {focused.name}
         </span>
         <span class="text-fg-muted text-[11px] tabular-nums">
-          {formatCount(focused.visitors)} visitors
+          {formatCount(focused.visitors)}
+          {unit.toLowerCase()}
         </span>
       </div>
     {/if}

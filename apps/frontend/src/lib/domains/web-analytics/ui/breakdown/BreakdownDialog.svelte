@@ -4,6 +4,7 @@
   import { untrack } from 'svelte';
   import { WebAnalyticsBreakdownState } from '../../application/web-analytics-dashboard.state.svelte';
   import { countryName } from '../../domain/analytics-format';
+  import { visitsLabel } from '../../domain/analytics-period';
   import type {
     WebAnalyticsBreakdownName,
     WebAnalyticsBreakdownRow,
@@ -74,7 +75,7 @@
   </label>
   <div class="flex items-center justify-between px-8 pt-4 pb-1.5 text-xs">
     <span class="text-fg-muted">{title}</span>
-    <span class="text-fg-muted">Visitors</span>
+    <span class="text-fg-muted">{visitsLabel(range.from, range.to)}</span>
   </div>
   <div class="min-h-40 flex-1 overflow-y-auto px-5 pb-5">
     {#if breakdown.loading}

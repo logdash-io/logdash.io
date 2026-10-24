@@ -51,5 +51,6 @@ export class ClusterRemovalService {
     await this.publicDashboardRemovalService.deletePublicDashboardsByClusterId(clusterId);
     await this.notificationChannelWriteService.deleteByClusterId(clusterId);
     await this.apiKeyWriteService.deleteByClusterId(clusterId);
+    await this.webAnalyticsWriteService.deleteByClusterId(clusterId);
   }
 }

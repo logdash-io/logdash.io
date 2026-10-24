@@ -6,13 +6,11 @@ import { trimToUndefined } from './trim-to-undefined';
 
 export const APP_NAME_MAX_LENGTH = 64;
 
-export const AppName = (): PropertyDecorator =>
+export const AppName = (
+  description = 'The app that sent this, such as desktop or api. With a domain key it picks the app and creates it on first use; a service key ignores it. Longer names are cut to 64 characters.',
+): PropertyDecorator =>
   applyDecorators(
-    ApiPropertyOptional({
-      description:
-        'The app that sent this, such as desktop or api. With a domain key it picks the app and creates it on first use; a service key ignores it. Longer names are cut to 64 characters.',
-      maxLength: APP_NAME_MAX_LENGTH,
-    }),
+    ApiPropertyOptional({ description, maxLength: APP_NAME_MAX_LENGTH }),
     IsOptional(),
     IsString(),
     Transform((params: { value: unknown }) => {

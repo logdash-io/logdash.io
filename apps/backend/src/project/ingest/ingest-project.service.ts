@@ -42,6 +42,25 @@ export class IngestProjectService {
     return this.resolveApp(target.clusterId, app || DEFAULT_APP_NAME);
   }
 
+  public async resolveAppName(
+    apiKeyValue: string | undefined,
+    app?: string,
+  ): Promise<{ clusterId: string; app: string }> {
+    const target = await this.apiKeyReadCachedService.readTarget(apiKeyValue);
+
+    if (!target) {
+      throw new UnauthorizedException('Invalid API key');
+    }
+
+    if ('clusterId' in target) {
+      return { clusterId: target.clusterId, app: app || DEFAULT_APP_NAME };
+    }
+
+    const project = await this.projectReadCachedService.readProjectOrThrow(target.projectId);
+
+    return { clusterId: project.clusterId, app: project.name };
+  }
+
   private async resolveApp(clusterId: string, name: string): Promise<ProjectNormalized> {
     const cacheKey = `cluster:${clusterId}:app:${name}`;
     const cachedProjectId = await this.redisService.get(cacheKey);

@@ -20,6 +20,7 @@
   import ActiveFilters from './ActiveFilters.svelte';
   import MetricsCard from './MetricsCard.svelte';
   import BreakdownCard from './breakdown/BreakdownCard.svelte';
+  import EventPanel from './event/EventPanel.svelte';
   import GoalsCard from './insights/GoalsCard.svelte';
   import InsightsCard from './insights/InsightsCard.svelte';
   import VisitorsCard from './insights/VisitorsCard.svelte';
@@ -33,6 +34,7 @@
   const query = $derived(parseAnalyticsQuery(page.url.searchParams));
   const timeWindow = $derived(queryWindow(query));
   let refreshes = $state(0);
+  let top = $state<HTMLElement>();
   const range = $derived.by(() => {
     void refreshes;
     return analyticsRange(query, tz);
@@ -68,8 +70,13 @@
     onQueryChange(withFilter(query, filter));
   }
 
-  function eventPath(name: string): `/app/domains/${string}` {
-    return `/app/domains/${clusterId}/events/${name}${analyticsSearch(query)}`;
+  function onEvent(name: string): void {
+    onQueryChange({ ...query, event: query.event === name ? null : name });
+    top?.scrollIntoView({ block: 'nearest' });
+  }
+
+  function onEventClose(): void {
+    onQueryChange({ ...query, event: null });
   }
 
   function onVisibilityChange(): void {
@@ -111,7 +118,26 @@
       ]}
       inert={analytics.waitingForData}
     >
-      <MetricsCard {report} {query} loading={analytics.loading && !report} />
+      <div bind:this={top} class="flex scroll-mt-2 flex-col gap-2">
+        {#if query.event}
+          {#key query.event}
+            <EventPanel
+              {clusterId}
+              name={query.event}
+              {query}
+              {range}
+              onfilter={onFilter}
+              onclose={onEventClose}
+            />
+          {/key}
+        {:else}
+          <MetricsCard
+            {report}
+            {query}
+            loading={analytics.loading && !report}
+          />
+        {/if}
+      </div>
 
       <div class="grid gap-2 @2xl:grid-cols-2 @min-[68.75rem]:grid-cols-3">
         <BreakdownCard
@@ -156,7 +182,12 @@
           ]}
           onfilter={onFilter}
         />
-        <GoalsCard {report} {eventPath} onfilter={onFilter} />
+        <GoalsCard
+          {report}
+          selected={query.event}
+          onselect={onEvent}
+          onfilter={onFilter}
+        />
         <BreakdownCard
           {clusterId}
           {report}

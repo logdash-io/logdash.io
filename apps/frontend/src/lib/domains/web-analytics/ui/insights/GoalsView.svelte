@@ -1,12 +1,8 @@
 <script lang="ts">
-  import { resolve } from '$app/paths';
-  import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
   import { formatCount, formatPercent } from '../../domain/analytics-format';
   import { endsInProgress } from '../../domain/analytics-period';
   import type {
     AnalyticsChartLine,
-    WebAnalyticsBreakdownRow,
-    WebAnalyticsFilter,
     WebAnalyticsReport,
   } from '../../domain/web-analytics';
   import AnalyticsChart from '../AnalyticsChart.svelte';
@@ -15,11 +11,11 @@
   type Props = {
     report: WebAnalyticsReport | null;
     limit?: number;
-    eventPath: (name: string) => `/app/domains/${string}`;
-    onfilter: (filter: WebAnalyticsFilter) => void;
+    selected: string | null;
+    onselect: (name: string) => void;
   };
 
-  const { report, limit, eventPath, onfilter }: Props = $props();
+  const { report, limit, selected, onselect }: Props = $props();
 
   const COLORS = [
     'var(--chart-1)',
@@ -42,10 +38,6 @@
 
   function colorOf(name: string): string | undefined {
     return lines.find((line) => line.label === name)?.color;
-  }
-
-  function onSelect(goal: WebAnalyticsBreakdownRow): void {
-    onfilter({ dimension: 'goal', value: goal.name });
   }
 </script>
 
@@ -78,7 +70,7 @@
   {/if}
   <div class={CARD_COLUMNS}>
     <span>Goal</span>
-    <span class="flex gap-6 pr-8.5">
+    <span class="flex gap-6">
       <span class="w-16 text-right">Completions</span>
       <span class="w-16 text-right">Conversion</span>
     </span>
@@ -86,12 +78,18 @@
   <ul class="flex flex-col gap-0.5">
     {#each visible as goal (goal.name)}
       {@const color = limit ? undefined : colorOf(goal.name)}
-      <li class="flex items-center gap-0.5">
+      <li>
         <button
           type="button"
-          class="group focus-visible:outline-brand relative flex h-8 min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg px-3 text-left text-sm focus-visible:outline-2"
-          title="Filter by visitors who completed {goal.name}"
-          onclick={() => onSelect(goal)}
+          class={[
+            'group focus-visible:outline-brand relative flex h-8 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-left text-sm focus-visible:outline-2',
+            { 'bg-surface-25-selected-bg': goal.name === selected },
+          ]}
+          aria-pressed={goal.name === selected}
+          title={goal.name === selected
+            ? 'Back to traffic'
+            : `Show the trend of ${goal.name}`}
+          onclick={() => onselect(goal.name)}
         >
           <span
             class="bg-surface-150-bg group-hover:bg-surface-150-hover-bg absolute inset-y-0 left-0 rounded-lg"
@@ -118,14 +116,6 @@
             </span>
           </span>
         </button>
-        <a
-          href={resolve(eventPath(goal.name))}
-          class="hover:bg-surface-150-bg hover:text-fg-default transition-ink focus-visible:outline-brand flex size-8 shrink-0 items-center justify-center rounded-lg text-fg-muted focus-visible:outline-2"
-          aria-label="Open {goal.name}"
-          title="Trend and properties of {goal.name}"
-        >
-          <ChevronRightIcon class="size-3.5" />
-        </a>
       </li>
     {/each}
   </ul>

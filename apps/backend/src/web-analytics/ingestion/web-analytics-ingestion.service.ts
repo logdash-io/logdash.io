@@ -6,11 +6,14 @@ import {
   Injectable,
   OnApplicationShutdown,
   ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { isbot } from 'isbot';
 import { createHash, randomBytes } from 'node:crypto';
 import { CollectWebEventsBody } from '../core/dto/collect-web-events.body';
+import { TrackEventBody } from '../core/dto/track-event.body';
+import { WebAnalyticsSiteNormalized } from '../core/entities/web-analytics-site.interface';
 import { WebEventClickhouseEntity } from '../core/entities/web-event.clickhouse-entity';
 import { WebAnalyticsReadService } from '../read/web-analytics-read.service';
 import {
@@ -18,7 +21,8 @@ import {
   WEB_ANALYTICS_QUEUE_LOCK,
 } from '../write/web-analytics-write.service';
 import { ClusterReadCachedService } from '../../cluster/read/cluster-read-cached.service';
-import { getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
+import { ClusterReadService } from '../../cluster/read/cluster-read.service';
+import { ClusterPlanConfig, getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
 import { RedisService, TtlOverwriteStrategy } from '../../shared/redis/redis.service';
 import { WEB_ANALYTICS_LOGGER } from '../../shared/logdash/logdash-tokens';
 import { LogdashLogger } from '../../shared/logdash/aggregate-logger';
@@ -65,6 +69,7 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
     private readonly read: WebAnalyticsReadService,
     private readonly write: WebAnalyticsWriteService,
     private readonly clusters: ClusterReadCachedService,
+    private readonly clusterRead: ClusterReadService,
     private readonly redis: RedisService,
     @Inject(WEB_ANALYTICS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
@@ -83,10 +88,10 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
     const config = getClusterPlanConfig(await this.clusters.readTier(site.clusterId)).webAnalytics;
     const now = new Date();
     const sentAt = new Date(body.sentAt);
-    const { rows, sessionKey, session } = await this.sessionize(
-      site.id,
-      ip,
-      userAgent,
+    await this.enqueue(
+      site,
+      config,
+      `${ip}:${userAgent}`,
       now,
       body.events.flatMap(
         (event) =>
@@ -101,6 +106,42 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
           ) ?? [],
       ),
     );
+  }
+
+  public async track(
+    body: TrackEventBody,
+    clusterId: string,
+    app: string,
+    userAgent: string,
+    ip: string,
+  ): Promise<void> {
+    const config = getClusterPlanConfig(await this.clusters.readTier(clusterId)).webAnalytics;
+    const site = await this.siteOf(clusterId);
+    const now = new Date();
+    await this.enqueue(site, config, `${ip}:${userAgent}:${app}`, now, [
+      WebEventClickhouseEntity.fromTracked(body, site, app, config.retentionDays, now),
+    ]);
+  }
+
+  private async siteOf(clusterId: string): Promise<WebAnalyticsSiteNormalized> {
+    const key = `web-analytics:cluster-site:${clusterId}`;
+    const cached = await this.redis.get(key);
+    if (cached !== null) return JSON.parse(cached) as WebAnalyticsSiteNormalized;
+    if (!(await this.clusterRead.readById(clusterId)))
+      throw new UnauthorizedException('Invalid API key');
+    const site = await this.write.ensureSite(clusterId);
+    await this.redis.set(key, JSON.stringify(site), 60);
+    return site;
+  }
+
+  private async enqueue(
+    site: WebAnalyticsSiteNormalized,
+    config: ClusterPlanConfig['webAnalytics'],
+    visitor: string,
+    now: Date,
+    events: WebEventClickhouseEntity[],
+  ): Promise<void> {
+    const { rows, sessionKey, session } = await this.sessionize(site.id, visitor, now, events);
     if (!rows.length) return;
     const hour = now.toISOString().slice(0, 13);
     const count = await this.redis.incrementBy(
@@ -152,8 +193,7 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
 
   private async sessionize(
     siteId: string,
-    ip: string,
-    userAgent: string,
+    visitor: string,
     now: Date,
     events: WebEventClickhouseEntity[],
   ): Promise<{ rows: WebEventClickhouseEntity[]; sessionKey: string; session: Session | null }> {
@@ -175,7 +215,7 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
       .get(saltKey(today - DAY_MS))
       .execTyped();
     const hash = (daySalt: string): string =>
-      createHash('sha256').update(`${daySalt}:${siteId}:${ip}:${userAgent}`).digest('hex');
+      createHash('sha256').update(`${daySalt}:${siteId}:${visitor}`).digest('hex');
     const visitorIds = [hash(salt ?? candidate)];
     if (yesterdaySalt && now.getTime() - today < 30 * 60_000) visitorIds.push(hash(yesterdaySalt));
     const keys = visitorIds.map((id) => `web-analytics:session:${siteId}:${id}`);

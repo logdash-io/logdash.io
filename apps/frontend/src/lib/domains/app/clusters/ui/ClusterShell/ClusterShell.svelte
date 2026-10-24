@@ -57,6 +57,12 @@
     monitoringState.getMonitorById(page.params.monitor_id ?? '')?.name,
   );
   const showLive = $derived(page.route.id === '/app/domains/[cluster_id]/logs');
+  const openEvent = $derived(page.url.searchParams.get('event'));
+  const trafficSearch = $derived(
+    new URLSearchParams(
+      [...page.url.searchParams].filter(([key]) => key !== 'event'),
+    ).toString(),
+  );
   const crumbs = $derived(crumbsFor(page.route.id));
 
   function crumbsFor(routeId: string | null): Crumb[] {
@@ -71,15 +77,20 @@
         { label: clusterName },
         { label: 'API keys' },
       ])
-      .with('/app/domains/[cluster_id]', () => [domain, { label: 'Analytics' }])
-      .with('/app/domains/[cluster_id]/events/[event_name]', () => [
-        domain,
-        {
-          label: 'Analytics',
-          path: clusterPath && `${clusterPath}${page.url.search}`,
-        },
-        { label: page.params.event_name ?? 'Event' },
-      ])
+      .with('/app/domains/[cluster_id]', () =>
+        openEvent
+          ? [
+              domain,
+              {
+                label: 'Analytics',
+                path:
+                  clusterPath &&
+                  `${clusterPath}${trafficSearch ? `?${trafficSearch}` : ''}`,
+              },
+              { label: openEvent },
+            ]
+          : [domain, { label: 'Analytics' }],
+      )
       .with('/app/domains/[cluster_id]/logs', () => [domain, { label: 'Logs' }])
       .with(
         '/app/domains/[cluster_id]/metrics',

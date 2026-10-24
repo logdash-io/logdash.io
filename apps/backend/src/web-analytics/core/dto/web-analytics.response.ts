@@ -54,8 +54,14 @@ export class WebAnalyticsBreakdowns {
 }
 
 export class WebAnalyticsSummary {
-  @ApiProperty()
+  @ApiProperty({
+    description:
+      'Visits: each visitor counts once per day in the requested time zone, because anonymous visitor IDs change every day',
+  })
   visitors: number;
+
+  @ApiProperty({ description: 'Identified people, each counted once in the range' })
+  people: number;
 
   @ApiProperty()
   pageviews: number;
@@ -69,7 +75,7 @@ export class WebAnalyticsSummary {
   @ApiProperty({ description: 'Average time between the first and last event of a session' })
   sessionSeconds: number;
 
-  @ApiProperty({ description: 'Share of visitors who completed any goal, 0 to 100' })
+  @ApiProperty({ description: 'Share of visits with any goal, 0 to 100' })
   conversionRate: number;
 }
 
@@ -77,11 +83,31 @@ export class WebAnalyticsPoint {
   @ApiProperty({ description: 'Bucket start, Unix milliseconds' })
   time: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Visits, each visitor once per day' })
   visitors: number;
+
+  @ApiProperty({ description: 'Identified people' })
+  people: number;
 
   @ApiProperty()
   pageviews: number;
+}
+
+export class WebAnalyticsAppRow {
+  @ApiProperty({ description: 'App name, or the hostname for website events' })
+  name: string;
+
+  @ApiProperty({ description: 'Whether these are website events, named by hostname' })
+  website: boolean;
+
+  @ApiProperty({ description: 'Visits, each visitor once per day' })
+  visitors: number;
+
+  @ApiProperty({ description: 'Identified people' })
+  people: number;
+
+  @ApiProperty({ description: 'Events, without page leaves' })
+  count: number;
 }
 
 export class WebAnalyticsGoalSeries {
@@ -125,6 +151,9 @@ export class WebAnalyticsResponse {
 
   @ApiProperty({ type: WebAnalyticsBreakdowns })
   breakdowns: WebAnalyticsBreakdowns;
+
+  @ApiProperty({ type: WebAnalyticsAppRow, isArray: true })
+  apps: WebAnalyticsAppRow[];
 }
 
 export class WebAnalyticsOverviewResponse {
@@ -144,10 +173,13 @@ export class WebAnalyticsEventSummary {
   @ApiProperty({ description: 'Times the event was sent' })
   count: number;
 
-  @ApiProperty({ description: 'Visitors who sent the event' })
+  @ApiProperty({ description: 'Visits with the event, each visitor once per day' })
   visitors: number;
 
-  @ApiProperty({ description: 'Share of visitors who sent the event, 0 to 100' })
+  @ApiProperty({ description: 'Identified people who sent the event' })
+  people: number;
+
+  @ApiProperty({ description: 'Share of visits with the event, 0 to 100' })
   conversionRate: number;
 }
 
@@ -157,6 +189,12 @@ export class WebAnalyticsEventPoint {
 
   @ApiProperty()
   count: number;
+
+  @ApiProperty({ description: 'Visits with the event' })
+  visitors: number;
+
+  @ApiProperty({ description: 'Identified people who sent the event' })
+  people: number;
 }
 
 export class WebAnalyticsEventResponse {
@@ -214,7 +252,7 @@ export class WebAnalyticsVisitor {
   @ApiProperty()
   browser: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'First website source, empty for visitors seen only in apps' })
   source: string;
 
   @ApiProperty()
@@ -225,6 +263,9 @@ export class WebAnalyticsVisitor {
 
   @ApiProperty({ type: String, isArray: true, description: 'Active days, YYYY-MM-DD' })
   activeDays: string[];
+
+  @ApiProperty({ type: String, isArray: true, description: 'Apps that tracked events for them' })
+  apps: string[];
 }
 
 export class WebAnalyticsVisitorsResponse {
@@ -247,6 +288,9 @@ export class WebAnalyticsVisitorEvent {
 
   @ApiProperty()
   hostname: string;
+
+  @ApiProperty({ description: 'The app that tracked the event, empty for website events' })
+  app: string;
 
   @ApiProperty()
   sessionId: string;

@@ -20,6 +20,7 @@ export interface AnalyticsQuery {
   granularity: WebAnalyticsGranularity;
   compare: boolean;
   filters: WebAnalyticsFilter[];
+  event: string | null;
 }
 
 const DIMENSIONS: WebAnalyticsFilterDimension[] = [
@@ -34,6 +35,7 @@ const DIMENSIONS: WebAnalyticsFilterDimension[] = [
   'os',
   'device',
   'goal',
+  'app',
 ];
 
 const GRANULARITIES: WebAnalyticsGranularity[] = [
@@ -55,6 +57,7 @@ export const FILTER_LABELS: Record<WebAnalyticsFilterDimension, string> = {
   os: 'OS',
   device: 'Device',
   goal: 'Goal',
+  app: 'App',
 };
 
 export function parseAnalyticsQuery(params: URLSearchParams): AnalyticsQuery {
@@ -68,6 +71,7 @@ export function parseAnalyticsQuery(params: URLSearchParams): AnalyticsQuery {
   );
   const allowed = allowedGranularities(analyticsWindow(period, offset));
   const rawGranularity = params.get('granularity') as WebAnalyticsGranularity;
+  const event = params.get('event');
   return {
     period,
     offset: period === 'all' ? 0 : offset,
@@ -94,6 +98,7 @@ export function parseAnalyticsQuery(params: URLSearchParams): AnalyticsQuery {
           all.findIndex((other) => other.dimension === filter.dimension) ===
             index,
       ),
+    event: event && /^[a-z][a-z0-9_]{0,63}$/.test(event) ? event : null,
   };
 }
 
@@ -106,6 +111,7 @@ export function analyticsSearch(query: AnalyticsQuery): string {
   if (query.compare) params.set('compare', '1');
   for (const filter of query.filters)
     params.append('filter', `${filter.dimension}:${filter.value}`);
+  if (query.event) params.set('event', query.event);
   const search = params.toString();
   return search ? `?${search}` : '';
 }

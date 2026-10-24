@@ -69,6 +69,7 @@ describe('Web analytics (reads)', () => {
     const data = response.body as WebAnalyticsResponse;
     expect(data.summary).toEqual({
       visitors: 0,
+      people: 0,
       pageviews: 0,
       sessions: 0,
       bounceRate: 0,
@@ -185,6 +186,7 @@ describe('Web analytics (reads)', () => {
     const data = response.body as WebAnalyticsResponse;
     expect(data.summary).toEqual({
       visitors: 3,
+      people: 0,
       pageviews: 4,
       sessions: 3,
       bounceRate: (1 / 3) * 100,
@@ -198,6 +200,7 @@ describe('Web analytics (reads)', () => {
     expect(data.series.at(-2)).toEqual({
       time: Date.parse('2026-10-01T00:00:00Z'),
       visitors: 1,
+      people: 0,
       pageviews: 2,
     });
     expect(data.breakdowns.channels).toEqual([
@@ -360,6 +363,7 @@ describe('Web analytics (reads)', () => {
       .body as WebAnalyticsResponse;
     expect(data.summary).toEqual({
       visitors: 6,
+      people: 0,
       pageviews: 5,
       sessions: 4,
       bounceRate: 25,
@@ -368,6 +372,7 @@ describe('Web analytics (reads)', () => {
     });
     expect(data.previous).toEqual({
       visitors: 1,
+      people: 0,
       pageviews: 1,
       sessions: 1,
       bounceRate: 0,
@@ -401,7 +406,7 @@ describe('Web analytics (reads)', () => {
     expect(timeline.events.map((item) => item.name)).toEqual(['pageview']);
   });
 
-  it('counts an identified user once across daily visitor ids in visitors, profiles, funnels and goal filters', async () => {
+  it('counts an identified user once in people, profiles, funnels and goal filters, and once per day in visits', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
     const site = await configure(setup.cluster.id, setup.token);
@@ -442,7 +447,11 @@ describe('Web analytics (reads)', () => {
     ).body as WebAnalyticsResponse;
 
     // then
-    expect(report.summary).toMatchObject({ visitors: 2, sessions: 3 });
+    expect(report.summary).toMatchObject({ visitors: 3, people: 1, sessions: 3 });
+    expect(report.series.slice(1, 3)).toMatchObject([
+      { visitors: 1, people: 1 },
+      { visitors: 2, people: 1 },
+    ]);
     expect(list.total).toBe(2);
     expect(list.visitors).toMatchObject([
       { id: 'c'.repeat(64), identified: false, sessions: 1 },
@@ -458,7 +467,7 @@ describe('Web analytics (reads)', () => {
     expect(profile.visitor).toMatchObject({ id: user, identified: true, sessions: 2 });
     expect(profile.events).toHaveLength(3);
     expect(funnel.steps.map((step) => step.visitors)).toEqual([2, 1]);
-    expect(converted.summary).toMatchObject({ visitors: 1, pageviews: 2 });
+    expect(converted.summary).toMatchObject({ visitors: 2, people: 1, pageviews: 2 });
   });
 
   it('reports identified-user cohorts, stickiness and comebacks within the plan retention', async () => {
@@ -564,8 +573,13 @@ describe('Web analytics (reads)', () => {
 
     // then
     const data = event.body as WebAnalyticsEventResponse;
-    expect(data.summary).toEqual({ count: 3, visitors: 2, conversionRate: (2 / 3) * 100 });
-    expect(data.previous).toEqual({ count: 0, visitors: 0, conversionRate: 0 });
+    expect(data.summary).toEqual({
+      count: 3,
+      visitors: 2,
+      people: 0,
+      conversionRate: (2 / 3) * 100,
+    });
+    expect(data.previous).toEqual({ count: 0, visitors: 0, people: 0, conversionRate: 0 });
     expect(data.series).toHaveLength(7);
     expect(data.series.reduce((sum, point) => sum + point.count, 0)).toBe(3);
     expect(data.previousSeries).toHaveLength(7);
@@ -587,6 +601,7 @@ describe('Web analytics (reads)', () => {
     expect((remoteStarts.body as WebAnalyticsEventResponse).summary).toEqual({
       count: 1,
       visitors: 1,
+      people: 0,
       conversionRate: 100,
     });
   });
@@ -621,6 +636,7 @@ describe('Web analytics (reads)', () => {
       received_at: '2026-10-02 11:00:00.000',
       expires_at: '2027-10-02 00:00:00',
       name: 'pageview',
+      app: '',
       hostname: 'example.com',
       path: '/',
       referrer: '',

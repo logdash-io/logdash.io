@@ -61,11 +61,15 @@
   const filterValues = $derived.by((): string[] => {
     if (!filterDimension || !report) return [];
     const needle = filterSearch.trim().toLowerCase();
-    return report.breakdowns[FILTER_BREAKDOWNS[filterDimension]]
-      .map((row) => row.name)
-      .filter((name) =>
-        filterValueLabel(filterDimension!, name).toLowerCase().includes(needle),
-      );
+    const names =
+      filterDimension === 'app'
+        ? report.apps.map((app) => app.name)
+        : report.breakdowns[FILTER_BREAKDOWNS[filterDimension]].map(
+            (row) => row.name,
+          );
+    return names.filter((name) =>
+      filterValueLabel(filterDimension!, name).toLowerCase().includes(needle),
+    );
   });
 
   function onPeriod(period: AnalyticsPeriod): void {

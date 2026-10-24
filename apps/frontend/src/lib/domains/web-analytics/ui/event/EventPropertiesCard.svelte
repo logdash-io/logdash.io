@@ -4,6 +4,7 @@
   import { untrack } from 'svelte';
   import { WebAnalyticsInsightState } from '../../application/web-analytics-dashboard.state.svelte';
   import { formatCount } from '../../domain/analytics-format';
+  import { visitsLabel } from '../../domain/analytics-period';
   import type {
     WebAnalyticsBreakdownRow,
     WebAnalyticsEvent,
@@ -115,7 +116,9 @@
       <span class="truncate font-mono">{values.data.key}</span>
       <span class="flex shrink-0 gap-6">
         <span class="w-16 text-right">Events</span>
-        <span class="w-16 text-right">Visitors</span>
+        <span class="w-16 text-right">
+          {visitsLabel(range.from, range.to)}
+        </span>
       </span>
     </div>
     <ul class="flex flex-col gap-0.5">
