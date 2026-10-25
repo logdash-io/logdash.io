@@ -194,6 +194,7 @@
           {range}
           label="Countries"
           tabs={[{ id: 'countries', label: 'Country', filter: 'country' }]}
+          attribution={dbIpAttribution}
           onfilter={onFilter}
         />
         <BreakdownCard
@@ -241,4 +242,15 @@
     onchange={onQueryChange}
     onrefresh={onRefresh}
   />
+{/snippet}
+
+{#snippet dbIpAttribution()}
+  <a
+    href="https://db-ip.com"
+    target="_blank"
+    rel="noopener"
+    class="text-fg-muted hover:text-fg-secondary focus-visible:text-fg-secondary focus-visible:outline-brand transition-ink truncate rounded-sm px-1.5 text-[11px] focus-visible:outline-2"
+  >
+    IP Geolocation by DB-IP
+  </a>
 {/snippet}

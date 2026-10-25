@@ -45,6 +45,7 @@
     "express-basic-auth": "^1.2.1",
     "helmet": "^8.3.0",
     "isbot": "^5.2.2",
+    "mmdb-lib": "^3.0.3",
     "mongoose": "^9.7.2",
     "opentype.js": "^2.0.0",
     "reflect-metadata": "^0.2.2",

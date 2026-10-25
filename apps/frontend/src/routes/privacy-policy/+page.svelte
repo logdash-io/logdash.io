@@ -36,7 +36,7 @@
   definition={PPdefinition}
   title="Privacy policy"
   description="How Logdash collects, stores and uses the data you send us, and what we never do with it."
-  updated="24 October 2026"
+  updated="25 October 2026"
 >
   <section class="flex flex-col items-start gap-4">
     <h2

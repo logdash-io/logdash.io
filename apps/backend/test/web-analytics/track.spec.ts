@@ -194,6 +194,25 @@ describe('POST /events', () => {
     });
   });
 
+  it('neither drops nor geolocates app events, because they come from your servers', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const key = await domainKey(setup.cluster.id, setup.token);
+    bootstrap.utils.webAnalyticsGeoUtils.reset();
+    await bootstrap.utils.webAnalyticsGeoUtils.refresh('2026-10');
+
+    // when
+    const response = await track(key, { name: 'agent_run', app: 'desktop' }).set(
+      'X-Forwarded-For',
+      '67.43.156.1',
+    );
+    await flush();
+
+    // then
+    expect(response.status).toBe(202);
+    expect((await stored()).map((row) => [row.name, row.country])).toEqual([['agent_run', '']]);
+  });
+
   it('deletes app events with their domain, and the site the domain got from them', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();

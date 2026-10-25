@@ -636,7 +636,7 @@ export async function load() {
       },
       {
         type: 'paragraph',
-        text: "On the events route, forward the browser's `Origin` and `User-Agent` headers, and set `x-logdash-client-ip` to the visitor's IP address. Without an `Origin` the API answers 403. Without the IP address every visitor shares your server's address, and visitors are undercounted. Never forward cookies, authorization headers or ingest keys on either route, and keep the target URLs fixed so the routes cannot become an open proxy.",
+        text: "On the events route, forward the browser's `Origin` and `User-Agent` headers, and set `x-logdash-client-ip` to the visitor's IP address. Without an `Origin` the API answers 403. Without the IP address every visitor shares your server's address, so visitors are undercounted, and if that server runs in a datacenter or cloud, every event is dropped. Never forward cookies, authorization headers or ingest keys on either route, and keep the target URLs fixed so the routes cannot become an open proxy.",
       },
       {
         type: 'code',
@@ -757,7 +757,7 @@ export async function load() {
       { type: 'heading', text: 'Let visitors opt out' },
       {
         type: 'paragraph',
-        text: 'The tracker does not start in automated browsers that set `navigator.webdriver`. If your site has privacy settings, add an analytics toggle that calls `optOut` and `optIn`:',
+        text: 'The tracker does not start in automated browsers that set `navigator.webdriver`, and Logdash drops events from known bots and from datacenter and cloud networks. If your site has privacy settings, add an analytics toggle that calls `optOut` and `optIn`:',
       },
       {
         type: 'code',
@@ -882,7 +882,7 @@ window.logdash?.optIn();`,
       { type: 'heading', text: 'Opt-out and browser storage' },
       {
         type: 'paragraph',
-        text: 'The tracker does not start in automated browsers that set `navigator.webdriver`. It counts browsers that send Do Not Track or Global Privacy Control like any other, unless the script tag has `data-respect-dnt`. Your site can let visitors opt out with `optOut`, both described in [Web analytics](/docs/web-analytics).',
+        text: 'The tracker does not start in automated browsers that set `navigator.webdriver`, and Logdash drops events from known bots and from datacenter and cloud networks. It counts browsers that send Do Not Track or Global Privacy Control like any other, unless the script tag has `data-respect-dnt`. Your site can let visitors opt out with `optOut`, both described in [Web analytics](/docs/web-analytics).',
       },
       {
         type: 'paragraph',
@@ -901,7 +901,7 @@ window.logdash?.optIn();`,
           'the host name and path of the page, without query string or fragment. Path segments that contain `@` become `:redacted`, and segments that look like database IDs, UUIDs or numbers of four or more digits become `:id`.',
           'the host name of the referring site, UTM source, medium, campaign and term, and the name of an ad click ID parameter such as `gclid`, never its value. They come from the first event of the session.',
           'device type, browser and operating system, derived from the User-Agent.',
-          "a country, derived from the browser's time zone rather than the IP address.",
+          "a country, looked up from the IP address in a copy of the [DB-IP](https://db-ip.com) database on the Logdash server, or derived from the browser's time zone when the lookup has no answer. The IP address itself is not stored.",
           'the time of the event.',
           'the visitor ID, a random session ID and, for identified users, the user hash.',
           'for events from your apps, the app name instead of the page, referrer, campaign and browser details.',
@@ -936,7 +936,7 @@ window.logdash?.optIn();`,
         language: 'text',
         code: `We measure how this website is used with Logdash web analytics. It sets no cookies and stores nothing in your browser to recognise you. To count visitors, Logdash computes a pseudonymous visitor ID on its server: a SHA-256 hash of your IP address, your browser's User-Agent, our site ID and a random value that changes every week and is deleted 30 minutes after the week ends (Monday, 00:00 UTC). Your IP address is not stored, and anonymous visits in different weeks are not linked to each other.
 
-For each page you visit, we collect the page address without query parameters, the domain of the website that referred you, campaign tags, your device type, browser and operating system, and a country derived from your time zone. [When you are signed in, your visits are also linked to a pseudonymous hash of your account ID, computed in your browser. Your account ID itself is not sent.] [For some actions, such as [actions], we also record the options you chose, never personal data.]
+For each page you visit, we collect the page address without query parameters, the domain of the website that referred you, campaign tags, your device type, browser and operating system, and a country derived from your IP address, or from your time zone if the IP address gives none. [When you are signed in, your visits are also linked to a pseudonymous hash of your account ID, computed in your browser. Your account ID itself is not sent.] [For some actions, such as [actions], we also record the options you chose, never personal data.]
 
 Logdash processes this data on our behalf as a processor and deletes it after [retention period]. We process it on the basis of our legitimate interest in understanding how our website is used and improving it (Art. 6(1)(f) GDPR). [The analytics does not run if your browser sends Global Privacy Control or Do Not Track.] [You can turn analytics off in our privacy settings.] To object or to ask about your data, contact [contact address].`,
       },

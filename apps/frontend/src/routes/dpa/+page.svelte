@@ -7,5 +7,5 @@
   definition={DPAdefinition}
   title="Data processing agreement"
   description="The terms under which Logdash processes personal data for you as a processor: web analytics, logs, security measures and sub-processors."
-  updated="24 October 2026"
+  updated="25 October 2026"
 />

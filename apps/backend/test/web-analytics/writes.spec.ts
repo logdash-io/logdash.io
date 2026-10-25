@@ -544,6 +544,94 @@ describe('Web analytics (writes)', () => {
     });
   });
 
+  describe('POST /web_events country and datacenter traffic', () => {
+    beforeEach(() => {
+      bootstrap.utils.webAnalyticsGeoUtils.reset();
+    });
+
+    it("takes the country from the visitor's IP address over the browser time zone", async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      await bootstrap.utils.webAnalyticsGeoUtils.refresh('2026-10');
+      const shanghai = (): CollectWebEventsBody =>
+        batch(site.id, [event({ timezone: 'Asia/Shanghai' })]);
+
+      // when
+      const responses = [
+        await collect(shanghai()).set('x-logdash-client-ip', '81.2.69.142'),
+        await collect(shanghai()).set('X-Forwarded-For', '89.160.20.112'),
+      ];
+      const rows = await queued();
+
+      // then
+      expect(responses.map((response) => response.status)).toEqual([202, 202]);
+      expect(rows.map((row) => row.country)).toEqual(['GB', 'SE']);
+      expect(JSON.stringify([rows, await bootstrap.app.get(RedisService).keys('*')])).not.toMatch(
+        /81\.2\.69|89\.160\.20/,
+      );
+    });
+
+    it('falls back to the browser time zone when the IP address is unknown or the databases are unavailable', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      const shanghai = (): CollectWebEventsBody =>
+        batch(site.id, [event({ timezone: 'Asia/Shanghai' })]);
+
+      // when
+      await collect(shanghai()).set('x-logdash-client-ip', '81.2.69.142');
+      await bootstrap.utils.webAnalyticsGeoUtils.refresh('2026-10');
+      await collect(shanghai()).set('x-logdash-client-ip', '203.0.113.7');
+      const rows = await queued();
+
+      // then
+      expect(rows.map((row) => row.country)).toEqual(['CN', 'CN']);
+    });
+
+    it('silently drops events from datacenter networks', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      await bootstrap.utils.webAnalyticsGeoUtils.refresh('2026-10');
+
+      // when
+      const responses = [
+        await collect(batch(site.id)).set('X-Forwarded-For', '67.43.156.1'),
+        await collect(batch(site.id)).set('x-logdash-client-ip', '67.43.156.1'),
+        await collect(batch(site.id)).set('x-logdash-client-ip', '149.101.100.1'),
+      ];
+      const rows = await queued();
+
+      // then
+      expect(responses.map((response) => response.status)).toEqual([202, 202, 202]);
+      expect(rows.map((row) => row.country)).toEqual(['US']);
+    });
+
+    it('keeps the loaded databases when a refresh fails', async () => {
+      // given
+      const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+      const site = await configure(setup.cluster.id, setup.token);
+      await bootstrap.utils.webAnalyticsGeoUtils.refresh('2026-10');
+      advanceTo('2026-11-02T12:00:00Z');
+
+      // when
+      await bootstrap.utils.webAnalyticsGeoUtils.refresh('2026-11', 500);
+      const responses = [
+        await collect(batch(site.id, [event({ timezone: 'Asia/Shanghai' })])).set(
+          'x-logdash-client-ip',
+          '81.2.69.142',
+        ),
+        await collect(batch(site.id)).set('x-logdash-client-ip', '67.43.156.1'),
+      ];
+      const rows = await queued();
+
+      // then
+      expect(responses.map((response) => response.status)).toEqual([202, 202]);
+      expect(rows.map((row) => row.country)).toEqual(['GB']);
+    });
+  });
+
   describe('POST /web_events identity and sessions', () => {
     it('derives a weekly visitor id from a salted hash of IP and user agent and ignores legacy cookie ids', async () => {
       // given

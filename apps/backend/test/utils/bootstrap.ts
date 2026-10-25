@@ -1,5 +1,6 @@
 import { ClickHouseClient } from '@clickhouse/client';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import type { Express } from 'express';
 import { App } from 'supertest/types';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { getModelToken } from '@nestjs/mongoose';
@@ -71,6 +72,7 @@ import { WebhookUtils } from './webhook-utils';
 import { PublicDashboardUtils } from './public-dashboard-utils';
 import { CustomDomainUtils } from './custom-domain-utils';
 import { BlogUtils } from './blog-utils';
+import { WebAnalyticsGeoUtils } from './web-analytics-geo-utils';
 import { ClusterInviteUtils } from './cluster-invite-utils';
 import { StripeModule } from '../../src/payments/stripe/stripe.module';
 import { SubscriptionEntity } from '../../src/subscription/core/entities/subscription.entity';
@@ -161,6 +163,7 @@ export async function createTestApp() {
   const app = module.createNestApplication<INestApplication<App>>();
   // Must mirror src/main.ts, otherwise e2e tests exercise different validation
   // rules than production.
+  (app.getHttpAdapter().getInstance() as Express).set('trust proxy', 1);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -320,6 +323,7 @@ export async function createTestApp() {
       clusterInviteUtils: new ClusterInviteUtils(app),
       userUtils: new UserUtils(app),
       blogUtils: new BlogUtils(app),
+      webAnalyticsGeoUtils: new WebAnalyticsGeoUtils(app),
     },
     methods: {
       clearDatabase,

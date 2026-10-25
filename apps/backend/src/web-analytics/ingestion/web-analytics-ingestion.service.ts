@@ -20,6 +20,7 @@ import {
   WebAnalyticsWriteService,
   WEB_ANALYTICS_QUEUE_LOCK,
 } from '../write/web-analytics-write.service';
+import { WebAnalyticsGeoService } from './web-analytics-geo.service';
 import { ClusterReadCachedService } from '../../cluster/read/cluster-read-cached.service';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ClusterPlanConfig, getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
@@ -71,6 +72,7 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
     private readonly clusters: ClusterReadCachedService,
     private readonly clusterRead: ClusterReadService,
     private readonly redis: RedisService,
+    private readonly geo: WebAnalyticsGeoService,
     @Inject(WEB_ANALYTICS_LOGGER) private readonly logger: LogdashLogger,
   ) {}
 
@@ -85,6 +87,8 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
     if (!origin || !/^https?:\/\/[^/]+$/.test(origin) || !URL.canParse(origin))
       throw new ForbiddenException('A browser Origin header is required');
     if (isbot(userAgent)) return;
+    const { country, datacenter } = this.geo.lookup(ip);
+    if (datacenter) return;
     const config = getClusterPlanConfig(await this.clusters.readTier(site.clusterId)).webAnalytics;
     const now = new Date();
     const sentAt = new Date(body.sentAt);
@@ -100,6 +104,7 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
             site,
             origin,
             userAgent,
+            country,
             config.retentionDays,
             sentAt,
             now,

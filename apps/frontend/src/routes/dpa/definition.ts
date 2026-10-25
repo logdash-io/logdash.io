@@ -51,13 +51,13 @@ export const DPAdefinition: LegalDocumentDefinition = [
           'a session identifier assigned by the Logdash server;',
           "where the Client calls identify, a pseudonymous user identifier: a SHA-256 hash of the site ID and the Client's user ID, computed in the visitor's browser, so the user ID itself never leaves the browser;",
           'page paths without query strings or fragments, event names, the host name of the referring website, campaign (UTM) tags and the name of an advertising click identifier parameter, never its value;',
-          "the device type, browser and operating system, derived from the User-Agent, and a country, derived from the browser's time zone;",
+          "the device type, browser and operating system, derived from the User-Agent, and a country, looked up from the visitor's IP address in a database on the Logdash server, or derived from the browser's time zone when the IP address gives none;",
           'the time of each event.',
         ],
       },
       {
         title:
-          'IP addresses are used only to compute the visitor identifier and are never stored. User-Agent strings are used only to compute the visitor identifier and to derive the device type, browser and operating system, and are not stored. The weekly salt is 32 random bytes created for each week starting on Monday at 00:00 UTC, held only in Redis and deleted 30 minutes after that week ends. After that, nobody, Logdash included, can recompute the visitor identifiers of that week.',
+          'IP addresses are used only to compute the visitor identifier, to look up the country and to discard events from datacenter networks, and are never stored. User-Agent strings are used only to compute the visitor identifier and to derive the device type, browser and operating system, and are not stored. The weekly salt is 32 random bytes created for each week starting on Monday at 00:00 UTC, held only in Redis and deleted 30 minutes after that week ends. After that, nobody, Logdash included, can recompute the visitor identifiers of that week.',
       },
       {
         title:
