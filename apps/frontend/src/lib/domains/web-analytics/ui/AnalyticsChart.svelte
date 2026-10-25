@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as d3 from 'd3';
   import type { ClassValue } from 'svelte/elements';
+  import { lastCurveSegment } from '../domain/analytics-chart';
   import {
     bucketLabel,
     bucketTitle,
@@ -30,7 +31,7 @@
   }: Props = $props();
 
   const MARGIN = { top: 12, right: 12, bottom: 28, left: 40 };
-  const gradientId = $props.id();
+  const id = $props.id();
 
   let width = $state(0);
   let height = $state(0);
@@ -79,8 +80,12 @@
 
   const partialIndex = $derived(partial ? times.length - 1 : -1);
 
-  function complete(line: AnalyticsChartLine): number[] {
-    return partial && !line.dashed ? line.values.slice(0, -1) : line.values;
+  function hasInProgressSegment(line: AnalyticsChartLine): boolean {
+    return partialIndex > 0 && !line.dashed;
+  }
+
+  function completeClip(line: AnalyticsChartLine): string | undefined {
+    return hasInProgressSegment(line) ? `url(#${id}-complete)` : undefined;
   }
 
   function isPartialPoint(line: AnalyticsChartLine, index: number): boolean {
@@ -125,7 +130,7 @@
       onblur={onPointerLeave}
     >
       <defs>
-        <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
+        <linearGradient id="{id}-fill" x1="0" x2="0" y1="0" y2="1">
           <stop
             offset="0%"
             stop-color="var(--fg-default)"
@@ -133,6 +138,11 @@
           />
           <stop offset="100%" stop-color="var(--fg-default)" stop-opacity="0" />
         </linearGradient>
+        {#if partialIndex > 0}
+          <clipPath id="{id}-complete">
+            <rect width={x(partialIndex - 1)} {height} />
+          </clipPath>
+        {/if}
       </defs>
 
       {#each ticks as tick (tick)}
@@ -171,19 +181,34 @@
 
       {#each lines as line (line.label)}
         {#if line.area}
-          <path d={fill(complete(line))} fill="url(#{gradientId})" />
+          <path
+            d={fill(line.values)}
+            fill="url(#{id}-fill)"
+            clip-path={completeClip(line)}
+          />
         {/if}
       {/each}
 
       {#each lines as line (line.label)}
         <path
-          d={path(complete(line))}
+          d={path(line.values)}
           fill="none"
           stroke={line.color}
           stroke-width={line.dashed ? 1.5 : 2}
           stroke-dasharray={line.dashed ? '4 4' : undefined}
           stroke-linejoin="round"
+          clip-path={completeClip(line)}
         />
+        {#if hasInProgressSegment(line)}
+          <path
+            d={lastCurveSegment(path(line.values) ?? '')}
+            fill="none"
+            stroke={line.color}
+            stroke-width="2"
+            stroke-dasharray="3 3"
+            stroke-dashoffset="3"
+          />
+        {/if}
         {#if isPartialPoint(line, partialIndex) && hovered !== partialIndex}
           <circle
             cx={x(partialIndex)}
