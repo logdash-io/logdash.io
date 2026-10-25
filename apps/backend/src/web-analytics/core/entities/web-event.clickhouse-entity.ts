@@ -36,6 +36,7 @@ export class WebEventClickhouseEntity {
     site: WebAnalyticsSiteNormalized,
     origin: string,
     userAgent: string,
+    country: string,
     retentionDays: number,
     sentAt: Date,
     now: Date,
@@ -80,7 +81,7 @@ export class WebEventClickhouseEntity {
           : 'Desktop',
       browser: this.browser(userAgent),
       os: this.os(userAgent),
-      country: TIMEZONE_COUNTRIES[event.timezone ?? ''] ?? '',
+      country: country || (TIMEZONE_COUNTRIES[event.timezone ?? ''] ?? ''),
       props: BUILT_IN_EVENTS.includes(event.name) ? {} : this.cleanProps(event.props),
     };
   }

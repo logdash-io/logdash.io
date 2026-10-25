@@ -3,6 +3,7 @@
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
   import MenuIcon from '$lib/domains/shared/icons/MenuIcon.svelte';
   import PieChartIcon from '$lib/domains/shared/icons/PieChartIcon.svelte';
+  import type { Snippet } from 'svelte';
   import type {
     WebAnalyticsBreakdownName,
     WebAnalyticsBreakdownRow,
@@ -32,11 +33,20 @@
     label: string;
     tabs: BreakdownTab[];
     initial?: WebAnalyticsBreakdownName;
+    attribution?: Snippet;
     onfilter: (filter: WebAnalyticsFilter) => void;
   };
 
-  const { clusterId, report, range, label, tabs, initial, onfilter }: Props =
-    $props();
+  const {
+    clusterId,
+    report,
+    range,
+    label,
+    tabs,
+    initial,
+    attribution,
+    onfilter,
+  }: Props = $props();
 
   let selected = $state<WebAnalyticsBreakdownName | null>(null);
   let detailsOpen = $state(false);
@@ -77,7 +87,7 @@
 <DashboardCard
   {label}
   tabs={tabs.length > 1 ? tabSwitch : undefined}
-  actions={tab.chart && rows.length ? chartToggle : undefined}
+  actions={tab.chart && rows.length ? chartToggle : attribution}
   expandLabel="Show all {title.toLowerCase()} rows"
   onexpand={rows.length ? onDetails : undefined}
 >
