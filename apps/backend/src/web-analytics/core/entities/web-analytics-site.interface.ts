@@ -4,6 +4,7 @@ export class WebAnalyticsSiteNormalized {
   id: string;
   clusterId: string;
   origins: string[];
+  goals: string[];
 }
 
 export class WebAnalyticsSiteSerialized {
@@ -15,6 +16,13 @@ export class WebAnalyticsSiteSerialized {
 
   @ApiProperty({ type: String, isArray: true })
   origins: string[];
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    description: 'The goals picked for the dashboard: the primary one, then an optional second',
+  })
+  goals: string[];
 }
 
 export class WebAnalyticsSiteResponse {

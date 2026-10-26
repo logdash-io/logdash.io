@@ -67,7 +67,7 @@
     <div class={CARD_COLUMNS}>
       <span>App</span>
       <span class="flex gap-6">
-        <span class="w-16 text-right">Visitors</span>
+        <span class="w-16 text-right">Visits</span>
         <span class="w-16 text-right">People</span>
       </span>
     </div>

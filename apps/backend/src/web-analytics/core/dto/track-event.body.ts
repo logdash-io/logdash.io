@@ -28,7 +28,7 @@ export class TrackEventBody {
     oneOf: [{ type: 'string' }, { type: 'number' }],
     example: '42',
     description:
-      "The signed-in user's internal ID, never an email address. The server stores only sha256(siteId:userId), the hash the website tracker's identify sends, so the same user is one person across your website and apps. Without it, the event counts toward an anonymous visitor of that app whose ID changes every week.",
+      "The signed-in user's internal ID, never an email address. The server stores only sha256(siteId:userId), the hash the website tracker's identify sends, so the same user is one person across your website and apps. Without it, the event counts toward a visitor of that app that changes every day.",
   })
   @IsOptional()
   @Transform(({ obj }: { obj: { userId?: unknown } }) =>

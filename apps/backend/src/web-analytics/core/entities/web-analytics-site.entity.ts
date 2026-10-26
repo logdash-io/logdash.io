@@ -10,6 +10,9 @@ export class WebAnalyticsSiteEntity {
 
   @Prop({ type: [String], required: true })
   origins: string[];
+
+  @Prop({ type: [String], default: [] })
+  goals?: string[];
 }
 
 export const WebAnalyticsSiteSchema = SchemaFactory.createForClass(WebAnalyticsSiteEntity);

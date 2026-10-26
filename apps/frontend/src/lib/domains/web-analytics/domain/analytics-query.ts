@@ -1,24 +1,13 @@
-import {
-  allowedGranularities,
-  analyticsWindow,
-  defaultGranularity,
-  isAnalyticsPeriod,
-  type AnalyticsPeriod,
-  type AnalyticsWindow,
-} from './analytics-period';
+import { DateTime } from 'luxon';
 import type {
   WebAnalyticsFilter,
   WebAnalyticsFilterDimension,
   WebAnalyticsFilterKey,
-  WebAnalyticsGranularity,
   WebAnalyticsRange,
 } from './web-analytics';
 
 export interface AnalyticsQuery {
-  period: AnalyticsPeriod;
-  offset: number;
-  granularity: WebAnalyticsGranularity;
-  compare: boolean;
+  day: string | null;
   filters: WebAnalyticsFilter[];
   event: string | null;
 }
@@ -38,13 +27,6 @@ const DIMENSIONS: WebAnalyticsFilterDimension[] = [
   'app',
 ];
 
-const GRANULARITIES: WebAnalyticsGranularity[] = [
-  'hour',
-  'day',
-  'week',
-  'month',
-];
-
 export const FILTER_LABELS: Record<WebAnalyticsFilterDimension, string> = {
   channel: 'Channel',
   referrer: 'Referrer',
@@ -61,24 +43,10 @@ export const FILTER_LABELS: Record<WebAnalyticsFilterDimension, string> = {
 };
 
 export function parseAnalyticsQuery(params: URLSearchParams): AnalyticsQuery {
-  const rawPeriod = params.get('period');
-  const period: AnalyticsPeriod = isAnalyticsPeriod(rawPeriod)
-    ? rawPeriod
-    : '7d';
-  const offset = Math.min(
-    0,
-    Math.max(-500, Math.trunc(Number(params.get('offset')) || 0)),
-  );
-  const allowed = allowedGranularities(analyticsWindow(period, offset));
-  const rawGranularity = params.get('granularity') as WebAnalyticsGranularity;
+  const day = params.get('day');
   const event = params.get('event');
   return {
-    period,
-    offset: period === 'all' ? 0 : offset,
-    granularity: allowed.includes(rawGranularity)
-      ? rawGranularity
-      : fallbackGranularity(period, allowed),
-    compare: params.get('compare') === '1',
+    day: day && isLocalDate(day) ? day : null,
     filters: params
       .getAll('filter')
       .map((entry) => {
@@ -104,11 +72,7 @@ export function parseAnalyticsQuery(params: URLSearchParams): AnalyticsQuery {
 
 export function analyticsSearch(query: AnalyticsQuery): string {
   const params = new URLSearchParams();
-  if (query.period !== '7d') params.set('period', query.period);
-  if (query.offset) params.set('offset', String(query.offset));
-  if (query.granularity !== defaultGranularity(query.period))
-    params.set('granularity', query.granularity);
-  if (query.compare) params.set('compare', '1');
+  if (query.day) params.set('day', query.day);
   for (const filter of query.filters)
     params.append('filter', `${filter.dimension}:${filter.value}`);
   if (query.event) params.set('event', query.event);
@@ -135,33 +99,22 @@ export function filterLabel(dimension: WebAnalyticsFilterKey): string {
     : FILTER_LABELS[dimension as WebAnalyticsFilterDimension];
 }
 
-export function analyticsRange(
-  query: AnalyticsQuery,
+export function dayRange(
+  day: string,
   tz: string,
+  filters: WebAnalyticsFilter[],
 ): WebAnalyticsRange {
-  const { from, to } = queryWindow(query);
+  const start = DateTime.fromISO(day, { zone: tz }).startOf('day');
   return {
-    from,
-    to,
-    granularity: query.granularity,
+    from: start.toJSDate(),
+    to: start.plus({ days: 1 }).toJSDate(),
+    granularity: 'hour',
     tz,
-    filters: query.filters,
-    compare: query.compare,
+    filters,
+    compare: false,
   };
 }
 
-export function queryWindow(query: AnalyticsQuery): AnalyticsWindow {
-  return analyticsWindow(query.period, query.offset);
-}
-
-export function isGranularity(value: string): value is WebAnalyticsGranularity {
-  return GRANULARITIES.includes(value as WebAnalyticsGranularity);
-}
-
-function fallbackGranularity(
-  period: AnalyticsPeriod,
-  allowed: WebAnalyticsGranularity[],
-): WebAnalyticsGranularity {
-  const preferred = defaultGranularity(period);
-  return allowed.includes(preferred) ? preferred : (allowed[0] ?? 'day');
+export function isLocalDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && DateTime.fromISO(value).isValid;
 }

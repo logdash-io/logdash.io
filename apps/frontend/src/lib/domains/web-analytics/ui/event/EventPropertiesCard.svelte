@@ -115,7 +115,7 @@
       <span class="truncate font-mono">{values.data.key}</span>
       <span class="flex shrink-0 gap-6">
         <span class="w-16 text-right">Events</span>
-        <span class="w-16 text-right">Visitors</span>
+        <span class="w-16 text-right">Visits</span>
       </span>
     </div>
     <ul class="flex flex-col gap-0.5">

@@ -42,7 +42,7 @@
   const PERIOD_IDS: AnalyticsPeriod[] = ['today', '24h', '7d', '30d', '12m'];
   const PERIODS = ANALYTICS_PERIODS.filter(({ id }) => PERIOD_IDS.includes(id));
   const ORDERS: { id: HomeOrder; label: string }[] = [
-    { id: 'visitors', label: 'Most visitors' },
+    { id: 'visitors', label: 'Most visits' },
     { id: 'name', label: 'Name' },
     { id: 'recent', label: 'Recently added' },
   ];
@@ -213,7 +213,7 @@
         {formatCount(total)}
       </span>
     {/if}
-    {total === 1 && !isLoading ? 'visitor' : 'visitors'}
+    {total === 1 && !isLoading ? 'visit' : 'visits'}
     {period === 'today' ? '' : 'in the'}
     {periodLabel}
   </p>

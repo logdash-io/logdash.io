@@ -51,7 +51,6 @@
 <EventMetricsCard
   {name}
   event={event.data}
-  {query}
   loading={event.loading && !event.data}
   onfilter={filtered ? undefined : onGoalFilter}
   {onclose}

@@ -51,7 +51,7 @@ describe('POST /events', () => {
       .lean();
     const siteId = site!._id.toString();
     expect(site!.origins).toEqual([]);
-    const salt = await bootstrap.app.get(RedisService).get('web-analytics:salt:week:2026-09-28');
+    const salt = await bootstrap.app.get(RedisService).get('web-analytics:salt:2026-10-02');
     const rows = await stored();
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({

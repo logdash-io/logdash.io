@@ -8,7 +8,6 @@
     formatPercent,
   } from '../../domain/analytics-format';
   import { endsInProgress } from '../../domain/analytics-period';
-  import type { AnalyticsQuery } from '../../domain/analytics-query';
   import type {
     AnalyticsChartLine,
     WebAnalyticsEvent,
@@ -20,7 +19,6 @@
   type Props = {
     name: string;
     event: WebAnalyticsEvent | null;
-    query: AnalyticsQuery;
     loading: boolean;
     onfilter?: () => void;
     onclose: () => void;
@@ -36,7 +34,7 @@
     chart?: Metric;
   };
 
-  const { name, event, query, loading, onfilter, onclose }: Props = $props();
+  const { name, event, loading, onfilter, onclose }: Props = $props();
 
   const stats = $derived<Stat[]>([
     {
@@ -46,17 +44,18 @@
       chart: 'count',
     },
     {
-      label: 'Visitors',
+      label: 'Visits',
       value: (summary: WebAnalyticsEventSummary) => summary.visitors,
       format: formatCount,
+      hint: `Visits that sent ${name}: each visitor counts once per day.`,
       chart: 'visitors',
     },
     {
-      label: 'Per visitor',
+      label: 'Per visit',
       value: (summary: WebAnalyticsEventSummary) =>
         summary.visitors ? summary.count / summary.visitors : 0,
       format: formatCount,
-      hint: `Average completions of ${name} per visitor that sent it.`,
+      hint: `Average completions of ${name} per visit that sent it.`,
     },
     {
       label: 'People',
@@ -86,18 +85,6 @@
         color: 'var(--fg-default)',
         area: true,
       },
-      ...(query.compare && event.previousSeries
-        ? [
-            {
-              label: 'Previous period',
-              values: event.previousSeries
-                .slice(0, event.series.length)
-                .map((point) => point[metric]),
-              color: 'var(--fg-faint)',
-              dashed: true,
-            },
-          ]
-        : []),
     ];
   });
 </script>

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { browser } from '$app/environment';
   import { afterNavigate } from '$app/navigation';
+  import { innerHeight } from 'svelte/reactivity/window';
   import { bottomSheetState } from './bottom-sheet.state.svelte.js';
   import type { Snippet } from 'svelte';
 
@@ -20,10 +20,11 @@
   const DRAG_THRESHOLD = 80;
   const VELOCITY_THRESHOLD = 0.4;
 
-  const maxDragDistance = $derived.by(() => {
-    if (!browser) return 500;
-    return window.innerHeight * 0.85 - PEEK_HEIGHT;
-  });
+  const maxDragDistance = $derived(
+    innerHeight.current === undefined
+      ? 500
+      : innerHeight.current * 0.85 - PEEK_HEIGHT,
+  );
 
   const clampedDragY = $derived.by(() => {
     if (bottomSheetState.isOpen) {

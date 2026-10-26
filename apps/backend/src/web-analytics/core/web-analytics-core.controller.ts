@@ -20,22 +20,32 @@ import { ClusterMemberGuard } from '../../cluster/guards/cluster-member/cluster-
 import { ClusterReadCachedService } from '../../cluster/read/cluster-read-cached.service';
 import { getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
 import { WebAnalyticsReadService } from '../read/web-analytics-read.service';
+import { WebAnalyticsDayReadService } from '../read/web-analytics-day-read.service';
 import { WebAnalyticsWriteService } from '../write/web-analytics-write.service';
 import { WebAnalyticsIngestionService } from '../ingestion/web-analytics-ingestion.service';
 import { IngestProjectService } from '../../project/ingest/ingest-project.service';
 import { ConfigureWebAnalyticsBody } from './dto/configure-web-analytics.body';
+import { UpdateWebAnalyticsGoalsBody } from './dto/update-web-analytics-goals.body';
 import { TrackEventBody } from './dto/track-event.body';
 import { CollectWebEventsBody, EVENT_NAME, PROP_KEY } from './dto/collect-web-events.body';
 import {
+  isLocalDate,
   ReadWebAnalyticsBreakdownQuery,
+  ReadWebAnalyticsDayQuery,
+  ReadWebAnalyticsDaysQuery,
+  ReadWebAnalyticsDayVisitsQuery,
   ReadWebAnalyticsFunnelQuery,
   ReadWebAnalyticsQuery,
-  ReadWebAnalyticsVisitorQuery,
+  ReadWebAnalyticsTimeZoneQuery,
   ReadWebAnalyticsVisitorsQuery,
 } from './dto/read-web-analytics.query';
 import {
   WebAnalyticsBreakdownResponse,
+  WebAnalyticsDayResponse,
+  WebAnalyticsDaysResponse,
+  WebAnalyticsDayVisitsResponse,
   WebAnalyticsEventResponse,
+  WebAnalyticsGoalsResponse,
   WebAnalyticsFunnelResponse,
   WebAnalyticsJourneysResponse,
   WebAnalyticsOverviewResponse,
@@ -56,6 +66,7 @@ import { WebAnalyticsSiteSerializer } from './entities/web-analytics-site.serial
 export class WebAnalyticsCoreController {
   constructor(
     private readonly read: WebAnalyticsReadService,
+    private readonly days: WebAnalyticsDayReadService,
     private readonly write: WebAnalyticsWriteService,
     private readonly ingestion: WebAnalyticsIngestionService,
     private readonly clusters: ClusterReadCachedService,
@@ -102,6 +113,69 @@ export class WebAnalyticsCoreController {
     @Query() query: ReadWebAnalyticsQuery,
   ): Promise<WebAnalyticsResponse> {
     return this.read.readReport(clusterId, query, await this.retentionDays(clusterId));
+  }
+
+  @Get('clusters/:clusterId/web_analytics/days')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @ApiResponse({ type: WebAnalyticsDaysResponse })
+  public async readDays(
+    @Param('clusterId') clusterId: string,
+    @Query() query: ReadWebAnalyticsDaysQuery,
+  ): Promise<WebAnalyticsDaysResponse> {
+    return this.days.readDays(clusterId, query, await this.retentionDays(clusterId));
+  }
+
+  @Get('clusters/:clusterId/web_analytics/days/:date')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @ApiResponse({ type: WebAnalyticsDayResponse })
+  public async readDay(
+    @Param('clusterId') clusterId: string,
+    @Param('date') date: string,
+    @Query() query: ReadWebAnalyticsDayQuery,
+  ): Promise<WebAnalyticsDayResponse> {
+    if (!isLocalDate(date)) throw new BadRequestException('date must be a day as YYYY-MM-DD');
+    return this.days.readDay(clusterId, date, query, await this.retentionDays(clusterId));
+  }
+
+  @Get('clusters/:clusterId/web_analytics/days/:date/visits')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @ApiResponse({ type: WebAnalyticsDayVisitsResponse })
+  public async readDayVisits(
+    @Param('clusterId') clusterId: string,
+    @Param('date') date: string,
+    @Query() query: ReadWebAnalyticsDayVisitsQuery,
+  ): Promise<WebAnalyticsDayVisitsResponse> {
+    if (!isLocalDate(date)) throw new BadRequestException('date must be a day as YYYY-MM-DD');
+    return this.days.readDayVisits(clusterId, date, query, await this.retentionDays(clusterId));
+  }
+
+  @Get('clusters/:clusterId/web_analytics/goals')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @ApiResponse({ type: WebAnalyticsGoalsResponse })
+  public async readGoals(
+    @Param('clusterId') clusterId: string,
+    @Query() query: ReadWebAnalyticsTimeZoneQuery,
+  ): Promise<WebAnalyticsGoalsResponse> {
+    const site = await this.read.readSiteByClusterId(clusterId);
+    return this.days.readGoals(clusterId, query.tz, site?.goals ?? []);
+  }
+
+  @Put('clusters/:clusterId/web_analytics/goals')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @ApiResponse({ type: WebAnalyticsSiteSerialized })
+  public async updateGoals(
+    @Param('clusterId') clusterId: string,
+    @Body() body: UpdateWebAnalyticsGoalsBody,
+    @CurrentUserId() userId: string,
+  ): Promise<WebAnalyticsSiteSerialized> {
+    return WebAnalyticsSiteSerializer.serialize(
+      await this.write.updateGoals(clusterId, body.goals, userId),
+    );
   }
 
   @Get('clusters/:clusterId/web_analytics/overview')
@@ -192,7 +266,7 @@ export class WebAnalyticsCoreController {
   public async visitor(
     @Param('clusterId') clusterId: string,
     @Param('visitorId') visitorId: string,
-    @Query() query: ReadWebAnalyticsVisitorQuery,
+    @Query() query: ReadWebAnalyticsTimeZoneQuery,
   ): Promise<WebAnalyticsVisitorResponse> {
     if (!/^[a-f0-9]{64}$/.test(visitorId)) throw new BadRequestException('Invalid visitor id');
     return this.read.readVisitor(clusterId, visitorId, query.tz);

@@ -2,7 +2,12 @@ import { httpClient } from '$lib/domains/shared/http/http-client';
 import type {
   WebAnalyticsBreakdownName,
   WebAnalyticsBreakdownRow,
+  WebAnalyticsDay,
+  WebAnalyticsDayParams,
+  WebAnalyticsDays,
+  WebAnalyticsDayVisits,
   WebAnalyticsEvent,
+  WebAnalyticsGoals,
   WebAnalyticsFunnelStep,
   WebAnalyticsJourney,
   WebAnalyticsOverview,
@@ -13,6 +18,7 @@ import type {
   WebAnalyticsStatus,
   WebAnalyticsVisitor,
   WebAnalyticsVisitorEvent,
+  WebAnalyticsVisitShow,
 } from '../domain/web-analytics';
 
 export class WebAnalyticsService {
@@ -40,6 +46,57 @@ export class WebAnalyticsService {
   ): Promise<WebAnalyticsStatus> {
     return httpClient.get<WebAnalyticsStatus>(
       `/clusters/${clusterId}/web_analytics/status`,
+    );
+  }
+
+  public static async readGoals(
+    clusterId: string,
+    tz: string,
+  ): Promise<WebAnalyticsGoals> {
+    return httpClient.get<WebAnalyticsGoals>(
+      `/clusters/${clusterId}/web_analytics/goals?${new URLSearchParams({ tz })}`,
+    );
+  }
+
+  public static async saveGoals(
+    clusterId: string,
+    goals: string[],
+  ): Promise<WebAnalyticsSite> {
+    return httpClient.put<WebAnalyticsSite>(
+      `/clusters/${clusterId}/web_analytics/goals`,
+      { goals },
+    );
+  }
+
+  public static async readDays(
+    clusterId: string,
+    date: string,
+    params: WebAnalyticsDayParams,
+  ): Promise<WebAnalyticsDays> {
+    return httpClient.get<WebAnalyticsDays>(
+      `/clusters/${clusterId}/web_analytics/days?${dayQuery(params, { date })}`,
+    );
+  }
+
+  public static async readDay(
+    clusterId: string,
+    date: string,
+    params: WebAnalyticsDayParams,
+  ): Promise<WebAnalyticsDay> {
+    return httpClient.get<WebAnalyticsDay>(
+      `/clusters/${clusterId}/web_analytics/days/${date}?${dayQuery(params)}`,
+    );
+  }
+
+  public static async readDayVisits(
+    clusterId: string,
+    date: string,
+    params: WebAnalyticsDayParams,
+    show: WebAnalyticsVisitShow,
+    offset: number,
+  ): Promise<WebAnalyticsDayVisits> {
+    return httpClient.get<WebAnalyticsDayVisits>(
+      `/clusters/${clusterId}/web_analytics/days/${date}/visits?${dayQuery(params, { show, offset: String(offset) })}`,
     );
   }
 
@@ -98,16 +155,6 @@ export class WebAnalyticsService {
     return response.rows;
   }
 
-  public static async readVisitors(
-    clusterId: string,
-    range: WebAnalyticsRange,
-    offset: number,
-  ): Promise<{ visitors: WebAnalyticsVisitor[]; total: number }> {
-    return httpClient.get(
-      `/clusters/${clusterId}/web_analytics/visitors?${query(range, { offset: String(offset) })}`,
-    );
-  }
-
   public static async readVisitor(
     clusterId: string,
     visitorId: string,
@@ -152,6 +199,17 @@ export class WebAnalyticsService {
       `/clusters/${clusterId}/web_analytics/retention?${query(range)}`,
     );
   }
+}
+
+function dayQuery(
+  params: WebAnalyticsDayParams,
+  extra: Record<string, string> = {},
+): URLSearchParams {
+  const search = new URLSearchParams({ tz: params.tz, ...extra });
+  for (const goal of params.goals) search.append('goal', goal);
+  for (const filter of params.filters)
+    search.append('filter', `${filter.dimension}:${filter.value}`);
+  return search;
 }
 
 function query(

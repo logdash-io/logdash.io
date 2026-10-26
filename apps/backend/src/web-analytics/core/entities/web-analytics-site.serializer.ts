@@ -6,7 +6,12 @@ import {
 
 export class WebAnalyticsSiteSerializer {
   public static normalize(entity: WebAnalyticsSiteEntity): WebAnalyticsSiteNormalized {
-    return { id: entity._id.toString(), clusterId: entity.clusterId, origins: entity.origins };
+    return {
+      id: entity._id.toString(),
+      clusterId: entity.clusterId,
+      origins: entity.origins,
+      goals: entity.goals ?? [],
+    };
   }
 
   public static serialize(site: WebAnalyticsSiteNormalized): WebAnalyticsSiteSerialized {

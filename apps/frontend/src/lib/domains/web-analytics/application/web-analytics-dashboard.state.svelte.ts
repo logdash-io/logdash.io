@@ -90,39 +90,6 @@ export class WebAnalyticsBreakdownState {
   }
 }
 
-export class WebAnalyticsVisitorsState {
-  public visitors = $state<WebAnalyticsVisitor[]>([]);
-  public total = $state(0);
-  public loading = $state(false);
-  public error = $state<string | null>(null);
-  private generation = 0;
-
-  constructor(private readonly clusterId: string) {}
-
-  public async load(range: WebAnalyticsRange, append = false): Promise<void> {
-    const generation = ++this.generation;
-    this.loading = true;
-    try {
-      const page = await WebAnalyticsService.readVisitors(
-        this.clusterId,
-        range,
-        append ? this.visitors.length : 0,
-      );
-      if (generation !== this.generation) return;
-      this.visitors = append
-        ? [...this.visitors, ...page.visitors]
-        : page.visitors;
-      this.total = page.total;
-      this.error = null;
-    } catch (error) {
-      if (generation === this.generation)
-        this.error = readHttpErrorMessage(error) ?? 'Could not load visitors.';
-    } finally {
-      if (generation === this.generation) this.loading = false;
-    }
-  }
-}
-
 export class WebAnalyticsVisitorState {
   public visitor = $state<WebAnalyticsVisitor | null>(null);
   public events = $state<WebAnalyticsVisitorEvent[]>([]);

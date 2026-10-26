@@ -134,6 +134,9 @@
 
   --background-color-error-bg: var(--error-bg);
   --background-color-error-hover-bg: var(--error-hover-bg);
+  --background-color-success-bg: var(--success-bg);
+  --text-color-error-fg: var(--error-fg);
+  --text-color-success-fg: var(--success-fg);
 
   --container-8xl: 90rem;
   --container-9xl: 100rem;

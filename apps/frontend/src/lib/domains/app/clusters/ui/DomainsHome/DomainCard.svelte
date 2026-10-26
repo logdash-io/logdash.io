@@ -50,7 +50,7 @@
 
   <div class="flex min-w-0 flex-col gap-3 p-3">
     <div class="flex flex-col gap-1.5">
-      <span class="text-fg-muted text-xs">Visitors</span>
+      <span class="text-fg-muted text-xs">Visits</span>
       <span class="flex h-8 items-center font-mono text-2xl tabular-nums">
         {#if visitors.status === 'ready'}
           {formatCount(visitors.overview.visitors)}

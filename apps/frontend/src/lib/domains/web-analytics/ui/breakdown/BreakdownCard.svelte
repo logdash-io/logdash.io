@@ -111,7 +111,7 @@
   {:else}
     <div class={CARD_COLUMNS}>
       <span>{title}</span>
-      <span>Visitors</span>
+      <span>Visits</span>
     </div>
     <BreakdownList
       rows={rows.slice(0, CARD_ROWS)}

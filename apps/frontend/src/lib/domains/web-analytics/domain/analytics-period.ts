@@ -26,13 +26,6 @@ export const ANALYTICS_PERIODS: { id: AnalyticsPeriod; label: string }[] = [
   { id: 'all', label: 'All time' },
 ];
 
-export const GRANULARITIES: { id: WebAnalyticsGranularity; label: string }[] = [
-  { id: 'hour', label: 'Hourly' },
-  { id: 'day', label: 'Daily' },
-  { id: 'week', label: 'Weekly' },
-  { id: 'month', label: 'Monthly' },
-];
-
 const DEFAULT_GRANULARITY: Record<AnalyticsPeriod, WebAnalyticsGranularity> = {
   today: 'hour',
   yesterday: 'hour',
@@ -46,13 +39,6 @@ const DEFAULT_GRANULARITY: Record<AnalyticsPeriod, WebAnalyticsGranularity> = {
   all: 'week',
 };
 
-const MAX_BUCKETS: Record<WebAnalyticsGranularity, number> = {
-  hour: 24 * 31,
-  day: 400,
-  week: Infinity,
-  month: Infinity,
-};
-
 export interface AnalyticsWindow {
   from: Date;
   to: Date;
@@ -60,26 +46,10 @@ export interface AnalyticsWindow {
   canGoForward: boolean;
 }
 
-export function isAnalyticsPeriod(
-  value: string | null,
-): value is AnalyticsPeriod {
-  return ANALYTICS_PERIODS.some((period) => period.id === value);
-}
-
 export function defaultGranularity(
   period: AnalyticsPeriod,
 ): WebAnalyticsGranularity {
   return DEFAULT_GRANULARITY[period];
-}
-
-export function allowedGranularities(
-  window: Pick<AnalyticsWindow, 'from' | 'to'>,
-): WebAnalyticsGranularity[] {
-  const hours = (window.to.getTime() - window.from.getTime()) / 3_600_000;
-  return GRANULARITIES.map((entry) => entry.id).filter((granularity) => {
-    const size = { hour: 1, day: 24, week: 168, month: 720 }[granularity];
-    return hours / size <= MAX_BUCKETS[granularity] && hours >= size;
-  });
 }
 
 export function analyticsWindow(
