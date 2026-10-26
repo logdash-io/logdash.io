@@ -16,6 +16,7 @@ describe('Web analytics (days)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
   const goals = 'goal=signup&goal=workspace_created';
   const user = 'b'.repeat(64);
+  const eleven = Array.from({ length: 11 }, (_, index) => `goal_${index}`);
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
@@ -43,14 +44,14 @@ describe('Web analytics (days)', () => {
     expect(update.status).toBe(403);
   });
 
-  it('rejects days that are not dates or still to come, and more than 2 or malformed goals', async () => {
+  it('rejects days that are not dates or still to come, and more than 10 or malformed goals', async () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
     for (const suffix of [
       '/days/2026-02-30',
       '/days/yesterday',
       '/days?date=2026-13-01',
       '/days/2026-10-01/visits?show=bounced',
-      `/days/2026-10-01?${goals}&goal=contact`,
+      `/days/2026-10-01?${eleven.map((goal) => `goal=${goal}`).join('&')}`,
       '/days?goal=Signup',
     ]) {
       expect((await get(setup.cluster.id, setup.token, suffix)).status).toBe(400);
@@ -69,8 +70,16 @@ describe('Web analytics (days)', () => {
   it('counts visits, stays and goals per day for 28 days and the 4 weeks before, with today typical up to now', async () => {
     const { setup, base } = await seed();
     const stranger = await bootstrap.utils.generalUtils.setupAnonymous();
+    const appOnly = {
+      ...event(base, 'm', '2026-10-02 11:00:00.000', { name: 'workspace_created' }),
+      app: 'api',
+      hostname: '',
+      user_id: 'c'.repeat(64),
+    };
     await insert([
       { ...base, cluster_id: stranger.cluster.id, visitor_id: 'e'.repeat(64) },
+      appOnly,
+      { ...appOnly, id: randomUUID(), created_at: '2026-10-02 11:05:00.000' },
       event(base, 'x', '2026-09-25 10:30:00.000', { referrer: 'news.ycombinator.com' }),
       event(base, 'y', '2026-09-25 13:00:00.000', { referrer: 'news.ycombinator.com' }),
       event(base, 'z', '2026-08-20 08:00:00.000'),
@@ -96,7 +105,7 @@ describe('Web analytics (days)', () => {
       date: '2026-10-02',
       visits: 5,
       stayed: 3,
-      goals: [1, 1],
+      goals: [1, 2],
     });
     expect(day('2026-10-01')).toEqual({ date: '2026-10-01', visits: 1, stayed: 1, goals: [0, 0] });
     expect(day('2026-09-25')).toMatchObject({ visits: 2, stayed: 0 });
@@ -121,7 +130,7 @@ describe('Web analytics (days)', () => {
     expect(tokyo.days.find((entry) => entry.date === '2026-10-02')?.visits).toBe(6);
   });
 
-  it('keeps the anonymous landing and the identified events after signup in one visit, and credits app goals of that user', async () => {
+  it('keeps the anonymous landing and the identified events after signup in one visit, with the goals it sent on the website', async () => {
     const { setup } = await seed();
 
     const response = await get(setup.cluster.id, setup.token, `/days/2026-10-02/visits?${goals}`);
@@ -147,7 +156,7 @@ describe('Web analytics (days)', () => {
       sessions: 1,
       seconds: 60,
       stayed: true,
-      goals: ['2026-10-02T10:00:50.000Z', '2026-10-02T10:01:00.000Z'],
+      goals: ['2026-10-02T10:00:50.000Z', null],
       country: 'PL',
       device: 'Desktop',
       browser: 'Chrome',
@@ -197,6 +206,12 @@ describe('Web analytics (days)', () => {
   it('reads a day by hour, source and landing page, next to the same weekday of the 4 weeks before up to the same time', async () => {
     const { setup, base } = await seed();
     await insert([
+      {
+        ...event(base, 'm', '2026-10-02 08:00:00.000', { name: 'workspace_created' }),
+        app: 'api',
+        hostname: '',
+        user_id: 'c'.repeat(64),
+      },
       event(base, 'x', '2026-09-25 10:30:00.000', { referrer: 'news.ycombinator.com' }),
       event(base, 'y', '2026-09-25 13:00:00.000', { referrer: 'news.ycombinator.com' }),
     ]);
@@ -212,17 +227,17 @@ describe('Web analytics (days)', () => {
     });
     expect(hoursWith(data.hours[0])).toEqual({ 9: 1, 10: 1, 11: 2 });
     expect(hoursWith(data.hours[1])).toEqual({ 10: 1, 13: 1 });
-    expect(data.goalHours.map(hoursWith)).toEqual([{ 10: 1 }, { 10: 1 }]);
+    expect(data.goalHours.map(hoursWith)).toEqual([{ 10: 1 }, { 8: 1, 10: 1 }]);
     expect(data.sourceHours.find((series) => series.name === 'Direct')?.visits[11]).toBe(2);
     const source = (name: string): unknown =>
       data.sources.find((group) => group.name === name)?.days.slice(0, 2);
     expect(source('www.google.com')).toEqual([
-      { visits: 1, stayed: 1, goals: [1, 1], medianSeconds: 60 },
-      { visits: 0, stayed: 0, goals: [0, 0], medianSeconds: 0 },
+      { visits: 1, stayed: 1, medianSeconds: 60 },
+      { visits: 0, stayed: 0, medianSeconds: 0 },
     ]);
     expect(source('news.ycombinator.com')).toEqual([
-      { visits: 0, stayed: 0, goals: [0, 0], medianSeconds: 0 },
-      { visits: 1, stayed: 0, goals: [0, 0], medianSeconds: 0 },
+      { visits: 0, stayed: 0, medianSeconds: 0 },
+      { visits: 1, stayed: 0, medianSeconds: 0 },
     ]);
     expect(data.pages.find((group) => group.name === '/')?.days[0]).toMatchObject({ visits: 4 });
 
@@ -232,7 +247,6 @@ describe('Web analytics (days)', () => {
     expect(past.sources.find((group) => group.name === 'news.ycombinator.com')?.days[0]).toEqual({
       visits: 2,
       stayed: 0,
-      goals: [0, 0],
       medianSeconds: 0,
     });
   });
@@ -245,7 +259,7 @@ describe('Web analytics (days)', () => {
     ]);
 
     const defaults = await get(setup.cluster.id, setup.token, '/goals');
-    const body: UpdateWebAnalyticsGoalsBody = { goals: ['contact', 'signup'] };
+    const body: UpdateWebAnalyticsGoalsBody = { goals: ['contact', 'signup', 'download'] };
     const saved = await request(bootstrap.app.getHttpServer())
       .put(`/clusters/${setup.cluster.id}/web_analytics/goals`)
       .set('Authorization', `Bearer ${setup.token}`)
@@ -261,16 +275,24 @@ describe('Web analytics (days)', () => {
       picked: ['download', 'signup'],
     });
     expect(saved.status).toBe(200);
-    expect((saved.body as WebAnalyticsSiteSerialized).goals).toEqual(['contact', 'signup']);
+    expect((saved.body as WebAnalyticsSiteSerialized).goals).toEqual([
+      'contact',
+      'signup',
+      'download',
+    ]);
     expect(
       await bootstrap.models.webAnalyticsSiteModel.findOne({ clusterId: setup.cluster.id }).lean(),
-    ).toMatchObject({ goals: ['contact', 'signup'], origins: ['https://example.com'] });
-    expect((picked.body as WebAnalyticsGoalsResponse).picked).toEqual(['contact', 'signup']);
+    ).toMatchObject({ goals: ['contact', 'signup', 'download'], origins: ['https://example.com'] });
+    expect((picked.body as WebAnalyticsGoalsResponse).picked).toEqual([
+      'contact',
+      'signup',
+      'download',
+    ]);
     expect((picked.body as WebAnalyticsGoalsResponse).goals).toContainEqual({
       name: 'contact',
       visits: 0,
     });
-    for (const goals of [[], ['a', 'b', 'c'], ['signup', 'signup'], ['Signup']]) {
+    for (const goals of [[], eleven, ['signup', 'signup'], ['Signup']]) {
       const invalid = await request(bootstrap.app.getHttpServer())
         .put(`/clusters/${setup.cluster.id}/web_analytics/goals`)
         .set('Authorization', `Bearer ${setup.token}`)

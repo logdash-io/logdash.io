@@ -41,27 +41,46 @@ test('flags a count only outside typical ± 2√typical and a rate only when the
 });
 
 test('a typical rate shrinks each day toward the pooled rate, so one broken day or sparse days do not skew it', () => {
-  const broken = [161, 161, 161, 35].map((hits) => counts(4600, 4000, hits));
-  expect(typicalOf(broken, 1).goalRates[0]).toBeCloseTo(0.035, 3);
-  const sparse = [0, 0, 0, 4].map((hits) => counts(40, 30, hits));
-  expect(typicalOf(sparse, 1).goalRates[0]).toBeGreaterThan(0.01);
+  const broken = [161, 161, 161, 35].map((hits) => counts(4600, hits, 0));
+  expect(typicalOf(broken, 1).stayRate).toBeCloseTo(0.035, 3);
+  const sparse = [0, 0, 0, 4].map((hits) => counts(40, hits, 0));
+  expect(typicalOf(sparse, 1).stayRate).toBeGreaterThan(0.01);
   const quietMorning = typicalOf(
-    [0, 0, 0, 0].map(() => counts(15, 9, 0)),
+    [0, 0, 0, 0].map(() => counts(15, 0, 0)),
     1,
   );
-  expect(judge(counts(13, 6, 1), quietMorning).goals[0].flag).toBe(0);
+  expect(judge(counts(13, 1, 0), quietMorning).stayed.flag).toBe(0);
   const bigQuiet = typicalOf(
-    [0, 0, 0, 0].map(() => counts(4000, 2400, 0)),
+    [0, 0, 0, 0].map(() => counts(4000, 0, 0)),
     1,
   );
-  expect(judge(counts(4000, 2400, 30), bigQuiet).goals[0].flag).toBe(1);
+  expect(judge(counts(4000, 30, 0), bigQuiet).stayed.flag).toBe(1);
   const typical = typicalOf([counts(150, 100, 5), counts(156, 100, 5)], 1);
   expect(typical).toMatchObject({ visits: 153, baseline: 306 });
   expect(judge(counts(222, 122, 6), typical)).toMatchObject({
     visits: { value: 222, typical: 153, flag: 1 },
     stayed: { rate: 122 / 222, flag: -1 },
-    goals: [{ hits: 6, flag: 0 }],
+    goals: [{ value: 6, typical: 5, flag: 0 }],
   });
+});
+
+test('a goal counts people on its own, judged against the same weekdays like visits, whatever the visits did', () => {
+  const typical = typicalOf(
+    [
+      counts(150, 100, 40),
+      counts(156, 100, 44),
+      counts(153, 100, 60),
+      counts(140, 90, 48),
+    ],
+    1,
+  );
+  expect(typical.goals).toEqual([46]);
+  expect(typical.goalRanges).toEqual([[43, 51]]);
+  expect(judge(counts(10, 6, 80), typical).goals).toEqual([
+    { value: 80, typical: 46, flag: 1 },
+  ]);
+  expect(judge(counts(400, 300, 46), typical).goals[0].flag).toBe(0);
+  expect(judge(counts(150, 100, 20), typical).goals[0].flag).toBe(-1);
 });
 
 test('the strip compares today with the same weekdays up to the same time, and leaves out days before the first visit', () => {
@@ -109,7 +128,7 @@ test('the strip compares today with the same weekdays up to the same time, and l
   const summary = stripSummary(strip);
   expect(summary).toMatchObject({ visits: 100, flagged: 1 });
   expect(summary.stayRate).toBeCloseTo(0.6);
-  expect(summary.goalRate).toBeCloseTo(0.03);
+  expect(summary.goals).toEqual([3]);
   expect(isRecord(strip, date(55))).toBe(false);
 });
 
@@ -197,15 +216,18 @@ test('the headline tells what is beyond noise, most urgent first, and calls a qu
       inProgress: false,
       verdict: judge(counts(153, 100, 0), typical),
     }),
-  ).toBe(
-    'Fewer visits reached signup than usual: 0 of 153 (0%), usually 3.3%.',
-  );
+  ).toBe('Fewer people did signup than on a usual Sunday: 0, usually 5.');
   expect(
     dayHeadline({ ...busy, verdict: judge(counts(153, 100, 5), typical) }),
   ).toBe('A normal Sunday so far.');
   expect(
     dayHeadline({ ...busy, verdict: judge(counts(0, 0, 0), typical) }),
   ).toBe('No visits yet today.');
+  expect(
+    dayHeadline({ ...busy, verdict: judge(counts(0, 0, 12), typical) }),
+  ).toBe(
+    'Quieter than a usual Sunday: 0 visits by 15:40, usually 153. More people did signup than on a usual Sunday: 12 by 15:40, usually 5.',
+  );
 });
 
 function counts(
@@ -219,8 +241,8 @@ function counts(
 function groupCounts(
   visits: number,
   stayed = Math.round(visits * 0.7),
-): { visits: number; stayed: number; goals: number[]; medianSeconds: number } {
-  return { visits, stayed, goals: [], medianSeconds: 30 };
+): { visits: number; stayed: number; medianSeconds: number } {
+  return { visits, stayed, medianSeconds: 30 };
 }
 
 function hours(noon: number): number[] {

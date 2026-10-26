@@ -192,12 +192,13 @@ export class ReadWebAnalyticsDayQuery extends ReadWebAnalyticsFilterQuery {
     type: String,
     isArray: true,
     example: ['signup', 'download'],
-    description: 'Up to 2 goals, by custom event name. Goal counts follow this order',
+    description:
+      'Up to 10 goals, by custom event name. Each goal is counted on its own, and goal counts follow this order',
   })
   @IsOptional()
   @Transform(toArray)
   @IsArray()
-  @ArrayMaxSize(2)
+  @ArrayMaxSize(10)
   @IsString({ each: true })
   @Matches(EVENT_NAME, { each: true })
   goal: string[] = [];

@@ -39,12 +39,6 @@
     onpin,
   }: Props = $props();
 
-  const COLUMNS: Record<number, string> = {
-    2: '@3xl:grid-cols-2',
-    3: '@3xl:grid-cols-3',
-    4: '@3xl:grid-cols-4',
-  };
-
   const day = $derived(DateTime.fromISO(date));
   const title = $derived(
     day.toFormat(
@@ -101,7 +95,7 @@
   </header>
 
   <dl
-    class={['grid grid-cols-2 gap-2', COLUMNS[shownGoals.length === 1 ? 3 : 4]]}
+    class="grid grid-cols-2 gap-2 @3xl:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]"
   >
     {#if verdict}
       <DayTile
@@ -132,14 +126,14 @@
           label={goal}
           hint="{index === 0
             ? 'Primary goal. '
-            : ''}Visits that reached {goal}, out of all visits."
+            : ''}People who did {goal} on this day, on your website or in your apps. Each goal is counted on its own, not as a step after the one before."
           verdict={verdict.goals[index]}
           typical={verdict.goals[index].typical === null
             ? 'No typical day yet'
-            : `Typical ${formatRate(verdict.goals[index].typical)}`}
+            : `Typical ${whole(verdict.goals[index].typical)}${by}`}
           {by}
           {weekdays}
-          reached="reached {goal}"
+          unit="people"
           goal
           loading={false}
         />

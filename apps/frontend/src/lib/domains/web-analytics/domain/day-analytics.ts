@@ -20,8 +20,8 @@ export interface Typical {
   visits: number | null;
   visitsRange: [number, number] | null;
   stayRate: number | null;
-  goalRates: (number | null)[];
-  goalRateRanges: ([number, number] | null)[];
+  goals: (number | null)[];
+  goalRanges: ([number, number] | null)[];
   baseline: number;
 }
 
@@ -44,7 +44,7 @@ export interface RateVerdict {
 export interface Verdict {
   visits: CountVerdict;
   stayed: RateVerdict;
-  goals: RateVerdict[];
+  goals: CountVerdict[];
 }
 
 export interface StripDay {
@@ -60,7 +60,7 @@ export interface StripDay {
 export interface StripSummary {
   visits: number | null;
   stayRate: number | null;
-  goalRate: number | null;
+  goals: (number | null)[];
   flagged: number;
 }
 
@@ -122,16 +122,14 @@ export function stripSummary(days: StripDay[]): StripSummary {
   return {
     visits: mean(complete.map((day) => day.counts.visits)),
     stayRate: mean(visited.map((day) => day.counts.stayed / day.counts.visits)),
-    goalRate: visited.some((day) => day.counts.goals.length)
-      ? mean(
-          visited.map((day) => (day.counts.goals[0] ?? 0) / day.counts.visits),
-        )
-      : null,
+    goals: (days[0]?.counts.goals ?? []).map((_, goal) =>
+      mean(complete.map((day) => day.counts.goals[goal])),
+    ),
     flagged: days.filter(
       (day) =>
         day.verdict.visits.flag ||
         day.verdict.stayed.flag ||
-        day.verdict.goals[0]?.flag,
+        day.verdict.goals.some((goal) => goal.flag),
     ).length,
   };
 }
@@ -172,12 +170,15 @@ export function groupRows(
 ): GroupRow[] {
   return groups
     .map((group): GroupRow => {
-      const [day, ...earlier] = group.days;
+      const [day, ...earlier] = group.days.map((entry) => ({
+        ...entry,
+        goals: [],
+      }));
       const typical = typicalOf(
         earlier.filter(
           (_, index) => since !== null && dates[index + 1] >= since,
         ),
-        day.goals.length,
+        0,
       );
       return {
         name: group.name,
@@ -199,22 +200,28 @@ export function groupRows(
 export function dayHeadline(input: HeadlineInput): string {
   const { verdict, goals } = input;
   const weekday = DateTime.fromISO(input.date).toFormat('cccc');
-  if (!verdict.visits.value)
+  if (!verdict.visits.value && !verdict.goals.some((goal) => goal.value))
     return input.inProgress ? 'No visits yet today.' : 'No visits on this day.';
   const by = input.inProgress ? ` by ${input.time}` : '';
+  const goalLine = (index: number, direction: Flag): string => {
+    const goal = verdict.goals[index];
+    if (!goal || !goals[index] || goal.flag !== direction) return '';
+    return `${direction > 0 ? 'More' : 'Fewer'} people did ${goals[index]} than on a usual ${weekday}: ${formatCount(goal.value)}${by}, usually ${whole(goal.typical)}.`;
+  };
+  const others = verdict.goals.slice(1).map((_, index) => index + 1);
   const lines = [
-    goalLine(verdict.goals[0], goals[0], -1),
+    goalLine(0, -1),
     verdict.visits.flag > 0
       ? `Busier than a usual ${weekday}: ${formatCount(verdict.visits.value)} visits${by}, usually ${whole(verdict.visits.typical)}.${sourceLine(input.sources)}`
       : '',
     verdict.visits.flag < 0
       ? `Quieter than a usual ${weekday}: ${formatCount(verdict.visits.value)} visits${by}, usually ${whole(verdict.visits.typical)}.`
       : '',
-    goalLine(verdict.goals[0], goals[0], 1),
+    goalLine(0, 1),
     stayLine(verdict.stayed, -1),
     stayLine(verdict.stayed, 1),
-    goalLine(verdict.goals[1], goals[1], -1),
-    goalLine(verdict.goals[1], goals[1], 1),
+    ...others.map((index) => goalLine(index, -1)),
+    ...others.map((index) => goalLine(index, 1)),
     input.record ? 'The busiest day in 4 weeks.' : '',
   ].filter(Boolean);
   if (lines.length) return lines.slice(0, 2).join(' ');
@@ -240,25 +247,24 @@ export function judge(counts: DayCounts, typical: Typical): Verdict {
       flag: countFlag(counts.visits, typical.visits),
     },
     stayed: rate(counts.stayed, typical.stayRate),
-    goals: counts.goals.map((hits, goal) =>
-      rate(hits, typical.goalRates[goal] ?? null),
-    ),
+    goals: counts.goals.map((value, goal) => ({
+      value,
+      typical: typical.goals[goal] ?? null,
+      flag: countFlag(value, typical.goals[goal] ?? null),
+    })),
   };
 }
 
 export function typicalOf(samples: DayCounts[], goals: number): Typical {
-  const visited = samples.filter((sample) => sample.visits > 0);
+  const goal = (index: number): number[] =>
+    samples.map((sample) => sample.goals[index] ?? 0);
   return {
     visits: median(samples.map((sample) => sample.visits)),
     visitsRange: middleHalf(samples.map((sample) => sample.visits)),
     stayRate: typicalRate(samples, (sample) => sample.stayed),
-    goalRates: Array.from({ length: goals }, (_, goal) =>
-      typicalRate(samples, (sample) => sample.goals[goal] ?? 0),
-    ),
-    goalRateRanges: Array.from({ length: goals }, (_, goal) =>
-      middleHalf(
-        visited.map((sample) => (sample.goals[goal] ?? 0) / sample.visits),
-      ),
+    goals: Array.from({ length: goals }, (_, index) => median(goal(index))),
+    goalRanges: Array.from({ length: goals }, (_, index) =>
+      middleHalf(goal(index)),
     ),
     baseline: samples.reduce((sum, sample) => sum + sample.visits, 0),
   };
@@ -363,15 +369,6 @@ export function addDays(date: string, days: number): string {
   return (
     DateTime.fromISO(date, { zone: 'utc' }).plus({ days }).toISODate() ?? date
   );
-}
-
-function goalLine(
-  goal: RateVerdict | undefined,
-  name: string | undefined,
-  direction: Flag,
-): string {
-  if (!goal || !name || goal.flag !== direction) return '';
-  return `${direction > 0 ? 'More' : 'Fewer'} visits reached ${name} than usual: ${formatCount(goal.hits)} of ${formatCount(goal.total)} (${formatRate(goal.rate)}), usually ${formatRate(goal.typical)}.`;
 }
 
 function stayLine(stayed: RateVerdict, direction: Flag): string {

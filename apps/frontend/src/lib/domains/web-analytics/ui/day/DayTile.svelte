@@ -17,6 +17,7 @@
     by: string;
     weekdays: string;
     reached?: string;
+    unit?: string;
     goal?: boolean;
     loading: boolean;
   };
@@ -29,6 +30,7 @@
     by,
     weekdays,
     reached,
+    unit,
     goal = false,
     loading,
   }: Props = $props();
@@ -52,7 +54,7 @@
       </span>
     </Tooltip>
     {#if !loading}
-      <Flag {label} {verdict} {by} {weekdays} {reached} />
+      <Flag {label} {verdict} {by} {weekdays} {reached} {unit} />
     {/if}
   </dt>
   <dd class="flex min-h-8 min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">

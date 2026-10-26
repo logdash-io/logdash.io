@@ -4,7 +4,6 @@
   import { DateTime } from 'luxon';
   import { formatCount } from '../../domain/analytics-format';
   import {
-    formatInterval,
     formatRate,
     verdictLabel,
     whole,
@@ -16,7 +15,7 @@
     days: StripDay[];
     summary: StripSummary;
     selected: string;
-    goal: string | null;
+    goals: string[];
     spot: number[] | null;
     now: string;
     title: string;
@@ -28,7 +27,7 @@
     days,
     summary,
     selected,
-    goal,
+    goals,
     spot,
     now,
     title,
@@ -43,6 +42,7 @@
   let hovered = $state<number | null>(null);
   let columns = $state<(SVGRectElement | undefined)[]>([]);
 
+  const goal = $derived(goals[0] ?? null);
   const narrow = $derived(width < 560);
   const left = $derived(narrow ? 36 : 44);
   const plot = $derived(narrow ? 120 : 150);
@@ -80,14 +80,17 @@
       .domain([
         0,
         Math.max(
-          0.01,
-          ...days.map((day) => (day.typical.goalRateRanges[0]?.[1] ?? 0) * 1.6),
-          ...days.map((day) => (day.verdict.goals[0]?.rate ?? 0) * 1.15),
+          4,
+          ...days.map((day) =>
+            Math.max(
+              day.counts.goals[0] ?? 0,
+              day.typical.goalRanges[0]?.[1] ?? 0,
+            ),
+          ),
         ),
       ])
       .nice(3)
-      .range([rateTop + rateHeight, rateTop])
-      .clamp(true),
+      .range([rateTop + rateHeight, rateTop]),
   );
   const tip = $derived(hovered === null ? null : days[hovered]);
 
@@ -157,9 +160,9 @@
     >
       {@render average('Visits a day', whole(summary.visits))}
       {@render average('Stayed', formatRate(summary.stayRate))}
-      {#if goal}
-        {@render average(goal, formatRate(summary.goalRate), true)}
-      {/if}
+      {#each goals as name, index (name)}
+        {@render average(name, whole(summary.goals[index] ?? null), true)}
+      {/each}
       {@render average('Days flagged', String(summary.flagged))}
     </Tooltip>
   </header>
@@ -175,7 +178,7 @@
         {height}
         class="block"
         role="group"
-        aria-label="Visits{goal ? ` and ${goal} rate` : ''} per day"
+        aria-label="Visits{goal ? ` and people who did ${goal}` : ''} per day"
       >
         {#each days as day, index (day.date)}
           {#if day.date === selected || index === hovered}
@@ -230,12 +233,12 @@
               dy="0.32em"
               class="fill-fg-muted text-[11px] tabular-nums"
             >
-              {Math.round(tick * 1000) / 10}%
+              {formatCount(tick)}
             </text>
           {/each}
           <text x={left} y={rateTop - 10} class="fill-fg-tertiary text-[11px]">
             <tspan class="font-mono">{goal}</tspan>
-            rate
+            people
           </text>
         {/if}
 
@@ -245,7 +248,7 @@
           {@const range = day.typical.visitsRange}
           {@const typical = day.typical.visits}
           {@const goalVerdict = day.verdict.goals[0]}
-          {@const goalRange = day.typical.goalRateRanges[0]}
+          {@const goalRange = day.typical.goalRanges[0]}
           {#if day.tracked}
             {#if range}
               <rect
@@ -328,35 +331,27 @@
                   stroke-width="1.5"
                 />
               {/if}
-              {#if goalVerdict.interval && goalVerdict.rate !== null}
-                <line
-                  x1={center}
-                  x2={center}
-                  y1={rate(goalVerdict.interval[1])}
-                  y2={rate(goalVerdict.interval[0])}
-                  stroke="var(--fg-tertiary)"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                />
-                <circle
-                  cx={center}
-                  cy={rate(goalVerdict.rate)}
-                  r={narrow ? 3 : 3.5}
-                  fill={day.inProgress
-                    ? 'var(--chart-surface)'
-                    : 'var(--fg-default)'}
-                  stroke={day.inProgress
-                    ? 'var(--fg-default)'
-                    : 'var(--chart-surface)'}
-                  stroke-width={day.inProgress ? 1.5 : 2}
-                />
-                {#if goalVerdict.flag}
-                  {@render arrow(
-                    center,
-                    rate(goalVerdict.interval[1]) - 8,
-                    goalVerdict.flag,
-                  )}
-                {/if}
+              <circle
+                cx={center}
+                cy={rate(goalVerdict.value)}
+                r={narrow ? 3 : 3.5}
+                fill={day.inProgress
+                  ? 'var(--chart-surface)'
+                  : 'var(--fg-default)'}
+                stroke={day.inProgress
+                  ? 'var(--fg-default)'
+                  : 'var(--chart-surface)'}
+                stroke-width={day.inProgress ? 1.5 : 2}
+              />
+              {#if goalVerdict.flag}
+                {@render arrow(
+                  center,
+                  Math.min(
+                    rate(goalVerdict.value),
+                    goalRange ? rate(goalRange[1]) : Infinity,
+                  ) - 8,
+                  goalVerdict.flag,
+                )}
               {/if}
             {/if}
           {/if}
@@ -464,13 +459,14 @@
             <p class="mt-2.5 flex items-baseline justify-between gap-4">
               <span class="truncate font-mono text-xs">{goal}</span>
               <span class="font-medium whitespace-nowrap tabular-nums">
-                {formatRate(goalVerdict.rate)}
-                <span class="text-fg-muted text-xs font-normal">
-                  {formatInterval(goalVerdict.interval)}
-                </span>
+                {formatCount(goalVerdict.value)}
+                <span class="text-fg-muted text-xs font-normal">people</span>
               </span>
             </p>
-            {@render row('Typical', formatRate(goalVerdict.typical))}
+            {@render row(
+              `Typical${tip.inProgress ? ` by ${now}` : ''}`,
+              whole(goalVerdict.typical),
+            )}
             {@render row('Verdict', verdictLabel(goalVerdict.flag))}
           {/if}
           <p class="text-fg-muted mt-2 text-xs">
@@ -505,21 +501,13 @@
     </span>
     {#if goal}
       <span class="flex items-center gap-1.5">
-        <svg width="8" height="12" aria-hidden="true">
-          <line
-            x1="4"
-            x2="4"
-            y1="1"
-            y2="11"
-            stroke="var(--fg-tertiary)"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-          <circle cx="4" cy="6" r="2.5" fill="var(--fg-default)" />
+        <svg width="8" height="8" aria-hidden="true">
+          <circle cx="4" cy="4" r="3.5" fill="var(--fg-default)" />
         </svg>
         <span>
+          People who did
           <span class="font-mono">{goal}</span>
-          rate, 95% interval
+          , counted on their own
         </span>
       </span>
     {/if}
@@ -538,7 +526,9 @@
     class="bg-surface-elevated-bg edge text-fg-secondary max-w-72 rounded-lg px-3 py-2 text-xs leading-5 whitespace-normal shadow"
   >
     Averages of the complete days shown. Each day is one sample: visits are
-    never added up across days, since one person on two days is two visits.
+    never added up across days, since one person on two days is two visits. Each
+    goal counts the people who did it that day, on your website or in your apps,
+    on its own.
   </p>
 {/snippet}
 

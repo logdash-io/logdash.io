@@ -13,7 +13,6 @@
     title: string;
     column: string;
     rows: GroupRow[];
-    goals: string[];
     by: string;
     weekdays: string;
     loading: boolean;
@@ -27,7 +26,6 @@
     title,
     column,
     rows,
-    goals,
     by,
     weekdays,
     loading,
@@ -90,18 +88,6 @@
           >
             Stayed
           </th>
-          {#each goals as goal, index (goal)}
-            <th
-              scope="col"
-              class={[
-                'h-6 truncate px-2 text-right font-mono font-normal @xl:px-3',
-                FLAGGED,
-                { 'hidden @xl:table-cell': index > 0 },
-              ]}
-            >
-              {goal}
-            </th>
-          {/each}
           <th
             scope="col"
             class="hidden h-6 px-3 text-right font-normal @3xl:table-cell"
@@ -169,33 +155,10 @@
               </span>
             </td>
             <td
-              class="group-hover:bg-surface-25-hover-bg relative px-2 text-right @xl:px-3"
+              class="group-hover:bg-surface-25-hover-bg relative rounded-r-lg px-2 text-right @xl:px-3 @3xl:rounded-none"
             >
               {@render rate(row.name, 'stayed', row.verdict.stayed, 'stayed')}
             </td>
-            {#each goals as goal, index (goal)}
-              <td
-                class={[
-                  'group-hover:bg-surface-25-hover-bg relative px-2 text-right @xl:px-3',
-                  { 'hidden @xl:table-cell': index > 0 },
-                  {
-                    'rounded-r-lg @3xl:rounded-none':
-                      index === goals.length - 1,
-                    'rounded-r-lg @xl:rounded-none @3xl:rounded-none':
-                      index === 0 && goals.length > 1,
-                  },
-                ]}
-              >
-                {#if row.verdict.goals[index]}
-                  {@render rate(
-                    row.name,
-                    goal,
-                    row.verdict.goals[index],
-                    `reached ${goal}`,
-                  )}
-                {/if}
-              </td>
-            {/each}
             <td
               class="group-hover:bg-surface-25-hover-bg text-fg-tertiary hidden rounded-r-lg px-3 text-right tabular-nums @3xl:table-cell"
             >

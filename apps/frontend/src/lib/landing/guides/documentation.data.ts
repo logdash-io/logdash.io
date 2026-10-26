@@ -719,9 +719,9 @@ export async function load() {
       {
         type: 'list',
         items: [
-          'The 28 days on top show the visits of each day against the middle half of the same weekday, and the rate of your primary goal with its 95% interval. Click a day to open it.',
-          'The day shows its visits, the visits that stayed, and the share of visits that reached each goal, then visits per hour, sources, landing pages and every visit, newest first. Point at a source to see its share in both charts, or click it to keep it there.',
-          'A visit stayed when it viewed 2 or more pages, reached a goal, or lasted 10 seconds or more.',
+          'The 28 days on top show the visits of each day against the middle half of the same weekday, and how many people did your primary goal. Click a day to open it.',
+          'The day shows its visits, the visits that stayed, and how many people did each goal, then visits per hour, sources, landing pages and every visit, newest first. Point at a source to see its share in both charts, or click it to keep it there.',
+          'A visit stayed when it viewed 2 or more pages, sent a custom event, or lasted 10 seconds or more.',
           'Channels, pages, goals, countries, technology, funnels, journeys and retention for the day are under Details.',
         ],
       },
@@ -731,12 +731,12 @@ export async function load() {
       },
       {
         type: 'paragraph',
-        text: 'Pick the goals with Goal in the toolbar: the primary goal, what success means for your site, and an optional second one. Everyone on the domain sees the same pick. Until you pick, the dashboard shows the 2 goals reached most in the last 28 days. A visit reaches a goal when it sends the event, or when one of your apps sends it for the same signed-in user on the same day.',
+        text: 'Pick the goals with Goals in the toolbar, one column each: the primary goal, what success means for your site, then up to 9 more. Everyone on the domain sees the same pick. Until you pick, the dashboard shows the 2 goals reached most in the last 28 days. Each goal counts the people who sent its event that day, on your website or in any of your apps, on its own. Logdash does not try to follow one person from your website into your app, so a goal can have more people than the one before it, such as existing users who open your app.',
       },
       { type: 'heading', text: 'Visits and people' },
       {
         type: 'paragraph',
-        text: 'Logdash forgets anonymous visitors every day, so it cannot tell whether a visitor on Monday is the same one on Tuesday. The dashboard counts visits: one visitor on one day, so someone who comes back on three days is three visits, and it never adds visits up across days. Breakdowns, goals and conversion rates count visits the same way. The ID changes at midnight UTC, so in a time zone far from UTC a visitor who comes back later the same day can count as a second visit.',
+        text: 'Logdash forgets anonymous visitors every day, so it cannot tell whether a visitor on Monday is the same one on Tuesday. The dashboard counts visits: one visitor on one day, so someone who comes back on three days is three visits, and it never adds visits up across days. Breakdowns and conversion rates count visits the same way, and goals count each person once per day. The ID changes at midnight UTC, so in a time zone far from UTC a visitor who comes back later the same day can count as a second visit.',
       },
       {
         type: 'paragraph',

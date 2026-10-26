@@ -6,7 +6,9 @@
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
   import ChevronLeftIcon from '$lib/domains/shared/icons/ChevronLeftIcon.svelte';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
+  import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import RefreshIcon from '$lib/domains/shared/icons/RefreshIcon.svelte';
+  import { CloseIcon } from '@logdash/hyper-ui/icons';
   import {
     Dropdown,
     Kbd,
@@ -62,6 +64,9 @@
     'hover:text-fg-default transition-ink focus-visible:outline-brand text-fg-tertiary disabled:text-fg-disabled flex h-full w-8 cursor-pointer items-center justify-center focus-visible:-outline-offset-2 focus-visible:outline-2 disabled:cursor-default';
   const ROW =
     'flex h-8 w-full items-center justify-between gap-3 rounded-lg px-2.5 text-left text-sm';
+  const MAX_GOALS = 10;
+
+  let adding = $state(false);
 
   const menuDays = $derived([
     ...(days.some((day) => day.date === today)
@@ -72,16 +77,50 @@
       .map((day) => ({ date: day.date, visits: day.counts.visits }))
       .reverse(),
   ]);
-  const second = $derived(picked[1] ?? null);
+  const columns = $derived(
+    adding || !picked.length ? [...picked, null] : picked,
+  );
+  const canAdd = $derived(
+    !adding &&
+      picked.length > 0 &&
+      picked.length < MAX_GOALS &&
+      goals.length > picked.length,
+  );
 
-  function onPrimary(name: string): void {
-    const rest = picked[1] === name ? picked[0] : picked[1];
-    onpick(rest && rest !== name ? [name, rest] : [name]);
+  function columnLabel(index: number): string {
+    if (index === 0) return 'Primary goal';
+    return index === 1 ? 'Secondary goal' : `Goal ${index + 1}`;
   }
 
-  function onSecond(name: string | null): void {
-    if (!picked[0]) return;
-    onpick(name ? [picked[0], name] : [picked[0]]);
+  function choices(index: number): WebAnalyticsGoalOption[] {
+    return goals.filter(
+      (goal) => !picked.some((name, at) => name === goal.name && at !== index),
+    );
+  }
+
+  function onPick(index: number, name: string): void {
+    adding = false;
+    if (index === picked.length) {
+      onpick([...picked, name]);
+      return;
+    }
+    onpick(picked.map((current, at) => (at === index ? name : current)));
+  }
+
+  function onRemove(index: number): void {
+    if (index === picked.length) {
+      adding = false;
+      return;
+    }
+    onpick(picked.filter((_, at) => at !== index));
+  }
+
+  function onAdd(): void {
+    adding = true;
+  }
+
+  function onPickerClick(event: MouseEvent): void {
+    event.stopPropagation();
   }
 </script>
 
@@ -174,24 +213,33 @@
     </Tooltip>
   </div>
 
-  <Dropdown align="end">
+  <Dropdown align="end" class="max-w-[calc(100vw-1rem)]">
     {#snippet trigger(attrs)}
       <button
         {...attrs}
         type="button"
-        class={[TOOLBAR_CONTROL, 'text-fg-tertiary max-w-72']}
-        aria-label="Goals: {picked.join(' and ') || 'none'}"
+        class={[TOOLBAR_CONTROL, 'text-fg-tertiary max-w-full min-w-0']}
+        aria-label="Goals: {picked.join(', ') || 'none'}"
       >
-        {#if picked[0]}
-          <span class="text-fg-muted">Goal</span>
-          <span class="text-fg-default truncate font-mono text-[13px]">
-            {picked[0]}
+        {#if picked.length}
+          <span class="text-fg-muted">
+            {picked.length === 1 ? 'Goal' : 'Goals'}
           </span>
-          {#if second}
-            <span class="text-fg-muted truncate font-mono text-[13px]">
-              + {second}
-            </span>
-          {/if}
+          <span class="flex min-w-0 items-center gap-1.5 font-mono text-[13px]">
+            {#each picked as name, index (name)}
+              {#if index}
+                <span class="text-fg-faint" aria-hidden="true">·</span>
+              {/if}
+              <span
+                class={[
+                  'truncate',
+                  index ? 'text-fg-secondary' : 'text-fg-default',
+                ]}
+              >
+                {name}
+              </span>
+            {/each}
+          </span>
         {:else}
           <span>Add a goal</span>
         {/if}
@@ -199,48 +247,70 @@
       </button>
     {/snippet}
     <div
-      class="bg-surface-elevated-bg border-surface-elevated-border mt-2 max-h-[min(30rem,70vh)] w-76 overflow-y-auto rounded-xl border p-1.5 shadow-lg"
+      class="bg-surface-elevated-bg border-surface-elevated-border mt-2 flex max-w-full flex-col overflow-hidden rounded-xl border shadow-lg"
+      role="presentation"
+      onclick={onPickerClick}
     >
       {#if goals.length}
-        <p
-          class="text-fg-muted flex justify-between gap-3 px-2.5 pt-1 pb-1.5 text-xs"
-        >
-          <span>Primary goal</span>
-          <span>Visits, last 28 days</span>
-        </p>
-        <ul class="flex flex-col">
-          {#each goals as goal (goal.name)}
-            <li>{@render option(goal, goal.name === picked[0], onPrimary)}</li>
+        <div class="edge-between-x flex overflow-x-auto">
+          {#each columns as name, index (name ?? 'new')}
+            <section
+              class="flex w-60 shrink-0 flex-col p-1.5"
+              aria-label={columnLabel(index)}
+            >
+              <header
+                class="text-fg-muted flex h-7 items-center justify-between gap-2 pr-1 pl-2.5 text-xs"
+              >
+                <span class={{ 'text-fg-secondary': name === null }}>
+                  {columnLabel(index)}
+                </span>
+                {#if columns.length > 1}
+                  <button
+                    type="button"
+                    class="text-fg-muted hover:text-fg-default hover:bg-surface-elevated-hover-bg transition-ink focus-visible:outline-brand flex size-6 cursor-pointer items-center justify-center rounded-md focus-visible:outline-2"
+                    aria-label="Remove {columnLabel(index)}"
+                    onclick={() => onRemove(index)}
+                  >
+                    <CloseIcon class="size-3.5" />
+                  </button>
+                {/if}
+              </header>
+              <ul class="flex max-h-[min(24rem,60vh)] flex-col overflow-y-auto">
+                {#each choices(index) as goal (goal.name)}
+                  <li>
+                    {@render option(goal, goal.name === name, (chosen) =>
+                      onPick(index, chosen),
+                    )}
+                  </li>
+                {/each}
+              </ul>
+            </section>
           {/each}
-        </ul>
-        <p class="text-fg-muted px-2.5 pt-3 pb-1.5 text-xs">Second goal</p>
-        <ul class="flex flex-col">
-          <li>
+          {#if canAdd}
             <button
               type="button"
-              class={[
-                ROW,
-                'text-[13px]',
-                second === null
-                  ? 'bg-surface-elevated-selected-bg'
-                  : 'hover:bg-surface-elevated-hover-bg',
-              ]}
-              aria-current={second === null ? 'true' : undefined}
-              onclick={() => onSecond(null)}
+              class="text-fg-tertiary hover:text-fg-default hover:bg-surface-elevated-hover-bg transition-ink focus-visible:outline-brand flex w-28 shrink-0 cursor-pointer flex-col items-center justify-center gap-2 text-xs focus-visible:-outline-offset-2 focus-visible:outline-2"
+              onclick={onAdd}
             >
-              None
+              <span
+                class="edge flex size-7 items-center justify-center rounded-full"
+              >
+                <PlusIcon class="size-3.5" />
+              </span>
+              Add goal
             </button>
-          </li>
-          {#each goals.filter((goal) => goal.name !== picked[0]) as goal (goal.name)}
-            <li>{@render option(goal, goal.name === second, onSecond)}</li>
-          {/each}
-        </ul>
+          {/if}
+        </div>
+        <p class="edge-t text-fg-muted px-4 py-2.5 text-xs leading-5">
+          Each goal counts the people who did it on a day, on your website or in
+          your apps, on its own. Numbers next to a goal add up its last 28 days.
+        </p>
       {:else}
-        <div class="flex flex-col gap-2 px-2.5 py-2">
+        <div class="flex w-76 flex-col gap-2 p-4">
           <p class="text-sm font-medium">No goals yet</p>
           <p class="text-fg-tertiary text-xs leading-5">
             A goal is a custom event, such as a signup. Track one from your
-            website:
+            website or app:
           </p>
           <code
             class="bg-surface-150-bg rounded-md px-2 py-1 font-mono text-xs whitespace-nowrap"

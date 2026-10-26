@@ -42,7 +42,7 @@ const REFERRER = `if(referrer != '', referrer, 'Direct')`;
 
 export const SOURCE = `if(utm_source != '', utm_source, ${REFERRER})`;
 
-const PERSON = `if(user_id != '', user_id, visitor_id)`;
+export const PERSON = `if(user_id != '', user_id, visitor_id)`;
 
 export const VISIT = `${PERSON}, toDate(created_at, {tz:String})`;
 

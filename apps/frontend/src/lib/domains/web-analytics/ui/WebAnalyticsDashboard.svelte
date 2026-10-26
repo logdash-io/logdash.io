@@ -372,7 +372,7 @@
           days={strip}
           {summary}
           selected={date}
-          goal={picked[0] ?? null}
+          goals={picked}
           spot={days.data?.sources.find((source) => source.name === spot)
             ?.visits ?? null}
           {now}
@@ -407,7 +407,6 @@
         title="Sources"
         column="Source"
         rows={sources}
-        goals={picked}
         {by}
         {weekdays}
         loading={!day.data}
@@ -421,7 +420,6 @@
         title="Landing pages"
         column="Landing page"
         rows={pages}
-        goals={picked}
         {by}
         {weekdays}
         loading={!day.data}
