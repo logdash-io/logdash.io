@@ -53,7 +53,9 @@
   </dt>
   <dd class="font-mono text-2xl tabular-nums">
     {#if loading}
-      <span class="bg-surface-150-bg block h-8 w-16 rounded-md"></span>
+      <span
+        class="bg-surface-25-selected-bg my-2.5 block h-3 w-14 rounded-full motion-safe:animate-ghost"
+      ></span>
     {:else}
       {value}
     {/if}

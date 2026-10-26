@@ -2,6 +2,8 @@
   import { Tooltip } from '@logdash/hyper-ui/presentational';
   import * as d3 from 'd3';
   import { DateTime } from 'luxon';
+  import { prefersReducedMotion } from 'svelte/motion';
+  import { fade } from 'svelte/transition';
   import { formatCount } from '../../domain/analytics-format';
   import {
     formatRate,
@@ -15,7 +17,7 @@
     days: StripDay[];
     summary: StripSummary;
     selected: string;
-    goals: string[];
+    goals: string[] | null;
     spot: number[] | null;
     now: string;
     title: string;
@@ -37,6 +39,11 @@
 
   const TOP = 22;
   const RIGHT = 8;
+  const GHOST = Array.from(
+    { length: 28 },
+    (_, index) =>
+      0.3 + 0.08 * Math.sin(index * 0.9) + 0.04 * Math.sin(index * 2.3),
+  );
 
   const scrub = new DayScrub();
 
@@ -46,8 +53,9 @@
   let resting: ReturnType<typeof setTimeout> | undefined;
 
   const loading = $derived(!days.length);
-  const goal = $derived(goals[0] ?? null);
-  const lane = $derived(goal !== null || loading);
+  const goal = $derived(goals?.[0] ?? null);
+  const lane = $derived(goal !== null || goals === null);
+  const swap = $derived({ duration: prefersReducedMotion.current ? 0 : 200 });
   const narrow = $derived(width > 0 && width < 560);
   const left = $derived(narrow ? 36 : 44);
   const plot = $derived(narrow ? 120 : 150);
@@ -194,14 +202,14 @@
       content={averagesHint}
       placement="bottom"
       align="right"
-      class="flex-wrap gap-x-5 gap-y-1 px-3 text-xs"
+      class="flex-wrap gap-x-5 gap-y-1 px-3 text-xs max-sm:grid max-sm:grid-cols-2"
     >
       {@render average('Visits a day', whole(summary.visits))}
       {@render average('Stayed', formatRate(summary.stayRate))}
-      {#each goals as name, index (name)}
+      {#each goals ?? [] as name, index (name)}
         {@render average(name, whole(summary.goals[index] ?? null), true)}
       {/each}
-      {@render average('Days flagged', String(summary.flagged))}
+      {@render average('Days flagged', loading ? '-' : String(summary.flagged))}
     </Tooltip>
   </header>
 
@@ -211,12 +219,23 @@
     bind:clientWidth={width}
   >
     {#if loading}
-      <div class="bg-surface-150-bg h-full rounded-xl"></div>
+      <div
+        class="absolute inset-y-0"
+        style:left="{left}px"
+        style:right="{RIGHT}px"
+        aria-hidden="true"
+        out:fade={swap}
+      >
+        <svg class="block size-full overflow-visible">
+          {@render ghost()}
+        </svg>
+      </div>
     {:else if width}
       <svg
         {width}
         {height}
         class="block"
+        in:fade={swap}
         role="group"
         aria-label="Visits{goal ? ` and people who did ${goal}` : ''} per day"
         onpointermove={onPointerMove}
@@ -550,4 +569,50 @@
   >
     {flag > 0 ? '↑' : '↓'}
   </text>
+{/snippet}
+
+{#snippet ghost()}
+  {#each [0, 0.5, 1] as step (step)}
+    <line
+      x1="-4"
+      x2="100%"
+      y1={TOP + plot * (1 - step)}
+      y2={TOP + plot * (1 - step)}
+      stroke="var(--surface-50-border)"
+      stroke-dasharray={step ? '3 4' : undefined}
+    />
+    {#if lane}
+      <line
+        x1="-4"
+        x2="100%"
+        y1={rateTop + rateHeight * (1 - step)}
+        y2={rateTop + rateHeight * (1 - step)}
+        stroke="var(--surface-50-border)"
+        stroke-dasharray={step ? '3 4' : undefined}
+      />
+    {/if}
+  {/each}
+  {#each GHOST as level, index (index)}
+    {@const center = ((index + 0.5) / GHOST.length) * 100}
+    <rect
+      x="{center - 23 / GHOST.length}%"
+      y={TOP + plot * (1 - level)}
+      width="{46 / GHOST.length}%"
+      height={plot * level}
+      rx="3"
+      fill="var(--surface-25-selected-bg)"
+      class="motion-safe:animate-ghost"
+      style:animation-delay="{index * 50}ms"
+    />
+    {#if lane}
+      <circle
+        cx="{center}%"
+        cy={rateTop + rateHeight * (1 - level * 1.4)}
+        r={narrow ? 3 : 3.5}
+        fill="var(--surface-25-selected-bg)"
+        class="motion-safe:animate-ghost"
+        style:animation-delay="{index * 50}ms"
+      />
+    {/if}
+  {/each}
 {/snippet}

@@ -94,9 +94,9 @@
         {headline}
       </p>
     {:else}
-      <span class="flex min-h-12 items-start pt-1">
+      <span class="flex min-h-12 items-start pt-1.5">
         <span
-          class="bg-surface-150-bg block h-4 w-80 max-w-full rounded-md"
+          class="bg-surface-25-selected-bg block h-3 w-72 max-w-full rounded-full motion-safe:animate-ghost"
         ></span>
       </span>
     {/if}
@@ -193,35 +193,43 @@
           <span class="font-mono">{goal}</span>
         </span>
       {/each}
-      {#if legend.length}
-        <span
-          class="edge-l flex flex-wrap items-center gap-0.5 pl-2 max-sm:basis-full max-sm:pl-0 max-sm:shadow-none"
-          role="group"
-          aria-label="Show one source in the chart"
-        >
-          {#each legend as source (source.name)}
-            <button
-              type="button"
-              class={[
-                'transition-ink focus-visible:outline-brand h-5 max-w-36 cursor-pointer truncate rounded-md px-1.5 focus-visible:outline-2',
-                source.name === pinned
-                  ? 'bg-surface-150-bg text-fg-default'
-                  : source.name === spot
-                    ? 'text-fg-default'
-                    : 'text-fg-muted hover:text-fg-default',
-              ]}
-              aria-pressed={source.name === pinned}
-              onpointerenter={() => onhover(source.name)}
-              onpointerleave={() => onhover(null)}
-              onfocus={() => onhover(source.name)}
-              onblur={() => onhover(null)}
-              onclick={() => onpin(source.name)}
-            >
-              {source.name}
-            </button>
-          {/each}
-        </span>
+    </div>
+    <div
+      class="-ml-1.5 flex min-h-5 flex-wrap items-center gap-0.5 text-xs"
+      role="group"
+      aria-label="Show one source in the chart"
+    >
+      {#if !hours}
+        {#each [44, 92, 64, 112, 72] as width, index (index)}
+          <span
+            class="bg-surface-25-selected-bg mx-1.5 h-2.5 rounded-full motion-safe:animate-ghost"
+            style:width="{width}px"
+            style:animation-delay="{index * 90}ms"
+            aria-hidden="true"
+          ></span>
+        {/each}
       {/if}
+      {#each legend as source (source.name)}
+        <button
+          type="button"
+          class={[
+            'transition-ink focus-visible:outline-brand h-5 max-w-36 cursor-pointer truncate rounded-md px-1.5 focus-visible:outline-2',
+            source.name === pinned
+              ? 'bg-surface-150-bg text-fg-default'
+              : source.name === spot
+                ? 'text-fg-default'
+                : 'text-fg-muted hover:text-fg-default',
+          ]}
+          aria-pressed={source.name === pinned}
+          onpointerenter={() => onhover(source.name)}
+          onpointerleave={() => onhover(null)}
+          onfocus={() => onhover(source.name)}
+          onblur={() => onhover(null)}
+          onclick={() => onpin(source.name)}
+        >
+          {source.name}
+        </button>
+      {/each}
     </div>
   </div>
 

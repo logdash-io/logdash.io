@@ -50,16 +50,23 @@
   import VisitorDialog from './insights/VisitorDialog.svelte';
   import WebAnalyticsSetup from './WebAnalyticsSetup.svelte';
 
-  type Props = { clusterId: string };
-  const { clusterId }: Props = $props();
+  type Props = { clusterId: string; goals: string[] | null };
+  const { clusterId, goals: savedGoals }: Props = $props();
 
   const STRIP_DAYS = 28;
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const analytics = new WebAnalyticsDashboardState(untrack(() => clusterId));
-  const goals = new WebAnalyticsGoalsState(untrack(() => clusterId));
-  const days = new WebAnalyticsCachedState<WebAnalyticsDays>();
-  const day = new WebAnalyticsCachedState<WebAnalyticsDay>();
+  const goals = new WebAnalyticsGoalsState(
+    untrack(() => clusterId),
+    untrack(() => savedGoals),
+  );
+  const days = new WebAnalyticsCachedState<WebAnalyticsDays>(
+    untrack(() => `${clusterId}:days`),
+  );
+  const day = new WebAnalyticsCachedState<WebAnalyticsDay>(
+    untrack(() => `${clusterId}:day`),
+  );
   const visits = new WebAnalyticsDayVisitsState(untrack(() => clusterId));
 
   let clock = $state(DateTime.local());
@@ -388,7 +395,7 @@
         days={strip}
         {summary}
         selected={shown}
-        goals={picked}
+        goals={params?.goals ?? null}
         spot={days.data?.sources.find((source) => source.name === spot)
           ?.visits ?? null}
         {now}

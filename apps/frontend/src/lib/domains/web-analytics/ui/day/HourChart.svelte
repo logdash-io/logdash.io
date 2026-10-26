@@ -32,6 +32,16 @@
   const RIGHT = 8;
   const AXIS = 26;
   const NONE = Array.from({ length: 24 }, () => 0);
+  const GHOST = Array.from(
+    { length: 24 },
+    (_, hour) => 0.5 + 2.2 * Math.exp(-(((hour - 14) / 5) ** 2)),
+  );
+  const GHOST_AREA = d3
+    .area<number>()
+    .x((_, hour) => hour + 0.5)
+    .y0(1)
+    .y1((value) => 1 - value / 4)
+    .curve(d3.curveMonotoneX)(GHOST);
   const id = $props.id();
 
   let width = $state(0);
@@ -63,7 +73,7 @@
       .nice(4),
   );
   const target = $derived({
-    hours: hours ?? NONE,
+    hours: hours ?? GHOST,
     typical: typical ?? NONE,
     spotted: spotHours ?? hours ?? NONE,
     max: scale.domain()[1],
@@ -155,7 +165,57 @@
 
 <div class="relative w-full" style:height="{height}px" bind:clientWidth={width}>
   {#if !hours}
-    <div class="bg-surface-150-bg h-full rounded-xl"></div>
+    <div
+      class="absolute inset-y-0"
+      style:left="{left}px"
+      style:right="{RIGHT}px"
+      aria-hidden="true"
+      out:fade={{ duration: prefersReducedMotion.current ? 0 : 200 }}
+    >
+      <svg class="block size-full overflow-visible">
+        {#each [0, 1, 2, 3] as step (step)}
+          <line
+            x2="100%"
+            y1={baseline - (PLOT * step) / 3}
+            y2={baseline - (PLOT * step) / 3}
+            stroke="var(--surface-50-border)"
+            stroke-dasharray={step ? '3 4' : undefined}
+          />
+        {/each}
+        <svg
+          y={TOP}
+          width="100%"
+          height={PLOT}
+          viewBox="0 0 24 1"
+          preserveAspectRatio="none"
+        >
+          <path
+            d={GHOST_AREA}
+            fill="var(--surface-25-selected-bg)"
+            class="motion-safe:animate-ghost"
+          />
+        </svg>
+        {#each lanes as lane, index (lane.name)}
+          {@const laneY = baseline + AXIS + 8 + index * LANE + LANE / 2}
+          <text
+            x={-left}
+            y={laneY}
+            dy="0.32em"
+            class="fill-fg-muted font-mono text-[11px]"
+          >
+            {lane.name}
+          </text>
+          <line
+            x2="100%"
+            y1={laneY}
+            y2={laneY}
+            stroke="var(--surface-50-border)"
+            stroke-dasharray="1 5"
+            stroke-linecap="round"
+          />
+        {/each}
+      </svg>
+    </div>
   {:else if width}
     <svg
       {width}

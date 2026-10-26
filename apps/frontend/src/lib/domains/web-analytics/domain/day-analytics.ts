@@ -8,6 +8,9 @@ import type {
   WebAnalyticsDayVisit,
 } from './web-analytics';
 
+export const GOALS_COOKIE = 'logdash_web_analytics_goals';
+export const GOALS_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
 export type Flag = -1 | 0 | 1;
 
 export interface DayCounts {
@@ -434,4 +437,17 @@ function emptyCounts(goals: number): DayCounts {
     stayed: 0,
     goals: Array.from({ length: goals }, () => 0),
   };
+}
+
+export function parseGoals(value: string | undefined): string[] | null {
+  try {
+    const goals: unknown = JSON.parse(value ?? 'null');
+    return Array.isArray(goals) &&
+      goals.length <= 10 &&
+      goals.every((goal) => typeof goal === 'string')
+      ? goals
+      : null;
+  } catch {
+    return null;
+  }
 }

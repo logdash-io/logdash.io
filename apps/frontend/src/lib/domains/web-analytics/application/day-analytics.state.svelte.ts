@@ -1,5 +1,9 @@
 import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
-import { visitKey } from '../domain/day-analytics';
+import {
+  GOALS_COOKIE,
+  GOALS_COOKIE_MAX_AGE,
+  visitKey,
+} from '../domain/day-analytics';
 import type {
   WebAnalyticsDayParams,
   WebAnalyticsDayVisit,
@@ -8,13 +12,19 @@ import type {
 } from '../domain/web-analytics';
 import { WebAnalyticsService } from '../infrastructure/web-analytics.service';
 
+const caches: Record<string, Record<string, unknown>> = {};
+
 export class WebAnalyticsCachedState<T> {
   public data = $state<T | null>(null);
   public loading = $state(false);
   public error = $state<string | null>(null);
-  private readonly cache: Record<string, T> = {};
+  private readonly cache: Record<string, T>;
   private readonly pending: Record<string, Promise<T>> = {};
   private generation = 0;
+
+  constructor(scope: string) {
+    this.cache = (caches[scope] ??= {}) as Record<string, T>;
+  }
 
   public async load(
     key: string,
@@ -139,13 +149,18 @@ export class WebAnalyticsGoalsState {
   public error = $state<string | null>(null);
   private loaded = false;
 
-  constructor(private readonly clusterId: string) {}
+  constructor(
+    private readonly clusterId: string,
+    picked: string[] | null,
+  ) {
+    this.picked = picked;
+  }
 
   public async load(tz: string): Promise<void> {
     try {
       const goals = await WebAnalyticsService.readGoals(this.clusterId, tz);
       this.options = goals.goals;
-      if (!this.loaded) this.picked = goals.picked;
+      if (!this.loaded) this.store(goals.picked);
       this.loaded = true;
       this.error = null;
     } catch (error) {
@@ -156,13 +171,18 @@ export class WebAnalyticsGoalsState {
 
   public async pick(goals: string[]): Promise<void> {
     const previous = this.picked;
-    this.picked = goals;
+    this.store(goals);
     try {
       await WebAnalyticsService.saveGoals(this.clusterId, goals);
       this.error = null;
     } catch (error) {
-      this.picked = previous;
+      this.store(previous);
       this.error = readHttpErrorMessage(error) ?? 'Could not save the goals.';
     }
+  }
+
+  private store(goals: string[] | null): void {
+    this.picked = goals;
+    document.cookie = `${GOALS_COOKIE}=${encodeURIComponent(JSON.stringify(goals))}; path=/app/domains/${this.clusterId}; max-age=${goals ? GOALS_COOKIE_MAX_AGE : 0}; samesite=lax`;
   }
 }

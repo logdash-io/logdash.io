@@ -57,7 +57,9 @@
   </dt>
   <dd class="flex min-h-8 min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
     {#if !verdict}
-      <span class="bg-surface-150-bg block h-8 w-16 rounded-md"></span>
+      <span
+        class="bg-surface-25-selected-bg my-2.5 block h-3 w-14 rounded-full motion-safe:animate-ghost"
+      ></span>
     {:else}
       <RollingNumber
         value={rate ? rate.hits : count}

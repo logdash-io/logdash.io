@@ -125,28 +125,34 @@
 </script>
 
 <div class="flex min-w-0 flex-wrap items-center gap-2">
-  {#if online !== null}
-    <Tooltip content="Visitors in the last 5 minutes" placement="bottom">
-      <span
-        class="bg-surface-100-bg text-fg-secondary flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[13px] tabular-nums"
-      >
-        <span class="relative flex size-1.5">
-          {#if online}
-            <span
-              class="bg-success absolute inline-flex size-full rounded-full motion-safe:animate-ping"
-            ></span>
-          {/if}
+  <Tooltip content="Visitors in the last 5 minutes" placement="bottom">
+    <span
+      class="bg-surface-100-bg text-fg-secondary flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[13px] tabular-nums"
+    >
+      <span class="relative flex size-1.5">
+        {#if online}
           <span
-            class={[
-              'relative inline-flex size-1.5 rounded-full',
-              online ? 'bg-success' : 'bg-idle',
-            ]}
+            class="bg-success absolute inline-flex size-full rounded-full motion-safe:animate-ping"
           ></span>
-        </span>
-        {online} online
+        {/if}
+        <span
+          class={[
+            'relative inline-flex size-1.5 rounded-full',
+            online ? 'bg-success' : 'bg-idle',
+          ]}
+        ></span>
       </span>
-    </Tooltip>
-  {/if}
+      {#if online === null}
+        <span
+          class="bg-surface-100-selected-bg h-2.5 w-2 rounded-full motion-safe:animate-ghost"
+          aria-hidden="true"
+        ></span>
+      {:else}
+        {online}
+      {/if}
+      online
+    </span>
+  </Tooltip>
 
   <div class="edge flex h-8 shrink-0 items-center rounded-full">
     <Tooltip content={previousTip} placement="bottom">

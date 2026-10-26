@@ -7,6 +7,7 @@ import {
   isRecord,
   judge,
   median,
+  parseGoals,
   quantile,
   rateFlag,
   stripDays,
@@ -254,3 +255,13 @@ function hours(noon: number): number[] {
 function date(index: number): string {
   return new Date(Date.UTC(2026, 7, 31 + index)).toISOString().slice(0, 10);
 }
+
+test('reads picked goals from the cookie only when it holds up to 10 names', () => {
+  expect(parseGoals('["signup","download"]')).toEqual(['signup', 'download']);
+  expect(parseGoals('[]')).toEqual([]);
+  expect(parseGoals(undefined)).toBeNull();
+  expect(parseGoals('not json')).toBeNull();
+  expect(parseGoals('{"0":"signup"}')).toBeNull();
+  expect(parseGoals('["signup",1]')).toBeNull();
+  expect(parseGoals(JSON.stringify(Array(11).fill('signup')))).toBeNull();
+});

@@ -190,6 +190,17 @@
   transition-duration: var(--tw-duration, var(--default-transition-duration));
 }
 
+@utility animate-ghost {
+  animation: ghost 1.8s ease-in-out infinite;
+}
+
+@keyframes ghost {
+  50% {
+    fill: var(--surface-150-bg);
+    background-color: var(--surface-150-bg);
+  }
+}
+
 @utility font-figure {
   font-family: var(--font-mono);
   font-weight: 500;
