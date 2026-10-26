@@ -14,7 +14,6 @@ import { ClusterRemovalService } from '../../src/cluster/removal/cluster-removal
 import { ClusterPlanConfigs } from '../../src/shared/configs/cluster-plan-configs';
 import { ClusterTier } from '../../src/cluster/core/enums/cluster-tier.enum';
 import { WebEventClickhouseEntity } from '../../src/web-analytics/core/entities/web-event.clickhouse-entity';
-import { WebAnalyticsResponse } from '../../src/web-analytics/core/dto/web-analytics.response';
 import { LoggerMock } from '../utils/logger-mock';
 import { removeKeysWhichWouldExpireInNextXSeconds } from '../utils/redis-test-container-server';
 
@@ -123,7 +122,7 @@ describe('Web analytics (writes)', () => {
         os: 'Windows',
         country: 'PL',
       });
-      const salt = await redis.get('web-analytics:salt:week:2026-09-28');
+      const salt = await redis.get('web-analytics:salt:2026-10-02');
       expect(data[0].visitor_id).toBe(sha256(`${salt}:${site.id}:127.0.0.1:${userAgent}`));
       expect(data[0].session_id).toMatch(/^[0-9a-f]{64}$/);
       expect(data[0].user_id).toBe('');
@@ -633,7 +632,7 @@ describe('Web analytics (writes)', () => {
   });
 
   describe('POST /web_events identity and sessions', () => {
-    it('derives a weekly visitor id from a salted hash of IP and user agent and ignores legacy cookie ids', async () => {
+    it('derives a daily visitor id from a salted hash of IP and user agent and ignores legacy cookie ids', async () => {
       // given
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
       const site = await configure(setup.cluster.id, setup.token);
@@ -649,30 +648,25 @@ describe('Web analytics (writes)', () => {
         .set('Origin', origin)
         .set('User-Agent', `${userAgent} Edg/130.0`)
         .send(batch(site.id));
-      const salt = await redis.get('web-analytics:salt:week:2026-09-28');
-      const saltTtl = await redis.getClient().ttl('web-analytics:salt:week:2026-09-28');
-      advanceTo('2026-10-04T23:00:00Z');
-      await collect(batch(site.id));
-      advanceTo('2026-10-05T12:00:00Z');
+      const salt = await redis.get('web-analytics:salt:2026-10-02');
+      const saltTtl = await redis.getClient().ttl('web-analytics:salt:2026-10-02');
+      advanceTo('2026-10-03T12:00:00Z');
       await collect(batch(site.id));
       const rows = await queued();
 
       // then
-      const untilNextWeek =
-        (Date.parse('2026-10-05T00:30:00Z') - Date.parse('2026-10-02T12:00:00Z')) / 1000;
       expect([first.status, second.status]).toEqual([202, 202]);
       expect(salt).toMatch(/^[0-9a-f]{64}$/);
-      expect(saltTtl).toBeGreaterThan(untilNextWeek - 10);
-      expect(saltTtl).toBeLessThanOrEqual(untilNextWeek);
+      expect(saltTtl).toBeGreaterThan(12.5 * 3600 - 10);
+      expect(saltTtl).toBeLessThanOrEqual(12.5 * 3600);
       expect(rows[0].visitor_id).toBe(sha256(`${salt}:${site.id}:127.0.0.1:${userAgent}`));
       expect(rows[1]).toMatchObject({
         visitor_id: rows[0].visitor_id,
         session_id: rows[0].session_id,
       });
       expect(rows[2].visitor_id).not.toBe(rows[0].visitor_id);
-      expect(rows[3].visitor_id).toBe(rows[0].visitor_id);
-      expect(rows[4].visitor_id).not.toBe(rows[0].visitor_id);
-      expect(await redis.get('web-analytics:salt:week:2026-10-05')).not.toBe(salt);
+      expect(rows[3].visitor_id).not.toBe(rows[0].visitor_id);
+      expect(await redis.get('web-analytics:salt:2026-10-03')).not.toBe(salt);
     });
 
     it('uses x-logdash-client-ip when it is an IP address, otherwise the request IP, and stores neither', async () => {
@@ -700,7 +694,7 @@ describe('Web analytics (writes)', () => {
       const rows = await queued();
 
       // then
-      const salt = await redis.get('web-analytics:salt:week:2026-09-28');
+      const salt = await redis.get('web-analytics:salt:2026-10-02');
       const visitor = (ip: string): string => sha256(`${salt}:${site.id}:${ip}:${userAgent}`);
       expect(rows.map((row) => row.visitor_id)).toEqual([
         visitor('127.0.0.1'),
@@ -754,9 +748,9 @@ describe('Web analytics (writes)', () => {
       expect(rows[2].session_id).not.toBe(rows[0].session_id);
     });
 
-    it("continues last week's session in the first 30 minutes of a week and ends sessions after 24 hours", async () => {
+    it("continues yesterday's session in the first 30 minutes of a UTC day and ends sessions after 24 hours", async () => {
       // given
-      advanceTo('2026-10-04T00:05:00Z');
+      advanceTo('2026-10-01T00:05:00Z');
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
       const site = await configure(setup.cluster.id, setup.token);
       const send = async (at: string, agent = userAgent): Promise<void> => {
@@ -770,15 +764,15 @@ describe('Web analytics (writes)', () => {
       };
 
       // when
-      await send('2026-10-04T00:05:00Z');
-      await send('2026-10-05T00:02:00Z');
-      await send('2026-10-05T00:03:00Z', `${userAgent} Edg/130.0`);
-      await send('2026-10-05T00:06:00Z');
-      await send('2026-10-05T00:31:00Z');
+      await send('2026-10-01T00:05:00Z');
+      await send('2026-10-02T00:02:00Z');
+      await send('2026-10-02T00:03:00Z', `${userAgent} Edg/130.0`);
+      await send('2026-10-02T00:06:00Z');
+      await send('2026-10-02T00:31:00Z');
       const [started, continued, newcomer, rolled, today] = await queued();
 
       // then
-      const salt = await bootstrap.app.get(RedisService).get('web-analytics:salt:week:2026-10-05');
+      const salt = await bootstrap.app.get(RedisService).get('web-analytics:salt:2026-10-02');
       expect(continued).toMatchObject({
         visitor_id: started.visitor_id,
         session_id: started.session_id,
@@ -792,36 +786,27 @@ describe('Web analytics (writes)', () => {
       expect(today.session_id).not.toBe(rolled.session_id);
     });
 
-    it('counts a visitor who comes back on several days of a week once, and again in the next week', async () => {
+    it("deletes this and last week's leftover weekly salts at startup and every minute, and keeps the daily salt", async () => {
       // given
-      advanceTo('2026-10-12T11:00:00Z');
+      advanceTo('2026-10-26T00:10:00Z');
       const setup = await bootstrap.utils.generalUtils.setupAnonymous();
       const site = await configure(setup.cluster.id, setup.token);
+      const redis = bootstrap.app.get(RedisService);
+      const ingestion = bootstrap.app.get(WebAnalyticsIngestionService);
+      await collect(batch(site.id));
+      await redis.set('web-analytics:salt:week:2026-10-19', 'last week', 3600);
+      await redis.set('web-analytics:salt:week:2026-10-26', 'this week', 3600);
 
       // when
-      for (const at of [
-        '2026-10-05T12:00:00Z',
-        '2026-10-07T09:00:00Z',
-        '2026-10-11T23:00:00Z',
-        '2026-10-12T12:00:00Z',
-      ]) {
-        advanceTo(at);
-        expect((await collect(batch(site.id))).status).toBe(202);
-      }
-      await bootstrap.app.get(WebAnalyticsIngestionService).processQueue();
-      advanceTo('2026-10-12T12:00:01Z');
-      const report = await request(bootstrap.app.getHttpServer())
-        .get(
-          `/clusters/${setup.cluster.id}/web_analytics?from=2026-10-05T00:00:00.000Z&to=2026-10-13T00:00:00.000Z`,
-        )
-        .set('Authorization', `Bearer ${setup.token}`);
+      await ingestion.onApplicationBootstrap();
+      const afterStartup = await redis.keys('web-analytics:salt:*');
+      advanceTo('2026-11-01T23:59:00Z');
+      await redis.set('web-analytics:salt:week:2026-10-26', 'recreated', 3600);
+      await ingestion.deleteWeeklySalts();
 
       // then
-      expect((report.body as WebAnalyticsResponse).summary).toMatchObject({
-        visitors: 2,
-        pageviews: 4,
-        sessions: 4,
-      });
+      expect(afterStartup).toEqual(['web-analytics:salt:2026-10-26']);
+      expect(await redis.keys('web-analytics:salt:*')).toEqual(['web-analytics:salt:2026-10-26']);
     });
 
     it('converges concurrent first requests of one visitor on a single session', async () => {

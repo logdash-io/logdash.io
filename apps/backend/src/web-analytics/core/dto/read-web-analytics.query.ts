@@ -19,6 +19,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
+import { EVENT_NAME } from './collect-web-events.body';
 
 export enum WebAnalyticsGranularity {
   Hour = 'hour',
@@ -62,6 +63,16 @@ export const WEB_ANALYTICS_BREAKDOWNS = [
 
 export type WebAnalyticsBreakdownName = (typeof WEB_ANALYTICS_BREAKDOWNS)[number];
 
+export const WEB_ANALYTICS_VISIT_SHOWS = ['all', 'stayed', 'goal'] as const;
+
+export type WebAnalyticsVisitShow = (typeof WEB_ANALYTICS_VISIT_SHOWS)[number];
+
+export function isLocalDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
+
 @ValidatorConstraint({ name: 'timeZone' })
 class IsTimeZone implements ValidatorConstraintInterface {
   public validate(value: unknown): boolean {
@@ -79,30 +90,28 @@ class IsTimeZone implements ValidatorConstraintInterface {
   }
 }
 
+@ValidatorConstraint({ name: 'localDate' })
+class IsLocalDate implements ValidatorConstraintInterface {
+  public validate(value: unknown): boolean {
+    return isLocalDate(value);
+  }
+
+  public defaultMessage(): string {
+    return 'date must be a day as YYYY-MM-DD';
+  }
+}
+
 const toArray = ({ value }: { value: unknown }): unknown[] =>
   Array.isArray(value) ? value : [value].filter(Boolean);
 
-export class ReadWebAnalyticsQuery {
-  @ApiProperty({ example: '2026-09-25T22:00:00.000Z' })
-  @Transform(({ value }: { value: string }) => new Date(value))
-  @IsDate()
-  from: Date;
-
-  @ApiProperty({ example: '2026-10-02T12:00:00.000Z' })
-  @Transform(({ value }: { value: string }) => new Date(value))
-  @IsDate()
-  to: Date;
-
-  @ApiPropertyOptional({ enum: WebAnalyticsGranularity, default: WebAnalyticsGranularity.Day })
-  @IsOptional()
-  @IsEnum(WebAnalyticsGranularity)
-  granularity: WebAnalyticsGranularity = WebAnalyticsGranularity.Day;
-
+export class ReadWebAnalyticsTimeZoneQuery {
   @ApiPropertyOptional({ example: 'Europe/Warsaw', default: 'UTC' })
   @IsOptional()
   @Validate(IsTimeZone)
   tz: string = 'UTC';
+}
 
+export class ReadWebAnalyticsFilterQuery extends ReadWebAnalyticsTimeZoneQuery {
   @ApiPropertyOptional({
     type: String,
     isArray: true,
@@ -123,6 +132,23 @@ export class ReadWebAnalyticsQuery {
     { each: true },
   )
   filter: string[] = [];
+}
+
+export class ReadWebAnalyticsQuery extends ReadWebAnalyticsFilterQuery {
+  @ApiProperty({ example: '2026-09-25T22:00:00.000Z' })
+  @Transform(({ value }: { value: string }) => new Date(value))
+  @IsDate()
+  from: Date;
+
+  @ApiProperty({ example: '2026-10-02T12:00:00.000Z' })
+  @Transform(({ value }: { value: string }) => new Date(value))
+  @IsDate()
+  to: Date;
+
+  @ApiPropertyOptional({ enum: WebAnalyticsGranularity, default: WebAnalyticsGranularity.Day })
+  @IsOptional()
+  @IsEnum(WebAnalyticsGranularity)
+  granularity: WebAnalyticsGranularity = WebAnalyticsGranularity.Day;
 
   @ApiPropertyOptional({ default: false })
   @IsOptional()
@@ -161,9 +187,48 @@ export class ReadWebAnalyticsVisitorsQuery extends ReadWebAnalyticsQuery {
   offset: number = 0;
 }
 
-export class ReadWebAnalyticsVisitorQuery {
-  @ApiPropertyOptional({ example: 'Europe/Warsaw', default: 'UTC' })
+export class ReadWebAnalyticsDayQuery extends ReadWebAnalyticsFilterQuery {
+  @ApiPropertyOptional({
+    type: String,
+    isArray: true,
+    example: ['signup', 'download'],
+    description: 'Up to 2 goals, by custom event name. Goal counts follow this order',
+  })
   @IsOptional()
-  @Validate(IsTimeZone)
-  tz: string = 'UTC';
+  @Transform(toArray)
+  @IsArray()
+  @ArrayMaxSize(2)
+  @IsString({ each: true })
+  @Matches(EVENT_NAME, { each: true })
+  goal: string[] = [];
+}
+
+export class ReadWebAnalyticsDaysQuery extends ReadWebAnalyticsDayQuery {
+  @ApiPropertyOptional({
+    example: '2026-10-25',
+    description: 'Any day of the 28-day page to read, as YYYY-MM-DD in tz. Defaults to today',
+  })
+  @IsOptional()
+  @Validate(IsLocalDate)
+  date?: string;
+}
+
+export class ReadWebAnalyticsDayVisitsQuery extends ReadWebAnalyticsDayQuery {
+  @ApiPropertyOptional({ default: 0 })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @Min(0)
+  @Max(10_000)
+  offset: number = 0;
+
+  @ApiPropertyOptional({
+    enum: WEB_ANALYTICS_VISIT_SHOWS,
+    default: 'all',
+    description:
+      'all, stayed for visits that stayed, or goal for visits that reached a requested goal',
+  })
+  @IsOptional()
+  @IsIn(WEB_ANALYTICS_VISIT_SHOWS)
+  show: WebAnalyticsVisitShow = 'all';
 }

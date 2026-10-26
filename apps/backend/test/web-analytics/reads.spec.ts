@@ -406,7 +406,7 @@ describe('Web analytics (reads)', () => {
     expect(timeline.events.map((item) => item.name)).toEqual(['pageview']);
   });
 
-  it('counts an identified user once across visitor ids in visitors, people, profiles, funnels and goal filters', async () => {
+  it('counts an identified user once in people, profiles, funnels and goal filters, and once per day in visits', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
     const site = await configure(setup.cluster.id, setup.token);
@@ -447,7 +447,7 @@ describe('Web analytics (reads)', () => {
     ).body as WebAnalyticsResponse;
 
     // then
-    expect(report.summary).toMatchObject({ visitors: 2, people: 1, sessions: 3 });
+    expect(report.summary).toMatchObject({ visitors: 3, people: 1, sessions: 3 });
     expect(report.series.slice(1, 3)).toMatchObject([
       { visitors: 1, people: 1 },
       { visitors: 2, people: 1 },
@@ -467,7 +467,7 @@ describe('Web analytics (reads)', () => {
     expect(profile.visitor).toMatchObject({ id: user, identified: true, sessions: 2 });
     expect(profile.events).toHaveLength(3);
     expect(funnel.steps.map((step) => step.visitors)).toEqual([2, 1]);
-    expect(converted.summary).toMatchObject({ visitors: 1, people: 1, pageviews: 2 });
+    expect(converted.summary).toMatchObject({ visitors: 2, people: 1, pageviews: 2 });
   });
 
   it('reports identified-user cohorts, stickiness and comebacks within the plan retention', async () => {

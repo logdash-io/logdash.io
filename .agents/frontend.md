@@ -96,6 +96,7 @@ Text is `fg-*`:
 Intent colours stay plain: `brand` (focus outlines, selected edges), `error`, `success`, `warning`, `info`, and `idle` for a status with nothing to report (unknown, unpublished).
 Data colours are `chart-1` to `chart-5` for categorical series and `heat-0` to `heat-3` for a sequential ramp such as a heatmap.
 `error-bg` and `error-hover-bg` fill danger buttons.
+`success-bg` and `error-bg` behind `success-fg` and `error-fg` text mark a value as above or below its usual range.
 `--focus-ring` and `--focus-ring-error` are box-shadow values, used as `shadow-(--focus-ring)` or `box-shadow: var(--focus-ring)`.
 
 Each token is registered in hyper-ui `main.css` only in the Tailwind namespaces it belongs to, so the wrong pairing does not exist as a class: `-bg` tokens make `bg-*`, `from-*`, `via-*` and `to-*`; `-border` tokens make `border-*`, `divide-*` and `ring-*`, and `-bg` tokens also make `ring-*` for a cut-out ring in the colour of the surface behind (overlapping avatars); `fg-*` tokens make `text-*`, `fill-*` and `decoration-*`.

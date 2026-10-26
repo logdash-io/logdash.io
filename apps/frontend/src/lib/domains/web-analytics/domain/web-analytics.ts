@@ -2,6 +2,7 @@ export interface WebAnalyticsSite {
   id: string;
   clusterId: string;
   origins: string[];
+  goals: string[];
 }
 
 export interface WebAnalyticsStatus {
@@ -202,4 +203,93 @@ export interface AnalyticsChartLine {
   color: string;
   area?: boolean;
   dashed?: boolean;
+}
+
+export interface WebAnalyticsDayCounts {
+  date: string;
+  visits: number;
+  stayed: number;
+  goals: number[];
+}
+
+export interface WebAnalyticsSourceSeries {
+  name: string;
+  visits: number[];
+}
+
+export interface WebAnalyticsDays {
+  today: string;
+  elapsed: number;
+  since: string | null;
+  from: string;
+  to: string;
+  days: WebAnalyticsDayCounts[];
+  todayTypical: WebAnalyticsDayCounts[];
+  sources: WebAnalyticsSourceSeries[];
+  online: number;
+}
+
+export interface WebAnalyticsDayGroupCounts {
+  visits: number;
+  stayed: number;
+  goals: number[];
+  medianSeconds: number;
+}
+
+export interface WebAnalyticsDayGroup {
+  name: string;
+  days: WebAnalyticsDayGroupCounts[];
+}
+
+export interface WebAnalyticsDay {
+  date: string;
+  dates: string[];
+  cutoff: number | null;
+  hours: number[][];
+  goalHours: number[][];
+  sourceHours: WebAnalyticsSourceSeries[];
+  sources: WebAnalyticsDayGroup[];
+  pages: WebAnalyticsDayGroup[];
+}
+
+export type WebAnalyticsVisitShow = 'all' | 'stayed' | 'goal';
+
+export interface WebAnalyticsDayVisit {
+  id: string;
+  identified: boolean;
+  startedAt: string;
+  lastSeenAt: string;
+  source: string;
+  entryPage: string;
+  exitPage: string;
+  pageviews: number;
+  sessions: number;
+  seconds: number;
+  stayed: boolean;
+  goals: (string | null)[];
+  country: string;
+  device: string;
+  browser: string;
+  os: string;
+}
+
+export interface WebAnalyticsDayVisits {
+  visits: WebAnalyticsDayVisit[];
+  total: number;
+}
+
+export interface WebAnalyticsGoalOption {
+  name: string;
+  visits: number;
+}
+
+export interface WebAnalyticsGoals {
+  goals: WebAnalyticsGoalOption[];
+  picked: string[];
+}
+
+export interface WebAnalyticsDayParams {
+  tz: string;
+  goals: string[];
+  filters: WebAnalyticsFilter[];
 }

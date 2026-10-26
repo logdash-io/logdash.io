@@ -51,6 +51,31 @@ export class WebAnalyticsWriteService {
     return normalized;
   }
 
+  public async updateGoals(
+    clusterId: string,
+    goals: string[],
+    actorUserId: string,
+  ): Promise<WebAnalyticsSiteNormalized> {
+    const site = await this.model
+      .findOneAndUpdate(
+        { clusterId },
+        { $set: { goals }, $setOnInsert: { origins: [] } },
+        { upsert: true, returnDocument: 'after' },
+      )
+      .lean<WebAnalyticsSiteEntity>()
+      .exec();
+    const normalized = WebAnalyticsSiteSerializer.normalize(site);
+    await this.redis.del(`web-analytics:site:${normalized.id}`);
+    void this.auditLog.create({
+      userId: actorUserId,
+      actor: Actor.User,
+      action: AuditLogEntityAction.Update,
+      relatedDomain: RelatedDomain.WebAnalytics,
+      relatedEntityId: normalized.id,
+    });
+    return normalized;
+  }
+
   public async ensureSite(clusterId: string): Promise<WebAnalyticsSiteNormalized> {
     const site = await this.model
       .findOneAndUpdate(

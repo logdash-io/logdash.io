@@ -4,6 +4,7 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  OnApplicationBootstrap,
   OnApplicationShutdown,
   ServiceUnavailableException,
   UnauthorizedException,
@@ -65,7 +66,7 @@ type Session = {
 };
 
 @Injectable()
-export class WebAnalyticsIngestionService implements OnApplicationShutdown {
+export class WebAnalyticsIngestionService implements OnApplicationBootstrap, OnApplicationShutdown {
   constructor(
     private readonly read: WebAnalyticsReadService,
     private readonly write: WebAnalyticsWriteService,
@@ -202,35 +203,27 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
     now: Date,
     events: WebEventClickhouseEntity[],
   ): Promise<{ rows: WebEventClickhouseEntity[]; sessionKey: string; session: Session | null }> {
-    // Weeks start on Monday at 00:00 UTC.
-    const week = (offset: number): number =>
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate() - ((now.getUTCDay() + 6) % 7) + offset * 7,
-      );
-    const saltKey = (start: number): string =>
-      `web-analytics:salt:week:${new Date(start).toISOString().slice(0, 10)}`;
+    const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    const saltKey = (day: number): string =>
+      `web-analytics:salt:${new Date(day).toISOString().slice(0, 10)}`;
     const client = this.redis.getClient();
     const candidate = randomBytes(32).toString('hex');
-    // ponytail: the week's salt lives only in Redis, so losing Redis mid-week gives every visitor a new ID
-    // for the rest of that week; keep it in Mongo with a TTL index if that ever bites.
-    const [, salt, lastWeekSalt] = await client
+    const [, salt, yesterdaySalt] = await client
       .multi()
-      .set(saltKey(week(0)), candidate, {
+      .set(saltKey(today), candidate, {
         condition: 'NX',
         expiration: {
           type: 'EX',
-          value: Math.ceil((week(1) + 30 * 60_000 - now.getTime()) / 1000),
+          value: Math.ceil((today + DAY_MS + 30 * 60_000 - now.getTime()) / 1000),
         },
       })
-      .get(saltKey(week(0)))
-      .get(saltKey(week(-1)))
+      .get(saltKey(today))
+      .get(saltKey(today - DAY_MS))
       .execTyped();
-    const hash = (weekSalt: string): string =>
-      createHash('sha256').update(`${weekSalt}:${siteId}:${visitor}`).digest('hex');
+    const hash = (daySalt: string): string =>
+      createHash('sha256').update(`${daySalt}:${siteId}:${visitor}`).digest('hex');
     const visitorIds = [hash(salt ?? candidate)];
-    if (lastWeekSalt && now.getTime() - week(0) < 30 * 60_000) visitorIds.push(hash(lastWeekSalt));
+    if (yesterdaySalt && now.getTime() - today < 30 * 60_000) visitorIds.push(hash(yesterdaySalt));
     const keys = visitorIds.map((id) => `web-analytics:session:${siteId}:${id}`);
     const stored = await client.mGet(keys);
     const live = stored[1] ? 1 : 0;
@@ -321,6 +314,33 @@ export class WebAnalyticsIngestionService implements OnApplicationShutdown {
     if (typeof row?.site_id === 'string' && /^[0-9a-f]{24}$/.test(row.site_id)) return [row];
     this.logger.error('Skipped unreadable queued web event', { sample: entry.slice(0, 200) });
     return [];
+  }
+
+  public async onApplicationBootstrap(): Promise<void> {
+    await this.deleteWeeklySalts();
+  }
+
+  // ponytail: deletes the weekly salts #284 introduced, at startup and every minute, because the old container
+  // recreates this week's salt until the zero-downtime deploy stops it. Remove after 2026-11-09.
+  @Cron(CronExpression.EVERY_MINUTE)
+  public async deleteWeeklySalts(): Promise<void> {
+    const now = new Date();
+    const monday = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() - ((now.getUTCDay() + 6) % 7),
+    );
+    try {
+      await this.redis
+        .getClient()
+        .del(
+          [monday, monday - 7 * DAY_MS].map(
+            (start) => `web-analytics:salt:week:${new Date(start).toISOString().slice(0, 10)}`,
+          ),
+        );
+    } catch (error) {
+      this.logger.error('Failed to delete weekly visitor salts', { error: errorMessage(error) });
+    }
   }
 
   public async onApplicationShutdown(): Promise<void> {

@@ -683,7 +683,7 @@ export async function load() {
       },
       {
         type: 'paragraph',
-        text: 'Custom events appear in the Goals card of the dashboard. Click one to see its trend in the main chart, with completions, visitors, people and a breakdown by each property, while the rest of the dashboard stays in place with the same date range and filters. Clicking a property value keeps only the events with that value, and narrows the other reports to the visitors who sent it.',
+        text: 'Custom events are the goals you pick in the toolbar, and each one appears in the Goals card under Details. Click it to see its trend through the day, with completions, visits, people and a breakdown by each property. Clicking a property value keeps only the events with that value, and narrows the other reports to the visitors who sent it.',
       },
       { type: 'heading', text: 'Track events from your apps' },
       {
@@ -702,28 +702,50 @@ export async function load() {
         type: 'list',
         items: [
           "`userId` is the signed-in user's internal ID, never an email address. Logdash stores only the same hash `identify` sends from the website, so one user is one person across your website and every app.",
-          'Without `userId`, the event counts toward an anonymous visitor of that app whose ID changes every week, like an anonymous website visitor. From a server, always pass `userId`: otherwise every event from that server counts as one visitor.',
+          'Without `userId`, the event counts toward a visitor of that app whose ID changes every day, like an anonymous website visitor. From a server, always pass `userId`: otherwise every event from that server counts as one visitor.',
           '`id` is an optional UUID. Send the same one when you retry a request, so the event is stored once.',
           'The API answers 202 once the event is queued, 400 for an invalid event, 401 for an unknown key and 429 when the hourly limit of your plan is reached.',
         ],
       },
       {
         type: 'paragraph',
-        text: 'Once more than one app sends events, the Goals card gets an Apps tab with the visitors and people of each app, the website by its host name. Clicking an app keeps the visitors who used it, so the Apps tab then shows how many of them also use your other apps. People who are signed in on both sides are the only ones Logdash can connect, because anonymous IDs are never shared between apps.',
+        text: 'Once more than one app sends events, the Goals card gets an Apps tab with the visits and people of each app, the website by its host name. Clicking an app keeps the visitors who used it, so the Apps tab then shows how many of them also use your other apps. People who are signed in on both sides are the only ones Logdash can connect, because anonymous IDs are never shared between apps.',
       },
-      { type: 'heading', text: 'Visitors and people' },
+      { type: 'heading', text: 'Read the dashboard' },
       {
         type: 'paragraph',
-        text: 'Logdash gives each anonymous visitor a new ID every week, on Monday at 00:00 UTC. Within a week, a visitor counts once however many days they come back, and a range that spans several weeks counts them once in each week. The ID also changes when the IP address or browser does, for example on another network or after a browser update.',
+        text: 'The dashboard shows one day at a time. It opens on today, live, and steps a day back or forward with the arrows in the toolbar or the left and right arrow keys.',
+      },
+      {
+        type: 'list',
+        items: [
+          'The 28 days on top show the visits of each day against the middle half of the same weekday, and the rate of your primary goal with its 95% interval. Click a day to open it.',
+          'The day shows its visits, the visits that stayed, and the share of visits that reached each goal, then visits per hour, sources, landing pages and every visit, newest first. Point at a source to see its share in both charts, or click it to keep it there.',
+          'A visit stayed when it viewed 2 or more pages, reached a goal, or lasted 10 seconds or more.',
+          'Channels, pages, goals, countries, technology, funnels, journeys and retention for the day are under Details.',
+        ],
       },
       {
         type: 'paragraph',
-        text: 'People counts the signed-in users you identify, each once over the whole range, however long it is. To count people, call `identify` on your website and pass `userId` from your apps.',
+        text: 'Each day is compared with a typical day: the median of the same weekday in the 4 weeks before, and while today is in progress, up to the same time of day. A count reads above or below usual only outside typical ± 2√typical, and a rate only when the typical rate falls outside its 95% interval. Everything else reads normal, so a flag is worth a look.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Pick the goals with Goal in the toolbar: the primary goal, what success means for your site, and an optional second one. Everyone on the domain sees the same pick. Until you pick, the dashboard shows the 2 goals reached most in the last 28 days. A visit reaches a goal when it sends the event, or when one of your apps sends it for the same signed-in user on the same day.',
+      },
+      { type: 'heading', text: 'Visits and people' },
+      {
+        type: 'paragraph',
+        text: 'Logdash forgets anonymous visitors every day, so it cannot tell whether a visitor on Monday is the same one on Tuesday. The dashboard counts visits: one visitor on one day, so someone who comes back on three days is three visits, and it never adds visits up across days. Breakdowns, goals and conversion rates count visits the same way. The ID changes at midnight UTC, so in a time zone far from UTC a visitor who comes back later the same day can count as a second visit.',
+      },
+      {
+        type: 'paragraph',
+        text: 'People counts the signed-in users you identify, each once over the whole range, however many days they come back. To count people, call `identify` on your website and pass `userId` from your apps.',
       },
       { type: 'heading', text: 'Identify signed-in users' },
       {
         type: 'paragraph',
-        text: 'Anonymous visitors get a new ID every week, so retention and returning visitors are measured for identified users only. Once your app knows who is signed in, pass their user ID to `identify`. The identity lives in memory only, so call it on every page load, and call it with `null` when the user signs out.',
+        text: 'Anonymous visitors get a new ID every day, so retention and returning visitors are measured for identified users only. Once your app knows who is signed in, pass their user ID to `identify`. The identity lives in memory only, so call it on every page load, and call it with `null` when the user signs out.',
       },
       {
         type: 'code',
@@ -797,7 +819,7 @@ window.logdash?.optIn();`,
       { type: 'heading', text: 'Privacy' },
       {
         type: 'paragraph',
-        text: 'The tracker sets no cookies, IP addresses are never stored, and anonymous visitors are counted with an ID that changes every week. [Web analytics privacy](/docs/web-analytics-privacy) describes what Logdash stores and for how long, and gives you text for your privacy policy.',
+        text: 'The tracker sets no cookies, IP addresses are never stored, and anonymous visitors are counted with an ID that changes every day. [Web analytics privacy](/docs/web-analytics-privacy) describes what Logdash stores and for how long, and gives you text for your privacy policy.',
       },
     ],
   },
@@ -809,7 +831,7 @@ window.logdash?.optIn();`,
     blocks: [
       {
         type: 'paragraph',
-        text: 'The Logdash tracker sets no cookies and keeps nothing in the browser to recognise a visitor. Anonymous visitors are counted on the server with an ID that changes every week, IP addresses are never stored, and signed-in users are recognised only by a hash computed in their browser. This page describes exactly what happens, so you can describe it to your visitors.',
+        text: 'The Logdash tracker sets no cookies and keeps nothing in the browser to recognise a visitor. Anonymous visitors are counted on the server with an ID that changes every day, IP addresses are never stored, and signed-in users are recognised only by a hash computed in their browser. This page describes exactly what happens, so you can describe it to your visitors.',
       },
       {
         type: 'paragraph',
@@ -823,13 +845,13 @@ window.logdash?.optIn();`,
       {
         type: 'code',
         language: 'javascript',
-        code: "sha256(weeklySalt + ':' + siteId + ':' + clientIp + ':' + userAgent)",
+        code: "sha256(dailySalt + ':' + siteId + ':' + clientIp + ':' + userAgent)",
       },
       {
         type: 'list',
         items: [
-          'The weekly salt is 32 random bytes, created for each week starting on Monday at 00:00 UTC. It is held only in Redis and expires 30 minutes after that week ends.',
-          "Once the salt is gone, nobody can recompute that week's visitor IDs, Logdash included. The same visitor gets a new ID every week.",
+          'The daily salt is 32 random bytes, created for each UTC day. It is held only in Redis and expires 30 minutes after that day ends.',
+          "Once the salt is gone, nobody can recompute that day's visitor IDs, Logdash included. The same visitor gets a new ID every day.",
           'The IP address is used only to compute the hash and is never stored.',
           'The User-Agent goes into the hash and is reduced to device type, browser and operating system. The full string is not stored.',
           "Behind a first-party proxy, the proxy passes the visitor's IP address in the `x-logdash-client-ip` header, so the hash uses the visitor's address rather than your server's. The proxy forwards `Origin`, `User-Agent` and `x-logdash-client-ip`, never cookies, authorization headers or ingest keys.",
@@ -837,11 +859,11 @@ window.logdash?.optIn();`,
       },
       {
         type: 'paragraph',
-        text: "Sessions live on the server too. A session ends after 30 minutes without events or after 24 hours, and the next event starts a new one. During the first 30 minutes of a week, a visitor whose session started the week before continues that session and keeps the previous week's visitor ID.",
+        text: "Sessions live on the server too. A session ends after 30 minutes without events or after 24 hours, and the next event starts a new one. During the first 30 minutes of a UTC day, a visitor whose session started the day before continues that session and keeps the previous day's visitor ID.",
       },
       {
         type: 'paragraph',
-        text: 'Within a week, an anonymous visitor who comes back counts once. In the next week they get a new ID and count again, and so does a visitor whose IP address or browser changes. Retention, stickiness and comebacks are measured for identified users only.',
+        text: 'Because the ID changes every day, an anonymous visitor who comes back the next day counts as a new visit. Retention, stickiness and comebacks are measured for identified users only.',
       },
       {
         type: 'paragraph',
@@ -850,7 +872,7 @@ window.logdash?.optIn();`,
       {
         type: 'code',
         language: 'javascript',
-        code: "sha256(weeklySalt + ':' + siteId + ':' + clientIp + ':' + userAgent + ':' + app)",
+        code: "sha256(dailySalt + ':' + siteId + ':' + clientIp + ':' + userAgent + ':' + app)",
       },
       { type: 'heading', text: 'Signed-in users' },
       {
@@ -934,7 +956,7 @@ window.logdash?.optIn();`,
       {
         type: 'code',
         language: 'text',
-        code: `We measure how this website is used with Logdash web analytics. It sets no cookies and stores nothing in your browser to recognise you. To count visitors, Logdash computes a pseudonymous visitor ID on its server: a SHA-256 hash of your IP address, your browser's User-Agent, our site ID and a random value that changes every week and is deleted 30 minutes after the week ends (Monday, 00:00 UTC). Your IP address is not stored, and anonymous visits in different weeks are not linked to each other.
+        code: `We measure how this website is used with Logdash web analytics. It sets no cookies and stores nothing in your browser to recognise you. To count visits, Logdash computes a pseudonymous visitor ID on its server: a SHA-256 hash of your IP address, your browser's User-Agent, our site ID and a random value that changes every day and is deleted 30 minutes after the day ends (UTC). Your IP address is not stored, and anonymous visits on different days are not linked to each other.
 
 For each page you visit, we collect the page address without query parameters, the domain of the website that referred you, campaign tags, your device type, browser and operating system, and a country derived from your IP address, or from your time zone if the IP address gives none. [When you are signed in, your visits are also linked to a pseudonymous hash of your account ID, computed in your browser. Your account ID itself is not sent.] [For some actions, such as [actions], we also record the options you chose, never personal data.]
 

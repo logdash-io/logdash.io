@@ -56,6 +56,8 @@
   --error-hover-bg: oklch(from var(--error) l c h / 0.25);
   --error-fg: var(--color-red-400);
   --success: var(--color-green-600);
+  --success-bg: oklch(from var(--success) l c h / 0.15);
+  --success-fg: var(--color-green-400);
   --warning: var(--color-amber-500);
   --info: var(--color-blue-600);
   --idle: var(--color-neutral-600);

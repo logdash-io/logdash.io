@@ -56,7 +56,7 @@ export class WebAnalyticsBreakdowns {
 export class WebAnalyticsSummary {
   @ApiProperty({
     description:
-      'Unique visitors. Anonymous visitor IDs change every Monday at 00:00 UTC, so a visitor who comes back in a later week counts again',
+      'Visits: each visitor counts once per day in the requested time zone, because anonymous visitor IDs change every day',
   })
   visitors: number;
 
@@ -75,7 +75,7 @@ export class WebAnalyticsSummary {
   @ApiProperty({ description: 'Average time between the first and last event of a session' })
   sessionSeconds: number;
 
-  @ApiProperty({ description: 'Share of visitors who completed any goal, 0 to 100' })
+  @ApiProperty({ description: 'Share of visits with any goal, 0 to 100' })
   conversionRate: number;
 }
 
@@ -83,7 +83,7 @@ export class WebAnalyticsPoint {
   @ApiProperty({ description: 'Bucket start, Unix milliseconds' })
   time: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Visits, each visitor once per day' })
   visitors: number;
 
   @ApiProperty({ description: 'Identified people' })
@@ -100,7 +100,7 @@ export class WebAnalyticsAppRow {
   @ApiProperty({ description: 'Whether these are website events, named by hostname' })
   website: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Visits, each visitor once per day' })
   visitors: number;
 
   @ApiProperty({ description: 'Identified people' })
@@ -173,13 +173,13 @@ export class WebAnalyticsEventSummary {
   @ApiProperty({ description: 'Times the event was sent' })
   count: number;
 
-  @ApiProperty({ description: 'Visitors who sent the event' })
+  @ApiProperty({ description: 'Visits with the event, each visitor once per day' })
   visitors: number;
 
   @ApiProperty({ description: 'Identified people who sent the event' })
   people: number;
 
-  @ApiProperty({ description: 'Share of visitors who sent the event, 0 to 100' })
+  @ApiProperty({ description: 'Share of visits with the event, 0 to 100' })
   conversionRate: number;
 }
 
@@ -190,7 +190,7 @@ export class WebAnalyticsEventPoint {
   @ApiProperty()
   count: number;
 
-  @ApiProperty({ description: 'Visitors who sent the event' })
+  @ApiProperty({ description: 'Visits with the event' })
   visitors: number;
 
   @ApiProperty({ description: 'Identified people who sent the event' })
@@ -228,9 +228,7 @@ export class WebAnalyticsEventResponse {
 }
 
 export class WebAnalyticsVisitor {
-  @ApiProperty({
-    description: 'Hashed user id when identified, otherwise the weekly visitor hash',
-  })
+  @ApiProperty({ description: 'Hashed user id when identified, otherwise the daily visitor hash' })
   id: string;
 
   @ApiProperty({ description: 'Whether the site identified this person with logdash.identify' })
@@ -391,4 +389,236 @@ export class WebAnalyticsStatusResponse {
 
   @ApiProperty({ type: String, nullable: true })
   lastLogAt: string | null;
+}
+
+export class WebAnalyticsSourceSeries {
+  @ApiProperty({ example: 'news.ycombinator.com' })
+  name: string;
+
+  @ApiProperty({ type: Number, isArray: true })
+  visits: number[];
+}
+
+export class WebAnalyticsDayCounts {
+  @ApiProperty({ example: '2026-10-25' })
+  date: string;
+
+  @ApiProperty({ description: 'Visits: one visitor on one day' })
+  visits: number;
+
+  @ApiProperty({
+    description: 'Visits with 2 or more pageviews, a custom event, or 10 seconds or more',
+  })
+  stayed: number;
+
+  @ApiProperty({
+    type: Number,
+    isArray: true,
+    description: 'Visits that reached each requested goal, in the order of the goal parameter',
+  })
+  goals: number[];
+}
+
+export class WebAnalyticsDaysResponse {
+  @ApiProperty({ example: '2026-10-25', description: 'Today in the requested time zone' })
+  today: string;
+
+  @ApiProperty({ description: 'Seconds after midnight that today has reached' })
+  elapsed: number;
+
+  @ApiProperty({
+    nullable: true,
+    example: '2026-07-28',
+    description: 'The first day with visits within the plan retention, or null without visits',
+  })
+  since: string | null;
+
+  @ApiProperty({ example: '2026-09-28', description: 'The first of the 28 days' })
+  from: string;
+
+  @ApiProperty({ example: '2026-10-25', description: 'The last of the 28 days' })
+  to: string;
+
+  @ApiProperty({
+    type: WebAnalyticsDayCounts,
+    isArray: true,
+    description: 'Every day from 28 days before from up to to, oldest first',
+  })
+  days: WebAnalyticsDayCounts[];
+
+  @ApiProperty({
+    type: WebAnalyticsDayCounts,
+    isArray: true,
+    description:
+      "Today's weekday in each of the 4 weeks before, counted up to the time of day today has reached. Empty unless to is today",
+  })
+  todayTypical: WebAnalyticsDayCounts[];
+
+  @ApiProperty({
+    type: WebAnalyticsSourceSeries,
+    isArray: true,
+    description:
+      'Visits per day from each of the top sources of the 28 days, one per day from from to to',
+  })
+  sources: WebAnalyticsSourceSeries[];
+
+  @ApiProperty({ description: 'Visitors in the last 5 minutes' })
+  online: number;
+}
+
+export class WebAnalyticsDayGroupCounts {
+  @ApiProperty()
+  visits: number;
+
+  @ApiProperty()
+  stayed: number;
+
+  @ApiProperty({ type: Number, isArray: true })
+  goals: number[];
+
+  @ApiProperty({ description: 'Median time a visit lasted, from its first event to its last' })
+  medianSeconds: number;
+}
+
+export class WebAnalyticsDayGroup {
+  @ApiProperty({ example: 'news.ycombinator.com' })
+  name: string;
+
+  @ApiProperty({
+    type: WebAnalyticsDayGroupCounts,
+    isArray: true,
+    description: 'One entry per date of the response',
+  })
+  days: WebAnalyticsDayGroupCounts[];
+}
+
+export class WebAnalyticsDayResponse {
+  @ApiProperty({ example: '2026-10-25' })
+  date: string;
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    description: 'The day, then the same weekday in each of the 4 weeks before it',
+  })
+  dates: string[];
+
+  @ApiProperty({
+    nullable: true,
+    description:
+      'For today, the seconds after midnight that the earlier days are counted up to in sources and pages',
+  })
+  cutoff: number | null;
+
+  @ApiProperty({
+    type: 'array',
+    items: { type: 'array', items: { type: 'number' } },
+    description: 'Visits that started in each hour, one list of 24 per date',
+  })
+  hours: number[][];
+
+  @ApiProperty({
+    type: 'array',
+    items: { type: 'array', items: { type: 'number' } },
+    description: 'Visits that reached each requested goal in each hour of the day, 24 per goal',
+  })
+  goalHours: number[][];
+
+  @ApiProperty({
+    type: WebAnalyticsSourceSeries,
+    isArray: true,
+    description: 'Visits that started in each hour of the day, for each of its top sources',
+  })
+  sourceHours: WebAnalyticsSourceSeries[];
+
+  @ApiProperty({ type: WebAnalyticsDayGroup, isArray: true })
+  sources: WebAnalyticsDayGroup[];
+
+  @ApiProperty({ type: WebAnalyticsDayGroup, isArray: true, description: 'Landing pages' })
+  pages: WebAnalyticsDayGroup[];
+}
+
+export class WebAnalyticsDayVisit {
+  @ApiProperty({
+    description: 'Profile id: the hashed user id when identified, otherwise the daily visitor hash',
+  })
+  id: string;
+
+  @ApiProperty()
+  identified: boolean;
+
+  @ApiProperty()
+  startedAt: string;
+
+  @ApiProperty()
+  lastSeenAt: string;
+
+  @ApiProperty({ example: 'news.ycombinator.com' })
+  source: string;
+
+  @ApiProperty()
+  entryPage: string;
+
+  @ApiProperty()
+  exitPage: string;
+
+  @ApiProperty()
+  pageviews: number;
+
+  @ApiProperty({ description: 'Sessions the visit is made of' })
+  sessions: number;
+
+  @ApiProperty()
+  seconds: number;
+
+  @ApiProperty()
+  stayed: boolean;
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    nullable: true,
+    description: 'When the visit reached each requested goal, or null',
+  })
+  goals: (string | null)[];
+
+  @ApiProperty()
+  country: string;
+
+  @ApiProperty()
+  device: string;
+
+  @ApiProperty()
+  browser: string;
+
+  @ApiProperty()
+  os: string;
+}
+
+export class WebAnalyticsDayVisitsResponse {
+  @ApiProperty({ type: WebAnalyticsDayVisit, isArray: true })
+  visits: WebAnalyticsDayVisit[];
+
+  @ApiProperty()
+  total: number;
+}
+
+export class WebAnalyticsGoalOption {
+  @ApiProperty({ example: 'signup' })
+  name: string;
+
+  @ApiProperty({ description: 'Visits that reached it in the last 28 days' })
+  visits: number;
+}
+
+export class WebAnalyticsGoalsResponse {
+  @ApiProperty({ type: WebAnalyticsGoalOption, isArray: true })
+  goals: WebAnalyticsGoalOption[];
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    description: 'The goals the domain reports on: the saved ones, or else its 2 most reached',
+  })
+  picked: string[];
 }

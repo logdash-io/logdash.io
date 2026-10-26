@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { DateTime } from 'luxon';
-import { allowedGranularities, analyticsWindow } from './analytics-period';
+import { analyticsWindow } from './analytics-period';
 import {
   analyticsSearch,
+  dayRange,
   filterLabel,
   parseAnalyticsQuery,
 } from './analytics-query';
@@ -25,29 +26,14 @@ test('periods cover whole local days and shift by their own length', () => {
   expect(analyticsWindow('yesterday', 0, now).label).toBe('Yesterday');
 });
 
-test('granularities stay within the bucket limits of the range', () => {
-  expect(allowedGranularities(analyticsWindow('today', 0, now))).toEqual([
-    'hour',
-    'day',
-  ]);
-  expect(allowedGranularities(analyticsWindow('12m', 0, now))).toEqual([
-    'day',
-    'week',
-    'month',
-  ]);
-});
-
-test('the URL keeps period, granularity, comparison and one filter per dimension', () => {
+test('the URL keeps the day and one filter per dimension, and drops what is not a day', () => {
   const query = parseAnalyticsQuery(
     new URLSearchParams(
-      'period=30d&offset=-2&granularity=week&compare=1&filter=page:/pricing&filter=page:/docs&filter=email:alice&filter=country:PL',
+      'day=2026-10-25&filter=page:/pricing&filter=page:/docs&filter=email:alice&filter=country:PL',
     ),
   );
   expect(query).toEqual({
-    period: '30d',
-    offset: -2,
-    granularity: 'week',
-    compare: true,
+    day: '2026-10-25',
     filters: [
       { dimension: 'page', value: '/pricing' },
       { dimension: 'country', value: 'PL' },
@@ -55,20 +41,18 @@ test('the URL keeps period, granularity, comparison and one filter per dimension
     event: null,
   });
   expect(analyticsSearch(query)).toBe(
-    '?period=30d&offset=-2&granularity=week&compare=1&filter=page%3A%2Fpricing&filter=country%3APL',
+    '?day=2026-10-25&filter=page%3A%2Fpricing&filter=country%3APL',
   );
-  const fallback = parseAnalyticsQuery(
-    new URLSearchParams('period=nope&offset=5&granularity=hour'),
-  );
-  expect(fallback).toMatchObject({
-    period: '7d',
-    offset: 0,
-    granularity: 'hour',
-  });
-  expect(
-    parseAnalyticsQuery(new URLSearchParams('period=12m&granularity=hour'))
-      .granularity,
-  ).toBe('month');
+  for (const day of ['2026-02-30', 'yesterday', '2026-10-25T10:00'])
+    expect(parseAnalyticsQuery(new URLSearchParams({ day })).day).toBeNull();
+  expect(analyticsSearch({ day: null, filters: [], event: null })).toBe('');
+});
+
+test('a day reads from its local midnight to the next, hour by hour', () => {
+  const range = dayRange('2026-10-25', 'Europe/Warsaw', []);
+  expect(range.from.toISOString()).toBe('2026-10-24T22:00:00.000Z');
+  expect(range.to.toISOString()).toBe('2026-10-25T23:00:00.000Z');
+  expect(range).toMatchObject({ granularity: 'hour', compare: false });
 });
 
 test('property filters keep one value per key and reject invalid keys', () => {

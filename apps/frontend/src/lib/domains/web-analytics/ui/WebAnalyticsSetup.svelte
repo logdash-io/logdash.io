@@ -263,7 +263,7 @@
     {#if !compact}
       <p class="text-xs leading-relaxed text-fg-muted">
         No cookies or browser storage: visitors are counted with a pseudonymous
-        hash that changes every week, and IP addresses are not stored.
+        hash that changes every day, and IP addresses are not stored.
       </p>
     {/if}
   </div>

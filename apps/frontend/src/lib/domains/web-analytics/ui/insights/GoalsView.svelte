@@ -34,7 +34,7 @@
       color: COLORS[index % COLORS.length],
     })),
   );
-  const peak = $derived(Math.max(1, ...goals.map((goal) => goal.count)));
+  const peak = $derived(Math.max(1, ...goals.map((goal) => goal.visitors)));
 
   function colorOf(name: string): string | undefined {
     return lines.find((line) => line.label === name)?.color;
@@ -93,7 +93,7 @@
         >
           <span
             class="bg-surface-150-bg group-hover:bg-surface-150-hover-bg absolute inset-y-0 left-0 rounded-lg"
-            style:width="{Math.max(1.5, (goal.count / peak) * 100)}%"
+            style:width="{Math.max(1.5, (goal.visitors / peak) * 100)}%"
             aria-hidden="true"
           ></span>
           <span class="relative flex min-w-0 flex-1 items-center gap-2">

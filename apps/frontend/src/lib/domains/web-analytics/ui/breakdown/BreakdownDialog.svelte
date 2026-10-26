@@ -74,7 +74,7 @@
   </label>
   <div class="flex items-center justify-between px-8 pt-4 pb-1.5 text-xs">
     <span class="text-fg-muted">{title}</span>
-    <span class="text-fg-muted">Visitors</span>
+    <span class="text-fg-muted">Visits</span>
   </div>
   <div class="min-h-40 flex-1 overflow-y-auto px-5 pb-5">
     {#if breakdown.loading}
