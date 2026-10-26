@@ -16,7 +16,13 @@ import {
   WebAnalyticsSourceSeries,
 } from '../core/dto/web-analytics.response';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
-import { NOT_A_GOAL, SOURCE, VISIT, WebAnalyticsReadService } from './web-analytics-read.service';
+import {
+  NOT_A_GOAL,
+  PERSON,
+  SOURCE,
+  VISIT,
+  WebAnalyticsReadService,
+} from './web-analytics-read.service';
 
 const DAY_MS = 86_400_000;
 
@@ -30,9 +36,11 @@ const VISITS_PAGE = 25;
 
 const SECOND_OF_DAY = `toHour(created_at, {tz:String}) * 3600 + toMinute(created_at, {tz:String}) * 60 + toSecond(created_at, {tz:String})`;
 
-type Visits = { sql: string; params: Record<string, unknown> };
+type Statement = { sql: string; params: Record<string, unknown> };
 
-type CountsRow = { date: string; visits: string; stayed: string; goal0: string; goal1: string };
+type Window = { events: string; filter: string; params: Record<string, unknown> };
+
+type CountsRow = { date: string; visits: string; stayed: string };
 
 type GroupRow = CountsRow & { kind: 'source' | 'page'; label: string; median_seconds: number };
 
@@ -48,8 +56,7 @@ type VisitRow = {
   sessions: string;
   duration: number;
   stayed: number;
-  goal0_at: string;
-  goal1_at: string;
+  goals_at: (string | null)[];
   country: string;
   device: string;
   browser: string;
@@ -85,13 +92,9 @@ export class WebAnalyticsDayReadService {
     const shown = dates.slice(STRIP_DAYS);
     const strip = this.visits(clusterId, query, shown, null, retentionDays);
     const [days, todayTypical, since, online, sources] = await Promise.all([
-      this.readCounts(this.visits(clusterId, query, dates, null, retentionDays), dates, query.goal),
+      this.readCounts(clusterId, query, dates, null, retentionDays),
       typicalDates.length
-        ? this.readCounts(
-            this.visits(clusterId, query, typicalDates, elapsed, retentionDays),
-            typicalDates,
-            query.goal,
-          )
+        ? this.readCounts(clusterId, query, typicalDates, elapsed, retentionDays)
         : [],
       this.readSince(clusterId, query.tz, retentionDays),
       this.read.readOnline([clusterId]),
@@ -134,18 +137,20 @@ export class WebAnalyticsDayReadService {
     const all = this.visits(clusterId, query, dates, null, retentionDays);
     const one = this.visits(clusterId, query, [date], null, retentionDays);
     const cut = cutoff === null ? all : this.visits(clusterId, query, dates, cutoff, retentionDays);
+    const reached = this.reached(clusterId, query, [date], null, retentionDays);
     const [hours, goalHours, sourceHours, groups] = await Promise.all([
       this.query<{ date: string; hour: number; visits: string }>(
         `SELECT toString(day) AS date, toHour(started_at, {tz:String}) AS hour, count() AS visits
         FROM (${all.sql}) GROUP BY date, hour`,
         all.params,
       ),
-      this.query<{ goal: number; hour: number; visits: string }>(
-        `SELECT goal, toHour(reached_at, {tz:String}) AS hour, count() AS visits
-        FROM (${one.sql}) ARRAY JOIN [0, 1] AS goal, [goal0_at, goal1_at] AS reached_at
-        WHERE reached_at > 0 GROUP BY goal, hour`,
-        one.params,
-      ),
+      query.goal.length
+        ? this.query<{ goal: number; hour: number; people: string }>(
+            `SELECT goal, toHour(reached_at, {tz:String}) AS hour, count() AS people
+            FROM (${reached.sql}) GROUP BY goal, hour`,
+            reached.params,
+          )
+        : [],
       this.query<{ label: string; hour: number; visits: string }>(
         `WITH visit AS (${one.sql})
         SELECT source AS label, toHour(started_at, {tz:String}) AS hour, count() AS visits FROM visit
@@ -163,7 +168,7 @@ export class WebAnalyticsDayReadService {
         perHour(hours.filter((row) => row.date === at).map((row) => [row.hour, row.visits])),
       ),
       goalHours: query.goal.map((_, goal) =>
-        perHour(goalHours.filter((row) => row.goal === goal).map((row) => [row.hour, row.visits])),
+        perHour(goalHours.filter((row) => row.goal === goal).map((row) => [row.hour, row.people])),
       ),
       sourceHours: [...new Set(sourceHours.map((row) => row.label))].map(
         (name): WebAnalyticsSourceSeries => ({
@@ -176,12 +181,10 @@ export class WebAnalyticsDayReadService {
       sources: this.toGroups(
         groups.filter((row) => row.kind === 'source'),
         dates,
-        query.goal,
       ),
       pages: this.toGroups(
         groups.filter((row) => row.kind === 'page'),
         dates,
-        query.goal,
       ),
     };
   }
@@ -194,12 +197,14 @@ export class WebAnalyticsDayReadService {
   ): Promise<WebAnalyticsDayVisitsResponse> {
     const date = this.retainedDay(day, query.tz, retentionDays);
     const visits = this.visits(clusterId, query, [date], null, retentionDays);
-    const shown = { all: '1', stayed: 'stayed', goal: '(goal0_at > 0 OR goal1_at > 0)' }[
-      query.show
-    ];
+    const shown = {
+      all: '1',
+      stayed: 'stayed',
+      goal: 'arrayExists(at -> at IS NOT NULL, goals_at)',
+    }[query.show];
     const rows = await this.query<VisitRow>(
       `SELECT visitor, person, started_at, last_seen, source, entry_page, exit_page, pageviews,
-        sessions, duration, stayed, goal0_at, goal1_at, country, device, browser, os, count() OVER () AS total
+        sessions, duration, stayed, goals_at, country, device, browser, os, count() OVER () AS total
       FROM (${visits.sql}) WHERE ${shown}
       ORDER BY started_at DESC, visitor LIMIT ${VISITS_PAGE} OFFSET {offset:UInt32}`,
       { ...visits.params, offset: query.offset },
@@ -217,7 +222,10 @@ export class WebAnalyticsDayReadService {
         sessions: Number(row.sessions),
         seconds: Math.round(row.duration),
         stayed: Number(row.stayed) === 1,
-        goals: query.goal.map((_, goal) => reachedAt(goal === 0 ? row.goal0_at : row.goal1_at)),
+        goals: query.goal.map((_, goal) => {
+          const at = row.goals_at[goal];
+          return at ? toIso(at) : null;
+        }),
         country: row.country,
         device: row.device,
         browser: row.browser,
@@ -269,29 +277,47 @@ export class WebAnalyticsDayReadService {
   }
 
   private async readCounts(
-    visits: Visits,
+    clusterId: string,
+    query: ReadWebAnalyticsDayQuery,
     dates: string[],
-    goals: string[],
+    cutoff: number | null,
+    retentionDays: number,
   ): Promise<WebAnalyticsDayCounts[]> {
-    const rows = await this.query<CountsRow>(
-      `SELECT toString(day) AS date, count() AS visits, countIf(stayed) AS stayed,
-        countIf(goal0_at > 0) AS goal0, countIf(goal1_at > 0) AS goal1
-      FROM (${visits.sql}) GROUP BY date`,
-      visits.params,
-    );
+    const visits = this.visits(clusterId, query, dates, cutoff, retentionDays);
+    const reached = this.reached(clusterId, query, dates, cutoff, retentionDays);
+    const [rows, goals] = await Promise.all([
+      this.query<CountsRow>(
+        `SELECT toString(day) AS date, count() AS visits, countIf(stayed) AS stayed
+        FROM (${visits.sql}) GROUP BY date`,
+        visits.params,
+      ),
+      query.goal.length
+        ? this.query<{ date: string; goal: number; people: string }>(
+            `SELECT toString(day) AS date, goal, count() AS people
+            FROM (${reached.sql}) GROUP BY date, goal`,
+            reached.params,
+          )
+        : [],
+    ]);
     return dates.map((date) => {
       const row = rows.find((entry) => entry.date === date);
-      return { date, ...this.toCounts(row, goals) };
+      return {
+        date,
+        visits: Number(row?.visits ?? 0),
+        stayed: Number(row?.stayed ?? 0),
+        goals: query.goal.map((_, goal) =>
+          Number(goals.find((entry) => entry.date === date && entry.goal === goal)?.people ?? 0),
+        ),
+      };
     });
   }
 
-  private async readGroups(visits: Visits, date: string): Promise<GroupRow[]> {
+  private async readGroups(visits: Statement, date: string): Promise<GroupRow[]> {
     const entries = `ARRAY JOIN [('source', source), ('page', entry_page)] AS entry`;
     return this.query<GroupRow>(
       `WITH visit AS (${visits.sql})
       SELECT entry.1 AS kind, entry.2 AS label, toString(day) AS date, count() AS visits,
-        countIf(stayed) AS stayed, countIf(goal0_at > 0) AS goal0, countIf(goal1_at > 0) AS goal1,
-        quantileExact(0.5)(duration) AS median_seconds
+        countIf(stayed) AS stayed, quantileExact(0.5)(duration) AS median_seconds
       FROM visit ${entries}
       WHERE (kind, label) IN (
         SELECT top_kind, top_label FROM (
@@ -307,28 +333,18 @@ export class WebAnalyticsDayReadService {
     );
   }
 
-  private toGroups(rows: GroupRow[], dates: string[], goals: string[]): WebAnalyticsDayGroup[] {
+  private toGroups(rows: GroupRow[], dates: string[]): WebAnalyticsDayGroup[] {
     return [...new Set(rows.map((row) => row.label))].map((name) => ({
       name,
       days: dates.map((date) => {
         const row = rows.find((entry) => entry.label === name && entry.date === date);
         return {
-          ...this.toCounts(row, goals),
+          visits: Number(row?.visits ?? 0),
+          stayed: Number(row?.stayed ?? 0),
           medianSeconds: Math.round(row?.median_seconds ?? 0),
         };
       }),
     }));
-  }
-
-  private toCounts(
-    row: CountsRow | undefined,
-    goals: string[],
-  ): Omit<WebAnalyticsDayCounts, 'date'> {
-    return {
-      visits: Number(row?.visits ?? 0),
-      stayed: Number(row?.stayed ?? 0),
-      goals: goals.map((_, goal) => Number((goal === 0 ? row?.goal0 : row?.goal1) ?? 0)),
-    };
   }
 
   private async readSince(
@@ -359,7 +375,76 @@ export class WebAnalyticsDayReadService {
     dates: string[],
     cutoff: number | null,
     retentionDays: number,
-  ): Visits {
+  ): Statement {
+    const { events, filter, params } = this.window(clusterId, query, dates, cutoff, retentionDays);
+    return {
+      params: { ...params, goals: query.goal },
+      sql: `SELECT session_visitor AS visitor, session_day AS day,
+          min(session_start) AS started_at, max(session_end) AS last_seen,
+          argMin(session_source, session_start) AS source,
+          argMinIf(session_entry, session_start, session_pageviews > 0) AS entry_page,
+          argMaxIf(session_exit, session_end, session_pageviews > 0) AS exit_page,
+          sum(session_pageviews) AS pageviews, count() AS sessions,
+          sum(session_seconds) AS duration,
+          minForEach(session_goals) AS goals_at,
+          pageviews > 1 OR sum(session_custom) > 0 OR duration >= 10 AS stayed,
+          argMaxIf(session_user, session_end, session_user != '') AS person,
+          anyIf(session_country, session_country != '') AS country,
+          anyIf(session_device, session_device != '') AS device,
+          anyIf(session_browser, session_browser != '') AS browser,
+          anyIf(session_os, session_os != '') AS os
+        FROM (
+          SELECT any(visitor_id) AS session_visitor,
+            toDate(min(created_at), {tz:String}) AS session_day,
+            min(created_at) AS session_start, max(created_at) AS session_end,
+            dateDiff('millisecond', session_start, session_end) / 1000 AS session_seconds,
+            argMin(${SOURCE}, created_at) AS session_source,
+            argMinIf(path, created_at, name = 'pageview') AS session_entry,
+            argMaxIf(path, created_at, name = 'pageview') AS session_exit,
+            countIf(name = 'pageview') AS session_pageviews,
+            countIf(name NOT IN ${NOT_A_GOAL}) AS session_custom,
+            minForEach(arrayMap(goal -> if(name = goal, created_at, NULL), {goals:Array(String)})) AS session_goals,
+            argMaxIf(user_id, created_at, user_id != '') AS session_user,
+            countIf(${filter}) AS session_matches,
+            anyIf(country, country != '') AS session_country,
+            anyIf(device, device != '') AS session_device,
+            anyIf(browser, browser != '') AS session_browser,
+            anyIf(os, os != '') AS session_os
+          FROM web_events FINAL
+          WHERE ${events} AND app = ''
+          GROUP BY session_id
+          HAVING session_day IN {days:Array(Date)}
+        )
+        GROUP BY visitor, day
+        HAVING pageviews > 0 AND sum(session_matches) > 0`,
+    };
+  }
+
+  private reached(
+    clusterId: string,
+    query: ReadWebAnalyticsDayQuery,
+    dates: string[],
+    cutoff: number | null,
+    retentionDays: number,
+  ): Statement {
+    const { events, filter, params } = this.window(clusterId, query, dates, cutoff, retentionDays);
+    return {
+      params: { ...params, goals: query.goal },
+      sql: `SELECT toDate(created_at, {tz:String}) AS day, toUInt8(indexOf({goals:Array(String)}, name) - 1) AS goal,
+          ${PERSON} AS person, min(created_at) AS reached_at
+        FROM web_events FINAL
+        WHERE ${events} AND name IN {goals:Array(String)} AND day IN {days:Array(Date)} AND ${filter}
+        GROUP BY day, goal, person`,
+    };
+  }
+
+  private window(
+    clusterId: string,
+    query: ReadWebAnalyticsDayQuery,
+    dates: string[],
+    cutoff: number | null,
+    retentionDays: number,
+  ): Window {
     const sorted = [...dates].sort();
     const scope = this.read.scope(
       clusterId,
@@ -373,78 +458,13 @@ export class WebAnalyticsDayReadService {
       },
       retentionDays,
     );
-    const events = `cluster_id = {clusterId:FixedString(24)} AND expires_at > now()
-      AND created_at >= {from:DateTime64(3)} AND created_at < {to:DateTime64(3)}${
-        cutoff === null ? '' : ` AND ${SECOND_OF_DAY} < {cutoff:UInt32}`
-      }`;
     return {
-      params: {
-        ...scope.params,
-        days: dates,
-        goal0: query.goal[0] ?? '',
-        goal1: query.goal[1] ?? '',
-        ...(cutoff === null ? {} : { cutoff }),
-      },
-      sql: `SELECT v.visitor AS visitor, v.day AS day, v.started_at AS started_at,
-          v.last_seen AS last_seen, v.source AS source, v.entry_page AS entry_page,
-          v.exit_page AS exit_page, v.pageviews AS pageviews, v.sessions AS sessions,
-          v.duration AS duration,
-          v.person AS person, v.country AS country, v.device AS device, v.browser AS browser,
-          v.os AS os,
-          multiIf(v.goal0 = 0, a.goal0, a.goal0 = 0, v.goal0, least(v.goal0, a.goal0)) AS goal0_at,
-          multiIf(v.goal1 = 0, a.goal1, a.goal1 = 0, v.goal1, least(v.goal1, a.goal1)) AS goal1_at,
-          v.pageviews > 1 OR v.custom > 0 OR v.duration >= 10 OR goal0_at > 0 OR goal1_at > 0 AS stayed
-        FROM (
-          SELECT session_visitor AS visitor, session_day AS day,
-            min(session_start) AS started_at, max(session_end) AS last_seen,
-            argMin(session_source, session_start) AS source,
-            argMinIf(session_entry, session_start, session_pageviews > 0) AS entry_page,
-            argMaxIf(session_exit, session_end, session_pageviews > 0) AS exit_page,
-            sum(session_pageviews) AS pageviews, count() AS sessions,
-            sum(session_seconds) AS duration,
-            sum(session_custom) AS custom,
-            minIf(session_goal0, session_goal0 > 0) AS goal0,
-            minIf(session_goal1, session_goal1 > 0) AS goal1,
-            argMaxIf(session_user, session_end, session_user != '') AS person,
-            anyIf(session_country, session_country != '') AS country,
-            anyIf(session_device, session_device != '') AS device,
-            anyIf(session_browser, session_browser != '') AS browser,
-            anyIf(session_os, session_os != '') AS os
-          FROM (
-            SELECT any(visitor_id) AS session_visitor,
-              toDate(min(created_at), {tz:String}) AS session_day,
-              min(created_at) AS session_start, max(created_at) AS session_end,
-              dateDiff('millisecond', session_start, session_end) / 1000 AS session_seconds,
-              argMin(${SOURCE}, created_at) AS session_source,
-              argMinIf(path, created_at, name = 'pageview') AS session_entry,
-              argMaxIf(path, created_at, name = 'pageview') AS session_exit,
-              countIf(name = 'pageview') AS session_pageviews,
-              countIf(name NOT IN ${NOT_A_GOAL}) AS session_custom,
-              minIf(created_at, name = {goal0:String}) AS session_goal0,
-              minIf(created_at, name = {goal1:String}) AS session_goal1,
-              argMaxIf(user_id, created_at, user_id != '') AS session_user,
-              countIf(${scope.filter}) AS session_matches,
-              anyIf(country, country != '') AS session_country,
-              anyIf(device, device != '') AS session_device,
-              anyIf(browser, browser != '') AS session_browser,
-              anyIf(os, os != '') AS session_os
-            FROM web_events FINAL
-            WHERE ${events} AND app = ''
-            GROUP BY session_id
-            HAVING session_day IN {days:Array(Date)}
-          )
-          GROUP BY visitor, day
-          HAVING pageviews > 0 AND sum(session_matches) > 0
-        ) AS v
-        LEFT JOIN (
-          SELECT user_id, toDate(created_at, {tz:String}) AS day,
-            minIf(created_at, name = {goal0:String}) AS goal0,
-            minIf(created_at, name = {goal1:String}) AS goal1
-          FROM web_events FINAL
-          WHERE ${events} AND app != '' AND user_id != ''
-            AND name IN ({goal0:String}, {goal1:String})
-          GROUP BY user_id, day
-        ) AS a ON a.user_id = v.person AND a.day = v.day`,
+      events: `cluster_id = {clusterId:FixedString(24)} AND expires_at > now()
+        AND created_at >= {from:DateTime64(3)} AND created_at < {to:DateTime64(3)}${
+          cutoff === null ? '' : ` AND ${SECOND_OF_DAY} < {cutoff:UInt32}`
+        }`,
+      filter: scope.filter,
+      params: { ...scope.params, days: dates, ...(cutoff === null ? {} : { cutoff }) },
     };
   }
 
@@ -462,10 +482,6 @@ function perHour(rows: [number, string][]): number[] {
 
 function toIso(date: string): string {
   return ClickhouseUtils.clickhouseDateToJsDate(date).toISOString();
-}
-
-function reachedAt(date: string): string | null {
-  return date.startsWith('1970-01-01') ? null : toIso(date);
 }
 
 function localDate(at: Date, tz: string): string {

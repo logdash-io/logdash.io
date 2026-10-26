@@ -232,7 +232,6 @@ export interface WebAnalyticsDays {
 export interface WebAnalyticsDayGroupCounts {
   visits: number;
   stayed: number;
-  goals: number[];
   medianSeconds: number;
 }
 

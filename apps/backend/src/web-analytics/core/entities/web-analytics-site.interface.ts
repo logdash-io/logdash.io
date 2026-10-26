@@ -20,7 +20,7 @@ export class WebAnalyticsSiteSerialized {
   @ApiProperty({
     type: String,
     isArray: true,
-    description: 'The goals picked for the dashboard: the primary one, then an optional second',
+    description: 'The goals picked for the dashboard: the primary one, then up to 9 more',
   })
   goals: string[];
 }

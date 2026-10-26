@@ -14,11 +14,11 @@ export class UpdateWebAnalyticsGoalsBody {
     type: String,
     isArray: true,
     example: ['signup', 'download'],
-    description: 'The primary goal, then an optional second one, by custom event name',
+    description: 'The primary goal, then up to 9 more, by custom event name',
   })
   @IsArray()
   @ArrayMinSize(1)
-  @ArrayMaxSize(2)
+  @ArrayMaxSize(10)
   @ArrayUnique()
   @IsString({ each: true })
   @Matches(EVENT_NAME, { each: true })

@@ -414,7 +414,8 @@ export class WebAnalyticsDayCounts {
   @ApiProperty({
     type: Number,
     isArray: true,
-    description: 'Visits that reached each requested goal, in the order of the goal parameter',
+    description:
+      'People who sent each requested goal that day, on the website or in an app, in the order of the goal parameter. Each goal is counted on its own, so a goal can have more people than the one before it',
   })
   goals: number[];
 }
@@ -473,9 +474,6 @@ export class WebAnalyticsDayGroupCounts {
   @ApiProperty()
   stayed: number;
 
-  @ApiProperty({ type: Number, isArray: true })
-  goals: number[];
-
   @ApiProperty({ description: 'Median time a visit lasted, from its first event to its last' })
   medianSeconds: number;
 }
@@ -520,7 +518,8 @@ export class WebAnalyticsDayResponse {
   @ApiProperty({
     type: 'array',
     items: { type: 'array', items: { type: 'number' } },
-    description: 'Visits that reached each requested goal in each hour of the day, 24 per goal',
+    description:
+      'People who first sent each requested goal that day in each hour, on the website or in an app, 24 per goal',
   })
   goalHours: number[][];
 
@@ -578,7 +577,8 @@ export class WebAnalyticsDayVisit {
     type: String,
     isArray: true,
     nullable: true,
-    description: 'When the visit reached each requested goal, or null',
+    description:
+      'When the visit first sent each requested goal on the website, or null. Goals sent from an app are counted per day, not per visit',
   })
   goals: (string | null)[];
 
@@ -607,7 +607,10 @@ export class WebAnalyticsGoalOption {
   @ApiProperty({ example: 'signup' })
   name: string;
 
-  @ApiProperty({ description: 'Visits that reached it in the last 28 days' })
+  @ApiProperty({
+    description:
+      'People who sent it each day, on the website or in an app, added up over the last 28 days',
+  })
   visits: number;
 }
 

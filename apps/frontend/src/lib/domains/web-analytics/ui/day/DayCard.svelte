@@ -11,7 +11,7 @@
     now: string;
     headline: string | null;
     verdict: Verdict | null;
-    goals: string[];
+    goals: string[] | null;
     hours: number[] | null;
     typicalHours: number[] | null;
     goalHours: number[][];
@@ -39,12 +39,6 @@
     onpin,
   }: Props = $props();
 
-  const COLUMNS: Record<number, string> = {
-    2: '@3xl:grid-cols-2',
-    3: '@3xl:grid-cols-3',
-    4: '@3xl:grid-cols-4',
-  };
-
   const day = $derived(DateTime.fromISO(date));
   const title = $derived(
     day.toFormat(
@@ -53,7 +47,7 @@
   );
   const weekdays = $derived(`${day.toFormat('cccc')}s`);
   const by = $derived(inProgress ? ` by ${now}` : '');
-  const shownGoals = $derived(goals.slice(0, verdict?.goals.length ?? 0));
+  const shownGoals = $derived((goals ?? []).slice(0, verdict?.goals.length));
   const legend = $derived(
     [...sources]
       .sort(
@@ -63,6 +57,12 @@
       )
       .slice(0, 6),
   );
+
+  function typicalCount(value: number | null): string {
+    return value === null
+      ? 'No typical day yet'
+      : `Typical ${whole(value)}${by}`;
+  }
 </script>
 
 <section
@@ -88,99 +88,78 @@
     </div>
     {#if headline}
       <p
-        class="text-fg-secondary max-w-4xl text-sm leading-6"
+        class="text-fg-secondary min-h-12 max-w-4xl text-sm leading-6"
         aria-live="polite"
       >
         {headline}
       </p>
     {:else}
-      <span
-        class="bg-surface-150-bg mt-1 block h-4 w-80 max-w-full rounded-md"
-      ></span>
+      <span class="flex min-h-12 items-start pt-1.5">
+        <span
+          class="bg-surface-25-selected-bg block h-3 w-72 max-w-full rounded-full motion-safe:animate-ghost"
+        ></span>
+      </span>
     {/if}
   </header>
 
   <dl
-    class={['grid grid-cols-2 gap-2', COLUMNS[shownGoals.length === 1 ? 3 : 4]]}
+    class="grid grid-cols-2 gap-2 @3xl:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]"
   >
-    {#if verdict}
+    <DayTile
+      label="Visits"
+      hint="One visitor on one day. Anonymous visitors get a new ID every day, so the same person on two days is two visits."
+      verdict={verdict?.visits ?? null}
+      typical={typicalCount(verdict?.visits.typical ?? null)}
+      {by}
+      {weekdays}
+    />
+    <DayTile
+      label="Stayed"
+      hint="Visits with 2 or more pages, a goal, or 10 seconds or more."
+      verdict={verdict?.stayed ?? null}
+      typical={verdict?.stayed.typical == null
+        ? 'No typical day yet'
+        : `Typical ${formatRate(verdict.stayed.typical)}`}
+      {by}
+      {weekdays}
+      reached="stayed"
+    />
+    {#each shownGoals as goal, index (goal)}
       <DayTile
-        label="Visits"
-        hint="One visitor on one day. Anonymous visitors get a new ID every day, so the same person on two days is two visits."
-        verdict={verdict.visits}
-        typical={verdict.visits.typical === null
-          ? 'No typical day yet'
-          : `Typical ${whole(verdict.visits.typical)}${by}`}
+        label={goal}
+        hint="{index === 0
+          ? 'Primary goal. '
+          : ''}People who did {goal} on this day, on your website or in your apps. Each goal is counted on its own, not as a step after the one before."
+        verdict={verdict?.goals[index] ?? null}
+        typical={typicalCount(verdict?.goals[index]?.typical ?? null)}
         {by}
         {weekdays}
-        loading={false}
+        unit="people"
+        goal
       />
-      <DayTile
-        label="Stayed"
-        hint="Visits with 2 or more pages, a goal, or 10 seconds or more."
-        verdict={verdict.stayed}
-        typical={verdict.stayed.typical === null
-          ? 'No typical day yet'
-          : `Typical ${formatRate(verdict.stayed.typical)}`}
-        {by}
-        {weekdays}
-        reached="stayed"
-        loading={false}
-      />
-      {#each shownGoals as goal, index (goal)}
-        <DayTile
-          label={goal}
-          hint="{index === 0
-            ? 'Primary goal. '
-            : ''}Visits that reached {goal}, out of all visits."
-          verdict={verdict.goals[index]}
-          typical={verdict.goals[index].typical === null
-            ? 'No typical day yet'
-            : `Typical ${formatRate(verdict.goals[index].typical)}`}
-          {by}
-          {weekdays}
-          reached="reached {goal}"
-          goal
-          loading={false}
-        />
-      {/each}
-      {#if !goals.length}
-        <div class="col-span-2 flex min-w-0 flex-col gap-1.5 rounded-lg p-3">
-          <dt class="text-fg-muted text-xs">Goal</dt>
-          <dd class="text-fg-tertiary text-sm leading-6">
-            Track a custom event, such as a signup, to see how many visits
-            convert and when.
-          </dd>
-          <dd>
-            <code
-              class="bg-surface-150-bg rounded-md px-2 py-1 font-mono text-xs whitespace-nowrap"
-            >
-              window.logdash?.track('signup')
-            </code>
-          </dd>
-        </div>
-      {/if}
-    {:else}
-      {#each [0, 1, 2, 3] as tile (tile)}
-        <DayTile
-          label=""
-          hint=""
-          verdict={{ value: 0, typical: null, flag: 0 }}
-          typical=""
-          {by}
-          {weekdays}
-          loading
-        />
-      {/each}
+    {/each}
+    {#if goals?.length === 0}
+      <div class="col-span-2 flex min-w-0 flex-col gap-1.5 rounded-lg p-3">
+        <dt class="text-fg-muted text-xs">Goal</dt>
+        <dd class="text-fg-tertiary text-sm leading-6">
+          Track a custom event, such as a signup, to see how many visits convert
+          and when.
+        </dd>
+        <dd>
+          <code
+            class="bg-surface-150-bg rounded-md px-2 py-1 font-mono text-xs whitespace-nowrap"
+          >
+            window.logdash?.track('signup')
+          </code>
+        </dd>
+      </div>
     {/if}
   </dl>
 
-  <div
-    class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-3 pt-2"
-  >
+  <div class="flex flex-col gap-1.5 px-3 pt-2">
     <h3 class="text-[13px] font-medium">Visits per hour</h3>
     <div
-      class="text-fg-tertiary flex flex-wrap items-center gap-x-3.5 gap-y-1 text-xs"
+      class="text-fg-tertiary flex min-h-5 flex-wrap items-center gap-x-3.5 gap-y-1 text-xs"
     >
       <span class="flex items-center gap-1.5">
         <span class="bg-surface-inverse-bg h-0.5 w-3.5 rounded-full"></span>
@@ -214,55 +193,59 @@
           <span class="font-mono">{goal}</span>
         </span>
       {/each}
-      {#if legend.length}
-        <span
-          class="edge-l flex flex-wrap items-center gap-0.5 pl-2 max-sm:basis-full max-sm:pl-0 max-sm:shadow-none"
-          role="group"
-          aria-label="Show one source in the chart"
-        >
-          {#each legend as source (source.name)}
-            <button
-              type="button"
-              class={[
-                'transition-ink focus-visible:outline-brand h-5 max-w-36 cursor-pointer truncate rounded-md px-1.5 focus-visible:outline-2',
-                source.name === pinned
-                  ? 'bg-surface-150-bg text-fg-default'
-                  : source.name === spot
-                    ? 'text-fg-default'
-                    : 'text-fg-muted hover:text-fg-default',
-              ]}
-              aria-pressed={source.name === pinned}
-              onpointerenter={() => onhover(source.name)}
-              onpointerleave={() => onhover(null)}
-              onfocus={() => onhover(source.name)}
-              onblur={() => onhover(null)}
-              onclick={() => onpin(source.name)}
-            >
-              {source.name}
-            </button>
-          {/each}
-        </span>
+    </div>
+    <div
+      class="-ml-1.5 flex min-h-5 flex-wrap items-center gap-0.5 text-xs"
+      role="group"
+      aria-label="Show one source in the chart"
+    >
+      {#if !hours}
+        {#each [44, 92, 64, 112, 72] as width, index (index)}
+          <span
+            class="bg-surface-25-selected-bg mx-1.5 h-2.5 rounded-full motion-safe:animate-ghost"
+            style:width="{width}px"
+            style:animation-delay="{index * 90}ms"
+            aria-hidden="true"
+          ></span>
+        {/each}
       {/if}
+      {#each legend as source (source.name)}
+        <button
+          type="button"
+          class={[
+            'transition-ink focus-visible:outline-brand h-5 max-w-36 cursor-pointer truncate rounded-md px-1.5 focus-visible:outline-2',
+            source.name === pinned
+              ? 'bg-surface-150-bg text-fg-default'
+              : source.name === spot
+                ? 'text-fg-default'
+                : 'text-fg-muted hover:text-fg-default',
+          ]}
+          aria-pressed={source.name === pinned}
+          onpointerenter={() => onhover(source.name)}
+          onpointerleave={() => onhover(null)}
+          onfocus={() => onhover(source.name)}
+          onblur={() => onhover(null)}
+          onclick={() => onpin(source.name)}
+        >
+          {source.name}
+        </button>
+      {/each}
     </div>
   </div>
 
   <div class="pt-1 pr-1 pb-1.5 pl-3">
-    {#if hours}
-      <HourChart
-        {date}
-        {hours}
-        typical={typicalHours}
-        lanes={shownGoals.map((goal, index) => ({
-          name: goal,
-          hours: goalHours[index] ?? [],
-        }))}
-        {sources}
-        {spot}
-        current={inProgress ? Number(now.slice(0, 2)) : null}
-        {now}
-      />
-    {:else}
-      <div class="bg-surface-150-bg h-62 rounded-xl"></div>
-    {/if}
+    <HourChart
+      {date}
+      {hours}
+      typical={typicalHours}
+      lanes={shownGoals.map((goal, index) => ({
+        name: goal,
+        hours: goalHours[index] ?? [],
+      }))}
+      {sources}
+      {spot}
+      current={inProgress ? Number(now.slice(0, 2)) : null}
+      {now}
+    />
   </div>
 </section>

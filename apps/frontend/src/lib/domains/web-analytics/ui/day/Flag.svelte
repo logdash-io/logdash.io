@@ -18,6 +18,7 @@
     by: string;
     weekdays: string;
     reached?: string;
+    unit?: string;
     variant?: 'chip' | 'mark';
   };
 
@@ -27,6 +28,7 @@
     by,
     weekdays,
     reached = 'stayed',
+    unit = 'visits',
     variant = 'chip',
   }: Props = $props();
 
@@ -89,7 +91,7 @@
       <span class="font-medium tabular-nums">
         {rate
           ? formatRate(rate.rate)
-          : `${formatCount(count?.value ?? 0)} visits`}
+          : `${formatCount(count?.value ?? 0)} ${unit}`}
       </span>
     </p>
     {#if rate}

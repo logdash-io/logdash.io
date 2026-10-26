@@ -64,9 +64,11 @@
   <header class="flex min-h-7 flex-wrap items-center justify-between gap-2">
     <h2 class="px-3 text-[13px] font-medium">
       {title}
-      <span class="text-fg-muted font-normal tabular-nums">
-        {formatCount(total)}
-      </span>
+      {#if visits.length || !loading}
+        <span class="text-fg-muted font-normal tabular-nums">
+          {formatCount(total)}
+        </span>
+      {/if}
     </h2>
     <SegmentedControl
       size="xs"
@@ -82,11 +84,15 @@
       {error}
     </p>
   {:else if loading && !visits.length}
-    <div class="flex flex-col gap-0.5" aria-hidden="true">
-      {#each [1, 2, 3, 4, 5, 6] as row (row)}
-        <div class="bg-surface-150-bg h-9 rounded-lg"></div>
+    <ul class="flex flex-col gap-0.5" aria-hidden="true">
+      {#each [46, 30, 54, 38, 24, 42] as width, index (index)}
+        <li class="flex h-9 items-center gap-2.5 px-2.5 @3xl:gap-3 @3xl:px-3">
+          {@render bone('36px', index)}
+          {@render bone('112px', index)}
+          {@render bone(`${width}%`, index)}
+        </li>
       {/each}
-    </div>
+    </ul>
   {:else if !visits.length}
     <p class="text-fg-muted py-10 text-center text-sm">
       {show === 'all' ? 'No visits yet' : 'No visits match'}
@@ -99,7 +105,7 @@
           <li in:fly={{ y: -8, duration: 280, easing: cubicOut }}>
             <button
               type="button"
-              class="hover:bg-surface-25-hover-bg focus-visible:outline-brand grid w-full cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm outline-none focus-visible:outline-2 @3xl:min-h-9 @3xl:grid-cols-[44px_minmax(110px,170px)_minmax(0,1fr)_76px_76px_minmax(96px,auto)] @3xl:gap-x-3 @3xl:px-3 @3xl:py-0"
+              class="group hover:bg-surface-25-hover-bg focus-visible:outline-brand grid w-full cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm outline-none focus-visible:outline-2 @3xl:min-h-9 @3xl:grid-cols-[44px_minmax(110px,170px)_minmax(0,1fr)_76px_76px_minmax(96px,auto)] @3xl:gap-x-3 @3xl:px-3 @3xl:py-0"
               onclick={() => onopen(visit)}
               onpointerenter={() => onhover(visit.source)}
               onpointerleave={() => onhover(null)}
@@ -113,8 +119,10 @@
               </span>
               <span
                 class={[
-                  'flex min-w-0 items-center gap-2',
-                  { 'text-fg-tertiary': !visit.stayed },
+                  'transition-ink flex min-w-0 items-center gap-2',
+                  visit.stayed
+                    ? 'text-fg-secondary group-hover:text-fg-default'
+                    : 'text-fg-tertiary',
                 ]}
               >
                 <BreakdownLabel dimension="referrers" name={visit.source} />
@@ -187,3 +195,11 @@
     {/if}
   {/if}
 </section>
+
+{#snippet bone(width: string, row: number)}
+  <span
+    class="bg-surface-25-selected-bg h-3 shrink-0 rounded-full motion-safe:animate-ghost"
+    style:width
+    style:animation-delay="{row * 90}ms"
+  ></span>
+{/snippet}
