@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { flip } from 'svelte/animate';
+  import { cubicInOut } from 'svelte/easing';
+  import { prefersReducedMotion } from 'svelte/motion';
   import { formatCount, formatDuration } from '../../domain/analytics-format';
   import {
     formatInterval,
@@ -54,12 +57,14 @@
   </header>
 
   {#if loading && !rows.length}
-    <div class="flex flex-col gap-0.5 pt-6" aria-hidden="true">
+    <div class="flex flex-col gap-0.5 pt-[26px] pb-0.5" aria-hidden="true">
       {#each [88, 64, 46, 32, 22] as width (width)}
-        <div
-          class="bg-surface-150-bg h-8 rounded-lg"
-          style:width="{width}%"
-        ></div>
+        <div class="flex h-11 items-center @xl:h-9">
+          <div
+            class="bg-surface-150-bg h-[calc(100%-6px)] rounded-md"
+            style:width="{width}%"
+          ></div>
+        </div>
       {/each}
     </div>
   {:else if !rows.length}
@@ -100,7 +105,16 @@
         {#each rows as row (row.name)}
           {@const lit = row.name === spot || row.name === pinned}
           <tr
-            class="group"
+            class={[
+              'group transition-ink',
+              lit
+                ? 'text-fg-default'
+                : 'text-fg-secondary hover:text-fg-default',
+            ]}
+            animate:flip={{
+              duration: prefersReducedMotion.current ? 0 : 240,
+              easing: cubicInOut,
+            }}
             onpointerenter={() => onhover?.(row.name)}
             onpointerleave={() => onhover?.(null)}
           >
@@ -112,7 +126,7 @@
             >
               <span
                 class={[
-                  'absolute inset-y-[3px] left-0 rounded-md',
+                  'absolute inset-y-[3px] left-0 rounded-md transition-[width] duration-240 ease-in-out motion-reduce:transition-none',
                   lit
                     ? 'bg-surface-150-selected-bg'
                     : 'bg-surface-150-bg group-hover:bg-surface-150-hover-bg',

@@ -12,14 +12,13 @@
   type Props = {
     label: string;
     hint: string;
-    verdict: CountVerdict | RateVerdict;
+    verdict: CountVerdict | RateVerdict | null;
     typical: string;
     by: string;
     weekdays: string;
     reached?: string;
     unit?: string;
     goal?: boolean;
-    loading: boolean;
   };
 
   const {
@@ -32,11 +31,10 @@
     reached,
     unit,
     goal = false,
-    loading,
   }: Props = $props();
 
-  const rate = $derived('rate' in verdict ? verdict : null);
-  const count = $derived('value' in verdict ? verdict.value : 0);
+  const rate = $derived(verdict && 'rate' in verdict ? verdict : null);
+  const count = $derived(verdict && 'value' in verdict ? verdict.value : 0);
 </script>
 
 <div class="flex min-w-0 flex-col gap-1.5 rounded-lg p-3">
@@ -53,18 +51,18 @@
         {label}
       </span>
     </Tooltip>
-    {#if !loading}
+    {#if verdict}
       <Flag {label} {verdict} {by} {weekdays} {reached} {unit} />
     {/if}
   </dt>
   <dd class="flex min-h-8 min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
-    {#if loading}
+    {#if !verdict}
       <span class="bg-surface-150-bg block h-8 w-16 rounded-md"></span>
     {:else}
       <RollingNumber
         value={rate ? rate.hits : count}
         class="font-mono text-2xl leading-8"
-        durationMs={1100}
+        durationMs={480}
       />
       {#if rate}
         <span class="text-fg-secondary text-sm whitespace-nowrap tabular-nums">
@@ -77,7 +75,7 @@
     {/if}
   </dd>
   <dd class="text-fg-muted h-4 truncate text-xs tabular-nums">
-    {loading ? '' : typical}
+    {verdict ? typical : ''}
   </dd>
 </div>
 

@@ -99,7 +99,7 @@
           <li in:fly={{ y: -8, duration: 280, easing: cubicOut }}>
             <button
               type="button"
-              class="hover:bg-surface-25-hover-bg focus-visible:outline-brand grid w-full cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm outline-none focus-visible:outline-2 @3xl:min-h-9 @3xl:grid-cols-[44px_minmax(110px,170px)_minmax(0,1fr)_76px_76px_minmax(96px,auto)] @3xl:gap-x-3 @3xl:px-3 @3xl:py-0"
+              class="group hover:bg-surface-25-hover-bg focus-visible:outline-brand grid w-full cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm outline-none focus-visible:outline-2 @3xl:min-h-9 @3xl:grid-cols-[44px_minmax(110px,170px)_minmax(0,1fr)_76px_76px_minmax(96px,auto)] @3xl:gap-x-3 @3xl:px-3 @3xl:py-0"
               onclick={() => onopen(visit)}
               onpointerenter={() => onhover(visit.source)}
               onpointerleave={() => onhover(null)}
@@ -113,8 +113,10 @@
               </span>
               <span
                 class={[
-                  'flex min-w-0 items-center gap-2',
-                  { 'text-fg-tertiary': !visit.stayed },
+                  'transition-ink flex min-w-0 items-center gap-2',
+                  visit.stayed
+                    ? 'text-fg-secondary group-hover:text-fg-default'
+                    : 'text-fg-tertiary',
                 ]}
               >
                 <BreakdownLabel dimension="referrers" name={visit.source} />

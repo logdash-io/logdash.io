@@ -13,6 +13,7 @@ export class WebAnalyticsCachedState<T> {
   public loading = $state(false);
   public error = $state<string | null>(null);
   private readonly cache: Record<string, T> = {};
+  private readonly pending: Record<string, Promise<T>> = {};
   private generation = 0;
 
   public async load(
@@ -32,8 +33,7 @@ export class WebAnalyticsCachedState<T> {
     }
     this.loading = true;
     try {
-      const data = await read();
-      this.cache[key] = data;
+      const data = await this.fetch(key, read);
       if (generation !== this.generation) return;
       this.data = data;
       this.error = null;
@@ -49,10 +49,17 @@ export class WebAnalyticsCachedState<T> {
   public async prefetch(key: string, read: () => Promise<T>): Promise<void> {
     if (key in this.cache) return;
     try {
-      this.cache[key] = await read();
+      await this.fetch(key, read);
     } catch {
       return;
     }
+  }
+
+  private async fetch(key: string, read: () => Promise<T>): Promise<T> {
+    this.pending[key] ??= read().finally(() => delete this.pending[key]);
+    const data = await this.pending[key];
+    this.cache[key] = data;
+    return data;
   }
 }
 

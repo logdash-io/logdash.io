@@ -5,11 +5,11 @@
   import { formatCount } from '../../domain/analytics-format';
   import {
     formatRate,
-    verdictLabel,
     whole,
     type StripDay,
     type StripSummary,
   } from '../../domain/day-analytics';
+  import { DayScrub, REST_MS } from './day-scrub';
 
   type Props = {
     days: StripDay[];
@@ -19,8 +19,8 @@
     spot: number[] | null;
     now: string;
     title: string;
+    onpreview: (date: string | null) => void;
     onselect: (date: string) => void;
-    onprefetch: (date: string) => void;
   };
 
   const {
@@ -31,24 +31,29 @@
     spot,
     now,
     title,
+    onpreview,
     onselect,
-    onprefetch,
   }: Props = $props();
 
   const TOP = 22;
   const RIGHT = 8;
 
+  const scrub = new DayScrub();
+
   let width = $state(0);
   let hovered = $state<number | null>(null);
   let columns = $state<(SVGRectElement | undefined)[]>([]);
+  let resting: ReturnType<typeof setTimeout> | undefined;
 
+  const loading = $derived(!days.length);
   const goal = $derived(goals[0] ?? null);
-  const narrow = $derived(width < 560);
+  const lane = $derived(goal !== null || loading);
+  const narrow = $derived(width > 0 && width < 560);
   const left = $derived(narrow ? 36 : 44);
   const plot = $derived(narrow ? 120 : 150);
   const rateTop = $derived(TOP + plot + 30);
   const rateHeight = $derived(narrow ? 56 : 64);
-  const axis = $derived((goal ? rateTop + rateHeight : TOP + plot) + 10);
+  const axis = $derived((lane ? rateTop + rateHeight : TOP + plot) + 10);
   const height = $derived(axis + (narrow ? 18 : 34));
   const slot = $derived(
     Math.max(0, width - left - RIGHT) / Math.max(1, days.length),
@@ -92,7 +97,7 @@
       .nice(3)
       .range([rateTop + rateHeight, rateTop]),
   );
-  const tip = $derived(hovered === null ? null : days[hovered]);
+  const scrubbed = $derived(hovered === null ? null : days[hovered]);
 
   function cx(index: number): number {
     return left + slot * (index + 0.5);
@@ -111,7 +116,45 @@
         ? 'var(--fg-faint)'
         : 'var(--surface-200-bg)';
     if (day.date === selected) return 'var(--fg-default)';
-    return index === hovered ? 'var(--fg-muted)' : 'var(--fg-faint)';
+    return index === hovered ? 'var(--fg-muted)' : 'var(--fg-disabled)';
+  }
+
+  function columnAt(event: PointerEvent): number | null {
+    const bounds = (event.currentTarget as SVGElement).getBoundingClientRect();
+    const index = Math.floor((event.clientX - bounds.left - left) / slot);
+    return index >= 0 && index < days.length ? index : null;
+  }
+
+  function onPointerMove(event: PointerEvent): void {
+    if (event.pointerType === 'touch') return;
+    const index = columnAt(event);
+    hovered = index;
+    clearTimeout(resting);
+    resting = setTimeout(() => preview(scrub.rest()), REST_MS);
+    preview(
+      scrub.move(
+        { x: event.clientX, y: event.clientY, time: event.timeStamp },
+        index !== null && days[index].tracked ? index : null,
+      ),
+    );
+  }
+
+  function onPointerLeave(event: PointerEvent): void {
+    clearTimeout(resting);
+    hovered = null;
+    const target = scrub.leave(event.timeStamp);
+    if (target === null) onpreview(null);
+    else onselect(days[target].date);
+  }
+
+  function preview(index: number | null): void {
+    if (index !== null && days[index].date !== selected)
+      onpreview(days[index].date);
+  }
+
+  function onColumnFocus(index: number): void {
+    hovered = index;
+    if (days[index].tracked) onselect(days[index].date);
   }
 
   function onColumnKeydown(event: KeyboardEvent, index: number): void {
@@ -132,11 +175,6 @@
   function longDate(date: string): string {
     return DateTime.fromISO(date).toFormat('cccc d LLLL');
   }
-
-  function onColumnEnter(index: number): void {
-    hovered = index;
-    if (days[index].tracked) onprefetch(days[index].date);
-  }
 </script>
 
 <section
@@ -149,7 +187,7 @@
     <h2 class="px-3 text-[13px] font-medium">
       {title}
       <span class="text-fg-muted font-normal">
-        one column per day, click one to open it
+        one column per day, point at one to open it
       </span>
     </h2>
     <Tooltip
@@ -172,13 +210,17 @@
     style:height="{height}px"
     bind:clientWidth={width}
   >
-    {#if width}
+    {#if loading}
+      <div class="bg-surface-150-bg h-full rounded-xl"></div>
+    {:else if width}
       <svg
         {width}
         {height}
         class="block"
         role="group"
         aria-label="Visits{goal ? ` and people who did ${goal}` : ''} per day"
+        onpointermove={onPointerMove}
+        onpointerleave={onPointerLeave}
       >
         {#each days as day, index (day.date)}
           {#if day.date === selected || index === hovered}
@@ -249,6 +291,7 @@
           {@const typical = day.typical.visits}
           {@const goalVerdict = day.verdict.goals[0]}
           {@const goalRange = day.typical.goalRanges[0]}
+          {@const lit = day.date === selected}
           {#if day.tracked}
             {#if range}
               <rect
@@ -280,8 +323,9 @@
                 x2={center + band / 2}
                 y1={y(typical)}
                 y2={y(typical)}
-                stroke="var(--fg-tertiary)"
+                stroke={lit ? 'var(--fg-tertiary)' : 'var(--fg-faint)'}
                 stroke-width="1.5"
+                class="transition-ink duration-150"
               />
             {/if}
             {#if day.inProgress && day.fullVisits}
@@ -292,8 +336,9 @@
                 height={y(0) - y(day.fullVisits)}
                 rx="5"
                 fill="none"
-                stroke="var(--fg-tertiary)"
+                stroke={lit ? 'var(--fg-tertiary)' : 'var(--fg-faint)'}
                 stroke-dasharray="3 3"
+                class="transition-ink duration-150"
               />
             {/if}
             {#if day.verdict.visits.flag}
@@ -327,8 +372,9 @@
                   x2={center + band / 2}
                   y1={rate(goalVerdict.typical)}
                   y2={rate(goalVerdict.typical)}
-                  stroke="var(--fg-faint)"
+                  stroke={lit ? 'var(--fg-faint)' : 'var(--fg-disabled)'}
                   stroke-width="1.5"
+                  class="transition-ink duration-150"
                 />
               {/if}
               <circle
@@ -337,11 +383,16 @@
                 r={narrow ? 3 : 3.5}
                 fill={day.inProgress
                   ? 'var(--chart-surface)'
-                  : 'var(--fg-default)'}
-                stroke={day.inProgress
-                  ? 'var(--fg-default)'
-                  : 'var(--chart-surface)'}
+                  : lit
+                    ? 'var(--fg-default)'
+                    : 'var(--fg-muted)'}
+                stroke={!day.inProgress
+                  ? 'var(--chart-surface)'
+                  : lit
+                    ? 'var(--fg-default)'
+                    : 'var(--fg-muted)'}
                 stroke-width={day.inProgress ? 1.5 : 2}
+                class="transition-ink duration-150"
               />
               {#if goalVerdict.flag}
                 {@render arrow(
@@ -410,9 +461,7 @@
               day.counts.visits,
             )} visits"
             aria-pressed={day.date === selected}
-            onpointerenter={() => onColumnEnter(index)}
-            onpointerleave={() => (hovered = null)}
-            onfocus={() => onColumnEnter(index)}
+            onfocus={() => onColumnFocus(index)}
             onblur={() => (hovered = null)}
             onclick={() => day.tracked && onselect(day.date)}
             onkeydown={(event) => onColumnKeydown(event, index)}
@@ -421,68 +470,27 @@
       </svg>
     {/if}
 
-    {#if tip && hovered !== null}
-      {@const center = cx(hovered)}
-      {@const goalVerdict = tip.verdict.goals[0]}
-      <div
-        class={[
-          'border-surface-elevated-border bg-surface-elevated-bg pointer-events-none absolute top-2 z-10 w-60 rounded-xl border px-3 py-2.5 text-sm shadow-lg',
-          center > width / 2
-            ? '-translate-x-[calc(100%+16px)]'
-            : 'translate-x-4',
-        ]}
-        style:left="{center}px"
+    {#if scrubbed && hovered !== null}
+      <span
+        class="bg-surface-elevated-bg edge text-fg-default pointer-events-none absolute z-10 flex h-5 -translate-x-1/2 items-center rounded-md px-1.5 text-[11px] whitespace-nowrap tabular-nums shadow-sm"
+        style:left="{Math.min(width - 40, Math.max(40, cx(hovered)))}px"
+        style:top="{axis + 2}px"
       >
-        <p class="text-fg-muted text-xs">{longDate(tip.date)}</p>
-        {#if tip.inProgress}
-          <p class="text-fg-tertiary text-xs">In progress, {now}</p>
-        {/if}
-        {#if !tip.tracked}
-          <p class="text-fg-tertiary mt-1.5">No data yet on this day</p>
+        {#if !scrubbed.tracked}
+          No data yet
+        {:else if scrubbed.inProgress}
+          Today, {now}
         {:else}
-          {@render row('Visits', formatCount(tip.counts.visits), true)}
-          {@render row(
-            `Typical${tip.inProgress ? ` by ${now}` : ''}`,
-            whole(tip.typical.visits),
-          )}
-          {#if tip.typical.visitsRange}
-            {@render row(
-              'Middle half',
-              `${whole(tip.typical.visitsRange[0])}-${whole(tip.typical.visitsRange[1])}`,
-            )}
-          {/if}
-          {#if tip.inProgress}
-            {@render row('Typical full day', whole(tip.fullVisits))}
-          {/if}
-          {@render row('Verdict', verdictLabel(tip.verdict.visits.flag))}
-          {#if goal && goalVerdict}
-            <p class="mt-2.5 flex items-baseline justify-between gap-4">
-              <span class="truncate font-mono text-xs">{goal}</span>
-              <span class="font-medium whitespace-nowrap tabular-nums">
-                {formatCount(goalVerdict.value)}
-                <span class="text-fg-muted text-xs font-normal">people</span>
-              </span>
-            </p>
-            {@render row(
-              `Typical${tip.inProgress ? ` by ${now}` : ''}`,
-              whole(goalVerdict.typical),
-            )}
-            {@render row('Verdict', verdictLabel(goalVerdict.flag))}
-          {/if}
-          <p class="text-fg-muted mt-2 text-xs">
-            {tip.date === selected ? 'Open below' : 'Click to open this day'}
-          </p>
+          {DateTime.fromISO(scrubbed.date).toFormat('ccc d LLL')}
         {/if}
-      </div>
+      </span>
     {/if}
   </div>
 
-  <div
-    class="text-fg-tertiary flex flex-wrap gap-x-3.5 gap-y-1 px-3 pb-1 text-xs"
-  >
+  <div class="text-fg-muted flex flex-wrap gap-x-3.5 gap-y-1 px-3 pb-1 text-xs">
     <span class="flex items-center gap-1.5">
       <svg width="8" height="8" aria-hidden="true">
-        <rect width="8" height="8" rx="2" fill="var(--fg-faint)" />
+        <rect width="8" height="8" rx="2" fill="var(--fg-disabled)" />
       </svg>
       Visits
     </span>
@@ -493,7 +501,7 @@
           x2="10"
           y1="5"
           y2="5"
-          stroke="var(--fg-tertiary)"
+          stroke="var(--fg-faint)"
           stroke-width="1.5"
         />
       </svg>
@@ -502,7 +510,7 @@
     {#if goal}
       <span class="flex items-center gap-1.5">
         <svg width="8" height="8" aria-hidden="true">
-          <circle cx="4" cy="4" r="3.5" fill="var(--fg-default)" />
+          <circle cx="4" cy="4" r="3.5" fill="var(--fg-muted)" />
         </svg>
         <span>
           People who did
@@ -517,7 +525,7 @@
 {#snippet average(label: string, value: string, mono = false)}
   <span class="flex items-baseline gap-1.5 whitespace-nowrap">
     <span class={['text-fg-muted', { 'font-mono': mono }]}>{label}</span>
-    <span class="font-mono text-sm">{value}</span>
+    <span class="text-fg-secondary font-mono text-sm">{value}</span>
   </span>
 {/snippet}
 
@@ -542,16 +550,4 @@
   >
     {flag > 0 ? '↑' : '↓'}
   </text>
-{/snippet}
-
-{#snippet row(label: string, value: string, strong = false)}
-  <p
-    class={[
-      'mt-1 flex justify-between gap-4',
-      strong ? 'mt-1.5' : 'text-fg-tertiary',
-    ]}
-  >
-    <span>{label}</span>
-    <span class={['tabular-nums', { 'font-medium': strong }]}>{value}</span>
-  </p>
 {/snippet}

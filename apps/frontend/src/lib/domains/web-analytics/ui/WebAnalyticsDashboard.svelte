@@ -66,6 +66,7 @@
   let show = $state<WebAnalyticsVisitShow>('all');
   let hovered = $state<string | null>(null);
   let pinned = $state<string | null>(null);
+  let preview = $state<string | null>(null);
   let detailsOpen = $state(false);
   let opened = $state<WebAnalyticsVisitor | null>(null);
   let details = $state<HTMLElement>();
@@ -82,6 +83,8 @@
         : query.day,
   );
   const live = $derived(date === today);
+  const shown = $derived(preview ?? date);
+  const shownLive = $derived(shown === today);
   const now = $derived(clock.toFormat('HH:mm'));
   const stripEnd = $derived(
     addDays(
@@ -102,7 +105,7 @@
     days.data && params ? stripDays(days.data, picked.length) : [],
   );
   const summary = $derived(stripSummary(strip));
-  const selected = $derived(strip.find((entry) => entry.date === date) ?? null);
+  const focused = $derived(strip.find((entry) => entry.date === shown) ?? null);
   const sources = $derived(
     day.data ? groupRows(day.data.sources, day.data.dates, since) : [],
   );
@@ -111,20 +114,20 @@
   );
   const spot = $derived(hovered ?? pinned);
   const headline = $derived(
-    selected && day.data?.date === date
+    focused
       ? dayHeadline({
-          date,
-          inProgress: live,
+          date: shown,
+          inProgress: shownLive,
           time: now,
-          verdict: selected.verdict,
+          verdict: focused.verdict,
           goals: picked,
-          sources,
-          record: isRecord(strip, date),
+          sources: day.data?.date === shown ? sources : [],
+          record: isRecord(strip, shown),
         })
       : null,
   );
-  const by = $derived(live ? ` by ${now}` : '');
-  const weekdays = $derived(`${DateTime.fromISO(date).toFormat('cccc')}s`);
+  const by = $derived(shownLive ? ` by ${now}` : '');
+  const weekdays = $derived(`${DateTime.fromISO(shown).toFormat('cccc')}s`);
   const range = $derived(dayRange(date, tz, query.filters));
   const error = $derived(
     days.error ?? day.error ?? goals.error ?? analytics.error,
@@ -148,7 +151,7 @@
 
   $effect(() => {
     if (!params || (query.day && !days.data)) return;
-    const at = date;
+    const at = shown;
     const current = params;
     untrack(() => {
       void loadDay(at, current, at === today);
@@ -222,8 +225,8 @@
     if (goals.error) void goals.load(tz);
     if (!params) return;
     loadDays(stripEnd, params, true);
+    if (shownLive || force) void loadDay(shown, params, true);
     if (!live && !force) return;
-    void loadDay(date, params, true);
     void visits.refresh(date, params, show);
     if (detailsOpen) {
       reportKey = '';
@@ -240,17 +243,31 @@
     if (!document.hidden) onTick();
   }
 
-  function onQueryChange(next: AnalyticsQuery): void {
-    void goto(resolve(`/app/domains/${clusterId}${analyticsSearch(next)}`), {
+  async function onQueryChange(next: AnalyticsQuery): Promise<void> {
+    await goto(resolve(`/app/domains/${clusterId}${analyticsSearch(next)}`), {
       replaceState: true,
       noScroll: true,
       keepFocus: true,
     });
   }
 
-  function onDay(next: string): void {
+  async function onDay(next: string): Promise<void> {
     if (next > today || !since || next < since) return;
-    onQueryChange({ ...query, day: next === today ? null : next });
+    await onQueryChange({ ...query, day: next === today ? null : next });
+  }
+
+  function onPreview(next: string | null): void {
+    preview = next;
+  }
+
+  async function onSelect(next: string): Promise<void> {
+    if (next === date) {
+      preview = null;
+      return;
+    }
+    preview = next;
+    await onDay(next);
+    if (preview === next) preview = null;
   }
 
   function onKeydown(event: KeyboardEvent): void {
@@ -268,20 +285,20 @@
     )
       return;
     event.preventDefault();
-    onDay(addDays(date, event.key === 'ArrowLeft' ? -1 : 1));
+    void onDay(addDays(date, event.key === 'ArrowLeft' ? -1 : 1));
   }
 
   function onFilter(filter: WebAnalyticsFilter): void {
-    onQueryChange(withFilter(query, filter));
+    void onQueryChange(withFilter(query, filter));
   }
 
   function onEvent(name: string): void {
-    onQueryChange({ ...query, event: query.event === name ? null : name });
+    void onQueryChange({ ...query, event: query.event === name ? null : name });
     details?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
   function onEventClose(): void {
-    onQueryChange({ ...query, event: null });
+    void onQueryChange({ ...query, event: null });
   }
 
   function onPick(next: string[]): void {
@@ -367,32 +384,26 @@
       ]}
       inert={analytics.waitingForData}
     >
-      {#if strip.length}
-        <DaysCard
-          days={strip}
-          {summary}
-          selected={date}
-          goals={picked}
-          spot={days.data?.sources.find((source) => source.name === spot)
-            ?.visits ?? null}
-          {now}
-          title={stripTitle()}
-          onselect={onDay}
-          onprefetch={prefetch}
-        />
-      {:else}
-        <div class="bg-surface-25-bg h-90 rounded-2xl p-2" aria-hidden="true">
-          <div class="bg-surface-150-bg h-full rounded-xl"></div>
-        </div>
-      {/if}
+      <DaysCard
+        days={strip}
+        {summary}
+        selected={shown}
+        goals={picked}
+        spot={days.data?.sources.find((source) => source.name === spot)
+          ?.visits ?? null}
+        {now}
+        title={stripTitle()}
+        onpreview={onPreview}
+        onselect={onSelect}
+      />
 
       <DayCard
-        {date}
-        inProgress={live}
+        date={shown}
+        inProgress={shownLive}
         {now}
         {headline}
-        verdict={selected?.verdict ?? null}
-        goals={picked}
+        verdict={focused?.verdict ?? null}
+        goals={goals.picked}
         hours={day.data?.hours[0] ?? null}
         typicalHours={day.data ? typicalHours(day.data, since) : null}
         goalHours={day.data?.goalHours ?? []}

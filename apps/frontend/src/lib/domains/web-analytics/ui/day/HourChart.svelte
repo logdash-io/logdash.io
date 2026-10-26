@@ -1,6 +1,10 @@
 <script lang="ts">
   import * as d3 from 'd3';
   import { DateTime } from 'luxon';
+  import { untrack } from 'svelte';
+  import { cubicInOut } from 'svelte/easing';
+  import { prefersReducedMotion, Tween } from 'svelte/motion';
+  import { fade } from 'svelte/transition';
   import { lastCurveSegment } from '../../domain/analytics-chart';
   import { formatCount } from '../../domain/analytics-format';
   import { whole } from '../../domain/day-analytics';
@@ -10,7 +14,7 @@
 
   type Props = {
     date: string;
-    hours: number[];
+    hours: number[] | null;
     typical: number[] | null;
     lanes: Lane[];
     sources: WebAnalyticsSourceSeries[];
@@ -27,6 +31,7 @@
   const TOP = 22;
   const RIGHT = 8;
   const AXIS = 26;
+  const NONE = Array.from({ length: 24 }, () => 0);
   const id = $props.id();
 
   let width = $state(0);
@@ -48,19 +53,32 @@
   const slot = $derived(Math.max(0, width - left - RIGHT) / 24);
   const last = $derived(current ?? 23);
   const partial = $derived(current !== null && current > 0);
-  const shown = $derived(hours.slice(0, last + 1));
-  const spotted = $derived(
-    sources.find((source) => source.name === spot)?.visits.slice(0, last + 1) ??
-      null,
+  const spotHours = $derived(
+    sources.find((source) => source.name === spot)?.visits ?? null,
   );
-  const y = $derived(
+  const scale = $derived(
     d3
       .scaleLinear()
-      .domain([0, Math.max(4, ...hours, ...(typical ?? []))])
-      .nice(4)
-      .range([baseline, TOP]),
+      .domain([0, Math.max(4, ...(hours ?? []), ...(typical ?? []))])
+      .nice(4),
   );
-  const ticks = $derived(y.ticks(4));
+  const target = $derived({
+    hours: hours ?? NONE,
+    typical: typical ?? NONE,
+    spotted: spotHours ?? hours ?? NONE,
+    max: scale.domain()[1],
+  });
+  const drawn = new Tween(untrack(() => target));
+  const shown = $derived(drawn.current.hours.slice(0, last + 1));
+  const spotted = $derived(
+    spotHours ? drawn.current.spotted.slice(0, last + 1) : null,
+  );
+  const y = $derived(
+    d3.scaleLinear().domain([0, drawn.current.max]).range([baseline, TOP]),
+  );
+  const ticks = $derived(
+    scale.ticks(4).filter((tick) => tick <= drawn.current.max + 1e-6),
+  );
   const labels = $derived(
     Array.from({ length: 24 }, (_, hour) => hour).filter(
       (hour) => hour % (width < 560 ? 6 : 3) === 0,
@@ -94,6 +112,13 @@
           .sort((a, b) => b.visits - a.visits)
           .slice(0, 5),
   );
+
+  $effect(() => {
+    void drawn.set(target, {
+      duration: prefersReducedMotion.current ? 0 : 240,
+      easing: cubicInOut,
+    });
+  });
 
   function x(hour: number): number {
     return left + slot * (hour + 0.5);
@@ -129,7 +154,9 @@
 </script>
 
 <div class="relative w-full" style:height="{height}px" bind:clientWidth={width}>
-  {#if width}
+  {#if !hours}
+    <div class="bg-surface-150-bg h-full rounded-xl"></div>
+  {:else if width}
     <svg
       {width}
       {height}
@@ -190,7 +217,7 @@
 
       {#if typical}
         <path
-          d={line(typical)}
+          d={line(drawn.current.typical)}
           fill="none"
           stroke="var(--fg-faint)"
           stroke-width="1.5"
@@ -245,7 +272,7 @@
       {#if current !== null && hovered !== current}
         <circle
           cx={x(current)}
-          cy={y(hours[current])}
+          cy={y(drawn.current.hours[current])}
           r="3.5"
           fill="none"
           stroke="var(--fg-default)"
@@ -253,7 +280,7 @@
         />
         <circle
           cx={x(current)}
-          cy={y(hours[current])}
+          cy={y(drawn.current.hours[current])}
           r="3.5"
           fill="var(--chart-surface, var(--surface-25-bg))"
           stroke="var(--fg-default)"
@@ -262,8 +289,8 @@
         <text
           x={x(current) + 8}
           y={Math.min(
-            y(hours[current]),
-            typical ? y(typical[current]) : baseline,
+            y(drawn.current.hours[current]),
+            typical ? y(drawn.current.typical[current]) : baseline,
           ) - 10}
           text-anchor={current > 20 ? 'end' : 'start'}
           dx={current > 20 ? -16 : 0}
@@ -289,7 +316,7 @@
           {@const open = hovered === current}
           <circle
             cx={x(hovered)}
-            cy={y((spotted ?? hours)[hovered])}
+            cy={y((spotted ?? shown)[hovered])}
             r="4"
             fill={open
               ? 'var(--chart-surface, var(--surface-25-bg))'
@@ -323,14 +350,16 @@
         />
         {#each lane.hours as count, hour (hour)}
           {#if count}
-            {@render marker(x(hour), laneY, count, index > 0)}
+            <g transition:fade={{ duration: 160 }}>
+              {@render marker(x(hour), laneY, count, index > 0)}
+            </g>
           {/if}
         {/each}
       {/each}
     </svg>
   {/if}
 
-  {#if hovered !== null}
+  {#if hours && hovered !== null}
     {@const hour = hovered}
     {@const future = current !== null && hour > current}
     <div
