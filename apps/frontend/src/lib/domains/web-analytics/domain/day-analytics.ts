@@ -310,7 +310,8 @@ export function wilson(
   const half =
     (z * Math.sqrt((rate * (1 - rate)) / total + z2 / (4 * total * total))) /
     denominator;
-  return [Math.max(0, centre - half), Math.min(1, centre + half)];
+  // At 0 hits the two terms cancel, but float error leaves a tiny positive.
+  return [hits ? Math.max(0, centre - half) : 0, Math.min(1, centre + half)];
 }
 
 export function median(values: number[]): number | null {

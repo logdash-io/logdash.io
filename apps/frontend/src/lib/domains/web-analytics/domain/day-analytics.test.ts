@@ -27,7 +27,8 @@ test('flags a count only outside typical ± 2√typical and a rate only when the
   const [low, high] = wilson(5, 225);
   expect(low).toBeCloseTo(0.0095, 3);
   expect(high).toBeCloseTo(0.0512, 3);
-  expect(wilson(0, 10)[0]).toBe(0);
+  expect([wilson(0, 10)[0], wilson(0, 47)[0]]).toEqual([0, 0]);
+  expect(formatInterval(wilson(0, 47))).toBe('0-7.6%');
   expect(formatInterval(wilson(116, 225))).toBe('45-58%');
   expect([countFlag(213, 152), countFlag(21, 15.2), countFlag(3, 0)]).toEqual([
     1, 0, 1,
