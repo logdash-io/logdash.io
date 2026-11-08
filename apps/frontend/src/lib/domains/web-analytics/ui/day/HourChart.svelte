@@ -197,14 +197,6 @@
         </svg>
         {#each lanes as lane, index (lane.name)}
           {@const laneY = baseline + AXIS + 8 + index * LANE + LANE / 2}
-          <text
-            x={-left}
-            y={laneY}
-            dy="0.32em"
-            class="fill-fg-muted font-mono text-[11px]"
-          >
-            {lane.name}
-          </text>
           <line
             x2="100%"
             y1={laneY}
@@ -391,14 +383,6 @@
 
       {#each lanes as lane, index (lane.name)}
         {@const laneY = baseline + AXIS + 8 + index * LANE + LANE / 2}
-        <text
-          x={0}
-          y={laneY}
-          dy="0.32em"
-          class="fill-fg-muted font-mono text-[11px]"
-        >
-          {lane.name}
-        </text>
         <line
           x1={left}
           x2={width - RIGHT}
@@ -418,6 +402,17 @@
       {/each}
     </svg>
   {/if}
+
+  {#each lanes as lane, index (lane.name)}
+    <span
+      class="text-fg-muted absolute left-0 -translate-y-1/2 truncate font-mono text-[11px] leading-none"
+      style:top="{baseline + AXIS + 8 + index * LANE + LANE / 2}px"
+      style:max-width="{left - 8}px"
+      title={lane.name}
+    >
+      {lane.name}
+    </span>
+  {/each}
 
   {#if hours && hovered !== null}
     {@const hour = hovered}

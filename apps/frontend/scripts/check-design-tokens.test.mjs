@@ -9,7 +9,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const valid = [
   'bg-surface-100-bg border-surface-100-border',
   'hover:bg-surface-100-hover-bg text-fg-muted',
-  'ring-surface-root-bg bg-heat-2 text-chart-3',
+  'ring-surface-root-bg bg-chart-1 text-chart-3',
   'bg-surface-50-border w-px',
 ];
 const invalid = [

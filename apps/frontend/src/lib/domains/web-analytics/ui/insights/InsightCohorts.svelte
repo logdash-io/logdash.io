@@ -1,12 +1,13 @@
 <script lang="ts">
   import { DateTime } from 'luxon';
-  import { formatCount, formatPercent } from '../../domain/analytics-format';
+  import { formatCount } from '../../domain/analytics-format';
   import type {
     WebAnalyticsInsightBucket,
     WebAnalyticsInsightCohort,
     WebAnalyticsInsightEvent,
   } from '../../domain/web-analytics';
   import { commonPrefix } from '../../domain/web-analytics-insight';
+  import HeatCell from './HeatCell.svelte';
   import InsightEventName from './InsightEventName.svelte';
 
   type Props = {
@@ -25,13 +26,6 @@
     if (bucket === 'month') return date.toFormat('LLL yyyy');
     if (bucket === 'week') return `Week of ${date.toFormat('d LLL')}`;
     return date.toFormat('EEE, d LLL');
-  }
-
-  function shade(rate: number): string {
-    if (rate >= 50) return 'bg-heat-3 text-fg-inverse';
-    if (rate >= 25) return 'bg-heat-2 text-fg-default';
-    if (rate >= 10) return 'bg-heat-1 text-fg-default';
-    return 'bg-heat-0 text-fg-tertiary';
   }
 </script>
 
@@ -80,15 +74,10 @@
               {formatCount(cohort.counts[0] ?? 0)}
             </td>
             {#each cohort.shares.slice(1) as share, index (index)}
-              <td
-                class={[
-                  'rounded-md py-1.5 text-center text-xs tabular-nums',
-                  share === null ? 'text-fg-faint' : shade(share),
-                ]}
+              <HeatCell
+                rate={share}
                 title="{formatCount(cohort.counts[index + 1] ?? 0)} events"
-              >
-                {share === null ? '–' : formatPercent(share)}
-              </td>
+              />
             {/each}
           </tr>
         {/each}

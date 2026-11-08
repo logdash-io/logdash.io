@@ -89,7 +89,7 @@
   }
 
   function isPartialPoint(line: AnalyticsChartLine, index: number): boolean {
-    return index === partialIndex && !line.dashed;
+    return partial && index === partialIndex && !line.dashed;
   }
 
   function onPointerMove(event: PointerEvent): void {

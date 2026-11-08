@@ -62,16 +62,17 @@
   --info: var(--color-blue-600);
   --idle: var(--color-neutral-600);
 
-  --chart-1: var(--color-neutral-100);
-  --chart-2: var(--color-sky-400);
-  --chart-3: var(--color-emerald-400);
-  --chart-4: var(--color-amber-400);
-  --chart-5: var(--color-rose-400);
+  /* Series in this order, never cycled. All sit at OKLCH lightness 0.60-0.66
+     and stay apart for colour-blind readers on the #161619 card. */
+  --chart-1: #4377f0;
+  --chart-2: #e15f0a;
+  --chart-3: #199d78;
+  --chart-4: #be8700;
+  --chart-5: #c05296;
 
-  --heat-0: var(--color-neutral-800);
-  --heat-1: var(--color-neutral-700);
-  --heat-2: var(--color-neutral-600);
-  --heat-3: var(--color-neutral-400);
+  /* Ends of the one-hue ramp for shares, mixed in OKLCH: 0% to 100%. */
+  --heat-0: #182135;
+  --heat-100: #8ab0fe;
 
   --edge-color: var(--surface-root-border);
 

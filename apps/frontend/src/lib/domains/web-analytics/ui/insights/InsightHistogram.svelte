@@ -60,16 +60,14 @@
   >
     {#each bins as bin, index (bin.value)}
       <li
-        class="group flex h-full min-w-0 flex-1 flex-col justify-end"
+        class="flex h-full min-w-0 flex-1 flex-col justify-end"
         aria-label="{binLabel(bin)}: {formatCount(bin.count)}"
         onpointerenter={() => onHover(index)}
       >
         <span
           class={[
             'block rounded-t-sm',
-            hovered === index
-              ? 'bg-surface-inverse-bg'
-              : 'bg-surface-150-bg group-hover:bg-surface-150-hover-bg',
+            hovered === index ? 'bg-surface-inverse-bg' : 'bg-chart-1',
           ]}
           style:height="{bin.count
             ? Math.max(1, (bin.count / peak) * 100)
