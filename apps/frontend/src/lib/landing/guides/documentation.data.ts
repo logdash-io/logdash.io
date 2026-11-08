@@ -789,14 +789,13 @@ export async function load() {
       { type: 'heading', text: 'Connect your coding agent' },
       {
         type: 'paragraph',
-        text: 'The Logdash MCP server lets your coding agent read your analytics and build insights for you, such as "add a funnel from first open to first merge, and a weekly cohort table". It answers at `https://api.logdash.io/mcp` over Streamable HTTP. Create a personal API key under API keys in your account, with Web analytics set to Read so the agent can only read, or to Write so it can also save, change and remove insights. The key reaches only the domains you pick for it.',
+        text: 'The Logdash MCP server lets your coding agent read your analytics and build insights for you, such as "add a funnel from first open to first merge, and a weekly cohort table". It answers at `https://api.logdash.io/mcp` over Streamable HTTP. Claude Code opens the Logdash consent page in your browser on first use, where you approve or decline access. No API key is needed. Clients without the OAuth flow can use a personal API key under API keys, with Web analytics set to Read so the agent can only read, or to Write so it can also save, change and remove insights. The key reaches only the domains you pick for it.',
       },
       {
         type: 'code',
         language: 'bash',
         title: 'Claude Code',
-        code: `claude mcp add --transport http logdash https://api.logdash.io/mcp \\
-  --header "Authorization: Bearer $LOGDASH_API_KEY"`,
+        code: `claude mcp add --transport http logdash https://api.logdash.io/mcp`,
       },
       {
         type: 'code',

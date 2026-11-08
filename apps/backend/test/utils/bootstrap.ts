@@ -93,6 +93,7 @@ import {
 } from '../../src/shared/logdash/logdash-tokens';
 import { WebAnalyticsCoreModule } from '../../src/web-analytics/core/web-analytics-core.module';
 import { McpCoreModule } from '../../src/mcp/core/mcp-core.module';
+import { McpOAuthModule } from '../../src/mcp/oauth/mcp-oauth.module';
 import { WebAnalyticsSiteEntity } from '../../src/web-analytics/core/entities/web-analytics-site.entity';
 import { ExposedConfigModule } from '../../src/exposed-config/exposed-config.module';
 import { FaviconCoreModule } from '../../src/favicon/core/favicon-core.module';
@@ -115,6 +116,7 @@ export async function createTestApp() {
       OverviewCoreModule,
       WebAnalyticsCoreModule,
       McpCoreModule,
+      McpOAuthModule,
       ExposedConfigModule,
       FaviconCoreModule,
       ProjectCoreModule,

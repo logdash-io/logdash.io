@@ -36,6 +36,7 @@ import { BadgeCoreModule } from './badge/core/badge-core.module';
 import { StatusPageCoreModule } from './status-page/core/status-page-core.module';
 import { WebAnalyticsCoreModule } from './web-analytics/core/web-analytics-core.module';
 import { McpCoreModule } from './mcp/core/mcp-core.module';
+import { McpOAuthModule } from './mcp/oauth/mcp-oauth.module';
 import { FaviconCoreModule } from './favicon/core/favicon-core.module';
 import { HealthModule } from './health/health.module';
 
@@ -81,6 +82,7 @@ import { HealthModule } from './health/health.module';
     StatusPageCoreModule,
     WebAnalyticsCoreModule,
     McpCoreModule,
+    McpOAuthModule,
     FaviconCoreModule,
     HealthModule,
   ],
