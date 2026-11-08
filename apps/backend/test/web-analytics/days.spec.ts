@@ -389,6 +389,7 @@ describe('Web analytics (days)', () => {
       utm_medium: '',
       utm_campaign: '',
       utm_term: '',
+      utm_content: '',
       click_id: '',
       device: 'Desktop',
       browser: 'Chrome',

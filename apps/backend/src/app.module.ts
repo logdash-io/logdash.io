@@ -35,6 +35,7 @@ import { CliAuthModule } from './cli-auth/core/cli-auth.module';
 import { BadgeCoreModule } from './badge/core/badge-core.module';
 import { StatusPageCoreModule } from './status-page/core/status-page-core.module';
 import { WebAnalyticsCoreModule } from './web-analytics/core/web-analytics-core.module';
+import { McpCoreModule } from './mcp/core/mcp-core.module';
 import { FaviconCoreModule } from './favicon/core/favicon-core.module';
 import { HealthModule } from './health/health.module';
 
@@ -79,6 +80,7 @@ import { HealthModule } from './health/health.module';
     BadgeCoreModule,
     StatusPageCoreModule,
     WebAnalyticsCoreModule,
+    McpCoreModule,
     FaviconCoreModule,
     HealthModule,
   ],

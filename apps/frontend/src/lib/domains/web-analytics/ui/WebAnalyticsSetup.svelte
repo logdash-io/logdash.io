@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { clustersState } from '$lib/domains/app/clusters/application/clusters.state.svelte.js';
   import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
@@ -253,6 +254,15 @@
         codebase.
       </p>
       <WebAnalyticsPromptForm {connection} />
+      <p class="text-xs text-fg-muted">
+        Your agent can also read this dashboard and build insights for you.
+        <a
+          href="{resolve('/docs/web-analytics')}#connect-your-coding-agent"
+          class="text-fg-tertiary underline underline-offset-2 transition-ink hover:text-fg-default"
+        >
+          Connect it over MCP
+        </a>
+      </p>
     {/if}
   </div>
 

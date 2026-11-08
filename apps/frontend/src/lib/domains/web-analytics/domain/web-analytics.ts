@@ -14,8 +14,10 @@ export type WebAnalyticsGranularity = 'hour' | 'day' | 'week' | 'month';
 
 export type WebAnalyticsFilterDimension =
   | 'channel'
+  | 'source'
   | 'referrer'
   | 'campaign'
+  | 'content'
   | 'keyword'
   | 'hostname'
   | 'page'
@@ -37,8 +39,10 @@ export interface WebAnalyticsFilter {
 
 export type WebAnalyticsBreakdownName =
   | 'channels'
+  | 'sources'
   | 'referrers'
   | 'campaigns'
+  | 'contents'
   | 'keywords'
   | 'hostnames'
   | 'pages'
@@ -157,11 +161,6 @@ export interface WebAnalyticsJourney {
   sessions: number;
 }
 
-export interface WebAnalyticsFunnelStep {
-  step: string;
-  visitors: number;
-}
-
 export interface WebAnalyticsCohort {
   date: string;
   users: number;
@@ -186,6 +185,98 @@ export interface WebAnalyticsRetention {
   cohorts: WebAnalyticsCohort[];
   stickiness: WebAnalyticsStickiness;
   comebacks: WebAnalyticsComeback[];
+}
+
+export type WebAnalyticsInsightType =
+  | 'funnel'
+  | 'trend'
+  | 'distribution'
+  | 'cohorts';
+
+export type WebAnalyticsFunnelMode = 'people' | 'events';
+
+export type WebAnalyticsInsightOperator =
+  | 'eq'
+  | 'neq'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte';
+
+export type WebAnalyticsInsightBucket = 'day' | 'week' | 'month';
+
+export interface WebAnalyticsInsightFilter {
+  key: string;
+  op: WebAnalyticsInsightOperator;
+  value: string;
+}
+
+export interface WebAnalyticsInsightEvent {
+  name: string;
+  filters: WebAnalyticsInsightFilter[];
+}
+
+export interface WebAnalyticsInsightConfig {
+  type: WebAnalyticsInsightType;
+  title: string;
+  days: number;
+  mode?: WebAnalyticsFunnelMode;
+  steps?: string[];
+  events?: WebAnalyticsInsightEvent[];
+  filters?: WebAnalyticsInsightFilter[];
+  bucket?: WebAnalyticsInsightBucket;
+  property?: string;
+  binSize?: number;
+}
+
+export interface WebAnalyticsInsight extends WebAnalyticsInsightConfig {
+  id: string;
+}
+
+export interface WebAnalyticsInsightStep {
+  name: string;
+  count: number;
+}
+
+export interface WebAnalyticsInsightSeries {
+  name: string;
+  counts: number[];
+}
+
+export interface WebAnalyticsInsightBin {
+  value: number;
+  count: number;
+  share: number;
+}
+
+export interface WebAnalyticsInsightCohort {
+  cohort: string;
+  counts: number[];
+  shares: (number | null)[];
+}
+
+export interface WebAnalyticsInsightResult {
+  type: WebAnalyticsInsightType;
+  from: string;
+  to: string;
+  steps?: WebAnalyticsInsightStep[];
+  times?: number[];
+  series?: WebAnalyticsInsightSeries[];
+  bins?: WebAnalyticsInsightBin[];
+  summary?: { count: number; mean: number | null; median: number | null };
+  cohorts?: WebAnalyticsInsightCohort[];
+}
+
+export interface WebAnalyticsSchemaEvent {
+  name: string;
+  count: number;
+  properties: string[];
+}
+
+export interface WebAnalyticsSchema {
+  from: string;
+  to: string;
+  events: WebAnalyticsSchemaEvent[];
 }
 
 export interface WebAnalyticsRange {

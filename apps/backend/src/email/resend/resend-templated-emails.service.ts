@@ -15,6 +15,7 @@ const RESOURCE_LABELS: Record<Resource, string> = {
   [Resource.Projects]: 'Services',
   [Resource.Clusters]: 'Domains',
   [Resource.Account]: 'Account',
+  [Resource.WebAnalytics]: 'Web analytics',
 };
 
 const ACCESS_NOUNS = { clusters: 'domain', projects: 'service' } as const;

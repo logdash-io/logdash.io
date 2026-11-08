@@ -711,6 +711,31 @@ export async function load() {
         type: 'paragraph',
         text: 'Once more than one app sends events, the Goals card gets an Apps tab with the visits and people of each app, the website by its host name. Clicking an app keeps the visitors who used it, so the Apps tab then shows how many of them also use your other apps. People who are signed in on both sides are the only ones Logdash can connect, because anonymous IDs are never shared between apps.',
       },
+      { type: 'heading', text: 'Tag your links' },
+      {
+        type: 'paragraph',
+        text: 'Browsers send only the domain of the referring site, never the post or the page, and many in-app browsers, such as the ones in Reddit, X, Slack and Discord, send no referrer at all. A visit from an untagged link in one of those apps counts as Direct. Tag every link you share so the dashboard can tell where each visit came from:',
+      },
+      {
+        type: 'code',
+        language: 'text',
+        code: 'https://example.com/?utm_source=reddit&utm_campaign=r_sveltejs&utm_content=1abc2d',
+      },
+      {
+        type: 'list',
+        items: [
+          '`utm_source` names where the link is, such as `reddit`, `x` or `newsletter`. Known names, such as `reddit`, `x`, `linkedin`, `google` or `chatgpt`, go to their channel. Other names count as Campaign.',
+          "`utm_campaign` names the group the link belongs to, such as the subreddit or the launch. `utm_content` names the exact post, ad or button, such as the post's ID. `utm_medium` and `utm_term` work as usual.",
+          'When a link has no `utm_source`, the tracker takes `ref`, then `via`, then `source`, so `?ref=reddit` counts as source `reddit` in Organic social. A visit with only a campaign or content tag counts as Campaign, never as Direct.',
+          "The tracker records the name of an ad click ID, such as `gclid` or Reddit's `rdt_cid`, never its value. A visit with one counts as Paid.",
+          'Values follow the rules of event properties: they are trimmed and cut to 100 characters, and a value that contains `@` or a control character is dropped.',
+          'All tags come from the first page of the session, so later pages keep the attribution of the link the visitor came in on.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Under Details, the Channels card breaks visits down by channel, source, campaign, content, keyword and referrer. Click a source, such as `reddit`, to keep its visits, then open the Campaign or Content tab to see which subreddit and which post they came from.',
+      },
       { type: 'heading', text: 'Read the dashboard' },
       {
         type: 'paragraph',
@@ -722,7 +747,8 @@ export async function load() {
           'The 28 days on top show the visits of each day against the middle half of the same weekday, and how many people did your primary goal. Click a day to open it.',
           'The day shows its visits, the visits that stayed, and how many people did each goal, then visits per hour, sources, landing pages and every visit, newest first. Point at a source to see its share in both charts, or click it to keep it there.',
           'A visit stayed when it viewed 2 or more pages, sent a custom event, or lasted 10 seconds or more.',
-          'Channels, pages, goals, countries, technology, funnels, journeys and retention for the day are under Details.',
+          'Your saved insights follow the day, described below.',
+          'Channels, pages, goals, countries, technology, journeys and retention for the day are under Details.',
         ],
       },
       {
@@ -741,6 +767,65 @@ export async function load() {
       {
         type: 'paragraph',
         text: 'People counts the signed-in users you identify, each once over the whole range, however many days they come back. To count people, call `identify` on your website and pass `userId` from your apps.',
+      },
+      { type: 'heading', text: 'Insights' },
+      {
+        type: 'paragraph',
+        text: 'Insights answer questions that span weeks or months. Add them with Add insight below the day. Everyone on the domain sees the same cards in the same order, and each card has its own period. Edit, move or remove a card from its menu.',
+      },
+      {
+        type: 'list',
+        items: [
+          'Funnel counts how many events reached each step, in order, with the conversion and drop-off between steps. Each step is an event with optional property filters, and a filter for every step, such as `cohort` between two dates, keeps the steps comparable. Pick People instead to follow each visitor or signed-in user through pages and goals.',
+          'Trend counts up to 5 events per day, week or month, each with its own filters, on one chart.',
+          'Histogram shows how often each value of a numeric property occurs, with its mean and median. Set the bar width to group values.',
+          'Cohorts groups a start event by the date in one of its properties, `cohort` by default, and shows the share of each group that sent each later event.',
+        ],
+      },
+      {
+        type: 'paragraph',
+        text: 'Funnels, trends, histograms and cohorts count events, not people, so they work for apps that send no user ID. To measure a product loop without one, send each milestone at most once per install, such as `first_open` and then `first_project`, with a `cohort` property set to the date of the first open. Then each event is one install: a funnel of the milestones shows where new installs drop off, and a cohort table shows how each week of installs does. For daily, weekly and monthly users, send one event per active day with properties that say whether it is the first day of its week or month, and count it in a trend with those filters. For how habitual your users are, send one event per month with the number of active days, and show it as a histogram.',
+      },
+      { type: 'heading', text: 'Connect your coding agent' },
+      {
+        type: 'paragraph',
+        text: 'The Logdash MCP server lets your coding agent read your analytics and build insights for you, such as "add a funnel from first open to first merge, and a weekly cohort table". It answers at `https://api.logdash.io/mcp` over Streamable HTTP. Create a personal API key under API keys in your account, with Web analytics set to Read so the agent can only read, or to Write so it can also save, change and remove insights. The key reaches only the domains you pick for it.',
+      },
+      {
+        type: 'code',
+        language: 'bash',
+        title: 'Claude Code',
+        code: `claude mcp add --transport http logdash https://api.logdash.io/mcp \\
+  --header "Authorization: Bearer $LOGDASH_API_KEY"`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        title: 'Codex, in ~/.codex/config.toml',
+        code: `[mcp_servers.logdash]
+url = "https://api.logdash.io/mcp"
+bearer_token_env_var = "LOGDASH_API_KEY"`,
+      },
+      {
+        type: 'code',
+        language: 'json',
+        title: 'Cursor, in .cursor/mcp.json',
+        code: `{
+  "mcpServers": {
+    "logdash": {
+      "url": "https://api.logdash.io/mcp",
+      "headers": { "Authorization": "Bearer \${env:LOGDASH_API_KEY}" }
+    }
+  }
+}`,
+      },
+      {
+        type: 'list',
+        items: [
+          '`describe` comes first: it lists the domains the key reaches, their sites, and the event names and property keys with counts for a period.',
+          '`overview`, `breakdown`, `person_funnel`, `events_funnel`, `trend`, `distribution`, `cohort_table` and `retention` return short summaries, never raw events.',
+          '`list_insights` and `run_insight` read the saved cards. `create_insight`, `update_insight`, `reorder_insights` and `delete_insight` change them and need Write.',
+        ],
       },
       { type: 'heading', text: 'Identify signed-in users' },
       {
@@ -921,7 +1006,7 @@ window.logdash?.optIn();`,
           'the event name: `pageview`, `pageleave`, `browser_error` or one of your custom events. `browser_error` carries no error message or stack trace.',
           'for custom events, the properties you pass to `track`, after the checks described above.',
           'the host name and path of the page, without query string or fragment. Path segments that contain `@` become `:redacted`, and segments that look like database IDs, UUIDs or numbers of four or more digits become `:id`.',
-          'the host name of the referring site, UTM source, medium, campaign and term, and the name of an ad click ID parameter such as `gclid`, never its value. They come from the first event of the session.',
+          'the host name of the referring site, UTM source, medium, campaign, term and content, with `ref`, `via` or `source` as the source when `utm_source` is missing, and the name of an ad click ID parameter such as `gclid`, never its value. They come from the first event of the session.',
           'device type, browser and operating system, derived from the User-Agent.',
           "a country, looked up from the IP address in a copy of the [DB-IP](https://db-ip.com) database on the Logdash server, or derived from the browser's time zone when the lookup has no answer. The IP address itself is not stored.",
           'the time of the event.',

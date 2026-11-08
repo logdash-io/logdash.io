@@ -28,7 +28,7 @@ const PAID_MEDIUMS = [
   'sponsored',
 ];
 
-const PAID_CLICK_IDS = ['gclid', 'gbraid', 'wbraid', 'gad_source', 'dclid', 'msclkid'];
+const PAID_CLICK_IDS = ['gclid', 'gbraid', 'wbraid', 'gad_source', 'dclid', 'msclkid', 'rdt_cid'];
 
 const SOCIAL_CLICK_IDS = ['fbclid', 'ttclid', 'twclid', 'li_fat_id'];
 
@@ -426,7 +426,7 @@ function lookupTable(): string {
 
 export const WEB_ANALYTICS_CHANNEL = `multiIf(
   lower(utm_medium) IN (${list(PAID_MEDIUMS)}) OR startsWith(lower(utm_medium), 'paid') OR click_id IN (${list(PAID_CLICK_IDS)}), 'Paid',
-  referrer = '' AND utm_source = '' AND utm_medium = '' AND click_id = '', 'Direct',
+  referrer = '' AND utm_source = '' AND utm_medium = '' AND utm_campaign = '' AND utm_content = '' AND click_id = '', 'Direct',
   transform(
     arrayFirst(found -> found > 0, arrayMap(key -> transform(key, ${lookupTable()}, 0), [
       lower(utm_source),
@@ -440,8 +440,7 @@ export const WEB_ANALYTICS_CHANNEL = `multiIf(
     multiIf(
       click_id IN (${list(SOCIAL_CLICK_IDS)}), 'Organic social',
       referrer != '', 'Referral',
-      utm_source != '', 'Campaign',
-      'Direct'
+      'Campaign'
     )
   )
 )`;

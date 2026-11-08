@@ -1,12 +1,27 @@
 import { ClickHouseClient } from '@clickhouse/client';
-import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { WebAnalyticsSiteEntity } from '../core/entities/web-analytics-site.entity';
-import { WebAnalyticsSiteNormalized } from '../core/entities/web-analytics-site.interface';
-import { WebAnalyticsSiteSerializer } from '../core/entities/web-analytics-site.serializer';
+import {
+  WebAnalyticsInsightNormalized,
+  WebAnalyticsSiteNormalized,
+} from '../core/entities/web-analytics-site.interface';
+import {
+  WebAnalyticsInsightSerializer,
+  WebAnalyticsSiteSerializer,
+} from '../core/entities/web-analytics-site.serializer';
+import {
+  MAX_WEB_ANALYTICS_INSIGHTS,
+  WebAnalyticsInsightConfig,
+} from '../core/dto/web-analytics-insight.body';
 import { RedisService } from '../../shared/redis/redis.service';
 import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 import { Actor } from '../../audit-log/core/enums/actor.enum';
@@ -88,6 +103,97 @@ export class WebAnalyticsWriteService {
     return WebAnalyticsSiteSerializer.normalize(site);
   }
 
+  public async createInsight(
+    clusterId: string,
+    insight: WebAnalyticsInsightConfig,
+    actorUserId: string,
+  ): Promise<WebAnalyticsInsightNormalized> {
+    await this.ensureSite(clusterId);
+    const _id = new Types.ObjectId();
+    const site = await this.model
+      .findOneAndUpdate(
+        { clusterId, [`insights.${MAX_WEB_ANALYTICS_INSIGHTS - 1}`]: { $exists: false } },
+        { $push: { insights: { ...insight, _id } } },
+        { returnDocument: 'after' },
+      )
+      .lean<WebAnalyticsSiteEntity>()
+      .exec();
+    if (!site)
+      throw new BadRequestException(
+        `A domain keeps at most ${MAX_WEB_ANALYTICS_INSIGHTS} insights. Remove one first`,
+      );
+    this.audit(actorUserId, AuditLogEntityAction.Create, _id.toString());
+    return this.pickInsight(site, _id.toString());
+  }
+
+  public async updateInsight(
+    clusterId: string,
+    insightId: string,
+    insight: WebAnalyticsInsightConfig,
+    actorUserId: string,
+  ): Promise<WebAnalyticsInsightNormalized> {
+    const _id = this.insightObjectId(insightId);
+    const site = await this.model
+      .findOneAndUpdate(
+        { clusterId, 'insights._id': _id },
+        { $set: { 'insights.$': { ...insight, _id } } },
+        { returnDocument: 'after' },
+      )
+      .lean<WebAnalyticsSiteEntity>()
+      .exec();
+    if (!site) throw new NotFoundException('Insight not found');
+    this.audit(actorUserId, AuditLogEntityAction.Update, insightId);
+    return this.pickInsight(site, insightId);
+  }
+
+  public async deleteInsight(
+    clusterId: string,
+    insightId: string,
+    actorUserId: string,
+  ): Promise<void> {
+    const _id = this.insightObjectId(insightId);
+    const result = await this.model
+      .updateOne({ clusterId, 'insights._id': _id }, { $pull: { insights: { _id } } })
+      .exec();
+    if (!result.modifiedCount) throw new NotFoundException('Insight not found');
+    this.audit(actorUserId, AuditLogEntityAction.Delete, insightId);
+  }
+
+  public async reorderInsights(
+    clusterId: string,
+    ids: string[],
+    actorUserId: string,
+  ): Promise<WebAnalyticsInsightNormalized[]> {
+    const objectIds = ids.map((id) => new Types.ObjectId(id));
+    const site = await this.model
+      .findOneAndUpdate(
+        { clusterId, insights: { $size: ids.length }, 'insights._id': { $all: objectIds } },
+        [
+          {
+            $set: {
+              insights: {
+                $map: {
+                  input: objectIds,
+                  as: 'id',
+                  in: {
+                    $first: {
+                      $filter: { input: '$insights', cond: { $eq: ['$$this._id', '$$id'] } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+        { returnDocument: 'after', updatePipeline: true },
+      )
+      .lean<WebAnalyticsSiteEntity>()
+      .exec();
+    if (!site) throw new BadRequestException('ids must list every insight of the domain once');
+    for (const id of ids) this.audit(actorUserId, AuditLogEntityAction.Update, id);
+    return (site.insights ?? []).map((insight) => WebAnalyticsInsightSerializer.normalize(insight));
+  }
+
   public async deleteByClusterId(clusterId: string): Promise<void> {
     const site = await this.model.findOne({ clusterId }).lean<WebAnalyticsSiteEntity>().exec();
     if (!site) return;
@@ -133,6 +239,30 @@ export class WebAnalyticsWriteService {
         { keys: [WEB_ANALYTICS_QUEUE_LOCK], arguments: [lock] },
       );
     }
+  }
+
+  private insightObjectId(insightId: string): Types.ObjectId {
+    if (!Types.ObjectId.isValid(insightId)) throw new NotFoundException('Insight not found');
+    return new Types.ObjectId(insightId);
+  }
+
+  private pickInsight(
+    site: WebAnalyticsSiteEntity,
+    insightId: string,
+  ): WebAnalyticsInsightNormalized {
+    const insight = (site.insights ?? []).find((entry) => entry._id.toString() === insightId);
+    if (!insight) throw new NotFoundException('Insight not found');
+    return WebAnalyticsInsightSerializer.normalize(insight);
+  }
+
+  private audit(actorUserId: string, action: AuditLogEntityAction, insightId: string): void {
+    void this.auditLog.create({
+      userId: actorUserId,
+      actor: Actor.User,
+      action,
+      relatedDomain: RelatedDomain.WebAnalytics,
+      relatedEntityId: insightId,
+    });
   }
 
   private normalizeOrigin(value: string): string {

@@ -47,6 +47,7 @@
   import DayToolbar from './day/DayToolbar.svelte';
   import DayVisitsCard from './day/DayVisitsCard.svelte';
   import VisitGroupsCard from './day/VisitGroupsCard.svelte';
+  import InsightsSection from './insights/InsightsSection.svelte';
   import VisitorDialog from './insights/VisitorDialog.svelte';
   import WebAnalyticsSetup from './WebAnalyticsSetup.svelte';
 
@@ -77,6 +78,7 @@
   let detailsOpen = $state(false);
   let opened = $state<WebAnalyticsVisitor | null>(null);
   let details = $state<HTMLElement>();
+  let revision = $state(0);
   let reportKey = '';
 
   const query = $derived(parseAnalyticsQuery(page.url.searchParams));
@@ -229,6 +231,7 @@
 
   function refresh(force = false): void {
     void analytics.loadSite();
+    if (force) revision += 1;
     if (goals.error) void goals.load(tz);
     if (!params) return;
     loadDays(stripEnd, params, true);
@@ -459,6 +462,8 @@
         onopen={onOpen}
         onhover={onHover}
       />
+
+      <InsightsSection {clusterId} {revision} />
 
       <div bind:this={details} class="scroll-mt-2">
         <DayDetails

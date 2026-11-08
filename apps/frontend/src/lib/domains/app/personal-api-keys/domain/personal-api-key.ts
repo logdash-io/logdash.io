@@ -4,6 +4,7 @@ export type Resource =
   | 'monitors'
   | 'projects'
   | 'clusters'
+  | 'webAnalytics'
   | 'account';
 
 export type Action = 'none' | 'read' | 'write' | 'delete';
@@ -47,6 +48,11 @@ export const RESOURCES: {
   },
   { resource: 'projects', label: 'Services', actions: ['none', 'read'] },
   { resource: 'clusters', label: 'Domains', actions: ['none', 'read'] },
+  {
+    resource: 'webAnalytics',
+    label: 'Web analytics',
+    actions: ['none', 'read', 'write'],
+  },
   { resource: 'account', label: 'Account', actions: ['none', 'read'] },
 ];
 
@@ -63,6 +69,7 @@ export const DEFAULT_SCOPES: ScopeEntry[] = [
   { resource: 'monitors', action: 'read' },
   { resource: 'projects', action: 'read' },
   { resource: 'clusters', action: 'read' },
+  { resource: 'webAnalytics', action: 'read' },
 ];
 
 export const EXPIRY_OPTIONS: { label: string; days: number | null }[] = [

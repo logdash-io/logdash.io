@@ -6,6 +6,7 @@ import {
 } from '../core/entities/web-analytics-site.entity';
 import { WebAnalyticsReadService } from './web-analytics-read.service';
 import { WebAnalyticsDayReadService } from './web-analytics-day-read.service';
+import { WebAnalyticsInsightReadService } from './web-analytics-insight-read.service';
 import { LogReadModule } from '../../log/read/log-read.module';
 import { ProjectReadModule } from '../../project/read/project-read.module';
 
@@ -17,7 +18,7 @@ import { ProjectReadModule } from '../../project/read/project-read.module';
     LogReadModule,
     ProjectReadModule,
   ],
-  providers: [WebAnalyticsReadService, WebAnalyticsDayReadService],
-  exports: [WebAnalyticsReadService, WebAnalyticsDayReadService],
+  providers: [WebAnalyticsReadService, WebAnalyticsDayReadService, WebAnalyticsInsightReadService],
+  exports: [WebAnalyticsReadService, WebAnalyticsDayReadService, WebAnalyticsInsightReadService],
 })
 export class WebAnalyticsReadModule {}
