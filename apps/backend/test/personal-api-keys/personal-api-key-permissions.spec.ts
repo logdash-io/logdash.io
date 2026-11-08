@@ -151,6 +151,18 @@ describe('Personal API keys (scope + access enforcement)', () => {
       expect(response.status).toBe(403);
     });
 
+    it('returns 403 for a personal key renewing a session token', async () => {
+      const { token } = await bootstrap.utils.generalUtils.setupClaimed();
+
+      const key = await createKey(token, ALL_ACCESS, { kind: 'all' });
+
+      const response = await request(server())
+        .post('/users/me/token')
+        .set('Authorization', `Bearer ${key}`);
+
+      expect(response.status).toBe(403);
+    });
+
     it('returns 403 for a personal key creating another key (credential-mints-credential is closed)', async () => {
       const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
 
