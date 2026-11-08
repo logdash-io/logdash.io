@@ -18,6 +18,7 @@ import {
   MAX_WEB_ANALYTICS_INSIGHTS,
   normalizeWebAnalyticsInsight,
   WEB_ANALYTICS_INSIGHT_BUCKETS,
+  WebAnalyticsFunnelLayout,
   WebAnalyticsFunnelMode,
   WebAnalyticsInsightBody,
   WebAnalyticsInsightOperator,
@@ -164,6 +165,12 @@ const INSIGHT = {
     enum: Object.values(WebAnalyticsFunnelMode),
     description:
       'Funnels only. events (default) counts the events of each step and needs events; people follows each visitor through steps',
+  },
+  layout: {
+    type: 'string',
+    enum: Object.values(WebAnalyticsFunnelLayout),
+    description:
+      'Funnels only. columns (default) draws a bar per step with the drop between bars and spans the full width above 3 steps; rows lists the steps and fits long names in half the width',
   },
   steps: { ...STEPS, description: `People funnels only. ${STEPS.description}` },
   events: events(

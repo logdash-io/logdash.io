@@ -76,6 +76,7 @@ describe('Web analytics insights', () => {
       type: 'trend',
       title: '  Daily users  ',
       steps: ['page:/'],
+      layout: 'rows',
       events: [{ name: 'malini_desktop_day', filters: [] }],
     });
     const third = await create(setup.cluster.id, setup.token, {
@@ -86,7 +87,11 @@ describe('Web analytics insights', () => {
     });
 
     // then
-    expect(first).toEqual({ id: expect.any(String) as string, ...withFilters(funnel) });
+    expect(first).toEqual({
+      id: expect.any(String) as string,
+      layout: 'columns',
+      ...withFilters(funnel),
+    });
     expect(second).toEqual({
       id: expect.any(String) as string,
       type: 'trend',
@@ -119,6 +124,13 @@ describe('Web analytics insights', () => {
     );
     expect(edited.status).toBe(200);
     expect(edited.body).toMatchObject({ id: second.id, title: 'Weekly users', bucket: 'week' });
+    const rows = await send(
+      setup.token,
+      'put',
+      `${setup.cluster.id}/web_analytics/insights/${first.id}`,
+      { ...funnel, layout: 'rows' },
+    );
+    expect(rows.body).toEqual({ id: first.id, layout: 'rows', ...withFilters(funnel) });
     expect(
       (
         await send(

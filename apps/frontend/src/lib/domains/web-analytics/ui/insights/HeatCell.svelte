@@ -11,8 +11,6 @@
   const share = $derived(Math.min(100, Math.max(0, rate ?? 0)));
 </script>
 
-<!-- The fill runs from heat-0 to heat-100. Text turns dark at 62%, where both
-     text colours reach the same contrast on the fill. -->
 <td
   class={[
     'rounded-md py-1.5 text-center text-xs tabular-nums',

@@ -195,6 +195,8 @@ export type WebAnalyticsInsightType =
 
 export type WebAnalyticsFunnelMode = 'people' | 'events';
 
+export type WebAnalyticsFunnelLayout = 'columns' | 'rows';
+
 export type WebAnalyticsInsightOperator =
   | 'eq'
   | 'neq'
@@ -221,6 +223,7 @@ export interface WebAnalyticsInsightConfig {
   title: string;
   days: number;
   mode?: WebAnalyticsFunnelMode;
+  layout?: WebAnalyticsFunnelLayout;
   steps?: string[];
   events?: WebAnalyticsInsightEvent[];
   filters?: WebAnalyticsInsightFilter[];
@@ -253,7 +256,6 @@ export interface WebAnalyticsInsightCohort {
   cohort: string;
   counts: number[];
   shares: (number | null)[];
-  // Whether each count can still grow, because the cohort is younger than its lag.
   filling: boolean[];
 }
 
@@ -267,7 +269,6 @@ export interface WebAnalyticsInsightResult {
   bins?: WebAnalyticsInsightBin[];
   summary?: { count: number; mean: number | null; median: number | null };
   cohorts?: WebAnalyticsInsightCohort[];
-  // Days from the cohort date that hold 95% of each event.
   lagDays?: number[];
 }
 

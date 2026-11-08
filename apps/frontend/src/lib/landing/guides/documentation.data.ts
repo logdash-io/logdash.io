@@ -776,7 +776,7 @@ export async function load() {
       {
         type: 'list',
         items: [
-          'Funnel counts how many events reached each step, in order, with the conversion and drop-off between steps. Each conversion shows its 95% interval, the range that likely holds the true rate. Each step is an event with optional property filters, and a filter for every step, such as `cohort` between two dates, keeps the steps comparable. Pick People instead to follow each visitor or signed-in user through pages and goals.',
+          'Funnel counts how many events reached each step, in order, with the conversion and drop-off between steps. Each conversion shows its 95% interval, the range that likely holds the true rate. Each step is an event with optional property filters, and a filter for every step, such as `cohort` between two dates, keeps the steps comparable. Pick People instead to follow each visitor or signed-in user through pages and goals. Under Chart, pick Columns to draw a bar for each step with the drop between bars, or Rows to fit long step names in half the width.',
           'Trend counts up to 5 events per day, week or month, each with its own filters, on one chart.',
           'Histogram shows how often each value of a numeric property occurs, with its mean and median. Set the bar width to group values.',
           'Cohorts groups a start event by the date in one of its properties, `cohort` by default, and shows the share of each group that sent each later event. A bar shows the 95% interval of each share, and a tick the typical share of the 4 groups before it. A green or red arrow marks a share above or below that typical share, beyond noise. A hollow dot marks a group too young for 95% of an event, so its share can still grow.',

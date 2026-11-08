@@ -34,6 +34,11 @@ export enum WebAnalyticsFunnelMode {
   Events = 'events',
 }
 
+export enum WebAnalyticsFunnelLayout {
+  Columns = 'columns',
+  Rows = 'rows',
+}
+
 export enum WebAnalyticsInsightOperator {
   Eq = 'eq',
   Neq = 'neq',
@@ -129,6 +134,16 @@ export class WebAnalyticsInsightBody {
   mode?: WebAnalyticsFunnelMode;
 
   @ApiPropertyOptional({
+    enum: WebAnalyticsFunnelLayout,
+    default: WebAnalyticsFunnelLayout.Columns,
+    description:
+      'Funnels only. columns draws a bar per step with the drop between bars; rows lists the steps, which fits long names in half the width',
+  })
+  @IsOptional()
+  @IsEnum(WebAnalyticsFunnelLayout)
+  layout?: WebAnalyticsFunnelLayout;
+
+  @ApiPropertyOptional({
     type: String,
     isArray: true,
     example: ['page:/', 'goal:signup_completed'],
@@ -215,6 +230,7 @@ export type WebAnalyticsInsightConfig = {
   title: string;
   days: number;
   mode?: WebAnalyticsFunnelMode;
+  layout?: WebAnalyticsFunnelLayout;
   steps?: string[];
   events?: WebAnalyticsInsightEvent[];
   filters?: WebAnalyticsInsightFilter[];
@@ -240,13 +256,14 @@ export function normalizeWebAnalyticsInsight(
       );
   };
   if (body.type === WebAnalyticsInsightType.Funnel) {
+    const layout = body.layout ?? WebAnalyticsFunnelLayout.Columns;
     if ((body.mode ?? WebAnalyticsFunnelMode.Events) === WebAnalyticsFunnelMode.People) {
       if ((body.steps ?? []).length < 2)
         throw new BadRequestException('A people funnel takes 2 to 8 steps');
-      return { ...base, mode: WebAnalyticsFunnelMode.People, steps: body.steps };
+      return { ...base, mode: WebAnalyticsFunnelMode.People, layout, steps: body.steps };
     }
     count(2, 8, 'events funnel');
-    return { ...base, mode: WebAnalyticsFunnelMode.Events, events, filters };
+    return { ...base, mode: WebAnalyticsFunnelMode.Events, layout, events, filters };
   }
   if (body.type === WebAnalyticsInsightType.Trend) {
     count(1, 5, 'trend');

@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { match } from 'ts-pattern';
 import { rateFlag, wilson, type RateVerdict } from './day-analytics';
 import type {
+  WebAnalyticsFunnelLayout,
   WebAnalyticsFunnelMode,
   WebAnalyticsInsight,
   WebAnalyticsInsightBucket,
@@ -20,6 +21,7 @@ export interface WebAnalyticsInsightDraft {
   title: string;
   days: number;
   mode: WebAnalyticsFunnelMode;
+  layout: WebAnalyticsFunnelLayout;
   steps: string[];
   events: WebAnalyticsInsightEvent[];
   filters: WebAnalyticsInsightFilter[];
@@ -32,7 +34,6 @@ export interface WebAnalyticsFunnelRow {
   name: string;
   count: number;
   conversion: number | null;
-  // 95% Wilson interval of the conversion, when the step is a subset of the one before.
   interval: [number, number] | null;
   dropped: number | null;
   overall: number;
@@ -53,11 +54,9 @@ export interface CohortRow {
 
 export interface CohortTable {
   groups: { label: string; rows: CohortRow[] }[];
-  // The top of each step's bar scale, as a rate.
   scales: number[];
 }
 
-// Like the day dashboard, which compares a day with the last 4 of its weekday.
 const TYPICAL_COHORTS = 4;
 
 export const INSIGHT_TYPES: {
@@ -68,6 +67,23 @@ export const INSIGHT_TYPES: {
   { value: 'trend', label: 'Trend' },
   { value: 'distribution', label: 'Histogram' },
   { value: 'cohorts', label: 'Cohorts' },
+];
+
+export const FUNNEL_LAYOUTS: {
+  value: WebAnalyticsFunnelLayout;
+  label: string;
+  hint: string;
+}[] = [
+  {
+    value: 'columns',
+    label: 'Columns',
+    hint: 'Shows how many drop at each step.',
+  },
+  {
+    value: 'rows',
+    label: 'Rows',
+    hint: 'Fits long step names in half the width.',
+  },
 ];
 
 export const INSIGHT_OPERATORS: {
@@ -94,6 +110,8 @@ export const INSIGHT_EVENT_LIMITS: Record<
 
 export const INSIGHT_DAYS = [7, 14, 30, 90, 180, 365];
 
+const NARROW_FUNNEL_COLUMNS = 3;
+
 export function defaultBucket(
   type: WebAnalyticsInsightType,
 ): WebAnalyticsInsightBucket {
@@ -109,6 +127,7 @@ export function insightDraft(
     title: insight?.title ?? '',
     days: insight?.days ?? 30,
     mode: insight?.mode ?? 'events',
+    layout: insight?.layout ?? 'columns',
     steps: insight?.steps?.length ? [...insight.steps] : ['page:/', 'goal:'],
     events: withEventCount(
       (insight?.events ?? []).map((event) => ({
@@ -156,9 +175,10 @@ export function insightConfig(
         ? {
             ...base,
             mode: draft.mode,
+            layout: draft.layout,
             steps: draft.steps.map((step) => step.trim()),
           }
-        : { ...base, mode: draft.mode, events, filters },
+        : { ...base, mode: draft.mode, layout: draft.layout, events, filters },
     )
     .with('trend', () => ({ ...base, events, filters, bucket }))
     .with('distribution', () => ({
@@ -205,6 +225,13 @@ export function insightProblem(
   return null;
 }
 
+export function insightWide(insight: WebAnalyticsInsightConfig): boolean {
+  if (insight.type === 'cohorts') return true;
+  if (insight.type !== 'funnel' || insight.layout === 'rows') return false;
+  const steps = insight.mode === 'people' ? insight.steps : insight.events;
+  return (steps?.length ?? 0) > NARROW_FUNNEL_COLUMNS;
+}
+
 export function funnelRows(
   steps: WebAnalyticsInsightStep[],
 ): WebAnalyticsFunnelRow[] {
@@ -226,8 +253,6 @@ export function funnelRows(
   });
 }
 
-// Rows stay newest first, grouped by month (by year for month cohorts). A share
-// is judged against the pooled share of the 4 older cohorts that finished its step.
 export function cohortTable(
   cohorts: WebAnalyticsInsightCohort[],
   bucket: WebAnalyticsInsightBucket,
@@ -291,7 +316,6 @@ export function cohortTable(
   return { groups, scales };
 }
 
-// A week belongs to the month of its Thursday, as an ISO week belongs to a year.
 function groupMonth(start: DateTime, bucket: WebAnalyticsInsightBucket) {
   return bucket === 'week' ? start.plus({ days: 3 }) : start;
 }

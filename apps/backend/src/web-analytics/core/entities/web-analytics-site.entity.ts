@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import {
+  WebAnalyticsFunnelLayout,
   WebAnalyticsFunnelMode,
   WebAnalyticsInsightBucket,
   WebAnalyticsInsightEvent,
@@ -23,6 +24,9 @@ export class WebAnalyticsInsightEntity {
 
   @Prop()
   mode?: WebAnalyticsFunnelMode;
+
+  @Prop()
+  layout?: WebAnalyticsFunnelLayout;
 
   @Prop({ type: [String], default: undefined })
   steps?: string[];

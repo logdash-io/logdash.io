@@ -1,4 +1,6 @@
 <script lang="ts">
+  import FunnelColumnsIcon from '$lib/domains/shared/icons/FunnelColumnsIcon.svelte';
+  import FunnelRowsIcon from '$lib/domains/shared/icons/FunnelRowsIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
@@ -9,6 +11,7 @@
   import { WebAnalyticsInsightState } from '../../application/web-analytics-dashboard.state.svelte';
   import type {
     WebAnalyticsBreakdownRow,
+    WebAnalyticsFunnelLayout,
     WebAnalyticsFunnelMode,
     WebAnalyticsInsight,
     WebAnalyticsInsightBucket,
@@ -18,6 +21,7 @@
   } from '../../domain/web-analytics';
   import {
     defaultBucket,
+    FUNNEL_LAYOUTS,
     INSIGHT_DAYS,
     INSIGHT_EVENT_LIMITS,
     INSIGHT_TYPES,
@@ -55,6 +59,8 @@
     { value: 'week', label: 'Week' },
     { value: 'month', label: 'Month' },
   ];
+  const PICTURE_SHARES = [100, 74, 58, 46, 37, 31, 27, 24];
+  const LAYOUT_ICONS = { columns: FunnelColumnsIcon, rows: FunnelRowsIcon };
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const id = $props.id();
 
@@ -91,6 +97,9 @@
     keysOf(draft.events.map((event) => event.name.trim())),
   );
   const copy = $derived(texts(draft.type));
+  const pictureShares = $derived(
+    PICTURE_SHARES.slice(0, people ? draft.steps.length : draft.events.length),
+  );
 
   $effect(() => {
     if (!isOpen) return;
@@ -273,6 +282,40 @@
           </Select>
         </label>
       </div>
+
+      {#if draft.type === 'funnel'}
+        <fieldset class="flex flex-col gap-2">
+          <legend class="pb-1.5 text-sm font-medium">Chart</legend>
+          <div class="grid grid-cols-2 gap-2">
+            {#each FUNNEL_LAYOUTS as layout (layout.value)}
+              {@const Icon = LAYOUT_ICONS[layout.value]}
+              <label
+                class={[
+                  'bg-surface-50-bg edge flex cursor-pointer flex-col gap-2.5 rounded-xl p-2.5 transition-shadow',
+                  'hover:not-has-checked:inset-ring-surface-150-bg hover:inset-ring',
+                  'has-checked:inset-ring-brand has-checked:inset-ring-[1.5px] has-focus-visible:shadow-(--focus-ring)',
+                ]}
+              >
+                <input
+                  type="radio"
+                  name="{id}-layout"
+                  value={layout.value}
+                  bind:group={draft.layout}
+                  class="sr-only"
+                />
+                {@render picture(layout.value)}
+                <span class="flex flex-col gap-0.5">
+                  <span class="flex items-center gap-1.5 text-sm font-medium">
+                    <Icon class="size-4" />
+                    {layout.label}
+                  </span>
+                  <span class="text-fg-muted text-xs">{layout.hint}</span>
+                </span>
+              </label>
+            {/each}
+          </div>
+        </fieldset>
+      {/if}
 
       {#if people}
         <fieldset class="flex flex-col gap-2">
@@ -457,6 +500,59 @@
   </form>
 </DetailsDialog>
 
+{#snippet picture(layout: WebAnalyticsFunnelLayout)}
+  {@const count = pictureShares.length}
+  <svg
+    class="h-16 w-full"
+    viewBox="0 0 200 64"
+    preserveAspectRatio="none"
+    aria-hidden="true"
+  >
+    {#each pictureShares as share, index (index)}
+      {#if layout === 'columns'}
+        {@const width = (200 - 6 * (count - 1)) / count}
+        {@const height = (share / 100) * 62}
+        <rect
+          class="picture-rest"
+          x={index * (width + 6)}
+          y="1"
+          {width}
+          height="62"
+          rx="2"
+        />
+        <rect
+          class="fill-chart-1"
+          x={index * (width + 6)}
+          y={63 - height}
+          {width}
+          {height}
+          rx="2"
+        />
+      {:else}
+        {@const height = (64 - 1.5 * (count - 1)) / count}
+        {@const y = index * (height + 1.5)}
+        <rect class="picture-row" x="0" {y} width={share * 2} {height} rx="2" />
+        <rect
+          class="fill-fg-muted"
+          x="6"
+          y={y + height / 2 - 1}
+          width={40 + ((index * 37) % 5) * 9}
+          height="2"
+          rx="1"
+        />
+        <rect
+          class="fill-fg-tertiary"
+          x="176"
+          y={y + height / 2 - 1}
+          width="18"
+          height="2"
+          rx="1"
+        />
+      {/if}
+    {/each}
+  </svg>
+{/snippet}
+
 {#snippet addButton(label: string, onclick: () => void)}
   <button
     type="button"
@@ -467,3 +563,13 @@
     {label}
   </button>
 {/snippet}
+
+<style>
+  .picture-rest {
+    fill: color-mix(in oklch, var(--chart-1) 14%, var(--surface-50-bg));
+  }
+
+  .picture-row {
+    fill: var(--surface-150-bg);
+  }
+</style>

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   WEB_ANALYTICS_INSIGHT_BUCKETS,
+  WebAnalyticsFunnelLayout,
   WebAnalyticsFunnelMode,
   WebAnalyticsInsightBucket,
   WebAnalyticsInsightEvent,
@@ -25,6 +26,9 @@ export class WebAnalyticsInsightSerialized {
 
   @ApiPropertyOptional({ enum: WebAnalyticsFunnelMode })
   mode?: WebAnalyticsFunnelMode;
+
+  @ApiPropertyOptional({ enum: WebAnalyticsFunnelLayout })
+  layout?: WebAnalyticsFunnelLayout;
 
   @ApiPropertyOptional({ type: String, isArray: true })
   steps?: string[];

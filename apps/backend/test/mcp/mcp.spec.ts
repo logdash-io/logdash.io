@@ -425,6 +425,7 @@ describe('MCP server', () => {
         clusterId,
         type: 'funnel',
         title: 'Install journey',
+        layout: 'rows',
         events: [{ name: 'malini_desktop_first_open' }, { name: 'malini_desktop_first_merge' }],
       })
     ).json;
@@ -452,7 +453,12 @@ describe('MCP server', () => {
     const deleted = await call(key, 'delete_insight', { clusterId, insightId: journey.id });
 
     // then
-    expect(journey).toMatchObject({ id: expect.any(String) as string, mode: 'events', days: 30 });
+    expect(journey).toMatchObject({
+      id: expect.any(String) as string,
+      mode: 'events',
+      layout: 'rows',
+      days: 30,
+    });
     expect(updated.json).toMatchObject({ id: l30.id, title: 'L30 of September' });
     expect((reordered.json.insights as { id: string }[]).map((insight) => insight.id)).toEqual([
       l30.id,

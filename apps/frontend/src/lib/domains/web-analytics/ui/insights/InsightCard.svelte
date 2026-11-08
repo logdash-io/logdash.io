@@ -21,10 +21,12 @@
     insightConfig,
     insightDraft,
     insightSummary,
+    insightWide,
   } from '../../domain/web-analytics-insight';
   import { WebAnalyticsService } from '../../infrastructure/web-analytics.service';
   import InsightCohorts from './InsightCohorts.svelte';
-  import InsightFunnel from './InsightFunnel.svelte';
+  import InsightFunnelColumns from './InsightFunnelColumns.svelte';
+  import InsightFunnelRows from './InsightFunnelRows.svelte';
   import InsightHistogram from './InsightHistogram.svelte';
   import InsightTrend from './InsightTrend.svelte';
 
@@ -76,10 +78,7 @@
 
 <Well
   label={insight.title}
-  class={[
-    '@container',
-    { '@4xl/insights:col-span-2': insight.type === 'cohorts' },
-  ]}
+  class={['@container', { '@4xl/insights:col-span-2': insightWide(insight) }]}
 >
   {#snippet header()}
     <h3 class="flex min-w-0 items-baseline gap-2 px-3 text-[13px]">
@@ -169,7 +168,9 @@
     {@const data = result.data}
     <div class="flex flex-1 flex-col gap-2">
       {#if insight.type === 'funnel'}
-        <InsightFunnel
+        {@const Funnel =
+          insight.layout === 'rows' ? InsightFunnelRows : InsightFunnelColumns}
+        <Funnel
           steps={data.steps ?? []}
           people={insight.mode === 'people'}
           filters={(insight.events ?? []).map((event) => event.filters)}

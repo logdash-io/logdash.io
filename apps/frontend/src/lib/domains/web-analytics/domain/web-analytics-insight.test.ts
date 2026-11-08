@@ -9,6 +9,7 @@ import {
   insightDraft,
   insightProblem,
   insightSummary,
+  insightWide,
   withEventCount,
 } from './web-analytics-insight';
 
@@ -101,7 +102,6 @@ test('a cohort share is judged against the 4 older cohorts that finished its ste
     [0, 0],
     [0, 0],
   ]);
-  // The filling 26 Oct share of 10% stays out of the typical share.
   expect(rows[0].cells[1].typical).toBe(0.5);
   expect(rows[3].cells[0].typical).toBeNull();
   expect(scales[0]).toBeCloseTo(0.9);
@@ -173,9 +173,31 @@ test('a draft keeps only the fields of its type and pads its events', () => {
     title: 'Weekly cohorts',
     days: 30,
     mode: 'people',
+    layout: 'columns',
     steps: ['page:/', 'goal:signup'],
   });
   expect(insightProblem(insightConfig(draft))).toBeNull();
+});
+
+test('a funnel spans the full width as columns above 3 steps', () => {
+  const steps = ['page:/', 'goal:a', 'goal:b'];
+  const funnel = { type: 'funnel', title: 'Journey', days: 30 } as const;
+  expect(insightWide({ ...funnel, mode: 'people', steps })).toBe(false);
+  expect(
+    insightWide({ ...funnel, mode: 'people', steps: [...steps, 'goal:d'] }),
+  ).toBe(true);
+  expect(
+    insightWide({
+      ...funnel,
+      mode: 'people',
+      layout: 'rows',
+      steps: [...steps, 'goal:d'],
+    }),
+  ).toBe(false);
+  expect(
+    insightWide({ type: 'cohorts', title: 'Cohorts', days: 90, events: [] }),
+  ).toBe(true);
+  expect(insightDraft({ ...funnel, layout: 'rows' }).layout).toBe('rows');
 });
 
 test('a config names its first problem', () => {
