@@ -309,7 +309,7 @@ describe('CLI authorization (device-authorization flow)', () => {
       expect(whoamiBody.access).toEqual({ kind: 'all' });
 
       const resources = whoamiBody.scopes.map((s) => s.resource);
-      // CLI_DEFAULT: logs/metrics/monitors/projects/clusters at read
+      // CLI_DEFAULT: logs/metrics/monitors/projects/clusters/webAnalytics at read
       expect(resources).toEqual(
         expect.arrayContaining([
           Resource.Logs,
@@ -317,6 +317,7 @@ describe('CLI authorization (device-authorization flow)', () => {
           Resource.Monitors,
           Resource.Projects,
           Resource.Clusters,
+          Resource.WebAnalytics,
         ]),
       );
       for (const scope of whoamiBody.scopes) {

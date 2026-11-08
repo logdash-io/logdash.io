@@ -24,6 +24,7 @@ export class WebEventClickhouseEntity {
   utm_medium: string;
   utm_campaign: string;
   utm_term: string;
+  utm_content: string;
   click_id: string;
   device: string;
   browser: string;
@@ -73,6 +74,7 @@ export class WebEventClickhouseEntity {
       utm_medium: campaign(event.utmMedium),
       utm_campaign: campaign(event.utmCampaign),
       utm_term: campaign(event.utmTerm),
+      utm_content: campaign(event.utmContent),
       click_id: event.clickId && CLICK_IDS.includes(event.clickId) ? event.clickId : '',
       device: /ipad|tablet/i.test(userAgent)
         ? 'Tablet'
@@ -116,6 +118,7 @@ export class WebEventClickhouseEntity {
       utm_medium: '',
       utm_campaign: '',
       utm_term: '',
+      utm_content: '',
       click_id: '',
       device: '',
       browser: '',

@@ -426,19 +426,29 @@ describe('Web analytics (writes)', () => {
         utmMedium: 'über',
         utmCampaign: 'bob@example.com',
         utmTerm: `  ${'x'.repeat(150)}  `,
+        utmContent: `  ${'y'.repeat(150)}  `,
       });
       const unknown = event({
         clickId: 'yclid',
         utmSource: 'line\nbreak',
         utmMedium: `${'x'.repeat(99)}😀tail`,
+        utmContent: 'tab\tbreak',
+      });
+      const reddit = event({
+        clickId: 'rdt_cid',
+        utmSource: 'reddit',
+        utmCampaign: 'r_ClaudeAI',
+        utmContent: '1abc2d',
       });
       expect((await collect(batch(site.id, [tagged]))).status).toBe(202);
       await expireSessions();
       expect((await collect(batch(site.id, [unknown]))).status).toBe(202);
+      await expireSessions();
+      expect((await collect(batch(site.id, [reddit]))).status).toBe(202);
       await bootstrap.app.get(WebAnalyticsIngestionService).processQueue();
       const result = await bootstrap.clickhouseClient.query({
         query:
-          'SELECT toString(id) AS id, click_id, utm_source, utm_medium, utm_campaign, utm_term FROM web_events FINAL',
+          'SELECT toString(id) AS id, click_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content FROM web_events FINAL',
       });
       const { data } = await result.json<Record<string, string>>();
       expect(data.find((row) => row.id === tagged.id)).toEqual({
@@ -448,11 +458,19 @@ describe('Web analytics (writes)', () => {
         utm_medium: 'über',
         utm_campaign: '',
         utm_term: 'x'.repeat(100),
+        utm_content: 'y'.repeat(100),
       });
       expect(data.find((row) => row.id === unknown.id)).toMatchObject({
         click_id: '',
         utm_source: '',
         utm_medium: `${'x'.repeat(99)}😀`,
+        utm_content: '',
+      });
+      expect(data.find((row) => row.id === reddit.id)).toMatchObject({
+        click_id: 'rdt_cid',
+        utm_source: 'reddit',
+        utm_campaign: 'r_ClaudeAI',
+        utm_content: '1abc2d',
       });
     });
 
@@ -715,7 +733,12 @@ describe('Web analytics (writes)', () => {
       // when
       await collect(
         batch(site.id, [
-          event({ referrer: 'news.example', utmSource: 'newsletter', clickId: 'gclid' }),
+          event({
+            referrer: 'news.example',
+            utmSource: 'newsletter',
+            utmContent: 'footer',
+            clickId: 'gclid',
+          }),
         ]),
       );
       advanceBy(20 * 60_000);
@@ -729,6 +752,7 @@ describe('Web analytics (writes)', () => {
       expect(rows[0]).toMatchObject({
         referrer: 'news.example',
         utm_source: 'newsletter',
+        utm_content: 'footer',
         click_id: 'gclid',
       });
       expect(rows[1]).toMatchObject({
@@ -737,12 +761,14 @@ describe('Web analytics (writes)', () => {
         path: '/pricing',
         referrer: 'news.example',
         utm_source: 'newsletter',
+        utm_content: 'footer',
         click_id: 'gclid',
       });
       expect(rows[2]).toMatchObject({
         visitor_id: rows[0].visitor_id,
         referrer: 'other.example',
         utm_source: '',
+        utm_content: '',
         click_id: '',
       });
       expect(rows[2].session_id).not.toBe(rows[0].session_id);

@@ -62,6 +62,7 @@ type Session = {
   utmMedium: string;
   utmCampaign: string;
   utmTerm: string;
+  utmContent?: string;
   clickId: string;
 };
 
@@ -243,6 +244,7 @@ export class WebAnalyticsIngestionService implements OnApplicationBootstrap, OnA
           utmMedium: event.utm_medium,
           utmCampaign: event.utm_campaign,
           utmTerm: event.utm_term,
+          utmContent: event.utm_content,
           clickId: event.click_id,
         };
         if (session) session = fresh;
@@ -267,6 +269,7 @@ export class WebAnalyticsIngestionService implements OnApplicationBootstrap, OnA
         utm_medium: session.utmMedium,
         utm_campaign: session.utmCampaign,
         utm_term: session.utmTerm,
+        utm_content: session.utmContent ?? '',
         click_id: session.clickId,
       });
     }

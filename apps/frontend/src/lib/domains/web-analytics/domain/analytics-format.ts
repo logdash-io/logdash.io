@@ -11,8 +11,10 @@ export const FILTER_BREAKDOWNS: Record<
   WebAnalyticsBreakdownName
 > = {
   channel: 'channels',
+  source: 'sources',
   referrer: 'referrers',
   campaign: 'campaigns',
+  content: 'contents',
   keyword: 'keywords',
   hostname: 'hostnames',
   page: 'pages',

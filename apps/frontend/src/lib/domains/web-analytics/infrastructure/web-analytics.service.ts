@@ -8,12 +8,15 @@ import type {
   WebAnalyticsDayVisits,
   WebAnalyticsEvent,
   WebAnalyticsGoals,
-  WebAnalyticsFunnelStep,
+  WebAnalyticsInsight,
+  WebAnalyticsInsightConfig,
+  WebAnalyticsInsightResult,
   WebAnalyticsJourney,
   WebAnalyticsOverview,
   WebAnalyticsRange,
   WebAnalyticsReport,
   WebAnalyticsRetention,
+  WebAnalyticsSchema,
   WebAnalyticsSite,
   WebAnalyticsStatus,
   WebAnalyticsVisitor,
@@ -178,25 +181,82 @@ export class WebAnalyticsService {
     return response.journeys;
   }
 
-  public static async readFunnel(
-    clusterId: string,
-    range: WebAnalyticsRange,
-    steps: string[],
-  ): Promise<WebAnalyticsFunnelStep[]> {
-    const params = query(range);
-    for (const step of steps) params.append('step', step);
-    const response = await httpClient.get<{ steps: WebAnalyticsFunnelStep[] }>(
-      `/clusters/${clusterId}/web_analytics/funnel?${params}`,
-    );
-    return response.steps;
-  }
-
   public static async readRetention(
     clusterId: string,
     range: WebAnalyticsRange,
   ): Promise<WebAnalyticsRetention> {
     return httpClient.get<WebAnalyticsRetention>(
       `/clusters/${clusterId}/web_analytics/retention?${query(range)}`,
+    );
+  }
+
+  public static async readSchema(
+    clusterId: string,
+    days: number,
+  ): Promise<WebAnalyticsSchema> {
+    return httpClient.get<WebAnalyticsSchema>(
+      `/clusters/${clusterId}/web_analytics/schema?${new URLSearchParams({ days: String(days) })}`,
+    );
+  }
+
+  public static async readInsights(
+    clusterId: string,
+  ): Promise<WebAnalyticsInsight[]> {
+    const response = await httpClient.get<{ insights: WebAnalyticsInsight[] }>(
+      `/clusters/${clusterId}/web_analytics/insights`,
+    );
+    return response.insights;
+  }
+
+  public static async runInsight(
+    clusterId: string,
+    config: WebAnalyticsInsightConfig,
+    tz: string,
+  ): Promise<WebAnalyticsInsightResult> {
+    return httpClient.post<WebAnalyticsInsightResult>(
+      `/clusters/${clusterId}/web_analytics/insights/run?${new URLSearchParams({ tz })}`,
+      config,
+    );
+  }
+
+  public static async createInsight(
+    clusterId: string,
+    config: WebAnalyticsInsightConfig,
+  ): Promise<WebAnalyticsInsight> {
+    return httpClient.post<WebAnalyticsInsight>(
+      `/clusters/${clusterId}/web_analytics/insights`,
+      config,
+    );
+  }
+
+  public static async updateInsight(
+    clusterId: string,
+    id: string,
+    config: WebAnalyticsInsightConfig,
+  ): Promise<WebAnalyticsInsight> {
+    return httpClient.put<WebAnalyticsInsight>(
+      `/clusters/${clusterId}/web_analytics/insights/${id}`,
+      config,
+    );
+  }
+
+  public static async reorderInsights(
+    clusterId: string,
+    ids: string[],
+  ): Promise<WebAnalyticsInsight[]> {
+    const response = await httpClient.post<{ insights: WebAnalyticsInsight[] }>(
+      `/clusters/${clusterId}/web_analytics/insights/reorder`,
+      { ids },
+    );
+    return response.insights;
+  }
+
+  public static async deleteInsight(
+    clusterId: string,
+    id: string,
+  ): Promise<void> {
+    await httpClient.delete<void>(
+      `/clusters/${clusterId}/web_analytics/insights/${id}`,
     );
   }
 }

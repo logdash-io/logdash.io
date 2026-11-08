@@ -40,7 +40,7 @@ import { WEB_ANALYTICS_CHANNEL as CHANNEL } from './web-analytics-channel';
 
 const REFERRER = `if(referrer != '', referrer, 'Direct')`;
 
-export const SOURCE = `if(utm_source != '', utm_source, ${REFERRER})`;
+export const SOURCE = `multiIf(utm_source != '', utm_source, referrer != '', referrer, ${CHANNEL})`;
 
 export const PERSON = `if(user_id != '', user_id, visitor_id)`;
 
@@ -55,8 +55,10 @@ const FILTER_COLUMNS: Record<
   string
 > = {
   channel: CHANNEL,
+  source: SOURCE,
   referrer: REFERRER,
   campaign: 'utm_campaign',
+  content: 'utm_content',
   keyword: 'utm_term',
   hostname: 'hostname',
   country: 'country',
@@ -70,8 +72,10 @@ const PAGEVIEW_BREAKDOWNS: Record<
   string
 > = {
   channels: CHANNEL,
+  sources: SOURCE,
   referrers: REFERRER,
   campaigns: 'utm_campaign',
+  contents: 'utm_content',
   keywords: 'utm_term',
   hostnames: 'hostname',
   pages: 'path',
@@ -654,7 +658,7 @@ export class WebAnalyticsReadService {
     });
   }
 
-  private async readBuckets(scope: Scope, params: Record<string, unknown>): Promise<number[]> {
+  public async readBuckets(scope: Scope, params: Record<string, unknown>): Promise<number[]> {
     const add = scope.addBuckets;
     const rows = await this.query<{ time: string }>(
       `SELECT toUnixTimestamp(${add}(${scope.bucket('{from:DateTime64(3)}')}, number)) * 1000 AS time
@@ -755,8 +759,10 @@ export class WebAnalyticsReadService {
         }));
     return {
       channels: pick('channels'),
+      sources: pick('sources'),
       referrers: pick('referrers'),
       campaigns: pick('campaigns'),
+      contents: pick('contents'),
       keywords: pick('keywords'),
       hostnames: pick('hostnames'),
       pages: pick('pages'),

@@ -268,10 +268,15 @@
     }
     return {
       referrer,
-      utmSource: campaign('utm_source'),
+      utmSource:
+        campaign('utm_source') ||
+        campaign('ref') ||
+        campaign('via') ||
+        campaign('source'),
       utmMedium: campaign('utm_medium'),
       utmCampaign: campaign('utm_campaign'),
       utmTerm: campaign('utm_term'),
+      utmContent: campaign('utm_content'),
       clickId:
         [
           'gclid',
@@ -280,6 +285,7 @@
           'gad_source',
           'dclid',
           'msclkid',
+          'rdt_cid',
           'fbclid',
           'ttclid',
           'twclid',

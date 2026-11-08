@@ -16,11 +16,21 @@ export class WebAnalyticsBreakdowns {
   @ApiProperty({ type: WebAnalyticsBreakdownRow, isArray: true })
   channels: WebAnalyticsBreakdownRow[];
 
+  @ApiProperty({
+    type: WebAnalyticsBreakdownRow,
+    isArray: true,
+    description: 'utm_source, else the referrer, else the channel',
+  })
+  sources: WebAnalyticsBreakdownRow[];
+
   @ApiProperty({ type: WebAnalyticsBreakdownRow, isArray: true })
   referrers: WebAnalyticsBreakdownRow[];
 
   @ApiProperty({ type: WebAnalyticsBreakdownRow, isArray: true })
   campaigns: WebAnalyticsBreakdownRow[];
+
+  @ApiProperty({ type: WebAnalyticsBreakdownRow, isArray: true })
+  contents: WebAnalyticsBreakdownRow[];
 
   @ApiProperty({ type: WebAnalyticsBreakdownRow, isArray: true })
   keywords: WebAnalyticsBreakdownRow[];

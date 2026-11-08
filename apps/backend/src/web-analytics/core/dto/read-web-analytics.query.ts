@@ -30,8 +30,10 @@ export enum WebAnalyticsGranularity {
 
 export const WEB_ANALYTICS_FILTER_DIMENSIONS = [
   'channel',
+  'source',
   'referrer',
   'campaign',
+  'content',
   'keyword',
   'hostname',
   'page',
@@ -47,8 +49,10 @@ export type WebAnalyticsFilterDimension = (typeof WEB_ANALYTICS_FILTER_DIMENSION
 
 export const WEB_ANALYTICS_BREAKDOWNS = [
   'channels',
+  'sources',
   'referrers',
   'campaigns',
+  'contents',
   'keywords',
   'hostnames',
   'pages',
@@ -232,4 +236,17 @@ export class ReadWebAnalyticsDayVisitsQuery extends ReadWebAnalyticsDayQuery {
   @IsOptional()
   @IsIn(WEB_ANALYTICS_VISIT_SHOWS)
   show: WebAnalyticsVisitShow = 'all';
+}
+
+export class ReadWebAnalyticsSchemaQuery {
+  @ApiPropertyOptional({
+    default: 30,
+    description: 'The last N days, cut to the retention of the plan',
+  })
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  days: number = 30;
 }

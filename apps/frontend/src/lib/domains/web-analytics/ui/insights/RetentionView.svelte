@@ -10,6 +10,7 @@
     WebAnalyticsRetention,
   } from '../../domain/web-analytics';
   import { WebAnalyticsService } from '../../infrastructure/web-analytics.service';
+  import HeatCell from './HeatCell.svelte';
 
   type Props = {
     clusterId: string;
@@ -39,13 +40,6 @@
     void range;
     void untrack(() => retention.load());
   });
-
-  function shade(rate: number): string {
-    if (rate >= 50) return 'bg-heat-3 text-fg-inverse';
-    if (rate >= 25) return 'bg-heat-2 text-fg-default';
-    if (rate >= 10) return 'bg-heat-1 text-fg-default';
-    return 'bg-heat-0 text-fg-tertiary';
-  }
 </script>
 
 {#if retention.loading && !retention.data}
@@ -126,14 +120,7 @@
                 {formatCount(cohort.users)}
               </td>
               {#each [cohort.day1, cohort.day7, cohort.day30, cohort.day90] as rate, index (index)}
-                <td
-                  class={[
-                    'rounded-md py-1.5 text-center text-xs tabular-nums',
-                    rate === null ? 'text-fg-faint' : shade(rate),
-                  ]}
-                >
-                  {rate === null ? '–' : formatPercent(rate)}
-                </td>
+                <HeatCell {rate} />
               {/each}
             </tr>
           {/each}

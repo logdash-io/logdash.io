@@ -5,4 +5,5 @@ export enum Resource {
   Projects = 'projects',
   Clusters = 'clusters',
   Account = 'account',
+  WebAnalytics = 'webAnalytics',
 }

@@ -14,8 +14,10 @@ export interface AnalyticsQuery {
 
 const DIMENSIONS: WebAnalyticsFilterDimension[] = [
   'channel',
+  'source',
   'referrer',
   'campaign',
+  'content',
   'keyword',
   'hostname',
   'page',
@@ -29,8 +31,10 @@ const DIMENSIONS: WebAnalyticsFilterDimension[] = [
 
 export const FILTER_LABELS: Record<WebAnalyticsFilterDimension, string> = {
   channel: 'Channel',
+  source: 'Source',
   referrer: 'Referrer',
   campaign: 'Campaign',
+  content: 'Content',
   keyword: 'Keyword',
   hostname: 'Hostname',
   page: 'Page',

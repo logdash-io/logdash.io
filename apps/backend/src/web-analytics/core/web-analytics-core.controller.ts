@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Delete,
   Headers,
   HttpCode,
   Ip,
@@ -36,6 +37,7 @@ import {
   ReadWebAnalyticsDayVisitsQuery,
   ReadWebAnalyticsFunnelQuery,
   ReadWebAnalyticsQuery,
+  ReadWebAnalyticsSchemaQuery,
   ReadWebAnalyticsTimeZoneQuery,
   ReadWebAnalyticsVisitorsQuery,
 } from './dto/read-web-analytics.query';
@@ -60,6 +62,21 @@ import {
   WebAnalyticsSiteSerialized,
 } from './entities/web-analytics-site.interface';
 import { WebAnalyticsSiteSerializer } from './entities/web-analytics-site.serializer';
+import { RequireScope } from '../../auth/core/decorators/require-scope.decorator';
+import { Resource } from '../../personal-api-key/core/enums/resource.enum';
+import { Action } from '../../personal-api-key/core/enums/action.enum';
+import { WebAnalyticsInsightReadService } from '../read/web-analytics-insight-read.service';
+import {
+  normalizeWebAnalyticsInsight,
+  ReorderWebAnalyticsInsightsBody,
+  WebAnalyticsInsightBody,
+} from './dto/web-analytics-insight.body';
+import {
+  WebAnalyticsInsightResult,
+  WebAnalyticsInsightSerialized,
+  WebAnalyticsInsightsResponse,
+  WebAnalyticsSchemaResponse,
+} from './dto/web-analytics-insight.response';
 
 @ApiTags('Web analytics')
 @Controller()
@@ -67,6 +84,7 @@ export class WebAnalyticsCoreController {
   constructor(
     private readonly read: WebAnalyticsReadService,
     private readonly days: WebAnalyticsDayReadService,
+    private readonly insights: WebAnalyticsInsightReadService,
     private readonly write: WebAnalyticsWriteService,
     private readonly ingestion: WebAnalyticsIngestionService,
     private readonly clusters: ClusterReadCachedService,
@@ -76,6 +94,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/site')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsSiteResponse })
   public async readSite(@Param('clusterId') clusterId: string): Promise<WebAnalyticsSiteResponse> {
     const site = await this.read.readSiteByClusterId(clusterId);
@@ -99,6 +118,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/status')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsStatusResponse })
   public async status(@Param('clusterId') clusterId: string): Promise<WebAnalyticsStatusResponse> {
     return this.read.readStatus(clusterId);
@@ -107,6 +127,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsResponse })
   public async report(
     @Param('clusterId') clusterId: string,
@@ -118,6 +139,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/days')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsDaysResponse })
   public async readDays(
     @Param('clusterId') clusterId: string,
@@ -129,6 +151,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/days/:date')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsDayResponse })
   public async readDay(
     @Param('clusterId') clusterId: string,
@@ -142,6 +165,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/days/:date/visits')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsDayVisitsResponse })
   public async readDayVisits(
     @Param('clusterId') clusterId: string,
@@ -155,6 +179,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/goals')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsGoalsResponse })
   public async readGoals(
     @Param('clusterId') clusterId: string,
@@ -181,6 +206,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/overview')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsOverviewResponse })
   public async overview(
     @Param('clusterId') clusterId: string,
@@ -192,6 +218,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/breakdown')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsBreakdownResponse })
   public async breakdown(
     @Param('clusterId') clusterId: string,
@@ -210,6 +237,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/events/:name')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsEventResponse })
   public async event(
     @Param('clusterId') clusterId: string,
@@ -223,6 +251,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/events/:name/properties/:key')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsBreakdownResponse })
   public async eventProperty(
     @Param('clusterId') clusterId: string,
@@ -246,6 +275,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/visitors')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsVisitorsResponse })
   public async visitors(
     @Param('clusterId') clusterId: string,
@@ -262,6 +292,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/visitors/:visitorId')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsVisitorResponse })
   public async visitor(
     @Param('clusterId') clusterId: string,
@@ -275,6 +306,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/journeys')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsJourneysResponse })
   public async journeys(
     @Param('clusterId') clusterId: string,
@@ -286,6 +318,7 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/funnel')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsFunnelResponse })
   public async funnel(
     @Param('clusterId') clusterId: string,
@@ -297,12 +330,113 @@ export class WebAnalyticsCoreController {
   @Get('clusters/:clusterId/web_analytics/retention')
   @ApiBearerAuth()
   @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
   @ApiResponse({ type: WebAnalyticsRetentionResponse })
   public async retention(
     @Param('clusterId') clusterId: string,
     @Query() query: ReadWebAnalyticsQuery,
   ): Promise<WebAnalyticsRetentionResponse> {
     return this.read.readRetention(clusterId, query, await this.retentionDays(clusterId));
+  }
+
+  @Get('clusters/:clusterId/web_analytics/schema')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
+  @ApiResponse({ type: WebAnalyticsSchemaResponse })
+  public async schema(
+    @Param('clusterId') clusterId: string,
+    @Query() query: ReadWebAnalyticsSchemaQuery,
+  ): Promise<WebAnalyticsSchemaResponse> {
+    return this.insights.readSchema(clusterId, query.days, await this.retentionDays(clusterId));
+  }
+
+  @Get('clusters/:clusterId/web_analytics/insights')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
+  @ApiResponse({ type: WebAnalyticsInsightsResponse })
+  public async readInsights(
+    @Param('clusterId') clusterId: string,
+  ): Promise<WebAnalyticsInsightsResponse> {
+    return { insights: await this.insights.readInsights(clusterId) };
+  }
+
+  @Post('clusters/:clusterId/web_analytics/insights/run')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Read)
+  @ApiResponse({ type: WebAnalyticsInsightResult })
+  public async runInsight(
+    @Param('clusterId') clusterId: string,
+    @Query() query: ReadWebAnalyticsTimeZoneQuery,
+    @Body() body: WebAnalyticsInsightBody,
+  ): Promise<WebAnalyticsInsightResult> {
+    return this.insights.run(
+      clusterId,
+      normalizeWebAnalyticsInsight(body),
+      query.tz,
+      await this.retentionDays(clusterId),
+    );
+  }
+
+  @Post('clusters/:clusterId/web_analytics/insights')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Write)
+  @ApiResponse({ status: 201, type: WebAnalyticsInsightSerialized })
+  public async createInsight(
+    @Param('clusterId') clusterId: string,
+    @Body() body: WebAnalyticsInsightBody,
+    @CurrentUserId() userId: string,
+  ): Promise<WebAnalyticsInsightSerialized> {
+    return this.write.createInsight(clusterId, normalizeWebAnalyticsInsight(body), userId);
+  }
+
+  @Post('clusters/:clusterId/web_analytics/insights/reorder')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Write)
+  @ApiResponse({ type: WebAnalyticsInsightsResponse })
+  public async reorderInsights(
+    @Param('clusterId') clusterId: string,
+    @Body() body: ReorderWebAnalyticsInsightsBody,
+    @CurrentUserId() userId: string,
+  ): Promise<WebAnalyticsInsightsResponse> {
+    return { insights: await this.write.reorderInsights(clusterId, body.ids, userId) };
+  }
+
+  @Put('clusters/:clusterId/web_analytics/insights/:insightId')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Write)
+  @ApiResponse({ type: WebAnalyticsInsightSerialized })
+  public async updateInsight(
+    @Param('clusterId') clusterId: string,
+    @Param('insightId') insightId: string,
+    @Body() body: WebAnalyticsInsightBody,
+    @CurrentUserId() userId: string,
+  ): Promise<WebAnalyticsInsightSerialized> {
+    return this.write.updateInsight(
+      clusterId,
+      insightId,
+      normalizeWebAnalyticsInsight(body),
+      userId,
+    );
+  }
+
+  @Delete('clusters/:clusterId/web_analytics/insights/:insightId')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Write)
+  public async deleteInsight(
+    @Param('clusterId') clusterId: string,
+    @Param('insightId') insightId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<void> {
+    await this.write.deleteInsight(clusterId, insightId, userId);
   }
 
   @Public()

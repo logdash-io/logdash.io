@@ -94,7 +94,8 @@ Text is `fg-*`:
 | `fg-inverse`   | 950   | text on `surface-inverse-bg`                           |
 
 Intent colours stay plain: `brand` (focus outlines, selected edges), `error`, `success`, `warning`, `info`, and `idle` for a status with nothing to report (unknown, unpublished).
-Data colours are `chart-1` to `chart-5` for categorical series and `heat-0` to `heat-3` for a sequential ramp such as a heatmap.
+Data colours are `chart-1` to `chart-5` for categorical series and `heat-0` and `heat-100` for the two ends of a one-hue ramp, mixed in OKLCH by share, such as a heatmap.
+Keep `chart-*` in that order, never cycled, and run new values through a colour-blind check against the card surface.
 `error-bg` and `error-hover-bg` fill danger buttons.
 `success-bg` and `error-bg` behind `success-fg` and `error-fg` text mark a value as above or below its usual range.
 `--focus-ring` and `--focus-ring-error` are box-shadow values, used as `shadow-(--focus-ring)` or `box-shadow: var(--focus-ring)`.

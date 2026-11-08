@@ -66,24 +66,28 @@
       {/if}
 
       <div class="grid gap-2 @2xl:grid-cols-2 @min-[68.75rem]:grid-cols-3">
-        <BreakdownCard
-          {clusterId}
-          {report}
-          {range}
-          label="Channels"
-          tabs={[
-            {
-              id: 'channels',
-              label: 'Channel',
-              filter: 'channel',
-              chart: 'donut',
-            },
-            { id: 'campaigns', label: 'Campaign', filter: 'campaign' },
-            { id: 'keywords', label: 'Keyword', filter: 'keyword' },
-            { id: 'referrers', label: 'Referrer', filter: 'referrer' },
-          ]}
-          {onfilter}
-        />
+        <div class="flex min-w-0 flex-col @2xl:col-span-2">
+          <BreakdownCard
+            {clusterId}
+            {report}
+            {range}
+            label="Channels"
+            tabs={[
+              {
+                id: 'channels',
+                label: 'Channel',
+                filter: 'channel',
+                chart: 'donut',
+              },
+              { id: 'sources', label: 'Source', filter: 'source' },
+              { id: 'campaigns', label: 'Campaign', filter: 'campaign' },
+              { id: 'contents', label: 'Content', filter: 'content' },
+              { id: 'keywords', label: 'Keyword', filter: 'keyword' },
+              { id: 'referrers', label: 'Referrer', filter: 'referrer' },
+            ]}
+            {onfilter}
+          />
+        </div>
         <BreakdownCard
           {clusterId}
           {report}
@@ -116,22 +120,20 @@
           attribution={dbIpAttribution}
           {onfilter}
         />
-        <div class="flex min-w-0 flex-col @2xl:col-span-2">
-          <BreakdownCard
-            {clusterId}
-            {report}
-            {range}
-            label="Technology"
-            tabs={[
-              { id: 'browsers', label: 'Browser', filter: 'browser' },
-              { id: 'os', label: 'OS', filter: 'os' },
-              { id: 'devices', label: 'Device', filter: 'device' },
-            ]}
-            {onfilter}
-          />
-        </div>
+        <BreakdownCard
+          {clusterId}
+          {report}
+          {range}
+          label="Technology"
+          tabs={[
+            { id: 'browsers', label: 'Browser', filter: 'browser' },
+            { id: 'os', label: 'OS', filter: 'os' },
+            { id: 'devices', label: 'Device', filter: 'device' },
+          ]}
+          {onfilter}
+        />
       </div>
-      <InsightsCard {clusterId} {report} {range} />
+      <InsightsCard {clusterId} {range} />
     </div>
   {/if}
 </details>

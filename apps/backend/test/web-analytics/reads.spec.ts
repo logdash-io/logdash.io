@@ -152,6 +152,7 @@ describe('Web analytics (reads)', () => {
         utm_source: 'newsletter',
         utm_campaign: 'launch',
         utm_term: 'logs',
+        utm_content: 'post_1',
         device: 'Mobile',
         browser: 'Safari',
         os: 'iOS',
@@ -221,6 +222,13 @@ describe('Web analytics (reads)', () => {
       { name: 'DE', visitors: 1, count: 1 },
     ]);
     expect(data.breakdowns.keywords).toEqual([{ name: 'logs', visitors: 1, count: 1 }]);
+    expect(data.breakdowns.sources).toEqual([
+      { name: 'www.google.com', visitors: 1, count: 2 },
+      { name: 'Direct', visitors: 1, count: 1 },
+      { name: 'newsletter', visitors: 1, count: 1 },
+    ]);
+    expect(data.breakdowns.campaigns).toEqual([{ name: 'launch', visitors: 1, count: 1 }]);
+    expect(data.breakdowns.contents).toEqual([{ name: 'post_1', visitors: 1, count: 1 }]);
     expect(data.breakdowns.goals).toEqual([{ name: 'signup_completed', visitors: 1, count: 1 }]);
     expect(data.goalSeries).toEqual([{ name: 'signup_completed', counts: [0, 0, 0, 0, 0, 1, 0] }]);
 
@@ -233,6 +241,15 @@ describe('Web analytics (reads)', () => {
     ).body as WebAnalyticsResponse;
     expect(germany.summary.visitors).toBe(1);
     expect(germany.breakdowns.browsers).toEqual([{ name: 'Safari', visitors: 1, count: 1 }]);
+    const post = (
+      await get(
+        setup.cluster.id,
+        setup.token,
+        `?${week}&filter=source:newsletter&filter=content:post_1`,
+      )
+    ).body as WebAnalyticsResponse;
+    expect(post.summary.visitors).toBe(1);
+    expect(post.breakdowns.campaigns).toEqual([{ name: 'launch', visitors: 1, count: 1 }]);
 
     const warsaw = (
       await get(
@@ -644,6 +661,7 @@ describe('Web analytics (reads)', () => {
       utm_medium: '',
       utm_campaign: '',
       utm_term: '',
+      utm_content: '',
       click_id: '',
       device: 'Desktop',
       browser: 'Chrome',

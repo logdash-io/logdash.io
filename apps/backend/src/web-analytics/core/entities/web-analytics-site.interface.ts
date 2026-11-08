@@ -1,4 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { WebAnalyticsInsightConfig } from '../dto/web-analytics-insight.body';
+
+export type WebAnalyticsInsightNormalized = WebAnalyticsInsightConfig & { id: string };
 
 export class WebAnalyticsSiteNormalized {
   id: string;

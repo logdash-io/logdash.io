@@ -2,6 +2,8 @@ import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
 import type {
   WebAnalyticsBreakdownName,
   WebAnalyticsBreakdownRow,
+  WebAnalyticsInsight,
+  WebAnalyticsInsightConfig,
   WebAnalyticsRange,
   WebAnalyticsReport,
   WebAnalyticsSite,
@@ -140,6 +142,79 @@ export class WebAnalyticsInsightState<T> {
           readHttpErrorMessage(error) ?? 'Could not load this report.';
     } finally {
       if (generation === this.generation) this.loading = false;
+    }
+  }
+}
+
+export class WebAnalyticsInsightsState {
+  public insights = $state<WebAnalyticsInsight[] | null>(null);
+  public error = $state<string | null>(null);
+
+  constructor(private readonly clusterId: string) {}
+
+  public async load(): Promise<void> {
+    try {
+      this.insights = await WebAnalyticsService.readInsights(this.clusterId);
+      this.error = null;
+    } catch (error) {
+      this.error =
+        readHttpErrorMessage(error) ?? 'Could not load the saved insights.';
+    }
+  }
+
+  public async save(
+    config: WebAnalyticsInsightConfig,
+    id: string | null,
+  ): Promise<void> {
+    const list = this.insights ?? [];
+    if (!id) {
+      const created = await WebAnalyticsService.createInsight(
+        this.clusterId,
+        config,
+      );
+      this.insights = [...list, created];
+      return;
+    }
+    const updated = await WebAnalyticsService.updateInsight(
+      this.clusterId,
+      id,
+      config,
+    );
+    this.insights = list.map((insight) =>
+      insight.id === id ? updated : insight,
+    );
+  }
+
+  public async remove(id: string): Promise<void> {
+    try {
+      await WebAnalyticsService.deleteInsight(this.clusterId, id);
+      this.insights = (this.insights ?? []).filter(
+        (insight) => insight.id !== id,
+      );
+      this.error = null;
+    } catch (error) {
+      this.error =
+        readHttpErrorMessage(error) ?? 'Could not remove the insight.';
+    }
+  }
+
+  public async move(id: string, offset: number): Promise<void> {
+    const before = this.insights ?? [];
+    const from = before.findIndex((insight) => insight.id === id);
+    const to = from + offset;
+    if (from < 0 || to < 0 || to >= before.length) return;
+    const next = [...before];
+    next.splice(to, 0, ...next.splice(from, 1));
+    this.insights = next;
+    try {
+      this.insights = await WebAnalyticsService.reorderInsights(
+        this.clusterId,
+        next.map((insight) => insight.id),
+      );
+      this.error = null;
+    } catch (error) {
+      this.insights = before;
+      this.error = readHttpErrorMessage(error) ?? 'Could not move the insight.';
     }
   }
 }

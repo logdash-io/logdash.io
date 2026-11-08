@@ -6,6 +6,7 @@ type Visit = {
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
+  utm_content?: string;
   click_id?: string;
 };
 
@@ -51,7 +52,11 @@ const CASES: [Visit, string][] = [
   [{ utm_medium: 'email', referrer: 'l.facebook.com' }, 'Email'],
   [{ utm_source: 'foo' }, 'Campaign'],
   [{ utm_source: 'foo', referrer: 'someones-blog.dev' }, 'Referral'],
-  [{ utm_campaign: 'launch' }, 'Direct'],
+  [{ utm_source: 'reddit', utm_campaign: 'r_ClaudeAI', utm_content: '1abc2d' }, 'Organic social'],
+  [{ click_id: 'rdt_cid' }, 'Paid'],
+  [{ utm_campaign: 'launch' }, 'Campaign'],
+  [{ utm_content: 'hero_link' }, 'Campaign'],
+  [{ utm_medium: 'qr' }, 'Campaign'],
   [{}, 'Direct'],
 ];
 
@@ -73,6 +78,7 @@ describe('WEB_ANALYTICS_CHANNEL', () => {
       visit.utm_source ?? '',
       visit.utm_medium ?? '',
       visit.utm_campaign ?? '',
+      visit.utm_content ?? '',
       visit.click_id ?? '',
     ]);
 
@@ -80,7 +86,7 @@ describe('WEB_ANALYTICS_CHANNEL', () => {
     const result = await bootstrap.clickhouseClient.query({
       query: `SELECT ${WEB_ANALYTICS_CHANNEL} AS channel FROM (
         SELECT n, visit[1] AS referrer, visit[2] AS utm_source, visit[3] AS utm_medium,
-          visit[4] AS utm_campaign, visit[5] AS click_id
+          visit[4] AS utm_campaign, visit[5] AS utm_content, visit[6] AS click_id
         FROM system.one
         ARRAY JOIN {visits:Array(Array(String))} AS visit, arrayEnumerate({visits:Array(Array(String))}) AS n
       ) ORDER BY n`,

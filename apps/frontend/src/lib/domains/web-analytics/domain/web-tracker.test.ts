@@ -17,6 +17,7 @@ type Event = {
   utmMedium: string;
   utmCampaign: string;
   utmTerm: string;
+  utmContent: string;
   clickId: string;
   timezone: string;
   userId?: string;
@@ -84,6 +85,7 @@ for (const [origin, domain] of [
         'timestamp',
         'timezone',
         'utmCampaign',
+        'utmContent',
         'utmMedium',
         'utmSource',
         'utmTerm',
@@ -129,6 +131,35 @@ test('sends the attribution of the page load on every event of that page load', 
     utmSource: '',
     clickId: '',
   });
+});
+
+test('falls back to ref, via and source for the source and keeps utm_content and rdt_cid', async ({
+  page,
+}) => {
+  const batches = await install(page);
+  await page.goto(
+    'https://app.example/?ref=reddit&via=x&source=hn&utm_campaign=r_ClaudeAI&utm_content=1abc2d&rdt_cid=secret-reddit',
+  );
+  await expect.poll(() => batches.length).toBe(1);
+  expect(batches[0].events[0]).toMatchObject({
+    referrer: '',
+    utmSource: 'reddit',
+    utmCampaign: 'r_ClaudeAI',
+    utmContent: '1abc2d',
+    clickId: 'rdt_cid',
+  });
+  for (const [search, source] of [
+    ['?via=producthunt&source=hn', 'producthunt'],
+    ['?source=hn', 'hn'],
+    ['?utm_source=newsletter&ref=reddit', 'newsletter'],
+    ['?ref=a%40b.example&source=hn', 'hn'],
+  ]) {
+    const count = named(batches, 'pageview').length;
+    await page.goto(`https://app.example/${search}`);
+    await expect.poll(() => named(batches, 'pageview').length).toBe(count + 1);
+    expect(named(batches, 'pageview')[count].utmSource).toBe(source);
+  }
+  expect(JSON.stringify(batches)).not.toContain('secret');
 });
 
 test('keeps UTM values with any characters, trimmed to 100, and drops emails and control characters', async ({

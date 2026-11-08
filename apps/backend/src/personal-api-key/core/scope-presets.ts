@@ -13,6 +13,7 @@ export const MAX_GRANT: Record<Resource, Action> = {
   [Resource.Projects]: Action.Read,
   [Resource.Clusters]: Action.Read,
   [Resource.Account]: Action.Read,
+  [Resource.WebAnalytics]: Action.Write,
 };
 
 /**
@@ -25,7 +26,7 @@ export const ALL_ACCESS: ScopeEntry[] = Object.values(Resource).map((resource) =
 }));
 
 /**
- * CLI default preset: logs/metrics/monitors/projects/clusters at read, everything
+ * CLI default preset: logs/metrics/monitors/projects/clusters/webAnalytics at read, everything
  * else implicitly `none` (absent from the array). Expanded at create time.
  */
 export const CLI_DEFAULT: ScopeEntry[] = [
@@ -34,4 +35,5 @@ export const CLI_DEFAULT: ScopeEntry[] = [
   Resource.Monitors,
   Resource.Projects,
   Resource.Clusters,
+  Resource.WebAnalytics,
 ].map((resource) => ({ resource, action: Action.Read }));

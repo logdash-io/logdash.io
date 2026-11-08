@@ -26,6 +26,7 @@ export const CLICK_IDS = [
   'ttclid',
   'twclid',
   'li_fat_id',
+  'rdt_cid',
 ];
 
 export const BUILT_IN_EVENTS = ['pageview', 'pageleave', 'browser_error'];
@@ -98,6 +99,14 @@ export class WebEventBody {
   @IsString()
   @MaxLength(1024)
   utmTerm?: string;
+
+  @ApiPropertyOptional({
+    description: 'utm_content, such as the post or ad a link was shared in',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1024)
+  utmContent?: string;
 
   @ApiPropertyOptional({ enum: ['', ...CLICK_IDS] })
   @IsOptional()
