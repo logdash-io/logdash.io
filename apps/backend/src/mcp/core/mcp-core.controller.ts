@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Header, HttpCode, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  HttpCode,
+  Post,
+  Req,
+  Res,
+  UseFilters,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AllowAnyPersonalKey } from '../../auth/core/decorators/allow-any-personal-key.decorator';
@@ -8,6 +18,7 @@ import {
   RequestUser,
 } from '../../auth/core/types/authenticated-request.type';
 import { McpToolsService } from './mcp-tools.service';
+import { McpUnauthorizedFilter } from './mcp-unauthorized.filter';
 
 const PROTOCOL_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];
 
@@ -29,6 +40,7 @@ type JsonRpcMessage = {
 
 @ApiTags('MCP')
 @Controller('mcp')
+@UseFilters(McpUnauthorizedFilter)
 export class McpCoreController {
   constructor(private readonly tools: McpToolsService) {}
 
