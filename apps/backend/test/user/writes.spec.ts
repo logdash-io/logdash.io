@@ -10,6 +10,7 @@ import { CreateAnonymousUserBody } from '../../src/user/core/dto/create-anonymou
 import { UserSerialized } from '../../src/user/core/entities/user.interface';
 import { MarketingConsentGivenEvent } from '../../src/user/events/definitions/marketing-consent-given.event';
 import { UserEvents } from '../../src/user/events/user-events.enum';
+import { TokenResponse } from '../../src/shared/responses/token.response';
 
 describe('UserCoreController (writes)', () => {
   let bootstrap: Awaited<ReturnType<typeof createTestApp>>;
@@ -230,6 +231,48 @@ describe('UserCoreController (writes)', () => {
 
       // when
       const response = await putOnboarding(token, { role: 'developer', source: 'search' });
+
+      // then
+      expect(response.status).toEqual(403);
+    });
+  });
+
+  describe('POST /users/me/token', () => {
+    it('issues a fresh seven day token for a claimed user', async () => {
+      // given
+      const { token, user } = await bootstrap.utils.generalUtils.setupClaimed();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/users/me/token')
+        .set('Authorization', `Bearer ${token}`);
+
+      // then
+      expect(response.status).toEqual(201);
+
+      const renewed = (response.body as TokenResponse).token;
+      const payload = bootstrap.app
+        .get(JwtService)
+        .decode<{ id: string; iat: number; exp: number }>(renewed);
+
+      expect(payload.id).toEqual(user.id);
+      expect(payload.exp - payload.iat).toEqual(60 * 60 * 24 * 7);
+
+      const meResponse = await request(bootstrap.app.getHttpServer())
+        .get('/users/me')
+        .set('Authorization', `Bearer ${renewed}`);
+
+      expect(meResponse.status).toEqual(200);
+    });
+
+    it('forbids anonymous users', async () => {
+      // given
+      const { token } = await bootstrap.utils.generalUtils.setupAnonymous();
+
+      // when
+      const response = await request(bootstrap.app.getHttpServer())
+        .post('/users/me/token')
+        .set('Authorization', `Bearer ${token}`);
 
       // then
       expect(response.status).toEqual(403);

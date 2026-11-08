@@ -24,6 +24,7 @@ import { getEnvConfig } from '../../shared/configs/env-configs';
 import { UpdateConsentsBody } from './dto/update-consents.body';
 import { CompleteOnboardingBody } from './dto/complete-onboarding.body';
 import { UserEventEmitter } from '../events/user-event.emitter';
+import { TokenResponse } from '../../shared/responses/token.response';
 
 @Controller('users')
 @ApiTags('Users')
@@ -45,6 +46,16 @@ export class UserCoreController {
     const user = await this.userReadService.readByIdOrThrow(userId);
 
     return UserSerializer.serialize(user);
+  }
+
+  @Post('me/token')
+  @ApiResponse({ type: TokenResponse })
+  public async renewSessionToken(@CurrentUserId() userId: string): Promise<TokenResponse> {
+    await this.readClaimedUserOrThrow(userId);
+
+    return {
+      token: await this.jwtService.sign({ id: userId }),
+    };
   }
 
   @Put('me')

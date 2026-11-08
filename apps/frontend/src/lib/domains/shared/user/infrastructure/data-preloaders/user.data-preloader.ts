@@ -1,5 +1,7 @@
 import type { DataPreloader } from '$lib/domains/shared/data-preloader/data-preloader';
 import { logdashAPI } from '$lib/domains/shared/logdash.api.server';
+import { renewSessionIfNeeded } from '$lib/domains/auth/infrastructure/renew-session.server';
+import { envConfig } from '$lib/domains/shared/utils/env-config';
 import {
   clear_access_token,
   get_access_token,
@@ -36,6 +38,13 @@ export class UserDataPreloader implements DataPreloader<{ user: User }> {
 
     try {
       const user = await logdashAPI.get_me(access_token);
+
+      await renewSessionIfNeeded(
+        cookies,
+        access_token,
+        user,
+        envConfig.apiBaseUrl,
+      );
 
       return { user };
     } catch (error) {
