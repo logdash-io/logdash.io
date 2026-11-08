@@ -1,8 +1,12 @@
+import { sum } from 'd3';
+import { DateTime } from 'luxon';
 import { match } from 'ts-pattern';
+import { rateFlag, wilson, type RateVerdict } from './day-analytics';
 import type {
   WebAnalyticsFunnelMode,
   WebAnalyticsInsight,
   WebAnalyticsInsightBucket,
+  WebAnalyticsInsightCohort,
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightEvent,
   WebAnalyticsInsightFilter,
@@ -28,9 +32,33 @@ export interface WebAnalyticsFunnelRow {
   name: string;
   count: number;
   conversion: number | null;
+  // 95% Wilson interval of the conversion, when the step is a subset of the one before.
+  interval: [number, number] | null;
   dropped: number | null;
   overall: number;
 }
+
+export interface CohortCell extends RateVerdict {
+  filling: boolean;
+}
+
+export interface CohortRow {
+  cohort: string;
+  label: string;
+  title: string;
+  total: number;
+  filling: boolean;
+  cells: CohortCell[];
+}
+
+export interface CohortTable {
+  groups: { label: string; rows: CohortRow[] }[];
+  // The top of each step's bar scale, as a rate.
+  scales: number[];
+}
+
+// Like the day dashboard, which compares a day with the last 4 of its weekday.
+const TYPICAL_COHORTS = 4;
 
 export const INSIGHT_TYPES: {
   value: WebAnalyticsInsightType;
@@ -188,10 +216,114 @@ export function funnelRows(
       count: step.count,
       conversion:
         previous === null ? null : previous ? (step.count / previous) * 100 : 0,
+      interval:
+        previous && step.count <= previous
+          ? wilson(step.count, previous)
+          : null,
       dropped: previous === null ? null : Math.max(0, previous - step.count),
       overall: first ? (step.count / first) * 100 : 0,
     };
   });
+}
+
+// Rows stay newest first, grouped by month (by year for month cohorts). A share
+// is judged against the pooled share of the 4 older cohorts that finished its step.
+export function cohortTable(
+  cohorts: WebAnalyticsInsightCohort[],
+  bucket: WebAnalyticsInsightBucket,
+): CohortTable {
+  const year = cohorts.length
+    ? groupMonth(DateTime.fromISO(cohorts[0].cohort), bucket).year
+    : null;
+  const groups: CohortTable['groups'] = [];
+  for (const [index, cohort] of cohorts.entries()) {
+    const start = DateTime.fromISO(cohort.cohort);
+    const total = cohort.counts[0] ?? 0;
+    const row: CohortRow = {
+      cohort: cohort.cohort,
+      ...cohortLabels(start, bucket),
+      total,
+      filling: cohort.filling[0] ?? false,
+      cells: cohort.counts.slice(1).map((hits, step) => {
+        const column = step + 1;
+        const filling = cohort.filling[column] ?? false;
+        const prior = cohorts
+          .slice(index + 1)
+          .filter((other) => !other.filling[column])
+          .slice(0, TYPICAL_COHORTS);
+        const baseline = sum(prior, (other) => other.counts[0] ?? 0);
+        const typical =
+          prior.length === TYPICAL_COHORTS && baseline
+            ? sum(prior, (other) => other.counts[column] ?? 0) / baseline
+            : null;
+        return {
+          hits,
+          total,
+          rate: total ? hits / total : null,
+          interval: total ? wilson(hits, total) : null,
+          typical,
+          baseline,
+          filling,
+          flag: filling ? 0 : rateFlag(hits, total, typical, baseline),
+        };
+      }),
+    };
+    const month = groupMonth(start, bucket);
+    const group =
+      bucket === 'month'
+        ? start.toFormat('yyyy')
+        : month.toFormat(month.year === year ? 'LLLL' : 'LLLL yyyy');
+    const last = groups.at(-1);
+    if (last?.label === group) last.rows.push(row);
+    else groups.push({ label: group, rows: [row] });
+  }
+  const rows = groups.flatMap((group) => group.rows);
+  const scales = (cohorts[0]?.counts.slice(1) ?? []).map((_, step) =>
+    niceScale(
+      Math.max(
+        0,
+        ...rows.map(({ cells: { [step]: cell } }) =>
+          cell.filling ? (cell.rate ?? 0) : (cell.interval?.[1] ?? 0),
+        ),
+      ),
+    ),
+  );
+  return { groups, scales };
+}
+
+// A week belongs to the month of its Thursday, as an ISO week belongs to a year.
+function groupMonth(start: DateTime, bucket: WebAnalyticsInsightBucket) {
+  return bucket === 'week' ? start.plus({ days: 3 }) : start;
+}
+
+function cohortLabels(
+  start: DateTime,
+  bucket: WebAnalyticsInsightBucket,
+): { label: string; title: string } {
+  if (bucket === 'month')
+    return {
+      label: start.toFormat('LLLL'),
+      title: start.toFormat('LLLL yyyy'),
+    };
+  if (bucket === 'day')
+    return {
+      label: start.toFormat('ccc d'),
+      title: start.toFormat('ccc d LLL'),
+    };
+  const end = start.plus({ days: 6 });
+  if (start.month !== end.month) {
+    const label = `${start.toFormat('d LLL')} - ${end.toFormat('d LLL')}`;
+    return { label, title: label };
+  }
+  return {
+    label: `${start.day}-${end.day}`,
+    title: `${start.day}-${end.toFormat('d LLL')}`,
+  };
+}
+
+function niceScale(rate: number): number {
+  const step = rate > 0.3 ? 0.1 : 0.05;
+  return Math.min(1, Math.max(step, Math.ceil(rate / step - 1e-9) * step));
 }
 
 export function commonPrefix(names: string[]): string {

@@ -252,6 +252,7 @@ describe('Web analytics insights', () => {
       marker('setup_finished', '2026-09-21', early),
       marker('first_prompt', '2026-09-30', { cohort: '2026-09-28', days: '2' }),
       marker('returned_week_1', '2026-09-25', { cohort: '2026-09-21', days: '4' }),
+      marker('returned_week_1', '2026-09-28', { cohort: '2026-09-22', days: '6' }),
       marker('day', '2026-09-22', { week_first: 'yes', month_first: 'no', age: 'day_1' }),
       marker('day', '2026-09-23', { week_first: 'no', month_first: 'no', age: 'week_1' }),
       marker('day', '2026-09-29', { week_first: 'yes', month_first: 'no', age: 'later' }),
@@ -341,9 +342,20 @@ describe('Web analytics insights', () => {
       [20, 0],
       [30, 1],
     ]);
+    expect(cohorts.lagDays).toEqual([0, 0, 6]);
     expect(cohorts.cohorts).toEqual([
-      { cohort: '2026-09-28', counts: [3, 2, 0], shares: [100, (2 / 3) * 100, 0] },
-      { cohort: '2026-09-21', counts: [2, 1, 1], shares: [100, 50, 50] },
+      {
+        cohort: '2026-09-28',
+        counts: [3, 2, 0],
+        shares: [100, (2 / 3) * 100, 0],
+        filling: [true, true, true],
+      },
+      {
+        cohort: '2026-09-21',
+        counts: [2, 1, 2],
+        shares: [100, 50, 100],
+        filling: [false, false, true],
+      },
     ]);
   });
 

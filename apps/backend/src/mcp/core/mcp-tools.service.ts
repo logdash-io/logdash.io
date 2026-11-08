@@ -338,7 +338,7 @@ export class McpToolsService {
       name: 'cohort_table',
       title: 'Cohort table',
       description:
-        'Rows are cohorts from a YYYY-MM-DD event property, newest first. counts holds the start event then each later event; shares are percents of the start event.',
+        'Rows are cohorts from a YYYY-MM-DD event property, newest first. counts holds the start event then each later event; shares are percents of the start event. filling marks counts that can still grow, because the cohort is younger than lagDays, the days from the cohort date that hold 95% of each event: do not compare those.',
       action: Action.Read,
       args: McpCohortTableArgs,
       inputSchema: object(

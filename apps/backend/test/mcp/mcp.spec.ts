@@ -396,7 +396,10 @@ describe('MCP server', () => {
       summary: { count: 4, mean: 9.3, median: 3 },
     });
     expect(cohorts).toMatchObject({
-      cohorts: [{ cohort: '2026-09-28', counts: [3, 2], shares: [100, 66.7] }],
+      cohorts: [
+        { cohort: '2026-09-28', counts: [3, 2], shares: [100, 66.7], filling: [true, true] },
+      ],
+      lagDays: [1, 1],
     });
     expect(people).toEqual({
       steps: [

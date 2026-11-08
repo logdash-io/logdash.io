@@ -195,6 +195,7 @@
           events={insight.events ?? []}
           bucket={insight.bucket ?? defaultBucket('cohorts')}
           property={insight.property ?? 'cohort'}
+          lagDays={data.lagDays ?? []}
         />
       {/if}
     </div>

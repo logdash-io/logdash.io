@@ -1,5 +1,6 @@
 <script lang="ts">
   import { formatCount, formatPercent } from '../../domain/analytics-format';
+  import { formatInterval } from '../../domain/day-analytics';
   import type {
     WebAnalyticsInsightFilter,
     WebAnalyticsInsightStep,
@@ -31,8 +32,8 @@
   <span>Step</span>
   <span class="flex gap-3">
     <span class="w-16 text-right">{people ? 'People' : 'Events'}</span>
-    <span class="w-20 text-right">Conversion</span>
-    <span class="w-20 text-right @max-sm:hidden">Dropped</span>
+    <span class="w-26 text-right">Conversion</span>
+    <span class="w-16 text-right @max-sm:hidden">Dropped</span>
   </span>
 </div>
 <ol class="flex flex-col gap-0.5">
@@ -70,10 +71,15 @@
         <span class="w-16 text-right font-medium">
           {formatCount(row.count)}
         </span>
-        <span class="text-fg-tertiary w-20 text-right">
+        <span class="text-fg-tertiary w-26 text-right whitespace-nowrap">
           {row.conversion === null ? '' : formatPercent(row.conversion)}
+          {#if row.interval}
+            <span class="text-fg-muted text-xs">
+              {formatInterval(row.interval)}
+            </span>
+          {/if}
         </span>
-        <span class="text-fg-tertiary w-20 text-right @max-sm:hidden">
+        <span class="text-fg-tertiary w-16 text-right @max-sm:hidden">
           {row.dropped === null ? '' : formatCount(row.dropped)}
         </span>
       </span>

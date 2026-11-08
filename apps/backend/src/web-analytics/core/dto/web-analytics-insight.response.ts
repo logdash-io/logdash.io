@@ -102,6 +102,13 @@ export class WebAnalyticsInsightCohort {
     description: 'Each count as a percent of the start event, null without start events',
   })
   shares: (number | null)[];
+
+  @ApiProperty({
+    type: Boolean,
+    isArray: true,
+    description: 'Whether each count can still grow: the cohort is younger than lagDays',
+  })
+  filling: boolean[];
 }
 
 export class WebAnalyticsInsightResult {
@@ -131,6 +138,13 @@ export class WebAnalyticsInsightResult {
 
   @ApiPropertyOptional({ type: WebAnalyticsInsightCohort, isArray: true })
   cohorts?: WebAnalyticsInsightCohort[];
+
+  @ApiPropertyOptional({
+    type: Number,
+    isArray: true,
+    description: 'Days from the cohort date that hold 95% of each insight event',
+  })
+  lagDays?: number[];
 }
 
 export class WebAnalyticsSchemaEvent {

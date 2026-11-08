@@ -253,6 +253,8 @@ export interface WebAnalyticsInsightCohort {
   cohort: string;
   counts: number[];
   shares: (number | null)[];
+  // Whether each count can still grow, because the cohort is younger than its lag.
+  filling: boolean[];
 }
 
 export interface WebAnalyticsInsightResult {
@@ -265,6 +267,8 @@ export interface WebAnalyticsInsightResult {
   bins?: WebAnalyticsInsightBin[];
   summary?: { count: number; mean: number | null; median: number | null };
   cohorts?: WebAnalyticsInsightCohort[];
+  // Days from the cohort date that hold 95% of each event.
+  lagDays?: number[];
 }
 
 export interface WebAnalyticsSchemaEvent {

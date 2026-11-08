@@ -37,6 +37,13 @@ const COHORT_START: Record<string, string> = {
   [WebAnalyticsGranularity.Month]: 'toStartOfMonth',
 };
 
+// Last day of a cohort that starts on `cohort_start`.
+const COHORT_END: Record<string, string> = {
+  [WebAnalyticsGranularity.Day]: 'cohort_start',
+  [WebAnalyticsGranularity.Week]: 'addDays(cohort_start, 6)',
+  [WebAnalyticsGranularity.Month]: 'toLastDayOfMonth(cohort_start)',
+};
+
 const MAX_BINS = 500;
 
 type Conditions = {
@@ -228,27 +235,48 @@ export class WebAnalyticsInsightReadService {
     insight: WebAnalyticsInsightConfig,
     scope: Scope,
     conditions: Conditions,
-  ): Promise<Pick<WebAnalyticsInsightResult, 'cohorts'>> {
-    const start = COHORT_START[insight.bucket ?? WebAnalyticsGranularity.Week];
-    const rows = await this.query<Record<string, string>>(
-      `SELECT toString(${start}(cohort_day)) AS cohort, ${this.counts(conditions)} FROM (
-        SELECT name, props, toDateOrNull(props[{cohortKey:String}]) AS cohort_day FROM web_events FINAL
-        WHERE cluster_id = {clusterId:FixedString(24)} AND expires_at > now()
-          AND created_at >= subtractDays({from:DateTime64(3)}, 2) AND created_at < {to:DateTime64(3)}
-          AND name IN {names:Array(String)} AND ${conditions.all}
+  ): Promise<Pick<WebAnalyticsInsightResult, 'cohorts' | 'lagDays'>> {
+    const bucket = insight.bucket ?? WebAnalyticsGranularity.Week;
+    const source = `SELECT name, props, created_at, toDateOrNull(props[{cohortKey:String}]) AS cohort_day
+      FROM web_events FINAL
+      WHERE cluster_id = {clusterId:FixedString(24)} AND expires_at > now()
+        AND created_at >= subtractDays({from:DateTime64(3)}, 2) AND created_at < {to:DateTime64(3)}
+        AND name IN {names:Array(String)} AND ${conditions.all}`;
+    const inRange = `cohort_day >= toDate({from:DateTime64(3)}, {tz:String}) AND cohort_day <= toDate({to:DateTime64(3)}, {tz:String})`;
+    const params = { ...conditions.params, cohortKey: insight.property };
+    // ponytail: young cohorts cut long delays short, so a lag can read low. Measure it on
+    // cohorts older than the period if late steps flag too early.
+    const lags = conditions.events
+      .map(
+        (condition, index) =>
+          `quantileExactIf(0.95)(greatest(0, dateDiff('day', cohort_day, toDate(created_at, {tz:String}))), ${condition}) AS l${index}`,
       )
-      WHERE cohort_day >= toDate({from:DateTime64(3)}, {tz:String}) AND cohort_day <= toDate({to:DateTime64(3)}, {tz:String})
-      GROUP BY cohort ORDER BY cohort DESC LIMIT 120`,
-      { ...conditions.params, cohortKey: insight.property },
-    );
-    const events = insight.events ?? [];
+      .join(', ');
+    const [rows, [lagRow]] = await Promise.all([
+      this.query<Record<string, string>>(
+        `SELECT toString(${COHORT_START[bucket]}(cohort_day) AS cohort_start) AS cohort,
+          dateDiff('day', ${COHORT_END[bucket]}, toDate({to:DateTime64(3)}, {tz:String})) AS age,
+          ${this.counts(conditions)}
+        FROM (${source}) WHERE ${inRange}
+        GROUP BY cohort_start ORDER BY cohort_start DESC LIMIT 120`,
+        params,
+      ),
+      this.query<Record<string, string>>(
+        `SELECT ${lags} FROM (${source}) WHERE ${inRange}`,
+        params,
+      ),
+    ]);
+    const lagDays = conditions.events.map((_, index) => Number(lagRow?.[`l${index}`] ?? 0));
     return {
+      lagDays,
       cohorts: rows.map((row) => {
-        const counts = events.map((_, index) => Number(row[`s${index}`]));
+        const counts = conditions.events.map((_, index) => Number(row[`s${index}`]));
         return {
           cohort: row.cohort,
           counts,
           shares: counts.map((count) => (counts[0] ? (count / counts[0]) * 100 : null)),
+          // The last day of the cohort has not had `lag` full days yet.
+          filling: lagDays.map((lag) => Number(row.age) <= lag),
         };
       }),
     };
