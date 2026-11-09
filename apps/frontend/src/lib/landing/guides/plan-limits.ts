@@ -7,29 +7,25 @@ export type Table = {
 };
 
 export type TableType =
-  | 'logsRetention'
-  | 'logsRateLimits'
-  | 'metricsPerApp'
-  | 'metricsRetention'
-  | 'webAnalyticsRetention';
-
-export const tableTitles: Record<TableType, string> = {
-  logsRetention: 'Logs retention',
-  logsRateLimits: 'Rate limit per hour',
-  metricsPerApp: 'Metrics per app',
-  metricsRetention: 'Metrics retention',
-  webAnalyticsRetention: 'Web analytics retention',
-};
+  | 'account'
+  | 'monitoring'
+  | 'logs'
+  | 'metrics'
+  | 'webAnalytics';
 
 const PLAN_TIERS = [UserTier.FREE, UserTier.BUILDER, UserTier.PRO] as const;
 
-const PLAN_NAMES: Record<(typeof PLAN_TIERS)[number], string> = {
+type PlanTier = (typeof PLAN_TIERS)[number];
+
+type Row = [label: string, cell: (tier: PlanTier) => string];
+
+const PLAN_NAMES: Record<PlanTier, string> = {
   [UserTier.FREE]: 'Hobby',
   [UserTier.BUILDER]: 'Builder',
   [UserTier.PRO]: 'Pro',
 };
 
-function formatRetentionHours(hours: number | undefined): string {
+function formatHours(hours: number | undefined): string {
   if (!hours) return '-';
   if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''}`;
   const days = Math.floor(hours / 24);
@@ -49,88 +45,140 @@ function formatCompactNumber(num: number | undefined): string {
   return num.toLocaleString('en-US');
 }
 
-function formatRateLimit(num: number | undefined): string {
-  if (num === undefined || num === null) return '-';
-  return num.toLocaleString('en-US');
+function formatNumber(num: number | undefined): string {
+  return num === undefined || num === null ? '-' : num.toLocaleString('en-US');
 }
 
-function formatLogsRetention(
-  retentionHours: number | undefined,
-  rateLimitPerHour: number | undefined,
-): string {
-  if (!retentionHours || !rateLimitPerHour) return '-';
-  const logsCapacity = retentionHours * rateLimitPerHour;
-  return `${formatRetentionHours(retentionHours)} (${formatCompactNumber(logsCapacity)} logs per app)`;
+function formatIncluded(value: boolean | undefined): string {
+  return value === undefined ? '-' : value ? 'Yes' : 'No';
 }
 
-function getProjectPlanConfig(config: ExposedConfig, tier: UserTier) {
-  return config?.projectPlanConfigs?.[tier];
+function formatCheckInterval(cron: string | undefined): string {
+  const fields = cron?.split(' ') ?? [];
+  const every = Number(fields[0]?.match(/^\*\/(\d+)$/)?.[1]);
+  if (!every) return '-';
+  const unit = fields.length === 6 ? 'second' : 'minute';
+  return `${every} ${unit}${every !== 1 ? 's' : ''}`;
 }
 
-/** Plan limits come from the backend config, so the docs never drift from billing. */
 export function buildTablesFromConfig(
   config: ExposedConfig,
 ): Record<TableType, Table> {
-  const availableTiers = PLAN_TIERS.filter(
-    (tier) => getProjectPlanConfig(config, tier) !== undefined,
+  const tiers = PLAN_TIERS.filter(
+    (tier) => config?.projectPlanConfigs?.[tier] !== undefined,
   );
-  const headers = availableTiers.map((tier) => PLAN_NAMES[tier]);
+  const user = (tier: PlanTier): ExposedConfig['userPlanConfigs'][PlanTier] =>
+    config?.userPlanConfigs?.[tier];
+  const cluster = (
+    tier: PlanTier,
+  ): ExposedConfig['clusterPlanConfigs'][PlanTier] =>
+    config?.clusterPlanConfigs?.[tier];
+  const project = (
+    tier: PlanTier,
+  ): ExposedConfig['projectPlanConfigs'][PlanTier] =>
+    config?.projectPlanConfigs?.[tier];
+
+  function table(rows: Row[]): Table {
+    return {
+      headers: ['Limit', ...tiers.map((tier) => PLAN_NAMES[tier])],
+      rows: rows.map(([label, cell]) => [label, ...tiers.map(cell)]),
+    };
+  }
 
   return {
-    logsRetention: {
-      headers,
-      rows: [
-        availableTiers.map((tier) => {
-          const planConfig = getProjectPlanConfig(config, tier);
-          return formatLogsRetention(
-            planConfig?.logs?.retentionHours,
-            planConfig?.logs?.rateLimitPerHour,
-          );
-        }),
+    account: table([
+      [
+        'Domains',
+        (tier) => formatNumber(user(tier)?.projects?.maxNumberOfProjects),
       ],
-    },
-    logsRateLimits: {
-      headers,
-      rows: [
-        availableTiers.map((tier) => {
-          const planConfig = getProjectPlanConfig(config, tier);
-          return formatRateLimit(planConfig?.logs?.rateLimitPerHour);
-        }),
+      [
+        'Apps, across all your domains',
+        (tier) => formatNumber(user(tier)?.projects?.maxNumberOfProjects),
       ],
-    },
-    metricsPerApp: {
-      headers,
-      rows: [
-        availableTiers.map((tier) => {
-          const planConfig = getProjectPlanConfig(config, tier);
-          return String(planConfig?.metrics?.maxMetricsRegisterEntries ?? '-');
-        }),
+      [
+        'Team seats per domain',
+        (tier) => formatNumber(cluster(tier)?.maxClusterMembers),
       ],
-    },
-    metricsRetention: {
-      headers,
-      rows: [
-        availableTiers.map((tier) => {
-          const planConfig = getProjectPlanConfig(config, tier);
-          const granularities = planConfig?.metrics?.keepGranularitiesForHours;
-          const maxRetention = Math.max(
-            granularities?.minute ?? 0,
-            granularities?.hour ?? 0,
-            granularities?.day ?? 0,
-          );
-          return formatRetentionHours(maxRetention || undefined);
-        }),
+    ]),
+    monitoring: table([
+      [
+        'Monitors, across all your domains',
+        (tier) => formatNumber(user(tier)?.httpMonitors?.maxNumberOfMonitors),
       ],
-    },
-    webAnalyticsRetention: {
-      headers,
-      rows: [
-        availableTiers.map((tier) => {
-          const days =
-            config?.clusterPlanConfigs?.[tier]?.webAnalytics?.retentionDays;
-          return formatRetentionHours(days && days * 24);
-        }),
+      [
+        'Check interval',
+        (tier) =>
+          formatCheckInterval(cluster(tier)?.httpMonitors?.pingFrequency),
       ],
-    },
+      [
+        'Heartbeat monitors',
+        (tier) =>
+          formatIncluded(cluster(tier)?.httpMonitors?.canCreatePushMonitors),
+      ],
+      [
+        'Status pages',
+        (tier) =>
+          formatNumber(
+            user(tier)?.publicDashboards?.maxNumberOfPublicDashboards,
+          ),
+      ],
+      [
+        'Custom status page domain',
+        (tier) => formatIncluded(cluster(tier)?.customDomains?.canCreate),
+      ],
+    ]),
+    logs: table([
+      ['Retention', (tier) => formatHours(project(tier)?.logs?.retentionHours)],
+      [
+        'Logs per app per hour',
+        (tier) => formatNumber(project(tier)?.logs?.rateLimitPerHour),
+      ],
+      [
+        'Logs kept per app',
+        (tier) => {
+          const logs = project(tier)?.logs;
+          return logs?.retentionHours && logs.rateLimitPerHour
+            ? formatCompactNumber(logs.retentionHours * logs.rateLimitPerHour)
+            : '-';
+        },
+      ],
+    ]),
+    metrics: table([
+      [
+        'Metrics per app',
+        (tier) =>
+          formatNumber(project(tier)?.metrics?.maxMetricsRegisterEntries),
+      ],
+      [
+        'Per-minute points kept',
+        (tier) =>
+          formatHours(
+            project(tier)?.metrics?.keepGranularitiesForHours?.minute,
+          ),
+      ],
+      [
+        'Hourly points kept',
+        (tier) =>
+          formatHours(project(tier)?.metrics?.keepGranularitiesForHours?.hour),
+      ],
+      [
+        'Daily points kept',
+        (tier) =>
+          formatHours(project(tier)?.metrics?.keepGranularitiesForHours?.day),
+      ],
+    ]),
+    webAnalytics: table([
+      [
+        'Retention',
+        (tier) => {
+          const days = cluster(tier)?.webAnalytics?.retentionDays;
+          return formatHours(days && days * 24);
+        },
+      ],
+      [
+        'Events per domain per hour',
+        (tier) => formatNumber(cluster(tier)?.webAnalytics?.rateLimitPerHour),
+      ],
+    ]),
   };
 }

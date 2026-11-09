@@ -257,7 +257,7 @@
       <p class="text-xs text-fg-muted">
         Your agent can also read this dashboard and build insights for you.
         <a
-          href="{resolve('/docs/web-analytics')}#connect-your-coding-agent"
+          href={resolve('/docs/mcp')}
           class="text-fg-tertiary underline underline-offset-2 transition-ink hover:text-fg-default"
         >
           Connect it over MCP

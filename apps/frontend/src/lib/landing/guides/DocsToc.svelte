@@ -3,12 +3,17 @@
   import { tick, untrack } from 'svelte';
 
   type Props = {
-    /** The article column. Its `h2[id]` headings make up the list. */
+    /** The article column. Its `h2[id]` and `h3[id]` headings make up the list. */
     container: HTMLElement | undefined;
   };
   const { container }: Props = $props();
 
-  type Entry = { id: string; text: string; element: HTMLElement };
+  type Entry = {
+    id: string;
+    text: string;
+    nested: boolean;
+    element: HTMLElement;
+  };
 
   /**
    * A heading counts as reached once its top passes this line, measured from
@@ -43,13 +48,14 @@
     const readHeadings = async (): Promise<void> => {
       await tick();
       if (cancelled) return;
-      entries = [...container.querySelectorAll<HTMLElement>('h2[id]')].map(
-        (element) => ({
-          id: element.id,
-          text: element.textContent?.trim() ?? '',
-          element,
-        }),
-      );
+      entries = [
+        ...container.querySelectorAll<HTMLElement>('h2[id], h3[id]'),
+      ].map((element) => ({
+        id: element.id,
+        text: element.textContent?.trim() ?? '',
+        nested: element.tagName === 'H3',
+        element,
+      }));
       untrack(update);
     };
     void readHeadings();
@@ -85,7 +91,8 @@
           <a
             href="#{entry.id}"
             class={[
-              'flex min-h-8 items-center rounded-lg px-2.5 py-1.5 text-sm leading-5 transition-ink duration-150',
+              'flex min-h-8 items-center rounded-lg py-1.5 pr-2.5 text-sm leading-5 transition-ink duration-150',
+              entry.nested ? 'pl-5.5' : 'pl-2.5',
               activeId === entry.id
                 ? 'text-fg-default'
                 : 'text-fg-tertiary hover:text-fg-default',

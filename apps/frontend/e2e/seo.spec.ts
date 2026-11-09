@@ -235,7 +235,7 @@ test.describe('llms.txt and the markdown twins', () => {
     );
 
     expect(await response.text()).toContain(
-      `[Web analytics](${SITE_ORIGIN}/docs/web-analytics)`,
+      `[Add the web analytics tracker](${SITE_ORIGIN}/docs/web-analytics)`,
     );
   });
 
@@ -332,10 +332,11 @@ test.describe('generated family pages', () => {
 
       // The hub, three siblings and one feature page, and nothing else in the
       // document column: the whole internal link budget SeoPageLayout sets.
+      // Heading anchors link within the page, so they spend none of it.
       await expect(
         page.locator('nav[aria-label="Keep reading"] a'),
       ).toHaveCount(5);
-      await expect(page.locator('main a')).toHaveCount(5);
+      await expect(page.locator('main a:not([href^="#"])')).toHaveCount(5);
     });
   }
 });

@@ -14,15 +14,7 @@ export type FeatureCopy = { title: string; body: string };
 export type FeatureLink = {
   title: string;
   description: string;
-  href:
-    | Extract<
-        DocsPath,
-        | '/docs/logging'
-        | '/docs/metrics'
-        | '/docs/monitoring'
-        | '/docs/status-pages'
-      >
-    | NavPath;
+  href: DocsPath | NavPath;
 };
 
 export type FeaturePageData = {

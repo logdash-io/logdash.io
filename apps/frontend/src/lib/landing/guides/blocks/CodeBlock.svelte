@@ -22,17 +22,22 @@
     xml,
     yaml,
   } from 'svelte-highlight/languages';
-  import type { CodeLanguage } from '../documentation.data';
+  import type {
+    CodeLanguage,
+    DocCode,
+    DocCodeTab,
+  } from '../documentation.data';
   import { commandBash } from './bash-grammar';
+  import { codeTabPreference } from './code-tab.svelte';
 
-  type Props = {
-    code: string;
-    language: CodeLanguage;
-    title?: string;
-    icon?: Component<{ class?: ClassValue }>;
+  type Item = DocCode & {
+    icon?: DocCodeTab['icon'] | Component<{ class?: ClassValue }>;
   };
 
-  const { code, language, title, icon: Icon }: Props = $props();
+  type Props = Item | { tabs: DocCodeTab[] };
+
+  const props: Props = $props();
+  const id = $props.id();
 
   /**
    * Grammars are named one by one so highlight.js ships seventeen languages
@@ -58,7 +63,21 @@
     text: plaintext,
   };
 
+  const tabbed = $derived('tabs' in props);
+  const items: Item[] = $derived('tabs' in props ? props.tabs : [props]);
+  const selected = $derived(
+    items.find((item) => item.title === codeTabPreference.title) ?? items[0],
+  );
+  const SelectedIcon = $derived(selected.icon);
+
   let copied = $state(false);
+  let tabList: HTMLElement | undefined = $state();
+
+  $effect(() => {
+    if (tabbed) {
+      codeTabPreference.restore();
+    }
+  });
 
   /** The check is time-based, so the reset lives where it can be cancelled. */
   $effect(() => {
@@ -74,46 +93,118 @@
   });
 
   async function onCopy(): Promise<void> {
-    await navigator.clipboard.writeText(code);
+    await navigator.clipboard.writeText(selected.code);
     copied = true;
+  }
+
+  function onSelect(item: Item): void {
+    if (item.title) {
+      codeTabPreference.choose(item.title);
+    }
+  }
+
+  function onTabKeydown(event: KeyboardEvent): void {
+    const step =
+      event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+
+    if (step === 0) return;
+
+    event.preventDefault();
+    const index = items.indexOf(selected);
+    const next = items[(index + step + items.length) % items.length];
+
+    onSelect(next);
+    tabList
+      ?.querySelectorAll<HTMLElement>('[role="tab"]')
+      [items.indexOf(next)]?.focus();
   }
 </script>
 
 <!--
   Highlighting runs at render time, so the block is already a readable
-  pre/code before any JavaScript loads. The copy button is the only part
-  that needs the browser, and its absence costs nothing.
+  pre/code before any JavaScript loads.
 -->
 <div
   class="doc-code border-surface-root-border overflow-hidden rounded-xl border"
 >
-  {#if title}
+  {#if tabbed}
+    <div
+      class="border-surface-root-border flex h-10 items-center justify-between gap-2 border-b pr-1 pl-1.5"
+    >
+      <div
+        bind:this={tabList}
+        role="tablist"
+        aria-label="Language"
+        tabindex="-1"
+        class="flex min-w-0 items-center self-stretch overflow-x-auto [scrollbar-width:none]"
+        onkeydown={onTabKeydown}
+      >
+        {#each items as item, index (item.title)}
+          {@const Icon = item.icon}
+          {@const active = item === selected}
+          <button
+            type="button"
+            role="tab"
+            id="{id}-tab-{index}"
+            aria-selected={active}
+            aria-controls="{id}-panel-{index}"
+            tabindex={active ? 0 : -1}
+            onclick={() => onSelect(item)}
+            class={[
+              'relative flex shrink-0 items-center gap-2 self-stretch px-2.5 text-xs font-medium transition-ink duration-150',
+              active
+                ? 'text-fg-default after:bg-surface-inverse-bg after:absolute after:inset-x-2.5 after:-bottom-px after:h-px'
+                : 'text-fg-muted hover:text-fg-secondary',
+            ]}
+          >
+            {#if Icon}
+              <Icon class="size-3.5 shrink-0" />
+            {/if}
+            {item.title}
+          </button>
+        {/each}
+      </div>
+      {@render copyButton()}
+    </div>
+  {:else if selected.title}
     <div
       class="border-surface-root-border flex h-9 items-center justify-between border-b pr-1 pl-4"
     >
       <span class="text-fg-muted flex items-center gap-2 text-xs font-medium">
-        {#if Icon}
-          <Icon class="size-3.5 shrink-0" />
+        {#if SelectedIcon}
+          <SelectedIcon class="size-3.5 shrink-0" />
         {/if}
-        {title}
+        {selected.title}
       </span>
       {@render copyButton()}
     </div>
+  {/if}
 
-    <Highlight class="font-mono" {code} language={grammars[language]} />
-  {:else}
+  {#each items as item, index (item.title ?? index)}
     <!--
       The right padding is a gutter the code never scrolls into, so a long
       first line clips against empty space instead of sliding under the button.
     -->
-    <div class="corner relative sm:pr-12">
-      <Highlight class="font-mono" {code} language={grammars[language]} />
+    <div
+      id="{id}-panel-{index}"
+      role={tabbed ? 'tabpanel' : undefined}
+      aria-labelledby={tabbed ? `${id}-tab-${index}` : undefined}
+      hidden={item !== selected}
+      class={[{ 'corner relative sm:pr-12': !tabbed && !item.title }]}
+    >
+      <Highlight
+        class="font-mono"
+        code={item.code}
+        language={grammars[item.language]}
+      />
 
-      <div class="absolute top-2 right-2 sm:top-3 sm:right-3">
-        {@render copyButton()}
-      </div>
+      {#if !tabbed && !item.title}
+        <div class="absolute top-2 right-2 sm:top-3 sm:right-3">
+          {@render copyButton()}
+        </div>
+      {/if}
     </div>
-  {/if}
+  {/each}
 </div>
 
 {#snippet copyButton()}
@@ -121,7 +212,7 @@
     type="button"
     onclick={onCopy}
     aria-label={copied ? 'Copied' : 'Copy code'}
-    class="text-fg-faint hover:text-fg-default bg-surface-root-bg flex size-7 items-center justify-center rounded-md transition-ink duration-150"
+    class="text-fg-faint hover:text-fg-default bg-surface-root-bg flex size-7 shrink-0 items-center justify-center rounded-md transition-ink duration-150"
   >
     {#if copied}
       <CheckIcon class="size-3.5" />

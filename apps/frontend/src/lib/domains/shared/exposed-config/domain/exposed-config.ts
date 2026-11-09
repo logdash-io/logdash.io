@@ -47,12 +47,15 @@ type UserPlanNotificationChannelsConfig = {
 
 type UserPlan = {
   projects: UserPlanProjectsConfig;
+  httpMonitors: { maxNumberOfMonitors: number };
   publicDashboards: UserPlanPublicDashboardsConfig;
   notificationChannels: UserPlanNotificationChannelsConfig;
 };
 
 type ClusterPlan = {
-  webAnalytics: { retentionDays: number };
+  maxClusterMembers: number;
+  webAnalytics: { rateLimitPerHour: number; retentionDays: number };
+  customDomains: { canCreate: boolean };
   httpMonitors: { pingFrequency: string; canCreatePushMonitors: boolean };
 };
 

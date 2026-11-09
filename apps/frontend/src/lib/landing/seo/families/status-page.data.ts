@@ -52,7 +52,7 @@ export const statusPagesFamily: SeoFamily = {
         type: 'list',
         items: [
           'A check is up when it gets a 2xx or 3xx answer. Anything else, or no answer within 10 seconds, is down.',
-          'A monitor is down when its latest check failed, degraded when any of its last 10 checks failed, and up otherwise.',
+          'A monitor is down when its 2 latest checks both failed, degraded when any of its last 10 checks failed, and up otherwise.',
           'The page is in outage when every monitor is down, degraded when any monitor is not up, and operational when all are up.',
           'Uptime is successful checks over total checks in the window.',
           'The page is composed at most once a minute, so what a visitor sees can be up to about three minutes old. The Telegram alert does not wait for it.',
@@ -322,7 +322,7 @@ for (const monitor of page.monitors) {
       },
       {
         type: 'paragraph',
-        text: 'The full field reference, status rules and error codes live in the docs at /docs/status-pages.',
+        text: 'The full field reference, status rules and error codes live in the docs at /docs/status-pages/api.',
       },
     ],
     featurePath: '/features/monitoring',
@@ -335,7 +335,7 @@ for (const monitor of page.monitors) {
       {
         question: 'Where is the status page API documentation?',
         answer:
-          'At /docs/status-pages on logdash.io. It covers every response field, the status rules, caching, CORS and errors, plus the client library, the shadcn component and the Next.js starter. The version is part of the path, and a change that would break an existing client gets a new version.',
+          'At /docs/status-pages/api on logdash.io. It covers every response field, the status rules, caching, CORS and errors, plus the client library, the shadcn component and the Next.js starter. The version is part of the path, and a change that would break an existing client gets a new version.',
       },
       {
         question: 'Is there an Uptime Kuma status page API?',
@@ -1833,7 +1833,7 @@ curl -s https://api.logdash.io/v1/status_pages/status.logdash.io | jq -r '.statu
       },
       {
         type: 'paragraph',
-        text: 'Logdash status pages show what the checks see. They have no incident editor and no subscriber list, so incident posts go wherever your customers already read you. The full status page reference is at /docs/status-pages.',
+        text: 'Logdash status pages show what the checks see. They have no incident editor and no subscriber list, so incident posts go wherever your customers already read you. The full status page reference is at /docs/status-pages/api.',
       },
       {
         type: 'steps',

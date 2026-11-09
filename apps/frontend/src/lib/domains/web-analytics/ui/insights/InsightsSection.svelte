@@ -109,7 +109,7 @@
             Add insight
           </button>
           <a
-            href="{resolve('/docs/web-analytics')}#connect-your-coding-agent"
+            href={resolve('/docs/mcp')}
             class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
           >
             Connect your agent

@@ -1,10 +1,11 @@
 import { LogdashSDKName } from '$lib/domains/shared/types';
-import type { SdkDoc } from './sdk-doc';
+import { SDKS, type DocCodeTab } from '$lib/landing/guides/documentation.data';
+import type { SdkDoc, SdkSnippet } from './sdk-doc';
 
 /**
- * One record per SDK. Every install, init, log and metric snippet is copied
- * from the README pinned in `sourceRef`, trimmed to imports plus the call and
- * switched to an env-var API key so it pastes straight into a project.
+ * One record per SDK. Every snippet is copied from the README pinned in
+ * `sourceRef`, trimmed to imports plus the call and switched to an env-var
+ * API key so it pastes straight into a project.
  *
  * When an SDK README changes, diff it against the pinned sha, update the
  * snippet and bump `updatedAt`. Never write a method name that is not in the
@@ -17,15 +18,15 @@ export const sdkDocs: SdkDoc[] = [
     id: LogdashSDKName.NODE_JS,
     repo: 'node-sdk',
     sourceRef: {
-      url: 'https://github.com/logdash-io/node-sdk/blob/a29c017cc4a2830c5db8d7c7cd24a0d0c1d1e3a5/README.md',
-      sha: 'a29c017cc4a2830c5db8d7c7cd24a0d0c1d1e3a5',
+      url: 'https://github.com/logdash-io/node-sdk/blob/0ff4b8c2c2050119cf13dd4b83f38607d01dc7f2/README.md',
+      sha: '0ff4b8c2c2050119cf13dd4b83f38607d01dc7f2',
     },
     install: { language: 'bash', code: 'npm install @logdash/node' },
     init: {
       language: 'typescript',
       code: `import { Logdash } from '@logdash/node';
 
-const logdash = new Logdash(process.env.LOGDASH_API_KEY);`,
+const logdash = new Logdash(process.env.LOGDASH_API_KEY, { app: 'api' });`,
     },
     log: {
       language: 'typescript',
@@ -49,6 +50,19 @@ logdash.setMetric('users', 0);
 // to modify existing metric
 logdash.mutateMetric('users', 1);`,
     },
+    event: {
+      language: 'typescript',
+      code: `import { Logdash } from '@logdash/node';
+
+const logdash = new Logdash(process.env.LOGDASH_API_KEY);
+
+logdash.track('agent_run', { model: 'opus', tools: 3 }, { userId: user.id });`,
+    },
+    flush: {
+      language: 'typescript',
+      code: `// Ensure all logs, metrics and events are sent before exiting
+await logdash.flush();`,
+    },
     frameworks: ['Express', 'NestJS', 'Fastify', 'Next.js', 'SvelteKit', 'Bun'],
     faq: [
       {
@@ -67,7 +81,7 @@ logdash.mutateMetric('users', 1);`,
           'Yes. Pass `options.host` to the constructor. It defaults to `https://api.logdash.io`.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-11-09',
   },
   {
     slug: 'python',
@@ -75,8 +89,8 @@ logdash.mutateMetric('users', 1);`,
     id: LogdashSDKName.PYTHON,
     repo: 'python-sdk',
     sourceRef: {
-      url: 'https://github.com/logdash-io/python-sdk/blob/f1504adf57f02955aaa724e03e8de1d203f195bc/README.md',
-      sha: 'f1504adf57f02955aaa724e03e8de1d203f195bc',
+      url: 'https://github.com/logdash-io/python-sdk/blob/8dac044d1ca327a6690e930683d5f8e039fd3b24/README.md',
+      sha: '8dac044d1ca327a6690e930683d5f8e039fd3b24',
     },
     install: { language: 'bash', code: 'pip install logdash' },
     init: {
@@ -87,6 +101,7 @@ from logdash import create_logdash
 
 logdash = create_logdash({
     "api_key": os.environ["LOGDASH_API_KEY"],
+    "app": "api",
 })`,
     },
     log: {
@@ -117,6 +132,22 @@ metrics.set("users", 0)
 # to modify existing metric
 metrics.mutate("users", 1)`,
     },
+    event: {
+      language: 'python',
+      code: `import os
+
+from logdash import create_logdash
+
+logdash = create_logdash({"api_key": os.environ["LOGDASH_API_KEY"]})
+
+logdash.track(
+    "agent_run",
+    props={"model": "opus", "tools": 3},
+    # the signed-in user's internal ID, never an email address
+    user_id="42",
+)`,
+    },
+    flush: { language: 'python', code: 'logdash.flush()' },
     frameworks: ['FastAPI', 'Django', 'Flask', 'Celery'],
     faq: [
       {
@@ -135,7 +166,7 @@ metrics.mutate("users", 1)`,
           'No framework binding ships with the SDK. `create_logdash` is the whole surface, so build one client at startup and import it where you need it.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-11-09',
   },
   {
     slug: 'go',
@@ -143,14 +174,27 @@ metrics.mutate("users", 1)`,
     id: LogdashSDKName.GO,
     repo: 'go-sdk',
     sourceRef: {
-      url: 'https://github.com/logdash-io/go-sdk/blob/b14658fa6a35b69591d432ef034f8942ba19dd74/README.md',
-      sha: 'b14658fa6a35b69591d432ef034f8942ba19dd74',
+      url: 'https://github.com/logdash-io/go-sdk/blob/8b10bef88ec90ae0fa524810ddd34933bacf98a5/README.md',
+      sha: '8b10bef88ec90ae0fa524810ddd34933bacf98a5',
     },
     install: {
       language: 'bash',
       code: 'go get github.com/logdash-io/go-sdk/logdash',
     },
     init: {
+      language: 'go',
+      code: `import (
+	"os"
+
+	"github.com/logdash-io/go-sdk/logdash"
+)
+
+ld := logdash.New(
+	logdash.WithAPIKey(os.Getenv("LOGDASH_API_KEY")),
+	logdash.WithApp("api"),
+)`,
+    },
+    log: {
       language: 'go',
       code: `package main
 
@@ -163,35 +207,20 @@ import (
 )
 
 func main() {
-	ld := logdash.New(
-		logdash.WithApiKey(os.Getenv("LOGDASH_API_KEY")),
-	)
-
-	// Shutdown waits for every enqueued log and metric to flush.
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	defer ld.Shutdown(ctx)
-}`,
-    },
-    log: {
-      language: 'go',
-      code: `package main
-
-import (
-	"os"
-
-	"github.com/logdash-io/go-sdk/logdash"
-)
-
-func main() {
-	ld := logdash.New(logdash.WithApiKey(os.Getenv("LOGDASH_API_KEY")))
+	ld := logdash.New(logdash.WithAPIKey(os.Getenv("LOGDASH_API_KEY")))
 	logger := ld.Logger
 
 	logger.Info("Application started successfully")
 	logger.Error("An unexpected error occurred")
+	logger.Warn("Low disk space warning")
 
 	// Every level has an ...F() counterpart, like fmt.Printf.
 	logger.InfoF("Processing %v of %v item", 1, 10)
+
+	// Shutdown waits for every enqueued log, metric and event to flush.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	ld.Shutdown(ctx)
 }`,
     },
     metric: {
@@ -199,13 +228,15 @@ func main() {
       code: `package main
 
 import (
+	"context"
 	"os"
+	"time"
 
 	"github.com/logdash-io/go-sdk/logdash"
 )
 
 func main() {
-	ld := logdash.New(logdash.WithApiKey(os.Getenv("LOGDASH_API_KEY")))
+	ld := logdash.New(logdash.WithAPIKey(os.Getenv("LOGDASH_API_KEY")))
 	metrics := ld.Metrics
 
 	// to set absolute value
@@ -213,7 +244,31 @@ func main() {
 
 	// or increment / decrement by
 	metrics.Mutate("users", 1)
+
+	// Shutdown waits for every enqueued log, metric and event to flush.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	ld.Shutdown(ctx)
 }`,
+    },
+    event: {
+      language: 'go',
+      code: `ld := logdash.New(
+	logdash.WithAPIKey(os.Getenv("LOGDASH_API_KEY")),
+)
+
+ld.Track("agent_run",
+	map[string]any{"agent": "support", "steps": 4, "success": true},
+	// the signed-in user's internal ID, never an email address
+	logdash.WithUserID("42"),
+)`,
+    },
+    flush: {
+      language: 'go',
+      code: `// Shutdown waits for every enqueued log, metric and event to flush.
+ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
+ld.Shutdown(ctx)`,
     },
     frameworks: ['net/http', 'log/slog', 'Gin', 'Echo', 'Fiber'],
     faq: [
@@ -225,7 +280,7 @@ func main() {
       {
         question: 'How do I flush before the process exits?',
         answer:
-          'Call `ld.Shutdown(ctx)` with a context deadline. It blocks until every queued log and metric has been sent or the context expires.',
+          'Call `ld.Shutdown(ctx)` with a context deadline. It blocks until every queued log, metric and event has been sent or the context expires.',
       },
       {
         question: 'Is there a printf-style logging call?',
@@ -233,7 +288,7 @@ func main() {
           'Yes. Every level has an `...F()` counterpart, so `logger.InfoF("Processing %v of %v item", i+1, items)` works the way `fmt.Printf` does.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-11-09',
   },
   {
     slug: 'dotnet',
@@ -241,8 +296,8 @@ func main() {
     id: LogdashSDKName.DOTNET,
     repo: 'dotnet-sdk',
     sourceRef: {
-      url: 'https://github.com/logdash-io/dotnet-sdk/blob/d77d3d98d52bfeb8cb4a8cff589090f459bc241a/README.md',
-      sha: 'd77d3d98d52bfeb8cb4a8cff589090f459bc241a',
+      url: 'https://github.com/logdash-io/dotnet-sdk/blob/6ba11863cbfe6e85326b7f92f7b720f3c6918292/README.md',
+      sha: '6ba11863cbfe6e85326b7f92f7b720f3c6918292',
     },
     install: { language: 'bash', code: 'dotnet add package Logdash' },
     init: {
@@ -252,9 +307,9 @@ using Logdash.Models;
 
 var apiKey = Environment.GetEnvironmentVariable("LOGDASH_API_KEY");
 
-var (logdash, metrics) = new LogdashBuilder()
+var (logdash, metrics, events) = new LogdashBuilder()
     .WithHttpClient(new HttpClient())
-    .WithInitializationParams(new InitializationParams(apiKey))
+    .WithInitializationParams(new InitializationParams(apiKey, App: "api"))
     .Build();`,
     },
     log: {
@@ -272,6 +327,15 @@ metrics.Set("key", 2);
 // or increment / decrement by
 metrics.Mutate("key", 3);`,
     },
+    event: {
+      language: 'csharp',
+      code: `events.Track("agent_run", new Dictionary<string, object>
+{
+    ["agent"] = "support",
+    ["steps"] = 4,
+    ["success"] = true,
+}, userId: user.Id);`,
+    },
     frameworks: [
       'ASP.NET Core',
       'Minimal APIs',
@@ -283,12 +347,12 @@ metrics.Mutate("key", 3);`,
       {
         question: 'How do I register it in ASP.NET Core?',
         answer:
-          'Call `builder.Services.AddLogdash(new InitializationParams(apiKey))`, then take `ILogdashLogger` and `ILogdashMetrics` as constructor parameters in your controllers and services.',
+          'Call `builder.Services.AddLogdash(new InitializationParams(apiKey))`, then take `ILogdashLogger`, `ILogdashMetrics` and `ILogdashEvents` as constructor parameters in your controllers and services.',
       },
       {
         question: 'Can I use it without dependency injection?',
         answer:
-          'Yes. `new LogdashBuilder().WithHttpClient(...).WithInitializationParams(...).Build()` returns a logger and a metrics client as a tuple.',
+          'Yes. `new LogdashBuilder().WithHttpClient(...).WithInitializationParams(...).Build()` returns a logger, a metrics client and an events client as a tuple.',
       },
       {
         question: 'What happens if I leave the API key out?',
@@ -296,7 +360,7 @@ metrics.Mutate("key", 3);`,
           'Logs go to the local console only. There is also a `host` parameter if you are running a self-hosted Logdash, and `verbose` if you need to debug the SDK itself.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-11-09',
   },
   {
     slug: 'java',
@@ -304,8 +368,8 @@ metrics.Mutate("key", 3);`,
     id: LogdashSDKName.JAVA,
     repo: 'java-sdk',
     sourceRef: {
-      url: 'https://github.com/logdash-io/java-sdk/blob/dc8b83986f8cd8dec863dce42b38373e1317e667/README.md',
-      sha: 'dc8b83986f8cd8dec863dce42b38373e1317e667',
+      url: 'https://github.com/logdash-io/java-sdk/blob/f6898db3b0a4cdd72fa4c7563368a4e496ba6847/README.md',
+      sha: 'f6898db3b0a4cdd72fa4c7563368a4e496ba6847',
     },
     install: {
       language: 'java',
@@ -320,6 +384,7 @@ dependencies {
 
 var logdash = Logdash.builder()
         .apiKey(System.getenv("LOGDASH_API_KEY"))
+        .app("api")
         .build();
 
 var logger = logdash.logger();
@@ -347,6 +412,17 @@ metrics.set("active_users", 1_250);
 // Counters - track events and occurrences
 metrics.mutate("api_requests", 1);`,
     },
+    event: {
+      language: 'java',
+      code: `import java.util.Map;
+
+logdash.track("agent_run", Map.of("agent", "support", "steps", 4, "success", true), user.id());`,
+    },
+    flush: {
+      language: 'java',
+      code: `logdash.flush();
+logdash.close();`,
+    },
     frameworks: ['Spring Boot', 'Quarkus', 'Micronaut', 'Standalone apps'],
     faq: [
       {
@@ -361,10 +437,10 @@ metrics.mutate("api_requests", 1);`,
       {
         question: 'Do logging calls block the request thread?',
         answer:
-          'No. The SDK is async and calls return immediately. Defaults are a 15000 ms request timeout, 3 retries and 10 concurrent requests; call `logdash.flush()` and `logdash.close()` before shutdown.',
+          'No. The SDK is async and calls return immediately. Defaults are a 15000 ms request timeout, 3 retries and 20 concurrent requests; call `logdash.flush()` and `logdash.close()` before shutdown.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-11-09',
   },
   {
     slug: 'rust',
@@ -372,14 +448,16 @@ metrics.mutate("api_requests", 1);`,
     id: LogdashSDKName.RUST,
     repo: 'rust-sdk',
     sourceRef: {
-      url: 'https://github.com/logdash-io/rust-sdk/blob/af54838f859926953fc7d2f0bb7cbbda4397518c/README.md',
-      sha: 'af54838f859926953fc7d2f0bb7cbbda4397518c',
+      url: 'https://github.com/logdash-io/rust-sdk/blob/155c9a4cf28687a78cdf05d1021a1e7e1981b15d/README.md',
+      sha: '155c9a4cf28687a78cdf05d1021a1e7e1981b15d',
     },
     install: { language: 'bash', code: 'cargo add logdash' },
     init: {
       language: 'rust',
       code: `// Config::default() reads LOGDASH_API_KEY from the environment.
-let (logger, metrics) = logdash::create_logdash(logdash::Config::default());`,
+let (logger, metrics) = logdash::create_logdash(
+    logdash::Config::default().app("api".into()),
+);`,
     },
     log: {
       language: 'rust',
@@ -397,6 +475,22 @@ metrics.set("users".into(), 0.0);
 
 // or increment / decrement by
 metrics.mutate("users".into(), 1.0);`,
+    },
+    event: {
+      language: 'rust',
+      code: `logdash::create_logdash(logdash::Config::default());
+
+// track that a signed-in user ran an agent
+logdash::track(
+    "agent_run",
+    &[("agent", "support".into()), ("steps", 4.into()), ("success", true.into())],
+    Some(&user.id),
+);`,
+    },
+    flush: {
+      language: 'rust',
+      code: `// wait until the logs, metrics and events queued so far are sent
+logdash::flush();`,
     },
     frameworks: ['Axum', 'Actix Web', 'Rocket', 'Tokio', 'CLI binaries'],
     faq: [
@@ -416,7 +510,7 @@ metrics.mutate("users".into(), 1.0);`,
           'The name is an owned string, so pass `"users".into()`, and the value is a float: `metrics.set("users".into(), 0.0)`.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-11-09',
   },
   {
     slug: 'ruby',
@@ -424,15 +518,15 @@ metrics.mutate("users".into(), 1.0);`,
     id: LogdashSDKName.RUBY,
     repo: 'ruby-sdk',
     sourceRef: {
-      url: 'https://github.com/logdash-io/ruby-sdk/blob/944f6d364502fcd21ba110a17233865e782b5e80/README.md',
-      sha: '944f6d364502fcd21ba110a17233865e782b5e80',
+      url: 'https://github.com/logdash-io/ruby-sdk/blob/4356af7efe5c391c006148e41f12df0a1dbf6534/README.md',
+      sha: '4356af7efe5c391c006148e41f12df0a1dbf6534',
     },
     install: { language: 'bash', code: 'gem install logdash' },
     init: {
       language: 'ruby',
       code: `require 'logdash'
 
-logdash_client = Logdash.create(api_key: ENV['LOGDASH_API_KEY'])
+logdash_client = Logdash.create(api_key: ENV['LOGDASH_API_KEY'], app: "api")
 logger = logdash_client[:logger]
 metrics = logdash_client[:metrics]`,
     },
@@ -447,17 +541,23 @@ logger.warn('Low disk space warning')`,
       code: `metrics.set('users', 0)
 metrics.mutate('users', 1)`,
     },
+    event: {
+      language: 'ruby',
+      code: `events = logdash_client[:events]
+
+events.track('agent_run', { agent: 'support', steps: 4, success: true }, user_id: current_user.id)`,
+    },
     frameworks: ['Ruby on Rails', 'Sinatra', 'Rack', 'Sidekiq'],
     faq: [
       {
         question: 'How do I wire it into Rails?',
         answer:
-          'Create `config/initializers/logdash.rb`, call `Logdash.create` inside `ActiveSupport.on_load(:after_initialize)` and assign `$logger` and `$metrics` so they are available app-wide.',
+          'Create `config/initializers/logdash.rb`, call `Logdash.create` inside `ActiveSupport.on_load(:after_initialize)` and assign `$logger`, `$metrics` and `$events` so they are available app-wide.',
       },
       {
         question: 'What does Logdash.create return?',
         answer:
-          'A hash. Read `client[:logger]` for logging and `client[:metrics]` for counters and gauges.',
+          'A hash. Read `client[:logger]` for logging, `client[:metrics]` for counters and gauges and `client[:events]` for events.',
       },
       {
         question: 'Which log levels does the logger expose?',
@@ -465,7 +565,7 @@ metrics.mutate('users', 1)`,
           '`info`, `error`, `warn`, `debug`, `verbose`, `http` and `silly`.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-11-09',
   },
   {
     slug: 'php',
@@ -473,8 +573,8 @@ metrics.mutate('users', 1)`,
     id: LogdashSDKName.PHP,
     repo: 'php-sdk',
     sourceRef: {
-      url: 'https://github.com/logdash-io/php-sdk/blob/d22e55bdd45f4ca18af4aa5546dc50cf0525e67b/README.md',
-      sha: 'd22e55bdd45f4ca18af4aa5546dc50cf0525e67b',
+      url: 'https://github.com/logdash-io/php-sdk/blob/84b58de96a1df6f267185454fae916228049561f/README.md',
+      sha: '84b58de96a1df6f267185454fae916228049561f',
     },
     install: { language: 'bash', code: 'composer require logdash/php-sdk' },
     init: {
@@ -487,6 +587,7 @@ use Logdash\\Logdash;
 
 $logdash = Logdash::create([
     'apiKey' => $_ENV['LOGDASH_API_KEY'] ?? '',
+    'app' => 'api'
 ]);
 
 $logger = $logdash->logger();
@@ -504,6 +605,15 @@ $logger->info('User logged in successfully');`,
 $metrics->mutate('login_count', 1); // Increment by 1
 $metrics->mutate('error_count', -1); // Decrement by 1`,
     },
+    event: {
+      language: 'php',
+      code: `$logdash->track('agent_run', [
+    'agent' => 'support',
+    'steps' => 4,
+    'success' => true,
+], $user->id);`,
+    },
+    flush: { language: 'php', code: '$logdash->flush();' },
     frameworks: ['Laravel', 'Symfony', 'Slim', 'WordPress', 'Plain PHP'],
     faq: [
       {
@@ -522,6 +632,14 @@ $metrics->mutate('error_count', -1); // Decrement by 1`,
           'PHP 8.1 or higher, tested on 8.1, 8.2 and 8.3. Composer pulls in the Guzzle HTTP client for you.',
       },
     ],
-    updatedAt: '2026-09-04',
+    updatedAt: '2026-11-09',
   },
 ];
+
+export function sdkTabs(snippet: (doc: SdkDoc) => SdkSnippet): DocCodeTab[] {
+  return sdkDocs.map((doc) => ({
+    title: doc.name,
+    icon: SDKS.find((sdk) => sdk.id === doc.id)?.icon,
+    ...snippet(doc),
+  }));
+}
