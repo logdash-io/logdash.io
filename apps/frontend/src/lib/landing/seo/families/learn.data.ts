@@ -729,7 +729,7 @@ done`,
       },
       {
         type: 'paragraph',
-        text: 'If process-queue exits non-zero, set -e ends the loop, the pings stop, and the next empty window marks the monitor down. If it hangs, same result. The || true on curl means a network blip on the ping itself never kills the worker. The endpoint allows 300 calls a minute per IP, so a ping every few seconds is nowhere near the limit.',
+        text: 'If process-queue exits non-zero, set -e ends the loop, the pings stop, and two empty windows in a row mark the monitor down. If it hangs, same result. The || true on curl means a network blip on the ping itself never kills the worker. The endpoint allows 300 calls a minute per IP, so a ping every few seconds is nowhere near the limit.',
       },
       { type: 'heading', text: 'Heartbeat monitoring for cron' },
       {
@@ -795,7 +795,7 @@ done`,
           },
           {
             title: 'Kill the worker',
-            text: 'Stop the process. The next window comes up empty, the monitor flips to down, and a Telegram message lands on your phone naming the monitor and saying no call arrived. Start the worker again and a second message says it is back up.',
+            text: 'Stop the process. Two windows in a row come up empty, the monitor flips to down, and a Telegram message lands on your phone naming the monitor and saying no call arrived. Start the worker again and a second message says it is back up.',
           },
         ],
       },

@@ -2,16 +2,15 @@
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import type { Snippet } from 'svelte';
+  import { tick } from 'svelte';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
-  import OpenIcon from '$lib/domains/shared/icons/OpenIcon.svelte';
+  import SearchIcon from '$lib/domains/shared/icons/SearchIcon.svelte';
   import Footer from '$lib/landing/Footer.svelte';
   import PageView from '$lib/landing/PageView.svelte';
+  import { Kbd } from '@logdash/hyper-ui/presentational';
+  import DocsSearch from './DocsSearch.svelte';
   import DocsToc from './DocsToc.svelte';
-  import {
-    docsSidebar,
-    type DocsPath,
-    type DocsSidebarItem,
-  } from './documentation.data';
+  import { docsNav, docsNavEntries } from './documentation.data';
 
   type Props = {
     children: Snippet;
@@ -20,31 +19,46 @@
   const { children }: Props = $props();
 
   let mobileOpen = $state(false);
+  let searchOpen = $state(false);
+  let shortcut = $state('⌘K');
   let article: HTMLElement | undefined = $state();
+  let sidebar: HTMLElement | undefined = $state();
 
-  const currentTitle = $derived(
-    docsSidebar
-      .flatMap((group) => group.items)
-      .find((item) => !item.external && item.href === page.url.pathname)
-      ?.title ?? 'Docs',
+  const current = $derived(
+    docsNavEntries.find((entry) => entry.href === page.url.pathname),
   );
 
-  /** Narrowed up front: type guards do not survive into template closures. */
-  function internalPath(item: DocsSidebarItem): DocsPath | null {
-    return item.external === true ? null : item.href;
+  $effect(() => {
+    if (!/Mac|iPhone|iPad/.test(navigator.userAgent)) {
+      shortcut = 'Ctrl K';
+    }
+  });
+
+  $effect(() => {
+    void page.url.pathname;
+
+    if (sidebar) {
+      void revealCurrent(sidebar);
+    }
+  });
+
+  async function revealCurrent(nav: HTMLElement): Promise<void> {
+    await tick();
+    const link = nav.querySelector<HTMLElement>('[aria-current="page"]');
+
+    if (!link) return;
+
+    const top = link.offsetTop - nav.offsetTop;
+    const bottom = top + link.offsetHeight;
+
+    if (top < nav.scrollTop || bottom > nav.scrollTop + nav.clientHeight) {
+      nav.scrollTop = top - nav.clientHeight / 3;
+    }
   }
 
-  function isCurrent(item: DocsSidebarItem): boolean {
-    return internalPath(item) === page.url.pathname;
-  }
-
-  function linkClass(current: boolean): string[] {
-    return [
-      'flex min-h-8 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm leading-5 transition-ink duration-150',
-      current
-        ? 'bg-surface-root-selected-bg text-fg-default'
-        : 'text-fg-tertiary hover:bg-surface-root-hover-bg hover:text-fg-default',
-    ];
+  function onSearch(): void {
+    mobileOpen = false;
+    searchOpen = true;
   }
 </script>
 
@@ -63,37 +77,63 @@
     <aside
       class="border-surface-root-border hidden w-60 shrink-0 border-r md:block lg:w-64"
     >
-      <nav
-        aria-label="Docs"
-        class="sticky top-16 max-h-[calc(100dvh-4rem)] overflow-y-auto px-4 py-8 lg:px-6 lg:py-10"
+      <div
+        class="sticky top-16 flex max-h-[calc(100dvh-4rem)] flex-col px-4 lg:px-6"
       >
-        {@render groups()}
-      </nav>
+        <div class="pt-8 pb-3 lg:pt-10">
+          <button
+            type="button"
+            onclick={onSearch}
+            class="border-surface-root-border text-fg-muted hover:text-fg-secondary hover:bg-surface-root-hover-bg flex h-9 w-full items-center gap-2.5 rounded-lg border pr-1.5 pl-2.5 text-sm transition-ink duration-150"
+          >
+            <SearchIcon class="size-4 shrink-0" />
+            Search docs
+            <Kbd size="sm" class="text-fg-muted ml-auto">{shortcut}</Kbd>
+          </button>
+        </div>
+        <nav
+          bind:this={sidebar}
+          aria-label="Docs"
+          class="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pt-5 pb-8 lg:pb-10"
+        >
+          {@render groups()}
+        </nav>
+      </div>
     </aside>
 
-    <div class="border-surface-root-border border-b md:hidden">
-      <button
-        type="button"
-        class="flex w-full items-center justify-between px-4 py-3 text-sm font-medium sm:px-6"
-        aria-expanded={mobileOpen}
-        onclick={() => (mobileOpen = !mobileOpen)}
-      >
-        <span class="flex items-center gap-2">
-          <span class="text-fg-muted">Docs</span>
-          <span class="text-fg-faint">/</span>
-          <span>{currentTitle}</span>
-        </span>
-        <ChevronDownIcon
-          class={[
-            'text-fg-muted size-4 transition-transform duration-200 ease-out',
-            { 'rotate-180': mobileOpen },
-          ]}
-        />
-      </button>
+    <div
+      class="border-surface-root-border bg-surface-root-bg sticky top-16 z-10 border-b md:hidden"
+    >
+      <div class="flex items-center pr-2 sm:pr-4">
+        <button
+          type="button"
+          class="flex min-w-0 flex-1 items-center gap-2 py-3 pl-4 text-left text-sm font-medium sm:pl-6"
+          aria-expanded={mobileOpen}
+          onclick={() => (mobileOpen = !mobileOpen)}
+        >
+          <span class="text-fg-muted shrink-0">{current?.group ?? 'Docs'}</span>
+          <span class="text-fg-faint shrink-0">/</span>
+          <span class="truncate">{current?.title ?? 'Docs'}</span>
+          <ChevronDownIcon
+            class={[
+              'text-fg-muted size-4 shrink-0 transition-transform duration-200 ease-out',
+              { 'rotate-180': mobileOpen },
+            ]}
+          />
+        </button>
+        <button
+          type="button"
+          aria-label="Search docs"
+          onclick={onSearch}
+          class="text-fg-muted hover:text-fg-default hover:bg-surface-root-hover-bg flex size-9 shrink-0 items-center justify-center rounded-lg transition-ink duration-150"
+        >
+          <SearchIcon class="size-4" />
+        </button>
+      </div>
       {#if mobileOpen}
         <nav
           aria-label="Docs"
-          class="border-surface-root-border border-t px-4 py-5 sm:px-6"
+          class="border-surface-root-border max-h-[calc(100dvh-7.25rem)] overflow-y-auto border-t px-4 py-5 sm:px-6"
         >
           {@render groups()}
         </nav>
@@ -118,49 +158,34 @@
 
 <Footer />
 
+<DocsSearch bind:open={searchOpen} />
+
 {#snippet groups()}
   <div class="flex flex-col gap-7">
-    {#each docsSidebar as group (group.title)}
+    {#each docsNav as group (group.title)}
       <div class="flex flex-col gap-1">
         <h3 class="mb-1 px-2.5 text-sm font-medium">{group.title}</h3>
         <ul class="flex flex-col gap-px">
           {#each group.items as item (item.href)}
+            {@const active = item.href === page.url.pathname}
             <li>
-              {@render sidebarLink(item)}
+              <a
+                href={resolve(item.href)}
+                aria-current={active ? 'page' : undefined}
+                onclick={() => (mobileOpen = false)}
+                class={[
+                  'flex min-h-8 items-center rounded-lg px-2.5 py-1.5 text-sm leading-5 transition-ink duration-150',
+                  active
+                    ? 'bg-surface-root-selected-bg text-fg-default'
+                    : 'text-fg-tertiary hover:bg-surface-root-hover-bg hover:text-fg-default',
+                ]}
+              >
+                {item.title}
+              </a>
             </li>
           {/each}
         </ul>
       </div>
     {/each}
   </div>
-{/snippet}
-
-{#snippet sidebarLink(item: DocsSidebarItem)}
-  {@const Icon = item.icon}
-  {@const path = internalPath(item)}
-  {#if !path}
-    <!-- eslint-disable svelte/no-navigation-without-resolve -- external README -->
-    <a
-      href={item.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      class={linkClass(false)}
-    >
-      <!-- eslint-enable svelte/no-navigation-without-resolve -->
-      {#if Icon}
-        <Icon class="size-4 shrink-0" />
-      {/if}
-      <span>{item.title}</span>
-      <OpenIcon class="text-fg-faint ml-auto size-3 shrink-0" />
-    </a>
-  {:else}
-    <a
-      href={resolve(path)}
-      class={linkClass(isCurrent(item))}
-      aria-current={isCurrent(item) ? 'page' : undefined}
-      onclick={() => (mobileOpen = false)}
-    >
-      {item.title}
-    </a>
-  {/if}
 {/snippet}

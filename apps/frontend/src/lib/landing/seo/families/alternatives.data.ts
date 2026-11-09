@@ -2486,7 +2486,7 @@ for (const monitor of page.monitors) {
       {
         question: 'Is there an Instatus API alternative?',
         answer:
-          'GET https://api.logdash.io/v1/status_pages/:id returns a published Logdash page as JSON, with no key. The API docs live at logdash.io/docs/status-pages. It is read-only, so incidents and subscribers stay an Instatus strength.',
+          'GET https://api.logdash.io/v1/status_pages/:id returns a published Logdash page as JSON, with no key. The API docs live at logdash.io/docs/status-pages/api. It is read-only, so incidents and subscribers stay an Instatus strength.',
       },
     ],
     updatedAt: '2026-10-02',

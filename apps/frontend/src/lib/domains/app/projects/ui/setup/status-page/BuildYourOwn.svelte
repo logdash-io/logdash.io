@@ -60,7 +60,7 @@ export function Status() {
   </div>
 
   <div class="flex flex-wrap items-center gap-2">
-    <Button href={resolve('/docs/status-pages')} size="sm">
+    <Button href={resolve('/docs/status-pages/api')} size="sm">
       Read the docs
     </Button>
     <Button

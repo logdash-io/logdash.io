@@ -1939,7 +1939,7 @@ npx shadcn-svelte add https://logdash.io/r/svelte/status-page.json`,
       },
       {
         type: 'paragraph',
-        text: 'Both give you the same page: an overall status banner, a row per monitor with its uptime, and 90 days of daily bars with a tooltip. The data comes from one public endpoint, `GET https://api.logdash.io/v1/status_pages/:id`, with no API key and a 60-second cache. Statuses are computed on the server, so every copy of the page agrees: a monitor is down when its latest check failed and degraded when any of its last 10 did. If the API cannot be reached, the page keeps showing the last data it had instead of going blank. For developers this is a headless status page: the data is ours, the markup is yours.',
+        text: 'Both give you the same page: an overall status banner, a row per monitor with its uptime, and 90 days of daily bars with a tooltip. The data comes from one public endpoint, `GET https://api.logdash.io/v1/status_pages/:id`, with no API key and a 60-second cache. Statuses are computed on the server, so every copy of the page agrees: a monitor is down when its 2 latest checks both failed and degraded when any of its last 10 did. If the API cannot be reached, the page keeps showing the last data it had instead of going blank. For developers this is a headless status page: the data is ours, the markup is yours.',
       },
       {
         type: 'paragraph',

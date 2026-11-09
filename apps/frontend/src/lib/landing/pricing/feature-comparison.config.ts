@@ -34,7 +34,7 @@ export const FEATURES_COMPARISON = {
           name: 'Logs retention',
           [UserTier.FREE]: '24 hours (240k logs per app)',
           [UserTier.BUILDER]: '7 days (4.2M logs per app)',
-          [UserTier.PRO]: '30 days (37M logs per app)',
+          [UserTier.PRO]: '30 days (36M logs per app)',
         },
         {
           name: 'Rate limit per hour',

@@ -196,7 +196,7 @@ A deployable Next.js status page: [templates/status-page-next](https://github.co
 
 ## Docs
 
-[logdash.io/docs/status-pages](https://logdash.io/docs/status-pages)
+[logdash.io/docs/status-pages/api](https://logdash.io/docs/status-pages/api)
 
 ## License
 

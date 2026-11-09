@@ -76,7 +76,7 @@ export const PAYMENT_PLANS = [
       { name: 'Max 30 metrics per app' },
       { name: 'Max 3 collaborators per domain' },
       { name: 'Monitoring channels (Telegram & Advanced Webhooks)' },
-      { name: '30 days logs retention (37M logs per app)' },
+      { name: '30 days logs retention (36M logs per app)' },
       { name: '30 days metrics retention' },
       { name: '99.9% uptime SLA' },
       { name: 'Advanced insights with detailed data granularity' },

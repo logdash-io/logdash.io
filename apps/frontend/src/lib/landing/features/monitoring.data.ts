@@ -143,7 +143,7 @@ export const monitoringPage: FeaturePageData = {
       title: 'Status page docs',
       description:
         'The status page API, the React and Svelte components and the Next.js starter.',
-      href: '/docs/status-pages',
+      href: '/docs/status-pages/api',
     },
     {
       title: 'Health check endpoint guides',
