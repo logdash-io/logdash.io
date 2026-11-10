@@ -74,7 +74,7 @@ export const page: DocPage = {
       items: [
         'Each app sends one marker per active day, named after the app, such as `malini_desktop_day`, `grip_day` and `tony_day`. The marker has the properties `week_first` and `month_first`, set to `yes` on the first active day of the week or month.',
         'The daily line counts the marker. The weekly line counts it with the filter `week_first` = `yes` and the bucket **Per week**. The monthly line counts it with the filter `month_first` = `yes` and the bucket **Per month**.',
-        'A line stays empty until its app sends the marker. Visitor IDs change every day, so only an app can tell that a person is active in a week or a month.',
+        'A line stays empty until its app sends the marker. A trend counts events, and anonymous visitor IDs change every day, so the app says which active day is the first of its week or month.',
         'The week of the app must match the dashboard, which starts it on Monday. A week that does not match can count a person twice or not at all.',
       ],
     },
