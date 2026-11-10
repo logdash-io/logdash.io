@@ -23,6 +23,7 @@
     WebAnalyticsInsight,
     WebAnalyticsInsightBucket,
     WebAnalyticsInsightConfig,
+    WebAnalyticsInsightMeasure,
     WebAnalyticsSchema,
     WebAnalyticsView,
   } from '../../domain/web-analytics';
@@ -67,7 +68,7 @@
 
   const MAX_STEPS = 8;
   const SCHEMA_DAYS = 90;
-  const MODES: { value: WebAnalyticsFunnelMode; label: string }[] = [
+  const MODES: { value: WebAnalyticsInsightMeasure; label: string }[] = [
     { value: 'events', label: 'Events' },
     { value: 'people', label: 'People' },
   ];
@@ -128,7 +129,7 @@
   const allKeys = $derived(
     keysOf(draft.events.map((event) => event.name.trim())),
   );
-  const copy = $derived(texts(draft.type));
+  const copy = $derived(texts(draft.type, draft.measure));
   const pictureShares = $derived(
     PICTURE_SHARES.slice(0, people ? draft.steps.length : draft.events.length),
   );
@@ -162,7 +163,10 @@
     ].sort();
   }
 
-  function texts(type: WebAnalyticsChartType): {
+  function texts(
+    type: WebAnalyticsChartType,
+    measure: WebAnalyticsInsightMeasure,
+  ): {
     events: string;
     add: string;
     hint: string;
@@ -172,7 +176,10 @@
       return {
         events: 'Lines',
         add: 'Add line',
-        hint: 'Each line counts its events per day, week or month, under its own label.',
+        hint:
+          measure === 'people'
+            ? 'Each line counts the people who sent its event per day, week or month. An event counts a person only when the app sends a user ID.'
+            : 'Each line counts its events per day, week or month, under its own label.',
         name: 'Active installs',
       };
     if (type === 'distribution')
@@ -223,6 +230,10 @@
 
   function onMode(mode: WebAnalyticsFunnelMode): void {
     draft.mode = mode;
+  }
+
+  function onMeasure(measure: WebAnalyticsInsightMeasure): void {
+    draft.measure = measure;
   }
 
   function onBucket(bucket: WebAnalyticsInsightBucket): void {
@@ -356,6 +367,14 @@
             options={MODES}
             value={draft.mode}
             onChange={onMode}
+          />
+        {:else if draft.type === 'trend'}
+          <SegmentedControl
+            size="xs"
+            label="Trend counts"
+            options={MODES}
+            value={draft.measure}
+            onChange={onMeasure}
           />
         {/if}
         {#if !tabbed}

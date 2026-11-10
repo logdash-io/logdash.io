@@ -13,6 +13,7 @@ import {
   WebAnalyticsInsightBucket,
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightFilter,
+  WebAnalyticsInsightMeasure,
   WebAnalyticsInsightOperator,
   WebAnalyticsInsightType,
 } from '../core/dto/web-analytics-insight.body';
@@ -183,15 +184,11 @@ export class WebAnalyticsInsightReadService {
     scope: Scope,
     conditions: Conditions,
   ): Promise<Pick<WebAnalyticsInsightResult, 'steps'>> {
-    const rows = await this.query<Record<string, string>>(
-      `SELECT ${this.counts(conditions)} FROM web_events FINAL
-      WHERE ${scope.where} AND name IN {names:Array(String)} AND ${conditions.all}`,
-      conditions.params,
-    );
+    const counts = await this.totals(scope, conditions);
     return {
       steps: (insight.events ?? []).map((event, index) => ({
         name: event.name,
-        count: Number(rows[0]?.[`s${index}`] ?? 0),
+        count: counts[index],
       })),
     };
   }
@@ -201,26 +198,30 @@ export class WebAnalyticsInsightReadService {
     scope: Scope,
     conditions: Conditions,
     scopeOf: (bucket: WebAnalyticsGranularity) => Scope,
-  ): Promise<Pick<WebAnalyticsInsightResult, 'times' | 'bucket' | 'series'>> {
+  ): Promise<Pick<WebAnalyticsInsightResult, 'times' | 'bucket' | 'measure' | 'series'>> {
     const events = insight.events ?? [];
     const buckets = lineBuckets(insight);
     const axis = trendAxis(buckets);
+    const people = insight.measure === WebAnalyticsInsightMeasure.People;
     const times = this.read.readBuckets(scope, scope.params);
+    // People of the whole period are not the sum of the people of each bucket, so they get a query of their own.
+    const distinct = people ? this.totals(scope, conditions, true) : undefined;
     // One query per bucket, which counts only the lines of that bucket.
     const groups = await Promise.all(
       [...new Set(buckets)].map(async (bucket) => {
         const lines = buckets.flatMap((own, index) => (own === bucket ? [index] : []));
         const group = bucket === axis ? scope : scopeOf(bucket);
-        const [ticks, starts, rows] = await Promise.all([
+        const [ticks, starts, rows, totals] = await Promise.all([
           times,
           bucket === axis ? times : this.read.readBuckets(group, scope.params),
           this.query<Record<string, string>>(
-            `SELECT toUnixTimestamp(${group.bucket('created_at')}) * 1000 AS time, ${this.counts(conditions, lines)}
+            `SELECT toUnixTimestamp(${group.bucket('created_at')}) * 1000 AS time, ${this.counts(conditions, lines, people)}
             FROM web_events FINAL
             WHERE ${scope.where} AND name IN {names:Array(String)} AND ${conditions.all}
             GROUP BY time`,
             conditions.params,
           ),
+          distinct,
         ]);
         const byTime = new Map(rows.map((row) => [Number(row.time), row]));
         return lines.map((line) => {
@@ -232,7 +233,7 @@ export class WebAnalyticsInsightReadService {
               ...(events[line].label ? { label: events[line].label } : {}),
               bucket,
               counts: spread(ticks, starts, counts),
-              total: counts.reduce((total, count) => total + count, 0),
+              total: totals?.[line] ?? counts.reduce((total, count) => total + count, 0),
             },
           ] as const;
         });
@@ -241,6 +242,7 @@ export class WebAnalyticsInsightReadService {
     return {
       times: await times,
       bucket: axis,
+      measure: people ? WebAnalyticsInsightMeasure.People : WebAnalyticsInsightMeasure.Events,
       series: groups
         .flat()
         .sort(([a], [b]) => a - b)
@@ -379,11 +381,26 @@ export class WebAnalyticsInsightReadService {
     };
   }
 
-  private counts(conditions: Conditions, only?: number[]): string {
+  // Per line: its events, or its distinct people. Only users with an id are people, as a visitor id changes every day.
+  private counts(conditions: Conditions, only?: number[], people = false): string {
     return conditions.events
-      .map((condition, index) => `countIf(${condition}) AS s${index}`)
+      .map((condition, index) =>
+        people
+          ? `uniqExactIf(user_id, user_id != '' AND (${condition})) AS s${index}`
+          : `countIf(${condition}) AS s${index}`,
+      )
       .filter((_, index) => !only || only.includes(index))
       .join(', ');
+  }
+
+  // One number per line for the whole period.
+  private async totals(scope: Scope, conditions: Conditions, people = false): Promise<number[]> {
+    const [row] = await this.query<Record<string, string>>(
+      `SELECT ${this.counts(conditions, undefined, people)} FROM web_events FINAL
+      WHERE ${scope.where} AND name IN {names:Array(String)} AND ${conditions.all}`,
+      conditions.params,
+    );
+    return conditions.events.map((_, index) => Number(row?.[`s${index}`] ?? 0));
   }
 
   private window(

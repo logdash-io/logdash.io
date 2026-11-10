@@ -218,6 +218,7 @@ describe('Web analytics insights', () => {
       { type: 'trend', title: 'Hours', events: [{ name: 'signup', bucket: 'hour' }] },
       { type: 'trend', title: 'Blank', events: [{ name: 'signup', label: '   ' }] },
       { type: 'trend', title: 'Long', events: [{ name: 'signup', label: 'x'.repeat(41) }] },
+      { type: 'trend', title: 'Sessions', events: [{ name: 'signup' }], measure: 'sessions' },
       { type: 'cohorts', title: ' ', events: funnel.events },
     ])
       expect((await send(setup.token, 'post', path, body)).status).toBe(400);
@@ -414,6 +415,61 @@ describe('Web analytics insights', () => {
     expect(raw?.insights?.[0].events?.[0]).not.toHaveProperty('bucket');
   });
 
+  it('keeps the people measure of trends and drops it from other charts', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clusterId = setup.cluster.id;
+    const trend = { type: 'trend', title: 'Active', events: [{ name: 'grip_open' }] };
+
+    // when
+    const people = await create(clusterId, setup.token, { ...trend, measure: 'people' });
+    const events = await create(clusterId, setup.token, { ...trend, measure: 'events' });
+    const plain = await create(clusterId, setup.token, trend);
+    const asFunnel = await create(clusterId, setup.token, { ...funnel, measure: 'people' });
+    const tabs = await create(clusterId, setup.token, {
+      type: 'tabs',
+      title: 'Active',
+      tabs: [{ ...trend, measure: 'people' }, trend],
+    });
+    const raw = await bootstrap.models.webAnalyticsSiteModel.findOne({ clusterId }).lean();
+
+    // then
+    expect(people).toMatchObject({ measure: 'people' });
+    for (const insight of [events, plain, asFunnel]) expect(insight).not.toHaveProperty('measure');
+    expect(tabs.tabs).toMatchObject([{ measure: 'people' }, {}]);
+    expect(tabs.tabs?.[1]).not.toHaveProperty('measure');
+    expect((await list(clusterId, setup.token)).map((insight) => insight.measure)).toEqual([
+      'people',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    expect(raw?.insights?.[1]).not.toHaveProperty('measure');
+
+    // when the people trend is saved again without the measure, or as another chart
+    const update = (id: string, body: object): request.Test =>
+      send(setup.token, 'put', `${clusterId}/web_analytics/insights/${id}`, body);
+    const kept = await update(plain.id, { ...trend, measure: 'people' });
+    const back = await update(people.id, trend);
+    const other = await update((kept.body as WebAnalyticsInsightSerialized).id, { ...funnel });
+
+    // then
+    expect(kept.body).toMatchObject({ measure: 'people' });
+    expect(back.status).toBe(200);
+    expect(back.body).not.toHaveProperty('measure');
+    expect(other.body).not.toHaveProperty('measure');
+    const after = await bootstrap.models.webAnalyticsSiteModel.findOne({ clusterId }).lean();
+    expect(after?.insights?.map((insight) => insight.measure)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    expect(after?.insights?.[0]).not.toHaveProperty('measure');
+  });
+
   it('counts each trend line per its own bucket on one day axis', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
@@ -513,6 +569,93 @@ describe('Web analytics insights', () => {
         counts: [1, 3, 5],
         total: 9,
       },
+    ]);
+  });
+
+  it('counts the distinct people of each trend line per its own bucket', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const stranger = await bootstrap.utils.generalUtils.setupAnonymous();
+    const site = await configure(setup.cluster.id, setup.token);
+    const open = (
+      at: string,
+      user: string,
+      props: Record<string, string> = {},
+    ): WebEventClickhouseEntity => ({
+      ...row(setup.cluster.id, site.id),
+      name: 'grip_open',
+      created_at: `${at} 10:00:00.000`,
+      user_id: user,
+      props,
+    });
+    await insert([
+      open('2026-09-17', 'ana'),
+      open('2026-09-19', 'ana'),
+      open('2026-09-22', 'ana'),
+      open('2026-09-22', 'ana'),
+      open('2026-09-22', 'ben'),
+      open('2026-09-23', 'ben'),
+      open('2026-09-29', 'ana'),
+      open('2026-09-30', 'cy'),
+      open('2026-09-30', ''),
+      open('2026-10-01', 'cy'),
+      open('2026-10-02', 'ana', { plan: 'pro' }),
+      { ...open('2026-09-22', 'zed'), cluster_id: stranger.cluster.id },
+    ]);
+    const line = (label: string, bucket: string, filters: object[] = []): object => ({
+      name: 'grip_open',
+      label,
+      bucket,
+      filters,
+    });
+    const body = {
+      type: 'trend',
+      title: 'Grip active',
+      days: 14,
+      measure: 'people',
+      events: [
+        line('Daily', 'day'),
+        line('Weekly', 'week'),
+        line('Monthly', 'month'),
+        line('Pro', 'day', [{ key: 'plan', op: 'eq', value: 'pro' }]),
+      ],
+    };
+
+    // when
+    const people = await run(setup.cluster.id, setup.token, body);
+    const weeks = await run(setup.cluster.id, setup.token, {
+      ...body,
+      bucket: 'week',
+      events: [{ name: 'grip_open' }],
+    });
+    const events = await run(setup.cluster.id, setup.token, {
+      ...body,
+      measure: 'events',
+      events: body.events.slice(0, 1),
+    });
+
+    // then
+    const series = (label: string, bucket: string, counts: number[], total: number): object => ({
+      name: 'grip_open',
+      label,
+      bucket,
+      counts,
+      total,
+    });
+    expect(people.measure).toBe('people');
+    expect(people.series).toEqual([
+      series('Daily', 'day', [0, 1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1], 3),
+      series('Weekly', 'week', [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], 3),
+      series('Monthly', 'month', [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2], 3),
+      series('Pro', 'day', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 1),
+    ]);
+    expect(weeks.measure).toBe('people');
+    expect(weeks.series).toEqual([
+      { name: 'grip_open', bucket: 'week', counts: [1, 2, 2], total: 3 },
+    ]);
+    expect(events.measure).toBe('events');
+    expect(events.series).toEqual([
+      series('Daily', 'day', [0, 1, 0, 0, 3, 1, 0, 0, 0, 0, 0, 1, 2, 1, 1], 10),
     ]);
   });
 

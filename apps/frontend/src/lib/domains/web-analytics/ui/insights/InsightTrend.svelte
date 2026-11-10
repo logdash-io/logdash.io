@@ -18,11 +18,19 @@
     series: WebAnalyticsInsightSeries[];
     events: WebAnalyticsInsightEvent[];
     bucket: WebAnalyticsInsightBucket;
+    people: boolean;
     partial: boolean;
     label: string;
   };
 
-  const { times, series, events, bucket, partial, label }: Props = $props();
+  const { times, series, events, bucket, people, partial, label }: Props =
+    $props();
+
+  const CURRENT: Record<WebAnalyticsInsightBucket, string> = {
+    day: 'today',
+    week: 'this week',
+    month: 'this month',
+  };
 
   const COLORS = [
     'var(--chart-1)',
@@ -74,12 +82,20 @@
           label={entry.label}
         />
       </span>
-      {#if mixed}
+      {#if people}
+        <span class="text-fg-muted text-xs">{CURRENT[entry.bucket]}</span>
+      {:else if mixed}
         <span class="text-fg-muted text-xs">per {entry.bucket}</span>
       {/if}
       <span class="font-medium tabular-nums">
-        {formatCount(entry.total)}
+        {formatCount(people ? (entry.counts.at(-1) ?? 0) : entry.total)}
       </span>
     </li>
   {/each}
 </ul>
+
+{#if people && series.every((entry) => !entry.total)}
+  <p class="text-fg-muted px-3 text-xs">
+    No people yet. An event counts a person only when the app sends a user ID.
+  </p>
+{/if}

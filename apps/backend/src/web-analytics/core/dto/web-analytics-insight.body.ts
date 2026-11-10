@@ -47,6 +47,11 @@ export enum WebAnalyticsFunnelLayout {
   Rows = 'rows',
 }
 
+export enum WebAnalyticsInsightMeasure {
+  Events = 'events',
+  People = 'people',
+}
+
 export enum WebAnalyticsInsightOperator {
   Eq = 'eq',
   Neq = 'neq',
@@ -176,7 +181,7 @@ export class WebAnalyticsInsightBody extends WebAnalyticsInsightPlacementBody {
   @ApiProperty({
     enum: WebAnalyticsInsightType,
     description:
-      'funnel counts each step, trend counts events per bucket, distribution histograms a numeric property, cohorts groups a start event and later events by a date property, tabs holds 2 to 6 of those charts in one card',
+      'funnel counts each step, trend counts events or people per bucket, distribution histograms a numeric property, cohorts groups a start event and later events by a date property, tabs holds 2 to 6 of those charts in one card',
   })
   @IsEnum(WebAnalyticsInsightType)
   type: WebAnalyticsInsightType;
@@ -264,6 +269,16 @@ export class WebAnalyticsInsightBody extends WebAnalyticsInsightPlacementBody {
   @IsOptional()
   @IsIn(WEB_ANALYTICS_INSIGHT_BUCKETS)
   bucket?: WebAnalyticsInsightBucket;
+
+  @ApiPropertyOptional({
+    enum: WebAnalyticsInsightMeasure,
+    default: WebAnalyticsInsightMeasure.Events,
+    description:
+      'Trends only. events counts the events of each line. people counts the distinct users who sent them, by the userId of the event, so a daily, a weekly and a monthly line give daily, weekly and monthly active users. Events without a userId do not count',
+  })
+  @IsOptional()
+  @IsEnum(WebAnalyticsInsightMeasure)
+  measure?: WebAnalyticsInsightMeasure;
 
   @ApiPropertyOptional({
     example: 'active_days',
@@ -358,6 +373,7 @@ export type WebAnalyticsInsightConfig = WebAnalyticsInsightPlacement & {
   events?: WebAnalyticsInsightEvent[];
   filters?: WebAnalyticsInsightFilter[];
   bucket?: WebAnalyticsInsightBucket;
+  measure?: WebAnalyticsInsightMeasure;
   property?: string;
   binSize?: number;
   tabs?: WebAnalyticsInsightConfig[];
@@ -420,7 +436,13 @@ function normalizeChart(body: WebAnalyticsInsightBody, nested: boolean): WebAnal
   }
   if (trend) {
     count(1, 5, 'trend');
-    return { ...base, events, filters, bucket: body.bucket ?? WebAnalyticsGranularity.Day };
+    return {
+      ...base,
+      events,
+      filters,
+      bucket: body.bucket ?? WebAnalyticsGranularity.Day,
+      ...(body.measure === WebAnalyticsInsightMeasure.People ? { measure: body.measure } : {}),
+    };
   }
   if (body.type === WebAnalyticsInsightType.Distribution) {
     count(1, 1, 'distribution');

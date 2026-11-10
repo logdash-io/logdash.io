@@ -58,10 +58,11 @@ export const page: DocPage = {
     {
       type: 'list',
       items: [
+        'Under **Trend counts**, pick **Events** to count the events, or **People** to count the distinct people who sent them. A person needs a user ID on the event, see [Events from your apps](/docs/web-analytics/app-events) and [Identify signed-in users](/docs/web-analytics/identify).',
         'A line counts per the bucket under **Count per**, unless you pick its own bucket in the line. **Same as chart** uses the bucket under **Count per**.',
         'Lines with different buckets share a day axis. A weekly or monthly line steps up on the first day of each week or month, and its last step is dashed until that week or month ends.',
         'Weeks start on Monday and buckets follow your time zone. The first bucket counts only from the start of the period.',
-        'The number beside a line is the events it counted in the period.',
+        'The number beside a line is the events it counted in the period. For people it is the people of the current day, week or month so far.',
       ],
     },
     { type: 'heading', text: 'Compare several products' },
@@ -72,10 +73,10 @@ export const page: DocPage = {
     {
       type: 'list',
       items: [
-        'Each app sends one marker per active day, named after the app, such as `malini_desktop_day`, `grip_day` and `tony_day`. The marker has the properties `week_first` and `month_first`, set to `yes` on the first active day of the week or month.',
-        'The daily line counts the marker. The weekly line counts it with the filter `week_first` = `yes` and the bucket **Per week**. The monthly line counts it with the filter `month_first` = `yes` and the bucket **Per month**.',
-        'A line stays empty until its app sends the marker. A trend counts events, and anonymous visitor IDs change every day, so the app says which active day is the first of its week or month.',
-        'The week of the app must match the dashboard, which starts it on Monday. A week that does not match can count a person twice or not at all.',
+        'Set **Trend counts** to **People**, and give the three lines the same event. Pick **Per day**, **Per week** and **Per month** as their buckets. They are then the daily, weekly and monthly active people of the app.',
+        'Each app sends that event with a `userId`, such as the ID of the signed-in user or of the install. A person who opens the app on three days of one week counts once on the weekly line.',
+        'A line stays empty until its app sends a `userId`. An event without one is not a person, because an anonymous visitor ID changes every day.',
+        'People are counted once for the whole period, so the total of a line in the API is lower than the sum of its days.',
       ],
     },
     { type: 'heading', text: 'Histogram' },
@@ -99,7 +100,7 @@ export const page: DocPage = {
     { type: 'heading', text: 'Measure a product without user IDs' },
     {
       type: 'paragraph',
-      text: 'Funnels, trends, histograms and cohorts count events, not people, so they work for apps that send no user ID.',
+      text: 'Funnels, histograms, cohorts and event trends count events, not people, so they work for apps that send no user ID.',
     },
     {
       type: 'table',
@@ -117,8 +118,8 @@ export const page: DocPage = {
         ],
         [
           'Daily, weekly and monthly users',
-          'One event per active day, with properties that say whether it is the first day of its week or month.',
-          'A trend with a daily, a weekly and a monthly line, each with its own bucket and filter.',
+          'One event per active day, with properties that say whether it is the first day of its week or month, such as `week_first` and `month_first` set to `yes`.',
+          'A trend of events with a daily, a weekly and a monthly line. The weekly line has the filter `week_first` = `yes` and the bucket **Per week**, and the monthly line has `month_first` = `yes` and **Per month**.',
         ],
         [
           'How habitual are your users?',

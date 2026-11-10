@@ -211,6 +211,9 @@ export type WebAnalyticsInsightOperator =
 
 export type WebAnalyticsInsightBucket = 'day' | 'week' | 'month';
 
+/** What a trend line counts: its events, or the distinct people who sent them. */
+export type WebAnalyticsInsightMeasure = 'events' | 'people';
+
 export interface WebAnalyticsInsightFilter {
   key: string;
   op: WebAnalyticsInsightOperator;
@@ -234,6 +237,7 @@ export interface WebAnalyticsChartConfig {
   events?: WebAnalyticsInsightEvent[];
   filters?: WebAnalyticsInsightFilter[];
   bucket?: WebAnalyticsInsightBucket;
+  measure?: WebAnalyticsInsightMeasure;
   property?: string;
   binSize?: number;
 }
@@ -319,6 +323,7 @@ export interface WebAnalyticsInsightResult {
   steps?: WebAnalyticsInsightStep[];
   times?: number[];
   bucket?: WebAnalyticsInsightBucket;
+  measure?: WebAnalyticsInsightMeasure;
   series?: WebAnalyticsInsightSeries[];
   bins?: WebAnalyticsInsightBin[];
   summary?: { count: number; mean: number | null; median: number | null };

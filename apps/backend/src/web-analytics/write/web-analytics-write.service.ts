@@ -49,6 +49,7 @@ const INSIGHT_CONFIG_KEYS = [
   'events',
   'filters',
   'bucket',
+  'measure',
   'property',
   'binSize',
   'tabs',

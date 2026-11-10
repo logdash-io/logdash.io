@@ -10,6 +10,7 @@ import {
   WebAnalyticsInsightEventBody,
   WebAnalyticsInsightFilter,
   WebAnalyticsInsightFilterBody,
+  WebAnalyticsInsightMeasure,
   WebAnalyticsInsightType,
   WebAnalyticsInsightWidth,
 } from './web-analytics-insight.body';
@@ -44,6 +45,12 @@ export class WebAnalyticsInsightSerialized {
 
   @ApiPropertyOptional({ enum: WEB_ANALYTICS_INSIGHT_BUCKETS })
   bucket?: WebAnalyticsInsightBucket;
+
+  @ApiPropertyOptional({
+    enum: WebAnalyticsInsightMeasure,
+    description: 'Trends only. Absent means events',
+  })
+  measure?: WebAnalyticsInsightMeasure;
 
   @ApiPropertyOptional()
   property?: string;
@@ -136,11 +143,14 @@ export class WebAnalyticsInsightSeries {
     type: Number,
     isArray: true,
     description:
-      'Events per bucket, in times order. A line with a coarser bucket than times repeats its count on each time of its bucket',
+      'Events, or distinct people, per bucket, in times order. A line with a coarser bucket than times repeats its count on each time of its bucket',
   })
   counts: number[];
 
-  @ApiProperty({ description: 'Events of the whole period, the sum of the buckets of the line' })
+  @ApiProperty({
+    description:
+      'Events of the whole period, the sum of the buckets of the line. For people it is the distinct people of the whole period, so it is below the sum of the buckets',
+  })
   total: number;
 }
 
@@ -211,6 +221,12 @@ export class WebAnalyticsInsightResult {
       'Trends: the bucket each of times starts. It is day when the lines count per different buckets',
   })
   bucket?: WebAnalyticsInsightBucket;
+
+  @ApiPropertyOptional({
+    enum: WebAnalyticsInsightMeasure,
+    description: 'Trends: whether the counts of the series are events or distinct people',
+  })
+  measure?: WebAnalyticsInsightMeasure;
 
   @ApiPropertyOptional({ type: WebAnalyticsInsightSeries, isArray: true })
   series?: WebAnalyticsInsightSeries[];

@@ -129,10 +129,11 @@ describe('MCP server', () => {
       name: string;
       inputSchema: { properties: { events: { items: { properties: object } } } };
     }[];
-    for (const name of ['trend', 'create_insight', 'update_insight'])
-      expect(
-        lines.find((tool) => tool.name === name)?.inputSchema.properties.events.items.properties,
-      ).toHaveProperty('bucket');
+    for (const name of ['trend', 'create_insight', 'update_insight']) {
+      const { properties } = lines.find((tool) => tool.name === name)?.inputSchema ?? {};
+      expect(properties?.events.items.properties).toHaveProperty('bucket');
+      expect(properties).toHaveProperty('measure');
+    }
     expect(
       lines.find((tool) => tool.name === 'events_funnel')?.inputSchema.properties.events.items
         .properties,
@@ -247,6 +248,12 @@ describe('MCP server', () => {
         { clusterId, type: 'trend', title: 'Hours', events: [{ name: 'a', bucket: 'hour' }] },
         'events.0.bucket must be one of',
       ],
+      [
+        'create_insight',
+        { clusterId, type: 'trend', title: 'Hits', events: [{ name: 'a' }], measure: 'hits' },
+        'measure must be one of',
+      ],
+      ['trend', { clusterId, events: [{ name: 'a' }], measure: 'hits' }, 'measure must be one of'],
       [
         'create_insight',
         { clusterId, type: 'trend', title: 'Blank', events: [{ name: 'a', label: ' ' }] },
@@ -484,6 +491,64 @@ describe('MCP server', () => {
     expect(retention.isError).toBe(false);
     expect(retention.json).toMatchObject({ stickiness: { monthlyActive: 0 } });
     expect(retention.text.length).toBeLessThan(2000);
+  });
+
+  it('counts the distinct people of each trend line and saves the measure', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const site = await configure(setup.cluster.id, setup.token);
+    const key = await createKey(setup.token, WRITE, ALL);
+    const clusterId = setup.cluster.id;
+    await insert(
+      [
+        ['2026-09-29', 'ana'],
+        ['2026-09-30', 'ana'],
+        ['2026-09-30', 'ana'],
+        ['2026-09-30', 'ben'],
+        ['2026-09-30', ''],
+      ].map(([day, user]) => ({
+        ...row(clusterId, site.id),
+        name: 'grip_open',
+        created_at: `${day} 10:00:00.000`,
+        user_id: user,
+      })),
+    );
+    const trend = {
+      clusterId,
+      measure: 'people',
+      events: [
+        { name: 'grip_open', label: 'Daily' },
+        { name: 'grip_open', label: 'Weekly', bucket: 'week' },
+      ],
+    };
+
+    // when
+    const people = (await call(key, 'trend', { ...trend, days: 4, tz: 'Europe/Warsaw' })).json;
+    const events = (
+      await call(key, 'trend', { ...trend, measure: 'events', days: 4, tz: 'Europe/Warsaw' })
+    ).json;
+    const saved = (
+      await call(key, 'create_insight', { ...trend, type: 'trend', title: 'Grip active' })
+    ).json;
+    const ran = (await call(key, 'run_insight', { clusterId, insightId: saved.id })).json;
+
+    // then
+    expect(people).toMatchObject({
+      measure: 'people',
+      series: [
+        { label: 'Daily', counts: [0, 1, 2, 0, 0], total: 2 },
+        { label: 'Weekly', counts: [2, 2, 2, 2, 2], total: 2 },
+      ],
+    });
+    expect(events).toMatchObject({
+      measure: 'events',
+      series: [
+        { counts: [0, 1, 4, 0, 0], total: 5 },
+        { counts: [5, 5, 5, 5, 5], total: 5 },
+      ],
+    });
+    expect(saved).toMatchObject({ type: 'trend', measure: 'people' });
+    expect(ran).toMatchObject({ measure: 'people', series: [{ total: 2 }, { total: 2 }] });
   });
 
   it('builds a dashboard of saved insights', async () => {

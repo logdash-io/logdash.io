@@ -24,6 +24,7 @@ import {
   WebAnalyticsFunnelMode,
   WebAnalyticsInsightBody,
   WebAnalyticsInsightConfig,
+  WebAnalyticsInsightMeasure,
   WebAnalyticsInsightOperator,
   WebAnalyticsInsightType,
   WebAnalyticsInsightWidth,
@@ -139,6 +140,13 @@ const PROPERTY_FILTERS = {
 
 const BUCKET = { type: 'string', enum: [...WEB_ANALYTICS_INSIGHT_BUCKETS] };
 
+const MEASURE = {
+  type: 'string',
+  enum: Object.values(WebAnalyticsInsightMeasure),
+  description:
+    'Trends only. events (default) counts the events of each line. people counts the distinct users who sent them, by the userId of the event, so a daily, a weekly and a monthly line give daily, weekly and monthly active users. Events without a userId do not count',
+};
+
 const LINE = {
   label: {
     type: 'string',
@@ -215,6 +223,7 @@ const CHART = {
     description:
       'Trends: the bucket of every line that has none of its own, day by default. Cohorts: the row size, week by default',
   },
+  measure: MEASURE,
   property: {
     type: 'string',
     pattern: PROP_KEY.source,
@@ -383,7 +392,7 @@ export class McpToolsService {
       name: 'trend',
       title: 'Event trend',
       description:
-        'Event counts per day, week or month for up to 5 series. Daily, weekly and monthly active counts come from markers sent once per period. Each series can count per its own bucket, so one chart can hold the daily, weekly and monthly lines of a product. total is the sum of the buckets of a series.',
+        'Event counts, or distinct people, per day, week or month for up to 5 series. Set measure to people to count the users (by userId) who sent an event. Each series can count per its own bucket, so one chart can hold the daily, weekly and monthly active users of a product. total is the sum of the buckets of a series, or the distinct people of the whole period for people. Apps that send no userId can send a marker once per active day and count its events instead.',
       action: Action.Read,
       args: McpTrendArgs,
       inputSchema: object(
@@ -392,6 +401,7 @@ export class McpToolsService {
           events: events(1, 5, 'One series per event', true),
           filters: { ...PROPERTY_FILTERS, description: 'Filters every series must match' },
           bucket: { ...BUCKET, default: 'day' },
+          measure: MEASURE,
           days: DAYS,
           tz: TZ,
         },
@@ -501,7 +511,7 @@ export class McpToolsService {
     this.tool({
       name: 'create_insight',
       title: 'Save an insight',
-      description: `Adds an insight card to the end of the dashboard, up to ${MAX_WEB_ANALYTICS_INSIGHTS} per domain. Try it with the matching read tool first. Pass view, section, hidden and width to place it, with view and section ids from list_insights or set_views. Give each trend line a label and its own bucket to show the daily, weekly and monthly lines of a product in one card.`,
+      description: `Adds an insight card to the end of the dashboard, up to ${MAX_WEB_ANALYTICS_INSIGHTS} per domain. Try it with the matching read tool first. Pass view, section, hidden and width to place it, with view and section ids from list_insights or set_views. Give each trend line a label and its own bucket, and set measure to people, to show the daily, weekly and monthly active users of a product in one card.`,
       action: Action.Write,
       args: McpCreateInsightArgs,
       inputSchema: object({ clusterId: CLUSTER_ID, ...INSIGHT }, ['clusterId', 'type', 'title']),

@@ -7,6 +7,7 @@ import {
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightEvent,
   WebAnalyticsInsightFilter,
+  WebAnalyticsInsightMeasure,
   WebAnalyticsInsightType,
   WebAnalyticsInsightWidth,
 } from '../dto/web-analytics-insight.body';
@@ -41,6 +42,9 @@ export class WebAnalyticsInsightEntity {
 
   @Prop()
   bucket?: WebAnalyticsInsightBucket;
+
+  @Prop()
+  measure?: WebAnalyticsInsightMeasure;
 
   @Prop()
   property?: string;

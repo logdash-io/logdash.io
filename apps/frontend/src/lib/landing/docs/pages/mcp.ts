@@ -97,7 +97,7 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
         ],
         [
           '`trend`',
-          'Event counts per day, week or month, for up to 5 series. A series can have its own `label` and `bucket`.',
+          'Event counts, or distinct people, per day, week or month, for up to 5 series. A series can have its own `label` and `bucket`, and `measure` set to `people` counts the users who sent it.',
         ],
         [
           '`distribution`',
@@ -159,20 +159,21 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
     { type: 'heading', text: 'Compare products in one chart' },
     {
       type: 'paragraph',
-      text: 'Each trend series takes a `label` and a `bucket` of `day`, `week` or `month`, so one chart can show the daily, weekly and monthly lines of several apps. An app sends a marker once per active day with the properties `week_first` and `month_first`, and the weekly and monthly series filter on them. See [Insights](/docs/web-analytics/insights) for the markers.',
+      text: 'Each trend series takes a `label` and a `bucket` of `day`, `week` or `month`, so one chart can show the daily, weekly and monthly lines of several apps. Set `measure` to `people` to count the distinct users who sent the event, by the `userId` of the event. The three series are then the daily, weekly and monthly active users of an app. See [Events from your apps](/docs/web-analytics/app-events) for `userId`.',
     },
     {
       type: 'list',
       items: [
         'Series with different buckets share a day axis, and a series repeats its count on each day of its bucket. The result says which `bucket` each series counts per.',
-        '`total` is the events a series counted in the period. It is not the sum of the repeated counts.',
+        '`total` is what a series counted in the period. It is not the sum of the repeated counts. For people it is the distinct people of the whole period.',
+        'An event without a `userId` is not a person. An app that sends no `userId` can send a marker once per active day with the properties `week_first` and `month_first`, and the weekly and monthly series count its events with a filter on them. See [Insights](/docs/web-analytics/insights) for the markers.',
         'The `bucket` of the insight is the bucket of every series that has none of its own.',
       ],
     },
     { type: 'heading', text: 'Measure a product loop' },
     {
       type: 'paragraph',
-      text: 'Funnels, trends and cohorts count events, so they work for apps that send no user ID. Send each milestone once per install, such as `first_open` and then `first_project`, with a `cohort` property set to the date of the first open. Then ask your agent for a funnel of the milestones and a weekly cohort table. See [Insights](/docs/web-analytics/insights) for more patterns.',
+      text: 'Funnels, cohorts and event trends count events, so they work for apps that send no user ID. Send each milestone once per install, such as `first_open` and then `first_project`, with a `cohort` property set to the date of the first open. Then ask your agent for a funnel of the milestones and a weekly cohort table. See [Insights](/docs/web-analytics/insights) for more patterns.',
     },
   ],
 };

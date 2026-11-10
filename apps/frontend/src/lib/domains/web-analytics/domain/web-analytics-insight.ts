@@ -12,6 +12,7 @@ import type {
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightEvent,
   WebAnalyticsInsightFilter,
+  WebAnalyticsInsightMeasure,
   WebAnalyticsInsightOperator,
   WebAnalyticsInsightPlacement,
   WebAnalyticsInsightStep,
@@ -27,6 +28,7 @@ export interface WebAnalyticsInsightDraft {
   events: WebAnalyticsInsightEvent[];
   filters: WebAnalyticsInsightFilter[];
   bucket: WebAnalyticsInsightBucket | null;
+  measure: WebAnalyticsInsightMeasure;
   property: string;
   binSize: number;
 }
@@ -141,6 +143,7 @@ export function insightDraft(
     ),
     filters: (insight?.filters ?? []).map((filter) => ({ ...filter })),
     bucket: insight?.bucket ?? null,
+    measure: insight?.measure ?? 'events',
     property: insight?.property ?? '',
     binSize: insight?.binSize ?? 1,
   };
@@ -184,7 +187,13 @@ export function insightConfig(
           }
         : { ...base, mode: draft.mode, layout: draft.layout, events, filters },
     )
-    .with('trend', () => ({ ...base, events, filters, bucket }))
+    .with('trend', () => ({
+      ...base,
+      events,
+      filters,
+      bucket,
+      ...(draft.measure === 'people' ? { measure: draft.measure } : {}),
+    }))
     .with('distribution', () => ({
       ...base,
       events,
@@ -447,7 +456,11 @@ export function insightSummary(insight: WebAnalyticsChartConfig): string {
       () =>
         `${insight.mode === 'people' ? 'People' : 'Events'} funnel, ${period}`,
     )
-    .with('trend', () => `${trendBuckets(insight)}, ${period}`)
+    .with(
+      'trend',
+      () =>
+        `${trendBuckets(insight)}${insight.measure === 'people' ? ' people' : ''}, ${period}`,
+    )
     .with('distribution', () => `${insight.property ?? ''}, ${period}`)
     .with(
       'cohorts',

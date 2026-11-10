@@ -81,6 +81,7 @@
         series={data.series ?? []}
         events={config.events ?? []}
         bucket={data.bucket ?? defaultBucket('trend')}
+        people={data.measure === 'people'}
         partial={endsInProgress(data.to)}
         label={config.title}
       />

@@ -99,7 +99,7 @@ export class McpEventsFunnelArgs extends IntersectionType(
 
 export class McpTrendArgs extends IntersectionType(
   McpInsightRunArgs,
-  PickType(WebAnalyticsInsightBody, ['days', 'events', 'filters', 'bucket'] as const),
+  PickType(WebAnalyticsInsightBody, ['days', 'events', 'filters', 'bucket', 'measure'] as const),
 ) {}
 
 export class McpDistributionArgs extends IntersectionType(

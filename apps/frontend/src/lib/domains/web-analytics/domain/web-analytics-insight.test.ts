@@ -369,3 +369,40 @@ test('a trend summary names each bucket its lines count per', () => {
     'Daily, last 30 days',
   );
 });
+
+test('a trend keeps the people measure and no other chart does', () => {
+  const people = {
+    ...trend('Active', 'grip_open'),
+    measure: 'people' as const,
+  };
+  const draft = insightDraft(people);
+  expect(draft.measure).toBe('people');
+  expect(insightConfig(draft)).toMatchObject({
+    type: 'trend',
+    measure: 'people',
+  });
+  expect(insightDraft(trend('Active', 'grip_open')).measure).toBe('events');
+  expect(
+    insightConfig(insightDraft(trend('Active', 'grip_open'))),
+  ).not.toHaveProperty('measure');
+
+  draft.measure = 'events';
+  expect(insightConfig(draft)).not.toHaveProperty('measure');
+  draft.measure = 'people';
+  draft.type = 'funnel';
+  expect(insightConfig(draft)).not.toHaveProperty('measure');
+
+  expect(insightSummary(people)).toBe('Daily people, last 30 days');
+  expect(
+    insightSummary({
+      ...people,
+      events: [
+        { name: 'grip_open', filters: [] },
+        { name: 'grip_open', filters: [], bucket: 'month' },
+      ],
+    }),
+  ).toBe('Daily and monthly people, last 30 days');
+  expect(
+    tabbedDraft({ ...tabs('Start', 'Finish'), tabs: [people, people] }).drafts,
+  ).toMatchObject([{ measure: 'people' }, { measure: 'people' }]);
+});
