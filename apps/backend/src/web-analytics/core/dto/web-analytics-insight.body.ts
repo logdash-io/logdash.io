@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -177,7 +177,7 @@ export class WebAnalyticsInsightPlacementBody {
   width?: WebAnalyticsInsightWidth | null;
 }
 
-export class WebAnalyticsInsightBody extends WebAnalyticsInsightPlacementBody {
+export class WebAnalyticsChartBody {
   @ApiProperty({
     enum: WebAnalyticsInsightType,
     description:
@@ -296,9 +296,15 @@ export class WebAnalyticsInsightBody extends WebAnalyticsInsightPlacementBody {
   @Min(0.000001)
   @Max(1_000_000_000)
   binSize?: number;
+}
 
+export class WebAnalyticsInsightBody extends IntersectionType(
+  WebAnalyticsChartBody,
+  WebAnalyticsInsightPlacementBody,
+) {
   @ApiPropertyOptional({
-    type: () => [WebAnalyticsInsightBody],
+    type: WebAnalyticsChartBody,
+    isArray: true,
     description:
       'Tabs cards only: 2 to 6 complete chart configs. The title of each tab is its label, and a tab cannot hold tabs or a placement',
   })
@@ -306,8 +312,8 @@ export class WebAnalyticsInsightBody extends WebAnalyticsInsightPlacementBody {
   @IsArray()
   @ArrayMaxSize(MAX_WEB_ANALYTICS_INSIGHT_TABS)
   @ValidateNested({ each: true })
-  @Type(() => WebAnalyticsInsightBody)
-  tabs?: WebAnalyticsInsightBody[];
+  @Type(() => WebAnalyticsChartBody)
+  tabs?: WebAnalyticsChartBody[];
 }
 
 export class WebAnalyticsInsightPlacementItemBody extends WebAnalyticsInsightPlacementBody {
@@ -393,10 +399,13 @@ export function normalizeWebAnalyticsInsight(
   return { ...normalizeChart(body, false), ...placement };
 }
 
-function normalizeChart(body: WebAnalyticsInsightBody, nested: boolean): WebAnalyticsInsightConfig {
+function normalizeChart(
+  body: WebAnalyticsChartBody & Pick<WebAnalyticsInsightBody, 'tabs'>,
+  nested: boolean,
+): WebAnalyticsInsightConfig {
   const base = { type: body.type, title: body.title.trim(), days: body.days ?? 30 };
   if (!base.title) throw new BadRequestException('title must not be blank');
-  if (nested && (body.type === WebAnalyticsInsightType.Tabs || body.tabs?.length))
+  if (nested && body.type === WebAnalyticsInsightType.Tabs)
     throw new BadRequestException('Tabs cannot nest');
   if (body.type === WebAnalyticsInsightType.Tabs) {
     const tabs = body.tabs ?? [];

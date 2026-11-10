@@ -4,10 +4,12 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsInt,
   IsMongoId,
   IsOptional,
   IsString,
   MaxLength,
+  Min,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -84,4 +86,13 @@ export class UpdateWebAnalyticsViewsBody {
   @ValidateNested({ each: true })
   @Type(() => WebAnalyticsViewBody)
   views: WebAnalyticsViewBody[];
+
+  @ApiPropertyOptional({
+    description:
+      'The viewsVersion the views were read at. When the views changed since, the call fails with 409 instead of overwriting them',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  version?: number;
 }

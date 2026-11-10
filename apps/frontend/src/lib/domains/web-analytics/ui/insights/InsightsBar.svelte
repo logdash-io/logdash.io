@@ -43,7 +43,7 @@
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-2">
-  <div class="min-w-0">
+  <div class="min-w-0 overflow-x-auto [scrollbar-width:none]">
     {#if views.length > 1}
       <SegmentedControl
         label="Dashboard view"

@@ -1,6 +1,7 @@
 import { ClickHouseClient } from '@clickhouse/client';
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
@@ -29,7 +30,10 @@ import {
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightPlacement,
 } from '../core/dto/web-analytics-insight.body';
-import { WebAnalyticsViewBody } from '../core/dto/web-analytics-views.body';
+import {
+  UpdateWebAnalyticsViewsBody,
+  WebAnalyticsViewBody,
+} from '../core/dto/web-analytics-views.body';
 import { RedisService } from '../../shared/redis/redis.service';
 import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 import { Actor } from '../../audit-log/core/enums/actor.enum';
@@ -56,6 +60,8 @@ const INSIGHT_CONFIG_KEYS = [
 ];
 
 const ABSENT_CONFIG = Object.fromEntries(INSIGHT_CONFIG_KEYS.map((key) => [key, null]));
+
+const VIEWS_CHANGED = 'The views changed since they were read. Reload them and try again';
 
 type Patch = { $set: Record<string, unknown>; $unset: Record<string, ''> };
 
@@ -216,25 +222,38 @@ export class WebAnalyticsWriteService {
 
   public async updateViews(
     clusterId: string,
-    views: WebAnalyticsViewBody[],
+    { views, version }: UpdateWebAnalyticsViewsBody,
     actorUserId: string,
   ): Promise<WebAnalyticsLayoutNormalized> {
+    await this.ensureSite(clusterId);
     const current = await this.model
       .findOne({ clusterId })
-      .select('views')
+      .select('views viewsVersion insights')
       .lean<WebAnalyticsSiteEntity>()
       .exec();
+    const stored = current?.viewsVersion ?? 0;
+    if (version !== undefined && version !== stored) throw new ConflictException(VIEWS_CHANGED);
+    const before = current?.views ?? [];
+    const after = this.buildViews(before, views);
+    const first = before[0]?._id.toString();
+    const pin = Boolean(current?.insights) && after.some(({ _id }) => _id.toString() === first);
     const site = await this.model
       .findOneAndUpdate(
-        { clusterId },
+        { clusterId, viewsVersion: stored || { $in: [0, null] } },
         {
-          $set: { views: this.buildViews(current?.views ?? [], views) },
-          $setOnInsert: { origins: [] },
+          $set: { views: after, ...(pin ? { 'insights.$[free].view': first } : {}) },
+          $inc: { viewsVersion: 1 },
         },
-        { upsert: true, returnDocument: 'after' },
+        {
+          returnDocument: 'after',
+          ...(pin
+            ? { arrayFilters: [{ 'free.view': { $nin: before.map(({ _id }) => _id.toString()) } }] }
+            : {}),
+        },
       )
       .lean<WebAnalyticsSiteEntity>()
       .exec();
+    if (!site) throw new ConflictException(VIEWS_CHANGED);
     this.audit(actorUserId, AuditLogEntityAction.Update, site._id.toString());
     return WebAnalyticsSiteSerializer.normalizeLayout(site);
   }
@@ -447,7 +466,7 @@ export class WebAnalyticsWriteService {
   ): WebAnalyticsInsightNormalized {
     const insight = (site.insights ?? []).find((entry) => entry._id.toString() === insightId);
     if (!insight) throw new NotFoundException('Insight not found');
-    return WebAnalyticsInsightSerializer.normalize(insight);
+    return WebAnalyticsInsightSerializer.normalize(insight, site.views ?? []);
   }
 
   private audit(actorUserId: string, action: AuditLogEntityAction, insightId: string): void {

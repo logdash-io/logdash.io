@@ -614,6 +614,7 @@ describe('MCP server', () => {
     });
     expect(deleted.json).toEqual({ deleted: journey.id });
     expect((await call(key, 'list_insights', { clusterId })).json).toEqual({
+      viewsVersion: 0,
       views: [],
       insights: [expect.objectContaining({ id: l30.id, title: 'L30 of September' })],
     });
@@ -695,9 +696,15 @@ describe('MCP server', () => {
     const renamed = (
       await call(key, 'set_views', {
         clusterId,
+        version: 1,
         views: [{ id: company.id, name: 'Business' }],
       })
     ).json;
+    const stale = await call(key, 'set_views', {
+      clusterId,
+      version: 1,
+      views: [{ name: 'Lost' }],
+    });
 
     // then
     expect(laidOut.views).toMatchObject([
@@ -749,8 +756,14 @@ describe('MCP server', () => {
       ],
     });
     expect(renamed).toMatchObject({
+      viewsVersion: 2,
       views: [{ id: company.id, name: 'Business', sections: [] }],
       insights: [{ id: plain.id }, { id: tabbed.id }, { id: placed.id }],
+    });
+    expect((renamed.insights as object[])[1]).not.toHaveProperty('view');
+    expect(stale).toMatchObject({
+      isError: true,
+      text: 'The views changed since they were read. Reload them and try again',
     });
     expect(
       await call(key, 'set_views', { clusterId, views: [{ name: 'A' }, { name: 'a' }] }),

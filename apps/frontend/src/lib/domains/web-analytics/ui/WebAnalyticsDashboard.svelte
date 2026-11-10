@@ -105,7 +105,7 @@
   const layout = $derived(
     viewLayout(insights.views, view, insights.insights ?? []),
   );
-  const traffic = $derived(ready && view.traffic);
+  const traffic = $derived((ready || insights.error !== null) && view.traffic);
   const today = $derived(days.data?.today ?? clock.toISODate() ?? '');
   const since = $derived(days.data?.since ?? null);
   const date = $derived(

@@ -2,6 +2,7 @@ import type {
   WebAnalyticsInsight,
   WebAnalyticsInsightPlacement,
   WebAnalyticsInsightPlacementUpdate,
+  WebAnalyticsInsights,
   WebAnalyticsInsightWidth,
   WebAnalyticsSection,
   WebAnalyticsView,
@@ -43,6 +44,16 @@ const PLACEMENT_KEYS = [
   'hidden',
   'width',
 ] as const satisfies readonly (keyof WebAnalyticsInsightPlacement)[];
+
+export function readLayout(
+  layout: Partial<WebAnalyticsInsights>,
+): WebAnalyticsInsights {
+  return {
+    viewsVersion: layout.viewsVersion,
+    views: layout.views ?? [],
+    insights: layout.insights ?? [],
+  };
+}
 
 export function dashboardViews(views: WebAnalyticsView[]): WebAnalyticsView[] {
   return views.length ? views : [OVERVIEW_VIEW];

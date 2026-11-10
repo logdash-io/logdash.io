@@ -1,7 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { assertRequiredEnv, getEnvConfig } from './shared/configs/env-configs';
 import basicAuth from 'express-basic-auth';
@@ -9,6 +8,7 @@ import helmet from 'helmet';
 import { NextFunction, Request, Response } from 'express';
 import { swaggerDarkModeCSS } from './swagger/swagger-dark-mode.js';
 import { CastErrorFilter } from './shared/filters/cast-error.filter';
+import { RequestValidationPipe } from './shared/pipes/request-validation.pipe';
 import { UnhandledErrorFilter } from './shared/filters/unhandled-error.filter';
 import { LogdashLogger } from './shared/logdash/aggregate-logger';
 import { LogdashMetrics } from './shared/logdash/aggregate-metrics';
@@ -93,14 +93,7 @@ async function bootstrap(): Promise<void> {
     customSiteTitle: 'LogDash API Documentation',
   });
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-    }),
-  );
+  app.useGlobalPipes(new RequestValidationPipe());
   app.useGlobalFilters(
     new UnhandledErrorFilter(
       appLogger,

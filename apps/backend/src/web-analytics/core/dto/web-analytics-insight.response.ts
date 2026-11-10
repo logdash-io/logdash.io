@@ -5,7 +5,7 @@ import {
   WebAnalyticsFunnelMode,
   WebAnalyticsInsightBucket,
   WebAnalyticsInsightEvent,
-  WebAnalyticsInsightBody,
+  WebAnalyticsChartBody,
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightEventBody,
   WebAnalyticsInsightFilter,
@@ -59,7 +59,7 @@ export class WebAnalyticsInsightSerialized {
   binSize?: number;
 
   @ApiPropertyOptional({
-    type: () => WebAnalyticsInsightBody,
+    type: () => WebAnalyticsChartBody,
     isArray: true,
     description: 'Tabs cards only: the chart configs, each title is the tab label',
   })
@@ -107,6 +107,12 @@ export class WebAnalyticsViewSerialized {
 }
 
 export class WebAnalyticsInsightsResponse {
+  @ApiProperty({
+    description:
+      'Grows each time the views change. Pass it to PUT /views as version to get 409 instead of overwriting a newer change',
+  })
+  viewsVersion: number;
+
   @ApiProperty({
     type: WebAnalyticsViewSerialized,
     isArray: true,

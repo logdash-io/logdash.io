@@ -40,10 +40,17 @@
     'var(--chart-5)',
   ];
 
-  const prefix = $derived(commonPrefix(series.map((entry) => entry.name)));
-  const mixed = $derived(series.some((entry) => entry.bucket !== bucket));
+  const rows = $derived(
+    series.map((entry) => ({
+      ...entry,
+      bucket: entry.bucket ?? bucket,
+      total: entry.total ?? entry.counts.reduce((sum, count) => sum + count, 0),
+    })),
+  );
+  const prefix = $derived(commonPrefix(rows.map((entry) => entry.name)));
+  const mixed = $derived(rows.some((entry) => entry.bucket !== bucket));
   const labels = $derived(
-    series.map(
+    rows.map(
       (entry, index) =>
         entry.label ??
         [entry.name, ...(events[index]?.filters ?? []).map(filterLabel)].join(
@@ -52,7 +59,7 @@
     ),
   );
   const lines = $derived<AnalyticsChartLine[]>(
-    series.map((entry, index) => ({
+    rows.map((entry, index) => ({
       label:
         labels.indexOf(labels[index]) === index
           ? labels[index]
@@ -68,7 +75,7 @@
 <AnalyticsChart {times} {lines} granularity={bucket} {partial} {label} />
 
 <ul class="flex flex-col gap-0.5">
-  {#each series as entry, index (index)}
+  {#each rows as entry, index (index)}
     <li class="flex min-h-8 items-center gap-2 px-3 py-1 text-sm">
       <span
         class="size-2 shrink-0 rounded-full"
@@ -94,7 +101,7 @@
   {/each}
 </ul>
 
-{#if people && series.every((entry) => !entry.total)}
+{#if people && rows.every((entry) => !entry.total)}
   <p class="text-fg-muted px-3 text-xs">
     No people yet. An event counts a person only when the app sends a user ID.
   </p>

@@ -26,12 +26,14 @@ export class WebAnalyticsSiteSerializer {
   }
 
   public static normalizeLayout(
-    site: Pick<WebAnalyticsSiteEntity, 'views' | 'insights'> | null,
+    site: Pick<WebAnalyticsSiteEntity, 'views' | 'insights' | 'viewsVersion'> | null,
   ): WebAnalyticsLayoutNormalized {
+    const views = site?.views ?? [];
     return {
-      views: (site?.views ?? []).map((view) => WebAnalyticsViewSerializer.normalize(view)),
+      viewsVersion: site?.viewsVersion ?? 0,
+      views: views.map((view) => WebAnalyticsViewSerializer.normalize(view)),
       insights: (site?.insights ?? []).map((insight) =>
-        WebAnalyticsInsightSerializer.normalize(insight),
+        WebAnalyticsInsightSerializer.normalize(insight, views),
       ),
     };
   }
@@ -53,8 +55,18 @@ export class WebAnalyticsViewSerializer {
 }
 
 export class WebAnalyticsInsightSerializer {
-  public static normalize(entity: WebAnalyticsInsightEntity): WebAnalyticsInsightNormalized {
-    const { _id, ...config } = entity;
-    return { id: _id.toString(), ...config };
+  public static normalize(
+    entity: WebAnalyticsInsightEntity,
+    views: WebAnalyticsViewEntity[],
+  ): WebAnalyticsInsightNormalized {
+    const { _id, view, section, ...config } = entity;
+    const own = views.find((entry) => entry._id.toString() === view);
+    const sections = (own ?? views[0])?.sections ?? [];
+    return {
+      id: _id.toString(),
+      ...config,
+      ...(own ? { view } : {}),
+      ...(sections.some((entry) => entry._id.toString() === section) ? { section } : {}),
+    };
   }
 }

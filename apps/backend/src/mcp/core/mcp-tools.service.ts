@@ -465,7 +465,7 @@ export class McpToolsService {
       name: 'list_insights',
       title: 'List saved insights',
       description:
-        'The dashboard views with their sections, and the saved insight cards in order with their full config and placement (view, section, hidden, width).',
+        'The dashboard views with their sections, the viewsVersion to pass to set_views, and the saved insight cards in order with their full config and placement (view, section, hidden, width).',
       action: Action.Read,
       args: McpClusterArgs,
       inputSchema: object({ clusterId: CLUSTER_ID }, ['clusterId']),
@@ -581,7 +581,7 @@ export class McpToolsService {
       name: 'set_views',
       title: 'Set dashboard views',
       description:
-        'Replaces the views of the dashboard, the first one is the default. Pass the id of an existing view or section to keep or rename it, and omit it to add one. A view with traffic true shows the built-in traffic cards, and no view shows them unless it says so. Cards of a removed view or section move to the first view or out of the section. Returns the views and insights, so the new ids can be used right away.',
+        'Replaces the views of the dashboard, the first one is the default. Pass the id of an existing view or section to keep or rename it, and omit it to add one. A view with traffic true shows the built-in traffic cards, and no view shows them unless it says so. Cards of a removed view or section move to the first view or out of the section, and cards keep their view when the views change order. Pass version, the viewsVersion from list_insights, so the call fails instead of overwriting views someone changed since. Returns the views and insights, so the new ids can be used right away.',
       action: Action.Write,
       args: McpSetViewsArgs,
       inputSchema: object(
@@ -611,16 +611,18 @@ export class McpToolsService {
               ['name'],
             ),
           },
+          version: {
+            type: 'integer',
+            minimum: 0,
+            description:
+              'The viewsVersion from list_insights. When the views changed since, the call fails instead of overwriting them',
+          },
         },
         ['clusterId', 'views'],
       ),
       annotations: { readOnlyHint: false, idempotentHint: true },
       run: (args, context) =>
-        this.write.updateViews(
-          this.cluster(context, args.clusterId).id,
-          args.views,
-          context.user.id,
-        ),
+        this.write.updateViews(this.cluster(context, args.clusterId).id, args, context.user.id),
     }),
     this.tool({
       name: 'delete_insight',

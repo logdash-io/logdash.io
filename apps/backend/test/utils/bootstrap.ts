@@ -1,5 +1,5 @@
 import { ClickHouseClient } from '@clickhouse/client';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import type { Express } from 'express';
 import { App } from 'supertest/types';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -83,6 +83,7 @@ import { ResendModule } from '../../src/email/resend/resend.module';
 import { getEnvConfig } from '../../src/shared/configs/env-configs';
 import { UserUtils } from './user.utils';
 import { CastErrorFilter } from '../../src/shared/filters/cast-error.filter';
+import { RequestValidationPipe } from '../../src/shared/pipes/request-validation.pipe';
 import { UnhandledErrorFilter } from '../../src/shared/filters/unhandled-error.filter';
 import { withRequestContext } from '../../src/shared/request-context/request-context';
 import { MAX_CONCURRENT_REQUESTS_TOKEN } from '../../src/http-ping/pinger/http-ping-pinger.service';
@@ -168,14 +169,7 @@ export async function createTestApp() {
   // Must mirror src/main.ts, otherwise e2e tests exercise different validation
   // rules than production.
   (app.getHttpAdapter().getInstance() as Express).set('trust proxy', 1);
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-    }),
-  );
+  app.useGlobalPipes(new RequestValidationPipe());
   app.useGlobalFilters(
     new UnhandledErrorFilter(app.get(APP_LOGGER), app.get(LOGDASH_METRICS), app.getHttpAdapter()),
     new CastErrorFilter(app.getHttpAdapter()),

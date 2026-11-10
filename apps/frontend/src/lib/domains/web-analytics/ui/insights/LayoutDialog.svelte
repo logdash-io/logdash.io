@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
+  import {
+    readHttpErrorMessage,
+    readHttpErrorStatus,
+  } from '$lib/domains/shared/http/http-error';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import TrashIcon from '$lib/domains/shared/icons/TrashIcon.svelte';
@@ -81,6 +84,12 @@
       );
       onclose();
     } catch (failure) {
+      if (readHttpErrorStatus(failure) === 409) {
+        inputs = viewInputs(views);
+        error =
+          'Someone changed the views after you opened this. It now shows their change, so make yours again.';
+        return;
+      }
       error = readHttpErrorMessage(failure) ?? 'Could not save the layout.';
     } finally {
       saving = false;

@@ -419,7 +419,7 @@ export class WebAnalyticsCoreController {
     @Body() body: UpdateWebAnalyticsViewsBody,
     @CurrentUserId() userId: string,
   ): Promise<WebAnalyticsInsightsResponse> {
-    return this.write.updateViews(clusterId, body.views, userId);
+    return this.write.updateViews(clusterId, body, userId);
   }
 
   @Put('clusters/:clusterId/web_analytics/insights/:insightId')

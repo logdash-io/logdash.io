@@ -256,10 +256,11 @@ export class WebAnalyticsService {
   public static async saveViews(
     clusterId: string,
     views: WebAnalyticsViewInput[],
+    version: number | undefined,
   ): Promise<WebAnalyticsInsights> {
     return httpClient.put<WebAnalyticsInsights>(
       `/clusters/${clusterId}/web_analytics/views`,
-      { views },
+      { views, version },
     );
   }
 

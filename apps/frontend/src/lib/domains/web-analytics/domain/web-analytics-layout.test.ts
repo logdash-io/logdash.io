@@ -9,6 +9,7 @@ import {
   insightWidth,
   OVERVIEW_VIEW,
   otherWidth,
+  readLayout,
   stepArrangement,
   viewInputs,
   viewLayout,
@@ -61,6 +62,15 @@ test('a domain without views gets one overview view that shows traffic', () => {
   expect(viewInputs([])).toEqual([
     { id: undefined, name: 'Overview', traffic: true, sections: [] },
   ]);
+});
+
+test('a layout from a backend without views reads as the overview layout', () => {
+  const layout = readLayout({ insights });
+  expect(layout).toEqual({ views: [], insights });
+  expect(activeView(layout.views, null)).toBe(OVERVIEW_VIEW);
+  expect(readLayout({})).toEqual({ views: [], insights: [] });
+  expect(readLayout({ views, insights })).toEqual({ views, insights });
+  expect(readLayout({ viewsVersion: 3, views, insights }).viewsVersion).toBe(3);
 });
 
 test('the first view is the default for cards with no or an unknown view', () => {

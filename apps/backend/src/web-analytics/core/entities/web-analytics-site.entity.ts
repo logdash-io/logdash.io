@@ -117,6 +117,9 @@ export class WebAnalyticsSiteEntity {
 
   @Prop({ type: [WebAnalyticsViewSchema], default: [] })
   views?: WebAnalyticsViewEntity[];
+
+  @Prop({ default: 0 })
+  viewsVersion?: number;
 }
 
 export const WebAnalyticsSiteSchema = SchemaFactory.createForClass(WebAnalyticsSiteEntity);

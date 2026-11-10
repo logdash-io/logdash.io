@@ -19,6 +19,7 @@ export type WebAnalyticsViewNormalized = {
 };
 
 export type WebAnalyticsLayoutNormalized = {
+  viewsVersion: number;
   views: WebAnalyticsViewNormalized[];
   insights: WebAnalyticsInsightNormalized[];
 };

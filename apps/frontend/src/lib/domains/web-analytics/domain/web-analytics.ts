@@ -286,6 +286,7 @@ export interface WebAnalyticsViewInput {
 }
 
 export interface WebAnalyticsInsights {
+  viewsVersion?: number;
   views: WebAnalyticsView[];
   insights: WebAnalyticsInsight[];
 }
@@ -298,9 +299,9 @@ export interface WebAnalyticsInsightStep {
 export interface WebAnalyticsInsightSeries {
   name: string;
   label?: string;
-  bucket: WebAnalyticsInsightBucket;
+  bucket?: WebAnalyticsInsightBucket;
   counts: number[];
-  total: number;
+  total?: number;
 }
 
 export interface WebAnalyticsInsightBin {

@@ -758,6 +758,7 @@ describe('Web analytics insights', () => {
 
     // then
     expect(stored).toEqual({
+      viewsVersion: 1,
       views: [
         {
           id: expect.any(String) as string,
@@ -823,7 +824,7 @@ describe('Web analytics insights', () => {
     ).toBe(201);
   });
 
-  it('keeps cards of a removed view and lists views of a domain without any', async () => {
+  it('moves cards of a removed view to the first view and lists a domain without views', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
     const clusterId = setup.cluster.id;
@@ -841,10 +842,14 @@ describe('Web analytics insights', () => {
     const emptied = await putViews(setup.token, clusterId, []);
 
     // then
-    expect(before).toEqual({ views: [], insights: [expect.objectContaining({ type: 'funnel' })] });
+    expect(before).toEqual({
+      viewsVersion: 0,
+      views: [],
+      insights: [expect.objectContaining({ type: 'funnel' })],
+    });
     expect(emptied.views).toEqual([]);
     expect(emptied.insights.map((insight) => insight.id)).toEqual([before.insights[0].id, card.id]);
-    expect(emptied.insights[1].view).toBe(views[0].id);
+    expect(emptied.insights[1]).not.toHaveProperty('view');
     await bootstrap.utils.auditLogUtils.assertAuditLog({
       userId: setup.user.id,
       action: AuditLogEntityAction.Update,
@@ -904,6 +909,80 @@ describe('Web analytics insights', () => {
     ])
       expect((await putViewsRaw(setup.token, clusterId, rejected)).status).toBe(400);
     expect((await layout(clusterId, setup.token)).views).toEqual(edited.views);
+  });
+
+  it('refuses views changed since they were read and keeps cards in their view', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clusterId = setup.cluster.id;
+    const first = await putViews(setup.token, clusterId, [
+      { name: 'Product', sections: [{ title: 'Activation' }] },
+      { name: 'Traffic' },
+    ]);
+    const [product, traffic] = first.views;
+    const activation = product.sections[0];
+    const loose = await create(clusterId, setup.token, funnel);
+    const sectioned = await create(clusterId, setup.token, {
+      ...funnel,
+      view: product.id,
+      section: activation.id,
+    });
+    const elsewhere = await create(clusterId, setup.token, { ...funnel, view: traffic.id });
+    const body = (version?: number, views = [traffic, product]): object => ({
+      version,
+      views: views.map(({ id, name, sections }) => ({ id, name, sections })),
+    });
+    const views = (sent: object): request.Test =>
+      send(setup.token, 'put', `${clusterId}/web_analytics/views`, sent);
+
+    // when
+    const stale = await views(body(0));
+    const swapped = await views(body(first.viewsVersion));
+    const again = await views(body(first.viewsVersion));
+    const unversioned = await views(
+      body(undefined, [{ ...traffic }, { ...product, sections: [] }]),
+    );
+    const removed = await views(body(undefined, [{ ...product, sections: [] }]));
+
+    // then
+    expect(first.viewsVersion).toBe(1);
+    for (const response of [stale, again]) {
+      expect(response.status).toBe(409);
+      expect((response.body as { message: string }).message).toBe(
+        'The views changed since they were read. Reload them and try again',
+      );
+    }
+    expect(swapped.status).toBe(200);
+    expect(swapped.body).toMatchObject({
+      viewsVersion: 2,
+      views: [{ id: traffic.id }, { id: product.id }],
+      insights: [
+        { id: loose.id, view: product.id },
+        { id: sectioned.id, view: product.id, section: activation.id },
+        { id: elsewhere.id, view: traffic.id },
+      ],
+    });
+    expect(unversioned.status).toBe(200);
+    expect((unversioned.body as WebAnalyticsInsightsResponse).viewsVersion).toBe(3);
+    expect((unversioned.body as WebAnalyticsInsightsResponse).insights[1]).toEqual({
+      ...sectioned,
+      section: undefined,
+    });
+    expect((removed.body as WebAnalyticsInsightsResponse).insights[2]).toEqual({
+      ...elsewhere,
+      view: undefined,
+    });
+    expect(await layout(clusterId, setup.token)).toEqual(removed.body);
+    expect(
+      (
+        await send(
+          setup.token,
+          'put',
+          `${clusterId}/web_analytics/insights/${elsewhere.id}`,
+          funnel,
+        )
+      ).body,
+    ).not.toHaveProperty('view');
   });
 
   it('orders cards and places them in one call', async () => {
@@ -998,7 +1077,7 @@ describe('Web analytics insights', () => {
     // when
     const created = await create(clusterId, setup.token, {
       ...tabs,
-      tabs: [{ ...install, view: views[0].id, hidden: true }, daily],
+      tabs: [install, daily],
       steps: ['page:/'],
       view: views[0].id,
       width: 'full',
@@ -1062,16 +1141,49 @@ describe('Web analytics insights', () => {
     for (const [body, message] of [
       [{ ...tabs, tabs: [install] }, 'A tabs card takes 2 to 6 tabs'],
       [{ type: 'tabs', title: 'Empty' }, 'A tabs card takes 2 to 6 tabs'],
+      [{ ...tabs, tabs: [install, { type: 'tabs', title: 'Inner' }] }, 'Tabs cannot nest'],
       [
-        { ...tabs, tabs: [install, { type: 'tabs', title: 'Inner', tabs: [install, daily] }] },
-        'Tabs cannot nest',
+        { ...tabs, tabs: [install, { ...daily, tabs: [install, daily] }] },
+        ['tabs.1.property tabs should not exist'],
       ],
-      [{ ...tabs, tabs: [install, { ...daily, tabs: [install, daily] }] }, 'Tabs cannot nest'],
+      [
+        { ...tabs, tabs: [{ ...install, view: views[0].id, hidden: true }, daily] },
+        ['tabs.0.property view should not exist', 'tabs.0.property hidden should not exist'],
+      ],
       [{ ...tabs, tabs: [install, { ...daily, events: [] }] }, 'A trend takes 1 to 5 events'],
     ] as const) {
       const response = await send(setup.token, 'post', `${path}/insights`, body);
       expect(response.status).toBe(400);
-      expect((response.body as { message: string }).message).toBe(message);
+      expect((response.body as { message: string }).message).toEqual(message);
+    }
+  });
+
+  it('refuses a body nested deeper than 64 levels on every route', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const path = `/clusters/${setup.cluster.id}/web_analytics`;
+    const deep = `${'{"tabs":['.repeat(5000)}{}${']}'.repeat(5000)}`;
+    const tabs = `{"type":"tabs","title":"Nested","tabs":[${deep},${JSON.stringify(funnel)}]}`;
+    const raw = (method: 'post' | 'put', route: string, body: string): request.Test =>
+      request(bootstrap.app.getHttpServer())
+        [method](`${path}/${route}`)
+        .set('Authorization', `Bearer ${setup.token}`)
+        .set('Content-Type', 'application/json')
+        .send(body);
+
+    // when
+    const responses = [
+      await raw('post', 'insights/run', tabs),
+      await raw('post', 'insights', tabs),
+      await raw('put', 'site', `{"origins":[],"extra":${deep}}`),
+    ];
+
+    // then
+    for (const response of responses) {
+      expect(response.status).toBe(400);
+      expect((response.body as { message: string }).message).toBe(
+        'The request nests deeper than 64 levels',
+      );
     }
   });
 

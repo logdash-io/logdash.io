@@ -1,4 +1,7 @@
-import { readHttpErrorMessage } from '$lib/domains/shared/http/http-error';
+import {
+  readHttpErrorMessage,
+  readHttpErrorStatus,
+} from '$lib/domains/shared/http/http-error';
 import type {
   WebAnalyticsBreakdownName,
   WebAnalyticsBreakdownRow,
@@ -18,6 +21,7 @@ import type {
 import {
   applyArrangement,
   dropArrangement,
+  readLayout,
   stepArrangement,
   type Arrangement,
   type DropTarget,
@@ -163,6 +167,7 @@ export class WebAnalyticsInsightsState {
   public insights = $state<WebAnalyticsInsight[] | null>(null);
   public error = $state<string | null>(null);
   private sequence = 0;
+  private viewsVersion: number | undefined;
 
   constructor(private readonly clusterId: string) {}
 
@@ -171,8 +176,11 @@ export class WebAnalyticsInsightsState {
   }
 
   public async load(): Promise<void> {
+    const sequence = this.sequence;
     try {
-      this.take(await WebAnalyticsService.readInsights(this.clusterId));
+      const layout = await WebAnalyticsService.readInsights(this.clusterId);
+      if (sequence !== this.sequence) return;
+      this.take(layout);
       this.error = null;
     } catch (error) {
       this.error =
@@ -204,8 +212,19 @@ export class WebAnalyticsInsightsState {
   }
 
   public async saveViews(views: WebAnalyticsViewInput[]): Promise<void> {
-    this.take(await WebAnalyticsService.saveViews(this.clusterId, views));
-    this.error = null;
+    try {
+      this.take(
+        await WebAnalyticsService.saveViews(
+          this.clusterId,
+          views,
+          this.viewsVersion,
+        ),
+      );
+      this.error = null;
+    } catch (error) {
+      if (readHttpErrorStatus(error) === 409) await this.load();
+      throw error;
+    }
   }
 
   public async remove(id: string): Promise<void> {
@@ -258,9 +277,8 @@ export class WebAnalyticsInsightsState {
     failure: string,
   ): Promise<void> {
     if (!arrangement || !this.insights) return;
-    const before = this.insights;
     const sequence = ++this.sequence;
-    this.insights = applyArrangement(before, arrangement);
+    this.insights = applyArrangement(this.insights, arrangement);
     try {
       const layout = await WebAnalyticsService.reorderInsights(
         this.clusterId,
@@ -270,14 +288,16 @@ export class WebAnalyticsInsightsState {
       this.take(layout);
       this.error = null;
     } catch (error) {
-      if (sequence !== this.sequence) return;
-      this.insights = before;
-      this.error = readHttpErrorMessage(error) ?? failure;
+      const message = readHttpErrorMessage(error) ?? failure;
+      await this.load();
+      this.error = message;
     }
   }
 
-  private take(layout: WebAnalyticsInsights): void {
-    this.views = layout.views;
-    this.insights = layout.insights;
+  private take(layout: Partial<WebAnalyticsInsights>): void {
+    const { viewsVersion, views, insights } = readLayout(layout);
+    this.viewsVersion = viewsVersion;
+    this.views = views;
+    this.insights = insights;
   }
 }

@@ -22,6 +22,7 @@ import {
 } from '../../../web-analytics/core/dto/read-web-analytics.query';
 import {
   ReorderWebAnalyticsInsightsBody,
+  WebAnalyticsChartBody,
   WebAnalyticsInsightBody,
 } from '../../../web-analytics/core/dto/web-analytics-insight.body';
 import { UpdateWebAnalyticsViewsBody } from '../../../web-analytics/core/dto/web-analytics-views.body';
@@ -94,22 +95,22 @@ const McpInsightRunArgs = IntersectionType(McpClusterArgs, ReadWebAnalyticsTimeZ
 
 export class McpEventsFunnelArgs extends IntersectionType(
   McpInsightRunArgs,
-  PickType(WebAnalyticsInsightBody, ['days', 'events', 'filters'] as const),
+  PickType(WebAnalyticsChartBody, ['days', 'events', 'filters'] as const),
 ) {}
 
 export class McpTrendArgs extends IntersectionType(
   McpInsightRunArgs,
-  PickType(WebAnalyticsInsightBody, ['days', 'events', 'filters', 'bucket', 'measure'] as const),
+  PickType(WebAnalyticsChartBody, ['days', 'events', 'filters', 'bucket', 'measure'] as const),
 ) {}
 
 export class McpDistributionArgs extends IntersectionType(
   McpInsightRunArgs,
-  PickType(WebAnalyticsInsightBody, ['days', 'events', 'filters', 'property', 'binSize'] as const),
+  PickType(WebAnalyticsChartBody, ['days', 'events', 'filters', 'property', 'binSize'] as const),
 ) {}
 
 export class McpCohortTableArgs extends IntersectionType(
   McpInsightRunArgs,
-  PickType(WebAnalyticsInsightBody, ['days', 'events', 'filters', 'bucket', 'property'] as const),
+  PickType(WebAnalyticsChartBody, ['days', 'events', 'filters', 'bucket', 'property'] as const),
 ) {}
 
 export class McpCreateInsightArgs extends IntersectionType(

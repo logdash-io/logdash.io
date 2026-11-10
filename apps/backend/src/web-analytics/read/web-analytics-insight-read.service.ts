@@ -89,7 +89,7 @@ export class WebAnalyticsInsightReadService {
   public async readLayout(clusterId: string): Promise<WebAnalyticsLayoutNormalized> {
     const site = await this.model
       .findOne({ clusterId })
-      .select('insights views')
+      .select('insights views viewsVersion')
       .lean<WebAnalyticsSiteEntity>()
       .exec();
     return WebAnalyticsSiteSerializer.normalizeLayout(site);

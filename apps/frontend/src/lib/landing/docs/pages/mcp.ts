@@ -150,7 +150,8 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
     {
       type: 'list',
       items: [
-        '`set_views` takes the whole list of views, and the first one opens by default. Pass the ID of an existing view or section to keep or rename it, and leave the ID out to add one. A view with `traffic` set to `true` shows the built-in traffic cards, and no other view does. A section with `collapsed` set to `true` starts closed.',
+        '`set_views` takes the whole list of views, and the first one opens by default. Pass the ID of an existing view or section to keep or rename it, and leave the ID out to add one. A view with `traffic` set to `true` shows the built-in traffic cards, and no other view does. A section with `collapsed` set to `true` starts closed. The cards of a removed view move to the first view, and cards stay in their view when the views change order.',
+        'Pass `version`, the `viewsVersion` from `list_insights`, to `set_views`. The call then fails when someone changed the views after you read them, instead of replacing their change.',
         'An insight takes `view` and `section` IDs, `hidden` to hide the card, and `width` set to `half` or `full`. An insight without a view shows in the first view, so existing insights need no change.',
         'To change the placement of insights, pass `placements` to `reorder_insights`. It changes only the insights it lists, and leaves a field alone when you omit it. A `null` clears the field.',
         'A tabbed insight has the type `tabs` and 2 to 6 chart setups in `tabs`. The title of each tab is its label.',

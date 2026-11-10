@@ -71,11 +71,13 @@
 
 <Well label={insight.title} class="group/card @container h-full flex-1">
   {#snippet header()}
-    <h3 class="flex min-w-0 items-baseline gap-2 px-3 text-[13px]">
+    <h3
+      class="flex h-[1lh] min-w-0 flex-wrap items-baseline gap-x-2 overflow-hidden px-3 text-[13px]"
+    >
       <span class="max-w-full shrink-0 truncate font-medium">
         {insight.title}
       </span>
-      <span class="text-fg-muted min-w-0 truncate" title={summary}>
+      <span class="text-fg-muted grow basis-16 truncate" title={summary}>
         {summary}
       </span>
     </h3>
@@ -85,17 +87,19 @@
     <div
       class="pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100 pointer-fine:group-focus-within/card:opacity-100 flex items-center gap-0.5 transition-opacity"
     >
-      <IconButton
-        well
-        label={full ? 'Make half width' : 'Make full width'}
-        onclick={() => onwidth(insight)}
-      >
-        {#if full}
-          <ShrinkIcon class="size-4" />
-        {:else}
-          <ExpandIcon class="size-4" />
-        {/if}
-      </IconButton>
+      <div class="hidden @4xl/insights:contents">
+        <IconButton
+          well
+          label={full ? 'Make half width' : 'Make full width'}
+          onclick={() => onwidth(insight)}
+        >
+          {#if full}
+            <ShrinkIcon class="size-4" />
+          {:else}
+            <ExpandIcon class="size-4" />
+          {/if}
+        </IconButton>
+      </div>
       <IconButton
         well
         label="Hide {insight.title}"

@@ -24,7 +24,7 @@ export const page: DocPage = {
     {
       type: 'list',
       items: [
-        '**Views** are dashboards of their own, such as Company, Traffic and Product, with a tab each above the cards. Open **Layout** to add, rename, reorder or remove them. The first view opens by default and holds every card that has no view.',
+        '**Views** are dashboards of their own, such as Company, Traffic and Product, with a tab each above the cards. Open **Layout** to add, rename, reorder or remove them. The first view opens by default and holds every card that has no view. The cards of a removed view move to the first view, and cards stay in their view when you reorder the views. When someone changed the views after you opened the page, Logdash shows their change and you make yours again.',
         '**Sections** group the cards of a view under a title. Press a title to close or open its cards. A section marked as collapsed starts closed.',
         '**Traffic cards** are the day, sources and landing pages. Tick **Show visitors, sources and the other traffic cards** on the views that should show them.',
         'To **hide** a card, press the eye on its header. **Hidden** above the cards lists them, and **Show** brings one back.',
