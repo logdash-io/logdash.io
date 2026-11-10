@@ -3,21 +3,22 @@ import { DateTime } from 'luxon';
 import { match } from 'ts-pattern';
 import { rateFlag, wilson, type RateVerdict } from './day-analytics';
 import type {
+  WebAnalyticsChartConfig,
+  WebAnalyticsChartType,
   WebAnalyticsFunnelLayout,
   WebAnalyticsFunnelMode,
-  WebAnalyticsInsight,
   WebAnalyticsInsightBucket,
   WebAnalyticsInsightCohort,
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightEvent,
   WebAnalyticsInsightFilter,
   WebAnalyticsInsightOperator,
+  WebAnalyticsInsightPlacement,
   WebAnalyticsInsightStep,
-  WebAnalyticsInsightType,
 } from './web-analytics';
 
 export interface WebAnalyticsInsightDraft {
-  type: WebAnalyticsInsightType;
+  type: WebAnalyticsChartType;
   title: string;
   days: number;
   mode: WebAnalyticsFunnelMode;
@@ -60,7 +61,7 @@ export interface CohortTable {
 const TYPICAL_COHORTS = 4;
 
 export const INSIGHT_TYPES: {
-  value: WebAnalyticsInsightType;
+  value: WebAnalyticsChartType;
   label: string;
 }[] = [
   { value: 'funnel', label: 'Funnel' },
@@ -99,7 +100,7 @@ export const INSIGHT_OPERATORS: {
 ];
 
 export const INSIGHT_EVENT_LIMITS: Record<
-  WebAnalyticsInsightType,
+  WebAnalyticsChartType,
   { min: number; max: number }
 > = {
   funnel: { min: 2, max: 8 },
@@ -110,18 +111,20 @@ export const INSIGHT_EVENT_LIMITS: Record<
 
 export const INSIGHT_DAYS = [7, 14, 30, 90, 180, 365];
 
+export const INSIGHT_TABS = { min: 2, max: 6 };
+
 const NARROW_FUNNEL_COLUMNS = 3;
 
 export function defaultBucket(
-  type: WebAnalyticsInsightType,
+  type: WebAnalyticsChartType,
 ): WebAnalyticsInsightBucket {
   return type === 'cohorts' ? 'week' : 'day';
 }
 
 export function insightDraft(
-  insight?: WebAnalyticsInsightConfig,
+  insight?: WebAnalyticsChartConfig | WebAnalyticsInsightConfig,
 ): WebAnalyticsInsightDraft {
-  const type = insight?.type ?? 'funnel';
+  const type = chartType(insight);
   return {
     type,
     title: insight?.title ?? '',
@@ -145,7 +148,7 @@ export function insightDraft(
 
 export function withEventCount(
   events: WebAnalyticsInsightEvent[],
-  type: WebAnalyticsInsightType,
+  type: WebAnalyticsChartType,
 ): WebAnalyticsInsightEvent[] {
   const { min, max } = INSIGHT_EVENT_LIMITS[type];
   const padding = Array.from(
@@ -157,7 +160,7 @@ export function withEventCount(
 
 export function insightConfig(
   draft: WebAnalyticsInsightDraft,
-): WebAnalyticsInsightConfig {
+): WebAnalyticsChartConfig {
   const base = {
     type: draft.type,
     title: draft.title.trim(),
@@ -202,6 +205,23 @@ export function insightProblem(
   config: WebAnalyticsInsightConfig,
 ): string | null {
   if (!config.title) return 'Name the insight';
+  if (config.type !== 'tabs') return chartProblem(insightCharts(config)[0]);
+  const tabs = config.tabs ?? [];
+  if (tabs.length < INSIGHT_TABS.min)
+    return `Add at least ${INSIGHT_TABS.min} tabs`;
+  const names = tabs.map((tab) => tab.title.toLowerCase());
+  for (const [index, tab] of tabs.entries()) {
+    if (!tab.title) return `Name tab ${index + 1}`;
+    if (names.indexOf(tab.title.toLowerCase()) !== index)
+      return 'Give each tab its own name';
+    const problem = chartProblem(tab);
+    if (problem) return `${tab.title}: ${problem}`;
+  }
+  return null;
+}
+
+function chartProblem(config: WebAnalyticsChartConfig): string | null {
+  if (!config.title) return 'Name the insight';
   if (config.mode === 'people') {
     const steps = config.steps ?? [];
     if (steps.length < 2) return 'Add at least two steps';
@@ -225,11 +245,49 @@ export function insightProblem(
   return null;
 }
 
-export function insightWide(insight: WebAnalyticsInsightConfig): boolean {
+export function insightWide(
+  insight: WebAnalyticsChartConfig | WebAnalyticsInsightConfig,
+): boolean {
+  if (insight.type === 'tabs') return (insight.tabs ?? []).some(insightWide);
   if (insight.type === 'cohorts') return true;
   if (insight.type !== 'funnel' || insight.layout === 'rows') return false;
   const steps = insight.mode === 'people' ? insight.steps : insight.events;
   return (steps?.length ?? 0) > NARROW_FUNNEL_COLUMNS;
+}
+
+export function insightCharts(
+  insight: WebAnalyticsInsightConfig,
+): WebAnalyticsChartConfig[] {
+  if (insight.type === 'tabs') return insight.tabs ?? [];
+  return [{ ...insight, type: insight.type }];
+}
+
+export function tabbedDraft(insight?: WebAnalyticsInsightConfig): {
+  title: string;
+  drafts: WebAnalyticsInsightDraft[];
+} {
+  if (insight?.type === 'tabs')
+    return {
+      title: insight.title,
+      drafts: (insight.tabs ?? []).map((tab) => insightDraft(tab)),
+    };
+  return { title: insight?.title ?? '', drafts: [insightDraft(insight)] };
+}
+
+export function tabbedConfig(
+  title: string,
+  drafts: WebAnalyticsInsightDraft[],
+  placement: WebAnalyticsInsightPlacement = {},
+): WebAnalyticsInsightConfig {
+  if (drafts.length === 1) return { ...insightConfig(drafts[0]), ...placement };
+  const tabs = drafts.map(insightConfig);
+  return {
+    type: 'tabs',
+    title: title.trim(),
+    days: tabs[0].days,
+    tabs,
+    ...placement,
+  };
 }
 
 export function funnelRows(
@@ -374,7 +432,7 @@ export function filterLabel(filter: WebAnalyticsInsightFilter): string {
   return `${filter.key} ${operator} ${filter.value}`;
 }
 
-export function insightSummary(insight: WebAnalyticsInsight): string {
+export function insightSummary(insight: WebAnalyticsChartConfig): string {
   const period = `last ${insight.days} days`;
   const filters = [
     ...(insight.type === 'distribution'
@@ -397,6 +455,15 @@ export function insightSummary(insight: WebAnalyticsInsight): string {
     )
     .exhaustive();
   return [summary, ...filters.map(filterLabel)].join(', ');
+}
+
+function chartType(
+  insight: WebAnalyticsChartConfig | WebAnalyticsInsightConfig | undefined,
+): WebAnalyticsChartType {
+  if (!insight) return 'funnel';
+  return insight.type === 'tabs'
+    ? (insight.tabs?.[0]?.type ?? 'funnel')
+    : insight.type;
 }
 
 function bucketName(bucket: WebAnalyticsInsightBucket | undefined): string {

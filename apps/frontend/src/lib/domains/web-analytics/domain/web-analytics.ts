@@ -187,11 +187,15 @@ export interface WebAnalyticsRetention {
   comebacks: WebAnalyticsComeback[];
 }
 
-export type WebAnalyticsInsightType =
+export type WebAnalyticsChartType =
   | 'funnel'
   | 'trend'
   | 'distribution'
   | 'cohorts';
+
+export type WebAnalyticsInsightType = WebAnalyticsChartType | 'tabs';
+
+export type WebAnalyticsInsightWidth = 'half' | 'full';
 
 export type WebAnalyticsFunnelMode = 'people' | 'events';
 
@@ -218,8 +222,8 @@ export interface WebAnalyticsInsightEvent {
   filters: WebAnalyticsInsightFilter[];
 }
 
-export interface WebAnalyticsInsightConfig {
-  type: WebAnalyticsInsightType;
+export interface WebAnalyticsChartConfig {
+  type: WebAnalyticsChartType;
   title: string;
   days: number;
   mode?: WebAnalyticsFunnelMode;
@@ -232,8 +236,52 @@ export interface WebAnalyticsInsightConfig {
   binSize?: number;
 }
 
+export interface WebAnalyticsInsightPlacement {
+  view?: string | null;
+  section?: string | null;
+  hidden?: boolean | null;
+  width?: WebAnalyticsInsightWidth | null;
+}
+
+export interface WebAnalyticsInsightPlacementUpdate
+  extends WebAnalyticsInsightPlacement {
+  id: string;
+}
+
+export interface WebAnalyticsInsightConfig
+  extends Omit<WebAnalyticsChartConfig, 'type'>,
+    WebAnalyticsInsightPlacement {
+  type: WebAnalyticsInsightType;
+  tabs?: WebAnalyticsChartConfig[];
+}
+
 export interface WebAnalyticsInsight extends WebAnalyticsInsightConfig {
   id: string;
+}
+
+export interface WebAnalyticsSection {
+  id: string;
+  title: string;
+  collapsed: boolean;
+}
+
+export interface WebAnalyticsView {
+  id: string;
+  name: string;
+  traffic: boolean;
+  sections: WebAnalyticsSection[];
+}
+
+export interface WebAnalyticsViewInput {
+  id?: string;
+  name: string;
+  traffic: boolean;
+  sections: { id?: string; title: string; collapsed: boolean }[];
+}
+
+export interface WebAnalyticsInsights {
+  views: WebAnalyticsView[];
+  insights: WebAnalyticsInsight[];
 }
 
 export interface WebAnalyticsInsightStep {
@@ -260,7 +308,7 @@ export interface WebAnalyticsInsightCohort {
 }
 
 export interface WebAnalyticsInsightResult {
-  type: WebAnalyticsInsightType;
+  type: WebAnalyticsChartType;
   from: string;
   to: string;
   steps?: WebAnalyticsInsightStep[];

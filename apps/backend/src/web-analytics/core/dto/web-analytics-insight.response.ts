@@ -5,10 +5,13 @@ import {
   WebAnalyticsFunnelMode,
   WebAnalyticsInsightBucket,
   WebAnalyticsInsightEvent,
+  WebAnalyticsInsightBody,
+  WebAnalyticsInsightConfig,
   WebAnalyticsInsightEventBody,
   WebAnalyticsInsightFilter,
   WebAnalyticsInsightFilterBody,
   WebAnalyticsInsightType,
+  WebAnalyticsInsightWidth,
 } from './web-analytics-insight.body';
 
 export class WebAnalyticsInsightSerialized {
@@ -47,9 +50,63 @@ export class WebAnalyticsInsightSerialized {
 
   @ApiPropertyOptional()
   binSize?: number;
+
+  @ApiPropertyOptional({
+    type: () => WebAnalyticsInsightBody,
+    isArray: true,
+    description: 'Tabs cards only: the chart configs, each title is the tab label',
+  })
+  tabs?: WebAnalyticsInsightConfig[];
+
+  @ApiPropertyOptional({ description: 'The view id. Absent means the first view' })
+  view?: string;
+
+  @ApiPropertyOptional({ description: 'The section id of the view. Absent means no section' })
+  section?: string;
+
+  @ApiPropertyOptional({ description: 'Absent means shown' })
+  hidden?: boolean;
+
+  @ApiPropertyOptional({
+    enum: WebAnalyticsInsightWidth,
+    description: 'Absent means automatic by type',
+  })
+  width?: WebAnalyticsInsightWidth;
+}
+
+export class WebAnalyticsSectionSerialized {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  title: string;
+
+  @ApiProperty()
+  collapsed: boolean;
+}
+
+export class WebAnalyticsViewSerialized {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({ description: 'Whether the built-in traffic cards show in this view' })
+  traffic: boolean;
+
+  @ApiProperty({ type: WebAnalyticsSectionSerialized, isArray: true })
+  sections: WebAnalyticsSectionSerialized[];
 }
 
 export class WebAnalyticsInsightsResponse {
+  @ApiProperty({
+    type: WebAnalyticsViewSerialized,
+    isArray: true,
+    description: 'The dashboard views in order, the first one is the default',
+  })
+  views: WebAnalyticsViewSerialized[];
+
   @ApiProperty({ type: WebAnalyticsInsightSerialized, isArray: true })
   insights: WebAnalyticsInsightSerialized[];
 }

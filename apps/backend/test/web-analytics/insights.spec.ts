@@ -52,6 +52,8 @@ describe('Web analytics insights', () => {
       ['post', `${base}/insights`, funnel],
       ['post', `${base}/insights/run`, funnel],
       ['post', `${base}/insights/reorder`, { ids: [insight.id] }],
+      ['post', `${base}/insights/reorder`, { placements: [{ id: insight.id, hidden: true }] }],
+      ['put', `${base}/views`, { views: [{ name: 'Product' }] }],
       ['put', `${base}/insights/${insight.id}`, funnel],
       ['delete', `${base}/insights/${insight.id}`, undefined],
     ] as const) {
@@ -421,6 +423,372 @@ describe('Web analytics insights', () => {
     ]);
   });
 
+  it('lays out views and sections and keeps the placement of a card across edits', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clusterId = setup.cluster.id;
+    const path = `${clusterId}/web_analytics`;
+    const stored = await putViews(setup.token, clusterId, [
+      {
+        name: 'Product',
+        sections: [{ title: 'Activation' }, { title: 'Retention', collapsed: true }],
+      },
+      { name: 'Traffic', traffic: true },
+    ]);
+    const [product, traffic] = stored.views;
+    const [activation, retention] = product.sections;
+    const unknown = new Types.ObjectId().toString();
+
+    // when
+    const plain = await create(clusterId, setup.token, funnel);
+    const placed = await create(clusterId, setup.token, {
+      ...funnel,
+      view: product.id,
+      section: activation.id,
+      hidden: true,
+      width: 'full',
+    });
+    const kept = await send(setup.token, 'put', `${path}/insights/${placed.id}`, {
+      ...funnel,
+      title: 'Renamed',
+    });
+    const moved = await send(setup.token, 'put', `${path}/insights/${placed.id}`, {
+      ...funnel,
+      view: traffic.id,
+      section: null,
+      hidden: false,
+      width: 'half',
+    });
+    const sectioned = await send(setup.token, 'put', `${path}/insights/${plain.id}`, {
+      ...funnel,
+      section: retention.id,
+    });
+    const cleared = await send(setup.token, 'put', `${path}/insights/${placed.id}`, {
+      ...funnel,
+      view: null,
+      hidden: null,
+      width: null,
+    });
+
+    // then
+    expect(stored).toEqual({
+      views: [
+        {
+          id: expect.any(String) as string,
+          name: 'Product',
+          traffic: false,
+          sections: [
+            { id: expect.any(String) as string, title: 'Activation', collapsed: false },
+            { id: expect.any(String) as string, title: 'Retention', collapsed: true },
+          ],
+        },
+        { id: expect.any(String) as string, name: 'Traffic', traffic: true, sections: [] },
+      ],
+      insights: [],
+    });
+    expect(plain).toEqual({
+      id: expect.any(String) as string,
+      layout: 'columns',
+      ...withFilters(funnel),
+    });
+    expect(placed).toMatchObject({
+      view: product.id,
+      section: activation.id,
+      hidden: true,
+      width: 'full',
+    });
+    expect(kept.body).toMatchObject({
+      title: 'Renamed',
+      view: product.id,
+      section: activation.id,
+      hidden: true,
+      width: 'full',
+    });
+    expect(moved.body).toEqual({
+      id: placed.id,
+      layout: 'columns',
+      ...withFilters(funnel),
+      view: traffic.id,
+      hidden: false,
+      width: 'half',
+    });
+    expect(sectioned.body).toMatchObject({ id: plain.id, section: retention.id });
+    expect(cleared.body).toEqual({ id: placed.id, layout: 'columns', ...withFilters(funnel) });
+    const raw = await bootstrap.models.webAnalyticsSiteModel.findOne({ clusterId }).lean();
+    for (const key of ['view', 'section', 'hidden', 'width'])
+      expect(raw?.insights?.[1]).not.toHaveProperty(key);
+    expect((await layout(clusterId, setup.token)).views).toEqual(stored.views);
+
+    for (const [placement, message] of [
+      [{ view: unknown }, 'Unknown view'],
+      [{ section: unknown }, 'Unknown section'],
+      [{ view: traffic.id, section: activation.id }, 'Unknown section'],
+    ] as const)
+      for (const response of [
+        await send(setup.token, 'post', `${path}/insights`, { ...funnel, ...placement }),
+        await send(setup.token, 'put', `${path}/insights/${plain.id}`, { ...funnel, ...placement }),
+      ]) {
+        expect(response.status).toBe(400);
+        expect((response.body as { message: string }).message).toBe(message);
+      }
+    expect(
+      (await send(setup.token, 'post', `${path}/insights`, { ...funnel, section: activation.id }))
+        .status,
+    ).toBe(201);
+  });
+
+  it('keeps cards of a removed view and lists views of a domain without any', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clusterId = setup.cluster.id;
+    const legacy = await bootstrap.models.webAnalyticsSiteModel.collection.insertOne({
+      clusterId,
+      origins: [],
+      goals: [],
+      insights: [{ ...withFilters(funnel), _id: new Types.ObjectId() }],
+    });
+
+    // when
+    const before = await layout(clusterId, setup.token);
+    const { views } = await putViews(setup.token, clusterId, [{ name: 'Product' }]);
+    const card = await create(clusterId, setup.token, { ...funnel, view: views[0].id });
+    const emptied = await putViews(setup.token, clusterId, []);
+
+    // then
+    expect(before).toEqual({ views: [], insights: [expect.objectContaining({ type: 'funnel' })] });
+    expect(emptied.views).toEqual([]);
+    expect(emptied.insights.map((insight) => insight.id)).toEqual([before.insights[0].id, card.id]);
+    expect(emptied.insights[1].view).toBe(views[0].id);
+    await bootstrap.utils.auditLogUtils.assertAuditLog({
+      userId: setup.user.id,
+      action: AuditLogEntityAction.Update,
+      relatedDomain: RelatedDomain.WebAnalytics,
+      relatedEntityId: legacy.insertedId.toString(),
+    });
+  });
+
+  it('keeps ids when views and sections are renamed, reordered and removed', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clusterId = setup.cluster.id;
+    const { views } = await putViews(setup.token, clusterId, [
+      { name: 'Product', sections: [{ title: 'Activation' }, { title: 'Retention' }] },
+      { name: 'Growth' },
+    ]);
+    const [product, growth] = views;
+    const [activation, retention] = product.sections;
+    const unknown = new Types.ObjectId().toString();
+
+    // when
+    const edited = await putViews(setup.token, clusterId, [
+      { id: growth.id, name: 'Acquisition', traffic: true },
+      {
+        id: product.id,
+        name: 'Usage',
+        sections: [{ title: 'New' }, { id: retention.id, title: 'Return', collapsed: true }],
+      },
+    ]);
+
+    // then
+    expect(edited.views).toEqual([
+      { id: growth.id, name: 'Acquisition', traffic: true, sections: [] },
+      {
+        id: product.id,
+        name: 'Usage',
+        traffic: false,
+        sections: [
+          { id: expect.any(String) as string, title: 'New', collapsed: false },
+          { id: retention.id, title: 'Return', collapsed: true },
+        ],
+      },
+    ]);
+    expect(edited.views[1].sections.map((section) => section.id)).not.toContain(activation.id);
+    for (const rejected of [
+      [{ id: unknown, name: 'Ghost' }],
+      [{ name: 'Usage' }, { name: 'usage' }],
+      [{ name: 'Usage', sections: [{ title: 'Same' }, { title: 'same' }] }],
+      [
+        { id: product.id, name: 'One' },
+        { id: product.id, name: 'Two' },
+      ],
+      [{ id: product.id, name: 'One', sections: [{ id: unknown, title: 'Ghost' }] }],
+      [{ id: growth.id, name: 'One', sections: [{ id: retention.id, title: 'Moved' }] }],
+      [{ name: 'One', sections: [{ id: retention.id, title: 'Moved' }] }],
+      [{ name: '   ' }],
+    ])
+      expect((await putViewsRaw(setup.token, clusterId, rejected)).status).toBe(400);
+    expect((await layout(clusterId, setup.token)).views).toEqual(edited.views);
+  });
+
+  it('orders cards and places them in one call', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clusterId = setup.cluster.id;
+    const path = `${clusterId}/web_analytics`;
+    const { views } = await putViews(setup.token, clusterId, [
+      { name: 'Product', sections: [{ title: 'Activation' }] },
+      { name: 'Traffic' },
+    ]);
+    const [product, traffic] = views;
+    const a = await create(clusterId, setup.token, { ...funnel, title: 'A' });
+    const b = await create(clusterId, setup.token, { ...funnel, title: 'B' });
+    const c = await create(clusterId, setup.token, { ...funnel, title: 'C' });
+    const reorder = (body: object): request.Test =>
+      send(setup.token, 'post', `${path}/insights/reorder`, body);
+    const order = (response: request.Response): string[] =>
+      (response.body as WebAnalyticsInsightsResponse).insights.map((insight) => insight.title);
+
+    // when
+    const placed = await reorder({
+      placements: [
+        { id: a.id, view: product.id, section: product.sections[0].id, width: 'half' },
+        { id: b.id, hidden: true },
+        { id: c.id },
+      ],
+    });
+    const both = await reorder({
+      ids: [c.id, b.id, a.id],
+      placements: [
+        { id: a.id, section: null, width: 'full' },
+        { id: c.id, view: traffic.id },
+      ],
+    });
+    const idsOnly = await reorder({ ids: [a.id, b.id, c.id] });
+
+    // then
+    expect(placed.status).toBe(200);
+    expect(order(placed)).toEqual(['A', 'B', 'C']);
+    expect((placed.body as WebAnalyticsInsightsResponse).views).toEqual(views);
+    expect((placed.body as WebAnalyticsInsightsResponse).insights).toEqual([
+      expect.objectContaining({
+        id: a.id,
+        view: product.id,
+        section: product.sections[0].id,
+        width: 'half',
+      }),
+      expect.objectContaining({ id: b.id, hidden: true }),
+      { ...c },
+    ]);
+    expect(order(both)).toEqual(['C', 'B', 'A']);
+    expect((both.body as WebAnalyticsInsightsResponse).insights).toEqual([
+      { ...c, view: traffic.id },
+      { ...b, hidden: true },
+      { ...a, view: product.id, width: 'full' },
+    ]);
+    expect(order(idsOnly)).toEqual(['A', 'B', 'C']);
+    expect((idsOnly.body as WebAnalyticsInsightsResponse).insights[0]).toMatchObject({
+      view: product.id,
+      width: 'full',
+    });
+
+    const before = await list(clusterId, setup.token);
+    for (const body of [
+      {},
+      { placements: [{ id: new Types.ObjectId().toString(), hidden: true }] },
+      { placements: [{ id: a.id, view: new Types.ObjectId().toString() }] },
+      { placements: [{ id: a.id, view: traffic.id, section: product.sections[0].id }] },
+      { ids: [b.id], placements: [{ id: a.id, hidden: true }] },
+    ])
+      expect((await reorder(body)).status).toBe(400);
+    expect(await list(clusterId, setup.token)).toEqual(before);
+    await bootstrap.utils.auditLogUtils.assertAuditLog({
+      userId: setup.user.id,
+      action: AuditLogEntityAction.Update,
+      relatedDomain: RelatedDomain.WebAnalytics,
+      relatedEntityId: b.id,
+    });
+  });
+
+  it('saves tabbed cards with 2 to 6 charts and runs each tab on its own', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clusterId = setup.cluster.id;
+    const path = `${clusterId}/web_analytics`;
+    const { views } = await putViews(setup.token, clusterId, [{ name: 'Product' }]);
+    const install = { type: 'funnel', title: 'Install', events: funnel.events };
+    const daily = { type: 'trend', title: 'Daily', events: [{ name: 'malini_desktop_day' }] };
+    const tabs = { type: 'tabs', title: 'Journeys', tabs: [install, daily] };
+
+    // when
+    const created = await create(clusterId, setup.token, {
+      ...tabs,
+      tabs: [{ ...install, view: views[0].id, hidden: true }, daily],
+      steps: ['page:/'],
+      view: views[0].id,
+      width: 'full',
+    });
+    const renamed = await send(setup.token, 'put', `${path}/insights/${created.id}`, {
+      ...tabs,
+      title: '$total journeys',
+      tabs: [{ ...install, title: '$100 installs' }, daily],
+    });
+    const asFunnel = await send(setup.token, 'put', `${path}/insights/${created.id}`, {
+      ...funnel,
+      tabs: [install, daily],
+    });
+    const raw = await bootstrap.models.webAnalyticsSiteModel.findOne({ clusterId }).lean();
+    const again = await send(setup.token, 'put', `${path}/insights/${created.id}`, tabs);
+    const ran = await send(setup.token, 'post', `${path}/insights/run`, tabs);
+
+    // then
+    expect(created).toEqual({
+      id: expect.any(String) as string,
+      type: 'tabs',
+      title: 'Journeys',
+      days: 30,
+      view: views[0].id,
+      width: 'full',
+      tabs: [
+        {
+          type: 'funnel',
+          title: 'Install',
+          days: 30,
+          mode: 'events',
+          layout: 'columns',
+          events: funnel.events.map((event) => ({ ...event, filters: [] })),
+          filters: [],
+        },
+        {
+          type: 'trend',
+          title: 'Daily',
+          days: 30,
+          events: [{ name: 'malini_desktop_day', filters: [] }],
+          filters: [],
+          bucket: 'day',
+        },
+      ],
+    });
+    expect(await list(clusterId, setup.token)).toEqual([created]);
+    expect(renamed.status).toBe(200);
+    expect(renamed.body).toMatchObject({
+      title: '$total journeys',
+      view: views[0].id,
+      width: 'full',
+      tabs: [{ title: '$100 installs' }, { title: 'Daily' }],
+    });
+    expect(asFunnel.body).toMatchObject({ type: 'funnel', title: 'Install journey' });
+    expect(asFunnel.body).not.toHaveProperty('tabs');
+    expect(raw?.insights?.[0]).not.toHaveProperty('tabs');
+    expect(again.body).toMatchObject({ type: 'tabs', tabs: [{ title: 'Install' }, {}] });
+    expect(ran.status).toBe(400);
+    expect((ran.body as { message: string }).message).toBe('Run each tab on its own');
+
+    for (const [body, message] of [
+      [{ ...tabs, tabs: [install] }, 'A tabs card takes 2 to 6 tabs'],
+      [{ type: 'tabs', title: 'Empty' }, 'A tabs card takes 2 to 6 tabs'],
+      [
+        { ...tabs, tabs: [install, { type: 'tabs', title: 'Inner', tabs: [install, daily] }] },
+        'Tabs cannot nest',
+      ],
+      [{ ...tabs, tabs: [install, { ...daily, tabs: [install, daily] }] }, 'Tabs cannot nest'],
+      [{ ...tabs, tabs: [install, { ...daily, events: [] }] }, 'A trend takes 1 to 5 events'],
+    ] as const) {
+      const response = await send(setup.token, 'post', `${path}/insights`, body);
+      expect(response.status).toBe(400);
+      expect((response.body as { message: string }).message).toBe(message);
+    }
+  });
+
   function withFilters(body: typeof funnel): Record<string, unknown> {
     return { ...body, events: body.events.map((event) => ({ ...event, filters: [] })) };
   }
@@ -435,10 +803,28 @@ describe('Web analytics insights', () => {
     return response.body as WebAnalyticsInsightSerialized;
   }
 
-  async function list(clusterId: string, token: string): Promise<WebAnalyticsInsightSerialized[]> {
+  async function layout(clusterId: string, token: string): Promise<WebAnalyticsInsightsResponse> {
     const response = await send(token, 'get', `${clusterId}/web_analytics/insights`);
     expect(response.status).toBe(200);
-    return (response.body as WebAnalyticsInsightsResponse).insights;
+    return response.body as WebAnalyticsInsightsResponse;
+  }
+
+  async function list(clusterId: string, token: string): Promise<WebAnalyticsInsightSerialized[]> {
+    return (await layout(clusterId, token)).insights;
+  }
+
+  function putViewsRaw(token: string, clusterId: string, views: object[]): request.Test {
+    return send(token, 'put', `${clusterId}/web_analytics/views`, { views });
+  }
+
+  async function putViews(
+    token: string,
+    clusterId: string,
+    views: object[],
+  ): Promise<WebAnalyticsInsightsResponse> {
+    const response = await putViewsRaw(token, clusterId, views);
+    expect(response.status).toBe(200);
+    return response.body as WebAnalyticsInsightsResponse;
   }
 
   async function run(

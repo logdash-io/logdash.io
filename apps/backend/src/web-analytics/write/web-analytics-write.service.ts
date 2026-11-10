@@ -8,10 +8,14 @@ import {
 import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { WebAnalyticsSiteEntity } from '../core/entities/web-analytics-site.entity';
+import { Model, Types, UpdateQuery } from 'mongoose';
+import {
+  WebAnalyticsSiteEntity,
+  WebAnalyticsViewEntity,
+} from '../core/entities/web-analytics-site.entity';
 import {
   WebAnalyticsInsightNormalized,
+  WebAnalyticsLayoutNormalized,
   WebAnalyticsSiteNormalized,
 } from '../core/entities/web-analytics-site.interface';
 import {
@@ -20,8 +24,12 @@ import {
 } from '../core/entities/web-analytics-site.serializer';
 import {
   MAX_WEB_ANALYTICS_INSIGHTS,
+  ReorderWebAnalyticsInsightsBody,
+  WEB_ANALYTICS_INSIGHT_PLACEMENT_KEYS,
   WebAnalyticsInsightConfig,
+  WebAnalyticsInsightPlacement,
 } from '../core/dto/web-analytics-insight.body';
+import { WebAnalyticsViewBody } from '../core/dto/web-analytics-views.body';
 import { RedisService } from '../../shared/redis/redis.service';
 import { AuditLog } from '../../audit-log/creation/audit-log-creation.service';
 import { Actor } from '../../audit-log/core/enums/actor.enum';
@@ -30,6 +38,25 @@ import { RelatedDomain } from '../../audit-log/core/enums/related-domain.enum';
 import { WebEventClickhouseEntity } from '../core/entities/web-event.clickhouse-entity';
 
 export const WEB_ANALYTICS_QUEUE_LOCK = 'web-analytics:flush-lock';
+
+const INSIGHT_CONFIG_KEYS = [
+  'type',
+  'title',
+  'days',
+  'mode',
+  'layout',
+  'steps',
+  'events',
+  'filters',
+  'bucket',
+  'property',
+  'binSize',
+  'tabs',
+];
+
+const ABSENT_CONFIG = Object.fromEntries(INSIGHT_CONFIG_KEYS.map((key) => [key, null]));
+
+type Patch = { $set: Record<string, unknown>; $unset: Record<string, ''> };
 
 @Injectable()
 export class WebAnalyticsWriteService {
@@ -108,12 +135,16 @@ export class WebAnalyticsWriteService {
     insight: WebAnalyticsInsightConfig,
     actorUserId: string,
   ): Promise<WebAnalyticsInsightNormalized> {
+    await this.assertPlacements(clusterId, [insight]);
     await this.ensureSite(clusterId);
     const _id = new Types.ObjectId();
+    const stored = Object.fromEntries(
+      Object.entries(insight).filter(([, value]) => value !== null),
+    );
     const site = await this.model
       .findOneAndUpdate(
         { clusterId, [`insights.${MAX_WEB_ANALYTICS_INSIGHTS - 1}`]: { $exists: false } },
-        { $push: { insights: { ...insight, _id } } },
+        { $push: { insights: { ...stored, _id } } },
         { returnDocument: 'after' },
       )
       .lean<WebAnalyticsSiteEntity>()
@@ -133,10 +164,11 @@ export class WebAnalyticsWriteService {
     actorUserId: string,
   ): Promise<WebAnalyticsInsightNormalized> {
     const _id = this.insightObjectId(insightId);
+    await this.assertPlacements(clusterId, [insight]);
     const site = await this.model
       .findOneAndUpdate(
         { clusterId, 'insights._id': _id },
-        { $set: { 'insights.$': { ...insight, _id } } },
+        this.operators(this.patch({ ...ABSENT_CONFIG, ...insight }, 'insights.$.')),
         { returnDocument: 'after' },
       )
       .lean<WebAnalyticsSiteEntity>()
@@ -161,37 +193,49 @@ export class WebAnalyticsWriteService {
 
   public async reorderInsights(
     clusterId: string,
-    ids: string[],
+    { ids, placements }: ReorderWebAnalyticsInsightsBody,
     actorUserId: string,
-  ): Promise<WebAnalyticsInsightNormalized[]> {
-    const objectIds = ids.map((id) => new Types.ObjectId(id));
+  ): Promise<WebAnalyticsLayoutNormalized> {
+    if (!ids && !placements) throw new BadRequestException('Pass ids, placements or both');
+    let site = await this.model
+      .findOne({ clusterId })
+      .select('insights views')
+      .lean<WebAnalyticsSiteEntity>()
+      .exec();
+    const known = new Set((site?.insights ?? []).map((insight) => insight._id.toString()));
+    if (placements?.some((placement) => !known.has(placement.id)))
+      throw new BadRequestException('Unknown insight');
+    this.assertViews(site?.views ?? [], placements ?? []);
+    if (ids) site = await this.applyOrder(clusterId, ids);
+    if (placements) site = (await this.applyPlacements(clusterId, placements)) ?? site;
+    const touched = new Set([...(ids ?? []), ...(placements ?? []).map(({ id }) => id)]);
+    for (const id of touched) this.audit(actorUserId, AuditLogEntityAction.Update, id);
+    return WebAnalyticsSiteSerializer.normalizeLayout(site);
+  }
+
+  public async updateViews(
+    clusterId: string,
+    views: WebAnalyticsViewBody[],
+    actorUserId: string,
+  ): Promise<WebAnalyticsLayoutNormalized> {
+    const current = await this.model
+      .findOne({ clusterId })
+      .select('views')
+      .lean<WebAnalyticsSiteEntity>()
+      .exec();
     const site = await this.model
       .findOneAndUpdate(
-        { clusterId, insights: { $size: ids.length }, 'insights._id': { $all: objectIds } },
-        [
-          {
-            $set: {
-              insights: {
-                $map: {
-                  input: objectIds,
-                  as: 'id',
-                  in: {
-                    $first: {
-                      $filter: { input: '$insights', cond: { $eq: ['$$this._id', '$$id'] } },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
-        { returnDocument: 'after', updatePipeline: true },
+        { clusterId },
+        {
+          $set: { views: this.buildViews(current?.views ?? [], views) },
+          $setOnInsert: { origins: [] },
+        },
+        { upsert: true, returnDocument: 'after' },
       )
       .lean<WebAnalyticsSiteEntity>()
       .exec();
-    if (!site) throw new BadRequestException('ids must list every insight of the domain once');
-    for (const id of ids) this.audit(actorUserId, AuditLogEntityAction.Update, id);
-    return (site.insights ?? []).map((insight) => WebAnalyticsInsightSerializer.normalize(insight));
+    this.audit(actorUserId, AuditLogEntityAction.Update, site._id.toString());
+    return WebAnalyticsSiteSerializer.normalizeLayout(site);
   }
 
   public async deleteByClusterId(clusterId: string): Promise<void> {
@@ -239,6 +283,156 @@ export class WebAnalyticsWriteService {
         { keys: [WEB_ANALYTICS_QUEUE_LOCK], arguments: [lock] },
       );
     }
+  }
+
+  private async applyOrder(clusterId: string, ids: string[]): Promise<WebAnalyticsSiteEntity> {
+    const objectIds = ids.map((id) => new Types.ObjectId(id));
+    const site = await this.model
+      .findOneAndUpdate(
+        { clusterId, insights: { $size: ids.length }, 'insights._id': { $all: objectIds } },
+        [
+          {
+            $set: {
+              insights: {
+                $map: {
+                  input: objectIds,
+                  as: 'id',
+                  in: {
+                    $first: {
+                      $filter: { input: '$insights', cond: { $eq: ['$$this._id', '$$id'] } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+        { returnDocument: 'after', updatePipeline: true },
+      )
+      .lean<WebAnalyticsSiteEntity>()
+      .exec();
+    if (!site) throw new BadRequestException('ids must list every insight of the domain once');
+    return site;
+  }
+
+  private async applyPlacements(
+    clusterId: string,
+    placements: (WebAnalyticsInsightPlacement & { id: string })[],
+  ): Promise<WebAnalyticsSiteEntity | null> {
+    const changes = placements.filter((placement) =>
+      WEB_ANALYTICS_INSIGHT_PLACEMENT_KEYS.some((key) => placement[key] !== undefined),
+    );
+    if (!changes.length) return null;
+    const patch: Patch = { $set: {}, $unset: {} };
+    changes.forEach((placement, index) =>
+      this.patch(this.placementOf(placement), `insights.$[e${index}].`, patch),
+    );
+    return this.model
+      .findOneAndUpdate({ clusterId }, this.operators(patch), {
+        arrayFilters: changes.map((placement, index) => ({
+          [`e${index}._id`]: new Types.ObjectId(placement.id),
+        })),
+        returnDocument: 'after',
+      })
+      .lean<WebAnalyticsSiteEntity>()
+      .exec();
+  }
+
+  private placementOf(values: WebAnalyticsInsightPlacement): Record<string, unknown> {
+    return Object.fromEntries(
+      WEB_ANALYTICS_INSIGHT_PLACEMENT_KEYS.map((key) => [key, values[key]]),
+    );
+  }
+
+  private patch(
+    values: Record<string, unknown>,
+    prefix: string,
+    into: Patch = { $set: {}, $unset: {} },
+  ): Patch {
+    for (const [key, value] of Object.entries(values)) {
+      if (value === null) into.$unset[`${prefix}${key}`] = '';
+      else if (value !== undefined) into.$set[`${prefix}${key}`] = value;
+    }
+    return into;
+  }
+
+  private operators(patch: Patch): UpdateQuery<WebAnalyticsSiteEntity> {
+    return Object.fromEntries(
+      Object.entries(patch).filter(([, fields]) => Object.keys(fields).length),
+    );
+  }
+
+  private async assertPlacements(
+    clusterId: string,
+    placements: WebAnalyticsInsightPlacement[],
+  ): Promise<void> {
+    if (!placements.some(({ view, section }) => view || section)) return;
+    const site = await this.model
+      .findOne({ clusterId })
+      .select('views')
+      .lean<WebAnalyticsSiteEntity>()
+      .exec();
+    this.assertViews(site?.views ?? [], placements);
+  }
+
+  private assertViews(
+    views: WebAnalyticsViewEntity[],
+    placements: WebAnalyticsInsightPlacement[],
+  ): void {
+    for (const { view, section } of placements) {
+      const owner = view ? views.find((entry) => entry._id.toString() === view) : undefined;
+      if (view && !owner) throw new BadRequestException('Unknown view');
+      const scope = owner ? [owner] : views;
+      if (
+        section &&
+        !scope.some((entry) => entry.sections.some((child) => child._id.toString() === section))
+      )
+        throw new BadRequestException('Unknown section');
+    }
+  }
+
+  private buildViews(
+    current: WebAnalyticsViewEntity[],
+    views: WebAnalyticsViewBody[],
+  ): Pick<WebAnalyticsViewEntity, '_id' | 'name' | 'traffic' | 'sections'>[] {
+    const ids = new Set<string>();
+    const claim = (id: string): void => {
+      if (ids.has(id)) throw new BadRequestException('An id appears twice');
+      ids.add(id);
+    };
+    const names = new Set<string>();
+    return views.map((view) => {
+      const existing = current.find((entry) => entry._id.toString() === view.id);
+      if (view.id) {
+        if (!existing) throw new BadRequestException('Unknown view');
+        claim(view.id);
+      }
+      if (names.has(view.name.toLowerCase()))
+        throw new BadRequestException('View names must be unique');
+      names.add(view.name.toLowerCase());
+      const titles = new Set<string>();
+      const sections = (view.sections ?? []).map((section) => {
+        if (section.id) {
+          if (!existing?.sections.some((entry) => entry._id.toString() === section.id))
+            throw new BadRequestException('Unknown section');
+          claim(section.id);
+        }
+        if (titles.has(section.title.toLowerCase()))
+          throw new BadRequestException('Section titles must be unique within a view');
+        titles.add(section.title.toLowerCase());
+        return {
+          _id: new Types.ObjectId(section.id),
+          title: section.title,
+          collapsed: section.collapsed ?? false,
+        };
+      });
+      return {
+        _id: new Types.ObjectId(view.id),
+        name: view.name,
+        traffic: view.traffic ?? false,
+        sections,
+      };
+    });
   }
 
   private insightObjectId(insightId: string): Types.ObjectId {

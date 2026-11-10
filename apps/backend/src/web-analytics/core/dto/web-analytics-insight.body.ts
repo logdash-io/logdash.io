@@ -5,6 +5,7 @@ import {
   ArrayMaxSize,
   ArrayUnique,
   IsArray,
+  IsBoolean,
   IsEnum,
   IsIn,
   IsInt,
@@ -19,6 +20,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import { NoImplicitConversion } from '../../../shared/utils/no-implicit-conversion.decorator';
 import { EVENT_NAME, PROP_KEY } from './collect-web-events.body';
 import { WebAnalyticsGranularity } from './read-web-analytics.query';
 
@@ -27,6 +29,12 @@ export enum WebAnalyticsInsightType {
   Trend = 'trend',
   Distribution = 'distribution',
   Cohorts = 'cohorts',
+  Tabs = 'tabs',
+}
+
+export enum WebAnalyticsInsightWidth {
+  Half = 'half',
+  Full = 'full',
 }
 
 export enum WebAnalyticsFunnelMode {
@@ -57,6 +65,8 @@ export const WEB_ANALYTICS_INSIGHT_BUCKETS = [
 export type WebAnalyticsInsightBucket = (typeof WEB_ANALYTICS_INSIGHT_BUCKETS)[number];
 
 export const MAX_WEB_ANALYTICS_INSIGHTS = 50;
+
+export const MAX_WEB_ANALYTICS_INSIGHT_TABS = 6;
 
 export class WebAnalyticsInsightFilterBody {
   @ApiProperty({ example: 'cohort', description: 'Event property key' })
@@ -98,11 +108,54 @@ export class WebAnalyticsInsightEventBody {
   filters: WebAnalyticsInsightFilterBody[] = [];
 }
 
-export class WebAnalyticsInsightBody {
+export class WebAnalyticsInsightPlacementBody {
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description:
+      'The id of a view. Omit to keep the stored value, null to clear it. A card without a view shows in the first view',
+  })
+  @IsOptional()
+  @IsMongoId()
+  view?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description:
+      'The id of a section of the view. Omit to keep the stored value, null to clear it. A card without a section sits above the sections',
+  })
+  @IsOptional()
+  @IsMongoId()
+  section?: string | null;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    nullable: true,
+    description:
+      'Hide the card from the dashboard. Omit to keep the stored value, null to clear it',
+  })
+  @IsOptional()
+  @NoImplicitConversion()
+  @IsBoolean()
+  hidden?: boolean | null;
+
+  @ApiPropertyOptional({
+    enum: WebAnalyticsInsightWidth,
+    nullable: true,
+    description:
+      'Half or full width. Omit to keep the stored value, null to clear it for the automatic width of the type',
+  })
+  @IsOptional()
+  @IsEnum(WebAnalyticsInsightWidth)
+  width?: WebAnalyticsInsightWidth | null;
+}
+
+export class WebAnalyticsInsightBody extends WebAnalyticsInsightPlacementBody {
   @ApiProperty({
     enum: WebAnalyticsInsightType,
     description:
-      'funnel counts each step, trend counts events per bucket, distribution histograms a numeric property, cohorts groups a start event and later events by a date property',
+      'funnel counts each step, trend counts events per bucket, distribution histograms a numeric property, cohorts groups a start event and later events by a date property, tabs holds 2 to 6 of those charts in one card',
   })
   @IsEnum(WebAnalyticsInsightType)
   type: WebAnalyticsInsightType;
@@ -206,15 +259,51 @@ export class WebAnalyticsInsightBody {
   @Min(0.000001)
   @Max(1_000_000_000)
   binSize?: number;
+
+  @ApiPropertyOptional({
+    type: () => [WebAnalyticsInsightBody],
+    description:
+      'Tabs cards only: 2 to 6 complete chart configs. The title of each tab is its label, and a tab cannot hold tabs or a placement',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(MAX_WEB_ANALYTICS_INSIGHT_TABS)
+  @ValidateNested({ each: true })
+  @Type(() => WebAnalyticsInsightBody)
+  tabs?: WebAnalyticsInsightBody[];
+}
+
+export class WebAnalyticsInsightPlacementItemBody extends WebAnalyticsInsightPlacementBody {
+  @ApiProperty()
+  @IsMongoId()
+  id: string;
 }
 
 export class ReorderWebAnalyticsInsightsBody {
-  @ApiProperty({ type: String, isArray: true, description: 'Every insight id, in the new order' })
+  @ApiPropertyOptional({
+    type: String,
+    isArray: true,
+    description: 'Every insight id, in the new order',
+  })
+  @IsOptional()
   @IsArray()
   @ArrayMaxSize(MAX_WEB_ANALYTICS_INSIGHTS)
   @ArrayUnique()
   @IsMongoId({ each: true })
-  ids: string[];
+  ids?: string[];
+
+  @ApiPropertyOptional({
+    type: WebAnalyticsInsightPlacementItemBody,
+    isArray: true,
+    description: 'Where cards sit. Fields follow the placement rules of an insight',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(MAX_WEB_ANALYTICS_INSIGHTS)
+  @ArrayUnique((placement: WebAnalyticsInsightPlacementItemBody) => placement.id)
+  @ValidateNested({ each: true })
+  @Type(() => WebAnalyticsInsightPlacementItemBody)
+  placements?: WebAnalyticsInsightPlacementItemBody[];
 }
 
 export type WebAnalyticsInsightFilter = {
@@ -225,7 +314,14 @@ export type WebAnalyticsInsightFilter = {
 
 export type WebAnalyticsInsightEvent = { name: string; filters: WebAnalyticsInsightFilter[] };
 
-export type WebAnalyticsInsightConfig = {
+export type WebAnalyticsInsightPlacement = {
+  view?: string | null;
+  section?: string | null;
+  hidden?: boolean | null;
+  width?: WebAnalyticsInsightWidth | null;
+};
+
+export type WebAnalyticsInsightConfig = WebAnalyticsInsightPlacement & {
   type: WebAnalyticsInsightType;
   title: string;
   days: number;
@@ -237,13 +333,36 @@ export type WebAnalyticsInsightConfig = {
   bucket?: WebAnalyticsInsightBucket;
   property?: string;
   binSize?: number;
+  tabs?: WebAnalyticsInsightConfig[];
 };
+
+export const WEB_ANALYTICS_INSIGHT_PLACEMENT_KEYS = ['view', 'section', 'hidden', 'width'] as const;
 
 export function normalizeWebAnalyticsInsight(
   body: WebAnalyticsInsightBody,
 ): WebAnalyticsInsightConfig {
+  const placement = Object.fromEntries(
+    WEB_ANALYTICS_INSIGHT_PLACEMENT_KEYS.filter((key) => body[key] !== undefined).map((key) => [
+      key,
+      body[key],
+    ]),
+  );
+  return { ...normalizeChart(body, false), ...placement };
+}
+
+function normalizeChart(body: WebAnalyticsInsightBody, nested: boolean): WebAnalyticsInsightConfig {
   const base = { type: body.type, title: body.title.trim(), days: body.days ?? 30 };
   if (!base.title) throw new BadRequestException('title must not be blank');
+  if (nested && (body.type === WebAnalyticsInsightType.Tabs || body.tabs?.length))
+    throw new BadRequestException('Tabs cannot nest');
+  if (body.type === WebAnalyticsInsightType.Tabs) {
+    const tabs = body.tabs ?? [];
+    if (tabs.length < 2 || tabs.length > MAX_WEB_ANALYTICS_INSIGHT_TABS)
+      throw new BadRequestException(
+        `A tabs card takes 2 to ${MAX_WEB_ANALYTICS_INSIGHT_TABS} tabs`,
+      );
+    return { ...base, tabs: tabs.map((tab) => normalizeChart(tab, true)) };
+  }
   const events = (body.events ?? []).map((event) => ({
     name: event.name,
     filters: (event.filters ?? []).map(({ key, op, value }) => ({ key, op, value })),

@@ -1,7 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { WebAnalyticsInsightConfig } from '../dto/web-analytics-insight.body';
+import {
+  WebAnalyticsInsightConfig,
+  WebAnalyticsInsightPlacement,
+} from '../dto/web-analytics-insight.body';
 
-export type WebAnalyticsInsightNormalized = WebAnalyticsInsightConfig & { id: string };
+export type WebAnalyticsInsightNormalized = Omit<
+  WebAnalyticsInsightConfig,
+  keyof WebAnalyticsInsightPlacement
+> & { id: string } & {
+  [K in keyof WebAnalyticsInsightPlacement]?: NonNullable<WebAnalyticsInsightPlacement[K]>;
+};
+
+export type WebAnalyticsViewNormalized = {
+  id: string;
+  name: string;
+  traffic: boolean;
+  sections: { id: string; title: string; collapsed: boolean }[];
+};
+
+export type WebAnalyticsLayoutNormalized = {
+  views: WebAnalyticsViewNormalized[];
+  insights: WebAnalyticsInsightNormalized[];
+};
 
 export class WebAnalyticsSiteNormalized {
   id: string;

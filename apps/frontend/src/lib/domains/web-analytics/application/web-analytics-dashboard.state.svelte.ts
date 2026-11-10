@@ -4,13 +4,25 @@ import type {
   WebAnalyticsBreakdownRow,
   WebAnalyticsInsight,
   WebAnalyticsInsightConfig,
+  WebAnalyticsInsightPlacement,
+  WebAnalyticsInsights,
   WebAnalyticsRange,
   WebAnalyticsReport,
   WebAnalyticsSite,
   WebAnalyticsStatus,
+  WebAnalyticsView,
+  WebAnalyticsViewInput,
   WebAnalyticsVisitor,
   WebAnalyticsVisitorEvent,
 } from '../domain/web-analytics';
+import {
+  applyArrangement,
+  dropArrangement,
+  stepArrangement,
+  type Arrangement,
+  type DropTarget,
+  type ViewLayout,
+} from '../domain/web-analytics-layout';
 import { WebAnalyticsService } from '../infrastructure/web-analytics.service';
 
 export class WebAnalyticsDashboardState {
@@ -147,14 +159,20 @@ export class WebAnalyticsInsightState<T> {
 }
 
 export class WebAnalyticsInsightsState {
+  public views = $state<WebAnalyticsView[]>([]);
   public insights = $state<WebAnalyticsInsight[] | null>(null);
   public error = $state<string | null>(null);
+  private sequence = 0;
 
   constructor(private readonly clusterId: string) {}
 
+  public get ids(): string[] {
+    return (this.insights ?? []).map((insight) => insight.id);
+  }
+
   public async load(): Promise<void> {
     try {
-      this.insights = await WebAnalyticsService.readInsights(this.clusterId);
+      this.take(await WebAnalyticsService.readInsights(this.clusterId));
       this.error = null;
     } catch (error) {
       this.error =
@@ -185,6 +203,11 @@ export class WebAnalyticsInsightsState {
     );
   }
 
+  public async saveViews(views: WebAnalyticsViewInput[]): Promise<void> {
+    this.take(await WebAnalyticsService.saveViews(this.clusterId, views));
+    this.error = null;
+  }
+
   public async remove(id: string): Promise<void> {
     try {
       await WebAnalyticsService.deleteInsight(this.clusterId, id);
@@ -198,23 +221,63 @@ export class WebAnalyticsInsightsState {
     }
   }
 
-  public async move(id: string, offset: number): Promise<void> {
-    const before = this.insights ?? [];
-    const from = before.findIndex((insight) => insight.id === id);
-    const to = from + offset;
-    if (from < 0 || to < 0 || to >= before.length) return;
-    const next = [...before];
-    next.splice(to, 0, ...next.splice(from, 1));
-    this.insights = next;
+  public async step(
+    layout: ViewLayout,
+    id: string,
+    offset: -1 | 1,
+  ): Promise<void> {
+    await this.arrange(
+      stepArrangement(layout, this.ids, id, offset),
+      'Could not move the insight.',
+    );
+  }
+
+  public async drop(
+    layout: ViewLayout,
+    id: string,
+    target: DropTarget,
+  ): Promise<void> {
+    await this.arrange(
+      dropArrangement(layout, this.ids, id, target),
+      'Could not move the insight.',
+    );
+  }
+
+  public async place(
+    id: string,
+    placement: WebAnalyticsInsightPlacement,
+  ): Promise<void> {
+    await this.arrange(
+      { placements: [{ id, ...placement }] },
+      'Could not update the insight.',
+    );
+  }
+
+  private async arrange(
+    arrangement: Arrangement | null,
+    failure: string,
+  ): Promise<void> {
+    if (!arrangement || !this.insights) return;
+    const before = this.insights;
+    const sequence = ++this.sequence;
+    this.insights = applyArrangement(before, arrangement);
     try {
-      this.insights = await WebAnalyticsService.reorderInsights(
+      const layout = await WebAnalyticsService.reorderInsights(
         this.clusterId,
-        next.map((insight) => insight.id),
+        arrangement,
       );
+      if (sequence !== this.sequence) return;
+      this.take(layout);
       this.error = null;
     } catch (error) {
+      if (sequence !== this.sequence) return;
       this.insights = before;
-      this.error = readHttpErrorMessage(error) ?? 'Could not move the insight.';
+      this.error = readHttpErrorMessage(error) ?? failure;
     }
+  }
+
+  private take(layout: WebAnalyticsInsights): void {
+    this.views = layout.views;
+    this.insights = layout.insights;
   }
 }

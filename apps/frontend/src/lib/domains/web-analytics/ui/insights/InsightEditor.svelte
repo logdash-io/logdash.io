@@ -6,31 +6,45 @@
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
   import { CloseIcon } from '@logdash/hyper-ui/icons';
-  import { Button, Input, Select } from '@logdash/hyper-ui/presentational';
+  import {
+    Button,
+    Input,
+    Select,
+    Tab,
+    Tabs,
+  } from '@logdash/hyper-ui/presentational';
   import { untrack } from 'svelte';
   import { WebAnalyticsInsightState } from '../../application/web-analytics-dashboard.state.svelte';
   import type {
     WebAnalyticsBreakdownRow,
+    WebAnalyticsChartType,
     WebAnalyticsFunnelLayout,
     WebAnalyticsFunnelMode,
     WebAnalyticsInsight,
     WebAnalyticsInsightBucket,
     WebAnalyticsInsightConfig,
-    WebAnalyticsInsightType,
     WebAnalyticsSchema,
+    WebAnalyticsView,
   } from '../../domain/web-analytics';
   import {
     defaultBucket,
     FUNNEL_LAYOUTS,
     INSIGHT_DAYS,
     INSIGHT_EVENT_LIMITS,
+    INSIGHT_TABS,
     INSIGHT_TYPES,
     insightConfig,
     insightDraft,
     insightProblem,
     stepKind,
+    tabbedConfig,
+    tabbedDraft,
     withEventCount,
   } from '../../domain/web-analytics-insight';
+  import {
+    dashboardViews,
+    insightView,
+  } from '../../domain/web-analytics-layout';
   import { WebAnalyticsService } from '../../infrastructure/web-analytics.service';
   import DetailsDialog from '../breakdown/DetailsDialog.svelte';
   import InsightFilters from './InsightFilters.svelte';
@@ -39,6 +53,8 @@
     clusterId: string;
     isOpen: boolean;
     insight: WebAnalyticsInsight | null;
+    views: WebAnalyticsView[];
+    viewId: string;
     onclose: () => void;
     onsave: (
       config: WebAnalyticsInsightConfig,
@@ -46,7 +62,8 @@
     ) => Promise<void>;
   };
 
-  const { clusterId, isOpen, insight, onclose, onsave }: Props = $props();
+  const { clusterId, isOpen, insight, views, viewId, onclose, onsave }: Props =
+    $props();
 
   const MAX_STEPS = 8;
   const SCHEMA_DAYS = 90;
@@ -64,7 +81,11 @@
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const id = $props.id();
 
-  let draft = $state(insightDraft());
+  let cardTitle = $state('');
+  let drafts = $state([insightDraft()]);
+  let active = $state(0);
+  let viewChoice = $state('');
+  let sectionChoice = $state('');
   let saving = $state(false);
   let error = $state<string | null>(null);
 
@@ -86,8 +107,19 @@
     ),
   );
 
-  const config = $derived(insightConfig(draft));
+  const draft = $derived(drafts[active]);
+  const choices = $derived(dashboardViews(views));
+  const sections = $derived(
+    choices.find((view) => view.id === viewChoice)?.sections ?? [],
+  );
+  const config = $derived(
+    tabbedConfig(cardTitle, drafts, {
+      view: viewChoice || null,
+      section: sectionChoice || null,
+    }),
+  );
   const problem = $derived(insightProblem(config));
+  const tabbed = $derived(drafts.length > 1);
   const limits = $derived(INSIGHT_EVENT_LIMITS[draft.type]);
   const people = $derived(draft.type === 'funnel' && draft.mode === 'people');
   const eventNames = $derived(
@@ -104,7 +136,12 @@
   $effect(() => {
     if (!isOpen) return;
     untrack(() => {
-      draft = insightDraft(insight ?? undefined);
+      const start = tabbedDraft(insight ?? undefined);
+      cardTitle = start.title;
+      drafts = start.drafts;
+      active = 0;
+      viewChoice = insight ? insightView(views, insight) : viewId;
+      sectionChoice = insight?.section ?? '';
       error = null;
       void schema.load();
     });
@@ -125,7 +162,7 @@
     ].sort();
   }
 
-  function texts(type: WebAnalyticsInsightType): {
+  function texts(type: WebAnalyticsChartType): {
     events: string;
     add: string;
     hint: string;
@@ -160,10 +197,28 @@
     };
   }
 
-  function onType(type: WebAnalyticsInsightType): void {
+  function onType(type: WebAnalyticsChartType): void {
     draft.type = type;
     draft.events = withEventCount(draft.events, type);
     draft.bucket = null;
+  }
+
+  function onAddTab(): void {
+    if (!tabbed) cardTitle = draft.title;
+    drafts.push({ ...insightDraft(insightConfig(draft)), title: '' });
+    active = drafts.length - 1;
+  }
+
+  function onRemoveTab(): void {
+    drafts.splice(active, 1);
+    active = Math.min(active, drafts.length - 1);
+    if (!tabbed && !drafts[0].title.trim()) drafts[0].title = cardTitle;
+  }
+
+  function onView(next: string): void {
+    viewChoice = next;
+    if (!sections.some((section) => section.id === sectionChoice))
+      sectionChoice = '';
   }
 
   function onMode(mode: WebAnalyticsFunnelMode): void {
@@ -244,6 +299,42 @@
     <div
       class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-5"
     >
+      {#if tabbed}
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium">Card name</span>
+          <Input
+            bind:value={cardTitle}
+            class="w-full"
+            maxlength={80}
+            placeholder="Setup time"
+          />
+        </label>
+      {/if}
+
+      {#if tabbed}
+        <div class="flex flex-wrap items-center gap-2">
+          <Tabs size="sm" boxed aria-label="Charts in this card">
+            {#each drafts as tab, index (index)}
+              <Tab active={index === active} onclick={() => (active = index)}>
+                {tab.title.trim() || `Tab ${index + 1}`}
+              </Tab>
+            {/each}
+          </Tabs>
+          {#if drafts.length < INSIGHT_TABS.max}
+            <IconButton label="Add tab" onclick={onAddTab}>
+              <PlusIcon class="size-3.5" />
+            </IconButton>
+          {/if}
+          <IconButton
+            label="Remove this tab"
+            disabled={drafts.length <= 1}
+            onclick={onRemoveTab}
+          >
+            <CloseIcon class="size-3.5" />
+          </IconButton>
+        </div>
+      {/if}
+
       <div class="flex flex-wrap items-center justify-between gap-3">
         <SegmentedControl
           size="xs"
@@ -261,11 +352,23 @@
             onChange={onMode}
           />
         {/if}
+        {#if !tabbed}
+          <button
+            type="button"
+            class="text-fg-tertiary hover:text-fg-default transition-ink focus-visible:outline-brand ml-auto flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-sm focus-visible:outline-2"
+            onclick={onAddTab}
+          >
+            <PlusIcon class="size-3.5" />
+            Add a tab
+          </button>
+        {/if}
       </div>
 
       <div class="flex gap-3">
         <label class="flex min-w-0 flex-1 flex-col gap-1.5">
-          <span class="text-sm font-medium">Name</span>
+          <span class="text-sm font-medium">
+            {tabbed ? 'Tab name' : 'Name'}
+          </span>
           <Input
             bind:value={draft.title}
             class="w-full"
@@ -478,6 +581,32 @@
             placeholder="cohort"
           />
         </label>
+      {/if}
+
+      {#if choices.length > 1 || sections.length}
+        <div class="flex gap-3">
+          {#if choices.length > 1}
+            <label class="flex min-w-0 flex-1 flex-col gap-1.5">
+              <span class="text-sm font-medium">View</span>
+              <Select bind:value={() => viewChoice, onView} class="w-full">
+                {#each choices as choice (choice.id)}
+                  <option value={choice.id}>{choice.name}</option>
+                {/each}
+              </Select>
+            </label>
+          {/if}
+          {#if sections.length}
+            <label class="flex min-w-0 flex-1 flex-col gap-1.5">
+              <span class="text-sm font-medium">Section</span>
+              <Select bind:value={sectionChoice} class="w-full">
+                <option value="">No section</option>
+                {#each sections as section (section.id)}
+                  <option value={section.id}>{section.title}</option>
+                {/each}
+              </Select>
+            </label>
+          {/if}
+        </div>
       {/if}
     </div>
 

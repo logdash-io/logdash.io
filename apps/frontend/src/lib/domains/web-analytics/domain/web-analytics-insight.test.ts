@@ -1,15 +1,22 @@
 import { expect, test } from '@playwright/test';
 import { wilson } from './day-analytics';
-import type { WebAnalyticsInsightCohort } from './web-analytics';
+import type {
+  WebAnalyticsChartConfig,
+  WebAnalyticsInsightCohort,
+  WebAnalyticsInsightConfig,
+} from './web-analytics';
 import {
   cohortTable,
   commonPrefix,
   funnelRows,
   insightConfig,
+  insightCharts,
   insightDraft,
   insightProblem,
   insightSummary,
   insightWide,
+  tabbedConfig,
+  tabbedDraft,
   withEventCount,
 } from './web-analytics-insight';
 
@@ -223,7 +230,6 @@ test('a config names its first problem', () => {
 test('a summary names the filters every event must match', () => {
   expect(
     insightSummary({
-      id: 'a',
       type: 'funnel',
       title: 'Install journey',
       days: 90,
@@ -234,7 +240,6 @@ test('a summary names the filters every event must match', () => {
   ).toBe('Events funnel, last 90 days, cohort ≥ 2026-10-01');
   expect(
     insightSummary({
-      id: 'b',
       type: 'distribution',
       title: 'L30',
       days: 90,
@@ -248,4 +253,75 @@ test('a summary names the filters every event must match', () => {
       filters: [],
     }),
   ).toBe('active_days, last 90 days, month = 2026-10');
+});
+
+const trend = (title: string, name: string): WebAnalyticsChartConfig => ({
+  type: 'trend',
+  title,
+  days: 30,
+  bucket: 'day',
+  events: [{ name, filters: [] }],
+  filters: [],
+});
+
+const tabs = (...titles: string[]): WebAnalyticsInsightConfig => ({
+  type: 'tabs',
+  title: 'Setup time',
+  days: 30,
+  tabs: titles.map((title) => trend(title, 'setup_finished')),
+});
+
+test('a tabbed card checks its tabs one by one', () => {
+  expect(insightProblem(tabs('Start'))).toBe('Add at least 2 tabs');
+  expect(insightProblem(tabs('Start', ''))).toBe('Name tab 2');
+  expect(insightProblem(tabs('Start', 'start'))).toBe(
+    'Give each tab its own name',
+  );
+  const broken = tabs('Start', 'Finish');
+  broken.tabs![1].events = [{ name: '', filters: [] }];
+  expect(insightProblem(broken)).toBe('Finish: Pick an event for each row');
+  expect(insightProblem(tabs('Start', 'Finish'))).toBeNull();
+  expect(insightProblem({ ...tabs('Start', 'Finish'), title: '' })).toBe(
+    'Name the insight',
+  );
+});
+
+test('a card is as wide as its widest tab', () => {
+  expect(insightWide(tabs('Start', 'Finish'))).toBe(false);
+  const wide = tabs('Start', 'Cohorts');
+  wide.tabs![1] = { ...wide.tabs![1], type: 'cohorts' };
+  expect(insightWide(wide)).toBe(true);
+});
+
+test('a plain card is one chart and a tabbed card is its tabs', () => {
+  const plain = trend('Runs', 'run_finished');
+  expect(insightCharts(plain)).toEqual([plain]);
+  expect(
+    insightCharts(tabs('Start', 'Finish')).map((tab) => tab.title),
+  ).toEqual(['Start', 'Finish']);
+});
+
+test('one draft stays a plain card and two or more become tabs', () => {
+  const plain = trend('Runs', 'run_finished');
+  const { title, drafts } = tabbedDraft(plain);
+  expect(title).toBe('Runs');
+  expect(drafts).toHaveLength(1);
+  expect(tabbedConfig(title, drafts, { view: 'v1' })).toEqual({
+    ...insightConfig(drafts[0]),
+    view: 'v1',
+  });
+
+  const split = tabbedDraft(tabs('Start', 'Finish'));
+  expect(split.title).toBe('Setup time');
+  expect(split.drafts.map((draft) => draft.title)).toEqual(['Start', 'Finish']);
+  const config = tabbedConfig(' Setup time ', split.drafts, {
+    section: 's1',
+    hidden: null,
+  });
+  expect(config.type).toBe('tabs');
+  expect(config.title).toBe('Setup time');
+  expect(config.section).toBe('s1');
+  expect(config.hidden).toBeNull();
+  expect(config.tabs?.map((tab) => tab.title)).toEqual(['Start', 'Finish']);
+  expect(tabbedDraft().drafts).toHaveLength(1);
 });

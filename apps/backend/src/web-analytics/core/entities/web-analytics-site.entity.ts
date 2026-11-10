@@ -4,9 +4,11 @@ import {
   WebAnalyticsFunnelLayout,
   WebAnalyticsFunnelMode,
   WebAnalyticsInsightBucket,
+  WebAnalyticsInsightConfig,
   WebAnalyticsInsightEvent,
   WebAnalyticsInsightFilter,
   WebAnalyticsInsightType,
+  WebAnalyticsInsightWidth,
 } from '../dto/web-analytics-insight.body';
 
 @Schema()
@@ -45,9 +47,53 @@ export class WebAnalyticsInsightEntity {
 
   @Prop()
   binSize?: number;
+
+  @Prop({ type: [Object], default: undefined })
+  tabs?: WebAnalyticsInsightConfig[];
+
+  @Prop()
+  view?: string;
+
+  @Prop()
+  section?: string;
+
+  @Prop()
+  hidden?: boolean;
+
+  @Prop()
+  width?: WebAnalyticsInsightWidth;
 }
 
 export const WebAnalyticsInsightSchema = SchemaFactory.createForClass(WebAnalyticsInsightEntity);
+
+@Schema()
+export class WebAnalyticsSectionEntity {
+  _id: Types.ObjectId;
+
+  @Prop({ required: true })
+  title: string;
+
+  @Prop({ default: false })
+  collapsed: boolean;
+}
+
+export const WebAnalyticsSectionSchema = SchemaFactory.createForClass(WebAnalyticsSectionEntity);
+
+@Schema()
+export class WebAnalyticsViewEntity {
+  _id: Types.ObjectId;
+
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ default: false })
+  traffic: boolean;
+
+  @Prop({ type: [WebAnalyticsSectionSchema], default: [] })
+  sections: WebAnalyticsSectionEntity[];
+}
+
+export const WebAnalyticsViewSchema = SchemaFactory.createForClass(WebAnalyticsViewEntity);
 
 @Schema({ collection: 'webAnalyticsSites', timestamps: true })
 export class WebAnalyticsSiteEntity {
@@ -64,6 +110,9 @@ export class WebAnalyticsSiteEntity {
 
   @Prop({ type: [WebAnalyticsInsightSchema], default: [] })
   insights?: WebAnalyticsInsightEntity[];
+
+  @Prop({ type: [WebAnalyticsViewSchema], default: [] })
+  views?: WebAnalyticsViewEntity[];
 }
 
 export const WebAnalyticsSiteSchema = SchemaFactory.createForClass(WebAnalyticsSiteEntity);

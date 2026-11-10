@@ -3,8 +3,11 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { WebAnalyticsSiteEntity } from '../core/entities/web-analytics-site.entity';
-import { WebAnalyticsInsightNormalized } from '../core/entities/web-analytics-site.interface';
-import { WebAnalyticsInsightSerializer } from '../core/entities/web-analytics-site.serializer';
+import {
+  WebAnalyticsInsightNormalized,
+  WebAnalyticsLayoutNormalized,
+} from '../core/entities/web-analytics-site.interface';
+import { WebAnalyticsSiteSerializer } from '../core/entities/web-analytics-site.serializer';
 import {
   WebAnalyticsFunnelMode,
   WebAnalyticsInsightConfig,
@@ -60,15 +63,13 @@ export class WebAnalyticsInsightReadService {
     private readonly read: WebAnalyticsReadService,
   ) {}
 
-  public async readInsights(clusterId: string): Promise<WebAnalyticsInsightNormalized[]> {
+  public async readLayout(clusterId: string): Promise<WebAnalyticsLayoutNormalized> {
     const site = await this.model
       .findOne({ clusterId })
-      .select('insights')
+      .select('insights views')
       .lean<WebAnalyticsSiteEntity>()
       .exec();
-    return (site?.insights ?? []).map((insight) =>
-      WebAnalyticsInsightSerializer.normalize(insight),
-    );
+    return WebAnalyticsSiteSerializer.normalizeLayout(site);
   }
 
   public async readInsightOrThrow(
@@ -76,7 +77,7 @@ export class WebAnalyticsInsightReadService {
     insightId: string,
   ): Promise<WebAnalyticsInsightNormalized> {
     const insight = Types.ObjectId.isValid(insightId)
-      ? (await this.readInsights(clusterId)).find((entry) => entry.id === insightId)
+      ? (await this.readLayout(clusterId)).insights.find((entry) => entry.id === insightId)
       : undefined;
     if (!insight) throw new NotFoundException('Insight not found');
     return insight;
@@ -111,6 +112,8 @@ export class WebAnalyticsInsightReadService {
     tz: string,
     retentionDays: number,
   ): Promise<WebAnalyticsInsightResult> {
+    if (insight.type === WebAnalyticsInsightType.Tabs)
+      throw new BadRequestException('Run each tab on its own');
     const query = this.window(insight.days, tz, insight.bucket);
     const scope = this.read.scope(clusterId, query, retentionDays);
     const range = {

@@ -24,6 +24,7 @@ import {
   ReorderWebAnalyticsInsightsBody,
   WebAnalyticsInsightBody,
 } from '../../../web-analytics/core/dto/web-analytics-insight.body';
+import { UpdateWebAnalyticsViewsBody } from '../../../web-analytics/core/dto/web-analytics-views.body';
 
 export class McpClusterArgs {
   @IsMongoId()
@@ -49,6 +50,11 @@ export class McpRunInsightArgs extends IntersectionType(
 export class McpReorderInsightsArgs extends IntersectionType(
   McpClusterArgs,
   ReorderWebAnalyticsInsightsBody,
+) {}
+
+export class McpSetViewsArgs extends IntersectionType(
+  McpClusterArgs,
+  UpdateWebAnalyticsViewsBody,
 ) {}
 
 export class McpRangeArgs extends IntersectionType(

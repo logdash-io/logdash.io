@@ -108,19 +108,29 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
           '`retention`',
           'Retention, daily and monthly active users and comebacks of signed-in users.',
         ],
-        ['`list_insights`', 'The saved insights of the dashboard, in order.'],
-        ['`run_insight`', 'The current result of one saved insight.'],
+        [
+          '`list_insights`',
+          'The views and sections of the dashboard, and its saved insights in order, each with its view, section, hidden flag and width.',
+        ],
+        [
+          '`run_insight`',
+          'The current result of one saved insight, or of each tab of a tabbed insight.',
+        ],
         [
           '`create_insight`',
-          'Adds an insight to the end of the dashboard, up to 50 per domain. Needs **Write**.',
+          'Adds an insight to the end of the dashboard, up to 50 per domain, in the view and section you name. Needs **Write**.',
         ],
         [
           '`update_insight`',
-          'Replaces the setup of an insight. Needs **Write**.',
+          'Replaces the setup of an insight. Its view, section, hidden flag and width stay as they are unless you pass them. Needs **Write**.',
         ],
         [
           '`reorder_insights`',
-          'Sets the order of the insights. Needs **Write**.',
+          'Sets the order of the insights, and the view, section, hidden flag and width of any of them, in one call. Needs **Write**.',
+        ],
+        [
+          '`set_views`',
+          'Replaces the views of the dashboard and the sections of each view. Needs **Write**.',
         ],
         ['`delete_insight`', 'Removes an insight. Needs **Write**.'],
       ],
@@ -128,6 +138,20 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
     {
       type: 'paragraph',
       text: 'With **Read** only, the agent does not see the tools that need **Write**.',
+    },
+    { type: 'heading', text: 'Lay out a dashboard' },
+    {
+      type: 'paragraph',
+      text: 'A dashboard has views, and each view has sections that hold cards. The agent reads the IDs of them with `list_insights`, and sets them with `set_views`, `create_insight`, `update_insight` and `reorder_insights`.',
+    },
+    {
+      type: 'list',
+      items: [
+        '`set_views` takes the whole list of views, and the first one opens by default. Pass the ID of an existing view or section to keep or rename it, and leave the ID out to add one. A view with `traffic` set to `true` shows the built-in traffic cards, and no other view does. A section with `collapsed` set to `true` starts closed.',
+        'An insight takes `view` and `section` IDs, `hidden` to hide the card, and `width` set to `half` or `full`. An insight without a view shows in the first view, so existing insights need no change.',
+        'To change the placement of insights, pass `placements` to `reorder_insights`. It changes only the insights it lists, and leaves a field alone when you omit it. A `null` clears the field.',
+        'A tabbed insight has the type `tabs` and 2 to 6 chart setups in `tabs`. The title of each tab is its label.',
+      ],
     },
     { type: 'heading', text: 'Measure a product loop' },
     {

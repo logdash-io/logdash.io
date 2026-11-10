@@ -10,11 +10,32 @@ export const page: DocPage = {
   blocks: [
     {
       type: 'paragraph',
-      text: 'Insights answer questions that span weeks or months. Add them with **Add insight** below the day. Everyone on the domain sees the same cards in the same order, and each card has its own period. Edit, move or remove a card from its menu.',
+      text: 'Insights answer questions that span weeks or months. Add them with **Add insight** below the day. Everyone on the domain sees the same cards in the same layout, and each card has its own period. Edit, move or remove a card from its menu.',
     },
     {
       type: 'callout',
       text: 'Your coding agent can build insights for you through the [MCP server](/docs/mcp), such as "add a funnel from first open to first merge, and a weekly cohort table".',
+    },
+    { type: 'heading', text: 'Arrange your dashboard' },
+    {
+      type: 'paragraph',
+      text: 'Split many cards into views and sections, and decide which cards show and how wide they are. Everyone on the domain sees the same layout.',
+    },
+    {
+      type: 'list',
+      items: [
+        '**Views** are dashboards of their own, such as Company, Traffic and Product, with a tab each above the cards. Open **Layout** to add, rename, reorder or remove them. The first view opens by default and holds every card that has no view.',
+        '**Sections** group the cards of a view under a title. Press a title to close or open its cards. A section marked as collapsed starts closed.',
+        '**Traffic cards** are the day, sources and landing pages. Tick **Show visitors, sources and the other traffic cards** on the views that should show them.',
+        'To **hide** a card, press the eye on its header. **Hidden** above the cards lists them, and **Show** brings one back.',
+        'To **reorder** cards, drag one by its grip onto another card, or onto a section. **Move earlier** and **Move later** in the card menu do the same one step at a time, and **Move to** sends a card to another view.',
+        'To **resize** a card, press the arrows on its header to switch between half and full width. A card with no width of its own is wide when it is a cohort table or a funnel of columns with more than 3 steps.',
+      ],
+    },
+    { type: 'heading', text: 'Tabbed cards' },
+    {
+      type: 'paragraph',
+      text: 'One card can hold several charts behind tabs, so related lines sit together. In the editor, press **Add a tab**. Each tab is a full insight with its own name, type and period, and the name of the tab is its label. A card takes 2 to 6 tabs.',
     },
     { type: 'heading', text: 'Funnel' },
     {

@@ -33,7 +33,13 @@ describe('MCP server', () => {
     'list_insights',
     'run_insight',
   ];
-  const WRITE_TOOLS = ['create_insight', 'update_insight', 'reorder_insights', 'delete_insight'];
+  const WRITE_TOOLS = [
+    'create_insight',
+    'update_insight',
+    'reorder_insights',
+    'set_views',
+    'delete_insight',
+  ];
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
@@ -214,6 +220,28 @@ describe('MCP server', () => {
       ['person_funnel', { clusterId, steps: ['page:/', 'click:x'] }, 'steps must match'],
       ['create_insight', { clusterId, type: 'trend', title: ' ' }, 'title must not be blank'],
       ['delete_insight', { clusterId, insightId: 'x' }, 'insightId must be a mongodb id'],
+      [
+        'create_insight',
+        { clusterId, type: 'trend', title: 'Days', events: [{ name: 'a' }], view: 'x' },
+        'view must be a mongodb id',
+      ],
+      [
+        'create_insight',
+        { clusterId, type: 'trend', title: 'Days', events: [{ name: 'a' }], width: 'wide' },
+        'width must be one of',
+      ],
+      [
+        'create_insight',
+        { clusterId, type: 'tabs', title: 'Tabs', tabs: [{ type: 'trend', title: 'One' }] },
+        'A tabs card takes 2 to 6 tabs',
+      ],
+      ['reorder_insights', { clusterId, placements: [{ id: 'x' }] }, 'placements.0.id must be'],
+      [
+        'set_views',
+        { clusterId, views: [{ name: ' ' }] },
+        'views.0.name must be longer than or equal to 1',
+      ],
+      ['set_views', { clusterId }, 'views must be an array'],
     ] as const) {
       const result = await call(key, name, args);
       expect(result.isError).toBe(true);
@@ -343,6 +371,7 @@ describe('MCP server', () => {
             origins: ['https://example.com', 'https://app.malini'],
             goals: [],
             insights: 0,
+            views: 0,
           },
           events: expect.arrayContaining([
             { name: 'malini_desktop_month', count: 4, properties: ['active_days', 'month'] },
@@ -475,6 +504,7 @@ describe('MCP server', () => {
     });
     expect(deleted.json).toEqual({ deleted: journey.id });
     expect((await call(key, 'list_insights', { clusterId })).json).toEqual({
+      views: [],
       insights: [expect.objectContaining({ id: l30.id, title: 'L30 of September' })],
     });
     expect(await call(key, 'delete_insight', { clusterId, insightId: journey.id })).toMatchObject({
@@ -482,6 +512,148 @@ describe('MCP server', () => {
       text: 'Insight not found',
     });
     await bootstrap.utils.auditLogUtils.assertAuditLog({ relatedEntityId: l30.id as string });
+  });
+
+  it('lays out a dashboard of views, sections, tabs and hidden cards', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    await configure(setup.cluster.id, setup.token);
+    const key = await createKey(setup.token, WRITE, ALL);
+    const clusterId = setup.cluster.id;
+    const trend = { type: 'trend', title: 'Days', events: [{ name: 'malini_desktop_day' }] };
+    const funnel = {
+      type: 'funnel',
+      title: 'Install',
+      events: [{ name: 'malini_desktop_first_open' }, { name: 'malini_desktop_first_merge' }],
+    };
+
+    // when
+    const laidOut = (
+      await call(key, 'set_views', {
+        clusterId,
+        views: [
+          {
+            name: 'Company',
+            sections: [{ title: 'Activation', collapsed: true }, { title: 'Usage' }],
+          },
+          { name: 'Traffic', traffic: true },
+        ],
+      })
+    ).json as { views: { id: string; traffic: boolean; sections: { id: string }[] }[] };
+    const [company, traffic] = laidOut.views;
+    const placed = (
+      await call(key, 'create_insight', {
+        clusterId,
+        ...trend,
+        view: company.id,
+        section: company.sections[0].id,
+        width: 'full',
+      })
+    ).json;
+    const tabbed = (
+      await call(key, 'create_insight', {
+        clusterId,
+        type: 'tabs',
+        title: 'Journeys',
+        tabs: [funnel, trend],
+        view: traffic.id,
+      })
+    ).json;
+    const plain = (await call(key, 'create_insight', { clusterId, ...funnel })).json;
+    const kept = await call(key, 'update_insight', {
+      clusterId,
+      insightId: placed.id,
+      ...trend,
+      title: 'Active days',
+    });
+    const cleared = await call(key, 'update_insight', {
+      clusterId,
+      insightId: placed.id,
+      ...trend,
+      section: null,
+      width: null,
+    });
+    const reordered = await call(key, 'reorder_insights', {
+      clusterId,
+      ids: [plain.id, tabbed.id, placed.id],
+      placements: [
+        { id: plain.id, view: company.id, section: company.sections[1].id },
+        { id: tabbed.id, hidden: true },
+      ],
+    });
+    const ran = (await call(key, 'run_insight', { clusterId, insightId: tabbed.id })).json;
+    const renamed = (
+      await call(key, 'set_views', {
+        clusterId,
+        views: [{ id: company.id, name: 'Business' }],
+      })
+    ).json;
+
+    // then
+    expect(laidOut.views).toMatchObject([
+      {
+        name: 'Company',
+        traffic: false,
+        sections: [
+          { title: 'Activation', collapsed: true },
+          { title: 'Usage', collapsed: false },
+        ],
+      },
+      { name: 'Traffic', traffic: true, sections: [] },
+    ]);
+    expect(placed).toMatchObject({
+      view: company.id,
+      section: company.sections[0].id,
+      width: 'full',
+    });
+    expect(tabbed).toMatchObject({
+      type: 'tabs',
+      view: traffic.id,
+      tabs: [{ title: 'Install' }, { title: 'Days' }],
+    });
+    expect(kept.json).toMatchObject({
+      title: 'Active days',
+      view: company.id,
+      section: company.sections[0].id,
+      width: 'full',
+    });
+    expect(cleared.json).toMatchObject({ view: company.id });
+    expect(cleared.json).not.toHaveProperty('section');
+    expect(cleared.json).not.toHaveProperty('width');
+    expect(reordered.json).toMatchObject({
+      insights: [
+        { id: plain.id, view: company.id, section: company.sections[1].id },
+        { id: tabbed.id, hidden: true, view: traffic.id },
+        { id: placed.id, view: company.id },
+      ],
+    });
+    expect(ran).toMatchObject({
+      id: tabbed.id,
+      tabs: [
+        {
+          title: 'Install',
+          type: 'funnel',
+          steps: [{ name: 'malini_desktop_first_open' }, { name: 'malini_desktop_first_merge' }],
+        },
+        { title: 'Days', type: 'trend' },
+      ],
+    });
+    expect(renamed).toMatchObject({
+      views: [{ id: company.id, name: 'Business', sections: [] }],
+      insights: [{ id: plain.id }, { id: tabbed.id }, { id: placed.id }],
+    });
+    expect(
+      await call(key, 'set_views', { clusterId, views: [{ name: 'A' }, { name: 'a' }] }),
+    ).toMatchObject({ isError: true });
+    expect(
+      await call(key, 'reorder_insights', {
+        clusterId,
+        placements: [{ id: plain.id, view: '0'.repeat(24) }],
+      }),
+    ).toMatchObject({ isError: true });
+    expect((await call(key, 'list_insights', { clusterId })).json).toMatchObject({
+      views: [{ name: 'Business' }],
+    });
   });
 
   async function createKey(
