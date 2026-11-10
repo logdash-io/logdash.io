@@ -15,6 +15,7 @@ import {
   WebAnalyticsGranularity,
 } from '../../web-analytics/core/dto/read-web-analytics.query';
 import {
+  MAX_WEB_ANALYTICS_INSIGHT_LABEL,
   MAX_WEB_ANALYTICS_INSIGHT_TABS,
   MAX_WEB_ANALYTICS_INSIGHTS,
   normalizeWebAnalyticsInsight,
@@ -136,10 +137,27 @@ const PROPERTY_FILTERS = {
     'Event property filters. gt, gte, lt and lte compare numbers when the value is a number, and text otherwise, so YYYY-MM-DD dates compare in order',
 };
 
+const BUCKET = { type: 'string', enum: [...WEB_ANALYTICS_INSIGHT_BUCKETS] };
+
+const LINE = {
+  label: {
+    type: 'string',
+    minLength: 1,
+    maxLength: MAX_WEB_ANALYTICS_INSIGHT_LABEL,
+    description: 'Trends only: the name of the line, the event name by default',
+  },
+  bucket: {
+    ...BUCKET,
+    description:
+      'Trends only: the bucket this line counts per, the bucket of the insight by default. Lines with different buckets share a day axis and a line repeats its count on each day of its bucket',
+  },
+};
+
 const events = (
   minItems: number,
   maxItems: number,
   description: string,
+  lines = false,
 ): Record<string, unknown> => ({
   type: 'array',
   minItems,
@@ -148,13 +166,12 @@ const events = (
     {
       name: { type: 'string', pattern: EVENT_NAME.source },
       filters: PROPERTY_FILTERS,
+      ...(lines ? LINE : {}),
     },
     ['name'],
   ),
   description,
 });
-
-const BUCKET = { type: 'string', enum: [...WEB_ANALYTICS_INSIGHT_BUCKETS] };
 
 const STEPS = {
   type: 'array',
@@ -190,11 +207,13 @@ const CHART = {
     0,
     8,
     'Events funnel steps (2 to 8), trend series (1 to 5), the one distribution event, or the cohort start event then up to 7 later events',
+    true,
   ),
   filters: { ...PROPERTY_FILTERS, description: 'Property filters every event must match' },
   bucket: {
     ...BUCKET,
-    description: 'Trends: day (default), week or month. Cohorts: the row size, week by default',
+    description:
+      'Trends: the bucket of every line that has none of its own, day by default. Cohorts: the row size, week by default',
   },
   property: {
     type: 'string',
@@ -268,8 +287,6 @@ const formatJson = (value: unknown): string =>
 
 const percent = (part: number, whole: number): number | null =>
   whole ? (part / whole) * 100 : null;
-
-const sum = (values: number[]): number => values.reduce((total, value) => total + value, 0);
 
 const validationMessages = (errors: ValidationError[], path = ''): string[] =>
   errors.flatMap((error) => {
@@ -366,13 +383,13 @@ export class McpToolsService {
       name: 'trend',
       title: 'Event trend',
       description:
-        'Event counts per day, week or month for up to 5 series. Daily, weekly and monthly active counts come from markers sent once per period.',
+        'Event counts per day, week or month for up to 5 series. Daily, weekly and monthly active counts come from markers sent once per period. Each series can count per its own bucket, so one chart can hold the daily, weekly and monthly lines of a product. total is the sum of the buckets of a series.',
       action: Action.Read,
       args: McpTrendArgs,
       inputSchema: object(
         {
           clusterId: CLUSTER_ID,
-          events: events(1, 5, 'One series per event'),
+          events: events(1, 5, 'One series per event', true),
           filters: { ...PROPERTY_FILTERS, description: 'Filters every series must match' },
           bucket: { ...BUCKET, default: 'day' },
           days: DAYS,
@@ -484,7 +501,7 @@ export class McpToolsService {
     this.tool({
       name: 'create_insight',
       title: 'Save an insight',
-      description: `Adds an insight card to the end of the dashboard, up to ${MAX_WEB_ANALYTICS_INSIGHTS} per domain. Try it with the matching read tool first. Pass view, section, hidden and width to place it, with view and section ids from list_insights or set_views.`,
+      description: `Adds an insight card to the end of the dashboard, up to ${MAX_WEB_ANALYTICS_INSIGHTS} per domain. Try it with the matching read tool first. Pass view, section, hidden and width to place it, with view and section ids from list_insights or set_views. Give each trend line a label and its own bucket to show the daily, weekly and monthly lines of a product in one card.`,
       action: Action.Write,
       args: McpCreateInsightArgs,
       inputSchema: object({ clusterId: CLUSTER_ID, ...INSIGHT }, ['clusterId', 'type', 'title']),
@@ -853,7 +870,6 @@ export class McpToolsService {
       to: this.date(result.to, tz),
       steps: result.steps && this.funnelSteps(result.steps),
       times: result.times?.map((time) => this.date(time, tz)),
-      series: result.series?.map((series) => ({ ...series, total: sum(series.counts) })),
     };
   }
 

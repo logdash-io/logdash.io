@@ -68,6 +68,8 @@ export const MAX_WEB_ANALYTICS_INSIGHTS = 50;
 
 export const MAX_WEB_ANALYTICS_INSIGHT_TABS = 6;
 
+export const MAX_WEB_ANALYTICS_INSIGHT_LABEL = 40;
+
 export class WebAnalyticsInsightFilterBody {
   @ApiProperty({ example: 'cohort', description: 'Event property key' })
   @IsString()
@@ -106,6 +108,25 @@ export class WebAnalyticsInsightEventBody {
   @ValidateNested({ each: true })
   @Type(() => WebAnalyticsInsightFilterBody)
   filters: WebAnalyticsInsightFilterBody[] = [];
+
+  @ApiPropertyOptional({
+    example: 'Weekly active',
+    description: 'Trends only: the name of the line, the event name by default',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(MAX_WEB_ANALYTICS_INSIGHT_LABEL)
+  label?: string;
+
+  @ApiPropertyOptional({
+    enum: WEB_ANALYTICS_INSIGHT_BUCKETS,
+    description:
+      'Trends only: the bucket this line counts per, the bucket of the insight by default. Lines with different buckets share a day axis and a line repeats its count on each day of its bucket',
+  })
+  @IsOptional()
+  @IsIn(WEB_ANALYTICS_INSIGHT_BUCKETS)
+  bucket?: WebAnalyticsInsightBucket;
 }
 
 export class WebAnalyticsInsightPlacementBody {
@@ -237,7 +258,8 @@ export class WebAnalyticsInsightBody extends WebAnalyticsInsightPlacementBody {
 
   @ApiPropertyOptional({
     enum: WEB_ANALYTICS_INSIGHT_BUCKETS,
-    description: 'Trends: day by default. Cohorts: the cohort row size, week by default',
+    description:
+      'Trends: the bucket of every line that has none of its own, day by default. Cohorts: the cohort row size, week by default',
   })
   @IsOptional()
   @IsIn(WEB_ANALYTICS_INSIGHT_BUCKETS)
@@ -312,7 +334,12 @@ export type WebAnalyticsInsightFilter = {
   value: string;
 };
 
-export type WebAnalyticsInsightEvent = { name: string; filters: WebAnalyticsInsightFilter[] };
+export type WebAnalyticsInsightEvent = {
+  name: string;
+  filters: WebAnalyticsInsightFilter[];
+  label?: string;
+  bucket?: WebAnalyticsInsightBucket;
+};
 
 export type WebAnalyticsInsightPlacement = {
   view?: string | null;
@@ -363,10 +390,17 @@ function normalizeChart(body: WebAnalyticsInsightBody, nested: boolean): WebAnal
       );
     return { ...base, tabs: tabs.map((tab) => normalizeChart(tab, true)) };
   }
-  const events = (body.events ?? []).map((event) => ({
-    name: event.name,
-    filters: (event.filters ?? []).map(({ key, op, value }) => ({ key, op, value })),
-  }));
+  const trend = body.type === WebAnalyticsInsightType.Trend;
+  const events = (body.events ?? []).map((event): WebAnalyticsInsightEvent => {
+    const label = trend ? event.label?.trim() : undefined;
+    if (label === '') throw new BadRequestException('label must not be blank');
+    return {
+      name: event.name,
+      filters: (event.filters ?? []).map(({ key, op, value }) => ({ key, op, value })),
+      ...(label ? { label } : {}),
+      ...(trend && event.bucket ? { bucket: event.bucket } : {}),
+    };
+  });
   const filters = (body.filters ?? []).map(({ key, op, value }) => ({ key, op, value }));
   const count = (min: number, max: number, what: string): void => {
     if (events.length < min || events.length > max)
@@ -384,7 +418,7 @@ function normalizeChart(body: WebAnalyticsInsightBody, nested: boolean): WebAnal
     count(2, 8, 'events funnel');
     return { ...base, mode: WebAnalyticsFunnelMode.Events, layout, events, filters };
   }
-  if (body.type === WebAnalyticsInsightType.Trend) {
+  if (trend) {
     count(1, 5, 'trend');
     return { ...base, events, filters, bucket: body.bucket ?? WebAnalyticsGranularity.Day };
   }

@@ -215,6 +215,9 @@ describe('Web analytics insights', () => {
       { ...funnel, mode: 'people', steps: ['page:/'] },
       { type: 'distribution', title: 'L30', events: [{ name: 'malini_desktop_month' }] },
       { type: 'trend', title: 'Too many', events: Array(6).fill({ name: 'signup' }) },
+      { type: 'trend', title: 'Hours', events: [{ name: 'signup', bucket: 'hour' }] },
+      { type: 'trend', title: 'Blank', events: [{ name: 'signup', label: '   ' }] },
+      { type: 'trend', title: 'Long', events: [{ name: 'signup', label: 'x'.repeat(41) }] },
       { type: 'cohorts', title: ' ', events: funnel.events },
     ])
       expect((await send(setup.token, 'post', path, body)).status).toBe(400);
@@ -340,8 +343,8 @@ describe('Web analytics insights', () => {
       ['2026-09-14', '2026-09-21', '2026-09-28'].map((day) => Date.parse(`${day}T00:00:00Z`)),
     );
     expect(trend.series).toEqual([
-      { name: 'malini_desktop_day', counts: [0, 1, 2] },
-      { name: 'malini_desktop_first_open', counts: [0, 2, 3] },
+      { name: 'malini_desktop_day', bucket: 'week', counts: [0, 1, 2], total: 3 },
+      { name: 'malini_desktop_first_open', bucket: 'week', counts: [0, 2, 3], total: 5 },
     ]);
     expect(distribution.bins).toHaveLength(30);
     expect(distribution.bins?.filter((bin) => bin.count)).toEqual([
@@ -369,6 +372,146 @@ describe('Web analytics insights', () => {
         counts: [2, 1, 2],
         shares: [100, 50, 100],
         filling: [false, false, true],
+      },
+    ]);
+  });
+
+  it('keeps the label and bucket of trend lines and drops them from other charts', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clusterId = setup.cluster.id;
+    const weekly = {
+      name: 'malini_desktop_day',
+      filters: [{ key: 'week_first', op: 'eq', value: 'yes' }],
+      bucket: 'week',
+    };
+
+    // when
+    const trend = await create(clusterId, setup.token, {
+      type: 'trend',
+      title: 'Malini active',
+      events: [{ name: 'malini_desktop_day' }, { ...weekly, label: '  Weekly  ' }],
+    });
+    const distribution = await create(clusterId, setup.token, {
+      type: 'distribution',
+      title: 'L30',
+      events: [{ name: 'malini_desktop_month', label: 'L30', bucket: 'week' }],
+      property: 'active_days',
+    });
+    const raw = await bootstrap.models.webAnalyticsSiteModel.findOne({ clusterId }).lean();
+
+    // then
+    expect(trend.events).toEqual([
+      { name: 'malini_desktop_day', filters: [] },
+      { ...weekly, label: 'Weekly' },
+    ]);
+    expect(distribution.events).toEqual([{ name: 'malini_desktop_month', filters: [] }]);
+    expect((await list(clusterId, setup.token)).map((insight) => insight.events)).toEqual([
+      trend.events,
+      distribution.events,
+    ]);
+    expect(raw?.insights?.[0].events?.[0]).not.toHaveProperty('label');
+    expect(raw?.insights?.[0].events?.[0]).not.toHaveProperty('bucket');
+  });
+
+  it('counts each trend line per its own bucket on one day axis', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const stranger = await bootstrap.utils.generalUtils.setupAnonymous();
+    const site = await configure(setup.cluster.id, setup.token);
+    const day = (at: string, props: Record<string, string>): WebEventClickhouseEntity => ({
+      ...row(setup.cluster.id, site.id),
+      name: 'malini_desktop_day',
+      created_at: `${at} 10:00:00.000`,
+      props,
+    });
+    const week = { week_first: 'yes', month_first: 'no' };
+    const month = { week_first: 'no', month_first: 'yes' };
+    await insert([
+      day('2026-09-17', week),
+      day('2026-09-19', { week_first: 'yes', month_first: 'yes' }),
+      day('2026-09-22', week),
+      day('2026-09-22', week),
+      day('2026-09-23', { week_first: 'no', month_first: 'no' }),
+      day('2026-09-29', week),
+      day('2026-09-30', week),
+      day('2026-09-30', week),
+      day('2026-10-01', month),
+      day('2026-10-02', month),
+      { ...day('2026-09-22', week), cluster_id: stranger.cluster.id },
+    ]);
+    const line = (label: string, bucket: string, key?: string): object => ({
+      name: 'malini_desktop_day',
+      label,
+      bucket,
+      filters: key ? [{ key, op: 'eq', value: 'yes' }] : [],
+    });
+    const body = {
+      type: 'trend',
+      title: 'Malini active',
+      days: 14,
+      events: [
+        line('Daily', 'day'),
+        line('Weekly', 'week', 'week_first'),
+        line('Monthly', 'month', 'month_first'),
+      ],
+    };
+
+    // when
+    const mixed = await run(setup.cluster.id, setup.token, body);
+    const weeks = await run(setup.cluster.id, setup.token, {
+      ...body,
+      events: body.events.slice(1),
+    });
+    const inherited = await run(setup.cluster.id, setup.token, {
+      ...body,
+      bucket: 'week',
+      events: [{ name: 'malini_desktop_day', label: 'Weekly' }],
+    });
+
+    // then
+    const ticks = Array.from(
+      { length: 15 },
+      (_, index) => Date.parse('2026-09-18T00:00:00Z') + index * 86_400_000,
+    );
+    expect(mixed.times).toEqual(ticks);
+    expect(mixed.series).toEqual([
+      {
+        name: 'malini_desktop_day',
+        label: 'Daily',
+        bucket: 'day',
+        counts: [0, 1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 1, 2, 1, 1],
+        total: 9,
+      },
+      {
+        name: 'malini_desktop_day',
+        label: 'Weekly',
+        bucket: 'week',
+        counts: [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3],
+        total: 6,
+      },
+      {
+        name: 'malini_desktop_day',
+        label: 'Monthly',
+        bucket: 'month',
+        counts: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2],
+        total: 3,
+      },
+    ]);
+    expect(weeks.times).toEqual(ticks);
+    expect(weeks.series?.map((series) => series.counts)).toEqual(
+      mixed.series?.slice(1).map((series) => series.counts),
+    );
+    expect(inherited.times).toEqual(
+      ['2026-09-14', '2026-09-21', '2026-09-28'].map((at) => Date.parse(`${at}T00:00:00Z`)),
+    );
+    expect(inherited.series).toEqual([
+      {
+        name: 'malini_desktop_day',
+        label: 'Weekly',
+        bucket: 'week',
+        counts: [1, 3, 5],
+        total: 9,
       },
     ]);
   });

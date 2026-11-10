@@ -33,11 +33,14 @@
   ];
 
   const prefix = $derived(commonPrefix(series.map((entry) => entry.name)));
+  const mixed = $derived(series.some((entry) => entry.bucket !== bucket));
   const labels = $derived(
-    series.map((entry, index) =>
-      [entry.name, ...(events[index]?.filters ?? []).map(filterLabel)].join(
-        ', ',
-      ),
+    series.map(
+      (entry, index) =>
+        entry.label ??
+        [entry.name, ...(events[index]?.filters ?? []).map(filterLabel)].join(
+          ', ',
+        ),
     ),
   );
   const lines = $derived<AnalyticsChartLine[]>(
@@ -49,6 +52,7 @@
       values: entry.counts,
       color: COLORS[index % COLORS.length],
       area: series.length === 1,
+      bucket: entry.bucket === bucket ? undefined : entry.bucket,
     })),
   );
 </script>
@@ -67,10 +71,14 @@
           name={entry.name}
           {prefix}
           filters={events[index]?.filters ?? []}
+          label={entry.label}
         />
       </span>
+      {#if mixed}
+        <span class="text-fg-muted text-xs">per {entry.bucket}</span>
+      {/if}
       <span class="font-medium tabular-nums">
-        {formatCount(entry.counts.reduce((sum, count) => sum + count, 0))}
+        {formatCount(entry.total)}
       </span>
     </li>
   {/each}

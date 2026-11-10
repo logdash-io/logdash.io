@@ -325,3 +325,47 @@ test('one draft stays a plain card and two or more become tabs', () => {
   expect(config.tabs?.map((tab) => tab.title)).toEqual(['Start', 'Finish']);
   expect(tabbedDraft().drafts).toHaveLength(1);
 });
+
+test('a trend keeps the label and bucket of each line and no other chart does', () => {
+  const lines = [
+    { name: 'malini_desktop_day', filters: [], label: ' Daily ' },
+    {
+      name: 'malini_desktop_day',
+      filters: [{ key: 'week_first', op: 'eq' as const, value: 'yes' }],
+      label: 'Weekly',
+      bucket: 'week' as const,
+    },
+    { name: 'malini_desktop_day', filters: [], label: ' ' },
+  ];
+  const draft = insightDraft({ ...trend('Malini active', 'x'), events: lines });
+  expect(draft.events[1]).toMatchObject({ label: 'Weekly', bucket: 'week' });
+  expect(insightConfig(draft).events).toEqual([
+    { name: 'malini_desktop_day', filters: [], label: 'Daily' },
+    { ...lines[1] },
+    { name: 'malini_desktop_day', filters: [] },
+  ]);
+
+  draft.type = 'cohorts';
+  expect(insightConfig(draft).events?.[1]).toEqual({
+    name: 'malini_desktop_day',
+    filters: lines[1].filters,
+  });
+});
+
+test('a trend summary names each bucket its lines count per', () => {
+  const summary = (bucket: 'day' | 'week' | 'month' | undefined) =>
+    insightSummary({
+      ...trend('Active', 'day'),
+      bucket,
+      events: [
+        { name: 'day', filters: [] },
+        { name: 'day', filters: [], bucket: 'week' },
+        { name: 'day', filters: [], bucket: 'month' },
+      ],
+    });
+  expect(summary('day')).toBe('Daily, weekly and monthly, last 30 days');
+  expect(summary('week')).toBe('Weekly and monthly, last 30 days');
+  expect(insightSummary(trend('Runs', 'run_finished'))).toBe(
+    'Daily, last 30 days',
+  );
+});

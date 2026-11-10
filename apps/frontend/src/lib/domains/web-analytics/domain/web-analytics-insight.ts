@@ -134,7 +134,7 @@ export function insightDraft(
     steps: insight?.steps?.length ? [...insight.steps] : ['page:/', 'goal:'],
     events: withEventCount(
       (insight?.events ?? []).map((event) => ({
-        name: event.name,
+        ...event,
         filters: event.filters.map((filter) => ({ ...filter })),
       })),
       type,
@@ -169,6 +169,7 @@ export function insightConfig(
   const events = draft.events.map((event) => ({
     name: event.name.trim(),
     filters: event.filters.map(trimFilter),
+    ...(draft.type === 'trend' ? lineConfig(event) : {}),
   }));
   const filters = draft.filters.map(trimFilter);
   const bucket = draft.bucket ?? defaultBucket(draft.type);
@@ -446,7 +447,7 @@ export function insightSummary(insight: WebAnalyticsChartConfig): string {
       () =>
         `${insight.mode === 'people' ? 'People' : 'Events'} funnel, ${period}`,
     )
-    .with('trend', () => `${bucketName(insight.bucket)}, ${period}`)
+    .with('trend', () => `${trendBuckets(insight)}, ${period}`)
     .with('distribution', () => `${insight.property ?? ''}, ${period}`)
     .with(
       'cohorts',
@@ -464,6 +465,29 @@ function chartType(
   return insight.type === 'tabs'
     ? (insight.tabs?.[0]?.type ?? 'funnel')
     : insight.type;
+}
+
+function lineConfig(
+  event: WebAnalyticsInsightEvent,
+): Pick<WebAnalyticsInsightEvent, 'label' | 'bucket'> {
+  const label = event.label?.trim();
+  return {
+    ...(label ? { label } : {}),
+    ...(event.bucket ? { bucket: event.bucket } : {}),
+  };
+}
+
+// "Daily", or "Daily, weekly and monthly" when lines count per different buckets.
+function trendBuckets(insight: WebAnalyticsChartConfig): string {
+  const lines = (insight.events ?? []).map(
+    (event) => event.bucket ?? insight.bucket ?? 'day',
+  );
+  const names = [...new Set(lines.length ? lines : [insight.bucket ?? 'day'])]
+    .map(bucketName)
+    .map((name, index) => (index ? name.toLowerCase() : name));
+  return names.length > 1
+    ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`
+    : names[0];
 }
 
 function bucketName(bucket: WebAnalyticsInsightBucket | undefined): string {

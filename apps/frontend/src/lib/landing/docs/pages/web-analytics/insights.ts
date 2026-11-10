@@ -53,7 +53,30 @@ export const page: DocPage = {
     { type: 'heading', text: 'Trend' },
     {
       type: 'paragraph',
-      text: 'Counts up to 5 events per day, week or month, each with its own filters, on one chart.',
+      text: 'Counts up to 5 events per day, week or month, each with its own filters, on one chart. Give a line a **label** to name it in the legend, such as Weekly active.',
+    },
+    {
+      type: 'list',
+      items: [
+        'A line counts per the bucket under **Count per**, unless you pick its own bucket in the line. **Same as chart** uses the bucket under **Count per**.',
+        'Lines with different buckets share a day axis. A weekly or monthly line steps up on the first day of each week or month, and its last step is dashed until that week or month ends.',
+        'Weeks start on Monday and buckets follow your time zone. The first bucket counts only from the start of the period.',
+        'The number beside a line is the events it counted in the period.',
+      ],
+    },
+    { type: 'heading', text: 'Compare several products' },
+    {
+      type: 'paragraph',
+      text: 'One domain can hold several apps that send different events. Make one trend for each app with a daily, a weekly and a monthly line, and label each line, such as Malini daily, Malini weekly and Malini monthly.',
+    },
+    {
+      type: 'list',
+      items: [
+        'Each app sends one marker per active day, named after the app, such as `malini_desktop_day`, `grip_day` and `tony_day`. The marker has the properties `week_first` and `month_first`, set to `yes` on the first active day of the week or month.',
+        'The daily line counts the marker. The weekly line counts it with the filter `week_first` = `yes` and the bucket **Per week**. The monthly line counts it with the filter `month_first` = `yes` and the bucket **Per month**.',
+        'A line stays empty until its app sends the marker. Visitor IDs change every day, so only an app can tell that a person is active in a week or a month.',
+        'The week of the app must match the dashboard, which starts it on Monday. A week that does not match can count a person twice or not at all.',
+      ],
     },
     { type: 'heading', text: 'Histogram' },
     {
@@ -95,7 +118,7 @@ export const page: DocPage = {
         [
           'Daily, weekly and monthly users',
           'One event per active day, with properties that say whether it is the first day of its week or month.',
-          'A trend with those filters.',
+          'A trend with a daily, a weekly and a monthly line, each with its own bucket and filter.',
         ],
         [
           'How habitual are your users?',

@@ -220,6 +220,8 @@ export interface WebAnalyticsInsightFilter {
 export interface WebAnalyticsInsightEvent {
   name: string;
   filters: WebAnalyticsInsightFilter[];
+  label?: string;
+  bucket?: WebAnalyticsInsightBucket;
 }
 
 export interface WebAnalyticsChartConfig {
@@ -291,7 +293,10 @@ export interface WebAnalyticsInsightStep {
 
 export interface WebAnalyticsInsightSeries {
   name: string;
+  label?: string;
+  bucket: WebAnalyticsInsightBucket;
   counts: number[];
+  total: number;
 }
 
 export interface WebAnalyticsInsightBin {
@@ -313,6 +318,7 @@ export interface WebAnalyticsInsightResult {
   to: string;
   steps?: WebAnalyticsInsightStep[];
   times?: number[];
+  bucket?: WebAnalyticsInsightBucket;
   series?: WebAnalyticsInsightSeries[];
   bins?: WebAnalyticsInsightBin[];
   summary?: { count: number; mean: number | null; median: number | null };
@@ -347,6 +353,8 @@ export interface AnalyticsChartLine {
   color: string;
   area?: boolean;
   dashed?: boolean;
+  /** Set when the line counts per a bucket coarser than the ticks: it steps at each bucket start. */
+  bucket?: WebAnalyticsInsightBucket;
 }
 
 export interface WebAnalyticsDayCounts {

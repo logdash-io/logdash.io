@@ -123,8 +123,25 @@ export class WebAnalyticsInsightSeries {
   @ApiProperty()
   name: string;
 
-  @ApiProperty({ type: Number, isArray: true, description: 'Events per bucket, in times order' })
+  @ApiPropertyOptional({ description: 'The label of the line, when it has one' })
+  label?: string;
+
+  @ApiProperty({
+    enum: WEB_ANALYTICS_INSIGHT_BUCKETS,
+    description: 'The bucket the line counts per',
+  })
+  bucket: WebAnalyticsInsightBucket;
+
+  @ApiProperty({
+    type: Number,
+    isArray: true,
+    description:
+      'Events per bucket, in times order. A line with a coarser bucket than times repeats its count on each time of its bucket',
+  })
   counts: number[];
+
+  @ApiProperty({ description: 'Events of the whole period, the sum of the buckets of the line' })
+  total: number;
 }
 
 export class WebAnalyticsInsightBin {
@@ -187,6 +204,13 @@ export class WebAnalyticsInsightResult {
 
   @ApiPropertyOptional({ type: Number, isArray: true, description: 'Bucket starts in ms' })
   times?: number[];
+
+  @ApiPropertyOptional({
+    enum: WEB_ANALYTICS_INSIGHT_BUCKETS,
+    description:
+      'Trends: the bucket each of times starts. It is day when the lines count per different buckets',
+  })
+  bucket?: WebAnalyticsInsightBucket;
 
   @ApiPropertyOptional({ type: WebAnalyticsInsightSeries, isArray: true })
   series?: WebAnalyticsInsightSeries[];

@@ -172,7 +172,7 @@
       return {
         events: 'Lines',
         add: 'Add line',
-        hint: 'Each line counts its events per day, week or month.',
+        hint: 'Each line counts its events per day, week or month, under its own label.',
         name: 'Active installs',
       };
     if (type === 'distribution')
@@ -227,6 +227,12 @@
 
   function onBucket(bucket: WebAnalyticsInsightBucket): void {
     draft.bucket = bucket;
+  }
+
+  function onLineBucket(index: number, bucket: string): void {
+    draft.events[index].bucket = BUCKETS.find(
+      (option) => option.value === bucket,
+    )?.value;
   }
 
   function onAddEvent(): void {
@@ -502,6 +508,34 @@
                   </IconButton>
                 {/if}
               </div>
+              {#if draft.type === 'trend'}
+                <div class="flex items-center gap-1.5 pl-5.5">
+                  <Input
+                    bind:value={event.label}
+                    size="sm"
+                    class="min-w-0 flex-1"
+                    maxlength={40}
+                    placeholder="Label, such as Weekly active"
+                    aria-label="Line {index + 1} label"
+                  />
+                  <Select
+                    bind:value={
+                      () => event.bucket ?? '',
+                      (bucket: string) => onLineBucket(index, bucket)
+                    }
+                    size="sm"
+                    class="w-36 shrink-0"
+                    aria-label="Line {index + 1} bucket"
+                  >
+                    <option value="">Same as chart</option>
+                    {#each BUCKETS as bucket (bucket.value)}
+                      <option value={bucket.value}>
+                        Per {bucket.label.toLowerCase()}
+                      </option>
+                    {/each}
+                  </Select>
+                </div>
+              {/if}
               <div class="flex flex-col gap-1.5 pl-5.5">
                 <InsightFilters
                   bind:filters={event.filters}
@@ -544,6 +578,11 @@
             value={draft.bucket ?? defaultBucket(draft.type)}
             onChange={onBucket}
           />
+          {#if draft.type === 'trend'}
+            <p class="text-fg-muted text-xs">
+              Lines without a bucket of their own count per this.
+            </p>
+          {/if}
         </div>
       {/if}
 

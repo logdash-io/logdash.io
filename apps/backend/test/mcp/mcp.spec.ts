@@ -125,6 +125,18 @@ describe('MCP server', () => {
     expect(await toolNames(read)).toEqual(READ_TOOLS);
     expect(await toolNames(write)).toEqual([...READ_TOOLS, ...WRITE_TOOLS]);
     expect(await toolNames(setup.token)).toEqual([...READ_TOOLS, ...WRITE_TOOLS]);
+    const lines = (await rpc(write, 'tools/list')).result?.tools as {
+      name: string;
+      inputSchema: { properties: { events: { items: { properties: object } } } };
+    }[];
+    for (const name of ['trend', 'create_insight', 'update_insight'])
+      expect(
+        lines.find((tool) => tool.name === name)?.inputSchema.properties.events.items.properties,
+      ).toHaveProperty('bucket');
+    expect(
+      lines.find((tool) => tool.name === 'events_funnel')?.inputSchema.properties.events.items
+        .properties,
+    ).not.toHaveProperty('bucket');
 
     expect(await call(none, 'describe', {})).toMatchObject({
       isError: true,
@@ -229,6 +241,16 @@ describe('MCP server', () => {
         'create_insight',
         { clusterId, type: 'trend', title: 'Days', events: [{ name: 'a' }], width: 'wide' },
         'width must be one of',
+      ],
+      [
+        'create_insight',
+        { clusterId, type: 'trend', title: 'Hours', events: [{ name: 'a', bucket: 'hour' }] },
+        'events.0.bucket must be one of',
+      ],
+      [
+        'create_insight',
+        { clusterId, type: 'trend', title: 'Blank', events: [{ name: 'a', label: ' ' }] },
+        'label must not be blank',
       ],
       [
         'create_insight',
@@ -340,6 +362,22 @@ describe('MCP server', () => {
         ],
       })
     ).json;
+    const lines = (
+      await call(key, 'trend', {
+        clusterId,
+        days: 4,
+        tz: 'Europe/Warsaw',
+        events: [
+          { name: 'malini_desktop_day', label: 'Daily' },
+          {
+            name: 'malini_desktop_day',
+            label: 'Weekly',
+            bucket: 'week',
+            filters: [{ key: 'week_first', op: 'eq', value: 'yes' }],
+          },
+        ],
+      })
+    ).json;
     const distribution = (
       await call(key, 'distribution', {
         clusterId,
@@ -413,6 +451,13 @@ describe('MCP server', () => {
       series: [
         { name: 'malini_desktop_day', counts: [0, 1, 1, 0, 0], total: 2 },
         { name: 'malini_desktop_day', counts: [0, 1, 0, 0, 0], total: 1 },
+      ],
+    });
+    expect(lines).toMatchObject({
+      times: ['2026-09-28', '2026-09-29', '2026-09-30', '2026-10-01', '2026-10-02'],
+      series: [
+        { label: 'Daily', bucket: 'day', counts: [0, 1, 1, 0, 0], total: 2 },
+        { label: 'Weekly', bucket: 'week', counts: [1, 1, 1, 1, 1], total: 1 },
       ],
     });
     expect(distribution).toMatchObject({

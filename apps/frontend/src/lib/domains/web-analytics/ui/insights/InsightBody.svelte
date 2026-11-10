@@ -80,7 +80,7 @@
         times={data.times ?? []}
         series={data.series ?? []}
         events={config.events ?? []}
-        bucket={config.bucket ?? defaultBucket('trend')}
+        bucket={data.bucket ?? defaultBucket('trend')}
         partial={endsInProgress(data.to)}
         label={config.title}
       />
