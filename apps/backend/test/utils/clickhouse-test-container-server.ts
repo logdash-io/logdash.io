@@ -52,7 +52,11 @@ export const rootClickHouseTestModule = () => {
           ) as ClickHouseClientOptions;
 
           const client = createClient({
-            url: options.url,
+            // ponytail: nock 14 passes ClickHouse requests through a mock socket that keeps the
+            // first TCP handle. `localhost` resolves to ::1 and 127.0.0.1, and when the first
+            // attempt times out under load, Node swaps the handle and the request fails with
+            // "read EINVAL". One address means one attempt. nock 15 fixes this, but it is ESM-only.
+            url: options.url?.replace('//localhost:', '//127.0.0.1:'),
             username: options.username,
             password: options.password,
             database: options.database,
