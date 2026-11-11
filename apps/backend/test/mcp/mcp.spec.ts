@@ -33,7 +33,13 @@ describe('MCP server', () => {
     'list_insights',
     'run_insight',
   ];
-  const WRITE_TOOLS = ['create_insight', 'update_insight', 'reorder_insights', 'delete_insight'];
+  const WRITE_TOOLS = [
+    'create_insight',
+    'update_insight',
+    'reorder_insights',
+    'set_views',
+    'delete_insight',
+  ];
 
   beforeAll(async () => {
     bootstrap = await createTestApp();
@@ -119,6 +125,19 @@ describe('MCP server', () => {
     expect(await toolNames(read)).toEqual(READ_TOOLS);
     expect(await toolNames(write)).toEqual([...READ_TOOLS, ...WRITE_TOOLS]);
     expect(await toolNames(setup.token)).toEqual([...READ_TOOLS, ...WRITE_TOOLS]);
+    const lines = (await rpc(write, 'tools/list')).result?.tools as {
+      name: string;
+      inputSchema: { properties: { events: { items: { properties: object } } } };
+    }[];
+    for (const name of ['trend', 'create_insight', 'update_insight']) {
+      const { properties } = lines.find((tool) => tool.name === name)?.inputSchema ?? {};
+      expect(properties?.events.items.properties).toHaveProperty('bucket');
+      expect(properties).toHaveProperty('measure');
+    }
+    expect(
+      lines.find((tool) => tool.name === 'events_funnel')?.inputSchema.properties.events.items
+        .properties,
+    ).not.toHaveProperty('bucket');
 
     expect(await call(none, 'describe', {})).toMatchObject({
       isError: true,
@@ -214,6 +233,44 @@ describe('MCP server', () => {
       ['person_funnel', { clusterId, steps: ['page:/', 'click:x'] }, 'steps must match'],
       ['create_insight', { clusterId, type: 'trend', title: ' ' }, 'title must not be blank'],
       ['delete_insight', { clusterId, insightId: 'x' }, 'insightId must be a mongodb id'],
+      [
+        'create_insight',
+        { clusterId, type: 'trend', title: 'Days', events: [{ name: 'a' }], view: 'x' },
+        'view must be a mongodb id',
+      ],
+      [
+        'create_insight',
+        { clusterId, type: 'trend', title: 'Days', events: [{ name: 'a' }], width: 'wide' },
+        'width must be one of',
+      ],
+      [
+        'create_insight',
+        { clusterId, type: 'trend', title: 'Hours', events: [{ name: 'a', bucket: 'hour' }] },
+        'events.0.bucket must be one of',
+      ],
+      [
+        'create_insight',
+        { clusterId, type: 'trend', title: 'Hits', events: [{ name: 'a' }], measure: 'hits' },
+        'measure must be one of',
+      ],
+      ['trend', { clusterId, events: [{ name: 'a' }], measure: 'hits' }, 'measure must be one of'],
+      [
+        'create_insight',
+        { clusterId, type: 'trend', title: 'Blank', events: [{ name: 'a', label: ' ' }] },
+        'label must not be blank',
+      ],
+      [
+        'create_insight',
+        { clusterId, type: 'tabs', title: 'Tabs', tabs: [{ type: 'trend', title: 'One' }] },
+        'A tabs card takes 2 to 6 tabs',
+      ],
+      ['reorder_insights', { clusterId, placements: [{ id: 'x' }] }, 'placements.0.id must be'],
+      [
+        'set_views',
+        { clusterId, views: [{ name: ' ' }] },
+        'views.0.name must be longer than or equal to 1',
+      ],
+      ['set_views', { clusterId }, 'views must be an array'],
     ] as const) {
       const result = await call(key, name, args);
       expect(result.isError).toBe(true);
@@ -312,6 +369,22 @@ describe('MCP server', () => {
         ],
       })
     ).json;
+    const lines = (
+      await call(key, 'trend', {
+        clusterId,
+        days: 4,
+        tz: 'Europe/Warsaw',
+        events: [
+          { name: 'malini_desktop_day', label: 'Daily' },
+          {
+            name: 'malini_desktop_day',
+            label: 'Weekly',
+            bucket: 'week',
+            filters: [{ key: 'week_first', op: 'eq', value: 'yes' }],
+          },
+        ],
+      })
+    ).json;
     const distribution = (
       await call(key, 'distribution', {
         clusterId,
@@ -343,6 +416,7 @@ describe('MCP server', () => {
             origins: ['https://example.com', 'https://app.malini'],
             goals: [],
             insights: 0,
+            views: 0,
           },
           events: expect.arrayContaining([
             { name: 'malini_desktop_month', count: 4, properties: ['active_days', 'month'] },
@@ -386,6 +460,13 @@ describe('MCP server', () => {
         { name: 'malini_desktop_day', counts: [0, 1, 0, 0, 0], total: 1 },
       ],
     });
+    expect(lines).toMatchObject({
+      times: ['2026-09-28', '2026-09-29', '2026-09-30', '2026-10-01', '2026-10-02'],
+      series: [
+        { label: 'Daily', bucket: 'day', counts: [0, 1, 1, 0, 0], total: 2 },
+        { label: 'Weekly', bucket: 'week', counts: [1, 1, 1, 1, 1], total: 1 },
+      ],
+    });
     expect(distribution).toMatchObject({
       bins: [
         { value: 0, count: 3, share: 75 },
@@ -410,6 +491,64 @@ describe('MCP server', () => {
     expect(retention.isError).toBe(false);
     expect(retention.json).toMatchObject({ stickiness: { monthlyActive: 0 } });
     expect(retention.text.length).toBeLessThan(2000);
+  });
+
+  it('counts the distinct people of each trend line and saves the measure', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const site = await configure(setup.cluster.id, setup.token);
+    const key = await createKey(setup.token, WRITE, ALL);
+    const clusterId = setup.cluster.id;
+    await insert(
+      [
+        ['2026-09-29', 'ana'],
+        ['2026-09-30', 'ana'],
+        ['2026-09-30', 'ana'],
+        ['2026-09-30', 'ben'],
+        ['2026-09-30', ''],
+      ].map(([day, user]) => ({
+        ...row(clusterId, site.id),
+        name: 'grip_open',
+        created_at: `${day} 10:00:00.000`,
+        user_id: user,
+      })),
+    );
+    const trend = {
+      clusterId,
+      measure: 'people',
+      events: [
+        { name: 'grip_open', label: 'Daily' },
+        { name: 'grip_open', label: 'Weekly', bucket: 'week' },
+      ],
+    };
+
+    // when
+    const people = (await call(key, 'trend', { ...trend, days: 4, tz: 'Europe/Warsaw' })).json;
+    const events = (
+      await call(key, 'trend', { ...trend, measure: 'events', days: 4, tz: 'Europe/Warsaw' })
+    ).json;
+    const saved = (
+      await call(key, 'create_insight', { ...trend, type: 'trend', title: 'Grip active' })
+    ).json;
+    const ran = (await call(key, 'run_insight', { clusterId, insightId: saved.id })).json;
+
+    // then
+    expect(people).toMatchObject({
+      measure: 'people',
+      series: [
+        { label: 'Daily', counts: [0, 1, 2, 0, 0], total: 2 },
+        { label: 'Weekly', counts: [2, 2, 2, 2, 2], total: 2 },
+      ],
+    });
+    expect(events).toMatchObject({
+      measure: 'events',
+      series: [
+        { counts: [0, 1, 4, 0, 0], total: 5 },
+        { counts: [5, 5, 5, 5, 5], total: 5 },
+      ],
+    });
+    expect(saved).toMatchObject({ type: 'trend', measure: 'people' });
+    expect(ran).toMatchObject({ measure: 'people', series: [{ total: 2 }, { total: 2 }] });
   });
 
   it('builds a dashboard of saved insights', async () => {
@@ -475,6 +614,8 @@ describe('MCP server', () => {
     });
     expect(deleted.json).toEqual({ deleted: journey.id });
     expect((await call(key, 'list_insights', { clusterId })).json).toEqual({
+      viewsVersion: 0,
+      views: [],
       insights: [expect.objectContaining({ id: l30.id, title: 'L30 of September' })],
     });
     expect(await call(key, 'delete_insight', { clusterId, insightId: journey.id })).toMatchObject({
@@ -482,6 +623,160 @@ describe('MCP server', () => {
       text: 'Insight not found',
     });
     await bootstrap.utils.auditLogUtils.assertAuditLog({ relatedEntityId: l30.id as string });
+  });
+
+  it('lays out a dashboard of views, sections, tabs and hidden cards', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    await configure(setup.cluster.id, setup.token);
+    const key = await createKey(setup.token, WRITE, ALL);
+    const clusterId = setup.cluster.id;
+    const trend = { type: 'trend', title: 'Days', events: [{ name: 'malini_desktop_day' }] };
+    const funnel = {
+      type: 'funnel',
+      title: 'Install',
+      events: [{ name: 'malini_desktop_first_open' }, { name: 'malini_desktop_first_merge' }],
+    };
+
+    // when
+    const laidOut = (
+      await call(key, 'set_views', {
+        clusterId,
+        views: [
+          {
+            name: 'Company',
+            sections: [{ title: 'Activation', collapsed: true }, { title: 'Usage' }],
+          },
+          { name: 'Traffic', traffic: true },
+        ],
+      })
+    ).json as { views: { id: string; traffic: boolean; sections: { id: string }[] }[] };
+    const [company, traffic] = laidOut.views;
+    const placed = (
+      await call(key, 'create_insight', {
+        clusterId,
+        ...trend,
+        view: company.id,
+        section: company.sections[0].id,
+        width: 'full',
+      })
+    ).json;
+    const tabbed = (
+      await call(key, 'create_insight', {
+        clusterId,
+        type: 'tabs',
+        title: 'Journeys',
+        tabs: [funnel, trend],
+        view: traffic.id,
+      })
+    ).json;
+    const plain = (await call(key, 'create_insight', { clusterId, ...funnel })).json;
+    const kept = await call(key, 'update_insight', {
+      clusterId,
+      insightId: placed.id,
+      ...trend,
+      title: 'Active days',
+    });
+    const cleared = await call(key, 'update_insight', {
+      clusterId,
+      insightId: placed.id,
+      ...trend,
+      section: null,
+      width: null,
+    });
+    const reordered = await call(key, 'reorder_insights', {
+      clusterId,
+      ids: [plain.id, tabbed.id, placed.id],
+      placements: [
+        { id: plain.id, view: company.id, section: company.sections[1].id },
+        { id: tabbed.id, hidden: true },
+      ],
+    });
+    const ran = (await call(key, 'run_insight', { clusterId, insightId: tabbed.id })).json;
+    const renamed = (
+      await call(key, 'set_views', {
+        clusterId,
+        version: 1,
+        views: [{ id: company.id, name: 'Business' }],
+      })
+    ).json;
+    const stale = await call(key, 'set_views', {
+      clusterId,
+      version: 1,
+      views: [{ name: 'Lost' }],
+    });
+
+    // then
+    expect(laidOut.views).toMatchObject([
+      {
+        name: 'Company',
+        traffic: false,
+        sections: [
+          { title: 'Activation', collapsed: true },
+          { title: 'Usage', collapsed: false },
+        ],
+      },
+      { name: 'Traffic', traffic: true, sections: [] },
+    ]);
+    expect(placed).toMatchObject({
+      view: company.id,
+      section: company.sections[0].id,
+      width: 'full',
+    });
+    expect(tabbed).toMatchObject({
+      type: 'tabs',
+      view: traffic.id,
+      tabs: [{ title: 'Install' }, { title: 'Days' }],
+    });
+    expect(kept.json).toMatchObject({
+      title: 'Active days',
+      view: company.id,
+      section: company.sections[0].id,
+      width: 'full',
+    });
+    expect(cleared.json).toMatchObject({ view: company.id });
+    expect(cleared.json).not.toHaveProperty('section');
+    expect(cleared.json).not.toHaveProperty('width');
+    expect(reordered.json).toMatchObject({
+      insights: [
+        { id: plain.id, view: company.id, section: company.sections[1].id },
+        { id: tabbed.id, hidden: true, view: traffic.id },
+        { id: placed.id, view: company.id },
+      ],
+    });
+    expect(ran).toMatchObject({
+      id: tabbed.id,
+      tabs: [
+        {
+          title: 'Install',
+          type: 'funnel',
+          steps: [{ name: 'malini_desktop_first_open' }, { name: 'malini_desktop_first_merge' }],
+        },
+        { title: 'Days', type: 'trend' },
+      ],
+    });
+    expect(renamed).toMatchObject({
+      viewsVersion: 2,
+      views: [{ id: company.id, name: 'Business', sections: [] }],
+      insights: [{ id: plain.id }, { id: tabbed.id }, { id: placed.id }],
+    });
+    expect((renamed.insights as object[])[1]).not.toHaveProperty('view');
+    expect(stale).toMatchObject({
+      isError: true,
+      text: 'The views changed since they were read. Reload them and try again',
+    });
+    expect(
+      await call(key, 'set_views', { clusterId, views: [{ name: 'A' }, { name: 'a' }] }),
+    ).toMatchObject({ isError: true });
+    expect(
+      await call(key, 'reorder_insights', {
+        clusterId,
+        placements: [{ id: plain.id, view: '0'.repeat(24) }],
+      }),
+    ).toMatchObject({ isError: true });
+    expect((await call(key, 'list_insights', { clusterId })).json).toMatchObject({
+      views: [{ name: 'Business' }],
+    });
   });
 
   async function createKey(

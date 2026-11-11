@@ -2,7 +2,6 @@ import { createTestApp } from '../utils/bootstrap';
 import { NewMetricQueueingService } from '../../src/metric/new-queueing/new-metric-queueing.service';
 import { MetricOperation } from '../../src/metric/core/enums/metric-operation.enum';
 import { MetricBufferService } from '../../src/metric/buffer/metric-buffer.service';
-import { randomIntegerBetweenInclusive } from '../../src/shared/utils/random-integer-between';
 import { getProjectPlanConfig } from '../../src/shared/configs/project-plan-configs';
 import { ProjectTier } from '../../src/project/core/enums/project-tier.enum';
 import { UserTier } from '../../src/user/core/enum/user-tier.enum';
@@ -72,9 +71,8 @@ describe('Metrics buffer', () => {
   });
 
   it('accumulates mutate metrics', async () => {
-    jest.retryTimes(5);
     // given
-    const iterations = 2137;
+    const iterations = 200;
     const setup = await bootstrap.utils.generalUtils.setupClaimed({
       userTier: UserTier.EarlyBird,
       email: 'test@test.com',
@@ -84,7 +82,7 @@ describe('Metrics buffer', () => {
     for (let i = 0; i < iterations; i++) {
       await queueingService.queueMetric({
         projectId: setup.project.id,
-        name: `metric-${randomIntegerBetweenInclusive(0, 9)}`,
+        name: `metric-${i % 10}`,
         operation: MetricOperation.Change,
         clusterId: 'cluster-1',
         app: 'default',

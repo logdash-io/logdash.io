@@ -5,10 +5,14 @@ import {
   WebAnalyticsFunnelMode,
   WebAnalyticsInsightBucket,
   WebAnalyticsInsightEvent,
+  WebAnalyticsChartBody,
+  WebAnalyticsInsightConfig,
   WebAnalyticsInsightEventBody,
   WebAnalyticsInsightFilter,
   WebAnalyticsInsightFilterBody,
+  WebAnalyticsInsightMeasure,
   WebAnalyticsInsightType,
+  WebAnalyticsInsightWidth,
 } from './web-analytics-insight.body';
 
 export class WebAnalyticsInsightSerialized {
@@ -42,14 +46,80 @@ export class WebAnalyticsInsightSerialized {
   @ApiPropertyOptional({ enum: WEB_ANALYTICS_INSIGHT_BUCKETS })
   bucket?: WebAnalyticsInsightBucket;
 
+  @ApiPropertyOptional({
+    enum: WebAnalyticsInsightMeasure,
+    description: 'Trends only. Absent means events',
+  })
+  measure?: WebAnalyticsInsightMeasure;
+
   @ApiPropertyOptional()
   property?: string;
 
   @ApiPropertyOptional()
   binSize?: number;
+
+  @ApiPropertyOptional({
+    type: () => WebAnalyticsChartBody,
+    isArray: true,
+    description: 'Tabs cards only: the chart configs, each title is the tab label',
+  })
+  tabs?: WebAnalyticsInsightConfig[];
+
+  @ApiPropertyOptional({ description: 'The view id. Absent means the first view' })
+  view?: string;
+
+  @ApiPropertyOptional({ description: 'The section id of the view. Absent means no section' })
+  section?: string;
+
+  @ApiPropertyOptional({ description: 'Absent means shown' })
+  hidden?: boolean;
+
+  @ApiPropertyOptional({
+    enum: WebAnalyticsInsightWidth,
+    description: 'Absent means automatic by type',
+  })
+  width?: WebAnalyticsInsightWidth;
+}
+
+export class WebAnalyticsSectionSerialized {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  title: string;
+
+  @ApiProperty()
+  collapsed: boolean;
+}
+
+export class WebAnalyticsViewSerialized {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({ description: 'Whether the built-in traffic cards show in this view' })
+  traffic: boolean;
+
+  @ApiProperty({ type: WebAnalyticsSectionSerialized, isArray: true })
+  sections: WebAnalyticsSectionSerialized[];
 }
 
 export class WebAnalyticsInsightsResponse {
+  @ApiProperty({
+    description:
+      'Grows each time the views change. Pass it to PUT /views as version to get 409 instead of overwriting a newer change',
+  })
+  viewsVersion: number;
+
+  @ApiProperty({
+    type: WebAnalyticsViewSerialized,
+    isArray: true,
+    description: 'The dashboard views in order, the first one is the default',
+  })
+  views: WebAnalyticsViewSerialized[];
+
   @ApiProperty({ type: WebAnalyticsInsightSerialized, isArray: true })
   insights: WebAnalyticsInsightSerialized[];
 }
@@ -66,8 +136,28 @@ export class WebAnalyticsInsightSeries {
   @ApiProperty()
   name: string;
 
-  @ApiProperty({ type: Number, isArray: true, description: 'Events per bucket, in times order' })
+  @ApiPropertyOptional({ description: 'The label of the line, when it has one' })
+  label?: string;
+
+  @ApiProperty({
+    enum: WEB_ANALYTICS_INSIGHT_BUCKETS,
+    description: 'The bucket the line counts per',
+  })
+  bucket: WebAnalyticsInsightBucket;
+
+  @ApiProperty({
+    type: Number,
+    isArray: true,
+    description:
+      'Events, or distinct people, per bucket, in times order. A line with a coarser bucket than times repeats its count on each time of its bucket',
+  })
   counts: number[];
+
+  @ApiProperty({
+    description:
+      'Events of the whole period, the sum of the buckets of the line. For people it is the distinct people of the whole period, so it is below the sum of the buckets',
+  })
+  total: number;
 }
 
 export class WebAnalyticsInsightBin {
@@ -130,6 +220,19 @@ export class WebAnalyticsInsightResult {
 
   @ApiPropertyOptional({ type: Number, isArray: true, description: 'Bucket starts in ms' })
   times?: number[];
+
+  @ApiPropertyOptional({
+    enum: WEB_ANALYTICS_INSIGHT_BUCKETS,
+    description:
+      'Trends: the bucket each of times starts. It is day when the lines count per different buckets',
+  })
+  bucket?: WebAnalyticsInsightBucket;
+
+  @ApiPropertyOptional({
+    enum: WebAnalyticsInsightMeasure,
+    description: 'Trends: whether the counts of the series are events or distinct people',
+  })
+  measure?: WebAnalyticsInsightMeasure;
 
   @ApiPropertyOptional({ type: WebAnalyticsInsightSeries, isArray: true })
   series?: WebAnalyticsInsightSeries[];

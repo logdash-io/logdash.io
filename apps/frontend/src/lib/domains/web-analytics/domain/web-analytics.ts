@@ -187,11 +187,15 @@ export interface WebAnalyticsRetention {
   comebacks: WebAnalyticsComeback[];
 }
 
-export type WebAnalyticsInsightType =
+export type WebAnalyticsChartType =
   | 'funnel'
   | 'trend'
   | 'distribution'
   | 'cohorts';
+
+export type WebAnalyticsInsightType = WebAnalyticsChartType | 'tabs';
+
+export type WebAnalyticsInsightWidth = 'half' | 'full';
 
 export type WebAnalyticsFunnelMode = 'people' | 'events';
 
@@ -207,6 +211,9 @@ export type WebAnalyticsInsightOperator =
 
 export type WebAnalyticsInsightBucket = 'day' | 'week' | 'month';
 
+/** What a trend line counts: its events, or the distinct people who sent them. */
+export type WebAnalyticsInsightMeasure = 'events' | 'people';
+
 export interface WebAnalyticsInsightFilter {
   key: string;
   op: WebAnalyticsInsightOperator;
@@ -216,10 +223,12 @@ export interface WebAnalyticsInsightFilter {
 export interface WebAnalyticsInsightEvent {
   name: string;
   filters: WebAnalyticsInsightFilter[];
+  label?: string;
+  bucket?: WebAnalyticsInsightBucket;
 }
 
-export interface WebAnalyticsInsightConfig {
-  type: WebAnalyticsInsightType;
+export interface WebAnalyticsChartConfig {
+  type: WebAnalyticsChartType;
   title: string;
   days: number;
   mode?: WebAnalyticsFunnelMode;
@@ -228,12 +237,58 @@ export interface WebAnalyticsInsightConfig {
   events?: WebAnalyticsInsightEvent[];
   filters?: WebAnalyticsInsightFilter[];
   bucket?: WebAnalyticsInsightBucket;
+  measure?: WebAnalyticsInsightMeasure;
   property?: string;
   binSize?: number;
 }
 
+export interface WebAnalyticsInsightPlacement {
+  view?: string | null;
+  section?: string | null;
+  hidden?: boolean | null;
+  width?: WebAnalyticsInsightWidth | null;
+}
+
+export interface WebAnalyticsInsightPlacementUpdate
+  extends WebAnalyticsInsightPlacement {
+  id: string;
+}
+
+export interface WebAnalyticsInsightConfig
+  extends Omit<WebAnalyticsChartConfig, 'type'>,
+    WebAnalyticsInsightPlacement {
+  type: WebAnalyticsInsightType;
+  tabs?: WebAnalyticsChartConfig[];
+}
+
 export interface WebAnalyticsInsight extends WebAnalyticsInsightConfig {
   id: string;
+}
+
+export interface WebAnalyticsSection {
+  id: string;
+  title: string;
+  collapsed: boolean;
+}
+
+export interface WebAnalyticsView {
+  id: string;
+  name: string;
+  traffic: boolean;
+  sections: WebAnalyticsSection[];
+}
+
+export interface WebAnalyticsViewInput {
+  id?: string;
+  name: string;
+  traffic: boolean;
+  sections: { id?: string; title: string; collapsed: boolean }[];
+}
+
+export interface WebAnalyticsInsights {
+  viewsVersion?: number;
+  views: WebAnalyticsView[];
+  insights: WebAnalyticsInsight[];
 }
 
 export interface WebAnalyticsInsightStep {
@@ -243,7 +298,10 @@ export interface WebAnalyticsInsightStep {
 
 export interface WebAnalyticsInsightSeries {
   name: string;
+  label?: string;
+  bucket?: WebAnalyticsInsightBucket;
   counts: number[];
+  total?: number;
 }
 
 export interface WebAnalyticsInsightBin {
@@ -260,11 +318,13 @@ export interface WebAnalyticsInsightCohort {
 }
 
 export interface WebAnalyticsInsightResult {
-  type: WebAnalyticsInsightType;
+  type: WebAnalyticsChartType;
   from: string;
   to: string;
   steps?: WebAnalyticsInsightStep[];
   times?: number[];
+  bucket?: WebAnalyticsInsightBucket;
+  measure?: WebAnalyticsInsightMeasure;
   series?: WebAnalyticsInsightSeries[];
   bins?: WebAnalyticsInsightBin[];
   summary?: { count: number; mean: number | null; median: number | null };
@@ -299,6 +359,8 @@ export interface AnalyticsChartLine {
   color: string;
   area?: boolean;
   dashed?: boolean;
+  /** Set when the line counts per a bucket coarser than the ticks: it steps at each bucket start. */
+  bucket?: WebAnalyticsInsightBucket;
 }
 
 export interface WebAnalyticsDayCounts {

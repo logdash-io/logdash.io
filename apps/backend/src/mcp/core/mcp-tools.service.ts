@@ -15,15 +15,24 @@ import {
   WebAnalyticsGranularity,
 } from '../../web-analytics/core/dto/read-web-analytics.query';
 import {
+  MAX_WEB_ANALYTICS_INSIGHT_LABEL,
+  MAX_WEB_ANALYTICS_INSIGHT_TABS,
   MAX_WEB_ANALYTICS_INSIGHTS,
   normalizeWebAnalyticsInsight,
   WEB_ANALYTICS_INSIGHT_BUCKETS,
   WebAnalyticsFunnelLayout,
   WebAnalyticsFunnelMode,
   WebAnalyticsInsightBody,
+  WebAnalyticsInsightConfig,
+  WebAnalyticsInsightMeasure,
   WebAnalyticsInsightOperator,
   WebAnalyticsInsightType,
+  WebAnalyticsInsightWidth,
 } from '../../web-analytics/core/dto/web-analytics-insight.body';
+import {
+  MAX_WEB_ANALYTICS_SECTIONS,
+  MAX_WEB_ANALYTICS_VIEWS,
+} from '../../web-analytics/core/dto/web-analytics-views.body';
 import {
   WebAnalyticsInsightResult,
   WebAnalyticsInsightStep,
@@ -45,6 +54,7 @@ import {
   McpReorderInsightsArgs,
   McpRetentionArgs,
   McpRunInsightArgs,
+  McpSetViewsArgs,
   McpTrendArgs,
   McpUpdateInsightArgs,
 } from './dto/mcp-tool.args';
@@ -128,10 +138,34 @@ const PROPERTY_FILTERS = {
     'Event property filters. gt, gte, lt and lte compare numbers when the value is a number, and text otherwise, so YYYY-MM-DD dates compare in order',
 };
 
+const BUCKET = { type: 'string', enum: [...WEB_ANALYTICS_INSIGHT_BUCKETS] };
+
+const MEASURE = {
+  type: 'string',
+  enum: Object.values(WebAnalyticsInsightMeasure),
+  description:
+    'Trends only. events (default) counts the events of each line. people counts the distinct users who sent them, by the userId of the event, so a daily, a weekly and a monthly line give daily, weekly and monthly active users. Events without a userId do not count',
+};
+
+const LINE = {
+  label: {
+    type: 'string',
+    minLength: 1,
+    maxLength: MAX_WEB_ANALYTICS_INSIGHT_LABEL,
+    description: 'Trends only: the name of the line, the event name by default',
+  },
+  bucket: {
+    ...BUCKET,
+    description:
+      'Trends only: the bucket this line counts per, the bucket of the insight by default. Lines with different buckets share a day axis and a line repeats its count on each day of its bucket',
+  },
+};
+
 const events = (
   minItems: number,
   maxItems: number,
   description: string,
+  lines = false,
 ): Record<string, unknown> => ({
   type: 'array',
   minItems,
@@ -140,13 +174,12 @@ const events = (
     {
       name: { type: 'string', pattern: EVENT_NAME.source },
       filters: PROPERTY_FILTERS,
+      ...(lines ? LINE : {}),
     },
     ['name'],
   ),
   description,
 });
-
-const BUCKET = { type: 'string', enum: [...WEB_ANALYTICS_INSIGHT_BUCKETS] };
 
 const STEPS = {
   type: 'array',
@@ -156,8 +189,13 @@ const STEPS = {
   description: 'Each step is page:<path> or goal:<event name>, such as ["page:/", "goal:signup"]',
 };
 
-const INSIGHT = {
-  type: { type: 'string', enum: Object.values(WebAnalyticsInsightType) },
+const CHART = {
+  type: {
+    type: 'string',
+    enum: Object.values(WebAnalyticsInsightType).filter(
+      (type) => type !== WebAnalyticsInsightType.Tabs,
+    ),
+  },
   title: { type: 'string', minLength: 1, maxLength: 80 },
   days: DAYS,
   mode: {
@@ -177,12 +215,15 @@ const INSIGHT = {
     0,
     8,
     'Events funnel steps (2 to 8), trend series (1 to 5), the one distribution event, or the cohort start event then up to 7 later events',
+    true,
   ),
   filters: { ...PROPERTY_FILTERS, description: 'Property filters every event must match' },
   bucket: {
     ...BUCKET,
-    description: 'Trends: day (default), week or month. Cohorts: the row size, week by default',
+    description:
+      'Trends: the bucket of every line that has none of its own, day by default. Cohorts: the row size, week by default',
   },
+  measure: MEASURE,
   property: {
     type: 'string',
     pattern: PROP_KEY.source,
@@ -197,6 +238,55 @@ const INSIGHT = {
   },
 };
 
+const HEX_ID = '^[a-f0-9]{24}$';
+
+const PLACEMENT = {
+  view: {
+    type: ['string', 'null'],
+    pattern: HEX_ID,
+    description:
+      'The id of a view, from list_insights or set_views. Omit to keep the stored view, null to clear it. A card without a view shows in the first view',
+  },
+  section: {
+    type: ['string', 'null'],
+    pattern: HEX_ID,
+    description:
+      'The id of a section of the view, from list_insights or set_views. Omit to keep the stored section, null to clear it. A card without a section sits above the sections',
+  },
+  hidden: {
+    type: ['boolean', 'null'],
+    description:
+      'Hide the card from the dashboard. Omit to keep the stored value, null to clear it',
+  },
+  width: {
+    type: ['string', 'null'],
+    enum: [...Object.values(WebAnalyticsInsightWidth), null],
+    description:
+      'half or full width. Omit to keep the stored value, null to clear it. The default is automatic by type',
+  },
+};
+
+const INSIGHT = {
+  ...CHART,
+  type: {
+    type: 'string',
+    enum: Object.values(WebAnalyticsInsightType),
+    description:
+      'tabs makes one card that holds 2 to 6 full chart configs in tabs, each tab title is the tab label',
+  },
+  ...PLACEMENT,
+  tabs: {
+    type: 'array',
+    minItems: 2,
+    maxItems: MAX_WEB_ANALYTICS_INSIGHT_TABS,
+    items: object(CHART, ['type', 'title']),
+    description:
+      'Tabs cards only: 2 to 6 full chart configs, never tabs or placement. The title of a tab is its label, and the card title is the title of the insight',
+  },
+};
+
+const VIEW_ID = { type: 'string', pattern: HEX_ID };
+
 const READ_ONLY = { readOnlyHint: true };
 
 const formatJson = (value: unknown): string =>
@@ -206,8 +296,6 @@ const formatJson = (value: unknown): string =>
 
 const percent = (part: number, whole: number): number | null =>
   whole ? (part / whole) * 100 : null;
-
-const sum = (values: number[]): number => values.reduce((total, value) => total + value, 0);
 
 const validationMessages = (errors: ValidationError[], path = ''): string[] =>
   errors.flatMap((error) => {
@@ -304,15 +392,16 @@ export class McpToolsService {
       name: 'trend',
       title: 'Event trend',
       description:
-        'Event counts per day, week or month for up to 5 series. Daily, weekly and monthly active counts come from markers sent once per period.',
+        'Event counts, or distinct people, per day, week or month for up to 5 series. Set measure to people to count the users (by userId) who sent an event. Each series can count per its own bucket, so one chart can hold the daily, weekly and monthly active users of a product. total is the sum of the buckets of a series, or the distinct people of the whole period for people. Apps that send no userId can send a marker once per active day and count its events instead.',
       action: Action.Read,
       args: McpTrendArgs,
       inputSchema: object(
         {
           clusterId: CLUSTER_ID,
-          events: events(1, 5, 'One series per event'),
+          events: events(1, 5, 'One series per event', true),
           filters: { ...PROPERTY_FILTERS, description: 'Filters every series must match' },
           bucket: { ...BUCKET, default: 'day' },
+          measure: MEASURE,
           days: DAYS,
           tz: TZ,
         },
@@ -375,18 +464,18 @@ export class McpToolsService {
     this.tool({
       name: 'list_insights',
       title: 'List saved insights',
-      description: 'The saved insight cards of the dashboard, in order, with their full config.',
+      description:
+        'The dashboard views with their sections, the viewsVersion to pass to set_views, and the saved insight cards in order with their full config and placement (view, section, hidden, width).',
       action: Action.Read,
       args: McpClusterArgs,
       inputSchema: object({ clusterId: CLUSTER_ID }, ['clusterId']),
-      run: async (args, context) => ({
-        insights: await this.insights.readInsights(this.cluster(context, args.clusterId).id),
-      }),
+      run: (args, context) => this.insights.readLayout(this.cluster(context, args.clusterId).id),
     }),
     this.tool({
       name: 'run_insight',
       title: 'Run a saved insight',
-      description: 'The current result of one saved insight card.',
+      description:
+        'The current result of one saved insight card. A tabs card returns the result of each tab.',
       action: Action.Read,
       args: McpRunInsightArgs,
       inputSchema: object({ clusterId: CLUSTER_ID, insightId: INSIGHT_ID, tz: TZ }, [
@@ -396,20 +485,33 @@ export class McpToolsService {
       run: async (args, context) => {
         const cluster = this.cluster(context, args.clusterId);
         const insight = await this.insights.readInsightOrThrow(cluster.id, args.insightId);
+        const result = async (
+          config: WebAnalyticsInsightConfig,
+        ): Promise<Record<string, unknown>> =>
+          this.formatResult(
+            await this.insights.run(cluster.id, config, args.tz, cluster.retentionDays),
+            args.tz,
+          );
         return {
           id: insight.id,
           title: insight.title,
-          ...this.formatResult(
-            await this.insights.run(cluster.id, insight, args.tz, cluster.retentionDays),
-            args.tz,
-          ),
+          ...(insight.type === WebAnalyticsInsightType.Tabs
+            ? {
+                tabs: await Promise.all(
+                  (insight.tabs ?? []).map(async (tab) => ({
+                    title: tab.title,
+                    ...(await result(tab)),
+                  })),
+                ),
+              }
+            : await result(insight)),
         };
       },
     }),
     this.tool({
       name: 'create_insight',
       title: 'Save an insight',
-      description: `Adds an insight card to the end of the dashboard, up to ${MAX_WEB_ANALYTICS_INSIGHTS} per domain. Try it with the matching read tool first.`,
+      description: `Adds an insight card to the end of the dashboard, up to ${MAX_WEB_ANALYTICS_INSIGHTS} per domain. Try it with the matching read tool first. Pass view, section, hidden and width to place it, with view and section ids from list_insights or set_views. Give each trend line a label and its own bucket, and set measure to people, to show the daily, weekly and monthly active users of a product in one card.`,
       action: Action.Write,
       args: McpCreateInsightArgs,
       inputSchema: object({ clusterId: CLUSTER_ID, ...INSIGHT }, ['clusterId', 'type', 'title']),
@@ -426,7 +528,8 @@ export class McpToolsService {
     this.tool({
       name: 'update_insight',
       title: 'Change a saved insight',
-      description: 'Replaces the whole config of a saved insight card.',
+      description:
+        'Replaces the whole config of a saved insight card. The placement fields (view, section, hidden, width) keep their stored value when omitted, and null clears one.',
       action: Action.Write,
       args: McpUpdateInsightArgs,
       inputSchema: object({ clusterId: CLUSTER_ID, insightId: INSIGHT_ID, ...INSIGHT }, [
@@ -449,7 +552,8 @@ export class McpToolsService {
     this.tool({
       name: 'reorder_insights',
       title: 'Reorder saved insights',
-      description: 'Sets the card order. ids must list every saved insight of the domain once.',
+      description:
+        'Sets the card order and/or where cards sit (view, section, hidden, width) in one call. ids, when given, must list every saved insight of the domain once. placements change only the cards they list, and a placement field keeps its stored value when omitted while null clears it. Use it to lay out a whole dashboard.',
       action: Action.Write,
       args: McpReorderInsightsArgs,
       inputSchema: object(
@@ -461,17 +565,64 @@ export class McpToolsService {
             uniqueItems: true,
             items: INSIGHT_ID,
           },
+          placements: {
+            type: 'array',
+            maxItems: MAX_WEB_ANALYTICS_INSIGHTS,
+            items: object({ id: INSIGHT_ID, ...PLACEMENT }, ['id']),
+          },
         },
-        ['clusterId', 'ids'],
+        ['clusterId'],
       ),
       annotations: { readOnlyHint: false, idempotentHint: true },
-      run: async (args, context) => ({
-        insights: await this.write.reorderInsights(
-          this.cluster(context, args.clusterId).id,
-          args.ids,
-          context.user.id,
-        ),
-      }),
+      run: (args, context) =>
+        this.write.reorderInsights(this.cluster(context, args.clusterId).id, args, context.user.id),
+    }),
+    this.tool({
+      name: 'set_views',
+      title: 'Set dashboard views',
+      description:
+        'Replaces the views of the dashboard, the first one is the default. Pass the id of an existing view or section to keep or rename it, and omit it to add one. A view with traffic true shows the built-in traffic cards, and no view shows them unless it says so. Cards of a removed view or section move to the first view or out of the section, and cards keep their view when the views change order. Pass version, the viewsVersion from list_insights, so the call fails instead of overwriting views someone changed since. Returns the views and insights, so the new ids can be used right away.',
+      action: Action.Write,
+      args: McpSetViewsArgs,
+      inputSchema: object(
+        {
+          clusterId: CLUSTER_ID,
+          views: {
+            type: 'array',
+            maxItems: MAX_WEB_ANALYTICS_VIEWS,
+            items: object(
+              {
+                id: { ...VIEW_ID, description: 'From list_insights, to keep or rename a view' },
+                name: { type: 'string', minLength: 1, maxLength: 40 },
+                traffic: { type: 'boolean', default: false },
+                sections: {
+                  type: 'array',
+                  maxItems: MAX_WEB_ANALYTICS_SECTIONS,
+                  items: object(
+                    {
+                      id: { ...VIEW_ID, description: 'From list_insights, to keep or rename it' },
+                      title: { type: 'string', minLength: 1, maxLength: 60 },
+                      collapsed: { type: 'boolean', default: false },
+                    },
+                    ['title'],
+                  ),
+                },
+              },
+              ['name'],
+            ),
+          },
+          version: {
+            type: 'integer',
+            minimum: 0,
+            description:
+              'The viewsVersion from list_insights. When the views changed since, the call fails instead of overwriting them',
+          },
+        },
+        ['clusterId', 'views'],
+      ),
+      annotations: { readOnlyHint: false, idempotentHint: true },
+      run: (args, context) =>
+        this.write.updateViews(this.cluster(context, args.clusterId).id, args, context.user.id),
     }),
     this.tool({
       name: 'delete_insight',
@@ -620,15 +771,20 @@ export class McpToolsService {
           const site = await this.read.readSiteByClusterId(cluster.id);
           if (!site)
             return { clusterId: cluster.id, name: cluster.name, retentionDays, site: null };
-          const [insights, schema] = await Promise.all([
-            this.insights.readInsights(cluster.id),
+          const [layout, schema] = await Promise.all([
+            this.insights.readLayout(cluster.id),
             this.insights.readSchema(cluster.id, args.days, retentionDays),
           ]);
           return {
             clusterId: cluster.id,
             name: cluster.name,
             retentionDays,
-            site: { origins: site.origins, goals: site.goals, insights: insights.length },
+            site: {
+              origins: site.origins,
+              goals: site.goals,
+              insights: layout.insights.length,
+              views: layout.views.length,
+            },
             events: schema.events.slice(0, 50),
           };
         }),
@@ -726,7 +882,6 @@ export class McpToolsService {
       to: this.date(result.to, tz),
       steps: result.steps && this.funnelSteps(result.steps),
       times: result.times?.map((time) => this.date(time, tz)),
-      series: result.series?.map((series) => ({ ...series, total: sum(series.counts) })),
     };
   }
 

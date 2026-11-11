@@ -23,6 +23,7 @@ jobs:
         uses: './.github/templates/test'
 
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as d3 from 'd3';
   import type { ClassValue } from 'svelte/elements';
-  import { lastCurveSegment } from '../domain/analytics-chart';
+  import { lastBucketStart, lastCurveSegment } from '../domain/analytics-chart';
   import {
     bucketLabel,
     bucketTitle,
@@ -80,6 +80,22 @@
 
   const partialIndex = $derived(partial ? times.length - 1 : -1);
 
+  // Where the in-progress part of a line starts, -1 for a complete line.
+  function partialFrom(line: AnalyticsChartLine): number {
+    if (!partial || line.dashed) return -1;
+    return line.bucket ? lastBucketStart(times, line.bucket) : partialIndex;
+  }
+
+  function stepPath(values: number[], offset = 0): string {
+    return (
+      d3
+        .line<number>()
+        .x((_, index) => x(offset + index))
+        .y((value) => y(value))
+        .curve(d3.curveStepAfter)(values) ?? ''
+    );
+  }
+
   function hasInProgressSegment(line: AnalyticsChartLine): boolean {
     return partialIndex > 0 && !line.dashed;
   }
@@ -89,7 +105,8 @@
   }
 
   function isPartialPoint(line: AnalyticsChartLine, index: number): boolean {
-    return partial && index === partialIndex && !line.dashed;
+    const from = partialFrom(line);
+    return from >= 0 && index >= from;
   }
 
   function onPointerMove(event: PointerEvent): void {
@@ -190,24 +207,49 @@
       {/each}
 
       {#each lines as line (line.label)}
-        <path
-          d={path(line.values)}
-          fill="none"
-          stroke={line.color}
-          stroke-width={line.dashed ? 1.5 : 2}
-          stroke-dasharray={line.dashed ? '4 4' : undefined}
-          stroke-linejoin="round"
-          clip-path={completeClip(line)}
-        />
-        {#if hasInProgressSegment(line)}
+        {#if line.bucket}
+          {@const from = partialFrom(line)}
+          {#if from !== 0}
+            <path
+              d={stepPath(
+                from < 0 ? line.values : line.values.slice(0, from + 1),
+              )}
+              fill="none"
+              stroke={line.color}
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          {/if}
+          {#if from >= 0 && from < times.length - 1}
+            <path
+              d={stepPath(line.values.slice(from), from)}
+              fill="none"
+              stroke={line.color}
+              stroke-width="2"
+              stroke-dasharray="3 3"
+              stroke-dashoffset="3"
+            />
+          {/if}
+        {:else}
           <path
-            d={lastCurveSegment(path(line.values) ?? '')}
+            d={path(line.values)}
             fill="none"
             stroke={line.color}
-            stroke-width="2"
-            stroke-dasharray="3 3"
-            stroke-dashoffset="3"
+            stroke-width={line.dashed ? 1.5 : 2}
+            stroke-dasharray={line.dashed ? '4 4' : undefined}
+            stroke-linejoin="round"
+            clip-path={completeClip(line)}
           />
+          {#if hasInProgressSegment(line)}
+            <path
+              d={lastCurveSegment(path(line.values) ?? '')}
+              fill="none"
+              stroke={line.color}
+              stroke-width="2"
+              stroke-dasharray="3 3"
+              stroke-dashoffset="3"
+            />
+          {/if}
         {/if}
         {#if isPartialPoint(line, partialIndex) && hovered !== partialIndex}
           <circle

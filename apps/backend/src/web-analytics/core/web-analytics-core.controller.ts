@@ -71,6 +71,7 @@ import {
   ReorderWebAnalyticsInsightsBody,
   WebAnalyticsInsightBody,
 } from './dto/web-analytics-insight.body';
+import { UpdateWebAnalyticsViewsBody } from './dto/web-analytics-views.body';
 import {
   WebAnalyticsInsightResult,
   WebAnalyticsInsightSerialized,
@@ -359,7 +360,7 @@ export class WebAnalyticsCoreController {
   public async readInsights(
     @Param('clusterId') clusterId: string,
   ): Promise<WebAnalyticsInsightsResponse> {
-    return { insights: await this.insights.readInsights(clusterId) };
+    return this.insights.readLayout(clusterId);
   }
 
   @Post('clusters/:clusterId/web_analytics/insights/run')
@@ -405,7 +406,20 @@ export class WebAnalyticsCoreController {
     @Body() body: ReorderWebAnalyticsInsightsBody,
     @CurrentUserId() userId: string,
   ): Promise<WebAnalyticsInsightsResponse> {
-    return { insights: await this.write.reorderInsights(clusterId, body.ids, userId) };
+    return this.write.reorderInsights(clusterId, body, userId);
+  }
+
+  @Put('clusters/:clusterId/web_analytics/views')
+  @ApiBearerAuth()
+  @UseGuards(ClusterMemberGuard)
+  @RequireScope(Resource.WebAnalytics, Action.Write)
+  @ApiResponse({ type: WebAnalyticsInsightsResponse })
+  public async updateViews(
+    @Param('clusterId') clusterId: string,
+    @Body() body: UpdateWebAnalyticsViewsBody,
+    @CurrentUserId() userId: string,
+  ): Promise<WebAnalyticsInsightsResponse> {
+    return this.write.updateViews(clusterId, body, userId);
   }
 
   @Put('clusters/:clusterId/web_analytics/insights/:insightId')

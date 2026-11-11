@@ -39,13 +39,29 @@ test('the URL keeps the day and one filter per dimension, and drops what is not 
       { dimension: 'country', value: 'PL' },
     ],
     event: null,
+    view: null,
   });
   expect(analyticsSearch(query)).toBe(
     '?day=2026-10-25&filter=page%3A%2Fpricing&filter=country%3APL',
   );
   for (const day of ['2026-02-30', 'yesterday', '2026-10-25T10:00'])
     expect(parseAnalyticsQuery(new URLSearchParams({ day })).day).toBeNull();
-  expect(analyticsSearch({ day: null, filters: [], event: null })).toBe('');
+  expect(
+    analyticsSearch({ day: null, filters: [], event: null, view: null }),
+  ).toBe('');
+});
+
+test('the URL keeps the open view and drops what is not a view id', () => {
+  const view = '6ad7c3bdbd07e475a5e48e73';
+  const query = parseAnalyticsQuery(
+    new URLSearchParams(`view=${view}&day=2026-10-25`),
+  );
+  expect(query.view).toBe(view);
+  expect(analyticsSearch(query)).toBe(`?day=2026-10-25&view=${view}`);
+  for (const value of ['', 'traffic', '6AD7C3BDBD07E475A5E48E73'])
+    expect(
+      parseAnalyticsQuery(new URLSearchParams({ view: value })).view,
+    ).toBeNull();
 });
 
 test('a day reads from its local midnight to the next, hour by hour', () => {

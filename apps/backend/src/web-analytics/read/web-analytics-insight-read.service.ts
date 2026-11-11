@@ -3,12 +3,17 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { WebAnalyticsSiteEntity } from '../core/entities/web-analytics-site.entity';
-import { WebAnalyticsInsightNormalized } from '../core/entities/web-analytics-site.interface';
-import { WebAnalyticsInsightSerializer } from '../core/entities/web-analytics-site.serializer';
+import {
+  WebAnalyticsInsightNormalized,
+  WebAnalyticsLayoutNormalized,
+} from '../core/entities/web-analytics-site.interface';
+import { WebAnalyticsSiteSerializer } from '../core/entities/web-analytics-site.serializer';
 import {
   WebAnalyticsFunnelMode,
+  WebAnalyticsInsightBucket,
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightFilter,
+  WebAnalyticsInsightMeasure,
   WebAnalyticsInsightOperator,
   WebAnalyticsInsightType,
 } from '../core/dto/web-analytics-insight.body';
@@ -52,6 +57,27 @@ type Conditions = {
   params: Record<string, unknown>;
 };
 
+// The bucket each trend line counts per: its own, else the one of the insight, else day.
+function lineBuckets(insight: WebAnalyticsInsightConfig): WebAnalyticsInsightBucket[] {
+  return (insight.events ?? []).map(
+    (event) => event.bucket ?? insight.bucket ?? WebAnalyticsGranularity.Day,
+  );
+}
+
+// Lines with different buckets share a day axis, where every bucket starts on a tick.
+function trendAxis(buckets: WebAnalyticsInsightBucket[]): WebAnalyticsInsightBucket {
+  return new Set(buckets).size === 1 ? buckets[0] : WebAnalyticsGranularity.Day;
+}
+
+// Repeats the count of each bucket on every tick it spans. The first bucket can start before the first tick.
+function spread(ticks: number[], starts: number[], counts: number[]): number[] {
+  let at = 0;
+  return ticks.map((tick) => {
+    while (at + 1 < starts.length && starts[at + 1] <= tick) at++;
+    return counts[at] ?? 0;
+  });
+}
+
 @Injectable()
 export class WebAnalyticsInsightReadService {
   constructor(
@@ -60,15 +86,13 @@ export class WebAnalyticsInsightReadService {
     private readonly read: WebAnalyticsReadService,
   ) {}
 
-  public async readInsights(clusterId: string): Promise<WebAnalyticsInsightNormalized[]> {
+  public async readLayout(clusterId: string): Promise<WebAnalyticsLayoutNormalized> {
     const site = await this.model
       .findOne({ clusterId })
-      .select('insights')
+      .select('insights views viewsVersion')
       .lean<WebAnalyticsSiteEntity>()
       .exec();
-    return (site?.insights ?? []).map((insight) =>
-      WebAnalyticsInsightSerializer.normalize(insight),
-    );
+    return WebAnalyticsSiteSerializer.normalizeLayout(site);
   }
 
   public async readInsightOrThrow(
@@ -76,7 +100,7 @@ export class WebAnalyticsInsightReadService {
     insightId: string,
   ): Promise<WebAnalyticsInsightNormalized> {
     const insight = Types.ObjectId.isValid(insightId)
-      ? (await this.readInsights(clusterId)).find((entry) => entry.id === insightId)
+      ? (await this.readLayout(clusterId)).insights.find((entry) => entry.id === insightId)
       : undefined;
     if (!insight) throw new NotFoundException('Insight not found');
     return insight;
@@ -111,7 +135,15 @@ export class WebAnalyticsInsightReadService {
     tz: string,
     retentionDays: number,
   ): Promise<WebAnalyticsInsightResult> {
-    const query = this.window(insight.days, tz, insight.bucket);
+    if (insight.type === WebAnalyticsInsightType.Tabs)
+      throw new BadRequestException('Run each tab on its own');
+    const query = this.window(
+      insight.days,
+      tz,
+      insight.type === WebAnalyticsInsightType.Trend
+        ? trendAxis(lineBuckets(insight))
+        : insight.bucket,
+    );
     const scope = this.read.scope(clusterId, query, retentionDays);
     const range = {
       type: insight.type,
@@ -136,7 +168,12 @@ export class WebAnalyticsInsightReadService {
     if (insight.type === WebAnalyticsInsightType.Funnel)
       return { ...range, ...(await this.readEventsFunnel(insight, scope, conditions)) };
     if (insight.type === WebAnalyticsInsightType.Trend)
-      return { ...range, ...(await this.readTrend(insight, scope, conditions)) };
+      return {
+        ...range,
+        ...(await this.readTrend(insight, scope, conditions, (bucket) =>
+          this.read.scope(clusterId, { ...query, granularity: bucket }, retentionDays),
+        )),
+      };
     if (insight.type === WebAnalyticsInsightType.Distribution)
       return { ...range, ...(await this.readDistribution(insight, scope, conditions)) };
     return { ...range, ...(await this.readCohorts(insight, scope, conditions)) };
@@ -147,15 +184,11 @@ export class WebAnalyticsInsightReadService {
     scope: Scope,
     conditions: Conditions,
   ): Promise<Pick<WebAnalyticsInsightResult, 'steps'>> {
-    const rows = await this.query<Record<string, string>>(
-      `SELECT ${this.counts(conditions)} FROM web_events FINAL
-      WHERE ${scope.where} AND name IN {names:Array(String)} AND ${conditions.all}`,
-      conditions.params,
-    );
+    const counts = await this.totals(scope, conditions);
     return {
       steps: (insight.events ?? []).map((event, index) => ({
         name: event.name,
-        count: Number(rows[0]?.[`s${index}`] ?? 0),
+        count: counts[index],
       })),
     };
   }
@@ -164,24 +197,56 @@ export class WebAnalyticsInsightReadService {
     insight: WebAnalyticsInsightConfig,
     scope: Scope,
     conditions: Conditions,
-  ): Promise<Pick<WebAnalyticsInsightResult, 'times' | 'series'>> {
-    const [times, rows] = await Promise.all([
-      this.read.readBuckets(scope, scope.params),
-      this.query<Record<string, string>>(
-        `SELECT toUnixTimestamp(${scope.bucket('created_at')}) * 1000 AS time, ${this.counts(conditions)}
-        FROM web_events FINAL
-        WHERE ${scope.where} AND name IN {names:Array(String)} AND ${conditions.all}
-        GROUP BY time`,
-        conditions.params,
-      ),
-    ]);
-    const byTime = new Map(rows.map((row) => [Number(row.time), row]));
+    scopeOf: (bucket: WebAnalyticsGranularity) => Scope,
+  ): Promise<Pick<WebAnalyticsInsightResult, 'times' | 'bucket' | 'measure' | 'series'>> {
+    const events = insight.events ?? [];
+    const buckets = lineBuckets(insight);
+    const axis = trendAxis(buckets);
+    const people = insight.measure === WebAnalyticsInsightMeasure.People;
+    const times = this.read.readBuckets(scope, scope.params);
+    // People of the whole period are not the sum of the people of each bucket, so they get a query of their own.
+    const distinct = people ? this.totals(scope, conditions, true) : undefined;
+    // One query per bucket, which counts only the lines of that bucket.
+    const groups = await Promise.all(
+      [...new Set(buckets)].map(async (bucket) => {
+        const lines = buckets.flatMap((own, index) => (own === bucket ? [index] : []));
+        const group = bucket === axis ? scope : scopeOf(bucket);
+        const [ticks, starts, rows, totals] = await Promise.all([
+          times,
+          bucket === axis ? times : this.read.readBuckets(group, scope.params),
+          this.query<Record<string, string>>(
+            `SELECT toUnixTimestamp(${group.bucket('created_at')}) * 1000 AS time, ${this.counts(conditions, lines, people)}
+            FROM web_events FINAL
+            WHERE ${scope.where} AND name IN {names:Array(String)} AND ${conditions.all}
+            GROUP BY time`,
+            conditions.params,
+          ),
+          distinct,
+        ]);
+        const byTime = new Map(rows.map((row) => [Number(row.time), row]));
+        return lines.map((line) => {
+          const counts = starts.map((start) => Number(byTime.get(start)?.[`s${line}`] ?? 0));
+          return [
+            line,
+            {
+              name: events[line].name,
+              ...(events[line].label ? { label: events[line].label } : {}),
+              bucket,
+              counts: spread(ticks, starts, counts),
+              total: totals?.[line] ?? counts.reduce((total, count) => total + count, 0),
+            },
+          ] as const;
+        });
+      }),
+    );
     return {
-      times,
-      series: (insight.events ?? []).map((event, index) => ({
-        name: event.name,
-        counts: times.map((time) => Number(byTime.get(time)?.[`s${index}`] ?? 0)),
-      })),
+      times: await times,
+      bucket: axis,
+      measure: people ? WebAnalyticsInsightMeasure.People : WebAnalyticsInsightMeasure.Events,
+      series: groups
+        .flat()
+        .sort(([a], [b]) => a - b)
+        .map(([, series]) => series),
     };
   }
 
@@ -316,10 +381,26 @@ export class WebAnalyticsInsightReadService {
     };
   }
 
-  private counts(conditions: Conditions): string {
+  // Per line: its events, or its distinct people. Only users with an id are people, as a visitor id changes every day.
+  private counts(conditions: Conditions, only?: number[], people = false): string {
     return conditions.events
-      .map((condition, index) => `countIf(${condition}) AS s${index}`)
+      .map((condition, index) =>
+        people
+          ? `uniqExactIf(user_id, user_id != '' AND (${condition})) AS s${index}`
+          : `countIf(${condition}) AS s${index}`,
+      )
+      .filter((_, index) => !only || only.includes(index))
       .join(', ');
+  }
+
+  // One number per line for the whole period.
+  private async totals(scope: Scope, conditions: Conditions, people = false): Promise<number[]> {
+    const [row] = await this.query<Record<string, string>>(
+      `SELECT ${this.counts(conditions, undefined, people)} FROM web_events FINAL
+      WHERE ${scope.where} AND name IN {names:Array(String)} AND ${conditions.all}`,
+      conditions.params,
+    );
+    return conditions.events.map((_, index) => Number(row?.[`s${index}`] ?? 0));
   }
 
   private window(

@@ -4,40 +4,35 @@
     MENU_ROW,
     onMenuArrowKeys,
   } from '$lib/domains/app/clusters/ui/menu';
+  import ExpandIcon from '$lib/domains/shared/icons/ExpandIcon.svelte';
+  import EyeOffIcon from '$lib/domains/shared/icons/EyeOffIcon.svelte';
+  import GripIcon from '$lib/domains/shared/icons/GripIcon.svelte';
   import MoreIcon from '$lib/domains/shared/icons/MoreIcon.svelte';
+  import ShrinkIcon from '$lib/domains/shared/icons/ShrinkIcon.svelte';
+  import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import Well from '$lib/domains/shared/ui/components/Well.svelte';
-  import { Dropdown, Spinner } from '@logdash/hyper-ui/presentational';
-  import { untrack } from 'svelte';
-  import { WebAnalyticsInsightState } from '../../application/web-analytics-dashboard.state.svelte';
-  import { formatPercent } from '../../domain/analytics-format';
-  import { endsInProgress } from '../../domain/analytics-period';
+  import { Dropdown, Tab, Tabs } from '@logdash/hyper-ui/presentational';
   import type {
     WebAnalyticsInsight,
-    WebAnalyticsInsightResult,
+    WebAnalyticsInsightWidth,
+    WebAnalyticsView,
   } from '../../domain/web-analytics';
-  import {
-    defaultBucket,
-    funnelRows,
-    insightConfig,
-    insightDraft,
-    insightSummary,
-    insightWide,
-  } from '../../domain/web-analytics-insight';
-  import { WebAnalyticsService } from '../../infrastructure/web-analytics.service';
-  import InsightCohorts from './InsightCohorts.svelte';
-  import InsightFunnelColumns from './InsightFunnelColumns.svelte';
-  import InsightFunnelRows from './InsightFunnelRows.svelte';
-  import InsightHistogram from './InsightHistogram.svelte';
-  import InsightTrend from './InsightTrend.svelte';
+  import { insightCharts } from '../../domain/web-analytics-insight';
+  import InsightBody from './InsightBody.svelte';
 
   type Props = {
     clusterId: string;
     insight: WebAnalyticsInsight;
     revision: number;
+    width: WebAnalyticsInsightWidth;
     first: boolean;
     last: boolean;
+    elsewhere: WebAnalyticsView[];
     onedit: (insight: WebAnalyticsInsight) => void;
-    onmove: (insight: WebAnalyticsInsight, offset: number) => void;
+    onmove: (insight: WebAnalyticsInsight, offset: -1 | 1) => void;
+    onviewmove: (insight: WebAnalyticsInsight, view: WebAnalyticsView) => void;
+    onhide: (insight: WebAnalyticsInsight) => void;
+    onwidth: (insight: WebAnalyticsInsight) => void;
     onremove: (insight: WebAnalyticsInsight) => void;
   };
 
@@ -45,53 +40,83 @@
     clusterId,
     insight,
     revision,
+    width,
     first,
     last,
+    elsewhere,
     onedit,
     onmove,
+    onviewmove,
+    onhide,
+    onwidth,
     onremove,
   }: Props = $props();
 
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const charts = $derived(insightCharts(insight));
+  const tabbed = $derived(insight.type === 'tabs');
 
-  const config = $derived(insightConfig(insightDraft(insight)));
-  const key = $derived(JSON.stringify(config));
-  const result = new WebAnalyticsInsightState<WebAnalyticsInsightResult>(() =>
-    WebAnalyticsService.runInsight(clusterId, config, tz),
-  );
-  const endToEnd = $derived.by((): string | null => {
-    const rows = funnelRows(result.data?.steps ?? []);
-    return rows.length > 1
-      ? `${formatPercent(rows[rows.length - 1].overall)} end to end`
-      : null;
-  });
-  const summary = $derived(
-    [insightSummary(insight), endToEnd].filter(Boolean).join(', '),
-  );
+  let picked = $state(0);
+  let visited = $state([0]);
+  let summaries = $state<string[]>([]);
 
-  $effect(() => {
-    void key;
-    void revision;
-    untrack(() => void result.load());
-  });
+  const active = $derived(Math.min(picked, charts.length - 1));
+  const summary = $derived(summaries[active] ?? '');
+  const full = $derived(width === 'full');
+
+  function onTab(index: number): void {
+    picked = index;
+    if (!visited.includes(index)) visited.push(index);
+  }
 </script>
 
-<Well
-  label={insight.title}
-  class={['@container', { '@4xl/insights:col-span-2': insightWide(insight) }]}
->
+<Well label={insight.title} class="group/card @container h-full flex-1">
   {#snippet header()}
-    <h3 class="flex min-w-0 items-baseline gap-2 px-3 text-[13px]">
+    <h3
+      class="flex h-[1lh] min-w-0 flex-wrap items-baseline gap-x-2 overflow-hidden px-3 text-[13px]"
+    >
       <span class="max-w-full shrink-0 truncate font-medium">
         {insight.title}
       </span>
-      <span class="text-fg-muted min-w-0 truncate" title={summary}>
+      <span class="text-fg-muted grow basis-16 truncate" title={summary}>
         {summary}
       </span>
     </h3>
   {/snippet}
 
   {#snippet actions()}
+    <div
+      class="pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100 pointer-fine:group-focus-within/card:opacity-100 flex items-center gap-0.5 transition-opacity"
+    >
+      <div class="hidden @4xl/insights:contents">
+        <IconButton
+          well
+          label={full ? 'Make half width' : 'Make full width'}
+          onclick={() => onwidth(insight)}
+        >
+          {#if full}
+            <ShrinkIcon class="size-4" />
+          {:else}
+            <ExpandIcon class="size-4" />
+          {/if}
+        </IconButton>
+      </div>
+      <IconButton
+        well
+        label="Hide {insight.title}"
+        onclick={() => onhide(insight)}
+      >
+        <EyeOffIcon class="size-4" />
+      </IconButton>
+      <IconButton
+        well
+        label="Drag {insight.title}"
+        tooltip="Drag to move"
+        class="cursor-grab"
+        data-grip="true"
+      >
+        <GripIcon class="size-4" />
+      </IconButton>
+    </div>
     <Dropdown align="end">
       {#snippet trigger(attrs)}
         <button
@@ -106,7 +131,7 @@
       {/snippet}
 
       <div
-        class={[MENU_PANEL, 'w-44']}
+        class={[MENU_PANEL, 'w-52']}
         role="menu"
         tabindex="-1"
         aria-label="Actions for {insight.title}"
@@ -144,6 +169,16 @@
         >
           Move later
         </button>
+        {#each elsewhere as view (view.id)}
+          <button
+            type="button"
+            role="menuitem"
+            class={MENU_ROW}
+            onclick={() => onviewmove(insight, view)}
+          >
+            <span class="truncate">Move to {view.name}</span>
+          </button>
+        {/each}
         <button
           type="button"
           role="menuitem"
@@ -156,49 +191,29 @@
     </Dropdown>
   {/snippet}
 
-  {#if result.error}
-    <p class="text-error px-3 py-16 text-center text-sm" role="alert">
-      {result.error}
-    </p>
-  {:else if !result.data || result.data.type !== insight.type}
-    <div class="flex min-h-60 flex-1 items-center justify-center">
-      <Spinner />
-    </div>
-  {:else}
-    {@const data = result.data}
-    <div class="flex flex-1 flex-col gap-2">
-      {#if insight.type === 'funnel'}
-        {@const Funnel =
-          insight.layout === 'rows' ? InsightFunnelRows : InsightFunnelColumns}
-        <Funnel
-          steps={data.steps ?? []}
-          people={insight.mode === 'people'}
-          filters={(insight.events ?? []).map((event) => event.filters)}
-        />
-      {:else if insight.type === 'trend'}
-        <InsightTrend
-          times={data.times ?? []}
-          series={data.series ?? []}
-          events={insight.events ?? []}
-          bucket={insight.bucket ?? defaultBucket('trend')}
-          partial={endsInProgress(data.to)}
-          label={insight.title}
-        />
-      {:else if insight.type === 'distribution'}
-        <InsightHistogram
-          bins={data.bins ?? []}
-          summary={data.summary ?? { count: 0, mean: null, median: null }}
-          binSize={insight.binSize ?? 1}
-        />
-      {:else}
-        <InsightCohorts
-          cohorts={data.cohorts ?? []}
-          events={insight.events ?? []}
-          bucket={insight.bucket ?? defaultBucket('cohorts')}
-          property={insight.property ?? 'cohort'}
-          lagDays={data.lagDays ?? []}
-        />
-      {/if}
-    </div>
+  {#if tabbed}
+    <Tabs size="xs" class="gap-0.5 px-3" aria-label="Charts in {insight.title}">
+      {#each charts as chart, index (index)}
+        <Tab active={index === active} onclick={() => onTab(index)}>
+          {chart.title}
+        </Tab>
+      {/each}
+    </Tabs>
   {/if}
+
+  {#each charts as chart, index (index)}
+    {#if index === active || visited.includes(index)}
+      <div
+        class={['flex flex-1 flex-col', { hidden: index !== active }]}
+        role={tabbed ? 'tabpanel' : undefined}
+      >
+        <InsightBody
+          {clusterId}
+          {chart}
+          {revision}
+          bind:summary={summaries[index]}
+        />
+      </div>
+    {/if}
+  {/each}
 </Well>

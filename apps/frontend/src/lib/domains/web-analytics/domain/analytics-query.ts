@@ -10,6 +10,7 @@ export interface AnalyticsQuery {
   day: string | null;
   filters: WebAnalyticsFilter[];
   event: string | null;
+  view: string | null;
 }
 
 const DIMENSIONS: WebAnalyticsFilterDimension[] = [
@@ -49,6 +50,7 @@ export const FILTER_LABELS: Record<WebAnalyticsFilterDimension, string> = {
 export function parseAnalyticsQuery(params: URLSearchParams): AnalyticsQuery {
   const day = params.get('day');
   const event = params.get('event');
+  const view = params.get('view');
   return {
     day: day && isLocalDate(day) ? day : null,
     filters: params
@@ -71,6 +73,7 @@ export function parseAnalyticsQuery(params: URLSearchParams): AnalyticsQuery {
             index,
       ),
     event: event && /^[a-z][a-z0-9_]{0,63}$/.test(event) ? event : null,
+    view: view && /^[0-9a-f]{24}$/.test(view) ? view : null,
   };
 }
 
@@ -80,6 +83,7 @@ export function analyticsSearch(query: AnalyticsQuery): string {
   for (const filter of query.filters)
     params.append('filter', `${filter.dimension}:${filter.value}`);
   if (query.event) params.set('event', query.event);
+  if (query.view) params.set('view', query.view);
   const search = params.toString();
   return search ? `?${search}` : '';
 }

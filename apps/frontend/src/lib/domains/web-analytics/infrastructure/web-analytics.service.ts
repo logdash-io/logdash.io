@@ -7,10 +7,12 @@ import type {
   WebAnalyticsDays,
   WebAnalyticsDayVisits,
   WebAnalyticsEvent,
+  WebAnalyticsChartConfig,
   WebAnalyticsGoals,
   WebAnalyticsInsight,
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightResult,
+  WebAnalyticsInsights,
   WebAnalyticsJourney,
   WebAnalyticsOverview,
   WebAnalyticsRange,
@@ -19,10 +21,12 @@ import type {
   WebAnalyticsSchema,
   WebAnalyticsSite,
   WebAnalyticsStatus,
+  WebAnalyticsViewInput,
   WebAnalyticsVisitor,
   WebAnalyticsVisitorEvent,
   WebAnalyticsVisitShow,
 } from '../domain/web-analytics';
+import type { Arrangement } from '../domain/web-analytics-layout';
 
 export class WebAnalyticsService {
   public static async readSite(
@@ -201,16 +205,15 @@ export class WebAnalyticsService {
 
   public static async readInsights(
     clusterId: string,
-  ): Promise<WebAnalyticsInsight[]> {
-    const response = await httpClient.get<{ insights: WebAnalyticsInsight[] }>(
+  ): Promise<WebAnalyticsInsights> {
+    return httpClient.get<WebAnalyticsInsights>(
       `/clusters/${clusterId}/web_analytics/insights`,
     );
-    return response.insights;
   }
 
   public static async runInsight(
     clusterId: string,
-    config: WebAnalyticsInsightConfig,
+    config: WebAnalyticsChartConfig,
     tz: string,
   ): Promise<WebAnalyticsInsightResult> {
     return httpClient.post<WebAnalyticsInsightResult>(
@@ -242,13 +245,23 @@ export class WebAnalyticsService {
 
   public static async reorderInsights(
     clusterId: string,
-    ids: string[],
-  ): Promise<WebAnalyticsInsight[]> {
-    const response = await httpClient.post<{ insights: WebAnalyticsInsight[] }>(
+    arrangement: Arrangement,
+  ): Promise<WebAnalyticsInsights> {
+    return httpClient.post<WebAnalyticsInsights>(
       `/clusters/${clusterId}/web_analytics/insights/reorder`,
-      { ids },
+      arrangement,
     );
-    return response.insights;
+  }
+
+  public static async saveViews(
+    clusterId: string,
+    views: WebAnalyticsViewInput[],
+    version: number | undefined,
+  ): Promise<WebAnalyticsInsights> {
+    return httpClient.put<WebAnalyticsInsights>(
+      `/clusters/${clusterId}/web_analytics/views`,
+      { views, version },
+    );
   }
 
   public static async deleteInsight(

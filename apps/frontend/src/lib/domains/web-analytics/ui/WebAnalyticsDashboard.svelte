@@ -12,7 +12,10 @@
     WebAnalyticsDayVisitsState,
     WebAnalyticsGoalsState,
   } from '../application/day-analytics.state.svelte';
-  import { WebAnalyticsDashboardState } from '../application/web-analytics-dashboard.state.svelte';
+  import {
+    WebAnalyticsDashboardState,
+    WebAnalyticsInsightsState,
+  } from '../application/web-analytics-dashboard.state.svelte';
   import {
     analyticsSearch,
     dayRange,
@@ -36,9 +39,17 @@
     WebAnalyticsDays,
     WebAnalyticsDayVisit,
     WebAnalyticsFilter,
+    WebAnalyticsInsight,
+    WebAnalyticsInsightConfig,
+    WebAnalyticsViewInput,
     WebAnalyticsVisitor,
     WebAnalyticsVisitShow,
   } from '../domain/web-analytics';
+  import {
+    activeView,
+    dashboardViews,
+    viewLayout,
+  } from '../domain/web-analytics-layout';
   import { WebAnalyticsService } from '../infrastructure/web-analytics.service';
   import ActiveFilters from './ActiveFilters.svelte';
   import DayCard from './day/DayCard.svelte';
@@ -47,7 +58,10 @@
   import DayToolbar from './day/DayToolbar.svelte';
   import DayVisitsCard from './day/DayVisitsCard.svelte';
   import VisitGroupsCard from './day/VisitGroupsCard.svelte';
+  import InsightEditor from './insights/InsightEditor.svelte';
+  import InsightsBar from './insights/InsightsBar.svelte';
   import InsightsSection from './insights/InsightsSection.svelte';
+  import LayoutDialog from './insights/LayoutDialog.svelte';
   import VisitorDialog from './insights/VisitorDialog.svelte';
   import WebAnalyticsSetup from './WebAnalyticsSetup.svelte';
 
@@ -69,6 +83,7 @@
     untrack(() => `${clusterId}:day`),
   );
   const visits = new WebAnalyticsDayVisitsState(untrack(() => clusterId));
+  const insights = new WebAnalyticsInsightsState(untrack(() => clusterId));
 
   let clock = $state(DateTime.local());
   let show = $state<WebAnalyticsVisitShow>('all');
@@ -79,9 +94,18 @@
   let opened = $state<WebAnalyticsVisitor | null>(null);
   let details = $state<HTMLElement>();
   let revision = $state(0);
+  let editing = $state<WebAnalyticsInsight | null>(null);
+  let editorOpen = $state(false);
+  let layoutOpen = $state(false);
   let reportKey = '';
 
   const query = $derived(parseAnalyticsQuery(page.url.searchParams));
+  const ready = $derived(insights.insights !== null);
+  const view = $derived(activeView(insights.views, query.view));
+  const layout = $derived(
+    viewLayout(insights.views, view, insights.insights ?? []),
+  );
+  const traffic = $derived((ready || insights.error !== null) && view.traffic);
   const today = $derived(days.data?.today ?? clock.toISODate() ?? '');
   const since = $derived(days.data?.since ?? null);
   const date = $derived(
@@ -102,7 +126,12 @@
     ),
   );
   const filterKey = $derived(
-    analyticsSearch({ day: null, filters: query.filters, event: null }),
+    analyticsSearch({
+      day: null,
+      filters: query.filters,
+      event: null,
+      view: null,
+    }),
   );
   const params = $derived.by((): WebAnalyticsDayParams | null => {
     if (!goals.picked) return null;
@@ -146,20 +175,21 @@
 
   onMount(() => {
     void analytics.loadSite();
+    void insights.load();
     void goals.load(tz);
     const timer = setInterval(onTick, 60_000);
     return () => clearInterval(timer);
   });
 
   $effect(() => {
-    if (!params) return;
+    if (!params || !traffic) return;
     const end = stripEnd;
     const current = params;
     untrack(() => loadDays(end, current, end === today));
   });
 
   $effect(() => {
-    if (!params || (query.day && !days.data)) return;
+    if (!params || !traffic || (query.day && !days.data)) return;
     const at = shown;
     const current = params;
     untrack(() => {
@@ -169,7 +199,7 @@
   });
 
   $effect(() => {
-    if (!params || (query.day && !days.data)) return;
+    if (!params || !traffic || (query.day && !days.data)) return;
     const at = date;
     const current = params;
     const shown = show;
@@ -181,7 +211,7 @@
   });
 
   $effect(() => {
-    if (!detailsOpen) return;
+    if (!detailsOpen || !traffic) return;
     void range;
     untrack(loadReport);
   });
@@ -231,9 +261,12 @@
 
   function refresh(force = false): void {
     void analytics.loadSite();
-    if (force) revision += 1;
+    if (force) {
+      revision += 1;
+      void insights.load();
+    }
     if (goals.error) void goals.load(tz);
-    if (!params) return;
+    if (!params || !traffic) return;
     loadDays(stripEnd, params, true);
     if (shownLive || force) void loadDay(shown, params, true);
     if (!live && !force) return;
@@ -282,6 +315,7 @@
 
   function onKeydown(event: KeyboardEvent): void {
     if (
+      !traffic ||
       event.defaultPrevented ||
       event.metaKey ||
       event.ctrlKey ||
@@ -353,6 +387,50 @@
     opened = null;
   }
 
+  function onView(id: string): void {
+    void onQueryChange({
+      ...query,
+      view: id === insights.views[0]?.id ? null : id,
+    });
+  }
+
+  function onAdd(): void {
+    editing = null;
+    editorOpen = true;
+  }
+
+  function onEdit(insight: WebAnalyticsInsight): void {
+    editing = insight;
+    editorOpen = true;
+  }
+
+  function onEditorClose(): void {
+    editorOpen = false;
+  }
+
+  async function onInsightSave(
+    config: WebAnalyticsInsightConfig,
+    id: string | null,
+  ): Promise<void> {
+    await insights.save(config, id);
+  }
+
+  function onRestore(insight: WebAnalyticsInsight): void {
+    void insights.place(insight.id, { hidden: null });
+  }
+
+  function onLayout(): void {
+    layoutOpen = true;
+  }
+
+  function onLayoutClose(): void {
+    layoutOpen = false;
+  }
+
+  async function onLayoutSave(views: WebAnalyticsViewInput[]): Promise<void> {
+    await insights.saveViews(views);
+  }
+
   function stripTitle(): string {
     if (!days.data || days.data.to === today) return 'Last 28 days';
     const from = DateTime.fromISO(days.data.from);
@@ -373,7 +451,7 @@
 <div class="@container flex w-full flex-col">
   <ServiceHealthStrip {clusterId} />
 
-  {#if query.filters.length}
+  {#if traffic && query.filters.length}
     <div class="edge-b px-4 py-2">
       <ActiveFilters {query} onchange={onQueryChange} />
     </div>
@@ -394,89 +472,113 @@
       ]}
       inert={analytics.waitingForData}
     >
-      <DaysCard
-        days={strip}
-        {summary}
-        selected={shown}
-        goals={params?.goals ?? null}
-        spot={days.data?.sources.find((source) => source.name === spot)
-          ?.visits ?? null}
-        {now}
-        title={stripTitle()}
-        onpreview={onPreview}
-        onselect={onSelect}
-      />
-
-      <DayCard
-        date={shown}
-        inProgress={shownLive}
-        {now}
-        {headline}
-        verdict={focused?.verdict ?? null}
-        goals={goals.picked}
-        hours={day.data?.hours[0] ?? null}
-        typicalHours={day.data ? typicalHours(day.data, since) : null}
-        goalHours={day.data?.goalHours ?? []}
-        sources={day.data?.sourceHours ?? []}
-        {spot}
-        {pinned}
-        onhover={onHover}
-        onpin={onPin}
-      />
-
-      <VisitGroupsCard
-        title="Sources"
-        column="Source"
-        rows={sources}
-        {by}
-        {weekdays}
-        loading={!day.data}
-        {spot}
-        {pinned}
-        onhover={onHover}
-        onpin={onPin}
-      />
-
-      <VisitGroupsCard
-        title="Landing pages"
-        column="Landing page"
-        rows={pages}
-        {by}
-        {weekdays}
-        loading={!day.data}
-      />
-
-      <DayVisitsCard
-        title={visitsTitle()}
-        {date}
-        visits={visits.visits}
-        total={visits.total}
-        loading={visits.loading}
-        error={visits.error}
-        goals={picked}
-        {show}
-        {live}
-        now={clock.toMillis()}
-        onshow={onShow}
-        onmore={onMore}
-        onopen={onOpen}
-        onhover={onHover}
-      />
-
-      <InsightsSection {clusterId} {revision} />
-
-      <div bind:this={details} class="scroll-mt-2">
-        <DayDetails
-          {clusterId}
-          report={analytics.report}
-          {range}
-          {query}
-          bind:open={detailsOpen}
-          onfilter={onFilter}
-          onevent={onEvent}
-          oneventclose={onEventClose}
+      {#if ready}
+        <InsightsBar
+          views={dashboardViews(insights.views)}
+          active={view}
+          hidden={layout.hidden}
+          canAdd={Boolean(insights.insights?.length)}
+          onview={onView}
+          onrestore={onRestore}
+          onlayout={onLayout}
+          onadd={onAdd}
         />
-      </div>
+      {/if}
+
+      {#if traffic}
+        <DaysCard
+          days={strip}
+          {summary}
+          selected={shown}
+          goals={params?.goals ?? null}
+          spot={days.data?.sources.find((source) => source.name === spot)
+            ?.visits ?? null}
+          {now}
+          title={stripTitle()}
+          onpreview={onPreview}
+          onselect={onSelect}
+        />
+
+        <DayCard
+          date={shown}
+          inProgress={shownLive}
+          {now}
+          {headline}
+          verdict={focused?.verdict ?? null}
+          goals={goals.picked}
+          hours={day.data?.hours[0] ?? null}
+          typicalHours={day.data ? typicalHours(day.data, since) : null}
+          goalHours={day.data?.goalHours ?? []}
+          sources={day.data?.sourceHours ?? []}
+          {spot}
+          {pinned}
+          onhover={onHover}
+          onpin={onPin}
+        />
+
+        <VisitGroupsCard
+          title="Sources"
+          column="Source"
+          rows={sources}
+          {by}
+          {weekdays}
+          loading={!day.data}
+          {spot}
+          {pinned}
+          onhover={onHover}
+          onpin={onPin}
+        />
+
+        <VisitGroupsCard
+          title="Landing pages"
+          column="Landing page"
+          rows={pages}
+          {by}
+          {weekdays}
+          loading={!day.data}
+        />
+
+        <DayVisitsCard
+          title={visitsTitle()}
+          {date}
+          visits={visits.visits}
+          total={visits.total}
+          loading={visits.loading}
+          error={visits.error}
+          goals={picked}
+          {show}
+          {live}
+          now={clock.toMillis()}
+          onshow={onShow}
+          onmore={onMore}
+          onopen={onOpen}
+          onhover={onHover}
+        />
+      {/if}
+
+      <InsightsSection
+        {clusterId}
+        {revision}
+        {insights}
+        {layout}
+        onadd={onAdd}
+        onedit={onEdit}
+      />
+
+      {#if traffic}
+        <div bind:this={details} class="scroll-mt-2">
+          <DayDetails
+            {clusterId}
+            report={analytics.report}
+            {range}
+            {query}
+            bind:open={detailsOpen}
+            onfilter={onFilter}
+            onevent={onEvent}
+            oneventclose={onEventClose}
+          />
+        </div>
+      {/if}
     </div>
 
     {#if analytics.waitingForData}
@@ -499,8 +601,26 @@
 
 <VisitorDialog {clusterId} visitor={opened} onclose={onClose} />
 
+<InsightEditor
+  {clusterId}
+  isOpen={editorOpen}
+  insight={editing}
+  views={insights.views}
+  viewId={view.id}
+  onclose={onEditorClose}
+  onsave={onInsightSave}
+/>
+
+<LayoutDialog
+  isOpen={layoutOpen}
+  views={insights.views}
+  onclose={onLayoutClose}
+  onsave={onLayoutSave}
+/>
+
 {#snippet toolbar()}
   <DayToolbar
+    {traffic}
     online={days.data?.online ?? null}
     {date}
     {today}
