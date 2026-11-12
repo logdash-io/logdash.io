@@ -86,7 +86,6 @@
   let drafts = $state([insightDraft()]);
   let active = $state(0);
   let viewChoice = $state('');
-  let sectionChoice = $state('');
   let saving = $state(false);
   let error = $state<string | null>(null);
 
@@ -110,13 +109,11 @@
 
   const draft = $derived(drafts[active]);
   const choices = $derived(dashboardViews(views));
-  const sections = $derived(
-    choices.find((view) => view.id === viewChoice)?.sections ?? [],
-  );
   const config = $derived(
     tabbedConfig(cardTitle, drafts, {
       view: viewChoice || null,
-      section: sectionChoice || null,
+      ...(insight &&
+        viewChoice !== insightView(views, insight) && { grid: null }),
     }),
   );
   const problem = $derived(insightProblem(config));
@@ -142,7 +139,6 @@
       drafts = start.drafts;
       active = 0;
       viewChoice = insight ? insightView(views, insight) : viewId;
-      sectionChoice = insight?.section ?? '';
       error = null;
       void schema.load();
     });
@@ -220,12 +216,6 @@
     drafts.splice(active, 1);
     active = Math.min(active, drafts.length - 1);
     if (!tabbed && !drafts[0].title.trim()) drafts[0].title = cardTitle;
-  }
-
-  function onView(next: string): void {
-    viewChoice = next;
-    if (!sections.some((section) => section.id === sectionChoice))
-      sectionChoice = '';
   }
 
   function onMode(mode: WebAnalyticsFunnelMode): void {
@@ -641,30 +631,15 @@
         </label>
       {/if}
 
-      {#if choices.length > 1 || sections.length}
-        <div class="flex gap-3">
-          {#if choices.length > 1}
-            <label class="flex min-w-0 flex-1 flex-col gap-1.5">
-              <span class="text-sm font-medium">View</span>
-              <Select bind:value={() => viewChoice, onView} class="w-full">
-                {#each choices as choice (choice.id)}
-                  <option value={choice.id}>{choice.name}</option>
-                {/each}
-              </Select>
-            </label>
-          {/if}
-          {#if sections.length}
-            <label class="flex min-w-0 flex-1 flex-col gap-1.5">
-              <span class="text-sm font-medium">Section</span>
-              <Select bind:value={sectionChoice} class="w-full">
-                <option value="">No section</option>
-                {#each sections as section (section.id)}
-                  <option value={section.id}>{section.title}</option>
-                {/each}
-              </Select>
-            </label>
-          {/if}
-        </div>
+      {#if choices.length > 1}
+        <label class="flex flex-col gap-1.5">
+          <span class="text-sm font-medium">View</span>
+          <Select bind:value={viewChoice} class="w-full">
+            {#each choices as choice (choice.id)}
+              <option value={choice.id}>{choice.name}</option>
+            {/each}
+          </Select>
+        </label>
       {/if}
     </div>
 

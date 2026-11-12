@@ -45,11 +45,6 @@ export class WebAnalyticsViewSerializer {
       id: entity._id.toString(),
       name: entity.name,
       traffic: entity.traffic ?? false,
-      sections: entity.sections.map((section) => ({
-        id: section._id.toString(),
-        title: section.title,
-        collapsed: section.collapsed ?? false,
-      })),
     };
   }
 }
@@ -59,14 +54,11 @@ export class WebAnalyticsInsightSerializer {
     entity: WebAnalyticsInsightEntity,
     views: WebAnalyticsViewEntity[],
   ): WebAnalyticsInsightNormalized {
-    const { _id, view, section, ...config } = entity;
-    const own = views.find((entry) => entry._id.toString() === view);
-    const sections = (own ?? views[0])?.sections ?? [];
+    const { _id, view, ...config } = entity;
     return {
       id: _id.toString(),
       ...config,
-      ...(own ? { view } : {}),
-      ...(sections.some((entry) => entry._id.toString() === section) ? { section } : {}),
+      ...(views.some((entry) => entry._id.toString() === view) ? { view } : {}),
     };
   }
 }

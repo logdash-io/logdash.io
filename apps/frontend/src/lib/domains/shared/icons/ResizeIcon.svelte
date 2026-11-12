@@ -15,5 +15,5 @@
   xmlns="http://www.w3.org/2000/svg"
   aria-hidden="true"
 >
-  <path d="M6 2.75V6H2.75M13.25 6H10V2.75M10 13.25V10h3.25M2.75 10H6v3.25" />
+  <path d="M13 7.5 7.5 13M13 11l-2 2" />
 </svg>

@@ -10,9 +10,10 @@ import {
   WebAnalyticsInsightEventBody,
   WebAnalyticsInsightFilter,
   WebAnalyticsInsightFilterBody,
+  WebAnalyticsInsightGrid,
+  WebAnalyticsInsightGridBody,
   WebAnalyticsInsightMeasure,
   WebAnalyticsInsightType,
-  WebAnalyticsInsightWidth,
 } from './web-analytics-insight.body';
 
 export class WebAnalyticsInsightSerialized {
@@ -68,28 +69,15 @@ export class WebAnalyticsInsightSerialized {
   @ApiPropertyOptional({ description: 'The view id. Absent means the first view' })
   view?: string;
 
-  @ApiPropertyOptional({ description: 'The section id of the view. Absent means no section' })
-  section?: string;
-
   @ApiPropertyOptional({ description: 'Absent means shown' })
   hidden?: boolean;
 
   @ApiPropertyOptional({
-    enum: WebAnalyticsInsightWidth,
-    description: 'Absent means automatic by type',
+    type: WebAnalyticsInsightGridBody,
+    description:
+      'Where the card sits on the 12 column grid. Absent means the dashboard places it at the end with the default size of its type',
   })
-  width?: WebAnalyticsInsightWidth;
-}
-
-export class WebAnalyticsSectionSerialized {
-  @ApiProperty()
-  id: string;
-
-  @ApiProperty()
-  title: string;
-
-  @ApiProperty()
-  collapsed: boolean;
+  grid?: WebAnalyticsInsightGrid;
 }
 
 export class WebAnalyticsViewSerialized {
@@ -101,9 +89,6 @@ export class WebAnalyticsViewSerialized {
 
   @ApiProperty({ description: 'Whether the built-in traffic cards show in this view' })
   traffic: boolean;
-
-  @ApiProperty({ type: WebAnalyticsSectionSerialized, isArray: true })
-  sections: WebAnalyticsSectionSerialized[];
 }
 
 export class WebAnalyticsInsightsResponse {

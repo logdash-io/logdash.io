@@ -15,7 +15,6 @@ export type WebAnalyticsViewNormalized = {
   id: string;
   name: string;
   traffic: boolean;
-  sections: { id: string; title: string; collapsed: boolean }[];
 };
 
 export type WebAnalyticsLayoutNormalized = {

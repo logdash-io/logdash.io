@@ -17,30 +17,8 @@ import { NoImplicitConversion } from '../../../shared/utils/no-implicit-conversi
 
 export const MAX_WEB_ANALYTICS_VIEWS = 10;
 
-export const MAX_WEB_ANALYTICS_SECTIONS = 20;
-
 const trim = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' ? value.trim() : value;
-
-export class WebAnalyticsSectionBody {
-  @ApiPropertyOptional({ description: 'Pass the id of an existing section to keep or rename it' })
-  @IsOptional()
-  @IsMongoId()
-  id?: string;
-
-  @ApiProperty({ example: 'Activation' })
-  @Transform(trim)
-  @IsString()
-  @MinLength(1)
-  @MaxLength(60)
-  title: string;
-
-  @ApiPropertyOptional({ default: false })
-  @IsOptional()
-  @NoImplicitConversion()
-  @IsBoolean()
-  collapsed?: boolean;
-}
 
 export class WebAnalyticsViewBody {
   @ApiPropertyOptional({ description: 'Pass the id of an existing view to keep or rename it' })
@@ -64,14 +42,6 @@ export class WebAnalyticsViewBody {
   @NoImplicitConversion()
   @IsBoolean()
   traffic?: boolean;
-
-  @ApiPropertyOptional({ type: WebAnalyticsSectionBody, isArray: true })
-  @IsOptional()
-  @IsArray()
-  @ArrayMaxSize(MAX_WEB_ANALYTICS_SECTIONS)
-  @ValidateNested({ each: true })
-  @Type(() => WebAnalyticsSectionBody)
-  sections?: WebAnalyticsSectionBody[];
 }
 
 export class UpdateWebAnalyticsViewsBody {

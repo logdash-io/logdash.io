@@ -8,6 +8,7 @@ import type {
   WebAnalyticsInsight,
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightPlacement,
+  WebAnalyticsInsightPlacementUpdate,
   WebAnalyticsInsights,
   WebAnalyticsRange,
   WebAnalyticsReport,
@@ -20,12 +21,8 @@ import type {
 } from '../domain/web-analytics';
 import {
   applyArrangement,
-  dropArrangement,
   readLayout,
-  stepArrangement,
   type Arrangement,
-  type DropTarget,
-  type ViewLayout,
 } from '../domain/web-analytics-layout';
 import { WebAnalyticsService } from '../infrastructure/web-analytics.service';
 
@@ -171,10 +168,6 @@ export class WebAnalyticsInsightsState {
 
   constructor(private readonly clusterId: string) {}
 
-  public get ids(): string[] {
-    return (this.insights ?? []).map((insight) => insight.id);
-  }
-
   public async load(): Promise<void> {
     const sequence = this.sequence;
     try {
@@ -240,43 +233,25 @@ export class WebAnalyticsInsightsState {
     }
   }
 
-  public async step(
-    layout: ViewLayout,
-    id: string,
-    offset: -1 | 1,
-  ): Promise<void> {
-    await this.arrange(
-      stepArrangement(layout, this.ids, id, offset),
-      'Could not move the insight.',
-    );
-  }
-
-  public async drop(
-    layout: ViewLayout,
-    id: string,
-    target: DropTarget,
-  ): Promise<void> {
-    await this.arrange(
-      dropArrangement(layout, this.ids, id, target),
-      'Could not move the insight.',
-    );
-  }
-
   public async place(
     id: string,
     placement: WebAnalyticsInsightPlacement,
   ): Promise<void> {
-    await this.arrange(
-      { placements: [{ id, ...placement }] },
-      'Could not update the insight.',
-    );
+    await this.placeAll([{ id, ...placement }]);
+  }
+
+  public async placeAll(
+    placements: WebAnalyticsInsightPlacementUpdate[],
+  ): Promise<void> {
+    if (!placements.length) return;
+    await this.arrange({ placements }, 'Could not update the layout.');
   }
 
   private async arrange(
-    arrangement: Arrangement | null,
+    arrangement: Arrangement,
     failure: string,
   ): Promise<void> {
-    if (!arrangement || !this.insights) return;
+    if (!this.insights) return;
     const sequence = ++this.sequence;
     this.insights = applyArrangement(this.insights, arrangement);
     try {

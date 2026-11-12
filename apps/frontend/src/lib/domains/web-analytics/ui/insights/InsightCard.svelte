@@ -4,17 +4,14 @@
     MENU_ROW,
     onMenuArrowKeys,
   } from '$lib/domains/app/clusters/ui/menu';
-  import ExpandIcon from '$lib/domains/shared/icons/ExpandIcon.svelte';
   import EyeOffIcon from '$lib/domains/shared/icons/EyeOffIcon.svelte';
   import GripIcon from '$lib/domains/shared/icons/GripIcon.svelte';
   import MoreIcon from '$lib/domains/shared/icons/MoreIcon.svelte';
-  import ShrinkIcon from '$lib/domains/shared/icons/ShrinkIcon.svelte';
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import Well from '$lib/domains/shared/ui/components/Well.svelte';
   import { Dropdown, Tab, Tabs } from '@logdash/hyper-ui/presentational';
   import type {
     WebAnalyticsInsight,
-    WebAnalyticsInsightWidth,
     WebAnalyticsView,
   } from '../../domain/web-analytics';
   import { insightCharts } from '../../domain/web-analytics-insight';
@@ -24,15 +21,10 @@
     clusterId: string;
     insight: WebAnalyticsInsight;
     revision: number;
-    width: WebAnalyticsInsightWidth;
-    first: boolean;
-    last: boolean;
     elsewhere: WebAnalyticsView[];
     onedit: (insight: WebAnalyticsInsight) => void;
-    onmove: (insight: WebAnalyticsInsight, offset: -1 | 1) => void;
     onviewmove: (insight: WebAnalyticsInsight, view: WebAnalyticsView) => void;
     onhide: (insight: WebAnalyticsInsight) => void;
-    onwidth: (insight: WebAnalyticsInsight) => void;
     onremove: (insight: WebAnalyticsInsight) => void;
   };
 
@@ -40,15 +32,10 @@
     clusterId,
     insight,
     revision,
-    width,
-    first,
-    last,
     elsewhere,
     onedit,
-    onmove,
     onviewmove,
     onhide,
-    onwidth,
     onremove,
   }: Props = $props();
 
@@ -61,7 +48,6 @@
 
   const active = $derived(Math.min(picked, charts.length - 1));
   const summary = $derived(summaries[active] ?? '');
-  const full = $derived(width === 'full');
 
   function onTab(index: number): void {
     picked = index;
@@ -69,7 +55,7 @@
   }
 </script>
 
-<Well label={insight.title} class="group/card @container h-full flex-1">
+<Well label={insight.title} class="group/card @container h-full">
   {#snippet header()}
     <h3
       class="flex h-[1lh] min-w-0 flex-wrap items-baseline gap-x-2 overflow-hidden px-3 text-[13px]"
@@ -87,19 +73,6 @@
     <div
       class="pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100 pointer-fine:group-focus-within/card:opacity-100 flex items-center gap-0.5 transition-opacity"
     >
-      <div class="hidden @4xl/insights:contents">
-        <IconButton
-          well
-          label={full ? 'Make half width' : 'Make full width'}
-          onclick={() => onwidth(insight)}
-        >
-          {#if full}
-            <ShrinkIcon class="size-4" />
-          {:else}
-            <ExpandIcon class="size-4" />
-          {/if}
-        </IconButton>
-      </div>
       <IconButton
         well
         label="Hide {insight.title}"
@@ -107,15 +80,17 @@
       >
         <EyeOffIcon class="size-4" />
       </IconButton>
-      <IconButton
-        well
-        label="Drag {insight.title}"
-        tooltip="Drag to move"
-        class="cursor-grab"
-        data-grip="true"
-      >
-        <GripIcon class="size-4" />
-      </IconButton>
+      <div class="hidden @3xl/insights:contents">
+        <IconButton
+          well
+          label="Move {insight.title}"
+          tooltip="Drag, or use the arrow keys, to move"
+          class="cursor-grab touch-none"
+          data-grip={insight.id}
+        >
+          <GripIcon class="size-4" />
+        </IconButton>
+      </div>
     </div>
     <Dropdown align="end">
       {#snippet trigger(attrs)}
@@ -144,30 +119,6 @@
           onclick={() => onedit(insight)}
         >
           Edit
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          class={[
-            MENU_ROW,
-            'disabled:text-fg-disabled disabled:pointer-events-none',
-          ]}
-          disabled={first}
-          onclick={() => onmove(insight, -1)}
-        >
-          Move earlier
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          class={[
-            MENU_ROW,
-            'disabled:text-fg-disabled disabled:pointer-events-none',
-          ]}
-          disabled={last}
-          onclick={() => onmove(insight, 1)}
-        >
-          Move later
         </button>
         {#each elsewhere as view (view.id)}
           <button
@@ -204,7 +155,10 @@
   {#each charts as chart, index (index)}
     {#if index === active || visited.includes(index)}
       <div
-        class={['flex flex-1 flex-col', { hidden: index !== active }]}
+        class={[
+          'flex min-h-0 flex-1 flex-col overflow-y-auto',
+          { hidden: index !== active },
+        ]}
         role={tabbed ? 'tabpanel' : undefined}
       >
         <InsightBody

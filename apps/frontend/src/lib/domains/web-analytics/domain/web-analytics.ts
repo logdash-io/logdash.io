@@ -195,8 +195,6 @@ export type WebAnalyticsChartType =
 
 export type WebAnalyticsInsightType = WebAnalyticsChartType | 'tabs';
 
-export type WebAnalyticsInsightWidth = 'half' | 'full';
-
 export type WebAnalyticsFunnelMode = 'people' | 'events';
 
 export type WebAnalyticsFunnelLayout = 'columns' | 'rows';
@@ -242,11 +240,17 @@ export interface WebAnalyticsChartConfig {
   binSize?: number;
 }
 
+export interface WebAnalyticsInsightGrid {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export interface WebAnalyticsInsightPlacement {
   view?: string | null;
-  section?: string | null;
   hidden?: boolean | null;
-  width?: WebAnalyticsInsightWidth | null;
+  grid?: WebAnalyticsInsightGrid | null;
 }
 
 export interface WebAnalyticsInsightPlacementUpdate
@@ -265,24 +269,16 @@ export interface WebAnalyticsInsight extends WebAnalyticsInsightConfig {
   id: string;
 }
 
-export interface WebAnalyticsSection {
-  id: string;
-  title: string;
-  collapsed: boolean;
-}
-
 export interface WebAnalyticsView {
   id: string;
   name: string;
   traffic: boolean;
-  sections: WebAnalyticsSection[];
 }
 
 export interface WebAnalyticsViewInput {
   id?: string;
   name: string;
   traffic: boolean;
-  sections: { id?: string; title: string; collapsed: boolean }[];
 }
 
 export interface WebAnalyticsInsights {

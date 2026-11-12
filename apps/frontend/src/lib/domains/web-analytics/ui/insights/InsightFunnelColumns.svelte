@@ -59,9 +59,13 @@
   }
 </script>
 
-<div class="overflow-x-auto px-3 pt-2 pb-1">
-  <div style:min-width="{minWidth}px" style:padding-left="{AXIS_WIDTH}px">
-    <div class="relative h-60" aria-hidden="true">
+<div class="flex flex-1 flex-col overflow-x-auto px-3 pt-2 pb-1">
+  <div
+    class="flex flex-1 flex-col"
+    style:min-width="{minWidth}px"
+    style:padding-left="{AXIS_WIDTH}px"
+  >
+    <div class="relative min-h-48 flex-1" aria-hidden="true">
       {#each TICKS as tick (tick)}
         <span
           class={[

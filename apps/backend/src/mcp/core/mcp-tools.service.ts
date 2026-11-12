@@ -27,12 +27,9 @@ import {
   WebAnalyticsInsightMeasure,
   WebAnalyticsInsightOperator,
   WebAnalyticsInsightType,
-  WebAnalyticsInsightWidth,
+  WEB_ANALYTICS_GRID,
 } from '../../web-analytics/core/dto/web-analytics-insight.body';
-import {
-  MAX_WEB_ANALYTICS_SECTIONS,
-  MAX_WEB_ANALYTICS_VIEWS,
-} from '../../web-analytics/core/dto/web-analytics-views.body';
+import { MAX_WEB_ANALYTICS_VIEWS } from '../../web-analytics/core/dto/web-analytics-views.body';
 import {
   WebAnalyticsInsightResult,
   WebAnalyticsInsightStep,
@@ -208,7 +205,7 @@ const CHART = {
     type: 'string',
     enum: Object.values(WebAnalyticsFunnelLayout),
     description:
-      'Funnels only. columns (default) draws a bar per step with the drop between bars and spans the full width above 3 steps; rows lists the steps and fits long names in half the width',
+      'Funnels only. columns (default) draws a bar per step with the drop between bars; rows lists the steps and fits long names in a narrow card',
   },
   steps: { ...STEPS, description: `People funnels only. ${STEPS.description}` },
   events: events(
@@ -247,22 +244,44 @@ const PLACEMENT = {
     description:
       'The id of a view, from list_insights or set_views. Omit to keep the stored view, null to clear it. A card without a view shows in the first view',
   },
-  section: {
-    type: ['string', 'null'],
-    pattern: HEX_ID,
-    description:
-      'The id of a section of the view, from list_insights or set_views. Omit to keep the stored section, null to clear it. A card without a section sits above the sections',
-  },
   hidden: {
     type: ['boolean', 'null'],
     description:
       'Hide the card from the dashboard. Omit to keep the stored value, null to clear it',
   },
-  width: {
-    type: ['string', 'null'],
-    enum: [...Object.values(WebAnalyticsInsightWidth), null],
+  grid: {
+    ...object(
+      {
+        x: {
+          type: 'integer',
+          minimum: 0,
+          maximum: WEB_ANALYTICS_GRID.columns - 1,
+          description: 'The first column of the card, from 0',
+        },
+        y: {
+          type: 'integer',
+          minimum: 0,
+          maximum: WEB_ANALYTICS_GRID.maxY,
+          description: 'The first row of the card, from 0',
+        },
+        w: {
+          type: 'integer',
+          minimum: WEB_ANALYTICS_GRID.minW,
+          maximum: WEB_ANALYTICS_GRID.columns,
+          description: 'The columns the card spans. x + w is at most 12',
+        },
+        h: {
+          type: 'integer',
+          minimum: WEB_ANALYTICS_GRID.minH,
+          maximum: WEB_ANALYTICS_GRID.maxH,
+          description: 'The rows the card spans',
+        },
+      },
+      ['x', 'y', 'w', 'h'],
+    ),
+    type: ['object', 'null'],
     description:
-      'half or full width. Omit to keep the stored value, null to clear it. The default is automatic by type',
+      'Where the card sits on the dashboard grid. The grid has 12 columns: x and w count columns. y and h count rows of 40px. Cards float up to fill empty space, so y only orders the cards in a column. Omit grid to keep the stored value, null to clear it. A card without a grid goes at the end of its view with the default size of its type',
   },
 };
 
@@ -465,7 +484,7 @@ export class McpToolsService {
       name: 'list_insights',
       title: 'List saved insights',
       description:
-        'The dashboard views with their sections, the viewsVersion to pass to set_views, and the saved insight cards in order with their full config and placement (view, section, hidden, width).',
+        'The dashboard views, the viewsVersion to pass to set_views, and the saved insight cards in order with their full config and placement (view, hidden, grid).',
       action: Action.Read,
       args: McpClusterArgs,
       inputSchema: object({ clusterId: CLUSTER_ID }, ['clusterId']),
@@ -511,7 +530,7 @@ export class McpToolsService {
     this.tool({
       name: 'create_insight',
       title: 'Save an insight',
-      description: `Adds an insight card to the end of the dashboard, up to ${MAX_WEB_ANALYTICS_INSIGHTS} per domain. Try it with the matching read tool first. Pass view, section, hidden and width to place it, with view and section ids from list_insights or set_views. Give each trend line a label and its own bucket, and set measure to people, to show the daily, weekly and monthly active users of a product in one card.`,
+      description: `Adds an insight card to the end of the dashboard, up to ${MAX_WEB_ANALYTICS_INSIGHTS} per domain. Try it with the matching read tool first. Pass view, hidden and grid to place it, with a view id from list_insights or set_views. Omit grid to put the card at the end of its view with the default size of its type. Give each trend line a label and its own bucket, and set measure to people, to show the daily, weekly and monthly active users of a product in one card.`,
       action: Action.Write,
       args: McpCreateInsightArgs,
       inputSchema: object({ clusterId: CLUSTER_ID, ...INSIGHT }, ['clusterId', 'type', 'title']),
@@ -529,7 +548,7 @@ export class McpToolsService {
       name: 'update_insight',
       title: 'Change a saved insight',
       description:
-        'Replaces the whole config of a saved insight card. The placement fields (view, section, hidden, width) keep their stored value when omitted, and null clears one.',
+        'Replaces the whole config of a saved insight card. The placement fields (view, hidden, grid) keep their stored value when omitted, and null clears one.',
       action: Action.Write,
       args: McpUpdateInsightArgs,
       inputSchema: object({ clusterId: CLUSTER_ID, insightId: INSIGHT_ID, ...INSIGHT }, [
@@ -553,7 +572,7 @@ export class McpToolsService {
       name: 'reorder_insights',
       title: 'Reorder saved insights',
       description:
-        'Sets the card order and/or where cards sit (view, section, hidden, width) in one call. ids, when given, must list every saved insight of the domain once. placements change only the cards they list, and a placement field keeps its stored value when omitted while null clears it. Use it to lay out a whole dashboard.',
+        'Sets the card order and/or where cards sit (view, hidden, grid) in one call. ids, when given, must list every saved insight of the domain once. placements change only the cards they list, and a placement field keeps its stored value when omitted while null clears it. Use it to lay out a whole dashboard, with the grid of every card of a view in one call.',
       action: Action.Write,
       args: McpReorderInsightsArgs,
       inputSchema: object(
@@ -581,7 +600,7 @@ export class McpToolsService {
       name: 'set_views',
       title: 'Set dashboard views',
       description:
-        'Replaces the views of the dashboard, the first one is the default. Pass the id of an existing view or section to keep or rename it, and omit it to add one. A view with traffic true shows the built-in traffic cards, and no view shows them unless it says so. Cards of a removed view or section move to the first view or out of the section, and cards keep their view when the views change order. Pass version, the viewsVersion from list_insights, so the call fails instead of overwriting views someone changed since. Returns the views and insights, so the new ids can be used right away.',
+        'Replaces the views of the dashboard, the first one is the default. Pass the id of an existing view to keep or rename it, and omit it to add one. A view with traffic true shows the built-in traffic cards, and no view shows them unless it says so. Cards of a removed view move to the first view, and cards keep their view when the views change order. Pass version, the viewsVersion from list_insights, so the call fails instead of overwriting views someone changed since. Returns the views and insights, so the new ids can be used right away.',
       action: Action.Write,
       args: McpSetViewsArgs,
       inputSchema: object(
@@ -595,18 +614,6 @@ export class McpToolsService {
                 id: { ...VIEW_ID, description: 'From list_insights, to keep or rename a view' },
                 name: { type: 'string', minLength: 1, maxLength: 40 },
                 traffic: { type: 'boolean', default: false },
-                sections: {
-                  type: 'array',
-                  maxItems: MAX_WEB_ANALYTICS_SECTIONS,
-                  items: object(
-                    {
-                      id: { ...VIEW_ID, description: 'From list_insights, to keep or rename it' },
-                      title: { type: 'string', minLength: 1, maxLength: 60 },
-                      collapsed: { type: 'boolean', default: false },
-                    },
-                    ['title'],
-                  ),
-                },
               },
               ['name'],
             ),

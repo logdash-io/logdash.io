@@ -9,8 +9,26 @@ import {
   WebAnalyticsInsightFilter,
   WebAnalyticsInsightMeasure,
   WebAnalyticsInsightType,
-  WebAnalyticsInsightWidth,
 } from '../dto/web-analytics-insight.body';
+
+@Schema({ _id: false })
+export class WebAnalyticsInsightGridEntity {
+  @Prop({ required: true })
+  x: number;
+
+  @Prop({ required: true })
+  y: number;
+
+  @Prop({ required: true })
+  w: number;
+
+  @Prop({ required: true })
+  h: number;
+}
+
+export const WebAnalyticsInsightGridSchema = SchemaFactory.createForClass(
+  WebAnalyticsInsightGridEntity,
+);
 
 @Schema()
 export class WebAnalyticsInsightEntity {
@@ -59,29 +77,13 @@ export class WebAnalyticsInsightEntity {
   view?: string;
 
   @Prop()
-  section?: string;
-
-  @Prop()
   hidden?: boolean;
 
-  @Prop()
-  width?: WebAnalyticsInsightWidth;
+  @Prop({ type: WebAnalyticsInsightGridSchema })
+  grid?: WebAnalyticsInsightGridEntity;
 }
 
 export const WebAnalyticsInsightSchema = SchemaFactory.createForClass(WebAnalyticsInsightEntity);
-
-@Schema()
-export class WebAnalyticsSectionEntity {
-  _id: Types.ObjectId;
-
-  @Prop({ required: true })
-  title: string;
-
-  @Prop({ default: false })
-  collapsed: boolean;
-}
-
-export const WebAnalyticsSectionSchema = SchemaFactory.createForClass(WebAnalyticsSectionEntity);
 
 @Schema()
 export class WebAnalyticsViewEntity {
@@ -92,9 +94,6 @@ export class WebAnalyticsViewEntity {
 
   @Prop({ default: false })
   traffic: boolean;
-
-  @Prop({ type: [WebAnalyticsSectionSchema], default: [] })
-  sections: WebAnalyticsSectionEntity[];
 }
 
 export const WebAnalyticsViewSchema = SchemaFactory.createForClass(WebAnalyticsViewEntity);

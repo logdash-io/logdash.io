@@ -1,21 +1,29 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
+  import ResizeIcon from '$lib/domains/shared/icons/ResizeIcon.svelte';
   import { confirmDialog } from '$lib/domains/shared/ui/confirm/confirm.state.svelte';
   import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
   import { TOOLBAR_CONTROL } from '$lib/domains/shared/ui/components/toolbar';
   import Well from '$lib/domains/shared/ui/components/Well.svelte';
+  import { tick } from 'svelte';
   import type { WebAnalyticsInsightsState } from '../../application/web-analytics-dashboard.state.svelte';
   import type {
     WebAnalyticsInsight,
-    WebAnalyticsSection,
+    WebAnalyticsInsightGrid,
     WebAnalyticsView,
   } from '../../domain/web-analytics';
   import {
-    insightWidth,
-    otherWidth,
-    type DropTarget,
+    GRID_COLUMNS,
+    GRID_GAP,
+    GRID_ROW,
+    gridPlacements,
+    gridRows,
+    moveCard,
+    nudgeCard,
+    resizeCard,
+    type GridCard,
+    type GridKey,
     type ViewLayout,
   } from '../../domain/web-analytics-layout';
   import InsightCard from './InsightCard.svelte';
@@ -29,48 +37,58 @@
     onedit: (insight: WebAnalyticsInsight) => void;
   };
 
+  type Drag = {
+    id: string;
+    mode: 'move' | 'resize';
+    x: number;
+    y: number;
+    origin: WebAnalyticsInsightGrid;
+    base: GridCard[];
+  };
+
   const { clusterId, revision, insights, layout, onadd, onedit }: Props =
     $props();
 
   const titleId = $props.id();
+  const KEYS: string[] = [
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowUp',
+    'ArrowDown',
+  ] satisfies GridKey[];
 
-  let toggled = $state<Record<string, boolean>>({});
-  let armed = $state<string | null>(null);
-  let dragged = $state<string | null>(null);
-  let over = $state<string | null>(null);
+  let board = $state<HTMLElement>();
+  let width = $state(0);
+  let drag = $state.raw<Drag | null>(null);
+  let preview = $state.raw<GridCard[] | null>(null);
+  let offset = $state({ x: 0, y: 0 });
 
   const elsewhere = $derived(
     insights.views.filter((view) => view.id !== layout.view.id),
   );
-  const shown = $derived(
-    layout.groups.reduce((total, group) => total + group.cards.length, 0),
+  const cards = $derived(preview ?? layout.cards);
+  const moving = $derived(drag?.mode === 'move' ? drag : null);
+  const landing = $derived(
+    moving && cards.find((card) => card.insight.id === moving.id)?.cell,
   );
 
-  function isOpen(section: WebAnalyticsSection): boolean {
-    return toggled[section.id] ?? !section.collapsed;
-  }
-
-  function onToggle(section: WebAnalyticsSection): void {
-    toggled[section.id] = !isOpen(section);
-  }
-
-  function onMove(insight: WebAnalyticsInsight, offset: -1 | 1): void {
-    void insights.step(layout, insight.id, offset);
+  function cellOf(card: GridCard): WebAnalyticsInsightGrid {
+    if (moving?.id === card.insight.id) return moving.origin;
+    return (
+      cards.find((entry) => entry.insight.id === card.insight.id)?.cell ??
+      card.cell
+    );
   }
 
   function onViewMove(
     insight: WebAnalyticsInsight,
     view: WebAnalyticsView,
   ): void {
-    void insights.place(insight.id, { view: view.id, section: null });
+    void insights.place(insight.id, { view: view.id, grid: null });
   }
 
   function onHide(insight: WebAnalyticsInsight): void {
     void insights.place(insight.id, { hidden: true });
-  }
-
-  function onWidth(insight: WebAnalyticsInsight): void {
-    void insights.place(insight.id, { width: otherWidth(insight) });
   }
 
   async function onRemove(insight: WebAnalyticsInsight): Promise<void> {
@@ -82,74 +100,89 @@
     if (confirmed) await insights.remove(insight.id);
   }
 
-  function onPointerDown(
-    event: PointerEvent,
-    insight: WebAnalyticsInsight,
-  ): void {
-    armed =
-      event.target instanceof Element && event.target.closest('[data-grip]')
-        ? insight.id
-        : null;
+  function handle(event: Event): 'move' | 'resize' | null {
+    const target = event.target instanceof Element ? event.target : null;
+    if (target?.closest('[data-resize]')) return 'resize';
+    if (target?.closest('[data-grip]')) return 'move';
+    return null;
   }
 
-  function onDragStart(event: DragEvent, insight: WebAnalyticsInsight): void {
-    if (armed !== insight.id || !event.dataTransfer) return;
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', insight.id);
-    setTimeout(() => {
-      if (armed === insight.id) dragged = insight.id;
-    });
-  }
-
-  function onDragEnd(): void {
-    dragged = null;
-    armed = null;
-    over = null;
-  }
-
-  function onCardOver(event: DragEvent, insight: WebAnalyticsInsight): void {
-    if (!dragged) return;
-    event.stopPropagation();
-    if (dragged === insight.id) return;
+  function onPointerDown(event: PointerEvent, card: GridCard): void {
+    const mode = handle(event);
+    if (!mode || event.button !== 0 || !board) return;
     event.preventDefault();
-    over = insight.id;
+    if (event.target instanceof Element)
+      event.target
+        .closest('[data-grip]')
+        ?.parentElement?.dispatchEvent(new MouseEvent('mouseleave'));
+    const rect = board.getBoundingClientRect();
+    drag = {
+      id: card.insight.id,
+      mode,
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+      origin: card.cell,
+      base: layout.cards,
+    };
+    offset = { x: 0, y: 0 };
   }
 
-  async function onCardDrop(
-    event: DragEvent,
-    insight: WebAnalyticsInsight,
+  function onPointerMove(event: PointerEvent): void {
+    if (!drag || !board) return;
+    const rect = board.getBoundingClientRect();
+    const x = event.clientX - rect.left - drag.x;
+    const y = event.clientY - rect.top - drag.y;
+    const columns = Math.round(x / ((width + GRID_GAP) / GRID_COLUMNS));
+    const rows = Math.round(y / (GRID_ROW + GRID_GAP));
+    const { id, origin, base } = drag;
+    offset = { x, y };
+    preview =
+      drag.mode === 'move'
+        ? moveCard(base, id, origin.x + columns, Math.max(0, origin.y + rows))
+        : resizeCard(base, id, origin.w + columns, origin.h + rows);
+  }
+
+  function onPointerUp(): void {
+    if (!drag) return;
+    const next = preview;
+    drag = null;
+    preview = null;
+    if (next) void insights.placeAll(gridPlacements(next));
+  }
+
+  function onPointerCancel(): void {
+    drag = null;
+    preview = null;
+  }
+
+  async function onKeyDown(
+    event: KeyboardEvent,
+    card: GridCard,
   ): Promise<void> {
-    if (!dragged) return;
+    const mode = handle(event);
+    if (!mode || !KEYS.includes(event.key)) return;
     event.preventDefault();
-    event.stopPropagation();
-    await drop({ card: insight.id });
-  }
-
-  function onZoneOver(event: DragEvent, section: string | null): void {
-    if (!dragged) return;
-    event.preventDefault();
-    over = zoneKey(section);
-  }
-
-  async function onZoneDrop(
-    event: DragEvent,
-    section: string | null,
-  ): Promise<void> {
-    if (!dragged) return;
-    event.preventDefault();
-    await drop({ section });
-  }
-
-  async function drop(target: DropTarget): Promise<void> {
-    const id = dragged;
-    onDragEnd();
-    if (id) await insights.drop(layout, id, target);
-  }
-
-  function zoneKey(section: string | null): string {
-    return `zone:${section ?? ''}`;
+    const id = card.insight.id;
+    const saved = insights.placeAll(
+      gridPlacements(
+        nudgeCard(layout.cards, id, event.key as GridKey, mode === 'resize'),
+      ),
+    );
+    await tick();
+    board
+      ?.querySelector<HTMLElement>(
+        mode === 'resize' ? `[data-resize="${id}"]` : `[data-grip="${id}"]`,
+      )
+      ?.focus();
+    await saved;
   }
 </script>
+
+<svelte:window
+  onpointermove={onPointerMove}
+  onpointerup={onPointerUp}
+  onpointercancel={onPointerCancel}
+/>
 
 <section
   class="@container/insights flex flex-col gap-2"
@@ -198,118 +231,131 @@
         </div>
       </EmptyState>
     </Well>
+  {:else if !layout.cards.length}
+    <Well label="Nothing in this view">
+      <EmptyState
+        centered
+        title={layout.hidden.length
+          ? 'Every card here is hidden'
+          : `Nothing in ${layout.view.name} yet`}
+        description={layout.hidden.length
+          ? 'Bring them back from Hidden above.'
+          : 'Add an insight, or move one here from its menu.'}
+      />
+    </Well>
   {:else}
-    <div class="flex flex-col gap-5">
-      {#each layout.groups as group (group.section?.id ?? 'none')}
-        {@const section = group.section}
-        {@const zone = zoneKey(section?.id ?? null)}
-        {#if section || group.cards.length || dragged}
-          <div class="flex flex-col gap-2">
-            {#if section}
-              <div
-                role="presentation"
-                ondragover={(event) => onZoneOver(event, section.id)}
-                ondrop={(event) => onZoneDrop(event, section.id)}
-              >
-                <button
-                  type="button"
-                  class={[
-                    'text-fg-tertiary hover:text-fg-default transition-ink focus-visible:outline-brand flex h-7 w-full cursor-pointer items-center gap-1.5 rounded-lg px-3 text-left text-xs font-medium focus-visible:outline-2',
-                    { 'outline-brand outline-2 outline-dashed': over === zone },
-                  ]}
-                  aria-expanded={isOpen(section)}
-                  onclick={() => onToggle(section)}
-                >
-                  <ChevronDownIcon
-                    class={[
-                      'size-3.5 transition-transform',
-                      { '-rotate-90': !isOpen(section) },
-                    ]}
-                  />
-                  <span class="truncate">{section.title}</span>
-                  <span class="text-fg-muted font-normal tabular-nums">
-                    {group.cards.length}
-                  </span>
-                </button>
-              </div>
-            {/if}
-
-            {#if !section || isOpen(section)}
-              <div
-                class={[
-                  'grid gap-2 rounded-2xl @4xl/insights:grid-cols-2',
-                  { 'outline-brand outline-2 outline-dashed': over === zone },
-                ]}
-                role="presentation"
-                ondragover={(event) => onZoneOver(event, section?.id ?? null)}
-                ondrop={(event) => onZoneDrop(event, section?.id ?? null)}
-              >
-                {#each group.cards as insight, index (insight.id)}
-                  {@const full = insightWidth(insight) === 'full'}
-                  <div
-                    class={[
-                      'flex min-w-0 rounded-2xl',
-                      {
-                        '@4xl/insights:col-span-2': full,
-                        'opacity-50': dragged === insight.id,
-                        'outline-brand outline-2 outline-dashed':
-                          over === insight.id,
-                      },
-                    ]}
-                    role="presentation"
-                    draggable={armed === insight.id}
-                    onpointerdown={(event) => onPointerDown(event, insight)}
-                    ondragstart={(event) => onDragStart(event, insight)}
-                    ondragend={onDragEnd}
-                    ondragover={(event) => onCardOver(event, insight)}
-                    ondrop={(event) => onCardDrop(event, insight)}
-                  >
-                    <InsightCard
-                      {clusterId}
-                      {insight}
-                      {revision}
-                      width={insightWidth(insight)}
-                      first={index === 0}
-                      last={index === group.cards.length - 1}
-                      {elsewhere}
-                      {onedit}
-                      onmove={onMove}
-                      onviewmove={onViewMove}
-                      onhide={onHide}
-                      onwidth={onWidth}
-                      onremove={onRemove}
-                    />
-                  </div>
-                {:else}
-                  {#if section || dragged}
-                    <p
-                      class="text-fg-muted edge col-span-full rounded-2xl px-5 py-4 text-sm"
-                    >
-                      {section
-                        ? 'No cards in this section. Drag one here, or move one from its menu.'
-                        : 'Drop here to take the card out of its section.'}
-                    </p>
-                  {/if}
-                {/each}
-              </div>
-            {/if}
-          </div>
-        {/if}
-      {/each}
-
-      {#if !shown && !layout.view.sections.length}
-        <Well label="Nothing in this view">
-          <EmptyState
-            centered
-            title={layout.hidden.length
-              ? 'Every card here is hidden'
-              : `Nothing in ${layout.view.name} yet`}
-            description={layout.hidden.length
-              ? 'Bring them back from Hidden above.'
-              : 'Add an insight, or move one here from its menu.'}
-          />
-        </Well>
+    <div
+      bind:this={board}
+      bind:clientWidth={width}
+      class={['board', { 'select-none': drag }]}
+      style:--row="{GRID_ROW}px"
+      style:--gap="{GRID_GAP}px"
+      style:--rows={gridRows(cards)}
+    >
+      {#if moving && landing}
+        <div
+          class="cell landing outline-brand rounded-2xl outline-2 outline-dashed"
+          style:--x={landing.x}
+          style:--y={landing.y}
+          style:--w={landing.w}
+          style:--h={landing.h}
+          aria-hidden="true"
+        ></div>
       {/if}
+      {#each layout.cards as card (card.insight.id)}
+        {@const cell = cellOf(card)}
+        {@const lifted = moving?.id === card.insight.id}
+        <div
+          class={['cell group/cell', { lifted }]}
+          style:--x={cell.x}
+          style:--y={cell.y}
+          style:--w={cell.w}
+          style:--h={cell.h}
+          style:--dx={lifted ? `${offset.x}px` : null}
+          style:--dy={lifted ? `${offset.y}px` : null}
+          role="presentation"
+          onpointerdown={(event) => onPointerDown(event, card)}
+          onkeydown={(event) => onKeyDown(event, card)}
+        >
+          <InsightCard
+            {clusterId}
+            insight={card.insight}
+            {revision}
+            {elsewhere}
+            {onedit}
+            onviewmove={onViewMove}
+            onhide={onHide}
+            onremove={onRemove}
+          />
+          <button
+            type="button"
+            class="corner text-fg-muted hover:text-fg-default focus-visible:outline-brand pointer-fine:opacity-0 pointer-fine:group-hover/cell:opacity-100 absolute right-0.5 bottom-0.5 size-5 cursor-nwse-resize touch-none items-center justify-center rounded-md transition-opacity focus-visible:opacity-100 focus-visible:outline-2"
+            aria-label="Resize {card.insight.title}"
+            title="Drag, or use the arrow keys, to resize"
+            data-resize={card.insight.id}
+          >
+            <ResizeIcon class="size-4" />
+          </button>
+        </div>
+      {/each}
     </div>
   {/if}
 </section>
+
+<style>
+  .board {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+  }
+
+  .cell {
+    height: calc(var(--h) * (var(--row) + var(--gap)) - var(--gap));
+  }
+
+  .landing,
+  .corner {
+    display: none;
+  }
+
+  @container insights (width >= 48rem) {
+    .board {
+      display: block;
+      position: relative;
+      height: calc(var(--rows) * (var(--row) + var(--gap)) - var(--gap));
+    }
+
+    .cell {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: calc((100cqw + var(--gap)) / 12 * var(--w) - var(--gap));
+      translate: calc((100cqw + var(--gap)) / 12 * var(--x) + var(--dx, 0px))
+        calc(var(--y) * (var(--row) + var(--gap)) + var(--dy, 0px));
+      transition:
+        translate 200ms cubic-bezier(0.2, 0, 0, 1),
+        width 200ms cubic-bezier(0.2, 0, 0, 1),
+        height 200ms cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    .landing {
+      display: block;
+    }
+
+    .lifted {
+      z-index: 10;
+      transition: none;
+      cursor: grabbing;
+    }
+
+    .corner {
+      display: flex;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cell {
+      transition: none;
+    }
+  }
+</style>

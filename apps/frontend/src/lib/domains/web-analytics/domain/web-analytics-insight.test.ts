@@ -315,12 +315,12 @@ test('one draft stays a plain card and two or more become tabs', () => {
   expect(split.title).toBe('Setup time');
   expect(split.drafts.map((draft) => draft.title)).toEqual(['Start', 'Finish']);
   const config = tabbedConfig(' Setup time ', split.drafts, {
-    section: 's1',
+    grid: null,
     hidden: null,
   });
   expect(config.type).toBe('tabs');
   expect(config.title).toBe('Setup time');
-  expect(config.section).toBe('s1');
+  expect(config.grid).toBeNull();
   expect(config.hidden).toBeNull();
   expect(config.tabs?.map((tab) => tab.title)).toEqual(['Start', 'Finish']);
   expect(tabbedDraft().drafts).toHaveLength(1);

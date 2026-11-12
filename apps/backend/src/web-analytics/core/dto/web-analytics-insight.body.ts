@@ -11,6 +11,7 @@ import {
   IsInt,
   IsMongoId,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   Matches,
@@ -18,7 +19,9 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateBy,
   ValidateNested,
+  ValidationArguments,
 } from 'class-validator';
 import { NoImplicitConversion } from '../../../shared/utils/no-implicit-conversion.decorator';
 import { EVENT_NAME, PROP_KEY } from './collect-web-events.body';
@@ -30,11 +33,6 @@ export enum WebAnalyticsInsightType {
   Distribution = 'distribution',
   Cohorts = 'cohorts',
   Tabs = 'tabs',
-}
-
-export enum WebAnalyticsInsightWidth {
-  Half = 'half',
-  Full = 'full',
 }
 
 export enum WebAnalyticsFunnelMode {
@@ -74,6 +72,8 @@ export const MAX_WEB_ANALYTICS_INSIGHTS = 50;
 export const MAX_WEB_ANALYTICS_INSIGHT_TABS = 6;
 
 export const MAX_WEB_ANALYTICS_INSIGHT_LABEL = 40;
+
+export const WEB_ANALYTICS_GRID = { columns: 12, minW: 3, maxY: 1200, minH: 4, maxH: 24 } as const;
 
 export class WebAnalyticsInsightFilterBody {
   @ApiProperty({ example: 'cohort', description: 'Event property key' })
@@ -134,6 +134,58 @@ export class WebAnalyticsInsightEventBody {
   bucket?: WebAnalyticsInsightBucket;
 }
 
+export class WebAnalyticsInsightGridBody {
+  @ApiProperty({
+    minimum: 0,
+    maximum: WEB_ANALYTICS_GRID.columns - 1,
+    description: 'The first column of the card, from 0',
+  })
+  @IsInt()
+  @Min(0)
+  @Max(WEB_ANALYTICS_GRID.columns - 1)
+  x: number;
+
+  @ApiProperty({
+    minimum: 0,
+    maximum: WEB_ANALYTICS_GRID.maxY,
+    description:
+      'The first row of the card, from 0. Cards float up, so y only orders cards in a column',
+  })
+  @IsInt()
+  @Min(0)
+  @Max(WEB_ANALYTICS_GRID.maxY)
+  y: number;
+
+  @ApiProperty({
+    minimum: WEB_ANALYTICS_GRID.minW,
+    maximum: WEB_ANALYTICS_GRID.columns,
+    description: 'The columns the card spans. x + w is at most 12',
+  })
+  @IsInt()
+  @Min(WEB_ANALYTICS_GRID.minW)
+  @Max(WEB_ANALYTICS_GRID.columns)
+  @ValidateBy({
+    name: 'fitsGrid',
+    validator: {
+      validate: (w: unknown, { object }: ValidationArguments): boolean =>
+        typeof w === 'number' &&
+        (object as WebAnalyticsInsightGridBody).x + w <= WEB_ANALYTICS_GRID.columns,
+      defaultMessage: (): string => `w must be at most ${WEB_ANALYTICS_GRID.columns} - x`,
+    },
+  })
+  w: number;
+
+  @ApiProperty({
+    minimum: WEB_ANALYTICS_GRID.minH,
+    maximum: WEB_ANALYTICS_GRID.maxH,
+    description: 'The rows of 40px the card spans',
+  })
+  @IsInt()
+  @Min(WEB_ANALYTICS_GRID.minH)
+  @Max(WEB_ANALYTICS_GRID.maxH)
+  h: number;
+}
+
 export class WebAnalyticsInsightPlacementBody {
   @ApiPropertyOptional({
     type: String,
@@ -144,16 +196,6 @@ export class WebAnalyticsInsightPlacementBody {
   @IsOptional()
   @IsMongoId()
   view?: string | null;
-
-  @ApiPropertyOptional({
-    type: String,
-    nullable: true,
-    description:
-      'The id of a section of the view. Omit to keep the stored value, null to clear it. A card without a section sits above the sections',
-  })
-  @IsOptional()
-  @IsMongoId()
-  section?: string | null;
 
   @ApiPropertyOptional({
     type: Boolean,
@@ -167,14 +209,16 @@ export class WebAnalyticsInsightPlacementBody {
   hidden?: boolean | null;
 
   @ApiPropertyOptional({
-    enum: WebAnalyticsInsightWidth,
+    type: WebAnalyticsInsightGridBody,
     nullable: true,
     description:
-      'Half or full width. Omit to keep the stored value, null to clear it for the automatic width of the type',
+      'Where the card sits on the 12 column grid. Omit to keep the stored value, null to clear it so the dashboard places the card at the end with the default size of its type',
   })
   @IsOptional()
-  @IsEnum(WebAnalyticsInsightWidth)
-  width?: WebAnalyticsInsightWidth | null;
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WebAnalyticsInsightGridBody)
+  grid?: WebAnalyticsInsightGridBody | null;
 }
 
 export class WebAnalyticsChartBody {
@@ -216,7 +260,7 @@ export class WebAnalyticsChartBody {
     enum: WebAnalyticsFunnelLayout,
     default: WebAnalyticsFunnelLayout.Columns,
     description:
-      'Funnels only. columns draws a bar per step with the drop between bars; rows lists the steps, which fits long names in half the width',
+      'Funnels only. columns draws a bar per step with the drop between bars; rows lists the steps, which fits long names in a narrow card',
   })
   @IsOptional()
   @IsEnum(WebAnalyticsFunnelLayout)
@@ -362,11 +406,12 @@ export type WebAnalyticsInsightEvent = {
   bucket?: WebAnalyticsInsightBucket;
 };
 
+export type WebAnalyticsInsightGrid = { x: number; y: number; w: number; h: number };
+
 export type WebAnalyticsInsightPlacement = {
   view?: string | null;
-  section?: string | null;
   hidden?: boolean | null;
-  width?: WebAnalyticsInsightWidth | null;
+  grid?: WebAnalyticsInsightGrid | null;
 };
 
 export type WebAnalyticsInsightConfig = WebAnalyticsInsightPlacement & {
@@ -385,7 +430,7 @@ export type WebAnalyticsInsightConfig = WebAnalyticsInsightPlacement & {
   tabs?: WebAnalyticsInsightConfig[];
 };
 
-export const WEB_ANALYTICS_INSIGHT_PLACEMENT_KEYS = ['view', 'section', 'hidden', 'width'] as const;
+export const WEB_ANALYTICS_INSIGHT_PLACEMENT_KEYS = ['view', 'hidden', 'grid'] as const;
 
 export function normalizeWebAnalyticsInsight(
   body: WebAnalyticsInsightBody,
