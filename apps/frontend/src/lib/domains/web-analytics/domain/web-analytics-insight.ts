@@ -85,7 +85,7 @@ export const FUNNEL_LAYOUTS: {
   {
     value: 'rows',
     label: 'Rows',
-    hint: 'Fits long step names in half the width.',
+    hint: 'Fits long step names in a narrow card.',
   },
 ];
 

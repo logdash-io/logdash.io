@@ -1,23 +1,21 @@
 import type {
   WebAnalyticsInsight,
-  WebAnalyticsInsightPlacement,
+  WebAnalyticsInsightGrid,
   WebAnalyticsInsightPlacementUpdate,
   WebAnalyticsInsights,
-  WebAnalyticsInsightWidth,
-  WebAnalyticsSection,
   WebAnalyticsView,
   WebAnalyticsViewInput,
 } from './web-analytics';
 import { insightWide } from './web-analytics-insight';
 
-export interface LayoutGroup {
-  section: WebAnalyticsSection | null;
-  cards: WebAnalyticsInsight[];
+export interface GridCard {
+  insight: WebAnalyticsInsight;
+  cell: WebAnalyticsInsightGrid;
 }
 
 export interface ViewLayout {
   view: WebAnalyticsView;
-  groups: LayoutGroup[];
+  cards: GridCard[];
   hidden: WebAnalyticsInsight[];
 }
 
@@ -26,24 +24,23 @@ export interface Arrangement {
   placements?: WebAnalyticsInsightPlacementUpdate[];
 }
 
-export type DropTarget = { card: string } | { section: string | null };
+export type GridKey = 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'ArrowDown';
 
 export const OVERVIEW_VIEW: WebAnalyticsView = {
   id: '',
   name: 'Overview',
   traffic: true,
-  sections: [],
 };
 
 export const MAX_VIEWS = 10;
-export const MAX_SECTIONS = 20;
 
-const PLACEMENT_KEYS = [
-  'view',
-  'section',
-  'hidden',
-  'width',
-] as const satisfies readonly (keyof WebAnalyticsInsightPlacement)[];
+export const GRID_COLUMNS = 12;
+export const GRID_ROW = 40;
+export const GRID_GAP = 8;
+export const MIN_W = 3;
+export const MIN_H = 4;
+export const MAX_H = 24;
+const CARD_H = 8;
 
 export function readLayout(
   layout: Partial<WebAnalyticsInsights>,
@@ -83,79 +80,109 @@ export function viewLayout(
   const own = insights.filter(
     (insight) => insightView(views, insight) === view.id,
   );
-  const shown = own.filter((insight) => !insight.hidden);
-  const known = new Set(view.sections.map((section) => section.id));
   return {
     view,
     hidden: own.filter((insight) => insight.hidden),
-    groups: [
-      {
-        section: null,
-        cards: shown.filter(
-          (insight) => !insight.section || !known.has(insight.section),
-        ),
-      },
-      ...view.sections.map((section) => ({
-        section,
-        cards: shown.filter((insight) => insight.section === section.id),
-      })),
-    ],
+    cards: gridCards(own.filter((insight) => !insight.hidden)),
   };
 }
 
-export function insightWidth(
-  insight: WebAnalyticsInsight,
-): WebAnalyticsInsightWidth {
-  return insight.width ?? (insightWide(insight) ? 'full' : 'half');
-}
-
-export function otherWidth(
-  insight: WebAnalyticsInsight,
-): WebAnalyticsInsightWidth {
-  return insightWidth(insight) === 'full' ? 'half' : 'full';
-}
-
-export function stepArrangement(
-  layout: ViewLayout,
-  ids: string[],
-  id: string,
-  offset: -1 | 1,
-): Arrangement | null {
-  const group = groupOf(layout, id);
-  if (!group) return null;
-  const neighbour = group.cards[indexIn(group, id) + offset];
-  if (!neighbour) return null;
-  return {
-    ids:
-      offset < 0
-        ? placeBefore(ids, id, neighbour.id)
-        : placeAfter(ids, id, neighbour.id),
-  };
-}
-
-export function dropArrangement(
-  layout: ViewLayout,
-  ids: string[],
-  id: string,
-  target: DropTarget,
-): Arrangement | null {
-  const from = groupOf(layout, id);
-  if (!from) return null;
-  if ('card' in target) return dropOnCard(layout, ids, id, from, target.card);
-  const to = layout.groups.find(
-    (group) => (group.section?.id ?? null) === target.section,
+export function gridCards(insights: WebAnalyticsInsight[]): GridCard[] {
+  const cards: GridCard[] = insights.flatMap((insight) =>
+    insight.grid ? [{ insight, cell: fit(insight.grid) }] : [],
   );
-  if (!to) return null;
-  const last = to.cards.at(-1);
-  if (to === from) {
-    return !last || last.id === id
-      ? null
-      : { ids: placeAfter(ids, id, last.id) };
+  let floor = Math.max(0, ...cards.map(({ cell }) => cell.y + cell.h));
+  for (const insight of insights) {
+    if (insight.grid) continue;
+    const cell = firstFree(cards, defaultSize(insight), floor);
+    cards.push({ insight, cell });
+    floor = cell.y;
   }
-  return {
-    ...(last && { ids: placeAfter(ids, id, last.id) }),
-    placements: [{ id, section: target.section }],
-  };
+  return settle(cards);
+}
+
+export function moveCard(
+  cards: GridCard[],
+  id: string,
+  x: number,
+  y: number,
+): GridCard[] {
+  return settle(
+    reshape(cards, id, (cell) => ({ ...cell, x, y })),
+    id,
+    true,
+  );
+}
+
+export function resizeCard(
+  cards: GridCard[],
+  id: string,
+  w: number,
+  h: number,
+): GridCard[] {
+  return settle(
+    reshape(cards, id, (cell) => ({ ...cell, w, h })),
+    id,
+  );
+}
+
+export function nudgeCard(
+  cards: GridCard[],
+  id: string,
+  key: GridKey,
+  resize: boolean,
+): GridCard[] {
+  const card = cards.find((entry) => entry.insight.id === id);
+  if (!card) return cards;
+  const { x, y, w, h } = card.cell;
+  if (resize) {
+    const dw = key === 'ArrowRight' ? 1 : key === 'ArrowLeft' ? -1 : 0;
+    const dh = key === 'ArrowDown' ? 1 : key === 'ArrowUp' ? -1 : 0;
+    return resizeCard(cards, id, w + dw, h + dh);
+  }
+  if (key === 'ArrowLeft' || key === 'ArrowRight')
+    return settle(
+      reshape(cards, id, (cell) => ({
+        ...cell,
+        x: x + (key === 'ArrowRight' ? 1 : -1),
+      })),
+      id,
+    );
+  const column = cards.filter(
+    (entry) => entry !== card && sharesColumns(entry.cell, card.cell),
+  );
+  const target =
+    key === 'ArrowUp'
+      ? column
+          .filter((entry) => entry.cell.y < y)
+          .reduce((top, entry) => Math.max(top, entry.cell.y), -1)
+      : column
+          .filter((entry) => entry.cell.y > y)
+          .reduce((top, entry) => Math.min(top, entry.cell.y + 1), Infinity);
+  if (target < 0 || target === Infinity) return cards;
+  return settle(
+    reshape(cards, id, (cell) => ({ ...cell, y: target })),
+    id,
+  );
+}
+
+export function gridPlacements(
+  cards: GridCard[],
+): WebAnalyticsInsightPlacementUpdate[] {
+  return cards
+    .filter(({ insight, cell }) => !sameCell(insight.grid, cell))
+    .map(({ insight, cell }) => ({ id: insight.id, grid: cell }));
+}
+
+export function sameCell(
+  a: WebAnalyticsInsightGrid | null | undefined,
+  b: WebAnalyticsInsightGrid | null | undefined,
+): boolean {
+  return a?.x === b?.x && a?.y === b?.y && a?.w === b?.w && a?.h === b?.h;
+}
+
+export function gridRows(cards: GridCard[]): number {
+  return Math.max(0, ...cards.map(({ cell }) => cell.y + cell.h));
 }
 
 export function applyArrangement(
@@ -182,66 +209,100 @@ export function viewInputs(views: WebAnalyticsView[]): WebAnalyticsViewInput[] {
     id: view.id || undefined,
     name: view.name,
     traffic: view.traffic,
-    sections: view.sections.map((section) => ({ ...section })),
   }));
 }
 
 export function viewsProblem(views: WebAnalyticsViewInput[]): string | null {
+  const names = views.map((view) => view.name.trim().toLowerCase());
   if (views.length > MAX_VIEWS) return `Keep at most ${MAX_VIEWS} views`;
-  if (hasBlank(views.map((view) => view.name))) return 'Name every view';
-  if (hasDuplicate(views.map((view) => view.name)))
+  if (names.some((name) => !name)) return 'Name every view';
+  if (names.some((name, index) => names.indexOf(name) !== index))
     return 'Give each view its own name';
-  for (const view of views) {
-    if (view.sections.length > MAX_SECTIONS)
-      return `Keep at most ${MAX_SECTIONS} sections in ${view.name.trim()}`;
-    if (hasBlank(view.sections.map((section) => section.title)))
-      return `Name every section in ${view.name.trim()}`;
-    if (hasDuplicate(view.sections.map((section) => section.title)))
-      return `Give each section in ${view.name.trim()} its own name`;
-  }
   return null;
 }
 
-function dropOnCard(
-  layout: ViewLayout,
-  ids: string[],
-  id: string,
-  from: LayoutGroup,
-  card: string,
-): Arrangement | null {
-  if (card === id) return null;
-  const to = groupOf(layout, card);
-  if (!to) return null;
-  if (to === from) {
-    const after = indexIn(from, id) < indexIn(to, card);
-    return {
-      ids: after ? placeAfter(ids, id, card) : placeBefore(ids, id, card),
-    };
-  }
+function defaultSize(insight: WebAnalyticsInsight): WebAnalyticsInsightGrid {
   return {
-    ids: placeBefore(ids, id, card),
-    placements: [{ id, section: to.section?.id ?? null }],
+    x: 0,
+    y: 0,
+    w: insightWide(insight) ? GRID_COLUMNS : GRID_COLUMNS / 2,
+    h: CARD_H,
   };
 }
 
-function groupOf(layout: ViewLayout, id: string): LayoutGroup | undefined {
-  return layout.groups.find((group) => indexIn(group, id) >= 0);
+function fit(cell: WebAnalyticsInsightGrid): WebAnalyticsInsightGrid {
+  const w = clamp(cell.w, MIN_W, GRID_COLUMNS);
+  return {
+    x: clamp(cell.x, 0, GRID_COLUMNS - w),
+    y: Math.max(0, Math.round(cell.y)),
+    w,
+    h: clamp(cell.h, MIN_H, MAX_H),
+  };
 }
 
-function indexIn(group: LayoutGroup, id: string): number {
-  return group.cards.findIndex((card) => card.id === id);
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(value)));
 }
 
-function placeBefore(ids: string[], id: string, target: string): string[] {
-  const rest = ids.filter((entry) => entry !== id);
-  rest.splice(rest.indexOf(target), 0, id);
-  return rest;
+function reshape(
+  cards: GridCard[],
+  id: string,
+  change: (cell: WebAnalyticsInsightGrid) => WebAnalyticsInsightGrid,
+): GridCard[] {
+  return cards.map((card) =>
+    card.insight.id === id ? { ...card, cell: fit(change(card.cell)) } : card,
+  );
 }
 
-function placeAfter(ids: string[], id: string, target: string): string[] {
-  const rest = ids.filter((entry) => entry !== id);
-  rest.splice(rest.indexOf(target) + 1, 0, id);
-  return rest;
+function settle(
+  cards: GridCard[],
+  pinned: string | null = null,
+  byCenter = false,
+): GridCard[] {
+  const key = ({ cell }: GridCard): number =>
+    cell.y + (byCenter ? cell.h / 2 : 0);
+  const pin = (card: GridCard): number => Number(card.insight.id === pinned);
+  const order = [...cards].sort(
+    (a, b) => key(a) - key(b) || pin(b) - pin(a) || a.cell.x - b.cell.x,
+  );
+  const done: GridCard[] = [];
+  for (const card of order) {
+    const y = Math.max(
+      0,
+      ...done
+        .filter((other) => sharesColumns(other.cell, card.cell))
+        .map(({ cell }) => cell.y + cell.h),
+    );
+    done.push({ ...card, cell: { ...card.cell, y } });
+  }
+  return done;
+}
+
+function firstFree(
+  cards: GridCard[],
+  size: WebAnalyticsInsightGrid,
+  floor: number,
+): WebAnalyticsInsightGrid {
+  for (let y = floor; ; y++) {
+    for (let x = 0; x + size.w <= GRID_COLUMNS; x++) {
+      const cell = { ...size, x, y };
+      if (!cards.some((card) => overlaps(card.cell, cell))) return cell;
+    }
+  }
+}
+
+function sharesColumns(
+  a: WebAnalyticsInsightGrid,
+  b: WebAnalyticsInsightGrid,
+): boolean {
+  return a.x < b.x + b.w && b.x < a.x + a.w;
+}
+
+function overlaps(
+  a: WebAnalyticsInsightGrid,
+  b: WebAnalyticsInsightGrid,
+): boolean {
+  return sharesColumns(a, b) && a.y < b.y + b.h && b.y < a.y + a.h;
 }
 
 function withPlacement(
@@ -249,19 +310,10 @@ function withPlacement(
   update: WebAnalyticsInsightPlacementUpdate,
 ): WebAnalyticsInsight {
   const next: WebAnalyticsInsight = { ...insight };
-  for (const key of PLACEMENT_KEYS) {
+  for (const key of ['view', 'hidden', 'grid'] as const) {
     const value = update[key];
     if (value === null) delete next[key];
     else if (value !== undefined) Object.assign(next, { [key]: value });
   }
   return next;
-}
-
-function hasBlank(names: string[]): boolean {
-  return names.some((name) => !name.trim());
-}
-
-function hasDuplicate(names: string[]): boolean {
-  const seen = names.map((name) => name.trim().toLowerCase());
-  return seen.some((name, index) => seen.indexOf(name) !== index);
 }

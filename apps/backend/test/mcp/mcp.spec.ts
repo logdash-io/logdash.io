@@ -240,8 +240,19 @@ describe('MCP server', () => {
       ],
       [
         'create_insight',
-        { clusterId, type: 'trend', title: 'Days', events: [{ name: 'a' }], width: 'wide' },
-        'width must be one of',
+        {
+          clusterId,
+          type: 'trend',
+          title: 'Days',
+          events: [{ name: 'a' }],
+          grid: { x: 7, y: 0, w: 6, h: 8 },
+        },
+        'grid.w must be at most 12 - x',
+      ],
+      [
+        'reorder_insights',
+        { clusterId, placements: [{ id: clusterId, grid: { x: 0, y: 0, w: 3, h: 25 } }] },
+        'placements.0.grid.h must not be greater than 24',
       ],
       [
         'create_insight',
@@ -625,7 +636,7 @@ describe('MCP server', () => {
     await bootstrap.utils.auditLogUtils.assertAuditLog({ relatedEntityId: l30.id as string });
   });
 
-  it('lays out a dashboard of views, sections, tabs and hidden cards', async () => {
+  it('lays out a dashboard of views, grid cards, tabs and hidden cards', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
     await configure(setup.cluster.id, setup.token);
@@ -637,29 +648,19 @@ describe('MCP server', () => {
       title: 'Install',
       events: [{ name: 'malini_desktop_first_open' }, { name: 'malini_desktop_first_merge' }],
     };
+    const left = { x: 0, y: 0, w: 6, h: 8 };
+    const right = { x: 6, y: 0, w: 6, h: 8 };
 
     // when
     const laidOut = (
       await call(key, 'set_views', {
         clusterId,
-        views: [
-          {
-            name: 'Company',
-            sections: [{ title: 'Activation', collapsed: true }, { title: 'Usage' }],
-          },
-          { name: 'Traffic', traffic: true },
-        ],
+        views: [{ name: 'Company' }, { name: 'Traffic', traffic: true }],
       })
-    ).json as { views: { id: string; traffic: boolean; sections: { id: string }[] }[] };
+    ).json as { views: { id: string; traffic: boolean }[] };
     const [company, traffic] = laidOut.views;
     const placed = (
-      await call(key, 'create_insight', {
-        clusterId,
-        ...trend,
-        view: company.id,
-        section: company.sections[0].id,
-        width: 'full',
-      })
+      await call(key, 'create_insight', { clusterId, ...trend, view: company.id, grid: left })
     ).json;
     const tabbed = (
       await call(key, 'create_insight', {
@@ -681,15 +682,15 @@ describe('MCP server', () => {
       clusterId,
       insightId: placed.id,
       ...trend,
-      section: null,
-      width: null,
+      grid: null,
     });
     const reordered = await call(key, 'reorder_insights', {
       clusterId,
       ids: [plain.id, tabbed.id, placed.id],
       placements: [
-        { id: plain.id, view: company.id, section: company.sections[1].id },
+        { id: plain.id, view: company.id, grid: right },
         { id: tabbed.id, hidden: true },
+        { id: placed.id, grid: left },
       ],
     });
     const ran = (await call(key, 'run_insight', { clusterId, insightId: tabbed.id })).json;
@@ -708,40 +709,24 @@ describe('MCP server', () => {
 
     // then
     expect(laidOut.views).toMatchObject([
-      {
-        name: 'Company',
-        traffic: false,
-        sections: [
-          { title: 'Activation', collapsed: true },
-          { title: 'Usage', collapsed: false },
-        ],
-      },
-      { name: 'Traffic', traffic: true, sections: [] },
+      { name: 'Company', traffic: false },
+      { name: 'Traffic', traffic: true },
     ]);
-    expect(placed).toMatchObject({
-      view: company.id,
-      section: company.sections[0].id,
-      width: 'full',
-    });
+    expect(placed).toMatchObject({ view: company.id, grid: left });
     expect(tabbed).toMatchObject({
       type: 'tabs',
       view: traffic.id,
       tabs: [{ title: 'Install' }, { title: 'Days' }],
     });
-    expect(kept.json).toMatchObject({
-      title: 'Active days',
-      view: company.id,
-      section: company.sections[0].id,
-      width: 'full',
-    });
+    expect(tabbed).not.toHaveProperty('grid');
+    expect(kept.json).toMatchObject({ title: 'Active days', view: company.id, grid: left });
     expect(cleared.json).toMatchObject({ view: company.id });
-    expect(cleared.json).not.toHaveProperty('section');
-    expect(cleared.json).not.toHaveProperty('width');
+    expect(cleared.json).not.toHaveProperty('grid');
     expect(reordered.json).toMatchObject({
       insights: [
-        { id: plain.id, view: company.id, section: company.sections[1].id },
+        { id: plain.id, view: company.id, grid: right },
         { id: tabbed.id, hidden: true, view: traffic.id },
-        { id: placed.id, view: company.id },
+        { id: placed.id, view: company.id, grid: left },
       ],
     });
     expect(ran).toMatchObject({
@@ -757,7 +742,7 @@ describe('MCP server', () => {
     });
     expect(renamed).toMatchObject({
       viewsVersion: 2,
-      views: [{ id: company.id, name: 'Business', sections: [] }],
+      views: [{ id: company.id, name: 'Business' }],
       insights: [{ id: plain.id }, { id: tabbed.id }, { id: placed.id }],
     });
     expect((renamed.insights as object[])[1]).not.toHaveProperty('view');

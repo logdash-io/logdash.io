@@ -386,7 +386,7 @@ export class WebAnalyticsWriteService {
     clusterId: string,
     placements: WebAnalyticsInsightPlacement[],
   ): Promise<void> {
-    if (!placements.some(({ view, section }) => view || section)) return;
+    if (!placements.some(({ view }) => view)) return;
     const site = await this.model
       .findOne({ clusterId })
       .select('views')
@@ -399,59 +399,28 @@ export class WebAnalyticsWriteService {
     views: WebAnalyticsViewEntity[],
     placements: WebAnalyticsInsightPlacement[],
   ): void {
-    for (const { view, section } of placements) {
-      const owner = view ? views.find((entry) => entry._id.toString() === view) : undefined;
-      if (view && !owner) throw new BadRequestException('Unknown view');
-      const scope = owner ? [owner] : views;
-      if (
-        section &&
-        !scope.some((entry) => entry.sections.some((child) => child._id.toString() === section))
-      )
-        throw new BadRequestException('Unknown section');
-    }
+    for (const { view } of placements)
+      if (view && !views.some((entry) => entry._id.toString() === view))
+        throw new BadRequestException('Unknown view');
   }
 
   private buildViews(
     current: WebAnalyticsViewEntity[],
     views: WebAnalyticsViewBody[],
-  ): Pick<WebAnalyticsViewEntity, '_id' | 'name' | 'traffic' | 'sections'>[] {
+  ): WebAnalyticsViewEntity[] {
     const ids = new Set<string>();
-    const claim = (id: string): void => {
-      if (ids.has(id)) throw new BadRequestException('An id appears twice');
-      ids.add(id);
-    };
     const names = new Set<string>();
     return views.map((view) => {
-      const existing = current.find((entry) => entry._id.toString() === view.id);
       if (view.id) {
-        if (!existing) throw new BadRequestException('Unknown view');
-        claim(view.id);
+        if (!current.some((entry) => entry._id.toString() === view.id))
+          throw new BadRequestException('Unknown view');
+        if (ids.has(view.id)) throw new BadRequestException('An id appears twice');
+        ids.add(view.id);
       }
       if (names.has(view.name.toLowerCase()))
         throw new BadRequestException('View names must be unique');
       names.add(view.name.toLowerCase());
-      const titles = new Set<string>();
-      const sections = (view.sections ?? []).map((section) => {
-        if (section.id) {
-          if (!existing?.sections.some((entry) => entry._id.toString() === section.id))
-            throw new BadRequestException('Unknown section');
-          claim(section.id);
-        }
-        if (titles.has(section.title.toLowerCase()))
-          throw new BadRequestException('Section titles must be unique within a view');
-        titles.add(section.title.toLowerCase());
-        return {
-          _id: new Types.ObjectId(section.id),
-          title: section.title,
-          collapsed: section.collapsed ?? false,
-        };
-      });
-      return {
-        _id: new Types.ObjectId(view.id),
-        name: view.name,
-        traffic: view.traffic ?? false,
-        sections,
-      };
+      return { _id: new Types.ObjectId(view.id), name: view.name, traffic: view.traffic ?? false };
     });
   }
 

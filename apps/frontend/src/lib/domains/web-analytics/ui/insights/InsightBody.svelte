@@ -61,12 +61,12 @@
     {result.error}
   </p>
 {:else if !result.data || result.data.type !== config.type}
-  <div class="flex min-h-60 flex-1 items-center justify-center">
+  <div class="flex flex-1 items-center justify-center">
     <Spinner />
   </div>
 {:else}
   {@const data = result.data}
-  <div class="flex flex-1 flex-col gap-2">
+  <div class="flex min-h-0 flex-1 flex-col gap-2">
     {#if config.type === 'funnel'}
       {@const Funnel =
         config.layout === 'rows' ? InsightFunnelRows : InsightFunnelColumns}

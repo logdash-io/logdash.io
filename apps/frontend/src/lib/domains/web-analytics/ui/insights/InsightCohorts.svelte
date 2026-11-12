@@ -57,7 +57,7 @@
     No events with a {property} date in this period
   </p>
 {:else}
-  <div class="max-h-128 overflow-auto">
+  <div class="min-h-0 flex-1 overflow-auto">
     <table
       class="w-full border-separate border-spacing-x-1 border-spacing-y-0 text-sm tabular-nums"
     >

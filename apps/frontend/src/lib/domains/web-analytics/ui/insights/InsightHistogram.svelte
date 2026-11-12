@@ -52,9 +52,9 @@
   {/if}
 </dl>
 
-<div class="flex flex-col gap-1.5 px-3 pb-1">
+<div class="flex min-h-0 flex-1 flex-col gap-1.5 px-3 pb-1">
   <ul
-    class="flex h-44 items-end gap-0.5"
+    class="flex min-h-32 flex-1 items-end gap-0.5"
     aria-label="Events by value"
     onpointerleave={() => onHover(null)}
   >

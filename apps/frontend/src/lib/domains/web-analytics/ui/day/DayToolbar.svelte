@@ -1,8 +1,5 @@
 <script lang="ts">
-  import {
-    TOOLBAR_CONTROL,
-    TOOLBAR_ICON_CONTROL,
-  } from '$lib/domains/shared/ui/components/toolbar.js';
+  import { TOOLBAR_ICON_CONTROL } from '$lib/domains/shared/ui/components/toolbar.js';
   import ChevronDownIcon from '$lib/domains/shared/icons/ChevronDownIcon.svelte';
   import ChevronLeftIcon from '$lib/domains/shared/icons/ChevronLeftIcon.svelte';
   import ChevronRightIcon from '$lib/domains/shared/icons/ChevronRightIcon.svelte';
@@ -126,7 +123,9 @@
   }
 </script>
 
-<div class="flex min-w-0 flex-wrap items-center gap-2">
+<div
+  class="flex min-w-0 items-center gap-2 max-sm:-my-1 max-sm:overflow-x-auto max-sm:py-1 max-sm:[scrollbar-width:none] sm:max-w-[calc(100cqw-12.75rem)]"
+>
   <Tooltip content="Visitors in the last 5 minutes" placement="bottom">
     <span
       class="bg-surface-100-bg text-fg-secondary flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[13px] tabular-nums"
@@ -227,7 +226,7 @@
         <button
           {...attrs}
           type="button"
-          class={[TOOLBAR_CONTROL, 'text-fg-tertiary max-w-full min-w-0']}
+          class="hover:text-fg-default transition-ink focus-visible:outline-brand edge text-fg-tertiary flex h-8 max-w-full min-w-24 cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm focus-visible:outline-2"
           aria-label="Goals: {picked.join(', ') || 'none'}"
         >
           {#if picked.length}

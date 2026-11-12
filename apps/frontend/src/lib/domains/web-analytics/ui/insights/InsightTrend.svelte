@@ -72,7 +72,14 @@
   );
 </script>
 
-<AnalyticsChart {times} {lines} granularity={bucket} {partial} {label} />
+<AnalyticsChart
+  {times}
+  {lines}
+  granularity={bucket}
+  {partial}
+  {label}
+  class="min-h-40 flex-1"
+/>
 
 <ul class="flex flex-col gap-0.5">
   {#each rows as entry, index (index)}
