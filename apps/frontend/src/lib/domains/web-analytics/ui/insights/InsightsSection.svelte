@@ -111,6 +111,10 @@
     const mode = handle(event);
     if (!mode || event.button !== 0 || !board) return;
     event.preventDefault();
+    if (event.target instanceof Element)
+      event.target
+        .closest('[data-grip]')
+        ?.parentElement?.dispatchEvent(new MouseEvent('mouseleave'));
     const rect = board.getBoundingClientRect();
     drag = {
       id: card.insight.id,
@@ -262,7 +266,7 @@
         {@const cell = cellOf(card)}
         {@const lifted = moving?.id === card.insight.id}
         <div
-          class={['cell group/cell flex', { lifted }]}
+          class={['cell group/cell', { lifted }]}
           style:--x={cell.x}
           style:--y={cell.y}
           style:--w={cell.w}
