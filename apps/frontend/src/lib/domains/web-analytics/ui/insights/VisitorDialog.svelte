@@ -7,9 +7,9 @@
   import { untrack } from 'svelte';
   import { WebAnalyticsVisitorState } from '../../application/web-analytics-dashboard.state.svelte';
   import { visitorName } from '../../domain/analytics-format';
-  import type {
-    WebAnalyticsVisitor,
-    WebAnalyticsVisitorEvent,
+  import {
+    visitorSessions,
+    type WebAnalyticsVisitor,
   } from '../../domain/web-analytics';
   import BreakdownLabel from '../breakdown/BreakdownLabel.svelte';
   import VisitorAvatar from './VisitorAvatar.svelte';
@@ -27,17 +27,7 @@
   const titleId = $props.id();
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const sessions = $derived.by(
-    (): { id: string; events: WebAnalyticsVisitorEvent[] }[] => {
-      const grouped: { id: string; events: WebAnalyticsVisitorEvent[] }[] = [];
-      for (const event of details.events) {
-        const last = grouped.at(-1);
-        if (last?.id === event.sessionId) last.events.push(event);
-        else grouped.push({ id: event.sessionId, events: [event] });
-      }
-      return grouped;
-    },
-  );
+  const sessions = $derived(visitorSessions(details.events));
   const profile = $derived(details.visitor ?? visitor);
 
   $effect(() => {
