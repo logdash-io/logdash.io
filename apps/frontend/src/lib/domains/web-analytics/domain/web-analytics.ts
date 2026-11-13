@@ -156,6 +156,23 @@ export interface WebAnalyticsVisitorEvent {
   source: string;
 }
 
+export interface WebAnalyticsVisitorSession {
+  id: string;
+  events: WebAnalyticsVisitorEvent[];
+}
+
+export function visitorSessions(
+  events: WebAnalyticsVisitorEvent[],
+): WebAnalyticsVisitorSession[] {
+  const sessions: WebAnalyticsVisitorSession[] = [];
+  for (const event of events) {
+    const session = sessions.find(({ id }) => id === event.sessionId);
+    if (session) session.events.push(event);
+    else sessions.push({ id: event.sessionId, events: [event] });
+  }
+  return sessions;
+}
+
 export interface WebAnalyticsJourney {
   steps: string[];
   sessions: number;
