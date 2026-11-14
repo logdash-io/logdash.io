@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { countryName, formatCount, formatPercent } from './analytics-format';
+import { formatCount, formatPercent } from './analytics-format';
 import type {
   WebAnalyticsDay,
   WebAnalyticsDayCounts,
@@ -349,17 +349,6 @@ export function whole(value: number | null): string {
 
 export function visitKey(visit: WebAnalyticsDayVisit): string {
   return `${visit.id}:${visit.startedAt}`;
-}
-
-export function visitTraits(
-  visit: Pick<WebAnalyticsDayVisit, 'country' | 'device' | 'os' | 'browser'>,
-): string[] {
-  return [
-    visit.country && countryName(visit.country),
-    visit.device,
-    visit.os,
-    visit.browser,
-  ].filter((trait) => trait && trait !== 'Other');
 }
 
 export function dayLabel(date: string, today: string): string {
