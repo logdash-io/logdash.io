@@ -17,7 +17,7 @@ export const page: DocPage = {
       type: 'list',
       items: [
         'The 28 days on top show the visits of each day against the middle half of the same weekday, and how many people did your primary goal. Click a day to open it.',
-        'The day shows its visits, the visits that stayed, and how many people did each goal, then visits per hour, sources, landing pages and every visit, newest first. Point at a source to see its share in both charts, or click it to keep it there.',
+        'The day shows its visits, the visits that stayed, and how many people did each goal, then visits per hour, sources, first pages and every visit, newest first. Point at a source to see its share in both charts, or click it to keep it there.',
         'Your saved [insights](/docs/web-analytics/insights) follow the day.',
         'Channels, pages, goals, countries, technology, journeys and retention for the day are under **Details**.',
       ],

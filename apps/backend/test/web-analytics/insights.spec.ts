@@ -701,20 +701,25 @@ describe('Web analytics insights', () => {
       body,
     );
     const ran = await run(clusterId, setup.token, named);
+    const weekly = await run(clusterId, setup.token, { ...body, binSize: 7 });
+    const none = await run(clusterId, setup.token, { ...body, events: [{ name: 'grip_gone' }] });
 
     // then
+    const filled = (result: WebAnalyticsInsightResult) => result.bins?.filter((bin) => bin.count);
+    const values = (result: WebAnalyticsInsightResult) => result.bins?.map((bin) => bin.value);
     expect(saved).toMatchObject({ measure: 'people', binSize: 1 });
     expect(saved).not.toHaveProperty('property');
     expect(utc.measure).toBe('people');
-    expect(utc.bins).toEqual([
+    expect(values(utc)).toEqual(Array.from({ length: 30 }, (_, index) => index + 1));
+    expect(filled(utc)).toEqual([
       { value: 2, count: 1, share: 50 },
       { value: 3, count: 1, share: 50 },
     ]);
     expect(utc.summary).toEqual({ count: 2, mean: 2.5, median: 3 });
     expect(local.status).toBe(200);
-    expect((local.body as WebAnalyticsInsightResult).bins).toEqual([
+    expect(values(local.body as WebAnalyticsInsightResult)).toEqual(values(utc));
+    expect(filled(local.body as WebAnalyticsInsightResult)).toEqual([
       { value: 1, count: 1, share: 50 },
-      { value: 2, count: 0, share: 0 },
       { value: 3, count: 1, share: 50 },
     ]);
     expect((local.body as WebAnalyticsInsightResult).summary).toEqual({
@@ -723,6 +728,9 @@ describe('Web analytics insights', () => {
       median: 3,
     });
     expect(ran.bins).toEqual(utc.bins);
+    expect(values(weekly)).toEqual([0, 7, 14, 21, 28]);
+    expect(filled(weekly)).toEqual([{ value: 0, count: 2, share: 100 }]);
+    expect(none.bins).toEqual([]);
   });
 
   it('runs people funnels and lists event names with their property keys', async () => {

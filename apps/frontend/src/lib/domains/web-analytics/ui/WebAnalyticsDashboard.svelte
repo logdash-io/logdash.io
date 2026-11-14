@@ -530,8 +530,8 @@
         />
 
         <VisitGroupsCard
-          title="Landing pages"
-          column="Landing page"
+          title="First pages"
+          column="First page"
           rows={pages}
           {by}
           {weekdays}

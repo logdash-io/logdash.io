@@ -50,6 +50,7 @@ const COHORT_END: Record<string, string> = {
 };
 
 const MAX_BINS = 500;
+const DAY_MS = 86_400_000;
 
 type Conditions = {
   events: string[];
@@ -277,13 +278,18 @@ export class WebAnalyticsInsightReadService {
     ]);
     const counts = new Map(rows.map((row) => [Number(row.bin), Number(row.count)]));
     const total = Number(summary[0]?.count ?? 0);
-    const first = rows.length ? Number(rows[0].bin) : 0;
-    const size = rows.length ? Number(rows[rows.length - 1].bin) - first + 1 : 0;
+    const binSize = insight.binSize ?? 1;
+    const ends = rows.length ? [Number(rows[0].bin), Number(rows[rows.length - 1].bin)] : [];
+    if (people && rows.length) {
+      const days = Math.ceil((scope.to.getTime() - scope.from.getTime()) / DAY_MS);
+      ends.push(Math.floor(1 / binSize), Math.floor(days / binSize));
+    }
+    const first = ends.length ? Math.min(...ends) : 0;
+    const size = ends.length ? Math.max(...ends) - first + 1 : 0;
     if (size > MAX_BINS)
       throw new BadRequestException(
         `Use a larger bin size: this one makes ${size} bars, at most ${MAX_BINS}`,
       );
-    const binSize = insight.binSize ?? 1;
     return {
       measure: people ? WebAnalyticsInsightMeasure.People : WebAnalyticsInsightMeasure.Events,
       bins: Array.from({ length: size }, (_, index) => {
@@ -416,7 +422,7 @@ export class WebAnalyticsInsightReadService {
   ): ReadWebAnalyticsQuery {
     const to = new Date();
     return {
-      from: new Date(to.getTime() - days * 86_400_000),
+      from: new Date(to.getTime() - days * DAY_MS),
       to,
       granularity: bucket,
       filter: [],

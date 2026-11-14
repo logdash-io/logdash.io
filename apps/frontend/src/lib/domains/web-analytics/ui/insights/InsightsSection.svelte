@@ -37,9 +37,12 @@
     onedit: (insight: WebAnalyticsInsight) => void;
   };
 
+  type Axis = 'x' | 'y' | 'xy';
+
   type Drag = {
     id: string;
     mode: 'move' | 'resize';
+    axis: Axis;
     x: number;
     y: number;
     origin: WebAnalyticsInsightGrid;
@@ -100,25 +103,29 @@
     if (confirmed) await insights.remove(insight.id);
   }
 
-  function handle(event: Event): 'move' | 'resize' | null {
+  function handle(event: Event): Pick<Drag, 'mode' | 'axis'> | null {
     const target = event.target instanceof Element ? event.target : null;
-    if (target?.closest('[data-resize]')) return 'resize';
-    if (target?.closest('[data-grip]')) return 'move';
+    const edge = target?.closest<HTMLElement>('[data-edge]')?.dataset.edge;
+    if (edge === 'x' || edge === 'y') return { mode: 'resize', axis: edge };
+    if (target?.closest('[data-resize]')) return { mode: 'resize', axis: 'xy' };
+    if (target?.closest('[data-grip]')) return { mode: 'move', axis: 'xy' };
     return null;
   }
 
   function onPointerDown(event: PointerEvent, card: GridCard): void {
-    const mode = handle(event);
-    if (!mode || event.button !== 0 || !board) return;
+    const grabbed = handle(event);
+    if (!grabbed || event.button !== 0 || !board) return;
     event.preventDefault();
-    if (event.target instanceof Element)
+    if (event.target instanceof Element) {
+      event.target.setPointerCapture(event.pointerId);
       event.target
         .closest('[data-grip]')
         ?.parentElement?.dispatchEvent(new MouseEvent('mouseleave'));
+    }
     const rect = board.getBoundingClientRect();
     drag = {
       id: card.insight.id,
-      mode,
+      ...grabbed,
       x: event.clientX - rect.left,
       y: event.clientY - rect.top,
       origin: card.cell,
@@ -134,12 +141,17 @@
     const y = event.clientY - rect.top - drag.y;
     const columns = Math.round(x / ((width + GRID_GAP) / GRID_COLUMNS));
     const rows = Math.round(y / (GRID_ROW + GRID_GAP));
-    const { id, origin, base } = drag;
+    const { id, origin, base, axis } = drag;
     offset = { x, y };
     preview =
       drag.mode === 'move'
         ? moveCard(base, id, origin.x + columns, Math.max(0, origin.y + rows))
-        : resizeCard(base, id, origin.w + columns, origin.h + rows);
+        : resizeCard(
+            base,
+            id,
+            origin.w + (axis === 'y' ? 0 : columns),
+            origin.h + (axis === 'x' ? 0 : rows),
+          );
   }
 
   function onPointerUp(): void {
@@ -159,7 +171,7 @@
     event: KeyboardEvent,
     card: GridCard,
   ): Promise<void> {
-    const mode = handle(event);
+    const mode = handle(event)?.mode;
     if (!mode || !KEYS.includes(event.key)) return;
     event.preventDefault();
     const id = card.insight.id;
@@ -296,11 +308,33 @@
           >
             <ResizeIcon class="size-4" />
           </button>
+          {@render edge(card, 'x')}
+          {@render edge(card, 'y')}
         </div>
       {/each}
     </div>
   {/if}
 </section>
+
+{#snippet edge(card: GridCard, axis: 'x' | 'y')}
+  <div
+    class={[
+      'sizer absolute touch-none items-center justify-center transition-opacity',
+      axis === 'x'
+        ? 'inset-y-6 -right-1.5 w-3 cursor-ew-resize'
+        : 'inset-x-6 -bottom-1.5 h-3 cursor-ns-resize',
+      drag?.id === card.insight.id && drag.axis === axis
+        ? 'text-brand'
+        : 'text-fg-tertiary hover:text-brand pointer-fine:opacity-0 pointer-fine:group-hover/cell:opacity-100',
+    ]}
+    data-edge={axis}
+    aria-hidden="true"
+  >
+    <span
+      class={['rounded-full bg-current', axis === 'x' ? 'h-8 w-1' : 'h-1 w-8']}
+    ></span>
+  </div>
+{/snippet}
 
 <style>
   .board {
@@ -314,7 +348,8 @@
   }
 
   .landing,
-  .corner {
+  .corner,
+  .sizer {
     display: none;
   }
 
@@ -348,7 +383,8 @@
       cursor: grabbing;
     }
 
-    .corner {
+    .corner,
+    .sizer {
       display: flex;
     }
   }

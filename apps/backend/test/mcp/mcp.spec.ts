@@ -552,14 +552,15 @@ describe('MCP server', () => {
     ).json;
 
     // then
-    expect(days).toMatchObject({
-      measure: 'people',
-      bins: [
-        { value: 1, count: 1, share: 50 },
-        { value: 2, count: 1, share: 50 },
-      ],
-      summary: { count: 2, mean: 1.5 },
-    });
+    const bins = days.bins as { value: number; count: number }[];
+    expect(days).toMatchObject({ measure: 'people', summary: { count: 2, mean: 1.5 } });
+    expect(bins.map((bin) => bin.value)).toEqual(
+      Array.from({ length: 30 }, (_, index) => index + 1),
+    );
+    expect(bins.filter((bin) => bin.count)).toEqual([
+      { value: 1, count: 1, share: 50 },
+      { value: 2, count: 1, share: 50 },
+    ]);
     expect(card).toMatchObject({ type: 'distribution', measure: 'people' });
     expect(card).not.toHaveProperty('property');
     expect(people).toMatchObject({
