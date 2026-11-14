@@ -182,8 +182,14 @@
       return {
         events: 'Event',
         add: '',
-        hint: 'Bars count the events of each value of a numeric property.',
-        name: 'Active days per month',
+        hint:
+          measure === 'people'
+            ? 'Bars count the people by the number of days they sent the event in the period. An event counts a person only when the app sends a user ID.'
+            : 'Bars count the events of each value of a numeric property.',
+        name:
+          measure === 'people'
+            ? 'Active days, last 30 days'
+            : 'Active days per month',
       };
     if (type === 'cohorts')
       return {
@@ -358,10 +364,10 @@
             value={draft.mode}
             onChange={onMode}
           />
-        {:else if draft.type === 'trend'}
+        {:else if draft.type === 'trend' || draft.type === 'distribution'}
           <SegmentedControl
             size="xs"
-            label="Trend counts"
+            label={draft.type === 'trend' ? 'Trend counts' : 'Histogram counts'}
             options={MODES}
             value={draft.measure}
             onChange={onMeasure}
@@ -597,22 +603,26 @@
 
       {#if draft.type === 'distribution'}
         <div class="flex gap-3">
-          <label class="flex min-w-0 flex-1 flex-col gap-1.5">
-            <span class="text-sm font-medium">Numeric property</span>
-            <Input
-              bind:value={draft.property}
-              class="w-full font-mono"
-              list="{id}-keys"
-              placeholder="active_days"
-            />
-          </label>
+          {#if draft.measure !== 'people'}
+            <label class="flex min-w-0 flex-1 flex-col gap-1.5">
+              <span class="text-sm font-medium">Numeric property</span>
+              <Input
+                bind:value={draft.property}
+                class="w-full font-mono"
+                list="{id}-keys"
+                placeholder="active_days"
+              />
+            </label>
+          {/if}
           <label class="flex w-36 shrink-0 flex-col gap-1.5">
-            <span class="text-sm font-medium">Bar width</span>
+            <span class="text-sm font-medium">
+              {draft.measure === 'people' ? 'Days per bar' : 'Bar width'}
+            </span>
             <Input
               bind:value={draft.binSize}
               type="number"
-              min="0"
-              step="any"
+              min={draft.measure === 'people' ? 1 : 0}
+              step={draft.measure === 'people' ? 1 : 'any'}
               class="w-full"
             />
           </label>

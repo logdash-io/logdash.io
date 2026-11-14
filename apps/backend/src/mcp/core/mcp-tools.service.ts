@@ -137,12 +137,13 @@ const PROPERTY_FILTERS = {
 
 const BUCKET = { type: 'string', enum: [...WEB_ANALYTICS_INSIGHT_BUCKETS] };
 
-const MEASURE = {
-  type: 'string',
-  enum: Object.values(WebAnalyticsInsightMeasure),
-  description:
-    'Trends only. events (default) counts the events of each line. people counts the distinct users who sent them, by the userId of the event, so a daily, a weekly and a monthly line give daily, weekly and monthly active users. Events without a userId do not count',
-};
+const MEASURE = { type: 'string', enum: Object.values(WebAnalyticsInsightMeasure) };
+
+const TREND_MEASURE =
+  'Trends: events (default) counts the events of each line. people counts the distinct users who sent them, by the userId of the event, so a daily, a weekly and a monthly line give daily, weekly and monthly active users. Events without a userId do not count.';
+
+const DISTRIBUTION_MEASURE =
+  'Distributions: people bins how many distinct days each person sent the event in the window, such as an L30 chart from a daily event; property is then not needed. Events without a userId do not count.';
 
 const LINE = {
   label: {
@@ -220,12 +221,12 @@ const CHART = {
     description:
       'Trends: the bucket of every line that has none of its own, day by default. Cohorts: the row size, week by default',
   },
-  measure: MEASURE,
+  measure: { ...MEASURE, description: `${TREND_MEASURE} ${DISTRIBUTION_MEASURE}` },
   property: {
     type: 'string',
     pattern: PROP_KEY.source,
     description:
-      'Distributions: the numeric property. Cohorts: the YYYY-MM-DD property naming the cohort, cohort by default',
+      'Distributions of events: the numeric property. Cohorts: the YYYY-MM-DD property naming the cohort, cohort by default',
   },
   binSize: {
     type: 'number',
@@ -420,7 +421,7 @@ export class McpToolsService {
           events: events(1, 5, 'One series per event', true),
           filters: { ...PROPERTY_FILTERS, description: 'Filters every series must match' },
           bucket: { ...BUCKET, default: 'day' },
-          measure: MEASURE,
+          measure: { ...MEASURE, description: TREND_MEASURE },
           days: DAYS,
           tz: TZ,
         },
@@ -430,22 +431,23 @@ export class McpToolsService {
     }),
     this.tool({
       name: 'distribution',
-      title: 'Property distribution',
+      title: 'Distribution',
       description:
-        'A histogram of a numeric event property with count, mean and median, such as active_days of a monthly marker for an L30 chart.',
+        'A histogram with count, mean and median: of a numeric event property, or with measure people of how many distinct days each person (by userId) sent the event, such as an L30 chart from a daily event.',
       action: Action.Read,
       args: McpDistributionArgs,
       inputSchema: object(
         {
           clusterId: CLUSTER_ID,
-          events: events(1, 1, 'The one event that carries the property'),
+          events: events(1, 1, 'The one event'),
+          measure: { ...MEASURE, description: DISTRIBUTION_MEASURE },
           property: INSIGHT.property,
           binSize: INSIGHT.binSize,
           filters: PROPERTY_FILTERS,
           days: DAYS,
           tz: TZ,
         },
-        ['clusterId', 'events', 'property'],
+        ['clusterId', 'events'],
       ),
       run: (args, context) => this.runAs(WebAnalyticsInsightType.Distribution, args, context),
     }),
@@ -530,7 +532,7 @@ export class McpToolsService {
     this.tool({
       name: 'create_insight',
       title: 'Save an insight',
-      description: `Adds an insight card to the end of the dashboard, up to ${MAX_WEB_ANALYTICS_INSIGHTS} per domain. Try it with the matching read tool first. Pass view, hidden and grid to place it, with a view id from list_insights or set_views. Omit grid to put the card at the end of its view with the default size of its type. Give each trend line a label and its own bucket, and set measure to people, to show the daily, weekly and monthly active users of a product in one card.`,
+      description: `Adds an insight card to the end of the dashboard, up to ${MAX_WEB_ANALYTICS_INSIGHTS} per domain. Try it with the matching read tool first. Pass view, hidden and grid to place it, with a view id from list_insights or set_views. Omit grid to put the card at the end of its view with the default size of its type. Give each trend line a label and its own bucket, and set measure to people, to show the daily, weekly and monthly active users of a product in one card. A distribution of a daily event with measure people is an L30 card.`,
       action: Action.Write,
       args: McpCreateInsightArgs,
       inputSchema: object({ clusterId: CLUSTER_ID, ...INSIGHT }, ['clusterId', 'type', 'title']),

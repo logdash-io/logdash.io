@@ -1,14 +1,16 @@
 <script lang="ts">
   import { formatCount, formatPercent } from '../../domain/analytics-format';
   import type { WebAnalyticsInsightBin } from '../../domain/web-analytics';
+  import { histogramBinLabel } from '../../domain/web-analytics-insight';
 
   type Props = {
     bins: WebAnalyticsInsightBin[];
     summary: { count: number; mean: number | null; median: number | null };
     binSize: number;
+    people?: boolean;
   };
 
-  const { bins, summary, binSize }: Props = $props();
+  const { bins, summary, binSize, people = false }: Props = $props();
 
   const MAX_LABELS = 8;
 
@@ -19,9 +21,7 @@
   const readout = $derived(hovered === null ? null : bins[hovered]);
 
   function binLabel(bin: WebAnalyticsInsightBin): string {
-    if (binSize === 1 && Number.isInteger(bin.value))
-      return formatCount(bin.value);
-    return `${formatCount(bin.value)} to ${formatCount(bin.value + binSize)}`;
+    return histogramBinLabel(bin.value, binSize, people);
   }
 
   function onHover(index: number | null): void {
@@ -30,7 +30,7 @@
 </script>
 
 <dl class="flex flex-wrap gap-x-6 gap-y-1 px-3 text-sm">
-  {@render stat('Events', formatCount(summary.count))}
+  {@render stat(people ? 'People' : 'Events', formatCount(summary.count))}
   {@render stat(
     'Mean',
     summary.mean === null ? '–' : formatCount(summary.mean),
@@ -55,7 +55,7 @@
 <div class="flex min-h-0 flex-1 flex-col gap-1.5 px-3 pb-1">
   <ul
     class="flex min-h-32 flex-1 items-end gap-0.5"
-    aria-label="Events by value"
+    aria-label={people ? 'People by active days' : 'Events by value'}
     onpointerleave={() => onHover(null)}
   >
     {#each bins as bin, index (bin.value)}

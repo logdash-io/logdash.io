@@ -105,7 +105,14 @@ export class McpTrendArgs extends IntersectionType(
 
 export class McpDistributionArgs extends IntersectionType(
   McpInsightRunArgs,
-  PickType(WebAnalyticsChartBody, ['days', 'events', 'filters', 'property', 'binSize'] as const),
+  PickType(WebAnalyticsChartBody, [
+    'days',
+    'events',
+    'filters',
+    'measure',
+    'property',
+    'binSize',
+  ] as const),
 ) {}
 
 export class McpCohortTableArgs extends IntersectionType(

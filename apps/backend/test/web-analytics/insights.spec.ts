@@ -660,6 +660,71 @@ describe('Web analytics insights', () => {
     ]);
   });
 
+  it('bins people by the distinct days they sent the event on', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const stranger = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clusterId = setup.cluster.id;
+    const site = await configure(clusterId, setup.token);
+    const day = (at: string, user: string, name = 'grip_day'): WebEventClickhouseEntity => ({
+      ...row(clusterId, site.id),
+      name,
+      created_at: at,
+      user_id: user,
+    });
+    await insert([
+      day('2026-09-20 10:00:00.000', 'ana'),
+      day('2026-09-25 10:00:00.000', 'ana'),
+      day('2026-09-25 18:00:00.000', 'ana'),
+      day('2026-10-01 10:00:00.000', 'ana'),
+      day('2026-09-30 22:30:00.000', 'ben'),
+      day('2026-10-01 01:00:00.000', 'ben'),
+      day('2026-09-29 10:00:00.000', ''),
+      day('2026-09-29 10:00:00.000', 'cy', 'grip_open'),
+      { ...day('2026-09-28 10:00:00.000', 'zed'), cluster_id: stranger.cluster.id },
+    ]);
+    const body = {
+      type: 'distribution',
+      title: 'Grip L30',
+      measure: 'people',
+      events: [{ name: 'grip_day' }],
+    };
+    const named = { ...body, property: 'active_days' };
+
+    // when
+    const saved = await create(clusterId, setup.token, named);
+    const utc = await run(clusterId, setup.token, body);
+    const local = await send(
+      setup.token,
+      'post',
+      `${clusterId}/web_analytics/insights/run?tz=America/New_York`,
+      body,
+    );
+    const ran = await run(clusterId, setup.token, named);
+
+    // then
+    expect(saved).toMatchObject({ measure: 'people', binSize: 1 });
+    expect(saved).not.toHaveProperty('property');
+    expect(utc.measure).toBe('people');
+    expect(utc.bins).toEqual([
+      { value: 2, count: 1, share: 50 },
+      { value: 3, count: 1, share: 50 },
+    ]);
+    expect(utc.summary).toEqual({ count: 2, mean: 2.5, median: 3 });
+    expect(local.status).toBe(200);
+    expect((local.body as WebAnalyticsInsightResult).bins).toEqual([
+      { value: 1, count: 1, share: 50 },
+      { value: 2, count: 0, share: 0 },
+      { value: 3, count: 1, share: 50 },
+    ]);
+    expect((local.body as WebAnalyticsInsightResult).summary).toEqual({
+      count: 2,
+      mean: 2,
+      median: 3,
+    });
+    expect(ran.bins).toEqual(utc.bins);
+  });
+
   it('runs people funnels and lists event names with their property keys', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();

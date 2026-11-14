@@ -49,7 +49,7 @@ export class WebAnalyticsInsightSerialized {
 
   @ApiPropertyOptional({
     enum: WebAnalyticsInsightMeasure,
-    description: 'Trends only. Absent means events',
+    description: 'Trends and distributions. Absent means events',
   })
   measure?: WebAnalyticsInsightMeasure;
 
@@ -146,18 +146,18 @@ export class WebAnalyticsInsightSeries {
 }
 
 export class WebAnalyticsInsightBin {
-  @ApiProperty({ description: 'The lowest value of the bar' })
+  @ApiProperty({ description: 'The lowest value of the bar, active days for people' })
   value: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Events, or people for people' })
   count: number;
 
-  @ApiProperty({ description: 'Percent of all events in the distribution' })
+  @ApiProperty({ description: 'Percent of all events, or people, in the distribution' })
   share: number;
 }
 
 export class WebAnalyticsInsightDistributionSummary {
-  @ApiProperty()
+  @ApiProperty({ description: 'Events, or people for people' })
   count: number;
 
   @ApiProperty({ type: Number, nullable: true })
@@ -215,7 +215,8 @@ export class WebAnalyticsInsightResult {
 
   @ApiPropertyOptional({
     enum: WebAnalyticsInsightMeasure,
-    description: 'Trends: whether the counts of the series are events or distinct people',
+    description:
+      'Trends: whether the counts of the series are events or distinct people. Distributions: whether the bins count events by a property, or people by their active days',
   })
   measure?: WebAnalyticsInsightMeasure;
 

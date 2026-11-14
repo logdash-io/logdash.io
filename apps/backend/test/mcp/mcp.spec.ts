@@ -135,6 +135,9 @@ describe('MCP server', () => {
       expect(properties).toHaveProperty('measure');
     }
     expect(
+      lines.find((tool) => tool.name === 'distribution')?.inputSchema.properties,
+    ).toHaveProperty('measure');
+    expect(
       lines.find((tool) => tool.name === 'events_funnel')?.inputSchema.properties.events.items
         .properties,
     ).not.toHaveProperty('bucket');
@@ -504,7 +507,7 @@ describe('MCP server', () => {
     expect(retention.text.length).toBeLessThan(2000);
   });
 
-  it('counts the distinct people of each trend line and saves the measure', async () => {
+  it('counts the distinct people of trend lines and distributions and saves the measure', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
     const site = await configure(setup.cluster.id, setup.token);
@@ -542,8 +545,23 @@ describe('MCP server', () => {
       await call(key, 'create_insight', { ...trend, type: 'trend', title: 'Grip active' })
     ).json;
     const ran = (await call(key, 'run_insight', { clusterId, insightId: saved.id })).json;
+    const l30 = { clusterId, measure: 'people', events: [{ name: 'grip_open' }] };
+    const days = (await call(key, 'distribution', l30)).json;
+    const card = (
+      await call(key, 'create_insight', { ...l30, type: 'distribution', title: 'Grip L30' })
+    ).json;
 
     // then
+    expect(days).toMatchObject({
+      measure: 'people',
+      bins: [
+        { value: 1, count: 1, share: 50 },
+        { value: 2, count: 1, share: 50 },
+      ],
+      summary: { count: 2, mean: 1.5 },
+    });
+    expect(card).toMatchObject({ type: 'distribution', measure: 'people' });
+    expect(card).not.toHaveProperty('property');
     expect(people).toMatchObject({
       measure: 'people',
       series: [

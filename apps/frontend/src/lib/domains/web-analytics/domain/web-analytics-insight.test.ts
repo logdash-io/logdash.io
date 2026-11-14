@@ -9,6 +9,7 @@ import {
   cohortTable,
   commonPrefix,
   funnelRows,
+  histogramBinLabel,
   insightConfig,
   insightCharts,
   insightDraft,
@@ -227,6 +228,36 @@ test('a config names its first problem', () => {
   expect(insightProblem(insightConfig(draft))).toBe('Name the insight');
 });
 
+test('histogram bars of people read in active days', () => {
+  expect(histogramBinLabel(1, 1, true)).toBe('1 day');
+  expect(histogramBinLabel(3, 1, true)).toBe('3 days');
+  expect(histogramBinLabel(0, 7, true)).toBe('1 to 6 days');
+  expect(histogramBinLabel(7, 7, true)).toBe('7 to 13 days');
+  expect(histogramBinLabel(3, 1, false)).toBe('3');
+  expect(histogramBinLabel(0, 7, false)).toBe('0 to 7');
+});
+
+test('a people histogram needs no property and drops it', () => {
+  const draft = insightDraft({
+    type: 'distribution',
+    title: 'Grip L30',
+    days: 30,
+    events: [{ name: 'grip_day', filters: [] }],
+  });
+  draft.property = 'active_days';
+  draft.measure = 'people';
+  const config = insightConfig(draft);
+  expect(config).toMatchObject({ measure: 'people', binSize: 1 });
+  expect(config).not.toHaveProperty('property');
+  expect(insightProblem(config)).toBeNull();
+  expect(insightSummary(config)).toBe('Active days per person, last 30 days');
+  expect(insightDraft(config).measure).toBe('people');
+
+  draft.measure = 'events';
+  draft.property = '';
+  expect(insightProblem(insightConfig(draft))).toBe('Pick a numeric property');
+});
+
 test('a summary names the filters every event must match', () => {
   expect(
     insightSummary({
@@ -390,6 +421,8 @@ test('a trend keeps the people measure and no other chart does', () => {
   expect(insightConfig(draft)).not.toHaveProperty('measure');
   draft.measure = 'people';
   draft.type = 'funnel';
+  expect(insightConfig(draft)).not.toHaveProperty('measure');
+  draft.type = 'cohorts';
   expect(insightConfig(draft)).not.toHaveProperty('measure');
 
   expect(insightSummary(people)).toBe('Daily people, last 30 days');
