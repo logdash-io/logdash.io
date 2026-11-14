@@ -1,6 +1,6 @@
 <script lang="ts">
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
-  import { Button } from '@logdash/hyper-ui/presentational';
+  import { Button, Tooltip } from '@logdash/hyper-ui/presentational';
   import { DateTime } from 'luxon';
   import { cubicOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
@@ -111,9 +111,9 @@
         aria-hidden="true"
       >
         <span>Time</span>
-        <span></span>
+        <span>Country</span>
         <span>Source</span>
-        <span>Landing page</span>
+        <span>First page</span>
         <span class="text-right">Pages</span>
         <span class="text-right">Stay</span>
         <span></span>
@@ -143,14 +143,15 @@
                   {DateTime.fromISO(visit.startedAt).toFormat('HH:mm')}
                 </span>
                 {#if visit.country}
-                  <span
-                    class="col-start-1 row-start-2 w-4 text-center leading-none @3xl:col-start-2 @3xl:row-start-1"
-                    role="img"
-                    aria-label={countryName(visit.country)}
-                    title={countryName(visit.country)}
+                  <Tooltip
+                    content={countryName(visit.country)}
+                    placement="top"
+                    class="col-start-1 row-start-2 w-fit leading-none @3xl:col-start-2 @3xl:row-start-1"
                   >
-                    {countryFlag(visit.country)}
-                  </span>
+                    <span role="img" aria-label={countryName(visit.country)}>
+                      {countryFlag(visit.country)}
+                    </span>
+                  </Tooltip>
                 {/if}
                 <span
                   class={[
