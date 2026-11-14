@@ -254,19 +254,24 @@ export class WebAnalyticsInsightReadService {
     insight: WebAnalyticsInsightConfig,
     scope: Scope,
     conditions: Conditions,
-  ): Promise<Pick<WebAnalyticsInsightResult, 'bins' | 'summary'>> {
-    const value = 'toFloat64OrNull(props[{property:String}])';
-    const where = `${scope.where} AND ${conditions.events[0]} AND ${conditions.all} AND isFinite(${value})`;
+  ): Promise<Pick<WebAnalyticsInsightResult, 'measure' | 'bins' | 'summary'>> {
+    const people = insight.measure === WebAnalyticsInsightMeasure.People;
+    const where = `${scope.where} AND ${conditions.events[0]} AND ${conditions.all}`;
+    const number = 'toFloat64OrNull(props[{property:String}])';
+    const values = people
+      ? `SELECT uniqExact(toDate(created_at, {tz:String})) AS value FROM web_events FINAL
+        WHERE ${where} AND user_id != '' GROUP BY user_id`
+      : `SELECT ${number} AS value FROM web_events FINAL WHERE ${where} AND isFinite(${number})`;
     const params = { ...conditions.params, property: insight.property, bin: insight.binSize };
     const [rows, summary] = await Promise.all([
       this.query<{ bin: string; count: string }>(
-        `SELECT floor(${value} / {bin:Float64}) AS bin, count() AS count
-        FROM web_events FINAL WHERE ${where} GROUP BY bin ORDER BY bin`,
+        `SELECT floor(value / {bin:Float64}) AS bin, count() AS count
+        FROM (${values}) GROUP BY bin ORDER BY bin`,
         params,
       ),
-      this.query<{ count: string; mean: number | null; median: number | null }>(
-        `SELECT count() AS count, avgOrNull(${value}) AS mean, quantileExactOrNull(0.5)(${value}) AS median
-        FROM web_events FINAL WHERE ${where}`,
+      this.query<{ count: string; mean: number | null; median: number | string | null }>(
+        `SELECT count() AS count, avgOrNull(value) AS mean, quantileExactOrNull(0.5)(value) AS median
+        FROM (${values})`,
         params,
       ),
     ]);
@@ -280,6 +285,7 @@ export class WebAnalyticsInsightReadService {
       );
     const binSize = insight.binSize ?? 1;
     return {
+      measure: people ? WebAnalyticsInsightMeasure.People : WebAnalyticsInsightMeasure.Events,
       bins: Array.from({ length: size }, (_, index) => {
         const count = counts.get(first + index) ?? 0;
         return {

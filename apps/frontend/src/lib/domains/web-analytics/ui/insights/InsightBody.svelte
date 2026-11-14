@@ -90,6 +90,7 @@
         bins={data.bins ?? []}
         summary={data.summary ?? { count: 0, mean: null, median: null }}
         binSize={config.binSize ?? 1}
+        people={data.measure === 'people'}
       />
     {:else}
       <InsightCohorts

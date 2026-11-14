@@ -101,7 +101,7 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
         ],
         [
           '`distribution`',
-          'A histogram of a numeric event property, with its mean and median.',
+          'A histogram of a numeric event property, with its mean and median. With `measure` set to `people`, it bins how many distinct days each user sent the event in the period, such as an L30 chart from a daily event, and needs no `property`.',
         ],
         [
           '`cohort_table`',

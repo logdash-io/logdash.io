@@ -86,6 +86,10 @@ export const page: DocPage = {
       type: 'paragraph',
       text: 'Shows how often each value of a numeric property occurs, with its mean and median. Set the bar width to group values.',
     },
+    {
+      type: 'paragraph',
+      text: 'Under **Histogram counts**, pick **People** to count the people by the number of days they sent the event in the period. A daily event over the last 30 days gives an L30 chart. A person needs a user ID on the event.',
+    },
     { type: 'heading', text: 'Cohorts' },
     {
       type: 'paragraph',
@@ -102,7 +106,7 @@ export const page: DocPage = {
     { type: 'heading', text: 'Measure a product without user IDs' },
     {
       type: 'paragraph',
-      text: 'Funnels, histograms, cohorts and event trends count events, not people, so they work for apps that send no user ID.',
+      text: 'Funnels, event histograms, cohorts and event trends count events, not people, so they work for apps that send no user ID.',
     },
     {
       type: 'table',

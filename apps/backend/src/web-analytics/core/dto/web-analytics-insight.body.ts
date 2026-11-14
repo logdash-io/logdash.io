@@ -318,7 +318,7 @@ export class WebAnalyticsChartBody {
     enum: WebAnalyticsInsightMeasure,
     default: WebAnalyticsInsightMeasure.Events,
     description:
-      'Trends only. events counts the events of each line. people counts the distinct users who sent them, by the userId of the event, so a daily, a weekly and a monthly line give daily, weekly and monthly active users. Events without a userId do not count',
+      'Trends: events counts the events of each line. people counts the distinct users who sent them, by the userId of the event, so a daily, a weekly and a monthly line give daily, weekly and monthly active users. Distributions: people bins how many distinct days each user sent the event in the window, such as an L30 chart from a daily event; property is then not needed. Events without a userId do not count',
   })
   @IsOptional()
   @IsEnum(WebAnalyticsInsightMeasure)
@@ -327,7 +327,7 @@ export class WebAnalyticsChartBody {
   @ApiPropertyOptional({
     example: 'active_days',
     description:
-      'Distributions: the numeric property. Cohorts: the YYYY-MM-DD property that names the cohort, cohort by default',
+      'Distributions of events: the numeric property. Cohorts: the YYYY-MM-DD property that names the cohort, cohort by default',
   })
   @IsOptional()
   @IsString()
@@ -472,6 +472,8 @@ function normalizeChart(
     };
   });
   const filters = (body.filters ?? []).map(({ key, op, value }) => ({ key, op, value }));
+  const people =
+    body.measure === WebAnalyticsInsightMeasure.People ? { measure: body.measure } : {};
   const count = (min: number, max: number, what: string): void => {
     if (events.length < min || events.length > max)
       throw new BadRequestException(
@@ -495,13 +497,18 @@ function normalizeChart(
       events,
       filters,
       bucket: body.bucket ?? WebAnalyticsGranularity.Day,
-      ...(body.measure === WebAnalyticsInsightMeasure.People ? { measure: body.measure } : {}),
+      ...people,
     };
   }
   if (body.type === WebAnalyticsInsightType.Distribution) {
     count(1, 1, 'distribution');
-    if (!body.property) throw new BadRequestException('A distribution takes a numeric property');
-    return { ...base, events, filters, property: body.property, binSize: body.binSize ?? 1 };
+    const binSize = body.binSize ?? 1;
+    if (people.measure) return { ...base, events, filters, ...people, binSize };
+    if (!body.property)
+      throw new BadRequestException(
+        'A distribution of events takes a numeric property, or set measure to people',
+      );
+    return { ...base, events, filters, property: body.property, binSize };
   }
   count(2, 8, 'cohort table');
   return {

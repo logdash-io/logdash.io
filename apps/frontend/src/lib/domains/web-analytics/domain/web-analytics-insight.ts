@@ -1,6 +1,7 @@
 import { sum } from 'd3';
 import { DateTime } from 'luxon';
 import { match } from 'ts-pattern';
+import { formatCount } from './analytics-format';
 import { rateFlag, wilson, type RateVerdict } from './day-analytics';
 import type {
   WebAnalyticsChartConfig,
@@ -176,6 +177,7 @@ export function insightConfig(
   }));
   const filters = draft.filters.map(trimFilter);
   const bucket = draft.bucket ?? defaultBucket(draft.type);
+  const people = draft.measure === 'people' ? { measure: draft.measure } : {};
   return match(draft.type)
     .with('funnel', () =>
       draft.mode === 'people'
@@ -192,13 +194,13 @@ export function insightConfig(
       events,
       filters,
       bucket,
-      ...(draft.measure === 'people' ? { measure: draft.measure } : {}),
+      ...people,
     }))
     .with('distribution', () => ({
       ...base,
       events,
       filters,
-      property: draft.property.trim(),
+      ...(people.measure ? people : { property: draft.property.trim() }),
       binSize: draft.binSize,
     }))
     .with('cohorts', () => ({
@@ -248,7 +250,11 @@ function chartProblem(config: WebAnalyticsChartConfig): string | null {
   ];
   if (filters.some((filter) => !filter.key || !filter.value))
     return 'Fill in or remove each filter';
-  if (config.type === 'distribution' && !config.property)
+  if (
+    config.type === 'distribution' &&
+    config.measure !== 'people' &&
+    !config.property
+  )
     return 'Pick a numeric property';
   if (config.type === 'distribution' && !((config.binSize ?? 0) > 0))
     return 'Set a bar width above 0';
@@ -418,6 +424,23 @@ function niceScale(rate: number): number {
   return Math.min(1, Math.max(step, Math.ceil(rate / step - 1e-9) * step));
 }
 
+export function histogramBinLabel(
+  value: number,
+  binSize: number,
+  people: boolean,
+): string {
+  if (people && Number.isInteger(binSize) && Number.isInteger(value))
+    return dayRange(Math.max(1, value), value + binSize - 1);
+  if (binSize === 1 && Number.isInteger(value)) return formatCount(value);
+  return `${formatCount(value)} to ${formatCount(value + binSize)}`;
+}
+
+function dayRange(first: number, last: number): string {
+  if (first >= last)
+    return `${formatCount(first)} ${first === 1 ? 'day' : 'days'}`;
+  return `${formatCount(first)} to ${formatCount(last)} days`;
+}
+
 export function commonPrefix(names: string[]): string {
   if (names.length < 2) return '';
   let prefix = names[0];
@@ -461,7 +484,11 @@ export function insightSummary(insight: WebAnalyticsChartConfig): string {
       () =>
         `${trendBuckets(insight)}${insight.measure === 'people' ? ' people' : ''}, ${period}`,
     )
-    .with('distribution', () => `${insight.property ?? ''}, ${period}`)
+    .with(
+      'distribution',
+      () =>
+        `${insight.measure === 'people' ? 'Active days per person' : (insight.property ?? '')}, ${period}`,
+    )
     .with(
       'cohorts',
       () =>

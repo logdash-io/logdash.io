@@ -226,7 +226,7 @@ export type WebAnalyticsInsightOperator =
 
 export type WebAnalyticsInsightBucket = 'day' | 'week' | 'month';
 
-/** What a trend line counts: its events, or the distinct people who sent them. */
+/** What a trend line or a histogram counts: events, or the distinct people who sent them. */
 export type WebAnalyticsInsightMeasure = 'events' | 'people';
 
 export interface WebAnalyticsInsightFilter {
