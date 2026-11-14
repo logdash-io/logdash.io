@@ -8,9 +8,10 @@
     summary: { count: number; mean: number | null; median: number | null };
     binSize: number;
     people?: boolean;
+    property?: string;
   };
 
-  const { bins, summary, binSize, people = false }: Props = $props();
+  const { bins, summary, binSize, people = false, property }: Props = $props();
 
   const MAX_LABELS = 8;
 
@@ -29,63 +30,73 @@
   }
 </script>
 
-<dl class="flex flex-wrap gap-x-6 gap-y-1 px-3 text-sm">
-  {@render stat(people ? 'People' : 'Events', formatCount(summary.count))}
-  {@render stat(
-    'Mean',
-    summary.mean === null ? '–' : formatCount(summary.mean),
-  )}
-  {@render stat(
-    'Median',
-    summary.median === null ? '–' : formatCount(summary.median),
-  )}
-  {#if readout}
-    <div class="ml-auto flex items-baseline gap-1.5">
-      <dt class="text-fg-muted">{binLabel(readout)}</dt>
-      <dd class="font-medium tabular-nums">
-        {formatCount(readout.count)}
-        <span class="text-fg-tertiary font-normal">
-          {formatPercent(readout.share)}
-        </span>
-      </dd>
-    </div>
-  {/if}
-</dl>
-
-<div class="flex min-h-0 flex-1 flex-col gap-1.5 px-3 pb-1">
-  <ul
-    class="flex min-h-32 flex-1 items-end gap-0.5"
-    aria-label={people ? 'People by active days' : 'Events by value'}
-    onpointerleave={() => onHover(null)}
+{#if !bins.length}
+  <p
+    class="text-fg-muted flex flex-1 items-center justify-center px-3 py-16 text-center text-sm"
   >
-    {#each bins as bin, index (bin.value)}
-      <li
-        class="flex h-full min-w-0 flex-1 flex-col justify-end"
-        aria-label="{binLabel(bin)}: {formatCount(bin.count)}"
-        onpointerenter={() => onHover(index)}
-      >
+    {people
+      ? 'No people yet. An event counts a person only when the app sends a user ID.'
+      : `No events with a numeric ${property} in this period`}
+  </p>
+{:else}
+  <dl class="flex flex-wrap gap-x-6 gap-y-1 px-3 text-sm">
+    {@render stat(people ? 'People' : 'Events', formatCount(summary.count))}
+    {@render stat(
+      'Mean',
+      summary.mean === null ? '–' : formatCount(summary.mean),
+    )}
+    {@render stat(
+      'Median',
+      summary.median === null ? '–' : formatCount(summary.median),
+    )}
+    {#if readout}
+      <div class="ml-auto flex items-baseline gap-1.5">
+        <dt class="text-fg-muted">{binLabel(readout)}</dt>
+        <dd class="font-medium tabular-nums">
+          {formatCount(readout.count)}
+          <span class="text-fg-tertiary font-normal">
+            {formatPercent(readout.share)}
+          </span>
+        </dd>
+      </div>
+    {/if}
+  </dl>
+
+  <div class="flex min-h-0 flex-1 flex-col gap-1.5 px-3 pb-1">
+    <ul
+      class="flex min-h-32 flex-1 items-end gap-0.5"
+      aria-label={people ? 'People by active days' : 'Events by value'}
+      onpointerleave={() => onHover(null)}
+    >
+      {#each bins as bin, index (bin.value)}
+        <li
+          class="flex h-full min-w-0 flex-1 flex-col justify-end"
+          aria-label="{binLabel(bin)}: {formatCount(bin.count)}"
+          onpointerenter={() => onHover(index)}
+        >
+          <span
+            class={[
+              'block rounded-t-sm',
+              hovered === index ? 'bg-surface-inverse-bg' : 'bg-chart-1',
+            ]}
+            style:height="{bin.count
+              ? Math.max(1, (bin.count / peak) * 100)
+              : 0}%"
+          ></span>
+        </li>
+      {/each}
+    </ul>
+    <div class="edge-t flex gap-0.5 pt-1.5" aria-hidden="true">
+      {#each bins as bin, index (bin.value)}
         <span
-          class={[
-            'block rounded-t-sm',
-            hovered === index ? 'bg-surface-inverse-bg' : 'bg-chart-1',
-          ]}
-          style:height="{bin.count
-            ? Math.max(1, (bin.count / peak) * 100)
-            : 0}%"
-        ></span>
-      </li>
-    {/each}
-  </ul>
-  <div class="edge-t flex gap-0.5 pt-1.5" aria-hidden="true">
-    {#each bins as bin, index (bin.value)}
-      <span
-        class="text-fg-muted min-w-0 flex-1 overflow-visible text-[11px] whitespace-nowrap tabular-nums"
-      >
-        {index % labelStep === 0 ? formatCount(bin.value) : ''}
-      </span>
-    {/each}
+          class="text-fg-muted min-w-0 flex-1 overflow-visible text-[11px] whitespace-nowrap tabular-nums"
+        >
+          {index % labelStep === 0 ? formatCount(bin.value) : ''}
+        </span>
+      {/each}
+    </div>
   </div>
-</div>
+{/if}
 
 {#snippet stat(label: string, value: string)}
   <div class="flex items-baseline gap-1.5">
