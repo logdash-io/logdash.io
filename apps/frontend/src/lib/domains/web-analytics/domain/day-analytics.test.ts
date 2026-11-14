@@ -14,6 +14,7 @@ import {
   stripSummary,
   typicalHours,
   typicalOf,
+  visitTraits,
   wilson,
   type GroupRow,
 } from './day-analytics';
@@ -265,4 +266,18 @@ test('reads picked goals from the cookie only when it holds up to 10 names', () 
   expect(parseGoals('{"0":"signup"}')).toBeNull();
   expect(parseGoals('["signup",1]')).toBeNull();
   expect(parseGoals(JSON.stringify(Array(11).fill('signup')))).toBeNull();
+});
+
+test('visit traits name the country and skip unknown ones', () => {
+  expect(
+    visitTraits({
+      country: 'PL',
+      device: 'Desktop',
+      os: 'macOS',
+      browser: 'Other',
+    }),
+  ).toEqual(['Poland', 'Desktop', 'macOS']);
+  expect(
+    visitTraits({ country: '', device: 'Mobile', os: '', browser: 'Safari' }),
+  ).toEqual(['Mobile', 'Safari']);
 });

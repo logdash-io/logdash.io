@@ -4,8 +4,12 @@
   import { DateTime } from 'luxon';
   import { cubicOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
-  import { formatCount, formatDuration } from '../../domain/analytics-format';
-  import { visitKey } from '../../domain/day-analytics';
+  import {
+    countryFlag,
+    formatCount,
+    formatDuration,
+  } from '../../domain/analytics-format';
+  import { visitKey, visitTraits } from '../../domain/day-analytics';
   import type {
     WebAnalyticsDayVisit,
     WebAnalyticsVisitShow,
@@ -86,7 +90,7 @@
   {:else if loading && !visits.length}
     <ul class="flex flex-col gap-0.5" aria-hidden="true">
       {#each [46, 30, 54, 38, 24, 42] as width, index (index)}
-        <li class="flex h-9 items-center gap-2.5 px-2.5 @3xl:gap-3 @3xl:px-3">
+        <li class="flex h-9 items-center gap-2.5 px-2.5 @4xl:gap-3 @4xl:px-3">
           {@render bone('36px', index)}
           {@render bone('112px', index)}
           {@render bone(`${width}%`, index)}
@@ -102,10 +106,11 @@
       <ul class="flex flex-col gap-0.5">
         {#each visits as visit (visitKey(visit))}
           {@const reached = goals.filter((_, index) => visit.goals[index])}
+          {@const traits = visitTraits(visit).join(' · ')}
           <li in:fly={{ y: -8, duration: 280, easing: cubicOut }}>
             <button
               type="button"
-              class="group hover:bg-surface-25-hover-bg focus-visible:outline-brand grid w-full cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm outline-none focus-visible:outline-2 @3xl:min-h-9 @3xl:grid-cols-[44px_minmax(110px,170px)_minmax(0,1fr)_76px_76px_minmax(96px,auto)] @3xl:gap-x-3 @3xl:px-3 @3xl:py-0"
+              class="group hover:bg-surface-25-hover-bg focus-visible:outline-brand grid w-full cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm outline-none focus-visible:outline-2 @4xl:min-h-9 @4xl:grid-cols-[44px_minmax(110px,170px)_minmax(0,2fr)_minmax(0,3fr)_76px_64px_minmax(96px,auto)] @4xl:gap-x-3 @4xl:px-3 @4xl:py-0"
               onclick={() => onopen(visit)}
               onpointerenter={() => onhover(visit.source)}
               onpointerleave={() => onhover(null)}
@@ -113,7 +118,7 @@
               onblur={() => onhover(null)}
             >
               <span
-                class="text-fg-muted row-span-2 self-start tabular-nums @3xl:row-span-1 @3xl:self-center"
+                class="text-fg-muted row-span-2 self-start tabular-nums @4xl:row-span-1 @4xl:self-center"
               >
                 {DateTime.fromISO(visit.startedAt).toFormat('HH:mm')}
               </span>
@@ -128,7 +133,7 @@
                 <BreakdownLabel dimension="referrers" name={visit.source} />
               </span>
               <span
-                class="col-start-3 row-start-1 flex justify-end gap-1 @3xl:col-start-6"
+                class="col-start-3 row-start-1 flex justify-end gap-1 @4xl:col-start-7"
               >
                 {#each reached as goal (goal)}
                   <span
@@ -149,7 +154,7 @@
               </span>
               <span
                 class={[
-                  'col-start-2 flex min-w-0 items-center gap-1.5 text-[13px] @3xl:col-start-3 @3xl:row-start-1 @3xl:text-sm',
+                  'col-start-2 flex min-w-0 items-center gap-1.5 text-[13px] @4xl:col-start-3 @4xl:row-start-1 @4xl:text-sm',
                   visit.stayed ? 'text-fg-secondary' : 'text-fg-tertiary',
                 ]}
               >
@@ -161,13 +166,23 @@
                 {/if}
               </span>
               <span
-                class="text-fg-tertiary hidden text-right tabular-nums @3xl:col-start-4 @3xl:row-start-1 @3xl:block"
+                class="text-fg-muted col-span-2 col-start-2 row-start-3 flex min-w-0 items-center gap-1.5 text-xs @4xl:col-span-1 @4xl:col-start-4 @4xl:row-start-1 @4xl:text-sm"
+              >
+                {#if visit.country}
+                  <span class="shrink-0 leading-none" aria-hidden="true">
+                    {countryFlag(visit.country)}
+                  </span>
+                {/if}
+                <span class="truncate" title={traits}>{traits}</span>
+              </span>
+              <span
+                class="text-fg-tertiary hidden text-right tabular-nums @4xl:col-start-5 @4xl:row-start-1 @4xl:block"
               >
                 {visit.pageviews}
                 {visit.pageviews === 1 ? 'page' : 'pages'}
               </span>
               <span
-                class="text-fg-tertiary col-start-3 flex items-center justify-end gap-1.5 text-[13px] tabular-nums @3xl:col-start-5 @3xl:row-start-1 @3xl:text-sm"
+                class="text-fg-tertiary col-start-3 flex items-center justify-end gap-1.5 text-[13px] tabular-nums @4xl:col-start-6 @4xl:row-start-1 @4xl:text-sm"
               >
                 {#if isLive(visit)}
                   <span class="relative flex size-1.5">
