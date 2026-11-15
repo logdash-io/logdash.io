@@ -1,5 +1,6 @@
 <script lang="ts">
   import { DateTime } from 'luxon';
+  import type { Snippet } from 'svelte';
   import { formatRate, whole, type Verdict } from '../../domain/day-analytics';
   import type { WebAnalyticsSourceSeries } from '../../domain/web-analytics';
   import DayTile from './DayTile.svelte';
@@ -20,6 +21,7 @@
     pinned: string | null;
     onhover: (name: string | null) => void;
     onpin: (name: string) => void;
+    grip?: Snippet;
   };
 
   const {
@@ -37,6 +39,7 @@
     pinned,
     onhover,
     onpin,
+    grip,
   }: Props = $props();
 
   const day = $derived(DateTime.fromISO(date));
@@ -66,10 +69,13 @@
 </script>
 
 <section
-  class="bg-surface-25-bg @container flex min-w-0 flex-col gap-2 rounded-2xl p-2 [--chart-surface:var(--surface-25-bg)]"
+  class="bg-surface-25-bg @container flex h-full min-w-0 flex-col gap-2 overflow-y-auto rounded-2xl p-2 [--chart-surface:var(--surface-25-bg)]"
   aria-label={title}
 >
-  <header class="flex flex-col gap-1 px-3 pt-1.5">
+  <header class="relative flex flex-col gap-1 px-3 pt-1.5">
+    {#if grip}
+      <div class="absolute top-0 right-0">{@render grip()}</div>
+    {/if}
     <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
       <h2 class="text-[15px] font-medium">{title}</h2>
       {#if inProgress}
@@ -233,7 +239,9 @@
     </div>
   </div>
 
-  <div class="pt-1 pr-1 pb-1.5 pl-3">
+  <div
+    class="flex flex-1 flex-col pt-1 pr-1 pb-1.5 pl-3 [--plot-min:200px] @3xl/insights:[--plot-min:120px]"
+  >
     <HourChart
       {date}
       {hours}

@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightPlacement,
+  WebAnalyticsTrafficCardPlacement,
 } from '../dto/web-analytics-insight.body';
 
 export type WebAnalyticsInsightNormalized = Omit<
@@ -15,6 +16,7 @@ export type WebAnalyticsViewNormalized = {
   id: string;
   name: string;
   traffic: boolean;
+  cards?: WebAnalyticsTrafficCardPlacement[];
 };
 
 export type WebAnalyticsLayoutNormalized = {

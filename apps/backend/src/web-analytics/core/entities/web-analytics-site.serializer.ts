@@ -45,6 +45,14 @@ export class WebAnalyticsViewSerializer {
       id: entity._id.toString(),
       name: entity.name,
       traffic: entity.traffic ?? false,
+      ...(entity.cards?.length
+        ? {
+            cards: entity.cards.map(({ id, grid: { x, y, w, h } }) => ({
+              id,
+              grid: { x, y, w, h },
+            })),
+          }
+        : {}),
     };
   }
 }

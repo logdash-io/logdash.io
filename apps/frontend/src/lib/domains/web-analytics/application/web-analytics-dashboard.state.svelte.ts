@@ -8,7 +8,6 @@ import type {
   WebAnalyticsInsight,
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightPlacement,
-  WebAnalyticsInsightPlacementUpdate,
   WebAnalyticsInsights,
   WebAnalyticsRange,
   WebAnalyticsReport,
@@ -21,7 +20,9 @@ import type {
 } from '../domain/web-analytics';
 import {
   applyArrangement,
+  applyTraffic,
   readLayout,
+  viewInputs,
   type Arrangement,
 } from '../domain/web-analytics-layout';
 import { WebAnalyticsService } from '../infrastructure/web-analytics.service';
@@ -237,36 +238,47 @@ export class WebAnalyticsInsightsState {
     id: string,
     placement: WebAnalyticsInsightPlacement,
   ): Promise<void> {
-    await this.placeAll([{ id, ...placement }]);
+    await this.arrange({ placements: [{ id, ...placement }] });
   }
 
-  public async placeAll(
-    placements: WebAnalyticsInsightPlacementUpdate[],
-  ): Promise<void> {
-    if (!placements.length) return;
-    await this.arrange({ placements }, 'Could not update the layout.');
-  }
-
-  private async arrange(
-    arrangement: Arrangement,
-    failure: string,
-  ): Promise<void> {
+  public async arrange(arrangement: Arrangement): Promise<void> {
     if (!this.insights) return;
+    if (!arrangement.placements?.length && !arrangement.traffic) return;
     const sequence = ++this.sequence;
     this.insights = applyArrangement(this.insights, arrangement);
+    if (arrangement.traffic)
+      this.views = applyTraffic(this.views, arrangement.traffic);
     try {
       const layout = await WebAnalyticsService.reorderInsights(
         this.clusterId,
-        arrangement,
+        await this.stored(arrangement),
       );
       if (sequence !== this.sequence) return;
       this.take(layout);
       this.error = null;
     } catch (error) {
-      const message = readHttpErrorMessage(error) ?? failure;
+      const message =
+        readHttpErrorMessage(error) ?? 'Could not update the layout.';
       await this.load();
       this.error = message;
     }
+  }
+
+  private async stored(arrangement: Arrangement): Promise<Arrangement> {
+    const { traffic } = arrangement;
+    if (!traffic || traffic.view) return arrangement;
+    this.take(
+      await WebAnalyticsService.saveViews(
+        this.clusterId,
+        viewInputs(this.views),
+        this.viewsVersion,
+      ),
+    );
+    const view = this.views[0]?.id ?? '';
+    const next = { ...arrangement, traffic: { ...traffic, view } };
+    this.insights = applyArrangement(this.insights ?? [], next);
+    this.views = applyTraffic(this.views, next.traffic);
+    return next;
   }
 
   private take(layout: Partial<WebAnalyticsInsights>): void {

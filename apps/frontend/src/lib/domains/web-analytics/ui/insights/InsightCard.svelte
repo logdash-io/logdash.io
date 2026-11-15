@@ -5,11 +5,11 @@
     onMenuArrowKeys,
   } from '$lib/domains/app/clusters/ui/menu';
   import EyeOffIcon from '$lib/domains/shared/icons/EyeOffIcon.svelte';
-  import GripIcon from '$lib/domains/shared/icons/GripIcon.svelte';
   import MoreIcon from '$lib/domains/shared/icons/MoreIcon.svelte';
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import Well from '$lib/domains/shared/ui/components/Well.svelte';
   import { Dropdown, Tab, Tabs } from '@logdash/hyper-ui/presentational';
+  import type { Snippet } from 'svelte';
   import type {
     WebAnalyticsInsight,
     WebAnalyticsView,
@@ -22,6 +22,7 @@
     insight: WebAnalyticsInsight;
     revision: number;
     elsewhere: WebAnalyticsView[];
+    grip: Snippet;
     onedit: (insight: WebAnalyticsInsight) => void;
     onviewmove: (insight: WebAnalyticsInsight, view: WebAnalyticsView) => void;
     onhide: (insight: WebAnalyticsInsight) => void;
@@ -33,6 +34,7 @@
     insight,
     revision,
     elsewhere,
+    grip,
     onedit,
     onviewmove,
     onhide,
@@ -80,17 +82,7 @@
       >
         <EyeOffIcon class="size-4" />
       </IconButton>
-      <div class="hidden @3xl/insights:contents">
-        <IconButton
-          well
-          label="Move {insight.title}"
-          tooltip="Drag, or use the arrow keys, to move"
-          class="cursor-grab touch-none"
-          data-grip={insight.id}
-        >
-          <GripIcon class="size-4" />
-        </IconButton>
-      </div>
+      {@render grip()}
     </div>
     <Dropdown align="end">
       {#snippet trigger(attrs)}

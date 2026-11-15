@@ -29,6 +29,7 @@ import {
   WEB_ANALYTICS_INSIGHT_PLACEMENT_KEYS,
   WebAnalyticsInsightConfig,
   WebAnalyticsInsightPlacement,
+  WebAnalyticsTrafficLayoutBody,
 } from '../core/dto/web-analytics-insight.body';
 import {
   UpdateWebAnalyticsViewsBody,
@@ -200,22 +201,28 @@ export class WebAnalyticsWriteService {
 
   public async reorderInsights(
     clusterId: string,
-    { ids, placements }: ReorderWebAnalyticsInsightsBody,
+    { ids, placements, traffic }: ReorderWebAnalyticsInsightsBody,
     actorUserId: string,
   ): Promise<WebAnalyticsLayoutNormalized> {
-    if (!ids && !placements) throw new BadRequestException('Pass ids, placements or both');
+    if (!ids && !placements && !traffic)
+      throw new BadRequestException('Pass ids, placements, traffic or a mix of them');
     let site = await this.model
       .findOne({ clusterId })
-      .select('insights views')
+      .select('insights views viewsVersion')
       .lean<WebAnalyticsSiteEntity>()
       .exec();
     const known = new Set((site?.insights ?? []).map((insight) => insight._id.toString()));
     if (placements?.some((placement) => !known.has(placement.id)))
       throw new BadRequestException('Unknown insight');
-    this.assertViews(site?.views ?? [], placements ?? []);
+    this.assertViews(site?.views ?? [], [...(placements ?? []), ...(traffic ? [traffic] : [])]);
     if (ids) site = await this.applyOrder(clusterId, ids);
-    if (placements) site = (await this.applyPlacements(clusterId, placements)) ?? site;
-    const touched = new Set([...(ids ?? []), ...(placements ?? []).map(({ id }) => id)]);
+    if (placements || traffic)
+      site = (await this.applyPlacements(clusterId, placements ?? [], traffic)) ?? site;
+    const touched = new Set([
+      ...(ids ?? []),
+      ...(placements ?? []).map(({ id }) => id),
+      ...(traffic ? [traffic.view] : []),
+    ]);
     for (const id of touched) this.audit(actorUserId, AuditLogEntityAction.Update, id);
     return WebAnalyticsSiteSerializer.normalizeLayout(site);
   }
@@ -338,22 +345,35 @@ export class WebAnalyticsWriteService {
   private async applyPlacements(
     clusterId: string,
     placements: (WebAnalyticsInsightPlacement & { id: string })[],
+    traffic: WebAnalyticsTrafficLayoutBody | undefined,
   ): Promise<WebAnalyticsSiteEntity | null> {
     const changes = placements.filter((placement) =>
       WEB_ANALYTICS_INSIGHT_PLACEMENT_KEYS.some((key) => placement[key] !== undefined),
     );
-    if (!changes.length) return null;
+    if (!changes.length && !traffic) return null;
     const patch: Patch = { $set: {}, $unset: {} };
     changes.forEach((placement, index) =>
       this.patch(this.placementOf(placement), `insights.$[e${index}].`, patch),
     );
+    if (traffic)
+      patch.$set['views.$[traffic].cards'] = traffic.cards.map(({ id, grid: { x, y, w, h } }) => ({
+        id,
+        grid: { x, y, w, h },
+      }));
     return this.model
-      .findOneAndUpdate({ clusterId }, this.operators(patch), {
-        arrayFilters: changes.map((placement, index) => ({
-          [`e${index}._id`]: new Types.ObjectId(placement.id),
-        })),
-        returnDocument: 'after',
-      })
+      .findOneAndUpdate(
+        { clusterId },
+        { ...this.operators(patch), ...(traffic ? { $inc: { viewsVersion: 1 } } : {}) },
+        {
+          arrayFilters: [
+            ...changes.map((placement, index) => ({
+              [`e${index}._id`]: new Types.ObjectId(placement.id),
+            })),
+            ...(traffic ? [{ 'traffic._id': new Types.ObjectId(traffic.view) }] : []),
+          ],
+          returnDocument: 'after',
+        },
+      )
       .lean<WebAnalyticsSiteEntity>()
       .exec();
   }
@@ -411,16 +431,21 @@ export class WebAnalyticsWriteService {
     const ids = new Set<string>();
     const names = new Set<string>();
     return views.map((view) => {
+      const stored = view.id ? current.find((entry) => entry._id.toString() === view.id) : null;
       if (view.id) {
-        if (!current.some((entry) => entry._id.toString() === view.id))
-          throw new BadRequestException('Unknown view');
+        if (!stored) throw new BadRequestException('Unknown view');
         if (ids.has(view.id)) throw new BadRequestException('An id appears twice');
         ids.add(view.id);
       }
       if (names.has(view.name.toLowerCase()))
         throw new BadRequestException('View names must be unique');
       names.add(view.name.toLowerCase());
-      return { _id: new Types.ObjectId(view.id), name: view.name, traffic: view.traffic ?? false };
+      return {
+        _id: new Types.ObjectId(view.id),
+        name: view.name,
+        traffic: view.traffic ?? false,
+        ...(stored?.cards ? { cards: stored.cards } : {}),
+      };
     });
   }
 

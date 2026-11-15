@@ -9,7 +9,8 @@ import {
   applyArrangement,
   dashboardViews,
   gridCards,
-  gridPlacements,
+  applyTraffic,
+  gridArrangement,
   gridRows,
   insightView,
   moveCard,
@@ -52,9 +53,7 @@ function at(
 }
 
 function cells(cards: GridCard[]): Record<string, WebAnalyticsInsightGrid> {
-  return Object.fromEntries(
-    cards.map(({ insight, cell }) => [insight.id, cell]),
-  );
+  return Object.fromEntries(cards.map(({ id, cell }) => [id, cell]));
 }
 
 const insights = [
@@ -91,10 +90,10 @@ test('the first view is the default for cards with no or an unknown view', () =>
 
 test('a view grids its shown cards and lists its hidden cards apart', () => {
   const layout = viewLayout(views, product, insights);
-  expect(layout.cards.map(({ insight }) => insight.id)).toEqual(['b']);
+  expect(layout.cards.map(({ id }) => id)).toEqual(['b']);
   expect(layout.hidden.map((entry) => entry.id)).toEqual(['c']);
   expect(
-    viewLayout(views, company, insights).cards.map(({ insight }) => insight.id),
+    viewLayout(views, company, insights).cards.map(({ id }) => id),
   ).toEqual(['a', 'd']);
 });
 
@@ -140,7 +139,7 @@ test('a laid out grid stays as it is', () => {
     c: at(0, 4, 6, 4),
     d: at(0, 12, 12, 4),
   });
-  expect(gridPlacements(grid)).toEqual([]);
+  expect(gridArrangement(grid, company.id)).toEqual({ placements: [] });
 });
 
 const stack = gridCards([
@@ -194,9 +193,11 @@ test('resizing pushes the cards below down and clamps to the grid', () => {
 });
 
 test('arrow keys swap with the card above or below, shift resizes', () => {
-  expect(
-    nudgeCard(stack, 'b', 'ArrowUp', false).map(({ insight }) => insight.id),
-  ).toEqual(['b', 'a', 'c']);
+  expect(nudgeCard(stack, 'b', 'ArrowUp', false).map(({ id }) => id)).toEqual([
+    'b',
+    'a',
+    'c',
+  ]);
   expect(cells(nudgeCard(stack, 'b', 'ArrowDown', false))).toEqual({
     a: at(0, 0, 12, 6),
     c: at(0, 6, 12, 6),
@@ -217,12 +218,110 @@ test('arrow keys swap with the card above or below, shift resizes', () => {
 });
 
 test('placements list only the cards whose cell changed', () => {
-  expect(gridPlacements(moveCard(stack, 'a', 0, 7))).toEqual([
-    { id: 'b', grid: at(0, 0, 12, 6) },
-    { id: 'a', grid: at(0, 6, 12, 6) },
+  expect(gridArrangement(moveCard(stack, 'a', 0, 7), company.id)).toEqual({
+    placements: [
+      { id: 'b', grid: at(0, 0, 12, 6) },
+      { id: 'a', grid: at(0, 6, 12, 6) },
+    ],
+  });
+  expect(gridArrangement(gridCards([card('a')]), company.id)).toEqual({
+    placements: [{ id: 'a', grid: at(0, 0, 6, 8) }],
+  });
+});
+
+const overview: WebAnalyticsView = {
+  id: 'v-overview',
+  name: 'Overview',
+  traffic: true,
+};
+
+test('a fresh traffic view puts the day on top, then insights, then details', () => {
+  const grid = viewLayout([overview], overview, [
+    card('a', { grid: at(0, 0, 12, 4) }),
+    card('b', { type: 'cohorts' }),
+  ]).cards;
+  expect(cells(grid)).toEqual({
+    day: at(0, 0, 12, 13),
+    sources: at(0, 13, 12, 5),
+    firstPages: at(0, 18, 12, 5),
+    visits: at(0, 23, 12, 11),
+    a: at(0, 34, 12, 4),
+    b: at(0, 38, 12, 8),
+    channels: at(0, 46, 8, 8),
+    pages: at(8, 46, 4, 8),
+    goals: at(0, 54, 4, 8),
+    countries: at(4, 54, 4, 8),
+    technology: at(8, 54, 4, 8),
+    journeys: at(0, 62, 12, 10),
+  });
+  expect(grid.find((entry) => entry.id === 'day')?.title).toBe('Day');
+});
+
+const stored: WebAnalyticsView = {
+  ...overview,
+  cards: [
+    { id: 'day', grid: at(0, 0, 6, 13) },
+    { id: 'visits', grid: at(6, 0, 6, 11) },
+  ],
+};
+const storedInsights = [card('a', { grid: at(0, 13, 12, 4) })];
+
+test('stored traffic cells stay and the missing traffic cards flow below', () => {
+  const grid = viewLayout([stored], stored, storedInsights).cards;
+  expect(cells(grid)).toEqual({
+    day: at(0, 0, 6, 13),
+    visits: at(6, 0, 6, 11),
+    a: at(0, 13, 12, 4),
+    sources: at(0, 17, 12, 5),
+    firstPages: at(0, 22, 12, 5),
+    channels: at(0, 27, 8, 8),
+    pages: at(8, 27, 4, 8),
+    goals: at(0, 35, 4, 8),
+    countries: at(4, 35, 4, 8),
+    technology: at(8, 35, 4, 8),
+    journeys: at(0, 43, 12, 10),
+  });
+});
+
+test('an arrangement stores every traffic cell once one of them moved', () => {
+  const grid = viewLayout([stored], stored, storedInsights).cards;
+  const first = gridArrangement(grid, stored.id);
+  expect(first.placements).toEqual([]);
+  expect(first.traffic?.view).toBe(stored.id);
+  expect(first.traffic?.cards.map(({ id }) => id)).toEqual([
+    'day',
+    'visits',
+    'sources',
+    'firstPages',
+    'channels',
+    'pages',
+    'goals',
+    'countries',
+    'technology',
+    'journeys',
   ]);
-  expect(gridPlacements(gridCards([card('a')]))).toEqual([
-    { id: 'a', grid: at(0, 0, 6, 8) },
+
+  const [saved] = applyTraffic([stored], first.traffic!);
+  const again = viewLayout([saved], saved, storedInsights).cards;
+  expect(cells(again)).toEqual(cells(grid));
+  expect(gridArrangement(again, saved.id)).toEqual({ placements: [] });
+
+  const taller = gridArrangement(resizeCard(again, 'day', 6, 14), saved.id);
+  expect(taller.placements).toEqual([{ id: 'a', grid: at(0, 14, 12, 4) }]);
+  expect(taller.traffic?.cards[0]).toEqual({
+    id: 'day',
+    grid: at(0, 0, 6, 14),
+  });
+});
+
+test('traffic cells of the virtual overview land on it', () => {
+  const cards = [{ id: 'day' as const, grid: at(0, 0, 12, 13) }];
+  expect(applyTraffic([], { view: '', cards })).toEqual([
+    { ...OVERVIEW_VIEW, cards },
+  ]);
+  expect(applyTraffic([company, stored], { view: stored.id, cards })).toEqual([
+    company,
+    { ...stored, cards },
   ]);
 });
 

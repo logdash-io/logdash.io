@@ -60,17 +60,6 @@
       'Median',
       summary.median === null ? '–' : formatCount(summary.median),
     )}
-    {#if readout}
-      <div class="ml-auto flex items-baseline gap-1.5">
-        <dt class="text-fg-muted">{binLabel(readout)}</dt>
-        <dd class="font-medium tabular-nums">
-          {formatCount(readout.count)}
-          <span class="text-fg-tertiary font-normal">
-            {formatPercent(readout.share)}
-          </span>
-        </dd>
-      </div>
-    {/if}
   </dl>
 
   <div class="flex min-h-0 flex-1 flex-col px-3 pt-2 pb-1">
@@ -119,6 +108,34 @@
             </li>
           {/each}
         </ul>
+        {#if readout && hovered !== null}
+          {@const at = (hovered + 0.5) / bins.length}
+          <div
+            class={[
+              'border-surface-elevated-border bg-surface-elevated-bg pointer-events-none absolute top-2 z-10 min-w-36 rounded-xl border px-3 py-2.5 text-sm shadow-lg',
+              at > 0.5 ? '-translate-x-[calc(100%+12px)]' : 'translate-x-3',
+            ]}
+            style:left="{at * 100}%"
+            aria-hidden="true"
+          >
+            <p class="text-fg-muted text-xs">{binLabel(readout)}</p>
+            <p class="mt-1.5 flex items-center justify-between gap-4">
+              <span class="flex min-w-0 items-center gap-2">
+                <span class="bg-chart-1 size-2 shrink-0 rounded-full"></span>
+                <span class="truncate">{people ? 'People' : 'Events'}</span>
+              </span>
+              <span class="font-medium tabular-nums">
+                {formatCount(readout.count)}
+              </span>
+            </p>
+            <p
+              class="text-fg-tertiary mt-1 flex items-center justify-between gap-4"
+            >
+              <span>Share</span>
+              <span class="tabular-nums">{formatPercent(readout.share)}</span>
+            </p>
+          </div>
+        {/if}
       </div>
     </div>
     <div class="flex pt-1.5 pl-10" aria-hidden="true">

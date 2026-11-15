@@ -34,6 +34,7 @@
     tabs: BreakdownTab[];
     initial?: WebAnalyticsBreakdownName;
     attribution?: Snippet;
+    grip?: Snippet;
     onfilter: (filter: WebAnalyticsFilter) => void;
   };
 
@@ -45,6 +46,7 @@
     tabs,
     initial,
     attribution,
+    grip,
     onfilter,
   }: Props = $props();
 
@@ -88,6 +90,7 @@
   {label}
   tabs={tabs.length > 1 ? tabSwitch : undefined}
   actions={tab.chart && rows.length ? chartToggle : attribution}
+  {grip}
   expandLabel="Show all {title.toLowerCase()} rows"
   onexpand={rows.length ? onDetails : undefined}
 >

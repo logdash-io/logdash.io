@@ -9,6 +9,7 @@ import {
   WebAnalyticsInsightFilter,
   WebAnalyticsInsightMeasure,
   WebAnalyticsInsightType,
+  WebAnalyticsTrafficCard,
 } from '../dto/web-analytics-insight.body';
 
 @Schema({ _id: false })
@@ -85,6 +86,19 @@ export class WebAnalyticsInsightEntity {
 
 export const WebAnalyticsInsightSchema = SchemaFactory.createForClass(WebAnalyticsInsightEntity);
 
+@Schema({ _id: false })
+export class WebAnalyticsTrafficCardEntity {
+  @Prop({ required: true })
+  id: WebAnalyticsTrafficCard;
+
+  @Prop({ type: WebAnalyticsInsightGridSchema, required: true })
+  grid: WebAnalyticsInsightGridEntity;
+}
+
+export const WebAnalyticsTrafficCardSchema = SchemaFactory.createForClass(
+  WebAnalyticsTrafficCardEntity,
+);
+
 @Schema()
 export class WebAnalyticsViewEntity {
   _id: Types.ObjectId;
@@ -94,6 +108,9 @@ export class WebAnalyticsViewEntity {
 
   @Prop({ default: false })
   traffic: boolean;
+
+  @Prop({ type: [WebAnalyticsTrafficCardSchema], default: undefined })
+  cards?: WebAnalyticsTrafficCardEntity[];
 }
 
 export const WebAnalyticsViewSchema = SchemaFactory.createForClass(WebAnalyticsViewEntity);

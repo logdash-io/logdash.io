@@ -7,17 +7,18 @@
     label: string;
     tabs?: Snippet;
     actions?: Snippet;
+    grip?: Snippet;
     expandLabel?: string;
     onexpand?: () => void;
     children: Snippet;
   };
 
-  const { label, tabs, actions, expandLabel, onexpand, children }: Props =
+  const { label, tabs, actions, grip, expandLabel, onexpand, children }: Props =
     $props();
 </script>
 
 <section
-  class="bg-surface-25-bg @container flex min-h-48 min-w-0 flex-col gap-2 rounded-2xl p-2 @2xl:h-[22.5rem]"
+  class="bg-surface-25-bg @container flex h-full min-w-0 flex-col gap-2 rounded-2xl p-2"
   aria-label={label}
 >
   <header class="flex h-7 shrink-0 items-center justify-between gap-3">
@@ -26,15 +27,17 @@
         {@render tabs()}
       </div>
     {:else}
-      <h2 class="truncate px-3 text-[13px] font-medium">{label}</h2>
+      <h2 class="shrink-0 px-3 text-[13px] font-medium">{label}</h2>
     {/if}
-    <div class="flex shrink-0 items-center gap-1">
+    <div class={['flex items-center gap-1', tabs ? 'shrink-0' : 'min-w-0']}>
+      {@render grip?.()}
       {@render actions?.()}
       {#if onexpand}
         <IconButton
           well
           label={expandLabel ?? `Show all ${label.toLowerCase()}`}
           tooltip="Details"
+          class="shrink-0"
           onclick={onexpand}
         >
           <ExpandIcon class="size-3.5" />
@@ -43,7 +46,7 @@
     </div>
   </header>
 
-  <div class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
+  <div class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
     {@render children()}
   </div>
 </section>

@@ -14,6 +14,8 @@ import {
   WebAnalyticsInsightGridBody,
   WebAnalyticsInsightMeasure,
   WebAnalyticsInsightType,
+  WebAnalyticsTrafficCardBody,
+  WebAnalyticsTrafficCardPlacement,
 } from './web-analytics-insight.body';
 
 export class WebAnalyticsInsightSerialized {
@@ -89,6 +91,14 @@ export class WebAnalyticsViewSerialized {
 
   @ApiProperty({ description: 'Whether the built-in traffic cards show in this view' })
   traffic: boolean;
+
+  @ApiPropertyOptional({
+    type: WebAnalyticsTrafficCardBody,
+    isArray: true,
+    description:
+      'Where the built-in traffic cards sit on the grid of this view. Absent, or a card left out, means its default place',
+  })
+  cards?: WebAnalyticsTrafficCardPlacement[];
 }
 
 export class WebAnalyticsInsightsResponse {

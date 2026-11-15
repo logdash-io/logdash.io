@@ -5,8 +5,9 @@
   import { topBarState } from '$lib/domains/app/clusters/application/top-bar.state.svelte.js';
   import ServiceHealthStrip from '$lib/domains/app/clusters/ui/ServiceHealthStrip.svelte';
   import { SettingsCardHeader } from '$lib/domains/shared/ui/components/settings-card';
+  import Modal from '$lib/domains/shared/ui/Modal.svelte';
   import { DateTime } from 'luxon';
-  import { onMount, untrack } from 'svelte';
+  import { onMount, untrack, type Snippet } from 'svelte';
   import {
     WebAnalyticsCachedState,
     WebAnalyticsDayVisitsState,
@@ -41,6 +42,7 @@
     WebAnalyticsFilter,
     WebAnalyticsInsight,
     WebAnalyticsInsightConfig,
+    WebAnalyticsTrafficCard,
     WebAnalyticsViewInput,
     WebAnalyticsVisitor,
     WebAnalyticsVisitShow,
@@ -52,14 +54,17 @@
   } from '../domain/web-analytics-layout';
   import { WebAnalyticsService } from '../infrastructure/web-analytics.service';
   import ActiveFilters from './ActiveFilters.svelte';
+  import BreakdownCard from './breakdown/BreakdownCard.svelte';
   import DayCard from './day/DayCard.svelte';
-  import DayDetails from './day/DayDetails.svelte';
   import DaysCard from './day/DaysCard.svelte';
   import DayToolbar from './day/DayToolbar.svelte';
   import DayVisitsCard from './day/DayVisitsCard.svelte';
   import VisitGroupsCard from './day/VisitGroupsCard.svelte';
+  import EventPanel from './event/EventPanel.svelte';
+  import GoalsCard from './insights/GoalsCard.svelte';
   import InsightEditor from './insights/InsightEditor.svelte';
   import InsightsBar from './insights/InsightsBar.svelte';
+  import InsightsCard from './insights/InsightsCard.svelte';
   import InsightsSection from './insights/InsightsSection.svelte';
   import LayoutDialog from './insights/LayoutDialog.svelte';
   import VisitorDialog from './insights/VisitorDialog.svelte';
@@ -70,6 +75,7 @@
 
   const STRIP_DAYS = 28;
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const goalTitleId = $props.id();
 
   const analytics = new WebAnalyticsDashboardState(untrack(() => clusterId));
   const goals = new WebAnalyticsGoalsState(
@@ -90,9 +96,8 @@
   let hovered = $state<string | null>(null);
   let pinned = $state<string | null>(null);
   let preview = $state<string | null>(null);
-  let detailsOpen = $state(false);
+  let goal = $state<string | null>(null);
   let opened = $state<WebAnalyticsVisitor | null>(null);
-  let details = $state<HTMLElement>();
   let revision = $state(0);
   let editing = $state<WebAnalyticsInsight | null>(null);
   let editorOpen = $state(false);
@@ -207,11 +212,11 @@
   });
 
   $effect(() => {
-    if (query.event) untrack(() => (detailsOpen = true));
+    if (query.event) goal = query.event;
   });
 
   $effect(() => {
-    if (!detailsOpen || !traffic) return;
+    if (!traffic) return;
     void range;
     untrack(loadReport);
   });
@@ -271,10 +276,8 @@
     if (shownLive || force) void loadDay(shown, params, true);
     if (!live && !force) return;
     void visits.refresh(date, params, show);
-    if (detailsOpen) {
-      reportKey = '';
-      loadReport();
-    }
+    reportKey = '';
+    loadReport();
   }
 
   function onTick(): void {
@@ -338,7 +341,6 @@
 
   function onEvent(name: string): void {
     void onQueryChange({ ...query, event: query.event === name ? null : name });
-    details?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
   function onEventClose(): void {
@@ -498,62 +500,6 @@
           onpreview={onPreview}
           onselect={onSelect}
         />
-
-        <DayCard
-          date={shown}
-          inProgress={shownLive}
-          {now}
-          {headline}
-          verdict={focused?.verdict ?? null}
-          goals={goals.picked}
-          hours={day.data?.hours[0] ?? null}
-          typicalHours={day.data ? typicalHours(day.data, since) : null}
-          goalHours={day.data?.goalHours ?? []}
-          sources={day.data?.sourceHours ?? []}
-          {spot}
-          {pinned}
-          onhover={onHover}
-          onpin={onPin}
-        />
-
-        <VisitGroupsCard
-          title="Sources"
-          column="Source"
-          rows={sources}
-          {by}
-          {weekdays}
-          loading={!day.data}
-          {spot}
-          {pinned}
-          onhover={onHover}
-          onpin={onPin}
-        />
-
-        <VisitGroupsCard
-          title="First pages"
-          column="First page"
-          rows={pages}
-          {by}
-          {weekdays}
-          loading={!day.data}
-        />
-
-        <DayVisitsCard
-          title={visitsTitle()}
-          {date}
-          visits={visits.visits}
-          total={visits.total}
-          loading={visits.loading}
-          error={visits.error}
-          goals={picked}
-          {show}
-          {live}
-          now={clock.toMillis()}
-          onshow={onShow}
-          onmore={onMore}
-          onopen={onOpen}
-          onhover={onHover}
-        />
       {/if}
 
       <InsightsSection
@@ -561,24 +507,10 @@
         {revision}
         {insights}
         {layout}
+        traffic={trafficCard}
         onadd={onAdd}
         onedit={onEdit}
       />
-
-      {#if traffic}
-        <div bind:this={details} class="scroll-mt-2">
-          <DayDetails
-            {clusterId}
-            report={analytics.report}
-            {range}
-            {query}
-            bind:open={detailsOpen}
-            onfilter={onFilter}
-            onevent={onEvent}
-            oneventclose={onEventClose}
-          />
-        </div>
-      {/if}
     </div>
 
     {#if analytics.waitingForData}
@@ -601,6 +533,27 @@
 
 <VisitorDialog {clusterId} visitor={opened} onclose={onClose} />
 
+<Modal
+  isOpen={traffic && query.event !== null}
+  onClose={onEventClose}
+  aria-labelledby={goalTitleId}
+  class="flex w-full max-w-5xl flex-col gap-2 p-2"
+>
+  <h2 id={goalTitleId} class="sr-only">Goal {goal}</h2>
+  {#if goal}
+    {#key goal}
+      <EventPanel
+        {clusterId}
+        name={goal}
+        {query}
+        {range}
+        onfilter={onFilter}
+        onclose={onEventClose}
+      />
+    {/key}
+  {/if}
+</Modal>
+
 <InsightEditor
   {clusterId}
   isOpen={editorOpen}
@@ -617,6 +570,148 @@
   onclose={onLayoutClose}
   onsave={onLayoutSave}
 />
+
+{#snippet trafficCard(id: WebAnalyticsTrafficCard, grip: Snippet)}
+  {#if id === 'day'}
+    <DayCard
+      date={shown}
+      inProgress={shownLive}
+      {now}
+      {headline}
+      verdict={focused?.verdict ?? null}
+      goals={goals.picked}
+      hours={day.data?.hours[0] ?? null}
+      typicalHours={day.data ? typicalHours(day.data, since) : null}
+      goalHours={day.data?.goalHours ?? []}
+      sources={day.data?.sourceHours ?? []}
+      {spot}
+      {pinned}
+      {grip}
+      onhover={onHover}
+      onpin={onPin}
+    />
+  {:else if id === 'sources'}
+    <VisitGroupsCard
+      title="Sources"
+      column="Source"
+      rows={sources}
+      {by}
+      {weekdays}
+      loading={!day.data}
+      {spot}
+      {pinned}
+      {grip}
+      onhover={onHover}
+      onpin={onPin}
+    />
+  {:else if id === 'firstPages'}
+    <VisitGroupsCard
+      title="First pages"
+      column="First page"
+      rows={pages}
+      {by}
+      {weekdays}
+      loading={!day.data}
+      {grip}
+    />
+  {:else if id === 'visits'}
+    <DayVisitsCard
+      title={visitsTitle()}
+      {date}
+      visits={visits.visits}
+      total={visits.total}
+      loading={visits.loading}
+      error={visits.error}
+      goals={picked}
+      {show}
+      {live}
+      now={clock.toMillis()}
+      {grip}
+      onshow={onShow}
+      onmore={onMore}
+      onopen={onOpen}
+      onhover={onHover}
+    />
+  {:else if id === 'channels'}
+    <BreakdownCard
+      {clusterId}
+      report={analytics.report}
+      {range}
+      label="Channels"
+      tabs={[
+        { id: 'channels', label: 'Channel', filter: 'channel', chart: 'donut' },
+        { id: 'sources', label: 'Source', filter: 'source' },
+        { id: 'campaigns', label: 'Campaign', filter: 'campaign' },
+        { id: 'contents', label: 'Content', filter: 'content' },
+        { id: 'keywords', label: 'Keyword', filter: 'keyword' },
+        { id: 'referrers', label: 'Referrer', filter: 'referrer' },
+      ]}
+      {grip}
+      onfilter={onFilter}
+    />
+  {:else if id === 'pages'}
+    <BreakdownCard
+      {clusterId}
+      report={analytics.report}
+      {range}
+      label="Pages"
+      tabs={[
+        { id: 'pages', label: 'Page', filter: 'page' },
+        { id: 'exitPages', label: 'Exit', title: 'Exit page', filter: 'page' },
+        { id: 'hostnames', label: 'Hostname', filter: 'hostname' },
+      ]}
+      {grip}
+      onfilter={onFilter}
+    />
+  {:else if id === 'goals'}
+    <GoalsCard
+      report={analytics.report}
+      selected={query.event}
+      {grip}
+      onselect={onEvent}
+      onfilter={onFilter}
+    />
+  {:else if id === 'countries'}
+    <BreakdownCard
+      {clusterId}
+      report={analytics.report}
+      {range}
+      label="Countries"
+      tabs={[{ id: 'countries', label: 'Country', filter: 'country' }]}
+      attribution={dbIpAttribution}
+      {grip}
+      onfilter={onFilter}
+    />
+  {:else if id === 'technology'}
+    <BreakdownCard
+      {clusterId}
+      report={analytics.report}
+      {range}
+      label="Technology"
+      tabs={[
+        { id: 'browsers', label: 'Browser', filter: 'browser' },
+        { id: 'os', label: 'OS', filter: 'os' },
+        { id: 'devices', label: 'Device', filter: 'device' },
+      ]}
+      {grip}
+      onfilter={onFilter}
+    />
+  {:else}
+    <InsightsCard {clusterId} {range} {grip} />
+  {/if}
+{/snippet}
+
+{#snippet dbIpAttribution()}
+  <a
+    href="https://db-ip.com"
+    target="_blank"
+    rel="noopener"
+    class="text-fg-muted hover:text-fg-secondary focus-visible:text-fg-secondary focus-visible:outline-brand transition-ink truncate rounded-sm px-1.5 text-[11px] focus-visible:outline-2"
+  >
+    <span class="hidden @xs:inline">IP Geolocation by</span>
+     DB-IP
+  </a>
+{/snippet}
 
 {#snippet toolbar()}
   <DayToolbar
