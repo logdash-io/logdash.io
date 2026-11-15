@@ -50,6 +50,19 @@ export enum WebAnalyticsInsightMeasure {
   People = 'people',
 }
 
+export enum WebAnalyticsTrafficCard {
+  Day = 'day',
+  Sources = 'sources',
+  FirstPages = 'firstPages',
+  Visits = 'visits',
+  Channels = 'channels',
+  Pages = 'pages',
+  Goals = 'goals',
+  Countries = 'countries',
+  Technology = 'technology',
+  Journeys = 'journeys',
+}
+
 export enum WebAnalyticsInsightOperator {
   Eq = 'eq',
   Neq = 'neq',
@@ -366,6 +379,37 @@ export class WebAnalyticsInsightPlacementItemBody extends WebAnalyticsInsightPla
   id: string;
 }
 
+export class WebAnalyticsTrafficCardBody {
+  @ApiProperty({ enum: WebAnalyticsTrafficCard })
+  @IsEnum(WebAnalyticsTrafficCard)
+  id: WebAnalyticsTrafficCard;
+
+  @ApiProperty({ type: WebAnalyticsInsightGridBody })
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WebAnalyticsInsightGridBody)
+  grid: WebAnalyticsInsightGridBody;
+}
+
+export class WebAnalyticsTrafficLayoutBody {
+  @ApiProperty({ description: 'The id of the view the traffic cards sit in' })
+  @IsMongoId()
+  view: string;
+
+  @ApiProperty({
+    type: WebAnalyticsTrafficCardBody,
+    isArray: true,
+    description:
+      'Where each built-in traffic card sits on the grid of the view. Replaces the stored list, and a card left out goes back to its default place',
+  })
+  @IsArray()
+  @ArrayMaxSize(Object.values(WebAnalyticsTrafficCard).length)
+  @ArrayUnique((card: WebAnalyticsTrafficCardBody) => card.id)
+  @ValidateNested({ each: true })
+  @Type(() => WebAnalyticsTrafficCardBody)
+  cards: WebAnalyticsTrafficCardBody[];
+}
+
 export class ReorderWebAnalyticsInsightsBody {
   @ApiPropertyOptional({
     type: String,
@@ -391,6 +435,16 @@ export class ReorderWebAnalyticsInsightsBody {
   @ValidateNested({ each: true })
   @Type(() => WebAnalyticsInsightPlacementItemBody)
   placements?: WebAnalyticsInsightPlacementItemBody[];
+
+  @ApiPropertyOptional({
+    type: WebAnalyticsTrafficLayoutBody,
+    description: 'Where the built-in traffic cards of one view sit, saved with the placements',
+  })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => WebAnalyticsTrafficLayoutBody)
+  traffic?: WebAnalyticsTrafficLayoutBody;
 }
 
 export type WebAnalyticsInsightFilter = {
@@ -407,6 +461,11 @@ export type WebAnalyticsInsightEvent = {
 };
 
 export type WebAnalyticsInsightGrid = { x: number; y: number; w: number; h: number };
+
+export type WebAnalyticsTrafficCardPlacement = {
+  id: WebAnalyticsTrafficCard;
+  grid: WebAnalyticsInsightGrid;
+};
 
 export type WebAnalyticsInsightPlacement = {
   view?: string | null;

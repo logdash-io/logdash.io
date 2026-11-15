@@ -6,18 +6,19 @@
   import EmptyState from '$lib/domains/shared/ui/components/EmptyState.svelte';
   import { TOOLBAR_CONTROL } from '$lib/domains/shared/ui/components/toolbar';
   import Well from '$lib/domains/shared/ui/components/Well.svelte';
-  import { tick } from 'svelte';
+  import { tick, type Snippet } from 'svelte';
   import type { WebAnalyticsInsightsState } from '../../application/web-analytics-dashboard.state.svelte';
   import type {
     WebAnalyticsInsight,
     WebAnalyticsInsightGrid,
+    WebAnalyticsTrafficCard,
     WebAnalyticsView,
   } from '../../domain/web-analytics';
   import {
     GRID_COLUMNS,
     GRID_GAP,
     GRID_ROW,
-    gridPlacements,
+    gridArrangement,
     gridRows,
     moveCard,
     nudgeCard,
@@ -26,6 +27,7 @@
     type GridKey,
     type ViewLayout,
   } from '../../domain/web-analytics-layout';
+  import CardGrip from './CardGrip.svelte';
   import InsightCard from './InsightCard.svelte';
 
   type Props = {
@@ -35,6 +37,7 @@
     layout: ViewLayout;
     onadd: () => void;
     onedit: (insight: WebAnalyticsInsight) => void;
+    traffic?: Snippet<[WebAnalyticsTrafficCard, Snippet]>;
   };
 
   type Axis = 'x' | 'y' | 'xy';
@@ -49,10 +52,16 @@
     base: GridCard[];
   };
 
-  const { clusterId, revision, insights, layout, onadd, onedit }: Props =
-    $props();
+  const {
+    clusterId,
+    revision,
+    insights,
+    layout,
+    onadd,
+    onedit,
+    traffic,
+  }: Props = $props();
 
-  const titleId = $props.id();
   const KEYS: string[] = [
     'ArrowLeft',
     'ArrowRight',
@@ -72,15 +81,12 @@
   const cards = $derived(preview ?? layout.cards);
   const moving = $derived(drag?.mode === 'move' ? drag : null);
   const landing = $derived(
-    moving && cards.find((card) => card.insight.id === moving.id)?.cell,
+    moving && cards.find((card) => card.id === moving.id)?.cell,
   );
 
   function cellOf(card: GridCard): WebAnalyticsInsightGrid {
-    if (moving?.id === card.insight.id) return moving.origin;
-    return (
-      cards.find((entry) => entry.insight.id === card.insight.id)?.cell ??
-      card.cell
-    );
+    if (moving?.id === card.id) return moving.origin;
+    return cards.find((entry) => entry.id === card.id)?.cell ?? card.cell;
   }
 
   function onViewMove(
@@ -124,7 +130,7 @@
     }
     const rect = board.getBoundingClientRect();
     drag = {
-      id: card.insight.id,
+      id: card.id,
       ...grabbed,
       x: event.clientX - rect.left,
       y: event.clientY - rect.top,
@@ -159,7 +165,7 @@
     const next = preview;
     drag = null;
     preview = null;
-    if (next) void insights.placeAll(gridPlacements(next));
+    if (next) void insights.arrange(gridArrangement(next, layout.view.id));
   }
 
   function onPointerCancel(): void {
@@ -174,10 +180,11 @@
     const mode = handle(event)?.mode;
     if (!mode || !KEYS.includes(event.key)) return;
     event.preventDefault();
-    const id = card.insight.id;
-    const saved = insights.placeAll(
-      gridPlacements(
+    const { id } = card;
+    const saved = insights.arrange(
+      gridArrangement(
         nudgeCard(layout.cards, id, event.key as GridKey, mode === 'resize'),
+        layout.view.id,
       ),
     );
     await tick();
@@ -198,123 +205,126 @@
 
 <section
   class="@container/insights flex flex-col gap-2"
-  aria-labelledby={titleId}
+  aria-label={layout.view.name}
 >
-  <header
-    class={[
-      'flex h-9 items-center justify-between gap-3 pr-1 pl-5',
-      { 'sr-only': !layout.view.traffic },
-    ]}
-  >
-    <h2 id={titleId} class="truncate text-[13px] font-medium">
-      {layout.view.traffic ? 'Insights' : layout.view.name}
-      <span class="text-fg-muted font-normal">
-        Saved for everyone on this domain
-      </span>
-    </h2>
-  </header>
-
   {#if insights.error}
     <p class="text-error px-5 text-sm" role="alert">{insights.error}</p>
   {/if}
 
-  {#if insights.insights === null}
-    {#if !insights.error}
-      <div class="bg-surface-25-bg h-72 rounded-2xl" aria-hidden="true"></div>
-    {/if}
-  {:else if !insights.insights.length}
-    <Well label="No insights yet">
-      <EmptyState
-        centered
-        title="Turn your events into answers"
-        description="Save funnels, trends, histograms and cohort tables of your events. They stay here for everyone on this domain, and your coding agent can build them for you too."
-      >
-        <div class="flex flex-wrap items-center justify-center gap-2">
-          <button type="button" class={TOOLBAR_CONTROL} onclick={onadd}>
-            <PlusIcon class="size-3.5" />
-            Add insight
-          </button>
-          <a
-            href={resolve('/docs/mcp')}
-            class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
-          >
-            Connect your agent
-          </a>
-        </div>
-      </EmptyState>
-    </Well>
-  {:else if !layout.cards.length}
-    <Well label="Nothing in this view">
-      <EmptyState
-        centered
-        title={layout.hidden.length
-          ? 'Every card here is hidden'
-          : `Nothing in ${layout.view.name} yet`}
-        description={layout.hidden.length
-          ? 'Bring them back from Hidden above.'
-          : 'Add an insight, or move one here from its menu.'}
-      />
-    </Well>
+  {#if insights.insights === null && !insights.error}
+    <div class="bg-surface-25-bg h-72 rounded-2xl" aria-hidden="true"></div>
   {:else}
-    <div
-      bind:this={board}
-      bind:clientWidth={width}
-      class={['board', { 'select-none': drag }]}
-      style:--row="{GRID_ROW}px"
-      style:--gap="{GRID_GAP}px"
-      style:--rows={gridRows(cards)}
+    {#if layout.cards.length}
+      {@render grid()}
+    {/if}
+    {#if insights.insights?.length === 0}
+      {@render empty()}
+    {:else if insights.insights && !layout.cards.length}
+      <Well label="Nothing in this view">
+        <EmptyState
+          centered
+          title={layout.hidden.length
+            ? 'Every card here is hidden'
+            : `Nothing in ${layout.view.name} yet`}
+          description={layout.hidden.length
+            ? 'Bring them back from Hidden above.'
+            : 'Add an insight, or move one here from its menu.'}
+        />
+      </Well>
+    {/if}
+  {/if}
+</section>
+
+{#snippet empty()}
+  <Well label="No insights yet">
+    <EmptyState
+      centered
+      title="Turn your events into answers"
+      description="Save funnels, trends, histograms and cohort tables of your events. They stay here for everyone on this domain, and your coding agent can build them for you too."
     >
-      {#if moving && landing}
-        <div
-          class="cell landing outline-brand rounded-2xl outline-2 outline-dashed"
-          style:--x={landing.x}
-          style:--y={landing.y}
-          style:--w={landing.w}
-          style:--h={landing.h}
-          aria-hidden="true"
-        ></div>
-      {/if}
-      {#each layout.cards as card (card.insight.id)}
-        {@const cell = cellOf(card)}
-        {@const lifted = moving?.id === card.insight.id}
-        <div
-          class={['cell group/cell', { lifted }]}
-          style:--x={cell.x}
-          style:--y={cell.y}
-          style:--w={cell.w}
-          style:--h={cell.h}
-          style:--dx={lifted ? `${offset.x}px` : null}
-          style:--dy={lifted ? `${offset.y}px` : null}
-          role="presentation"
-          onpointerdown={(event) => onPointerDown(event, card)}
-          onkeydown={(event) => onKeyDown(event, card)}
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <button type="button" class={TOOLBAR_CONTROL} onclick={onadd}>
+          <PlusIcon class="size-3.5" />
+          Add insight
+        </button>
+        <a
+          href={resolve('/docs/mcp')}
+          class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
         >
+          Connect your agent
+        </a>
+      </div>
+    </EmptyState>
+  </Well>
+{/snippet}
+
+{#snippet grid()}
+  <div
+    bind:this={board}
+    bind:clientWidth={width}
+    class={['board', { 'select-none': drag }]}
+    style:--row="{GRID_ROW}px"
+    style:--gap="{GRID_GAP}px"
+    style:--rows={gridRows(cards)}
+  >
+    {#if moving && landing}
+      <div
+        class="cell landing outline-brand rounded-2xl outline-2 outline-dashed"
+        style:--x={landing.x}
+        style:--y={landing.y}
+        style:--w={landing.w}
+        style:--h={landing.h}
+        aria-hidden="true"
+      ></div>
+    {/if}
+    {#each layout.cards as card (card.id)}
+      {@const cell = cellOf(card)}
+      {@const lifted = moving?.id === card.id}
+      <div
+        class={['cell group/cell', { lifted, fluid: card.traffic }]}
+        style:--x={cell.x}
+        style:--y={cell.y}
+        style:--w={cell.w}
+        style:--h={cell.h}
+        style:--dx={lifted ? `${offset.x}px` : null}
+        style:--dy={lifted ? `${offset.y}px` : null}
+        role="presentation"
+        onpointerdown={(event) => onPointerDown(event, card)}
+        onkeydown={(event) => onKeyDown(event, card)}
+      >
+        {#snippet grip()}
+          <CardGrip id={card.id} title={card.title} />
+        {/snippet}
+        {#if card.insight}
           <InsightCard
             {clusterId}
             insight={card.insight}
             {revision}
             {elsewhere}
+            {grip}
             {onedit}
             onviewmove={onViewMove}
             onhide={onHide}
             onremove={onRemove}
           />
-          <button
-            type="button"
-            class="corner text-fg-muted hover:text-fg-default focus-visible:outline-brand pointer-fine:opacity-0 pointer-fine:group-hover/cell:opacity-100 absolute right-0.5 bottom-0.5 size-5 cursor-nwse-resize touch-none items-center justify-center rounded-md transition-opacity focus-visible:opacity-100 focus-visible:outline-2"
-            aria-label="Resize {card.insight.title}"
-            title="Drag, or use the arrow keys, to resize"
-            data-resize={card.insight.id}
-          >
-            <ResizeIcon class="size-4" />
-          </button>
-          {@render edge(card, 'x')}
-          {@render edge(card, 'y')}
-        </div>
-      {/each}
-    </div>
-  {/if}
-</section>
+        {:else}
+          {@render traffic?.(card.traffic, grip)}
+        {/if}
+        <button
+          type="button"
+          class="corner text-fg-muted hover:text-fg-default focus-visible:outline-brand pointer-fine:opacity-0 pointer-fine:group-hover/cell:opacity-100 absolute right-0.5 bottom-0.5 size-5 cursor-nwse-resize touch-none items-center justify-center rounded-md transition-opacity focus-visible:opacity-100 focus-visible:outline-2"
+          aria-label="Resize {card.title}"
+          title="Drag, or use the arrow keys, to resize"
+          data-resize={card.id}
+        >
+          <ResizeIcon class="size-4" />
+        </button>
+        {@render edge(card, 'x')}
+        {@render edge(card, 'y')}
+      </div>
+    {/each}
+  </div>
+{/snippet}
 
 {#snippet edge(card: GridCard, axis: 'x' | 'y')}
   <div
@@ -323,7 +333,7 @@
       axis === 'x'
         ? 'inset-y-6 -right-1.5 w-3 cursor-ew-resize'
         : 'inset-x-6 -bottom-1.5 h-3 cursor-ns-resize',
-      drag?.id === card.insight.id && drag.axis === axis
+      drag?.id === card.id && drag.axis === axis
         ? 'text-brand'
         : 'text-fg-tertiary hover:text-brand pointer-fine:opacity-0 pointer-fine:group-hover/cell:opacity-100',
     ]}
@@ -344,7 +354,11 @@
   }
 
   .cell {
-    height: calc(var(--h) * (var(--row) + var(--gap)) - var(--gap));
+    --height: calc(var(--h) * (var(--row) + var(--gap)) - var(--gap));
+  }
+
+  .cell:not(.fluid) {
+    height: var(--height);
   }
 
   .landing,
@@ -361,6 +375,7 @@
     }
 
     .cell {
+      height: var(--height);
       position: absolute;
       top: 0;
       left: 0;

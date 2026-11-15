@@ -1080,6 +1080,75 @@ describe('Web analytics insights', () => {
     });
   });
 
+  it('places the traffic cards of a view with the insights and keeps them across view edits', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clusterId = setup.cluster.id;
+    const { views } = await putViews(setup.token, clusterId, [
+      { name: 'Overview', traffic: true },
+      { name: 'Product' },
+    ]);
+    const [overview, product] = views;
+    const a = await create(clusterId, setup.token, { ...funnel, title: 'A' });
+    const reorder = (body: object): request.Test =>
+      send(setup.token, 'post', `${clusterId}/web_analytics/insights/reorder`, body);
+    const cards = [
+      { id: 'day', grid: { x: 0, y: 0, w: 8, h: 10 } },
+      { id: 'visits', grid: { x: 8, y: 0, w: 4, h: 12 } },
+    ];
+    const below = { x: 0, y: 12, w: 12, h: 8 };
+
+    // when
+    const placed = await reorder({
+      placements: [{ id: a.id, grid: below }],
+      traffic: { view: overview.id, cards },
+    });
+    const renamed = await putViews(setup.token, clusterId, [
+      { id: product.id, name: 'Product' },
+      { id: overview.id, name: 'Traffic', traffic: true },
+    ]);
+    const cleared = await reorder({ traffic: { view: overview.id, cards: [] } });
+
+    // then
+    expect(placed.status).toBe(200);
+    const body = placed.body as WebAnalyticsInsightsResponse;
+    expect(body.views).toEqual([{ ...overview, cards }, product]);
+    expect(body.insights).toEqual([{ ...a, grid: below }]);
+    expect(renamed.views).toEqual([product, { ...overview, name: 'Traffic', cards }]);
+    expect(cleared.status).toBe(200);
+    expect((cleared.body as WebAnalyticsInsightsResponse).views[1]).toEqual({
+      ...overview,
+      name: 'Traffic',
+    });
+    expect((cleared.body as WebAnalyticsInsightsResponse).viewsVersion).toBe(
+      renamed.viewsVersion + 1,
+    );
+    expect(
+      (
+        await send(setup.token, 'put', `${clusterId}/web_analytics/views`, {
+          views: [{ name: 'Stale' }],
+          version: renamed.viewsVersion,
+        })
+      ).status,
+    ).toBe(409);
+
+    const before = await layout(clusterId, setup.token);
+    for (const traffic of [
+      { view: new Types.ObjectId().toString(), cards },
+      { view: overview.id, cards: [{ id: 'sidebar', grid: below }] },
+      { view: overview.id, cards: [cards[0], cards[0]] },
+      { view: overview.id, cards: [{ id: 'day', grid: { x: 9, y: 0, w: 6, h: 8 } }] },
+    ])
+      expect((await reorder({ traffic })).status).toBe(400);
+    expect(await layout(clusterId, setup.token)).toEqual(before);
+    await bootstrap.utils.auditLogUtils.assertAuditLog({
+      userId: setup.user.id,
+      action: AuditLogEntityAction.Update,
+      relatedDomain: RelatedDomain.WebAnalytics,
+      relatedEntityId: overview.id,
+    });
+  });
+
   it('places every card of a full dashboard on the grid in one call', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();

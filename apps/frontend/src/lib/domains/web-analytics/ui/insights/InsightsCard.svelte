@@ -1,5 +1,6 @@
 <script lang="ts">
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
+  import type { Snippet } from 'svelte';
   import type { WebAnalyticsRange } from '../../domain/web-analytics';
   import JourneysView from './JourneysView.svelte';
   import RetentionView from './RetentionView.svelte';
@@ -9,9 +10,10 @@
   type Props = {
     clusterId: string;
     range: WebAnalyticsRange;
+    grip?: Snippet;
   };
 
-  const { clusterId, range }: Props = $props();
+  const { clusterId, range, grip }: Props = $props();
 
   const TABS: { value: Tab; label: string }[] = [
     { value: 'journeys', label: 'Journey' },
@@ -26,7 +28,7 @@
 </script>
 
 <section
-  class="bg-surface-25-bg flex min-h-[28rem] min-w-0 flex-col gap-2 rounded-2xl p-2"
+  class="bg-surface-25-bg flex h-full min-w-0 flex-col gap-2 rounded-2xl p-2"
   aria-label="Journeys and retention"
 >
   <header class="flex h-7 shrink-0 items-center justify-between gap-3">
@@ -39,9 +41,10 @@
         onChange={onTab}
       />
     </div>
+    {@render grip?.()}
   </header>
 
-  <div class="flex min-h-0 flex-1 flex-col">
+  <div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
     {#if tab === 'journeys'}
       <JourneysView {clusterId} {range} />
     {:else}

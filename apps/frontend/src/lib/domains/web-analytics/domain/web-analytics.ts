@@ -286,10 +286,33 @@ export interface WebAnalyticsInsight extends WebAnalyticsInsightConfig {
   id: string;
 }
 
+export type WebAnalyticsTrafficCard =
+  | 'day'
+  | 'sources'
+  | 'firstPages'
+  | 'visits'
+  | 'channels'
+  | 'pages'
+  | 'goals'
+  | 'countries'
+  | 'technology'
+  | 'journeys';
+
+export interface WebAnalyticsTrafficCardPlacement {
+  id: WebAnalyticsTrafficCard;
+  grid: WebAnalyticsInsightGrid;
+}
+
+export interface WebAnalyticsTrafficLayout {
+  view: string;
+  cards: WebAnalyticsTrafficCardPlacement[];
+}
+
 export interface WebAnalyticsView {
   id: string;
   name: string;
   traffic: boolean;
+  cards?: WebAnalyticsTrafficCardPlacement[];
 }
 
 export interface WebAnalyticsViewInput {

@@ -26,7 +26,7 @@
   const { date, hours, typical, lanes, sources, spot, current, now }: Props =
     $props();
 
-  const PLOT = 200;
+  const MIN_PLOT = 120;
   const LANE = 20;
   const TOP = 22;
   const RIGHT = 8;
@@ -45,6 +45,7 @@
   const id = $props.id();
 
   let width = $state(0);
+  let height = $state(0);
   let hovered = $state<number | null>(null);
 
   const left = $derived(
@@ -56,10 +57,9 @@
       ),
     ),
   );
-  const baseline = TOP + PLOT;
-  const height = $derived(
-    baseline + AXIS + (lanes.length ? 8 + lanes.length * LANE : 0),
-  );
+  const below = $derived(AXIS + (lanes.length ? 8 + lanes.length * LANE : 0));
+  const plot = $derived(Math.max(MIN_PLOT, height - TOP - below));
+  const baseline = $derived(TOP + plot);
   const slot = $derived(Math.max(0, width - left - RIGHT) / 24);
   const last = $derived(current ?? 23);
   const partial = $derived(current !== null && current > 0);
@@ -163,7 +163,12 @@
   }
 </script>
 
-<div class="relative w-full" style:height="{height}px" bind:clientWidth={width}>
+<div
+  class="relative h-full w-full"
+  style:min-height="calc({TOP + below}px + var(--plot-min, {MIN_PLOT}px))"
+  bind:clientWidth={width}
+  bind:clientHeight={height}
+>
   {#if !hours}
     <div
       class="absolute inset-y-0"
@@ -176,8 +181,8 @@
         {#each [0, 1, 2, 3] as step (step)}
           <line
             x2="100%"
-            y1={baseline - (PLOT * step) / 3}
-            y2={baseline - (PLOT * step) / 3}
+            y1={baseline - (plot * step) / 3}
+            y2={baseline - (plot * step) / 3}
             stroke="var(--surface-50-border)"
             stroke-dasharray={step ? '3 4' : undefined}
           />
@@ -185,7 +190,7 @@
         <svg
           y={TOP}
           width="100%"
-          height={PLOT}
+          height={plot}
           viewBox="0 0 24 1"
           preserveAspectRatio="none"
         >
@@ -212,7 +217,7 @@
     <svg
       {width}
       {height}
-      class="focus-visible:outline-brand block touch-pan-y rounded-lg outline-none focus-visible:outline-2"
+      class="focus-visible:outline-brand absolute inset-0 touch-pan-y rounded-lg outline-none focus-visible:outline-2"
       role="img"
       tabindex="0"
       aria-label="Visits per hour. Use the arrow keys to read each hour."

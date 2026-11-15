@@ -3,15 +3,23 @@ import type {
   WebAnalyticsInsightGrid,
   WebAnalyticsInsightPlacementUpdate,
   WebAnalyticsInsights,
+  WebAnalyticsTrafficCard,
+  WebAnalyticsTrafficCardPlacement,
+  WebAnalyticsTrafficLayout,
   WebAnalyticsView,
   WebAnalyticsViewInput,
 } from './web-analytics';
 import { insightWide } from './web-analytics-insight';
 
-export interface GridCard {
-  insight: WebAnalyticsInsight;
+export type GridCard = {
+  id: string;
+  title: string;
   cell: WebAnalyticsInsightGrid;
-}
+  saved: WebAnalyticsInsightGrid | undefined;
+} & (
+  | { insight: WebAnalyticsInsight; traffic?: undefined }
+  | { traffic: WebAnalyticsTrafficCard; insight?: undefined }
+);
 
 export interface ViewLayout {
   view: WebAnalyticsView;
@@ -22,7 +30,35 @@ export interface ViewLayout {
 export interface Arrangement {
   ids?: string[];
   placements?: WebAnalyticsInsightPlacementUpdate[];
+  traffic?: WebAnalyticsTrafficLayout;
 }
+
+type TrafficCardSpec = {
+  id: WebAnalyticsTrafficCard;
+  title: string;
+  w: number;
+  h: number;
+  last?: boolean;
+};
+
+export const TRAFFIC_CARDS: TrafficCardSpec[] = [
+  { id: 'day', title: 'Day', w: 12, h: 13 },
+  { id: 'sources', title: 'Sources', w: 12, h: 5 },
+  { id: 'firstPages', title: 'First pages', w: 12, h: 5 },
+  { id: 'visits', title: 'Visits', w: 12, h: 11 },
+  { id: 'channels', title: 'Channels', w: 8, h: 8, last: true },
+  { id: 'pages', title: 'Pages', w: 4, h: 8, last: true },
+  { id: 'goals', title: 'Goals', w: 4, h: 8, last: true },
+  { id: 'countries', title: 'Countries', w: 4, h: 8, last: true },
+  { id: 'technology', title: 'Technology', w: 4, h: 8, last: true },
+  {
+    id: 'journeys',
+    title: 'Journeys and retention',
+    w: 12,
+    h: 10,
+    last: true,
+  },
+];
 
 export type GridKey = 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'ArrowDown';
 
@@ -83,22 +119,51 @@ export function viewLayout(
   return {
     view,
     hidden: own.filter((insight) => insight.hidden),
-    cards: gridCards(own.filter((insight) => !insight.hidden)),
+    cards: gridCards(
+      own.filter((insight) => !insight.hidden),
+      view.traffic ? (view.cards ?? []) : null,
+    ),
   };
 }
 
-export function gridCards(insights: WebAnalyticsInsight[]): GridCard[] {
-  const cards: GridCard[] = insights.flatMap((insight) =>
-    insight.grid ? [{ insight, cell: fit(insight.grid) }] : [],
-  );
-  let floor = Math.max(0, ...cards.map(({ cell }) => cell.y + cell.h));
-  for (const insight of insights) {
-    if (insight.grid) continue;
-    const cell = firstFree(cards, defaultSize(insight), floor);
-    cards.push({ insight, cell });
-    floor = cell.y;
-  }
-  return settle(cards);
+export function gridCards(
+  insights: WebAnalyticsInsight[],
+  traffic: WebAnalyticsTrafficCardPlacement[] | null = null,
+): GridCard[] {
+  const first = traffic?.length
+    ? []
+    : flow(
+        [],
+        TRAFFIC_CARDS.filter((spec) => traffic && !spec.last).map(trafficCard),
+        0,
+      );
+  const shift = gridRows(first);
+  const placed: GridCard[] = [
+    ...first,
+    ...(traffic ?? []).flatMap(({ id, grid }) => {
+      const spec = TRAFFIC_CARDS.find((entry) => entry.id === id);
+      return spec
+        ? [{ ...trafficCard(spec), saved: grid, cell: fit(grid) }]
+        : [];
+    }),
+    ...insights.flatMap((insight) =>
+      insight.grid
+        ? [
+            {
+              ...insightCard(insight),
+              cell: fit({ ...insight.grid, y: insight.grid.y + shift }),
+            },
+          ]
+        : [],
+    ),
+  ];
+  const rest = [
+    ...insights.filter((insight) => !insight.grid).map(insightCard),
+    ...TRAFFIC_CARDS.filter(
+      (spec) => traffic && !placed.some((card) => card.id === spec.id),
+    ).map(trafficCard),
+  ];
+  return settle(flow(placed, rest, gridRows(placed)));
 }
 
 export function moveCard(
@@ -132,7 +197,7 @@ export function nudgeCard(
   key: GridKey,
   resize: boolean,
 ): GridCard[] {
-  const card = cards.find((entry) => entry.insight.id === id);
+  const card = cards.find((entry) => entry.id === id);
   if (!card) return cards;
   const { x, y, w, h } = card.cell;
   if (resize) {
@@ -166,12 +231,30 @@ export function nudgeCard(
   );
 }
 
-export function gridPlacements(
-  cards: GridCard[],
-): WebAnalyticsInsightPlacementUpdate[] {
-  return cards
-    .filter(({ insight, cell }) => !sameCell(insight.grid, cell))
-    .map(({ insight, cell }) => ({ id: insight.id, grid: cell }));
+export function gridArrangement(cards: GridCard[], view: string): Arrangement {
+  const moved = cards.filter(({ saved, cell }) => !sameCell(saved, cell));
+  const placements = moved.flatMap(({ id, insight, cell }) =>
+    insight ? [{ id, grid: cell }] : [],
+  );
+  if (!moved.some((card) => card.traffic)) return { placements };
+  return {
+    placements,
+    traffic: {
+      view,
+      cards: cards.flatMap(({ traffic, cell }) =>
+        traffic ? [{ id: traffic, grid: cell }] : [],
+      ),
+    },
+  };
+}
+
+export function applyTraffic(
+  views: WebAnalyticsView[],
+  traffic: WebAnalyticsTrafficLayout,
+): WebAnalyticsView[] {
+  return dashboardViews(views).map((view) =>
+    view.id === traffic.view ? { ...view, cards: traffic.cards } : view,
+  );
 }
 
 export function sameCell(
@@ -221,13 +304,40 @@ export function viewsProblem(views: WebAnalyticsViewInput[]): string | null {
   return null;
 }
 
-function defaultSize(insight: WebAnalyticsInsight): WebAnalyticsInsightGrid {
+function insightCard(insight: WebAnalyticsInsight): GridCard {
   return {
-    x: 0,
-    y: 0,
-    w: insightWide(insight) ? GRID_COLUMNS : GRID_COLUMNS / 2,
-    h: CARD_H,
+    id: insight.id,
+    title: insight.title,
+    insight,
+    saved: insight.grid ?? undefined,
+    cell: {
+      x: 0,
+      y: 0,
+      w: insightWide(insight) ? GRID_COLUMNS : GRID_COLUMNS / 2,
+      h: CARD_H,
+    },
   };
+}
+
+function trafficCard({ id, title, w, h }: TrafficCardSpec): GridCard {
+  return {
+    id,
+    title,
+    traffic: id,
+    saved: undefined,
+    cell: { x: 0, y: 0, w, h },
+  };
+}
+
+function flow(cards: GridCard[], rest: GridCard[], floor: number): GridCard[] {
+  const placed = [...cards];
+  let row = floor;
+  for (const card of rest) {
+    const cell = firstFree(placed, card.cell, row);
+    placed.push({ ...card, cell });
+    row = cell.y;
+  }
+  return placed;
 }
 
 function fit(cell: WebAnalyticsInsightGrid): WebAnalyticsInsightGrid {
@@ -250,7 +360,7 @@ function reshape(
   change: (cell: WebAnalyticsInsightGrid) => WebAnalyticsInsightGrid,
 ): GridCard[] {
   return cards.map((card) =>
-    card.insight.id === id ? { ...card, cell: fit(change(card.cell)) } : card,
+    card.id === id ? { ...card, cell: fit(change(card.cell)) } : card,
   );
 }
 
@@ -261,7 +371,7 @@ function settle(
 ): GridCard[] {
   const key = ({ cell }: GridCard): number =>
     cell.y + (byCenter ? cell.h / 2 : 0);
-  const pin = (card: GridCard): number => Number(card.insight.id === pinned);
+  const pin = (card: GridCard): number => Number(card.id === pinned);
   const order = [...cards].sort(
     (a, b) => key(a) - key(b) || pin(b) - pin(a) || a.cell.x - b.cell.x,
   );

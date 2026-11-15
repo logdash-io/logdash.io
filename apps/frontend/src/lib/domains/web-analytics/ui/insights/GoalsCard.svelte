@@ -1,5 +1,6 @@
 <script lang="ts">
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
+  import type { Snippet } from 'svelte';
   import { formatCount } from '../../domain/analytics-format';
   import type {
     WebAnalyticsAppRow,
@@ -16,12 +17,13 @@
     report: WebAnalyticsReport | null;
     selected: string | null;
     onselect: (name: string) => void;
+    grip?: Snippet;
     onfilter: (filter: WebAnalyticsFilter) => void;
   };
 
   type Tab = 'goals' | 'apps';
 
-  const { report, selected, onselect, onfilter }: Props = $props();
+  const { report, selected, grip, onselect, onfilter }: Props = $props();
 
   let tab = $state<Tab>('goals');
   let detailsOpen = $state(false);
@@ -56,6 +58,7 @@
 <DashboardCard
   label="Goals"
   tabs={hasApps ? tabSwitch : undefined}
+  {grip}
   expandLabel="Show all goals"
   onexpand={shown === 'goals' && report?.breakdowns.goals.length
     ? onDetails
