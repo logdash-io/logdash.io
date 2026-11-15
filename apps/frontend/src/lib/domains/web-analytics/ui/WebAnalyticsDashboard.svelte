@@ -709,7 +709,7 @@
     class="text-fg-muted hover:text-fg-secondary focus-visible:text-fg-secondary focus-visible:outline-brand transition-ink truncate rounded-sm px-1.5 text-[11px] focus-visible:outline-2"
   >
     <span class="hidden @xs:inline">IP Geolocation by</span>
-     DB-IP
+    DB-IP
   </a>
 {/snippet}
 
