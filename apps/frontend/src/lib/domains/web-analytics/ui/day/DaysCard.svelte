@@ -11,7 +11,6 @@
     type StripDay,
     type StripSummary,
   } from '../../domain/day-analytics';
-  import { DayScrub, REST_MS } from './day-scrub';
 
   type Props = {
     days: StripDay[];
@@ -21,21 +20,11 @@
     spot: number[] | null;
     now: string;
     title: string;
-    onpreview: (date: string | null) => void;
     onselect: (date: string) => void;
   };
 
-  const {
-    days,
-    summary,
-    selected,
-    goals,
-    spot,
-    now,
-    title,
-    onpreview,
-    onselect,
-  }: Props = $props();
+  const { days, summary, selected, goals, spot, now, title, onselect }: Props =
+    $props();
 
   const TOP = 22;
   const RIGHT = 8;
@@ -45,12 +34,9 @@
       0.3 + 0.08 * Math.sin(index * 0.9) + 0.04 * Math.sin(index * 2.3),
   );
 
-  const scrub = new DayScrub();
-
   let width = $state(0);
   let hovered = $state<number | null>(null);
   let columns = $state<(SVGRectElement | undefined)[]>([]);
-  let resting: ReturnType<typeof setTimeout> | undefined;
 
   const loading = $derived(!days.length);
   const goal = $derived(goals?.[0] ?? null);
@@ -134,30 +120,11 @@
   }
 
   function onPointerMove(event: PointerEvent): void {
-    if (event.pointerType === 'touch') return;
-    const index = columnAt(event);
-    hovered = index;
-    clearTimeout(resting);
-    resting = setTimeout(() => preview(scrub.rest()), REST_MS);
-    preview(
-      scrub.move(
-        { x: event.clientX, y: event.clientY, time: event.timeStamp },
-        index !== null && days[index].tracked ? index : null,
-      ),
-    );
+    if (event.pointerType !== 'touch') hovered = columnAt(event);
   }
 
-  function onPointerLeave(event: PointerEvent): void {
-    clearTimeout(resting);
+  function onPointerLeave(): void {
     hovered = null;
-    const target = scrub.leave(event.timeStamp);
-    if (target === null) onpreview(null);
-    else onselect(days[target].date);
-  }
-
-  function preview(index: number | null): void {
-    if (index !== null && days[index].date !== selected)
-      onpreview(days[index].date);
   }
 
   function onColumnFocus(index: number): void {
@@ -195,7 +162,7 @@
     <h2 class="px-3 text-[13px] font-medium">
       {title}
       <span class="text-fg-muted font-normal">
-        one column per day, point at one to open it
+        one column per day, click one to open it
       </span>
     </h2>
     <Tooltip
@@ -533,8 +500,10 @@
         </svg>
         <span>
           People who did
-          <span class="font-mono">{goal}</span>
-          , counted on their own
+          <span class="inline-flex items-baseline">
+            <span class="font-mono">{goal}</span>
+            <span>, counted on their own</span>
+          </span>
         </span>
       </span>
     {/if}

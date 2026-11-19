@@ -32,7 +32,6 @@
     onshow: (show: WebAnalyticsVisitShow) => void;
     onmore: () => void;
     onopen: (visit: WebAnalyticsDayVisit) => void;
-    onhover: (source: string | null) => void;
     grip?: Snippet;
   };
 
@@ -50,7 +49,6 @@
     onshow,
     onmore,
     onopen,
-    onhover,
     grip,
   }: Props = $props();
 
@@ -141,10 +139,6 @@
                   type="button"
                   class="group hover:bg-surface-25-hover-bg focus-visible:outline-brand grid w-full cursor-pointer grid-cols-[40px_minmax(0,1fr)_fit-content(16rem)] items-center gap-x-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm outline-none focus-visible:outline-2 @3xl:col-span-full @3xl:min-h-9 @3xl:grid-cols-subgrid @3xl:gap-x-6 @3xl:px-3 @3xl:py-0"
                   onclick={() => onopen(visit)}
-                  onpointerenter={() => onhover(visit.source)}
-                  onpointerleave={() => onhover(null)}
-                  onfocus={() => onhover(visit.source)}
-                  onblur={() => onhover(null)}
                 >
                   <span
                     class="text-fg-muted col-start-1 row-start-1 tabular-nums"

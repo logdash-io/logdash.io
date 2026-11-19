@@ -17,9 +17,7 @@
     typicalHours: number[] | null;
     goalHours: number[][];
     sources: WebAnalyticsSourceSeries[];
-    spot: string | null;
     pinned: string | null;
-    onhover: (name: string | null) => void;
     onpin: (name: string) => void;
     grip?: Snippet;
   };
@@ -35,9 +33,7 @@
     typicalHours,
     goalHours,
     sources,
-    spot,
     pinned,
-    onhover,
     onpin,
     grip,
   }: Props = $props();
@@ -222,15 +218,9 @@
             'transition-ink focus-visible:outline-brand h-5 max-w-36 cursor-pointer truncate rounded-md px-1.5 focus-visible:outline-2',
             source.name === pinned
               ? 'bg-surface-150-bg text-fg-default'
-              : source.name === spot
-                ? 'text-fg-default'
-                : 'text-fg-muted hover:text-fg-default',
+              : 'text-fg-muted hover:text-fg-default',
           ]}
           aria-pressed={source.name === pinned}
-          onpointerenter={() => onhover(source.name)}
-          onpointerleave={() => onhover(null)}
-          onfocus={() => onhover(source.name)}
-          onblur={() => onhover(null)}
           onclick={() => onpin(source.name)}
         >
           {source.name}
@@ -251,7 +241,7 @@
         hours: goalHours[index] ?? [],
       }))}
       {sources}
-      {spot}
+      spot={pinned}
       current={inProgress ? Number(now.slice(0, 2)) : null}
       {now}
     />
