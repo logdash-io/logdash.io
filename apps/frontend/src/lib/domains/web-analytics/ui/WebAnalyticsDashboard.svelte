@@ -93,7 +93,6 @@
 
   let clock = $state(DateTime.local());
   let show = $state<WebAnalyticsVisitShow>('all');
-  let hovered = $state<string | null>(null);
   let pinned = $state<string | null>(null);
   let preview = $state<string | null>(null);
   let goal = $state<string | null>(null);
@@ -155,7 +154,6 @@
   const pages = $derived(
     day.data ? groupRows(day.data.pages, day.data.dates, since) : [],
   );
-  const spot = $derived(hovered ?? pinned);
   const headline = $derived(
     focused
       ? dayHeadline({
@@ -302,10 +300,6 @@
     await onQueryChange({ ...query, day: next === today ? null : next });
   }
 
-  function onPreview(next: string | null): void {
-    preview = next;
-  }
-
   async function onSelect(next: string): Promise<void> {
     if (next === date) {
       preview = null;
@@ -357,10 +351,6 @@
 
   function onMore(): void {
     if (params) void visits.load(date, params, show, true);
-  }
-
-  function onHover(name: string | null): void {
-    hovered = name;
   }
 
   function onPin(name: string): void {
@@ -493,11 +483,10 @@
           {summary}
           selected={shown}
           goals={params?.goals ?? null}
-          spot={days.data?.sources.find((source) => source.name === spot)
+          spot={days.data?.sources.find((source) => source.name === pinned)
             ?.visits ?? null}
           {now}
           title={stripTitle()}
-          onpreview={onPreview}
           onselect={onSelect}
         />
       {/if}
@@ -584,10 +573,8 @@
       typicalHours={day.data ? typicalHours(day.data, since) : null}
       goalHours={day.data?.goalHours ?? []}
       sources={day.data?.sourceHours ?? []}
-      {spot}
       {pinned}
       {grip}
-      onhover={onHover}
       onpin={onPin}
     />
   {:else if id === 'sources'}
@@ -598,10 +585,8 @@
       {by}
       {weekdays}
       loading={!day.data}
-      {spot}
       {pinned}
       {grip}
-      onhover={onHover}
       onpin={onPin}
     />
   {:else if id === 'firstPages'}
@@ -630,7 +615,6 @@
       onshow={onShow}
       onmore={onMore}
       onopen={onOpen}
-      onhover={onHover}
     />
   {:else if id === 'channels'}
     <BreakdownCard

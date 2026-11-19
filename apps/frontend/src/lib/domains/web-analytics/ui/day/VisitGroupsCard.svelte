@@ -21,9 +21,7 @@
     by: string;
     weekdays: string;
     loading: boolean;
-    spot?: string | null;
     pinned?: string | null;
-    onhover?: (name: string | null) => void;
     onpin?: (name: string) => void;
     grip?: Snippet;
   };
@@ -35,9 +33,7 @@
     by,
     weekdays,
     loading,
-    spot = null,
     pinned = null,
-    onhover,
     onpin,
     grip,
   }: Props = $props();
@@ -57,7 +53,7 @@
       <h2 class="px-3 text-[13px] font-medium">{title}</h2>
       <p class="text-fg-muted px-3 text-xs">
         Rates with their 95% interval. Arrows mark what is beyond noise.
-        {onpin ? 'Point at a source to see it in the charts.' : ''}
+        {onpin ? 'Click a source to see it in the charts.' : ''}
       </p>
     </div>
     {@render grip?.()}
@@ -120,7 +116,7 @@
         {:else}
           <tbody in:fade={{ duration: prefersReducedMotion.current ? 0 : 200 }}>
             {#each rows as row (row.name)}
-              {@const lit = row.name === spot || row.name === pinned}
+              {@const lit = row.name === pinned}
               <tr
                 class={[
                   'group transition-ink',
@@ -132,8 +128,6 @@
                   duration: prefersReducedMotion.current ? 0 : 240,
                   easing: cubicInOut,
                 }}
-                onpointerenter={() => onhover?.(row.name)}
-                onpointerleave={() => onhover?.(null)}
               >
                 <td
                   class={[
@@ -161,9 +155,7 @@
                       aria-pressed={row.name === pinned}
                       title={row.name === pinned
                         ? 'Stop showing it in the charts'
-                        : 'Keep it in the charts'}
-                      onfocus={() => onhover?.(row.name)}
-                      onblur={() => onhover?.(null)}
+                        : 'Show it in the charts'}
                       onclick={() => onpin(row.name)}
                     >
                       <BreakdownLabel dimension="referrers" name={row.name} />
