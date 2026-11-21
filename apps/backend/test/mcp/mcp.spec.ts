@@ -8,6 +8,7 @@ import { AccessRestriction } from '../../src/personal-api-key/core/types/access-
 import { ScopeEntry } from '../../src/personal-api-key/core/types/scope-entry.type';
 import { CreatePersonalApiKeyResponse } from '../../src/personal-api-key/core/dto/create-personal-api-key.response';
 import { WebEventClickhouseEntity } from '../../src/web-analytics/core/entities/web-event.clickhouse-entity';
+import { LogLevel } from '../../src/log/core/enums/log-level.enum';
 import { WebAnalyticsSiteSerialized } from '../../src/web-analytics/core/entities/web-analytics-site.interface';
 
 type Rpc = { id?: unknown; result?: Record<string, unknown>; error?: { code: number } };
@@ -19,6 +20,7 @@ describe('MCP server', () => {
 
   const READ = [{ resource: Resource.WebAnalytics, action: Action.Read }];
   const WRITE = [{ resource: Resource.WebAnalytics, action: Action.Write }];
+  const LOGS = [{ resource: Resource.Logs, action: Action.Read }];
   const ALL: AccessRestriction = { kind: 'all' };
   const READ_TOOLS = [
     'describe',
@@ -108,9 +110,10 @@ describe('MCP server', () => {
     await configure(setup.cluster.id, setup.token);
     const none = await createKey(
       setup.token,
-      [{ resource: Resource.Logs, action: Action.Read }],
+      [{ resource: Resource.Metrics, action: Action.Read }],
       ALL,
     );
+    const logs = await createKey(setup.token, LOGS, ALL);
     const read = await createKey(setup.token, READ, ALL);
     const write = await createKey(setup.token, WRITE, ALL);
     const insight = {
@@ -124,7 +127,8 @@ describe('MCP server', () => {
     expect(await toolNames(none)).toEqual([]);
     expect(await toolNames(read)).toEqual(READ_TOOLS);
     expect(await toolNames(write)).toEqual([...READ_TOOLS, ...WRITE_TOOLS]);
-    expect(await toolNames(setup.token)).toEqual([...READ_TOOLS, ...WRITE_TOOLS]);
+    expect(await toolNames(logs)).toEqual(['describe', 'logs_search']);
+    expect(await toolNames(setup.token)).toEqual([...READ_TOOLS, ...WRITE_TOOLS, 'logs_search']);
     const lines = (await rpc(write, 'tools/list')).result?.tools as {
       name: string;
       inputSchema: { properties: { events: { items: { properties: object } } } };
@@ -144,7 +148,15 @@ describe('MCP server', () => {
 
     expect(await call(none, 'describe', {})).toMatchObject({
       isError: true,
+      text: 'This key lacks the webAnalytics:read or logs:read scope',
+    });
+    expect(await call(logs, 'overview', { clusterId: setup.cluster.id })).toMatchObject({
+      isError: true,
       text: 'This key lacks the webAnalytics:read scope',
+    });
+    expect(await call(write, 'logs_search', { projectId: setup.project.id })).toMatchObject({
+      isError: true,
+      text: 'This key lacks the logs:read scope',
     });
     expect(await call(read, 'create_insight', insight)).toMatchObject({
       isError: true,
@@ -205,6 +217,105 @@ describe('MCP server', () => {
           text: 'This key does not reach that domain',
         });
     }
+  });
+
+  it('searches the logs of the projects the key reaches', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const stranger = await bootstrap.utils.generalUtils.setupAnonymous();
+    const projectId = setup.project.id;
+    const all = await createKey(setup.token, LOGS, ALL);
+    const own = await createKey(setup.token, LOGS, { kind: 'projects', ids: [projectId] });
+    const other = await createKey(setup.token, LOGS, {
+      kind: 'projects',
+      ids: [stranger.project.id],
+    });
+    for (const [hoursAgo, level, namespace, message] of [
+      [72, LogLevel.Error, 'malini@1.3.0', 'Render failed before the retention'],
+      [4, LogLevel.Error, 'malini@1.2.0', 'Render failed: boom'],
+      [3, LogLevel.Error, 'malini@1.3.0', 'The render FAILED again'],
+      [2, LogLevel.Info, 'malini@1.3.0', 'Render failed quietly'],
+      [1, LogLevel.Error, 'updater', 'Render failed elsewhere'],
+    ] as const)
+      await bootstrap.utils.logUtils.createLog({
+        apiKey: setup.apiKey.value,
+        createdAt: new Date(Date.now() - hoursAgo * 3_600_000).toISOString(),
+        level,
+        namespace,
+        message,
+      });
+    const messages = (result: ToolResult): string[] =>
+      (result.json.logs as { message: string }[]).map((log) => log.message);
+
+    // then
+    const described = (await call(all, 'describe', {})).json;
+    expect(described.projects).toEqual([
+      { projectId, name: setup.project.name, clusterId: setup.cluster.id, logRetentionDays: 1 },
+    ]);
+    expect(described).not.toHaveProperty('domains');
+    expect((await call(own, 'describe', {})).json.projects).toHaveLength(1);
+    expect((await call(other, 'describe', {})).json.projects).toEqual([]);
+    expect((await call(setup.token, 'describe', {})).json).toMatchObject({
+      projects: [{ projectId }],
+      domains: [{ clusterId: setup.cluster.id }],
+    });
+
+    const filtered = await call(own, 'logs_search', {
+      projectId,
+      level: 'error',
+      namespacePrefix: 'malini@',
+      query: 'failed render',
+      days: 30,
+    });
+    expect(filtered.json).toEqual({
+      projectId,
+      from: '2026-10-01T12:00:00.000Z',
+      to: '2026-10-02T12:00:00.000Z',
+      logs: [
+        {
+          createdAt: '2026-10-02T09:00:00.000Z',
+          level: 'error',
+          namespace: 'malini@1.3.0',
+          message: 'The render FAILED again',
+        },
+        {
+          createdAt: '2026-10-02T08:00:00.000Z',
+          level: 'error',
+          namespace: 'malini@1.2.0',
+          message: 'Render failed: boom',
+        },
+      ],
+      nextCursor: null,
+    });
+    expect(messages(await call(all, 'logs_search', { projectId, namespace: 'updater' }))).toEqual([
+      'Render failed elsewhere',
+    ]);
+
+    const first = await call(all, 'logs_search', { projectId, limit: 3 });
+    expect(messages(first)).toEqual([
+      'Render failed elsewhere',
+      'Render failed quietly',
+      'The render FAILED again',
+    ]);
+    const second = await call(all, 'logs_search', {
+      projectId,
+      limit: 3,
+      cursor: first.json.nextCursor,
+    });
+    expect(messages(second)).toEqual(['Render failed: boom']);
+    expect(second.json.nextCursor).toBeNull();
+
+    for (const [key, id] of [
+      [other, projectId],
+      [all, stranger.project.id],
+    ])
+      expect(await call(key, 'logs_search', { projectId: id })).toMatchObject({
+        isError: true,
+        text: 'This key does not reach that project',
+      });
+    expect((await call(all, 'logs_search', { projectId, level: 'loud' })).text).toContain(
+      'level must be one of',
+    );
   });
 
   it('validates tool arguments', async () => {

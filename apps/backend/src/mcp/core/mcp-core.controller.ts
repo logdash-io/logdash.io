@@ -23,7 +23,7 @@ import { McpUnauthorizedFilter } from './mcp-unauthorized.filter';
 const PROTOCOL_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];
 
 const INSTRUCTIONS =
-  'Logdash web analytics for the domains this key reaches. Call describe first to get domain ids, event names and property keys, then read with the other tools. Every count is for the last N days in the plan retention. Write tools change the saved insight cards on the dashboard and need the webAnalytics:write scope.';
+  'Logdash web analytics and logs for the domains and projects this key reaches. Call describe first to get domain ids, event names, property keys and project ids, then read with the other tools. Every count is for the last N days in the plan retention. Web analytics tools need the webAnalytics:read scope. Write tools change the saved insight cards on the dashboard and need the webAnalytics:write scope. logs_search reads the log lines of a project and needs the logs:read scope.';
 
 type JsonRpcId = string | number | null;
 

@@ -3,6 +3,7 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsEnum,
   IsIn,
   IsInt,
   IsMongoId,
@@ -13,6 +14,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { LogLevel } from '../../../log/core/enums/log-level.enum';
 import {
   ReadWebAnalyticsFilterQuery,
   ReadWebAnalyticsSchemaQuery,
@@ -129,3 +131,38 @@ export class McpUpdateInsightArgs extends IntersectionType(
   McpInsightIdArgs,
   WebAnalyticsInsightBody,
 ) {}
+
+export class McpLogsSearchArgs extends ReadWebAnalyticsSchemaQuery {
+  @IsMongoId()
+  projectId: string;
+
+  @IsOptional()
+  @IsEnum(LogLevel)
+  level?: LogLevel;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  namespace?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  namespacePrefix?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  query?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit: number = 50;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  cursor?: string;
+}

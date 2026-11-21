@@ -34,6 +34,7 @@ export class LogReadService {
     projectIds: string[];
     searchString?: string;
     namespaces?: string[];
+    namespacePrefix?: string;
   }): Promise<LogClickhouseNormalized[]> {
     if (dto.projectIds.length === 0) {
       return [];
@@ -75,6 +76,11 @@ export class LogReadService {
     if (dto.namespaces?.length) {
       conditions.push('l.namespace IN ({namespaces:Array(String)})');
       queryParams.namespaces = dto.namespaces;
+    }
+
+    if (dto.namespacePrefix) {
+      conditions.push('startsWith(l.namespace, {namespacePrefix:String})');
+      queryParams.namespacePrefix = dto.namespacePrefix;
     }
 
     const words =

@@ -36,14 +36,14 @@ describe('MCP OAuth', () => {
     return (response.body as { client_id: string }).client_id;
   }
 
-  function authorizeBody(clientId: string): Record<string, string> {
+  function authorizeBody(clientId: string, scope = 'webAnalytics:read'): Record<string, string> {
     return {
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
       code_challenge: challenge,
       code_challenge_method: 'S256',
-      scope: 'webAnalytics:read',
+      scope,
       state: 'state-1',
     };
   }
@@ -79,6 +79,33 @@ describe('MCP OAuth', () => {
     expect(authorizationServer.status).toBe(200);
     expect(authorizationServerBody.token_endpoint).toBe(`${apiUrl}/oauth/token`);
     expect(authorizationServerBody.code_challenge_methods_supported).toEqual(['S256']);
+    expect((authorizationServer.body as { scopes_supported: string[] }).scopes_supported).toEqual([
+      'webAnalytics:read',
+      'webAnalytics:write',
+      'logs:read',
+    ]);
+  });
+
+  it('asks consent for logs:read next to the highest web analytics scope', async () => {
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const clientId = await registerClient();
+    const details = async (scope: string): Promise<request.Response> =>
+      server()
+        .post('/oauth/authorize/details')
+        .set('Authorization', `Bearer ${setup.token}`)
+        .send(authorizeBody(clientId, scope));
+
+    expect(
+      (
+        (await details('webAnalytics:read webAnalytics:write logs:read')).body as {
+          scopes: string[];
+        }
+      ).scopes,
+    ).toEqual(['webAnalytics:write', 'logs:read']);
+    expect(((await details('logs:read')).body as { scopes: string[] }).scopes).toEqual([
+      'logs:read',
+    ]);
+    expect((await details('logs:write')).status).toBe(400);
   });
 
   it('advertises OAuth on the MCP 401', async () => {
