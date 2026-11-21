@@ -222,12 +222,13 @@ describe('Web analytics (writes)', () => {
         },
       });
       const pageview = event({ props: { mode: 'zen' } });
+      const interaction = event({ name: 'interaction', props: { mode: 'zen' } });
       const text = event({ name: 'listen', props: 'remote=yes' });
       const list = event({ name: 'listen', props: ['yes'] });
       const legacy = event({ name: 'legacy' });
-      expect((await collect(batch(site.id, [pageview, start, text, list, legacy]))).status).toBe(
-        202,
-      );
+      expect(
+        (await collect(batch(site.id, [pageview, interaction, start, text, list, legacy]))).status,
+      ).toBe(202);
       await bootstrap.app.get(WebAnalyticsIngestionService).processQueue();
       const result = await bootstrap.clickhouseClient.query({
         query: 'SELECT toString(id) AS id, props FROM web_events FINAL',
@@ -250,7 +251,8 @@ describe('Web analytics (writes)', () => {
         k9: '9',
         k10: '10',
       });
-      for (const plain of [pageview, text, list, legacy]) expect(props.get(plain.id)).toEqual({});
+      for (const plain of [pageview, interaction, text, list, legacy])
+        expect(props.get(plain.id)).toEqual({});
     });
 
     it('counts property values past 500 per key as (other) and drops keys past 50 per site, within the retention', async () => {

@@ -203,6 +203,48 @@ describe('Web analytics (days)', () => {
     ]);
   });
 
+  it('counts a visit as stayed after an interaction or 10 seconds, never after a custom event or a short page leave, and never offers the interaction as a goal', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const site = await configure(setup.cluster.id, setup.token);
+    const base = row(setup.cluster.id, site.id);
+    await insert([
+      event(base, 'g', '2026-10-02 09:00:00.000'),
+      event(base, 'g', '2026-10-02 09:00:01.000', { name: 'section_viewed' }),
+      event(base, 'h', '2026-10-02 09:10:00.000'),
+      event(base, 'h', '2026-10-02 09:10:04.000', { name: 'interaction' }),
+      event(base, 'i', '2026-10-02 09:20:00.000'),
+      event(base, 'i', '2026-10-02 09:20:09.000', { name: 'pageleave' }),
+      event(base, 'j', '2026-10-02 09:30:00.000'),
+      event(base, 'j', '2026-10-02 09:30:10.000', { name: 'pageleave' }),
+    ]);
+
+    // when
+    const visits = await get(setup.cluster.id, setup.token, '/days/2026-10-02/visits');
+    const days = await get(setup.cluster.id, setup.token, '/days');
+    const candidates = await get(setup.cluster.id, setup.token, '/goals');
+
+    // then
+    expect(
+      (visits.body as WebAnalyticsDayVisitsResponse).visits.map((visit) => [
+        visit.id[0],
+        visit.stayed,
+      ]),
+    ).toEqual([
+      ['j', true],
+      ['i', false],
+      ['h', true],
+      ['g', false],
+    ]);
+    expect(
+      (days.body as WebAnalyticsDaysResponse).days.find((day) => day.date === '2026-10-02'),
+    ).toMatchObject({ visits: 4, stayed: 2 });
+    expect(candidates.body as WebAnalyticsGoalsResponse).toEqual({
+      goals: [{ name: 'section_viewed', visits: 1 }],
+      picked: ['section_viewed'],
+    });
+  });
+
   it('reads a day by hour, source and landing page, next to the same weekday of the 4 weeks before up to the same time', async () => {
     const { setup, base } = await seed();
     await insert([

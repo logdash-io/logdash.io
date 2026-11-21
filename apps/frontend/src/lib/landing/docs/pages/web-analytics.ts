@@ -56,7 +56,11 @@ export const page: DocPage = {
         ],
         [
           '`pageleave`',
-          'When the visitor leaves the page, for session time and exit pages.',
+          'When the visitor leaves the page or hides it, such as by switching tabs or apps, for session time and exit pages.',
+        ],
+        [
+          '`interaction`',
+          'On the first click, tap or typed key on each page. Scrolling and browser shortcuts do not count. A visit with an interaction is not a bounce.',
         ],
         [
           '`browser_error`',

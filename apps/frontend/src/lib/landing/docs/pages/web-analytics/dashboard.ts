@@ -24,7 +24,7 @@ export const page: DocPage = {
     },
     {
       type: 'paragraph',
-      text: 'A visit stayed when it viewed 2 or more pages, sent a custom event, or lasted 10 seconds or more.',
+      text: 'A visit stayed when it viewed 2 or more pages, had a click, tap or typed key, or lasted 10 seconds or more. Scrolling and custom events do not count, so an event your site sends by itself on load never hides a bounce.',
     },
     { type: 'heading', text: 'Above or below usual' },
     {
@@ -45,7 +45,7 @@ export const page: DocPage = {
     { type: 'heading', text: 'Goals' },
     {
       type: 'paragraph',
-      text: 'Pick the goals with **Goals** in the toolbar, one column each: the primary goal, what success means for your site, then up to 9 more. Everyone on the domain sees the same pick. Until you pick, the dashboard shows the 2 goals reached most in the last 28 days.',
+      text: 'Pick the goals with **Goals** in the toolbar, one column each: the primary goal, what success means for your site, then up to 9 more. Everyone on the domain sees the same pick. Until you pick, the dashboard shows the 2 goals reached most in the last 28 days. The **Goals** card shows the same goals first, then your other custom events, and conversion counts only the goals.',
     },
     {
       type: 'paragraph',

@@ -29,7 +29,7 @@ export const CLICK_IDS = [
   'rdt_cid',
 ];
 
-export const BUILT_IN_EVENTS = ['pageview', 'pageleave', 'browser_error'];
+export const BUILT_IN_EVENTS = ['pageview', 'pageleave', 'interaction', 'browser_error'];
 
 export const EVENT_NAME = /^[a-z][a-z0-9_]{0,63}$/;
 

@@ -348,7 +348,7 @@ export class McpToolsService {
       name: 'overview',
       title: 'Traffic overview',
       description:
-        'Visits, people, pageviews, sessions, bounce rate, session length and conversion with the previous period, visits over time, and the top 5 of every breakdown.',
+        'Visits, people, pageviews, sessions, bounce rate, session length and conversion to the saved goals (null with none saved) with the previous period, visits over time, the top 5 of every breakdown, each saved goal with its conversion, and the top 5 other custom events.',
       action: Action.Read,
       args: McpRangeArgs,
       inputSchema: object({ clusterId: CLUSTER_ID, days: DAYS, tz: TZ, filter: FILTER }, [
@@ -825,14 +825,24 @@ export class McpToolsService {
         visitors: point.visitors,
         pageviews: point.pageviews,
       })),
-      top: Object.fromEntries(
-        WEB_ANALYTICS_BREAKDOWNS.map((name) => [
-          name,
-          report.breakdowns[name]
-            .slice(0, 5)
-            .map((row) => ({ name: row.name, visitors: row.visitors })),
-        ]),
-      ),
+      top: {
+        ...Object.fromEntries(
+          WEB_ANALYTICS_BREAKDOWNS.map((name) => [
+            name,
+            report.breakdowns[name]
+              .slice(0, 5)
+              .map((row) => ({ name: row.name, visitors: row.visitors })),
+          ]),
+        ),
+        goals: report.goals.map((row) => ({
+          ...row,
+          conversion: percent(row.visitors, report.summary.visitors),
+        })),
+        events: report.breakdowns.goals
+          .filter((row) => !report.goals.some((goal) => goal.name === row.name))
+          .slice(0, 5)
+          .map((row) => ({ name: row.name, visitors: row.visitors })),
+      },
     };
   }
 
