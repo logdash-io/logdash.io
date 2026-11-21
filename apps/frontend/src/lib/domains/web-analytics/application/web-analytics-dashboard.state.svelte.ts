@@ -44,13 +44,14 @@ export class WebAnalyticsDashboardState {
     );
   }
 
-  public async load(range: WebAnalyticsRange): Promise<void> {
+  public async load(range: WebAnalyticsRange, goals: string[]): Promise<void> {
     const generation = ++this.generation;
     this.loading = true;
     try {
       const report = await WebAnalyticsService.readReport(
         this.clusterId,
         range,
+        goals,
       );
       if (generation !== this.generation) return;
       this.report = report;

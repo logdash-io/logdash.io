@@ -96,6 +96,7 @@ describe('POST /events', () => {
     const statuses = [
       (await track('ldi_unknown', { name: 'agent_run' })).status,
       (await track(key, { name: 'pageview' })).status,
+      (await track(key, { name: 'interaction' })).status,
       (await track(key, { name: 'Agent run' })).status,
       (await track(key, { name: 'agent_run', userId: 'alice@example.com' })).status,
       (await track(key, { name: 'agent_run', userId: true })).status,
@@ -103,7 +104,7 @@ describe('POST /events', () => {
     await flush();
 
     // then
-    expect(statuses).toEqual([401, 400, 400, 400, 400]);
+    expect(statuses).toEqual([401, 400, 400, 400, 400, 400]);
     expect(await stored()).toEqual([]);
   });
 

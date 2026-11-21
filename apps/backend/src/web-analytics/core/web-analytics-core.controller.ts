@@ -37,6 +37,7 @@ import {
   ReadWebAnalyticsDayVisitsQuery,
   ReadWebAnalyticsFunnelQuery,
   ReadWebAnalyticsQuery,
+  ReadWebAnalyticsReportQuery,
   ReadWebAnalyticsSchemaQuery,
   ReadWebAnalyticsTimeZoneQuery,
   ReadWebAnalyticsVisitorsQuery,
@@ -132,7 +133,7 @@ export class WebAnalyticsCoreController {
   @ApiResponse({ type: WebAnalyticsResponse })
   public async report(
     @Param('clusterId') clusterId: string,
-    @Query() query: ReadWebAnalyticsQuery,
+    @Query() query: ReadWebAnalyticsReportQuery,
   ): Promise<WebAnalyticsResponse> {
     return this.read.readReport(clusterId, query, await this.retentionDays(clusterId));
   }

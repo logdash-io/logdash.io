@@ -110,9 +110,12 @@ export class WebAnalyticsService {
   public static async readReport(
     clusterId: string,
     range: WebAnalyticsRange,
+    goals: string[],
   ): Promise<WebAnalyticsReport> {
+    const search = query(range);
+    for (const goal of goals) search.append('goal', goal);
     return httpClient.get<WebAnalyticsReport>(
-      `/clusters/${clusterId}/web_analytics?${query(range)}`,
+      `/clusters/${clusterId}/web_analytics?${search}`,
     );
   }
 

@@ -98,7 +98,7 @@ export const page: DocPage = {
     {
       type: 'list',
       items: [
-        'the event name: `pageview`, `pageleave`, `browser_error` or one of your custom events. `browser_error` carries no error message or stack trace.',
+        'the event name: `pageview`, `pageleave`, `interaction`, `browser_error` or one of your custom events. `browser_error` carries no error message or stack trace.',
         'for custom events, the properties you pass to `track`, after the checks described above.',
         'the host name and path of the page, without query string or fragment. Path segments that contain `@` become `:redacted`, and segments that look like database IDs, UUIDs or numbers of four or more digits become `:id`.',
         'the host name of the referring site, UTM source, medium, campaign, term and content, with `ref`, `via` or `source` as the source when `utm_source` is missing, and the name of an ad click ID parameter such as `gclid`, never its value. They come from the first event of the session.',

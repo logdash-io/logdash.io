@@ -214,8 +214,9 @@
   });
 
   $effect(() => {
-    if (!traffic) return;
+    if (!traffic || !params) return;
     void range;
+    void picked;
     untrack(loadReport);
   });
 
@@ -256,10 +257,11 @@
   }
 
   function loadReport(): void {
-    const key = JSON.stringify(range);
+    if (!params) return;
+    const key = JSON.stringify([range, picked]);
     if (key === reportKey) return;
     reportKey = key;
-    void analytics.load(range);
+    void analytics.load(range, picked);
   }
 
   function refresh(force = false): void {

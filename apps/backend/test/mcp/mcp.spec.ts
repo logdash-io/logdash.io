@@ -453,6 +453,11 @@ describe('MCP server', () => {
 
     // when
     const described = (await call(key, 'describe', { days: 7 })).json;
+    await request(bootstrap.app.getHttpServer())
+      .put(`/clusters/${clusterId}/web_analytics/goals`)
+      .set('Authorization', `Bearer ${setup.token}`)
+      .send({ goals: ['malini_desktop_first_open'] })
+      .expect(200);
     const overview = (await call(key, 'overview', { clusterId, days: 7 })).json;
     const campaigns = (
       await call(key, 'breakdown', {
@@ -554,8 +559,15 @@ describe('MCP server', () => {
       from: '2026-09-25',
       to: '2026-10-02',
       summary: { pageviews: 3 },
-      top: { sources: [{ name: 'reddit', visitors: 3 }] },
+      top: {
+        sources: [{ name: 'reddit', visitors: 3 }],
+        goals: [{ name: 'malini_desktop_first_open', visitors: 1, count: 3 }],
+      },
     });
+    const top = overview.top as { goals: { conversion: number }[]; events: { name: string }[] };
+    expect(top.goals[0].conversion).toBeGreaterThan(0);
+    expect(top.events.map((event) => event.name)).not.toContain('malini_desktop_first_open');
+    expect(top.events).toHaveLength(4);
     expect((overview.series as unknown[]).length).toBe(8);
     expect(campaigns).toEqual({
       dimension: 'campaigns',

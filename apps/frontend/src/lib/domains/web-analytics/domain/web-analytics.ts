@@ -67,7 +67,7 @@ export interface WebAnalyticsSummary {
   sessions: number;
   bounceRate: number;
   sessionSeconds: number;
-  conversionRate: number;
+  conversionRate: number | null;
 }
 
 export interface WebAnalyticsPoint {
@@ -94,6 +94,7 @@ export interface WebAnalyticsReport {
   previous: WebAnalyticsSummary;
   series: WebAnalyticsPoint[];
   previousSeries?: WebAnalyticsPoint[];
+  goals: WebAnalyticsBreakdownRow[];
   goalSeries: { name: string; counts: number[] }[];
   online: number;
   breakdowns: Record<WebAnalyticsBreakdownName, WebAnalyticsBreakdownRow[]>;
