@@ -3,10 +3,17 @@ import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate, ValidationError } from 'class-validator';
 import { ClusterReadService } from '../../cluster/read/cluster-read.service';
 import { ClusterNormalized } from '../../cluster/core/entities/cluster.interface';
+import { projectTierFromClusterTier } from '../../cluster/core/enums/cluster-tier.enum';
+import { LogLevel } from '../../log/core/enums/log-level.enum';
+import { LogReadDirection } from '../../log/core/enums/log-read-direction.enum';
+import { LogReadService } from '../../log/read/log-read.service';
+import { ProjectNormalized } from '../../project/core/entities/project.interface';
+import { ProjectReadService } from '../../project/read/project-read.service';
 import { RequestUser } from '../../auth/core/types/authenticated-request.type';
 import { Action, ACTION_RANK } from '../../personal-api-key/core/enums/action.enum';
 import { Resource } from '../../personal-api-key/core/enums/resource.enum';
 import { getClusterPlanConfig } from '../../shared/configs/cluster-plan-configs';
+import { getProjectPlanConfig } from '../../shared/configs/project-plan-configs';
 import { EVENT_NAME, PROP_KEY } from '../../web-analytics/core/dto/collect-web-events.body';
 import {
   ReadWebAnalyticsQuery,
@@ -46,6 +53,7 @@ import {
   McpDistributionArgs,
   McpEventsFunnelArgs,
   McpInsightIdArgs,
+  McpLogsSearchArgs,
   McpPersonFunnelArgs,
   McpRangeArgs,
   McpReorderInsightsArgs,
@@ -66,16 +74,20 @@ export type McpToolDefinition = {
   annotations: { readOnlyHint: boolean; destructiveHint?: boolean; idempotentHint?: boolean };
 };
 
-type McpContext = { user: RequestUser; reach: ClusterNormalized[] };
+type McpContext = { user: RequestUser; member: ClusterNormalized[]; reach: ClusterNormalized[] };
 
 type McpTool = McpToolDefinition & {
+  resources: Resource[];
   action: Action;
   call: (plain: unknown, context: McpContext) => Promise<unknown>;
 };
 
 type McpCluster = { id: string; retentionDays: number };
 
+type McpProject = ProjectNormalized & { retentionHours: number };
+
 const DAY_MS = 86_400_000;
+const HOUR_MS = 3_600_000;
 
 const object = (
   properties: Record<string, unknown>,
@@ -333,9 +345,10 @@ export class McpToolsService {
   private readonly tools: McpTool[] = [
     this.tool({
       name: 'describe',
-      title: 'Describe web analytics',
+      title: 'Describe domains and projects',
       description:
-        'Start here. Lists the domains this key reaches with their site origins, goals, saved insight count and plan retention, and for each site the custom event names with counts and property keys in the range.',
+        'Start here. With the webAnalytics:read scope, lists the domains this key reaches with their site origins, goals, saved insight count and plan retention, and for each site the custom event names with counts and property keys in the range. With the logs:read scope, lists the projects whose logs this key reaches with their ids, domains and log retention.',
+      resources: [Resource.WebAnalytics, Resource.Logs],
       action: Action.Read,
       args: McpDescribeArgs,
       inputSchema: object({
@@ -653,6 +666,41 @@ export class McpToolsService {
         return { deleted: args.insightId };
       },
     }),
+    this.tool({
+      name: 'logs_search',
+      title: 'Search logs',
+      description:
+        'The log lines of one project, newest first, each with createdAt, level, namespace and the full message. Narrow them by level, namespace and words of the message. When nextCursor is not null, pass it as cursor with the same arguments to read older lines.',
+      resources: [Resource.Logs],
+      action: Action.Read,
+      args: McpLogsSearchArgs,
+      inputSchema: object(
+        {
+          projectId: { ...CLUSTER_ID, description: 'The project id from describe' },
+          level: { type: 'string', enum: Object.values(LogLevel) },
+          namespace: { type: 'string', maxLength: 200, description: 'The exact namespace' },
+          namespacePrefix: {
+            type: 'string',
+            maxLength: 200,
+            description: 'The start of the namespace, such as malini@ for every version',
+          },
+          query: {
+            type: 'string',
+            maxLength: 200,
+            description: 'Words the message must all contain, in any order and any case',
+          },
+          days: { ...DAYS, description: 'The last N days, cut to the log retention of the plan' },
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
+          cursor: {
+            type: 'string',
+            maxLength: 100,
+            description: 'The nextCursor of the last call',
+          },
+        },
+        ['projectId'],
+      ),
+      run: (args, context) => this.logsSearch(args, context),
+    }),
   ];
 
   constructor(
@@ -660,11 +708,13 @@ export class McpToolsService {
     private readonly read: WebAnalyticsReadService,
     private readonly insights: WebAnalyticsInsightReadService,
     private readonly write: WebAnalyticsWriteService,
+    private readonly projects: ProjectReadService,
+    private readonly logs: LogReadService,
   ) {}
 
   public list(user: RequestUser): McpToolDefinition[] {
     return this.tools
-      .filter((tool) => this.allows(user, tool.action))
+      .filter((tool) => this.allows(user, tool.resources, tool.action))
       .map(({ name, title, description, inputSchema, annotations }) => ({
         name,
         title,
@@ -681,10 +731,17 @@ export class McpToolsService {
   ): Promise<McpToolContent | null> {
     const tool = this.tools.find((candidate) => candidate.name === name);
     if (!tool) return null;
-    if (!this.allows(user, tool.action))
-      return this.error(`This key lacks the ${Resource.WebAnalytics}:${tool.action} scope`);
+    if (!this.allows(user, tool.resources, tool.action))
+      return this.error(
+        `This key lacks the ${tool.resources.map((resource) => `${resource}:${tool.action}`).join(' or ')} scope`,
+      );
     try {
-      const result = await tool.call(plain ?? {}, { user, reach: await this.reach(user) });
+      const member = await this.clusters.readWhereUserHasAnyRole(user.id);
+      const result = await tool.call(plain ?? {}, {
+        user,
+        member,
+        reach: this.reach(user, member),
+      });
       return { content: [{ type: 'text', text: formatJson(result) }] };
     } catch (error) {
       if (error instanceof HttpException && error.getStatus() < 500)
@@ -694,15 +751,23 @@ export class McpToolsService {
   }
 
   private tool<T extends object>(
-    definition: Omit<McpTool, 'call' | 'annotations'> & {
+    definition: Omit<McpTool, 'call' | 'annotations' | 'resources'> & {
+      resources?: Resource[];
       args: ClassConstructor<T>;
       annotations?: McpToolDefinition['annotations'];
       run: (args: T, context: McpContext) => Promise<unknown>;
     },
   ): McpTool {
-    const { args, run, annotations = READ_ONLY, ...rest } = definition;
+    const {
+      args,
+      run,
+      annotations = READ_ONLY,
+      resources = [Resource.WebAnalytics],
+      ...rest
+    } = definition;
     return {
       ...rest,
+      resources,
       annotations,
       call: async (plain, context) => {
         if (typeof plain !== 'object' || Array.isArray(plain) || plain === null)
@@ -718,19 +783,39 @@ export class McpToolsService {
     };
   }
 
-  private allows(user: RequestUser, action: Action): boolean {
-    const held =
-      user.scopes?.find((scope) => scope.resource === Resource.WebAnalytics)?.action ?? Action.None;
-    return ACTION_RANK[held] >= ACTION_RANK[action];
+  private allows(user: RequestUser, resources: Resource[], action: Action): boolean {
+    return resources.some((resource) => {
+      const held = user.scopes?.find((scope) => scope.resource === resource)?.action ?? Action.None;
+      return ACTION_RANK[held] >= ACTION_RANK[action];
+    });
   }
 
-  private async reach(user: RequestUser): Promise<ClusterNormalized[]> {
+  private reach(user: RequestUser, member: ClusterNormalized[]): ClusterNormalized[] {
     const access = user.access ?? { kind: 'all' };
     if (access.kind === 'projects') return [];
-    const clusters = await this.clusters.readWhereUserHasAnyRole(user.id);
     return access.kind === 'all'
-      ? clusters
-      : clusters.filter((cluster) => access.ids.includes(cluster.id));
+      ? member
+      : member.filter((cluster) => access.ids.includes(cluster.id));
+  }
+
+  private async reachProjects(context: McpContext): Promise<McpProject[]> {
+    const access = context.user.access ?? { kind: 'all' };
+    const tiers = new Map(context.member.map((cluster) => [cluster.id, cluster.tier]));
+    const projects = await this.projects.readByClusterIds([...tiers.keys()]);
+    return projects
+      .filter(
+        (project) =>
+          access.kind === 'all' ||
+          access.ids.includes(access.kind === 'clusters' ? project.clusterId : project.id),
+      )
+      .map((project) => ({
+        ...project,
+        retentionHours: Math.max(
+          ...[project.tier, projectTierFromClusterTier(tiers.get(project.clusterId)!)].map(
+            (tier) => getProjectPlanConfig(tier).logs.retentionHours,
+          ),
+        ),
+      }));
   }
 
   private cluster(context: McpContext, clusterId: string): McpCluster {
@@ -772,32 +857,77 @@ export class McpToolsService {
     const clusters = context.reach.filter(
       (cluster) => !args.clusterId || cluster.id === args.clusterId,
     );
+    const projects = this.allows(context.user, [Resource.Logs], Action.Read)
+      ? await this.reachProjects(context)
+      : undefined;
     return {
       days: args.days,
-      domains: await Promise.all(
-        clusters.map(async (cluster) => {
-          const retentionDays = this.retentionDays(cluster);
-          const site = await this.read.readSiteByClusterId(cluster.id);
-          if (!site)
-            return { clusterId: cluster.id, name: cluster.name, retentionDays, site: null };
-          const [layout, schema] = await Promise.all([
-            this.insights.readLayout(cluster.id),
-            this.insights.readSchema(cluster.id, args.days, retentionDays),
-          ]);
-          return {
-            clusterId: cluster.id,
-            name: cluster.name,
-            retentionDays,
-            site: {
-              origins: site.origins,
-              goals: site.goals,
-              insights: layout.insights.length,
-              views: layout.views.length,
-            },
-            events: schema.events.slice(0, 50),
-          };
-        }),
-      ),
+      projects: projects
+        ?.filter((project) => !args.clusterId || project.clusterId === args.clusterId)
+        .map((project) => ({
+          projectId: project.id,
+          name: project.name,
+          clusterId: project.clusterId,
+          logRetentionDays: project.retentionHours / 24,
+        })),
+      domains: !this.allows(context.user, [Resource.WebAnalytics], Action.Read)
+        ? undefined
+        : await Promise.all(
+            clusters.map(async (cluster) => {
+              const retentionDays = this.retentionDays(cluster);
+              const site = await this.read.readSiteByClusterId(cluster.id);
+              if (!site)
+                return { clusterId: cluster.id, name: cluster.name, retentionDays, site: null };
+              const [layout, schema] = await Promise.all([
+                this.insights.readLayout(cluster.id),
+                this.insights.readSchema(cluster.id, args.days, retentionDays),
+              ]);
+              return {
+                clusterId: cluster.id,
+                name: cluster.name,
+                retentionDays,
+                site: {
+                  origins: site.origins,
+                  goals: site.goals,
+                  insights: layout.insights.length,
+                  views: layout.views.length,
+                },
+                events: schema.events.slice(0, 50),
+              };
+            }),
+          ),
+    };
+  }
+
+  private async logsSearch(args: McpLogsSearchArgs, context: McpContext): Promise<unknown> {
+    const project = (await this.reachProjects(context)).find(({ id }) => id === args.projectId);
+    if (!project) throw new ForbiddenException('This key does not reach that project');
+    const to = new Date();
+    const from = new Date(
+      to.getTime() - Math.min(args.days * DAY_MS, project.retentionHours * HOUR_MS),
+    );
+    const logs = await this.logs.readMany({
+      projectIds: [project.id],
+      level: args.level,
+      namespaces: args.namespace === undefined ? undefined : [args.namespace],
+      namespacePrefix: args.namespacePrefix,
+      searchString: args.query,
+      startDate: from,
+      limit: args.limit,
+      lastId: args.cursor,
+      direction: args.cursor === undefined ? undefined : LogReadDirection.Before,
+    });
+    return {
+      projectId: project.id,
+      from: from.toISOString(),
+      to: to.toISOString(),
+      logs: logs.map(({ createdAt, level, namespace, message }) => ({
+        createdAt,
+        level,
+        namespace: namespace ?? null,
+        message,
+      })),
+      nextCursor: logs.length === args.limit ? logs[logs.length - 1].id : null,
     };
   }
 

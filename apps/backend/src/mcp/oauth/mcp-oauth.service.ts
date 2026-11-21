@@ -322,33 +322,26 @@ export class McpOAuthService {
       typeof value === 'string' && value.trim() !== ''
         ? value.split(' ').filter((entry) => entry.length > 0)
         : [DEFAULT_SCOPE];
-    let action = Action.None;
+    const held = new Map<Resource, Action>();
 
     for (const entry of requested) {
-      const [resource, requestedAction] = entry.split(':');
-
-      if (resource !== String(Resource.WebAnalytics)) {
+      if (!(MCP_OAUTH_SCOPES as readonly string[]).includes(entry)) {
         throw this.oauthError('invalid_scope', `Unsupported scope ${entry}`);
       }
 
-      let parsedAction: Action;
+      const [resource, action] = entry.split(':') as [Resource, Action];
 
-      if (requestedAction === String(Action.Read)) {
-        parsedAction = Action.Read;
-      } else if (requestedAction === String(Action.Write)) {
-        parsedAction = Action.Write;
-      } else {
-        throw this.oauthError('invalid_scope', `Unsupported scope ${entry}`);
-      }
-
-      if (ACTION_RANK[parsedAction] > ACTION_RANK[action]) {
-        action = parsedAction;
+      if (ACTION_RANK[action] > ACTION_RANK[held.get(resource) ?? Action.None]) {
+        held.set(resource, action);
       }
     }
 
-    const scopes: ScopeEntry[] = [{ resource: Resource.WebAnalytics, action }];
+    const scopes: ScopeEntry[] = [...held].map(([resource, action]) => ({ resource, action }));
 
-    return { scopes, scope: `${Resource.WebAnalytics}:${action}` };
+    return {
+      scopes,
+      scope: scopes.map(({ resource, action }) => `${resource}:${action}`).join(' '),
+    };
   }
 
   private parseRedirectUris(value: unknown): string[] {

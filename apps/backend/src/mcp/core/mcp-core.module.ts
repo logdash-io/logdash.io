@@ -1,12 +1,20 @@
 import { Module } from '@nestjs/common';
 import { ClusterReadModule } from '../../cluster/read/cluster-read.module';
+import { LogReadModule } from '../../log/read/log-read.module';
+import { ProjectReadModule } from '../../project/read/project-read.module';
 import { WebAnalyticsReadModule } from '../../web-analytics/read/web-analytics-read.module';
 import { WebAnalyticsWriteModule } from '../../web-analytics/write/web-analytics-write.module';
 import { McpCoreController } from './mcp-core.controller';
 import { McpToolsService } from './mcp-tools.service';
 
 @Module({
-  imports: [ClusterReadModule, WebAnalyticsReadModule, WebAnalyticsWriteModule],
+  imports: [
+    ClusterReadModule,
+    ProjectReadModule,
+    LogReadModule,
+    WebAnalyticsReadModule,
+    WebAnalyticsWriteModule,
+  ],
   controllers: [McpCoreController],
   providers: [McpToolsService],
 })

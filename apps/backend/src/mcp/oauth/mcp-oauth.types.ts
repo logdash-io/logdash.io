@@ -5,7 +5,7 @@ export const MCP_OAUTH_CONSENT_TTL_SECONDS = 10 * 60;
 export const MCP_OAUTH_CODE_TTL_SECONDS = 2 * 60;
 export const MCP_OAUTH_KEY_TTL_DAYS = 30;
 export const MCP_OAUTH_AUTHORIZE_PATH = '/app/authorize-mcp';
-export const MCP_OAUTH_SCOPES = ['webAnalytics:read', 'webAnalytics:write'] as const;
+export const MCP_OAUTH_SCOPES = ['webAnalytics:read', 'webAnalytics:write', 'logs:read'] as const;
 
 export interface McpOAuthClient {
   clientId: string;

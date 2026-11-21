@@ -5,10 +5,13 @@
 
   const { data, form }: PageProps = $props();
 
-  const scopeLabel = (scope: string): string =>
-    scope === 'webAnalytics:write'
-      ? 'Read your analytics and manage your saved insights'
-      : 'Read your analytics';
+  const SCOPE_LABELS: Record<string, string> = {
+    'webAnalytics:read': 'Read your analytics',
+    'webAnalytics:write': 'Read your analytics and manage your saved insights',
+    'logs:read': 'Read your logs',
+  };
+
+  const scopeLabel = (scope: string): string => SCOPE_LABELS[scope] ?? scope;
 </script>
 
 <svelte:head>
@@ -26,7 +29,7 @@
           Authorize {data.consent.clientName}
         </h1>
         <p class="text-fg-tertiary text-sm">
-          {data.consent.clientName} wants to access your Logdash web analytics.
+          {data.consent.clientName} wants to access your Logdash data.
         </p>
       {:else}
         <h1 class="text-xl font-medium">Authorize access</h1>
