@@ -67,7 +67,7 @@ export interface WebAnalyticsSummary {
   sessions: number;
   bounceRate: number;
   sessionSeconds: number;
-  conversionRate: number;
+  conversionRate: number | null;
 }
 
 export interface WebAnalyticsPoint {

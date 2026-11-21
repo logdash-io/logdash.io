@@ -74,7 +74,7 @@ describe('Web analytics (reads)', () => {
       sessions: 0,
       bounceRate: 0,
       sessionSeconds: 0,
-      conversionRate: 0,
+      conversionRate: null,
     });
     expect(data.series).toHaveLength(7);
     expect(data.series[0].time).toBe(Date.parse('2026-09-26T00:00:00Z'));
@@ -192,7 +192,7 @@ describe('Web analytics (reads)', () => {
       sessions: 3,
       bounceRate: (1 / 3) * 100,
       sessionSeconds: Math.round((180 + 0 + 60) / 3),
-      conversionRate: (1 / 3) * 100,
+      conversionRate: null,
     });
     expect(data.previous.visitors).toBe(1);
     expect(data.previous.sessions).toBe(1);
@@ -344,7 +344,7 @@ describe('Web analytics (reads)', () => {
     });
   });
 
-  it('attributes sessions to their start, counts engaged sessions as non-bounces and ignores page leaves', async () => {
+  it('attributes sessions to their start, ends a bounce only with a second page, an interaction or 10 seconds, and ignores page leaves', async () => {
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
     const site = await configure(setup.cluster.id, setup.token);
     const base = row(setup.cluster.id, site.id);
@@ -374,18 +374,20 @@ describe('Web analytics (reads)', () => {
       event('7', '2026-10-02 11:50:00.000'),
       event('7', '2026-10-02 11:59:00.000', 'pageleave'),
       event('8', '2026-10-02 11:58:00.000'),
+      event('9', '2026-09-28 13:00:00.000'),
+      event('9', '2026-09-28 13:00:03.000', 'interaction'),
     ]);
 
     const data = (await get(setup.cluster.id, setup.token, `?${range}`))
       .body as WebAnalyticsResponse;
     expect(data.summary).toEqual({
-      visitors: 6,
+      visitors: 7,
       people: 0,
-      pageviews: 5,
-      sessions: 4,
-      bounceRate: 25,
-      sessionSeconds: Math.round((2 + 15 + 5 + 1830) / 4),
-      conversionRate: (1 / 6) * 100,
+      pageviews: 6,
+      sessions: 5,
+      bounceRate: 40,
+      sessionSeconds: Math.round((2 + 15 + 5 + 1830 + 3) / 5),
+      conversionRate: null,
     });
     expect(data.previous).toEqual({
       visitors: 1,
@@ -394,17 +396,17 @@ describe('Web analytics (reads)', () => {
       sessions: 1,
       bounceRate: 0,
       sessionSeconds: 2400,
-      conversionRate: 0,
+      conversionRate: null,
     });
     expect(data.online).toBe(1);
     expect(data.breakdowns.goals).toEqual([{ name: 'signup_completed', visitors: 1, count: 1 }]);
     expect(data.goalSeries.map((goal) => goal.name)).toEqual(['signup_completed']);
     expect(data.breakdowns.entryPages).toEqual([
-      { name: '/', visitors: 3, count: 3 },
+      { name: '/', visitors: 4, count: 4 },
       { name: '/start', visitors: 1, count: 1 },
     ]);
     expect(data.breakdowns.exitPages).toEqual([
-      { name: '/', visitors: 3, count: 3 },
+      { name: '/', visitors: 4, count: 4 },
       { name: '/end', visitors: 1, count: 1 },
     ]);
 
@@ -414,13 +416,21 @@ describe('Web analytics (reads)', () => {
     const journeys = (await get(setup.cluster.id, setup.token, `/journeys?${range}`))
       .body as WebAnalyticsJourneysResponse;
     expect(journeys.journeys).toEqual([{ steps: ['/start', '/end'], sessions: 1 }]);
-    const funnel = (
-      await get(setup.cluster.id, setup.token, `/funnel?${range}&step=page:/&step=goal:pageleave`)
-    ).body as WebAnalyticsFunnelResponse;
-    expect(funnel.steps.map((step) => step.visitors)).toEqual([3, 0]);
-    const timeline = (await get(setup.cluster.id, setup.token, `/visitors/${'3'.repeat(64)}`))
-      .body as WebAnalyticsVisitorResponse;
-    expect(timeline.events.map((item) => item.name)).toEqual(['pageview']);
+    for (const builtIn of ['pageleave', 'interaction']) {
+      const funnel = (
+        await get(
+          setup.cluster.id,
+          setup.token,
+          `/funnel?${range}&step=page:/&step=goal:${builtIn}`,
+        )
+      ).body as WebAnalyticsFunnelResponse;
+      expect(funnel.steps.map((step) => step.visitors)).toEqual([4, 0]);
+    }
+    for (const visitor of ['3', '9']) {
+      const timeline = (await get(setup.cluster.id, setup.token, `/visitors/${visitor.repeat(64)}`))
+        .body as WebAnalyticsVisitorResponse;
+      expect(timeline.events.map((item) => item.name)).toEqual(['pageview']);
+    }
   });
 
   it('counts an identified user once in people, profiles, funnels and goal filters, and once per day in visits', async () => {
@@ -621,6 +631,43 @@ describe('Web analytics (reads)', () => {
       people: 0,
       conversionRate: 100,
     });
+  });
+
+  it('converts only visits that reached a saved goal, not any custom event', async () => {
+    // given
+    const setup = await bootstrap.utils.generalUtils.setupAnonymous();
+    const site = await configure(setup.cluster.id, setup.token);
+    const base = row(setup.cluster.id, site.id);
+    const event = (visitor: string, name: string) => ({
+      ...base,
+      id: randomUUID(),
+      visitor_id: visitor.repeat(64),
+      session_id: visitor.repeat(64),
+      name,
+    });
+    await insert([
+      event('a', 'pageview'),
+      event('a', 'section_viewed'),
+      event('b', 'pageview'),
+      event('b', 'download_started'),
+      event('c', 'pageview'),
+    ]);
+    const unsaved = (await get(setup.cluster.id, setup.token, `?${week}`))
+      .body as WebAnalyticsResponse;
+
+    // when
+    await request(bootstrap.app.getHttpServer())
+      .put(`/clusters/${setup.cluster.id}/web_analytics/goals`)
+      .set('Authorization', `Bearer ${setup.token}`)
+      .send({ goals: ['download_started'] })
+      .expect(200);
+    const saved = (await get(setup.cluster.id, setup.token, `?${week}`))
+      .body as WebAnalyticsResponse;
+
+    // then
+    expect(unsaved.summary.conversionRate).toBeNull();
+    expect(saved.summary.conversionRate).toBe((1 / 3) * 100);
+    expect(saved.previous.conversionRate).toBe(0);
   });
 
   async function configure(clusterId: string, token: string): Promise<WebAnalyticsSiteSerialized> {

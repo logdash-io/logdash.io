@@ -24,7 +24,7 @@ export const page: DocPage = {
     },
     {
       type: 'paragraph',
-      text: 'A visit stayed when it viewed 2 or more pages, sent a custom event, or lasted 10 seconds or more.',
+      text: 'A visit stayed when it viewed 2 or more pages, had a click, tap or typed key, or lasted 10 seconds or more. Scrolling and custom events do not count, so an event your site sends by itself on load never hides a bounce.',
     },
     { type: 'heading', text: 'Above or below usual' },
     {

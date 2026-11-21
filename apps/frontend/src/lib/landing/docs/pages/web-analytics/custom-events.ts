@@ -55,7 +55,7 @@ export const page: DocPage = {
       type: 'list',
       items: [
         'Invalid properties are dropped with one console warning per page load, and the event is still sent. The API checks every request against the same rules.',
-        'Only custom events carry properties. `pageview`, `pageleave` and `browser_error` never do.',
+        'Only custom events carry properties. `pageview`, `pageleave`, `interaction` and `browser_error` never do.',
       ],
     },
     {

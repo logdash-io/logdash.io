@@ -226,6 +226,77 @@ test('sends a page leave on page hide and a fresh pageview after a back-forward 
   ]);
 });
 
+test('sends a page leave once each time the page is hidden, for browsers that skip page hide', async ({
+  page,
+}) => {
+  const batches = await install(page);
+  await page.goto('https://app.example/pricing');
+  await expect.poll(() => batches.length).toBe(1);
+  await page.evaluate(() => {
+    const show = (state: string): void => {
+      Object.defineProperty(document, 'visibilityState', {
+        value: state,
+        configurable: true,
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    };
+    show('hidden');
+    window.dispatchEvent(new Event('pagehide'));
+    show('visible');
+    show('hidden');
+    show('hidden');
+  });
+  await call(page, 'track', 'marker');
+  await expect.poll(() => named(batches, 'marker').length).toBe(1);
+  expect(named(batches, 'pageleave')).toHaveLength(2);
+  expect(batches[1].events.map((event) => event.name)).toEqual(['pageleave']);
+});
+
+test('sends one interaction per page for a click, a typed key or an input, never for scrolling, shortcuts or scripted clicks', async ({
+  page,
+}) => {
+  const batches = await install(page);
+  await page.goto('https://app.example/');
+  await expect.poll(() => batches.length).toBe(1);
+  await page.mouse.wheel(0, 400);
+  for (const key of [
+    'Space',
+    'ArrowDown',
+    'PageDown',
+    'End',
+    'Tab',
+    'Shift',
+    'Meta+c',
+    'Control+c',
+    'Alt+a',
+  ])
+    await page.keyboard.press(key);
+  await page.evaluate(() => document.body.click());
+  await call(page, 'track', 'marker');
+  await expect.poll(() => named(batches, 'marker').length).toBe(1);
+  expect(named(batches, 'interaction')).toEqual([]);
+
+  await page.mouse.click(5, 5);
+  await page.mouse.click(5, 5);
+  await page.keyboard.press('a');
+  await page.evaluate(() => history.pushState({}, '', '/pricing'));
+  await page.keyboard.press('k');
+  await page.evaluate(() => {
+    document.body.insertAdjacentHTML('beforeend', '<input id="email" />');
+    history.pushState({}, '', '/signup');
+  });
+  await page.fill('#email', 'pasted');
+  await call(page, 'track', 'done');
+  await expect.poll(() => named(batches, 'done').length).toBe(1);
+  expect(
+    named(batches, 'interaction').map((event) => [event.path, event.props]),
+  ).toEqual([
+    ['/', undefined],
+    ['/pricing', undefined],
+    ['/signup', undefined],
+  ]);
+});
+
 test('tracks SPA navigation once per path and ignores invalid event names', async ({
   page,
 }) => {

@@ -348,7 +348,7 @@ export class McpToolsService {
       name: 'overview',
       title: 'Traffic overview',
       description:
-        'Visits, people, pageviews, sessions, bounce rate, session length and conversion with the previous period, visits over time, and the top 5 of every breakdown.',
+        'Visits, people, pageviews, sessions, bounce rate, session length and conversion to the saved goals (null with none saved) with the previous period, visits over time, and the top 5 of every breakdown.',
       action: Action.Read,
       args: McpRangeArgs,
       inputSchema: object({ clusterId: CLUSTER_ID, days: DAYS, tz: TZ, filter: FILTER }, [

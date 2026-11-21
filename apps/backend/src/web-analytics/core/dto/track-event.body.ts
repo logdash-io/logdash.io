@@ -8,7 +8,7 @@ export class TrackEventBody {
   @ApiProperty({
     example: 'agent_run',
     description:
-      'Matches [a-z][a-z0-9_]{0,63}. pageview, pageleave and browser_error belong to the website tracker.',
+      'Matches [a-z][a-z0-9_]{0,63}. pageview, pageleave, interaction and browser_error belong to the website tracker.',
   })
   @Matches(EVENT_NAME)
   @IsNotIn(BUILT_IN_EVENTS)

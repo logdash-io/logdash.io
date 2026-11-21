@@ -81,7 +81,7 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
         ],
         [
           '`overview`',
-          'Visits, people, pageviews, bounce rate, session length and conversion against the period before, with the top 5 of every breakdown.',
+          'Visits, people, pageviews, bounce rate, session length and conversion to your saved goals against the period before, with the top 5 of every breakdown.',
         ],
         [
           '`breakdown`',

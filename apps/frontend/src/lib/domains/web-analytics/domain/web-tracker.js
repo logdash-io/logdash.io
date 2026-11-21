@@ -42,13 +42,18 @@
   let identifyCalls = 0;
   let warnedProps = false;
   let restoreHistory = [];
+  let interacted = false;
+  let left = false;
   const listeners = [
     [window, 'popstate', pageview],
     [window, 'pageshow', onPageShow],
-    [window, 'pagehide', onPageHide],
+    [window, 'pagehide', leave],
     [document, 'visibilitychange', onVisibilityChange],
     [window, 'error', onError],
     [window, 'unhandledrejection', onError],
+    [document, 'click', onInteraction, true],
+    [document, 'input', onInteraction, true],
+    [document, 'keydown', onInteraction, true],
   ];
 
   window.logdash = { track, identify, optOut, optIn, stop: optOut };
@@ -79,7 +84,9 @@
     if (input === undefined || input === null) return;
     const props = {};
     let dropped =
-      ['pageview', 'pageleave', 'browser_error'].includes(name) ||
+      ['pageview', 'pageleave', 'interaction', 'browser_error'].includes(
+        name,
+      ) ||
       typeof input !== 'object' ||
       Array.isArray(input);
     try {
@@ -157,8 +164,8 @@
     active = true;
     lastPath = undefined;
     restoreHistory = ['pushState', 'replaceState'].map(patchHistory);
-    for (const [target, type, listener] of listeners)
-      target.addEventListener(type, listener);
+    for (const [target, type, listener, capture] of listeners)
+      target.addEventListener(type, listener, capture);
     pageview();
   }
 
@@ -168,8 +175,8 @@
     clearTimeout(timer);
     timer = undefined;
     for (const restore of restoreHistory) restore();
-    for (const [target, type, listener] of listeners)
-      target.removeEventListener(type, listener);
+    for (const [target, type, listener, capture] of listeners)
+      target.removeEventListener(type, listener, capture);
   }
 
   function patchHistory(method) {
@@ -187,6 +194,8 @@
   function pageview() {
     if (!active || lastPath === location.pathname) return;
     lastPath = location.pathname;
+    interacted = false;
+    left = false;
     track('pageview');
   }
 
@@ -321,13 +330,30 @@
     }
   }
 
-  function onPageHide() {
-    track('pageleave');
+  function leave() {
+    if (!left) track('pageleave');
+    left = true;
     void flush(true);
   }
 
   function onVisibilityChange() {
-    if (document.visibilityState === 'hidden') void flush(true);
+    if (document.visibilityState === 'hidden') leave();
+    else left = false;
+  }
+
+  function onInteraction(event) {
+    if (
+      interacted ||
+      !event.isTrusted ||
+      (event.type === 'keydown' &&
+        (event.ctrlKey ||
+          event.metaKey ||
+          event.altKey ||
+          !/^\S$/u.test(event.key)))
+    )
+      return;
+    interacted = true;
+    track('interaction');
   }
 
   function onPageShow(event) {

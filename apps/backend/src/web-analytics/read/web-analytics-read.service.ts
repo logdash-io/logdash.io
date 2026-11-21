@@ -36,6 +36,7 @@ import { RedisService } from '../../shared/redis/redis.service';
 import { ClickhouseUtils } from '../../clickhouse/clickhouse.utils';
 import { LogReadService } from '../../log/read/log-read.service';
 import { ProjectReadService } from '../../project/read/project-read.service';
+import { BUILT_IN_EVENTS } from '../core/dto/collect-web-events.body';
 import { WEB_ANALYTICS_CHANNEL as CHANNEL } from './web-analytics-channel';
 
 const REFERRER = `if(referrer != '', referrer, 'Direct')`;
@@ -85,7 +86,7 @@ const PAGEVIEW_BREAKDOWNS: Record<
   devices: 'device',
 };
 
-export const NOT_A_GOAL = `('pageview', 'pageleave', 'browser_error')`;
+export const NOT_A_GOAL = `(${BUILT_IN_EVENTS.map((name) => `'${name}'`).join(', ')})`;
 
 const BUCKETS: Record<WebAnalyticsGranularity, { start: string; add: string; ms: number }> = {
   [WebAnalyticsGranularity.Hour]: { start: 'toStartOfHour', add: 'addHours', ms: 3_600_000 },
@@ -196,10 +197,11 @@ export class WebAnalyticsReadService {
     retentionDays: number,
   ): Promise<WebAnalyticsResponse> {
     const scope = this.scope(clusterId, query, retentionDays);
+    const goals = (await this.readSiteByClusterId(clusterId))?.goals ?? [];
     const [summary, previous, series, previousSeries, online, breakdowns, apps] = await Promise.all(
       [
-        this.readSummary(scope, scope.params),
-        this.readSummary(scope, scope.previousParams),
+        this.readSummary(scope, scope.params, goals),
+        this.readSummary(scope, scope.previousParams, goals),
         this.readSeries(scope, scope.params),
         query.compare ? this.readSeries(scope, scope.previousParams) : undefined,
         this.readOnline([clusterId]),
@@ -308,7 +310,7 @@ export class WebAnalyticsReadService {
         source: string;
       }>(
         `SELECT created_at AS time, name, path, hostname, app, session_id, ${SOURCE} AS source
-        FROM web_events FINAL WHERE ${where} AND name != 'pageleave' ORDER BY created_at DESC LIMIT 300`,
+        FROM web_events FINAL WHERE ${where} AND name NOT IN ('pageleave', 'interaction') ORDER BY created_at DESC LIMIT 300`,
         params,
       ),
     ]);
@@ -604,14 +606,15 @@ export class WebAnalyticsReadService {
   private async readSummary(
     scope: Scope,
     params: Record<string, unknown>,
+    goals: string[],
   ): Promise<WebAnalyticsSummary> {
     const [events, sessions] = await Promise.all([
       this.query<{ visitors: string; people: string; pageviews: string; converted: string }>(
         `SELECT uniqExact(${VISIT}) AS visitors, ${PEOPLE} AS people,
           countIf(name = 'pageview') AS pageviews,
-          uniqExactIf(${VISIT}, name NOT IN ${NOT_A_GOAL}) AS converted
+          uniqExactIf(${VISIT}, name IN {goals:Array(String)}) AS converted
         FROM web_events FINAL WHERE ${scope.where}`,
-        params,
+        { ...params, goals },
       ),
       this.query<{ sessions: string; bounces: string; duration: number | null }>(
         `SELECT count() AS sessions, countIf(bounce) AS bounces, avgOrNull(duration) AS duration
@@ -628,7 +631,11 @@ export class WebAnalyticsReadService {
       sessions: sessionCount,
       bounceRate: sessionCount ? (Number(sessions[0].bounces) / sessionCount) * 100 : 0,
       sessionSeconds: Math.round(sessions[0]?.duration ?? 0),
-      conversionRate: visitors ? (Number(events[0].converted) / visitors) * 100 : 0,
+      conversionRate: !goals.length
+        ? null
+        : visitors
+          ? (Number(events[0].converted) / visitors) * 100
+          : 0,
     };
   }
 
@@ -698,7 +705,7 @@ export class WebAnalyticsReadService {
     }>(
       `SELECT ${APP} AS label, min(app = '') AS website, uniqExact(${VISIT}) AS visitors,
         ${PEOPLE} AS people, count() AS count
-      FROM web_events FINAL WHERE ${scope.where} AND name != 'pageleave'
+      FROM web_events FINAL WHERE ${scope.where} AND name NOT IN ('pageleave', 'interaction')
       GROUP BY label ORDER BY visitors DESC, count DESC, label ASC LIMIT 50`,
       scope.params,
     );
@@ -781,7 +788,7 @@ export class WebAnalyticsReadService {
     return `SELECT any(${PERSON}) AS visitor, min(created_at) AS started_at,
         countIf(name = 'pageview') AS pageviews,
         dateDiff('millisecond', started_at, max(created_at)) / 1000 AS duration,
-        NOT (pageviews > 1 OR countIf(name NOT IN ${NOT_A_GOAL}) > 0 OR duration >= 10) AS bounce,
+        NOT (pageviews > 1 OR countIf(name = 'interaction') > 0 OR duration >= 10) AS bounce,
         argMinIf(path, created_at, name = 'pageview') AS entry_page,
         argMaxIf(path, created_at, name = 'pageview') AS exit_page,
         arraySlice(arrayMap(entry -> entry.2, arraySort(groupArrayIf((created_at, path), name = 'pageview'))), 1, 5) AS steps

@@ -79,14 +79,21 @@ export class WebAnalyticsSummary {
   @ApiProperty()
   sessions: number;
 
-  @ApiProperty({ description: 'Share of sessions with at most one pageview, 0 to 100' })
+  @ApiProperty({
+    description:
+      'Share of sessions with one pageview, no click, tap or typed key, and under 10 seconds, 0 to 100',
+  })
   bounceRate: number;
 
   @ApiProperty({ description: 'Average time between the first and last event of a session' })
   sessionSeconds: number;
 
-  @ApiProperty({ description: 'Share of visits with any goal, 0 to 100' })
-  conversionRate: number;
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    description: 'Share of visits with any saved goal, 0 to 100, or null with no goals saved',
+  })
+  conversionRate: number | null;
 }
 
 export class WebAnalyticsPoint {
@@ -417,7 +424,8 @@ export class WebAnalyticsDayCounts {
   visits: number;
 
   @ApiProperty({
-    description: 'Visits with 2 or more pageviews, a custom event, or 10 seconds or more',
+    description:
+      'Visits with 2 or more pageviews, a click, tap or typed key, or 10 seconds or more',
   })
   stayed: number;
 
