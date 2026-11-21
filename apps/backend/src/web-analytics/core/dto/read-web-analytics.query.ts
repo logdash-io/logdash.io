@@ -163,6 +163,23 @@ export class ReadWebAnalyticsQuery extends ReadWebAnalyticsFilterQuery {
   compare: boolean = false;
 }
 
+export class ReadWebAnalyticsReportQuery extends ReadWebAnalyticsQuery {
+  @ApiPropertyOptional({
+    type: String,
+    isArray: true,
+    example: ['signup', 'download'],
+    description:
+      'Up to 10 goals, by custom event name, for conversion and the goal rows. Defaults to the saved goals',
+  })
+  @IsOptional()
+  @Transform(toArray)
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  @Matches(EVENT_NAME, { each: true })
+  goal?: string[];
+}
+
 export class ReadWebAnalyticsBreakdownQuery extends ReadWebAnalyticsQuery {
   @ApiProperty({ enum: WEB_ANALYTICS_BREAKDOWNS })
   @IsIn(WEB_ANALYTICS_BREAKDOWNS)

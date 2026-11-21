@@ -60,7 +60,8 @@
   tabs={hasApps ? tabSwitch : undefined}
   {grip}
   expandLabel="Show all goals"
-  onexpand={shown === 'goals' && report?.breakdowns.goals.length
+  onexpand={shown === 'goals' &&
+  (report?.goals.length || report?.breakdowns.goals.length)
     ? onDetails
     : undefined}
 >

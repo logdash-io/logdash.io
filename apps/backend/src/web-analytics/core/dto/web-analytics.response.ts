@@ -160,6 +160,13 @@ export class WebAnalyticsResponse {
   @ApiPropertyOptional({ type: WebAnalyticsPoint, isArray: true })
   previousSeries?: WebAnalyticsPoint[];
 
+  @ApiProperty({
+    type: WebAnalyticsBreakdownRow,
+    isArray: true,
+    description: 'The requested goals, or the saved goals, in their order, with zero rows kept',
+  })
+  goals: WebAnalyticsBreakdownRow[];
+
   @ApiProperty({ type: WebAnalyticsGoalSeries, isArray: true })
   goalSeries: WebAnalyticsGoalSeries[];
 

@@ -66,7 +66,7 @@ export const page: DocPage = {
     { type: 'heading', text: 'Goals' },
     {
       type: 'paragraph',
-      text: 'Custom events are the goals you pick in the toolbar, and each one appears in the **Goals** card under **Details**. Click it to see its trend through the day, with completions, visits, people and a breakdown by each property.',
+      text: 'Custom events are the goals you pick in the toolbar. The **Goals** card shows your goals first, with their conversion, and your other custom events below them. Click one to see its trend through the day, with completions, visits, people and a breakdown by each property.',
     },
     {
       type: 'paragraph',

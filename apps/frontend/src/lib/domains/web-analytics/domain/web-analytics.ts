@@ -94,6 +94,7 @@ export interface WebAnalyticsReport {
   previous: WebAnalyticsSummary;
   series: WebAnalyticsPoint[];
   previousSeries?: WebAnalyticsPoint[];
+  goals: WebAnalyticsBreakdownRow[];
   goalSeries: { name: string; counts: number[] }[];
   online: number;
   breakdowns: Record<WebAnalyticsBreakdownName, WebAnalyticsBreakdownRow[]>;

@@ -28,6 +28,7 @@ import {
 import {
   ReadWebAnalyticsFunnelQuery,
   ReadWebAnalyticsQuery,
+  ReadWebAnalyticsReportQuery,
   WebAnalyticsBreakdownName,
   WebAnalyticsFilterDimension,
   WebAnalyticsGranularity,
@@ -193,22 +194,22 @@ export class WebAnalyticsReadService {
 
   public async readReport(
     clusterId: string,
-    query: ReadWebAnalyticsQuery,
+    query: ReadWebAnalyticsReportQuery,
     retentionDays: number,
   ): Promise<WebAnalyticsResponse> {
     const scope = this.scope(clusterId, query, retentionDays);
-    const goals = (await this.readSiteByClusterId(clusterId))?.goals ?? [];
-    const [summary, previous, series, previousSeries, online, breakdowns, apps] = await Promise.all(
-      [
+    const goals = query.goal ?? (await this.readSiteByClusterId(clusterId))?.goals ?? [];
+    const [summary, previous, series, previousSeries, online, breakdowns, goalRows, apps] =
+      await Promise.all([
         this.readSummary(scope, scope.params, goals),
         this.readSummary(scope, scope.previousParams, goals),
         this.readSeries(scope, scope.params),
         query.compare ? this.readSeries(scope, scope.previousParams) : undefined,
         this.readOnline([clusterId]),
         this.readBreakdowns(scope, 10),
+        this.readGoalRows(scope, goals),
         this.readApps(scope),
-      ],
-    );
+      ]);
     return {
       from: scope.from.toISOString(),
       to: scope.to.toISOString(),
@@ -218,11 +219,8 @@ export class WebAnalyticsReadService {
       previous,
       series,
       previousSeries,
-      goalSeries: await this.readGoalSeries(
-        scope,
-        series,
-        breakdowns.goals.slice(0, 5).map((goal) => goal.name),
-      ),
+      goals: goalRows,
+      goalSeries: await this.readGoalSeries(scope, series, goals),
       online: online[clusterId] ?? 0,
       breakdowns,
       apps,
@@ -674,6 +672,19 @@ export class WebAnalyticsReadService {
       params,
     );
     return rows.map((row) => Number(row.time));
+  }
+
+  private async readGoalRows(scope: Scope, goals: string[]): Promise<WebAnalyticsBreakdownRow[]> {
+    if (!goals.length) return [];
+    const rows = await this.query<{ name: string; visitors: string; count: string }>(
+      `SELECT name, uniqExact(${VISIT}) AS visitors, count() AS count
+      FROM web_events FINAL WHERE ${scope.where} AND name IN {goals:Array(String)} GROUP BY name`,
+      { ...scope.params, goals },
+    );
+    return goals.map((name) => {
+      const row = rows.find((candidate) => candidate.name === name);
+      return { name, visitors: Number(row?.visitors ?? 0), count: Number(row?.count ?? 0) };
+    });
   }
 
   private async readGoalSeries(

@@ -230,7 +230,8 @@ describe('Web analytics (reads)', () => {
     expect(data.breakdowns.campaigns).toEqual([{ name: 'launch', visitors: 1, count: 1 }]);
     expect(data.breakdowns.contents).toEqual([{ name: 'post_1', visitors: 1, count: 1 }]);
     expect(data.breakdowns.goals).toEqual([{ name: 'signup_completed', visitors: 1, count: 1 }]);
-    expect(data.goalSeries).toEqual([{ name: 'signup_completed', counts: [0, 0, 0, 0, 0, 1, 0] }]);
+    expect(data.goals).toEqual([]);
+    expect(data.goalSeries).toEqual([]);
 
     const pricing = (await get(setup.cluster.id, setup.token, `?${week}&filter=page:/pricing`))
       .body as WebAnalyticsResponse;
@@ -400,7 +401,6 @@ describe('Web analytics (reads)', () => {
     });
     expect(data.online).toBe(1);
     expect(data.breakdowns.goals).toEqual([{ name: 'signup_completed', visitors: 1, count: 1 }]);
-    expect(data.goalSeries.map((goal) => goal.name)).toEqual(['signup_completed']);
     expect(data.breakdowns.entryPages).toEqual([
       { name: '/', visitors: 4, count: 4 },
       { name: '/start', visitors: 1, count: 1 },
@@ -633,7 +633,7 @@ describe('Web analytics (reads)', () => {
     });
   });
 
-  it('converts only visits that reached a saved goal, not any custom event', async () => {
+  it('converts only visits that reached a saved or requested goal, not any custom event', async () => {
     // given
     const setup = await bootstrap.utils.generalUtils.setupAnonymous();
     const site = await configure(setup.cluster.id, setup.token);
@@ -663,11 +663,24 @@ describe('Web analytics (reads)', () => {
       .expect(200);
     const saved = (await get(setup.cluster.id, setup.token, `?${week}`))
       .body as WebAnalyticsResponse;
+    const requested = (
+      await get(setup.cluster.id, setup.token, `?${week}&goal=signup&goal=section_viewed`)
+    ).body as WebAnalyticsResponse;
+    const invalid = await get(setup.cluster.id, setup.token, `?${week}&goal=Signup`);
 
     // then
     expect(unsaved.summary.conversionRate).toBeNull();
+    expect(unsaved.goals).toEqual([]);
     expect(saved.summary.conversionRate).toBe((1 / 3) * 100);
     expect(saved.previous.conversionRate).toBe(0);
+    expect(saved.goals).toEqual([{ name: 'download_started', visitors: 1, count: 1 }]);
+    expect(saved.goalSeries).toEqual([{ name: 'download_started', counts: [0, 0, 0, 0, 0, 0, 1] }]);
+    expect(requested.goals).toEqual([
+      { name: 'signup', visitors: 0, count: 0 },
+      { name: 'section_viewed', visitors: 1, count: 1 },
+    ]);
+    expect(requested.summary.conversionRate).toBe((1 / 3) * 100);
+    expect(invalid.status).toBe(400);
   });
 
   async function configure(clusterId: string, token: string): Promise<WebAnalyticsSiteSerialized> {
