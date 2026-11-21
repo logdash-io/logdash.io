@@ -338,7 +338,7 @@ export LOGDASH_DOMAIN_ID="6650f1c2a3b4c5d6e7f80a01"`,
     { type: 'heading', text: 'Read web analytics', level: 3 },
     {
       type: 'paragraph',
-      text: 'Read web analytics through the [MCP server](/docs/mcp). It takes the same personal API key, with **Web analytics: Read**.',
+      text: 'Read web analytics through the [MCP server](/docs/mcp). It takes the same personal API key, with **Web analytics: Read**. With **Logs: Read**, its `logs_search` tool also searches your logs.',
     },
     { type: 'heading', text: 'Status pages' },
     {

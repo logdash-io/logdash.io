@@ -5,13 +5,13 @@ export const page: DocPage = {
   title: 'MCP server',
   metaTitle: 'MCP server | Logdash Docs',
   description:
-    'Connect Claude Code, Codex, Cursor or any MCP client to Logdash, so your coding agent can read your web analytics and build insights for you.',
+    'Connect Claude Code, Codex, Cursor or any MCP client to Logdash, so your coding agent can read your web analytics and logs, and build insights for you.',
   keywords:
-    'logdash mcp, mcp server, web analytics mcp, claude code analytics, cursor mcp, codex mcp',
+    'logdash mcp, mcp server, web analytics mcp, logs mcp, claude code analytics, cursor mcp, codex mcp',
   blocks: [
     {
       type: 'paragraph',
-      text: 'The Logdash MCP server lets your coding agent read your [web analytics](/docs/web-analytics) and save [insights](/docs/web-analytics/insights) to your dashboard. Ask it questions such as "where do signups come from this month?" or "add a funnel from first open to first project, and a weekly cohort table".',
+      text: 'The Logdash MCP server lets your coding agent read your [web analytics](/docs/web-analytics) and logs, and save [insights](/docs/web-analytics/insights) to your dashboard. Ask it questions such as "where do signups come from this month?", "which errors did the desktop app log today?" or "add a funnel from first open to first project, and a weekly cohort table".',
     },
     {
       type: 'paragraph',
@@ -51,7 +51,7 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
     { type: 'heading', text: 'Sign in through the browser', level: 3 },
     {
       type: 'paragraph',
-      text: 'On first use, Claude Code opens a Logdash consent page that names the agent and what it asks for: **Read your analytics**, or **Read your analytics and manage your saved insights**. Press **Approve** to connect, or **Decline**.',
+      text: 'On first use, Claude Code opens a Logdash consent page that names the agent and what it asks for: **Read your analytics**, or **Read your analytics and manage your saved insights**, and **Read your logs**. Press **Approve** to connect, or **Decline**.',
     },
     {
       type: 'list',
@@ -64,12 +64,12 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
     { type: 'heading', text: 'Use a personal API key', level: 3 },
     {
       type: 'paragraph',
-      text: 'For Codex, Cursor and other clients, [create a personal API key](/docs/api-keys#create-a-key) and keep it in `LOGDASH_PERSONAL_KEY`. Set **Web analytics** to **Read** so the agent can only read, or to **Write** so it can also save, change and remove insights. Under **Access**, pick the domains the agent may see.',
+      text: 'For Codex, Cursor and other clients, [create a personal API key](/docs/api-keys#create-a-key) and keep it in `LOGDASH_PERSONAL_KEY`. Set **Web analytics** to **Read** so the agent can only read, or to **Write** so it can also save, change and remove insights. Set **Logs** to **Read** so it can search your logs. Under **Access**, pick the domains or services the agent may see.',
     },
     { type: 'heading', text: 'Tools' },
     {
       type: 'paragraph',
-      text: 'The agent calls `describe` first, to get the IDs of your domains and the names of your events. The other tools take a domain ID, and most take a number of days, cut to the retention of your plan. They return short summaries, never raw events.',
+      text: 'The agent calls `describe` first, to get the IDs of your domains and services and the names of your events. `logs_search` takes the `projectId` of a service, and the other tools take a domain ID. Most tools take a number of days, cut to the retention of your plan. The analytics tools return short summaries, never raw events.',
     },
     {
       type: 'table',
@@ -77,7 +77,7 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
       rows: [
         [
           '`describe`',
-          'The domains the key reaches, with their sites, goals, saved insights and retention, and the custom events with their counts and property keys.',
+          'With **Web analytics: Read**, the domains the key reaches, with their sites, goals, saved insights and retention, and the custom events with their counts and property keys. With **Logs: Read**, the services whose logs the key reaches, with their IDs and log retention.',
         ],
         [
           '`overview`',
@@ -136,11 +136,15 @@ bearer_token_env_var = "LOGDASH_PERSONAL_KEY"`,
           'Replaces the views of the dashboard. Needs **Write**.',
         ],
         ['`delete_insight`', 'Removes an insight. Needs **Write**.'],
+        [
+          '`logs_search`',
+          'The logs of one service, newest first, each with its time, level, namespace and full message. Filter by `level`, by an exact `namespace` or a `namespacePrefix` such as `desktop@` for every version, and by the words of `query`. Pass `nextCursor` back as `cursor` to read older logs. Needs **Logs: Read**.',
+        ],
       ],
     },
     {
       type: 'paragraph',
-      text: 'With **Read** only, the agent does not see the tools that need **Write**.',
+      text: 'The agent sees only the tools its scopes allow. With **Web analytics: Read** only, it does not see the tools that need **Write**. Without **Logs: Read**, it does not see `logs_search`.',
     },
     { type: 'heading', text: 'Lay out a dashboard' },
     {

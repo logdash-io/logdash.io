@@ -10,7 +10,7 @@ The expected flow is the one other MCP servers use: the client opens Logdash in 
 - `POST /oauth/register` performs dynamic client registration for public clients (`token_endpoint_auth_method=none`), with redirect URIs restricted to https or a loopback address.
 - The frontend page `/app/authorize-mcp` shows the client name, the redirect host and the requested scopes, and the user approves or declines.
 - `POST /oauth/token` requires PKCE S256 and a single-use code that lives for two minutes.
-- The token exchange mints a Personal API Key with a mandatory 30-day expiry, `access: all`, and the requested `webAnalytics:read` or `webAnalytics:write` scope. The key value is returned as the OAuth access token.
+- The token exchange mints a Personal API Key with a mandatory 30-day expiry, `access: all`, and the requested scopes: `webAnalytics:read` or `webAnalytics:write`, and `logs:read`. The key value is returned as the OAuth access token.
 
 **Why a Personal API Key as the token:** The guard, the scope enforcement, the revoke path and the API keys screen already exist. The token is revocable there, and no second credential type can drift from the first.
 
