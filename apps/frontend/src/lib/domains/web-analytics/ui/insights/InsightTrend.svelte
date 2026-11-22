@@ -83,7 +83,7 @@
 
 <ul class="flex flex-col gap-0.5">
   {#each rows as entry, index (index)}
-    <li class="flex min-h-8 items-center gap-2 px-3 py-1 text-sm">
+    <li class="flex min-h-8 items-center gap-2 px-3 py-1 text-sm" data-row>
       <span
         class="size-2 shrink-0 rounded-full"
         style:background-color={COLORS[index % COLORS.length]}

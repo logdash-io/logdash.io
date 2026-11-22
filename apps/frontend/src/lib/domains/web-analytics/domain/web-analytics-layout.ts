@@ -1,3 +1,4 @@
+import { match } from 'ts-pattern';
 import type {
   WebAnalyticsInsight,
   WebAnalyticsInsightGrid,
@@ -61,6 +62,17 @@ export const TRAFFIC_CARDS: TrafficCardSpec[] = [
 ];
 
 export type GridKey = 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'ArrowDown';
+
+export type GridEdge = 'l' | 'r' | 'b' | 'bl' | 'br';
+
+export type GridSeam = {
+  a: string;
+  b: string;
+  axis: 'x' | 'y';
+  x: number;
+  y: number;
+  length: number;
+};
 
 export const OVERVIEW_VIEW: WebAnalyticsView = {
   id: '',
@@ -231,6 +243,62 @@ export function nudgeCard(
   );
 }
 
+export function resizeEdge(
+  cards: GridCard[],
+  id: string,
+  edge: GridEdge,
+  columns: number,
+  rows: number,
+): GridCard[] {
+  return settle(
+    reshape(cards, id, (cell) => stretch(cell, edge, columns, rows)),
+    id,
+  );
+}
+
+export function resizeSeam(
+  cards: GridCard[],
+  seam: GridSeam,
+  delta: number,
+): GridCard[] {
+  const a = cards.find((card) => card.id === seam.a)?.cell;
+  const b = cards.find((card) => card.id === seam.b)?.cell;
+  if (!a || !b) return cards;
+  const m =
+    seam.axis === 'x'
+      ? clamp(delta, MIN_W - a.w, b.w - MIN_W)
+      : clamp(
+          delta,
+          Math.max(MIN_H - a.h, b.h - MAX_H),
+          Math.min(MAX_H - a.h, b.h - MIN_H),
+        );
+  const next = cards.map((card) =>
+    match(card.id)
+      .with(seam.a, () => ({ ...card, cell: grow(a, seam.axis, m, 0) }))
+      .with(seam.b, () => ({ ...card, cell: grow(b, seam.axis, -m, m) }))
+      .otherwise(() => card),
+  );
+  return settle(next, seam.a);
+}
+
+export function gridSeams(cards: GridCard[]): GridSeam[] {
+  return cards.flatMap(({ id: a, cell: left }) =>
+    cards.flatMap(({ id: b, cell: right }): GridSeam[] => {
+      const top = Math.max(left.y, right.y);
+      const bottom = Math.min(left.y + left.h, right.y + right.h);
+      if (left.x + left.w === right.x && bottom - top >= 2)
+        return [{ a, b, axis: 'x', x: right.x, y: top, length: bottom - top }];
+      if (
+        left.y + left.h === right.y &&
+        left.x === right.x &&
+        left.w === right.w
+      )
+        return [{ a, b, axis: 'y', x: left.x, y: right.y, length: left.w }];
+      return [];
+    }),
+  );
+}
+
 export function gridArrangement(cards: GridCard[], view: string): Arrangement {
   const moved = cards.filter(({ saved, cell }) => !sameCell(saved, cell));
   const placements = moved.flatMap(({ id, insight, cell }) =>
@@ -352,6 +420,31 @@ function fit(cell: WebAnalyticsInsightGrid): WebAnalyticsInsightGrid {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+function stretch(
+  cell: WebAnalyticsInsightGrid,
+  edge: GridEdge,
+  columns: number,
+  rows: number,
+): WebAnalyticsInsightGrid {
+  const h = edge === 'l' || edge === 'r' ? cell.h : cell.h + rows;
+  if (edge === 'b') return { ...cell, h };
+  if (edge === 'r' || edge === 'br')
+    return { ...cell, w: Math.min(cell.w + columns, GRID_COLUMNS - cell.x), h };
+  const m = clamp(columns, -cell.x, cell.w - MIN_W);
+  return { ...cell, x: cell.x + m, w: cell.w - m, h };
+}
+
+function grow(
+  cell: WebAnalyticsInsightGrid,
+  axis: 'x' | 'y',
+  size: number,
+  shift: number,
+): WebAnalyticsInsightGrid {
+  return axis === 'x'
+    ? { ...cell, x: cell.x + shift, w: cell.w + size }
+    : { ...cell, y: cell.y + shift, h: cell.h + size };
 }
 
 function reshape(

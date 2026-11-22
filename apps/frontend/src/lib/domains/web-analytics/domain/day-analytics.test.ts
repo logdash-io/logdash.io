@@ -16,6 +16,7 @@ import {
   typicalOf,
   wilson,
   type GroupRow,
+  halfHourTimeline,
 } from './day-analytics';
 import type {
   WebAnalyticsDay,
@@ -265,4 +266,40 @@ test('reads picked goals from the cookie only when it holds up to 10 names', () 
   expect(parseGoals('{"0":"signup"}')).toBeNull();
   expect(parseGoals('["signup",1]')).toBeNull();
   expect(parseGoals(JSON.stringify(Array(11).fill('signup')))).toBeNull();
+});
+
+test('the timeline marks online visits and scales dots to fit a column', () => {
+  const none = { goal: 0, stayed: 0, left: 0 };
+  const halves = Array.from({ length: 48 }, () => none);
+  halves[20] = { goal: 1, stayed: 3, left: 2 };
+  const quiet = halfHourTimeline(halves, [
+    { half: 20, stayed: true, goal: false },
+    { half: 20, stayed: true, goal: true },
+  ]);
+  expect(quiet.per).toBe(1);
+  expect(quiet.bins[20]).toEqual({ goal: 1, stayed: 2, left: 2, live: 1 });
+  expect(quiet.dots[20]).toEqual([
+    'goal',
+    'stayed',
+    'stayed',
+    'left',
+    'left',
+    'live',
+  ]);
+  expect(quiet.dots[0]).toEqual([]);
+
+  halves[21] = { goal: 1, stayed: 30, left: 9 };
+  const busy = halfHourTimeline(halves, []);
+  expect(busy.per).toBe(6);
+  expect(busy.dots[21]).toEqual([
+    'goal',
+    'stayed',
+    'stayed',
+    'stayed',
+    'stayed',
+    'stayed',
+    'left',
+    'left',
+  ]);
+  expect(busy.dots[20]).toEqual(['goal', 'stayed', 'left']);
 });

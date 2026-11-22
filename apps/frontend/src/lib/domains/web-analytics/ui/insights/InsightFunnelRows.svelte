@@ -38,7 +38,10 @@
 </div>
 <ol class="flex flex-col gap-0.5">
   {#each rows as row, index (index)}
-    <li class="relative flex min-h-9 items-center gap-3 rounded-lg px-3 py-1.5">
+    <li
+      class="relative flex min-h-9 items-center gap-3 rounded-lg px-3 py-1.5"
+      data-row
+    >
       <span
         class="bg-surface-150-bg absolute inset-y-0 left-0 rounded-lg"
         style:width="{row.count

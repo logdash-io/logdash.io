@@ -87,11 +87,11 @@
       Signed-in users grouped by their first day, and the share who came back
       exactly 1, 7, 30 and 90 days later.
     </p>
-    <div class="max-h-96 overflow-auto">
+    <div class="overflow-x-auto">
       <table
         class="w-full min-w-[34rem] border-separate border-spacing-1 text-sm"
       >
-        <thead class="text-fg-muted bg-surface-25-bg sticky top-0 text-xs">
+        <thead class="text-fg-muted text-xs">
           <tr>
             <th scope="col" class="px-2 pb-1 text-left font-normal">
               First seen
@@ -109,7 +109,7 @@
         </thead>
         <tbody>
           {#each cohorts as cohort (cohort.date)}
-            <tr>
+            <tr data-row>
               <th
                 scope="row"
                 class="px-2 py-1.5 text-left font-normal whitespace-nowrap"

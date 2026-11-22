@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
   import { flip } from 'svelte/animate';
   import { cubicInOut } from 'svelte/easing';
   import { prefersReducedMotion } from 'svelte/motion';
@@ -12,6 +11,9 @@
     type RateVerdict,
   } from '../../domain/day-analytics';
   import BreakdownLabel from '../breakdown/BreakdownLabel.svelte';
+  import DetailsDialog from '../breakdown/DetailsDialog.svelte';
+  import { fitRows, type RowFit } from '../breakdown/fit-rows';
+  import MoreRow from '../breakdown/MoreRow.svelte';
   import Flag from './Flag.svelte';
 
   type Props = {
@@ -23,7 +25,6 @@
     loading: boolean;
     pinned?: string | null;
     onpin?: (name: string) => void;
-    grip?: Snippet;
   };
 
   const {
@@ -35,11 +36,31 @@
     loading,
     pinned = null,
     onpin,
-    grip,
   }: Props = $props();
 
-  const peak = $derived(Math.max(1, ...rows.map((row) => row.counts.visits)));
   const FLAGGED = 'pr-[26px] @xl:pr-[30px]';
+
+  let fit = $state<RowFit>({ shown: 0, hidden: 0, more: false });
+  let detailsOpen = $state(false);
+
+  const peak = $derived(Math.max(1, ...rows.map((row) => row.counts.visits)));
+
+  function onFit(next: RowFit): void {
+    fit = next;
+  }
+
+  function onDetails(): void {
+    detailsOpen = true;
+  }
+
+  function onDetailsClose(): void {
+    detailsOpen = false;
+  }
+
+  function onDetailsPin(name: string): void {
+    detailsOpen = false;
+    onpin?.(name);
+  }
 </script>
 
 <section
@@ -56,153 +77,171 @@
         {onpin ? 'Click a source to see it in the charts.' : ''}
       </p>
     </div>
-    {@render grip?.()}
   </header>
 
   {#if !loading && !rows.length}
     <p class="text-fg-muted py-10 text-center text-sm">No visits yet</p>
   {:else}
-    <div class="min-h-0 flex-1 overflow-y-auto">
-      <table
-        class="w-full table-auto border-separate border-spacing-y-0.5 text-sm whitespace-nowrap @xl:table-fixed"
-      >
-        <thead class="text-fg-muted text-xs">
-          <tr>
-            <th
-              scope="col"
-              class="h-6 w-full px-2 text-left font-normal @xl:w-[30%] @xl:px-3"
-            >
-              {column}
-            </th>
-            <th
-              scope="col"
-              class={['h-6 px-2 text-right font-normal @xl:px-3', FLAGGED]}
-            >
-              Visits
-            </th>
-            <th
-              scope="col"
-              class={['h-6 px-2 text-right font-normal @xl:px-3', FLAGGED]}
-            >
-              Stayed
-            </th>
-            <th
-              scope="col"
-              class="hidden h-6 px-3 text-right font-normal @3xl:table-cell"
-            >
-              Median stay
-            </th>
-          </tr>
-        </thead>
-        {#if !rows.length}
-          <tbody aria-hidden="true">
-            {#each [100, 74, 52, 38, 26] as width, index (width)}
-              <tr>
-                <td class="h-11 px-2 @xl:h-9 @xl:px-3">
-                  {@render bone(`${width}%`, index)}
-                </td>
-                <td class={['px-2 @xl:px-3', FLAGGED]}>
-                  {@render bone('28px', index, true)}
-                </td>
-                <td class={['px-2 @xl:px-3', FLAGGED]}>
-                  {@render bone('64px', index, true)}
-                </td>
-                <td class="hidden px-3 @3xl:table-cell">
-                  {@render bone('28px', index, true)}
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        {:else}
-          <tbody in:fade={{ duration: prefersReducedMotion.current ? 0 : 200 }}>
-            {#each rows as row (row.name)}
-              {@const lit = row.name === pinned}
-              <tr
-                class={[
-                  'group transition-ink',
-                  lit
-                    ? 'text-fg-default'
-                    : 'text-fg-secondary hover:text-fg-default',
-                ]}
-                animate:flip={{
-                  duration: prefersReducedMotion.current ? 0 : 240,
-                  easing: cubicInOut,
-                }}
-              >
-                <td
-                  class={[
-                    'group-hover:bg-surface-25-hover-bg relative h-11 max-w-0 rounded-l-lg @xl:h-9 @xl:max-w-none',
-                    onpin ? 'p-0' : 'px-2 @xl:px-3',
-                  ]}
-                >
-                  <span
-                    class={[
-                      'absolute inset-y-[3px] left-0 rounded-md transition-[width] duration-240 ease-in-out motion-reduce:transition-none',
-                      lit
-                        ? 'bg-surface-150-selected-bg'
-                        : 'bg-surface-150-bg group-hover:bg-surface-150-hover-bg',
-                    ]}
-                    style:width="{Math.max(
-                      1.5,
-                      (row.counts.visits / peak) * 100,
-                    )}%"
-                    aria-hidden="true"
-                  ></span>
-                  {#if onpin}
-                    <button
-                      type="button"
-                      class="focus-visible:outline-brand relative flex h-full w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 text-left outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 @xl:px-3"
-                      aria-pressed={row.name === pinned}
-                      title={row.name === pinned
-                        ? 'Stop showing it in the charts'
-                        : 'Show it in the charts'}
-                      onclick={() => onpin(row.name)}
-                    >
-                      <BreakdownLabel dimension="referrers" name={row.name} />
-                    </button>
-                  {:else}
-                    <span class="relative block truncate">{row.name}</span>
-                  {/if}
-                </td>
-                <td
-                  class="group-hover:bg-surface-25-hover-bg relative px-2 text-right tabular-nums @xl:px-3"
-                >
-                  <span
-                    class="relative inline-flex items-baseline justify-end gap-1"
-                  >
-                    {formatCount(row.counts.visits)}
-                    <Flag
-                      label="{row.name}, visits"
-                      verdict={row.verdict.visits}
-                      {by}
-                      {weekdays}
-                      variant="mark"
-                    />
-                  </span>
-                </td>
-                <td
-                  class="group-hover:bg-surface-25-hover-bg relative rounded-r-lg px-2 text-right @xl:px-3 @3xl:rounded-none"
-                >
-                  {@render rate(
-                    row.name,
-                    'stayed',
-                    row.verdict.stayed,
-                    'stayed',
-                  )}
-                </td>
-                <td
-                  class="group-hover:bg-surface-25-hover-bg text-fg-tertiary hidden rounded-r-lg px-3 text-right tabular-nums @3xl:table-cell"
-                >
-                  {row.counts.visits ? formatDuration(row.medianSeconds) : '-'}
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        {/if}
-      </table>
+    <div
+      class="relative flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden"
+      {@attach fitRows(onFit)}
+    >
+      {@render table(onpin)}
+      {#if fit.more}
+        <MoreRow
+          shown={fit.shown}
+          total={rows.length}
+          label={title.toLowerCase()}
+          onopen={onDetails}
+        />
+      {/if}
     </div>
   {/if}
 </section>
+
+<DetailsDialog
+  isOpen={detailsOpen}
+  {title}
+  class="max-w-4xl"
+  onclose={onDetailsClose}
+>
+  <div class="@container min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-4">
+    {@render table(onpin && onDetailsPin)}
+  </div>
+</DetailsDialog>
+
+{#snippet table(pin: ((name: string) => void) | undefined)}
+  <table
+    class="w-full table-auto border-separate border-spacing-y-0.5 text-sm whitespace-nowrap @xl:table-fixed"
+  >
+    <thead class="text-fg-muted text-xs">
+      <tr>
+        <th
+          scope="col"
+          class="h-6 w-full px-2 text-left font-normal @xl:w-[30%] @xl:px-3"
+        >
+          {column}
+        </th>
+        <th
+          scope="col"
+          class={['h-6 px-2 text-right font-normal @xl:px-3', FLAGGED]}
+        >
+          Visits
+        </th>
+        <th
+          scope="col"
+          class={['h-6 px-2 text-right font-normal @xl:px-3', FLAGGED]}
+        >
+          Stayed
+        </th>
+        <th
+          scope="col"
+          class="hidden h-6 px-3 text-right font-normal @3xl:table-cell"
+        >
+          Median stay
+        </th>
+      </tr>
+    </thead>
+    {#if !rows.length}
+      <tbody aria-hidden="true">
+        {#each [100, 74, 52, 38, 26] as width, index (width)}
+          <tr>
+            <td class="h-11 px-2 @xl:h-9 @xl:px-3">
+              {@render bone(`${width}%`, index)}
+            </td>
+            <td class={['px-2 @xl:px-3', FLAGGED]}>
+              {@render bone('28px', index, true)}
+            </td>
+            <td class={['px-2 @xl:px-3', FLAGGED]}>
+              {@render bone('64px', index, true)}
+            </td>
+            <td class="hidden px-3 @3xl:table-cell">
+              {@render bone('28px', index, true)}
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    {:else}
+      <tbody in:fade={{ duration: prefersReducedMotion.current ? 0 : 200 }}>
+        {#each rows as row (row.name)}
+          {@const lit = row.name === pinned}
+          <tr
+            data-row
+            class={[
+              'group transition-ink',
+              lit
+                ? 'text-fg-default'
+                : 'text-fg-secondary hover:text-fg-default',
+            ]}
+            animate:flip={{
+              duration: prefersReducedMotion.current ? 0 : 240,
+              easing: cubicInOut,
+            }}
+          >
+            <td
+              class={[
+                'group-hover:bg-surface-25-hover-bg relative h-11 max-w-0 rounded-l-lg @xl:h-9 @xl:max-w-none',
+                pin ? 'p-0' : 'px-2 @xl:px-3',
+              ]}
+            >
+              <span
+                class={[
+                  'absolute inset-y-[3px] left-0 rounded-md transition-[width] duration-240 ease-in-out motion-reduce:transition-none',
+                  lit
+                    ? 'bg-surface-150-selected-bg'
+                    : 'bg-surface-150-bg group-hover:bg-surface-150-hover-bg',
+                ]}
+                style:width="{Math.max(1.5, (row.counts.visits / peak) * 100)}%"
+                aria-hidden="true"
+              ></span>
+              {#if pin}
+                <button
+                  type="button"
+                  class="focus-visible:outline-brand relative flex h-full w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 text-left outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 @xl:px-3"
+                  aria-pressed={row.name === pinned}
+                  title={row.name === pinned
+                    ? 'Stop showing it in the charts'
+                    : 'Show it in the charts'}
+                  onclick={() => pin(row.name)}
+                >
+                  <BreakdownLabel dimension="referrers" name={row.name} />
+                </button>
+              {:else}
+                <span class="relative block truncate">{row.name}</span>
+              {/if}
+            </td>
+            <td
+              class="group-hover:bg-surface-25-hover-bg relative px-2 text-right tabular-nums @xl:px-3"
+            >
+              <span
+                class="relative inline-flex items-baseline justify-end gap-1"
+              >
+                {formatCount(row.counts.visits)}
+                <Flag
+                  label="{row.name}, visits"
+                  verdict={row.verdict.visits}
+                  {by}
+                  {weekdays}
+                  variant="mark"
+                />
+              </span>
+            </td>
+            <td
+              class="group-hover:bg-surface-25-hover-bg relative rounded-r-lg px-2 text-right @xl:px-3 @3xl:rounded-none"
+            >
+              {@render rate(row.name, 'stayed', row.verdict.stayed, 'stayed')}
+            </td>
+            <td
+              class="group-hover:bg-surface-25-hover-bg text-fg-tertiary hidden rounded-r-lg px-3 text-right tabular-nums @3xl:table-cell"
+            >
+              {row.counts.visits ? formatDuration(row.medianSeconds) : '-'}
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    {/if}
+  </table>
+{/snippet}
 
 {#snippet rate(
   name: string,

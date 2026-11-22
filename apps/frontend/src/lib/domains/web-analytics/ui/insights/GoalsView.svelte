@@ -11,12 +11,12 @@
 
   type Props = {
     report: WebAnalyticsReport | null;
-    limit?: number;
+    compact?: boolean;
     selected: string | null;
     onselect: (name: string) => void;
   };
 
-  const { report, limit, selected, onselect }: Props = $props();
+  const { report, compact = false, selected, onselect }: Props = $props();
 
   const COLORS = [
     'var(--chart-1)',
@@ -31,10 +31,6 @@
     (report?.breakdowns.goals ?? []).filter(
       (event) => !goals.some((goal) => goal.name === event.name),
     ),
-  );
-  const shownGoals = $derived(limit ? goals.slice(0, limit) : goals);
-  const shownEvents = $derived(
-    limit ? events.slice(0, Math.max(0, limit - shownGoals.length)) : events,
   );
   const lines = $derived<AnalyticsChartLine[]>(
     (report?.goalSeries ?? []).map((goal, index) => ({
@@ -70,7 +66,7 @@
     </code>
   </div>
 {:else}
-  {#if !limit && lines.length}
+  {#if !compact && lines.length}
     <AnalyticsChart
       times={report.series.map((point) => point.time)}
       {lines}
@@ -87,19 +83,22 @@
       <span class="w-16 text-right">Conversion</span>
     </span>
   </div>
-  {#if shownGoals.length}
+  {#if goals.length}
     <ul class="flex flex-col gap-0.5">
-      {#each shownGoals as goal (goal.name)}
+      {#each goals as goal (goal.name)}
         {@render row(goal, goalPeak, true)}
       {/each}
     </ul>
   {/if}
-  {#if shownEvents.length}
-    <p class="text-fg-muted mt-1.5 flex h-6 items-center px-3 text-xs">
+  {#if events.length}
+    <p
+      class="text-fg-muted mt-1.5 flex h-6 shrink-0 items-center px-3 text-xs"
+      data-row="head"
+    >
       {goals.length ? 'Other events' : 'Events'}
     </p>
     <ul class="flex flex-col gap-0.5">
-      {#each shownEvents as event (event.name)}
+      {#each events as event (event.name)}
         {@render row(event, eventPeak, false)}
       {/each}
     </ul>
@@ -107,8 +106,8 @@
 {/if}
 
 {#snippet row(item: WebAnalyticsBreakdownRow, peak: number, goal: boolean)}
-  {@const color = goal && !limit ? colorOf(item.name) : undefined}
-  <li>
+  {@const color = goal && !compact ? colorOf(item.name) : undefined}
+  <li data-row>
     <button
       type="button"
       class={[

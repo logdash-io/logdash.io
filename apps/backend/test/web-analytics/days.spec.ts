@@ -176,6 +176,13 @@ describe('Web analytics (days)', () => {
       stayed: true,
       goals: [null, null],
     });
+    const none = { goal: 0, stayed: 0, left: 0 };
+    const halves = Array.from({ length: 48 }, () => none);
+    halves[18] = { ...none, stayed: 1 };
+    halves[20] = { ...none, goal: 1 };
+    halves[22] = { ...none, left: 1 };
+    halves[23] = { ...none, stayed: 1 };
+    expect(data.halfHours).toEqual(halves);
 
     const stayed = await get(
       setup.cluster.id,
@@ -183,6 +190,7 @@ describe('Web analytics (days)', () => {
       `/days/2026-10-02/visits?${goals}&show=stayed`,
     );
     expect((stayed.body as WebAnalyticsDayVisitsResponse).total).toBe(3);
+    expect((stayed.body as WebAnalyticsDayVisitsResponse).halfHours).toEqual(data.halfHours);
     const reached = await get(
       setup.cluster.id,
       setup.token,

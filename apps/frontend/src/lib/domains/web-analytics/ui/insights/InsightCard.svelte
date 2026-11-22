@@ -9,12 +9,16 @@
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import Well from '$lib/domains/shared/ui/components/Well.svelte';
   import { Dropdown, Tab, Tabs } from '@logdash/hyper-ui/presentational';
-  import type { Snippet } from 'svelte';
+  import { match } from 'ts-pattern';
   import type {
+    WebAnalyticsChartType,
     WebAnalyticsInsight,
     WebAnalyticsView,
   } from '../../domain/web-analytics';
   import { insightCharts } from '../../domain/web-analytics-insight';
+  import DetailsDialog from '../breakdown/DetailsDialog.svelte';
+  import { fitRows, type RowFit } from '../breakdown/fit-rows';
+  import MoreRow from '../breakdown/MoreRow.svelte';
   import InsightBody from './InsightBody.svelte';
 
   type Props = {
@@ -22,7 +26,6 @@
     insight: WebAnalyticsInsight;
     revision: number;
     elsewhere: WebAnalyticsView[];
-    grip: Snippet;
     onedit: (insight: WebAnalyticsInsight) => void;
     onviewmove: (insight: WebAnalyticsInsight, view: WebAnalyticsView) => void;
     onhide: (insight: WebAnalyticsInsight) => void;
@@ -34,7 +37,6 @@
     insight,
     revision,
     elsewhere,
-    grip,
     onedit,
     onviewmove,
     onhide,
@@ -47,6 +49,8 @@
   let picked = $state(0);
   let visited = $state([0]);
   let summaries = $state<string[]>([]);
+  let fits = $state<RowFit[]>([]);
+  let detailsOpen = $state(false);
 
   const active = $derived(Math.min(picked, charts.length - 1));
   const summary = $derived(summaries[active] ?? '');
@@ -54,6 +58,26 @@
   function onTab(index: number): void {
     picked = index;
     if (!visited.includes(index)) visited.push(index);
+  }
+
+  function onFit(index: number, next: RowFit): void {
+    fits[index] = next;
+  }
+
+  function onDetails(): void {
+    detailsOpen = true;
+  }
+
+  function onDetailsClose(): void {
+    detailsOpen = false;
+  }
+
+  function rowsOf(type: WebAnalyticsChartType): string {
+    return match(type)
+      .with('funnel', () => 'steps')
+      .with('trend', () => 'events')
+      .with('cohorts', () => 'cohorts')
+      .otherwise(() => 'rows');
   }
 </script>
 
@@ -82,7 +106,6 @@
       >
         <EyeOffIcon class="size-4" />
       </IconButton>
-      {@render grip()}
     </div>
     <Dropdown align="end">
       {#snippet trigger(attrs)}
@@ -146,12 +169,14 @@
 
   {#each charts as chart, index (index)}
     {#if index === active || visited.includes(index)}
+      {@const fit = fits[index]}
       <div
         class={[
-          'flex min-h-0 flex-1 flex-col overflow-y-auto',
+          'relative flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden',
           { hidden: index !== active },
         ]}
         role={tabbed ? 'tabpanel' : undefined}
+        {@attach fitRows((next) => onFit(index, next))}
       >
         <InsightBody
           {clusterId}
@@ -159,7 +184,30 @@
           {revision}
           bind:summary={summaries[index]}
         />
+        {#if fit?.more}
+          <MoreRow
+            shown={fit.shown}
+            total={fit.shown + fit.hidden}
+            label={rowsOf(chart.type)}
+            onopen={onDetails}
+          />
+        {/if}
       </div>
     {/if}
   {/each}
 </Well>
+
+<DetailsDialog
+  isOpen={detailsOpen}
+  title={charts[active]?.title ?? insight.title}
+  class="max-w-4xl"
+  onclose={onDetailsClose}
+>
+  <div
+    class="@container flex h-[34rem] max-h-[70dvh] min-h-0 flex-col overflow-y-auto px-3 pt-3 pb-4"
+  >
+    {#if charts[active]}
+      <InsightBody {clusterId} chart={charts[active]} {revision} />
+    {/if}
+  </div>
+</DetailsDialog>

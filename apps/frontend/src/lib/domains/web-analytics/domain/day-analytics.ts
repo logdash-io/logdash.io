@@ -3,6 +3,7 @@ import { formatCount, formatPercent } from './analytics-format';
 import type {
   WebAnalyticsDay,
   WebAnalyticsDayCounts,
+  WebAnalyticsDayHalfHour,
   WebAnalyticsDayGroup,
   WebAnalyticsDays,
   WebAnalyticsDayVisit,
@@ -450,4 +451,61 @@ export function parseGoals(value: string | undefined): string[] | null {
   } catch {
     return null;
   }
+}
+
+export type HalfHourKind = 'goal' | 'stayed' | 'left' | 'live';
+
+export type HalfHourBin = Record<HalfHourKind, number>;
+
+export type OnlineVisit = { half: number; stayed: boolean; goal: boolean };
+
+export type Timeline = {
+  bins: HalfHourBin[];
+  per: number;
+  dots: HalfHourKind[][];
+};
+
+export const TIMELINE_DOTS = 8;
+
+const HALF_HOUR_KINDS: HalfHourKind[] = ['goal', 'stayed', 'left', 'live'];
+
+export function halfHourTimeline(
+  halfHours: WebAnalyticsDayHalfHour[],
+  online: OnlineVisit[],
+): Timeline {
+  const bins = halfHours.map((half, index) => {
+    const here = online.filter((visit) => visit.half === index && !visit.goal);
+    const stayed = here.filter((visit) => visit.stayed).length;
+    return {
+      goal: half.goal,
+      stayed: Math.max(0, half.stayed - stayed),
+      left: Math.max(0, half.left - (here.length - stayed)),
+      live: here.length,
+    };
+  });
+  const dotsOf = (bin: HalfHourBin, per: number): number[] =>
+    HALF_HOUR_KINDS.map((kind) => Math.ceil(bin[kind] / per));
+  const peak = Math.max(
+    0,
+    ...bins.map((bin) =>
+      HALF_HOUR_KINDS.reduce((sum, kind) => sum + bin[kind], 0),
+    ),
+  );
+  let per = Math.max(1, Math.ceil(peak / TIMELINE_DOTS));
+  while (
+    bins.some(
+      (bin) =>
+        dotsOf(bin, per).reduce((sum, dots) => sum + dots, 0) > TIMELINE_DOTS,
+    )
+  )
+    per++;
+  return {
+    bins,
+    per,
+    dots: bins.map((bin) =>
+      dotsOf(bin, per).flatMap((count, kind) =>
+        Array<HalfHourKind>(count).fill(HALF_HOUR_KINDS[kind]),
+      ),
+    ),
+  };
 }

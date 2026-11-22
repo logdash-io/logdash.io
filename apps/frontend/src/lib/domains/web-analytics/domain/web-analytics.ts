@@ -467,9 +467,16 @@ export interface WebAnalyticsDayVisit {
   os: string;
 }
 
+export interface WebAnalyticsDayHalfHour {
+  goal: number;
+  stayed: number;
+  left: number;
+}
+
 export interface WebAnalyticsDayVisits {
   visits: WebAnalyticsDayVisit[];
   total: number;
+  halfHours: WebAnalyticsDayHalfHour[];
 }
 
 export interface WebAnalyticsGoalOption {

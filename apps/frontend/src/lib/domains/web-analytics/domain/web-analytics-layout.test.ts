@@ -12,12 +12,15 @@ import {
   applyTraffic,
   gridArrangement,
   gridRows,
+  gridSeams,
   insightView,
   moveCard,
   nudgeCard,
   OVERVIEW_VIEW,
   readLayout,
   resizeCard,
+  resizeEdge,
+  resizeSeam,
   viewInputs,
   viewLayout,
   viewsProblem,
@@ -190,6 +193,50 @@ test('resizing pushes the cards below down and clamps to the grid', () => {
   expect(cells(resizeCard(stack, 'a', 1, 99)).a).toEqual(at(0, 0, 3, 24));
   const narrow = resizeCard(stack, 'a', 4, 6);
   expect(cells(resizeCard(narrow, 'b', 6, 6)).b).toEqual(at(0, 6, 6, 6));
+});
+
+test('the left edge moves the left side, the right edge stops at the grid', () => {
+  const half = resizeCard(stack, 'a', 6, 6);
+  expect(cells(resizeEdge(half, 'a', 'l', 2, 0)).a).toEqual(at(2, 0, 4, 6));
+  expect(cells(resizeEdge(half, 'a', 'l', 5, 0)).a).toEqual(at(3, 0, 3, 6));
+  const right = moveCard(half, 'a', 6, 0);
+  expect(cells(resizeEdge(right, 'a', 'l', -4, 0)).a).toEqual(at(2, 0, 10, 6));
+  expect(cells(resizeEdge(right, 'a', 'l', -9, 3)).a).toEqual(at(0, 0, 12, 6));
+  expect(cells(resizeEdge(right, 'a', 'bl', -9, 3)).a).toEqual(at(0, 0, 12, 9));
+  expect(cells(resizeEdge(half, 'a', 'br', 9, -1)).a).toEqual(at(0, 0, 12, 5));
+  expect(cells(resizeEdge(stack, 'a', 'b', 4, 2))).toEqual({
+    a: at(0, 0, 12, 8),
+    b: at(0, 8, 12, 6),
+    c: at(0, 14, 12, 6),
+  });
+});
+
+test('a seam trades size between the two cards it splits', () => {
+  const pair = gridCards([
+    card('a', { grid: at(0, 0, 6, 8) }),
+    card('b', { grid: at(6, 0, 6, 8) }),
+    card('c', { grid: at(0, 8, 12, 6) }),
+  ]);
+  const seams = gridSeams(pair);
+  expect(seams).toEqual([{ a: 'a', b: 'b', axis: 'x', x: 6, y: 0, length: 8 }]);
+  expect(cells(resizeSeam(pair, seams[0], 2))).toEqual({
+    a: at(0, 0, 8, 8),
+    b: at(8, 0, 4, 8),
+    c: at(0, 8, 12, 6),
+  });
+  expect(cells(resizeSeam(pair, seams[0], -9))).toEqual({
+    a: at(0, 0, 3, 8),
+    b: at(3, 0, 9, 8),
+    c: at(0, 8, 12, 6),
+  });
+  const [, rows] = gridSeams(stack);
+  expect(rows).toEqual({ a: 'b', b: 'c', axis: 'y', x: 0, y: 12, length: 12 });
+  expect(cells(resizeSeam(stack, rows, 3))).toEqual({
+    a: at(0, 0, 12, 6),
+    b: at(0, 6, 12, 8),
+    c: at(0, 14, 12, 4),
+  });
+  expect(cells(resizeSeam(stack, rows, -5)).b).toEqual(at(0, 6, 12, 4));
 });
 
 test('arrow keys swap with the card above or below, shift resizes', () => {

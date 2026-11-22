@@ -222,6 +222,20 @@ export class WebAnalyticsInsightsState {
     }
   }
 
+  public async orderViews(ids: string[]): Promise<void> {
+    const views = ids.flatMap((id) =>
+      this.views.filter((view) => view.id === id),
+    );
+    if (views.length !== this.views.length) return;
+    this.views = views;
+    try {
+      await this.saveViews(viewInputs(views));
+    } catch (error) {
+      if (readHttpErrorStatus(error) !== 409) await this.load();
+      this.error = readHttpErrorMessage(error) ?? 'Could not move the view.';
+    }
+  }
+
   public async remove(id: string): Promise<void> {
     try {
       await WebAnalyticsService.deleteInsight(this.clusterId, id);

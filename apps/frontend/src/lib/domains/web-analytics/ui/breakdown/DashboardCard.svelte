@@ -2,19 +2,36 @@
   import ExpandIcon from '$lib/domains/shared/icons/ExpandIcon.svelte';
   import IconButton from '$lib/domains/shared/ui/components/IconButton.svelte';
   import type { Snippet } from 'svelte';
+  import { fitRows, type RowFit } from './fit-rows';
+  import MoreRow from './MoreRow.svelte';
 
   type Props = {
     label: string;
     tabs?: Snippet;
     actions?: Snippet;
-    grip?: Snippet;
     expandLabel?: string;
     onexpand?: () => void;
+    more?: string;
+    total?: number | null;
     children: Snippet;
   };
 
-  const { label, tabs, actions, grip, expandLabel, onexpand, children }: Props =
-    $props();
+  const {
+    label,
+    tabs,
+    actions,
+    expandLabel,
+    onexpand,
+    more,
+    total,
+    children,
+  }: Props = $props();
+
+  let fit = $state<RowFit>({ shown: 0, hidden: 0, more: false });
+
+  function onFit(next: RowFit): void {
+    fit = next;
+  }
 </script>
 
 <section
@@ -30,7 +47,6 @@
       <h2 class="shrink-0 px-3 text-[13px] font-medium">{label}</h2>
     {/if}
     <div class={['flex items-center gap-1', tabs ? 'shrink-0' : 'min-w-0']}>
-      {@render grip?.()}
       {@render actions?.()}
       {#if onexpand}
         <IconButton
@@ -46,7 +62,18 @@
     </div>
   </header>
 
-  <div class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
+  <div
+    class="relative flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden"
+    {@attach fitRows(onFit, total)}
+  >
     {@render children()}
+    {#if more && onexpand && fit.more}
+      <MoreRow
+        shown={fit.shown}
+        total={total === undefined ? fit.shown + fit.hidden : total}
+        label={more}
+        onopen={onexpand}
+      />
+    {/if}
   </div>
 </section>
