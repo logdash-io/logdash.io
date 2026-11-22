@@ -26,6 +26,7 @@
     canAdd: boolean;
     arranging: boolean;
     onview: (id: string) => void;
+    onvieworder: (ids: string[]) => void;
     onrestore: (insight: WebAnalyticsInsight) => void;
     onviews: () => void;
     onarrange: () => void;
@@ -39,6 +40,7 @@
     canAdd,
     arranging,
     onview,
+    onvieworder,
     onrestore,
     onviews,
     onarrange,
@@ -58,6 +60,7 @@
         {options}
         value={active.id}
         onChange={onview}
+        onReorder={onvieworder}
       />
     {/if}
   </div>

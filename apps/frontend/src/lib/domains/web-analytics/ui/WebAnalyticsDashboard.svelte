@@ -389,6 +389,12 @@
     });
   }
 
+  async function onViewOrder(ids: string[]): Promise<void> {
+    if (query.view !== view.id && ids[0] !== view.id)
+      await onQueryChange({ ...query, view: view.id });
+    await insights.orderViews(ids);
+  }
+
   function onAdd(): void {
     editing = null;
     editorOpen = true;
@@ -482,6 +488,7 @@
               canAdd={Boolean(insights.insights?.length)}
               {arranging}
               onview={onView}
+              onvieworder={onViewOrder}
               onrestore={onRestore}
               onviews={onViews}
               onarrange={onArrange}
