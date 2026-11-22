@@ -1,6 +1,5 @@
 <script lang="ts">
   import { DateTime } from 'luxon';
-  import type { Snippet } from 'svelte';
   import { formatRate, whole, type Verdict } from '../../domain/day-analytics';
   import type { WebAnalyticsSourceSeries } from '../../domain/web-analytics';
   import DayTile from './DayTile.svelte';
@@ -19,7 +18,6 @@
     sources: WebAnalyticsSourceSeries[];
     pinned: string | null;
     onpin: (name: string) => void;
-    grip?: Snippet;
   };
 
   const {
@@ -35,7 +33,6 @@
     sources,
     pinned,
     onpin,
-    grip,
   }: Props = $props();
 
   const day = $derived(DateTime.fromISO(date));
@@ -65,13 +62,10 @@
 </script>
 
 <section
-  class="bg-surface-25-bg @container flex h-full min-w-0 flex-col gap-2 overflow-y-auto rounded-2xl p-2 [--chart-surface:var(--surface-25-bg)]"
+  class="bg-surface-25-bg @container flex h-full min-w-0 flex-col gap-2 overflow-hidden rounded-2xl p-2 [--chart-surface:var(--surface-25-bg)]"
   aria-label={title}
 >
-  <header class="relative flex flex-col gap-1 px-3 pt-1.5">
-    {#if grip}
-      <div class="absolute top-0 right-0">{@render grip()}</div>
-    {/if}
+  <header class="flex flex-col gap-1 px-3 pt-1.5">
     <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
       <h2 class="text-[15px] font-medium">{title}</h2>
       {#if inProgress}

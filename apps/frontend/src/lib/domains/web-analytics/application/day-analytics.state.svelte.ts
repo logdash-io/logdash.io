@@ -6,6 +6,7 @@ import {
 } from '../domain/day-analytics';
 import type {
   WebAnalyticsDayParams,
+  WebAnalyticsDayHalfHour,
   WebAnalyticsDayVisit,
   WebAnalyticsGoalOption,
   WebAnalyticsVisitShow,
@@ -76,6 +77,7 @@ export class WebAnalyticsCachedState<T> {
 export class WebAnalyticsDayVisitsState {
   public visits = $state<WebAnalyticsDayVisit[]>([]);
   public total = $state(0);
+  public halfHours = $state<WebAnalyticsDayHalfHour[]>([]);
   public loading = $state(false);
   public error = $state<string | null>(null);
   private generation = 0;
@@ -107,6 +109,7 @@ export class WebAnalyticsDayVisitsState {
           ]
         : page.visits;
       this.total = page.total;
+      if (!append) this.halfHours = page.halfHours;
       this.error = null;
     } catch (error) {
       if (generation === this.generation)
@@ -137,6 +140,7 @@ export class WebAnalyticsDayVisitsState {
         ...this.visits.filter((visit) => !fresh.includes(visitKey(visit))),
       ];
       this.total = page.total;
+      this.halfHours = page.halfHours;
     } catch {
       return;
     }

@@ -20,7 +20,7 @@
 
 <ul class="flex flex-col gap-0.5">
   {#each rows as row (row.name)}
-    <li>
+    <li data-row>
       <button
         type="button"
         class="group focus-visible:outline-brand relative flex h-8 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-left text-sm focus-visible:outline-2 disabled:cursor-default"

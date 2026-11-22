@@ -7,7 +7,7 @@
   import { SettingsCardHeader } from '$lib/domains/shared/ui/components/settings-card';
   import Modal from '$lib/domains/shared/ui/Modal.svelte';
   import { DateTime } from 'luxon';
-  import { onMount, untrack, type Snippet } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import {
     WebAnalyticsCachedState,
     WebAnalyticsDayVisitsState,
@@ -101,6 +101,7 @@
   let editing = $state<WebAnalyticsInsight | null>(null);
   let editorOpen = $state(false);
   let layoutOpen = $state(false);
+  let arranging = $state(false);
   let reportKey = '';
 
   const query = $derived(parseAnalyticsQuery(page.url.searchParams));
@@ -417,6 +418,14 @@
     layoutOpen = true;
   }
 
+  function onArrange(): void {
+    arranging = !arranging;
+  }
+
+  function onArrangeDone(): void {
+    arranging = false;
+  }
+
   function onLayoutClose(): void {
     layoutOpen = false;
   }
@@ -445,9 +454,42 @@
 <div class="@container flex w-full flex-col">
   <ServiceHealthStrip {clusterId} />
 
-  {#if traffic && query.filters.length}
-    <div class="edge-b px-4 py-2">
-      <ActiveFilters {query} onchange={onQueryChange} />
+  {#if ready || (traffic && query.filters.length)}
+    <div
+      class={[
+        'top-0 z-20 [container-type:scroll-state]',
+        analytics.waitingForData ? 'relative' : 'sticky',
+      ]}
+    >
+      <div class="bg-surface-50-bg [@container_scroll-state(stuck:top)]:edge-b">
+        {#if traffic && query.filters.length}
+          <div class="edge-b px-4 py-2">
+            <ActiveFilters {query} onchange={onQueryChange} />
+          </div>
+        {/if}
+        {#if ready}
+          <div
+            class={[
+              'p-2',
+              { 'blur-[2px] select-none': analytics.waitingForData },
+            ]}
+            inert={analytics.waitingForData}
+          >
+            <InsightsBar
+              views={dashboardViews(insights.views)}
+              active={view}
+              hidden={layout.hidden}
+              canAdd={Boolean(insights.insights?.length)}
+              {arranging}
+              onview={onView}
+              onrestore={onRestore}
+              onlayout={onLayout}
+              onarrange={onArrange}
+              onadd={onAdd}
+            />
+          </div>
+        {/if}
+      </div>
     </div>
   {/if}
 
@@ -458,27 +500,15 @@
   <div class="grid grid-cols-1">
     <div
       class={[
-        'col-start-1 row-start-1 flex flex-col gap-2 p-2',
+        'col-start-1 row-start-1 flex flex-col gap-2 px-2 pb-2',
         {
+          'pt-2': !ready,
           'max-h-160 overflow-hidden blur-[2px] select-none [mask-image:linear-gradient(to_bottom,black,transparent)]':
             analytics.waitingForData,
         },
       ]}
       inert={analytics.waitingForData}
     >
-      {#if ready}
-        <InsightsBar
-          views={dashboardViews(insights.views)}
-          active={view}
-          hidden={layout.hidden}
-          canAdd={Boolean(insights.insights?.length)}
-          onview={onView}
-          onrestore={onRestore}
-          onlayout={onLayout}
-          onadd={onAdd}
-        />
-      {/if}
-
       {#if traffic}
         <DaysCard
           days={strip}
@@ -498,6 +528,8 @@
         {revision}
         {insights}
         {layout}
+        {arranging}
+        ondone={onArrangeDone}
         traffic={trafficCard}
         onadd={onAdd}
         onedit={onEdit}
@@ -562,7 +594,7 @@
   onsave={onLayoutSave}
 />
 
-{#snippet trafficCard(id: WebAnalyticsTrafficCard, grip: Snippet)}
+{#snippet trafficCard(id: WebAnalyticsTrafficCard)}
   {#if id === 'day'}
     <DayCard
       date={shown}
@@ -576,7 +608,6 @@
       goalHours={day.data?.goalHours ?? []}
       sources={day.data?.sourceHours ?? []}
       {pinned}
-      {grip}
       onpin={onPin}
     />
   {:else if id === 'sources'}
@@ -588,7 +619,6 @@
       {weekdays}
       loading={!day.data}
       {pinned}
-      {grip}
       onpin={onPin}
     />
   {:else if id === 'firstPages'}
@@ -599,7 +629,6 @@
       {by}
       {weekdays}
       loading={!day.data}
-      {grip}
     />
   {:else if id === 'visits'}
     <DayVisitsCard
@@ -607,13 +636,13 @@
       {date}
       visits={visits.visits}
       total={visits.total}
+      halfHours={visits.halfHours}
       loading={visits.loading}
       error={visits.error}
       goals={picked}
       {show}
       {live}
       now={clock.toMillis()}
-      {grip}
       onshow={onShow}
       onmore={onMore}
       onopen={onOpen}
@@ -632,7 +661,6 @@
         { id: 'keywords', label: 'Keyword', filter: 'keyword' },
         { id: 'referrers', label: 'Referrer', filter: 'referrer' },
       ]}
-      {grip}
       onfilter={onFilter}
     />
   {:else if id === 'pages'}
@@ -646,14 +674,12 @@
         { id: 'exitPages', label: 'Exit', title: 'Exit page', filter: 'page' },
         { id: 'hostnames', label: 'Hostname', filter: 'hostname' },
       ]}
-      {grip}
       onfilter={onFilter}
     />
   {:else if id === 'goals'}
     <GoalsCard
       report={analytics.report}
       selected={query.event}
-      {grip}
       onselect={onEvent}
       onfilter={onFilter}
     />
@@ -665,7 +691,6 @@
       label="Countries"
       tabs={[{ id: 'countries', label: 'Country', filter: 'country' }]}
       attribution={dbIpAttribution}
-      {grip}
       onfilter={onFilter}
     />
   {:else if id === 'technology'}
@@ -679,11 +704,10 @@
         { id: 'os', label: 'OS', filter: 'os' },
         { id: 'devices', label: 'Device', filter: 'device' },
       ]}
-      {grip}
       onfilter={onFilter}
     />
   {:else}
-    <InsightsCard {clusterId} {range} {grip} />
+    <InsightsCard {clusterId} {range} />
   {/if}
 {/snippet}
 

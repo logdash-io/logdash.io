@@ -620,12 +620,31 @@ export class WebAnalyticsDayVisit {
   os: string;
 }
 
+export class WebAnalyticsDayHalfHour {
+  @ApiProperty({ description: 'Visits that reached a requested goal' })
+  goal: number;
+
+  @ApiProperty({ description: 'Visits that stayed and reached no requested goal' })
+  stayed: number;
+
+  @ApiProperty({ description: 'Visits that left and reached no requested goal' })
+  left: number;
+}
+
 export class WebAnalyticsDayVisitsResponse {
   @ApiProperty({ type: WebAnalyticsDayVisit, isArray: true })
   visits: WebAnalyticsDayVisit[];
 
   @ApiProperty()
   total: number;
+
+  @ApiProperty({
+    type: WebAnalyticsDayHalfHour,
+    isArray: true,
+    description:
+      'The visits of the whole day by the half hour they started in, in the time zone, 48 entries. It ignores show',
+  })
+  halfHours: WebAnalyticsDayHalfHour[];
 }
 
 export class WebAnalyticsGoalOption {

@@ -57,11 +57,11 @@
     No events with a {property} date in this period
   </p>
 {:else}
-  <div class="min-h-0 flex-1 overflow-auto">
+  <div class="overflow-x-auto">
     <table
       class="w-full border-separate border-spacing-x-1 border-spacing-y-0 text-sm tabular-nums"
     >
-      <thead class="text-fg-muted bg-surface-25-bg sticky top-0 z-10 text-xs">
+      <thead class="text-fg-muted text-xs">
         <tr>
           <th scope="col" class="px-2 pb-1 text-left align-bottom font-normal">
             {unit}
@@ -86,7 +86,7 @@
       </thead>
       {#each table.groups as group (group.label)}
         <tbody>
-          <tr>
+          <tr data-row="head">
             <th
               scope="rowgroup"
               colspan={events.length + 1}
@@ -96,7 +96,7 @@
             </th>
           </tr>
           {#each group.rows as row (row.cohort)}
-            <tr>
+            <tr data-row>
               <th
                 scope="row"
                 class="px-2 py-0.5 text-left font-normal whitespace-nowrap"

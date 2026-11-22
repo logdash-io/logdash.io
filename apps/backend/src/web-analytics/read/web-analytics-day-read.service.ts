@@ -202,13 +202,30 @@ export class WebAnalyticsDayReadService {
       stayed: 'stayed',
       goal: 'arrayExists(at -> at IS NOT NULL, goals_at)',
     }[query.show];
-    const rows = await this.query<VisitRow>(
-      `SELECT visitor, person, started_at, last_seen, source, entry_page, exit_page, pageviews,
-        sessions, duration, stayed, goals_at, country, device, browser, os, count() OVER () AS total
-      FROM (${visits.sql}) WHERE ${shown}
-      ORDER BY started_at DESC, visitor LIMIT ${VISITS_PAGE} OFFSET {offset:UInt32}`,
-      { ...visits.params, offset: query.offset },
-    );
+    const [rows, halves] = await Promise.all([
+      this.query<VisitRow>(
+        `SELECT visitor, person, started_at, last_seen, source, entry_page, exit_page, pageviews,
+          sessions, duration, stayed, goals_at, country, device, browser, os, count() OVER () AS total
+        FROM (${visits.sql}) WHERE ${shown}
+        ORDER BY started_at DESC, visitor LIMIT ${VISITS_PAGE} OFFSET {offset:UInt32}`,
+        { ...visits.params, offset: query.offset },
+      ),
+      this.query<{
+        half: number;
+        goal_visits: string;
+        stayed_visits: string;
+        left_visits: string;
+      }>(
+        `SELECT intDiv(toHour(started_at, {tz:String}) * 60 + toMinute(started_at, {tz:String}), 30) AS half,
+          countIf(reached) AS goal_visits, countIf(stayed AND NOT reached) AS stayed_visits,
+          countIf(NOT stayed AND NOT reached) AS left_visits
+        FROM (SELECT started_at, stayed, arrayExists(at -> at IS NOT NULL, goals_at) AS reached
+          FROM (${visits.sql}))
+        GROUP BY half`,
+        visits.params,
+      ),
+    ]);
+    const byHalf = new Map(halves.map((row) => [Number(row.half), row]));
     return {
       visits: rows.map((row) => ({
         id: row.person || row.visitor,
@@ -232,6 +249,14 @@ export class WebAnalyticsDayReadService {
         os: row.os,
       })),
       total: Number(rows[0]?.total ?? 0),
+      halfHours: Array.from({ length: 48 }, (_, half) => {
+        const row = byHalf.get(half);
+        return {
+          goal: Number(row?.goal_visits ?? 0),
+          stayed: Number(row?.stayed_visits ?? 0),
+          left: Number(row?.left_visits ?? 0),
+        };
+      }),
     };
   }
 

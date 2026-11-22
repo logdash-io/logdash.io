@@ -16,7 +16,7 @@
   import BreakdownList from './BreakdownList.svelte';
   import ChannelDonut from './ChannelDonut.svelte';
   import DashboardCard from './DashboardCard.svelte';
-  import { CARD_COLUMNS, CARD_ROWS } from './dashboard-card';
+  import { CARD_COLUMNS, REPORT_ROWS } from './dashboard-card';
 
   type BreakdownTab = {
     id: WebAnalyticsBreakdownName;
@@ -34,7 +34,6 @@
     tabs: BreakdownTab[];
     initial?: WebAnalyticsBreakdownName;
     attribution?: Snippet;
-    grip?: Snippet;
     onfilter: (filter: WebAnalyticsFilter) => void;
   };
 
@@ -46,7 +45,6 @@
     tabs,
     initial,
     attribution,
-    grip,
     onfilter,
   }: Props = $props();
 
@@ -90,9 +88,10 @@
   {label}
   tabs={tabs.length > 1 ? tabSwitch : undefined}
   actions={tab.chart && rows.length ? chartToggle : attribution}
-  {grip}
   expandLabel="Show all {title.toLowerCase()} rows"
   onexpand={rows.length ? onDetails : undefined}
+  more={donut && tab.chart ? undefined : `${title.toLowerCase()} rows`}
+  total={rows.length < REPORT_ROWS ? rows.length : null}
 >
   {#if !report}
     <div class="flex flex-col gap-0.5 pt-6.5" aria-hidden="true">
@@ -116,11 +115,7 @@
       <span>{title}</span>
       <span>Visits</span>
     </div>
-    <BreakdownList
-      rows={rows.slice(0, CARD_ROWS)}
-      dimension={tab.id}
-      onselect={onSelect}
-    />
+    <BreakdownList {rows} dimension={tab.id} onselect={onSelect} />
   {/if}
 </DashboardCard>
 

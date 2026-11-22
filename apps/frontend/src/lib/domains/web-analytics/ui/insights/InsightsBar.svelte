@@ -6,9 +6,13 @@
   } from '$lib/domains/app/clusters/ui/menu';
   import EyeOffIcon from '$lib/domains/shared/icons/EyeOffIcon.svelte';
   import GridIcon from '$lib/domains/shared/icons/GridIcon.svelte';
+  import GripIcon from '$lib/domains/shared/icons/GripIcon.svelte';
   import PlusIcon from '$lib/domains/shared/icons/PlusIcon.svelte';
   import SegmentedControl from '$lib/domains/shared/ui/components/SegmentedControl.svelte';
-  import { TOOLBAR_CONTROL } from '$lib/domains/shared/ui/components/toolbar';
+  import {
+    TOOLBAR_CONTROL,
+    TOOLBAR_PRIMARY,
+  } from '$lib/domains/shared/ui/components/toolbar';
   import { Dropdown } from '@logdash/hyper-ui/presentational';
   import type {
     WebAnalyticsInsight,
@@ -20,9 +24,11 @@
     active: WebAnalyticsView;
     hidden: WebAnalyticsInsight[];
     canAdd: boolean;
+    arranging: boolean;
     onview: (id: string) => void;
     onrestore: (insight: WebAnalyticsInsight) => void;
     onlayout: () => void;
+    onarrange: () => void;
     onadd: () => void;
   };
 
@@ -31,9 +37,11 @@
     active,
     hidden,
     canAdd,
+    arranging,
     onview,
     onrestore,
     onlayout,
+    onarrange,
     onadd,
   }: Props = $props();
 
@@ -91,6 +99,23 @@
         </div>
       </Dropdown>
     {/if}
+
+    <div class="hidden @min-[49rem]:contents">
+      <button
+        type="button"
+        class={arranging
+          ? TOOLBAR_PRIMARY
+          : [TOOLBAR_CONTROL, 'text-fg-tertiary']}
+        aria-pressed={arranging}
+        title={arranging
+          ? 'Press Escape to finish'
+          : 'Move and resize the cards in this view'}
+        onclick={onarrange}
+      >
+        <GripIcon class="size-3.5" />
+        {arranging ? 'Done' : 'Arrange'}
+      </button>
+    </div>
 
     <button
       type="button"
