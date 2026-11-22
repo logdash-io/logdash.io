@@ -72,7 +72,7 @@
           'Someone changed the views after you opened this. It now shows their change, so make yours again.';
         return;
       }
-      error = readHttpErrorMessage(failure) ?? 'Could not save the layout.';
+      error = readHttpErrorMessage(failure) ?? 'Could not save the views.';
     } finally {
       saving = false;
     }
@@ -81,7 +81,7 @@
 
 <DetailsDialog
   {isOpen}
-  title="Layout"
+  title="Views"
   class="h-[min(44rem,88dvh)] sm:max-w-2xl"
   {onclose}
 >
@@ -91,7 +91,7 @@
     >
       <p class="text-fg-muted text-sm">
         Views split the cards of this domain into dashboards. Everyone on this
-        domain sees the same layout. The first view opens by default, and holds
+        domain sees the same views. The first view opens by default, and holds
         every card that has no view. The cards of a removed view move to the
         first view.
       </p>
@@ -151,7 +151,7 @@
         loading={saving}
         disabled={Boolean(problem)}
       >
-        Save layout
+        Save views
       </Button>
     </footer>
   </form>

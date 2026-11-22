@@ -66,7 +66,7 @@
   import InsightsBar from './insights/InsightsBar.svelte';
   import InsightsCard from './insights/InsightsCard.svelte';
   import InsightsSection from './insights/InsightsSection.svelte';
-  import LayoutDialog from './insights/LayoutDialog.svelte';
+  import ViewsDialog from './insights/ViewsDialog.svelte';
   import VisitorDialog from './insights/VisitorDialog.svelte';
   import WebAnalyticsSetup from './WebAnalyticsSetup.svelte';
 
@@ -100,7 +100,7 @@
   let revision = $state(0);
   let editing = $state<WebAnalyticsInsight | null>(null);
   let editorOpen = $state(false);
-  let layoutOpen = $state(false);
+  let viewsOpen = $state(false);
   let arranging = $state(false);
   let reportKey = '';
 
@@ -414,8 +414,8 @@
     void insights.place(insight.id, { hidden: null });
   }
 
-  function onLayout(): void {
-    layoutOpen = true;
+  function onViews(): void {
+    viewsOpen = true;
   }
 
   function onArrange(): void {
@@ -426,11 +426,11 @@
     arranging = false;
   }
 
-  function onLayoutClose(): void {
-    layoutOpen = false;
+  function onViewsClose(): void {
+    viewsOpen = false;
   }
 
-  async function onLayoutSave(views: WebAnalyticsViewInput[]): Promise<void> {
+  async function onViewsSave(views: WebAnalyticsViewInput[]): Promise<void> {
     await insights.saveViews(views);
   }
 
@@ -483,7 +483,7 @@
               {arranging}
               onview={onView}
               onrestore={onRestore}
-              onlayout={onLayout}
+              onviews={onViews}
               onarrange={onArrange}
               onadd={onAdd}
             />
@@ -587,11 +587,11 @@
   onsave={onInsightSave}
 />
 
-<LayoutDialog
-  isOpen={layoutOpen}
+<ViewsDialog
+  isOpen={viewsOpen}
   views={insights.views}
-  onclose={onLayoutClose}
-  onsave={onLayoutSave}
+  onclose={onViewsClose}
+  onsave={onViewsSave}
 />
 
 {#snippet trafficCard(id: WebAnalyticsTrafficCard)}

@@ -27,7 +27,7 @@
     arranging: boolean;
     onview: (id: string) => void;
     onrestore: (insight: WebAnalyticsInsight) => void;
-    onlayout: () => void;
+    onviews: () => void;
     onarrange: () => void;
     onadd: () => void;
   };
@@ -40,7 +40,7 @@
     arranging,
     onview,
     onrestore,
-    onlayout,
+    onviews,
     onarrange,
     onadd,
   }: Props = $props();
@@ -120,10 +120,10 @@
     <button
       type="button"
       class={[TOOLBAR_CONTROL, 'text-fg-tertiary']}
-      onclick={onlayout}
+      onclick={onviews}
     >
       <GridIcon class="size-3.5" />
-      Layout
+      Views
     </button>
 
     {#if canAdd}
